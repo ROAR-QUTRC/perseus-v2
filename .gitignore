@@ -1,9 +1,10 @@
 # nix stuff ignore
-install/
 .direnv
+result/
 
 # ROS
 log
+install
 
 # Prerequisites
 *.d

@@ -49,6 +49,12 @@
               touch $out/COLCON_IGNORE
             '';
           };
+          hardware-interfaces =
+            pkgs.ros.callPackage ./src/hardware_interfaces/package.nix { };
+          input-controllers =
+            pkgs.ros.callPackage ./src/input_controllers/package.nix { };
+          perseus-bringup =
+            pkgs.ros.callPackage ./src/perseus_bringup/package.nix { };
         };
 
         # packages needed to build the workspace
