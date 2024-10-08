@@ -105,6 +105,11 @@
           prebuiltPackages = common-pkgs // sim-pkgs;
           prebuiltShellPackages = { } // build-pkgs;
         };
+
+        # LAUNCH SCRIPTS
+        perseus-main = pkgs.writeShellScriptBin "perseus-main" ''
+          ${default}/bin/ros2 pkg list
+        '';
       in {
         # rover development environment
         packages = {
@@ -119,6 +124,12 @@
         devShells = {
           default = default.env;
           roverSim = roverSim.env;
+        };
+        apps = {
+          default = {
+            type = "app";
+            program = "${perseus-main}/bin/perseus-main";
+          };
         };
       });
   nixConfig = {
