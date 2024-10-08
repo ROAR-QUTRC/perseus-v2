@@ -28,6 +28,10 @@
                 };
               })
             (import ./overlays.nix)
+            (final: prev: {
+              ros = prev.ros // prev.ros.overrideScope
+                (import ./nix-ros-packages/overlay.nix);
+            })
           ];
           # Gazebo makes use of Freeimage.
           # Freeimage is blocked by default since it has a whole bunch of CVEs.
@@ -37,7 +41,7 @@
         };
 
         # --- ROVER PACKAGES ---
-        dev-packages = rec {
+        dev-packages = {
           # mini package which puts COLCON_IGNORE in the output result folder
           # allows colcon build of workspace after run nix build
           colcon-ignore = pkgs.stdenv.mkDerivation rec {
@@ -49,13 +53,8 @@
               touch $out/COLCON_IGNORE
             '';
           };
-          hardware-interfaces =
-            pkgs.ros.callPackage ./src/hardware_interfaces/package.nix { };
-          input-controllers =
-            pkgs.ros.callPackage ./src/input_controllers/package.nix { };
-          perseus-bringup =
-            pkgs.ros.callPackage ./src/perseus_bringup/package.nix { };
-        };
+        } // (builtins.intersectAttrs
+          (import ./nix-ros-packages/overlay.nix null null) pkgs.ros);
 
         # packages needed to build the workspace
         build-pkgs = {
