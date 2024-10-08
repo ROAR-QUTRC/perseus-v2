@@ -2,6 +2,9 @@
 install/
 .direnv
 
+# ROS
+log
+
 # Prerequisites
 *.d
 
