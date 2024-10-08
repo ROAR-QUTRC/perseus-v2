@@ -56,6 +56,8 @@ if grep -Fq 'hide_env_diff' ~/.config/direnv/direnv.toml &>/dev/null
 then
     echo "direnv hide_env_diff already set up!"
 else
+    mkdir -p ~/.config/direnv
+    touch ~/.config/direnv/direnv.toml
     echo "[global]" >> ~/.config/direnv/direnv.toml
     echo "hide_env_diff = true" >> ~/.config/direnv/direnv.toml
 fi
