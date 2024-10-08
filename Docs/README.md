@@ -291,6 +291,14 @@ enum class directions
 
 ## Design Guidelines
 
+### Versioning
+
+Follow [BreakVer](https://www.taoensso.com/break-versioning). That is, versions should follow the form `major.minor.nonbreaking[-optional-qualifier]`. Nonbreaking updates should be exactly what they say - non-breaking. Updating version bumps should always be safe (and recommended) to perform. Minor updates _may_ break code in a _minor_ way - read the changelog to see if you're affected. Major updates might break code in a _major_ way - read the changes!
+
+Whenever you perform a major (possibly breaking) change, update the major version number. Whenever you make a breaking minor change, update the minor version number. For non-breaking changes, update either the non-breaking or minor version numbers as appropriate.
+
+Whenever a version number is incremented, all lower numbers should be reset to zero - that is, a major version bump from `1.1.1` would be `2.0.0`.
+
 ### Warnings are not acceptable
 
 If the compiler (or linter) is complaining about something, it's almost certainly right. Fix the warnings before raising a PR to merge code onto the main branch. This not only helps to enforce a higher code quality, but also to make new (and possibly more important) warnings much more obvious when they _do_ occur.
@@ -375,6 +383,7 @@ This also goes for _programs_ you write, not just functions and classes - for ex
 ### Avoid magic numbers
 
 There should be no "bare" magic numbers in your code. They should be one of the following instead:
+
 - Commented - easiest but also worst solution
 - Converted to a _named_ constant
 - Explained by the variable names, such as `outputRevolutionsPerSecond = inputRpm*60;`
@@ -541,6 +550,7 @@ Source code files should all be located under the `src/` directory inside the pr
 ## Variable Declarations and Naming Standards
 
 ### Capitalisation
+
 Variables should be named in `camelCase`. The only exception to this rule is local static variables (that is, static within a function or class). These variables should be named in `snake_case` - this is to immediately signify to a programmer (who may not have seen the declaration) that they may behave differently to how they expect.
 
 ### Variable Type Declarations
