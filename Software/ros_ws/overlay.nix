@@ -5,15 +5,25 @@ let
   ros = prev.rosPackages.${rosDistro};
 
   # individual package overrides/fixes
-  joint-state-publisher-gui = ros.joint-state-publisher-gui.overrideAttrs
-    ({ nativeBuildInputs ? [ ], qtWrapperArgs ? [ ], postFixup ? "", ... }: {
+  joint-state-publisher-gui = ros.joint-state-publisher-gui.overrideAttrs (
+    {
+      nativeBuildInputs ? [ ],
+      qtWrapperArgs ? [ ],
+      postFixup ? "",
+      ...
+    }:
+    {
       dontWrapQtApps = false;
       nativeBuildInputs = nativeBuildInputs ++ [ prev.qt5.wrapQtAppsHook ];
-      postFixup = postFixup + ''
-        wrapQtApp "$out/lib/joint_state_publisher_gui/joint_state_publisher_gui"
-      '';
-    });
-in {
+      postFixup =
+        postFixup
+        + ''
+          wrapQtApp "$out/lib/joint_state_publisher_gui/joint_state_publisher_gui"
+        '';
+    }
+  );
+in
+{
   buildColconPackage = ros.callPackage ./build-colcon-package {
     inherit rosDistro;
     rosVersion = 2;
@@ -29,7 +39,8 @@ in {
     '';
   };
 
-  ros = ros
+  ros =
+    ros
     # ros packaging fixes
     // {
       inherit joint-state-publisher-gui;

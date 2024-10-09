@@ -7,8 +7,15 @@
       flake = false;
     };
   };
-  outputs = { self, nix-ros-overlay, nix-ros-workspace, nixpkgs }:
-    nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nix-ros-overlay,
+      nix-ros-workspace,
+      nixpkgs,
+    }:
+    nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (
+      system:
       let
         # --- NIX PACKAGES IMPORT AND OVERLAYS ---
         pkgs = import nixpkgs {
@@ -24,20 +31,21 @@
           # Gazebo makes use of Freeimage.
           # Freeimage is blocked by default since it has a whole bunch of CVEs.
           # This means we have to explicitly permit Freeimage to allow Gazebo to run.
-          config.permittedInsecurePackages =
-            [ "freeimage-unstable-2021-11-01" ];
+          config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
         };
 
         # --- ROVER PACKAGES ---
-        /* The intersection of the full ros package set and the workspace packages overlay
-           selects the fully resolved packages out of the ros package set,
-           getting us only the dev packages.
+        /*
+          The intersection of the full ros package set and the workspace packages overlay
+          selects the fully resolved packages out of the ros package set,
+          getting us only the dev packages.
 
-           That then gets merged with the colcon-ignore package so colcon doesn't try
-           and build things from the (already built!) result symlink that nix build generates
+          That then gets merged with the colcon-ignore package so colcon doesn't try
+          and build things from the (already built!) result symlink that nix build generates
         */
-        dev-packages = (builtins.intersectAttrs
-          (import ./ros_ws/nix-packages/overlay.nix null null) pkgs.ros) // {
+        dev-packages =
+          (builtins.intersectAttrs (import ./ros_ws/nix-packages/overlay.nix null null) pkgs.ros)
+          // {
             inherit (pkgs) colcon-ignore;
           };
 
@@ -48,15 +56,29 @@
         };
         # CLI tooling
         cli-pkgs = {
-          inherit (pkgs.ros) rviz2 rosbag2 teleop-twist-keyboard demo-nodes-cpp;
+          inherit (pkgs.ros)
+            rviz2
+            rosbag2
+            teleop-twist-keyboard
+            demo-nodes-cpp
+            ;
         };
 
         # packages for simulation
         sim-pkgs = {
           inherit (pkgs.ros)
-            gazebo-ros gazebo-ros2-control gazebo-ros-pkgs controller-manager
-            topic-tools robot-localization slam-toolbox imu-filter-madgwick
-            laser-filters joint-state-publisher-gui joint-state-broadcaster;
+            gazebo-ros
+            gazebo-ros2-control
+            gazebo-ros-pkgs
+            controller-manager
+            topic-tools
+            robot-localization
+            slam-toolbox
+            imu-filter-madgwick
+            laser-filters
+            joint-state-publisher-gui
+            joint-state-broadcaster
+            ;
         };
 
         # --- OUTPUT NIX WORKSPACES ---
@@ -79,15 +101,14 @@
         perseus-main = pkgs.writeShellScriptBin "perseus-main" ''
           ${default}/bin/ros2 pkg list
         '';
-      in {
+      in
+      {
         # rover development environment
         packages = {
           inherit default roverSim;
           # used only to split up the build for Cachix - this particular package builds only the ROS core,
           # thus reducing RAM required (slightly... still need a fair bit of swap space)
-          rosCore = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace {
-            name = "ROS Core";
-          };
+          rosCore = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace { name = "ROS Core"; };
         };
 
         devShells = {
@@ -101,13 +122,17 @@
             program = "${perseus-main}/bin/perseus-main";
           };
         };
-      });
+        formatter = pkgs.nixfmt-rfc-style;
+      }
+    );
   nixConfig = {
     # note from James Nichol - I set up a custom cache at https://qutrc-roar.cachix.org 
     # Currently I'm compiling for x86-64 and aarch64 on my machine and pushing to it whenever I make changes
     # to the Nix config - contact me if you want an auth token to push your own builds
-    extra-substituters =
-      [ "https://qutrc-roar.cachix.org" "https://ros.cachix.org" ];
+    extra-substituters = [
+      "https://qutrc-roar.cachix.org"
+      "https://ros.cachix.org"
+    ];
     extra-trusted-public-keys = [
       "qutrc-roar.cachix.org-1:lARPhJL+PLuGd021HeN8CQOGGiYVEVGws5za+39M1Z0="
       "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo="
