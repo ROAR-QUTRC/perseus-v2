@@ -1,5 +1,9 @@
 # Details and attributes of Perseus's Network
 
+## TLDR
+SSID is "QUTRC-ROAR" and assume only a 20Mhz connection.
+
+## Purpose
 Some of the software written for Perseus will operate better if details of the network Perseus operates on are known.
 This file seeks to capture these details
 
