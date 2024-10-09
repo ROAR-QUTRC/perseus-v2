@@ -1,9 +1,10 @@
 # cd to the script location so everything searches in and goes to the right place
 SCRIPT_PATH="$(dirname $0)"
-cd $SCRIPT_PATH
+cd $SCRIPT_PATH/..
 
-OUTPUT_DIR=nix-ros-packages
+OUTPUT_DIR=ros_ws/nix-packages
 
+rm -r $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
 # need to keep the environment isolated so that direnv doesn't screw with ros2nix.
 # -i (--ignore-environment) clears all environment variables and drops you into a shell

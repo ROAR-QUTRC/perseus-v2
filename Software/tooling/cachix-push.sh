@@ -1,3 +1,7 @@
+# cd to the script location so everything searches in and goes to the right place
+SCRIPT_PATH="$(dirname $0)"
+cd $SCRIPT_PATH/..
+
 # push built packages
 nix build .#rosCore --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
 nix build --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar

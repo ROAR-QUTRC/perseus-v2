@@ -1,7 +1,8 @@
 echo "Setting up git submodule repos"
 
-# cd into correct directory so everything works
-cd "$(dirname $0)"
+# cd to the script location so everything searches in and goes to the right place
+SCRIPT_PATH="$(dirname $0)"
+cd $SCRIPT_PATH/../..
 
 # clone submodules if not already done so workspace can actually build
 git submodule update --init --recursive
@@ -62,6 +63,7 @@ else
     echo "hide_env_diff = true" >> ~/.config/direnv/direnv.toml
 fi
 
+cd $SCRIPT_PATH/..
 # allow direnv to configure based on the .envrc file in the current directory
 direnv allow
 
