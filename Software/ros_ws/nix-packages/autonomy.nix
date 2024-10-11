@@ -5,23 +5,21 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
-  hardware-interfaces,
+  rclcpp,
 }:
 buildRosPackage rec {
-  pname = "ros-humble-perseus-bringup";
+  pname = "ros-humble-autonomy";
   version = "0.0.0";
 
-  src = ./../src/perseus_bringup;
+  src = ./../src/autonomy;
 
   buildType = "ament_cmake";
-  buildInputs = [
-    ament-cmake
-    hardware-interfaces
-  ];
+  buildInputs = [ ament-cmake ];
   checkInputs = [
     ament-lint-auto
     ament-lint-common
   ];
+  propagatedBuildInputs = [ rclcpp ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
