@@ -1,7 +1,7 @@
 echo "Setting up git submodule repos"
 
-# cd to the script location so everything searches in and goes to the right place
-SCRIPT_PATH="$(dirname $0)"
+SCRIPT_DIR="$(dirname "$(readlink -f $0)")"
+# cd to project root so git will work properly
 cd $SCRIPT_PATH/../..
 
 # clone submodules if not already done so workspace can actually build
@@ -63,6 +63,7 @@ else
     echo "hide_env_diff = true" >> ~/.config/direnv/direnv.toml
 fi
 
+# cd to Software/ folder for direnv config
 cd $SCRIPT_PATH/..
 # allow direnv to configure based on the .envrc file in the current directory
 direnv allow
