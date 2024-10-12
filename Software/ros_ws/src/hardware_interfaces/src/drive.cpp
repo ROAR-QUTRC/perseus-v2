@@ -1,10 +1,11 @@
 #include <cstdio>
+#include <hi_can_lib.hpp>
 
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
-  (void) argc;
-  (void) argv;
+    (void)argc;
+    (void)argv;
 
-  printf("hello world hardware_interfaces package\n");
-  return 0;
+    printf("hello world hardware_interfaces package\n");
+    return 0;
 }

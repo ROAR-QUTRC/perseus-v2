@@ -1,6 +1,6 @@
-# cd to the script location so everything searches in and goes to the right place
-SCRIPT_PATH="$(dirname $0)"
-cd $SCRIPT_PATH/..
+# cd to the Software root so it picks the flake properly
+SCRIPT_DIR="$(dirname "$(readlink -f $0)")"
+cd $SCRIPT_DIR/..
 
 # push built packages
 nix build .#rosCore --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar

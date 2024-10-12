@@ -26,7 +26,7 @@
             # add ros workspace functionality
             (import nix-ros-workspace { }).overlay
             # import ros workspace packages + fixes
-            (import ./ros_ws/overlay.nix)
+            (import ./overlay.nix)
           ];
           # Gazebo makes use of Freeimage.
           # Freeimage is blocked by default since it has a whole bunch of CVEs.
@@ -34,27 +34,7 @@
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
         };
 
-        # --- ROVER PACKAGES ---
-        /*
-          The intersection of the full ros package set and the workspace packages overlay
-          selects the fully resolved packages out of the ros package set,
-          getting us only the dev packages.
-
-          That then gets merged with the colcon-ignore package so colcon doesn't try
-          and build things from the (already built!) result symlink that nix build generates
-        */
-        dev-packages =
-          (builtins.intersectAttrs (import ./ros_ws/nix-packages/overlay.nix null null) pkgs.ros)
-          // {
-            inherit (pkgs) colcon-ignore;
-          };
-
-        # packages needed to build the workspace in the CLI
-        build-pkgs = {
-          inherit (pkgs) colcon python311;
-          inherit (pkgs.ros) ament-cmake-core python-cmake-module;
-        };
-        # CLI tooling
+        # useful CLI tooling
         cli-pkgs = {
           inherit (pkgs.ros)
             rviz2
@@ -64,37 +44,32 @@
             ;
         };
 
-        # packages for simulation
-        sim-pkgs = {
-          inherit (pkgs.ros)
-            gazebo-ros
-            gazebo-ros2-control
-            gazebo-ros-pkgs
-            controller-manager
-            topic-tools
-            robot-localization
-            slam-toolbox
-            imu-filter-madgwick
-            laser-filters
-            joint-state-publisher-gui
-            joint-state-broadcaster
-            ;
-        };
-
         # --- OUTPUT NIX WORKSPACES ---
         default = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace {
+          inherit (pkgs) devPackages;
           name = "ROAR";
-          devPackages = dev-packages;
           prebuiltPackages = cli-pkgs;
-          prebuiltShellPackages = build-pkgs;
         };
 
         # rover simulation environment with Gazebo, etc
         roverSim = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace {
+          inherit (pkgs) devPackages;
           name = "ROAR Simulation";
-          devPackages = dev-packages;
-          prebuiltPackages = cli-pkgs // sim-pkgs;
-          prebuiltShellPackages = build-pkgs;
+          prebuiltPackages = cli-pkgs // {
+            inherit (pkgs.ros)
+              gazebo-ros
+              gazebo-ros2-control
+              gazebo-ros-pkgs
+              # controller-manager
+              # topic-tools
+              # robot-localization
+              # slam-toolbox
+              # imu-filter-madgwick
+              # laser-filters
+              # joint-state-publisher-gui
+              # joint-state-broadcaster
+              ;
+          };
         };
 
         # --- LAUNCH SCRIPTS ---

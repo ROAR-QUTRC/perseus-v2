@@ -1,0 +1,13 @@
+{
+    "folders": [
+        {
+            "path": "."
+        },
+        // {
+        //     "path": "Software/native/can-interface"
+        // }
+    ],
+    "settings": {
+        "nixEnvSelector.suggestion": false
+    }
+}
