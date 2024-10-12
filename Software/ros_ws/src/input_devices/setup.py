@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'input_controllers'
+package_name = 'input_devices'
 
 setup(
     name=package_name,

@@ -11,7 +11,7 @@ buildRosPackage rec {
   pname = "ros-humble-input-controllers";
   version = "0.0.0";
 
-  src = ./../src/input_controllers;
+  src = ./../src/input_devices;
 
   buildType = "ament_python";
   checkInputs = [
