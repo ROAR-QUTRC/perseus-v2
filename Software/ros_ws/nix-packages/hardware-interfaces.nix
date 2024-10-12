@@ -5,6 +5,7 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
+  hi-can-lib,
 }:
 buildRosPackage rec {
   pname = "ros-humble-hardware-interfaces";
@@ -13,7 +14,10 @@ buildRosPackage rec {
   src = ./../src/hardware_interfaces;
 
   buildType = "ament_cmake";
-  buildInputs = [ ament-cmake ];
+  buildInputs = [
+    ament-cmake
+    hi-can-lib
+  ];
   checkInputs = [
     ament-lint-auto
     ament-lint-common
