@@ -5,15 +5,17 @@
   ament-copyright,
   ament-flake8,
   ament-pep257,
+  python3Packages,
   pythonPackages,
 }:
 buildRosPackage rec {
-  pname = "ros-humble-input-controllers";
+  pname = "ros-humble-input-devices";
   version = "0.0.0";
 
   src = ./../src/input_devices;
 
   buildType = "ament_python";
+  buildInputs = [ python3Packages.pygame ];
   checkInputs = [
     ament-copyright
     ament-flake8

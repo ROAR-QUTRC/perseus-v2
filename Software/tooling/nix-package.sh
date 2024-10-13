@@ -19,27 +19,26 @@ nix shell -i github:wentasah/ros2nix --command ros2nix --output-dir=$OUTPUT_DIR 
 echo "Formatting generated files"
 cd $OUTPUT_DIR
 nix fmt --quiet
-# cd $WORKSPACE_ROOT/native
-# nix fmt --quiet
-# cd $WORKSPACE_ROOT/shared
-# nix fmt --quiet
-# cd $WORKSPACE_ROOT/machines
-# nix fmt --quiet
 
-if ! git diff --cached --quiet >/dev/null
-then
+if [[ $* == *--no-commit* ]]; then
+    NO_COMMIT=1
+    echo "Will not commit changes"
+fi
+
+if [[ -z "$NO_COMMIT" ]] && ! git diff --cached --quiet >/dev/null; then
     HAS_GIT_STAGING=1
     echo "Stashing staged changes"
     git stash push -S >/dev/null
 fi
 
-echo "Staging changes"
-git add "${OUTPUT_DIR}"
-echo "Committing changes"
-git commit -m "$(date +%Y-%m-%dT%H:%M:%S) Nix packaging generation" >/dev/null
+if [[ -z "$NO_COMMIT" ]]; then
+    echo "Staging changes"
+    git add "${OUTPUT_DIR}"
+    echo "Committing changes"
+    git commit -m "$(date +%Y-%m-%dT%H:%M:%S) Nix packaging generation" >/dev/null
+fi
 
-if [ -v HAS_GIT_STAGING ]
-then
+if [[ -v HAS_GIT_STAGING ]]; then
     echo "Restoring git stash"
     git stash pop >/dev/null
 fi
