@@ -11,4 +11,5 @@ let
     ];
   };
 in
-builtins.intersectAttrs ((import ./overlay.nix) null null) pkgs
+# builtins.intersectAttrs ((import ./overlay.nix) null null) pkgs
+pkgs

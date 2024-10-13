@@ -53,6 +53,13 @@ let
   };
 in
 {
+  pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+    (pyFinal: pyPrev: {
+      colcon-clean = pyFinal.callPackage ./colcon/clean.nix { };
+      scantree = pyFinal.callPackage ./colcon/scantree.nix { };
+    })
+  ];
+  colcon = with final.python3Packages; prev.colcon.withExtensions [ colcon-clean ];
   # output package sets
   inherit ros colcon-ignore buildColconPackage;
   /*
