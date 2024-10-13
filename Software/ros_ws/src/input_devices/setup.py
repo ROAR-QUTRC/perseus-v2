@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'generic_controller = input_devices.generic_controller:main'
+            'generic_controller = input_devices.generic_controller:main',
+            'xbox_controller = input_devices.src.xbox_controller:main',
         ],
     },
 )
