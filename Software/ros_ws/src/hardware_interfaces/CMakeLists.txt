@@ -11,6 +11,7 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
+# drive node
 add_executable(drive src/drive.cpp)
 target_include_directories(drive PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -18,6 +19,26 @@ target_include_directories(drive PUBLIC
 target_compile_features(drive PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 install(TARGETS drive
+  DESTINATION lib/${PROJECT_NAME})
+
+# beacon node
+add_executable(beacon src/beacon.cpp)
+target_include_directories(beacon PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(beacon PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+install(TARGETS beacon
+  DESTINATION lib/${PROJECT_NAME})
+
+# excavation node
+add_executable(excavation src/excavation.cpp)
+target_include_directories(excavation PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(excavation PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+install(TARGETS excavation
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
@@ -43,3 +64,4 @@ if(NOT hi_can_lib_FOUND)
 endif()
 
 target_link_libraries(drive PRIVATE hi_can_lib)
+target_link_libraries(beacon PRIVATE hi_can_lib)
