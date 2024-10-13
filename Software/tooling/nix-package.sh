@@ -15,7 +15,7 @@ echo "Running ros2nix to generate new packaging files..."
 # -i (--ignore-environment) clears all environment variables and drops you into a shell
 # --command automatically runs the following command and exits the shell once it completes
 # nix run is the "better" way to do this, but it doesn't allow for complete environment isolation like the shell -i flag.
-nix shell -i github:wentasah/ros2nix --command ros2nix --output-dir=$OUTPUT_DIR --output-as-nix-pkg-name --no-default --distro humble $(find -name package.xml)
+nix shell -i github:wentasah/ros2nix --command ros2nix --output-dir="$OUTPUT_DIR" --output-as-nix-pkg-name --no-default --distro humble $(find "$ROS_WS" -name package.xml)
 echo "Formatting generated files"
 cd $OUTPUT_DIR
 nix fmt --quiet

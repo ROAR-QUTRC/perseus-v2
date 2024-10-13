@@ -5,8 +5,11 @@
   ament-copyright,
   ament-flake8,
   ament-pep257,
+  geometry-msgs,
   python3Packages,
   pythonPackages,
+  rclpy,
+  sensor-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-humble-input-devices";
@@ -21,6 +24,11 @@ buildRosPackage rec {
     ament-flake8
     ament-pep257
     pythonPackages.pytest
+  ];
+  propagatedBuildInputs = [
+    geometry-msgs
+    rclpy
+    sensor-msgs
   ];
 
   meta = {
