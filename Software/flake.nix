@@ -34,8 +34,9 @@
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
         };
 
-        # useful CLI tooling
-        cli-pkgs = {
+        devPackages = pkgs.devPackages // { inherit (pkgs) can-interface hi-can-lib; };
+        # useful tooling
+        toolingPkgs = {
           inherit (pkgs.ros)
             rviz2
             rosbag2
@@ -46,16 +47,16 @@
 
         # --- OUTPUT NIX WORKSPACES ---
         default = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace {
-          inherit (pkgs) devPackages;
+          inherit devPackages;
           name = "ROAR";
-          prebuiltPackages = cli-pkgs;
+          prebuiltPackages = toolingPkgs;
         };
 
         # rover simulation environment with Gazebo, etc
         roverSim = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace {
-          inherit (pkgs) devPackages;
+          inherit devPackages;
           name = "ROAR Simulation";
-          prebuiltPackages = cli-pkgs // {
+          prebuiltPackages = toolingPkgs // {
             inherit (pkgs.ros)
               gazebo-ros
               gazebo-ros2-control

@@ -2,7 +2,7 @@
 
 stdenv.mkDerivation rec {
   pname = "hi-can-lib";
-  version = "0.0.0";
+  version = "0.0.1";
 
   src = builtins.path {
     path = ./.;
