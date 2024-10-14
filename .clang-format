@@ -10,3 +10,6 @@ AccessModifierOffset: -4
 NamespaceIndentation: All
 FixNamespaceComments: false
 AlignConsecutiveMacros: true
+DerivePointerAlignment: false
+ReferenceAlignment: Left
+PointerAlignment: Left
