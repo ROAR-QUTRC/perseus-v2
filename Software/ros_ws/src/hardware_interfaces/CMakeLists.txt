@@ -65,3 +65,4 @@ endif()
 
 target_link_libraries(drive PRIVATE hi_can_lib)
 target_link_libraries(beacon PRIVATE hi_can_lib)
+target_link_libraries(excavation PRIVATE hi_can_lib)
