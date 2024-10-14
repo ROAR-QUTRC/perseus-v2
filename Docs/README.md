@@ -197,6 +197,8 @@ If a getter or setter for a variable is written, they must be prefixed with `get
 
 When accessing aggregate classes (lists, maps, etc.), the function should be prefixed with `add`, `get`, `remove`, or `set` (depending on the type of the aggregate, other prefixes may be appropriate), and the plurality of the variable modified as needed (such as `getConfiguration` accessing `_configurations`).
 
+Note that for some classes, it may not make sense for them to be mutatable, and in these cases, providing only getters is perfectly acceptable.
+
 #### Acceptable
 
 ```cpp
@@ -932,9 +934,11 @@ Finally, you should be avoiding manual memory management at all costs if you can
 
 The STL (Standard Template Library) is _massive_ in modern C++ and contains a huge number of solutions to common problems - the most common likely being `std::string` and `std::vector`. Less well known solutions are libraries such as `<atomic>`, `<chrono>`, and `<tuple>` - all of which solve common problems well. Before implementing a new solution, take half a minute to do a search and see if the STL has a solution already.
 
-### `auto` and the STL
+### When to use `auto`
 
-Using the STL can result in... interesting... types sometimes - if you don't particularly care what type the variable _is_ (such as `std::vector::begin`), you may use the `auto` (or `const auto`, or `auto&`, or `const auto&` as appropriate) keyword instead of specifying the complete type - **but only do this where you know exactly what will happen!** It is very easy for the `auto` keyword to apply a type that you didn't expect, introducing bugs later down the line. It should only be used in cases where the type is fully specified and the intended use is clear.
+The `auto` keyword should only be used in cases where it is explicitly clear what the type is. It is very easy to accidentally perform an implicit cast with `auto` to a type you didn't intend to use, and as such should be avoided for standard primitives. There are also cases where explicitly specifying the type may result in clearer code - in these cases don't use it.
+
+Using the STL can result in... interesting... types sometimes - if you don't particularly care what type the variable _is_ (such as `std::vector::begin`), you may use the `auto` (or `const auto`, or `auto&`, or `const auto&` as appropriate) keyword instead of specifying the complete type - **but only do this where you know exactly what will happen!** It should only be used in cases where the type is fully specified and the intended use is clear.
 
 ### Exception Handling
 
