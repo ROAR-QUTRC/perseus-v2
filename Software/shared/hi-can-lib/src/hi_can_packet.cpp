@@ -5,7 +5,7 @@
 using namespace hi_can;
 
 Packet::Packet(const can_address_t& address, const std::unique_ptr<void>& data, const size_t& dataLen, const bool& isRTR)
-    : _address(address), _dataLen(dataLen), _isRTR(isRTR)
+    : _dataLen(dataLen), _address(address), _isRTR(isRTR)
 {
     if (address > MAX_ADDRESS)
         throw std::invalid_argument("Address is invalid");

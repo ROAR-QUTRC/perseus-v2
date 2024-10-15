@@ -32,13 +32,13 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   VERSION ${PROJECT_VERSION}
 )
 
-# check if hi_can_client is already present (Nix build), if not, add its subdirectory
-find_package(hi_can_client QUIET)
-if(NOT hi_can_client_FOUND)
-    message(STATUS "hi_can_client not found, adding subdirectory...")
+# check if hi_can_lib is already present (Nix build), if not, add its subdirectory
+find_package(hi_can_lib QUIET)
+if(NOT hi_can_lib_FOUND)
+    message(STATUS "hi_can_lib not found, adding subdirectory...")
     # add the directory with its CMakeLists.txt
-    add_subdirectory(../../shared/hi-can-client)
+    add_subdirectory(../../shared/hi-can-lib)
 endif()
 
 # Link in libraries needed
-target_link_libraries(${PROJECT_NAME} PRIVATE hi_can_client)
+target_link_libraries(${PROJECT_NAME} PRIVATE hi_can_lib)
