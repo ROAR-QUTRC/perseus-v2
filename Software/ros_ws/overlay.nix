@@ -71,7 +71,7 @@ in
     and build things from the (already built!) result symlink that nix build generates
   */
   # output dev packages to make workspace package selection easier
-  devPackages = (builtins.intersectAttrs (packaging-overlay null null) final.ros) // {
+  rosDevPackages = (builtins.intersectAttrs (packaging-overlay null null) final.ros) // {
     inherit colcon-ignore; # always include colcon-ignore in dev packages
   };
 }

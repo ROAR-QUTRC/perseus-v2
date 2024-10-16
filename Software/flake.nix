@@ -34,7 +34,7 @@
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
         };
 
-        devPackages = pkgs.devPackages // { inherit (pkgs) can-interface hi-can-lib; };
+        devPackages = pkgs.rosDevPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # useful tooling
         toolingPkgs = {
           inherit (pkgs.ros)
