@@ -31,6 +31,7 @@ namespace hi_can
             memcpy(&data, _data, sizeof(T));
             return data;
         }
+        const uint8_t* getData() const { return _data; }
 
         void setData(const std::unique_ptr<void>& data, const size_t& dataLen);
         template <typename T>
@@ -39,6 +40,8 @@ namespace hi_can
             setData(std::make_unique<T>(data), sizeof(T));
         }
 
+        uint8_t getDataLen() const { return _dataLen; }
+
         const can_address_t& getAddress() const { return _address; }
         void setAddress(const can_address_t& address) { _address = address; }
 
@@ -46,7 +49,7 @@ namespace hi_can
         void setIsRTR(const bool& isRTR) { _isRTR = isRTR; }
 
     private:
-        uint8_t _data[MAX_PACKET_LEN] = {0};
+        uint8_t _data[MAX_PACKET_LEN]{};
         uint8_t _dataLen = 0;
         can_address_t _address = MAX_ADDRESS;
         bool _isRTR = false;

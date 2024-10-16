@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 # Set the project name and version
-project(hi_can_client VERSION 0.0.1 LANGUAGES CXX)
+project(hi_can_net VERSION 0.0.1 LANGUAGES CXX)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Werror)

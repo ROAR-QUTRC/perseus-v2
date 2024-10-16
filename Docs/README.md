@@ -422,6 +422,10 @@ This means using `#include <cstlib>` instead of `#include <stdlib.h>` and simila
 #include <stdint.h> // don't do this
 ```
 
+### Include types
+
+In C++, there are two types of `#include` directive - `#include <filename.hpp>` and `#include "filename.hpp"`. The former searches for files on the compiler include path (eg STL headers, external libraries, etc) before project paths (if it searches project paths at all). Quoted include directives search the project paths first, *then* the system include paths. As such, include directives using quotes are to be used for files within the same project, and angle bracket includes should be used for everything else. This ensures that even in the event of a naming conflict, the correct file will usually be selected. It also serves to differentiate intention - that is, *using* a behaviour as opposed to (usually) *implementing* a behaviour.
+
 ### Assume nothing
 
 Make no assumptions about files being included before whatever you're writing. If your header file needs another file to be included before it, **do not** assume that it will be included. Include it yourself. If you need a certain variable to be declared, declare it. If your code can be broken by including it into a different file, or with a different include order of files, it needs to be fixed.
@@ -549,6 +553,8 @@ class Settings
 
 Source code files should all be located under the `src/` directory inside the project, and include files under `include/`. If the application is a program, the entry point should be located inside a file named `main.cpp`. If, as in the case of ROS nodes, this is not applicable, name the source files according to what they _are_ - this will primarily mean naming them with nouns and adjectives.
 
+Libraries may need internal, private header files - if necessary, these should be present under a `priv_include` directory, and the builder/installer should be configured appropriately to not include them in final outputs.
+
 ## Variable Declarations and Naming Standards
 
 ### Capitalisation
@@ -593,14 +599,14 @@ void loadSettingsFromFile(void) { };
 
 ### Namespaces
 
-There should be very little need for namespaces in ROAR software (except perhaps for common libraries). However, if you do need a namespace, keep it to all lowercase single words, and if that's impossible, two words of `snake_case` is also acceptable.
+There is very little need for namespaces in ROAR software (except for common libraries such as `hi-can-lib` and associated libs under `hi_can`). However, if you do need a namespace, keep it to all lowercase single words, and if that's impractical, multiple words of `snake_case` is also acceptable - just keep it as short as possible while remaining understandable.
 
 #### Acceptable
 
 ```cpp
-::rover
-::rover::drive
-::rover::drive::traction_control
+::hi_can
+::hi_can::drive
+::hi_can::drive::traction_control
 ```
 
 #### Incorrect
@@ -910,7 +916,7 @@ Although [implicit conversions](https://en.cppreference.com/w/cpp/language/impli
 
 ### Prefer pass-by-reference-to-const to pass-by-value
 
-If this is not done, it means that values can get _copied_ around, which can have performance hits, especially if the objects being copied are complex classes that need to run copy constructors and/or destructors to do so. However, be aware that this is best applied to complex types (classes) and should not be used for things like numeric types.
+If this is not done, it means that values can get _copied_ around, which can have performance hits, especially if the objects being copied are complex classes that need to run copy constructors and/or destructors to do so.
 
 #### Acceptable
 
@@ -950,7 +956,7 @@ Additionally, you should make `try`/`catch` blocks as short as possible.
 
 Error codes should be provided by an `enum` (or `enum class` if appropriate), not integers. On this, do not use `#define`s to specify error codes.
 
-Additionally, prefer to use an appropriate STL type such as `std::optional` rather than having the function _maybe_ set an output parameter and return an error code. This both makes intentions clearer and forces programmers using the API to handle potential errors adequately, since the compiler will throw errors otherwise.
+Additionally, prefer to use an appropriate STL type such as `std::optional` rather than having the function _maybe_ set an output parameter and return an error code. This both makes intentions clearer and forces programmers to think about error handling explicitly, rather than simply ignoring a return value.
 
 ### Avoid `#define` statements (mostly)
 
