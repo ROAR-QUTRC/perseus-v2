@@ -2,14 +2,16 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>autonomy</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="dingo.australia@gmail.com">dingo</maintainer>
+  <version>0.0.1</version>
+  <description>QUTRC Autonomy for robots. Includes Mapping and Localisation based on laserscan and imu data</description>
+  <maintainer email="dingo.australia@gmail.com">Nigel</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
+  <depend>slam_toolbox</depend>
+  <depend>nav2_bringup</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
