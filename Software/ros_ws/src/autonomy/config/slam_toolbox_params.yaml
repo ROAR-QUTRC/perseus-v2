@@ -1,0 +1,49 @@
+slam_toolbox:
+  ros__parameters:
+    # Existing parameters...
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_footprint
+    scan_topic: /scan
+    mode: mapping
+
+    # IMU-related parameters
+    use_imu: true
+    imu_topic: /imu
+    imu_angular_scale: 1.0
+    imu_linear_scale: 1.0
+    imu_use_rotational_information: true
+    imu_use_translational_information: true
+
+    # Adjusted parameters for tight indoor environment
+    max_laser_range: 5.0
+    map_update_interval: 1.0
+    resolution: 0.02
+    transform_timeout: 0.1
+    tf_buffer_duration: 30.
+    stack_size_to_use: 40000000
+    enable_interactive_mode: true
+
+    # Fine-tuning parameters
+    scan_buffer_size: 15
+    scan_buffer_maximum_scan_distance: 10.0
+    link_match_minimum_response_fine: 0.2
+    link_scan_maximum_distance: 1.0
+    loop_search_maximum_distance: 2.0
+    do_loop_closing: true
+    loop_match_minimum_chain_size: 10
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.35
+    loop_match_minimum_response_fine: 0.5
+
+    # Trajectory smoothing
+    minimum_time_interval: 0.3
+    minimum_distance_interval: 0.2
+
+    # Additional IMU-related parameters
+    use_imu_yaw: true
+    imu_yaw_offset: 0.0
+    imu_calibration_x_offset: 0.0
+    imu_calibration_y_offset: 0.0
+    imu_calibration_z_offset: 0.0
+    imu_angular_velocity_calibration: 1.0
