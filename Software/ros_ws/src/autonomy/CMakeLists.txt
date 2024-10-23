@@ -8,6 +8,8 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(slam_toolbox REQUIRED)
+find_package(nav2_bringup REQUIRED)
 
 # Add the executable
 add_executable(mapper src/mapper.cpp)
