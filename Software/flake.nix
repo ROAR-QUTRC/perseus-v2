@@ -6,13 +6,18 @@
       url = "github:hacker1024/nix-ros-workspace";
       flake = false;
     };
+    nixGL = {
+      url = "github:nix-community/nixGL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
       self,
+      nixpkgs,
       nix-ros-overlay,
       nix-ros-workspace,
-      nixpkgs,
+      nixGL,
     }:
     nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (
       system:
@@ -77,6 +82,9 @@
         perseus-main = pkgs.writeShellScriptBin "perseus-main" ''
           ${default}/bin/ros2 pkg list
         '';
+        rviz2-nixgl = pkgs.writeShellScriptBin "rviz2-nixgl" ''
+          NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure "github:nix-community/nixGL" "${default}/bin/rviz2" -- "$@"
+        '';
       in
       {
         # rover development environment
@@ -96,6 +104,10 @@
           default = {
             type = "app";
             program = "${perseus-main}/bin/perseus-main";
+          };
+          rviz2 = {
+            type = "app";
+            program = "${rviz2-nixgl}/bin/rviz2-nixgl";
           };
         };
         formatter = pkgs.nixfmt-rfc-style;
