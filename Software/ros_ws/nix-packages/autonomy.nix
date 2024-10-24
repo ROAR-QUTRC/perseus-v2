@@ -5,11 +5,13 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
+  nav2-bringup,
   rclcpp,
+  slam-toolbox,
 }:
 buildRosPackage rec {
   pname = "ros-humble-autonomy";
-  version = "0.0.0";
+  version = "0.0.1";
 
   src = ./../src/autonomy;
 
@@ -19,11 +21,15 @@ buildRosPackage rec {
     ament-lint-auto
     ament-lint-common
   ];
-  propagatedBuildInputs = [ rclcpp ];
+  propagatedBuildInputs = [
+    nav2-bringup
+    rclcpp
+    slam-toolbox
+  ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "TODO: Package description";
+    description = "QUTRC Autonomy for robots. Includes Mapping and Localisation based on laserscan and imu data";
     license = with lib.licenses; [ "TODO-License-declaration" ];
   };
 }
