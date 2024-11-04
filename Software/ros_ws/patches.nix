@@ -52,6 +52,18 @@ let
       patches = patches ++ [ ./patches/fix-nav2-constrained-smoother.patch ];
     }
   );
+  nav2-mppi-controller = rosPrev.nav2-mppi-controller.overrideAttrs (
+    {
+      CXXFLAGS ? "",
+      ...
+    }:
+    {
+      # WARNING: This is probably extremely bad, but it makes it build.
+      # This package builds on Ubuntu normally, but not in Nix with the same dependencies.
+      # so, this makes it build.
+      CXXFLAGS = CXXFLAGS + " -Wno-error=array-bounds";
+    }
+  );
   nav2-planner = rosPrev.nav2-planner.overrideAttrs (
     {
       CXXFLAGS ? "",
@@ -83,9 +95,6 @@ let
       CXXFLAGS = CXXFLAGS + " -Wno-error=maybe-uninitialized";
     }
   );
-
-  # until the xtensor compilation errors in this package are fixed, just remove mppi controller for now
-  nav2-mppi-controller = prev.hello;
 
   # output package set
   ros = {

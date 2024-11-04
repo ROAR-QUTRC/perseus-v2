@@ -39,7 +39,13 @@
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
         };
 
-        devPackages = pkgs.rosDevPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
+        devPackages =
+          pkgs.rosDevPackages
+          // pkgs.sharedDevPackages
+          // pkgs.nativeDevPackages
+          // {
+            inherit (pkgs.ros) nav2-mppi-controller;
+          };
         # useful tooling
         toolingPkgs = {
           inherit (pkgs.ros)
@@ -47,6 +53,7 @@
             rosbag2
             teleop-twist-keyboard
             demo-nodes-cpp
+            tf2-eigen
             ;
         };
 
