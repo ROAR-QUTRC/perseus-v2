@@ -1,7 +1,24 @@
 let
-  nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-24.05";
-  nix-ros-overlay = fetchTarball "https://github.com/lopsided98/nix-ros-overlay/archive/master.tar.gz";
-  nix-ros-workspace = fetchTarball "https://github.com/hacker1024/nix-ros-workspace/archive/master.tar.gz";
+
+  lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+  nixpkgs = fetchTarball {
+    url =
+      lock.nodes.nixpkgs.locked.url
+        or "https://github.com/NixOS/nixpkgs/archive/${lock.nodes.nixpkgs.locked.rev}.tar.gz";
+    sha256 = lock.nodes.nixpkgs.locked.narHash;
+  };
+  nix-ros-overlay = fetchTarball {
+    url =
+      lock.nodes.nix-ros-overlay.locked.url
+        or "https://github.com/lopsided98/nix-ros-overlay/archive/${lock.nodes.nix-ros-overlay.locked.rev}.tar.gz";
+    sha256 = lock.nodes.nix-ros-overlay.locked.narHash;
+  };
+  nix-ros-workspace = fetchTarball {
+    url =
+      lock.nodes.nix-ros-workspace.locked.url
+        or "https://github.com/NixOS/nixpkgs/archive/${lock.nodes.nix-ros-workspace.locked.rev}.tar.gz";
+    sha256 = lock.nodes.nix-ros-workspace.locked.narHash;
+  };
   pkgs = import nixpkgs {
     config = { };
     overlays = [
@@ -11,5 +28,4 @@ let
     ];
   };
 in
-# builtins.intersectAttrs ((import ./overlay.nix) null null) pkgs
 pkgs
