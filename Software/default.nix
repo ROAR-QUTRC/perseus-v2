@@ -20,7 +20,6 @@ let
     sha256 = lock.nodes.nix-ros-workspace.locked.narHash;
   };
   pkgs = import nixpkgs {
-    config = { };
     overlays = [
       (import (nix-ros-overlay + "/overlay.nix"))
       (import nix-ros-workspace { }).overlay

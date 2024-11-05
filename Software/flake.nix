@@ -39,13 +39,7 @@
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
         };
 
-        devPackages =
-          pkgs.rosDevPackages
-          // pkgs.sharedDevPackages
-          // pkgs.nativeDevPackages
-          // {
-            inherit (pkgs.ros) nav2-mppi-controller;
-          };
+        devPackages = pkgs.rosDevPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # useful tooling
         toolingPkgs = {
           inherit (pkgs.ros)
@@ -53,7 +47,6 @@
             rosbag2
             teleop-twist-keyboard
             demo-nodes-cpp
-            tf2-eigen
             ;
         };
 
@@ -69,19 +62,7 @@
           inherit devPackages;
           name = "ROAR Simulation";
           prebuiltPackages = toolingPkgs // {
-            inherit (pkgs.ros)
-              gazebo-ros
-              gazebo-ros2-control
-              gazebo-ros-pkgs
-              # controller-manager
-              # topic-tools
-              # robot-localization
-              # slam-toolbox
-              # imu-filter-madgwick
-              # laser-filters
-              # joint-state-publisher-gui
-              # joint-state-broadcaster
-              ;
+            inherit (pkgs.ros) gazebo-ros gazebo-ros2-control gazebo-ros-pkgs;
           };
         };
 

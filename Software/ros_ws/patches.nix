@@ -58,9 +58,8 @@ let
       ...
     }:
     {
-      # WARNING: This is probably extremely bad, but it makes it build.
-      # This package builds on Ubuntu normally, but not in Nix with the same dependencies.
-      # so, this makes it build.
+      # have to clear this warning error - it was introduced with GCC 13,
+      # which adds an extra array bounds check, and the package is compiled with -Werror, so it fails otherwise
       CXXFLAGS = CXXFLAGS + " -Wno-error=array-bounds";
     }
   );
@@ -73,19 +72,15 @@ let
       CXXFLAGS = CXXFLAGS + " -Wno-error=maybe-uninitialized";
     }
   );
-  # for some reason overrideScope is not properly replacing nav-2d-utils as an input to this package,
-  # so we have to do it manually
-  nav2-smoother =
-    (rosPrev.nav2-smoother.overrideAttrs (
-      {
-        CXXFLAGS ? "",
-        ...
-      }:
-      {
-        CXXFLAGS = CXXFLAGS + " -Wno-error=maybe-uninitialized";
-      }
-    )).override
-      { inherit nav-2d-utils; };
+  nav2-smoother = rosPrev.nav2-smoother.overrideAttrs (
+    {
+      CXXFLAGS ? "",
+      ...
+    }:
+    {
+      CXXFLAGS = CXXFLAGS + " -Wno-error=maybe-uninitialized";
+    }
+  );
   nav2-waypoint-follower = rosPrev.nav2-waypoint-follower.overrideAttrs (
     {
       CXXFLAGS ? "",
