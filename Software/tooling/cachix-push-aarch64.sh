@@ -1,6 +1,8 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -p cachix jq -i bash
 
+set -e
+
 # cd to the Software root so it picks the flake properly
 SCRIPT_DIR="$(dirname "$(readlink -f $0)")"
 cd $SCRIPT_DIR/..

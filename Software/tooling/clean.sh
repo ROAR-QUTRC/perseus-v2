@@ -1,5 +1,8 @@
 #! /usr/bin/env bash
-shopt -s globstar  # Enable globstar for recursive globbing
+
+set -e
+
+shopt -s globstar # Enable globstar for recursive globbing
 SCRIPT_DIR="$(dirname "$(readlink -f $0)")"
 PROJECT_ROOT="$SCRIPT_DIR/../.."
 cd $PROJECT_ROOT

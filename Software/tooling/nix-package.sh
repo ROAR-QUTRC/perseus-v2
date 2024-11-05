@@ -1,3 +1,5 @@
+set -e
+
 # cd to the script location so everything searches in and goes to the right place
 SCRIPT_DIR="$(dirname "$(readlink -f $0)")"
 WORKSPACE_ROOT="$(dirname "$SCRIPT_DIR")"

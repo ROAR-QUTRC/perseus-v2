@@ -1,6 +1,8 @@
 SCRIPT_DIR="$(dirname "$(readlink -f $0)")"
 WORKSPACE_ROOT="$(dirname "$SCRIPT_DIR")"
 
+set -e
+
 cd "${WORKSPACE_ROOT}/ros_ws"
 nix fmt --quiet
 cd "${WORKSPACE_ROOT}/native"
