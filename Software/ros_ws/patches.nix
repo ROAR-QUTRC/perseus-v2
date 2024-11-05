@@ -72,15 +72,19 @@ let
       CXXFLAGS = CXXFLAGS + " -Wno-error=maybe-uninitialized";
     }
   );
-  nav2-smoother = rosPrev.nav2-smoother.overrideAttrs (
-    {
-      CXXFLAGS ? "",
-      ...
-    }:
-    {
-      CXXFLAGS = CXXFLAGS + " -Wno-error=maybe-uninitialized";
-    }
-  );
+  # for some reason overrideScope is not properly replacing nav-2d-utils as an input to this package,
+  # so we have to do it manually
+  nav2-smoother =
+    (rosPrev.nav2-smoother.overrideAttrs (
+      {
+        CXXFLAGS ? "",
+        ...
+      }:
+      {
+        CXXFLAGS = CXXFLAGS + " -Wno-error=maybe-uninitialized";
+      }
+    )).override
+      { inherit nav-2d-utils; };
   nav2-waypoint-follower = rosPrev.nav2-waypoint-follower.overrideAttrs (
     {
       CXXFLAGS ? "",
