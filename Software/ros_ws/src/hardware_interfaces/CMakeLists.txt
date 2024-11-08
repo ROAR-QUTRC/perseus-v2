@@ -16,7 +16,7 @@ add_executable(drive src/drive.cpp)
 target_include_directories(drive PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(drive PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(drive PUBLIC c_std_99 cxx_std_20)  # Require C99 and C++20
 
 install(TARGETS drive
   DESTINATION lib/${PROJECT_NAME})
@@ -26,7 +26,7 @@ add_executable(beacon src/beacon.cpp)
 target_include_directories(beacon PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(beacon PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(beacon PUBLIC c_std_99 cxx_std_20)  # Require C99 and C++20
 
 install(TARGETS beacon
   DESTINATION lib/${PROJECT_NAME})
@@ -36,7 +36,7 @@ add_executable(excavation src/excavation.cpp)
 target_include_directories(excavation PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(excavation PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(excavation PUBLIC c_std_99 cxx_std_20)  # Require C99 and C++20
 
 install(TARGETS excavation
   DESTINATION lib/${PROJECT_NAME})
