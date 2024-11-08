@@ -946,17 +946,27 @@ The `auto` keyword should only be used in cases where it is explicitly clear wha
 
 Using the STL can result in... interesting... types sometimes - if you don't particularly care what type the variable _is_ (such as `std::vector::begin`), you may use the `auto` (or `const auto`, or `auto&`, or `const auto&` as appropriate) keyword instead of specifying the complete type - **but only do this where you know exactly what will happen!** It should only be used in cases where the type is fully specified and the intended use is clear.
 
-### Exception Handling
+### Use of exceptions
 
-Exceptions are, as the name suggests, for _exceptional_ behaviour. Your code should both catch "expected" exceptions, and throw exceptions if it encounters _unexpected_ states. Expected or naturally-occurring errors, however, should be handled using other methods.
+Exceptions are, as the name suggests, for _exceptional_ behaviour. Before writing code which throws exceptions _or_ returns an error code, read through, at the very least, the first 8 items of the [ISO C++](https://isocpp.org/wiki/faq/exceptions) exceptions and error handling page - everything in that document is applicable and should be followed, but the first entries are the most important. The most important points are that exceptions separate the *happy path* (everything succeeded) from the *bad path* (errors occured). Exceptions should not be used as another way to return ordinary data from a function - they should be reserved for errors only. Additionally, they should not be used for flow control - this is what if/else statements are for! Your code should both catch "expected" exceptions, and throw exceptions if it encounters _unexpected_ states. Errors which are part of normal operation, however, should perhaps be handled in other ways (eg `std::optional`). Good reasons to throw exceptions are:
+- An error occurs inside a class constructor (**this is what makes RAII possible**)
+- A syscall fails (eg `open()` fails)
 
-Additionally, you should make `try`/`catch` blocks as short as possible.
+*Potentially* valid reasons to throw exceptions, but which require more consideration, are:
+- The function received invalid data (depending on the function and what it's meant to do, this could be a valid or invalid reason)
+
+*Bad* reasons to throw exceptions are:
+- An expected and recoverable error occured
+- Internal state is corrupted or assumptions are violated (violations of invariants) - this is what `assert` is for!
+- You want to return a different data type from your function - use `std::variant` or redesign your code.
+
+Exceptions should all be derived from the `std::exception` base class. No exceptions (pun intended). You should also **never ever** throw an exception from a class *destructor* since this causes a whole bunch of nasty behaviour - there's no good way to handle this happening. Finally, try to make `try`/`catch` blocks as short as is reasonably possible.
 
 ### Error Return and Retrieval
 
 Error codes should be provided by an `enum` (or `enum class` if appropriate), not integers. On this, do not use `#define`s to specify error codes.
 
-Additionally, prefer to use an appropriate STL type such as `std::optional` rather than having the function _maybe_ set an output parameter and return an error code. This both makes intentions clearer and forces programmers to think about error handling explicitly, rather than simply ignoring a return value.
+Additionally, do not use return codes to specify a function's success/failure. Either use exceptions to signal that the function failed entirely, or use an appropriate STL type such as `std::optional` to make the function's operation and usage clear. This both makes intentions clearer _and_ forces programmers to think about error handling explicitly, rather than simply ignoring a return value. However, unless the function's behaviour is documented, this is useless! Make sure you document all possible return values or exceptions clearly.
 
 ### Avoid `#define` statements (mostly)
 
