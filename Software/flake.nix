@@ -78,6 +78,7 @@
         # rover development environment
         packages = {
           inherit default roverSim;
+          inherit (pkgs) ros;
           # used only to split up the build for Cachix - this particular package builds only the ROS core,
           # thus reducing RAM required (slightly... still need a fair bit of swap space)
           rosCore = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace { name = "ROS Core"; };
