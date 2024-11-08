@@ -3,7 +3,7 @@
 <package format="3">
   <name>autonomy</name>
   <version>0.0.1</version>
-  <description>QUTRC Autonomy for robots. Includes Mapping and Localisation based on laserscan and imu data</description>
+  <description>ROAR Autonomy software. Includes Mapping and Localisation based on laserscan and imu data</description>
   <maintainer email="dingo.australia@gmail.com">Nigel</maintainer>
   <license>TODO: License declaration</license>
 
