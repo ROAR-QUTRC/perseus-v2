@@ -40,8 +40,8 @@
         };
 
         devPackages = pkgs.rosDevPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
-        # useful tooling
-        toolingPkgs = {
+        # Packages which should be available in the shell, both in development and production
+        standardPkgs = {
           inherit (pkgs.ros)
             rviz2
             rosbag2
@@ -49,21 +49,27 @@
             demo-nodes-cpp
             ;
         };
+        # Packages which should be available only in the dev shell
+        devShellPkgs = {
+          inherit (pkgs) man-pages man-pages-posix stdmanpages;
+        };
 
         # --- OUTPUT NIX WORKSPACES ---
         default = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace {
           inherit devPackages;
           name = "ROAR";
-          prebuiltPackages = toolingPkgs;
+          prebuiltPackages = standardPkgs;
+          prebuiltShellPackages = devShellPkgs;
         };
 
         # rover simulation environment with Gazebo, etc
         roverSim = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace {
           inherit devPackages;
           name = "ROAR Simulation";
-          prebuiltPackages = toolingPkgs // {
+          prebuiltPackages = standardPkgs // {
             inherit (pkgs.ros) gazebo-ros gazebo-ros2-control gazebo-ros-pkgs;
           };
+          prebuiltShellPackages = devShellPkgs;
         };
 
         # --- LAUNCH SCRIPTS ---
