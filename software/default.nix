@@ -1,5 +1,8 @@
 let
+  # --- CONFIGURATION ---
+  rosDistro = "humble";
 
+  # --- FLAKE INPUTS ---
   lock = builtins.fromJSON (builtins.readFile ./flake.lock);
   nixpkgs = fetchTarball {
     url =
@@ -19,11 +22,12 @@ let
         or "https://github.com/NixOS/nixpkgs/archive/${lock.nodes.nix-ros-workspace.locked.rev}.tar.gz";
     sha256 = lock.nodes.nix-ros-workspace.locked.narHash;
   };
+  # --- OUTPUT PACKAGES ---
   pkgs = import nixpkgs {
     overlays = [
       (import (nix-ros-overlay + "/overlay.nix"))
       (import nix-ros-workspace { }).overlay
-      (import ./overlay.nix)
+      (import ./overlay.nix rosDistro)
     ];
   };
 in

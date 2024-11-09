@@ -18,11 +18,10 @@
       system:
       let
         # --- INPUT PARAMETERS ---
-        PRODUCTION_DOMAIN_ID = 42;
-        DEVELOPMENT_DOMAIN_ID = 51;
+        rosDistro = "humble";
 
-        WORKSPACE_NAME = "ROAR";
-        WORKSPACE_SIM_NAME = "ROAR Simulation";
+        productionDomainId = 42;
+        devDomainId = 51;
 
         # --- NIX PACKAGES IMPORT AND OVERLAYS ---
         pkgs = import nixpkgs {
@@ -30,12 +29,17 @@
           overlays = [
             # get the ros packages
             nix-ros-overlay.overlays.default
+            # fix colcon (silence warnings, add extensions)
+            (import ./ros_ws/colcon/overlay.nix)
             # add ros workspace functionality
             (import nix-ros-workspace { }).overlay
             # import ros workspace packages + fixes
-            (import ./overlay.nix)
+            (import ./overlay.nix rosDistro)
+            # finally, alias the output to pkgs.ros to make it easier to use
             (final: prev: {
-              ros = prev.ros.overrideScope (rosFinal: rosPrev: { manualDomainId = DEVELOPMENT_DOMAIN_ID; });
+              ros = final.rosPackages.${rosDistro}.overrideScope (
+                rosFinal: rosPrev: { manualDomainId = toString productionDomainId; }
+              );
             })
           ];
           # Gazebo makes use of Freeimage.
@@ -43,15 +47,13 @@
           # This means we have to explicitly permit Freeimage to allow Gazebo to run.
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
         };
-        productionRosPkgs = pkgs.ros.overrideScope (
-          rosFinal: rosPrev: { manualDomainId = PRODUCTION_DOMAIN_ID; }
-        );
 
         # --- INPUT PACKAGE SETS ---
-        devPackages = pkgs.rosDevPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
+        devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
         standardPkgs = {
           inherit (pkgs.ros)
+            natrviz
             rviz2
             rosbag2
             teleop-twist-keyboard
@@ -68,37 +70,62 @@
         };
 
         # --- OUTPUT NIX WORKSPACES ---
+        # function to build a ROS workspace which modifies the dev shell hook to set up environment variables
         mkWorkspace =
-          ros: name: additionalPkgs:
-          ros.callPackage ros.buildROSWorkspace {
-            inherit devPackages name;
-            prebuiltPackages = standardPkgs // additionalPkgs;
-            prebuiltShellPackages = devShellPkgs;
-          };
+          {
+            ros,
+            name ? "ROAR",
+            additionalPkgs ? { },
+          }:
+          let
+            workspace = ros.callPackage ros.buildROSWorkspace {
+              inherit devPackages name;
+              prebuiltPackages = standardPkgs // additionalPkgs;
+              prebuiltShellPackages = devShellPkgs;
+            };
+            env = workspace.env.overrideAttrs (
+              {
+                shellHook ? "",
+                ...
+              }:
+              {
+                # override the shell hook to set some environment variables
+                shellHook =
+                  shellHook
+                  + ''
+                    # set the ROS_DOMAIN_ID to the development ID, since by default it's set to the production ID
+                    export ROS_DOMAIN_ID=${toString devDomainId}
+                    # tell colcon to use our defaults file (uses --symlink-install by default)
+                    export COLCON_DEFAULTS_FILE=${./ros_ws/colcon_defaults.yaml}
+                  '';
+              }
+            );
+          in
+          # override the .env (cli environment) attribute with our modifications
+          workspace // { inherit env; };
 
-        # standard workspace
-        devDefault = mkWorkspace pkgs.ros WORKSPACE_NAME { };
-        productionDefault = mkWorkspace productionRosPkgs WORKSPACE_NAME { };
-        # rover simulation environment with Gazebo, etc
-        devSimulation = mkWorkspace pkgs.ros WORKSPACE_SIM_NAME simPkgs;
-        productionSimulation = mkWorkspace productionRosPkgs WORKSPACE_SIM_NAME simPkgs;
+        # Actually build the workspaces
+        default = mkWorkspace {
+          inherit (pkgs) ros;
+          name = "ROAR";
+        };
+        simulation = mkWorkspace {
+          inherit (pkgs) ros;
+          name = "ROAR Simulation";
+          additionalPkgs = simPkgs;
+        };
 
         # --- LAUNCH SCRIPTS ---
         perseus-main = pkgs.writeShellScriptBin "perseus-main" ''
-          ${productionDefault}/bin/ros2 pkg list
-        '';
-        rviz2-nixgl = pkgs.writeShellScriptBin "rviz2-nixgl" ''
-          NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure "github:nix-community/nixGL" "${productionDefault}/bin/rviz2" -- "$@"
+          ${default}/bin/ros2 pkg list
         '';
       in
       {
         # rover development environment
         packages = {
-          inherit (pkgs) ros;
-          default = productionDefault;
-          simulation = productionSimulation;
-          dev = devDefault;
-          devSimulation = devSimulation;
+          # note: as well as adding the output workspaces,
+          # we also output the entire package set to make certain debugging easier
+          inherit default simulation pkgs;
 
           # used only to split up the build for Cachix - this particular package builds only the ROS core,
           # thus reducing RAM required (slightly... still need a fair bit of swap space)
@@ -106,20 +133,14 @@
         };
 
         devShells = {
-          default = devDefault.env;
-          simulation = devSimulation.env;
-          production = productionDefault.env;
-          productionSimulation = productionSimulation.env;
+          default = default.env;
+          simulation = simulation.env;
         };
 
         apps = {
           default = {
             type = "app";
-            program = "${perseus-main}/bin/perseus-main";
-          };
-          rviz2 = {
-            type = "app";
-            program = "${rviz2-nixgl}/bin/rviz2-nixgl";
+            program = "${pkgs.lib.getExe perseus-main}";
           };
         };
         formatter = pkgs.nixfmt-rfc-style;
