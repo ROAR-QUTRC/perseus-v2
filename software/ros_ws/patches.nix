@@ -109,12 +109,11 @@ let
       ;
   };
 
-  # we need to use overrideScope and an overlay to apply the changes
-  # so that they propagate properly (eg most of nav2 is dependent on nav-2d-utils)
-  rosOverlay = rosFinal: rosPrev: ros;
 in
 {
   rosPackages = prev.rosPackages // {
-    ${rosDistro} = (rosPrev.overrideScope rosOverlay);
+    # we need to use overrideScope and an overlay to apply the changes
+    # so that they propagate properly (eg most of nav2 is dependent on nav-2d-utils)
+    ${rosDistro} = (rosPrev.overrideScope (rosFinal: rosPrev: ros));
   };
 }

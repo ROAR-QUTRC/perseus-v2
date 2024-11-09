@@ -8,10 +8,11 @@ let
 
   patches-overlay = (import ./patches.nix) rosDistro final prev;
 
-  patchedPrev = prev // patches-overlay;
-  rosPkgs = patchedPrev.rosPackages.${rosDistro};
+  patchedPkgs = prev // patches-overlay;
+  rosPkgs = patchedPkgs.rosPackages.${rosDistro};
+
   # output package set
-  ros = (rosPkgs.overrideScope packaging-overlay) // rosPkgs;
+  ros = rosPkgs.overrideScope packaging-overlay;
 
   # --- OTHER PACKAGES ---
   # mini package which puts COLCON_IGNORE in the output result folder
@@ -25,7 +26,7 @@ let
     '';
   };
 in
-patchedPrev
+patchedPkgs
 // {
   # packaging for colcon clean
   pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
@@ -38,7 +39,7 @@ patchedPrev
 
   # output package sets
   inherit ros colcon-ignore;
-  rosPackages = patchedPrev.rosPackages // {
+  rosPackages = patchedPkgs.rosPackages // {
     ${rosDistro} = ros;
   };
   /*
