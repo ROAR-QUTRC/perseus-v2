@@ -1,11 +1,15 @@
-{ stdenv, cmake }:
+{
+  stdenv,
+  cleanCmakeSource,
+  cmake,
+}:
 
 stdenv.mkDerivation rec {
   pname = "hi-can-lib";
   version = "0.0.1";
 
-  src = builtins.path {
-    path = ./.;
+  src = cleanCmakeSource {
+    src = ./.;
     name = pname;
   };
 
