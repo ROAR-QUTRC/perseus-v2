@@ -26,7 +26,7 @@ namespace hi_can
         friend void swap(RawCanInterface& first, RawCanInterface& second) noexcept
         {
             using std::swap;
-            swap(static_cast<FilteredCanInterface&>(first), static_cast<FilteredCanInterface&>(second));
+            swap(first._filters, second._filters);
             swap(first._interfaceName, second._interfaceName);
             swap(first._socket, second._socket);
         }

@@ -50,16 +50,9 @@ namespace hi_can
         virtual bool addressMatchesFilters(const addressing::raw_address_t& address) const;
 
     protected:
-        friend void swap(FilteredCanInterface& first, FilteredCanInterface& second) noexcept
-        {
-            using std::swap;
-            swap(first._filters, second._filters);
-        }
-
         /// @brief List of currently applied filters
         std::set<addressing::filter_t> _filters;
     };
-    void swap(FilteredCanInterface& first, FilteredCanInterface& second) noexcept;
 
     /// @brief A variant of @ref FilteredCanInterface implemented in software
     class SoftwareFilteredCanInterface : public FilteredCanInterface
