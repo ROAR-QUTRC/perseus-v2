@@ -63,8 +63,7 @@ install(
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION}
                                                  SOVERSION 1)
 
-# check if hi_can_lib is already present (Nix build), if not, add its
-# subdirectory
+# check if libraries are already present (Nix build), if not, add them
 find_package(hi_can_lib QUIET)
 if(NOT hi_can_lib_FOUND)
   message(STATUS "hi_can_lib not found, adding subdirectory...")
