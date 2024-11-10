@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fd_wrapper.hpp>
 #include <hi_can_lib.hpp>
 #include <string>
 
@@ -10,18 +11,38 @@ namespace hi_can
     public:
         /// @brief Instantiates a new RawCanInterface
         /// @param interfaceName The interface name (can0, vcan1, etc) to use
-        RawCanInterface(std::string interfaceName);
+        RawCanInterface(const std::string& interfaceName);
+        // we need the destructor, so we should probably implement the Rule of 5
         ~RawCanInterface();
         // copy constructor
         RawCanInterface(const RawCanInterface& other);
+        // move constructor
+        RawCanInterface(RawCanInterface&& other) noexcept;
+        // copy assignment
+        RawCanInterface& operator=(RawCanInterface other);
+        // move assignment
+        RawCanInterface& operator=(RawCanInterface&& other) noexcept;
+
+        friend void swap(RawCanInterface& first, RawCanInterface& second) noexcept
+        {
+            using std::swap;
+            swap(static_cast<FilteredCanInterface&>(first), static_cast<FilteredCanInterface&>(second));
+            swap(first._interfaceName, second._interfaceName);
+            swap(first._socket, second._socket);
+        }
 
         void transmit(const Packet& packet) const override;
         std::optional<Packet> receive() override;
-        void setReceiveCallback(const std::function<void(const Packet&)>& callback) override;
 
     private:
-        const std::string _interfaceName{};
+        static int _createSocket();
+        void _configureSocket(const int& socket);
 
-        int _socket = -1;
+        // we only allow a default constructor for the move constructor, so make it private
+        RawCanInterface() = default;
+
+        // note: NOT const to allow for copy-and-swap
+        std::string _interfaceName{};
+        FdWrapper _socket;
     };
 }

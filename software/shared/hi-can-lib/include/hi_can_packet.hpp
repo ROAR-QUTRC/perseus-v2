@@ -1,7 +1,10 @@
 #pragma once
 
-#include <memory>
+#include <algorithm>
+#include <array>
 #include <optional>
+#include <span>
+#include <stdexcept>
 
 #include "hi_can_address.hpp"
 
@@ -11,11 +14,14 @@ namespace hi_can
     {
     public:
         Packet() = default;
-        Packet(const can_address_t& address, const std::unique_ptr<void>& data, const size_t& dataLen, const bool& isRTR = false);
+
+        Packet(const addressing::raw_address_t& address, const std::span<const uint8_t>& data, const bool& isRTR = false);
         template <typename T>
-        Packet(const can_address_t& address, const T& data, const bool& isRTR = false)
-            : Packet(address, std::make_unique<T>(data), sizeof(T), isRTR)
+        Packet(const addressing::raw_address_t& address, const T& data, const bool& isRTR = false)
         {
+            setAddress(address);
+            setIsRTR(isRTR);
+            setData(data);
         }
 
         /// @brief Copies a packet's data into a buffer
@@ -28,30 +34,47 @@ namespace hi_can
                 return std::nullopt;
 
             T data;
-            memcpy(&data, _data, sizeof(T));
+            std::copy_n(_data.begin(), _dataLen, reinterpret_cast<uint8_t*>(&data));
             return data;
         }
-        const uint8_t* getData() const { return _data; }
+        constexpr const auto& getData() const { return _data; }
 
-        void setData(const std::unique_ptr<void>& data, const size_t& dataLen);
         template <typename T>
         void setData(const T& data)
         {
-            setData(std::make_unique<T>(data), sizeof(T));
+            constexpr size_t dataLen = sizeof(T);
+            if (dataLen > _data.size())
+                throw std::invalid_argument("Data is too long");
+
+            _dataLen = dataLen;
+            std::copy_n(reinterpret_cast<const uint8_t*>(&data), dataLen, _data.begin());
         }
 
-        uint8_t getDataLen() const { return _dataLen; }
+        constexpr auto getDataLen() const { return _dataLen; }
 
-        const can_address_t& getAddress() const { return _address; }
-        void setAddress(const can_address_t& address) { _address = address; }
+        constexpr auto getAddress() const { return _address; }
+        void setAddress(const addressing::raw_address_t& address);
 
-        bool getIsRTR() const { return _isRTR; }
+        constexpr bool getIsRTR() const { return _isRTR; }
         void setIsRTR(const bool& isRTR) { _isRTR = isRTR; }
 
+        constexpr bool dataEquals(const Packet& other) const
+        {
+            return (_address == other._address) &&
+                   (_dataLen == other._dataLen) &&
+                   (_data == other._data) &&
+                   (_isRTR == other._isRTR);
+        }
+
+        // implement comparison functions for STL containers - comparison based on address
+        constexpr bool operator<(const Packet& other) const { return _address < other._address; }
+        constexpr bool operator>(const Packet& other) const { return _address > other._address; }
+        constexpr bool operator==(const Packet& other) const { return _address == other._address; }
+
     private:
-        uint8_t _data[MAX_PACKET_LEN]{};
-        uint8_t _dataLen = 0;
-        can_address_t _address = MAX_ADDRESS;
+        addressing::raw_address_t _address = addressing::MAX_ADDRESS;
+        std::array<uint8_t, addressing::MAX_PACKET_LEN> _data{};
+        size_t _dataLen = 0;
         bool _isRTR = false;
     };
 }

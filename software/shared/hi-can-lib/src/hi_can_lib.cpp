@@ -5,34 +5,49 @@
 #include <unistd.h>
 
 using namespace hi_can;
+using namespace hi_can::addressing;
 
 using namespace std::chrono;
 
-void FilteredCanInterface::addAddressRange(const can_address_t& start, const can_address_t& end)
+void CanInterface::receiveAll()
 {
-    for (can_address_t i = start; i <= end; i++)
-        addAddress(i);
+    while (const auto packet = receive());
 }
-void FilteredCanInterface::removeAddressRange(const can_address_t& start, const can_address_t& end)
+
+FilteredCanInterface& FilteredCanInterface::addFilter(const filter_t& address)
 {
-    for (can_address_t i = start; i <= end; i++)
-        removeAddress(i);
+    _filters.emplace(address);
+    return *this;
+}
+FilteredCanInterface& FilteredCanInterface::removeFilter(const filter_t& address)
+{
+    _filters.erase(address);
+    return *this;
+}
+
+std::optional<filter_t> FilteredCanInterface::findMatchingFilter(const raw_address_t& address) const
+{
+    // because the filters are sorted by most specific mask first, even when multiple filters match,
+    // it should generally match the most specific one first
+    for (const auto& filter : _filters)
+        if ((address & filter.mask) == (filter.address & filter.mask))
+            return filter;
+    return std::nullopt;
+}
+bool FilteredCanInterface::addressMatchesFilters(const raw_address_t& address) const
+{
+    return _filters.empty() || findMatchingFilter(address).has_value();
 }
 
 std::optional<Packet> SoftwareFilteredCanInterface::receive()
 {
-    auto packet = _interface.receive();
-    if (packet && _whitelist.find(packet->getAddress()) != _whitelist.end())
-        return packet;
-    return std::nullopt;
-}
+    const auto packet = _interface->receive();
+    if (!packet || !addressMatchesFilters(packet->getAddress()))
+        return std::nullopt;
 
-void SoftwareFilteredCanInterface::setReceiveCallback(const std::function<void(const Packet&)>& callback)
-{
-    _interface.setReceiveCallback([this, callback](const Packet& packet)
-                                  {
-                                     if (_whitelist.find(packet.getAddress()) != _whitelist.end())
-                                         callback(packet); });
+    if (_receiveCallback)
+        _receiveCallback(*packet);
+    return packet;
 }
 
 PacketManager::PacketManager(FilteredCanInterface& interface)
@@ -65,29 +80,45 @@ void PacketManager::handle()
     }
 }
 
-void PacketManager::setCallback(const can_address_t& address, const callback_config_t& config)
+void PacketManager::setCallback(const filter_t& filter, const callback_config_t& config)
 {
-    _callbacks[address] = {
+    _callbacks[filter] = {
         .config = config,
         .hasTimedOut = false,
         .lastReceived = steady_clock::now(),
     };
-    _interface.addAddress(address);
+    getInterface().addFilter(filter);
 }
 
-void PacketManager::removeCallback(const can_address_t& address)
+std::optional<PacketManager::callback_config_t> PacketManager::getCallback(const filter_t& filter)
 {
-    _callbacks.erase(address);
-    _interface.removeAddress(address);
+    if (const auto it = _callbacks.find(filter); it != _callbacks.end())
+        return it->second.config;
+    return std::nullopt;
+}
+
+void PacketManager::removeCallback(const filter_t& filter)
+{
+    _callbacks.erase(filter);
+}
+
+void PacketManager::setTransmit(const transmit_config_t& config)
+{
+    _transmissions[config.packet.getAddress()] = {
+        .config = config,
+        .lastTransmitted = steady_clock::now(),
+    };
+    if (config.shouldTransmitImmediately)
+        getInterface().transmit(config.packet);
 }
 
 void PacketManager::_handleReceivedPacket(const Packet& packet)
 {
     // it should never happen that the packet address is not in the map since we're using a filtered interface,
     // but check anyway to not crash
-    if (auto val = _callbacks.find(packet.getAddress()); val != _callbacks.end())
+    if (const std::optional<filter_t> filter = _interface.findMatchingFilter(packet.getAddress()); filter)
     {
-        auto& callback = val->second;
+        auto& callback = _callbacks[filter.value()];
         callback.lastPacket = packet;
         if (callback.config.dataCallback)
             callback.config.dataCallback(packet);

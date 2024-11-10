@@ -1,30 +1,19 @@
 #include "hi_can_packet.hpp"
 
-#include <cstring>
-
 using namespace hi_can;
 
-Packet::Packet(const can_address_t& address, const std::unique_ptr<void>& data, const size_t& dataLen, const bool& isRTR)
-    : _dataLen(dataLen), _address(address), _isRTR(isRTR)
+Packet::Packet(const addressing::raw_address_t& address, const std::span<const uint8_t>& data, const bool& isRTR)
 {
-    if (address > MAX_ADDRESS)
-        throw std::invalid_argument("Address is invalid");
-
-    setData(data, dataLen);
+    setAddress(address);
+    setIsRTR(isRTR);
+    if (data.size_bytes() > addressing::MAX_PACKET_LEN)
+        throw std::invalid_argument("Data is too long");
+    std::copy_n(data.begin(), data.size_bytes(), _data.begin());
 }
 
-void Packet::setData(const std::unique_ptr<void>& data, const size_t& dataLen)
+void Packet::setAddress(const addressing::raw_address_t& address)
 {
-    {
-        if (dataLen > MAX_PACKET_LEN)
-            throw std::invalid_argument("Data is too long");
-        if (dataLen > 0)
-        {
-            if (!data)
-                throw std::invalid_argument("Data is null");
-        }
-
-        _dataLen = dataLen;
-        memcpy(_data, data.get(), dataLen);
-    }
+    if (address > addressing::MAX_ADDRESS)
+        throw std::invalid_argument("Address is invalid");
+    _address = address;
 }

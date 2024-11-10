@@ -21,77 +21,59 @@ namespace hi_can
         /// @return The next packet in the buffer, or std::nullopt if the buffer is empty
         virtual std::optional<Packet> receive() = 0;
 
+        virtual void receiveAll();
+
         /// @brief Sets a callback to be called when a packet is received
         /// @param callback Callback to use
-        virtual void setReceiveCallback(const std::function<void(const Packet&)>& callback) = 0;
+        virtual void setReceiveCallback(const std::function<void(const Packet&)>& callback) { _receiveCallback = callback; };
         /// @brief Clears the receive callback
         void clearReceiveCallback() { setReceiveCallback(nullptr); }
+
+    protected:
+        std::function<void(const Packet&)> _receiveCallback = nullptr;
     };
 
-    /// @brief A variant of @ref CanInterface with an address whitelist
+    /// @brief A variant of @ref CanInterface which contains a whitelist of filters. In the event that there are no filters, all packets are accepted.
     class FilteredCanInterface : public CanInterface
     {
     public:
-        /// @brief Add an address to the whitelist
-        /// @param address Address to add
-        virtual void addAddress(const can_address_t& address) = 0;
-        /// @brief Remove an address from the whitelist
-        /// @param address Address to remove
-        virtual void removeAddress(const can_address_t& address) = 0;
+        /// @brief Add a filter to the interface
+        /// @return Itself for chaining
+        virtual FilteredCanInterface& addFilter(const addressing::filter_t& address);
+        /// @brief Remove a filter from the interface
+        /// @return Itself for chaining
+        virtual FilteredCanInterface& removeFilter(const addressing::filter_t& address);
 
-        /// @brief Add a range of addresses (inclusive) to the whitelist
-        /// @param start Start address to add
-        /// @param end End address to add
-        void addAddressRange(const can_address_t& start, const can_address_t& end);
-        /// @brief Remove a range of addresses (inclusive) from the whitelist
-        /// @param start Start address to remove
-        /// @param end End address to remove
-        void removeAddressRange(const can_address_t& start, const can_address_t& end);
+        virtual const std::set<addressing::filter_t>& getFilters() const { return _filters; }
 
-        /// @brief Add an iterable list of addresses to the whitelist
-        /// @tparam Iterable Type of the iterable container
-        /// @tparam C++ cursedness to ensure that the type is iterable
-        /// @param addresses Addresses to add to the whitelist
-        template <typename Iterable, typename = std::void_t<decltype(std::begin(std::declval<Iterable>())), decltype(std::end(std::declval<Iterable>()))>>
-        void addAddressList(const Iterable& addresses)
+        virtual std::optional<addressing::filter_t> findMatchingFilter(const addressing::raw_address_t& address) const;
+        virtual bool addressMatchesFilters(const addressing::raw_address_t& address) const;
+
+    protected:
+        friend void swap(FilteredCanInterface& first, FilteredCanInterface& second) noexcept
         {
-            for (const auto& address : addresses)
-            {
-                addAddress(address);
-            }
+            using std::swap;
+            swap(first._filters, second._filters);
         }
 
-        /// @brief Remove an iterable list of addresses from the whitelist
-        /// @tparam Iterable Type of the iterable container
-        /// @tparam C++ cursedness to ensure that the type is iterable
-        /// @param addresses Addresses to remove from the whitelist
-        template <typename Iterable, typename = std::void_t<decltype(std::begin(std::declval<Iterable>())), decltype(std::end(std::declval<Iterable>()))>>
-        void removeAddressList(const Iterable& addresses)
-        {
-            for (const auto& address : addresses)
-            {
-                removeAddress(address);
-            }
-        }
+        /// @brief List of currently applied filters
+        std::set<addressing::filter_t> _filters;
     };
+    void swap(FilteredCanInterface& first, FilteredCanInterface& second) noexcept;
 
     /// @brief A variant of @ref FilteredCanInterface implemented in software
     class SoftwareFilteredCanInterface : public FilteredCanInterface
     {
     public:
-        SoftwareFilteredCanInterface(CanInterface& interface) : _interface(interface) {}
+        SoftwareFilteredCanInterface(const std::shared_ptr<CanInterface> interface) : _interface(interface) {}
 
-        void transmit(const Packet& packet) const override { _interface.transmit(packet); }
+        void transmit(const Packet& packet) const override { _interface->transmit(packet); }
         std::optional<Packet> receive() override;
-        void setReceiveCallback(const std::function<void(const Packet&)>& callback) override;
 
-        void addAddress(const can_address_t& address) override { _whitelist.insert(address); }
-        void removeAddress(const can_address_t& address) override { _whitelist.erase(address); }
+        // note: no need to override setReceiveCallback since that's based on the receive method
 
     private:
-        void _receiveCallback(const Packet& packet);
-        CanInterface& _interface;
-        std::set<can_address_t> _whitelist;
+        const std::shared_ptr<CanInterface> _interface;
     };
 
     /// @brief Manages automatically sending and receiving packets on the CAN bus with timeouts and callbacks
@@ -100,15 +82,16 @@ namespace hi_can
     public:
         struct callback_config_t
         {
-            std::function<void(const Packet&)> dataCallback;
-            std::function<void(void)> timeoutCallback;
-            std::function<void(const Packet&)> timeoutRecoveryCallback;
+            std::function<void(const Packet&)> dataCallback = nullptr;
+            std::function<void(void)> timeoutCallback = nullptr;
+            std::function<void(const Packet&)> timeoutRecoveryCallback = nullptr;
             std::chrono::steady_clock::duration timeout = std::chrono::steady_clock::duration::zero();
         };
         struct transmit_config_t
         {
             Packet packet;
             std::chrono::steady_clock::duration interval = std::chrono::steady_clock::duration::zero();
+            bool shouldTransmitImmediately = false;
         };
 
         /// @brief Constructs a new PacketManager
@@ -116,14 +99,14 @@ namespace hi_can
 
         void handle();
 
-        void setCallback(const can_address_t& address, const callback_config_t& config);
-        std::optional<callback_config_t> getCallback(const can_address_t& address);
-        void removeCallback(const can_address_t& address);
+        void setCallback(const addressing::filter_t& address, const callback_config_t& config);
+        std::optional<callback_config_t> getCallback(const addressing::filter_t& address);
+        void removeCallback(const addressing::filter_t& address);
 
         void setTransmit(const transmit_config_t& config);
         void setTransmitData(const Packet& packet);
-        void setTransmitInterval(const can_address_t& address, const std::chrono::steady_clock::duration& interval);
-        void removeTransmit(const can_address_t& address);
+        void setTransmitInterval(const addressing::raw_address_t& address, const std::chrono::steady_clock::duration& interval);
+        void removeTransmit(const addressing::raw_address_t& address);
 
         FilteredCanInterface& getInterface() const { return _interface; }
 
@@ -142,7 +125,7 @@ namespace hi_can
         };
         void _handleReceivedPacket(const Packet& packet);
         FilteredCanInterface& _interface;
-        std::map<can_address_t, callback_data_t> _callbacks;
-        std::map<can_address_t, transmit_data_t> _transmissions;
+        std::map<addressing::filter_t, callback_data_t> _callbacks;
+        std::map<addressing::raw_address_t, transmit_data_t> _transmissions;
     };
 };

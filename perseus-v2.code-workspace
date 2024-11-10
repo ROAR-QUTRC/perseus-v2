@@ -10,11 +10,9 @@
     "settings": {
         "nixEnvSelector.suggestion": true,
         "files.associations": {
-            "*.scad": "scad",
             "array": "cpp",
             "atomic": "cpp",
             "bit": "cpp",
-            "*.tcc": "cpp",
             "cctype": "cpp",
             "charconv": "cpp",
             "chrono": "cpp",
@@ -82,7 +80,16 @@
             "variant": "cpp",
             "any": "cpp",
             "fstream": "cpp",
-            "cinttypes": "cpp"
+            "cinttypes": "cpp",
+            "strstream": "cpp",
+            "bitset": "cpp",
+            "cfenv": "cpp",
+            "complex": "cpp",
+            "forward_list": "cpp",
+            "regex": "cpp",
+            "source_location": "cpp",
+            "ranges": "cpp",
+            "valarray": "cpp"
         },
         "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
         "editor.defaultFormatter": "ibecker.treefmt-vscode",
