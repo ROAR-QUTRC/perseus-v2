@@ -47,14 +47,13 @@ install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 # Versioning
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
-# check if hi_can_lib is already present (Nix build), if not, add its
-# subdirectory
-find_package(hi_can_lib QUIET)
-if(NOT hi_can_lib_FOUND)
-  message(STATUS "hi_can_lib not found, adding subdirectory...")
+# check if libraries are already present (Nix build), if not, add them
+find_package(hi_can_raw QUIET)
+if(NOT hi_can_raw_FOUND)
+  message(STATUS "hi_can_raw not found, adding subdirectory...")
   # add the directory with its CMakeLists.txt
-  add_subdirectory(../../shared/hi-can-lib hi-can-lib)
+  add_subdirectory(../../shared/hi-can-raw hi-can-raw)
 endif()
 
 # Link in libraries needed
-target_link_libraries(${PROJECT_NAME} PRIVATE hi_can_lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE hi_can_raw)

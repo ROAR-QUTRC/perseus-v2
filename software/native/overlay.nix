@@ -1,1 +1,1 @@
-final: prev: { can-interface = prev.callPackage ./can-interface { }; }
+final: prev: { net-can-server = final.callPackage ./net-can-server { }; }

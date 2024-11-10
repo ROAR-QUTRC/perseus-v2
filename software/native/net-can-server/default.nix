@@ -2,11 +2,11 @@
   stdenv,
   cleanCmakeSource,
   cmake,
-  hi-can-lib,
+  hi-can-raw,
 }:
 
 stdenv.mkDerivation rec {
-  pname = "can-interface";
+  pname = "net-can-server";
   version = "0.0.0";
 
   src = cleanCmakeSource {
@@ -15,5 +15,5 @@ stdenv.mkDerivation rec {
   };
 
   nativeBuildInputs = [ cmake ];
-  buildInputs = [ hi-can-lib ];
+  buildInputs = [ hi-can-raw ];
 }
