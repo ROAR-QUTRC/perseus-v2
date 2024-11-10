@@ -67,8 +67,16 @@ find_package(hi_can_lib QUIET)
 if(NOT hi_can_lib_FOUND)
     message(STATUS "hi_can_lib not found, adding subdirectory...")
     # add the directory with its CMakeLists.txt
-    add_subdirectory(../hi-can-lib build)
+    add_subdirectory(../hi-can-lib hi-can-lib)
+endif()
+# same thing for the file descriptor wrapper
+find_package(fd_wrapper QUIET)
+if(NOT fd_wrapper_FOUND)
+    message(STATUS "fd_wrapper not found, adding subdirectory...")
+    # add the directory with its CMakeLists.txt
+    add_subdirectory(../fd-wrapper fd-wrapper)
 endif()
 
 # Link in libraries needed
 target_link_libraries(${PROJECT_NAME} PUBLIC hi_can_lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC fd_wrapper)
