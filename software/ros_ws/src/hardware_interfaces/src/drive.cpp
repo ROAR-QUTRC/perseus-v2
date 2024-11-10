@@ -1,5 +1,5 @@
 #include <cstdio>
-#include <hi_can_lib.hpp>
+#include <hi_can.hpp>
 
 int main(int argc, char** argv)
 {

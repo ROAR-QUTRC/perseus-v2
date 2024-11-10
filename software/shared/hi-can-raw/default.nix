@@ -3,7 +3,7 @@
   cleanCmakeSource,
   cmake,
   fd-wrapper,
-  hi-can-lib,
+  hi-can,
 }:
 
 stdenv.mkDerivation rec {
@@ -17,7 +17,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     fd-wrapper
-    hi-can-lib
+    hi-can
   ];
   nativeBuildInputs = [ cmake ];
 }

@@ -2,7 +2,7 @@
   stdenv,
   cleanCmakeSource,
   cmake,
-  hi-can-lib,
+  hi-can,
 }:
 
 stdenv.mkDerivation rec {
@@ -14,6 +14,6 @@ stdenv.mkDerivation rec {
     name = pname;
   };
 
-  buildInputs = [ hi-can-lib ];
+  buildInputs = [ hi-can ];
   nativeBuildInputs = [ cmake ];
 }

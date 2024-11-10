@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 # Set the project name and version
 project(
-  hi_can_lib
+  hi_can
   VERSION 0.0.1
   LANGUAGES CXX)
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <fd_wrapper.hpp>
-#include <hi_can_lib.hpp>
+#include <hi_can.hpp>
 #include <string>
 
 namespace hi_can

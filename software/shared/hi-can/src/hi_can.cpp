@@ -1,8 +1,8 @@
-#include "hi_can_lib.hpp"
-
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+
+#include "hi_can.hpp"
 
 using namespace hi_can;
 using namespace hi_can::addressing;

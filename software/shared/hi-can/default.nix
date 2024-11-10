@@ -5,7 +5,7 @@
 }:
 
 stdenv.mkDerivation rec {
-  pname = "hi-can-lib";
+  pname = "hi-can";
   version = "0.0.1";
 
   src = cleanCmakeSource {

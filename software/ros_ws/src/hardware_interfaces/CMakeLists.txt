@@ -72,13 +72,13 @@ endif()
 ament_package()
 
 # check if libraries are already present (Nix build), if not, add them
-find_package(hi_can_lib QUIET)
-if(NOT hi_can_lib_FOUND)
-  message(STATUS "hi_can_lib not found, adding subdirectory...")
+find_package(hi_can QUIET)
+if(NOT hi_can_FOUND)
+  message(STATUS "hi_can not found, adding subdirectory...")
   # add the directory with its CMakeLists.txt
-  add_subdirectory(../../../shared/hi-can-lib hi-can-lib)
+  add_subdirectory(../../../shared/hi-can hi-can)
 endif()
 
-target_link_libraries(drive PRIVATE hi_can_lib)
-target_link_libraries(beacon PRIVATE hi_can_lib)
-target_link_libraries(excavation PRIVATE hi_can_lib)
+target_link_libraries(drive PRIVATE hi_can)
+target_link_libraries(beacon PRIVATE hi_can)
+target_link_libraries(excavation PRIVATE hi_can)
