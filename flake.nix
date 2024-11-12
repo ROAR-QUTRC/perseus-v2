@@ -90,6 +90,7 @@
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
         standardPkgs = {
+          inherit (pkgs) can-utils;
           inherit (pkgs.ros)
             natrviz
             rviz2
