@@ -1,17 +1,18 @@
+#include "hi_can.hpp"
+
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-
-#include "hi_can.hpp"
 
 using namespace hi_can;
 using namespace hi_can::addressing;
 
 using namespace std::chrono;
 
-void CanInterface::receiveAll()
+void CanInterface::receiveAll(bool block)
 {
-    while (const auto packet = receive());
+    receive(block);
+    while (const auto packet = receive(false));
 }
 
 FilteredCanInterface& FilteredCanInterface::addFilter(const filter_t& address)
@@ -39,9 +40,9 @@ bool FilteredCanInterface::addressMatchesFilters(const raw_address_t& address) c
     return _filters.empty() || findMatchingFilter(address).has_value();
 }
 
-std::optional<Packet> SoftwareFilteredCanInterface::receive()
+std::optional<Packet> SoftwareFilteredCanInterface::receive(bool blocking)
 {
-    const auto packet = _interface->receive();
+    const auto packet = _interface->receive(blocking);
     if (!packet || !addressMatchesFilters(packet->getAddress()))
         return std::nullopt;
 

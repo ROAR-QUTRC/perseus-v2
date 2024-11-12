@@ -16,12 +16,12 @@ namespace hi_can
     public:
         /// @brief Transmits a packet on the CAN bus
         /// @param packet Packet to transmit
-        virtual void transmit(const Packet& packet) const = 0;
+        virtual void transmit(const Packet& packet) = 0;
         /// @brief Pulls the next packet from the CAN bus buffer
         /// @return The next packet in the buffer, or std::nullopt if the buffer is empty
-        virtual std::optional<Packet> receive() = 0;
+        virtual std::optional<Packet> receive(bool blocking = false) = 0;
 
-        virtual void receiveAll();
+        virtual void receiveAll(bool block = true);
 
         /// @brief Sets a callback to be called when a packet is received
         /// @param callback Callback to use
@@ -60,8 +60,8 @@ namespace hi_can
     public:
         SoftwareFilteredCanInterface(const std::shared_ptr<CanInterface> interface) : _interface(interface) {}
 
-        void transmit(const Packet& packet) const override { _interface->transmit(packet); }
-        std::optional<Packet> receive() override;
+        void transmit(const Packet& packet) override { _interface->transmit(packet); }
+        std::optional<Packet> receive(bool blocking = false) override;
 
         // note: no need to override setReceiveCallback since that's based on the receive method
 

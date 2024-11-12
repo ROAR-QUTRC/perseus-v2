@@ -31,8 +31,8 @@ namespace hi_can
             swap(first._socket, second._socket);
         }
 
-        void transmit(const Packet& packet) const override;
-        std::optional<Packet> receive() override;
+        void transmit(const Packet& packet) override;
+        std::optional<Packet> receive(bool blocking = false) override;
 
     private:
         static int _createSocket();

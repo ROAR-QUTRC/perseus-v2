@@ -49,7 +49,7 @@ RawCanInterface& RawCanInterface::operator=(RawCanInterface&& other) noexcept
     return *this;
 }
 
-void RawCanInterface::transmit(const Packet& packet) const
+void RawCanInterface::transmit(const Packet& packet)
 {
     struct can_frame frame
     {
@@ -68,22 +68,25 @@ void RawCanInterface::transmit(const Packet& packet) const
 
     std::copy_n(packet.getData().begin(), frame.len, frame.data);
 
-    const ssize_t bytesWritten = write((int)_socket, &frame, sizeof(frame));
+    const ssize_t bytesWritten = send((int)_socket, &frame, sizeof(frame), 0);
     if (bytesWritten < 0)
-        throw std::runtime_error("Failed to transmit CAN frame");
-    else if (bytesWritten != frame.len)
+    {
+        string err = std::strerror(errno);
+        throw std::runtime_error("Failed to transmit CAN frame: " + err);
+    }
+    else if (bytesWritten != sizeof(frame))
         throw std::runtime_error("Failed to transmit entire CAN frame - only " +
                                  std::to_string(bytesWritten) +
                                  " bytes written of " +
                                  std::to_string(frame.len));
 }
 
-std::optional<Packet> hi_can::RawCanInterface::receive()
+std::optional<Packet> hi_can::RawCanInterface::receive(bool blocking)
 {
     struct can_frame frame
     {
     };
-    const ssize_t bytesRead = read((int)_socket, &frame, sizeof(frame));
+    const ssize_t bytesRead = recv((int)_socket, &frame, sizeof(frame), blocking ? 0 : MSG_DONTWAIT);
     if (bytesRead < 0)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -103,7 +106,7 @@ std::optional<Packet> hi_can::RawCanInterface::receive()
     // note: should always be true since we only use extended frames
     const bool isEFF = (frame.can_id & CAN_EFF_FLAG) != 0;
     const addressing::raw_address_t address = frame.can_id & (isEFF ? CAN_EFF_MASK : CAN_SFF_MASK);
-    Packet packet(address, std::span(frame.data, frame.len), isRTR);
+    Packet packet(address, frame.data, frame.len, isRTR);
 
     if (_receiveCallback)
         _receiveCallback(packet);
@@ -113,8 +116,8 @@ std::optional<Packet> hi_can::RawCanInterface::receive()
 
 int RawCanInterface::_createSocket()
 {
-    // acquire a non-blocking, raw CAN socket
-    int _socket = socket(PF_CAN, SOCK_RAW | SOCK_NONBLOCK, CAN_RAW);
+    // acquire a raw CAN socket
+    int _socket = socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (_socket < 0)
     {
         string err = std::strerror(errno);
@@ -135,6 +138,7 @@ void RawCanInterface::_configureSocket(const int& socket)
             string err = std::strerror(errno);
             throw std::runtime_error("Failed to get interface index: " + err);
         }
+        interface_idx = ifr.ifr_ifindex;
     }
 
     // Bind socket to the specified CAN interface
