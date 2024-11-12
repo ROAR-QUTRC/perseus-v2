@@ -33,20 +33,16 @@ namespace hi_can
                 return std::nullopt;
 
             T data;
-            std::copy_n(_data.begin(), _dataLen, reinterpret_cast<uint8_t*>(&data));
+            std::copy_n(_data.begin(), _dataLen, reinterpret_cast<uint8_t* const>(&data));
             return data;
         }
         constexpr const auto& getData() const { return _data; }
 
+        void setData(const uint8_t data[], size_t dataLen);
         template <typename T>
         void setData(const T& data)
         {
-            constexpr size_t dataLen = sizeof(T);
-            if (dataLen > _data.size())
-                throw std::invalid_argument("Data is longer than the minimum packet length");
-
-            _dataLen = dataLen;
-            std::copy_n(reinterpret_cast<const uint8_t*>(&data), dataLen, _data.begin());
+            setData(reinterpret_cast<const uint8_t* const>(&data), sizeof(T));
         }
 
         constexpr auto getDataLen() const { return _dataLen; }
