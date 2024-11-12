@@ -5,7 +5,7 @@
 
 namespace hi_can
 {
-    namespace addressing
+    namespace address
     {
 
         typedef uint32_t raw_address_t;
@@ -91,19 +91,19 @@ namespace hi_can
                        (static_cast<uint32_t>(parameter) << PARAM_ADDRESS_POS);
             }
         };
-        struct vesc_address_t : public structured_address_t
-        {
-            uint8_t commandId = 0;
-            uint8_t vescId = 0;
-
-            constexpr operator raw_address_t() const override
-            {
-                return (static_cast<uint32_t>(commandId) << 8) | static_cast<uint32_t>(vescId);
-            }
-        };
 
         namespace drive
         {
+            struct vesc_address_t : public structured_address_t
+            {
+                uint8_t commandId = 0;
+                uint8_t vescId = 0;
+
+                constexpr operator raw_address_t() const override
+                {
+                    return (static_cast<uint32_t>(commandId) << 8) | static_cast<uint32_t>(vescId);
+                }
+            };
         }
     }
 }

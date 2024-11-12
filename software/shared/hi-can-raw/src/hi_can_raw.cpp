@@ -105,7 +105,7 @@ std::optional<Packet> hi_can::RawCanInterface::receive(bool blocking)
     const bool isRTR = (frame.can_id & CAN_RTR_FLAG) != 0;
     // note: should always be true since we only use extended frames
     const bool isEFF = (frame.can_id & CAN_EFF_FLAG) != 0;
-    const addressing::raw_address_t address = frame.can_id & (isEFF ? CAN_EFF_MASK : CAN_SFF_MASK);
+    const address::raw_address_t address = frame.can_id & (isEFF ? CAN_EFF_MASK : CAN_SFF_MASK);
     Packet packet(address, frame.data, frame.len, isRTR);
 
     if (_receiveCallback)

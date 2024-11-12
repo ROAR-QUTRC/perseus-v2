@@ -14,9 +14,9 @@ namespace hi_can
     public:
         Packet() = default;
 
-        Packet(const addressing::raw_address_t& address, const uint8_t data[], size_t dataLen, const bool& isRTR = false);
+        Packet(const address::raw_address_t& address, const uint8_t data[], size_t dataLen, const bool& isRTR = false);
         template <typename T>
-        Packet(const addressing::raw_address_t& address, const T& data, const bool& isRTR = false)
+        Packet(const address::raw_address_t& address, const T& data, const bool& isRTR = false)
         {
             setAddress(address);
             setIsRTR(isRTR);
@@ -48,7 +48,7 @@ namespace hi_can
         constexpr auto getDataLen() const { return _dataLen; }
 
         constexpr auto getAddress() const { return _address; }
-        void setAddress(const addressing::raw_address_t& address);
+        void setAddress(const address::raw_address_t& address);
 
         constexpr bool getIsRTR() const { return _isRTR; }
         void setIsRTR(const bool& isRTR) { _isRTR = isRTR; }
@@ -67,8 +67,8 @@ namespace hi_can
         constexpr bool operator==(const Packet& other) const { return _address == other._address; }
 
     private:
-        addressing::raw_address_t _address = addressing::MAX_ADDRESS;
-        std::array<uint8_t, addressing::MAX_PACKET_LEN> _data{};
+        address::raw_address_t _address = address::MAX_ADDRESS;
+        std::array<uint8_t, address::MAX_PACKET_LEN> _data{};
         size_t _dataLen = 0;
         bool _isRTR = false;
     };

@@ -39,19 +39,19 @@ namespace hi_can
     public:
         /// @brief Add a filter to the interface
         /// @return Itself for chaining
-        virtual FilteredCanInterface& addFilter(const addressing::filter_t& address);
+        virtual FilteredCanInterface& addFilter(const address::filter_t& address);
         /// @brief Remove a filter from the interface
         /// @return Itself for chaining
-        virtual FilteredCanInterface& removeFilter(const addressing::filter_t& address);
+        virtual FilteredCanInterface& removeFilter(const address::filter_t& address);
 
-        virtual const std::set<addressing::filter_t>& getFilters() const { return _filters; }
+        virtual const std::set<address::filter_t>& getFilters() const { return _filters; }
 
-        virtual std::optional<addressing::filter_t> findMatchingFilter(const addressing::raw_address_t& address) const;
-        virtual bool addressMatchesFilters(const addressing::raw_address_t& address) const;
+        virtual std::optional<address::filter_t> findMatchingFilter(const address::raw_address_t& address) const;
+        virtual bool addressMatchesFilters(const address::raw_address_t& address) const;
 
     protected:
         /// @brief List of currently applied filters
-        std::set<addressing::filter_t> _filters;
+        std::set<address::filter_t> _filters;
     };
 
     /// @brief A variant of @ref FilteredCanInterface implemented in software
@@ -92,14 +92,14 @@ namespace hi_can
 
         void handle();
 
-        void setCallback(const addressing::filter_t& address, const callback_config_t& config);
-        std::optional<callback_config_t> getCallback(const addressing::filter_t& address);
-        void removeCallback(const addressing::filter_t& address);
+        void setCallback(const address::filter_t& address, const callback_config_t& config);
+        std::optional<callback_config_t> getCallback(const address::filter_t& address);
+        void removeCallback(const address::filter_t& address);
 
         void setTransmit(const transmit_config_t& config);
         void setTransmitData(const Packet& packet);
-        void setTransmitInterval(const addressing::raw_address_t& address, const std::chrono::steady_clock::duration& interval);
-        void removeTransmit(const addressing::raw_address_t& address);
+        void setTransmitInterval(const address::raw_address_t& address, const std::chrono::steady_clock::duration& interval);
+        void removeTransmit(const address::raw_address_t& address);
 
         FilteredCanInterface& getInterface() const { return _interface; }
 
@@ -118,7 +118,7 @@ namespace hi_can
         };
         void _handleReceivedPacket(const Packet& packet);
         FilteredCanInterface& _interface;
-        std::map<addressing::filter_t, callback_data_t> _callbacks;
-        std::map<addressing::raw_address_t, transmit_data_t> _transmissions;
+        std::map<address::filter_t, callback_data_t> _callbacks;
+        std::map<address::raw_address_t, transmit_data_t> _transmissions;
     };
 };
