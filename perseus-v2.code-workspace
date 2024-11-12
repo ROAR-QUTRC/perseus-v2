@@ -91,6 +91,7 @@
             "ranges": "cpp",
             "valarray": "cpp"
         },
+        "C_Cpp.default.cppStandard": "c++20",
         "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
         "editor.defaultFormatter": "ibecker.treefmt-vscode",
         "[markdown]": {
