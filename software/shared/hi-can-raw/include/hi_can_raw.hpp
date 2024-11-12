@@ -12,8 +12,6 @@ namespace hi_can
         /// @brief Instantiates a new RawCanInterface
         /// @param interfaceName The interface name (can0, vcan1, etc) to use
         RawCanInterface(const std::string& interfaceName);
-        // we need the destructor, so we should probably implement the Rule of 5
-        ~RawCanInterface();
         // copy constructor
         RawCanInterface(const RawCanInterface& other);
         // move constructor
@@ -34,9 +32,13 @@ namespace hi_can
         void transmit(const Packet& packet) override;
         std::optional<Packet> receive(bool blocking = false) override;
 
+        RawCanInterface& addFilter(const address::filter_t& address) override;
+        RawCanInterface& removeFilter(const address::filter_t& address) override;
+
     private:
         static int _createSocket();
         void _configureSocket(const int& socket);
+        void _updateFilters();
 
         // we only allow a default constructor for the move constructor, so make it private
         RawCanInterface() = default;

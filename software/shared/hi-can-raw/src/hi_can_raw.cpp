@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <stdexcept>
 
@@ -20,11 +21,6 @@ RawCanInterface::RawCanInterface(const string& interfaceName)
               [this](int socket)
               { _configureSocket(socket); })
 {
-}
-
-RawCanInterface::~RawCanInterface()
-{
-    // no need to close anything here, the FdWrapper classes will handle it
 }
 
 RawCanInterface::RawCanInterface(const RawCanInterface& other)
@@ -56,9 +52,13 @@ void RawCanInterface::transmit(const Packet& packet)
     };
 
     // set CAN ID, as well as necessary flags
-    frame.can_id = packet.getAddress() | CAN_EFF_FLAG;  // use 29-bit extended frame format
+    frame.can_id = static_cast<address::raw_address_t>(packet.getAddress());
+    if (packet.getIsExtended())
+        frame.can_id |= CAN_EFF_FLAG;
     if (packet.getIsRTR())
         frame.can_id |= CAN_RTR_FLAG;
+    if (packet.getIsError())
+        frame.can_id |= CAN_ERR_FLAG;
 
     frame.len = packet.getDataLen();
     if (frame.len > CAN_MAX_DLEN)
@@ -81,7 +81,7 @@ void RawCanInterface::transmit(const Packet& packet)
                                  std::to_string(frame.len));
 }
 
-std::optional<Packet> hi_can::RawCanInterface::receive(bool blocking)
+std::optional<Packet> RawCanInterface::receive(bool blocking)
 {
     struct can_frame frame
     {
@@ -104,14 +104,28 @@ std::optional<Packet> hi_can::RawCanInterface::receive(bool blocking)
 
     const bool isRTR = (frame.can_id & CAN_RTR_FLAG) != 0;
     // note: should always be true since we only use extended frames
-    const bool isEFF = (frame.can_id & CAN_EFF_FLAG) != 0;
-    const address::raw_address_t address = frame.can_id & (isEFF ? CAN_EFF_MASK : CAN_SFF_MASK);
-    Packet packet(address, frame.data, frame.len, isRTR);
+    const bool isExtended = (frame.can_id & CAN_EFF_FLAG) != 0;
+    const bool isError = (frame.can_id & CAN_ERR_FLAG) != 0;
+    const address::flagged_address_t address(frame.can_id, isRTR, isError, isExtended);
+    Packet packet(address, frame.data, frame.len);
 
     if (_receiveCallback)
         _receiveCallback(packet);
 
     return packet;
+}
+
+RawCanInterface& RawCanInterface::addFilter(const address::filter_t& address)
+{
+    FilteredCanInterface::addFilter(address);
+    _updateFilters();
+    return *this;
+}
+RawCanInterface& RawCanInterface::removeFilter(const address::filter_t& address)
+{
+    FilteredCanInterface::removeFilter(address);
+    _updateFilters();
+    return *this;
 }
 
 int RawCanInterface::_createSocket()
@@ -125,8 +139,11 @@ int RawCanInterface::_createSocket()
     }
     return _socket;
 }
+
 void RawCanInterface::_configureSocket(const int& socket)
 {
+    if (socket < 0)
+        throw std::runtime_error("Invalid socket file descriptor");
     // Get the index of the network interface
     int interface_idx = 0;
     if (_interfaceName != "any")
@@ -151,5 +168,44 @@ void RawCanInterface::_configureSocket(const int& socket)
     {
         string err = std::strerror(errno);
         throw std::runtime_error("Failed to bind CAN socket: " + err);
+    }
+}
+
+void RawCanInterface::_updateFilters()
+{
+    // build a vector containing the filters
+    std::vector<can_filter> filters;
+    if (!_filters.empty())
+    {
+        filters.reserve(_filters.size());
+        for (const auto& filter : _filters)
+        {
+            canid_t can_id = static_cast<address::raw_address_t>(filter.address);
+            if (filter.address.rtr)
+                can_id |= CAN_RTR_FLAG;
+            if (filter.address.error)
+                can_id |= CAN_ERR_FLAG;
+            if (filter.address.extended)
+                can_id |= CAN_EFF_FLAG;
+
+            canid_t can_mask = filter.mask | CAN_EFF_FLAG;
+            if (filter.matchRtr)
+                can_mask |= CAN_RTR_FLAG;
+            if (filter.matchError)
+                can_mask |= CAN_ERR_FLAG;
+            filters.emplace_back(can_filter{.can_id = can_id, .can_mask = can_mask});
+        }
+    }
+    else
+    {
+        // remove all filters (match everything)
+        filters.emplace_back(can_filter{.can_id = 0, .can_mask = 0});
+    }
+
+    // apply the filters
+    if (setsockopt((int)_socket, SOL_CAN_RAW, CAN_RAW_FILTER, filters.data(), filters.size() * sizeof(can_filter)) < 0)
+    {
+        string err = std::strerror(errno);
+        throw std::runtime_error("Failed to update CAN filters: " + err);
     }
 }

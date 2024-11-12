@@ -7,15 +7,15 @@ namespace hi_can
 {
     namespace address
     {
-
         typedef uint32_t raw_address_t;
-        typedef uint32_t raw_mask_t;
+        typedef uint32_t mask_t;
 
         constexpr uint8_t ADDRESS_LENGTH = 29;
         constexpr size_t MAX_PACKET_LEN = 8;
         constexpr raw_address_t MAX_ADDRESS = 0x1FFFFFFFUL;
-        constexpr raw_mask_t MASK_ALL = 0x1FFFFFFFUL;
-        constexpr raw_mask_t MASK_NONE = 0x00000000UL;
+        constexpr raw_address_t MAX_SHORT_ADDRESS = 0x7FFUL;
+        constexpr mask_t MASK_ALL = 0x1FFFFFFFUL;
+        constexpr mask_t MASK_NONE = 0x00000000UL;
 
         constexpr uint8_t SYSTEM_ADDRESS_BITS = 5;
         constexpr uint8_t SUBSYSTEM_ADDRESS_BITS = 4;
@@ -29,38 +29,80 @@ namespace hi_can
         constexpr uint8_t SUBSYSTEM_ADDRESS_POS = (DEVICE_ADDRESS_POS + DEVICE_ADDRESS_BITS);
         constexpr uint8_t SYSTEM_ADDRESS_POS = (SUBSYSTEM_ADDRESS_POS + SUBSYSTEM_ADDRESS_BITS);
 
-        constexpr raw_mask_t SYSTEM_MASK = (MASK_ALL << SYSTEM_ADDRESS_POS) & MASK_ALL;
-        constexpr raw_mask_t SUBSYSTEM_MASK = (MASK_ALL << SUBSYSTEM_ADDRESS_POS) & MASK_ALL;
-        constexpr raw_mask_t DEVICE_MASK = (MASK_ALL << DEVICE_ADDRESS_POS) & MASK_ALL;
-        constexpr raw_mask_t GROUP_MASK = (MASK_ALL << GROUP_ADDRESS_POS) & MASK_ALL;
-        constexpr raw_mask_t PARAM_MASK = (MASK_ALL << PARAM_ADDRESS_POS) & MASK_ALL;
+        constexpr mask_t SYSTEM_MASK = (MASK_ALL << SYSTEM_ADDRESS_POS) & MASK_ALL;
+        constexpr mask_t SUBSYSTEM_MASK = (MASK_ALL << SUBSYSTEM_ADDRESS_POS) & MASK_ALL;
+        constexpr mask_t DEVICE_MASK = (MASK_ALL << DEVICE_ADDRESS_POS) & MASK_ALL;
+        constexpr mask_t GROUP_MASK = (MASK_ALL << GROUP_ADDRESS_POS) & MASK_ALL;
+        constexpr mask_t PARAM_MASK = (MASK_ALL << PARAM_ADDRESS_POS) & MASK_ALL;
+
+        struct flagged_address_t
+        {
+            raw_address_t address = 0;
+            bool rtr = false;
+            bool error = false;
+            bool extended = true;
+
+            constexpr flagged_address_t() = default;
+            constexpr flagged_address_t(raw_address_t address, bool rtr = false, bool error = false, bool extended = true)
+                : address(address & (extended ? MAX_ADDRESS : MAX_SHORT_ADDRESS)),
+                  rtr(rtr),
+                  error(error),
+                  extended(extended) {}
+            constexpr explicit operator raw_address_t() const
+            {
+                return address & (extended ? MAX_ADDRESS : MAX_SHORT_ADDRESS);
+            }
+
+            constexpr auto operator<=>(const flagged_address_t& other) const
+            {
+                if (address != other.address)
+                    return address <=> other.address;
+                if (rtr != other.rtr)
+                    return rtr <=> other.rtr;
+                if (error != other.error)
+                    return error <=> other.error;
+                return extended <=> other.extended;
+            }
+            constexpr auto operator==(const flagged_address_t& other) const
+            {
+                return (address == other.address) && (rtr == other.rtr) && (error == other.error) && (extended == other.extended);
+            }
+            constexpr auto operator!=(const flagged_address_t& other) const
+            {
+                return !(*this == other);
+            }
+        };
 
         /// @brief A CAN address and mask for filtering
         struct filter_t
         {
             /// @brief The address to accept
-            raw_address_t address = MAX_ADDRESS;
+            flagged_address_t address = MAX_ADDRESS;
             /// @brief The mask of address bits to care about
-            raw_mask_t mask = MASK_ALL;
+            mask_t mask = MASK_ALL;
+            bool matchRtr = false;
+            bool matchError = true;
 
             // need to define the comparison operators for std::set
             // more specific filters (greater masks) should be sorted first, and as such compare as less than
             // If the masks are the same, sort by address
-            constexpr bool operator<(const filter_t& other) const
+            constexpr auto operator<=>(const filter_t& other) const
             {
                 if (mask != other.mask)
-                    return mask > other.mask;
-                return address < other.address;
+                    return other.mask <=> mask;
+                if (address != other.address)
+                    return address <=> other.address;
+                if (matchRtr != other.matchRtr)
+                    return matchRtr <=> other.matchRtr;
+                return matchError <=> other.matchError;
             }
-            constexpr bool operator>(const filter_t& other) const
+
+            constexpr bool matches(const flagged_address_t& address) const
             {
-                if (mask != other.mask)
-                    return mask < other.mask;
-                return address > other.address;
-            }
-            constexpr bool operator==(const filter_t& other) const
-            {
-                return address == other.address && mask == other.mask;
+                return (static_cast<raw_address_t>(address) & mask) == (static_cast<raw_address_t>(this->address) & mask) &&
+                       (this->address.extended == address.extended) &&
+                       (!matchRtr || (this->address.rtr == (address.rtr))) &&
+                       (!matchError || (this->address.error == (address.error)));
             }
         };
 
@@ -84,11 +126,11 @@ namespace hi_can
 
             constexpr operator raw_address_t() const override
             {
-                return (static_cast<uint32_t>(system) << SYSTEM_ADDRESS_POS) |
-                       (static_cast<uint32_t>(subsystem) << SUBSYSTEM_ADDRESS_POS) |
-                       (static_cast<uint32_t>(device) << DEVICE_ADDRESS_POS) |
-                       (static_cast<uint32_t>(group) << GROUP_ADDRESS_POS) |
-                       (static_cast<uint32_t>(parameter) << PARAM_ADDRESS_POS);
+                return (static_cast<raw_address_t>(system) << SYSTEM_ADDRESS_POS) |
+                       (static_cast<raw_address_t>(subsystem) << SUBSYSTEM_ADDRESS_POS) |
+                       (static_cast<raw_address_t>(device) << DEVICE_ADDRESS_POS) |
+                       (static_cast<raw_address_t>(group) << GROUP_ADDRESS_POS) |
+                       (static_cast<raw_address_t>(parameter) << PARAM_ADDRESS_POS);
             }
         };
 
@@ -125,7 +167,7 @@ namespace hi_can
 
                     constexpr operator raw_address_t() const override
                     {
-                        return (static_cast<uint32_t>(command) << 8) | static_cast<uint32_t>(vesc);
+                        return (static_cast<raw_address_t>(command) << 8) | static_cast<raw_address_t>(vesc);
                     }
                 };
             }

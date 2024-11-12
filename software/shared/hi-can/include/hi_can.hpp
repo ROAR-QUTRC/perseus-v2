@@ -46,8 +46,8 @@ namespace hi_can
 
         virtual const std::set<address::filter_t>& getFilters() const { return _filters; }
 
-        virtual std::optional<address::filter_t> findMatchingFilter(const address::raw_address_t& address) const;
-        virtual bool addressMatchesFilters(const address::raw_address_t& address) const;
+        virtual std::optional<address::filter_t> findMatchingFilter(const address::flagged_address_t& address) const;
+        virtual bool addressMatchesFilters(const address::flagged_address_t& address) const;
 
     protected:
         /// @brief List of currently applied filters
@@ -98,8 +98,8 @@ namespace hi_can
 
         void setTransmit(const transmit_config_t& config);
         void setTransmitData(const Packet& packet);
-        void setTransmitInterval(const address::raw_address_t& address, const std::chrono::steady_clock::duration& interval);
-        void removeTransmit(const address::raw_address_t& address);
+        void setTransmitInterval(const address::flagged_address_t& address, const std::chrono::steady_clock::duration& interval);
+        void removeTransmit(const address::flagged_address_t& address);
 
         FilteredCanInterface& getInterface() const { return _interface; }
 
@@ -119,6 +119,6 @@ namespace hi_can
         void _handleReceivedPacket(const Packet& packet);
         FilteredCanInterface& _interface;
         std::map<address::filter_t, callback_data_t> _callbacks;
-        std::map<address::raw_address_t, transmit_data_t> _transmissions;
+        std::map<address::flagged_address_t, transmit_data_t> _transmissions;
     };
 };

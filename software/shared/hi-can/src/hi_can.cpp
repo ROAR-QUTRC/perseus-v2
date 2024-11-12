@@ -26,16 +26,16 @@ FilteredCanInterface& FilteredCanInterface::removeFilter(const filter_t& address
     return *this;
 }
 
-std::optional<filter_t> FilteredCanInterface::findMatchingFilter(const raw_address_t& address) const
+std::optional<filter_t> FilteredCanInterface::findMatchingFilter(const flagged_address_t& address) const
 {
     // because the filters are sorted by most specific mask first, even when multiple filters match,
     // it should generally match the most specific one first
     for (const auto& filter : _filters)
-        if ((address & filter.mask) == (filter.address & filter.mask))
+        if (filter.matches(address))
             return filter;
     return std::nullopt;
 }
-bool FilteredCanInterface::addressMatchesFilters(const raw_address_t& address) const
+bool FilteredCanInterface::addressMatchesFilters(const flagged_address_t& address) const
 {
     return _filters.empty() || findMatchingFilter(address).has_value();
 }
