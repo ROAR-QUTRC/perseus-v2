@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 # Set the project name and version
 project(
-  can_interface
+  net_can_server
   VERSION 0.0.1
   LANGUAGES CXX)
 
