@@ -15,7 +15,8 @@ stdenv.mkDerivation rec {
     name = pname;
   };
 
-  buildInputs = [
+  # due to header files, these need to propagate
+  propagatedBuildInputs = [
     fd-wrapper
     hi-can
   ];
