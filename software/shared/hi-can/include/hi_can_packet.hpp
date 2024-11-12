@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <array>
 #include <optional>
-#include <span>
 #include <stdexcept>
 
 #include "hi_can_address.hpp"
@@ -15,7 +14,7 @@ namespace hi_can
     public:
         Packet() = default;
 
-        Packet(const addressing::raw_address_t& address, const std::span<const uint8_t>& data, const bool& isRTR = false);
+        Packet(const addressing::raw_address_t& address, const uint8_t data[], size_t dataLen, const bool& isRTR = false);
         template <typename T>
         Packet(const addressing::raw_address_t& address, const T& data, const bool& isRTR = false)
         {
@@ -44,7 +43,7 @@ namespace hi_can
         {
             constexpr size_t dataLen = sizeof(T);
             if (dataLen > _data.size())
-                throw std::invalid_argument("Data is too long");
+                throw std::invalid_argument("Data is longer than the minimum packet length");
 
             _dataLen = dataLen;
             std::copy_n(reinterpret_cast<const uint8_t*>(&data), dataLen, _data.begin());

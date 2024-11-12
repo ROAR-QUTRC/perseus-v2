@@ -2,13 +2,16 @@
 
 using namespace hi_can;
 
-Packet::Packet(const addressing::raw_address_t& address, const std::span<const uint8_t>& data, const bool& isRTR)
+Packet::Packet(const addressing::raw_address_t& address, const uint8_t data[], size_t dataLen, const bool& isRTR)
 {
+    if (dataLen > addressing::MAX_PACKET_LEN)
+        throw std::invalid_argument("Data is longer than the maximum packet length");
+
     setAddress(address);
     setIsRTR(isRTR);
-    if (data.size_bytes() > addressing::MAX_PACKET_LEN)
-        throw std::invalid_argument("Data is too long");
-    std::copy_n(data.begin(), data.size_bytes(), _data.begin());
+
+    _dataLen = dataLen;
+    std::copy_n(data, dataLen, _data.begin());
 }
 
 void Packet::setAddress(const addressing::raw_address_t& address)
