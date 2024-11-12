@@ -94,16 +94,97 @@ namespace hi_can
 
         namespace drive
         {
-            struct vesc_address_t : public structured_address_t
+            constexpr uint8_t SYSTEM_ID = 0x00;
+            namespace vesc
             {
-                uint8_t commandId = 0;
-                uint8_t vescId = 0;
-
-                constexpr operator raw_address_t() const override
+                constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                enum class device
                 {
-                    return (static_cast<uint32_t>(commandId) << 8) | static_cast<uint32_t>(vescId);
-                }
-            };
+                    FRONT_LEFT = 0,
+                    FRONT_RIGHT = 1,
+                    REAR_LEFT = 2,
+                    REAR_RIGHT = 3,
+                };
+                enum class command_id
+                {
+                    SET_DUTY = 0,
+                    SET_CURRENT = 1,
+                    SET_CURRENT_BRAKE = 2,
+                    SET_RPM = 3,
+                    SET_POS = 4,
+                    SET_CURRENT_REL = 10,
+                    SET_CURRENT_BRAKE_REL = 11,
+                    SET_CURRENT_HANDBRAKE = 12,
+                    SET_CURRENT_HANDBRAKE_REL = 13,
+                };
+
+                struct address_t : public structured_address_t
+                {
+                    command_id command = command_id::SET_DUTY;
+                    device vesc = device::FRONT_LEFT;
+
+                    constexpr operator raw_address_t() const override
+                    {
+                        return (static_cast<uint32_t>(command) << 8) | static_cast<uint32_t>(vesc);
+                    }
+                };
+            }
+        }
+        namespace power
+        {
+            constexpr uint8_t SYSTEM_ID = 0x01;
+            namespace battery
+            {
+                constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                enum class device
+                {
+                    BATTERY_1 = 0,
+                    BATTERY_2 = 1,
+                    BATTERY_3 = 2,
+                    BATTERY_4 = 3,
+                    BATTERY_5 = 4,
+                    BATTERY_6 = 5,
+                    BATTERY_7 = 6,
+                    BATTERY_8 = 7,
+                };
+            }
+            namespace distribution
+            {
+                constexpr uint8_t SUBSYSTEM_ID = 0x01;
+                enum class device
+                {
+                    ROVER_CONTROL_BOARD = 0,
+                };
+            }
+        }
+        namespace compute
+        {
+            constexpr uint8_t SYSTEM_ID = 0x02;
+            namespace primary
+            {
+                constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                enum class device
+                {
+                    BIG_BRAIN = 0,
+                    MEDIUM_BRAIN = 1,
+                };
+            }
+        }
+        namespace post_landing
+        {
+            constexpr uint8_t SYSTEM_ID = 0x03;
+        }
+        namespace excavation
+        {
+            constexpr uint8_t SYSTEM_ID = 0x04;
+            namespace arm
+            {
+                constexpr uint8_t SUBSYSTEM_ID = 0x00;
+            }
+        }
+        namespace space_resources
+        {
+            constexpr uint8_t SYSTEM_ID = 0x05;
         }
     }
 }
