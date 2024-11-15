@@ -247,7 +247,7 @@ C source files should end with `.c`, C header files with `.h`, C++ source files 
 
 ##### Correct
 
-```
+```text
 .
 ├── include
 │  └── settings.hpp
@@ -257,7 +257,7 @@ C source files should end with `.c`, C header files with `.h`, C++ source files 
 
 ##### Incorrect
 
-```
+```text
 .
 ├── include
 │  └── settings.h
@@ -652,7 +652,7 @@ Structs and typedef types should be named using `snake_case` and suffixed with `
 
 Use `clang-formatter` with `-style=file`. A `.clang-format` file with the following configuration is provided in the root directory of this project.
 
-```yml
+```yaml
 BasedOnStyle: Google
 UseTab: Never
 IndentWidth: 4
@@ -669,7 +669,7 @@ AlignConsecutiveMacros: true
 
 If you're using VSCode, either set `Clang_format_style` to `file` (this is the default setting, and is preferred - it will use `.clang-format`), or to the following:
 
-```yml
+```yaml
 {
   BasedOnStyle: Google,
   UseTab: Never,
@@ -1021,7 +1021,6 @@ Just follow the conventions in [PEP 8](https://peps.python.org/pep-0008). A coup
 - Classes: `PascalCase`
 - Variables: `snake_case` variable names
 - 4 space indentation
--
 
 Everything in the general standards section still applies, and if there is a conflict between PEP 8 and what's specified in this document, this document takes priority.
 
@@ -1041,7 +1040,7 @@ Packages should contain a set of related nodes/launch files with similar respons
 
 Nodes should be named as _nouns_ according to what they _are_. Node names **should not** be appended with `_node`.
 
-##### Acceptable
+#### Acceptable
 
 ```
 input_devices generic_controller
