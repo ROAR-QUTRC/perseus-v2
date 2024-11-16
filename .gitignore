@@ -6,6 +6,11 @@ result
 log/
 install/
 
+# Documentation
+generated/
+build/
+public/
+
 # Prerequisites
 *.d
 
