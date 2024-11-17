@@ -1,5 +1,6 @@
 {
   inputs = {
+    # ros inputs
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay";
     nixpkgs.follows = "nix-ros-overlay/nixpkgs"; # IMPORTANT!!!
     nix-ros-workspace = {
@@ -30,11 +31,11 @@
             # get the ros packages
             nix-ros-overlay.overlays.default
             # fix colcon (silence warnings, add extensions)
-            (import ./ros_ws/colcon/overlay.nix)
+            (import ./software/ros_ws/colcon/overlay.nix)
             # add ros workspace functionality
             (import nix-ros-workspace { }).overlay
             # import ros workspace packages + fixes
-            (import ./overlay.nix rosDistro)
+            (import ./software/overlay.nix rosDistro)
             # finally, alias the output to pkgs.ros to make it easier to use
             (final: prev: {
               ros = final.rosPackages.${rosDistro}.overrideScope (
@@ -69,7 +70,7 @@
           inherit (pkgs.ros) gazebo-ros gazebo-ros2-control gazebo-ros-pkgs;
         };
 
-        # --- OUTPUT NIX WORKSPACES ---
+        # --- ROS WORKSPACES ---
         # function to build a ROS workspace which modifies the dev shell hook to set up environment variables
         mkWorkspace =
           {
@@ -96,12 +97,12 @@
                     # set the ROS_DOMAIN_ID to the development ID, since by default it's set to the production ID
                     export ROS_DOMAIN_ID=${toString devDomainId}
                     # tell colcon to use our defaults file (uses --symlink-install by default)
-                    export COLCON_DEFAULTS_FILE=${./ros_ws/colcon_defaults.yaml}
+                    export COLCON_DEFAULTS_FILE=${./software/ros_ws/colcon_defaults.yaml}
                   '';
               }
             );
           in
-          # override the .env (cli environment) attribute with our modifications
+          # override the env attribute (cli environment) with our modifications
           workspace // { inherit env; };
 
         # Actually build the workspaces
@@ -116,7 +117,7 @@
         };
 
         # --- LAUNCH SCRIPTS ---
-        perseus-main = pkgs.writeShellScriptBin "perseus-main" ''
+        perseus = pkgs.writeShellScriptBin "perseus" ''
           ${default}/bin/ros2 pkg list
         '';
       in
@@ -140,7 +141,7 @@
         apps = {
           default = {
             type = "app";
-            program = "${pkgs.lib.getExe perseus-main}";
+            program = "${pkgs.lib.getExe perseus}";
           };
         };
         formatter = pkgs.nixfmt-rfc-style;

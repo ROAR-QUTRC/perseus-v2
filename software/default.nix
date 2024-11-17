@@ -3,7 +3,7 @@ let
   rosDistro = "humble";
 
   # --- FLAKE INPUTS ---
-  lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+  lock = builtins.fromJSON (builtins.readFile ./../flake.lock);
   nixpkgs = fetchTarball {
     url =
       lock.nodes.nixpkgs.locked.url
