@@ -35,8 +35,8 @@ jobs:
           compression-level: 0 # we're already compressing with p7zip
 
   push-docs:
-    # only run on origin
-    if: github.repository == 'ROAR-QUTRC/perseus-v2'
+    # only run on origin repo AND main branch
+    if: github.repository == 'ROAR-QUTRC/perseus-v2' && github.ref == 'refs/heads/main'
 
     # Allow only one concurrent deployment, cancelling previous if needed
     concurrency:
