@@ -19,7 +19,8 @@
 let
   # mostly taken from uv2nix docs https://adisbladis.github.io/uv2nix/usage/hello-world.html
   # Load uv workspace from the workspace root
-  workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
+  # note that moving the python dependencies to ./pyproject ensures that updating _docs_ doesn't cause a workspace rebuild
+  workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./pyproject; };
 
   # Create package overlay from workspace.
   overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
