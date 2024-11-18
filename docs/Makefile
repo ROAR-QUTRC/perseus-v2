@@ -7,8 +7,8 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
-# TODO: Fix date - https://github.com/sphinx-doc/sphinx/issues/3451
-# SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+# Fix date - see https://github.com/sphinx-doc/sphinx/issues/3451
+SOURCE_DATE_EPOCH = $(shell git log -1 --format=%ct)
 
 # Put it first so that "make" without argument is like "make help".
 help:
