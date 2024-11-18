@@ -18,10 +18,13 @@ jobs:
   generate-docs:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
       - uses: nixbuild/nix-quick-install-action@v29
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build compressed docs
-        run: nix build -L .#docs.compressed
+        run: nix build -L ./source#docs.compressed
       - name: Upload docs artifact
         uses: actions/upload-artifact@v4
         with:
