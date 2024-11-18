@@ -1,0 +1,72 @@
+# Workflow to build and deploy the docs using a deploy key
+name: Deploy docs to Pages
+
+on:
+  # Run on pushes to main and docs - we shouldn't need to test building for other branches
+  push:
+    branches: ["main", "docs"]
+    paths:
+      - docs/**
+      - software/**
+      - flake.nix
+      - flake.lock
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Build compressed docs
+        run: nix build -L .#docs.compressed
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compressed-docs
+          path: result/docs.7z
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0 # we're already compressing with p7zip
+
+  push-docs:
+    # only run on origin
+    if: github.repository == 'ROAR-QUTRC/perseus-v2'
+
+    # Allow only one concurrent deployment, cancelling previous if needed
+    concurrency:
+      group: "docs"
+      cancel-in-progress: true
+
+    needs: generate-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download docs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: compressed-docs
+      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Decompress docs
+        run: nix run .#docs.decompress docs.7z docs-decompressed
+      - uses: actions/checkout@v4
+        with:
+          repository: ROAR-QUTRC/roar-qutrc.github.io
+          ref: main
+          ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          path: docs
+      - name: Update docs in checked out repo
+        run: |
+          rm -rf docs/*
+          cp -a docs-decompressed/html/. docs/
+      - name: Commit changes
+        run: |
+          cd docs
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add .
+          git commit -m "$(date +%z:%Y-%m-%dT%H:%M:%S) Automatic docs update"
+      - name: Push changes
+        run: git push
