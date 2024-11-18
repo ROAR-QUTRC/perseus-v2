@@ -18,6 +18,8 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
       inputs.pyproject-nix.follows = "pyproject-nix";
     };
+    # flake compat input (allows use of nix-build)
+    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
   };
   outputs =
     {
