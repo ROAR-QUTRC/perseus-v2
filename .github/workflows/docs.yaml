@@ -67,12 +67,11 @@ jobs:
         run: |
           rm -rf docs/*
           cp -a docs-decompressed/html/. docs/
-      - name: Commit changes
+      - name: Commit and push changes
         run: |
           cd docs
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add .
           git commit -m "$(date +%z:%Y-%m-%dT%H:%M:%S) Automatic docs update"
-      - name: Push changes
-        run: git push
+          git push
