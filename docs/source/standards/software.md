@@ -413,13 +413,13 @@ This means using `#include <cstlib>` instead of `#include <stdlib.h>` and simila
 ##### Correct
 
 ```cpp
-##include <cstdint>
+#include <cstdint>
 ```
 
 ##### Incorrect
 
 ```cpp
-##include <stdint.h> // don't do this
+#include <stdint.h> // don't do this
 ```
 
 #### Include types
@@ -433,7 +433,7 @@ Make no assumptions about files being included before whatever you're writing. I
 ##### Correct
 
 ```cpp
-##include <cstdint>
+#include <cstdint>
 
 uint8_t adder(uint8_t input);
 ```
@@ -453,11 +453,11 @@ You should never use a `using` directive in a header. This goes for both `using 
 ##### Correct
 
 ```cpp
-##pragma once
+#pragma once
 
-##include <cstdint>
-##include <tuple>
-##include <vector>
+#include <cstdint>
+#include <tuple>
+#include <vector>
 
 class Settings
 {
@@ -481,11 +481,11 @@ private:
 ##### Incorrect
 
 ```cpp
-##pragma once
+#pragma once
 
-##include <cstdint>
-##include <tuple>
-##include <vector>
+#include <cstdint>
+#include <tuple>
+#include <vector>
 
 // now everything after the inclusion of this file has to deal with the inclusion of the entire std namespace
 using namespace std;
@@ -513,10 +513,10 @@ private:
 Put `#pragma once` as the first line of all headers. This prevents files from being included more than once in a file. Whilst technically `#pragma once` is compiler specific, it's common enough that it's effectively a standard, and all C++ code on the rover is compiled with `gcc` anyway making it a nonissue. You may have already seen the standard include guard pattern of
 
 ```cpp
-##ifndef __MY_FILE_H
-##define __MY_FILE_H
+#ifndef __MY_FILE_H
+#define __MY_FILE_H
 // code here...
-##endif // __MY_FILE_H
+#endif // __MY_FILE_H
 ```
 
 or something similar - whilst this will work the exact same way, it is liable to programmer mistakes if a file gets moved, renamed, or copied, whereas the pragma directive doesn't have these issues.
@@ -524,9 +524,9 @@ or something similar - whilst this will work the exact same way, it is liable to
 ##### Correct
 
 ```cpp
-##pragma once
+#pragma once
 
-##include <cstdint>
+#include <cstdint>
 
 // now if this file is included twice, there'll be an error since the class is declared twice
 class Settings
@@ -538,7 +538,7 @@ class Settings
 ##### Incorrect
 
 ```cpp
-##include <cstdint>
+#include <cstdint>
 
 // now if this file is included twice, there'll be an error since the class is declared twice
 class Settings
@@ -576,7 +576,7 @@ This is because the C++ (and C) compiler has _global_ (project-wide) linkage by 
 ###### settings.cpp
 
 ```cpp
-##include "settings.hpp"
+#include "settings.hpp"
 
 static settings_t settings;
 
@@ -588,7 +588,7 @@ static void loadSettingsFromFile(void) { };
 ###### settings.cpp
 
 ```cpp
-##include "settings.hpp"
+#include "settings.hpp"
 
 // other code can modify settings now!
 settings_t settings;
@@ -604,16 +604,16 @@ There is very little need for namespaces in ROAR software (except for common lib
 ##### Acceptable
 
 ```cpp
-::hi_can
-::hi_can::drive
-::hi_can::drive::traction_control
+hi_can
+hi_can::drive
+hi_can::drive::traction_control
 ```
 
 ##### Incorrect
 
 ```cpp
-::rover_libraries::drive
-::RoverLibraries
+rover_libraries::drive
+RoverLibraries
 ```
 
 #### Class names
