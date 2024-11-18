@@ -7,12 +7,26 @@
       url = "github:hacker1024/nix-ros-workspace";
       flake = false;
     };
+    # docs inputs
+    nixpkgs-unstable.url = "nixpkgs/nixpkgs-unstable";
+    pyproject-nix = {
+      url = "github:nix-community/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    uv2nix = {
+      url = "github:adisbladis/uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+    };
   };
   outputs =
     {
       nixpkgs,
       nix-ros-overlay,
       nix-ros-workspace,
+      nixpkgs-unstable,
+      pyproject-nix,
+      uv2nix,
       ...
     }:
     nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (
@@ -47,6 +61,14 @@
           # Freeimage is blocked by default since it has a whole bunch of CVEs.
           # This means we have to explicitly permit Freeimage to allow Gazebo to run.
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
+        };
+        # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
+        pkgs-unstable = import nixpkgs-unstable {
+          inherit system;
+          overlays = [
+            # add uv2nix + pyproject-nix to the package set
+            (final: prev: { inherit pyproject-nix uv2nix; })
+          ];
         };
 
         # --- INPUT PACKAGE SETS ---
@@ -116,6 +138,10 @@
           additionalPkgs = simPkgs;
         };
 
+        # --- PYTHON (UV) WORKSPACES ---
+        # note: called with pkgs-unstable since we need the uv tool to be up-to-date due to rapid development
+        docs = pkgs-unstable.callPackage (import ./docs) { };
+
         # --- LAUNCH SCRIPTS ---
         perseus = pkgs.writeShellScriptBin "perseus" ''
           ${default}/bin/ros2 pkg list
@@ -126,7 +152,12 @@
         packages = {
           # note: as well as adding the output workspaces,
           # we also output the entire package set to make certain debugging easier
-          inherit default simulation pkgs;
+          inherit
+            default
+            simulation
+            pkgs
+            docs
+            ;
 
           # used only to split up the build for Cachix - this particular package builds only the ROS core,
           # thus reducing RAM required (slightly... still need a fair bit of swap space)
@@ -136,6 +167,8 @@
         devShells = {
           default = default.env;
           simulation = simulation.env;
+
+          docs = docs.shell;
         };
 
         apps = {
