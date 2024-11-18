@@ -1,4 +1,4 @@
-# Details and attributes of Perseus's Network
+# Network Architecture
 
 ## TLDR
 

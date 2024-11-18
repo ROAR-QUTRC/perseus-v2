@@ -1,3 +1,7 @@
+---
+tocdepth: 4
+---
+
 # Software Standards
 
 This document is intended to codify a set of standards and practices for developing high-quality and interoperable software and firmware across the QUT Robotics ROAR team. Before writing any software, you should have fully read through both the [General](#general-software-standards) and language-specific ([C++](#c-standards) or [Python](#python-standards)) sections of this document. If you're writing ROS code, you should also have read through the [ROS](#ros-standards) section. If you don't fully understand some of the topics being referenced, feel free to ask questions in Discord, we'll be happy to help. If enough people have the same questions, we'll edit this document to add explanations.
@@ -37,17 +41,17 @@ speed_settings_t curSpds;
 
 Below is a list of some of the common exceptions to this rule.
 
-| Abbreviation | Full name    | Note                                                                                                                                                              |
-| ------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `i`          | `index`      |                                                                                                                                                                   |
-| `idx`        | `index`      |                                                                                                                                                                   |
-| `it`         | `iterator`   | Language standard (C++)                                                                                                                                           |
-| `pos`        | `position`   |                                                                                                                                                                   |
-| `tmp`/`temp` | `temporary`  | Should not be used as a standalone name though, only as prefixes. Also should not be used around code that references temperatures as that gets confusing quickly |
-| `max`        | `maximum`    |                                                                                                                                                                   |
-| `min`        | `minimum`    |                                                                                                                                                                   |
-| `prev`       | `previous`   |                                                                                                                                                                   |
-| `init`       | `initialize` |                                                                                                                                                                   |
+| Abbreviation | Full name    | Note                                                                                                    |
+| ------------ | ------------ | ------------------------------------------------------------------------------------------------------- |
+| `i`          | `index`      |                                                                                                         |
+| `idx`        | `index`      |                                                                                                         |
+| `it`         | `iterator`   | Language standard (C++)                                                                                 |
+| `pos`        | `position`   |                                                                                                         |
+| `tmp`/`temp` | `temporary`  | Only to be used as prefixes. Also should not be used around temperatures as that gets confusing quickly |
+| `max`        | `maximum`    |                                                                                                         |
+| `min`        | `minimum`    |                                                                                                         |
+| `prev`       | `previous`   |                                                                                                         |
+| `init`       | `initialize` |                                                                                                         |
 
 #### Units in variable names
 

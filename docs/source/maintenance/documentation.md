@@ -6,10 +6,9 @@ This documentation is loosely based off of Rohit Gaswami's blog posts documentin
 
 Unless you're making edits to the raw markdown/reST files, you should never need to build them locally - let the continuous deployment take care of it for you! However, if you do need to test edits locally, the process is as follows:
 
-1. Install [`uv`](https://docs.astral.sh/uv/)
-2. Install Doxygen
-3. If you're using Nix, you can run `nix shell nixpkgs/nixpkgs-unstable#uv nixpkgs#doxygen` to enter a shell with these tools instead - note that `uv` comes from `nixpkgs-unstable`, as we need the very latest version!
-4. `cd` to the `docs/` folder
-5. Run `doxygen` to generate all source code
-6. Run `uv run make html` to build the docs with Sphinx
-7. That's it! The documentation is now built and available under the `html/` directory.
+From the repo root:
+
+1. Run `nix develop .#docs`
+2. Run `cd docs`
+3. Whenever you want to rebuild the docs, run `make clean && make html` - they will be built to `build/html`
+4. Optionally, if you want to serve the docs instead of opening the file locally, open a new terminal and run `nix run nixpkgs#darkhttpd -- ./docs/build/html` ({keys}`ctrl+c` to terminate) and open `127.0.0.1:8080`.
