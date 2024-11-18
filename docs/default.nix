@@ -55,9 +55,11 @@ let
 
     # make needs to be run from the docs directory, but we need the whole tree for Doxygen generation
     # (hence source being the whole project)
+    # note that the _sources directory is removed as we don't want to accidentally leak things
     buildPhase = ''
       cd docs
       make html
+      rm -rf ./build/html/_sources
     '';
     # install the docs to $out/html
     installPhase = ''
