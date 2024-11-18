@@ -102,6 +102,11 @@ html_theme = theme
 html_static_path = ["_static"]
 
 html_extra_path = ["robots.txt", "README.md"]
+
+html_css_files = [
+    "css/theme.css",
+]
+
 primary = "deep-orange"
 accent = "indigo"
 

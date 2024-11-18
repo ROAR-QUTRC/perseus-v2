@@ -1,0 +1,28 @@
+[data-md-color-scheme="slate"] {
+  /* --md-hue: 100; */
+  --md-default-fg-color: hsla(var(--md-hue), 35%, 95%, 1);
+  --md-default-fg-color--light: hsla(var(--md-hue), 35%, 90%, 0.62);
+  --md-default-fg-color--lighter: hsla(var(--md-hue), 35%, 90%, 0.32);
+  --md-default-fg-color--lightest: hsla(var(--md-hue), 35%, 90%, 0.12);
+  --md-default-bg-color: hsla(var(--md-hue), 7%, 11%, 1);
+  --md-default-bg-color--light: hsla(var(--md-hue), 7%, 11%, 0.54);
+  --md-default-bg-color--lighter: hsla(var(--md-hue), 7%, 11%, 0.26);
+  --md-default-bg-color--lightest: hsla(var(--md-hue), 7%, 11%, 0.07);
+
+  /* Code color shades */
+  --md-code-fg-color: hsla(var(--md-hue), 9%, 86%, 1);
+  --md-code-bg-color: hsla(var(--md-hue), 7%, 7%, 1);
+
+  /* Typeset `kbd` color shades */
+  --md-typeset-kbd-color: hsla(var(--md-hue), 7%, 70%, 0.12);
+  --md-typeset-kbd-accent-color: hsla(var(--md-hue), 7%, 70%, 0.2);
+  --md-typeset-kbd-border-color: hsla(var(--md-hue), 7%, 7%, 1);
+}
+
+/* Footer color shades - overridden for BOTH themes */
+.md-footer {
+  background-color: #101010;
+}
+.md-footer-meta {
+  background-color: #020202;
+}
