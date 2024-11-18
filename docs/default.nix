@@ -63,8 +63,8 @@ let
     '';
     # install the docs to $out/html
     installPhase = ''
-      mkdir -p $out
-      cp -a ./build/html/ $out
+      mkdir -p $out/html
+      cp -a ./build/html/. $out/html
     '';
     # provide dev shell in passthru
     passthru = {

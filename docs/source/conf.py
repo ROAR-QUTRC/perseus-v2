@@ -16,7 +16,7 @@ author = "ROAR Team"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["myst_parser", "breathe", "exhale"]
+extensions = ["myst_parser", "breathe", "exhale", "sphinx.ext.githubpages"]
 
 templates_path = ["_templates"]
 exclude_patterns = []
