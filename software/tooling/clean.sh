@@ -11,3 +11,4 @@ rm -rf "$PROJECT_ROOT"/**/result
 rm -rf "$PROJECT_ROOT"/**/build
 rm -rf "$PROJECT_ROOT"/**/log
 rm -rf "$PROJECT_ROOT"/**/install
+rm -rf "$PROJECT_ROOT"/**/generated
