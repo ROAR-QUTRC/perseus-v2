@@ -8,6 +8,7 @@
   # python tooling
   pyproject-nix,
   uv2nix,
+  # non-python packages to build docs
   doxygen,
   # shell env
   mkShell,
@@ -38,29 +39,43 @@ let
       doxygen
     ];
   };
+  # Setting this as an environment variable makes the copyright year in the generated documentation correct,
+  # but requires impure evaluation. Oh well. We're already doing non-sandboxed evaluation anyway...
+  SOURCE_DATE_EPOCH = builtins.toString builtins.currentTime;
+
   # create derivation which builds the docs
   docs = stdenv.mkDerivation {
+    inherit SOURCE_DATE_EPOCH;
     name = "roar-docs";
     buildInputs = [ env ];
     src = lib.cleanSourceWith {
       name = "roar-docs-src";
       src = lib.cleanSource ./..;
       filter =
-        path: type:
+        name: type:
         let
-          # strip out the absolute path prefix
-          relativePath = lib.removePrefix (toString ./. + "/") path;
+          relativePath = lib.removePrefix (toString ./.. + "/") name;
         in
-        !((lib.hasInfix "build/" relativePath) || (lib.hasInfix "generated/" relativePath));
+        !(
+          # filter out build directory
+          (lib.hasInfix "build/" relativePath)
+          # filter out generated files
+          || (lib.hasInfix "generated" relativePath)
+        );
     };
 
+    # with sandbox=relaxed, disables sandboxing for this derivation
+    __noChroot = true;
     # make needs to be run from the docs directory, but we need the whole tree for Doxygen generation
     # (hence source being the whole project)
     # note that the _sources directory is removed as we don't want to accidentally leak things
     buildPhase = ''
       cd docs
+      # needed to prevent /homeless-shelter from being created
+      export HOME=$PWD
       make html
-      rm -rf ./build/html/_sources
+      # failsafe to *ensure* that program listings are removed - we REALLY don't want to leak source code
+      find -type f -name '*program_listing*' -delete
     '';
     # install the docs to $out/html
     installPhase = ''

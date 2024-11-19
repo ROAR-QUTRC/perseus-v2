@@ -194,5 +194,11 @@
       "qutrc-roar.cachix.org-1:lARPhJL+PLuGd021HeN8CQOGGiYVEVGws5za+39M1Z0="
       "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo="
     ];
+    # note that this is normally a VERY BAD IDEA but it's needed so the docs can have internet access
+    # This is needed for:
+    # - sphinx-immaterial to build (it pulls fonts and CSS from Google CDN)
+    # - intersphinx to pull inventory files so it can link to other Sphinx projects
+    #   (like Python or ROS2 docs)
+    sandbox = "relaxed";
   };
 }

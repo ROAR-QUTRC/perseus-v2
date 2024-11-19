@@ -24,7 +24,9 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@v29
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build compressed docs
-        run: nix build -L ./source#docs.compressed
+        # note: impure build so we can have the copyright date correct
+        # (also, non-sandboxed for internet access so doesn't matter anyway, but still...)
+        run: nix build -L --impure ./source#docs.compressed
       - name: Upload docs artifact
         uses: actions/upload-artifact@v4
         with:
