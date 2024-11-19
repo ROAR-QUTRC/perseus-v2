@@ -107,6 +107,10 @@ html_css_files = [
     "css/theme.css",
 ]
 
+rover_logo = "_static/Rover-Logo.svg"
+html_logo = rover_logo
+html_favicon = rover_logo
+
 primary = "deep-orange"
 accent = "indigo"
 
