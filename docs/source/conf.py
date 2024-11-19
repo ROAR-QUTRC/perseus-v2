@@ -45,7 +45,7 @@ breathe_default_project = "rover"
 exhale_args = {
     # Required arguments
     "containmentFolder": "./generated",
-    "rootFileName": "root.rst",
+    "rootFileName": "index.rst",
     "rootFileTitle": "Generated Documentation",
     "doxygenStripFromPath": "../../software",
     # Optional arguments

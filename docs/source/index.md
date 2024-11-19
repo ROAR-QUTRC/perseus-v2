@@ -13,5 +13,5 @@ home/docs-structure
 architecture
 standards
 maintenance
-generated/root
+generated/index
 ```
