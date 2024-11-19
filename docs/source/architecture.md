@@ -3,8 +3,9 @@
 The rover is a complex system, and
 
 ```{toctree}
-:glob:
+:maxdepth: 1
+:titlesonly:
 :hidden:
-:maxdepth: 2
+:glob:
 architecture/*
 ```
