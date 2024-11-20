@@ -9,6 +9,9 @@
    id="svg5"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
    sodipodi:docname="Rover-Logo.svg"
+   inkscape:export-filename="Rover-Logo.png"
+   inkscape:export-xdpi="180"
+   inkscape:export-ydpi="180"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -16,27 +19,168 @@
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
      id="namedview7"
-     pagecolor="#2d2d2d"
+     pagecolor="#bdbdbd"
      bordercolor="#ffffff"
      borderopacity="1"
      inkscape:showpageshadow="0"
      inkscape:pageopacity="0"
-     inkscape:pagecheckerboard="1"
+     inkscape:pagecheckerboard="true"
      inkscape:deskcolor="#505050"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.4142136"
-     inkscape:cx="298.75261"
-     inkscape:cy="215.66756"
+     inkscape:zoom="2"
+     inkscape:cx="297.25"
+     inkscape:cy="163"
      inkscape:window-width="2344"
      inkscape:window-height="1401"
      inkscape:window-x="1024"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg5"
-     showguides="true" />
+     inkscape:current-layer="layer3"
+     showguides="false"
+     inkscape:lockguides="true">
+    <sodipodi:guide
+       position="82.045996,56.584769"
+       orientation="-0.27563736,0.9612617"
+       id="guide22"
+       inkscape:locked="true"
+       inkscape:label=""
+       inkscape:color="rgb(0,134,229)" />
+    <sodipodi:guide
+       position="82.045991,56.584768"
+       orientation="0,-1"
+       id="guide23"
+       inkscape:locked="true" />
+    <sodipodi:guide
+       position="82.045996,32.58506"
+       orientation="0,-1"
+       id="guide24"
+       inkscape:locked="true" />
+    <sodipodi:guide
+       position="82.045996,32.585059"
+       orientation="-0.56525499,0.82491624"
+       id="guide25"
+       inkscape:locked="true"
+       inkscape:label=""
+       inkscape:color="rgb(0,134,229)" />
+    <sodipodi:guide
+       position="95.829218,64.750248"
+       orientation="-0.35510696,0.93482568"
+       id="guide29"
+       inkscape:locked="true"
+       inkscape:label=""
+       inkscape:color="rgb(0,134,229)" />
+  </sodipodi:namedview>
   <defs
      id="defs2">
+    <linearGradient
+       id="swatch37"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#c4c4c5;stop-opacity:1;"
+         offset="0"
+         id="stop37" />
+    </linearGradient>
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect32"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ C,0,0,1,0,2,0,1 @ C,0,0,1,0,2,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect31"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect30"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <linearGradient
+       id="swatch21"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000b8e;stop-opacity:1;"
+         offset="0"
+         id="stop21" />
+    </linearGradient>
+    <linearGradient
+       id="swatch20"
+       inkscape:swatch="solid"
+       gradientTransform="translate(-118.27385,131.10463)">
+      <stop
+         style="stop-color:#434344;stop-opacity:1;"
+         offset="0"
+         id="stop20" />
+    </linearGradient>
+    <linearGradient
+       id="swatch19"
+       inkscape:swatch="solid"
+       gradientTransform="translate(-201.77252,-40.465023)">
+      <stop
+         style="stop-color:#8f8f91;stop-opacity:1;"
+         offset="0"
+         id="stop19" />
+    </linearGradient>
+    <linearGradient
+       id="swatch18">
+      <stop
+         style="stop-color:#cac8be;stop-opacity:1;"
+         offset="0"
+         id="stop18" />
+    </linearGradient>
+    <linearGradient
+       id="swatch22"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#bd4c17;stop-opacity:1;"
+         offset="0"
+         id="stop22" />
+    </linearGradient>
+    <linearGradient
+       id="swatch17"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop17" />
+    </linearGradient>
     <inkscape:path-effect
        effect="copy_rotate"
        starting_point="153.79,54.055"
@@ -204,11 +348,65 @@
        random_gap_y="false"
        random_gap_x="false"
        transformorigin="" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch17"
+       id="linearGradient17"
+       x1="55"
+       y1="18.999585"
+       x2="115"
+       y2="18.999585"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch19"
+       id="linearGradient19"
+       x1="185.60001"
+       y1="96.149998"
+       x2="220"
+       y2="96.149998"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch20"
+       id="linearGradient20"
+       x1="238.0249"
+       y1="22.604284"
+       x2="265.0249"
+       y2="22.604284"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch21"
+       id="linearGradient21"
+       x1="94.00042"
+       y1="15.249702"
+       x2="99.00042"
+       y2="15.249702"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch22"
+       id="linearGradient22"
+       x1="1.2996588"
+       y1="78.196159"
+       x2="28.19984"
+       y2="78.196159"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch37"
+       id="linearGradient37"
+       x1="12.253343"
+       y1="59.299362"
+       x2="102.89763"
+       y2="59.299362"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <g
      id="g8"
-     inkscape:label="Rover"
-     transform="translate(-39.13,-5.6389998)">
+     inkscape:label="Main Rover"
+     transform="translate(-39.130004,-5.6390006)">
     <g
        inkscape:groupmode="layer"
        id="layer4"
@@ -222,7 +420,7 @@
          inkscape:transform-center-y="-16.836187"
          transform="rotate(-34.418108,53.772697,172.53514)">
         <rect
-           style="fill:#434344;fill-opacity:1;stroke:none;stroke-width:3.851;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+           style="fill:url(#linearGradient20);fill-opacity:1;stroke:none;stroke-width:3.851;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
            id="rect33525-4-1"
            width="27"
            height="2"
@@ -233,9 +431,9 @@
         <g
            id="g47-5-8"
            inkscape:label="Long Motor Assy"
-           style="fill:#8f8f91;fill-opacity:1">
+           style="fill:url(#linearGradient19);fill-opacity:1">
           <rect
-             style="fill:#8f8f91;fill-opacity:1;stroke:none;stroke-width:8.08805;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+             style="fill:url(#linearGradient19);fill-opacity:1;stroke:none;stroke-width:8.08805;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
              id="rect26191-1-6-7"
              width="30.5"
              height="3.5"
@@ -245,9 +443,9 @@
           <g
              id="g58"
              inkscape:label="Fixed"
-             style="fill:#8f8f91;fill-opacity:1">
+             style="fill:url(#linearGradient19);fill-opacity:1">
             <rect
-               style="display:inline;fill:#8f8f91;fill-opacity:1;stroke:none;stroke-width:3.8;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+               style="display:inline;fill:url(#linearGradient19);fill-opacity:1;stroke:none;stroke-width:3.8;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
                id="rect25463-7-7-2"
                width="1.9"
                height="1.9"
@@ -255,7 +453,7 @@
                y="97.050003"
                inkscape:label="Mount" />
             <rect
-               style="fill:#8f8f91;fill-opacity:1;stroke:none;stroke-width:3.8;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+               style="fill:url(#linearGradient19);fill-opacity:1;stroke:none;stroke-width:3.8;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
                id="rect27645-1-1-9"
                width="8"
                height="4"
@@ -263,7 +461,7 @@
                y="92.299995"
                inkscape:label="Motor" />
             <rect
-               style="display:inline;fill:#8f8f91;fill-opacity:1;stroke:none;stroke-width:3.75159;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+               style="display:inline;fill:url(#linearGradient19);fill-opacity:1;stroke:none;stroke-width:3.75159;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
                id="rect23954-1-2-9"
                width="2.2"
                height="7.7000022"
@@ -277,10 +475,10 @@
       <g
          id="g55"
          inkscape:label="Top Lin Act"
-         inkscape:transform-center-x="-27.296977"
-         inkscape:transform-center-y="-10.236173"
+         inkscape:transform-center-x="-27.303747"
+         inkscape:transform-center-y="-10.221306"
          style="display:inline"
-         transform="rotate(-20.83,-105.40138,136.85285)">
+         transform="rotate(-20.799914,-105.78018,136.97993)">
         <rect
            style="display:inline;fill:#434344;fill-opacity:1;stroke:none;stroke-width:3.851;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
            id="rect33525-4-1-5"
@@ -303,14 +501,17 @@
          inkscape:label="Bottom Act'r Mnt"
          style="display:inline"
          transform="translate(0,-0.4998822)">
-        <rect
-           style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+        <path
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:4;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
            id="rect32047"
-           width="4"
-           height="2"
+           width="6"
+           height="6"
            x="117"
-           y="35.499584"
-           inkscape:label="Mount" />
+           y="33.499584"
+           inkscape:label="Mount"
+           inkscape:path-effect="#path-effect30"
+           sodipodi:type="rect"
+           d="m 117,33.499584 h 4 a 2,2 45 0 1 2,2 l 0,2 a 2,2 135 0 1 -2,2 h -4 z" />
         <g
            id="g2"
            inkscape:label="Bearing">
@@ -328,9 +529,10 @@
          inkscape:label="Main Arm"
          transform="rotate(-16,67.812223,19.4998)"
          inkscape:transform-center-x="-31.721636"
-         inkscape:transform-center-y="-9.0960326">
+         inkscape:transform-center-y="-9.0960326"
+         style="display:inline">
         <rect
-           style="fill:#cac8be;fill-opacity:1;stroke:none;stroke-width:3.07457;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+           style="fill:url(#swatch37);fill-opacity:1;stroke:none;stroke-width:3.07457;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
            id="rect37408"
            width="66"
            height="4"
@@ -433,7 +635,8 @@
         <g
            id="g46"
            inkscape:label="Jaws"
-           style="display:inline;fill:#000000;fill-opacity:1">
+           style="display:inline;fill:#000000;fill-opacity:1"
+           sodipodi:insensitive="true">
           <g
              id="g6"
              inkscape:label="Back Face"
@@ -518,8 +721,8 @@
         <circle
            style="fill:#434344;fill-opacity:1;stroke-width:3.8;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:10"
            id="path46"
-           cx="198.8"
-           cy="83.5"
+           cx="198.68867"
+           cy="83.354973"
            r="0.30000001"
            inkscape:label="Tilt Act Mount" />
       </g>
@@ -603,7 +806,7 @@
            transform="translate(-2.9303684,3.8430866)" />
       </g>
       <rect
-         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.41539;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:url(#linearGradient17);fill-opacity:1;stroke:none;stroke-width:1.41539;stroke-dasharray:none;stroke-opacity:1"
          id="rect5986"
          width="60"
          height="20"
@@ -618,12 +821,13 @@
          inkscape:label="Arm mount bearing"
          r="3.7750001" />
       <rect
-         style="fill:#000b8e;fill-opacity:1;stroke-width:0.53;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
+         style="fill:url(#linearGradient21);fill-opacity:1;stroke-width:0.53;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
          id="rect12"
          width="5"
          height="6.5"
          x="94.00042"
-         y="11.999702" />
+         y="11.999702"
+         inkscape:label="Connector Mount" />
     </g>
     <g
        inkscape:groupmode="layer"
@@ -723,14 +927,12 @@
              cy="53.789581"
              r="5"
              inkscape:label="Hub"
-             transform="translate(0.20999869,0.31041537)"
-             sodipodi:insensitive="true" />
+             transform="translate(0.20999869,0.31041537)" />
           <path
              d="M 54.100249,39.349893 A 14.75,14.75 0 0 0 39.350245,54.099897 14.75,14.75 0 0 0 54.100249,68.849901 14.75,14.75 0 0 0 68.850253,54.099897 14.75,14.75 0 0 0 54.100249,39.349893 Z m 0,1.300179 A 13.45,13.45 0 0 1 67.550074,54.099897 13.45,13.45 0 0 1 54.100249,67.550239 13.45,13.45 0 0 1 40.649908,54.099897 13.45,13.45 0 0 1 54.100249,40.650072 Z"
              style="display:inline;stroke-width:1.3"
              id="path3"
-             inkscape:label="Tyre"
-             sodipodi:insensitive="true" />
+             inkscape:label="Tyre" />
         </g>
         <use
            x="0"
@@ -740,6 +942,196 @@
            inkscape:label="Wheel F"
            transform="translate(85.658001,-5.5499999e-5)" />
       </g>
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="Simplified Overlay"
+     style="display:none">
+    <g
+       id="g36"
+       inkscape:label="Bucket">
+      <g
+         id="g34"
+         inkscape:label="Lower Act"
+         style="display:inline">
+        <rect
+           style="fill:url(#swatch19);fill-opacity:1;stroke:none;stroke-width:3.70001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+           id="rect30"
+           width="10.1"
+           height="7.6999998"
+           x="34.415226"
+           y="90.468056"
+           inkscape:transform-center-x="-3.8109856"
+           inkscape:transform-center-y="0.41293083"
+           transform="rotate(-34.418113)"
+           inkscape:label="Motor Assy" />
+        <rect
+           style="display:inline;fill:url(#swatch20);fill-opacity:1;stroke:none;stroke-width:3.70001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+           id="rect34-5"
+           width="26.700001"
+           height="3.5"
+           x="66.094681"
+           y="95.313049"
+           inkscape:transform-center-x="-11.63054"
+           inkscape:transform-center-y="-6.0000721"
+           transform="rotate(-34.973359)"
+           inkscape:label="Arm" />
+      </g>
+      <g
+         id="g35"
+         inkscape:label="Upper Act"
+         style="display:inline">
+        <use
+           x="0"
+           y="0"
+           xlink:href="#rect30"
+           inkscape:transform-center-x="3.2795908"
+           inkscape:transform-center-y="5.4377654"
+           id="use34"
+           transform="rotate(12.833883,231.50029,106.17471)"
+           inkscape:label="Motor Assy"
+           style="display:inline" />
+        <rect
+           style="display:inline;fill:url(#swatch20);fill-opacity:1;stroke:none;stroke-width:3.70001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+           id="rect34"
+           width="26"
+           height="3.5"
+           x="113.02096"
+           y="58.888065"
+           inkscape:transform-center-x="-6.3949507"
+           inkscape:transform-center-y="-0.96069199"
+           transform="rotate(-20.800117)"
+           inkscape:label="Arm" />
+      </g>
+      <rect
+         style="display:inline;fill:url(#swatch20);fill-opacity:1;stroke:none;stroke-width:3.70001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+         id="rect34-5-7"
+         width="7"
+         height="3.5"
+         x="8.2926264"
+         y="146.01994"
+         inkscape:transform-center-x="1.4199096"
+         inkscape:transform-center-y="-3.1695978"
+         transform="rotate(-83.874949)"
+         inkscape:label="Arm" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#rect30"
+         inkscape:transform-center-x="-4.3728815"
+         inkscape:transform-center-y="-4.6046617"
+         id="use37"
+         style="display:inline"
+         transform="rotate(-49.381841,71.124186,-29.059977)" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#g46"
+         id="use35"
+         inkscape:label="Jaws"
+         style="display:inline"
+         transform="translate(-47.377559,-76.234764)" />
+      <path
+         style="fill:url(#swatch19);stroke:none;stroke-width:4.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+         d="m 53.869994,53.361015 20.000002,9.999983 h 4 V 33.360883 L 75.869995,33.361 v 19.999997 z"
+         id="path17"
+         inkscape:label="Bracing" />
+      <g
+         id="g37"
+         inkscape:label="Mounts">
+        <use
+           x="0"
+           y="0"
+           xlink:href="#rect32047"
+           id="use31"
+           style="display:inline"
+           transform="translate(-39.130004,23.861415)"
+           inkscape:label="Bottom Mount" />
+        <use
+           x="0"
+           y="0"
+           xlink:href="#use31"
+           id="use32"
+           transform="translate(-2.9791666e-7,-23.99971)"
+           inkscape:label="Top Act Mount" />
+        <path
+           style="fill:url(#swatch17);fill-opacity:1;stroke:none;stroke-width:3.70001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+           id="rect32"
+           width="4.9999962"
+           height="7.6999998"
+           x="-86.844986"
+           y="-60.067875"
+           inkscape:transform-center-x="-1.5762368"
+           inkscape:transform-center-y="-3.5728888"
+           transform="rotate(163.99985)"
+           inkscape:path-effect="#path-effect32"
+           sodipodi:type="rect"
+           d="m -86.844986,-60.067875 h 4.999996 v 5.7 l -2,2 h -0.999996 l -2,-2 z"
+           inkscape:label="Lower Arm Act Mnt" />
+        <use
+           x="0"
+           y="0"
+           xlink:href="#rect32"
+           inkscape:transform-center-x="1.6175794"
+           inkscape:transform-center-y="4.1143128"
+           id="use33"
+           transform="rotate(180,113.76763,27.265262)"
+           inkscape:label="Upper Arm Act Mnt" />
+      </g>
+    </g>
+    <g
+       id="g16"
+       inkscape:label="Suspension"
+       style="display:inline">
+      <path
+         style="display:inline;fill:none;fill-opacity:1;stroke:url(#linearGradient37);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none"
+         d="M 14.753343,71.047691 70.059631,47.550998 100.39763,70.150997"
+         id="path16"
+         sodipodi:nodetypes="ccc"
+         inkscape:label="Arm" />
+      <g
+         id="g15"
+         inkscape:label="Wheels">
+        <g
+           id="g39"
+           inkscape:label="Wheel R"
+           style="display:inline">
+          <ellipse
+             style="fill:#000000;fill-opacity:1;stroke-width:0.53;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
+             id="path7-9"
+             cx="14.73963"
+             cy="78.150635"
+             rx="14.73963"
+             ry="14.704582"
+             inkscape:label="Tyre" />
+          <ellipse
+             style="fill:url(#linearGradient22);stroke-width:0.53;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"
+             id="path7"
+             cx="14.749749"
+             cy="78.196159"
+             rx="13.45009"
+             ry="13.449927"
+             inkscape:label="Hub" />
+        </g>
+        <use
+           x="0"
+           y="0"
+           xlink:href="#g39"
+           id="use40"
+           inkscape:label="Wheel F"
+           transform="translate(85.658251,-1.5796279e-4)"
+           style="display:inline" />
+      </g>
+      <rect
+         style="fill:#212866;fill-opacity:1;stroke:none;stroke-width:4.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+         id="rect16"
+         width="3.5"
+         height="15.000006"
+         x="12.369996"
+         y="35.860996"
+         inkscape:label="Crossbar Bearing" />
     </g>
   </g>
 </svg>

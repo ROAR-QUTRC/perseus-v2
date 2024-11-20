@@ -107,9 +107,8 @@ html_css_files = [
     "css/theme.css",
 ]
 
-rover_logo = "_static/Rover-Logo.svg"
-html_logo = rover_logo
-html_favicon = rover_logo
+html_logo = "_static/Rover-Logo.svg"
+html_favicon = "_static/Logo-Simple.png"
 
 primary = "deep-orange"
 accent = "indigo"
@@ -121,6 +120,7 @@ html_theme_options = (
         "repo_name": "Perseus V2",
         "icon": {
             "repo": "material/github",
+            "edit": "material/file-edit-outline",
         },
         "edit_uri": "edit/main/docs/source/",
         "features": [
