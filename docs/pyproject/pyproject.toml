@@ -7,9 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "breathe>=4.35.0",
     "exhale>=0.3.7",
-    "furo>=2024.8.6",
     "sphinx>=8.1.3",
-    "sphinx-rtd-theme>=3.0.2",
     "myst-parser[linkify]>=4.0.0",
     "sphinx-immaterial[keys]>=0.12.4",
     "sphinxcontrib-jquery>=4.1",

@@ -14,9 +14,6 @@ project = "Perseus V2"
 author = "ROAR Team"
 copyright = f"2024, {author}"
 
-# may be: "sphinx_immaterial", "sphinx_rtd_theme" or "furo"
-theme = "sphinx_immaterial"
-
 # General configuration
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
@@ -26,11 +23,12 @@ extensions = [
     "exhale",  # doxygen integration
     "sphinxcontrib.jquery",  # add jQuery to the HTML output so that plugins expecting to run on RTD work
     "sphinx.ext.githubpages",  # add .nojekyll file for github pages
-    "sphinx_immaterial.kbd_keys",  # pretty keyboard shortcuts
     "sphinx.ext.intersphinx",  # link to other projects (specifically ROS and Python)
+    "sphinx_immaterial",  # theme
+    "sphinx_immaterial.kbd_keys",  # pretty keyboard shortcuts
+    "sphinx_immaterial.apidoc.cpp.cppreference",  # link to en.cppreference.com
+    "sphinx_immaterial.graphviz",  # graphviz support with theme integration
 ]
-if theme == "sphinx_immaterial":
-    extensions.append("sphinx_immaterial")
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -101,7 +99,7 @@ highlight_language = "cpp"
 
 # Options for HTML output
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-html_theme = theme
+html_theme = "sphinx_immaterial"
 html_static_path = ["_static"]
 
 html_extra_path = ["robots.txt", "README.md"]
@@ -118,67 +116,61 @@ primary = "deep-orange"
 accent = "indigo"
 
 # sphinx-immaterial theme options
-html_theme_options = (
-    {
-        "repo_url": "https://github.com/ROAR-QUTRC/perseus-v2",
-        "repo_name": "Perseus V2",
-        "icon": {
-            "repo": "material/github",
-            "edit": "material/file-edit-outline",
-        },
-        "edit_uri": "edit/main/docs/source/",
-        "features": [
-            # "content.tabs.link", # linked tabs which all switch at once, eg for different languages
-            # "header.autohide", # autohide header on scroll
-            # "navigation.expand", # expand navigation by default (on load)
-            "navigation.instant",  # instant navigation
-            "navigation.sections",  # split navigation into sections (by caption mostly)
-            # "navigation.tabs",
-            # "navigation.tabs.sticky",
-            "navigation.top",  # back to top button
-            # "navigation.tracking", # URL tracks header
-            "search.highlight",  # highlight search results
-            "search.share",  # share search results button
-            # "toc.integrate", # integrate ToC with left navigation
-            "toc.follow",  # ToC active header follows scroll
-            "toc.sticky",  # sticky ToC header
-        ],
-        "palette": [
-            {
-                "media": "(prefers-color-scheme: light)",
-                "scheme": "default",
-                "primary": primary,
-                "accent": accent,
-                "toggle": {
-                    "icon": "material/lightbulb-outline",
-                    "name": "Switch to dark mode",
-                },
-            },
-            {
-                "media": "(prefers-color-scheme: dark)",
-                "scheme": "slate",
-                "primary": primary,
-                "accent": accent,
-                "toggle": {
-                    "icon": "material/lightbulb",
-                    "name": "Switch to light mode",
-                },
-            },
-        ],
-        # using self-hosted fonts (Roboto): See _static/css/fonts.css and https://sphinx-immaterial.readthedocs.io/en/latest/customization.html#themeconf-font
-        # This prevents CDN downloads which require breaking the Nix build sandbox
-        "font": False,
-        "globaltoc_collapse": False,
-        "toc_title_is_page_title": True,
-    }
-    if (theme == "sphinx_immaterial")
-    else (
+html_theme_options = {
+    "repo_url": "https://github.com/ROAR-QUTRC/perseus-v2",
+    "repo_name": "Perseus V2",
+    "icon": {
+        "repo": "material/github",
+        "edit": "material/file-edit-outline",
+    },
+    "edit_uri": "edit/main/docs/source/",
+    "features": [
+        # "content.tabs.link", # linked tabs which all switch at once, eg for different languages
+        # "header.autohide", # autohide header on scroll
+        # "navigation.expand", # expand navigation by default (on load)
+        "navigation.instant",  # instant navigation
+        "navigation.sections",  # split navigation into sections (by caption mostly)
+        # "navigation.tabs",
+        # "navigation.tabs.sticky",
+        "navigation.top",  # back to top button
+        # "navigation.tracking", # URL tracks header
+        "search.highlight",  # highlight search results
+        "search.share",  # share search results button
+        # "toc.integrate", # integrate ToC with left navigation
+        "toc.follow",  # ToC active header follows scroll
+        "toc.sticky",  # sticky ToC header
+    ],
+    "palette": [
         {
-            "collapse_navigation": False,
-            "sticky_navigation": True,
-            "navigation_depth": -1,
-        }
-        if theme == "sphinx_rtd_theme"
-        else {}
-    )
-)
+            "media": "(prefers-color-scheme: light)",
+            "scheme": "default",
+            "primary": primary,
+            "accent": accent,
+            "toggle": {
+                "icon": "material/lightbulb-outline",
+                "name": "Switch to dark mode",
+            },
+        },
+        {
+            "media": "(prefers-color-scheme: dark)",
+            "scheme": "slate",
+            "primary": primary,
+            "accent": accent,
+            "toggle": {
+                "icon": "material/lightbulb",
+                "name": "Switch to light mode",
+            },
+        },
+    ],
+    # using self-hosted fonts (Roboto): See _static/css/fonts.css and https://sphinx-immaterial.readthedocs.io/en/latest/customization.html#themeconf-font
+    # This prevents CDN downloads which require breaking the Nix build sandbox
+    "font": False,
+    "globaltoc_collapse": False,
+    "toc_title_is_page_title": True,
+}
+# sphinx_rtd_theme config - no longer used
+# {
+#     "collapse_navigation": False,
+#     "sticky_navigation": True,
+#     "navigation_depth": -1,
+# }
