@@ -22,6 +22,11 @@ writeShellScriptBin "roar-docs-fetch-inventories" ''
     --output python.inv https://docs.python.org/3/objects.inv \
     --output ros.inv https://docs.ros.org/en/${rosDistro}/objects.inv
 
+  if git diff --quiet -- "$INVENTORY_LOCATION" >/dev/null; then
+    echo "No changes to commit"
+    exit 0
+  fi
+
   if [[ "$*" == *--no-commit* ]]; then
       echo "Will not commit changes"
       exit 0
