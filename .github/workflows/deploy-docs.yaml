@@ -1,0 +1,71 @@
+# Workflow to build and deploy the docs using a deploy key
+name: Deploy documentation to GH Pages
+
+on:
+  # Run on pushes to main and docs - we shouldn't need to test building for other branches
+  push:
+    branches: ["main", "docs"]
+    paths:
+      - docs/**
+      - software/**
+      - flake.nix
+      - flake.lock
+      - .github/workflows/docs.yaml
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy-docs:
+    # only run one job at a time
+    concurrency:
+      group: "docs"
+      cancel-in-progress: true
+    # needed for the intersphinx update
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Update intersphinx inventory files
+        # only run intersphinx update on main branch!
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          cd source
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          nix run .#docs.fetch-inventories
+          git push
+      - name: Build docs
+        run: nix build -L ./source#docs
+
+      # From here, deploying to the website repo
+      - name: Checkout website repo
+        # only run on origin main branch
+        if: ${{ github.repository == 'ROAR-QUTRC/perseus-v2' && github.ref == 'refs/heads/main' }}
+        id: checkout-website
+        uses: actions/checkout@v4
+        with:
+          repository: ROAR-QUTRC/roar-qutrc.github.io
+          ref: main
+          ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          path: docs
+      - name: Update docs in checked out repo
+        if: ${{ steps.checkout-website.outcome == 'success' }}
+        run: |
+          rm -rf docs/*
+          # copy from previous nix build
+          cp -a result/html/. docs/
+      - name: Commit and push changes
+        if: ${{ steps.checkout-website.outcome == 'success' }}
+        run: |
+          cd docs
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add .
+          git commit -m "$(date +%z:%Y-%m-%dT%H:%M:%S) Automatic docs update"
+          git push
