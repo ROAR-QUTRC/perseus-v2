@@ -1,4 +1,5 @@
-import shutil
+from shutil import which
+from os import environ
 from textwrap import dedent
 
 # Configuration file for the Sphinx documentation builder.
@@ -52,7 +53,7 @@ exhale_args = {
     # Optional arguments
     "createTreeView": True,
     # configure Exhale to run doxygen (if it's available)
-    "exhaleExecutesDoxygen": (shutil.which("doxygen") is not None),
+    "exhaleExecutesDoxygen": (which("doxygen") is not None),
     # dedent so we can provide multiline string
     "exhaleDoxygenStdin": dedent(
         """
