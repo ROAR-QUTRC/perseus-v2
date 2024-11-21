@@ -10,7 +10,6 @@ on:
       - software/**
       - flake.nix
       - flake.lock
-      - .github/workflows/docs.yaml
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -62,6 +61,7 @@ jobs:
           cp -a result/html/. docs/
       - name: Commit and push changes
         if: ${{ steps.checkout-website.outcome == 'success' }}
+        continue-on-error: true # if there's nothing to push, this step fails
         run: |
           cd docs
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
