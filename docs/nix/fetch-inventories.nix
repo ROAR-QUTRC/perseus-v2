@@ -20,8 +20,7 @@ writeShellScriptBin "roar-docs-fetch-inventories" ''
   curl --parallel \
     --create-dirs --output-dir "$INVENTORY_LOCATION" \
     --output python.inv https://docs.python.org/3/objects.inv \
-    --variable rosDistro="${rosDistro}" \
-    --output ros.inv --expand-url https://docs.ros.org/en/{{rosDistro:trim:url}}/objects.inv
+    --output ros.inv https://docs.ros.org/en/${rosDistro}/objects.inv
 
   if [[ "$*" == *--no-commit* ]]; then
       echo "Will not commit changes"
