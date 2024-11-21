@@ -23,6 +23,7 @@ extensions = [
     "myst_parser",  # MyST parser - allows for markdown instead of reStructuredText
     "breathe",
     "exhale",  # doxygen integration
+    "sphinxcontrib.jquery",  # add jQuery to the HTML output so that plugins expecting to run on RTD work
     "sphinx.ext.githubpages",  # add .nojekyll file for github pages
     "sphinx_immaterial.kbd_keys",  # pretty keyboard shortcuts
     "sphinx.ext.intersphinx",  # link to other projects (specifically ROS and Python)
@@ -74,6 +75,7 @@ exhale_args = {
 # https://myst-parser.readthedocs.io/en/latest/
 myst_enable_extensions = [
     "amsmath",
+    "attrs_inline",
     "colon_fence",
     "dollarmath",
     "html_admonition",

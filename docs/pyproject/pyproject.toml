@@ -12,4 +12,5 @@ dependencies = [
     "sphinx-rtd-theme>=3.0.2",
     "myst-parser[linkify]>=4.0.0",
     "sphinx-immaterial[keys]>=0.12.4",
+    "sphinxcontrib-jquery>=4.1",
 ]
