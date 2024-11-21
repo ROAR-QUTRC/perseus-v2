@@ -108,6 +108,7 @@ html_extra_path = ["robots.txt", "README.md"]
 
 html_css_files = [
     "css/theme.css",
+    "css/fonts.css",
 ]
 
 html_logo = "_static/Rover-Logo.svg"
@@ -164,6 +165,9 @@ html_theme_options = (
                 },
             },
         ],
+        # using self-hosted fonts (Roboto): See _static/css/fonts.css and https://sphinx-immaterial.readthedocs.io/en/latest/customization.html#themeconf-font
+        # This prevents CDN downloads which require breaking the Nix build sandbox
+        "font": False,
         "globaltoc_collapse": False,
         "toc_title_is_page_title": True,
     }
