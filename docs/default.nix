@@ -48,13 +48,13 @@ let
       filter =
         name: type:
         let
-          relativePath = lib.removePrefix (toString ./.. + "/") name;
+          relativePath = lib.removePrefix (toString ./..) name;
         in
         !(
           # filter out build directory
           (lib.hasInfix "build/" relativePath)
           # filter out generated files
-          || (lib.hasInfix "generated" relativePath)
+          || (lib.hasInfix "generated/" relativePath)
         );
     };
 

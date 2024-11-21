@@ -23,7 +23,7 @@ let
         path: type:
         let
           # strip out the absolute path prefix
-          relativePath = prev.lib.removePrefix (toString src + "/") path;
+          relativePath = prev.lib.removePrefix (toString src) path;
         in
         !(prev.lib.hasPrefix "build/" relativePath);
     };
