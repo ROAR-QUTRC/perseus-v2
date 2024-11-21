@@ -27,6 +27,7 @@ if [[ "$*" == *--no-commit* ]]; then
     exit 0
 fi
 
+git add -N "$INVENTORY_LOCATION"
 if ! git diff --cached --quiet >/dev/null; then
     HAS_GIT_STAGING=1
     echo "Stashing staged changes"
