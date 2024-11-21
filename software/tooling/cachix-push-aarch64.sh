@@ -21,6 +21,11 @@ cachix push qutrc-roar roar-devenv
 
 rm roar-devenv*
 
+nix develop .#docs --profile roar-devenv -c true
+cachix push qutrc-roar roar-devenv
+
+rm roar-devenv*
+
 nix develop .#devShells.aarch64-linux.roverSim --profile roar-devenv -c true
 cachix push qutrc-roar roar-devenv
 

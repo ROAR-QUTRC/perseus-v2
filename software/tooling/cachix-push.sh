@@ -10,6 +10,7 @@ cd $SCRIPT_DIR/..
 # push built packages
 nix build .#rosCore --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
 nix build --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
+nix build .#docs --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
 nix build .#roverSim --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
 
 # push input flakes
@@ -21,7 +22,12 @@ cachix push qutrc-roar roar-devenv
 
 rm roar-devenv*
 
-nix develop .#roverSim --profile roar-devenv -c true
+nix develop .#docs --profile roar-devenv -c true
+cachix push qutrc-roar roar-devenv
+
+rm roar-devenv*
+
+nix develop .#sim --profile roar-devenv -c true
 cachix push qutrc-roar roar-devenv
 
 rm roar-devenv*
