@@ -1,6 +1,7 @@
 from shutil import which
-from os import environ
 from textwrap import dedent
+import os
+from os import path
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -86,7 +87,7 @@ myst_enable_extensions = [
 myst_heading_anchors = 4  # auto-generated heading anchors (slugs)
 suppress_warnings = ["myst.strikethrough"]
 
-ros_distro = environ.get("ROS_DISTRO", "humble")
+ros_distro = os.environ.get("ROS_DISTRO", "humble")
 # intersphinx config
 # this is a good guide: https://docs.readthedocs.io/en/stable/guides/intersphinx.html
 intersphinx_mapping = {
@@ -114,6 +115,9 @@ html_extra_path = ["robots.txt", "README.md"]
 html_css_files = [
     "css/theme.css",
     "css/fonts.css",
+]
+html_js_files = [
+    "js/dark-opt-images.js",
 ]
 
 html_logo = "_static/Rover-Logo.svg"
@@ -181,3 +185,43 @@ html_theme_options = {
 #     "sticky_navigation": True,
 #     "navigation_depth": -1,
 # }
+
+
+def index_figures(app):
+    INDEX_FILE = "_figure-index.rst"
+    figure_dir = path.join(app.builder.srcdir, "generated")
+
+    # only run if the directory exists
+    if not path.exists(figure_dir):
+        return
+
+    # use scandir to get all files in the directory - see:
+    # https://stackoverflow.com/questions/800197/how-to-get-all-of-the-immediate-subdirectories-in-python
+    figure_paths = [
+        f.name
+        for f in os.scandir(figure_dir)
+        if (
+            f.is_file()
+            and (
+                f.name.endswith(".svg")
+                or f.name.endswith(".png")
+                or f.name.endswith(".jpg")
+                or f.name.endswith(".jpeg")
+                or f.name.endswith(".pdf")
+            )
+        )
+    ]
+
+    # write the index file which embeds the image
+    file = open(path.join(figure_dir, INDEX_FILE), "w")
+    file.write(
+        ":orphan:\n\n"  # suppress warnings about not being included in toctree
+        "Generated Images\n=======\n\n"
+        "This is a dirty hack to ensure that Sphinx includes all the generated figures in the output.\n\n"
+    )
+    for image in figure_paths:
+        file.write(f".. image:: {image}\n")
+
+
+def setup(app):
+    app.connect("builder-inited", index_figures)
