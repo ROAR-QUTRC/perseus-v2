@@ -86,12 +86,19 @@ myst_enable_extensions = [
 myst_heading_anchors = 4  # auto-generated heading anchors (slugs)
 suppress_warnings = ["myst.strikethrough"]
 
+ros_distro = environ.get("ROS_DISTRO", "humble")
 # intersphinx config
 # this is a good guide: https://docs.readthedocs.io/en/stable/guides/intersphinx.html
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-    "ros": ("https://docs.ros.org/en/humble", None),
+    "python": ("https://docs.python.org/3", "./intersphinx/python.inv"),
+    "ros": (f"https://docs.ros.org/en/{ros_distro}", "./intersphinx/ros.inv"),
 }
+# Sphinx defaults to automatically resolve *unresolved* labels using all your Intersphinx mappings.
+# This behavior has unintended side-effects, namely that documentations local references can
+# suddenly resolve to an external location.
+# See also:
+# https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_disabled_reftypes
+intersphinx_disabled_reftypes = ["*"]
 
 # Options for markup
 primary_domain = "cpp"
