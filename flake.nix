@@ -71,6 +71,7 @@
             # add uv2nix + pyproject-nix to the package set
             (final: prev: { inherit pyproject-nix uv2nix; })
           ];
+          config.allowUnfree = true; # needed for draw.io for the docs
         };
 
         # --- INPUT PACKAGE SETS ---
@@ -142,7 +143,8 @@
 
         # --- PYTHON (UV) WORKSPACES ---
         # note: called with pkgs-unstable since we need the uv tool to be up-to-date due to rapid development
-        docs = pkgs-unstable.callPackage (import ./docs) { };
+        # note 2: called with rosDistro to link correct intersphinx inventory
+        docs = pkgs-unstable.callPackage (import ./docs) { inherit rosDistro; };
 
         # --- LAUNCH SCRIPTS ---
         perseus = pkgs.writeShellScriptBin "perseus" ''
@@ -194,11 +196,17 @@
       "qutrc-roar.cachix.org-1:lARPhJL+PLuGd021HeN8CQOGGiYVEVGws5za+39M1Z0="
       "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo="
     ];
-    # note that this is normally a VERY BAD IDEA but it's needed so the docs can have internet access
-    # This is needed for:
-    # - sphinx-immaterial to build (it pulls fonts and CSS from Google CDN)
-    # - intersphinx to pull inventory files so it can link to other Sphinx projects
-    #   (like Python or ROS2 docs)
-    sandbox = "relaxed";
+    # note that this is normally a VERY BAD IDEA but it may be needed so the docs can have internet access,
+    # with certain configurations. Currently, everything is configured to work offline with cached files in the git repo.
+
+    # Unless otherwise configured, sphinx-immaterial will pull fonts from Google's CDN, which obviously requires internet access.
+    # The Roboto (and RobotoMono) fonts have been downloaded locally and are used instead.
+    # These should never change, so it really doesn't matter.
+
+    # intersphinx also normally expects to be able to download inventory (.inv) files from the target projects,
+    # but it has also been configured to use local copies. Updating these files is done with `nix run .#docs.fetch-inventories`,
+    # and is run automatically from the CI pipeline (it makes a commit with the update).
+
+    # sandbox = "relaxed";
   };
 }

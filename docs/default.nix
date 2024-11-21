@@ -10,12 +10,9 @@
   uv2nix,
   # non-python packages to build docs
   doxygen,
-  # shell env
-  mkShell,
-  uv,
-  # compressed docs
-  p7zip,
-  writeShellScriptBin,
+  graphviz,
+  # ros version to link to with intersphinx - defaults to humble
+  rosDistro ? "humble",
 }:
 let
   # mostly taken from uv2nix docs https://adisbladis.github.io/uv2nix/usage/hello-world.html
@@ -31,18 +28,18 @@ let
     (callPackage pyproject-nix.build.packages { python = python312; }).overrideScope
       overlay;
   pyEnv = pythonPkgSet.mkVirtualEnv "roar-docs-py-env" workspace.deps.default;
-  # add Doxygen to the final environment so we can generate code docs
+  # add generation tools to the final environment so we can generate code docs
   env = symlinkJoin {
     name = "roar-docs-env";
     paths = [
       pyEnv
       doxygen
+      graphviz
     ];
   };
 
   # create derivation which builds the docs
   docs = stdenv.mkDerivation {
-    inherit SOURCE_DATE_EPOCH;
     name = "roar-docs";
     buildInputs = [ env ];
     src = lib.cleanSourceWith {
@@ -61,20 +58,40 @@ let
         );
     };
 
-    # with sandbox=relaxed, disables sandboxing for this derivation
-    __noChroot = true;
+    passthru = {
+      inherit
+        env
+        shell
+        compressed
+        decompress
+        figures
+        fetch-inventories
+        setup
+        ;
+    };
+
+    ROS_DISTRO = rosDistro; # for intersphinx config
+
     # make needs to be run from the docs directory, but we need the whole tree for Doxygen generation
     # (hence source being the whole project)
-    # note that the _sources directory is removed as we don't want to accidentally leak things
+    # note that (although they should not be present anyway) the program_listing files are removed to
+    # doubly ensure that there are no source code leaks
     buildPhase = ''
       cd docs
+
+      # copy prebuilt figures into place
+      mkdir -p source/generated
+      cp -a ${figures}/. source/generated
+
       # needed to prevent /homeless-shelter from being created
       export HOME=$PWD
 
       # this needed because Sphinx does a dumb thing and overrides the "current year" in copyright with SOURCE_DATE_EPOCH
       # see https://github.com/sphinx-doc/sphinx/issues/3451#issuecomment-877801728
       unset SOURCE_DATE_EPOCH
-      # build the docs
+      # make the directory writable - allows us to modify the files during the Sphinx build
+      chmod -R +w .
+      # finally build the docs
       make html
 
       # failsafe to *ensure* that program listings are removed - we REALLY don't want to leak source code
@@ -85,36 +102,16 @@ let
       mkdir -p $out/html
       cp -a ./build/html/. $out/html
     '';
-    # provide dev shell in passthru
-    passthru = {
-      inherit env compressed decompress;
-      shell = mkShell {
-        buildInputs = [
-          env
-          uv # uv added to manage python dependencies
-        ];
-        shellHook = ''
-          # Undo dependency propagation by nixpkgs.
-          unset PYTHONPATH
-        '';
-      };
-    };
   };
 
-  compressed = stdenv.mkDerivation {
-    name = "roar-docs-compressed";
-    buildInputs = [
-      docs
-      p7zip
-    ];
-    src = docs;
-    installPhase = ''
-      mkdir -p $out
-      7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $out/docs.7z .
-    '';
+  shell = callPackage (import ./nix/shell.nix) { inherit rosDistro env; };
+  compressed = callPackage (import ./nix/compressed.nix) { inherit docs; };
+  decompress = callPackage (import ./nix/decompress.nix) { };
+  cd-docs-source = callPackage (import ./nix/cd-docs-source.nix) { };
+  figures = callPackage (import ./nix/figures.nix) { };
+  fetch-inventories = callPackage (import ./nix/fetch-inventories.nix) {
+    inherit rosDistro cd-docs-source;
   };
-  decompress = writeShellScriptBin "decompress" ''
-    ${lib.getExe p7zip} x $1 -o$2
-  '';
+  setup = callPackage (import ./nix/setup.nix) { inherit cd-docs-source figures; };
 in
 docs

@@ -12,8 +12,6 @@ build/
 public/
 # draw.io stuff
 .$*
-# generated figures
-figures-output/
 
 # Prerequisites
 *.d
