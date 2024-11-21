@@ -11,8 +11,8 @@ from textwrap import dedent
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "Perseus V2"
-copyright = "2024, ROAR Team"
 author = "ROAR Team"
+copyright = f"2024, {author}"
 
 # may be: "sphinx_immaterial", "sphinx_rtd_theme" or "furo"
 theme = "sphinx_immaterial"

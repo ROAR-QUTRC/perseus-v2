@@ -39,9 +39,6 @@ let
       doxygen
     ];
   };
-  # Setting this as an environment variable makes the copyright year in the generated documentation correct,
-  # but requires impure evaluation. Oh well. We're already doing non-sandboxed evaluation anyway...
-  SOURCE_DATE_EPOCH = builtins.toString builtins.currentTime;
 
   # create derivation which builds the docs
   docs = stdenv.mkDerivation {
@@ -73,7 +70,13 @@ let
       cd docs
       # needed to prevent /homeless-shelter from being created
       export HOME=$PWD
+
+      # this needed because Sphinx does a dumb thing and overrides the "current year" in copyright with SOURCE_DATE_EPOCH
+      # see https://github.com/sphinx-doc/sphinx/issues/3451#issuecomment-877801728
+      unset SOURCE_DATE_EPOCH
+      # build the docs
       make html
+
       # failsafe to *ensure* that program listings are removed - we REALLY don't want to leak source code
       find -type f -name '*program_listing*' -delete
     '';
