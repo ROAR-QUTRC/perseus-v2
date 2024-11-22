@@ -39,10 +39,12 @@ language = "en"
 # Extension configuration
 # Set up the breathe extension
 # https://breathe.readthedocs.io/en/stable/quickstart.html
-breathe_projects = {"rover": "../build/doxygen/xml/"}
+doxygen_xml_dir = "../build/doxygen/xml"
+breathe_projects = {"rover": doxygen_xml_dir}
 breathe_default_project = "rover"
 
 # Setup the exhale extension
+# https://exhale.readthedocs.io/en/stable/usage.html
 exhale_args = {
     # Required arguments
     "containmentFolder": "./generated",
@@ -51,8 +53,10 @@ exhale_args = {
     "doxygenStripFromPath": "../../software",
     # Optional arguments
     "createTreeView": True,
-    # configure Exhale to run doxygen (if it's available)
-    "exhaleExecutesDoxygen": (which("doxygen") is not None),
+    # configure Exhale to run doxygen if it's available AND we haven't already generated output (speeds up dev shell builds a bit)
+    "exhaleExecutesDoxygen": (
+        (which("doxygen") is not None) and not os.path.isdir(doxygen_xml_dir)
+    ),
     # dedent so we can provide multiline string
     "exhaleDoxygenStdin": dedent(
         """
