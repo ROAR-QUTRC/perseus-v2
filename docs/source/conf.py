@@ -97,6 +97,20 @@ ros_distro = os.environ.get("ROS_DISTRO", "humble")
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", "./intersphinx/python.inv"),
     "ros": (f"https://docs.ros.org/en/{ros_distro}", "./intersphinx/ros.inv"),
+    "sphinx": ("https://www.sphinx-doc.org/en/master", "./intersphinx/sphinx.inv"),
+    "myst": (
+        "https://myst-parser.readthedocs.io/en/latest",
+        "./intersphinx/myst.inv",
+    ),
+    "breathe": (
+        "https://breathe.readthedocs.io/en/stable",
+        "./intersphinx/breathe.inv",
+    ),
+    "exhale": ("https://exhale.readthedocs.io/en/stable", "./intersphinx/exhale.inv"),
+    "sphinx-immaterial": (
+        "https://jbms.github.io/sphinx-immaterial",
+        "./intersphinx/sphinx-immaterial.inv",
+    ),
 }
 # Sphinx defaults to automatically resolve *unresolved* labels using all your Intersphinx mappings.
 # This behavior has unintended side-effects, namely that documentations local references can
@@ -220,7 +234,7 @@ def index_figures(app):
     file = open(path.join(figure_dir, INDEX_FILE), "w")
     file.write(
         ":orphan:\n\n"  # suppress warnings about not being included in toctree
-        "Generated Images\n=======\n\n"
+        "Generated Images\n============================\n\n"
         "This is a dirty hack to ensure that Sphinx includes all the generated figures in the output.\n\n"
     )
     for image in figure_paths:

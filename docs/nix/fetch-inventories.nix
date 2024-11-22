@@ -20,7 +20,12 @@ writeShellScriptBin "roar-docs-fetch-inventories" ''
   curl --parallel \
     --create-dirs --output-dir "$INVENTORY_LOCATION" \
     --output python.inv https://docs.python.org/3/objects.inv \
-    --output ros.inv https://docs.ros.org/en/${rosDistro}/objects.inv
+    --output ros.inv https://docs.ros.org/en/${rosDistro}/objects.inv \
+    --output sphinx.inv https://www.sphinx-doc.org/en/master/objects.inv \
+    --output myst.inv https://myst-parser.readthedocs.io/en/latest/objects.inv \
+    --output breathe.inv https://breathe.readthedocs.io/en/stable/objects.inv \
+    --output exhale.inv https://exhale.readthedocs.io/en/stable/objects.inv \
+    --output sphinx-immaterial.inv https://jbms.github.io/sphinx-immaterial/objects.inv
 
   git add -N "$INVENTORY_LOCATION"
   if git diff --quiet -- "$INVENTORY_LOCATION" >/dev/null; then
