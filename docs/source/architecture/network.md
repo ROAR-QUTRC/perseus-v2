@@ -2,7 +2,17 @@
 
 ## TLDR
 
-SSID is "QUTRC-ROAR" and assume only a 20Mhz connection.
+Perseus assumes that it will connect to a wifi network with SSID: "QUTRC-ROAR".
+
+All processes and nodes running should be able to operate via a network connection sharing a single 2.4GHz wifi connection with a 20MHz channel width.
+
+Whilst the rules allow for 40Mhz bonding interference is possible. 
+
+Assuming 20MHz means 802.11g which is 54Mbps. 
+
+This equates to a maximum usage network connection of 6.75 MBps.
+
+If bonding is used then 802.11n allows for up to 600 Mbps (this would require 4xMIMO) being 75MBps.
 
 ## Purpose
 
