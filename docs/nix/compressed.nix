@@ -1,9 +1,9 @@
 {
-  stdenv,
+  stdenvNoCC,
   p7zip,
   docs,
 }:
-stdenv.mkDerivation {
+stdenvNoCC.mkDerivation {
   name = "roar-docs-compressed";
   buildInputs = [
     docs

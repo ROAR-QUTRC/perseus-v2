@@ -1,5 +1,6 @@
+# TODO: Maybe copy over empty directory structure before generating the figures?
 {
-  stdenv,
+  stdenvNoCC,
   lib,
   writeShellScript,
   drawio,
@@ -15,7 +16,7 @@
 let
   output-dir = "generated";
 
-  figures = stdenv.mkDerivation {
+  figures = stdenvNoCC.mkDerivation {
     name = "roar-docs-figures";
     src = lib.cleanSource ../figures-source;
     # after making the temp output dir, this finds all .drawio files in the source directory,

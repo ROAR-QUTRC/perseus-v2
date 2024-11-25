@@ -1,7 +1,7 @@
 {
   # standard nix tooling
   lib,
-  stdenv,
+  stdenvNoCC,
   callPackage,
   python312,
   symlinkJoin,
@@ -39,7 +39,7 @@ let
   };
 
   # create derivation which builds the docs
-  docs = stdenv.mkDerivation {
+  docs = stdenvNoCC.mkDerivation {
     name = "roar-docs";
     buildInputs = [ env ];
     src = lib.cleanSourceWith {
