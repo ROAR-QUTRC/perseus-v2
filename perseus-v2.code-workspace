@@ -83,6 +83,19 @@
             "any": "cpp",
             "fstream": "cpp",
             "cinttypes": "cpp"
-        }
+        },
+        "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix"
+    },
+    "extensions": {
+        "recommendations": [
+            "jeff-hykin.better-cpp-syntax",
+            "ms-python.vscode-pylance",
+            "ms-python.python",
+            "ms-python.debugpy",
+            "christian-kohler.path-intellisense",
+            "cschlosser.doxdocgen",
+            "mkhl.direnv",
+            "ms-vscode.cpptools"
+        ]
     }
 }
