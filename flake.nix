@@ -10,13 +10,19 @@
     # docs inputs
     nixpkgs-unstable.url = "nixpkgs/nixpkgs-unstable";
     pyproject-nix = {
-      url = "github:nix-community/pyproject.nix";
+      url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     uv2nix = {
       url = "github:adisbladis/uv2nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
       inputs.pyproject-nix.follows = "pyproject-nix";
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     # flake compat input (allows use of nix-build)
     flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
@@ -29,6 +35,7 @@
       nixpkgs-unstable,
       pyproject-nix,
       uv2nix,
+      pyproject-build-systems,
       ...
     }:
     nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (
@@ -67,10 +74,6 @@
         # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
         pkgs-unstable = import nixpkgs-unstable {
           inherit system;
-          overlays = [
-            # add uv2nix + pyproject-nix to the package set
-            (final: prev: { inherit pyproject-nix uv2nix; })
-          ];
           config.allowUnfree = true; # needed for draw.io for the docs
         };
 
@@ -144,7 +147,14 @@
         # --- PYTHON (UV) WORKSPACES ---
         # note: called with pkgs-unstable since we need the uv tool to be up-to-date due to rapid development
         # note 2: called with rosDistro to link correct intersphinx inventory
-        docs = pkgs-unstable.callPackage (import ./docs) { inherit rosDistro; };
+        docs = pkgs-unstable.callPackage (import ./docs) {
+          inherit
+            rosDistro
+            pyproject-nix
+            uv2nix
+            pyproject-build-systems
+            ;
+        };
 
         # --- LAUNCH SCRIPTS ---
         perseus = pkgs.writeShellScriptBin "perseus" ''

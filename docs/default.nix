@@ -8,6 +8,7 @@
   # python tooling
   pyproject-nix,
   uv2nix,
+  pyproject-build-systems,
   # non-python packages to build docs
   doxygen,
   graphviz,
@@ -24,9 +25,12 @@ let
   overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
 
   # Construct package set, using base package set from pyproject.nix builders
-  pythonPkgSet =
-    (callPackage pyproject-nix.build.packages { python = python312; }).overrideScope
-      overlay;
+  pythonPkgSet = (callPackage pyproject-nix.build.packages { python = python312; }).overrideScope (
+    lib.composeManyExtensions [
+      pyproject-build-systems.overlays.default
+      overlay
+    ]
+  );
   pyEnv = pythonPkgSet.mkVirtualEnv "roar-docs-py-env" workspace.deps.default;
   # add generation tools to the final environment so we can generate code docs
   env = symlinkJoin {
