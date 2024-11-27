@@ -23,7 +23,7 @@ let
     # and parallel processes them using parallel with draw-io-convert, all run through xvfb-run so electron is happy
     buildPhase = ''
       mkdir ${output-dir}
-      find ${../figures-source} -type f -name "*.drawio" -print0 | ${lib.getExe xvfb-run} ${lib.getExe parallel} -0 -j $(nproc) ${draw-io-convert}
+      find . -type f -name "*.drawio" -print0 | ${lib.getExe xvfb-run} ${lib.getExe parallel} -0 -j $(nproc) ${draw-io-convert}
     '';
     installPhase = ''
       mkdir -p $out

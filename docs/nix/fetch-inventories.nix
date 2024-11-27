@@ -33,17 +33,20 @@ writeShellScriptBin "roar-docs-fetch-inventories" ''
     exit 0
   fi
 
+  # check if --no-commit flag was provided
   if [[ "$*" == *--no-commit* ]]; then
       echo "Will not commit changes"
       exit 0
   fi
 
+  # check if there's staged changes to stash
   if ! git diff --cached --quiet >/dev/null; then
       HAS_GIT_STAGING=1
       echo "Stashing staged changes"
       git stash push -S >/dev/null
   fi
 
+  # define cleanup which pops the stash on exit (even on failure)
   cleanup() {
     if [[ -v HAS_GIT_STAGING ]]; then
         echo "Restoring git stash"
@@ -52,6 +55,7 @@ writeShellScriptBin "roar-docs-fetch-inventories" ''
   }
   trap cleanup EXIT
 
+  # commit the changes
   echo "Staging changes"
   git add "$INVENTORY_LOCATION"
   echo "Committing changes"

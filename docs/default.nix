@@ -25,14 +25,25 @@ let
   overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
 
   # Construct package set, using base package set from pyproject.nix builders
+  # for details see https://pyproject-nix.github.io/pyproject.nix/build.html#resolving
+  # Unlike an ordinary Nix package set, this is not directly usable.
+  # Since Python packages can have different run- and build-time dependencies which may or may not need to propagate,
+  # pyproject.nix uses passthru attributes to specify all of this.
+  # This also means that you need to a *builder* to actually "render" the output package set and make it usable (typically with a virtualenv),
+  # hence the comparatively large number of steps
   pythonPkgSet = (callPackage pyproject-nix.build.packages { python = python312; }).overrideScope (
     lib.composeManyExtensions [
       pyproject-build-systems.overlays.default
       overlay
     ]
   );
+
+  # Resolve a virtualenv with everything python in it
   pyEnv = pythonPkgSet.mkVirtualEnv "roar-docs-py-env" workspace.deps.default;
+
   # add generation tools to the final environment so we can generate code docs
+  # next, use the resolved venv and add the other tools we need to generate the code docs - 
+  # this is the environment that will be passed as a dependency to the build and dev shell derivations
   env = symlinkJoin {
     name = "roar-docs-env";
     paths = [
@@ -42,10 +53,23 @@ let
     ];
   };
 
+  # define all the passthru attributes
+  # Defining them here in the `let` block allows convenient recursive evaluation
+  shell = callPackage (import ./nix/shell.nix) { inherit rosDistro env; };
+  compressed = callPackage (import ./nix/compressed.nix) { inherit docs; };
+  decompress = callPackage (import ./nix/decompress.nix) { };
+  cd-docs-source = callPackage (import ./nix/cd-docs-source.nix) { };
+  figures = callPackage (import ./nix/figures.nix) { };
+  fetch-inventories = callPackage (import ./nix/fetch-inventories.nix) {
+    inherit rosDistro cd-docs-source;
+  };
+  setup = callPackage (import ./nix/setup.nix) { inherit cd-docs-source figures; };
+
   # create derivation which builds the docs
   docs = stdenvNoCC.mkDerivation {
     name = "roar-docs";
     buildInputs = [ env ];
+    # filtering the source ensures that we don't have (too many) unnecessary extra rebuilds when something changes even though it doesn't affect the output
     src = lib.cleanSourceWith {
       name = "roar-docs-src";
       src = lib.cleanSource ./..;
@@ -62,6 +86,7 @@ let
         );
     };
 
+    # use passthru attributes for scripts, other build targets (eg figures and compressed), and the build env
     passthru = {
       inherit
         env
@@ -74,11 +99,14 @@ let
         ;
     };
 
-    ROS_DISTRO = rosDistro; # for intersphinx config
+    # this needs to be set as an environment variable (just passing it as part of the set to mkDerivation)
+    # for intersphinx config to be sure to use the correct file
+    ROS_DISTRO = rosDistro;
 
     # make needs to be run from the docs directory, but we need the whole tree for Doxygen generation
     # (hence source being the whole project)
-    # note that (although they should not be present anyway) the program_listing files are removed to
+
+    # note that (although they should not be present anyway due to doxygen config) the program_listing files are removed to
     # doubly ensure that there are no source code leaks
     buildPhase = ''
       cd docs
@@ -93,8 +121,10 @@ let
       # this needed because Sphinx does a dumb thing and overrides the "current year" in copyright with SOURCE_DATE_EPOCH
       # see https://github.com/sphinx-doc/sphinx/issues/3451#issuecomment-877801728
       unset SOURCE_DATE_EPOCH
-      # make the directory writable - allows us to modify the files during the Sphinx build
+      # make the entire directory writable - allows us to modify the files during the Sphinx build
+      # (mainly for figures)
       chmod -R +w .
+
       # finally build the docs
       make html
 
@@ -107,15 +137,5 @@ let
       cp -a ./build/html/. $out/html
     '';
   };
-
-  shell = callPackage (import ./nix/shell.nix) { inherit rosDistro env; };
-  compressed = callPackage (import ./nix/compressed.nix) { inherit docs; };
-  decompress = callPackage (import ./nix/decompress.nix) { };
-  cd-docs-source = callPackage (import ./nix/cd-docs-source.nix) { };
-  figures = callPackage (import ./nix/figures.nix) { };
-  fetch-inventories = callPackage (import ./nix/fetch-inventories.nix) {
-    inherit rosDistro cd-docs-source;
-  };
-  setup = callPackage (import ./nix/setup.nix) { inherit cd-docs-source figures; };
 in
 docs

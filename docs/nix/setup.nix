@@ -3,6 +3,7 @@
   cd-docs-source,
   figures,
 }:
+# this script copies the built figures to the /docs/source/generated directory
 let
   output-dir = "generated";
 in
