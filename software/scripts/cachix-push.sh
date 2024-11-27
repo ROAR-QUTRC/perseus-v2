@@ -1,11 +1,11 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -p cachix jq -i bash
+# shellcheck shell=bash
 
 set -e
 
-# cd to the Software root so it picks the flake properly
-SCRIPT_DIR="$(dirname "$(readlink -f $0)")"
-cd $SCRIPT_DIR/..
+# cd to the repo root
+cd "$(git rev-parse --show-toplevel)"
 
 # push built packages
 nix build .#rosCore --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
