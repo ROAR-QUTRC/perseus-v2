@@ -24,11 +24,17 @@
       inputs.uv2nix.follows = "uv2nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # flake compat input (allows use of nix-build)
+    # flake compat input (allows use of nix-build and nix-shell for the default workspace)
     flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
+    # formatting
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
+      self,
       nixpkgs,
       nix-ros-overlay,
       nix-ros-workspace,
@@ -36,6 +42,7 @@
       pyproject-nix,
       uv2nix,
       pyproject-build-systems,
+      treefmt-nix,
       ...
     }:
     nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (
@@ -110,7 +117,7 @@
             workspace = ros.callPackage ros.buildROSWorkspace {
               inherit devPackages name;
               prebuiltPackages = standardPkgs // additionalPkgs;
-              prebuiltShellPackages = devShellPkgs;
+              prebuiltShellPackages = devShellPkgs // formatters;
             };
             env = workspace.env.overrideAttrs (
               {
@@ -146,7 +153,7 @@
 
         # --- PYTHON (UV) WORKSPACES ---
         # note: called with pkgs-unstable since we need the uv tool to be up-to-date due to rapid development
-        # note 2: called with rosDistro to link correct intersphinx inventory
+        # note: called with rosDistro to link correct intersphinx inventory
         docs = pkgs-unstable.callPackage (import ./docs) {
           inherit
             rosDistro
@@ -156,26 +163,56 @@
             ;
         };
 
-        # --- LAUNCH SCRIPTS ---
+        # --- SCRIPTS ---
         perseus = pkgs.writeShellScriptBin "perseus" ''
           ${default}/bin/ros2 pkg list
         '';
+        treefmt-write-config = pkgs.writeShellScriptBin "treefmt-write-config" ''
+          cd "$(git rev-parse --show-toplevel)"
+          cp ${treefmtEval.config.build.configFile} ./treefmt.toml
+          chmod +w treefmt.toml
+        '';
+
+        # --- FORMATTING ---
+        treefmtEval = treefmt-nix.lib.evalModule pkgs-unstable ./treefmt.nix;
+
+        # formatters package set for use in ROS workspaces
+        formatters =
+          {
+            # include treefmt wrapped with the config from ./treefmt.nix
+            treefmt = treefmtEval.config.build.wrapper;
+          }
+          # plus all of the individual formatter programs from said config
+          // treefmtEval.config.build.programs;
       in
       {
         # rover development environment
         packages = {
-          # note: as well as adding the output workspaces,
-          # we also output the entire package set to make certain debugging easier
-          inherit
-            default
-            simulation
-            pkgs
-            docs
-            ;
+          inherit default simulation docs;
 
           # used only to split up the build for Cachix - this particular package builds only the ROS core,
           # thus reducing RAM required (slightly... still need a fair bit of swap space)
           rosCore = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace { name = "ROS Core"; };
+
+          # Output the entire package set to make certain debugging easier 
+          # Note that it needs to be a derivation though to make nix flake commands happy, so we just touch the output file
+          # so that it can "build" successfully
+          pkgs = pkgs.runCommand "roar-all-pkgs" { passthru = pkgs; } ''
+            touch $out
+          '';
+
+          # same as pkgs but for utilities
+          tools =
+            pkgs.runCommand "roar-tools"
+              {
+                passthru = {
+                  inherit treefmt-write-config;
+                  treefmt-build = treefmtEval.config.build;
+                };
+              }
+              ''
+                touch $out
+              '';
         };
 
         devShells = {
@@ -191,7 +228,10 @@
             program = "${pkgs.lib.getExe perseus}";
           };
         };
-        formatter = pkgs.nixfmt-rfc-style;
+        formatter = treefmtEval.config.build.wrapper;
+        checks = {
+          formatting = treefmtEval.config.build.check self;
+        };
       }
     );
   nixConfig = {
