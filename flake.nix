@@ -66,12 +66,13 @@
             (import nix-ros-workspace { }).overlay
             # import ros workspace packages + fixes
             (import ./software/overlay.nix rosDistro)
-            # finally, alias the output to pkgs.ros to make it easier to use
             (final: prev: {
               # alias the output to pkgs.ros to make it easier to use
               ros = final.rosPackages.${rosDistro}.overrideScope (
                 rosFinal: rosPrev: { manualDomainId = toString productionDomainId; }
               );
+              # override select packages with latest
+              inherit (pkgs-unstable) uv;
             })
           ];
           # Gazebo makes use of Freeimage.
@@ -155,7 +156,7 @@
         # --- PYTHON (UV) WORKSPACES ---
         # note: called with pkgs-unstable since we need the uv tool to be up-to-date due to rapid development
         # note: called with rosDistro to link correct intersphinx inventory
-        docs = pkgs-unstable.callPackage (import ./docs) {
+        docs = pkgs.callPackage (import ./docs) {
           inherit
             rosDistro
             pyproject-nix
