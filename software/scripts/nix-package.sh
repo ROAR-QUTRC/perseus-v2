@@ -47,4 +47,4 @@ trap cleanup EXIT
 echo "Staging changes"
 git add "$OUTPUT_DIR"
 echo "Committing changes"
-git commit -m "$(date +%z:%Y-%m-%dT%H:%M:%S) Nix packaging generation" >/dev/null
+git commit -m "ros_ws(nix): $(date +%z:%Y-%m-%dT%H:%M:%S) Nix packaging generation" >/dev/null

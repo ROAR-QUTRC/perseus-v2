@@ -59,5 +59,5 @@ writeShellScriptBin "roar-docs-fetch-inventories" ''
   echo "Staging changes"
   git add "$INVENTORY_LOCATION"
   echo "Committing changes"
-  git commit -m "$(date +%z:%Y-%m-%dT%H:%M:%S) Intersphinx inventory fetch" >/dev/null
+  git commit -m "docs: $(date +%z:%Y-%m-%dT%H:%M:%S) Intersphinx inventory fetch" >/dev/null
 ''
