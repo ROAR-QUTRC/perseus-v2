@@ -133,8 +133,6 @@
                   + ''
                     # set the ROS_DOMAIN_ID to the development ID, since by default it's set to the production ID
                     export ROS_DOMAIN_ID=${toString devDomainId}
-                    # tell colcon to use our defaults file (uses --symlink-install by default)
-                    export COLCON_DEFAULTS_FILE=${./software/ros_ws/colcon_defaults.yaml}
                   '';
               }
             );
