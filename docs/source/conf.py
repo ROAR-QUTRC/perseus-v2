@@ -204,7 +204,15 @@ html_theme_options = {
 #     "navigation_depth": -1,
 # }
 
+# part of sphinx-immaterial: custom objects
+# https://jbms.github.io/sphinx-immaterial/apidoc/index.html
+object_description_options = [
+    ("std:confval", dict(toc_icon_class="data", toc_icon_text="C")),
+    ("std:confflag", dict(toc_icon_class="sub-data", toc_icon_text="F")),
+]
 
+
+# Output configuration/extensions/Sphinx python configuration
 def index_figures(app):
     INDEX_FILE = "_figure-index.rst"
     figure_dir = path.join(app.builder.srcdir, "generated")
@@ -242,4 +250,19 @@ def index_figures(app):
 
 
 def setup(app):
+    # run the figures hack
     app.connect("builder-inited", index_figures)
+
+    # add custom confval and confflag objects
+    app.add_object_type(
+        "confval",
+        "confval",
+        objname="configuration value",
+        indextemplate="pair: %s; configuration value",
+    )
+    app.add_object_type(
+        "confflag",
+        "confflag",
+        objname="configuration flag",
+        indextemplate="pair: %s; configuration flag",
+    )
