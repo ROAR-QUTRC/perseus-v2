@@ -18,7 +18,7 @@ namespace hi_can
         {
         }
 
-        /// @brief Copys a packet's data into a buffer
+        /// @brief Copies a packet's data into a buffer
         /// @tparam T The type of the buffer to copy it into
         /// @return The buffer with the data copied into it, or std::nullopt if the buffer does not match the packet size
         template <typename T>

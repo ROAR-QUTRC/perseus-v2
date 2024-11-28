@@ -1,6 +1,5 @@
 # Workflow to build and deploy the docs using a deploy key
 name: Deploy documentation to GH Pages
-
 on:
   # Run on pushes to main and docs - we shouldn't need to test building for other branches
   push:
@@ -12,7 +11,6 @@ on:
       - flake.lock
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
 jobs:
   deploy-docs:
     # only run one job at a time
@@ -22,7 +20,6 @@ jobs:
     # needed for the intersphinx update
     permissions:
       contents: write
-
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +38,6 @@ jobs:
           git push
       - name: Build docs
         run: nix build -L ./source#docs
-
       # From here, deploying to the website repo
       - name: Checkout website repo
         # only run on origin main branch

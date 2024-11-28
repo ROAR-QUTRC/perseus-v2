@@ -41,11 +41,11 @@ namespace hi_can
 
         /// @brief Add a range of addresses (inclusive) to the whitelist
         /// @param start Start address to add
-        /// @param end End adress to add
+        /// @param end End address to add
         void addAddressRange(const can_address_t& start, const can_address_t& end);
         /// @brief Remove a range of addresses (inclusive) from the whitelist
         /// @param start Start address to remove
-        /// @param end End adress to remove
+        /// @param end End address to remove
         void removeAddressRange(const can_address_t& start, const can_address_t& end);
 
         /// @brief Add an iterable list of addresses to the whitelist

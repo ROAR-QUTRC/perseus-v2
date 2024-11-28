@@ -24,7 +24,7 @@ This project is built with [Nix](https://nixos.org) rather than `colcon` directl
 - Reproducibility: If it builds on your machine, it builds on _any_ machine.
 - Distro independence: Although ROS 2 is targeted at specific LTS versions of Ubuntu, with Nix it can be built and run on any Linux machine with Nix installed.
 - Binary caching: If the built files have been uploaded, you can download them instead of having to build the project locally.
-- VSCode integration: Since Nix sets up enviromnent variables, you can now edit ROS 2 code in VSCode without errors and with autocomplete!
+- VSCode integration: Since Nix sets up environment variables, you can now edit ROS 2 code in VSCode without errors and with autocomplete!
 - No submodules: Nix can build projects from Git repositories, so you never have to clone it yourself. This means that `git submodule`s can be entirely removed.
 
 ## Overview

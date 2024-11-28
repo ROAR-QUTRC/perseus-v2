@@ -68,6 +68,7 @@
             (import ./software/overlay.nix rosDistro)
             # finally, alias the output to pkgs.ros to make it easier to use
             (final: prev: {
+              # alias the output to pkgs.ros to make it easier to use
               ros = final.rosPackages.${rosDistro}.overrideScope (
                 rosFinal: rosPrev: { manualDomainId = toString productionDomainId; }
               );

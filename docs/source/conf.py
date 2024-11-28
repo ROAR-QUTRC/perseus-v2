@@ -1,7 +1,7 @@
-from shutil import which
-from textwrap import dedent
 import os
 from os import path
+from shutil import which
+from textwrap import dedent
 
 # Configuration file for the Sphinx documentation builder.
 #
