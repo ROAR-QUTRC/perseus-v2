@@ -27,12 +27,6 @@ writeShellScriptBin "roar-docs-fetch-inventories" ''
     --output exhale.inv https://exhale.readthedocs.io/en/stable/objects.inv \
     --output sphinx-immaterial.inv https://jbms.github.io/sphinx-immaterial/objects.inv
 
-  git add -N "$INVENTORY_LOCATION"
-  if git diff --quiet -- "$INVENTORY_LOCATION" >/dev/null; then
-    echo "No changes to commit"
-    exit 0
-  fi
-
   # check if --no-commit flag was provided
   if [[ "$*" == *--no-commit* ]]; then
       echo "Will not commit changes"

@@ -19,17 +19,16 @@ echo "Running ros2nix to generate new packaging files..."
 # nix run is the "better" way to do this, but it doesn't allow for complete environment isolation like the shell -i flag.
 # we want word splitting here to get all the package files in one go, so disable the shellcheck warning
 # shellcheck disable=SC2046
-nix shell -i github:wentasah/ros2nix --command ros2nix --output-dir="$OUTPUT_DIR" --output-as-nix-pkg-name --no-default --distro humble $(find "$ROS_WS" -name package.xml)
+nix shell -i github:wentasah/ros2nix --command ros2nix --output-dir="$OUTPUT_DIR" --output-as-nix-pkg-name --no-default --distro humble $(find "$ROS_WS" -type d \( -name log -o -name build -o -name install \) -prune -o -name 'package.xml' -print)
 echo "Formatting generated files"
 cd "$OUTPUT_DIR"
-nix fmt --quiet
+nix fmt
 
 if [[ $* == *--no-commit* ]]; then
   echo "Will not commit changes"
   exit 0
 fi
 
-git add -N "$INVENTORY_LOCATION"
 if ! git diff --cached --quiet >/dev/null; then
   HAS_GIT_STAGING=1
   echo "Stashing staged changes"
@@ -45,6 +44,6 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Staging changes"
-git add "$OUTPUT_DIR"
+git add .
 echo "Committing changes"
 git commit -m "ros_ws(nix): $(date +%z:%Y-%m-%dT%H:%M:%S) Nix packaging generation" >/dev/null
