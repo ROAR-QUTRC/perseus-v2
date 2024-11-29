@@ -99,7 +99,8 @@
         },
         "[cpp]": {
             "editor.defaultFormatter": "ibecker.treefmt-vscode"
-        }
+        },
+        "editor.formatOnSave": true
     },
     "extensions": {
         "recommendations": [
