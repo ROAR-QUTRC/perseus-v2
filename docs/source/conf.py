@@ -25,6 +25,7 @@ extensions = [
     "sphinxcontrib.jquery",  # add jQuery to the HTML output so that plugins expecting to run on RTD work
     "sphinx.ext.githubpages",  # add .nojekyll file for github pages
     "sphinx.ext.intersphinx",  # link to other projects (specifically ROS and Python)
+    "sphinx.ext.todo",  # enable todo directives
     "sphinx_immaterial",  # theme
     "sphinx_immaterial.kbd_keys",  # pretty keyboard shortcuts
     "sphinx_immaterial.apidoc.cpp.cppreference",  # link to en.cppreference.com
@@ -118,6 +119,8 @@ intersphinx_mapping = {
 # See also:
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_disabled_reftypes
 intersphinx_disabled_reftypes = ["*"]
+
+todo_include_todos = True
 
 # Options for markup
 primary_domain = "cpp"
