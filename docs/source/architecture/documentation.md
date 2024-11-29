@@ -5,19 +5,34 @@
 ### Core
 
 This documentation is built using <inv:sphinx:std#index> with a number of extensions.
-Code (API) documentation is provided with Doxygen through the use of [Breathe](inv:breathe#index), which acts as a bridge from the output Doxygen provides to Sphinx's reStructuredText (RST or ReST) format.
+
+#### Markdown Support
+
+If you inspect the raw documentation, you'll notice it's written in Markdown, not the standard reStructuredText (ReST) that Sphinx expects - this is thanks to the [MyST Parser](inv:myst#index).
+This extension extends Sphinx to add Markdown parsing support.
+It also comes with a number of built-in [extensions](inv:myst#syntax/optional) which can be enabled to extend its functionality on top of standard Markdown support.
+If you're curious as to what this documentation uses, check out the list of them in `docs/source/conf.py`.
+
+#### Generated Documentation
+
+Code (API) documentation is provided with Doxygen through the use of [Breathe](inv:breathe#index), which acts as a bridge from the output Doxygen provides to ReST for Sphinx.
 Although it's not leveraged much in this documentation, you can reference specific [files](inv:breathe#file), [classes](inv:breathe#class), or [methods](inv:breathe#function), and [more](inv:breathe#directives) using Breathe.
 Next is the [Exhale](inv:exhale#index) extension, which provides the Doxygen-style namespace, class, and file [lists](project:/generated/index.rst).
 It's also set up to automatically run Doxygen, so there's no need for a standard configuration `Doxyfile` - the modifications to the standard configuration are provided with [configuration](inv:exhale#*exhaleDoxygenStdin) options on top of Exhale's [defaults](inv:exhale#*DEFAULT_DOXYGEN_STDIN_BASE).
-If you inspect the raw documentation, however, you'll notice it's written in Markdown, not the standard ReST - this is thanks to the [MyST Parser](inv:myst#index).
-Together, this forms a solid foundation for good manual documentation, as well as leveraging Doxygen's formidable automatic generation capabilities.
+
+#### Theming
 
 After these core extensions, comes theming.
 As it says in the footer, this site is built using [Sphinx-Immaterial](inv:sphinx-immaterial#index).
 Whilst you shouldn't need to modify its configuration unless the documentation website is actively broken, it is very well documented if you need to do so.
 In this documentation, we also make use of some of its excellent extensions: [`sphinx_immaterial.kbd_keys`](inv:sphinx-immaterial:std#keys) for pretty keyboard keys (like {keys}`ctrl+c`!), [`sphinx_immaterial.apidoc.cpp.cppreference`](inv:sphinx-immaterial#apidoc/cpp/cppreference) for automatic links to cppreference.com, and finally [`sphinx_immaterial.graphviz`](inv:sphinx-immaterial#graphviz) for lovely theme-integrated [Graphviz](https://graphviz.org/) diagrams - though support for <inv:sphinx-immaterial#mermaid_diagrams> is also baked in by default if that's more your style.
+
+#### Utility Extensions
+
 We also include [`sphinxcontrib.jquery`](https://github.com/sphinx-contrib/jquery) - some plugins expect to run on ReadTheDocs' website which always has JQuery available.
 It's also useful for developing custom JavaScript to enhance the pages if needed.
+In addition, the [`sphinx_tippy`](https://sphinx-tippy.readthedocs.io/en/latest/) extension is also included to add preview tooltips when you hover on links.
+If it's not listed here, all enabled extensions have a comment explaining what they do in the `conf.py` file.
 
 ### Sandboxing
 
@@ -56,23 +71,26 @@ Python (and therefore Sphinx) and draw.io unfortunately both fall into this cate
 ### Python Environment
 
 The first obstacle is Python packages - the credited [blog posts](#credits) which first inspired this toolchain make use of Poetry2Nix, but this is no longer maintained, and the author of the tool recommends using [uv2nix](https://github.com/adisbladis/uv2nix) instead, which is what we have done here.
-The [`uv`](https://docs.astral.sh/uv/) tool is a Python package manager which produces a `uv.lock` lockfile which can be parsed using Nix and which also contains enough information (primarily versions and hashes of **all** dependencies) to satisfy the purity requirements for a Nix build.
+The [`uv`](https://docs.astral.sh/uv/) tool is a Python package manager which produces a `uv.lock` lockfile containing enough information to satisfy the purity requirements for a Nix build (specifically versions and hashes of **all** dependencies).
 If that didn't make much sense, don't worry - it just means that the build is reproducible.
-Additionally, if you want to develop directly instead of through Nix, the tool is _extremely_ fast - the graph is available on their website for your convenience to see how ludicrous the speed differences are.
-Nix then parses the python project file (`pyproject.toml`) along with the lockfile and uses it to build a workspace with `uv2nix`, which contains all of the Python packages in a virtualenv.
+Additionally, if you want to develop directly instead of through Nix, the tool is _extremely_ fast - the speed comparison chart is available on their website for your convenience to see how ludicrous the speed differences are.
+Nix then parses the python project file (`pyproject.toml`) along with the lockfile and uses it to build a workspace with `uv2nix` containing all of the Python packages in a `virtualenv`.
 This allows repeatable and easy integration of _any_ python module, not just those available in the standard `nixpkgs`, in a much more convenient fashion.
 
 ### Draw.io diagrams
 
+% spellchecker:off
+% we need to disable the spellchecker for xvfb explanation, and we can't put comments inside the paragraph since it breaks it into multiple paragraphs.
 Next up is draw.io.
 Whilst, to its credit, it _does_ provide a CLI for interacting with and exporting diagrams, draw.io itself has some... quirks... which make it hard to automate.
 The first of these is that it _requires_ a graphical environment to be available to run, even though it isn't using it in the CLI mode (thanks Electron!).
-To get around this, the [`drawio-headless`](https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/graphics/drawio/headless.nix) package was created, which wraps the draw.io call using `xvfb` (**X** **v**irtual **f**rame**b**uffer) and calls it that way. % spellchecker:disable-line
+To get around this, the [`drawio-headless`](https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/graphics/drawio/headless.nix) package was created, which wraps the draw.io call using `xvfb` (**X** **v**irtual **f**rame**b**uffer) and calls it that way.
 Unfortunately, if you try and use this package, you'll notice that it doesn't work - it executes, waits for 3 seconds, and then exits, without ever actually running draw.io!
 Upon testing, it turns out that the `--auto-display` flag is to blame, and running the command without that flag works perfectly.
 To actually generate the diagrams, the script uses `find` to locate all the `.drawio` diagrams in the source directory `docs/figures-source`, which is then passed into GNU `parallel`, which runs the conversion script.
 To avoid spinning up a virtual framebuffer for every single `drawio` call, the root `parallel` command is executed through `xvfb-run`, and the X11 environment is then inherited by all the script processes it runs.
 Finally, the aforementioned script does one thing - it takes in a source file path and an output directory, and then generates two SVG files from the diagram - one in light theme, and one in dark theme.
+% spellchecker:on
 
 ### Deployment
 
@@ -96,11 +114,13 @@ The key itself is stored using GitHub Secrets and passed as a parameter to the C
 Finally, to make the deployment, the workflow replaces the contents of the checked out repo with the built static documentation from `nix build .#docs`, then commits and pushes the documentation to the website repo.
 Once this runs, the automated deployment is complete, and all going well, the new website is live!
 
-## Usage
-
-### Build Outputs
+## Nix outputs
 
 This section documents the outputs made available from the project `flake.nix`.
+
+### Build artifacts
+
+Available using `nix build .#name`.
 
 #### `docs`
 
@@ -152,6 +172,8 @@ Not intended for direct use.
 This is the development shell environment for use with `nix develop`.
 
 ### Executables
+
+Run using `nix run .#name`.
 
 #### `docs.decompress`
 
