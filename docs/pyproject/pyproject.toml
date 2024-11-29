@@ -11,4 +11,5 @@ dependencies = [
     "myst-parser[linkify]>=4.0.0",
     "sphinx-immaterial[keys]>=0.12.4",
     "sphinxcontrib-jquery>=4.1",
+    "sphinx-tippy>=0.4.3",
 ]

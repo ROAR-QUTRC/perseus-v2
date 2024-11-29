@@ -478,6 +478,7 @@ dependencies = [
     { name = "myst-parser", extra = ["linkify"] },
     { name = "sphinx" },
     { name = "sphinx-immaterial", extra = ["keys"] },
+    { name = "sphinx-tippy" },
     { name = "sphinxcontrib-jquery" },
 ]
 
@@ -488,6 +489,7 @@ requires-dist = [
     { name = "myst-parser", extras = ["linkify"], specifier = ">=4.0.0" },
     { name = "sphinx", specifier = ">=8.1.3" },
     { name = "sphinx-immaterial", extras = ["keys"], specifier = ">=0.12.4" },
+    { name = "sphinx-tippy", specifier = ">=0.4.3" },
     { name = "sphinxcontrib-jquery", specifier = ">=4.1" },
 ]
 
@@ -566,6 +568,21 @@ wheels = [
 [package.optional-dependencies]
 keys = [
     { name = "pymdown-extensions" },
+]
+
+[[package]]
+name = "sphinx-tippy"
+version = "0.4.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "jinja2" },
+    { name = "requests" },
+    { name = "sphinx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1d/2b/411b0a8fdcd6729c0de4ea41fdfa6ac25f5c334ed7a9194075c79f004398/sphinx_tippy-0.4.3.tar.gz", hash = "sha256:255abee0aed8085fdb9ab0cc595cd7a45748ae7f4662156e500a17a3f73ad63d", size = 117195 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/54/5d/60c9da704aee0f269a6d6bbd0e24ca61ef34effa6fd5863ca46f496e7cea/sphinx_tippy-0.4.3-py3-none-any.whl", hash = "sha256:572b0e001baec9b03e2b19ec4e9760ca1a853f4c3226b5cea251f477b2c2b096", size = 9952 },
 ]
 
 [[package]]

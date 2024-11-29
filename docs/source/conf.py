@@ -30,6 +30,7 @@ extensions = [
     "sphinx_immaterial.kbd_keys",  # pretty keyboard shortcuts
     "sphinx_immaterial.apidoc.cpp.cppreference",  # link to en.cppreference.com
     "sphinx_immaterial.graphviz",  # graphviz support with theme integration
+    "sphinx_tippy",  # preview tooltips on link hover
 ]
 
 templates_path = ["_templates"]
