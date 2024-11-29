@@ -84,7 +84,14 @@
             "fstream": "cpp",
             "cinttypes": "cpp"
         },
-        "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix"
+        "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
+        "editor.defaultFormatter": "ibecker.treefmt-vscode",
+        "[markdown]": {
+            "editor.defaultFormatter": "ibecker.treefmt-vscode"
+        },
+        "[cpp]": {
+            "editor.defaultFormatter": "ibecker.treefmt-vscode"
+        }
     },
     "extensions": {
         "recommendations": [
@@ -95,7 +102,8 @@
             "christian-kohler.path-intellisense",
             "cschlosser.doxdocgen",
             "mkhl.direnv",
-            "ms-vscode.cpptools"
+            "ms-vscode.cpptools",
+            "ibecker.treefmt-vscode"
         ]
     }
 }
