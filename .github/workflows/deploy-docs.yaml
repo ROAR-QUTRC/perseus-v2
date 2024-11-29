@@ -30,6 +30,7 @@ jobs:
       - name: Update intersphinx inventory files
         # only run intersphinx update on main branch!
         if: ${{ github.ref == 'refs/heads/main' }}
+        continue-on-error: true # if there are no changes to the files, technically this fails
         run: |
           cd source
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
