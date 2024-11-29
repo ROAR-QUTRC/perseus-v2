@@ -15,7 +15,7 @@ int main()
 {
     cout << "Pre-initialisation" << endl;
     auto can = RawCanInterface("any");
-    can_data d;
+    // can_data d;
     // for (int j = 0; j < 1000; j++)
     // {
     //     for (size_t i = 0; i < sizeof(d.data); i++)
