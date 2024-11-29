@@ -4,7 +4,7 @@
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay";
     nixpkgs.follows = "nix-ros-overlay/nixpkgs"; # IMPORTANT!!!
     nix-ros-workspace = {
-      url = "github:hacker1024/nix-ros-workspace";
+      url = "github:RandomSpaceship/nix-ros-workspace";
       flake = false;
     };
     # docs inputs
@@ -226,6 +226,10 @@
           default = {
             type = "app";
             program = "${pkgs.lib.getExe perseus}";
+          };
+          ros2 = {
+            type = "app";
+            program = "${default}/bin/ros2";
           };
         };
         formatter = treefmtEval.config.build.wrapper;
