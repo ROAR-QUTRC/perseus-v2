@@ -14,7 +14,7 @@ Its subdirectories are as follows. Each one contains its own README.md detailing
 - `ros_ws`: The ROS 2 software workspace containing all the actual logic.
 - `shared`: Libraries which are shared between the `native` and `ros_ws` workspaces, as well as potentially firmware as well.
 - `templates`: Template files for bringing up new projects.
-- `tooling`: Short bash scripts containing commonly run tasks.
+- `scripts`: Short bash scripts (and Nix files containing scripts) for some commonly run tasks.
 - `web_ui`: The rover web interface.
 
 # Build System

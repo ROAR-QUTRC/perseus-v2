@@ -4,7 +4,9 @@ tocdepth: 4
 
 # Software Standards
 
-This document is intended to codify a set of standards and practices for developing high-quality and interoperable software and firmware across the QUT Robotics ROAR team. Before writing any software, you should have fully read through both the [General](#general-software-standards) and language-specific ([C++](#c-standards) or [Python](#python-standards)) sections of this document. If you're writing ROS code, you should also have read through the [ROS](#ros-standards) section. If you don't fully understand some of the topics being referenced, feel free to ask questions in Discord, we'll be happy to help. If enough people have the same questions, we'll edit this document to add explanations.
+This document is intended to codify a set of standards and practices for developing high-quality and interoperable software and firmware across the QUT Robotics ROAR team. Before writing any software, you should have fully read through both the [General](#general-software-standards) and language-specific ([C++](#c-standards) or [Python](#python-standards)) sections of this document.
+Additionally, if you're writing ROS code, you should also have read through the [ROS](#ros-standards) section.
+If you don't fully understand some of the topics being referenced, feel free to ask questions in Discord, we'll be happy to help, and if enough people have the same questions, we'll edit this document to add explanations.
 
 This document is heavily based off the [OpenStack C++ standards](https://wiki.openstack.org/wiki/CppCodingStandards).
 
@@ -201,7 +203,7 @@ If a getter or setter for a variable is written, they must be prefixed with `get
 
 When accessing aggregate classes (lists, maps, etc.), the function should be prefixed with `add`, `get`, `remove`, or `set` (depending on the type of the aggregate, other prefixes may be appropriate), and the plurality of the variable modified as needed (such as `getConfiguration` accessing `_configurations`).
 
-Note that for some classes, it may not make sense for them to be mutatable, and in these cases, providing only getters is perfectly acceptable.
+Note that for some classes, it may not make sense for them to be mutable, and in these cases, providing only getters is perfectly acceptable.
 
 ##### Acceptable
 
@@ -308,6 +310,11 @@ Whenever a version number is incremented, all lower numbers should be reset to z
 #### Warnings are not acceptable
 
 If the compiler (or linter) is complaining about something, it's almost certainly right. Fix the warnings before raising a PR to merge code onto the main branch. This not only helps to enforce a higher code quality, but also to make new (and possibly more important) warnings much more obvious when they _do_ occur.
+
+:::{note}
+The only place this doesn't apply is the documentation itself, funny enough - if there are warnings for the auto-generated Doxygen documentation, you can safely ignore those.
+However, other warnings are still a problem!
+:::
 
 #### Keep functions short
 
@@ -532,7 +539,6 @@ or something similar - whilst this will work the exact same way, it is liable to
 
 #include <cstdint>
 
-// now if this file is included twice, there'll be an error since the class is declared twice
 class Settings
 {
     // ...
@@ -828,7 +834,7 @@ In most cases, this code will work as expected:
 ```cpp
 Rational oneEighth(1,8);
 Rational two(2);
-Rational result = oneEigth * two;
+Rational result = oneEighth * two;
 result = oneEighth * 2; // this works because 2 gets implicitly converted to a Rational
 ```
 
@@ -936,13 +942,23 @@ int processClass(ExampleClass inputData);
 
 #### Memory Management
 
-Never use C `malloc()` and `free()` - there are better C++ replacements. Firstly, prefer to use references if you can (`type_t& variable`), eliminating pointers entirely. If a pointer doesn't serve your needs, the next best options (C++ smart pointers) are `std::unique_ptr` for a pointer which is owned in a single place, and `std::shared_ptr` for a pointer which needs to be, well, shared between multiple pieces of code (you can research [`std::weak_ptr`](https://en.cppreference.com/w/cpp/memory/weak_ptr) in your own time - it's unlikely to be useful). Smart pointers should be initialised with `std::make_unique` or `std::make_shared` as appropriate - they are drop-in, safer replacements for `new`. Speaking of, avoid the use of `new` and `new[]`. If you _must_ use it, assign the resultant pointer to a smart pointer type as soon as possible. Dynamic array allocation can also be almost entirely replaced with C++ STL storage containers such as `std::vector` (especially with functions like `std::vector::emplace_back`, which will construct the variable appended to the vector).
+Never use C `malloc()` and `free()` - there are better C++ replacements.
+Firstly, prefer to use references if you can (`type_t& variable`), eliminating pointers entirely.
+If a pointer doesn't serve your needs, the next best options (C++ smart pointers) are {cpp:expr}`std::unique_ptr` for a pointer which is owned in a single place, and {cpp:expr}`std::shared_ptr` for a pointer which needs to be, well, shared between multiple pieces of code (you can research {cpp:expr}`std::weak_ptr` in your own time - it's unlikely to be useful).
+Smart pointers should be initialised with {cpp:expr}`std::make_unique` or {cpp:expr}`std::make_shared` as appropriate - they are drop-in, safer replacements for `new`.
+Speaking of, avoid the use of `new` and `new[]`.
+If you _must_ use it, assign the resultant pointer to a smart pointer type as soon as possible.
+Dynamic array allocation can also be almost entirely replaced with C++ STL storage containers such as {cpp:expr}`std::vector` (especially with functions like {cpp:expr}`std::vector::emplace_back`, which will construct the variable appended to the vector).
 
-Finally, you should be avoiding manual memory management at all costs if you can. It's just very hard to get right, and if it goes wrong, it can cause a whole host of new and interesting bugs to appear. If you can use normal initialisation instead, do so.
+Finally, you should be avoiding manual memory management at all costs if you can.
+It's just very hard to get right, and if it goes wrong, it can cause a whole host of new and interesting bugs to appear.
+If you can use normal initialisation instead, do so.
 
 #### Use the STL
 
-The STL (Standard Template Library) is _massive_ in modern C++ and contains a huge number of solutions to common problems - the most common likely being `std::string` and `std::vector`. Less well known solutions are libraries such as `<atomic>`, `<chrono>`, and `<tuple>` - all of which solve common problems well. Before implementing a new solution, take half a minute to do a search and see if the STL has a solution already.
+The STL (Standard Template Library) is _massive_ in modern C++ and contains a huge number of solutions to common problems - the most common likely being {cpp:expr}`std::string` and {cpp:expr}`std::vector`.
+Less well known solutions are libraries such as `<atomic>`, `<chrono>`, and `<tuple>` - all of which solve common problems well.
+Before implementing a new solution, take half a minute to do a search and see if the STL has a solution already.
 
 #### When to use `auto`
 
@@ -952,7 +968,7 @@ Using the STL can result in... interesting... types sometimes - if you don't par
 
 #### Use of exceptions
 
-Exceptions are, as the name suggests, for _exceptional_ behaviour. Before writing code which throws exceptions _or_ returns an error code, read through, at the very least, the first 8 items of the [ISO C++](https://isocpp.org/wiki/faq/exceptions) exceptions and error handling page - everything in that document is applicable and should be followed, but the first entries are the most important. The most important points are that exceptions separate the _happy path_ (everything succeeded) from the _bad path_ (errors occured). Exceptions should not be used as another way to return ordinary data from a function - they should be reserved for errors only. Additionally, they should not be used for flow control - this is what if/else statements are for! Your code should both catch "expected" exceptions, and throw exceptions if it encounters _unexpected_ states. Errors which are part of normal operation, however, should perhaps be handled in other ways (eg `std::optional`). Good reasons to throw exceptions are:
+Exceptions are, as the name suggests, for _exceptional_ behaviour. Before writing code which throws exceptions _or_ returns an error code, read through, at the very least, the first 8 items of the [ISO C++](https://isocpp.org/wiki/faq/exceptions) exceptions and error handling page - everything in that document is applicable and should be followed, but the first entries are the most important. The most important points are that exceptions separate the _happy path_ (everything succeeded) from the _bad path_ (errors occurred). Exceptions should not be used as another way to return ordinary data from a function - they should be reserved for errors only. Additionally, they should not be used for flow control - this is what if/else statements are for! Your code should both catch "expected" exceptions, and throw exceptions if it encounters _unexpected_ states. Errors which are part of normal operation, however, should perhaps be handled in other ways (eg `std::optional`). Good reasons to throw exceptions are:
 
 - An error occurs inside a class constructor (**this is what makes RAII possible**)
 - A syscall fails (eg `open()` fails)
@@ -963,7 +979,7 @@ _Potentially_ valid reasons to throw exceptions, but which require more consider
 
 _Bad_ reasons to throw exceptions are:
 
-- An expected and recoverable error occured
+- An expected and recoverable error occurred
 - Internal state is corrupted or assumptions are violated (violations of invariants) - this is what `assert` is for!
 - You want to return a different data type from your function - use `std::variant` or redesign your code.
 

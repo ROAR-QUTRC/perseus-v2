@@ -67,6 +67,13 @@ You must **always** run `colcon` inside the workspace root `software/ros_ws`, ot
 To the experienced ROS2 developers - you may notice the lack of a `--symlink-install` flag on the `colcon build` command - that's because it's configured using a [`colcon_defaults.yaml`](https://colcon.readthedocs.io/en/released/user/configuration.html#defaults-yaml) file present at `software/ros_ws/colcon_defaults.yaml` which adds this flag by default.
 :::
 
+### Before you start
+
+However, before you start writing code, there's a few things you need to read through first.
+The most important one is the software [architecture](project:/architecture/software.md), which goes over how all the software links together and how it's laid out.
+The other document is the software [standards](project:/standards/software.md), which details the standards to which your software is expected to be written.
+If your software _doesn't_ meet these standards, we unfortunately won't be able to merge your changes until you fix the issues - if code standards aren't enforced, the code **will** quickly become an un-maintainable mess, leading to another rewrite.
+
 ## Debugging
 
 ### ROS2 Nodes can't see each other on the network
