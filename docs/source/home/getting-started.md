@@ -30,14 +30,32 @@ You'll have to set up the hook yourself according to its [docs](https://direnv.n
 
 The script is designed to be able to run multiple times if something goes wrong - it checks if the modifications it makes are already present, and if it detects them, skips that step.
 
-### VSCode Setup
+### IDE Setup
 
-If you're using [VSCode](https://code.visualstudio.com/), open the `perseus-v2.code-workspace` workspace file (you'll need to do this every time you need)
+#### [VSCode](https://code.visualstudio.com/) (recommended)
 
-### Other IDE Setup
+Open the `perseus-v2.code-workspace` workspace file and install the recommended extensions.
+This will install language support extensions (python and C++), an extension for the formatter in use ([`treefmt`](https://github.com/numtide/treefmt) - configured using [`treefmt-nix`](https://github.com/numtide/treefmt-nix/)), and configure VSCode to respect the project settings.
+
+:::{important}
+You specifically need to open the `perseus-v2.code-workspace` file, not the folder, as otherwise settings won't apply.
+In the event that you open the folder by mistake, VSCode will prompt you to open the workspace file:
+
+![VSCode Prompt](open-code-workspace.png)
+
+Once you've opened the workspace, you should see `(WORKSPACE)` in your explorer (file view) title.
+:::
+
+Unfortunately, due to limitations in how `treefmt` works, it can only format files on save - this is fine, don't worry if you hit format and nothing happens.
+Save it and try again!
+
+At this point, you're all set up and ready to go.
+
+#### Other (I)DEs
 
 In the event that you're using another editor, you probably have enough technical know-how to set it up yourself.
 As long as it uses the environment variables from the `direnv` setup, it should be able to find and run everything.
+You should also configure your editor to use `treefmt` as its formatter - if you're using `direnv` or you're in a `nix develop` environment (see the [next sections](#developing-software)), it (and the formatters it uses internally) will already be available in your shell.
 
 ## Building the software
 
