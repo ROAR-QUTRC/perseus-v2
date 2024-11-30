@@ -1,0 +1,8 @@
+/*
+Fix class diagram colors - the ones with bad backgrounds *don't* have it specified in their inline style,
+which means that only *they* will have it overridden with CSS
+*/
+svg.graphviz polygon {
+  /* Use the default theme graphviz background color but override its opacity */
+  fill: rgb(from var(--md-graphviz-node-bg-color) r g b / 40%);
+}

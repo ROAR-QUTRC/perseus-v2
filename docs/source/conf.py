@@ -2,6 +2,7 @@ import os
 from os import path
 from shutil import which
 from textwrap import dedent
+from exhale import utils
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -45,8 +46,28 @@ doxygen_xml_dir = "../build/doxygen/xml"
 breathe_projects = {"rover": doxygen_xml_dir}
 breathe_default_project = "rover"
 
+
 # Setup the exhale extension
 # https://exhale.readthedocs.io/en/stable/usage.html
+# this needs to be overridden so that we can enable graphs
+def exhale_kind_overrides(kind):
+    """
+    For a given input ``kind``, return the list of reStructuredText specifications
+    for the associated Breathe directive.
+    """
+    # override doxygen class and struct directives to include graphs
+    if kind == "class" or kind == "struct":
+        return [
+            ":members:",
+            ":protected-members:",
+            ":undoc-members:",
+            ":allow-dot-graphs:",
+        ]
+    # An empty list signals to Exhale to use the defaults
+    else:
+        return []
+
+
 exhale_args = {
     # Required arguments
     "containmentFolder": "./generated",
@@ -69,12 +90,18 @@ exhale_args = {
 
         # we do NOT want program listings as that exposes the source code
         XML_PROGRAMLISTING = NO
+
+        # generate graphs
+        HAVE_DOT = YES
         """
     ),
     # Page layout configuration
     "contentsDirectives": False,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
+    "customSpecificationsMapping": utils.makeCustomSpecificationsMapping(
+        exhale_kind_overrides
+    ),
 }
 
 # set up MyST parser extension
@@ -253,9 +280,17 @@ def index_figures(app):
         file.write(f".. image:: {image}\n")
 
 
+def add_graph_fix_css(app, pagename, templatename, context, doctree):
+    if pagename.startswith("generated/"):
+        app.add_css_file("css/graph-fix.css")
+
+
 def setup(app):
     # run the figures hack
     app.connect("builder-inited", index_figures)
+    # add graph fix CSS to generated documentation
+    # Fixes background fill colours on the "this class" node in class/collaboration diagrams
+    app.connect("html-page-context", add_graph_fix_css)
 
     # add custom confval and confflag objects
     app.add_object_type(
