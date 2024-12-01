@@ -32,8 +32,8 @@ namespace hi_can
         void transmit(const Packet& packet) override;
         std::optional<Packet> receive(bool blocking = false) override;
 
-        RawCanInterface& addFilter(const address::filter_t& address) override;
-        RawCanInterface& removeFilter(const address::filter_t& address) override;
+        RawCanInterface& addFilter(const addressing::filter_t& address) override;
+        RawCanInterface& removeFilter(const addressing::filter_t& address) override;
 
     private:
         static int _createSocket();

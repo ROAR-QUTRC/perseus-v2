@@ -5,9 +5,14 @@
 
 namespace hi_can
 {
-    namespace address
+    /// @brief Contains all the types, classes, constants, and functions for
+    ///        working with CAN addresses, as well as all of the addresses of the devices currently on the bus
+    namespace addressing
     {
+        // these are typedef'd to make it clear in which contexts they're being used
+        /// @brief A raw CAN address
         typedef uint32_t raw_address_t;
+        /// @brief A CAN address mask
         typedef uint32_t mask_t;
 
         constexpr uint8_t ADDRESS_LENGTH = 29;
@@ -35,6 +40,7 @@ namespace hi_can
         constexpr mask_t GROUP_MASK = (MASK_ALL << GROUP_ADDRESS_POS) & MASK_ALL;
         constexpr mask_t PARAM_MASK = (MASK_ALL << PARAM_ADDRESS_POS) & MASK_ALL;
 
+        /// @brief A CAN address with flags for RTR, error, and extended (29-bit) addressing
         struct flagged_address_t
         {
             raw_address_t address = 0;
@@ -73,7 +79,7 @@ namespace hi_can
             }
         };
 
-        /// @brief A CAN address and mask for filtering
+        /// @brief A CAN address and mask for filtering, as well as whether to match RTR and error frames
         struct filter_t
         {
             /// @brief The address to accept
@@ -84,8 +90,16 @@ namespace hi_can
             bool matchError = true;
 
             // need to define the comparison operators for std::set
-            // more specific filters (greater masks) should be sorted first, and as such compare as less than
-            // If the masks are the same, sort by address
+            /// @brief Compare two filters for sorting
+            /// @param other Filter to compare against
+            /// @return The result of the comparison
+            ///
+            /// Compares by, in order:
+            /// - mask
+            /// - address
+            /// - matchRtr
+            /// - matchError
+            /// More specific filters (greater masks) should be sorted first, and as such compare as less than, by flipping the comparison.
             constexpr auto operator<=>(const filter_t& other) const
             {
                 if (mask != other.mask)
@@ -97,6 +111,9 @@ namespace hi_can
                 return matchError <=> other.matchError;
             }
 
+            /// @brief Check if address matches the filter
+            /// @param address Address to check
+            /// @return Whether the address matches the filter
             constexpr bool matches(const flagged_address_t& address) const
             {
                 return (static_cast<raw_address_t>(address) & mask) == (static_cast<raw_address_t>(this->address) & mask) &&

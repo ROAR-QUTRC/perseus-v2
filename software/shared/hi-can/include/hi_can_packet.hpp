@@ -15,9 +15,9 @@ namespace hi_can
     public:
         Packet() = default;
 
-        Packet(const address::flagged_address_t& address, const uint8_t data[], size_t dataLen);
+        Packet(const addressing::flagged_address_t& address, const uint8_t data[], size_t dataLen);
         template <typename T>
-        Packet(const address::flagged_address_t& address, const T& data)
+        Packet(const addressing::flagged_address_t& address, const T& data)
         {
             setAddress(address);
             setData(data);
@@ -48,7 +48,7 @@ namespace hi_can
         constexpr auto getDataLen() const { return _dataLen; }
 
         constexpr auto getAddress() const { return _address; }
-        void setAddress(const address::flagged_address_t& address);
+        void setAddress(const addressing::flagged_address_t& address);
 
         constexpr bool getIsRTR() const { return _address.rtr; }
         void setIsRTR(const bool& isRTR) { _address.rtr = isRTR; }
@@ -70,8 +70,8 @@ namespace hi_can
         constexpr auto operator!=(const Packet& other) const { return !(*this == other); }
 
     private:
-        address::flagged_address_t _address = address::MAX_ADDRESS;
-        std::array<uint8_t, address::MAX_PACKET_LEN> _data{};
+        addressing::flagged_address_t _address = addressing::MAX_ADDRESS;
+        std::array<uint8_t, addressing::MAX_PACKET_LEN> _data{};
         size_t _dataLen = 0;
     };
 }

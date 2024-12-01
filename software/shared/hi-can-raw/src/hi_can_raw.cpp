@@ -52,7 +52,7 @@ void RawCanInterface::transmit(const Packet& packet)
     };
 
     // set CAN ID, as well as necessary flags
-    frame.can_id = static_cast<address::raw_address_t>(packet.getAddress());
+    frame.can_id = static_cast<addressing::raw_address_t>(packet.getAddress());
     if (packet.getIsExtended())
         frame.can_id |= CAN_EFF_FLAG;
     if (packet.getIsRTR())
@@ -106,7 +106,7 @@ std::optional<Packet> RawCanInterface::receive(bool blocking)
     // note: should always be true since we only use extended frames
     const bool isExtended = (frame.can_id & CAN_EFF_FLAG) != 0;
     const bool isError = (frame.can_id & CAN_ERR_FLAG) != 0;
-    const address::flagged_address_t address(frame.can_id, isRTR, isError, isExtended);
+    const addressing::flagged_address_t address(frame.can_id, isRTR, isError, isExtended);
     Packet packet(address, frame.data, frame.len);
 
     if (_receiveCallback)
@@ -115,13 +115,13 @@ std::optional<Packet> RawCanInterface::receive(bool blocking)
     return packet;
 }
 
-RawCanInterface& RawCanInterface::addFilter(const address::filter_t& address)
+RawCanInterface& RawCanInterface::addFilter(const addressing::filter_t& address)
 {
     FilteredCanInterface::addFilter(address);
     _updateFilters();
     return *this;
 }
-RawCanInterface& RawCanInterface::removeFilter(const address::filter_t& address)
+RawCanInterface& RawCanInterface::removeFilter(const addressing::filter_t& address)
 {
     FilteredCanInterface::removeFilter(address);
     _updateFilters();
@@ -180,7 +180,7 @@ void RawCanInterface::_updateFilters()
         filters.reserve(_filters.size());
         for (const auto& filter : _filters)
         {
-            canid_t can_id = static_cast<address::raw_address_t>(filter.address);
+            canid_t can_id = static_cast<addressing::raw_address_t>(filter.address);
             if (filter.address.rtr)
                 can_id |= CAN_RTR_FLAG;
             if (filter.address.error)

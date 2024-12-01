@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 using namespace hi_can;
-using namespace hi_can::address;
+using namespace hi_can::addressing;
 
 using namespace std::chrono;
 
