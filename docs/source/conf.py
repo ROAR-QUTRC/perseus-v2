@@ -108,8 +108,10 @@ exhale_args = {
 # https://myst-parser.readthedocs.io/en/latest/
 myst_enable_extensions = [
     "amsmath",
+    "attrs_block",
     "attrs_inline",
     "colon_fence",
+    "deflist",
     "dollarmath",
     "html_admonition",
     "html_image",
@@ -239,11 +241,21 @@ html_theme_options = {
 # https://jbms.github.io/sphinx-immaterial/apidoc/index.html
 object_description_options = [
     ("std:confval", dict(toc_icon_class="data", toc_icon_text="C")),
-    ("std:confflag", dict(toc_icon_class="sub-data", toc_icon_text="F")),
+    ("std:option", dict(toc_icon_class="sub-data", toc_icon_text="O")),
 ]
 
 
 # Output configuration/extensions/Sphinx python configuration
+nitpicky = True
+nitpick_ignore_regex = {
+    # ignore not being able to find STL documentation
+    ("cpp:identifier", "std.*"),
+    # unfortunately the same goes for hi_can
+    ("cpp:identifier", "hi_can.*"),
+    ("cpp:identifier", "addressing"),
+}
+
+
 def index_figures(app):
     INDEX_FILE = "_figure-index.rst"
     figure_dir = path.join(app.builder.srcdir, "generated")
@@ -292,7 +304,7 @@ def setup(app):
     # Fixes background fill colours on the "this class" node in class/collaboration diagrams
     app.connect("html-page-context", add_graph_fix_css)
 
-    # add custom confval and confflag objects
+    # add custom confval and option objects
     app.add_object_type(
         "confval",
         "confval",
@@ -300,8 +312,8 @@ def setup(app):
         indextemplate="pair: %s; configuration value",
     )
     app.add_object_type(
-        "confflag",
-        "confflag",
-        objname="configuration flag",
-        indextemplate="pair: %s; configuration flag",
+        "option",
+        "option",
+        objname="command-line option",
+        indextemplate="pair: %s; command-line option",
     )
