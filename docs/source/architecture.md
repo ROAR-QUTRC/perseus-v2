@@ -14,6 +14,8 @@ Whilst those two documents contain the majority of the information you'll need d
 If you're just looking for a high-level overview, this diagram contains the basics of the information flow between modules (as well as some power information):
 ![Architecture](generated/system_architecture.drawio.svg){.has-dark-opt}
 
+Finally, if you're wondering about a specific payload, those get their own [section](project:/subsystems.md).
+
 ```{toctree}
 :maxdepth: 1
 :hidden:
