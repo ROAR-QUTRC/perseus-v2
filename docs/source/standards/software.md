@@ -944,11 +944,11 @@ int processClass(ExampleClass inputData);
 
 Never use C `malloc()` and `free()` - there are better C++ replacements.
 Firstly, prefer to use references if you can (`type_t& variable`), eliminating pointers entirely.
-If a pointer doesn't serve your needs, the next best options (C++ smart pointers) are {cpp:expr}`std::unique_ptr` for a pointer which is owned in a single place, and {cpp:expr}`std::shared_ptr` for a pointer which needs to be, well, shared between multiple pieces of code (you can research {cpp:expr}`std::weak_ptr` in your own time - it's unlikely to be useful).
-Smart pointers should be initialised with {cpp:expr}`std::make_unique` or {cpp:expr}`std::make_shared` as appropriate - they are drop-in, safer replacements for `new`.
+If a pointer doesn't serve your needs, the next best options (C++ smart pointers) are {expr}`std::unique_ptr` for a pointer which is owned in a single place, and {expr}`std::shared_ptr` for a pointer which needs to be, well, shared between multiple pieces of code (you can research {expr}`std::weak_ptr` in your own time - it's unlikely to be useful).
+Smart pointers should be initialised with {expr}`std::make_unique` or {expr}`std::make_shared` as appropriate - they are drop-in, safer replacements for `new`.
 Speaking of, avoid the use of `new` and `new[]`.
 If you _must_ use it, assign the resultant pointer to a smart pointer type as soon as possible.
-Dynamic array allocation can also be almost entirely replaced with C++ STL storage containers such as {cpp:expr}`std::vector` (especially with functions like {cpp:expr}`std::vector::emplace_back`, which will construct the variable appended to the vector).
+Dynamic array allocation can also be almost entirely replaced with C++ STL storage containers such as {expr}`std::vector` (especially with functions like {expr}`std::vector::emplace_back`, which will construct the variable appended to the vector).
 
 Finally, you should be avoiding manual memory management at all costs if you can.
 It's just very hard to get right, and if it goes wrong, it can cause a whole host of new and interesting bugs to appear.
@@ -956,7 +956,7 @@ If you can use normal initialisation instead, do so.
 
 #### Use the STL
 
-The STL (Standard Template Library) is _massive_ in modern C++ and contains a huge number of solutions to common problems - the most common likely being {cpp:expr}`std::string` and {cpp:expr}`std::vector`.
+The STL (Standard Template Library) is _massive_ in modern C++ and contains a huge number of solutions to common problems - the most common likely being {expr}`std::string` and {expr}`std::vector`.
 Less well known solutions are libraries such as `<atomic>`, `<chrono>`, and `<tuple>` - all of which solve common problems well.
 Before implementing a new solution, take half a minute to do a search and see if the STL has a solution already.
 

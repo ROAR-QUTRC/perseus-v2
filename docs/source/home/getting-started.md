@@ -1,6 +1,7 @@
 # Getting Started
 
 This project is built using [Nix](https://nixos.org/), which makes getting started quite easy - all you have to do is install Nix and `direnv`, and they take care of the rest.
+Whilst this page will get you started, it is strongly recommended that you read through <project:nix-basics.md> after reading through this document so you understand how to use the tooling.
 
 ## Environment Setup
 
@@ -91,6 +92,30 @@ However, before you start writing code, there's a few things you need to read th
 The most important one is the software [architecture](project:/architecture/software.md), which goes over how all the software links together and how it's laid out.
 The other document is the software [standards](project:/standards/software.md), which details the standards to which your software is expected to be written.
 If your software _doesn't_ meet these standards, we unfortunately won't be able to merge your changes until you fix the issues - if code standards aren't enforced, the code **will** quickly become an un-maintainable mess, leading to another rewrite.
+
+## Full first-time setup example
+
+If you only care about building the code, the instructions for a first-time bringup from scratch on a Debian-based system like Ubuntu are as follows:
+
+1. Install the [GitHub CLI](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
+2. Run the following shell commands:
+
+```{code-block} console
+sudo apt-get update
+sudo apt-get install -y gh git curl direnv
+gh auth login -w -p https # log in with GitHub CLI and authenticate git
+cd ~
+gh repo clone ROAR-QUTRC/perseus-v2 # download the repository
+cd perseus-v2
+./software/scripts/nix-setup.sh
+```
+
+3. Restart your shell
+4. Run `cd ~/perseus-v2`
+5. Accept all config when prompted with `y`
+6. Wait for the downloads (and potentially builds)
+7. Run `nix build`
+8. You're done! If there were no errors, the built rover workspace is now available under the `perseus-v2/result` symlink folder.
 
 ## Debugging
 

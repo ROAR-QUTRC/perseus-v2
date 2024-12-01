@@ -1,5 +1,9 @@
 # Documentation
 
+Good documentation is key to a project's long-term success.
+As such, the documentation pipeline which ends up generating these very webpages is explained in this document.
+If you're looking to start _writing_ documentation, check out the [maintenance](project:/maintenance/documentation.md) page after reading through this one.
+
 ## Tech Stack
 
 ### Core
@@ -183,17 +187,13 @@ A wrapper script around `p7zip` which provides the arguments to decompress the f
 
 Both arguments are mandatory.
 
-```{confval} source
-
-```
-
+```{option} source
 The path to the input file
-
-```{confval} destination
-
 ```
 
+```{option} destination
 The path to the destination directory for the extracted files
+```
 
 #### `docs.fetch-inventories`
 
@@ -221,11 +221,9 @@ It's intended for use in the CI/CD pipeline, but you can run it manually if you 
 
 ##### Flags
 
-```{confflag} --no-commit
-
-```
-
+```{option} --no-commit
 If present, the script will not automatically commit the changes
+```
 
 #### `docs.setup`
 
