@@ -1,0 +1,29 @@
+# Workflow to build the repo, run tests, and push the binaries to Cachix
+name: Build repo and run tests
+on:
+  push:
+    # no point rebuilding if the code doesn't change
+    paths:
+      - software/**
+      - flake.nix
+      - flake.lock
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+jobs:
+  run-build:
+    concurrency:
+      group: "build"
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Build repository
+        run: nix build -L
+      - name: Run flake checks
+        run: nix flake check -L
+      - name: Test dev shell
+        run: nix develop -L -c echo 'Shell test success'
+      - name: Upload to Cachix
+        run: ./software/scripts/cachix-push-minimal.sh
