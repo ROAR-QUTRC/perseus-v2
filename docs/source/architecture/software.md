@@ -93,3 +93,44 @@ The other project is the rover's web control UI - since it's a completely differ
 ### Backend
 
 ## Firmware
+
+## Nix outputs
+
+This section documents the outputs made available from the project `flake.nix`.
+See <project:/home/nix-basics.md> for more information.
+
+### Packages
+
+Intended for use with `nix build`.
+
+#### `default`
+
+A package containing all core software.
+
+#### `simulation`
+
+Same as the `default` package, but contains everything needed to run simulation as well.
+
+### Executables
+
+Intended for use with `nix run`.
+
+#### `default`
+
+Currently just for testing. Will eventually run the main bringup launch file.
+
+#### `ros2`
+
+ROS2 core executable from the `default` package.
+
+### Development shells
+
+Intended for use with `nix develop`.
+
+#### `default`
+
+Workspace containing everything needed to build and run the core software.
+
+#### `simulation`
+
+Same as the `default` dev shell, but extended with the packages needed to run simulation.

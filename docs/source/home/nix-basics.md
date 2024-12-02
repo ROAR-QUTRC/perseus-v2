@@ -37,12 +37,13 @@ If you want to select a _different_ output, you append a `#` symbol and the {ter
 Again assuming you're in the repo root, if you wanted to build the project documentation instead, you would run `nix build .#docs`.
 
 :::{tip}
-Particularly for `nix build`, if you want to see logs in real time instead of running the `nix log` command after the fact, add the `-L` flag.
+For any `nix` command (and particularly `nix build`), if you want to see logs in real time instead of running the `nix log` command after the fact, add the `-L` flag.
 Just beware that this will output logs for _every_ step of the process, so if you're doing a major (re-)build, you may get a lot of logs from dependencies which you don't necessarily want to see.
 :::
 :::{tip}
-If you're just running `nix COMMAND .` or `nix COMMAND .#something`, you can actually exclude the `.` specifying the current directory, since that's where Nix searches first.
+If you're just running `nix build .` or `nix build .#something`, you can actually exclude the `.` specifying the current directory, since that's where Nix searches first.
 It's just been included in this documentation to make things clearer.
+The `nix run` and `nix develop` commands have slightly different semantics if you do this - they'll search through output packages first, instead of dev shells or applications, which isn't normally what you want.
 :::
 
 ### The `build` command
@@ -111,6 +112,14 @@ This is particularly useful to select the latest version from `nixpkgs-unstable`
 `nixpkgs/nixpkgs-unstable#uv` would select the latest version available in `nixpkgs` of the `uv` package.
 :::
 ::::
+
+Every [architecture](project:/architecture.md) document contains a "Nix outputs" section if applicable detailing the available outputs to use.
+
+:::{tip}
+You can override the default search behaviour of the commands if you wish.
+Although `nix build` searches for packages, you can build a dev shell with `nix build .#devShells.NAME`, and an application with `nix build .#applications.NAME`.
+You can also use the same syntax with the other commands to, for example, run a package directly instead of an application with the same name.
+:::
 
 ## Nix Flakes
 

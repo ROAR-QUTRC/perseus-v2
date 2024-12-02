@@ -121,10 +121,11 @@ Once this runs, the automated deployment is complete, and all going well, the ne
 ## Nix outputs
 
 This section documents the outputs made available from the project `flake.nix`.
+See <project:/home/nix-basics.md> for more information.
 
-### Build artifacts
+### Packages
 
-Available using `nix build .#name`.
+Intended for use with `nix build`.
 
 #### `docs`
 
@@ -177,7 +178,7 @@ This is the development shell environment for use with `nix develop`.
 
 ### Executables
 
-Run using `nix run .#name`.
+Intended for use with `nix run`.
 
 #### `docs.decompress`
 
@@ -229,6 +230,16 @@ If present, the script will not automatically commit the changes
 
 A script which needs to be run before running `make html` from a dev shell.
 It builds the documentation figures from `docs.figures` and copies them into `docs/source/generated` so that Sphinx can use them.
+
+### Development shells
+
+Intended for use with `nix develop`.
+
+#### `docs`
+
+Development environment for the documentation with a fully set up Python environment and all dependencies needed to build it.
+
+Also aliased at `docs.shell`.
 
 ## Credits
 
