@@ -1,14 +1,18 @@
 # Workflow to build and deploy the docs using a deploy key
 name: Deploy documentation to GH Pages
 on:
-  # Run on pushes to main and docs - we shouldn't need to test building for other branches
   push:
-    branches: ["main", "docs"]
     paths:
-      - docs/**
-      - software/**
-      - flake.nix
-      - flake.lock
+      - "docs/**"
+      # software paths should only include files which are used by Doxygen
+      - "software/**/*.cpp"
+      - "software/**/*.hpp"
+      - "software/**/*.c"
+      - "software/**/*.h"
+      - "software/**/*.py"
+      - "software/**/*.pyi"
+      - "flake.nix"
+      - "flake.lock"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 jobs:
