@@ -26,4 +26,4 @@ jobs:
       - name: Test dev shell
         run: nix develop -L -c echo 'Shell test success'
       - name: Upload to Cachix
-        run: ./software/scripts/cachix-push-minimal.sh
+        run: nix run -L .#tools.scripts.cachix-push-minimal
