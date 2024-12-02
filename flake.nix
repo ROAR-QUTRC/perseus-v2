@@ -191,10 +191,6 @@
         packages = {
           inherit default simulation docs;
 
-          # used only to split up the build for Cachix - this particular package builds only the ROS core,
-          # thus reducing RAM required (slightly... still need a fair bit of swap space)
-          rosCore = pkgs.ros.callPackage pkgs.ros.buildROSWorkspace { name = "ROS Core"; };
-
           # Output the entire package set to make certain debugging easier 
           # Note that it needs to be a derivation though to make nix flake commands happy, so we just touch the output file
           # so that it can "build" successfully
