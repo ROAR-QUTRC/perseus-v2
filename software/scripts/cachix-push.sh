@@ -8,7 +8,6 @@ set -e
 cd "$(git rev-parse --show-toplevel)"
 
 # push built packages
-nix build .#rosCore --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
 nix build --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
 nix build .#docs --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
 nix build .#simulation --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar
