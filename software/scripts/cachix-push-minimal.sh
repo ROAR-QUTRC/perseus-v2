@@ -1,10 +1,8 @@
-#! /usr/bin/env nix-shell
-#! nix-shell -p cachix jq -i bash
-# shellcheck shell=bash
+# /usr/bin/env bash
+# WARNING: This script is intended to be used only through `nix run`.
 
-# WARNING: This script is intended to be used only in CI/CD.
-
-set -e
+# make script brittle - fail on any error
+set -euo pipefail
 
 # push built packages
 nix build --json | jq -r '.[].outputs | to_entries[].value' | cachix push qutrc-roar

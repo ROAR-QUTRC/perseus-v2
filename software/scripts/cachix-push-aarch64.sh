@@ -2,7 +2,7 @@
 #! nix-shell -p cachix jq -i bash
 # shellcheck shell=bash
 
-set -e
+set -euo pipefail
 
 # cd to the repo root
 cd "$(git rev-parse --show-toplevel)"
