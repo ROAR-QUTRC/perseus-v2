@@ -1,4 +1,4 @@
-# /usr/bin/env bash
+#! /usr/bin/env bash
 # WARNING: This script is intended to be used only through `nix run`.
 
 # make script brittle - fail on any error
