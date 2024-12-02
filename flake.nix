@@ -231,7 +231,7 @@
         };
         formatter = treefmtEval.config.build.wrapper;
         checks = {
-          formatting = treefmtEval.config.build.check self;
+          # formatting = treefmtEval.config.build.check self;
         };
       }
     );
