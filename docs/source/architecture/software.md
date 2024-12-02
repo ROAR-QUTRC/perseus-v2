@@ -24,6 +24,19 @@ The reason this is important is because these projects add the `-Werror` to the 
 
 If you're curious as to what all this looks like in practice, check out the `software/templates/` directory.
 
+:::{note}
+Under the hood, Nix's [`stdenv.mkDerivation`](https://nixos.org/manual/nixpkgs/stable/#sec-using-stdenv) automatically detects and uses CMake for these projects.
+More on that here: <project:nix.md>.
+:::
+
+### Testing
+
+Individual projects are unit tested using [GoogleTest](https://google.github.io/googletest/) (AKA GTest).
+This is the default testing solution supported for ROS2 projects, as documented [here](inv:ros#Tutorials/Intermediate/Testing/Cpp).
+It works well enough that we're also using it for unit testing the shared and native software.
+
+% TODO: Investigate using catch2 instead of GTest - maybe better?
+
 ## Core
 
 This is mostly ROS code, and is located in `software/ros_ws/src/`.
@@ -169,7 +182,7 @@ ROS2 core executable from the `default` package.
 
 #### `clean`
 
-Convenience alias of [`tools.scripts.clean`](#tools-scripts-clean)
+Convenience alias of [`tools.scripts.clean`](#toolsscriptsclean)
 
 #### `tools.scripts.clean`
 
