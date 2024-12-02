@@ -203,6 +203,7 @@
             pkgs.runCommand "roar-tools"
               {
                 passthru = {
+                  inherit (pkgs) scripts;
                   inherit treefmt-write-config;
                   treefmt-build = treefmtEval.config.build;
                 };
@@ -227,6 +228,10 @@
           ros2 = {
             type = "app";
             program = "${default}/bin/ros2";
+          };
+          clean = {
+            type = "app";
+            program = "${pkgs.scripts.clean}/bin/clean";
           };
         };
         formatter = treefmtEval.config.build.wrapper;
