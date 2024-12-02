@@ -71,8 +71,7 @@
               ros = final.rosPackages.${rosDistro}.overrideScope (
                 rosFinal: rosPrev: { manualDomainId = toString productionDomainId; }
               );
-              # override select packages with latest
-              inherit (pkgs-unstable) uv;
+              unstable = pkgs-unstable;
             })
           ];
           # Gazebo makes use of Freeimage.
@@ -83,6 +82,9 @@
         # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
         pkgs-unstable = import nixpkgs-unstable {
           inherit system;
+          overlays = [
+            (import ./docs/nix/overlay.nix)
+          ];
           config.allowUnfree = true; # needed for draw.io for the docs
         };
 
@@ -153,7 +155,6 @@
         };
 
         # --- PYTHON (UV) WORKSPACES ---
-        # note: called with pkgs-unstable since we need the uv tool to be up-to-date due to rapid development
         # note: called with rosDistro to link correct intersphinx inventory
         docs = pkgs.callPackage (import ./docs) {
           inherit

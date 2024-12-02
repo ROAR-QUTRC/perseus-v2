@@ -2,7 +2,7 @@
   rosDistro,
   mkShell,
   env,
-  uv,
+  unstable,
   drawio,
 }:
 # provide a dev shell environment for the docs - see pyproject docs:
@@ -16,7 +16,7 @@ let
     ROS_DISTRO = rosDistro;
     buildInputs = [
       env
-      uv # uv added to manage python dependencies
+      unstable.uv # uv added to manage python dependencies - needs to be from unstable due to rapid development
       drawio
     ];
     shellHook = ''

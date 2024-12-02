@@ -10,7 +10,7 @@
   uv2nix,
   pyproject-build-systems,
   # non-python packages to build docs
-  doxygen,
+  unstable,
   graphviz,
   # ros version to link to with intersphinx - defaults to humble
   rosDistro ? "humble",
@@ -48,7 +48,7 @@ let
     name = "roar-docs-env";
     paths = [
       pyEnv
-      doxygen
+      unstable.doxygen
       graphviz
     ];
   };
