@@ -18,7 +18,8 @@ let
 in
 {
   scripts = {
-    cachix-push-minimal = build-cachix-script "cachix-push-minimal";
+    cachix-push-build = build-cachix-script "cachix-push-build";
+    cachix-push-shell = build-cachix-script "cachix-push-shell";
     cachix-push = build-cachix-script "cachix-push";
     clean = build-wrapped-script "clean" (with prev; [ git ]);
   };
