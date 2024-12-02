@@ -2,13 +2,16 @@ final: prev:
 let
   build-cachix-script =
     name:
-    build-wrapped-script name (
-      with prev;
-      [
-        cachix
-        jq
-      ]
-    );
+    prev.runCommandLocal name { nativeBuildInputs = with prev; [ makeWrapper ]; } ''
+      makeWrapper ${./cachix/${name}.sh} $out/bin/${name} \
+        --prefix PATH : ${
+          with prev;
+          lib.makeBinPath [
+            cachix
+            jq
+          ]
+        }
+    '';
   build-wrapped-script =
     name: deps:
     prev.runCommandLocal name { nativeBuildInputs = with prev; [ makeWrapper ]; } ''
@@ -18,9 +21,12 @@ let
 in
 {
   scripts = {
-    cachix-push-build = build-cachix-script "cachix-push-build";
-    cachix-push-shell = build-cachix-script "cachix-push-shell";
-    cachix-push = build-cachix-script "cachix-push";
+    cachix = {
+      build = build-cachix-script "build";
+      shell = build-cachix-script "shell";
+      all = build-cachix-script "all";
+      docs-shell = build-cachix-script "docs-shell";
+    };
     clean = build-wrapped-script "clean" (with prev; [ git ]);
   };
 }
