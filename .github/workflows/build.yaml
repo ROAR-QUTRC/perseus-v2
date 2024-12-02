@@ -4,9 +4,17 @@ on:
   push:
     # no point rebuilding if the code doesn't change
     paths:
-      - software/**
-      - flake.nix
-      - flake.lock
+      - "software/**"
+      - "flake.nix"
+      - "flake.lock"
+      # ignore script updates
+      - "!software/scripts/**"
+      - "!software/ros_ws/colcon/**"
+      # we don't care about package.xml updates since they don't affect the nix build,
+      # we only care about it when the nix files get updated
+      - "!software/ros_ws/**/package.xml"
+      # launch files don't affect the tests
+      - "!software/ros_ws/**/launch/**"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 jobs:
@@ -23,9 +31,11 @@ jobs:
         run: nix build -L
       - name: Run flake checks
         run: nix flake check -L
+      - name: Upload build to Cachix
+        run: nix run -L .#tools.scripts.cachix-push-build
       - name: Test dev shell
         run: nix develop -L -c echo 'Shell test success'
-      - name: Upload to Cachix
-        run: nix run -L .#tools.scripts.cachix-push-minimal
+      - name: Upload dev shell to Cachix
+        run: nix run -L .#tools.scripts.cachix-push-shell
     env:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
