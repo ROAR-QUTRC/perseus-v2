@@ -5,12 +5,15 @@ on:
   push:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+# only run one job at a time
+concurrency:
+  group: "format"
+  cancel-in-progress: true
 jobs:
   run-format:
-    # only run one job at a time
+    # jobs which push to the repo all need to be in this concurrency group
     concurrency:
-      group: "format"
-      cancel-in-progress: true
+      group: "pushers"
     # needed to push changes if needed
     permissions:
       contents: write
