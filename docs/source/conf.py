@@ -85,7 +85,7 @@ exhale_args = {
         """
         INPUT=./../../software
         RECURSIVE = YES
-        EXCLUDE_PATTERNS = *.md setup.py __init__.py __pycache__* */tests/* */test/*
+        EXCLUDE_PATTERNS = *.md setup.py __init__.py __pycache__* */tests/* */test/* */launch/*
         EXCLUDE_SYMLINKS = YES
 
         # we do NOT want program listings as that exposes the source code
@@ -93,6 +93,9 @@ exhale_args = {
 
         # generate graphs
         HAVE_DOT = YES
+
+        # exclude main functions
+        EXCLUDE_SYMBOLS += main
         """
     ),
     # Page layout configuration
