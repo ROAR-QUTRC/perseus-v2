@@ -246,10 +246,12 @@
     # to the Nix config - contact me if you want an auth token to push your own builds
     extra-substituters = [
       "https://qutrc-roar.cachix.org"
+      "https://roar-qutrc.cachix.org"
       "https://ros.cachix.org"
     ];
     extra-trusted-public-keys = [
       "qutrc-roar.cachix.org-1:lARPhJL+PLuGd021HeN8CQOGGiYVEVGws5za+39M1Z0="
+      "roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA="
       "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo="
     ];
     # note that this is normally a VERY BAD IDEA but it may be needed so the docs can have internet access,
