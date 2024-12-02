@@ -24,3 +24,14 @@ For this project, we aren't employing continuous deployment for anything but the
 ## Execution
 
 The CI/CD pipeline for this project is run entirely using [GitHub Actions](https://docs.github.com/en/actions).
+The typical workflow looks something like this:
+
+1. Check out the repo with [`actions/checkout`](https://github.com/actions/checkout)
+2. Install Nix with [`nixbuild/nix-quick-install-action`](https://github.com/nixbuild/nix-quick-install-action)
+3. Set up Nix output caching with [`DeterminateSystems/magic-nix-cache-action`](https://github.com/DeterminateSystems/magic-nix-cache-action)
+4. (Optionally) Run some kind of update with `nix run` and commit it back to the repo
+5. Run `nix build -L` (or `check`) on the output - adding the `-L` flag enables logging into the shell and makes it easier to debug when things go wrong
+6. If that succeeds, the builds are passing!
+7. (Optionally) Upload to cachix using one of the scripts in `software/scripts`
+
+If you're curious about any specific workflow, they're all well commented.
