@@ -2,6 +2,7 @@
   stdenv,
   cleanCmakeSource,
   cmake,
+  gtest,
 }:
 
 stdenv.mkDerivation rec {
@@ -13,5 +14,9 @@ stdenv.mkDerivation rec {
     name = pname;
   };
 
-  nativeBuildInputs = [ cmake ];
+  nativeBuildInputs = [
+    cmake
+    gtest
+  ];
+  doCheck = true;
 }

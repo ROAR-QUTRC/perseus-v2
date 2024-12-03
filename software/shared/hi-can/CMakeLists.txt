@@ -62,3 +62,14 @@ install(
 # Versioning
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION}
                                                  SOVERSION 1)
+
+find_package(GTest REQUIRED)
+enable_testing()
+
+add_executable(interface_test tests/packet_manager_test.cpp)
+target_link_libraries(interface_test GTest::gtest_main)
+target_include_directories(interface_test
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+include(GoogleTest)
+gtest_discover_tests(interface_test)
