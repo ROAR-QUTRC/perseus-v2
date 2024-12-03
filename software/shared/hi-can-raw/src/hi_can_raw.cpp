@@ -181,17 +181,17 @@ void RawCanInterface::_updateFilters()
         for (const auto& filter : _filters)
         {
             canid_t can_id = static_cast<addressing::raw_address_t>(filter.address);
-            if (filter.address.rtr)
+            if (filter.address.isRtr)
                 can_id |= CAN_RTR_FLAG;
-            if (filter.address.error)
+            if (filter.address.isError)
                 can_id |= CAN_ERR_FLAG;
-            if (filter.address.extended)
+            if (filter.address.isExtended)
                 can_id |= CAN_EFF_FLAG;
 
             canid_t can_mask = filter.mask | CAN_EFF_FLAG;
-            if (filter.matchRtr)
+            if (filter.shouldMatchRtr)
                 can_mask |= CAN_RTR_FLAG;
-            if (filter.matchError)
+            if (filter.shouldMatchError)
                 can_mask |= CAN_ERR_FLAG;
             filters.emplace_back(can_filter{.can_id = can_id, .can_mask = can_mask});
         }

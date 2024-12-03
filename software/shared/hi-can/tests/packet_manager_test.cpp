@@ -15,6 +15,7 @@ public:
     }
     std::optional<Packet> receive(bool blocking = false) override
     {
+        (void)blocking;  // unused - we can't actually do anything with it
         if (receiveQueue.empty())
             return std::nullopt;
         Packet packet = receiveQueue.front();

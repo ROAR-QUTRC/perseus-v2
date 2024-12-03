@@ -15,14 +15,14 @@ void CanInterface::receiveAll(bool block)
     while (const auto packet = receive(false));
 }
 
-FilteredCanInterface& FilteredCanInterface::addFilter(const filter_t& address)
+FilteredCanInterface& FilteredCanInterface::addFilter(const filter_t& filter)
 {
-    _filters.emplace(address);
+    _filters.emplace(filter);
     return *this;
 }
-FilteredCanInterface& FilteredCanInterface::removeFilter(const filter_t& address)
+FilteredCanInterface& FilteredCanInterface::removeFilter(const filter_t& filter)
 {
-    _filters.erase(address);
+    _filters.erase(filter);
     return *this;
 }
 
@@ -73,7 +73,7 @@ void PacketManager::handle()
     for (auto& [key, value] : _transmissions)
     {
         const auto elapsed = now - value.lastTransmitted;
-        if (elapsed > value.config.interval)
+        if ((value.config.interval > 0ms) && (elapsed > value.config.interval))
         {
             value.lastTransmitted = now;
             getInterface().transmit(value.config.packet);
@@ -103,13 +103,18 @@ void PacketManager::removeCallback(const filter_t& filter)
     _callbacks.erase(filter);
 }
 
-void PacketManager::setTransmit(const transmit_config_t& config)
+void PacketManager::setTransmitConfig(const transmit_config_t& config)
 {
-    _transmissions[config.packet.getAddress()] = {
-        .config = config,
-        .lastTransmitted = steady_clock::now(),
-    };
-    if (config.shouldTransmitImmediately)
+    const bool hasZeroInterval = config.interval == 0ms;
+    if (!hasZeroInterval)
+        _transmissions[config.packet.getAddress()] = {
+            .config = config,
+            .lastTransmitted = steady_clock::now(),
+        };
+    else
+        _transmissions.erase(config.packet.getAddress());
+
+    if (hasZeroInterval || config.shouldTransmitImmediately)
         getInterface().transmit(config.packet);
 }
 
