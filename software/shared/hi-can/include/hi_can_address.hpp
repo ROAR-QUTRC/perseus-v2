@@ -191,6 +191,9 @@ namespace hi_can
                                       GROUP_ADDRESS_BITS -
                                       PARAM_ADDRESS_BITS) = 0;
 
+            standard_address_t(uint8_t system, uint8_t subsystem, uint8_t device, uint8_t group, uint8_t parameter)
+                : system(system), subsystem(subsystem), device(device), group(group), parameter(parameter) {}
+
             constexpr operator raw_address_t() const override
             {
                 return (static_cast<raw_address_t>(system) << SYSTEM_ADDRESS_POS) |
@@ -274,6 +277,10 @@ namespace hi_can
                     BATTERY_7 = 6,
                     BATTERY_8 = 7,
                 };
+                namespace bms_module
+                {
+
+                };
             }
             /// @brief Namespace containing all addresses in the power distribution subsystem
             namespace distribution
@@ -337,5 +344,79 @@ namespace hi_can
             /// @brief The space resources system ID
             constexpr uint8_t SYSTEM_ID = 0x05;
         }
+        // legacy addresses for old hardware
+        /// @brief Namespace containing all addresses in the legacy system
+        namespace legacy
+        {
+            struct address_t : public structured_address_t
+            {
+                /// @brief The system ID
+                uint8_t system : 5;
+                /// @brief The subsystem ID
+                uint8_t subsystem : 4;
+                /// @brief The device ID
+                uint8_t device : 8;
+                /// @brief The parameter group ID
+                uint8_t group : 8;
+                /// @brief The parameter ID
+                uint8_t parameter : 4;
+                /// @brief Padding to fill out the rest of 32 bits so it's aligned
+                const uint8_t _padding : (32 - 5 - 4 - 8 - 8 - 4) = 0;
+
+                address_t(uint8_t system, uint8_t subsystem, uint8_t device, uint8_t group, uint8_t parameter)
+                    : system(system), subsystem(subsystem), device(device), group(group), parameter(parameter) {}
+
+                constexpr operator raw_address_t() const override
+                {
+                    return (static_cast<raw_address_t>(system) << 24) |
+                           (static_cast<raw_address_t>(subsystem) << 20) |
+                           (static_cast<raw_address_t>(device) << 12) |
+                           (static_cast<raw_address_t>(group) << 4) |
+                           (static_cast<raw_address_t>(parameter) << 0);
+                }
+            };
+            namespace power
+            {
+                constexpr uint8_t SYSTEM_ID = 0x00;
+                namespace control
+                {
+                    constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                    enum class device
+                    {
+                        ROVER_CONTROL_BOARD = 0x00,
+                    };
+                    namespace contactor
+                    {
+                        constexpr uint8_t GROUP_ID = 0x01;
+                    };
+                    namespace power_bus
+                    {
+                        enum class group
+                        {
+                            COMPUTE_BUS = 2,
+                            DRIVE_BUS = 3,
+                            AUX_BUS = 4,
+                            SPARE_BUS = 5,
+                        };
+                        address_t getAddress(group id, uint8_t parameter = 0)
+                        {
+                            return address_t{SYSTEM_ID,
+                                             SUBSYSTEM_ID,
+                                             static_cast<uint8_t>(device::ROVER_CONTROL_BOARD),
+                                             static_cast<uint8_t>(id),
+                                             parameter};
+                        }
+                        namespace control_immediate
+                        {
+                            constexpr uint8_t PARAMETER_ID = 0x00;
+                        };
+                    };
+                };
+            };
+            namespace drive
+            {
+                constexpr uint8_t SYSTEM_ID = 0x01;
+            };
+        };
     }
 }
