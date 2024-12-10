@@ -1,0 +1,16 @@
+<library path="perseus_hardware">
+  <class name="perseus_hardware/VescSystemHardware"
+         type="perseus_hardware::VescSystemHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Hardware interface for VESC motor controllers
+    </description>
+  </class>
+  <class name="perseus_hardware/McbSystemHardware"
+         type="perseus_hardware::McbSystemHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Hardware interface for legacy Motor Control Boards
+    </description>
+  </class>
+</library>
