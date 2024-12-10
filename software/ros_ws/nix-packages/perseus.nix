@@ -3,29 +3,39 @@
   lib,
   buildRosPackage,
   ament-cmake,
-  ament-lint-auto,
-  ament-lint-common,
-  hardware-interfaces,
+  controller-manager,
+  diff-drive-controller,
+  joint-state-broadcaster,
+  perseus-hardware,
+  robot-state-publisher,
+  ros2controlcli,
+  ros2launch,
+  rviz2,
+  xacro,
 }:
 buildRosPackage rec {
-  pname = "ros-humble-perseus-bringup";
+  pname = "ros-humble-perseus";
   version = "0.0.0";
 
-  src = ./../src/perseus_bringup;
+  src = ./../src/perseus;
 
   buildType = "ament_cmake";
-  buildInputs = [
-    ament-cmake
-    hardware-interfaces
-  ];
-  checkInputs = [
-    ament-lint-auto
-    ament-lint-common
+  buildInputs = [ ament-cmake ];
+  propagatedBuildInputs = [
+    controller-manager
+    diff-drive-controller
+    joint-state-broadcaster
+    perseus-hardware
+    robot-state-publisher
+    ros2controlcli
+    ros2launch
+    rviz2
+    xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "TODO: Package description";
+    description = "Perseus V2 Rover Bringup";
     license = with lib.licenses; [ "TODO-License-declaration" ];
   };
 }
