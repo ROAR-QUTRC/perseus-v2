@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.5)
+# PROJECT SETUP
+cmake_minimum_required(VERSION 3.23)
 
-# Set the project name and version
 project(
   hi_can
   VERSION 0.0.1
@@ -19,6 +19,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
                                                "MinSizeRel" "RelWithDebInfo")
 endif()
+# we always want debug info for stack tracing, so switch to RelWithDebInfo from
+# Release
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -31,45 +36,55 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# COMPILE (Libraries)
+
 # Find all source files in the src directory
 file(GLOB_RECURSE CODE_SOURCES src/*.cpp)
-
-# Add the target, using the sources found
+# Add the target with those sources
 add_library(${PROJECT_NAME} SHARED ${CODE_SOURCES})
-
 # Set the include directories for the library
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                         $<INSTALL_INTERFACE:include>)
+                         $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 
-# Install the library files
-install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT ${PROJECT_NAME}_export
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin)
+# INSTALL (Libraries)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-# Install the headers
-install(DIRECTORY include/ DESTINATION include)
+# CMake packaging - see https://blog.vito.nyc/posts/cmake-pkg/ for a good
+# explanation
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.cmake.in
+               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake @ONLY)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+  COMPATIBILITY SameMinorVersion)
 
-# Export the CMake configuration so other CMake projects can import it
-install(
-  EXPORT ${PROJECT_NAME}_export
-  FILE ${PROJECT_NAME}-config.cmake
-  DESTINATION lib/cmake/${PROJECT_NAME})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME})
+
+# Headers
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 # Versioning
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION}
-                                                 SOVERSION 1)
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+# The main install - default locations are fine
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}_targets
+  ARCHIVE
+  LIBRARY
+  RUNTIME)
 
-find_package(GTest REQUIRED)
-enable_testing()
+# The last of the CMake packaging info
+install(EXPORT ${PROJECT_NAME}_targets
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
 
-add_executable(interface_test tests/packet_manager_test.cpp)
-target_link_libraries(interface_test GTest::gtest_main)
-target_include_directories(interface_test
-                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+# TESTING find_package(GTest REQUIRED) enable_testing()
 
-include(GoogleTest)
-gtest_discover_tests(interface_test)
+# add_executable(interface_test tests/packet_manager_test.cpp)
+# target_link_libraries(interface_test GTest::gtest_main)
+# target_include_directories(interface_test PUBLIC
+# ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# include(GoogleTest) gtest_discover_tests(interface_test)

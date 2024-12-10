@@ -40,13 +40,6 @@ add_executable(${PROJECT_NAME} ${CODE_SOURCES})
 # Set the include directories for the library
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-
-# Install the executable
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
-
-# Versioning
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
-
 # check if libraries are already present (Nix build), if not, add them
 find_package(hi_can_raw QUIET)
 if(NOT hi_can_raw_FOUND)
@@ -56,4 +49,10 @@ if(NOT hi_can_raw_FOUND)
 endif()
 
 # Link in libraries needed
-target_link_libraries(${PROJECT_NAME} PRIVATE hi_can_raw)
+target_link_libraries(${PROJECT_NAME} PUBLIC hi_can_raw)
+
+# Versioning
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+
+# Install the executable
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
