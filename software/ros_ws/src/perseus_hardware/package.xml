@@ -3,9 +3,9 @@
 <package format="3">
   <name>perseus_hardware</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Perseus rover hardware interface plugins for ROS2 control</description>
   <maintainer email="59348282+RandomSpaceship@users.noreply.github.com">james</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

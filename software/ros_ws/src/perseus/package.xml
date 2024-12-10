@@ -6,7 +6,7 @@
   <description>Perseus V2 Rover Bringup</description>
 
   <maintainer email="59348282+RandomSpaceship@users.noreply.github.com">james</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

@@ -29,7 +29,7 @@ buildRosPackage rec {
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "ROAR Autonomy software. Includes Mapping and Localisation based on laserscan and imu data";
-    license = with lib.licenses; [ "TODO-License-declaration" ];
+    description = "ROAR Autonomy software control stack";
+    license = with lib.licenses; [ mit ];
   };
 }

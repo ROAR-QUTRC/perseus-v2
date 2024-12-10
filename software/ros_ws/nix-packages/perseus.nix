@@ -36,6 +36,6 @@ buildRosPackage rec {
 
   meta = {
     description = "Perseus V2 Rover Bringup";
-    license = with lib.licenses; [ "TODO-License-declaration" ];
+    license = with lib.licenses; [ mit ];
   };
 }
