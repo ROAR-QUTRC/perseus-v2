@@ -121,8 +121,16 @@ namespace hi_can
         /// @param interface The interface to use for I/O
         PacketManager(FilteredCanInterface& interface);
 
-        /// @brief Handles all callbacks and transmissions
-        void handle();
+        /// @brief Handles all data reception and transmission - just calls @ref handleReceive and @ref handleTransmit
+        void handle()
+        {
+            handleReceive();
+            handleTransmit();
+        }
+        /// @brief Handles all data reception and associated callbacks
+        void handleReceive();
+        /// @brief Handles all data transmissions
+        void handleTransmit();
 
         /// @brief Sets a data receive callback which will be called for packets received on the interface matching the filter
         /// @param filter The filter to match packets against
