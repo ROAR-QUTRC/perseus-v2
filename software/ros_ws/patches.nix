@@ -10,7 +10,7 @@ let
       }:
       {
         dontWrapQtApps = false;
-        nativeBuildInputs = nativeBuildInputs ++ [ rosPrev.qt5.wrapQtAppsHook ];
+        nativeBuildInputs = nativeBuildInputs ++ [ prev.qt5.wrapQtAppsHook ];
         postFixup =
           postFixup
           + ''
