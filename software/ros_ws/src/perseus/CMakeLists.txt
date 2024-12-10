@@ -7,6 +7,6 @@ find_package(ament_cmake REQUIRED)
 
 # INSTALL
 install(DIRECTORY description/urdf DESTINATION share/perseus)
-install(DIRECTORY bringup/launch bringup/config DESTINATION share/perseus)
+install(DIRECTORY bringup/config DESTINATION share/perseus)
 
 ament_package()
