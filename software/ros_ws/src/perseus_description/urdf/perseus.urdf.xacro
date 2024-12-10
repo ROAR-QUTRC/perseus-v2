@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="perseus" params="prefix">
+    <!-- Import components -->
+    <xacro:include filename="$(find perseus_description)/urdf/chassis.urdf.xacro"/>
+    <xacro:include filename="$(find perseus_description)/urdf/rocker.urdf.xacro"/>
+    <!-- <xacro:include filename="$(find perseus_description)/urdf/sensors.urdf.xacro"/> -->
+
+    <link name="${prefix}base_link"/>
+
+    <!-- CHASSIS -->
+    <xacro:chassis prefix="${prefix}"/>
+    <joint name="chassis_joint" type="fixed">
+      <origin xyz="0.21 0.0 0.35" rpy="0.0 0.0 -${pi/2}"/>
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}chassis"/>
+    </joint>
+
+    <!-- ROCKER ARMS -->
+    <!-- LEFT -->
+    <xacro:rocker prefix="${prefix}" side="left">
+      <origin xyz="-0.275 -0.075 0.05" rpy="0.0 0.0 ${-pi/2}"/>
+    </xacro:rocker>
+    <!-- RIGHT -->
+    <xacro:rocker prefix="${prefix}" side="right">
+      <origin xyz="0.275 -0.075 0.05" rpy="0.0 0.0 ${-pi/2}"/>
+    </xacro:rocker>
+  </xacro:macro>
+</robot>

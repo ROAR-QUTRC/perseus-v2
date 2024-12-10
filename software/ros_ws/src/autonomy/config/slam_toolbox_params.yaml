@@ -3,7 +3,7 @@ slam_toolbox:
     # Existing parameters...
     odom_frame: odom
     map_frame: map
-    base_frame: base_footprint
+    base_frame: chassis
     scan_topic: /scan
     mode: mapping
     # IMU-related parameters
