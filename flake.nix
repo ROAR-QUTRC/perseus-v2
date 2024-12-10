@@ -94,8 +94,7 @@
         standardPkgs = {
           inherit (pkgs) can-utils;
           inherit (pkgs.ros)
-            natrviz
-            rviz2
+            rviz2-fixed
             rosbag2
             teleop-twist-keyboard
             demo-nodes-cpp
@@ -167,7 +166,7 @@
 
         # --- SCRIPTS ---
         perseus = pkgs.writeShellScriptBin "perseus" ''
-          ${default}/bin/ros2 pkg list
+          ${default}/bin/ros2 launch perseus perseus.launch.py "$@"
         '';
         treefmt-write-config = pkgs.writeShellScriptBin "treefmt-write-config" ''
           cd "$(git rev-parse --show-toplevel)"

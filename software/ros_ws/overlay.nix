@@ -30,11 +30,8 @@ let
         };
         # additionally, override rviz by default to wrap it with nixGL since most people are on Ubuntu not NixOS
         # also provide native rviz with an alias
-        rviz2 = prev.writeShellScriptBin "rviz2" ''
+        rviz2-fixed = prev.writeShellScriptBin "rviz2-fixed" ''
           NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure "github:nix-community/nixGL" "${prev.lib.getExe rosPrev.rviz2}" -- "$@"
-        '';
-        natrviz = prev.writeShellScriptBin "natrviz" ''
-          exec "${prev.lib.getExe rosPrev.rviz2}" "$@"
         '';
       })
     ] rosFinal rosPrev);
