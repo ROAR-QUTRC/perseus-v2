@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<robot name="rocker" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find perseus_description)/urdf/motor_wheel.urdf.xacro"/>
+
+  <xacro:macro name="rocker" params="prefix side *origin">
+    <!-- ROCKER ARM -->
+    <link name="${prefix}${side}_rocker">
+      <inertial>
+        <!-- RIGHT -->
+        <xacro:if value="${side == 'right'}">
+          <origin xyz="0.011819187400851083 -0.08337339654014758 -0.06739096070989994" rpy="0.0 0.0 0.0"/>
+          <inertia ixx="0.078224" iyy="0.009964" izz="0.076528" ixy="0.003701" iyz="-0.006846" ixz="0.00298"/>
+        </xacro:if>
+        <!-- LEFT -->
+        <xacro:if value="${side == 'left'}">
+          <origin xyz="0.011819187400851083 -0.08337339654014758 -0.06739096070989994" rpy="0.0 0.0 0.0"/>
+          <inertia ixx="0.078224" iyy="0.009964" izz="0.076528" ixy="-0.003701" iyz="-0.006845" ixz="-0.00298"/>
+        </xacro:if>
+        <mass value="1.2546142039512485"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/rocker_${side}.dae"/>
+        </geometry>
+        <!-- <material name="silver"/> -->
+      </visual>
+      <collision>
+        <origin xyz="0.2 0.0 -0.05" rpy="0.0 0.3 0.0"/>
+        <geometry>
+          <box size="0.4 0.05 0.03" />
+          <!--mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/rocker_${side}.dae"/-->
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${side}_rocker_joint" type="fixed"> <!-- revolute -->
+      <!-- <limit effort="100.0" lower="-0.24" upper="0.24" velocity="100.0"/>
+      <dynamics damping="0.1" friction="1.0"/> -->
+
+      <xacro:insert_block name="origin"/>
+      <!-- <axis xyz="0 1 0"/> -->
+
+      <parent link="chassis"/>
+      <child link="${side}_rocker"/>
+
+      <!-- <xacro:if value="${side == 'right'}">
+        <mimic joint="flange_bearing_to_differential_bar"/>
+      </xacro:if>
+      <xacro:if value="${side == 'left'}">
+        <mimic joint="flange_bearing_to_differential_bar" multiplier="-1"/>
+      </xacro:if> -->
+    </joint>
+
+    <!-- FRONT MOTOR -->
+    <xacro:motor_wheel prefix="${prefix}" side="${side}" end="front">
+      <xacro:if value="${side == 'left'}">
+        <!-- NHS: suspect this joint is the reason for the wheels turning backwards-->
+        <!--playing around with rotating in Z and manually placing offset for wheels-->
+        <!--ORIGINAL TEXT: origin xyz="-0.3 0.045 -0.25" rpy="0.0 0.0 ${pi/2}"/-->
+        <origin xyz="-0.3 -0.225 -0.25" rpy="0.0 0.0 ${-pi/2}"/>
+      </xacro:if>
+      <xacro:if value="${side == 'right'}">
+        <!--ORIGINAL TEXT: origin xyz="-0.3 -0.045 -0.25" rpy="0.0 0.0 ${-pi/2}"/-->
+        <origin xyz="-0.3 0.225 -0.25" rpy="0.0 0.0 ${pi/2}"/>
+      </xacro:if>
+    </xacro:motor_wheel>
+    
+    <!-- REAR MOTOR -->
+    <xacro:motor_wheel prefix="${prefix}" side="${side}" end="rear">
+      <xacro:if value="${side == 'left'}">
+        <!-- origin xyz="0.55 0.045 -0.25" rpy="0.0 0.0 ${pi/2}"/-->
+        <origin xyz="0.55 -0.225 -0.25" rpy="0.0 0.0 ${-pi/2}"/>
+      </xacro:if>
+      <xacro:if value="${side == 'right'}">
+        <origin xyz="0.55 0.225 -0.25" rpy="0.0 0.0 ${pi/2}"/>
+      </xacro:if>
+    </xacro:motor_wheel>
+  </xacro:macro>
+
+</robot>

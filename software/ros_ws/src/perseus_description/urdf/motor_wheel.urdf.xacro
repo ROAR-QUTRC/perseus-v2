@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot name="motor_wheel" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find perseus_description)/urdf/wheel.urdf.xacro"/>
+
+  <xacro:macro name="motor_wheel" params="prefix side end *origin">
+    <link name="${prefix}${end}_${side}_motor">
+      <inertial>
+        <!-- moving origin has no perceivable impact-->
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <mass value="5.236579"/>
+        <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
+      </inertial>
+
+      <visual>
+        <origin xyz="-0.265 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
+        <geometry>
+          <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        </geometry>
+        <!-- <material name="white"/> -->
+      </visual>
+
+      <collision>
+        <origin xyz="-0.3 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <box size="0.1 0.1 0.075" />
+          <!--mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/gearbox.dae"/-->
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- JOINT -->
+    <joint name="${prefix}${end}_${side}_motor_joint" type="fixed">
+      <parent link="${prefix}${side}_rocker"/>
+      <child link="${prefix}${end}_${side}_motor"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+    <!-- TRANSMISSION -->
+    <!-- <transmission name="gear_ratio">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="bogie_${prefix}_to_motor_${prefix}_${suffix}">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="">
+        <mechanicalReduction>30</mechanicalReduction>
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </actuator>
+    </transmission> -->
+
+    <xacro:wheel prefix="${prefix}" side="${side}" end="${end}"/>
+  </xacro:macro>
+</robot>
