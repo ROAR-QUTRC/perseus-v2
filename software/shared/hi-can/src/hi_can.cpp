@@ -58,17 +58,24 @@ PacketManager::PacketManager(FilteredCanInterface& interface)
                                  { this->_handleReceivedPacket(packet); });
 }
 
-void PacketManager::handle()
+void PacketManager::handleReceive()
 {
+    _interface.receiveAll(false);
+
+    const auto now = steady_clock::now();
     for (auto& [key, value] : _callbacks)
     {
-        if (!value.hasTimedOut && (steady_clock::now() - value.lastReceived > value.config.timeout))
+        if (!value.hasTimedOut && (now - value.lastReceived > value.config.timeout))
         {
             value.hasTimedOut = true;
             if (value.config.timeoutCallback)
                 value.config.timeoutCallback();
         }
     }
+}
+
+void PacketManager::handleTransmit()
+{
     const auto now = steady_clock::now();
     for (auto& [key, value] : _transmissions)
     {
