@@ -3,16 +3,23 @@
 <package format="3">
   <name>perseus</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Perseus V2 Rover Bringup</description>
+
   <maintainer email="59348282+RandomSpaceship@users.noreply.github.com">james</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <depend>perseus_hardware</depend>
 
-  <build_depend>hardware_interfaces</build_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>diff_drive_controller</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>ros2controlcli</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>xacro</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

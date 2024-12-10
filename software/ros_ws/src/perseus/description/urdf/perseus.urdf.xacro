@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="perseus">
+  <xacro:arg name="prefix" default="" />
+  <xacro:arg name="use_mock_hardware" default="false" />
+
+  <!-- Import URDF description -->
+  <xacro:include filename="$(find perseus_description)/urdf/perseus.urdf.xacro" />
+  <!-- Import colours for rviz -->
+  <xacro:include filename="$(find perseus_description)/urdf/perseus.materials.xacro" />
+  <!-- Import ros2_control description -->
+  <xacro:include filename="$(find perseus_description)/ros2_control/perseus.ros2_control.xacro" />
+
+  <!-- Instantiate the description and the ROS2 control information -->
+  <xacro:perseus prefix="$(arg prefix)" />
+  <xacro:perseus_ros2_control name="Perseus" prefix="$(arg prefix)" use_mock_hardware="$(arg use_mock_hardware)"/>
+</robot>
