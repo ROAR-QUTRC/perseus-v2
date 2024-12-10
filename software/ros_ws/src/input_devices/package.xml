@@ -3,9 +3,9 @@
 <package format="3">
   <name>input_devices</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Nodes which publish input device data to topics</description>
   <maintainer email="59348282+RandomSpaceship@users.noreply.github.com">james</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <build_depend>python3-pygame</build_depend>
 

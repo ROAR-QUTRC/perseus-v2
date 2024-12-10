@@ -14,8 +14,8 @@ setup(
     zip_safe=True,
     maintainer="james",
     maintainer_email="59348282+RandomSpaceship@users.noreply.github.com",
-    description="TODO: Package description",
-    license="TODO: License declaration",
+    description="Nodes which publish input device data to topics",
+    license="MIT",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [

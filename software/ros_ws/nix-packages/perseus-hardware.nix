@@ -33,7 +33,7 @@ buildRosPackage rec {
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "TODO: Package description";
-    license = with lib.licenses; [ "TODO-License-declaration" ];
+    description = "Perseus rover hardware interface plugins for ROS2 control";
+    license = with lib.licenses; [ mit ];
   };
 }

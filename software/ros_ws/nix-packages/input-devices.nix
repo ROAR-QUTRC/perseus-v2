@@ -32,7 +32,7 @@ buildRosPackage rec {
   ];
 
   meta = {
-    description = "TODO: Package description";
-    license = with lib.licenses; [ "TODO-License-declaration" ];
+    description = "Nodes which publish input device data to topics";
+    license = with lib.licenses; [ mit ];
   };
 }

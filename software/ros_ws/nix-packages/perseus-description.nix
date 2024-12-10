@@ -16,6 +16,6 @@ buildRosPackage rec {
 
   meta = {
     description = "Package containing description files for Perseus V2";
-    license = with lib.licenses; [ "TODO-License-declaration" ];
+    license = with lib.licenses; [ mit ];
   };
 }
