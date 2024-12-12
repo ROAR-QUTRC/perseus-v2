@@ -28,7 +28,16 @@ hardware_interface::CallbackReturn VescSystemHardware::on_init(const hardware_in
         CHECK_INTERFACE_NAME(get_logger(), joint, state_interfaces, "state", 1, hardware_interface::HW_IF_VELOCITY);
 
         CHECK_PARAMETER_EXISTS(get_logger(), joint, "id");
-        // unsigned long vescId = std::stoul(joint.parameters.at("id"));
+        try
+        {
+            unsigned long vescId = std::stoul(joint.parameters.at("id"));
+            _vescIds.emplace_back(vescId);
+        }
+        catch (const std::exception& e)
+        {
+            RCLCPP_FATAL(get_logger(), "Failed to parse VESC ID for joint '%s': %s", joint.name.c_str(), e.what());
+            return hardware_interface::CallbackReturn::ERROR;
+        }
 
         _commandSpeeds.emplace_back(0);
         _realPositions.emplace_back(0);
@@ -79,7 +88,20 @@ hardware_interface::CallbackReturn VescSystemHardware::on_activate(
     {
         RCLCPP_FATAL(get_logger(), "Failed to initialise CAN bus (%s): %s",
                      info.hardware_parameters.at("can_bus").c_str(), e.what());
+        _packetManager.reset();
         return hardware_interface::CallbackReturn::ERROR;
+    }
+    for (const auto& vescId : _vescIds)
+    {
+        try
+        {
+            // register VESC parameter group here
+        }
+        catch (const std::exception& e)
+        {
+            RCLCPP_FATAL(get_logger(), "Failed to set up parameter group for VESC %lu: %s",
+                         vescId, e.what());
+        }
     }
 
     // RCLCPP_INFO(get_logger(), "Successfully activated!");
@@ -98,14 +120,16 @@ hardware_interface::CallbackReturn VescSystemHardware::on_deactivate(
 hardware_interface::return_type VescSystemHardware::read(
     const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
-    _packetManager->handleReceive();
+    if (_packetManager)
+        _packetManager->handleReceive();
     return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type VescSystemHardware::write(
     const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
-    _packetManager->handleTransmit();
+    if (_packetManager)
+        _packetManager->handleTransmit();
     return hardware_interface::return_type::OK;
 }
 

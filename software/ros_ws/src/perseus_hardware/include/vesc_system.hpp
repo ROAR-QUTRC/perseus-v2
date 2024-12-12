@@ -37,6 +37,8 @@ namespace perseus_hardware
     private:
         std::optional<hi_can::PacketManager> _packetManager;
 
+        // std::vector<hi_can::
+        std::vector<unsigned long> _vescIds;
         std::vector<double> _commandSpeeds;
         std::vector<double> _realSpeeds;
         std::vector<double> _realPositions;
