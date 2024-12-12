@@ -1,6 +1,6 @@
 final: prev:
 let
-  doxygen = prev.doxygen.overrideAttrs (
+  doxygen12 = prev.doxygen.overrideAttrs (
     { ... }:
     rec {
       version = "1.12.0";
@@ -16,5 +16,5 @@ let
   );
 in
 {
-  inherit doxygen;
+  inherit doxygen12;
 }
