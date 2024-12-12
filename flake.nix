@@ -66,6 +66,23 @@
             (import nix-ros-workspace { }).overlay
             # import ros workspace packages + fixes
             (import ./software/overlay.nix rosDistro)
+            # Pi graphics overlay
+(final: prev: {
+  mesa = (prev.mesa.override {
+    # Include softpipe as a minimal software renderer alongside v3d
+    galliumDrivers = [ "v3d" "softpipe" ];
+    vulkanDrivers = [ "broadcom" ];
+  }).overrideAttrs (oldAttrs: {
+    mesonBuildType = "release";
+    mesonFlags = (oldAttrs.mesonFlags or []) ++ [
+      "-Dgallium-vdpau=false"
+      "-Dgallium-va=false"
+      "-Dgallium-xa=false"
+      "-Dgallium-nine=false"
+    ];
+  });
+})
+			
             (final: prev: {
               # alias the output to pkgs.ros to make it easier to use
               ros = final.rosPackages.${rosDistro}.overrideScope (
@@ -88,6 +105,21 @@
           config.allowUnfree = true; # needed for draw.io for the docs
         };
 
+		# Add the ogre-config definition
+        ogre-config = pkgs.writeTextFile {
+          name = "ogre.cfg";
+          text = ''
+            Render System=OpenGL ES 2.x
+            FSAA=0
+            Fixed Pipeline Enabled=Yes
+            Full Screen=No
+            RTT Preferred Mode=FBO
+            VSync=Yes
+            Video Mode=1280 x 720
+            sRGB Gamma Conversion=No
+          '';
+        };
+
         # --- INPUT PACKAGE SETS ---
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
@@ -99,6 +131,22 @@
             teleop-twist-keyboard
             demo-nodes-cpp
             ;
+          # packages for raspberry pi 5
+          inherit (pkgs) 
+            mesa 
+            mesa-demos
+            libGL
+            libdrm
+            egl-wayland
+            ;
+          inherit (pkgs.xorg) 
+			libX11
+			libXrandr
+			libXext
+			libXi
+			libXmu
+			;
+		  inherit ogre-config;	
         };
         # Packages which should be available only in the dev shell
         devShellPkgs = {
@@ -135,6 +183,16 @@
                   + ''
                     # set the ROS_DOMAIN_ID to the development ID, since by default it's set to the production ID
                     export ROS_DOMAIN_ID=${toString devDomainId}
+                    
+                    # environment variables for Pi 5 graphics
+                    export LIBGL_DRIVER=v3d
+					export GALLIUM_DRIVER=v3d
+					export OGRE_RENDERING_PLUGIN=GLES2
+					export OGRE_RTT_MODE=FBO
+					export DISPLAY=:0
+					export LIBGL_ALWAYS_SOFTWARE=0
+					export QT_QPA_PLATFORM=eglfs
+					export QT_QPA_EGLFS_FORCE888=1
                   '';
               }
             );
