@@ -11,7 +11,7 @@ includes = ["*.c", "*.cc", "*.cpp", "*.h", "*.hh", "*.hpp"]
 options = ["-i"]
 
 [formatter.cmake-format]
-command = "/nix/store/9ijpfiihb5hnwy5s6fag0c196z71ycfb-cmake-format-0.6.13/bin/cmake-format"
+command = "/nix/store/br5n4f9z6ybfln4k6044rgdrkmdm94bb-cmake-format-0.6.13/bin/cmake-format"
 excludes = []
 includes = ["CMakeLists.txt", "**/CMakeLists.txt", "**/*.cmake", "*.cmake", "CMakeLists.txt"]
 options = ["--in-place"]
@@ -35,7 +35,7 @@ includes = ["*.nix"]
 options = []
 
 [formatter.prettier]
-command = "/nix/store/9hwlvnn35g296w83m1088sf1lng0cv9d-prettier-3.3.3/bin/prettier"
+command = "/nix/store/1bi5k3m7n4wldvgfzbfiqw1mzpb6jy0l-prettier-3.3.3/bin/prettier"
 excludes = []
 includes = ["*.cjs", "*.css", "*.html", "*.js", "*.json", "*.json5", "*.jsx", "*.md", "*.mdx", "*.mjs", "*.scss", "*.ts", "*.tsx", "*.vue", "*.yaml", "*.yml"]
 options = ["--write"]

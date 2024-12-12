@@ -48,7 +48,7 @@ let
     name = "roar-docs-env";
     paths = [
       pyEnv
-      unstable.doxygen
+      unstable.doxygen12
       graphviz
     ];
   };
