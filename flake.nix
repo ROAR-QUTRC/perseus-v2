@@ -67,19 +67,37 @@
             # import ros workspace packages + fixes
             (import ./software/overlay.nix rosDistro)
             # Pi graphics overlay
-(final: prev: {
-  mesa = (prev.mesa.override {
-    # Include softpipe as a minimal software renderer alongside v3d
-    galliumDrivers = [ "v3d" "softpipe" ];
-    vulkanDrivers = [ "broadcom" ];
-  }).overrideAttrs (oldAttrs: {
-    mesonBuildType = "release";
-    mesonFlags = (oldAttrs.mesonFlags or []) ++ [
-      "-Dgallium-vdpau=false"
-      "-Dgallium-va=false"
-      "-Dgallium-xa=false"
-      "-Dgallium-nine=false"
+            (final: prev: {
+            mesa = (prev.mesa.override {
+            # Include softpipe as a minimal software renderer alongside v3d
+            galliumDrivers = [ "v3d" "softpipe" ];
+            vulkanDrivers = [ "broadcom" ];
+            }).overrideAttrs (oldAttrs: {
+            mesonBuildType = "release";
+            outputs = [ "out" "dev" "drivers" ];
+	    buildInputs = oldAttrs.buildInputs or [] ++ [
+	    final.libdrm
+	    final.libglvnd
+	    ];
+	    mesonFlags = (oldAttrs.mesonFlags or []) ++ [
+            "-Dgallium-vdpau=disabled"
+            "-Dgallium-va=disabled"
+            "-Dgallium-xa=disabled"
+            "-Dgallium-nine=false"
+            "-Dspirv-to-dxil=false"
+            "-Dmicrosoft-clc=disabled"
+            "-Dintel-clc=auto"
+	    "-Dvulkan-layers=device-select"
+	    #"-Dllvm=disabled"
+	    #"-Dshared-llvm=disabled"
+	    "-Dshared-glapi=enabled"
+	    "-Degl=enabled"
+	    "-Dgbm=enabled"
+	    "-Ddri3=enabled"
+	    "-Dgallium-opencl=disabled"
+	    
     ];
+     NIX_DEBUG="1";
   });
 })
 			
