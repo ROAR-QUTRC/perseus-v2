@@ -398,14 +398,7 @@ namespace hi_can
                             AUX_BUS = 4,
                             SPARE_BUS = 5,
                         };
-                        address_t getAddress(group id, uint8_t parameter = 0)
-                        {
-                            return address_t{SYSTEM_ID,
-                                             SUBSYSTEM_ID,
-                                             static_cast<uint8_t>(device::ROVER_CONTROL_BOARD),
-                                             static_cast<uint8_t>(id),
-                                             parameter};
-                        }
+                        address_t getAddress(group id, uint8_t parameter = 0);
                         namespace control_immediate
                         {
                             constexpr uint8_t PARAMETER_ID = 0x00;
