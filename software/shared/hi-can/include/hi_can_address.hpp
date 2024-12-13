@@ -1,5 +1,6 @@
 #pragma once
 
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 
@@ -64,6 +65,7 @@ namespace hi_can
         /// @brief An address which can be converted to a raw address - all addressing in the Hi-CAN library should inherit from this if possible
         struct structured_address_t
         {
+            structured_address_t() = default;
             /// @brief Convert to a raw address
             /// @return The raw address
             virtual constexpr operator raw_address_t() const = 0;
@@ -168,6 +170,15 @@ namespace hi_can
                        (!shouldMatchRtr || (this->address.isRtr == (address.isRtr))) &&
                        (!shouldMatchError || (this->address.isError == (address.isError)));
             }
+
+            constexpr raw_address_t getMaskedAddress() const
+            {
+                return static_cast<raw_address_t>(address) & mask;
+            }
+            constexpr raw_address_t getUnmaskedAddress() const
+            {
+                return static_cast<raw_address_t>(address) & (~mask);
+            }
         };
 
         /// @brief A standard address for a Hi-CAN compliant device
@@ -191,8 +202,22 @@ namespace hi_can
                                       GROUP_ADDRESS_BITS -
                                       PARAM_ADDRESS_BITS) = 0;
 
-            standard_address_t(uint8_t system, uint8_t subsystem, uint8_t device, uint8_t group, uint8_t parameter)
-                : system(system), subsystem(subsystem), device(device), group(group), parameter(parameter) {}
+            standard_address_t(const uint8_t& system = 0x00,
+                               const uint8_t& subsystem = 0x00,
+                               const uint8_t& device = 0x00,
+                               const uint8_t& group = 0x00,
+                               const uint8_t& parameter = 0x00)
+                : system(system),
+                  subsystem(subsystem),
+                  device(device),
+                  group(group),
+                  parameter(parameter) {}
+            standard_address_t(standard_address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
+                : system(deviceAddress.system),
+                  subsystem(deviceAddress.subsystem),
+                  device(deviceAddress.device),
+                  group(group),
+                  parameter(parameter) {}
 
             constexpr operator raw_address_t() const override
             {
@@ -234,19 +259,26 @@ namespace hi_can
                     SET_CURRENT_BRAKE = 2,
                     SET_RPM = 3,
                     SET_POS = 4,
+                    STATUS = 9,
                     SET_CURRENT_REL = 10,
                     SET_CURRENT_BRAKE_REL = 11,
                     SET_CURRENT_HANDBRAKE = 12,
                     SET_CURRENT_HANDBRAKE_REL = 13,
+                    STATUS_2 = 14,
+                    STATUS_3 = 15,
+                    STATUS_4 = 16,
+                    STATUS_5 = 27,
+                    STATUS_6 = 28,
                 };
 
                 /// @brief VESC command packet address
                 struct address_t : public structured_address_t
                 {
+                    address_t(const uint8_t& vesc, const command_id& command) : vesc(vesc), command(command) {}
+                    /// @brief The VESC device ID
+                    uint8_t vesc = static_cast<uint8_t>(device::FRONT_LEFT);
                     /// @brief The VESC command ID
                     command_id command = command_id::SET_DUTY;
-                    /// @brief The VESC device ID
-                    device vesc = device::FRONT_LEFT;
 
                     constexpr operator raw_address_t() const override
                     {
@@ -363,8 +395,22 @@ namespace hi_can
                 /// @brief Padding to fill out the rest of 32 bits so it's aligned
                 const uint8_t _padding : (32 - 5 - 4 - 8 - 8 - 4) = 0;
 
-                address_t(uint8_t system, uint8_t subsystem, uint8_t device, uint8_t group, uint8_t parameter)
-                    : system(system), subsystem(subsystem), device(device), group(group), parameter(parameter) {}
+                address_t(const uint8_t& system = 0x00,
+                          const uint8_t& subsystem = 0x00,
+                          const uint8_t& device = 0x00,
+                          const uint8_t& group = 0x00,
+                          const uint8_t& parameter = 0x00)
+                    : system(system),
+                      subsystem(subsystem),
+                      device(device),
+                      group(group),
+                      parameter(parameter) {}
+                address_t(address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
+                    : system(deviceAddress.system),
+                      subsystem(deviceAddress.subsystem),
+                      device(deviceAddress.device),
+                      group(group),
+                      parameter(parameter) {}
 
                 constexpr operator raw_address_t() const override
                 {
@@ -375,9 +421,10 @@ namespace hi_can
                            (static_cast<raw_address_t>(parameter) << 0);
                 }
             };
+            // SYSTEMS
             namespace power
             {
-                constexpr uint8_t SYSTEM_ID = 0x00;
+                constexpr uint8_t SYSTEM_ID = 0x01;
                 namespace control
                 {
                     constexpr uint8_t SUBSYSTEM_ID = 0x00;
@@ -385,31 +432,86 @@ namespace hi_can
                     {
                         ROVER_CONTROL_BOARD = 0x00,
                     };
+                    // DEVICES
+                    namespace rcb
+                    {
+                        enum class groups
+                        {
+                            STATUS = 0x00,
+                            CONTACTOR = 0x01,
+                            COMPUTE_BUS = 0x02,
+                            DRIVE_BUS = 0x03,
+                            AUX_BUS = 0x04,
+                            SPARE_BUS = 0x05,
+                        };
+                    }
+                    // PARAMETER GROUPS
                     namespace contactor
                     {
-                        constexpr uint8_t GROUP_ID = 0x01;
-                    };
+                        enum class parameter
+                        {
+                            SHUTDOWN = 0x00
+                        };
+                    }
                     namespace power_bus
                     {
-                        enum class group
+                        enum class parameter
                         {
-                            COMPUTE_BUS = 2,
-                            DRIVE_BUS = 3,
-                            AUX_BUS = 4,
-                            SPARE_BUS = 5,
+                            CONTROL_IMMEDIATE = 0x00,
+                            CONTROL_SCHEDULED = 0x01,
+                            CURRENT_LIMIT = 0x02,
+                            POWER_STATUS = 0x03,
                         };
-                        address_t getAddress(group id, uint8_t parameter = 0);
-                        namespace control_immediate
-                        {
-                            constexpr uint8_t PARAMETER_ID = 0x00;
-                        };
-                    };
-                };
-            };
+                    }
+                }
+            }
             namespace drive
             {
-                constexpr uint8_t SYSTEM_ID = 0x01;
+                constexpr uint8_t SYSTEM_ID = 0x02;
+                namespace motors
+                {
+                    constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                    enum class device
+                    {
+                        FRONT_LEFT_MOTOR = 0x00,
+                        FRONT_RIGHT_MOTOR = 0x01,
+                        REAR_LEFT_MOTOR = 0x02,
+                        REAR_RIGHT_MOTOR = 0x03,
+                    };
+                    // DEVICES
+                    namespace mcb
+                    {
+                        enum class groups
+                        {
+                            STATUS = 0x00,
+                            ESC = 0x01,
+                        };
+                    }
+                    // PARAMETER GROUPS
+                    namespace esc
+                    {
+                        constexpr uint8_t esc = 0x01;
+                        enum class parameter
+                        {
+                            SPEED = 0x00,
+                            LIMITS = 0x01,
+                            STATUS = 0x02,
+                            POSITION = 0x03,
+                        };
+                    }
+                }
+            }
+
+        }
+        // PARAMETER GROUPS
+        namespace status
+        {
+            enum class parameter
+            {
+                POWER = 0x00,
+                STATUS = 0x01,
+                CPU = 0x02,
             };
-        };
+        }
     }
 }
