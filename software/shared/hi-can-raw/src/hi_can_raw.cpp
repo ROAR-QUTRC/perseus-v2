@@ -171,8 +171,10 @@ void RawCanInterface::_configureSocket(const int& socket)
     }
 }
 
+#include <iostream>
 void RawCanInterface::_updateFilters()
 {
+    std::cout << "filt upd" << std::endl;
     // build a vector containing the filters
     std::vector<can_filter> filters;
     if (!_filters.empty())
@@ -181,6 +183,7 @@ void RawCanInterface::_updateFilters()
         for (const auto& filter : _filters)
         {
             canid_t can_id = static_cast<addressing::raw_address_t>(filter.address);
+            std::cout << "id " << std::hex << can_id << std::endl;
             if (filter.address.isRtr)
                 can_id |= CAN_RTR_FLAG;
             if (filter.address.isError)
@@ -202,10 +205,12 @@ void RawCanInterface::_updateFilters()
         filters.emplace_back(can_filter{.can_id = 0, .can_mask = 0});
     }
 
+    // TODO: Currently this appears to disable receiving *all* packets,
+    // rather than applying the filters correctly, so disabled for now
     // apply the filters
-    if (setsockopt((int)_socket, SOL_CAN_RAW, CAN_RAW_FILTER, filters.data(), filters.size() * sizeof(can_filter)) < 0)
-    {
-        string err = std::strerror(errno);
-        throw std::runtime_error("Failed to update CAN filters: " + err);
-    }
+    // if (setsockopt((int)_socket, SOL_CAN_RAW, CAN_RAW_FILTER, filters.data(), filters.size() * sizeof(can_filter)) < 0)
+    // {
+    //     string err = std::strerror(errno);
+    //     throw std::runtime_error("Failed to update CAN filters: " + err);
+    // }
 }
