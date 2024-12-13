@@ -2,8 +2,8 @@
 
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
 #include <hi_can_raw.hpp>
-#include <rclcpp/rclcpp.hpp>
 #include <numbers>
+#include <rclcpp/rclcpp.hpp>
 
 #include "system_common.hpp"
 
@@ -103,8 +103,8 @@ hardware_interface::CallbackReturn McbSystemHardware::on_activate(
                 drive::SYSTEM_ID,
                 drive::motors::SUBSYSTEM_ID,
                 vescId));
-            _parameterGroups.emplace_back(paramGroup);
-            _packetManager->addGroup(paramGroup);
+            // _parameterGroups.emplace_back(paramGroup);
+            // _packetManager->addGroup(paramGroup);
         }
         catch (const std::exception& e)
         {
@@ -132,11 +132,11 @@ hardware_interface::return_type McbSystemHardware::read(
     if (_packetManager)
     {
         _packetManager->handleReceive();
-        for(size_t i = 0; i < _commandSpeeds.size(); i++)
+        for (size_t i = 0; i < _commandSpeeds.size(); i++)
         {
-            const auto& paramGroup = _parameterGroups[i];
-            const auto& status = paramGroup.getStatus();
-            _realSpeeds[i] = (status.realSpeed) / 180 * std::numbers::pi;
+            // const auto& paramGroup = _parameterGroups[i];
+            // const auto& status = paramGroup.getStatus();
+            // _realSpeeds[i] = (status.realSpeed) / 180 * std::numbers::pi;
         }
     }
     return hardware_interface::return_type::OK;
