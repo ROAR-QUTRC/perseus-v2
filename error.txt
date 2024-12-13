@@ -1,0 +1,1885 @@
+Running phase: unpackPhase
+@nix { "action": "setPhase", "phase": "unpackPhase" }
+unpacking source archive /nix/store/m747mq3sakhx4v0fjdjfxd6llljkf8a7-source
+source root is source
+Running phase: patchPhase
+@nix { "action": "setPhase", "phase": "patchPhase" }
+applying patch /nix/store/dy5d8jh60z4imy4z4nagd2bpsryw26wr-opencl.patch
+patching file meson.build
+Hunk #1 succeeded at 1895 (offset 90 lines).
+patching file meson_options.txt
+Hunk #1 succeeded at 29 (offset 6 lines).
+patching file src/gallium/targets/opencl/meson.build
+Hunk #1 succeeded at 22 (offset -17 lines).
+Hunk #2 succeeded at 107 (offset -17 lines).
+patching file src/gallium/targets/rusticl/meson.build
+Hunk #1 succeeded at 63 (offset -13 lines).
+patching script interpreter paths in .
+./.gitlab-ci/crosvm-runner.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/run-yamllint.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/piglit/piglit-runner.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/piglit/piglit-traces.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/run-shellcheck.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/build/compiler-wrapper-clang++-15.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/build/compiler-wrapper-clang++.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/build/compiler-wrapper-clang.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/build/compiler-wrapper-clang-15.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/build/compiler-wrapper-g++.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/build/compiler-wrapper-gcc.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/gtest-runner.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/run-shader-db.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/b2c/generate_b2c.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/meson/time.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/meson/time-strace.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/meson/build.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/crosvm-init.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/vkd3d-proton/run.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/deqp-runner.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/lava/lava-submit.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/lava/lava_job_submitter.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/lava/lava-pytest.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/container/build-skqp.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/container/install-wine-dxvk.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/container/setup-wine.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/container/container_pre_build.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/container/container_post_build.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/container/build-kdl.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/container/lava_build.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/container/create-cross-file.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/fossils/fossils.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/prepare-artifacts.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/serial_buffer.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/bare-metal/fastboot.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/eth008-power-relay.py: interpreter directive changed from "#!/usr/bin/python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/bare-metal/poe-on: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/poe-powered.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/mkbootimg.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/bare-metal/cisco-2960-poe-off.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/google-power-relay.py: interpreter directive changed from "#!/usr/bin/python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/bare-metal/poe_run.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/bare-metal/fastboot_run.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/bare-metal/telnet-buffer.py: interpreter directive changed from "#!/usr/bin/python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/bare-metal/poe-off: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/bm-init.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/bare-metal/google-power-down.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/cros-servo.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/expect-output.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/cisco-2960-poe-on.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/eth008-power-up.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/google-power-up.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/bare-metal/cros_servo_run.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./.gitlab-ci/bare-metal/eth008-power-down.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/cuttlefish-runner.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/fossilize-runner.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/common/init-stage1.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/common/intel-gpu-freq.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/common/capture-devcoredump.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/common/generate-env.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/common/start-x.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./.gitlab-ci/common/kdl.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./.gitlab-ci/common/init-stage2.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./src/vulkan/registry/update-aliases.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/vulkan/overlay-layer/mesa-overlay-control.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/glx/tests/dispatch-index-check: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./src/freedreno/computerator/examples/test-opcodes.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./src/freedreno/computerator/examples/test-flut.sh: interpreter directive changed from "#!/bin/bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./src/gallium/drivers/radeonsi/ci/radeonsi-run-tests.py: interpreter directive changed from "#!/usr/bin/python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/drivers/freedreno/trace-parser.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/auxiliary/driver_trace/enums2names.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/tools/addr2line.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./src/gallium/tools/trace/model.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/tools/trace/tracediff.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./src/gallium/tools/trace/dump.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/tools/trace/parse.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/tools/trace/dump_state.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/tools/trace/diff_state.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/tools/trace/pytracediff.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/tools/trace/format.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/gallium/frontends/xa/xa-indent.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./src/nouveau/headers/update-from-open-gpu-doc.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/intel/genxml/genxml_import.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/intel/genxml/gen_sort_tags.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/intel/genxml/intel_genxml.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/intel/tools/intel_sanitize_gpu.in: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./src/intel/tools/intel_dump_gpu.in: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./src/intel/tools/intel_stub_gpu.in: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./src/intel/dev/intel_device_info_serialize_gen_c.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/intel/dev/intel_device_info_gen_h.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/intel/compiler/brw_device_sha1_gen_c.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/intel/compiler/tests/run-test.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/intel/compiler/elk/tests/run-test.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/mapi/new/gen_gldispatch_mapi.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/etnaviv/hwdb/hwdb.h.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/compiler/isaspec/decode.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/compiler/isaspec/encode.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./src/compiler/spirv/tests/spirv-to-c-array.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/pick-ui.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/gen_calendar_entries.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/update-android-headers.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./bin/python-venv.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./bin/renderdoc-update.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/post_version.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/pick-ui.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./bin/commit_in_branch.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/gen_release_notes.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/perf-annotate-jit.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/ci/nightly_compare.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/ci/ci_run_n_monitor.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./bin/ci/gitlab_gql.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/ci/download_gl_schema.sh: interpreter directive changed from "#!/bin/sh" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/sh"
+./bin/ci/gitlab_gql.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./bin/ci/ci_gantt_chart.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/ci/marge_queue.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/ci/ci_post_gantt.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/ci/update_traces_checksum.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/ci/marge_queue.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./bin/ci/ci_run_n_monitor.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/ci/ci_gantt_chart.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./bin/ci/ci_post_gantt.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./bin/ci/update_traces_checksum.sh: interpreter directive changed from "#!/usr/bin/env bash" to "/nix/store/8jind2ncd72hlzym9pghjjdj79fvqzv5-bash-5.2p32/bin/bash"
+./bin/meson-cmd-extract.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+./bin/khronos-update.py: interpreter directive changed from "#!/usr/bin/env python3" to "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3"
+substituteStream() in derivation mesa-24.2.2: WARNING: '--replace' is deprecated, use --replace-{fail,warn,quiet}. (file 'src/util/xmlconfig.c')
+substituteStream() in derivation mesa-24.2.2: WARNING: pattern get_option\(\'datadir\'\) doesn't match anything in file 'src/amd/vulkan/meson.build'
+Running phase: updateAutotoolsGnuConfigScriptsPhase
+@nix { "action": "setPhase", "phase": "updateAutotoolsGnuConfigScriptsPhase" }
+Running phase: configurePhase
+@nix { "action": "setPhase", "phase": "configurePhase" }
+mesonConfigurePhase flags: --prefix=/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2 --libdir=/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib --libexecdir=/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/libexec --bindir=/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/bin --sbindir=/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/sbin --includedir=/nix/store/4ppw4kpg4wfamsan18pdaflf0alkb8d0-mesa-24.2.2-dev/include --mandir=/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/share/man --infodir=/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/share/info --localedir=/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/share/locale -Dauto_features=enabled -Dwrap_mode=nodownload --buildtype=release --sysconfdir=/etc --datadir=/nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/share -Dplatforms=x11\,wayland -Dgallium-drivers=v3d\,softpipe -Dvulkan-drivers=broadcom -Dvulkan-layers=device-select\,overlay\,intel-nullhw -Ddri-drivers-path=/nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri -Dvdpau-libs-path=/nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/vdpau -Domx-libs-path=/nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/bellagio -Dva-libs-path=/nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri -Dd3d-drivers-path=/nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/d3d -Ddri-search-path=/run/opengl-driver/lib/dri -Dgbm-backends-path=/run/opengl-driver/lib/gbm:/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/gbm -Dglvnd=enabled -Dgallium-nine=true -Dosmesa=true -Dteflon=true -Dinstall-intel-clc=true -Dintel-rt=disabled -Dclang-libdir=/nix/store/3z4d1py2v0g51hkq9ci2n2i3bw9ysghz-clang-18.1.8-lib/lib -Dgallium-opencl=icd -Dopencl-spirv=true -Dgallium-rusticl=true -Dandroid-libbacktrace=disabled -Dmicrosoft-clc=disabled -Dvalgrind=enabled -Dvideo-codecs=all -Dgallium-opencl=disabled -Dopencl-spirv=false -Dgallium-rusticl=false -Dplatforms=x11\,wayland -Degl=enabled -Dgbm=enabled -Ddri3=enabled -Dgles2=enabled -Dgles1=disabled -Dgallium-vdpau=disabled -Dgallium-va=disabled -Dgallium-xa=disabled -Dgallium-nine=false -Dvulkan-layers=device-select -Dllvm=disabled -Dshared-llvm=disabled -Dosmesa=false -Dglx=dri -Dshared-glapi=enabled -Dspirv-to-dxil=false -Dmicrosoft-clc=disabled -Dintel-clc=auto
+[1mThe Meson build system[0m
+Version: 1.5.1
+Source dir: [1m/build/source[0m
+Build dir: [1m/build/source/build[0m
+Build type: [1mnative build[0m
+Project name: [1mmesa[0m
+Project version: [1m24.2.2[0m
+C compiler for the host machine: [1mgcc[0m (gcc 13.3.0 "gcc (GCC) 13.3.0")
+C linker for the host machine: [1mgcc[0m ld.bfd 2.42
+C++ compiler for the host machine: [1mg++[0m (gcc 13.3.0 "g++ (GCC) 13.3.0")
+C++ linker for the host machine: [1mg++[0m ld.bfd 2.42
+Host machine cpu family: [1maarch64[0m
+Host machine cpu: [1maarch64[0m
+Checking for size of "[1mvoid*[0m" : [1m8[0m 
+Checking if "[1m-mtls-dialect=gnu2[0m" runs: [1;31mDID NOT COMPILE[0m
+Checking if "[1m-mtls-dialect=desc[0m" runs: [1;32mYES[0m
+Found pkg-config: [1;32mYES[0m [1m(/nix/store/23lhk9krmcpra578n3gsair6jbx30q3s-pkg-config-wrapper-0.29.2/bin/pkg-config)[0m [1;34m0.29.2[0m
+Run-time dependency [1mlibglvnd[0m found: [1;32mYES[0m [36m1.7.0[0m
+Dependency [1mvdpau[0m skipped: feature [1mgallium-vdpau[0m disabled
+Program [1mglslangValidator[0m found: [1;32mYES[0m (/nix/store/mbnzwy3rzicpagxgd994iq1i4jp4iq6s-glslang-14.3.0-bin/bin/glslangValidator)
+Dependency [1mlibva[0m skipped: feature [1mgallium-va[0m disabled
+Program python3 found: [1;32mYES[0m (/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3)
+Fetching value of define "[1mETIME[0m" : 62 
+Compiler for C supports arguments -gsplit-dwarf: [1;32mYES[0m 
+Compiler for C supports link arguments -Wl,--gdb-index: [1;31mNO[0m 
+Checking for function "[1mbswap32[0m" : [1;32mYES[0m 
+Checking for function "[1mbswap64[0m" : [1;32mYES[0m 
+Checking for function "[1mclz[0m" : [1;32mYES[0m 
+Checking for function "[1mclzll[0m" : [1;32mYES[0m 
+Checking for function "[1mctz[0m" : [1;32mYES[0m 
+Checking for function "[1mexpect[0m" : [1;32mYES[0m 
+Checking for function "[1mffs[0m" : [1;32mYES[0m 
+Checking for function "[1mffsll[0m" : [1;32mYES[0m 
+Checking for function "[1mpopcount[0m" : [1;32mYES[0m 
+Checking for function "[1mpopcountll[0m" : [1;32mYES[0m 
+Checking for function "[1munreachable[0m" : [1;32mYES[0m 
+Checking for function "[1mtypes_compatible_p[0m" : [1;32mYES[0m 
+Compiler for C supports function attribute const: [1;32mYES[0m 
+Compiler for C supports function attribute flatten: [1;32mYES[0m 
+Compiler for C supports function attribute malloc: [1;32mYES[0m 
+Compiler for C supports function attribute pure: [1;32mYES[0m 
+Compiler for C supports function attribute unused: [1;32mYES[0m 
+Compiler for C supports function attribute warn_unused_result: [1;32mYES[0m 
+Compiler for C supports function attribute weak: [1;32mYES[0m 
+Compiler for C supports function attribute format: [1;32mYES[0m 
+Compiler for C supports function attribute packed: [1;32mYES[0m 
+Compiler for C supports function attribute returns_nonnull: [1;32mYES[0m 
+Compiler for C supports function attribute alias: [1;32mYES[0m 
+Compiler for C supports function attribute noreturn: [1;32mYES[0m 
+Compiler for C supports function attribute optimize: [1;32mYES[0m 
+Compiler for C supports function attribute visibility:hidden: [1;32mYES[0m 
+Checking if "[1m__uint128_t[0m" compiles: [1;32mYES[0m 
+Checking for function "[1mreallocarray[0m" : [1;32mYES[0m 
+Checking for function "[1mfmemopen[0m" : [1;32mYES[0m 
+Checking if "[1mgc-sections[0m" : links: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=implicit-function-declaration: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=missing-prototypes: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=return-type: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=empty-body: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=incompatible-pointer-types: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=int-conversion: [1;32mYES[0m 
+Compiler for C supports arguments -Wimplicit-fallthrough: [1;32mYES[0m 
+Compiler for C supports arguments -Wmisleading-indentation: [1;32mYES[0m 
+Compiler for C supports arguments -Wno-missing-field-initializers: [1;32mYES[0m 
+Compiler for C supports arguments -Wno-format-truncation: [1;32mYES[0m 
+Compiler for C supports arguments -Wno-nonnull-compare: [1;32mYES[0m 
+Compiler for C supports arguments -fno-math-errno: [1;32mYES[0m 
+Compiler for C supports arguments -fno-trapping-math: [1;32mYES[0m 
+Compiler for C supports arguments -Qunused-arguments: [1;31mNO[0m 
+Compiler for C supports arguments -fno-common: [1;32mYES[0m 
+Compiler for C supports arguments -Wno-unknown-pragmas: [1;32mYES[0m 
+Compiler for C supports arguments -Wno-microsoft-enum-value: [1;31mNO[0m 
+Compiler for C supports arguments -Wno-unused-function: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=format: [1;32mYES[0m 
+Compiler for C supports arguments -Wformat-security: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=thread-safety: [1;31mNO[0m 
+Compiler for C supports arguments -ffunction-sections: [1;32mYES[0m 
+Compiler for C supports arguments -fdata-sections: [1;32mYES[0m 
+Compiler for C supports arguments -Wno-unused-variable: [1;32mYES[0m 
+Compiler for C supports arguments -Wno-unused-but-set-variable: [1;32mYES[0m 
+Compiler for C supports arguments /wd4189: [1;31mNO[0m 
+Compiler for C++ supports arguments -Werror=return-type: [1;32mYES[0m 
+Compiler for C++ supports arguments -Werror=empty-body: [1;32mYES[0m 
+Compiler for C++ supports arguments -Wmisleading-indentation: [1;32mYES[0m 
+Compiler for C++ supports arguments -Wno-non-virtual-dtor: [1;32mYES[0m 
+Compiler for C++ supports arguments -Wno-missing-field-initializers: [1;32mYES[0m 
+Compiler for C++ supports arguments -Wno-format-truncation: [1;32mYES[0m 
+Compiler for C++ supports arguments -fno-math-errno: [1;32mYES[0m 
+Compiler for C++ supports arguments -fno-trapping-math: [1;32mYES[0m 
+Compiler for C++ supports arguments -Qunused-arguments: [1;31mNO[0m 
+Compiler for C++ supports arguments -flifetime-dse=1: [1;32mYES[0m 
+Compiler for C++ supports arguments -Wno-unknown-pragmas: [1;32mYES[0m 
+Compiler for C++ supports arguments -Wno-microsoft-enum-value: [1;31mNO[0m 
+Compiler for C++ supports arguments -Werror=format: [1;32mYES[0m 
+Compiler for C++ supports arguments -Wformat-security: [1;32mYES[0m 
+Compiler for C++ supports arguments -ffunction-sections: [1;32mYES[0m 
+Compiler for C++ supports arguments -fdata-sections: [1;32mYES[0m 
+Compiler for C++ supports arguments -Wno-unused-variable: [1;32mYES[0m 
+Compiler for C++ supports arguments -Wno-unused-but-set-variable: [1;32mYES[0m 
+Compiler for C++ supports arguments /wd4189: [1;31mNO[0m 
+Compiler for C supports arguments -Wno-override-init: [1;32mYES[0m 
+Compiler for C supports arguments -Wno-initializer-overrides: [1;31mNO[0m 
+Compiler for C supports arguments -Werror=pointer-arith: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=vla: [1;32mYES[0m 
+Compiler for C supports arguments -Werror=gnu-empty-initializer: [1;31mNO[0m 
+Compiler for C++ supports arguments -Werror=pointer-arith: [1;32mYES[0m 
+Compiler for C++ supports arguments -Werror=vla: [1;32mYES[0m 
+Compiler for C++ supports arguments -Werror=gnu-empty-initializer: [1;31mNO[0m 
+Checking for function "[1m__builtin_ia32_clflushopt[0m" : [1;31mNO[0m 
+Checking if "[1mGCC atomic builtins[0m" compiles: [1;32mYES[0m 
+Checking if "[1mGCC atomic builtins required -latomic[0m" : links: [1;32mYES[0m 
+Checking if "[1mGCC 64bit atomics[0m" with dependency : links: [1;32mYES[0m 
+Library [1mws2_32[0m found: [1;31mNO[0m
+Header "[1msys/sysmacros.h[0m" has symbol "[1mmajor[0m" : [1;32mYES[0m 
+Header "[1msys/sysmacros.h[0m" has symbol "[1mminor[0m" : [1;32mYES[0m 
+Header "[1msys/sysmacros.h[0m" has symbol "[1mmakedev[0m" : [1;32mYES[0m 
+Header "[1msys/mkdev.h[0m" has symbol "[1mmajor[0m" : [1;31mNO[0m 
+Check usable header "[1msched.h[0m" : [1;32mYES[0m 
+Checking for function "[1msched_getaffinity[0m" : [1;32mYES[0m 
+Check usable header "[1mxlocale.h[0m" : [1;31mNO[0m 
+Check usable header "[1mlinux/futex.h[0m" : [1;32mYES[0m 
+Check usable header "[1mendian.h[0m" : [1;32mYES[0m 
+Check usable header "[1mdlfcn.h[0m" : [1;32mYES[0m 
+Check usable header "[1msys/shm.h[0m" : [1;32mYES[0m 
+Check usable header "[1mcet.h[0m" : [1;31mNO[0m 
+Check usable header "[1mpthread_np.h[0m" : [1;31mNO[0m 
+Check usable header "[1msys/inotify.h[0m" : [1;32mYES[0m 
+Check usable header "[1mlinux/udmabuf.h[0m" : [1;32mYES[0m 
+Checking for function "[1mstrtof[0m" : [1;32mYES[0m 
+Checking for function "[1mmkostemp[0m" : [1;32mYES[0m 
+Checking for function "[1mmemfd_create[0m" : [1;32mYES[0m 
+Checking for function "[1mrandom_r[0m" : [1;32mYES[0m 
+Checking for function "[1mflock[0m" : [1;32mYES[0m 
+Checking for function "[1mstrtok_r[0m" : [1;32mYES[0m 
+Checking for function "[1mgetrandom[0m" : [1;32mYES[0m 
+Checking for function "[1mqsort_s[0m" : [1;31mNO[0m 
+Checking for function "[1mposix_fallocate[0m" : [1;32mYES[0m 
+Checking for function "[1msecure_getenv[0m" : [1;32mYES[0m 
+Checking if "[1mGNU qsort_r[0m" : links: [1;32mYES[0m 
+Header "[1mtime.h[0m" has symbol "[1mstruct timespec[0m" : [1;32mYES[0m 
+Checking for function "[1mthrd_create[0m" : [1;32mYES[0m 
+Header "[1merrno.h[0m" has symbol "[1mprogram_invocation_name[0m" : [1;32mYES[0m 
+Header "[1mmath.h[0m" has symbol "[1missignaling[0m" : [1;32mYES[0m 
+Checking for function "[1mposix_memalign[0m" : [1;32mYES[0m 
+Checking whether type "[1mstruct dirent[0m" has member "[1md_type[0m" : [1;32mYES[0m 
+Checking if "[1mstrtod has locale support[0m" : links: [1;32mYES[0m 
+Checking if "[1mBsymbolic[0m" : links: [1;32mYES[0m 
+Checking if "[1mversion-script[0m" : links: [1;32mYES[0m 
+Checking if "[1mdynamic-list[0m" : links: [1;32mYES[0m 
+Compiler for C supports link arguments -Wl,--build-id=sha1: [1;32mYES[0m 
+Checking for function "[1mdlopen[0m" : [1;32mYES[0m 
+Checking for function "[1mdladdr[0m" with dependency : [1;32mYES[0m 
+Checking for function "[1mdl_iterate_phdr[0m" : [1;32mYES[0m 
+Checking for function "[1mclock_gettime[0m" : [1;32mYES[0m 
+Run-time dependency [1mzlib[0m found: [1;32mYES[0m [36m1.3.1[0m
+Run-time dependency [1mlibzstd[0m found: [1;32mYES[0m [36m1.5.6[0m
+Run-time dependency [1mthreads[0m found: [1;32mYES[0m
+Checking for function "[1mpthread_setaffinity_np[0m" with dependency threads: [1;32mYES[0m 
+Run-time dependency [1mexpat[0m found: [1;32mYES[0m [36m2.6.2[0m
+Library [1mm[0m found: [1;32mYES[0m
+Run-time dependency [1mlibdrm[0m found: [1;32mYES[0m [36m2.4.122[0m
+Run-time dependency [1mlibudev[0m found: [1;32mYES[0m [36m256[0m
+Run-time dependency [1mlibelf[0m found: [1;32mYES[0m [36m0.191[0m
+Run-time dependency [1mvalgrind[0m found: [1;32mYES[0m [36m3.23.0[0m
+Program [1mbison[0m found: [1;32mYES[0m (/nix/store/2l9blslgs7qay9jmxkwdrq8ifry45kzq-bison-3.8.2/bin/bison)
+Program [1mbison[0m found: [1;32mYES[0m [36m3.8.2[0m [36m3.8.2[0m (/nix/store/2l9blslgs7qay9jmxkwdrq8ifry45kzq-bison-3.8.2/bin/bison)
+Program [1mflex[0m found: [1;32mYES[0m (/nix/store/m2l9zfaf5szxapn60d3dbp003hs9kvka-flex-2.6.4/bin/flex)
+Run-time dependency [1mlibunwind[0m found: [1;32mYES[0m [36m1.8.1[0m
+Build-time dependency [1mwayland-scanner[0m found: [1;32mYES[0m [36m1.23.1[0m
+Program [1m/nix/store/561hdf2kp5gi508sl2d5sm6r6ivqkxxw-wayland-scanner-1.23.1-bin/bin/wayland-scanner[0m found: [1;32mYES[0m (/nix/store/561hdf2kp5gi508sl2d5sm6r6ivqkxxw-wayland-scanner-1.23.1-bin/bin/wayland-scanner)
+Run-time dependency [1mwayland-protocols[0m found: [1;32mYES[0m [36m1.36[0m
+Run-time dependency [1mwayland-client[0m found: [1;32mYES[0m [36m1.23.1[0m
+Run-time dependency [1mwayland-server[0m found: [1;32mYES[0m [36m1.23.1[0m
+Run-time dependency [1mwayland-egl-backend[0m found: [1;32mYES[0m [36m3[0m
+Checking for function "[1mwl_display_dispatch_queue_timeout[0m" with dependency wayland-client: [1;31mNO[0m 
+Checking for function "[1mwl_display_create_queue_with_name[0m" with dependency wayland-client: [1;32mYES[0m 
+Run-time dependency [1mxcb[0m found: [1;32mYES[0m [36m1.17.0[0m
+Run-time dependency [1mxcb-randr[0m found: [1;32mYES[0m [36m1.17.0[0m
+Run-time dependency [1mx11[0m found: [1;32mYES[0m [36m1.8.10[0m
+Run-time dependency [1mxext[0m found: [1;32mYES[0m [36m1.3.6[0m
+Run-time dependency [1mxfixes[0m found: [1;32mYES[0m [36m6.0.1[0m
+Run-time dependency [1mxcb-glx[0m found: [1;32mYES[0m [36m1.17.0[0m
+Run-time dependency [1mxcb-shm[0m found: [1;32mYES[0m [36m1.17.0[0m
+Dependency [1mxcb[0m found: [1;32mYES[0m [36m1.17.0[0m [1;34m(cached)[0m
+Run-time dependency [1mxcb-keysyms[0m found: [1;32mYES[0m [36m0.4.1[0m
+Run-time dependency [1mx11-xcb[0m found: [1;32mYES[0m [36m1.8.10[0m
+Run-time dependency [1mxcb-dri2[0m found: [1;32mYES[0m [36m1.17.0[0m
+Dependency [1mxcb-dri2[0m found: [1;32mYES[0m [36m1.17.0[0m [1;34m(cached)[0m
+Run-time dependency [1mxcb-dri3[0m found: [1;32mYES[0m [36m1.17.0[0m
+Run-time dependency [1mxcb-present[0m found: [1;32mYES[0m [36m1.17.0[0m
+Dependency [1mxcb-shm[0m found: [1;32mYES[0m [36m1.17.0[0m [1;34m(cached)[0m
+Run-time dependency [1mxcb-sync[0m found: [1;32mYES[0m [36m1.17.0[0m
+Run-time dependency [1mxshmfence[0m found: [1;32mYES[0m [36m1.3.2[0m
+Run-time dependency [1mglproto[0m found: [1;32mYES[0m [36m1.4.17[0m
+Run-time dependency [1mdri2proto[0m found: [1;32mYES[0m [36m2.8[0m
+Run-time dependency [1mxxf86vm[0m found: [1;32mYES[0m [36m1.1.5[0m
+Run-time dependency [1mxcb-xfixes[0m found: [1;32mYES[0m [36m1.17.0[0m
+Dependency [1mxcb-randr[0m found: [1;32mYES[0m [36m1.17.0[0m [1;34m(cached)[0m
+Run-time dependency [1mxrandr[0m found: [1;32mYES[0m [36m1.5.4[0m
+Library [1msensors[0m found: [1;32mYES[0m
+Program [1mnm[0m found: [1;32mYES[0m
+Program [1msymbols-check.py[0m found: [1;32mYES[0m (/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3.12 /build/source/bin/symbols-check.py)
+Program [1minstall_megadrivers.py[0m found: [1;32mYES[0m (/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3.12 /build/source/bin/install_megadrivers.py)
+Compiler for C supports arguments -Wno-misleading-indentation: [1;32mYES[0m 
+Program [1mdecode.py[0m found: [1;32mYES[0m (/build/source/src/compiler/isaspec/decode.py)
+Program [1mencode.py[0m found: [1;32mYES[0m (/build/source/src/compiler/isaspec/encode.py)
+Compiler for C supports link arguments -Wl,-Bsymbolic-functions: [1;32mYES[0m 
+Compiler for C supports link arguments -Wl,-z,relro: [1;32mYES[0m 
+Did not find CMake 'cmake'
+Found CMake: [1;31mNO[0m
+Run-time dependency [1mv3d_hw[0m found: [1;31mNO[0m (tried pkgconfig and cmake)
+Run-time dependency [1mv3d_hw[0m found: [1;31mNO[0m (tried pkgconfig and cmake)
+Run-time dependency [1mv3d_hw[0m found: [1;31mNO[0m (tried pkgconfig and cmake)
+Compiler for C supports link arguments -Wl,--default-symver: [1;32mYES[0m 
+Configuring [1mdri.sym[0m using configuration
+Checking for function "[1mmincore[0m" : [1;32mYES[0m 
+Configuring [1m50_mesa.json[0m using configuration
+Configuring [1mdri.sym[0m using configuration
+Program [1mln[0m found: [1;32mYES[0m (/nix/store/ssqdazslv2wjpybnk0pjwnpq0dfpa6q2-coreutils-9.5/bin/ln)
+Program [1msphinx-build[0m skipped: feature [1mhtml-docs[0m disabled
+Build targets in project: [1m227[0m
+
+mesa [36m24.2.2[0m
+
+  [1mDirectories[0m
+    prefix                       : /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2
+    libdir                       : lib
+    includedir                   : /nix/store/4ppw4kpg4wfamsan18pdaflf0alkb8d0-mesa-24.2.2-dev/include
+
+  [1mCommon C and C++ arguments[0m
+    c_cpp_args                   : -mtls-dialect=desc
+
+  [1mOpenGL[0m
+    OpenGL                       : [1;32mYES[0m
+    ES1                          : [1;31mNO[0m
+    ES2                          : [1;32mYES[0m
+    Shared glapi                 : [1;32mYES[0m
+    GLVND                        : [1;32mYES[0m
+
+  [1mDRI[0m
+    Platform                     : drm
+    Driver dir                   : /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri
+
+  [1mGLX[0m
+    Enabled                      : [1;32mYES[0m
+    Provider                     : dri
+
+  [1mEGL[0m
+    Enabled                      : [1;32mYES[0m
+    Drivers                      : builtin:egl_dri2 builtin:egl_dri3
+    Platforms                    : x11 wayland surfaceless drm xcb
+
+  [1mGBM[0m
+    Enabled                      : [1;32mYES[0m
+    Backends path                : /run/opengl-driver/lib/gbm:/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/gbm
+
+  [1mVulkan[0m
+    Drivers                      : broadcom
+    Platforms                    : x11 wayland surfaceless drm xcb
+    ICD dir                      : /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/share/vulkan/icd.d
+    Layers                       : device-select
+    Intel Ray tracing            : [1;31mNO[0m
+
+  [1mVideo[0m
+    Codecs                       : vc1dec h264dec h264enc h265dec h265enc
+                                   av1dec av1enc vp9dec
+    APIs                         : vulkan
+
+  [1mLLVM[0m
+    Enabled                      : [1;31mNO[0m
+
+  [1mGallium[0m
+    Enabled                      : [1;32mYES[0m
+    Drivers                      : v3d softpipe
+    Platforms                    : x11 wayland surfaceless drm xcb
+    Frontends                    : mesa
+    Off-screen rendering (OSMesa): [1;31mNO[0m
+    HUD lm-sensors               : [1;32mYES[0m
+
+  [1mPerfetto[0m
+    Enabled                      : [1;31mNO[0m
+
+  [1mTeflon (TensorFlow Lite delegate)[0m
+    Enabled                      : [1;32mYES[0m
+
+  [1mUser defined options[0m
+    auto_features                : enabled
+    bindir                       : /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/bin
+    buildtype                    : release
+    datadir                      : /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/share
+    includedir                   : /nix/store/4ppw4kpg4wfamsan18pdaflf0alkb8d0-mesa-24.2.2-dev/include
+    infodir                      : /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/share/info
+    libdir                       : /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib
+    libexecdir                   : /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/libexec
+    localedir                    : /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/share/locale
+    mandir                       : /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/share/man
+    prefix                       : /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2
+    sbindir                      : /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/sbin
+    sysconfdir                   : /etc
+    wrap_mode                    : nodownload
+    android-libbacktrace         : disabled
+    clang-libdir                 : /nix/store/3z4d1py2v0g51hkq9ci2n2i3bw9ysghz-clang-18.1.8-lib/lib
+    d3d-drivers-path             : /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/d3d
+    dri-drivers-path             : /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri
+    dri-search-path              : /run/opengl-driver/lib/dri
+    dri3                         : enabled
+    egl                          : enabled
+    gallium-drivers              : v3d,softpipe
+    gallium-nine                 : false
+    gallium-opencl               : disabled
+    gallium-rusticl              : false
+    gallium-va                   : disabled
+    gallium-vdpau                : disabled
+    gallium-xa                   : disabled
+    gbm                          : enabled
+    gbm-backends-path            : /run/opengl-driver/lib/gbm:/nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/gbm
+    gles1                        : disabled
+    gles2                        : enabled
+    glvnd                        : enabled
+    glx                          : dri
+    install-intel-clc            : true
+    intel-clc                    : auto
+    intel-rt                     : disabled
+    llvm                         : disabled
+    microsoft-clc                : disabled
+    omx-libs-path                : /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/bellagio
+    opencl-spirv                 : false
+    osmesa                       : false
+    platforms                    : x11,wayland
+    shared-glapi                 : enabled
+    shared-llvm                  : disabled
+    spirv-to-dxil                : false
+    teflon                       : true
+    va-libs-path                 : /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri
+    valgrind                     : enabled
+    vdpau-libs-path              : /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/vdpau
+    video-codecs                 : all
+    vulkan-drivers               : broadcom
+    vulkan-layers                : device-select
+
+Found ninja-1.12.1 at /nix/store/0fh3p839z4r28nvj7j3w1ffbr8dmdckq-ninja-1.12.1/bin/ninja
+mesonConfigurePhase: enabled\ parallel\ building
+Running phase: buildPhase
+@nix { "action": "setPhase", "phase": "buildPhase" }
+build flags: -j4
+[1/1304] Generating src/util/format/u_format_pack.h with a custom command (wrapped by meson to capture output)
+[2/1304] Generating src/util/format/u_format_gen.h with a custom command (wrapped by meson to capture output)
+[3/1304] Generating src/util/format/u_format_table.c with a custom command (wrapped by meson to capture output)
+[4/1304] Compiling C object src/c11/impl/libmesa_util_c11.a.p/time.c.o
+[5/1304] Compiling C object src/util/blake3/libblake3.a.p/blake3_dispatch.c.o
+[6/1304] Compiling C object src/c11/impl/libmesa_util_c11.a.p/threads_posix.c.o
+[7/1304] Compiling C object src/util/blake3/libblake3.a.p/blake3.c.o
+[8/1304] Compiling C object src/util/blake3/libblake3.a.p/blake3_portable.c.o
+[9/1304] Compiling C object src/util/libmesa_util_sse41.a.p/streaming-load-memcpy.c.o
+[10/1304] Compiling C object src/util/libmesa_util.a.p/anon_file.c.o
+[11/1304] Compiling C object src/util/libmesa_util.a.p/bitscan.c.o
+[12/1304] Compiling C object src/util/blake3/libblake3.a.p/blake3_neon.c.o
+[13/1304] Compiling C object src/util/libmesa_util.a.p/build_id.c.o
+[14/1304] Compiling C object src/util/libmesa_util.a.p/blob.c.o
+[15/1304] Compiling C object src/util/libmesa_util.a.p/cnd_monotonic.c.o
+[16/1304] Compiling C object src/util/libmesa_util.a.p/compress.c.o
+[17/1304] Compiling C object src/util/libmesa_util.a.p/thread_sched.c.o
+[18/1304] Compiling C object src/util/libmesa_util.a.p/crc32.c.o
+[19/1304] Generating src/util/format_srgb with a custom command (wrapped by meson to capture output)
+[20/1304] Compiling C object src/util/libmesa_util.a.p/meson-generated_.._format_srgb.c.o
+[21/1304] Compiling C object src/util/libmesa_util.a.p/dag.c.o
+[22/1304] Compiling C object src/util/libmesa_util.a.p/disk_cache.c.o
+[23/1304] Compiling C object src/util/libmesa_util.a.p/double.c.o
+[24/1304] Compiling C object src/util/libmesa_util.a.p/fast_idiv_by_const.c.o
+[25/1304] Compiling C object src/util/libmesa_util.a.p/futex.c.o
+[26/1304] Compiling C object src/util/libmesa_util.a.p/half_float.c.o
+[27/1304] Compiling C object src/util/libmesa_util.a.p/disk_cache_os.c.o
+../src/util/disk_cache_os.c: In function 'disk_cache_touch_cache_user_marker':
+../src/util/disk_cache_os.c:1068:4: warning: ignoring return value of 'asprintf' declared with attribute 'warn_unused_result' [-Wunused-result]
+ 1068 |    asprintf(&marker_path, "%s/marker", path);
+      |    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../src/util/disk_cache_os.c: In function 'delete_dir':
+../src/util/disk_cache_os.c:1216:7: warning: ignoring return value of 'asprintf' declared with attribute 'warn_unused_result' [-Wunused-result]
+ 1216 |       asprintf(&entry_path, "%s/%s", path, p->d_name);
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[28/1304] Compiling C object src/util/libmesa_util.a.p/fossilize_db.c.o
+[29/1304] Compiling C object src/util/libmesa_util.a.p/log.c.o
+[30/1304] Compiling C object src/util/libmesa_util.a.p/u_idalloc.c.o
+[31/1304] Compiling C object src/util/libmesa_util.a.p/memstream.c.o
+[32/1304] Compiling C object src/util/libmesa_util.a.p/hash_table.c.o
+[33/1304] Compiling C object src/util/libmesa_util.a.p/mesa-sha1.c.o
+[34/1304] Compiling C object src/util/libmesa_util.a.p/mesa-blake3.c.o
+[35/1304] Compiling C object src/util/libmesa_util.a.p/os_time.c.o
+[36/1304] Compiling C object src/util/libmesa_util.a.p/os_file.c.o
+[37/1304] Compiling C object src/util/libmesa_util.a.p/os_memory_fd.c.o
+[38/1304] Compiling C object src/util/libmesa_util.a.p/os_socket.c.o
+[39/1304] Compiling C object src/util/libmesa_util.a.p/os_misc.c.o
+[40/1304] Compiling C object src/util/libmesa_util.a.p/u_process.c.o
+[41/1304] Compiling C object src/util/libmesa_util.a.p/rwlock.c.o
+[42/1304] Compiling C++ object src/util/libmesa_util.a.p/u_qsort.cpp.o
+[43/1304] Compiling C object src/util/libmesa_util.a.p/perf_u_trace.c.o
+[44/1304] Compiling C object src/util/libmesa_util.a.p/sha1_sha1.c.o
+[45/1304] Compiling C object src/util/libmesa_util.a.p/rand_xor.c.o
+[46/1304] Compiling C object src/util/libmesa_util.a.p/rb_tree.c.o
+[47/1304] Compiling C object src/util/libmesa_util.a.p/register_allocate.c.o
+[48/1304] Compiling C object src/util/libmesa_util.a.p/ralloc.c.o
+[49/1304] Compiling C object src/util/libmesa_util.a.p/rgtc.c.o
+[50/1304] Compiling C object src/util/libmesa_util.a.p/simple_mtx.c.o
+[51/1304] Compiling C object src/util/libmesa_util.a.p/set.c.o
+[52/1304] Compiling C object src/util/libmesa_util.a.p/slab.c.o
+[53/1304] Compiling C object src/util/libmesa_util.a.p/string_buffer.c.o
+[54/1304] Compiling C object src/util/libmesa_util.a.p/strtod.c.o
+[55/1304] Compiling C object src/util/libmesa_util.a.p/sparse_array.c.o
+[56/1304] Compiling C object src/util/libmesa_util.a.p/softfloat.c.o
+[57/1304] Compiling C object src/util/libmesa_util.a.p/u_atomic.c.o
+[58/1304] Compiling C object src/util/libmesa_util.a.p/u_call_once.c.o
+[59/1304] Compiling C object src/util/libmesa_util.a.p/u_dl.c.o
+[60/1304] Compiling C++ object src/util/libmesa_util.a.p/texcompress_astc_luts_wrap.cpp.o
+[61/1304] Compiling C object src/util/libmesa_util.a.p/u_dynarray.c.o
+[62/1304] Compiling C object src/util/libmesa_util.a.p/u_hash_table.c.o
+[63/1304] Compiling C object src/util/libmesa_util.a.p/u_thread.c.o
+[64/1304] Compiling C object src/util/libmesa_util.a.p/u_queue.c.o
+[65/1304] Compiling C object src/util/libmesa_util.a.p/u_vector.c.o
+[66/1304] Compiling C object src/util/libmesa_util.a.p/u_math.c.o
+[67/1304] Compiling C object src/util/libmesa_util.a.p/u_mm.c.o
+[68/1304] Compiling C++ object src/util/libmesa_util.a.p/texcompress_astc_luts.cpp.o
+[69/1304] Compiling C object src/util/libmesa_util.a.p/u_debug_memory.c.o
+[70/1304] Compiling C object src/util/libmesa_util.a.p/u_debug.c.o
+[71/1304] Compiling C object src/util/libmesa_util.a.p/u_cpu_detect.c.o
+[72/1304] Compiling C object src/util/libmesa_util.a.p/u_worklist.c.o
+[73/1304] Compiling C object src/util/libmesa_util.a.p/vl_zscan_data.c.o
+[74/1304] Compiling C object src/util/libmesa_util.a.p/u_printf.c.o
+[75/1304] Compiling C object src/util/libmesa_util.a.p/vma.c.o
+[76/1304] Compiling C object src/util/libmesa_util.a.p/mesa_cache_db_multipart.c.o
+[77/1304] Compiling C object src/util/libmesa_util.a.p/mesa_cache_db.c.o
+[78/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format.c.o
+[79/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_etc.c.o
+[80/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_latc.c.o
+[81/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_bptc.c.o
+[82/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_fxt1.c.o
+[83/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_other.c.o
+[84/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_tests.c.o
+[85/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_rgtc.c.o
+[86/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_unpack_neon.c.o
+[87/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_zs.c.o
+[88/1304] Compiling C object src/util/libmesa_util.a.p/u_debug_stack.c.o
+[89/1304] Compiling C object src/util/libmesa_util.a.p/u_debug_symbol.c.o
+[90/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_s3tc.c.o
+[91/1304] Linking static target src/c11/impl/libmesa_util_c11.a
+[92/1304] Linking static target src/util/blake3/libblake3.a
+[93/1304] Generating src/mapi/shared-glapi/shared_glapi_mapi_tmp.h with a custom command (wrapped by meson to capture output)
+[94/1304] Linking static target src/util/libmesa_util_sse41.a
+[95/1304] Generating src/util/driconf_static.h with a custom command
+[96/1304] Generating src/git_sha1.h with a custom command
+[97/1304] Generating src/mapi/glapi/gen/enums.c with a custom command (wrapped by meson to capture output)
+[98/1304] Generating src/mapi/glapi/gen/api_exec_init.c with a custom command (wrapped by meson to capture output)
+[99/1304] Generating src/mapi/glapi/gen/api_exec_decl.h with a custom command (wrapped by meson to capture output)
+[100/1304] Generating src/mapi/glapi/gen/api_save_init.h with a custom command (wrapped by meson to capture output)
+[101/1304] Compiling C object src/util/libmesa_util.a.p/format_u_format_yuv.c.o
+[102/1304] Generating src/mapi/glapi/gen/api_save.h with a custom command (wrapped by meson to capture output)
+[103/1304] Generating src/mapi/glapi/gen/api_beginend_init.h with a custom command (wrapped by meson to capture output)
+[104/1304] Generating src/mapi/glapi/gen/api_hw_select_init.h with a custom command (wrapped by meson to capture output)
+[105/1304] Generating src/mapi/glapi/gen/unmarshal_table.c with a custom command (wrapped by meson to capture output)
+[106/1304] Generating src/mapi/glapi/gen/marshal_generated0.c with a custom command (wrapped by meson to capture output)
+[107/1304] Generating src/mapi/glapi/gen/marshal_generated1.c with a custom command (wrapped by meson to capture output)
+[108/1304] Generating src/mapi/glapi/gen/marshal_generated2.c with a custom command (wrapped by meson to capture output)
+[109/1304] Generating src/mapi/glapi/gen/marshal_generated4.c with a custom command (wrapped by meson to capture output)
+[110/1304] Generating src/mapi/glapi/gen/marshal_generated3.c with a custom command (wrapped by meson to capture output)
+[111/1304] Generating src/mapi/glapi/gen/marshal_generated5.c with a custom command (wrapped by meson to capture output)
+[112/1304] Generating src/mapi/glapi/gen/marshal_generated7.c with a custom command (wrapped by meson to capture output)
+[113/1304] Generating src/mapi/glapi/gen/marshal_generated6.c with a custom command (wrapped by meson to capture output)
+[114/1304] Compiling C object src/mapi/shared-glapi/libglapi.so.0.0.0.p/.._u_current.c.o
+[115/1304] Compiling C object src/mapi/shared-glapi/libglapi.so.0.0.0.p/glapi.c.o
+[116/1304] Compiling C object src/mapi/shared-glapi/libglapi.so.0.0.0.p/stub.c.o
+[117/1304] Compiling C object src/mapi/shared-glapi/libglapi.so.0.0.0.p/table.c.o
+[118/1304] Generating src/compiler/builtin_types.h with a custom command
+[119/1304] Generating src/compiler/builtin_types.c with a custom command
+[120/1304] Generating src/compiler/ir_expression_operation.h with a custom command (wrapped by meson to capture output)
+[121/1304] Generating src/compiler/nir/nir_builder_opcodes.h with a custom command (wrapped by meson to capture output)
+[122/1304] Generating src/compiler/nir/nir_constant_expressions.c with a custom command (wrapped by meson to capture output)
+[123/1304] Generating src/compiler/nir/nir_opcodes.h with a custom command (wrapped by meson to capture output)
+[124/1304] Generating src/compiler/nir/nir_opcodes.c with a custom command (wrapped by meson to capture output)
+[125/1304] Generating src/compiler/nir/nir_intrinsics.h with a custom command
+[126/1304] Generating src/compiler/nir/nir_intrinsics_indices.h with a custom command
+[127/1304] Generating src/compiler/nir/nir_intrinsic.c with a custom command
+[128/1304] Generating src/compiler/spirv/vtn_gather_types.c with a custom command
+[129/1304] Generating src/compiler/spirv/spirv_info with a custom command
+[130/1304] Generating src/compiler/spirv/vtn_generator_ids.h with a custom command
+[131/1304] Generating src/compiler/glsl/glcpp/glcpp-parse.[ch] with a custom command
+[132/1304] Generating src/compiler/glsl/glcpp/glcpp-lex.c with a custom command
+[133/1304] Generating src/compiler/glsl/glsl_parser with a custom command
+[134/1304] Generating src/compiler/glsl/glsl_lexer_cpp with a custom command
+[135/1304] Generating src/compiler/glsl/ir_expression_operation_constant.h with a custom command (wrapped by meson to capture output)
+[136/1304] Generating src/compiler/glsl/ir_expression_operation_strings.h with a custom command (wrapped by meson to capture output)
+[137/1304] Generating src/compiler/glsl/float64_glsl.h with a custom command
+[138/1304] Generating src/compiler/glsl/cross_platform_settings_piece_all.h with a custom command
+[139/1304] Generating src/compiler/glsl/bc1_glsl.h with a custom command
+[140/1304] Generating src/compiler/glsl/bc4_glsl.h with a custom command
+[141/1304] Generating src/compiler/glsl/etc2_rgba_stitch_glsl.h with a custom command
+[142/1304] Generating src/compiler/glsl/astc_glsl.h with a custom command
+[143/1304] Generating src/broadcom/cle/v3d_packet_v21_pack.h with a custom command (wrapped by meson to capture output)
+[144/1304] Compiling C object src/mapi/shared-glapi/libglapi.so.0.0.0.p/.._entry.c.o
+[145/1304] Generating src/broadcom/cle/v3d_packet_v42_pack.h with a custom command (wrapped by meson to capture output)
+[146/1304] Generating src/broadcom/cle/v3d_packet_v71_pack.h with a custom command (wrapped by meson to capture output)
+[147/1304] Generating src/broadcom/cle/v3d_xml.h with a custom command (wrapped by meson to capture output)
+[148/1304] Generating src/mesa/program/mesa_lex with a custom command
+[149/1304] Generating src/broadcom/compiler/v3d_nir_lower_algebraic.c with a custom command (wrapped by meson to capture output)
+[150/1304] Generating src/mesa/program/program_parse_tab.[ch] with a custom command
+[151/1304] Generating src/mesa/main/dispatch.h with a custom command (wrapped by meson to capture output)
+[152/1304] Generating src/mesa/main/marshal_generated.h with a custom command (wrapped by meson to capture output)
+[153/1304] Generating src/mesa/format_fallback.c with a custom command
+[154/1304] Generating src/mesa/main/remap_helper.h with a custom command (wrapped by meson to capture output)
+[155/1304] Generating src/mesa/format_info.h with a custom command (wrapped by meson to capture output)
+[156/1304] Generating src/gallium/auxiliary/tr_util.[ch] with a custom command
+[157/1304] Generating src/mesa/get_hash.h with a custom command (wrapped by meson to capture output)
+[158/1304] Generating src/gallium/auxiliary/u_tracepoints.h with a custom command
+[159/1304] Generating src/gallium/auxiliary/u_tracepoints.c with a custom command
+[160/1304] Generating src/gallium/auxiliary/u_indices_gen.c with a custom command
+[161/1304] Generating src/gallium/auxiliary/u_unfilled_gen.c with a custom command
+[162/1304] Compiling C object src/loader/libloader.a.p/loader_dri_helper.c.o
+[163/1304] Compiling C object src/util/libxmlconfig.a.p/xmlconfig.c.o
+[164/1304] Compiling C object src/loader/libloader.a.p/loader.c.o
+[165/1304] Compiling C object src/compiler/libcompiler.a.p/meson-generated_.._builtin_types.c.o
+[166/1304] Compiling C object src/compiler/libcompiler.a.p/shader_enums.c.o
+[167/1304] Compiling C object src/compiler/nir/libnir.a.p/meson-generated_.._nir_opcodes.c.o
+[168/1304] Compiling C object src/compiler/libcompiler.a.p/glsl_types.c.o
+[169/1304] Compiling C object src/compiler/nir/libnir.a.p/meson-generated_.._nir_intrinsics.c.o
+[170/1304] Compiling C object src/compiler/nir/libnir.a.p/nir.c.o
+[171/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_builder.c.o
+[172/1304] Generating src/compiler/nir/nir_opt_algebraic.c with a custom command
+[173/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_builtin_builder.c.o
+[174/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_clone.c.o
+[175/1304] Compiling C object src/util/libmesa_util.a.p/meson-generated_.._format_u_format_table.c.o
+[176/1304] Linking static target src/util/libmesa_util.a
+[177/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_control_flow.c.o
+[178/1304] Linking target src/mapi/shared-glapi/libglapi.so.0.0.0
+[179/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_divergence_analysis.c.o
+[180/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_dominance.c.o
+[181/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_deref.c.o
+[182/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_from_ssa.c.o
+[183/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_format_convert.c.o
+[184/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_functions.c.o
+[185/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_gather_types.c.o
+[186/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_gather_info.c.o
+[187/1304] Compiling C object src/compiler/nir/libnir.a.p/meson-generated_.._nir_opt_algebraic.c.o
+[188/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_gather_xfb_info.c.o
+[189/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_gs_count_vertices.c.o
+[190/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_group_loads.c.o
+[191/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_inline_uniforms.c.o
+[192/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_legacy.c.o
+[193/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_instr_set.c.o
+[194/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_liveness.c.o
+[195/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_linking_helpers.c.o
+[196/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_alu.c.o
+[197/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_alpha_test.c.o
+[198/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_loop_analyze.c.o
+[199/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_amul.c.o
+[200/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_atomics_to_ssbo.c.o
+[201/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_alu_width.c.o
+[202/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_bitmap.c.o
+[203/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_array_deref_of_vec.c.o
+[204/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_bool_to_bitsize.c.o
+[205/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_bool_to_int32.c.o
+[206/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_bool_to_float.c.o
+[207/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_blend.c.o
+[208/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_clamp_color_outputs.c.o
+[209/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_cl_images.c.o
+[210/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_clip.c.o
+[211/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_clip_disable.c.o
+[212/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_clip_cull_distance_arrays.c.o
+[213/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_clip_halfz.c.o
+[214/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_continue_constructs.c.o
+[215/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_const_arrays_to_uniforms.c.o
+[216/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_discard_if.c.o
+[217/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_convert_alu_types.c.o
+[218/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_variable_initializers.c.o
+[219/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_fb_read.c.o
+[220/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_drawpixels.c.o
+[221/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_double_ops.c.o
+[222/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_flatshade.c.o
+[223/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_flrp.c.o
+[224/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_fragcoord_wtrans.c.o
+[225/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_frag_coord_to_pixel_coord.c.o
+[226/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_fragcolor.c.o
+[227/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_global_vars_to_local.c.o
+[228/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_frexp.c.o
+[229/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_fp16_conv.c.o
+[230/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_helper_writes.c.o
+[231/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_goto_ifs.c.o
+[232/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_load_const_to_scalar.c.o
+[233/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_locals_to_regs.c.o
+[234/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_idiv.c.o
+[235/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_image.c.o
+[236/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_image_atomics_to_global.c.o
+[237/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_gs_intrinsics.c.o
+[238/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_indirect_derefs.c.o
+[239/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_input_attachments.c.o
+[240/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_interpolation.c.o
+[241/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_int_to_float.c.o
+[242/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_int64.c.o
+[243/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_io_arrays_to_elements.c.o
+[244/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_io_to_temporaries.c.o
+[245/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_io_to_scalar.c.o
+[246/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_io_to_vector.c.o
+[247/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_is_helper_invocation.c.o
+[248/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_multiview.c.o
+[249/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_io.c.o
+[250/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_mediump.c.o
+[251/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_memory_model.c.o
+[252/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_memcpy.c.o
+[253/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_non_uniform_access.c.o
+[254/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_packing.c.o
+[255/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_mem_access_bit_sizes.c.o
+[256/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_passthrough_edgeflags.c.o
+[257/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_patch_vertices.c.o
+[258/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_phis_to_scalar.c.o
+[259/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_pntc_ytransform.c.o
+[260/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_point_size.c.o
+[261/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_point_size_mov.c.o
+[262/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_poly_line_smooth.c.o
+[263/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_point_smooth.c.o
+[264/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_reg_intrinsics_to_ssa.c.o
+[265/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_printf.c.o
+[266/1304] Compiling C object src/compiler/nir/libnir.a.p/meson-generated_.._nir_constant_expressions.c.o
+[267/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_readonly_images_to_tex.c.o
+[268/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_returns.c.o
+[269/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_samplers.c.o
+[270/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_robust_access.c.o
+[271/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_scratch.c.o
+[272/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_single_sampled.c.o
+[273/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_ssbo.c.o
+[274/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_task_shader.c.o
+[275/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_system_values.c.o
+[276/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_terminate_to_demote.c.o
+[277/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_tess_coord_z.c.o
+[278/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_tex_shadow.c.o
+[279/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_subgroups.c.o
+[280/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_texcoord_replace.c.o
+[281/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_texcoord_replace_late.c.o
+[282/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_shader_calls.c.o
+[283/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_undef_to_zero.c.o
+[284/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_two_sided_color.c.o
+[285/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_var_copies.c.o
+[286/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_vars_to_ssa.c.o
+[287/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_vec3_to_vec4.c.o
+[288/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_tex.c.o
+[289/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_view_index_to_device_index.c.o
+[290/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_vec_to_regs.c.o
+[291/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_wpos_center.c.o
+[292/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_viewport_transform.c.o
+[293/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_wrmasks.c.o
+[294/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_wpos_ytransform.c.o
+[295/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_bit_size.c.o
+[296/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_sysvals_to_varyings.c.o
+[297/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_metadata.c.o
+[298/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_uniforms_to_ubo.c.o
+[299/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_mod_analysis.c.o
+[300/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_move_vec_src_uses_to_dest.c.o
+[301/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_lower_ubo_vec4.c.o
+[302/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_normalize_cubemap_coords.c.o
+[303/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_access.c.o
+[304/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_barriers.c.o
+[305/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_conditional_discard.c.o
+[306/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_comparison_pre.c.o
+[307/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_combine_stores.c.o
+[308/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_constant_folding.c.o
+[309/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_cse.c.o
+[310/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_copy_propagate.c.o
+[311/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_dce.c.o
+[312/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_dead_cf.c.o
+[313/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_dead_write_vars.c.o
+[314/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_fragdepth.c.o
+[315/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_find_array_copies.c.o
+[316/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_copy_prop_vars.c.o
+[317/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_gcm.c.o
+[318/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_idiv_const.c.o
+[319/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_intrinsics.c.o
+[320/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_licm.c.o
+[321/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_large_constants.c.o
+[322/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_if.c.o
+[323/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_loop.c.o
+[324/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_move.c.o
+[325/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_memcpy.c.o
+[326/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_loop_unroll.c.o
+[327/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_move_discards_to_top.c.o
+[328/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_mqsad.c.o
+[329/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_non_uniform_access.c.o
+[330/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_offsets.c.o
+[331/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_phi_precision.c.o
+[332/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_peephole_select.c.o
+[333/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_load_store_vectorize.c.o
+[334/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_reassociate_bfi.c.o
+[335/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_preamble.c.o
+[336/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_ray_queries.c.o
+[337/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_rematerialize_compares.c.o
+[338/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_reuse_constants.c.o
+[339/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_remove_phis.c.o
+[340/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_sink.c.o
+[341/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_shrink_stores.c.o
+[342/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_uniform_subgroup.c.o
+[343/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_undef.c.o
+[344/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_shrink_vectors.c.o
+[345/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_uniform_atomics.c.o
+[346/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_passthrough_gs.c.o
+[347/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_vectorize_io.c.o
+[348/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_vectorize.c.o
+[349/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_phi_builder.c.o
+[350/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_passthrough_tcs.c.o
+[351/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_propagate_invariant.c.o
+[352/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_remove_dead_variables.c.o
+[353/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_remove_tex_shadow.c.o
+[354/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_range_analysis.c.o
+[355/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_repair_ssa.c.o
+[356/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_scale_fdiv.c.o
+[357/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_print.c.o
+[358/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_opt_varyings.c.o
+[359/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_search.c.o
+[360/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_schedule.c.o
+[361/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_split_64bit_vec3_and_vec4.c.o
+[362/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_split_var_copies.c.o
+[363/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_split_per_member_structs.c.o
+[364/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_serialize.c.o
+[365/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_sweep.c.o
+[366/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_to_lcssa.c.o
+[367/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_use_dominance.c.o
+[368/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_validate.c.o
+[369/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_trivialize_registers.c.o
+[370/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_worklist.c.o
+[371/1304] Compiling C object src/compiler/nir/libnir.a.p/nir_split_vars.c.o
+[372/1304] Compiling C object src/compiler/spirv/libvtn.a.p/meson-generated_.._vtn_gather_types.c.o
+[373/1304] Compiling C object src/compiler/spirv/libvtn.a.p/meson-generated_.._spirv_info.c.o
+[374/1304] Compiling C object src/compiler/spirv/libvtn.a.p/gl_spirv.c.o
+[375/1304] Compiling C object src/compiler/spirv/libvtn.a.p/vtn_amd.c.o
+[376/1304] Compiling C object src/compiler/spirv/libvtn.a.p/vtn_cfg.c.o
+[377/1304] Compiling C object src/compiler/spirv/libvtn.a.p/vtn_alu.c.o
+[378/1304] Compiling C object src/compiler/spirv/libvtn.a.p/vtn_cmat.c.o
+[379/1304] Compiling C object src/compiler/spirv/libvtn.a.p/vtn_glsl450.c.o
+[380/1304] Compiling C object src/compiler/spirv/libvtn.a.p/vtn_subgroup.c.o
+[381/1304] Compiling C object src/compiler/spirv/libvtn.a.p/vtn_structured_cfg.c.o
+[382/1304] Compiling C object src/compiler/spirv/libvtn.a.p/vtn_opencl.c.o
+[383/1304] Compiling C object src/compiler/glsl/glcpp/libglcpp.a.p/meson-generated_.._glcpp-lex.c.o
+[384/1304] Compiling C object src/compiler/glsl/glcpp/libglcpp.a.p/pp.c.o
+[385/1304] Compiling C object src/compiler/glsl/glcpp/libglcpp.a.p/meson-generated_.._glcpp-parse.c.o
+[386/1304] Compiling C object src/compiler/spirv/libvtn.a.p/vtn_variables.c.o
+[387/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ast_array_index.cpp.o
+[388/1304] Compiling C object src/compiler/spirv/libvtn.a.p/spirv_to_nir.c.o
+[389/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ast_expr.cpp.o
+[390/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ast_function.cpp.o
+[391/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ast_type.cpp.o
+[392/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/meson-generated_.._glsl_parser.cpp.o
+[393/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/builtin_types.cpp.o
+[394/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ast_to_hir.cpp.o
+[395/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_detect_function_recursion.c.o
+[396/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_atomics.c.o
+[397/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/builtin_variables.cpp.o
+[398/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_images.c.o
+[399/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_buffers.c.o
+[400/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_discard_flow.c.o
+[401/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_blend_equation_advanced.c.o
+[402/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_named_interface_blocks.c.o
+[403/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_samplers.c.o
+[404/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_packed_varyings.c.o
+[405/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_samplers_as_deref.c.o
+[406/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/meson-generated_.._glsl_lexer.cpp.o
+[407/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_link_atomics.c.o
+[408/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_lower_xfb_varying.c.o
+[409/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_link_interface_blocks.c.o
+[410/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_link_uniform_initializers.c.o
+[411/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_link_uniform_blocks.c.o
+[412/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_link_xfb.c.o
+[413/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_link_uniforms.c.o
+[414/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_opt_dead_builtin_varyings.c.o
+[415/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_link_varyings.c.o
+[416/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/glsl_symbol_table.cpp.o
+[417/1304] Compiling C object src/compiler/glsl/libglsl.a.p/gl_nir_linker.c.o
+[418/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/hir_field_selection.cpp.o
+[419/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/glsl_parser_extras.cpp.o
+[420/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_array_refcount.cpp.o
+[421/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_basic_block.cpp.o
+[422/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_builder.cpp.o
+[423/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_clone.cpp.o
+[424/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/glsl_to_nir.cpp.o
+[425/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir.cpp.o
+[426/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_equals.cpp.o
+[427/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_expression_flattening.cpp.o
+[428/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_function.cpp.o
+[429/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_function_detect_recursion.cpp.o
+[430/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_hierarchical_visitor.cpp.o
+[431/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_hv_accept.cpp.o
+[432/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_print_visitor.cpp.o
+[433/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_reader.cpp.o
+[434/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_rvalue_visitor.cpp.o
+[435/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_variable_refcount.cpp.o
+[436/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_validate.cpp.o
+[437/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/builtin_functions.cpp.o
+[438/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/linker_util.cpp.o
+[439/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/link_functions.cpp.o
+[440/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/link_interface_blocks.cpp.o
+[441/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/linker.cpp.o
+[442/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/lower_builtins.cpp.o
+[443/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/lower_mat_op_to_vec.cpp.o
+[444/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/lower_jumps.cpp.o
+[445/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/lower_instructions.cpp.o
+[446/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/lower_subroutine.cpp.o
+[447/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/lower_packing_builtins.cpp.o
+[448/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/lower_vec_index_to_cond_assign.cpp.o
+[449/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_algebraic.cpp.o
+[450/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/lower_vector_derefs.cpp.o
+[451/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/lower_precision.cpp.o
+[452/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_dead_builtin_variables.cpp.o
+[453/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_dead_code.cpp.o
+[454/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_dead_code_local.cpp.o
+[455/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_flatten_nested_if_blocks.cpp.o
+[456/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_flip_matrices.cpp.o
+[457/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_if_simplification.cpp.o
+[458/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_function_inlining.cpp.o
+[459/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_tree_grafting.cpp.o
+[460/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_rebalance_tree.cpp.o
+[461/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/opt_minmax.cpp.o
+[462/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/string_to_uint_map.cpp.o
+[463/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/propagate_invariance.cpp.o
+[464/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/s_expression.cpp.o
+[465/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/shader_cache.cpp.o
+[466/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/serialize.cpp.o
+[467/1304] Compiling C object src/broadcom/cle/libbroadcom_cle.a.p/v3d_decoder.c.o
+[468/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/meson-generated_.._v3d_nir_lower_algebraic.c.o
+[469/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir_dump.c.o
+[470/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir_live_variables.c.o
+[471/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir_opt_constant_alu.c.o
+[472/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir_opt_copy_propagate.c.o
+[473/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir.c.o
+[474/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir_opt_dead_code.c.o
+[475/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir_opt_redundant_flags.c.o
+[476/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir_opt_small_immediates.c.o
+[477/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir_to_qpu.c.o
+[478/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/vir_register_allocate.c.o
+[479/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/qpu_validate.c.o
+[480/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/nir_to_vir.c.o
+[481/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/v3d_tex.c.o
+[482/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/v3d_nir_lower_io.c.o
+[483/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/qpu_schedule.c.o
+[484/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/v3d_nir_lower_image_load_store.c.o
+[485/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/v3d_nir_lower_line_smooth.c.o
+[486/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/v3d_nir_lower_load_store_bitsize.c.o
+[487/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/v3d_nir_lower_scratch.c.o
+[488/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/v3d_nir_lower_logic_ops.c.o
+[489/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/v3d_nir_lower_txf_ms.c.o
+[490/1304] Compiling C object src/broadcom/qpu/libbroadcom_qpu.a.p/qpu_disasm.c.o
+[491/1304] Compiling C object src/broadcom/compiler/libbroadcom_compiler.a.p/v3d_packing.c.o
+[492/1304] Compiling C object src/broadcom/simulator/libv3d-simulator-v42.a.p/v3dx_simulator.c.o
+[493/1304] Compiling C object src/broadcom/simulator/libv3d-simulator-v71.a.p/v3dx_simulator.c.o
+[494/1304] Compiling C object src/broadcom/simulator/libbroadcom_simulator.a.p/v3d_simulator.c.o
+[495/1304] Compiling C++ object src/broadcom/simulator/libbroadcom_simulator.a.p/v3d_simulator_wrapper.cpp.o
+[496/1304] Compiling C object src/broadcom/qpu/libbroadcom_qpu.a.p/qpu_instr.c.o
+[497/1304] Compiling C object src/broadcom/libbroadcom-v42.a.p/clif_v3dx_dump.c.o
+[498/1304] Compiling C object src/broadcom/libbroadcom-v71.a.p/clif_v3dx_dump.c.o
+[499/1304] Compiling C object src/broadcom/libbroadcom_v3d.a.p/common_v3d_debug.c.o
+[500/1304] Compiling C object src/broadcom/libbroadcom_v3d.a.p/common_v3d_device_info.c.o
+[501/1304] Compiling C object src/broadcom/qpu/libbroadcom_qpu.a.p/qpu_pack.c.o
+[502/1304] Compiling C object src/broadcom/libbroadcom_v3d.a.p/common_v3d_util.c.o
+[503/1304] Compiling C object src/broadcom/libbroadcom_v3d.a.p/clif_clif_dump.c.o
+[504/1304] Compiling C object src/broadcom/libv3d_neon.a.p/common_v3d_tiling.c.o
+[505/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._program_program_parse.tab.c.o
+[506/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._program_lex.yy.c.o
+[507/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._format_fallback.c.o
+[508/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_enums.c.o
+[509/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_unmarshal_table.c.o
+[510/1304] Compiling C++ object src/compiler/glsl/libglsl.a.p/ir_constant_expression.cpp.o
+[511/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_marshal_generated0.c.o
+[512/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_marshal_generated1.c.o
+[513/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_marshal_generated2.c.o
+[514/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_api_exec_init.c.o
+[515/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_marshal_generated3.c.o
+[516/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_marshal_generated4.c.o
+[517/1304] Compiling C object src/mesa/libmesa.a.p/main_accum.c.o
+[518/1304] Compiling C object src/mesa/libmesa.a.p/main_api_arrayelt.c.o
+[519/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_marshal_generated5.c.o
+[520/1304] Compiling C object src/mesa/libmesa.a.p/main_arrayobj.c.o
+[521/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_marshal_generated7.c.o
+[522/1304] Compiling C object src/mesa/libmesa.a.p/main_arbprogram.c.o
+[523/1304] Compiling C object src/mesa/libmesa.a.p/meson-generated_.._.._mapi_glapi_gen_marshal_generated6.c.o
+[524/1304] Compiling C object src/mesa/libmesa.a.p/main_barrier.c.o
+[525/1304] Compiling C object src/mesa/libmesa.a.p/main_atifragshader.c.o
+[526/1304] Compiling C object src/mesa/libmesa.a.p/main_bbox.c.o
+[527/1304] Compiling C object src/mesa/libmesa.a.p/main_blit.c.o
+[528/1304] Compiling C object src/mesa/libmesa.a.p/main_attrib.c.o
+[529/1304] Compiling C object src/mesa/libmesa.a.p/main_blend.c.o
+[530/1304] Compiling C object src/mesa/libmesa.a.p/main_clip.c.o
+[531/1304] Compiling C object src/mesa/libmesa.a.p/main_clear.c.o
+[532/1304] Compiling C object src/mesa/libmesa.a.p/main_compute.c.o
+[533/1304] Compiling C object src/mesa/libmesa.a.p/main_condrender.c.o
+[534/1304] Compiling C object src/mesa/libmesa.a.p/main_buffers.c.o
+[535/1304] Compiling C object src/mesa/libmesa.a.p/main_conservativeraster.c.o
+[536/1304] Compiling C object src/mesa/libmesa.a.p/main_copyimage.c.o
+[537/1304] Compiling C object src/mesa/libmesa.a.p/main_context.c.o
+[538/1304] Compiling C object src/mesa/libmesa.a.p/main_debug.c.o
+[539/1304] Compiling C object src/mesa/libmesa.a.p/main_depth.c.o
+[540/1304] Compiling C object src/mesa/libmesa.a.p/main_debug_output.c.o
+[541/1304] Compiling C object src/mesa/libmesa.a.p/main_bufferobj.c.o
+[542/1304] Compiling C object src/mesa/libmesa.a.p/main_draw_validate.c.o
+[543/1304] Compiling C object src/mesa/libmesa.a.p/main_drawpix.c.o
+[544/1304] Compiling C object src/mesa/libmesa.a.p/main_drawtex.c.o
+[545/1304] Compiling C object src/mesa/libmesa.a.p/main_errors.c.o
+[546/1304] Compiling C object src/mesa/libmesa.a.p/main_draw.c.o
+[547/1304] Compiling C object src/mesa/libmesa.a.p/main_es1_conversion.c.o
+[548/1304] Compiling C object src/mesa/libmesa.a.p/main_enable.c.o
+[549/1304] Compiling C object src/mesa/libmesa.a.p/main_eval.c.o
+[550/1304] Compiling C object src/mesa/libmesa.a.p/main_extensions_table.c.o
+[551/1304] Compiling C object src/mesa/libmesa.a.p/main_extensions.c.o
+[552/1304] Compiling C object src/mesa/libmesa.a.p/main_feedback.c.o
+[553/1304] Compiling C object src/mesa/libmesa.a.p/main_externalobjects.c.o
+[554/1304] Compiling C object src/mesa/libmesa.a.p/main_ff_fragment_shader.c.o
+[555/1304] Compiling C object src/mesa/libmesa.a.p/main_fog.c.o
+[556/1304] Compiling C object src/mesa/libmesa.a.p/main_ffvertex_prog.c.o
+[557/1304] Compiling C object src/mesa/libmesa.a.p/main_fbobject.c.o
+[558/1304] Compiling C object src/mesa/libmesa.a.p/main_formatquery.c.o
+[559/1304] Compiling C object src/mesa/libmesa.a.p/main_formats.c.o
+[560/1304] Compiling C object src/mesa/libmesa.a.p/main_genmipmap.c.o
+[561/1304] Compiling C object src/mesa/libmesa.a.p/main_framebuffer.c.o
+[562/1304] Compiling C object src/mesa/libmesa.a.p/main_getstring.c.o
+[563/1304] Compiling C object src/mesa/libmesa.a.p/main_get.c.o
+[564/1304] Compiling C object src/mesa/libmesa.a.p/main_glformats.c.o
+[565/1304] Compiling C object src/mesa/libmesa.a.p/main_glspirv.c.o
+[566/1304] Compiling C object src/mesa/libmesa.a.p/main_glthread.c.o
+[567/1304] Compiling C object src/mesa/libmesa.a.p/main_glthread_bufferobj.c.o
+[568/1304] Compiling C object src/mesa/libmesa.a.p/main_glthread_draw_unroll.c.o
+[569/1304] Compiling C object src/mesa/libmesa.a.p/main_glthread_get.c.o
+[570/1304] Compiling C object src/mesa/libmesa.a.p/main_glthread_list.c.o
+[571/1304] Compiling C object src/mesa/libmesa.a.p/main_glthread_pixels.c.o
+[572/1304] Compiling C object src/mesa/libmesa.a.p/main_glthread_shaderobj.c.o
+[573/1304] Compiling C object src/mesa/libmesa.a.p/main_glthread_varray.c.o
+[574/1304] Compiling C object src/mesa/libmesa.a.p/main_hash.c.o
+[575/1304] Compiling C object src/mesa/libmesa.a.p/main_glthread_draw.c.o
+[576/1304] Compiling C object src/mesa/libmesa.a.p/main_hint.c.o
+[577/1304] Compiling C object src/mesa/libmesa.a.p/main_image.c.o
+[578/1304] Compiling C object src/mesa/libmesa.a.p/main_lines.c.o
+[579/1304] Compiling C object src/mesa/libmesa.a.p/main_light.c.o
+[580/1304] Compiling C object src/mesa/libmesa.a.p/main_mipmap.c.o
+[581/1304] Compiling C object src/mesa/libmesa.a.p/main_matrix.c.o
+[582/1304] Compiling C object src/mesa/libmesa.a.p/main_multisample.c.o
+[583/1304] Compiling C object src/mesa/libmesa.a.p/main_objectlabel.c.o
+[584/1304] Compiling C object src/mesa/libmesa.a.p/main_pbo.c.o
+[585/1304] Compiling C object src/mesa/libmesa.a.p/main_performance_monitor.c.o
+[586/1304] Compiling C object src/mesa/libmesa.a.p/main_pack.c.o
+[587/1304] Compiling C object src/mesa/libmesa.a.p/main_performance_query.c.o
+[588/1304] Compiling C object src/mesa/libmesa.a.p/main_pipelineobj.c.o
+[589/1304] Compiling C object src/mesa/libmesa.a.p/main_pixel.c.o
+[590/1304] Compiling C object src/mesa/libmesa.a.p/main_pixelstore.c.o
+[591/1304] Compiling C object src/mesa/libmesa.a.p/main_pixeltransfer.c.o
+[592/1304] Compiling C object src/mesa/libmesa.a.p/main_points.c.o
+[593/1304] Compiling C object src/mesa/libmesa.a.p/main_program_binary.c.o
+[594/1304] Compiling C object src/mesa/libmesa.a.p/main_polygon.c.o
+[595/1304] Compiling C object src/mesa/libmesa.a.p/main_querymatrix.c.o
+[596/1304] Compiling C object src/mesa/libmesa.a.p/main_program_resource.c.o
+[597/1304] Compiling C object src/mesa/libmesa.a.p/main_queryobj.c.o
+[598/1304] Compiling C object src/mesa/libmesa.a.p/main_rastpos.c.o
+[599/1304] Compiling C object src/mesa/libmesa.a.p/main_dlist.c.o
+[600/1304] Compiling C object src/mesa/libmesa.a.p/main_remap.c.o
+[601/1304] Compiling C object src/mesa/libmesa.a.p/main_renderbuffer.c.o
+[602/1304] Compiling C object src/mesa/libmesa.a.p/main_readpix.c.o
+[603/1304] Compiling C object src/mesa/libmesa.a.p/main_robustness.c.o
+[604/1304] Compiling C object src/mesa/libmesa.a.p/main_scissor.c.o
+[605/1304] Compiling C object src/mesa/libmesa.a.p/main_samplerobj.c.o
+[606/1304] Compiling C++ object src/mesa/libmesa.a.p/main_shader_query.cpp.o
+[607/1304] Compiling C object src/mesa/libmesa.a.p/main_shaderimage.c.o
+[608/1304] Compiling C object src/mesa/libmesa.a.p/main_shaderobj.c.o
+[609/1304] Compiling C object src/mesa/libmesa.a.p/main_shared.c.o
+[610/1304] Compiling C object src/mesa/libmesa.a.p/main_shaderapi.c.o
+[611/1304] Compiling C object src/mesa/libmesa.a.p/main_spirv_capabilities.c.o
+[612/1304] Compiling C object src/mesa/libmesa.a.p/main_spirv_extensions.c.o
+[613/1304] Compiling C object src/mesa/libmesa.a.p/main_stencil.c.o
+[614/1304] Compiling C object src/mesa/libmesa.a.p/main_state.c.o
+[615/1304] Compiling C object src/mesa/libmesa.a.p/main_syncobj.c.o
+[616/1304] Compiling C object src/mesa/libmesa.a.p/main_texcompress.c.o
+[617/1304] Compiling C object src/mesa/libmesa.a.p/main_texcompress_cpal.c.o
+[618/1304] Compiling C++ object src/mesa/libmesa.a.p/main_texcompress_astc.cpp.o
+[619/1304] Compiling C object src/mesa/libmesa.a.p/main_texcompress_bptc.c.o
+[620/1304] Compiling C object src/mesa/libmesa.a.p/main_texcompress_fxt1.c.o
+[621/1304] Compiling C object src/mesa/libmesa.a.p/main_texcompress_rgtc.c.o
+[622/1304] Compiling C object src/mesa/libmesa.a.p/main_texcompress_etc.c.o
+[623/1304] Compiling C object src/mesa/libmesa.a.p/main_texenv.c.o
+[624/1304] Compiling C object src/mesa/libmesa.a.p/main_texgen.c.o
+[625/1304] Compiling C object src/mesa/libmesa.a.p/main_texcompress_s3tc.c.o
+[626/1304] Compiling C object src/mesa/libmesa.a.p/main_texgetimage.c.o
+[627/1304] Compiling C object src/mesa/libmesa.a.p/main_texobj.c.o
+[628/1304] Compiling C object src/mesa/libmesa.a.p/main_texstate.c.o
+[629/1304] Compiling C object src/mesa/libmesa.a.p/main_texparam.c.o
+[630/1304] Compiling C object src/mesa/libmesa.a.p/main_texstorage.c.o
+[631/1304] Compiling C object src/mesa/libmesa.a.p/main_texstore.c.o
+[632/1304] Compiling C object src/mesa/libmesa.a.p/main_textureview.c.o
+[633/1304] Compiling C object src/mesa/libmesa.a.p/main_texturebindless.c.o
+[634/1304] Compiling C object src/mesa/libmesa.a.p/main_teximage.c.o
+[635/1304] Compiling C object src/mesa/libmesa.a.p/main_transformfeedback.c.o
+[636/1304] Compiling C object src/mesa/libmesa.a.p/main_uniforms.c.o
+[637/1304] Compiling C++ object src/mesa/libmesa.a.p/main_uniform_query.cpp.o
+[638/1304] Compiling C object src/mesa/libmesa.a.p/main_vdpau.c.o
+[639/1304] Compiling C object src/mesa/libmesa.a.p/main_format_utils.c.o
+[640/1304] Compiling C object src/mesa/libmesa.a.p/math_m_eval.c.o
+[641/1304] Compiling C object src/mesa/libmesa.a.p/main_version.c.o
+[642/1304] Compiling C object src/mesa/libmesa.a.p/main_viewport.c.o
+[643/1304] Compiling C object src/mesa/libmesa.a.p/program_arbprogparse.c.o
+[644/1304] Compiling C object src/mesa/libmesa.a.p/program_prog_cache.c.o
+[645/1304] Compiling C object src/mesa/libmesa.a.p/math_m_matrix.c.o
+[646/1304] Compiling C object src/mesa/libmesa.a.p/program_prog_instruction.c.o
+[647/1304] Compiling C object src/mesa/libmesa.a.p/program_prog_parameter.c.o
+[648/1304] Compiling C object src/mesa/libmesa.a.p/program_prog_parameter_layout.c.o
+[649/1304] Compiling C object src/mesa/libmesa.a.p/program_prog_print.c.o
+[650/1304] Compiling C object src/mesa/libmesa.a.p/program_program.c.o
+[651/1304] Compiling C object src/mesa/libmesa.a.p/main_varray.c.o
+[652/1304] Compiling C object src/mesa/libmesa.a.p/program_program_parse_extra.c.o
+[653/1304] Compiling C object src/mesa/libmesa.a.p/program_symbol_table.c.o
+[654/1304] Compiling C object src/mesa/libmesa.a.p/program_prog_statevars.c.o
+[655/1304] Compiling C object src/mesa/libmesa.a.p/program_prog_to_nir.c.o
+[656/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_atomicbuf.c.o
+[657/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_blend.c.o
+[658/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_clip.c.o
+[659/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_depth.c.o
+[660/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_constbuf.c.o
+[661/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atifs_to_nir.c.o
+[662/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_framebuffer.c.o
+[663/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_image.c.o
+[664/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_msaa.c.o
+[665/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_rasterizer.c.o
+[666/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_pixeltransfer.c.o
+[667/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_sampler.c.o
+[668/1304] Compiling C++ object src/mesa/libmesa.a.p/state_tracker_st_atom_array.cpp.o
+[669/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_scissor.c.o
+[670/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_stipple.c.o
+[671/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_shader.c.o
+[672/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_tess.c.o
+[673/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_storagebuf.c.o
+[674/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_viewport.c.o
+[675/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_atom_texture.c.o
+[676/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_bitmap.c.o
+[677/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_clear.c.o
+[678/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_copyimage.c.o
+[679/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_drawtex.c.o
+[680/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_eglimage.c.o
+[681/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_feedback.c.o
+[682/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_flush.c.o
+[683/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_rasterpos.c.o
+[684/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_readpixels.c.o
+[685/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_drawpixels.c.o
+[686/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_context.c.o
+[687/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_copytex.c.o
+[688/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_debug.c.o
+[689/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_draw.c.o
+[690/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_draw_feedback.c.o
+[691/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_cb_texture.c.o
+[692/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_gen_mipmap.c.o
+[693/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_extensions.c.o
+[694/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_format.c.o
+[695/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_interop.c.o
+[696/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_manager.c.o
+[697/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_nir_builtins.c.o
+[698/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_draw_hw_select.c.o
+[699/1304] Compiling C++ object src/mesa/libmesa.a.p/state_tracker_st_glsl_to_nir.cpp.o
+[700/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_nir_lower_builtin.c.o
+[701/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_nir_lower_fog.c.o
+[702/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_nir_lower_position_invariant.c.o
+[703/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_nir_lower_tex_src_plane.c.o
+[704/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_sampler_view.c.o
+[705/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_pbo.c.o
+[706/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_scissor.c.o
+[707/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_program.c.o
+[708/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_shader_cache.c.o
+[709/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_vdpau.c.o
+[710/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_texture.c.o
+[711/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_context.c.o
+[712/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_texcompress_compute.c.o
+[713/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_exec.c.o
+[714/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_exec_draw.c.o
+[715/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_exec_eval.c.o
+[716/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_minmax_index.c.o
+[717/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_save.c.o
+[718/1304] Compiling C object src/mesa/libmesa.a.p/state_tracker_st_pbo_compute.c.o
+[719/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_save_draw.c.o
+[720/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_save_loopback.c.o
+[721/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/meson-generated_.._tr_util.c.o
+[722/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/meson-generated_.._u_tracepoints.c.o
+[723/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_noop.c.o
+[724/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/meson-generated_.._u_unfilled_gen.c.o
+[725/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/cso_cache_cso_cache.c.o
+[726/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/cso_cache_cso_context.c.o
+[727/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/cso_cache_cso_hash.c.o
+[728/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_context.c.o
+[729/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_fs.c.o
+[730/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_gs.c.o
+[731/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_mesh.c.o
+[732/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_mesh_prim.c.o
+[733/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_aaline.c.o
+[734/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_aapoint.c.o
+[735/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe.c.o
+[736/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_clip.c.o
+[737/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_cull.c.o
+[738/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_flatshade.c.o
+[739/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_offset.c.o
+[740/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_pstipple.c.o
+[741/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_stipple.c.o
+[742/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_twoside.c.o
+[743/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_unfilled.c.o
+[744/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_user_cull.c.o
+[745/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_util.c.o
+[746/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_validate.c.o
+[747/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/meson-generated_.._u_indices_gen.c.o
+[748/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_vbuf.c.o
+[749/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_save_api.c.o
+[750/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_wide_line.c.o
+[751/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pipe_wide_point.c.o
+[752/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt.c.o
+[753/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_prim_assembler.c.o
+[754/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt_emit.c.o
+[755/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt_fetch.c.o
+[756/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt_fetch_shade_emit.c.o
+[757/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt_fetch_shade_pipeline.c.o
+[758/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt_mesh_pipeline.c.o
+[759/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt_util.c.o
+[760/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt_so_emit.c.o
+[761/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt_post_vs.c.o
+[762/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_vertex.c.o
+[763/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_tess.c.o
+[764/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_vs.c.o
+[765/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_vs_exec.c.o
+[766/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_vs_variant.c.o
+[767/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/draw_draw_pt_vsplit.c.o
+[768/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_ddebug_dd_context.c.o
+[769/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_ddebug_dd_screen.c.o
+[770/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_noop_noop_pipe.c.o
+[771/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_noop_noop_state.c.o
+[772/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_ddebug_dd_draw.c.o
+[773/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_trace_tr_dump.c.o
+[774/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_trace_tr_context.c.o
+[775/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_trace_tr_dump_state.c.o
+[776/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_trace_tr_texture.c.o
+[777/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_trace_tr_screen.c.o
+[778/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/hud_font.c.o
+[779/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/driver_trace_tr_video.c.o
+[780/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/hud_hud_nic.c.o
+[781/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/hud_hud_cpufreq.c.o
+[782/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/hud_hud_diskstat.c.o
+[783/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/hud_hud_cpu.c.o
+[784/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/hud_hud_sensors_temp.c.o
+[785/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/hud_hud_driver_query.c.o
+[786/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/hud_hud_fps.c.o
+[787/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/hud_hud_context.c.o
+[788/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/indices_u_primconvert.c.o
+[789/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/pipebuffer_pb_bufmgr_cache.c.o
+[790/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/pipebuffer_pb_bufmgr_debug.c.o
+[791/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/pipebuffer_pb_buffer_fenced.c.o
+[792/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/pipebuffer_pb_bufmgr_mm.c.o
+[793/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/pipebuffer_pb_bufmgr_slab.c.o
+[794/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/pipebuffer_pb_cache.c.o
+[795/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/pipebuffer_pb_slab.c.o
+[796/1304] Compiling C object src/mesa/libmesa.a.p/vbo_vbo_exec_api.c.o
+[797/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/postprocess_pp_celshade.c.o
+[798/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/pipebuffer_pb_validate.c.o
+[799/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/postprocess_pp_colors.c.o
+[800/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/postprocess_pp_init.c.o
+[801/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/postprocess_pp_program.c.o
+[802/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/postprocess_pp_mlaa.c.o
+[803/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/rtasm_rtasm_x86sse.c.o
+[804/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/postprocess_pp_run.c.o
+[805/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/rtasm_rtasm_execmem.c.o
+[806/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_aa_point.c.o
+[807/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_dynamic_indexing.c.o
+[808/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_build.c.o
+[809/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_from_mesa.c.o
+[810/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_info.c.o
+[811/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_iterate.c.o
+[812/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_dump.c.o
+[813/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_parse.c.o
+[814/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_point_sprite.c.o
+[815/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_sanity.c.o
+[816/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_strings.c.o
+[817/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_lowering.c.o
+[818/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_scan.c.o
+[819/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_transform.c.o
+[820/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_two_side.c.o
+[821/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_util.c.o
+[822/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_vpos.c.o
+[823/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/translate_translate.c.o
+[824/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/translate_translate_cache.c.o
+[825/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_text.c.o
+[826/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/translate_translate_sse.c.o
+[827/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_async_debug.c.o
+[828/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_exec.c.o
+[829/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/translate_translate_generic.c.o
+[830/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_bitmask.c.o
+[831/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/tgsi_tgsi_ureg.c.o
+[832/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_cache.c.o
+[833/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_debug_flush.c.o
+[834/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_debug_describe.c.o
+[835/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_debug_refcnt.c.o
+[836/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_debug_image.c.o
+[837/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_draw_quad.c.o
+[838/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_draw.c.o
+[839/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_compute.c.o
+[840/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_driconf.c.o
+[841/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_dump_defines.c.o
+[842/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_framebuffer.c.o
+[843/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_gen_mipmap.c.o
+[844/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_handle_table.c.o
+[845/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_index_modify.c.o
+[846/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_dump_state.c.o
+[847/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_helpers.c.o
+[848/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_blitter.c.o
+[849/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_prim.c.o
+[850/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_log.c.o
+[851/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_live_shader_cache.c.o
+[852/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_prim_restart.c.o
+[853/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_sample_positions.c.o
+[854/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_resource.c.o
+[855/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_pstipple.c.o
+[856/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_sampler.c.o
+[857/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_screen.c.o
+[858/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_split_draw.c.o
+[859/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_suballoc.c.o
+[860/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_texture.c.o
+[861/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_surface.c.o
+[862/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_tests.c.o
+[863/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_tile.c.o
+[864/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_transfer.c.o
+[865/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_trace_gallium.c.o
+[866/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_transfer_helper.c.o
+[867/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_upload_mgr.c.o
+[868/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_vertex_state_cache.c.o
+[869/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_simple_shaders.c.o
+[870/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_vbuf.c.o
+[871/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/nir_nir_draw_helpers.c.o
+[872/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/renderonly_renderonly.c.o
+[873/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/util_u_threaded_context.c.o
+[874/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_codec.c.o
+[875/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/nir_tgsi_to_nir.c.o
+[876/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_bicubic_filter.c.o
+[877/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_compositor.c.o
+[878/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_csc.c.o
+[879/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_decoder.c.o
+[880/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_compositor_gfx.c.o
+[881/1304] Compiling C object src/gallium/auxiliary/libgallium.a.p/nir_nir_to_tgsi.c.o
+[882/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_compositor_cs.c.o
+[883/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_matrix_filter.c.o
+[884/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_idct.c.o
+[885/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_deint_filter.c.o
+[886/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_median_filter.c.o
+[887/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_mc.c.o
+[888/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_mpeg12_decoder.c.o
+[889/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_vertex_buffers.c.o
+[890/1304] Compiling C object src/gallium/auxiliary/pipe-loader/libpipe_loader_static.a.p/pipe_loader.c.o
+[891/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_video_buffer.c.o
+[892/1304] Compiling C object src/gallium/auxiliary/pipe-loader/libpipe_loader_static.a.p/pipe_loader_sw.c.o
+[893/1304] Compiling C object src/gallium/winsys/sw/null/libws_null.a.p/null_sw_winsys.c.o
+[894/1304] Compiling C object src/gallium/auxiliary/pipe-loader/libpipe_loader_static.a.p/pipe_loader_drm.c.o
+[895/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_zscan.c.o
+[896/1304] Compiling C object src/gallium/auxiliary/libgalliumvl.a.p/vl_vl_mpeg12_bitstream.c.o
+[897/1304] Compiling C object src/gallium/winsys/sw/dri/libswdri.a.p/dri_sw_winsys.c.o
+[898/1304] Compiling C object src/gallium/winsys/sw/kms-dri/libswkmsdri.a.p/kms_dri_sw_winsys.c.o
+[899/1304] Compiling C object src/gallium/winsys/sw/wrapper/libwsw.a.p/wrapper_sw_winsys.c.o
+[900/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_buffer.c.o
+[901/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_clear.c.o
+[902/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_fence.c.o
+[903/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_context.c.o
+[904/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_draw_arrays.c.o
+[905/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_compute.c.o
+[906/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_fs_exec.c.o
+[907/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_flush.c.o
+[908/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_prim_vbuf.c.o
+[909/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_image.c.o
+[910/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_quad_fs.c.o
+[911/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_quad_pipe.c.o
+[912/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_query.c.o
+[913/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_screen.c.o
+[914/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_quad_depth_test.c.o
+[915/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_blend.c.o
+[916/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_quad_blend.c.o
+[917/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_clip.c.o
+[918/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_setup.c.o
+[919/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_image.c.o
+[920/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_derived.c.o
+[921/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_rasterizer.c.o
+[922/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_so.c.o
+[923/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_shader.c.o
+[924/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_surface.c.o
+[925/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_sampler.c.o
+[926/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_state_vertex.c.o
+[927/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_surface.c.o
+[928/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_tex_tile_cache.c.o
+[929/1304] Compiling C object src/gallium/winsys/kmsro/drm/libkmsrowinsys.a.p/kmsro_drm_winsys.c.o
+[930/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_texture.c.o
+[931/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_tile_cache.c.o
+[932/1304] Compiling C object src/gallium/winsys/v3d/drm/libv3dwinsys.a.p/v3d_drm_winsys.c.o
+[933/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v42.a.p/v3dx_format_table.c.o
+[934/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v42.a.p/v3dx_job.c.o
+[935/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v42.a.p/v3dx_emit.c.o
+[936/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v42.a.p/v3dx_query_perfcnt.c.o
+[937/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v42.a.p/v3dx_rcl.c.o
+[938/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v42.a.p/v3dx_draw.c.o
+[939/1304] Compiling C object src/gallium/drivers/softpipe/libsoftpipe.a.p/sp_tex_sample.c.o
+[940/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v42.a.p/v3dx_tfu.c.o
+[941/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v71.a.p/v3dx_format_table.c.o
+[942/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v42.a.p/v3dx_state.c.o
+[943/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v71.a.p/v3dx_emit.c.o
+[944/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v71.a.p/v3dx_job.c.o
+[945/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v71.a.p/v3dx_query_perfcnt.c.o
+[946/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v71.a.p/v3dx_tfu.c.o
+[947/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v71.a.p/v3dx_draw.c.o
+[948/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v71.a.p/v3dx_rcl.c.o
+[949/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_cl.c.o
+[950/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_bufmgr.c.o
+[951/1304] Compiling C object src/gallium/drivers/v3d/libv3d-v71.a.p/v3dx_state.c.o
+[952/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_disk_cache.c.o
+[953/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_context.c.o
+[954/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_fence.c.o
+[955/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_formats.c.o
+[956/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_job.c.o
+[957/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_blit.c.o
+[958/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_query.c.o
+[959/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_query_pipe.c.o
+[960/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_screen.c.o
+[961/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_program.c.o
+[962/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_resource.c.o
+[963/1304] Compiling C object src/gallium/drivers/v3d/libv3d.a.p/v3d_uniforms.c.o
+[964/1304] Compiling C object src/gallium/frontends/dri/libdri.a.p/dri_context.c.o
+[965/1304] Compiling C object src/gallium/frontends/dri/libdri.a.p/dri_query_renderer.c.o
+[966/1304] Compiling C object src/gallium/frontends/dri/libdri.a.p/dri_drawable.c.o
+[967/1304] Compiling C object src/gallium/frontends/dri/libdri.a.p/dri_helpers.c.o
+[968/1304] Compiling C object src/gallium/frontends/dri/libdri.a.p/dri_util.c.o
+[969/1304] Linking static target src/util/libxmlconfig.a
+[970/1304] Linking static target src/loader/libloader.a
+[971/1304] Generating symbol file src/mapi/shared-glapi/libglapi.so.0.0.0.p/libglapi.so.0.0.0.symbols
+[972/1304] Compiling C object src/gallium/frontends/dri/libdri.a.p/dri_screen.c.o
+[973/1304] Linking static target src/compiler/libcompiler.a
+[974/1304] Linking static target src/compiler/spirv/libvtn.a
+[975/1304] Linking static target src/compiler/glsl/glcpp/libglcpp.a
+[976/1304] Compiling C object src/gallium/frontends/dri/libdri.a.p/drisw.c.o
+[977/1304] Linking static target src/compiler/glsl/libglsl.a
+[978/1304] Linking static target src/broadcom/simulator/libv3d-simulator-v42.a
+[979/1304] Linking static target src/broadcom/cle/libbroadcom_cle.a
+[980/1304] Linking static target src/compiler/nir/libnir.a
+[981/1304] Linking static target src/broadcom/simulator/libv3d-simulator-v71.a
+[982/1304] Linking static target src/broadcom/libv3d_neon.a
+[983/1304] Linking static target src/broadcom/libbroadcom_v3d.a
+[984/1304] Linking static target src/gallium/auxiliary/libgalliumvl.a
+[985/1304] Linking static target src/gallium/auxiliary/pipe-loader/libpipe_loader_static.a
+[986/1304] Linking static target src/gallium/winsys/sw/null/libws_null.a
+[987/1304] Linking static target src/gallium/winsys/sw/dri/libswdri.a
+[988/1304] Linking static target src/gallium/winsys/sw/kms-dri/libswkmsdri.a
+[989/1304] Linking static target src/gallium/auxiliary/libgallium.a
+[990/1304] Linking static target src/gallium/winsys/sw/wrapper/libwsw.a
+[991/1304] Linking static target src/gallium/winsys/kmsro/drm/libkmsrowinsys.a
+[992/1304] Linking static target src/gallium/drivers/softpipe/libsoftpipe.a
+[993/1304] Linking static target src/gallium/winsys/v3d/drm/libv3dwinsys.a
+[994/1304] Linking static target src/gallium/drivers/v3d/libv3d-v42.a
+[995/1304] Linking static target src/gallium/drivers/v3d/libv3d-v71.a
+[996/1304] Linking static target src/gallium/drivers/v3d/libv3d.a
+[997/1304] Linking static target src/mesa/libmesa.a
+[998/1304] Generating src/mapi/glapi/gen/indirect.c with a custom command (wrapped by meson to capture output)
+[999/1304] Compiling C object src/gallium/targets/dri/libgallium-24.2.2.so.p/dri_target.c.o
+[1000/1304] Generating src/mapi/glapi/gen/glapi_mapi_tmp.h with a custom command (wrapped by meson to capture output)
+[1001/1304] Compiling C object src/gallium/frontends/dri/libdri.a.p/dri2.c.o
+[1002/1304] Linking static target src/gallium/frontends/dri/libdri.a
+[1003/1304] Generating src/mapi/glapi/gen/indirect.h with a custom command (wrapped by meson to capture output)
+[1004/1304] Generating src/mapi/glapi/gen/indirect_size.h with a custom command (wrapped by meson to capture output)
+[1005/1304] Generating src/egl/wayland/wayland-drm/wayland-drm-protocol.c with a custom command
+[1006/1304] Generating src/egl/wayland/wayland-drm/wayland-drm-server-protocol.h with a custom command
+[1007/1304] Generating src/egl/wayland/wayland-drm/linux-dmabuf-unstable-v1-protocol.c with a custom command
+[1008/1304] Generating src/egl/wayland/wayland-drm/linux-dmabuf-unstable-v1-client-protocol.h with a custom command
+[1009/1304] Generating src/egl/wayland/wayland-drm/presentation-time-protocol.c with a custom command
+[1010/1304] Generating src/egl/wayland/wayland-drm/presentation-time-client-protocol.h with a custom command
+[1011/1304] Generating src/egl/wayland/wayland-drm/tearing-control-v1-protocol.c with a custom command
+[1012/1304] Generating src/egl/wayland/wayland-drm/tearing-control-v1-client-protocol.h with a custom command
+[1013/1304] Generating src/egl/wayland/wayland-drm/linux-drm-syncobj-v1-protocol.c with a custom command
+[1014/1304] Generating src/egl/wayland/wayland-drm/linux-drm-syncobj-v1-client-protocol.h with a custom command
+[1015/1304] Generating src/mapi/glapi/gen/indirect_init.c with a custom command (wrapped by meson to capture output)
+[1016/1304] Generating src/vulkan/util/vk_dispatch_table with a custom command
+[1017/1304] Generating src/mapi/glapi/gen/indirect_size.c with a custom command (wrapped by meson to capture output)
+[1018/1304] Generating src/vulkan/util/vk_enum_to_str with a custom command
+[1019/1304] Generating src/vulkan/util/vk_struct_type_cast with a custom command
+[1020/1304] Generating src/vulkan/runtime/vk_common_entrypoints with a custom command
+[1021/1304] Generating src/vulkan/util/vk_extensions with a custom command
+[1022/1304] Generating src/vulkan/runtime/vk_cmd_enqueue_entrypoints with a custom command
+[1023/1304] Generating src/vulkan/runtime/vk_cmd_queue with a custom command
+[1024/1304] Generating src/vulkan/runtime/vk_dispatch_trampolines with a custom command
+[1025/1304] Generating src/vulkan/runtime/vk_physical_device_features with a custom command
+[1026/1304] Generating src/vulkan/runtime/vk_physical_device_properties with a custom command
+[1027/1304] Generating src/vulkan/runtime/vk_physical_device_spirv_caps with a custom command
+[1028/1304] Generating src/vulkan/runtime/astc_spv.h with a custom command
+[1029/1304] Generating src/vulkan/runtime/vk_synchronization_helpers with a custom command
+[1030/1304] Generating src/vulkan/wsi/wsi_entrypoints with a custom command
+[1031/1304] Generating src/broadcom/vulkan/v3dv_entrypoints with a custom command
+[1032/1304] Compiling C object src/gbm/libgbm.so.1.0.0.p/main_backend.c.o
+[1033/1304] Compiling C object src/gbm/libgbm.so.1.0.0.p/main_gbm.c.o
+[1034/1304] Generating src/vulkan/runtime/vk_format_info with a custom command
+[1035/1304] Compiling C object src/loader/libloader_wayland_helper.a.p/loader_wayland_helper.c.o
+[1036/1304] Compiling C object src/gbm/libgbm.so.1.0.0.p/backends_dri_gbm_dri.c.o
+[1037/1304] Generating src/egl/wayland/wayland-drm/wayland-drm-client-protocol.h with a custom command
+[1038/1304] Compiling C object src/egl/wayland/wayland-drm/libwayland_drm.a.p/meson-generated_.._wayland-drm-protocol.c.o
+[1039/1304] Compiling C object src/egl/wayland/wayland-drm/libwayland_drm.a.p/wayland-drm.c.o
+[1040/1304] Compiling C object src/loader/libloader_dri3_helper.a.p/loader_dri3_helper.c.o
+[1041/1304] Linking target src/gallium/targets/dri/libgallium-24.2.2.so
+[1042/1304] Generating symbol file src/gallium/targets/dri/libgallium-24.2.2.so.p/libgallium-24.2.2.so.symbols
+[1043/1304] Compiling C object src/vulkan/util/libvulkan_util.a.p/meson-generated_.._vk_dispatch_table.c.o
+[1044/1304] Compiling C object src/vulkan/util/libvulkan_util.a.p/meson-generated_.._vk_extensions.c.o
+[1045/1304] Compiling C object src/vulkan/util/libvulkan_util.a.p/vk_alloc.c.o
+[1046/1304] Compiling C object src/vulkan/util/libvulkan_util.a.p/vk_format.c.o
+[1047/1304] Compiling C object src/vulkan/util/libvulkan_util.a.p/vk_util.c.o
+[1048/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/meson-generated_.._vk_cmd_enqueue_entrypoints.c.o
+[1049/1304] Compiling C object src/mapi/glapi/libglapi_bridge.a.p/.._entry.c.o
+[1050/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/meson-generated_.._vk_common_entrypoints.c.o
+[1051/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/meson-generated_.._vk_format_info.c.o
+[1052/1304] Compiling C object src/vulkan/util/libvulkan_util.a.p/meson-generated_.._vk_enum_to_str.c.o
+[1053/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/meson-generated_.._vk_dispatch_trampolines.c.o
+[1054/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/meson-generated_.._vk_physical_device_properties.c.o
+[1055/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/meson-generated_.._vk_physical_device_spirv_caps.c.o
+[1056/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/meson-generated_.._vk_synchronization_helpers.c.o
+[1057/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/rmv_vk_rmv_common.c.o
+[1058/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/rmv_vk_rmv_exporter.c.o
+[1059/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_acceleration_structure.c.o
+[1060/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_blend.c.o
+[1061/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_buffer.c.o
+[1062/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_buffer_view.c.o
+[1063/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_cmd_copy.c.o
+[1064/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_cmd_enqueue.c.o
+[1065/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_command_buffer.c.o
+[1066/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_debug_report.c.o
+[1067/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_command_pool.c.o
+[1068/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_deferred_operation.c.o
+[1069/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_debug_utils.c.o
+[1070/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_descriptors.c.o
+[1071/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_descriptor_set_layout.c.o
+[1072/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_descriptor_update_template.c.o
+[1073/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_device.c.o
+[1074/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_device_memory.c.o
+[1075/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/meson-generated_.._vk_physical_device_features.c.o
+[1076/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_framebuffer.c.o
+[1077/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_fence.c.o
+[1078/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_image.c.o
+[1079/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_log.c.o
+[1080/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/meson-generated_.._vk_cmd_queue.c.o
+[1081/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_physical_device.c.o
+[1082/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_pipeline_layout.c.o
+[1083/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_object.c.o
+[1084/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_query_pool.c.o
+[1085/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_sampler.c.o
+[1086/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_queue.c.o
+[1087/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_standard_sample_locations.c.o
+[1088/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_semaphore.c.o
+[1089/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_sync_binary.c.o
+[1090/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_render_pass.c.o
+[1091/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_sync.c.o
+[1092/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_sync_dummy.c.o
+[1093/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_graphics_state.c.o
+[1094/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_sync_timeline.c.o
+[1095/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_ycbcr_conversion.c.o
+[1096/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_synchronization.c.o
+[1097/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_drm_syncobj.c.o
+[1098/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_meta.c.o
+[1099/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_meta_clear.c.o
+[1100/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_meta_blit_resolve.c.o
+[1101/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_meta_draw_rects.c.o
+[1102/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_nir.c.o
+[1103/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_nir_convert_ycbcr.c.o
+[1104/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_pipeline_cache.c.o
+[1105/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_shader_module.c.o
+[1106/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_pipeline.c.o
+[1107/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_shader.c.o
+[1108/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_texcompress_astc.c.o
+[1109/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/meson-generated_.._.._.._egl_wayland_wayland-drm_linux-dmabuf-unstable-v1-protocol.c.o
+[1110/1304] Compiling C object src/vulkan/runtime/libvulkan_instance.a.p/vk_instance.c.o
+[1111/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/meson-generated_.._.._.._egl_wayland_wayland-drm_tearing-control-v1-protocol.c.o
+[1112/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/meson-generated_.._.._.._egl_wayland_wayland-drm_presentation-time-protocol.c.o
+[1113/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/meson-generated_.._.._.._egl_wayland_wayland-drm_linux-drm-syncobj-v1-protocol.c.o
+[1114/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/meson-generated_.._wsi_common_entrypoints.c.o
+[1115/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/wsi_common_drm.c.o
+[1116/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/wsi_common.c.o
+[1117/1304] Compiling C object src/vulkan/runtime/libvulkan_runtime.a.p/vk_texcompress_etc2.c.o
+[1118/1304] Compiling C object src/vulkan/runtime/libvulkan_lite_runtime.a.p/vk_video.c.o
+[1119/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/wsi_common_headless.c.o
+[1120/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/wsi_common_wayland.c.o
+[1121/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/wsi_common_x11.c.o
+[1122/1304] Compiling C object src/vulkan/wsi/libvulkan_wsi.a.p/wsi_common_display.c.o
+[1123/1304] Compiling C object src/broadcom/vulkan/libv3dv-v42.a.p/v3dvx_descriptor_set.c.o
+[1124/1304] Compiling C object src/broadcom/vulkan/libv3dv-v42.a.p/v3dvx_device.c.o
+[1125/1304] Compiling C object src/broadcom/vulkan/libv3dv-v42.a.p/v3dvx_formats.c.o
+[1126/1304] Compiling C object src/broadcom/vulkan/libv3dv-v42.a.p/v3dvx_image.c.o
+[1127/1304] Compiling C object src/broadcom/vulkan/libv3dv-v42.a.p/v3dvx_cmd_buffer.c.o
+[1128/1304] Compiling C object src/broadcom/vulkan/libv3dv-v42.a.p/v3dvx_pipeline.c.o
+[1129/1304] Compiling C object src/broadcom/vulkan/libv3dv-v42.a.p/v3dvx_query.c.o
+[1130/1304] Compiling C object src/broadcom/vulkan/libv3dv-v42.a.p/v3dvx_queue.c.o
+[1131/1304] Compiling C object src/broadcom/vulkan/libv3dv-v71.a.p/v3dvx_descriptor_set.c.o
+[1132/1304] Compiling C object src/broadcom/vulkan/libv3dv-v42.a.p/v3dvx_meta_common.c.o
+[1133/1304] Compiling C object src/broadcom/vulkan/libv3dv-v71.a.p/v3dvx_device.c.o
+[1134/1304] Compiling C object src/broadcom/vulkan/libv3dv-v71.a.p/v3dvx_formats.c.o
+[1135/1304] Compiling C object src/broadcom/vulkan/libv3dv-v71.a.p/v3dvx_image.c.o
+[1136/1304] Compiling C object src/broadcom/vulkan/libv3dv-v71.a.p/v3dvx_pipeline.c.o
+[1137/1304] Compiling C object src/broadcom/vulkan/libv3dv-v71.a.p/v3dvx_cmd_buffer.c.o
+[1138/1304] Compiling C object src/broadcom/vulkan/libv3dv-v71.a.p/v3dvx_query.c.o
+[1139/1304] Compiling C object src/gallium/frontends/teflon/libteflon_st.a.p/tfl_device.c.o
+[1140/1304] Compiling C object src/broadcom/vulkan/libv3dv-v71.a.p/v3dvx_queue.c.o
+[1141/1304] Compiling C object src/broadcom/vulkan/libv3dv-v71.a.p/v3dvx_meta_common.c.o
+[1142/1304] Compiling C object src/glx/libglx.a.p/meson-generated_.._.._mapi_glapi_gen_indirect_size.c.o
+[1143/1304] Compiling C object src/glx/libglx.a.p/clientattrib.c.o
+[1144/1304] Compiling C object src/glx/libglx.a.p/clientinfo.c.o
+[1145/1304] Compiling C object src/glx/libglx.a.p/compsize.c.o
+[1146/1304] Compiling C object src/glx/libglx.a.p/meson-generated_.._.._mapi_glapi_gen_indirect_init.c.o
+[1147/1304] Compiling C object src/glx/libglx.a.p/create_context.c.o
+[1148/1304] Compiling C object src/glx/libglx.a.p/dri_common.c.o
+[1149/1304] Compiling C object src/glx/libglx.a.p/dri_common_interop.c.o
+[1150/1304] Compiling C object src/glx/libglx.a.p/dri_common_query_renderer.c.o
+[1151/1304] Compiling C object src/glx/libglx.a.p/eval.c.o
+[1152/1304] Compiling C object src/glx/libglx.a.p/glxconfig.c.o
+[1153/1304] Compiling C object src/glx/libglx.a.p/drisw_glx.c.o
+[1154/1304] Compiling C object src/glx/libglx.a.p/glxcurrent.c.o
+[1155/1304] Compiling C object src/glx/libglx.a.p/glx_error.c.o
+[1156/1304] Compiling C object src/glx/libglx.a.p/glxcmds.c.o
+[1157/1304] Compiling C object src/glx/libglx.a.p/glxhash.c.o
+[1158/1304] Compiling C object src/glx/libglx.a.p/glxextensions.c.o
+[1159/1304] Compiling C object src/glx/libglx.a.p/glxext.c.o
+[1160/1304] Compiling C object src/glx/libglx.a.p/glx_query.c.o
+[1161/1304] Compiling C object src/glx/libglx.a.p/glx_pbuffer.c.o
+[1162/1304] Compiling C object src/glx/libglx.a.p/indirect_glx.c.o
+[1163/1304] Compiling C object src/glx/libglx.a.p/indirect_transpose_matrix.c.o
+[1164/1304] Compiling C object src/glx/libglx.a.p/indirect_texture_compression.c.o
+[1165/1304] Compiling C object src/glx/libglx.a.p/indirect_vertex_program.c.o
+[1166/1304] Compiling C object src/glx/libglx.a.p/indirect_window_pos.c.o
+[1167/1304] Compiling C object src/glx/libglx.a.p/meson-generated_.._.._mapi_glapi_gen_indirect.c.o
+[1168/1304] Compiling C object src/glx/libglx.a.p/pixelstore.c.o
+[1169/1304] Compiling C object src/glx/libglx.a.p/pixel.c.o
+[1170/1304] Compiling C object src/glx/libglx.a.p/query_renderer.c.o
+[1171/1304] Compiling C object src/glx/libglx.a.p/renderpix.c.o
+[1172/1304] Compiling C object src/glx/libglx.a.p/indirect_vertex_array.c.o
+[1173/1304] Compiling C object src/glx/libglx.a.p/render2.c.o
+[1174/1304] Compiling C object src/glx/libglx.a.p/singlepix.c.o
+[1175/1304] Compiling C object src/glx/libglx.a.p/vertarr.c.o
+[1176/1304] Compiling C object src/glx/libglx.a.p/xfont.c.o
+[1177/1304] Compiling C object src/glx/libglx.a.p/single2.c.o
+[1178/1304] Compiling C object src/glx/libglx.a.p/dri2.c.o
+[1179/1304] Compiling C object src/glx/libglx.a.p/dri3_glx.c.o
+[1180/1304] Compiling C object src/glx/libglx.a.p/glxglvnd.c.o
+[1181/1304] Compiling C object src/glx/libglx.a.p/dri2_glx.c.o
+[1182/1304] Compiling C object src/glx/libglx.a.p/g_glxglvnddispatchfuncs.c.o
+[1183/1304] Linking static target src/loader/libloader_dri3_helper.a
+[1184/1304] Linking static target src/loader/libloader_wayland_helper.a
+[1185/1304] Linking static target src/mapi/glapi/libglapi_bridge.a
+[1186/1304] Linking target src/gbm/libgbm.so.1.0.0
+[1187/1304] Linking static target src/egl/wayland/wayland-drm/libwayland_drm.a
+[1188/1304] Linking static target src/vulkan/util/libvulkan_util.a
+[1189/1304] Linking static target src/vulkan/runtime/libvulkan_lite_runtime.a
+[1190/1304] Linking static target src/vulkan/runtime/libvulkan_runtime.a
+[1191/1304] Linking static target src/vulkan/runtime/libvulkan_instance.a
+[1192/1304] Linking static target src/vulkan/wsi/libvulkan_wsi.a
+[1193/1304] Compiling C object src/compiler/isaspec/libisaspec.a.p/isaspec.c.o
+[1194/1304] Generating src/egl/g_egldispatchstubs.c with a custom command (wrapped by meson to capture output)
+[1195/1304] Generating src/egl/g_egldispatchstubs.h with a custom command (wrapped by meson to capture output)
+[1196/1304] Compiling C object src/vulkan/device-select-layer/libVkLayer_MESA_device_select.so.p/meson-generated_.._.._.._egl_wayland_wayland-drm_wayland-drm-protocol.c.o
+[1197/1304] Linking static target src/broadcom/qpu/libbroadcom_qpu.a
+[1198/1304] Compiling C object src/vulkan/device-select-layer/libVkLayer_MESA_device_select.so.p/device_select_x11.c.o
+[1199/1304] Compiling C object src/broadcom/qpu/qpu_disasm.p/tests_qpu_disasm.c.o
+[1200/1304] Linking static target src/broadcom/vulkan/libv3dv-v42.a
+[1201/1304] Linking static target src/broadcom/vulkan/libv3dv-v71.a
+[1202/1304] Compiling C object src/vulkan/device-select-layer/libVkLayer_MESA_device_select.so.p/device_select_wayland.c.o
+[1203/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/meson-generated_.._.._.._egl_wayland_wayland-drm_wayland-drm-protocol.c.o
+[1204/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/meson-generated_.._v3dv_entrypoints.c.o
+[1205/1304] Compiling C object src/vulkan/device-select-layer/libVkLayer_MESA_device_select.so.p/device_select_layer.c.o
+[1206/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_cl.c.o
+[1207/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_bo.c.o
+[1208/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_debug.c.o
+[1209/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_descriptor_set.c.o
+[1210/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_event.c.o
+[1211/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_cmd_buffer.c.o
+[1212/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_device.c.o
+[1213/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_formats.c.o
+[1214/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_image.c.o
+[1215/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_pass.c.o
+[1216/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_meta_clear.c.o
+[1217/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_pipeline_cache.c.o
+[1218/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_query.c.o
+[1219/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_pipeline.c.o
+[1220/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_meta_copy.c.o
+[1221/1304] Linking static target src/gallium/frontends/teflon/libteflon_st.a
+[1222/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_queue.c.o
+[1223/1304] Linking static target src/glx/libglx.a
+[1224/1304] Compiling C object src/gallium/targets/teflon/libteflon.so.p/teflon_target.c.o
+[1225/1304] Generating symbol file src/gbm/libgbm.so.1.0.0.p/libgbm.so.1.0.0.symbols
+[1226/1304] Generating src/egl/egl.def with a custom command
+[1227/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/meson-generated_.._wayland_wayland-drm_linux-dmabuf-unstable-v1-protocol.c.o
+[1228/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/meson-generated_.._g_egldispatchstubs.c.o
+[1229/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_wsi.c.o
+[1230/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglarray.c.o
+[1231/1304] Compiling C object src/broadcom/vulkan/libvulkan_broadcom.so.p/v3dv_uniforms.c.o
+[1232/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglconfigdebug.c.o
+[1233/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglcontext.c.o
+[1234/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglcurrent.c.o
+[1235/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglconfig.c.o
+[1236/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_egldevice.c.o
+[1237/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglglobals.c.o
+[1238/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglimage.c.o
+[1239/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_egldisplay.c.o
+[1240/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_egllog.c.o
+[1241/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglsync.c.o
+[1242/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglsurface.c.o
+[1243/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/drivers_dri2_platform_device.c.o
+[1244/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/drivers_dri2_platform_surfaceless.c.o
+[1245/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/drivers_dri2_platform_x11_dri3.c.o
+[1246/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/drivers_dri2_egl_dri2.c.o
+[1247/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglapi.c.o
+[1248/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/drivers_dri2_platform_x11.c.o
+[1249/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_eglglvnd.c.o
+[1250/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/main_egldispatchstubs.c.o
+[1251/1304] Linking static target src/compiler/isaspec/libisaspec.a
+[1252/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/drivers_dri2_platform_drm.c.o
+[1253/1304] Linking target src/vulkan/device-select-layer/libVkLayer_MESA_device_select.so
+[1254/1304] Linking static target src/broadcom/libbroadcom-v42.a
+[1255/1304] Linking static target src/broadcom/libbroadcom-v71.a
+[1256/1304] Linking target src/broadcom/qpu/qpu_disasm
+[1257/1304] Generating src/broadcom/vulkan/broadcom_icd with a custom command
+[1258/1304] Generating src/broadcom/vulkan/broadcom_devenv_icd with a custom command
+[1259/1304] Compiling C object src/gallium/targets/dril/libdril_dri.so.p/dril_target.c.o
+[1260/1304] Linking target src/glx/libGLX_mesa.so.0.0.0
+[1261/1304] Linking target src/gallium/targets/dril/libdril_dri.so
+[1262/1304] Generating src/gallium/targets/dril/armada-drm_dri.so with a custom command
+[1263/1304] Generating src/gallium/targets/dril/exynos_dri.so with a custom command
+[1264/1304] Generating src/gallium/targets/dril/gm12u320_dri.so with a custom command
+[1265/1304] Generating src/gallium/targets/dril/hdlcd_dri.so with a custom command
+[1266/1304] Generating src/gallium/targets/dril/hx8357d_dri.so with a custom command
+[1267/1304] Generating src/gallium/targets/dril/ili9163_dri.so with a custom command
+[1268/1304] Generating src/gallium/targets/dril/ili9225_dri.so with a custom command
+[1269/1304] Generating src/gallium/targets/dril/ili9341_dri.so with a custom command
+[1270/1304] Generating src/gallium/targets/dril/ili9486_dri.so with a custom command
+[1271/1304] Generating src/gallium/targets/dril/imx-drm_dri.so with a custom command
+[1272/1304] Generating src/gallium/targets/dril/imx-dcss_dri.so with a custom command
+[1273/1304] Generating src/gallium/targets/dril/imx-lcdif_dri.so with a custom command
+[1274/1304] Generating src/gallium/targets/dril/ingenic-drm_dri.so with a custom command
+[1275/1304] Generating src/gallium/targets/dril/kirin_dri.so with a custom command
+[1276/1304] Generating src/gallium/targets/dril/komeda_dri.so with a custom command
+[1277/1304] Generating src/gallium/targets/dril/mali-dp_dri.so with a custom command
+[1278/1304] Generating src/gallium/targets/dril/mcde_dri.so with a custom command
+[1279/1304] Generating src/gallium/targets/dril/mediatek_dri.so with a custom command
+[1280/1304] Generating src/gallium/targets/dril/meson_dri.so with a custom command
+[1281/1304] Generating src/gallium/targets/dril/mi0283qt_dri.so with a custom command
+[1282/1304] Generating src/gallium/targets/dril/mxsfb-drm_dri.so with a custom command
+[1283/1304] Generating src/gallium/targets/dril/panel-mipi-dbi_dri.so with a custom command
+[1284/1304] Generating src/gallium/targets/dril/pl111_dri.so with a custom command
+[1285/1304] Generating src/gallium/targets/dril/rcar-du_dri.so with a custom command
+[1286/1304] Generating src/gallium/targets/dril/repaper_dri.so with a custom command
+[1287/1304] Generating src/gallium/targets/dril/rockchip_dri.so with a custom command
+[1288/1304] Generating src/gallium/targets/dril/rzg2l-du_dri.so with a custom command
+[1289/1304] Generating src/gallium/targets/dril/ssd130x_dri.so with a custom command
+[1290/1304] Generating src/gallium/targets/dril/st7586_dri.so with a custom command
+[1291/1304] Generating src/gallium/targets/dril/st7735r_dri.so with a custom command
+[1292/1304] Generating src/gallium/targets/dril/sti_dri.so with a custom command
+[1293/1304] Generating src/gallium/targets/dril/stm_dri.so with a custom command
+[1294/1304] Generating src/gallium/targets/dril/sun4i-drm_dri.so with a custom command
+[1295/1304] Generating src/gallium/targets/dril/udl_dri.so with a custom command
+[1296/1304] Generating src/gallium/targets/dril/vkms_dri.so with a custom command
+[1297/1304] Generating src/gallium/targets/dril/zynqmp-dpsub_dri.so with a custom command
+[1298/1304] Generating src/gallium/targets/dril/swrast_dri.so with a custom command
+[1299/1304] Generating src/gallium/targets/dril/kms_swrast_dri.so with a custom command
+[1300/1304] Generating src/gallium/targets/dril/v3d_dri.so with a custom command
+[1301/1304] Linking target src/gallium/targets/teflon/libteflon.so
+[1302/1304] Compiling C object src/egl/libEGL_mesa.so.0.0.0.p/drivers_dri2_platform_wayland.c.o
+[1303/1304] Linking target src/egl/libEGL_mesa.so.0.0.0
+[1304/1304] Linking target src/broadcom/vulkan/libvulkan_broadcom.so
+buildPhase completed in 9 minutes 24 seconds
+Running phase: installPhase
+@nix { "action": "setPhase", "phase": "installPhase" }
+mesonInstallPhase flags: ''
+Installing src/mapi/shared-glapi/libglapi.so.0.0.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib
+Installing src/vulkan/device-select-layer/libVkLayer_MESA_device_select.so to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib
+Installing src/broadcom/vulkan/libvulkan_broadcom.so to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib
+Installing src/broadcom/vulkan/broadcom_icd.aarch64.json to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/share/vulkan/icd.d
+Installing src/gallium/targets/dri/libgallium-24.2.2.so to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib
+Installing src/gallium/targets/teflon/libteflon.so to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib
+Installing src/glx/libGLX_mesa.so.0.0.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib
+Installing src/gbm/libgbm.so.1.0.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib
+Installing src/egl/libEGL_mesa.so.0.0.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib
+Installing src/gallium/targets/dril/libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri
+Installing /build/source/include/EGL/eglext_angle.h to /nix/store/4ppw4kpg4wfamsan18pdaflf0alkb8d0-mesa-24.2.2-dev/include/EGL
+Installing /build/source/include/EGL/eglmesaext.h to /nix/store/4ppw4kpg4wfamsan18pdaflf0alkb8d0-mesa-24.2.2-dev/include/EGL
+Installing /build/source/include/GL/internal/dri_interface.h to /nix/store/4ppw4kpg4wfamsan18pdaflf0alkb8d0-mesa-24.2.2-dev/include/GL/internal
+Installing /build/source/src/gbm/main/gbm.h to /nix/store/4ppw4kpg4wfamsan18pdaflf0alkb8d0-mesa-24.2.2-dev/include
+Installing /build/source/src/util/00-mesa-defaults.conf to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/share/drirc.d
+Installing /build/source/src/vulkan/device-select-layer/VkLayer_MESA_device_select.json to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/share/vulkan/implicit_layer.d
+Installing /build/source/build/meson-private/dri.pc to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/pkgconfig
+Installing /build/source/build/meson-private/gbm.pc to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/pkgconfig
+Installing /build/source/build/src/egl/50_mesa.json to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/share/glvnd/egl_vendor.d
+Installing symlink pointing to libglapi.so.0.0.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libglapi.so.0
+Installing symlink pointing to libglapi.so.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libglapi.so
+Installing symlink pointing to libGLX_mesa.so.0.0.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libGLX_mesa.so.0
+Installing symlink pointing to libGLX_mesa.so.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libGLX_mesa.so
+Installing symlink pointing to libgbm.so.1.0.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libgbm.so.1
+Installing symlink pointing to libgbm.so.1 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libgbm.so
+Installing symlink pointing to libEGL_mesa.so.0.0.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libEGL_mesa.so.0
+Installing symlink pointing to libEGL_mesa.so.0 to /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libEGL_mesa.so
+Running custom install script '/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5/bin/python3.12 /build/source/bin/install_megadrivers.py /build/source/build/src/gallium/targets/dril/libdril_dri.so /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri armada-drm_dri.so exynos_dri.so gm12u320_dri.so hdlcd_dri.so hx8357d_dri.so ili9163_dri.so ili9225_dri.so ili9341_dri.so ili9486_dri.so imx-drm_dri.so imx-dcss_dri.so imx-lcdif_dri.so ingenic-drm_dri.so kirin_dri.so komeda_dri.so mali-dp_dri.so mcde_dri.so mediatek_dri.so meson_dri.so mi0283qt_dri.so mxsfb-drm_dri.so panel-mipi-dbi_dri.so pl111_dri.so rcar-du_dri.so repaper_dri.so rockchip_dri.so rzg2l-du_dri.so ssd130x_dri.so st7586_dri.so st7735r_dri.so sti_dri.so stm_dri.so sun4i-drm_dri.so udl_dri.so vkms_dri.so zynqmp-dpsub_dri.so swrast_dri.so kms_swrast_dri.so v3d_dri.so'
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/armada-drm_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/exynos_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/gm12u320_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/hdlcd_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/hx8357d_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/ili9163_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/ili9225_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/ili9341_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/ili9486_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/imx-drm_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/imx-dcss_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/imx-lcdif_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/ingenic-drm_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/kirin_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/komeda_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/mali-dp_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/mcde_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/mediatek_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/meson_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/mi0283qt_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/mxsfb-drm_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/panel-mipi-dbi_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/pl111_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/rcar-du_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/repaper_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/rockchip_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/rzg2l-du_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/ssd130x_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/st7586_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/st7735r_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/sti_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/stm_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/sun4i-drm_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/udl_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/vkms_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/zynqmp-dpsub_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/swrast_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/kms_swrast_dri.so
+Installing symlink pointing to libdril_dri.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/dri/v3d_dri.so
+Moving /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libEGL_mesa.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/libEGL_mesa.so
+Moving /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libEGL_mesa.so.0 to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/libEGL_mesa.so.0
+Moving /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libEGL_mesa.so.0.0.0 to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/libEGL_mesa.so.0.0.0
+Moving /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libGLX_mesa.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/libGLX_mesa.so
+Moving /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libGLX_mesa.so.0 to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/libGLX_mesa.so.0
+Moving /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libGLX_mesa.so.0.0.0 to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/libGLX_mesa.so.0.0.0
+Moving /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libvulkan_broadcom.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/libvulkan_broadcom.so
+Moving /nix/store/haz8fjrrpg24iykdzb7dcycv4azjxi7d-mesa-24.2.2/lib/libVkLayer_MESA_device_select.so to /nix/store/afnfaicg9g4iswv4s7rw0nf1vk0wz38r-mesa-24.2.2-drivers/lib/libVkLayer_MESA_device_select.so
+mkdir: cannot create directory '/etc/OpenCL': Permission denied

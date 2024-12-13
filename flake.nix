@@ -66,38 +66,54 @@
             (import nix-ros-workspace { }).overlay
             # import ros workspace packages + fixes
             (import ./software/overlay.nix rosDistro)
-            # Pi graphics overlay
-            (final: prev: {
-            mesa = (prev.mesa.override {
-            # Include softpipe as a minimal software renderer alongside v3d
-            galliumDrivers = [ "v3d" "softpipe" ];
-            vulkanDrivers = [ "broadcom" ];
-            }).overrideAttrs (oldAttrs: {
-            mesonBuildType = "release";
-            outputs = [ "out" "dev" "drivers" ];
-	    buildInputs = oldAttrs.buildInputs or [] ++ [
-	    final.libdrm
-	    final.libglvnd
-	    ];
-	    mesonFlags = (oldAttrs.mesonFlags or []) ++ [
-            "-Dgallium-vdpau=disabled"
-            "-Dgallium-va=disabled"
-            "-Dgallium-xa=disabled"
-            "-Dgallium-nine=false"
-            "-Dspirv-to-dxil=false"
-            "-Dmicrosoft-clc=disabled"
-            "-Dintel-clc=auto"
-	    "-Dvulkan-layers=device-select"
-	    #"-Dllvm=disabled"
-	    #"-Dshared-llvm=disabled"
-	    "-Dshared-glapi=enabled"
-	    "-Degl=enabled"
-	    "-Dgbm=enabled"
-	    "-Ddri3=enabled"
-	    "-Dgallium-opencl=disabled"
-	    
+            
+            
+            #pi5 graphics
+(final: prev: {
+  mesa = (prev.mesa.override {
+    galliumDrivers = [ "v3d" "softpipe" ];
+    vulkanDrivers = [ "broadcom" ];
+  }).overrideAttrs (oldAttrs: {
+    mesonBuildType = "release";
+    outputs = [ "out" "dev" "drivers" ];
+    
+    buildInputs = oldAttrs.buildInputs or [] ++ [
+      final.libdrm
+      final.libglvnd
     ];
-     NIX_DEBUG="1";
+
+   
+    
+    mesonFlags = (oldAttrs.mesonFlags or []) ++ [
+      "--sysconfdir=${placeholder "out"}/etc"
+      "-Dgallium-opencl=disabled"
+      "-Dopencl-spirv=false" 
+      "-Dgallium-rusticl=false"
+      "-Dplatforms=x11,wayland"
+      "-Degl=enabled"
+      "-Dgbm=enabled"
+      "-Ddri3=enabled"
+      "-Dgles2=enabled"
+      "-Dgles1=disabled"
+      "-Dgallium-vdpau=disabled"
+      "-Dgallium-va=disabled"
+      "-Dgallium-xa=disabled"
+      "-Dgallium-nine=false"
+      "-Dvulkan-layers=device-select"
+      "-Dllvm=disabled"
+      "-Dshared-llvm=disabled"
+      "-Dosmesa=false"
+      "-Dglx=dri"
+      "-Dshared-glapi=enabled"
+      "-Dspirv-to-dxil=false"
+      "-Dmicrosoft-clc=disabled"
+      "-Dintel-clc=auto"
+    ];
+    postPatch = (oldAttrs.postPatch or "") + ''
+      substituteInPlace src/util/disk_cache.c \
+        --replace 'full_path = mesa_cache_dir_override;' 'full_path = getenv("XDG_CACHE_HOME");' \
+        --replace 'full_path = "/tmp/mesa_shader_cache/"' 'full_path = getenv("XDG_CACHE_HOME")'
+    '';
   });
 })
 			
