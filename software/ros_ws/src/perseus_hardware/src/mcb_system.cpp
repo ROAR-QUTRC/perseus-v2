@@ -1,6 +1,11 @@
 #include "mcb_system.hpp"
 
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
+#include <hi_can_raw.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <numbers>
+
+#include "system_common.hpp"
 
 using namespace perseus_hardware;
 
@@ -9,19 +14,51 @@ hardware_interface::CallbackReturn McbSystemHardware::on_init(const hardware_int
     if (const auto& ret = hardware_interface::SystemInterface::on_init(info); ret != hardware_interface::CallbackReturn::SUCCESS)
         return ret;
 
+    _logger = std::make_shared<rclcpp::Logger>(rclcpp::get_logger("resource_manager.McbSystemHardware"));
+    _clock = std::make_shared<rclcpp::Clock>(rclcpp::Clock());
+
+    CHECK_HARDWARE_PARAMETER_EXISTS(get_logger(), info, "can_bus");
+
+    for (const auto& joint : info.joints)
+    {
+        CHECK_INTERFACE_COUNT(get_logger(), joint, command_interfaces, "command", 1);
+        CHECK_INTERFACE_COUNT(get_logger(), joint, state_interfaces, "state", 2);
+
+        CHECK_INTERFACE_NAME(get_logger(), joint, command_interfaces, "command", 0, hardware_interface::HW_IF_VELOCITY);
+        CHECK_INTERFACE_NAME(get_logger(), joint, state_interfaces, "state", 0, hardware_interface::HW_IF_POSITION);
+        CHECK_INTERFACE_NAME(get_logger(), joint, state_interfaces, "state", 1, hardware_interface::HW_IF_VELOCITY);
+
+        CHECK_PARAMETER_EXISTS(get_logger(), joint, "id");
+        try
+        {
+            unsigned long vescId = std::stoul(joint.parameters.at("id"));
+            _vescIds.emplace_back(vescId);
+        }
+        catch (const std::exception& e)
+        {
+            RCLCPP_FATAL(get_logger(), "Failed to parse VESC ID for joint '%s': %s", joint.name.c_str(), e.what());
+            return hardware_interface::CallbackReturn::ERROR;
+        }
+
+        _commandSpeeds.emplace_back(0);
+        _realPositions.emplace_back(0);
+        _realSpeeds.emplace_back(0);
+    }
+
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 std::vector<hardware_interface::StateInterface> McbSystemHardware::export_state_interfaces()
 {
     std::vector<hardware_interface::StateInterface> state_interfaces;
-    // for (auto i = 0u; i < info_.joints.size(); i++)
-    // {
-    //     state_interfaces.emplace_back(hardware_interface::StateInterface(
-    //         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_positions_[i]));
-    //     state_interfaces.emplace_back(hardware_interface::StateInterface(
-    //         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_velocities_[i]));
-    // }
+    const auto& info = get_info();
+    for (size_t i = 0; i < info.joints.size(); i++)
+    {
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info.joints[i].name, hardware_interface::HW_IF_POSITION, &_realPositions[i]));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &_realSpeeds[i]));
+    }
 
     return state_interfaces;
 }
@@ -29,11 +66,12 @@ std::vector<hardware_interface::StateInterface> McbSystemHardware::export_state_
 std::vector<hardware_interface::CommandInterface> McbSystemHardware::export_command_interfaces()
 {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
-    // for (auto i = 0u; i < info_.joints.size(); i++)
-    // {
-    //     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-    //         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
-    // }
+    const auto& info = get_info();
+    for (size_t i = 0; i < info.joints.size(); i++)
+    {
+        command_interfaces.emplace_back(hardware_interface::CommandInterface(
+            info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &_commandSpeeds[i]));
+    }
 
     return command_interfaces;
 }
@@ -41,28 +79,74 @@ std::vector<hardware_interface::CommandInterface> McbSystemHardware::export_comm
 hardware_interface::CallbackReturn McbSystemHardware::on_activate(
     const rclcpp_lifecycle::State& /*previous_state*/)
 {
-    // RCLCPP_INFO(get_logger(), "Successfully activated!");
+    const auto& info = get_info();
+    try
+    {
+        hi_can::RawCanInterface canInterface(info.hardware_parameters.at("can_bus"));
+        _packetManager.emplace(canInterface);
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_FATAL(get_logger(), "Failed to initialise CAN bus (%s): %s",
+                     info.hardware_parameters.at("can_bus").c_str(), e.what());
+        _packetManager.reset();
+        return hardware_interface::CallbackReturn::ERROR;
+    }
+    for (const auto& vescId : _vescIds)
+    {
+        try
+        {
+            using namespace hi_can;
+            using namespace addressing::legacy;
+            using namespace parameters::legacy::drive::motors;
+            const auto& paramGroup = EscParameterGroup(address_t(
+                drive::SYSTEM_ID,
+                drive::motors::SUBSYSTEM_ID,
+                vescId));
+            _parameterGroups.emplace_back(paramGroup);
+            _packetManager->addGroup(paramGroup);
+        }
+        catch (const std::exception& e)
+        {
+            RCLCPP_FATAL(get_logger(), "Failed to set up parameter group for VESC %lu: %s",
+                         vescId, e.what());
+        }
+    }
 
+    // RCLCPP_INFO(get_logger(), "Successfully activated!");
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn McbSystemHardware::on_deactivate(
     const rclcpp_lifecycle::State& /*previous_state*/)
 {
-    // RCLCPP_INFO(get_logger(), "Successfully deactivated!");
+    _packetManager.reset();
 
+    // RCLCPP_INFO(get_logger(), "Successfully deactivated!");
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::return_type McbSystemHardware::read(
     const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
+    if (_packetManager)
+    {
+        _packetManager->handleReceive();
+        for(size_t i = 0; i < _commandSpeeds.size(); i++)
+        {
+            const auto& paramGroup = _parameterGroups[i];
+            const auto& status = paramGroup.getStatus();
+            _realSpeeds[i] = (status.realSpeed) / 180 * std::numbers::pi;
+        }
+    }
     return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type McbSystemHardware::write(
     const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
+    if (_packetManager)
+        _packetManager->handleTransmit();
     return hardware_interface::return_type::OK;
 }
 
