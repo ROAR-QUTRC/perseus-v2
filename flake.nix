@@ -104,6 +104,7 @@
             rviz2-fixed
             rosbag2
             teleop-twist-keyboard
+            joy
             demo-nodes-cpp
             ;
         };

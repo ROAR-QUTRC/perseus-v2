@@ -4,7 +4,7 @@
 #include <hardware_interface/hardware_info.hpp>
 #include <hardware_interface/system_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
-#include <hi_can.hpp>
+#include <hi_can_raw.hpp>
 #include <optional>
 #include <rclcpp/clock.hpp>
 #include <rclcpp/duration.hpp>
@@ -35,9 +35,10 @@ namespace perseus_hardware
         auto& get_info() const { return info_; }
 
     private:
+        std::optional<hi_can::RawCanInterface> _canInterface;
         std::optional<hi_can::PacketManager> _packetManager;
 
-        std::vector<hi_can::parameters::ParameterGroup> _parameterGroups;
+        std::vector<hi_can::parameters::legacy::drive::motors::EscParameterGroup> _parameterGroups;
         std::vector<unsigned long> _vescIds;
         std::vector<double> _commandSpeeds;
         std::vector<double> _realSpeeds;

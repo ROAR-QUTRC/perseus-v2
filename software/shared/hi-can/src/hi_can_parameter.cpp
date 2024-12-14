@@ -330,4 +330,10 @@ namespace hi_can::parameters::legacy::drive::motors
                 },
             });
     }
+    EscParameterGroup::EscParameterGroup(const EscParameterGroup& group)
+        : EscParameterGroup(group._deviceAddress)
+    {
+        _speed = group._speed;
+        _status = group._status;
+    }
 }

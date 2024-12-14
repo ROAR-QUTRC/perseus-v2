@@ -76,6 +76,7 @@ def generate_launch_description():
         remappings=[
             ("~/robot_description", "/robot_description"),
             ("/perseus_base_controller/cmd_vel", "/cmd_vel"),
+            ("/perseus_base_controller/cmd_vel_unstamped", "/cmd_vel"),
         ],
     )
     robot_state_pub_node = Node(

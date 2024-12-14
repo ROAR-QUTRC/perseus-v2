@@ -31,8 +31,17 @@ hardware_interface::CallbackReturn McbSystemHardware::on_init(const hardware_int
         CHECK_PARAMETER_EXISTS(get_logger(), joint, "id");
         try
         {
+            using namespace hi_can;
+            using namespace addressing::legacy;
+            using namespace parameters::legacy::drive::motors;
+
+            // TODO: Better error message here if needed
             unsigned long vescId = std::stoul(joint.parameters.at("id"));
             _vescIds.emplace_back(vescId);
+            _parameterGroups.emplace_back(address_t(
+                drive::SYSTEM_ID,
+                drive::motors::SUBSYSTEM_ID,
+                vescId));
         }
         catch (const std::exception& e)
         {
@@ -82,8 +91,8 @@ hardware_interface::CallbackReturn McbSystemHardware::on_activate(
     const auto& info = get_info();
     try
     {
-        hi_can::RawCanInterface canInterface(info.hardware_parameters.at("can_bus"));
-        _packetManager.emplace(canInterface);
+        _canInterface.emplace(info.hardware_parameters.at("can_bus"));
+        _packetManager.emplace(*_canInterface);
     }
     catch (const std::exception& e)
     {
@@ -92,24 +101,19 @@ hardware_interface::CallbackReturn McbSystemHardware::on_activate(
         _packetManager.reset();
         return hardware_interface::CallbackReturn::ERROR;
     }
-    for (const auto& vescId : _vescIds)
+
+    auto& packetManager = *_packetManager;
+    for (const auto& group : _parameterGroups)
     {
         try
         {
-            using namespace hi_can;
-            using namespace addressing::legacy;
-            using namespace parameters::legacy::drive::motors;
-            const auto& paramGroup = EscParameterGroup(address_t(
-                drive::SYSTEM_ID,
-                drive::motors::SUBSYSTEM_ID,
-                vescId));
-            // _parameterGroups.emplace_back(paramGroup);
-            // _packetManager->addGroup(paramGroup);
+            packetManager.addGroup(group);
         }
         catch (const std::exception& e)
         {
-            RCLCPP_FATAL(get_logger(), "Failed to set up parameter group for VESC %lu: %s",
-                         vescId, e.what());
+            RCLCPP_FATAL(get_logger(), "Failed to set up parameter group: %s", e.what());
+            // for VESC %lu: %s",
+            //              vescId, e.what());
         }
     }
 
@@ -121,6 +125,11 @@ hardware_interface::CallbackReturn McbSystemHardware::on_deactivate(
     const rclcpp_lifecycle::State& /*previous_state*/)
 {
     _packetManager.reset();
+    _canInterface.reset();
+    for (auto& group : _parameterGroups)
+    {
+        // TODO: clear data
+    }
 
     // RCLCPP_INFO(get_logger(), "Successfully deactivated!");
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -134,11 +143,12 @@ hardware_interface::return_type McbSystemHardware::read(
         _packetManager->handleReceive();
         for (size_t i = 0; i < _commandSpeeds.size(); i++)
         {
-            // const auto& paramGroup = _parameterGroups[i];
-            // const auto& status = paramGroup.getStatus();
-            // _realSpeeds[i] = (status.realSpeed) / 180 * std::numbers::pi;
+            auto& paramGroup = _parameterGroups[i];
+            const auto& status = paramGroup.getStatus();
+            _realSpeeds[i] = (status.realSpeed) / 180 * std::numbers::pi;
         }
     }
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Real speeds: %f %f %f %f", _realSpeeds[0], _realSpeeds[1], _realSpeeds[2], _realSpeeds[3]);
     return hardware_interface::return_type::OK;
 }
 
@@ -146,7 +156,17 @@ hardware_interface::return_type McbSystemHardware::write(
     const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
     if (_packetManager)
+    {
+        for (size_t i = 0; i < _commandSpeeds.size(); i++)
+        {
+            auto& speed = _parameterGroups[i].getSpeed();
+            speed.enabled = true;
+            speed.direction = hi_can::parameters::legacy::drive::motors::motor_direction::FORWARD;
+            speed.speed = _commandSpeeds[i] * 180.0 / std::numbers::pi;
+        }
         _packetManager->handleTransmit();
+    }
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Commanded speeds: %f %f %f %f", _commandSpeeds[0], _commandSpeeds[1], _commandSpeeds[2], _commandSpeeds[3]);
     return hardware_interface::return_type::OK;
 }
 

@@ -21,8 +21,8 @@ namespace hi_can::parameters
         // Delete copy/move constructors/assignments.
         // Since the the transmit/recieve callbacks are probably lambdas which capture `this`,
         // they likely also cannot be copied or moved.
-        ParameterGroup(const ParameterGroup&) = delete;
-        ParameterGroup(ParameterGroup&&) = delete;
+        // ParameterGroup(const ParameterGroup&) = default;
+        // ParameterGroup(ParameterGroup&&) = default;
         ParameterGroup& operator=(const ParameterGroup&) = delete;
         ParameterGroup& operator=(ParameterGroup&&) = delete;
 
@@ -245,7 +245,6 @@ namespace hi_can::parameters
                     STOP = 0,
                     FORWARD = 1,
                 };
-#pragma pack(push, 1)
                 struct speed_t : public BidirectionalSerializable
                 {
                     bool enabled = false;
@@ -264,17 +263,18 @@ namespace hi_can::parameters
                     void deserializeData(const std::vector<uint8_t>& serializedData) override;
                     std::vector<uint8_t> serializeData() override;
                 };
-#pragma pack(pop)
                 class EscParameterGroup : public ParameterGroup
                 {
                 public:
                     EscParameterGroup(const addressing::legacy::address_t& deviceAddress);
 
+                    EscParameterGroup(const EscParameterGroup&);
+
                     auto& getSpeed() { return _speed; }
                     auto& getStatus() { return _status; }
 
                 private:
-                    addressing::flagged_address_t _deviceAddress;
+                    addressing::legacy::address_t _deviceAddress;
                     speed_t _speed{};
                     status_t _status{};
                 };
