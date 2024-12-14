@@ -25,10 +25,10 @@ class XboxControllerNode(Node):
         if dead_man_switch:
             # Axis 1 (left stick Y-axis) for forward/backward movement
             forward_input = joy_msg.axes[1]
-            forward_input = forward_input / 10  # scale down factor
+            forward_input = forward_input * 2  # scale down factor
             twist.linear.x = forward_input
             # Axis 2 (left stick X-axis) for left/right movement
-            sideways_input = joy_msg.axes[2]
+            sideways_input = joy_msg.axes[2] * 2
 
             if forward_input < 0:
                 twist.angular.z = -1.0 * sideways_input

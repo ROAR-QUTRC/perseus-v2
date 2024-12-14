@@ -26,6 +26,7 @@ perseus_base_controller:
     use_stamped_vel: false
     # Kinematic limits
     # If min_* is not specified, defaults to -max_*
+    # TODO: Check limit values
     linear.x.has_velocity_limits: true
     linear.x.has_acceleration_limits: true
     linear.x.has_jerk_limits: false
