@@ -160,9 +160,15 @@ hardware_interface::return_type McbSystemHardware::write(
         for (size_t i = 0; i < _commandSpeeds.size(); i++)
         {
             auto& speed = _parameterGroups[i].getSpeed();
+            auto& targetSpeed = _commandSpeeds[i];
             speed.enabled = true;
-            speed.direction = hi_can::parameters::legacy::drive::motors::motor_direction::FORWARD;
-            speed.speed = _commandSpeeds[i] * 180.0 / std::numbers::pi;
+            if (abs(targetSpeed) < 0.001)
+                speed.direction = hi_can::parameters::legacy::drive::motors::motor_direction::STOP;
+            else if (targetSpeed < 0)
+                speed.direction = hi_can::parameters::legacy::drive::motors::motor_direction::REVERSE;
+            else
+                speed.direction = hi_can::parameters::legacy::drive::motors::motor_direction::FORWARD;
+            speed.speed = abs(targetSpeed * 180.0 / std::numbers::pi);
         }
         _packetManager->handleTransmit();
     }
