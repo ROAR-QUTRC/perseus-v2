@@ -33,7 +33,6 @@ hardware_interface::CallbackReturn McbSystemHardware::on_init(const hardware_int
         {
             using namespace hi_can;
             using namespace addressing::legacy;
-            using namespace parameters::legacy::drive::motors;
 
             // TODO: Better error message here if needed
             unsigned long vescId = std::stoul(joint.parameters.at("id"));
