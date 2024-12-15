@@ -1,8 +1,7 @@
 {
   inputs = {
     # ros inputs
-    # TODO: Currently can't be updated till after issue #540 is resolved
-    nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay";
+    nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay/master";
     nixpkgs.follows = "nix-ros-overlay/nixpkgs"; # IMPORTANT!!!
     nix-ros-workspace = {
       url = "github:RandomSpaceship/nix-ros-workspace";
