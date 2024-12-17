@@ -1,7 +1,7 @@
 {
   inputs = {
     # ros inputs
-    nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay/master";
+    nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay";
     nixpkgs.follows = "nix-ros-overlay/nixpkgs"; # IMPORTANT!!!
     nix-ros-workspace = {
       url = "github:RandomSpaceship/nix-ros-workspace";
@@ -50,7 +50,7 @@
       system:
       let
         # --- INPUT PARAMETERS ---
-        rosDistro = "humble";
+        rosDistro = "jazzy";
 
         productionDomainId = 42;
         devDomainId = 51;

@@ -19,7 +19,7 @@ echo "Running ros2nix to generate new packaging files..."
 # nix run is the "better" way to do this, but it doesn't allow for complete environment isolation like the shell -i flag.
 # we want word splitting here to get all the package files in one go, so disable the shellcheck warning
 # shellcheck disable=SC2046
-nix shell -i github:wentasah/ros2nix --command ros2nix --output-dir="$OUTPUT_DIR" --output-as-nix-pkg-name --no-default --distro humble $(find "$ROS_WS" -type d \( -name log -o -name build -o -name install \) -prune -o -name 'package.xml' -print)
+nix shell -i github:wentasah/ros2nix --command ros2nix --output-dir="$OUTPUT_DIR" --output-as-nix-pkg-name --no-default --distro jazzy $(find "$ROS_WS" -type d \( -name log -o -name build -o -name install \) -prune -o -name 'package.xml' -print)
 echo "Formatting generated files"
 cd "$OUTPUT_DIR"
 nix fmt

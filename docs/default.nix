@@ -12,8 +12,8 @@
   # non-python packages to build docs
   unstable,
   graphviz,
-  # ros version to link to with intersphinx - defaults to humble
-  rosDistro ? "humble",
+  # ros version to link to with intersphinx, with default
+  rosDistro ? "jazzy",
 }:
 let
   # mostly taken from uv2nix docs https://adisbladis.github.io/uv2nix/usage/hello-world.html
