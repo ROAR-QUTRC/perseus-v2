@@ -1,3 +1,40 @@
+/**
+ * @file m2m2_lidar.cpp
+ * @brief ROS2 driver for M2M2 LIDAR sensor
+ *
+ * @details Expected sequence of flow:
+ * 1. Node initialisation:
+ *    - Loads ROS params (IP, port, topics, frame_id) - likely to come from a launch file in future
+ *    - Establishes TCP socket connection to sensor
+ *    - Sends initial configuration command - need to test if this is necessary
+ *    - Creates publishers for scan and IMU data via ROS topic
+ *
+ * 2. Main operation loop (100ms intervals):
+ *    - Reads raw data packets from sensor
+ *    - Parses into LaserScan messages:
+ *      + Single 360° sweep per scan
+ *      + Each scan timestamped
+ *      + Points evenly spaced with time_increment
+ *    - Parses IMU data if present
+ *    - Publishes to respective topics
+ *
+ * 3. Cleanup on shutdown:
+ *    - Closes socket connection
+ *    - Releases resources
+ *
+ * This is under construction but hopefully helpful as multiple people are collaborating on this.
+ *
+ * @note Hardware to Laserscan generation:
+ * The driver is going to take a single 360 degree sweep as a "scan".
+ * Each scan is timestamped. Each datapoint in the scan is not timestamped.
+ * Individual data points in the scan are not timestamped but are assumed to be evenly spaced and have a time_increment value.
+ * scan_time is the time for a one complete 360 degree sweep.
+ *
+ * *
+ * @see sensor_msgs::msg::LaserScan
+ * @see sensor_msgs::msg::Imu
+ */
+
 #include "m2m2_lidar/m2m2_lidar.hpp"
 
 #include <arpa/inet.h>
@@ -10,7 +47,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
 {
     // Parameter setup
     this->declare_parameter("sensor_ip", "192.168.1.100");
-    this->declare_parameter("sensor_port", 2000);
+    this->declare_parameter("sensor_port", 8080);
     this->declare_parameter("frame_id", "lidar_frame");
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
@@ -74,6 +111,15 @@ void M2M2Lidar::_initializePublishers()
         this->get_parameter("imu_topic").as_string(), qos);
 }
 
+/**
+ * @brief Creates a configuration command packet for the M2M2 LIDAR sensor.
+ *
+ * @details Constructs a byte sequence following the sensor's protocol format for
+ * configuration commands. Note that this function may become deprecated as hardware
+ * testing progresses - the m2m2 LIDAR's default configuration may be sufficient
+ * without manual configuration. Testing will confirm or not.
+ *
+ */
 std::vector<uint8_t> M2M2Lidar::_createConfigCommand(const SensorConfig& config)
 {
     // Protocol-related constants
@@ -86,7 +132,7 @@ std::vector<uint8_t> M2M2Lidar::_createConfigCommand(const SensorConfig& config)
     // Add command type (example: 0x01 for configuration)
     command.push_back(0x01);
 
-    // Add configuration parameters
+    // Add configuration parameters if needed - this might go-away post hardware testing
     // Note: This is a simplified example - you'll need to match your actual protocol
     command.push_back(static_cast<uint8_t>(config.scanFrequency));
     command.push_back(static_cast<uint8_t>(config.angularResolution * 100));
