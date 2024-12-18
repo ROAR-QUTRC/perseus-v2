@@ -12,13 +12,13 @@
 namespace
 {
     // Helper functions that don't need class access
-    bool validateChecksum(const std::vector<uint8_t>& data)
+    [[maybe_unused]] bool validateChecksum([[maybe_unused]] const std::vector<uint8_t>& data)
     {
         // Implementation of checksum validation
         return true;  // Placeholder
     }
 
-    uint16_t calculateChecksum(const std::vector<uint8_t>& data)
+    [[maybe_unused]] uint16_t calculateChecksum([[maybe_unused]] const std::vector<uint8_t>& data)
     {
         // Implementation of checksum calculation
         return 0;  // Placeholder
@@ -220,8 +220,7 @@ namespace sensors
             }
 
             // We also need to implement the parsing methods
-            std::optional<sensor_msgs::msg::LaserScan> Lidar::parseLaserScanData(
-                const std::vector<uint8_t>& data)
+            std::optional<sensor_msgs::msg::LaserScan> Lidar::parseLaserScanData([[maybe_unused]] const std::vector<uint8_t>& data)
             {
                 sensor_msgs::msg::LaserScan scan;
                 // This is a placeholder implementation
@@ -237,8 +236,7 @@ namespace sensors
                 return scan;
             }
 
-            std::optional<sensor_msgs::msg::Imu> Lidar::parseImuData(
-                const std::vector<uint8_t>& data)
+            std::optional<sensor_msgs::msg::Imu> Lidar::parseImuData([[maybe_unused]] const std::vector<uint8_t>& data)
             {
                 sensor_msgs::msg::Imu imu;
                 // This is a placeholder implementation
