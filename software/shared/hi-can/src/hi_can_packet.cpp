@@ -27,6 +27,9 @@ void Packet::setData(const uint8_t data[], size_t dataLen)
     if (dataLen > MAX_PACKET_LEN)
         throw std::invalid_argument("Data is longer than the maximum packet length");
 
+    if ((data == nullptr) && (dataLen > 0))
+        throw std::invalid_argument("Data is nullptr but length is non-zero");
+
     _data.resize(dataLen);
     _data.assign(data, data + dataLen);
 }
@@ -88,6 +91,8 @@ void PacketManager::addGroup(const ParameterGroup& group)
         setCallback(filter, config);
     for (const auto& [address, config] : group.getTransmissions())
         setTransmissionConfig(address, config);
+    for (const auto& transmission : group.getStartupTransmissions())
+        getInterface().transmit(transmission);
 }
 void PacketManager::removeGroup(const ParameterGroup& group)
 {

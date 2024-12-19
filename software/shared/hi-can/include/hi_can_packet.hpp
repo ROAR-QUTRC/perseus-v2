@@ -24,7 +24,7 @@ namespace hi_can
         /// @param address The address of the packet
         /// @param data The packet data
         /// @param dataLen The length of the data array
-        Packet(const addressing::flagged_address_t& address, const uint8_t data[], size_t dataLen);
+        Packet(const addressing::flagged_address_t& address, const uint8_t data[] = nullptr, size_t dataLen = 0);
         /// @brief Construct a packet from an address and data vector
         /// @param address The address of the packet
         /// @param data The data vector

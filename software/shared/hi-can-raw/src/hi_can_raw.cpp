@@ -63,8 +63,6 @@ void RawCanInterface::transmit(const Packet& packet)
     frame.len = packet.getDataLen();
     if (frame.len > CAN_MAX_DLEN)
         throw std::runtime_error("Packet data length exceeds maximum CAN frame length");
-    if (packet.getData().data() == nullptr)
-        throw std::runtime_error("Packet data is null");  // note: this should never happen since we use std::array
 
     std::copy_n(packet.getData().begin(), frame.len, frame.data);
 
