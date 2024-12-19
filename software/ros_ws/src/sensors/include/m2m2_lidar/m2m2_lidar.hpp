@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nlohmann/json.hpp>  // JSON parsing
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
@@ -44,14 +45,24 @@ public:
     ~M2M2Lidar();
 
 private:
+    int _requestId;
+    static constexpr const char* REQUEST_DELIM = "\r\n\r\n";
+
+    std::vector<uint8_t> _decodeBase64(const std::string& encoded);
+
+    std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64_encoded);
+
+    bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
+    nlohmann::json _receiveJsonResponse();
+
     // Network communication
     void _sendCommand(const std::vector<uint8_t>& command);
     std::optional<std::vector<uint8_t>> _receiveData();
 
     // Protocol handling
     std::vector<uint8_t> _createConfigCommand(const SensorConfig& config);
-    std::optional<sensor_msgs::msg::LaserScan> _parseLaserScanData(const std::vector<uint8_t>& data);
-    std::optional<sensor_msgs::msg::Imu> _parseImuData(const std::vector<uint8_t>& data);
+    // std::optional<sensor_msgs::msg::LaserScan> _parseLaserScanData(const std::vector<uint8_t>& data);
+    // std::optional<sensor_msgs::msg::Imu> _parseImuData(const std::vector<uint8_t>& data);
 
     // ROS setup
     void _initializePublishers();
