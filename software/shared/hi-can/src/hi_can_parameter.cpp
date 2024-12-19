@@ -169,7 +169,7 @@ namespace hi_can::parameters::drive::vesc
                     return _setRpm.serializeData();
                 },
                 .interval = transmissionInterval,
-                .shouldTransmitImmediately = true,
+                .shouldTransmitImmediately = false,
             });
 
         _callbacks.emplace_back(
