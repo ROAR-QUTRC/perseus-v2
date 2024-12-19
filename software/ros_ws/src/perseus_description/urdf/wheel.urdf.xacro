@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot name="wheel" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="wheel" params="prefix side end">
+  <xacro:macro name="wheel" params="prefix:=^ side:=^ end:=^">
     <link name="${prefix}${end}_${side}_wheel">
       <inertial>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
