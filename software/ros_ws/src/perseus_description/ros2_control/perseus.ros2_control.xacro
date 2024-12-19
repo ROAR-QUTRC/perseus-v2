@@ -13,30 +13,21 @@
           <param name="calculate_dynamics">true</param>
         </xacro:if>
       </hardware>
-      <joint name="${prefix}front_left_wheel_joint">
-        <param name="id">0</param>
-        <command_interface name="velocity"/>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-      </joint>
-      <joint name="${prefix}front_right_wheel_joint">
-        <param name="id">1</param>
-        <command_interface name="velocity"/>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-      </joint>
-      <joint name="${prefix}rear_left_wheel_joint">
-        <param name="id">2</param>
-        <command_interface name="velocity"/>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-      </joint>
-      <joint name="${prefix}rear_right_wheel_joint">
-        <param name="id">3</param>
-        <command_interface name="velocity"/>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-      </joint>
+
+      <xacro:macro name="ros2_control_joint" params="name id">
+        <joint name="${prefix}${name}_wheel_joint">
+          <param name="id">${id}</param>
+          <command_interface name="velocity"/>
+          <state_interface name="position"/>
+          <state_interface name="velocity"/>
+          <state_interface name="current"/>
+          <state_interface name="temperature"/>
+        </joint>
+      </xacro:macro>
+      <xacro:ros2_control_joint name="front_left" id="0"/>
+      <xacro:ros2_control_joint name="front_right" id="1"/>
+      <xacro:ros2_control_joint name="rear_left" id="2"/>
+      <xacro:ros2_control_joint name="rear_right" id="3"/>
     </ros2_control>
   </xacro:macro>
 </robot>
