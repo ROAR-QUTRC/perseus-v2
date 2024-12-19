@@ -135,7 +135,7 @@ Specific useful packages/package sets are documented below.
 
 All ROS packages for a specific distro.
 Packages which contain spaces or underscores in their name have those replaced with dashes.
-The packages for the project's target distro will also be modified to add all the ROS2 packages in this workspace - for example, if targeting ROS2 Humble, the autonomy package would be accessible under `pkgs.rosPackages.humble.autonomy`.
+The packages for the project's target distro will also be modified to add all the ROS2 packages in this workspace - for example, if targeting ROS2 Jazzy, the autonomy package would be accessible under `pkgs.rosPackages.jazzy.autonomy`.
 
 :::{example}
 To use `ros2_control` from ROS Rolling Ridley: `pkgs.rosPackages.rolling.ros2-control`.
