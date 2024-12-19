@@ -2,7 +2,7 @@
 <robot name="motor_wheel" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:include filename="$(find perseus_description)/urdf/wheel.urdf.xacro"/>
 
-  <xacro:macro name="motor_wheel" params="prefix side end *origin">
+  <xacro:macro name="motor_wheel" params="prefix:=^ side:=^ end *origin">
     <link name="${prefix}${end}_${side}_motor">
       <inertial>
         <!-- moving origin has no perceivable impact-->
@@ -47,6 +47,6 @@
       </actuator>
     </transmission> -->
 
-    <xacro:wheel prefix="${prefix}" side="${side}" end="${end}"/>
+    <xacro:wheel />
   </xacro:macro>
 </robot>

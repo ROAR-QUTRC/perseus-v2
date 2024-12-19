@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="chassis" xmlns:xacro="http://ros.org/wiki/xacro">
   <!-- Contains base rover chassis and balance bar -->
-  <xacro:macro name="chassis" params="prefix">
+  <xacro:macro name="chassis" params="prefix:=^">
     <!-- CHASSIS -->
     <link name="${prefix}chassis">
       <inertial>
@@ -15,7 +15,6 @@
         <geometry>
           <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
         </geometry>
-        <!-- <material name="silver"/> -->
       </visual>
       
       <collision>
@@ -41,7 +40,6 @@
         <geometry>
           <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
         </geometry>
-        <!-- <material name="blue"/> -->
       </visual>
       
       <collision>
@@ -71,13 +69,11 @@
         <geometry>
           <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
         </geometry>
-        <!-- <material name="red"/> -->
       </visual>
       
       <collision>
         <origin xyz="0.0 0.0 -0.01" rpy="0.0 0.0 0.0"/>
         <geometry>
-          <!-- close enough-->
           <box size="0.5 0.05 0.03" />
           <!--mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/-->
         </geometry>

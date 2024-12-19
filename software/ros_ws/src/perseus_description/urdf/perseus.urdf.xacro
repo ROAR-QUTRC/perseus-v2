@@ -9,7 +9,7 @@
     <link name="${prefix}base_link"/>
 
     <!-- CHASSIS -->
-    <xacro:chassis prefix="${prefix}"/>
+    <xacro:chassis />
     <joint name="chassis_joint" type="fixed">
       <origin xyz="0.21 0.0 0.35" rpy="0.0 0.0 -${pi/2}"/>
       <parent link="${prefix}base_link"/>
@@ -18,11 +18,11 @@
 
     <!-- ROCKER ARMS -->
     <!-- LEFT -->
-    <xacro:rocker prefix="${prefix}" side="left">
+    <xacro:rocker side="left">
       <origin xyz="-0.275 -0.075 0.05" rpy="0.0 0.0 ${-pi/2}"/>
     </xacro:rocker>
     <!-- RIGHT -->
-    <xacro:rocker prefix="${prefix}" side="right">
+    <xacro:rocker side="right">
       <origin xyz="0.275 -0.075 0.05" rpy="0.0 0.0 ${-pi/2}"/>
     </xacro:rocker>
   </xacro:macro>
