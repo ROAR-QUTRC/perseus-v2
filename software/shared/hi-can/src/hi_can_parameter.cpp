@@ -250,6 +250,11 @@ namespace hi_can::parameters::legacy::drive::motors
         int16_t realSpeed = 0;
         int16_t realCurrent = 0;
     };
+    struct raw_limits_t
+    {
+        int16_t maxCurrent = 0;
+        int16_t rampSpeed = 0;
+    };
 #pragma pack(pop)
 
     void speed_t::deserializeData(const std::vector<uint8_t>& serializedData)
@@ -257,14 +262,14 @@ namespace hi_can::parameters::legacy::drive::motors
         DESERIALIZE_BOILERPLATE(raw_speed_t, rawData, serializedData);
         enabled = rawData.enabled;
         direction = rawData.direction;
-        speed = (rawData.speed);
+        speed = rawData.speed;
     }
     std::vector<uint8_t> speed_t::serializeData()
     {
         SERIALIZE_BOILERPLATE(raw_speed_t, rawData, dataBuf);
         rawData.enabled = enabled;
         rawData.direction = direction;
-        rawData.speed = (speed);
+        rawData.speed = speed;
         std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
         return dataBuf;
     }
@@ -272,15 +277,29 @@ namespace hi_can::parameters::legacy::drive::motors
     {
         DESERIALIZE_BOILERPLATE(raw_status_t, rawData, serializedData);
         ready = rawData.ready;
-        realSpeed = (rawData.realSpeed);
-        realCurrent = (rawData.realCurrent);
+        realSpeed = rawData.realSpeed;
+        realCurrent = rawData.realCurrent;
     }
     std::vector<uint8_t> status_t::serializeData()
     {
         SERIALIZE_BOILERPLATE(raw_status_t, rawData, dataBuf);
         rawData.ready = ready;
-        rawData.realSpeed = (realSpeed);
-        rawData.realCurrent = (realCurrent);
+        rawData.realSpeed = realSpeed;
+        rawData.realCurrent = realCurrent;
+        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
+        return dataBuf;
+    }
+    void limits_t::deserializeData(const std::vector<uint8_t>& serializedData)
+    {
+        DESERIALIZE_BOILERPLATE(raw_limits_t, rawData, serializedData);
+        maxCurrent = rawData.maxCurrent;
+        rampSpeed = rawData.rampSpeed;
+    }
+    std::vector<uint8_t> limits_t::serializeData()
+    {
+        SERIALIZE_BOILERPLATE(raw_limits_t, rawData, dataBuf);
+        rawData.maxCurrent = maxCurrent;
+        rawData.rampSpeed = rampSpeed;
         std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
         return dataBuf;
     }
@@ -290,14 +309,11 @@ namespace hi_can::parameters::legacy::drive::motors
     {
         using namespace hi_can::addressing::legacy;
         using namespace hi_can::addressing::legacy::drive::motors;
+
         const auto speedAddress = static_cast<flagged_address_t>(
             address_t(deviceAddress,
                       static_cast<uint8_t>(mcb::groups::ESC),
                       static_cast<uint8_t>(esc::parameter::SPEED)));
-        const auto statusAddress = static_cast<flagged_address_t>(
-            address_t(deviceAddress,
-                      static_cast<uint8_t>(mcb::groups::ESC),
-                      static_cast<uint8_t>(esc::parameter::STATUS)));
 
         _transmissions.emplace_back(
             speedAddress,
@@ -307,7 +323,7 @@ namespace hi_can::parameters::legacy::drive::motors
                     return _speed.serializeData();
                 },
                 .interval = 100ms,
-                .shouldTransmitImmediately = true,
+                .shouldTransmitImmediately = false,
             });
 
         _callbacks.emplace_back(
@@ -322,12 +338,44 @@ namespace hi_can::parameters::legacy::drive::motors
             });
         _callbacks.emplace_back(
             filter_t{
-                .address = statusAddress,
+                .address = static_cast<flagged_address_t>(
+                    address_t(deviceAddress,
+                              static_cast<uint8_t>(mcb::groups::ESC),
+                              static_cast<uint8_t>(esc::parameter::STATUS))),
             },
             PacketManager::callback_config_t{
                 .dataCallback = [this](const Packet& packet)
                 {
                     _status.deserializeData(packet.getData());
+                },
+            });
+        _callbacks.emplace_back(
+            filter_t{
+                .address = static_cast<flagged_address_t>(
+                    address_t(deviceAddress,
+                              static_cast<uint8_t>(mcb::groups::ESC),
+                              static_cast<uint8_t>(esc::parameter::POSITION))),
+            },
+            PacketManager::callback_config_t{
+                .dataCallback = [this](const Packet& packet)
+                {
+                    DESERIALIZE_BOILERPLATE(int64_t, rawData, packet.getData());
+                    _position = rawData;
+                },
+            });
+        _callbacks.emplace_back(
+            filter_t{
+                .address = static_cast<flagged_address_t>(
+                    address_t(deviceAddress,
+                              static_cast<uint8_t>(mcb::groups::ESC),
+                              static_cast<uint8_t>(esc::parameter::LIMITS))),
+            },
+            PacketManager::callback_config_t{
+                .dataCallback = [this](const Packet& packet)
+                {
+                    if (!_limits)
+                        _limits = limits_t();
+                    _limits->deserializeData(packet.getData());
                 },
             });
     }
@@ -336,5 +384,21 @@ namespace hi_can::parameters::legacy::drive::motors
     {
         _speed = group._speed;
         _status = group._status;
+    }
+
+    std::vector<Packet> EscParameterGroup::getStartupTransmissions() const
+    {
+        using namespace hi_can::addressing::legacy;
+        using namespace hi_can::addressing::legacy::drive::motors;
+
+        std::vector<Packet> packets;
+        packets.emplace_back(
+            flagged_address_t{
+                address_t(_deviceAddress,
+                          static_cast<uint8_t>(mcb::groups::ESC),
+                          static_cast<uint8_t>(esc::parameter::LIMITS)),
+                true,
+            });
+        return packets;
     }
 }

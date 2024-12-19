@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -261,6 +262,14 @@ namespace hi_can::parameters
                     void deserializeData(const std::vector<uint8_t>& serializedData) override;
                     std::vector<uint8_t> serializeData() override;
                 };
+                struct limits_t : public BidirectionalSerializable
+                {
+                    int16_t maxCurrent = 0;
+                    int16_t rampSpeed = 0;
+
+                    void deserializeData(const std::vector<uint8_t>& serializedData) override;
+                    std::vector<uint8_t> serializeData() override;
+                };
                 class EscParameterGroup : public ParameterGroup
                 {
                 public:
@@ -268,13 +277,19 @@ namespace hi_can::parameters
 
                     EscParameterGroup(const EscParameterGroup&);
 
+                    std::vector<Packet> getStartupTransmissions() const override;
+
                     auto& getSpeed() { return _speed; }
                     auto& getStatus() { return _status; }
+                    auto& getPosition() { return _position; }
+                    auto& getLimits() { return _position; }
 
                 private:
                     addressing::legacy::address_t _deviceAddress;
                     speed_t _speed{};
                     status_t _status{};
+                    int64_t _position{};
+                    std::optional<limits_t> _limits{};
                 };
             }
         }
