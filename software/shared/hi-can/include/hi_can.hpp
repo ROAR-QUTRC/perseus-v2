@@ -4,6 +4,7 @@
 
 #include "hi_can_address.hpp"
 #include "hi_can_packet.hpp"
+#include "hi_can_parameter.hpp"
 
 /// @brief Contains all classes, functions, and types related to implementing Hi-CAN
 namespace hi_can

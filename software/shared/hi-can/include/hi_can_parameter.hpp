@@ -100,4 +100,66 @@ namespace hi_can::parameters
     {
 
     }
+
+    namespace legacy
+    {
+        namespace drive
+        {
+            namespace motors
+            {
+                enum class motor_direction : int8_t
+                {
+                    REVERSE = -1,
+                    STOP = 0,
+                    FORWARD = 1,
+                };
+                struct speed_t : public BidirectionalSerializable
+                {
+                    bool enabled = false;
+                    motor_direction direction = motor_direction::STOP;
+                    int16_t speed = 0;
+
+                    void deserializeData(const std::vector<uint8_t>& serializedData) override;
+                    std::vector<uint8_t> serializeData() override;
+                };
+                struct status_t : public BidirectionalSerializable
+                {
+                    bool ready = false;
+                    int16_t realSpeed = 0;
+                    int16_t realCurrent = 0;
+
+                    void deserializeData(const std::vector<uint8_t>& serializedData) override;
+                    std::vector<uint8_t> serializeData() override;
+                };
+                class EscParameterGroup : public ParameterGroup
+                {
+                public:
+                    EscParameterGroup(const addressing::legacy::address_t& deviceAddress);
+
+                    EscParameterGroup(const EscParameterGroup&);
+
+                    auto& getSpeed() { return _speed; }
+                    auto& getStatus() { return _status; }
+
+                private:
+                    addressing::legacy::address_t _deviceAddress;
+                    speed_t _speed{};
+                    status_t _status{};
+                };
+            }
+        }
+        namespace power
+        {
+            namespace control
+            {
+                namespace contactor
+                {
+
+                }
+                namespace power_bus
+                {
+                }
+            }
+        }
+    }
 }
