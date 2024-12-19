@@ -1,5 +1,7 @@
 #pragma once
 
+#include <netinet/in.h>
+
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -63,8 +65,136 @@ namespace hi_can::parameters
     {
         namespace vesc
         {
-            struct type_1_status
+            template <double scalingFactor>
+            struct scaled_int32_t : public BidirectionalSerializable
             {
+                double value = 0;
+
+                void deserializeData(const std::vector<uint8_t>& serializedData) override
+                {
+                    int32_t rawData;
+                    if (serializedData.size() != sizeof(rawData))
+                        throw std::invalid_argument("Data size does not match");
+                    std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(&rawData));
+                    value = ntohl(rawData) / scalingFactor;
+                }
+                std::vector<uint8_t> serializeData() override
+                {
+                    int32_t rawData = htonl(static_cast<int32_t>(round(value * scalingFactor)));
+                    std::vector<uint8_t> dataBuf;
+                    dataBuf.resize(sizeof(rawData));
+                    std::copy_n(reinterpret_cast<uint8_t* const>(&rawData), sizeof(rawData), dataBuf.begin());
+                    return dataBuf;
+                }
+            };
+            // COMMAND STRUCTS
+            struct set_duty_t : public scaled_int32_t<100000.0>
+            {
+            };
+            struct set_current_t : public scaled_int32_t<1000.0>
+            {
+            };
+            struct set_brake_t : public scaled_int32_t<1000.0>
+            {
+            };
+            struct set_rpm_t : public scaled_int32_t<1.0>
+            {
+            };
+            struct set_pos_t : public scaled_int32_t<1000000.0>
+            {
+            };
+            struct set_current_rel_t : public scaled_int32_t<100000.0>
+            {
+            };
+            struct set_current_brake_rel_t : public scaled_int32_t<100000.0>
+            {
+            };
+            struct set_current_handbrake_t : public scaled_int32_t<1000.0>
+            {
+            };
+            struct set_current_handbrake_rel_t : public scaled_int32_t<100000.0>
+            {
+            };
+            // STATUS STRUCTS
+            struct status_t : public BidirectionalSerializable
+            {
+                double rpm = 0;
+                double current = 0;
+                double dutyCycle = 0;
+
+                void deserializeData(const std::vector<uint8_t>& serializedData) override;
+                std::vector<uint8_t> serializeData() override;
+            };
+            struct status_2_t : public BidirectionalSerializable
+            {
+                double ah = 0;
+                double ahCharge = 0;
+
+                void deserializeData(const std::vector<uint8_t>& serializedData) override;
+                std::vector<uint8_t> serializeData() override;
+            };
+            struct status_3_t : public BidirectionalSerializable
+            {
+                double wh = 0;
+                double whCharge = 0;
+
+                void deserializeData(const std::vector<uint8_t>& serializedData) override;
+                std::vector<uint8_t> serializeData() override;
+            };
+            struct status_4_t : public BidirectionalSerializable
+            {
+                double tempFet = 0;
+                double tempMotor = 0;
+                double currentIn = 0;
+                double pidPos = 0;
+
+                void deserializeData(const std::vector<uint8_t>& serializedData) override;
+                std::vector<uint8_t> serializeData() override;
+            };
+            struct status_5_t : public BidirectionalSerializable
+            {
+                double tachometer = 0;
+                double voltsIn = 0;
+
+                void deserializeData(const std::vector<uint8_t>& serializedData) override;
+                std::vector<uint8_t> serializeData() override;
+            };
+            struct status_6_t : public BidirectionalSerializable
+            {
+                double adc1 = 0;
+                double adc2 = 0;
+                double adc3 = 0;
+                double ppm = 0;
+
+                void deserializeData(const std::vector<uint8_t>& serializedData) override;
+                std::vector<uint8_t> serializeData() override;
+            };
+
+            class VescParameterGroup : public ParameterGroup
+            {
+            public:
+                VescParameterGroup(uint8_t vescId, std::chrono::steady_clock::duration transmissionInterval = std::chrono::steady_clock::duration::zero());
+
+                auto& getStatus() { return _status; }
+                auto& getStatus2() { return _status2; }
+                auto& getStatus3() { return _status3; }
+                auto& getStatus4() { return _status4; }
+                auto& getStatus5() { return _status5; }
+                auto& getStatus6() { return _status6; }
+
+                auto& getSetRpm() { return _setRpm; }
+
+            private:
+                uint8_t _vescId = 0;
+
+                set_rpm_t _setRpm;
+
+                status_t _status;
+                status_2_t _status2;
+                status_3_t _status3;
+                status_4_t _status4;
+                status_5_t _status5;
+                status_6_t _status6;
             };
         }
     }
