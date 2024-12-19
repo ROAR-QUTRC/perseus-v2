@@ -125,7 +125,7 @@ myst_enable_extensions = [
 myst_heading_anchors = 4  # auto-generated heading anchors (slugs)
 suppress_warnings = ["myst.strikethrough"]
 
-ros_distro = os.environ.get("ROS_DISTRO", "humble")
+ros_distro = os.environ.get("ROS_DISTRO", "jazzy")
 # intersphinx config
 # this is a good guide: https://docs.readthedocs.io/en/stable/guides/intersphinx.html
 intersphinx_mapping = {

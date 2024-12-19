@@ -1,6 +1,6 @@
 let
   # --- CONFIGURATION ---
-  rosDistro = "humble";
+  rosDistro = "jazzy";
 
   # --- FLAKE INPUTS ---
   lock = builtins.fromJSON (builtins.readFile ./../flake.lock);

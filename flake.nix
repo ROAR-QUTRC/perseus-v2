@@ -1,7 +1,6 @@
 {
   inputs = {
     # ros inputs
-    # TODO: Currently can't be updated till after issue #540 is resolved
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay";
     nixpkgs.follows = "nix-ros-overlay/nixpkgs"; # IMPORTANT!!!
     nix-ros-workspace = {
@@ -51,7 +50,7 @@
       system:
       let
         # --- INPUT PARAMETERS ---
-        rosDistro = "humble";
+        rosDistro = "jazzy";
 
         productionDomainId = 42;
         devDomainId = 51;
