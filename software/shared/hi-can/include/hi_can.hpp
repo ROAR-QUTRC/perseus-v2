@@ -1,8 +1,5 @@
 #pragma once
 
-#include <chrono>
-#include <functional>
-#include <map>
 #include <set>
 
 #include "hi_can_address.hpp"
@@ -11,10 +8,6 @@
 /// @brief Contains all classes, functions, and types related to implementing Hi-CAN
 namespace hi_can
 {
-    // we use this type a lot so a typedef is convenient
-    /// @brief A callback function which takes a @ref Packet as an argument and returns nothing
-    typedef std::function<void(const hi_can::Packet&)> packet_callback_t;
-
     /// @brief Interface for sending and receiving packets on the CAN bus
     class CanInterface
     {
@@ -88,117 +81,5 @@ namespace hi_can
     private:
         /// @brief The interface to use for I/O
         const std::shared_ptr<CanInterface> _interface;
-    };
-
-    /// @brief Manages automatically sending and receiving packets on the CAN bus with timeouts and callbacks
-    class PacketManager
-    {
-    public:
-        /// @brief Configuration for a callback
-        struct callback_config_t
-        {
-            /// @brief The callback to be called when data is received
-            packet_callback_t dataCallback = nullptr;
-            /// @brief The callback to be called when a timeout occurs
-            std::function<void(void)> timeoutCallback = nullptr;
-            /// @brief The callback to be called when data is received after a timeout
-            packet_callback_t timeoutRecoveryCallback = nullptr;
-            /// @brief The timeout duration. Zero means no timeout
-            std::chrono::steady_clock::duration timeout = std::chrono::steady_clock::duration::zero();
-        };
-        /// @brief Configuration for scheduling a packet transmission
-        struct transmit_config_t
-        {
-            /// @brief The packet to transmit
-            Packet packet;
-            /// @brief The interval between transmissions - zero means transmit once, regardless of @ref shouldTransmitImmediately
-            std::chrono::steady_clock::duration interval = std::chrono::steady_clock::duration::zero();
-            /// @brief Whether or not to transmit the packet immediately. If false, will transmit after the interval
-            bool shouldTransmitImmediately = false;
-        };
-
-        /// @brief Constructs a new @ref PacketManager using the given interface for I/O
-        /// @param interface The interface to use for I/O
-        PacketManager(FilteredCanInterface& interface);
-
-        /// @brief Handles all data reception and transmission - just calls @ref handleReceive and @ref handleTransmit
-        void handle()
-        {
-            handleReceive();
-            handleTransmit();
-        }
-        /// @brief Handles all data reception and associated callbacks
-        void handleReceive();
-        /// @brief Handles all data transmissions
-        void handleTransmit();
-
-        /// @brief Sets a data receive callback which will be called for packets received on the interface matching the filter
-        /// @param filter The filter to match packets against
-        /// @param config The configuration for the callback
-        /// @note The filter will be added to the interface's receive filter list
-        void setCallback(const addressing::filter_t& filter, const callback_config_t& config);
-        /// @brief Get the callback configuration for a specific filter
-        /// @param filter The filter to get the configuration for
-        /// @return The callback configuration if found, otherwise std::nullopt
-        std::optional<callback_config_t> getCallback(const addressing::filter_t& filter);
-        /// @brief Remove a callback for a specific filter
-        /// @param filter The filter to remove the callback for
-        /// @note The filter will be removed from the interface's receive filter list
-        void removeCallback(const addressing::filter_t& filter);
-
-        /// @brief Set a transmit configuration
-        /// @param config The configuration to set
-        void setTransmitConfig(const transmit_config_t& config);
-        /// @brief Overwrite the transmit data for a transmit configuration
-        /// @param packet The packet to transmit
-        /// @note If there is no transmit configuration for the packet's address, nothing will happen
-        void setTransmitData(const Packet& packet);
-        /// @brief Set the transmission interval for an address
-        /// @param address The address to set the interval for
-        /// @param interval New transmission interval
-        /// @note If there is no transmit configuration for the address, nothing will happen
-        void setTransmitInterval(const addressing::flagged_address_t& address, const std::chrono::steady_clock::duration& interval);
-        /// @brief Get the transmit configuration for an address
-        /// @param address The address to get the configuration for
-        /// @return The transmit configuration if found, otherwise std::nullopt
-        std::optional<transmit_config_t> getTransmitConfig(const addressing::flagged_address_t& address);
-        /// @brief Remove a transmit configuration
-        /// @param address The address to remove the configuration for
-        void removeTransmit(const addressing::flagged_address_t& address);
-
-        /// @brief Get the underlying interface used for I/O
-        /// @return The interface
-        FilteredCanInterface& getInterface() const { return _interface; }
-
-    private:
-        /// @brief Struct storing all the data we need to track to handle RX callbacks
-        struct callback_data_t
-        {
-            /// @brief The callback config
-            callback_config_t config{};
-            /// @brief The last packet received
-            Packet lastPacket{};
-            /// @brief Whether or not it's currently timed out
-            bool hasTimedOut = false;
-            /// @brief The last time a packet was received
-            std::chrono::steady_clock::time_point lastReceived{};
-        };
-        /// @brief Struct storing all the data we need to track to handle transmissions
-        struct transmit_data_t
-        {
-            /// @brief The transmit configuration
-            transmit_config_t config{};
-            /// @brief The last time the data was transmitted
-            std::chrono::steady_clock::time_point lastTransmitted{};
-        };
-        /// @brief Handle an incoming packet and call the correct callbacks
-        /// @param packet The packet to handle
-        void _handleReceivedPacket(const Packet& packet);
-        /// @brief The underlying I/O interface
-        FilteredCanInterface& _interface;
-        /// @brief Map of filters to their callback data
-        std::map<addressing::filter_t, callback_data_t> _callbacks;
-        /// @brief Map of addresses to their transmit data
-        std::map<addressing::flagged_address_t, transmit_data_t> _transmissions;
     };
 };
