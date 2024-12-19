@@ -5,6 +5,10 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
     perseus_base_controller:
       type: diff_drive_controller/DiffDriveController
+joint_state_broadcaster:
+  ros__parameters:
+    map_interface_to_joint_state:
+      effort: current
 perseus_base_controller:
   ros__parameters:
     # Hardware configuration
