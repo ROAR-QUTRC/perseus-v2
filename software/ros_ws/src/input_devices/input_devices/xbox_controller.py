@@ -37,22 +37,22 @@ class XboxControllerNode(Node):
                 twist.angular.z = sideways_input
 
         # Display Xbox controller axes data
-        self.get_logger().info("Xbox Controller Axes:")
+        self.get_logger().debug("Xbox Controller Axes:")
         for i, axis in enumerate(joy_msg.axes):
-            self.get_logger().info(f"  Axis {i}: {axis:.2f}")
+            self.get_logger().debug(f"  Axis {i}: {axis:.2f}")
 
         # Display Twist output
-        self.get_logger().info("Twist Output:")
-        self.get_logger().info(f"  Linear X: {twist.linear.x:.2f} m/s")
-        self.get_logger().info(f"  Angular Z: {twist.angular.z:.2f} rad/s")
-        self.get_logger().info(
+        self.get_logger().debug("Twist Output:")
+        self.get_logger().debug(f"  Linear X: {twist.linear.x:.2f} m/s")
+        self.get_logger().debug(f"  Angular Z: {twist.angular.z:.2f} rad/s")
+        self.get_logger().debug(
             f'  Dead Man\'s Switch: {"Engaged" if dead_man_switch else "Disengaged"}'
         )
-        self.get_logger().info(
+        self.get_logger().debug(
             f'  Direction Reversed: {"Yes" if direction_reversed else "No"}'
         )
 
-        self.get_logger().info("------------------------")
+        self.get_logger().debug("------------------------")
 
         self.publisher_.publish(twist)
 
