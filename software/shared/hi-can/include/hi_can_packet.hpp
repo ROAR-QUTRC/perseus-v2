@@ -175,15 +175,19 @@ namespace hi_can
         PacketManager(FilteredCanInterface& interface);
 
         /// @brief Handles all data reception and transmission - just calls @ref handleReceive and @ref handleTransmit
-        void handle()
+        /// @param shouldBlock Whether or not to block until a packet is received
+        /// @param shouldForceTransmission Force transmission of all packets, even if they are not due
+        void handle(bool shouldBlock = false, bool shouldForceTransmission = false)
         {
-            handleReceive();
-            handleTransmit();
+            handleReceive(shouldBlock);
+            handleTransmit(shouldForceTransmission);
         }
         /// @brief Handles all data reception and associated callbacks
-        void handleReceive();
+        /// @param shouldBlock Whether or not to block until a packet is received
+        void handleReceive(bool shouldBlock = false);
         /// @brief Handles all data transmissions
-        void handleTransmit();
+        /// @param shouldForceTransmission Force transmission of all packets, even if they are not due
+        void handleTransmit(bool shouldForceTransmission = false);
 
         /// @brief Add a parameter group to the packet manager
         /// @param group Group to add

@@ -52,9 +52,9 @@ PacketManager::PacketManager(FilteredCanInterface& interface)
                                  { this->_handleReceivedPacket(packet); });
 }
 
-void PacketManager::handleReceive()
+void PacketManager::handleReceive(bool shouldBlock)
 {
-    _interface.receiveAll(false);
+    _interface.receiveAll(shouldBlock);
 
     const auto now = steady_clock::now();
     for (auto& [key, value] : _callbacks)
@@ -68,13 +68,13 @@ void PacketManager::handleReceive()
     }
 }
 
-void PacketManager::handleTransmit()
+void PacketManager::handleTransmit(bool shouldForceTransmission)
 {
     const auto now = steady_clock::now();
     for (auto& [key, value] : _transmissions)
     {
         const auto elapsed = now - value.lastTransmitted;
-        if (elapsed > value.config.interval)
+        if ((elapsed > value.config.interval) || shouldForceTransmission)
         {
             value.lastTransmitted = now;
             getInterface().transmit(Packet(key, value.config.generator()));
