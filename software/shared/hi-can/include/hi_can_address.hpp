@@ -1,5 +1,6 @@
 #pragma once
 
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 
@@ -64,6 +65,7 @@ namespace hi_can
         /// @brief An address which can be converted to a raw address - all addressing in the Hi-CAN library should inherit from this if possible
         struct structured_address_t
         {
+            structured_address_t() = default;
             /// @brief Convert to a raw address
             /// @return The raw address
             virtual constexpr operator raw_address_t() const = 0;
@@ -168,6 +170,15 @@ namespace hi_can
                        (!shouldMatchRtr || (this->address.isRtr == (address.isRtr))) &&
                        (!shouldMatchError || (this->address.isError == (address.isError)));
             }
+
+            constexpr raw_address_t getMaskedAddress() const
+            {
+                return static_cast<raw_address_t>(address) & mask;
+            }
+            constexpr raw_address_t getUnmaskedAddress() const
+            {
+                return static_cast<raw_address_t>(address) & (~mask);
+            }
         };
 
         /// @brief A standard address for a Hi-CAN compliant device
@@ -190,6 +201,23 @@ namespace hi_can
                                       DEVICE_ADDRESS_BITS -
                                       GROUP_ADDRESS_BITS -
                                       PARAM_ADDRESS_BITS) = 0;
+
+            standard_address_t(const uint8_t& system = 0x00,
+                               const uint8_t& subsystem = 0x00,
+                               const uint8_t& device = 0x00,
+                               const uint8_t& group = 0x00,
+                               const uint8_t& parameter = 0x00)
+                : system(system),
+                  subsystem(subsystem),
+                  device(device),
+                  group(group),
+                  parameter(parameter) {}
+            standard_address_t(standard_address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
+                : system(deviceAddress.system),
+                  subsystem(deviceAddress.subsystem),
+                  device(deviceAddress.device),
+                  group(group),
+                  parameter(parameter) {}
 
             constexpr operator raw_address_t() const override
             {
