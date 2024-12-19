@@ -365,5 +365,132 @@ namespace hi_can
             /// @brief The space resources system ID
             constexpr uint8_t SYSTEM_ID = 0x05;
         }
+        // legacy addresses for old hardware
+        /// @brief Namespace containing all addresses in the legacy system
+        namespace legacy
+        {
+            struct address_t : public structured_address_t
+            {
+                /// @brief The system ID
+                uint8_t system : 5;
+                /// @brief The subsystem ID
+                uint8_t subsystem : 4;
+                /// @brief The device ID
+                uint8_t device : 8;
+                /// @brief The parameter group ID
+                uint8_t group : 8;
+                /// @brief The parameter ID
+                uint8_t parameter : 4;
+                /// @brief Padding to fill out the rest of 32 bits so it's aligned
+                const uint8_t _padding : (32 - 5 - 4 - 8 - 8 - 4) = 0;
+
+                address_t(const uint8_t& system = 0x00,
+                          const uint8_t& subsystem = 0x00,
+                          const uint8_t& device = 0x00,
+                          const uint8_t& group = 0x00,
+                          const uint8_t& parameter = 0x00)
+                    : system(system),
+                      subsystem(subsystem),
+                      device(device),
+                      group(group),
+                      parameter(parameter) {}
+                address_t(address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
+                    : system(deviceAddress.system),
+                      subsystem(deviceAddress.subsystem),
+                      device(deviceAddress.device),
+                      group(group),
+                      parameter(parameter) {}
+
+                constexpr operator raw_address_t() const override
+                {
+                    return (static_cast<raw_address_t>(system) << 24) |
+                           (static_cast<raw_address_t>(subsystem) << 20) |
+                           (static_cast<raw_address_t>(device) << 12) |
+                           (static_cast<raw_address_t>(group) << 4) |
+                           (static_cast<raw_address_t>(parameter) << 0);
+                }
+            };
+            // SYSTEMS
+            namespace power
+            {
+                constexpr uint8_t SYSTEM_ID = 0x01;
+                namespace control
+                {
+                    constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                    enum class device
+                    {
+                        ROVER_CONTROL_BOARD = 0x00,
+                    };
+                    // DEVICES
+                    namespace rcb
+                    {
+                        enum class groups
+                        {
+                            STATUS = 0x00,
+                            CONTACTOR = 0x01,
+                            COMPUTE_BUS = 0x02,
+                            DRIVE_BUS = 0x03,
+                            AUX_BUS = 0x04,
+                            SPARE_BUS = 0x05,
+                        };
+                    }
+                    // PARAMETER GROUPS
+                    namespace contactor
+                    {
+                        enum class parameter
+                        {
+                            SHUTDOWN = 0x00
+                        };
+                    }
+                    namespace power_bus
+                    {
+                        enum class parameter
+                        {
+                            CONTROL_IMMEDIATE = 0x00,
+                            CONTROL_SCHEDULED = 0x01,
+                            CURRENT_LIMIT = 0x02,
+                            POWER_STATUS = 0x03,
+                        };
+                    }
+                }
+            }
+            namespace drive
+            {
+                constexpr uint8_t SYSTEM_ID = 0x02;
+                namespace motors
+                {
+                    constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                    enum class device
+                    {
+                        FRONT_LEFT_MOTOR = 0x00,
+                        FRONT_RIGHT_MOTOR = 0x01,
+                        REAR_LEFT_MOTOR = 0x02,
+                        REAR_RIGHT_MOTOR = 0x03,
+                    };
+                    // DEVICES
+                    namespace mcb
+                    {
+                        enum class groups
+                        {
+                            STATUS = 0x00,
+                            ESC = 0x01,
+                        };
+                    }
+                    // PARAMETER GROUPS
+                    namespace esc
+                    {
+                        constexpr uint8_t esc = 0x01;
+                        enum class parameter
+                        {
+                            SPEED = 0x00,
+                            LIMITS = 0x01,
+                            STATUS = 0x02,
+                            POSITION = 0x03,
+                        };
+                    }
+                }
+            }
+        }
+        }
     }
 }
