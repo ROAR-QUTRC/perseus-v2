@@ -259,19 +259,26 @@ namespace hi_can
                     SET_CURRENT_BRAKE = 2,
                     SET_RPM = 3,
                     SET_POS = 4,
+                    STATUS = 9,
                     SET_CURRENT_REL = 10,
                     SET_CURRENT_BRAKE_REL = 11,
                     SET_CURRENT_HANDBRAKE = 12,
                     SET_CURRENT_HANDBRAKE_REL = 13,
+                    STATUS_2 = 14,
+                    STATUS_3 = 15,
+                    STATUS_4 = 16,
+                    STATUS_5 = 27,
+                    STATUS_6 = 28,
                 };
 
                 /// @brief VESC command packet address
                 struct address_t : public structured_address_t
                 {
+                    address_t(const uint8_t& vesc, const command_id& command) : vesc(vesc), command(command) {}
+                    /// @brief The VESC device ID
+                    uint8_t vesc = static_cast<uint8_t>(device::FRONT_LEFT);
                     /// @brief The VESC command ID
                     command_id command = command_id::SET_DUTY;
-                    /// @brief The VESC device ID
-                    device vesc = device::FRONT_LEFT;
 
                     constexpr operator raw_address_t() const override
                     {
