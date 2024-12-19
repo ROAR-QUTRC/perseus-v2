@@ -11,6 +11,9 @@ class XboxControllerNode(Node):
         self.subscription = self.create_subscription(Joy, "joy", self.joy_callback, 10)
         self.subscription  # prevent unused variable warning
 
+        self.TRANSLATE_SCALING = 0.25
+        self.ROTATE_SCALING = 0.5
+
     def joy_callback(self, joy_msg):
         twist = Twist()
 
@@ -19,16 +22,14 @@ class XboxControllerNode(Node):
         sideways_input = 0.0
         direction_reversed = False
 
-        # Check if Axis 5 (right trigger) is fully pressed (-1.0)
-        dead_man_switch = joy_msg.axes[5] == -1.0
+        # Check if Axis 5 (right trigger) is fully pressed (close to -1.0)
+        dead_man_switch = joy_msg.axes[5] <= -0.95
 
         if dead_man_switch:
             # Axis 1 (left stick Y-axis) for forward/backward movement
-            forward_input = joy_msg.axes[1]
-            forward_input = forward_input / 10  # scale down factor
-            twist.linear.x = forward_input
-            # Axis 2 (left stick X-axis) for left/right movement
-            sideways_input = joy_msg.axes[2]
+            twist.linear.x = joy_msg.axes[1] * self.TRANSLATE_SCALING
+            # Axis 2 (right stick X-axis) for left/right movement
+            sideways_input = joy_msg.axes[2] * self.ROTATE_SCALING
 
             if forward_input < 0:
                 twist.angular.z = -1.0 * sideways_input
