@@ -433,7 +433,6 @@ namespace hi_can
                     {
                         enum class groups
                         {
-                            STATUS = 0x00,
                             CONTACTOR = 0x01,
                             COMPUTE_BUS = 0x02,
                             DRIVE_BUS = 0x03,
@@ -479,7 +478,6 @@ namespace hi_can
                     {
                         enum class groups
                         {
-                            STATUS = 0x00,
                             ESC = 0x01,
                         };
                     }
@@ -498,6 +496,21 @@ namespace hi_can
                 }
             }
         }
+        // PARAMETER GROUPS
+        namespace status
+        {
+            /// @brief Status parameter group ID - will always be 0x00
+            constexpr uint8_t GROUP_ID = 0x00;
+            /// @brief Status parameter IDs
+            enum class parameter
+            {
+                /// @brief Power control
+                POWER = 0x00,
+                /// @brief Device current status
+                STATUS = 0x01,
+                /// @brief Device CPU loading (if applicable)
+                CPU = 0x02,
+            };
         }
     }
 }
