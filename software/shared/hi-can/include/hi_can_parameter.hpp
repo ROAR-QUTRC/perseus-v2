@@ -210,7 +210,7 @@ namespace hi_can::parameters
         {
             struct bus_status_t
             {
-                enum class status : uint8_t
+                enum class status_t : uint8_t
                 {
                     OFF = 0,
                     ON,
@@ -220,7 +220,7 @@ namespace hi_can::parameters
                     OVERLOAD,
                     FAULT,
                 };
-                status status;
+                status_t status_t;
                 uint16_t voltage;  // in mV
                 uint32_t current;  // in mA
             };
