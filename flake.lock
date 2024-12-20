@@ -61,11 +61,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1734130259,
-        "narHash": "sha256-OnAWAfj6nPhtfYvof7c03ENK+08xdU1PacuMtqpcdOU=",
+        "lastModified": 1734611049,
+        "narHash": "sha256-zIXvTRV0sjO2KTG6JgFaeOwqmYVruIGm4Q57ncrm1JU=",
         "owner": "RandomSpaceship",
         "repo": "nix-ros-workspace",
-        "rev": "cb834dd883dce8f09c85fe0f9f8533f59f6c064d",
+        "rev": "38e8fb4a4b656312a52ee2f6543dae9c51c97eb2",
         "type": "github"
       },
       "original": {

@@ -124,14 +124,21 @@
             additionalPkgs ? { },
           }:
           let
-            workspace = ros.callPackage ros.buildROSWorkspace {
-              inherit devPackages name;
-              prebuiltPackages = standardPkgs // additionalPkgs;
-              prebuiltShellPackages = devShellPkgs // formatters;
-              releaseDomainId = productionDomainId;
-              environmentDomainId = devDomainId;
-              forceReleaseDomainId = true;
-            };
+            workspace = (
+              ros.callPackage ros.buildROSWorkspace {
+                inherit devPackages name;
+                prebuiltPackages = standardPkgs // additionalPkgs;
+                prebuiltShellPackages = devShellPkgs // formatters;
+                releaseDomainId = productionDomainId;
+                environmentDomainId = devDomainId;
+                forceReleaseDomainId = true;
+
+                # enable coloured ros2 launch output
+                postShellHook = ''
+                  export RCUTILS_COLORIZED_OUTPUT=1
+                '';
+              }
+            );
           in
           # override the env attribute (cli environment) with our modifications
           workspace;
