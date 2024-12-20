@@ -28,5 +28,12 @@ in
       docs-shell = build-cachix-script "docs-shell";
     };
     clean = build-wrapped-script "clean" (with prev; [ git ]);
+    vcan-setup = build-wrapped-script "vcan-setup" (
+      with prev;
+      [
+        iproute2
+        kmod
+      ]
+    );
   };
 }
