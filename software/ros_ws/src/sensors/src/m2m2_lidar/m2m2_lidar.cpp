@@ -46,12 +46,18 @@
 
 #include <nlohmann/json.hpp>  // JSON parsing
 
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
+#include <chrono>
+
+using namespace std::chrono_literals;
+
 M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     : Node("m2m2_lidar", options)
 {
     // Parameter setup
-    this->declare_parameter("sensor_ip", "192.168.1.100");
-    this->declare_parameter("sensor_port", 8080);
+    this->declare_parameter("sensor_ip", "192.168.1.243");
+    this->declare_parameter("sensor_port", 1445);
     this->declare_parameter("frame_id", "lidar_frame");
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
@@ -424,6 +430,27 @@ void M2M2Lidar::_readSensorData()
 
     */
 }
+
+
+class M2M2LidarNode : public rclcpp::Node {
+public:
+    M2M2LidarNode() : Node("m2m2_lidar_node") {
+        publisher_ = this->create_publisher<sensor_msgs::msg::LaserScan>("m2m2_lidar/scan", 10);
+        timer_ = this->create_wall_timer(
+            100ms, std::bind(&M2M2LidarNode::publish_scan, this));
+    }
+
+private:
+    void publish_scan() {
+        auto message = sensor_msgs::msg::LaserScan();
+        // Fill in the LaserScan message
+        publisher_->publish(message);
+    }
+
+    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher_;
+    rclcpp::TimerBase::SharedPtr timer_;
+};
+
 
 int main(int argc, char** argv)
 {
