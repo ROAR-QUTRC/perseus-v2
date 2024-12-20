@@ -3,40 +3,37 @@
 This project is built using [Nix](https://nixos.org/), which makes getting started quite easy - all you have to do is install Nix and `direnv`, and they take care of the rest.
 Whilst this page will get you started, it is strongly recommended that you read through <project:nix-basics.md> after reading through this document so you understand how to use the tooling.
 
-## Environment Setup
+## First-time Setup
 
-1. Ensure you have `curl` and `direnv` installed. For Ubuntu and other Debian-based distros, run: `sudo apt-get update && sudo apt-get install -y curl direnv`
-2. Run `software/scripts/nix-setup.sh`
-3. Restart your shell
-4. `cd` to the repository root
-5. When prompted to allow configuration, hit `y` (yes) for everything (you'll only need to do this once)
-6. Wait for the downloads and builds to finish
-7. You're done!
+1. Install the [GitHub CLI](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
+2. Run the following shell commands to install `curl` and `direnv` (this assumes a Debian-based distro like Ubuntu):
 
-The script, in order:
+```{code-block} console
+sudo apt-get update
+sudo apt-get install -y gh git curl direnv
+```
 
-- Sets up git submodules (should never be necessary, but better to have it and not need it)
-- [Installs Nix](https://github.com/DeterminateSystems/nix-installer)
-- Configures Nix to allow your user to configure _it_
-- Adds `direnv` setup to your `.zshrc` and `.bashrc` files
-- Allows `direnv` to configure based on the `.envrc` file present in this directory
-- Configures `direnv` to silence absurdly long info messages on activation (this sometimes doesn't work - if you see a text wall when it activates, contact James N to have a look at it)
+3. Log into GitHub: `gh auth login -w -p https`
+4. Clone the repo (into `~/perseus-v2`):
 
-After this, you'll need to restart your shell for `direnv` to take effect and set up your dev environment.
+```{code-block} console
+cd ~
+gh repo clone ROAR-QUTRC/perseus-v2 # download the repository
+```
 
-:::{warning}
-This script cannot set up direnv if you're not using `bash` or `zsh` as your shell!
-You'll have to set up the hook yourself according to its [docs](https://direnv.net/docs/hook.html), or use `nix develop` instead (see [Developing](#developing-software)).
-:::
-
-The script is designed to be able to run multiple times if something goes wrong - it checks if the modifications it makes are already present, and if it detects them, skips that step.
+5. Run the setup script (it will prompt you for sudo permissions): `~/perseus-v2/software/scripts/nix-setup.sh`
+6. Restart your shell
+7. Run `cd ~/perseus-v2`
+8. Accept all config options when prompted with `y`
+9. Wait for the downloads (and potentially builds)
+10. Run `nix build` - this will attempt to build the workspace. If this succeeds, you're done, and the built workspace is now available under the `./result` folder!
 
 ### IDE Setup
 
 #### [VSCode](https://code.visualstudio.com/) (recommended)
 
-Open the `perseus-v2.code-workspace` workspace file and install the recommended extensions.
-This will install language support extensions (python and C++), an extension for the formatter in use ([`treefmt`](https://github.com/numtide/treefmt) - configured using [`treefmt-nix`](https://github.com/numtide/treefmt-nix/)), and configure VSCode to respect the project settings.
+Open the `perseus-v2/perseus-v2.code-workspace` workspace file (`File/Open Workspace from File`) and install all the recommended extensions.
+This will install language support extensions (Python and C++), an extension for the formatter in use ([`treefmt`](https://github.com/numtide/treefmt) - configured using [`treefmt-nix`](https://github.com/numtide/treefmt-nix/)), and configure VSCode to respect the project settings.
 
 :::{important}
 You specifically need to open the `perseus-v2.code-workspace` file, not the folder, as otherwise settings won't apply.
@@ -57,6 +54,17 @@ At this point, you're all set up and ready to go.
 In the event that you're using another editor, you probably have enough technical know-how to set it up yourself.
 As long as it uses the environment variables from the `direnv` setup, it should be able to find and run everything.
 You should also configure your editor to use `treefmt` as its formatter - if you're using `direnv` or you're in a `nix develop` environment (see the [next sections](#developing-software)), it (and the formatters it uses internally) will already be available in your shell.
+Finally, you should configure your C/C++ LSP provider to recursively search in `${ROS_WORKSPACE_ENV_PATH}/include` [^env-path] as part of its include path.
+:::{example}
+VSCode is configured with the include path `${env:ROS_WORKSPACE_ENV_PATH}/include/**` added.
+`${env:...}` tells it to substitute the value of that environment variable as-is, the `/include/` is simply directing it to the correct subdirectory, and finally `**` tells it to recursively search through all directories for files to include.
+:::
+
+[^env-path]: `ROS_WORKSPACE_ENV_PATH` is an environment variable which gets set containing the path to the ROS environment in the Nix store. It contains all the tools and dependencies which get made available in the development environment.
+
+:::{note}
+You don't need to do anything Python support - the workspace sets `PYTHONPATH` by default.
+:::
 
 ## Building the software
 
@@ -93,30 +101,6 @@ The most important one is the software [architecture](project:/architecture/soft
 The other document is the software [standards](project:/standards/software.md), which details the standards to which your software is expected to be written.
 If your software _doesn't_ meet these standards, we unfortunately won't be able to merge your changes until you fix the issues - if code standards aren't enforced, the code **will** quickly become an un-maintainable mess, leading to another rewrite.
 
-## Full first-time setup example
-
-If you only care about building the code, the instructions for a first-time bringup from scratch on a Debian-based system like Ubuntu are as follows:
-
-1. Install the [GitHub CLI](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
-2. Run the following shell commands:
-
-```{code-block} console
-sudo apt-get update
-sudo apt-get install -y gh git curl direnv
-gh auth login -w -p https # log in with GitHub CLI and authenticate git
-cd ~
-gh repo clone ROAR-QUTRC/perseus-v2 # download the repository
-cd perseus-v2
-./software/scripts/nix-setup.sh
-```
-
-3. Restart your shell
-4. Run `cd ~/perseus-v2`
-5. Accept all config when prompted with `y`
-6. Wait for the downloads (and potentially builds)
-7. Run `nix build`
-8. You're done! If there were no errors, the built rover workspace is now available under the `perseus-v2/result` symlink folder.
-
 ## Debugging
 
 ### ROS2 Nodes can't see each other on the network
@@ -145,8 +129,26 @@ Firstly, you should really be using the Nix setup as it manages dependencies for
 It coexists perfectly happily with a standard ROS install, as it takes priority over your normal system-installed packages.
 Secondly, you will probably probably experience `ROS_DOMAIN_ID` mismatches - this project defaults the `ROS_DOMAIN_ID` to 51 for development, and 42 for production deployment, since this ensures that packages in development can't interfere with those running on the rover.
 :::{note}
-If you set the `ROS_DOMAIN_ID` environment variable manually, it will be used instead of the defaults.
+If you set the `ROS_DOMAIN_ID` environment variable manually, it will be used instead of the defaults in the dev shell.
 :::
-:::{todo}
-At some point, we might patch the ROS production environment so that it _sets_ the domain ID instead of defaulting - it causes issues with the use of `direnv` since the development environment sets the environment variable itself, and `direnv` uses that.
+
+## Setup script details
+
+For the curious among you, the `nix-setup.sh` script, in order:
+
+- Sets up git submodules (should never be necessary, but better to have it and not need it)
+- [Installs Nix](https://github.com/DeterminateSystems/nix-installer)
+- Configures Nix to allow your user to configure _it_ (adds you to `trusted-users`)
+  % TODO: This needs to be changed - the repo Cachix paths should be added to `trusted-substituters` instead, since `trusted-users` apparently has _many_ security issues.
+- Adds `direnv` setup to your `.zshrc` and `.bashrc` files
+- Allows `direnv` to configure based on the `.envrc` file present in this directory
+- Configures `direnv` to silence absurdly long info messages on activation [^direnv-versioning]
+
+[^direnv-versioning]: This requires a modern version of `direnv` - if you see a text wall when it activates, you probably need a newer version. The standard version shipped with Ubuntu 22.04 is unfortunately too old for this to work.
+
+:::{warning}
+This script cannot set up direnv if you're not using `bash` or `zsh` as your shell!
+You'll have to set up the hook yourself according to its [docs](https://direnv.net/docs/hook.html), or use `nix develop` instead (see [Developing](#developing-software)).
 :::
+
+It's also designed to be able to run multiple times if something goes wrong - it checks if the modifications it makes are already present, and if it detects them, skips that step.
