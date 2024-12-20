@@ -80,8 +80,7 @@ target_include_directories(
   ${PROJECT_NAME}
   PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/priv_include>)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC hi_can)
-target_link_libraries(${PROJECT_NAME} PRIVATE hi_can_raw)
+target_link_libraries(${PROJECT_NAME} PUBLIC hi_can_raw)
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
                           ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
