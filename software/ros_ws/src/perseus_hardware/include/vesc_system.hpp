@@ -4,7 +4,7 @@
 #include <hardware_interface/hardware_info.hpp>
 #include <hardware_interface/system_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
-#include <hi_can.hpp>
+#include <hi_can_raw.hpp>
 #include <optional>
 #include <rclcpp/clock.hpp>
 #include <rclcpp/duration.hpp>
@@ -21,27 +21,33 @@ namespace perseus_hardware
     {
     public:
         RCLCPP_SHARED_PTR_DEFINITIONS(VescSystemHardware)
+        virtual ~VescSystemHardware();
 
         hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo& info) override;
         std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
         std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
+        hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
+        hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) override;
         hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
         hardware_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
         hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) override;
         hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
-        auto& get_logger() const { return *_logger; }
-        auto get_clock() const { return _clock; }
-        auto& get_info() const { return info_; }
-
     private:
+        // note: using std::optional so we can delay initialisation until on_configure
+        std::optional<hi_can::RawCanInterface> _canInterface;
         std::optional<hi_can::PacketManager> _packetManager;
 
+        /// @brief The last time we tried to transmit and had an error
+        /// @details Used to throttle transmissions (and error messages) so we don't build up a massive transmit queue when the bus comes online again
+        rclcpp::Time _lastTransmitError;
+
+        std::vector<hi_can::parameters::drive::vesc::VescParameterGroup> _parameterGroups;
+        std::vector<unsigned long> _vescIds;
         std::vector<double> _commandSpeeds;
         std::vector<double> _realSpeeds;
         std::vector<double> _realPositions;
-
-        std::shared_ptr<rclcpp::Logger> _logger;
-        rclcpp::Clock::SharedPtr _clock;
+        std::vector<double> _realCurrents;
+        std::vector<double> _realTemperatures;
     };
 }

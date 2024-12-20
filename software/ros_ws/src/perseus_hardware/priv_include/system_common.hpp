@@ -4,7 +4,7 @@
 #include <rclcpp/logger.hpp>
 #include <rclcpp/macros.hpp>
 
-#define CHECK_INTERFACE_COUNT(_logger, _joint, _interface_type, _interface_name, _count)                    \
+#define CHECK_EQ_INTERFACE_COUNT(_logger, _joint, _interface_type, _interface_name, _count)                 \
     do                                                                                                      \
     {                                                                                                       \
         if ((_joint)._interface_type.size() != (_count))                                                    \
@@ -15,6 +15,18 @@
                          _count);                                                                           \
             return hardware_interface::CallbackReturn::ERROR;                                               \
         }                                                                                                   \
+    } while (0)
+#define CHECK_GE_INTERFACE_COUNT(_logger, _joint, _interface_type, _interface_name, _count)                          \
+    do                                                                                                               \
+    {                                                                                                                \
+        if ((_joint)._interface_type.size() >= (_count))                                                             \
+        {                                                                                                            \
+            RCLCPP_FATAL((_logger), "Joint '%s' has %zu " _interface_name " interfaces found, expected at least %d", \
+                         (_joint).name.c_str(),                                                                      \
+                         (_joint)._interface_type.size(),                                                            \
+                         _count);                                                                                    \
+            return hardware_interface::CallbackReturn::ERROR;                                                        \
+        }                                                                                                            \
     } while (0)
 
 #define CHECK_INTERFACE_NAME(_logger, _joint, _interface_type, _interface_name, _interface_index, _expected_name) \
