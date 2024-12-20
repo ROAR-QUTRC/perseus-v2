@@ -1,6 +1,8 @@
 controller_manager:
   ros__parameters:
     update_rate: 50
+    # we're not on a real-time system
+    lock_memory: False
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
     perseus_base_controller:
