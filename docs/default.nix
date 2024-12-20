@@ -42,7 +42,7 @@ let
   pyEnv = pythonPkgSet.mkVirtualEnv "roar-docs-py-env" workspace.deps.default;
 
   # add generation tools to the final environment so we can generate code docs
-  # next, use the resolved venv and add the other tools we need to generate the code docs - 
+  # next, use the resolved venv and add the other tools we need to generate the code docs -
   # this is the environment that will be passed as a dependency to the build and dev shell derivations
   env = symlinkJoin {
     name = "roar-docs-env";

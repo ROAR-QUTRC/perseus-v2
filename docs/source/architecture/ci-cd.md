@@ -12,6 +12,7 @@ However, that's only one part of code _integration_ - the other is continuous an
 CI/CD is only made possible by continuous and automated builds and tests which run every time there is code pushed to the main repository.
 
 #### CI testing frameworks
+
 As this is a ROS2 project with C++ and Python nodes, the GoogleTest (gtest) and pytest frameworks are used respectively to create tests that are automatically run.
 
 ### Continuous Delivery
@@ -35,6 +36,6 @@ The typical workflow looks something like this:
 4. (Optionally) Run some kind of update with `nix run` and commit it back to the repo
 5. Run `nix build -L` (or `check`) on the output - adding the `-L` flag enables logging into the shell and makes it easier to debug when things go wrong
 6. If that succeeds, the builds are passing!
-7. (Optionally) Upload to cachix using one of the scripts in `software/scripts`
+7. (Optionally) Upload to cachix using one of the scripts in `software/scripts` (wrapped for execution with `nix run`)
 
 If you're curious about any specific workflow, they're all well commented.
