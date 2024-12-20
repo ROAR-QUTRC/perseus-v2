@@ -1,11 +1,13 @@
 {
   inputs = {
     # ros inputs
+    # TODO: Currently can't be updated till after issue #540 is resolved
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay";
     nixpkgs.follows = "nix-ros-overlay/nixpkgs"; # IMPORTANT!!!
     nix-ros-workspace = {
       url = "github:RandomSpaceship/nix-ros-workspace";
-      flake = false;
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nix-ros-overlay.follows = "nix-ros-overlay";
     };
     # docs inputs
     nixpkgs-unstable.url = "nixpkgs/nixpkgs-unstable";
@@ -63,7 +65,7 @@
             # fix colcon (silence warnings, add extensions)
             (import ./software/ros_ws/colcon/overlay.nix)
             # add ros workspace functionality
-            (import nix-ros-workspace { }).overlay
+            nix-ros-workspace.overlays.default
             # import ros workspace packages + fixes
             (import ./software/overlay.nix rosDistro)
             
@@ -129,6 +131,11 @@
           # Freeimage is blocked by default since it has a whole bunch of CVEs.
           # This means we have to explicitly permit Freeimage to allow Gazebo to run.
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
+          config.allowUnfreePredicate =
+            pkg:
+            builtins.elem (pkgs.lib.getName pkg) [
+              "drawio"
+            ];
         };
         # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
         pkgs-unstable = import nixpkgs-unstable {
@@ -204,7 +211,11 @@
               inherit devPackages name;
               prebuiltPackages = standardPkgs // additionalPkgs;
               prebuiltShellPackages = devShellPkgs // formatters;
+              releaseDomainId = productionDomainId;
+              environmentDomainId = devDomainId;
+              forceReleaseDomainId = true;
             };
+<<<<<<< HEAD
             env = workspace.env.overrideAttrs (
               {
                 shellHook ? "",
@@ -230,9 +241,11 @@
                   '';
               }
             );
+=======
+>>>>>>> main
           in
           # override the env attribute (cli environment) with our modifications
-          workspace // { inherit env; };
+          workspace;
 
         # Actually build the workspaces
         default = mkWorkspace {
@@ -283,7 +296,7 @@
         packages = {
           inherit default simulation docs;
 
-          # Output the entire package set to make certain debugging easier 
+          # Output the entire package set to make certain debugging easier
           # Note that it needs to be a derivation though to make nix flake commands happy, so we just touch the output file
           # so that it can "build" successfully
           pkgs = pkgs.runCommand "roar-all-pkgs" { passthru = pkgs; } ''
@@ -333,18 +346,18 @@
       }
     );
   nixConfig = {
-    # note from James Nichol - I set up a custom cache at https://qutrc-roar.cachix.org 
+    # note from James Nichol - I set up a custom cache at https://qutrc-roar.cachix.org
     # Currently I'm compiling for x86-64 and aarch64 on my machine and pushing to it whenever I make changes
     # to the Nix config - contact me if you want an auth token to push your own builds
     extra-substituters = [
-      "https://qutrc-roar.cachix.org"
       "https://roar-qutrc.cachix.org"
       "https://ros.cachix.org"
+      "https://qutrc-roar.cachix.org"
     ];
     extra-trusted-public-keys = [
-      "qutrc-roar.cachix.org-1:lARPhJL+PLuGd021HeN8CQOGGiYVEVGws5za+39M1Z0="
       "roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA="
       "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo="
+      "qutrc-roar.cachix.org-1:lARPhJL+PLuGd021HeN8CQOGGiYVEVGws5za+39M1Z0="
     ];
     # note that this is normally a VERY BAD IDEA but it may be needed so the docs can have internet access,
     # with certain configurations. Currently, everything is configured to work offline with cached files in the git repo.

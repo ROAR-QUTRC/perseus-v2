@@ -52,13 +52,20 @@
       }
     },
     "nix-ros-workspace": {
-      "flake": false,
+      "inputs": {
+        "nix-ros-overlay": [
+          "nix-ros-overlay"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
       "locked": {
-        "lastModified": 1711506611,
-        "narHash": "sha256-FXwNfiKBBarRjo4apAZuBU/OVgrNWa/lwi+S8HwHbvY=",
+        "lastModified": 1733998607,
+        "narHash": "sha256-XW1j5WF2jwb7dAbIrbARAmOjhZcxOm2saMqtN9os5dc=",
         "owner": "RandomSpaceship",
         "repo": "nix-ros-workspace",
-        "rev": "d389c0ad68267b85b9ac3b7350801dd0110ed669",
+        "rev": "8808ff5ee433d0d9cf4df42806d6997ff01db1e5",
         "type": "github"
       },
       "original": {

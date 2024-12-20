@@ -11,6 +11,9 @@ This keeps code merges small (reducing the chances and sizes of merge conflicts)
 However, that's only one part of code _integration_ - the other is continuous and _automated_ testing.
 CI/CD is only made possible by continuous and automated builds and tests which run every time there is code pushed to the main repository.
 
+#### CI testing frameworks
+As this is a ROS2 project with C++ and Python nodes, the GoogleTest (gtest) and pytest frameworks are used respectively to create tests that are automatically run.
+
 ### Continuous Delivery
 
 Continuous Delivery refers to the project always being _delivered_ in a functional, ready-to-go state, and handles any final stages needed to package the project and get it into a _deployment_ ready state.
