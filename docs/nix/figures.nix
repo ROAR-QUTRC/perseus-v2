@@ -44,7 +44,7 @@ let
       INPUT_FILE="$1"
       OUTPUT_FILE="$2"
       shift 2
-      ${lib.getExe drawio} -x "$INPUT_FILE" -o "$OUTPUT_FILE" --disable-gpu "$@" 
+      ${lib.getExe drawio} -x "$INPUT_FILE" -o "$OUTPUT_FILE" --no-sandbox --disable-gpu "$@"
     }
 
     # Electron really wants a configuration directory to not die with:
