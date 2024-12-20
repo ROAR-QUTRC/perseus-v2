@@ -60,13 +60,13 @@ void PacketManager::handleReceive(bool shouldBlock)
     _interface.receiveAll(shouldBlock);
 
     const auto now = steady_clock::now();
-    for (auto& [key, value] : _callbacks)
+    for (auto& [filter, config] : _callbacks)
     {
-        if (!value.hasTimedOut && (now - value.lastReceived > (value.config.timeout * MISSED_PACKET_TIMEOUT_COUNT)))
+        if (!config.hasTimedOut && (now - config.lastReceived > (config.config.timeout * MISSED_PACKET_TIMEOUT_COUNT)))
         {
-            value.hasTimedOut = true;
-            if (value.config.timeoutCallback)
-                value.config.timeoutCallback();
+            config.hasTimedOut = true;
+            if (config.config.timeoutCallback)
+                config.config.timeoutCallback();
         }
     }
 }
@@ -74,13 +74,16 @@ void PacketManager::handleReceive(bool shouldBlock)
 void PacketManager::handleTransmit(bool shouldForceTransmission)
 {
     const auto now = steady_clock::now();
-    for (auto& [key, value] : _transmissions)
+    for (auto& [address, config] : _transmissions)
     {
-        const auto elapsed = now - value.lastTransmitted;
-        if ((elapsed > value.config.interval) || shouldForceTransmission)
+        const auto elapsed = now - config.lastTransmitted;
+        if ((elapsed > config.config.interval) || shouldForceTransmission)
         {
-            value.lastTransmitted = now;
-            getInterface().transmit(Packet(key, value.config.generator()));
+            config.lastTransmitted = now;
+            if (config.config.generator)
+                getInterface().transmit(Packet(address, config.config.generator()));
+            else
+                getInterface().transmit(Packet(address));
         }
     }
 }
@@ -132,7 +135,12 @@ void PacketManager::setTransmissionConfig(const flagged_address_t& address, cons
     };
 
     if (config.shouldTransmitImmediately)
-        getInterface().transmit(Packet(address, config.generator()));
+    {
+        if (config.generator)
+            getInterface().transmit(Packet(address, config.generator()));
+        else
+            getInterface().transmit(Packet(address));
+    }
 }
 
 void PacketManager::setTransmissionGenerator(const flagged_address_t& address, const data_generator_t& generator)
