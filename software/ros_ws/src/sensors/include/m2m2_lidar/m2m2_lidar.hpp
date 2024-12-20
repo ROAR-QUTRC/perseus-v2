@@ -1,11 +1,14 @@
 #pragma once
 
+#include <chrono>
+#include <iomanip>
 #include <nlohmann/json.hpp>  // JSON parsing
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <string>
+#include <thread>
 #include <vector>
 
 /**
@@ -51,6 +54,8 @@ private:
     std::vector<uint8_t> _decodeBase64(const std::string& encoded);
 
     std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64_encoded);
+
+    bool connectToSensor(const std::string& host, int port);
 
     bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
     nlohmann::json _receiveJsonResponse();

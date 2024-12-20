@@ -44,9 +44,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <chrono>
-#include <nlohmann/json.hpp>  // JSON parsing
-
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 
@@ -84,7 +81,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
         RCLCPP_ERROR(this->get_logger(), "Failed to create socket");
         // TODO: Throw exception
     }
-    if (connect(_socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
+    if (::connect(_socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
     {
         RCLCPP_ERROR(this->get_logger(), "Connection failed");
         close(_socket);
@@ -235,6 +232,8 @@ bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::jso
     }
 
     std::string json_str = request.dump();
+    RCLCPP_DEBUG(this->get_logger(), "Sending JSON request: %s", json_str.c_str());
+
     std::vector<uint8_t> data(json_str.begin(), json_str.end());
 
     // append the delimiters
@@ -244,12 +243,16 @@ bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::jso
         data.push_back('\n');
     }
 
+    RCLCPP_DEBUG(this->get_logger(), "Sending %zu bytes to socket", data.size());
+
     ssize_t sent = send(_socket, data.data(), data.size(), 0);
     if (sent <= 0)
     {
-        RCLCPP_ERROR(this->get_logger(), "Send failed: %s", strerror(errno));
+        RCLCPP_ERROR(this->get_logger(), "Send failed: %s (errno: %d)", strerror(errno), errno);
         return false;
     }
+
+    RCLCPP_DEBUG(this->get_logger(), "Successfully sent %zd bytes", sent);
     return true;
 }
 
@@ -258,17 +261,50 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
     std::vector<uint8_t> buffer(4096);
     std::vector<uint8_t> received;
     bool found_delim = false;
+    auto start_time = std::chrono::steady_clock::now();
+    const auto timeout = std::chrono::seconds(2);
+
+    RCLCPP_DEBUG(this->get_logger(), "Waiting for response...");
 
     while (!found_delim)
     {
-        ssize_t bytes = recv(_socket, buffer.data(), buffer.size(), 0);
-        if (bytes <= 0)
+        // Check for timeout
+        auto now = std::chrono::steady_clock::now();
+        if (now - start_time > timeout)
         {
-            RCLCPP_ERROR(this->get_logger(), "Receive error: %s", strerror(errno));
+            RCLCPP_ERROR(this->get_logger(), "Timeout waiting for response");
             return nlohmann::json();
         }
 
+        ssize_t bytes = recv(_socket, buffer.data(), buffer.size(), MSG_DONTWAIT);
+        if (bytes < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                // No data available yet, sleep briefly and try again
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+            RCLCPP_ERROR(this->get_logger(), "Receive error: %s (errno: %d)", strerror(errno), errno);
+            return nlohmann::json();
+        }
+        else if (bytes == 0)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Connection closed by peer");
+            return nlohmann::json();
+        }
+
+        RCLCPP_DEBUG(this->get_logger(), "Received %zd bytes", bytes);
         received.insert(received.end(), buffer.begin(), buffer.begin() + bytes);
+
+        // Print first few bytes for debugging
+        std::stringstream ss;
+        for (size_t i = 0; i < static_cast<size_t>(std::min(bytes, ssize_t(16))); ++i)
+        {
+            ss << std::hex << std::setw(2) << std::setfill('0')
+               << static_cast<int>(buffer[i]) << " ";
+        }
+        RCLCPP_DEBUG(this->get_logger(), "First bytes: %s", ss.str().c_str());
 
         // Check for delimiter
         if (received.size() >= 4 &&
@@ -278,6 +314,7 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
             received[received.size() - 1] == '\n')
         {
             found_delim = true;
+            RCLCPP_DEBUG(this->get_logger(), "Found delimiter after %zu bytes", received.size());
         }
     }
 
@@ -287,13 +324,95 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
     std::string response_str(received.begin(), received.end());
     try
     {
-        return nlohmann::json::parse(response_str);
+        RCLCPP_DEBUG(this->get_logger(), "Parsing JSON response of length %zu", response_str.length());
+        auto json = nlohmann::json::parse(response_str);
+        RCLCPP_DEBUG(this->get_logger(), "Successfully parsed JSON");
+        return json;
     }
     catch (const std::exception& e)
     {
-        RCLCPP_ERROR(this->get_logger(), "JSON parse error: %s", e.what());
+        RCLCPP_ERROR(this->get_logger(), "JSON parse error: %s\nFirst 100 bytes of response: %s",
+                     e.what(), response_str.substr(0, 100).c_str());
         return nlohmann::json();
     }
+}
+
+bool M2M2Lidar::connectToSensor(const std::string& host, int port)
+{
+    RCLCPP_INFO(this->get_logger(), "Connecting to %s:%d", host.c_str(), port);
+
+    _socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (_socket < 0)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Socket creation failed: %s (errno: %d)",
+                     strerror(errno), errno);
+        return false;
+    }
+
+    // Set socket timeout
+    struct timeval tv;
+    tv.tv_sec = 2;  // 2 second timeout
+    tv.tv_usec = 0;
+    if (setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set receive timeout: %s", strerror(errno));
+        close(_socket);
+        return false;
+    }
+    if (setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set send timeout: %s", strerror(errno));
+        close(_socket);
+        return false;
+    }
+
+    // Enable TCP keepalive
+    int keepalive = 1;
+    if (setsockopt(_socket, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) < 0)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set keepalive: %s", strerror(errno));
+        close(_socket);
+        return false;
+    }
+
+    struct sockaddr_in serv_addr;
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(port);
+
+    if (inet_pton(AF_INET, host.c_str(), &serv_addr.sin_addr) <= 0)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Invalid address: %s (errno: %d)",
+                     strerror(errno), errno);
+        close(_socket);
+        return false;
+    }
+
+    if (!this->connectToSensor(_sensorAddress, _sensorPort))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Connection failed");
+        close(_socket);
+        throw std::runtime_error("Failed to connect to LIDAR");
+    }
+
+    // Test the connection with a simple request
+    if (!_sendJsonRequest("ping"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to send initial ping");
+        close(_socket);
+        return false;
+    }
+
+    auto response = _receiveJsonResponse();
+    if (response.empty())
+    {
+        RCLCPP_ERROR(this->get_logger(), "No response to initial ping");
+        close(_socket);
+        return false;
+    }
+
+    RCLCPP_INFO(this->get_logger(), "Successfully connected to %s:%d", host.c_str(), port);
+    return true;
 }
 
 /**
