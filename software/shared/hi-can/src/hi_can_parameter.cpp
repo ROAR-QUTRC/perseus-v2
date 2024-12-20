@@ -21,7 +21,7 @@ using namespace std::chrono_literals;
 namespace hi_can::parameters::drive::vesc
 {
 #pragma pack(push, 1)
-    struct raw_status_t
+    struct raw_status_1_t
     {
         int32_t rpm;
         int16_t current;
@@ -58,16 +58,16 @@ namespace hi_can::parameters::drive::vesc
     };
 #pragma pack(pop)
 
-    void status_t::deserializeData(const std::vector<uint8_t>& serializedData)
+    void status_1_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
-        DESERIALIZE_BOILERPLATE(raw_status_t, rawData, serializedData);
+        DESERIALIZE_BOILERPLATE(raw_status_1_t, rawData, serializedData);
         rpm = ntohl(rawData.rpm);
         current = ntohs(rawData.current) / 10.0;
         dutyCycle = ntohs(rawData.dutyCycle) / 1000.0;
     }
-    std::vector<uint8_t> status_t::serializeData()
+    std::vector<uint8_t> status_1_t::serializeData()
     {
-        SERIALIZE_BOILERPLATE(raw_status_t, rawData, dataBuf);
+        SERIALIZE_BOILERPLATE(raw_status_1_t, rawData, dataBuf);
         rawData.rpm = htonl(rpm);
         rawData.current = htons(current) * 10.0;
         rawData.dutyCycle = htons(dutyCycle) * 1000.0;
@@ -174,12 +174,12 @@ namespace hi_can::parameters::drive::vesc
 
         _callbacks.emplace_back(
             filter_t{
-                .address = static_cast<flagged_address_t>(address_t(vescId, command_id::STATUS)),
+                .address = static_cast<flagged_address_t>(address_t(vescId, command_id::STATUS_1)),
             },
             PacketManager::callback_config_t{
                 .dataCallback = [this](const Packet& packet)
                 {
-                    _status.deserializeData(packet.getData());
+                    _status1.deserializeData(packet.getData());
                 },
             });
         _callbacks.emplace_back(
