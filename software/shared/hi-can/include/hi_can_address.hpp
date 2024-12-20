@@ -259,7 +259,7 @@ namespace hi_can
                     SET_CURRENT_BRAKE = 2,
                     SET_RPM = 3,
                     SET_POS = 4,
-                    STATUS = 9,
+                    STATUS_1 = 9,
                     SET_CURRENT_REL = 10,
                     SET_CURRENT_BRAKE_REL = 11,
                     SET_CURRENT_HANDBRAKE = 12,
@@ -268,7 +268,7 @@ namespace hi_can
                     STATUS_3 = 15,
                     STATUS_4 = 16,
                     STATUS_5 = 27,
-                    STATUS_6 = 28,
+                    STATUS_6 = 58,
                 };
 
                 /// @brief VESC command packet address

@@ -117,7 +117,7 @@ namespace hi_can::parameters
             {
             };
             // STATUS STRUCTS
-            struct status_t : public BidirectionalSerializable
+            struct status_1_t : public BidirectionalSerializable
             {
                 double rpm = 0;
                 double current = 0;
@@ -176,7 +176,7 @@ namespace hi_can::parameters
             public:
                 VescParameterGroup(uint8_t vescId, std::chrono::steady_clock::duration transmissionInterval = std::chrono::steady_clock::duration::zero());
 
-                auto& getStatus() { return _status; }
+                auto& getStatus1() { return _status1; }
                 auto& getStatus2() { return _status2; }
                 auto& getStatus3() { return _status3; }
                 auto& getStatus4() { return _status4; }
@@ -190,7 +190,7 @@ namespace hi_can::parameters
 
                 set_rpm_t _setRpm;
 
-                status_t _status;
+                status_1_t _status1;
                 status_2_t _status2;
                 status_3_t _status3;
                 status_4_t _status4;
