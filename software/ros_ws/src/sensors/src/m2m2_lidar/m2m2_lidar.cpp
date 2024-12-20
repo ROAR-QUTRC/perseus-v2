@@ -44,11 +44,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <chrono>
 #include <nlohmann/json.hpp>  // JSON parsing
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include <chrono>
 
 using namespace std::chrono_literals;
 
@@ -174,7 +174,9 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const 
 
         if (b == sentinel1)
         {
-            if (pos + 2 < decoded.size() && decoded[pos + 1] == 0 && decoded[pos + 2] == sentinel2)
+            if (pos + 2 < decoded.size() &&
+                decoded[pos + 1] == 0 &&
+                decoded[pos + 2] == sentinel2)
             {
                 std::swap(sentinel1, sentinel2);
                 pos += 2;
@@ -183,8 +185,8 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const 
             {
                 uint8_t repeat_val = decoded[pos + 2];
                 uint8_t repeat_count = decoded[pos + 1];
-                for (uint8_t i = 0; 1 < repeat_count; i++)
-                {
+                for (uint8_t i = 0; i < repeat_count; i++)
+                {  // Fixed condition
                     decompressed.push_back(repeat_val);
                 }
                 pos += 2;
@@ -197,7 +199,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const 
         ++pos;
     }
 
-    // Parse points
+    // Parse points (12 bytes each: float distance, float angle, bool valid)
     for (size_t i = 0; i < decompressed.size(); i += 12)
     {
         if (i + 12 > decompressed.size())
@@ -207,9 +209,17 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const 
         memcpy(&distance, &decompressed[i], sizeof(float));
         memcpy(&angle, &decompressed[i + 4], sizeof(float));
 
-        bool valid = distance != 100000.0;  // TODO fix magic number
-        points.emplace_back(distance, angle, valid);
+        bool valid = distance != 100000.0;
+
+        if (valid)
+        {
+            RCLCPP_DEBUG(this->get_logger(), "Point: angle=%.2f, distance=%.2f",
+                         angle, distance);
+        }
+
+        points.emplace_back(angle, distance, valid);
     }
+
     return points;
 }
 
@@ -248,7 +258,6 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
     std::vector<uint8_t> buffer(4096);
     std::vector<uint8_t> received;
     bool found_delim = false;
-    ssize_t bytes = 0;
 
     while (!found_delim)
     {
@@ -256,20 +265,24 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
         if (bytes <= 0)
         {
             RCLCPP_ERROR(this->get_logger(), "Receive error: %s", strerror(errno));
-            return {};
+            return nlohmann::json();
+        }
+
+        received.insert(received.end(), buffer.begin(), buffer.begin() + bytes);
+
+        // Check for delimiter
+        if (received.size() >= 4 &&
+            received[received.size() - 4] == '\r' &&
+            received[received.size() - 3] == '\n' &&
+            received[received.size() - 2] == '\r' &&
+            received[received.size() - 1] == '\n')
+        {
+            found_delim = true;
         }
     }
 
-    received.insert(received.end(), buffer.begin(), buffer.begin() + bytes);
-
-    if (received.size() >= 4 &&
-        received[received.size() - 4] == '\r' &&
-        received[received.size() - 3] == '\n' &&
-        received[received.size() - 2] == '\r' &&
-        received[received.size() - 1] == '\n')
-    {
-        found_delim = true;
-    }
+    // Remove the delimiter
+    received.resize(received.size() - 4);
 
     std::string response_str(received.begin(), received.end());
     try
@@ -278,8 +291,8 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
     }
     catch (const std::exception& e)
     {
-        RCLCPP_ERROR(this->get_logger(), "Failed to parse JSON response: %s", e.what());
-        return {};
+        RCLCPP_ERROR(this->get_logger(), "JSON parse error: %s", e.what());
+        return nlohmann::json();
     }
 }
 
@@ -327,6 +340,8 @@ void M2M2Lidar::_sendCommand(const std::vector<uint8_t>& command)
 
 void M2M2Lidar::_readSensorData()
 {
+    RCLCPP_DEBUG(this->get_logger(), "Requesting laser scan data...");
+
     if (!_sendJsonRequest("getlaserscan"))
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to send getlaserscan command");
@@ -337,111 +352,59 @@ void M2M2Lidar::_readSensorData()
     if (response.empty() ||
         response["result"].is_null() ||
         !response["result"].contains("laser_points"))
-
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to receive valid laser scan response");
         return;
     }
 
     std::string base64_points = response["result"]["laser_points"];
+    RCLCPP_DEBUG(this->get_logger(), "Received base64 data of length: %zu", base64_points.length());
+
     auto points = _decodeLaserPoints(base64_points);
+    RCLCPP_DEBUG(this->get_logger(), "Decoded %zu points", points.size());
 
-    // populate the LaserScan message
-    sensor_msgs::msg::LaserScan scan;
-    scan.header.stamp = this->now();
-    scan.header.frame_id = this->get_parameter("frame_id").as_string();
-
-    if (!points.empty())
+    if (points.empty())
     {
-        scan.angle_min = std::get<0>(points.front());
-        scan.angle_max = std::get<0>(points.back());
-        scan.angle_increment = (scan.angle_max - scan.angle_min) / (points.size() - 1);
-        scan.time_increment = 0.0;
-        scan.scan_time = 0.0;  // TODO: set this based on sensor specs
-        scan.range_min = 0.0;  // TODO: set this based on sensor specs
-        scan.range_max = 40.0;
-
-        scan.ranges.reserve(points.size());
-        for (const auto& [angle, distance, valid] : points)
-        {
-            scan.ranges.push_back(valid ? distance : 0.0);
-        }
-    }
-
-    _scanPublisher->publish(scan);
-
-    //*******************************************************
-
-    // Buffer for receiving data
-    std::vector<uint8_t> buffer(1024);  // Adjust size based on your sensor's needs
-    ssize_t bytesRead = recv(_socket, buffer.data(), buffer.size(), 0);
-
-    if (bytesRead <= 0)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Error reading from sensor");
+        RCLCPP_WARN(this->get_logger(), "No valid points decoded from laser scan");
         return;
     }
 
-    // Resize buffer to actual data received
-    buffer.resize(bytesRead);
+    // Populate the LaserScan message
+    auto scan = std::make_unique<sensor_msgs::msg::LaserScan>();
+    scan->header.stamp = this->now();
+    scan->header.frame_id = this->get_parameter("frame_id").as_string();
 
-    // Note: These are placeholder implementations - we need to implement
-    // proper parsing based on m2m2 protocol
-    // TODO: Error handling
-    /*
-    auto maybeScan = _parseLaserScanData(buffer);
-    if (maybeScan)
+    scan->angle_min = std::get<0>(points.front());
+    scan->angle_max = std::get<0>(points.back());
+    scan->angle_increment = (scan->angle_max - scan->angle_min) / (points.size() - 1);
+    scan->time_increment = 1.0 / (15.0 * points.size());  // Assuming 15Hz scan rate
+    scan->scan_time = 1.0 / 15.0;                         // 15Hz
+    scan->range_min = 0.1;                                // 10cm minimum range
+    scan->range_max = 30.0;                               // 30m maximum range
+
+    scan->ranges.reserve(points.size());
+    for (const auto& [angle, distance, valid] : points)
     {
-        maybeScan->header.stamp = this->now();
-        maybeScan->header.frame_id =
-            this->get_parameter("frame_id").as_string();
-        _scanPublisher->publish(*maybeScan);
+        scan->ranges.push_back(valid ? distance : 0.0);
     }
 
-    auto maybeImu = _parseImuData(buffer);
-    if (maybeImu)
-    {
-        maybeImu->header.stamp = this->now();
-        maybeImu->header.frame_id =
-            this->get_parameter("frame_id").as_string();
-        _imuPublisher->publish(*maybeImu);
-    }
-    */
-
-    /*
-    *replaced now
-    std::optional<sensor_msgs::msg::LaserScan> M2M2Lidar::_parseLaserScanData([[maybe_unused]] const std::vector<uint8_t>& data)
-    {
-        sensor_msgs::msg::LaserScan scan{};
-
-        // TODO: Implement
-
-        return scan;
-    }
-
-    std::optional<sensor_msgs::msg::Imu> M2M2Lidar::_parseImuData([[maybe_unused]] const std::vector<uint8_t>& data)
-    {
-        sensor_msgs::msg::Imu imu{};
-
-        // TODO: Implement
-
-        return imu;
-    }
-
-    */
+    RCLCPP_DEBUG(this->get_logger(), "Publishing scan with %zu ranges", scan->ranges.size());
+    _scanPublisher->publish(*scan);
 }
 
-
-class M2M2LidarNode : public rclcpp::Node {
+class M2M2LidarNode : public rclcpp::Node
+{
 public:
-    M2M2LidarNode() : Node("m2m2_lidar_node") {
+    M2M2LidarNode() : Node("m2m2_lidar_node")
+    {
         publisher_ = this->create_publisher<sensor_msgs::msg::LaserScan>("m2m2_lidar/scan", 10);
         timer_ = this->create_wall_timer(
             100ms, std::bind(&M2M2LidarNode::publish_scan, this));
     }
 
 private:
-    void publish_scan() {
+    void publish_scan()
+    {
         auto message = sensor_msgs::msg::LaserScan();
         // Fill in the LaserScan message
         publisher_->publish(message);
@@ -450,7 +413,6 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
 };
-
 
 int main(int argc, char** argv)
 {
