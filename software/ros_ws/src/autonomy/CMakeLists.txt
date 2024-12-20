@@ -17,9 +17,11 @@ endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  # Add -Werror flag for release builds
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Werror")
   add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+# Add -Werror flag for release builds
+if(CMAKE_BUILD_TYPE MATCHES "Rel.*")
+  add_compile_options(-Werror)
 endif()
 
 # find dependencies
