@@ -32,10 +32,10 @@ jobs:
       - name: Run flake checks
         run: nix flake check -L
       - name: Upload build to Cachix
-        run: nix run -L .#tools.scripts.cachix.build
+        run: nix run -L .#scripts.cachix.build
       - name: Test dev shell
         run: nix develop -L -c echo 'Shell test success'
       - name: Upload dev shell to Cachix
-        run: nix run -L .#tools.scripts.cachix.shell
+        run: nix run -L .#scripts.cachix.shell
     env:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}

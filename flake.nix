@@ -103,6 +103,7 @@
             rviz2-fixed
             rosbag2
             teleop-twist-keyboard
+            joy
             demo-nodes-cpp
             ;
         };
@@ -112,7 +113,6 @@
         };
         # Packages needed to run the simulation
         simPkgs = {
-          inherit (pkgs.ros) gazebo-ros gazebo-ros2-control gazebo-ros-pkgs;
         };
 
         # --- ROS WORKSPACES ---
@@ -195,19 +195,26 @@
           # Output the entire package set to make certain debugging easier
           # Note that it needs to be a derivation though to make nix flake commands happy, so we just touch the output file
           # so that it can "build" successfully
-          pkgs = pkgs.runCommand "roar-all-pkgs" { passthru = pkgs; } ''
+          pkgs = pkgs.runCommandNoCC "roar-all-pkgs" { passthru = pkgs; } ''
             touch $out
           '';
 
           # same as pkgs but for utilities
           tools =
-            pkgs.runCommand "roar-tools"
+            pkgs.runCommandNoCC "roar-tools"
               {
                 passthru = {
-                  inherit (pkgs) scripts;
                   inherit treefmt-write-config;
                   treefmt-build = treefmtEval.config.build;
                 };
+              }
+              ''
+                touch $out
+              '';
+          scripts =
+            pkgs.runCommandNoCC "roar-scripts"
+              {
+                passthru = pkgs.scripts;
               }
               ''
                 touch $out
