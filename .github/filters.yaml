@@ -1,14 +1,14 @@
-# nix updates are common to all workflows
-nix: &nix
+common: &common
   - "flake.nix"
   - "flake.lock"
+  - ".github/**"
 docs-shell:
-  - *nix
+  - *common
   - "docs/**/*.nix"
   - "docs/pyproject/**"
 docs:
+  - *common
   - "docs/**"
-  - *nix
   # software paths should only include files which are used by Doxygen
   - "software/**/*.cpp"
   - "software/**/*.hpp"
@@ -17,8 +17,8 @@ docs:
   - "software/**/*.py"
   - "software/**/*.pyi"
 software:
+  - *common
   - "software/**"
-  - *nix
   # ignore script updates
   - "!software/scripts/**"
   - "!software/ros_ws/colcon/**"
