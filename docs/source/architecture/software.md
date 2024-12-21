@@ -85,7 +85,9 @@ This package contains the core mapping and autonomous navigation functionality f
 It also implements the fail-over functionality which handles autonomous recovery on disconnection or network failure.
 
 :::{tip}
-The ROS2 build system 'colcon' can fail to recognise changes to cached build files after events such as a Github Update or an indirect dependency change. This may result in 'colcon build' failing unncessarily. The solution is to clean the workspace (.e.g. 'colcon clean workspace') and re-running 'colcon build'
+The ROS2 build system `colcon` can fail to rebuild cached outputs after events such as a `git pull` or when a non-ROS dependency changes, which may result in `colcon build` incorrectly failing.
+The solution is to clean the workspace (`colcon clean workspace -y` or `nix run .#clean`) and then re-run `colcon build`.
+To ensure that this doesn't happen at all, run a clean after every git pull or after changing any code outside of `software/ros_ws/src`.
 :::
 
 ### Shared Libraries
