@@ -1,0 +1,27 @@
+# nix updates are common to all workflows
+nix: &nix
+  - "flake.nix"
+  - "flake.lock"
+docs-shell:
+  - *nix
+  - "docs/**/*.nix"
+  - "docs/pyproject/**"
+docs:
+  - "docs/**"
+  - *nix
+  # software paths should only include files which are used by Doxygen
+  - "software/**/*.cpp"
+  - "software/**/*.hpp"
+  - "software/**/*.c"
+  - "software/**/*.h"
+  - "software/**/*.py"
+  - "software/**/*.pyi"
+software:
+  - "software/**"
+  - *nix
+  # ignore script updates
+  - "!software/scripts/**"
+  - "!software/ros_ws/colcon/**"
+  # we don't care about package.xml updates since they don't affect the nix build,
+  # we only care about it when the nix files get updated
+  - "!software/ros_ws/**/package.xml"
