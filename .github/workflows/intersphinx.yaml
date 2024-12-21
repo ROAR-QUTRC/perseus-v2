@@ -1,0 +1,23 @@
+on:
+  schedule:
+    # WARNING: When @RandomSpaceship leaves the project, this will need to be updated
+    # see: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+    # note: the time is semi-random
+    - cron: "42 0 * * 1"
+jobs:
+  intersphinx:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    concurrency:
+      group: "push"
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Update intersphinx inventory files
+        run: nix run .#docs.fetch-inventories
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update intersphinx inventory files"

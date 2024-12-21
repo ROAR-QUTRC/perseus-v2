@@ -1,0 +1,27 @@
+common: &common
+  - "flake.nix"
+  - "flake.lock"
+  - ".github/**"
+docs-shell:
+  - *common
+  - "docs/**/*.nix"
+  - "docs/pyproject/**"
+docs:
+  - *common
+  - "docs/**"
+  # software paths should only include files which are used by Doxygen
+  - "software/**/*.cpp"
+  - "software/**/*.hpp"
+  - "software/**/*.c"
+  - "software/**/*.h"
+  - "software/**/*.py"
+  - "software/**/*.pyi"
+software:
+  - *common
+  - "software/**"
+  # ignore script updates
+  - "!software/scripts/**"
+  - "!software/ros_ws/colcon/**"
+  # we don't care about package.xml updates since they don't affect the nix build,
+  # we only care about it when the nix files get updated
+  - "!software/ros_ws/**/package.xml"
