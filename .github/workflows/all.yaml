@@ -8,6 +8,7 @@ jobs:
     name: Detect changes
     runs-on: ubuntu-latest
     outputs:
+      manual: ${{ github.event_name == 'workflow_dispatch'}}
       software: ${{ steps.filter.outputs.software }}
       docs: ${{ steps.filter.outputs.docs }}
       docs-shell: ${{ steps.filter.outputs.docs-shell }}
@@ -39,8 +40,9 @@ jobs:
         with:
           commit_message: "Run format and lint"
   docs-shell:
+    name: Build docs dev shell
     runs-on: ubuntu-latest
-    if: ${{ needs.changes.outputs.docs-shell == 'true' }}
+    if: ${{ (needs.changes.outputs.docs-shell == 'true') || (needs.changes.outputs.manual == 'true') }}
     needs: [changes, format]
     steps:
       - uses: actions/checkout@v4
@@ -51,8 +53,9 @@ jobs:
     env:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
   docs:
+    name: Build docs
     runs-on: ubuntu-latest
-    if: ${{ needs.changes.outputs.docs == 'true' }}
+    if: ${{ (needs.changes.outputs.docs == 'true') || (needs.changes.outputs.manual == 'true') }}
     needs: [changes, format, docs-shell]
     steps:
       - uses: actions/checkout@v4
@@ -82,8 +85,9 @@ jobs:
           commit_message: "Update generated docs"
           repository: ./docs
   build:
+    name: Build software
     runs-on: ubuntu-latest
-    if: ${{ needs.changes.outputs.software == 'true' }}
+    if: ${{ (needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true') }}
     needs: [changes, format]
     steps:
       - uses: actions/checkout@v4
