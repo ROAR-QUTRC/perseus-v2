@@ -44,9 +44,13 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <bit>  // For std::bit_cast
+
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 
+using std::string;
+using std::vector;
 using namespace std::chrono_literals;
 
 M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
@@ -81,7 +85,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
         RCLCPP_ERROR(this->get_logger(), "Failed to create socket");
         // TODO: Throw exception
     }
-    if (::connect(_socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
+    if (connect(_socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
     {
         RCLCPP_ERROR(this->get_logger(), "Connection failed");
         close(_socket);
@@ -89,7 +93,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     }
 
     // Create and send initial configuration
-    SensorConfig defaultConfig{
+    sensor_config_t defaultConfig{
         .scanFrequency = 15.0,
         .angularResolution = 0.25,
         .minRange = 0.1,
@@ -98,7 +102,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     // TODO: Exception handling
     _sendCommand(_createConfigCommand(defaultConfig));
 
-    // Start the data reading timer
+    // StartThe data reading timer
     _readTimer = this->create_wall_timer(
         std::chrono::milliseconds(100),
         std::bind(&M2M2Lidar::_readSensorData, this));
@@ -123,37 +127,86 @@ void M2M2Lidar::_initializePublishers()
         this->get_parameter("imu_topic").as_string(), qos);
 }
 
+bool M2M2Lidar::isWithinEpsilon(float a, float b, float epsilon)
+{
+    return std::abs(a - b) <= epsilon;
+}
+
 /**
  * @brief Decodes a base64-encoded string into a byte sequence.
  *
  */
-std::vector<uint8_t> M2M2Lidar::_decodeBase64(const std::string& encoded)
+vector<uint8_t> M2M2Lidar::_decodeBase64(const string& encoded)
 {
-    BIO *bio, *b64;
-    std::vector<uint8_t> decoded;
-
-    b64 = BIO_new(BIO_f_base64());
-    bio = BIO_new_mem_buf(encoded.c_str(), encoded.length());
-    bio = BIO_push(b64, bio);
-
-    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
-
-    char buffer[1024];
-    int len;
-    while ((len = BIO_read(bio, buffer, sizeof(buffer))) > 0)
+    try
     {
-        decoded.insert(decoded.end(), buffer, buffer + len);
-    }
+        // Calculate the maximum possible decoded length
+        size_t maxDecodedLength = ((encoded.length() + 3) / 4) * 3;
 
-    BIO_free_all(bio);
-    return decoded;
+        // Create a buffer for the decoded data
+        vector<uint8_t> decoded(maxDecodedLength);
+
+        // Create and initialize the decoding context
+        EVP_ENCODE_CTX* context = EVP_ENCODE_CTX_new();
+        if (!context)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to create Base64 decoding context");
+            throw std::runtime_error("Base64 context creation failed");
+        }
+
+        try
+        {
+            EVP_DecodeInit(context);
+
+            // Process the input data
+            int outputLength;
+            int result = EVP_DecodeUpdate(context,
+                                          decoded.data(), &outputLength,
+                                          reinterpret_cast<const unsigned char*>(encoded.data()),
+                                          encoded.length());
+
+            if (result < 0)
+            {
+                throw std::runtime_error("Failed to decode Base64 data");
+            }
+
+            // Finalize the decoding
+            int finalLength;
+            result = EVP_DecodeFinal(context, decoded.data() + outputLength, &finalLength);
+
+            if (result < 0)
+            {
+                throw std::runtime_error("Failed to finalize Base64 decoding");
+            }
+
+            // Cleanup and resize
+            EVP_ENCODE_CTX_free(context);
+            decoded.resize(outputLength + finalLength);
+
+            RCLCPP_DEBUG(this->get_logger(),
+                         "Successfully decoded %zu Base64 bytes to %zu bytes",
+                         encoded.length(), decoded.size());
+
+            return decoded;
+        }
+        catch (...)
+        {
+            EVP_ENCODE_CTX_free(context);
+            throw;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Base64 decoding error: %s", e.what());
+        return vector<uint8_t>();
+    }
 }
 
-std::vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const std::string& base64_encoded)
+vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const string& base64Encoded)
 {
-    std::vector<std::tuple<float, float, bool>> points;
+    vector<std::tuple<float, float, bool>> points;
 
-    std::vector<uint8_t> decoded = _decodeBase64(base64_encoded);
+    vector<uint8_t> decoded = _decodeBase64(base64Encoded);
 
     if (decoded.size() < 9 ||
         strncmp(reinterpret_cast<const char*>(decoded.data()), "RLE", 3) != 0)
@@ -163,7 +216,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const 
     }
 
     // RLE decompression
-    std::vector<uint8_t> decompressed;
+    vector<uint8_t> decompressed;
     uint8_t sentinel1 = decoded[3];
     uint8_t sentinel2 = decoded[4];
 
@@ -183,12 +236,9 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const 
             }
             else if (pos + 2 < decoded.size())
             {
-                uint8_t repeat_val = decoded[pos + 2];
-                uint8_t repeat_count = decoded[pos + 1];
-                for (uint8_t i = 0; i < repeat_count; i++)
-                {
-                    decompressed.push_back(repeat_val);
-                }
+                uint8_t repeatValue = decoded[pos + 2];
+                uint8_t repeatCount = decoded[pos + 1];
+                decompressed.insert(decompressed.end(), repeatCount, repeatValue);
                 pos += 2;
             }
         }
@@ -200,16 +250,39 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const 
     }
 
     // Parse points (12 bytes each: float distance, float angle, bool valid)
+    static_assert(sizeof(float) == 4, "Expected 32-bit floats");
+
     for (size_t i = 0; i < decompressed.size(); i += 12)
     {
         if (i + 12 > decompressed.size())
             break;
 
-        float distance, angle;
-        std::copy_n(decompressed.data() + i, sizeof(float), reinterpret_cast<uint8_t*>(&distance));
-        std::copy_n(decompressed.data() + i + 4, sizeof(float), reinterpret_cast<uint8_t*>(&angle));
+        // Read bytes into uint32_t first to handle endianness
+        uint32_t distanceRaw = 0;
+        uint32_t angleRaw = 0;
 
-        bool valid = distance != 100000.0;
+        // Assuming little-endian data from sensor
+        for (int j = 0; j < 4; j++)
+        {
+            distanceRaw |= (static_cast<uint32_t>(decompressed[i + j]) << (j * 8));
+            angleRaw |= (static_cast<uint32_t>(decompressed[i + 4 + j]) << (j * 8));
+        }
+
+        // Use std::bit_cast to safely convert between representations
+        float distance = std::bit_cast<float>(distanceRaw);
+        float angle = std::bit_cast<float>(angleRaw);
+
+        // Validate the values
+        if (!std::isfinite(distance) || !std::isfinite(angle))
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Received non-finite values: distance=%.2f, angle=%.2f",
+                        distance, angle);
+            continue;
+        }
+
+        bool valid = !isWithinEpsilon(distance, INVALID_DISTANCE);
+        // bool valid = distance != 100000.0;
 
         if (valid)
         {
@@ -223,7 +296,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const 
     return points;
 }
 
-bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::json& args)
+bool M2M2Lidar::_sendJsonRequest(const string& command, const nlohmann::json& args)
 {
     nlohmann::json request = {
         {"command", command},
@@ -234,10 +307,10 @@ bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::jso
         request["args"] = args;
     }
 
-    std::string json_str = request.dump();
+    string json_str = request.dump();
     RCLCPP_DEBUG(this->get_logger(), "Sending JSON request: %s", json_str.c_str());
 
-    std::vector<uint8_t> data(json_str.begin(), json_str.end());
+    vector<uint8_t> data(json_str.begin(), json_str.end());
 
     // append the delimiters
     for (int i = 0; i < 3; ++i)
@@ -261,19 +334,19 @@ bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::jso
 
 nlohmann::json M2M2Lidar::_receiveJsonResponse()
 {
-    std::vector<uint8_t> buffer(4096);
-    std::vector<uint8_t> received;
-    bool found_delim = false;
-    auto start_time = std::chrono::steady_clock::now();
+    vector<uint8_t> buffer(4096);
+    vector<uint8_t> received;
+    bool foundDelim = false;
+    auto startTime = std::chrono::steady_clock::now();
     const auto timeout = std::chrono::seconds(2);
 
     RCLCPP_DEBUG(this->get_logger(), "Waiting for response...");
 
-    while (!found_delim)
+    while (!foundDelim)
     {
         // Check for timeout
         auto now = std::chrono::steady_clock::now();
-        if (now - start_time > timeout)
+        if (now - startTime > timeout)
         {
             RCLCPP_ERROR(this->get_logger(), "Timeout waiting for response");
             return nlohmann::json();
@@ -309,14 +382,10 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
         }
         RCLCPP_DEBUG(this->get_logger(), "First bytes: %s", ss.str().c_str());
 
-        // Check for delimiter
         if (received.size() >= 4 &&
-            received[received.size() - 4] == '\r' &&
-            received[received.size() - 3] == '\n' &&
-            received[received.size() - 2] == '\r' &&
-            received[received.size() - 1] == '\n')
+            strncmp(reinterpret_cast<const char*>(&received[received.size() - 4]), "\r\n\r\n", 4) == 0)
         {
-            found_delim = true;
+            foundDelim = true;
             RCLCPP_DEBUG(this->get_logger(), "Found delimiter after %zu bytes", received.size());
         }
     }
@@ -324,7 +393,7 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
     // Remove the delimiter
     received.resize(received.size() - 4);
 
-    std::string response_str(received.begin(), received.end());
+    string response_str(received.begin(), received.end());
     try
     {
         RCLCPP_DEBUG(this->get_logger(), "Parsing JSON response of length %zu", response_str.length());
@@ -340,7 +409,7 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
     }
 }
 
-bool M2M2Lidar::connectToSensor(const std::string& host, int port)
+bool M2M2Lidar::connectToSensor(const string& host, int port)
 {
     RCLCPP_INFO(this->get_logger(), "Connecting to %s:%d", host.c_str(), port);
 
@@ -427,13 +496,13 @@ bool M2M2Lidar::connectToSensor(const std::string& host, int port)
  * without manual configuration. Testing will confirm or not.
  *
  */
-std::vector<uint8_t> M2M2Lidar::_createConfigCommand(const SensorConfig& config)
+vector<uint8_t> M2M2Lidar::_createConfigCommand(const sensor_config_t& config)
 {
     // Protocol-related constants
     static constexpr uint8_t PROTOCOL_HEADER = 0xAA;
     static constexpr uint8_t PROTOCOL_FOOTER = 0x55;
 
-    std::vector<uint8_t> command;
+    vector<uint8_t> command;
     command.push_back(PROTOCOL_HEADER);
 
     // Add command type (example: 0x01 for configuration)
@@ -450,7 +519,7 @@ std::vector<uint8_t> M2M2Lidar::_createConfigCommand(const SensorConfig& config)
     return command;
 }
 
-void M2M2Lidar::_sendCommand(const std::vector<uint8_t>& command)
+void M2M2Lidar::_sendCommand(const vector<uint8_t>& command)
 {
     ssize_t bytesSent = send(_socket, command.data(), command.size(), 0);
     if (bytesSent != static_cast<ssize_t>(command.size()))
@@ -479,10 +548,10 @@ void M2M2Lidar::_readSensorData()
         return;
     }
 
-    std::string base64_points = response["result"]["laser_points"];
-    RCLCPP_DEBUG(this->get_logger(), "Received base64 data of length: %zu", base64_points.length());
+    string base64Points = response["result"]["laser_points"];
+    RCLCPP_DEBUG(this->get_logger(), "Received base64 data of length: %zu", base64Points.length());
 
-    auto points = _decodeLaserPoints(base64_points);
+    auto points = _decodeLaserPoints(base64Points);
     RCLCPP_DEBUG(this->get_logger(), "Decoded %zu points", points.size());
 
     if (points.empty())
@@ -492,26 +561,28 @@ void M2M2Lidar::_readSensorData()
     }
 
     // Populate the LaserScan message
-    auto scan = std::make_unique<sensor_msgs::msg::LaserScan>();
-    scan->header.stamp = this->now();
-    scan->header.frame_id = this->get_parameter("frame_id").as_string();
+    sensor_msgs::msg::LaserScan scan;
+    scan.header.stamp = this->now();
 
-    scan->angle_min = std::get<0>(points.front());
-    scan->angle_max = std::get<0>(points.back());
-    scan->angle_increment = (scan->angle_max - scan->angle_min) / (points.size() - 1);
-    scan->time_increment = 1.0 / (15.0 * points.size());  // Assuming 15Hz scan rate
-    scan->scan_time = 1.0 / 15.0;                         // 15Hz
-    scan->range_min = 0.1;                                // 10cm minimum range
-    scan->range_max = 30.0;                               // 30m maximum range
+    // scan->header.frame_id = this->get_parameter("frame_id").as_string();
+    scan.header.frame_id = this->get_parameter("frame_id").as_string();
 
-    scan->ranges.reserve(points.size());
+    scan.angle_min = std::get<0>(points.front());
+    scan.angle_max = std::get<0>(points.back());
+    scan.angle_increment = (scan.angle_max - scan.angle_min) / (points.size() - 1);
+    scan.time_increment = 1.0 / (SCAN_FREQUENCY * points.size());
+    scan.scan_time = 1.0 / SCAN_FREQUENCY;
+    scan.range_min = MIN_RANGE;
+    scan.range_max = MAX_RANGE;
+
+    scan.ranges.reserve(points.size());
     for (const auto& [angle, distance, valid] : points)
     {
-        scan->ranges.push_back(valid ? distance : 0.0);
+        scan.ranges.push_back(valid ? distance : 0.0);
     }
 
-    RCLCPP_DEBUG(this->get_logger(), "Publishing scan with %zu ranges", scan->ranges.size());
-    _scanPublisher->publish(*scan);
+    RCLCPP_DEBUG(this->get_logger(), "Publishing scan with %zu ranges", scan.ranges.size());
+    _scanPublisher->publish(scan);
 }
 
 int main(int argc, char** argv)

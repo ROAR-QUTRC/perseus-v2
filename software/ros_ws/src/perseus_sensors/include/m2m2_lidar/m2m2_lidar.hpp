@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cmath>
 #include <iomanip>
 #include <nlohmann/json.hpp>  // JSON parsing
 #include <optional>
@@ -22,7 +23,7 @@
 class M2M2Lidar : public rclcpp::Node
 {
 public:
-    struct SensorConfig
+    struct sensor_config_t
     {
         double scanFrequency;
         double angularResolution;
@@ -34,21 +35,26 @@ public:
     virtual ~M2M2Lidar();  // destructor virtual because class inherits from rclcpp::Node
 
 private:
+    static constexpr double SCAN_FREQUENCY = 15.0;  // SI unit: Hz
+    static constexpr double MIN_RANGE = 0.1;        // SI unit: meters
+    static constexpr double MAX_RANGE = 30.0;       // SI unit: meters
+    static constexpr float INVALID_DISTANCE = 100000.0f;
+    static constexpr float EPSILON = 0.0001f;
+    static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
+
+    // Data
     std::vector<uint8_t> _decodeBase64(const std::string& encoded);
+    std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64Encoded);
 
-    std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64_encoded);
-
+    // Network
     bool connectToSensor(const std::string& host, int port);
-
     bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
     nlohmann::json _receiveJsonResponse();
-
-    // Network communication
     void _sendCommand(const std::vector<uint8_t>& command);
     std::optional<std::vector<uint8_t>> _receiveData();
 
     // Protocol handling
-    std::vector<uint8_t> _createConfigCommand(const SensorConfig& config);
+    std::vector<uint8_t> _createConfigCommand(const sensor_config_t& config);
     // std::optional<sensor_msgs::msg::LaserScan> _parseLaserScanData(const std::vector<uint8_t>& data);
     // std::optional<sensor_msgs::msg::Imu> _parseImuData(const std::vector<uint8_t>& data);
 
@@ -58,13 +64,13 @@ private:
     void _readSensorData();
 
     // Member variables
-    static constexpr const char* REQUEST_DELIM = "\r\n\r\n";
+    static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
     int _requestId;
     std::string _sensorAddress;
     uint16_t _sensorPort;
     int _socket;
     bool _isConnected;
-    SensorConfig _config;
+    sensor_config_t _config;
 
     // ROS2 publishers
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr _scanPublisher;
