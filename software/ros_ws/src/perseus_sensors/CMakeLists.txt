@@ -41,8 +41,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs std_msgs OpenSSL
-                                 nlohmann_json)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs OpenSSL nlohmann_json)
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
 
@@ -67,7 +66,6 @@ target_include_directories(
 
 ament_target_dependencies(m2m2_lidar PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-# OpenSSL has two libraries that need to linked against explicitly
 target_link_libraries(m2m2_lidar PRIVATE OpenSSL::Crypto)
 
 # INSTALL (ROS Executables)
