@@ -6,14 +6,9 @@ This package contains the `m2m2_lidar` node, which is responsible for interfacin
 
 The `m2m2_lidar` node reads data from the LIDAR sensor and publishes it to a ROS topic for other nodes to consume.
 
-## Dependencies
-
-nlohmann for json
-openssl for decoding byte64
-
 ## Build & Installation
 
-It should build as part of the environment biuld, threre is no need to build and install separately.
+It should build as part of the environment build, there is no need to build and install separately.
 
 ## Usage
 

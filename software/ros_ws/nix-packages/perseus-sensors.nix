@@ -4,12 +4,14 @@
   buildRosPackage,
   ament-cmake,
   backward-ros,
+  nlohmann_json,
+  openssl,
   rclcpp,
   sensor-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-sensors";
-  version = "0.0.0";
+  version = "1.0.0";
 
   src = ./../src/perseus_sensors;
 
@@ -17,13 +19,15 @@ buildRosPackage rec {
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
     backward-ros
+    nlohmann_json
+    openssl
     rclcpp
     sensor-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "TODO: Package description";
+    description = "ROS 2 package for managing and processing point-cloud data from the Slamtec M2M2 lidar device which is accessed by TCP ethernet. Handles network access, data processing and provides ROS sensor message information.";
     license = with lib.licenses; [ mit ];
   };
 }
