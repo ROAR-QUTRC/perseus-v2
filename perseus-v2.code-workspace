@@ -102,6 +102,12 @@
         },
         "editor.formatOnSave": true,
         "editor.detectIndentation": true,
+        "[python]": {
+            "editor.defaultFormatter": "ibecker.treefmt-vscode"
+        },
+        "[javascript]": {
+            "editor.defaultFormatter": "ibecker.treefmt-vscode"
+        },
     },
     "extensions": {
         "recommendations": [
