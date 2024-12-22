@@ -1,0 +1,110 @@
+name: Nix CI/CD
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  # get the file changes to filter other jobs
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      manual: ${{ github.event_name == 'workflow_dispatch'}}
+      software: ${{ steps.filter.outputs.software }}
+      docs: ${{ steps.filter.outputs.docs }}
+      docs-shell: ${{ steps.filter.outputs.docs-shell }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: .github/filters.yaml
+  format:
+    name: Format and lint
+    # jobs which push to the repo all need to be in this concurrency group
+    concurrency:
+      group: "push"
+    # needed to push changes if needed
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Format and lint repository
+        run: nix fmt
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        # don't want to run the commit action on pull request workflows (ie, after the merge commit), only on push
+        # note: this applies to all push workflows, not just this job
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          commit_message: "Run format and lint"
+  docs-shell:
+    name: Build docs dev shell
+    runs-on: ubuntu-latest
+    environment: binary-deployment
+    if: ${{ (needs.changes.outputs.docs-shell == 'true') || (needs.changes.outputs.manual == 'true') }}
+    needs: [changes, format]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Upload docs dev shell to Cachix
+        run: nix run -L .#scripts.cachix.docs-shell
+    env:
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+  docs:
+    name: Build docs
+    runs-on: ubuntu-latest
+    environment: docs-deployment
+    if: ${{ (needs.changes.outputs.docs == 'true') || (needs.changes.outputs.manual == 'true') }}
+    needs: [changes, format, docs-shell]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Build docs
+        run: nix build -L .#docs
+      # From here, deploying to the website repo
+      - name: Checkout website repo
+        # only run on origin main branch
+        if: ${{ (github.event_name != 'pull_request') && (github.repository == 'ROAR-QUTRC/perseus-v2') && (github.ref == 'refs/heads/main') }}
+        id: checkout-website
+        uses: actions/checkout@v4
+        with:
+          repository: ROAR-QUTRC/roar-qutrc.github.io
+          ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          path: docs
+      - name: Update docs in checked out repo
+        if: ${{ steps.checkout-website.outcome == 'success' }}
+        run: |
+          rm -rf docs/*
+          cp -a result/html/. docs/
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        name: Commit and push changes
+        if: ${{ steps.checkout-website.outcome == 'success' }}
+        with:
+          commit_message: "Update generated docs"
+          repository: ./docs
+  build:
+    name: Build software
+    runs-on: ubuntu-latest
+    environment: binary-deployment
+    if: ${{ (needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true') }}
+    needs: [changes, format]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Build repository
+        run: nix build -L
+      - name: Upload build to Cachix
+        run: nix run -L .#scripts.cachix.build
+      - name: Test dev shell
+        run: nix develop -L -c echo 'Shell test success'
+      - name: Upload dev shell to Cachix
+        run: nix run -L .#scripts.cachix.shell
+      - name: Run flake checks
+        run: nix flake check -L
+    env:
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
