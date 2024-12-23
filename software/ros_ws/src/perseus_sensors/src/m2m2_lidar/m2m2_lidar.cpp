@@ -38,10 +38,12 @@
 #include "m2m2_lidar.hpp"
 
 #include <arpa/inet.h>
+#include <netdb.h>  // For getaddrinfo, freeaddrinfo, gai_strerror
 #include <netinet/in.h>
 #include <openssl/bio.h>  // for Base64 decoding
 #include <openssl/evp.h>  // also for Base64 decoding
 #include <sys/socket.h>
+#include <sys/types.h>  // For general system types
 #include <unistd.h>
 
 #include <bit>  // For std::bit_cast
@@ -56,41 +58,146 @@ using namespace std::chrono_literals;
 M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     : Node("m2m2_lidar", options)
 {
-    // Parameter setup
+    // First, let's set the logger level to DEBUG to see all messages
+    auto ret = rcutils_logging_set_logger_level(
+        get_logger().get_name(),
+        RCUTILS_LOG_SEVERITY_DEBUG);
+
+    if (ret != RCUTILS_RET_OK)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set logger level to DEBUG");
+    }
+
+    // Parameter setup with detailed logging
+    RCLCPP_DEBUG(this->get_logger(), "Starting M2M2Lidar initialization...");
     this->declare_parameter("sensor_ip", "192.168.1.243");
     this->declare_parameter("sensor_port", 1445);
     this->declare_parameter("frame_id", "lidar_frame");
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
 
-    // TODO: Error handling (exceptions)
     _sensorAddress = this->get_parameter("sensor_ip").as_string();
-    _sensorPort = static_cast<uint16_t>(
-        this->get_parameter("sensor_port").as_int());
+    _sensorPort = this->get_parameter("sensor_port").as_int();
 
-    // TODO: Replace with network library
-    struct sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(_sensorPort);
+    RCLCPP_INFO(this->get_logger(),
+                "Attempting connection to sensor at %s:%d",
+                _sensorAddress.c_str(), _sensorPort);
 
-    if (inet_pton(AF_INET, _sensorAddress.c_str(), &serverAddr.sin_addr) <= 0)
+    // Setup address hints
+    struct addrinfo addressHints, *addressResults, *currentAddress;
+    int addressStatus;
+
+    memset(&addressHints, 0, sizeof addressHints);
+    addressHints.ai_family = AF_UNSPEC;      // IPv4 or IPv6
+    addressHints.ai_socktype = SOCK_STREAM;  // TCP stream sockets
+
+    // char portString[6];
+    // snprintf(portString, sizeof(portString), "%d", _sensorPort);
+    std::string portString = std::to_string(_sensorPort);
+
+    RCLCPP_DEBUG(this->get_logger(), "Resolving address information...");
+
+    // Get address information with error details
+    if ((addressStatus = getaddrinfo(_sensorAddress.c_str(), portString.c_str(), &addressHints, &addressResults)) != 0)
     {
-        RCLCPP_ERROR(this->get_logger(), "Invalid address");
-        // TODO: Throw exception
+        std::string error_msg = gai_strerror(addressStatus);
+        RCLCPP_ERROR(this->get_logger(),
+                     "Address resolution failed: %s (Error code: %d)",
+                     error_msg.c_str(), addressStatus);
+        throw std::runtime_error("Address resolution failed: " + error_msg);
     }
 
-    _socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (_socket < 0)
+    RCLCPP_DEBUG(this->get_logger(), "Address resolved successfully, attempting connection...");
+
+    // Connection attempt loop with detailed logging
+    bool connection_success = false;
+    for (currentAddress = addressResults; currentAddress != nullptr; currentAddress = currentAddress->ai_next)
     {
-        RCLCPP_ERROR(this->get_logger(), "Failed to create socket");
-        // TODO: Throw exception
+        _socket = socket(currentAddress->ai_family, currentAddress->ai_socktype, currentAddress->ai_protocol);
+        if (_socket == -1)
+        {
+            RCLCPP_DEBUG(this->get_logger(),
+                         "Socket creation failed for address family %d: %s",
+                         currentAddress->ai_family, strerror(errno));
+            continue;
+        }
+
+        RCLCPP_DEBUG(this->get_logger(), "Socket created successfully, configuring options...");
+
+        // Socket options configuration with error checking
+        struct timeval timeoutValue;
+        timeoutValue.tv_sec = 2;
+        timeoutValue.tv_usec = 0;
+
+        if (setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
+        {
+            RCLCPP_ERROR(this->get_logger(),
+                         "Failed to set receive timeout: %s", strerror(errno));
+            close(_socket);
+            continue;
+        }
+
+        if (setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
+        {
+            RCLCPP_ERROR(this->get_logger(),
+                         "Failed to set send timeout: %s", strerror(errno));
+            close(_socket);
+            continue;
+        }
+
+        int keepaliveEnabled = 1;
+        if (setsockopt(_socket, SOL_SOCKET, SO_KEEPALIVE, &keepaliveEnabled, sizeof(keepaliveEnabled)) < 0)
+        {
+            RCLCPP_ERROR(this->get_logger(),
+                         "Failed to set keepalive: %s", strerror(errno));
+            close(_socket);
+            continue;
+        }
+
+        RCLCPP_DEBUG(this->get_logger(), "Socket options configured, attempting connection...");
+
+        // Connection attempt with detailed error reporting
+        if (connect(_socket, currentAddress->ai_addr, currentAddress->ai_addrlen) == -1)
+        {
+            RCLCPP_ERROR(this->get_logger(),
+                         "Connection attempt failed: %s (errno: %d)",
+                         strerror(errno), errno);
+            close(_socket);
+            _socket = -1;
+            continue;
+        }
+
+        // If we get here, connection succeeded
+        connection_success = true;
+        RCLCPP_INFO(this->get_logger(), "Successfully connected to sensor");
+        break;
     }
-    if (connect(_socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
+
+    freeaddrinfo(addressResults);
+
+    if (!connection_success)
     {
-        RCLCPP_ERROR(this->get_logger(), "Connection failed");
+        throw std::runtime_error("Failed to connect to LIDAR sensor after trying all available addresses");
+    }
+
+    // Test connection with ping
+    RCLCPP_DEBUG(this->get_logger(), "Testing connection with ping command...");
+    if (!_sendJsonRequest("ping"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Ping request failed to send");
         close(_socket);
-        // TODO: Throw exception
+        throw std::runtime_error("Failed to send initial ping");
     }
+
+    auto pingResponse = _receiveJsonResponse();
+    if (pingResponse.empty())
+    {
+        RCLCPP_ERROR(this->get_logger(), "No response received from ping request");
+        close(_socket);
+        throw std::runtime_error("No response to initial ping");
+    }
+
+    RCLCPP_DEBUG(this->get_logger(), "Ping successful, configuring sensor...");
 
     // Create and send initial configuration
     sensor_config_t defaultConfig{
@@ -99,14 +206,17 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
         .minRange = 0.1,
         .maxRange = 30.0,
     };
-    // TODO: Exception handling
+
     _sendCommand(_createConfigCommand(defaultConfig));
 
-    // StartThe data reading timer
+    // Initialize publishers and timer
+    RCLCPP_DEBUG(this->get_logger(), "Setting up ROS publishers and timers...");
+    _initializePublishers();
     _readTimer = this->create_wall_timer(
         std::chrono::milliseconds(100),
         std::bind(&M2M2Lidar::_readSensorData, this));
-    _initializePublishers();
+
+    RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
 }
 
 M2M2Lidar::~M2M2Lidar()
@@ -334,7 +444,7 @@ bool M2M2Lidar::_sendJsonRequest(const string& command, const nlohmann::json& ar
 
 nlohmann::json M2M2Lidar::_receiveJsonResponse()
 {
-    vector<uint8_t> buffer(4096);
+    vector<uint8_t> buffer(SOCKET_BUFFER_SIZE);
     vector<uint8_t> received;
     bool foundDelim = false;
     auto startTime = std::chrono::steady_clock::now();
@@ -407,84 +517,6 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
                      e.what(), response_str.substr(0, 100).c_str());
         return nlohmann::json();
     }
-}
-
-bool M2M2Lidar::connectToSensor(const string& host, int port)
-{
-    RCLCPP_INFO(this->get_logger(), "Connecting to %s:%d", host.c_str(), port);
-
-    _socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (_socket < 0)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Socket creation failed: %s (errno: %d)",
-                     strerror(errno), errno);
-        return false;
-    }
-
-    // Set socket timeout
-    struct timeval tv;
-    tv.tv_sec = 2;  // 2 second timeout
-    tv.tv_usec = 0;
-    if (setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Failed to set receive timeout: %s", strerror(errno));
-        close(_socket);
-        return false;
-    }
-    if (setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Failed to set send timeout: %s", strerror(errno));
-        close(_socket);
-        return false;
-    }
-
-    // Enable TCP keepalive
-    int keepalive = 1;
-    if (setsockopt(_socket, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) < 0)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Failed to set keepalive: %s", strerror(errno));
-        close(_socket);
-        return false;
-    }
-
-    struct sockaddr_in serv_addr;
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(port);
-
-    if (inet_pton(AF_INET, host.c_str(), &serv_addr.sin_addr) <= 0)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Invalid address: %s (errno: %d)",
-                     strerror(errno), errno);
-        close(_socket);
-        return false;
-    }
-
-    if (!this->connectToSensor(_sensorAddress, _sensorPort))
-    {
-        RCLCPP_ERROR(this->get_logger(), "Connection failed");
-        close(_socket);
-        throw std::runtime_error("Failed to connect to LIDAR");
-    }
-
-    // Test the connection with a simple request
-    if (!_sendJsonRequest("ping"))
-    {
-        RCLCPP_ERROR(this->get_logger(), "Failed to send initial ping");
-        close(_socket);
-        return false;
-    }
-
-    auto response = _receiveJsonResponse();
-    if (response.empty())
-    {
-        RCLCPP_ERROR(this->get_logger(), "No response to initial ping");
-        close(_socket);
-        return false;
-    }
-
-    RCLCPP_INFO(this->get_logger(), "Successfully connected to %s:%d", host.c_str(), port);
-    return true;
 }
 
 /**
