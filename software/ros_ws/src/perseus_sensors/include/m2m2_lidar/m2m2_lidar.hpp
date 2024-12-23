@@ -40,6 +40,8 @@ private:
     static constexpr double MAX_RANGE = 30.0;       // SI unit: meters
     static constexpr float INVALID_DISTANCE = 100000.0f;
     static constexpr float EPSILON = 0.0001f;
+    static constexpr size_t SOCKET_BUFFER_SIZE = 4096;  // Size in bytes for socket read operations
+
     static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
 
     // Data
