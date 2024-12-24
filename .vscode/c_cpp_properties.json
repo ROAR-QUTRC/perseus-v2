@@ -1,20 +1,20 @@
 {
-    "configurations": [
-        {
-            "browse": {
-                "databaseFilename": "${default}",
-                "limitSymbolsToIncludedHeaders": false
-            },
-            "includePath": [
-                "${workspaceFolder}/**",
-                "${env:ROS_WORKSPACE_ENV_PATH}/include/**",
-                "/usr/include/**"
-            ],
-            "name": "Linux",
-            "intelliSenseMode": "${default}",
-            "cStandard": "gnu17",
-            "cppStandard": "c++20"
-        }
-    ],
-    "version": 4
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${env:ROS_WORKSPACE_ENV_PATH}/include/**",
+        "/usr/include/**"
+      ],
+      "name": "Linux",
+      "intelliSenseMode": "${default}",
+      "cStandard": "gnu17",
+      "cppStandard": "c++20"
+    }
+  ],
+  "version": 4
 }
