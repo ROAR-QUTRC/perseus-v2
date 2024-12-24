@@ -228,6 +228,44 @@ M2M2Lidar::~M2M2Lidar()
     }
 }
 
+/// Move constructor
+M2M2Lidar::M2M2Lidar(M2M2Lidar&& other) noexcept
+    : Node(other.get_name())  // Initialize base class
+{
+    // Use swap for the actual move operation
+    swap(*this, other);
+
+    // The other object now has our default-constructed state
+    // We should ensure its resources are properly nulled out
+    other._socket = -1;
+    other._isConnected = false;
+    other._scanPublisher.reset();
+    other._imuPublisher.reset();
+    other._readTimer.reset();
+}
+
+// Move assignment operator
+M2M2Lidar& M2M2Lidar::operator=(M2M2Lidar&& other) noexcept
+{
+    if (this != &other)
+    {
+        // Use swap for the move
+        swap(*this, other);
+
+        // Clean up the other object's resources
+        if (other._socket >= 0)
+        {
+            close(other._socket);
+            other._socket = -1;
+        }
+        other._isConnected = false;
+        other._scanPublisher.reset();
+        other._imuPublisher.reset();
+        other._readTimer.reset();
+    }
+    return *this;
+}
+
 void M2M2Lidar::_initializePublishers()
 {
     const auto qos = rclcpp::QoS(10);
@@ -534,14 +572,29 @@ vector<uint8_t> M2M2Lidar::_createConfigCommand(const sensor_config_t& config)
     static constexpr uint8_t PROTOCOL_HEADER = 0xAA;
     static constexpr uint8_t PROTOCOL_FOOTER = 0x55;
 
+    // Define valid ranges for our parameters
+    static constexpr double MIN_SCAN_FREQUENCY = 0.0;
+    static constexpr double MAX_SCAN_FREQUENCY = 255.0;  // uint8_t max
+    static constexpr double MIN_ANGULAR_RESOLUTION = 0.0;
+    static constexpr double MAX_ANGULAR_RESOLUTION = 2.55;
+
     vector<uint8_t> command;
     command.push_back(PROTOCOL_HEADER);
+    command.push_back(0x01);  // command type for configuration
 
-    // Add command type (example: 0x01 for configuration)
-    command.push_back(0x01);
+    // clamp scan frequency to valid uint8_t and round to nearest integer
+    double clampedFrequency = std::clamp(config.scanFrequency,
+                                         MIN_SCAN_FREQUENCY,
+                                         MAX_SCAN_FREQUENCY);
+    command.push_back(static_cast<uint8_t>(std::round(clampedFrequency)));
+
+    // Clamp angular resolution, scale by 100, and ensure it fits in uint8_t
+    double scaledResolution = std::clamp(config.angularResolution * 100.0,
+                                         MIN_ANGULAR_RESOLUTION * 100.0,
+                                         MAX_ANGULAR_RESOLUTION * 100.0);
+    command.push_back(static_cast<uint8_t>(std::round(scaledResolution)));
 
     // Add configuration parameters if needed - this might go-away post hardware testing
-    // Note: This is a simplified example - you'll need to match your actual protocol
     command.push_back(static_cast<uint8_t>(config.scanFrequency));
     command.push_back(static_cast<uint8_t>(config.angularResolution * 100));
 
