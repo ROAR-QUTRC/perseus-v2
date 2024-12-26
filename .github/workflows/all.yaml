@@ -20,9 +20,8 @@ jobs:
           filters: .github/filters.yaml
   format:
     name: Format and lint
-    # jobs which push to the repo all need to be in this concurrency group
     concurrency:
-      group: "push"
+      group: ${{ github.workflow }}-${{ github.ref }}
     # needed to push changes if needed
     permissions:
       contents: write
