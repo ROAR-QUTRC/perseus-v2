@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import rclpy
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TwistStamped
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor, FloatingPointRange
 from sensor_msgs.msg import Joy
@@ -16,7 +16,7 @@ class XboxController(Node):
     and configurable scaling factors through ROS2 parameters.
 
     Publishers:
-        input_devices/cmd_vel (geometry_msgs/Twist): Robot velocity commands
+        input_devices/cmd_vel (geometry_msgs/Twist or TwistStamped): Robot velocity commands
 
     Subscribers:
         joy (sensor_msgs/Joy): Raw joystick inputs
@@ -26,6 +26,7 @@ class XboxController(Node):
         rotation_scale (double): Base scaling for angular motion [rad/s] (default: 0.50)
         high_speed_multiplier (double): Multiplier for high-speed mode (default: 2.0)
         deadman_threshold (double): Threshold for dead man's switch activation (default: -0.95)
+        use_stamped_msg (bool): Whether to publish TwistStamped instead of Twist (default: False)
     """
 
     def __init__(self):
@@ -42,10 +43,16 @@ class XboxController(Node):
         self._declare_parameters()
         self._load_parameters()
 
-        # Publishers and subscribers
-        self.velocity_publisher = self.create_publisher(
-            Twist, "input_devices/cmd_vel", 10
-        )
+        # Create appropriate publisher based on message type parameter
+        if self.use_stamped_msg:
+            self.velocity_publisher = self.create_publisher(
+                TwistStamped, "input_devices/cmd_vel", 10
+            )
+        else:
+            self.velocity_publisher = self.create_publisher(
+                Twist, "input_devices/cmd_vel", 10
+            )
+
         self.joy_subscriber = self.create_subscription(
             Joy, "joy", self.process_joystick_input, 10
         )
@@ -53,7 +60,8 @@ class XboxController(Node):
         self.get_logger().info(
             f"Xbox controller initialized with translation scale: {self.translation_scale}, "
             f"rotation scale: {self.rotation_scale}, "
-            f"high speed multiplier: {self.high_speed_multiplier}"
+            f"high speed multiplier: {self.high_speed_multiplier}, "
+            f"using {'stamped' if self.use_stamped_msg else 'unstamped'} messages"
         )
 
     def _declare_parameters(self) -> None:
@@ -106,12 +114,22 @@ class XboxController(Node):
             ),
         )
 
+        self.declare_parameter(
+            "use_stamped_msg",
+            False,
+            ParameterDescriptor(
+                description="Whether to publish TwistStamped instead of Twist messages",
+                read_only=True,
+            ),
+        )
+
     def _load_parameters(self) -> None:
         """Load all declared parameters into instance variables."""
         self.translation_scale = self.get_parameter("translation_scale").value
         self.rotation_scale = self.get_parameter("rotation_scale").value
         self.high_speed_multiplier = self.get_parameter("high_speed_multiplier").value
         self.deadman_threshold = self.get_parameter("deadman_threshold").value
+        self.use_stamped_msg = self.get_parameter("use_stamped_msg").value
 
     def process_joystick_input(self, joy_msg: Joy) -> None:
         """
@@ -149,8 +167,17 @@ class XboxController(Node):
                 -1.0 * rotation_value if twist.linear.x < 0 else rotation_value
             )
 
+        # Create and publish appropriate message type
+        if self.use_stamped_msg:
+            stamped_twist = TwistStamped()
+            stamped_twist.header.stamp = self.get_clock().now().to_msg()
+            stamped_twist.header.frame_id = "base_link"
+            stamped_twist.twist = twist
+            self.velocity_publisher.publish(stamped_twist)
+        else:
+            self.velocity_publisher.publish(twist)
+
         self._log_debug_info(joy_msg, twist, is_regular_speed, is_high_speed)
-        self.velocity_publisher.publish(twist)
 
     def _log_debug_info(
         self, joy_msg: Joy, twist: Twist, is_regular_speed: bool, is_high_speed: bool
