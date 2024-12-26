@@ -3,6 +3,7 @@
 import rclpy
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
+from rcl_interfaces.msg import ParameterDescriptor, FloatingPointRange
 from sensor_msgs.msg import Joy
 
 
@@ -12,7 +13,7 @@ class XboxController(Node):
 
     This node subscribes to joystick inputs and converts them into velocity commands
     for robot control. It includes two dead man's switches for different speed modes
-    and configurable scaling factors.
+    and configurable scaling factors through ROS2 parameters.
 
     Publishers:
         input_devices/cmd_vel (geometry_msgs/Twist): Robot velocity commands
@@ -21,27 +22,25 @@ class XboxController(Node):
         joy (sensor_msgs/Joy): Raw joystick inputs
 
     Parameters:
-        TRANSLATION_SCALE (float): Base scaling factor for linear motion (default: 0.25)
-        ROTATION_SCALE (float): Base scaling factor for angular motion (default: 0.50)
-        HIGH_SPEED_MULTIPLIER (float): Multiplier for high-speed mode (default: 2.0)
-        DEADMAN_THRESHOLD (float): Threshold for dead man's switch activation (default: -0.95)
+        translation_scale (double): Base scaling for linear motion [m/s] (default: 0.25)
+        rotation_scale (double): Base scaling for angular motion [rad/s] (default: 0.50)
+        high_speed_multiplier (double): Multiplier for high-speed mode (default: 2.0)
+        deadman_threshold (double): Threshold for dead man's switch activation (default: -0.95)
     """
 
     def __init__(self):
-        """Initialize the Xbox controller node."""
+        """Initialize the Xbox controller node with configurable parameters."""
         super().__init__("xbox_controller")
-
-        # Constants
-        self.TRANSLATION_SCALE = 0.25
-        self.ROTATION_SCALE = 0.50
-        self.HIGH_SPEED_MULTIPLIER = 2.0
-        self.DEADMAN_THRESHOLD = -0.95
 
         # Xbox controller axis mappings
         self.LEFT_STICK_Y_AXIS = 1
         self.RIGHT_STICK_X_AXIS = 2
         self.RIGHT_TRIGGER_AXIS = 5  # Regular speed deadman switch
         self.LEFT_TRIGGER_AXIS = 6  # High speed deadman switch
+
+        # Declare and load parameters with proper constraints and descriptions
+        self._declare_parameters()
+        self._load_parameters()
 
         # Publishers and subscribers
         self.velocity_publisher = self.create_publisher(
@@ -51,13 +50,76 @@ class XboxController(Node):
             Joy, "joy", self.process_joystick_input, 10
         )
 
+        self.get_logger().info(
+            f"Xbox controller initialized with translation scale: {self.translation_scale}, "
+            f"rotation scale: {self.rotation_scale}, "
+            f"high speed multiplier: {self.high_speed_multiplier}"
+        )
+
+    def _declare_parameters(self) -> None:
+        """Declare all node parameters with proper constraints and descriptions."""
+        # Parameter range constraints
+        speed_range = FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)
+
+        multiplier_range = FloatingPointRange(from_value=1.0, to_value=5.0, step=0.1)
+
+        threshold_range = FloatingPointRange(from_value=-1.0, to_value=0.0, step=0.01)
+
+        # Declare all parameters with proper descriptors
+        self.declare_parameter(
+            "translation_scale",
+            0.25,
+            ParameterDescriptor(
+                description="Base scaling factor for linear motion in m/s",
+                floating_point_range=[speed_range],
+                read_only=False,
+            ),
+        )
+
+        self.declare_parameter(
+            "rotation_scale",
+            0.50,
+            ParameterDescriptor(
+                description="Base scaling factor for angular motion in rad/s",
+                floating_point_range=[speed_range],
+                read_only=False,
+            ),
+        )
+
+        self.declare_parameter(
+            "high_speed_multiplier",
+            2.0,
+            ParameterDescriptor(
+                description="Multiplier for high-speed mode",
+                floating_point_range=[multiplier_range],
+                read_only=False,
+            ),
+        )
+
+        self.declare_parameter(
+            "deadman_threshold",
+            -0.95,
+            ParameterDescriptor(
+                description="Threshold for dead man's switch activation",
+                floating_point_range=[threshold_range],
+                read_only=False,
+            ),
+        )
+
+    def _load_parameters(self) -> None:
+        """Load all declared parameters into instance variables."""
+        self.translation_scale = self.get_parameter("translation_scale").value
+        self.rotation_scale = self.get_parameter("rotation_scale").value
+        self.high_speed_multiplier = self.get_parameter("high_speed_multiplier").value
+        self.deadman_threshold = self.get_parameter("deadman_threshold").value
+
     def process_joystick_input(self, joy_msg: Joy) -> None:
         """
         Process incoming joystick messages and publish velocity commands.
 
         The node supports two speed modes:
         - Regular speed (RIGHT_TRIGGER): Normal operation
-        - High speed (LEFT_TRIGGER): Operates at 2x normal speed
+        - High speed (LEFT_TRIGGER): Operates at high_speed_multiplier times normal speed
 
         Args:
             joy_msg (sensor_msgs/Joy): The incoming joystick message
@@ -66,9 +128,9 @@ class XboxController(Node):
 
         # Check deadman switches
         is_regular_speed = (
-            joy_msg.axes[self.RIGHT_TRIGGER_AXIS] <= self.DEADMAN_THRESHOLD
+            joy_msg.axes[self.RIGHT_TRIGGER_AXIS] <= self.deadman_threshold
         )
-        is_high_speed = joy_msg.axes[self.LEFT_TRIGGER_AXIS] <= self.DEADMAN_THRESHOLD
+        is_high_speed = joy_msg.axes[self.LEFT_TRIGGER_AXIS] <= self.deadman_threshold
 
         if is_regular_speed or is_high_speed:
             # Calculate base movement
@@ -76,11 +138,11 @@ class XboxController(Node):
             rotation_input = joy_msg.axes[self.RIGHT_STICK_X_AXIS]
 
             # Apply appropriate scaling based on which deadman switch is engaged
-            speed_multiplier = self.HIGH_SPEED_MULTIPLIER if is_high_speed else 1.0
+            speed_multiplier = self.high_speed_multiplier if is_high_speed else 1.0
 
-            twist.linear.x = linear_input * self.TRANSLATION_SCALE * speed_multiplier
+            twist.linear.x = linear_input * self.translation_scale * speed_multiplier
 
-            rotation_value = rotation_input * self.ROTATION_SCALE * speed_multiplier
+            rotation_value = rotation_input * self.rotation_scale * speed_multiplier
 
             # Invert rotation direction when moving backwards
             twist.angular.z = (
