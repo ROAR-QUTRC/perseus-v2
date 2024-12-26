@@ -5,4 +5,5 @@ self: super: {
   perseus-description = super.callPackage ./perseus-description.nix { };
   perseus-hardware = super.callPackage ./perseus-hardware.nix { };
   perseus-sensors = super.callPackage ./perseus-sensors.nix { };
+  perseus-simulation = super.callPackage ./perseus-simulation.nix { };
 }
