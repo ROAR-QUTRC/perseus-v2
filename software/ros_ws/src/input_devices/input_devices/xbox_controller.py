@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 
 import rclpy
+from typing import List
 from geometry_msgs.msg import Twist, TwistStamped
 from rclpy.node import Node
-from rcl_interfaces.msg import ParameterDescriptor, FloatingPointRange
+from rcl_interfaces.msg import (
+    ParameterDescriptor,
+    FloatingPointRange,
+    SetParametersResult,
+)
+from rclpy.parameter import Parameter
 from sensor_msgs.msg import Joy
 
 
@@ -39,6 +45,15 @@ class XboxController(Node):
         self.RIGHT_TRIGGER_AXIS = 5  # Regular speed deadman switch
         self.LEFT_TRIGGER_AXIS = 6  # High speed deadman switch
 
+        # Create range constraints as instance variables for use in callback
+        self._speed_range = FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)
+        self._multiplier_range = FloatingPointRange(
+            from_value=1.0, to_value=5.0, step=0.1
+        )
+        self._threshold_range = FloatingPointRange(
+            from_value=-1.0, to_value=0.0, step=0.01
+        )
+
         # Declare and load parameters with proper constraints and descriptions
         self._declare_parameters()
         self._load_parameters()
@@ -66,20 +81,13 @@ class XboxController(Node):
 
     def _declare_parameters(self) -> None:
         """Declare all node parameters with proper constraints and descriptions."""
-        # Parameter range constraints
-        speed_range = FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)
-
-        multiplier_range = FloatingPointRange(from_value=1.0, to_value=5.0, step=0.1)
-
-        threshold_range = FloatingPointRange(from_value=-1.0, to_value=0.0, step=0.01)
-
-        # Declare all parameters with proper descriptors
+        # Parameter declarations
         self.declare_parameter(
             "translation_scale",
             0.25,
             ParameterDescriptor(
                 description="Base scaling factor for linear motion in m/s",
-                floating_point_range=[speed_range],
+                floating_point_range=[self._speed_range],
                 read_only=False,
             ),
         )
@@ -89,7 +97,7 @@ class XboxController(Node):
             0.50,
             ParameterDescriptor(
                 description="Base scaling factor for angular motion in rad/s",
-                floating_point_range=[speed_range],
+                floating_point_range=[self._speed_range],
                 read_only=False,
             ),
         )
@@ -99,7 +107,7 @@ class XboxController(Node):
             2.0,
             ParameterDescriptor(
                 description="Multiplier for high-speed mode",
-                floating_point_range=[multiplier_range],
+                floating_point_range=[self._multiplier_range],
                 read_only=False,
             ),
         )
@@ -109,7 +117,7 @@ class XboxController(Node):
             -0.95,
             ParameterDescriptor(
                 description="Threshold for dead man's switch activation",
-                floating_point_range=[threshold_range],
+                floating_point_range=[self._threshold_range],
                 read_only=False,
             ),
         )
@@ -122,6 +130,59 @@ class XboxController(Node):
                 read_only=True,
             ),
         )
+        self.add_on_set_parameters_callback(self._parameter_callback)
+
+    def _parameter_callback(self, params: List[Parameter]) -> SetParametersResult:
+        """Handle parameter updates during runtime.
+
+        Args:
+            params: List of parameters that are being updated
+
+        Returns:
+            SetParametersResult indicating success/failure of parameter updates
+        """
+        for param in params:
+            if param.name == "high_speed_multiplier":
+                if (
+                    param.value < self._multiplier_range.from_value
+                    or param.value > self._multiplier_range.to_value
+                ):
+                    return SetParametersResult(
+                        successful=False, reason="Multiplier out of valid range"
+                    )
+                self.high_speed_multiplier = param.value
+
+            elif param.name == "deadman_threshold":
+                if (
+                    param.value < self._threshold_range.from_value
+                    or param.value > self._threshold_range.to_value
+                ):
+                    return SetParametersResult(
+                        successful=False, reason="Threshold out of valid range"
+                    )
+                self.deadman_threshold = param.value
+
+            elif param.name == "translation_scale":
+                if (
+                    param.value < self._speed_range.from_value
+                    or param.value > self._speed_range.to_value
+                ):
+                    return SetParametersResult(
+                        successful=False, reason="Translation scale out of valid range"
+                    )
+                self.translation_scale = param.value
+
+            elif param.name == "rotation_scale":
+                if (
+                    param.value < self._speed_range.from_value
+                    or param.value > self._speed_range.to_value
+                ):
+                    return SetParametersResult(
+                        successful=False, reason="Rotation scale out of valid range"
+                    )
+                self.rotation_scale = param.value
+
+        return SetParametersResult(successful=True)
 
     def _load_parameters(self) -> None:
         """Load all declared parameters into instance variables."""
