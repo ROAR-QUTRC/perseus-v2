@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>perseus_simulation</name>
+  <version>0.0.1</version>
+  <description>ROS 2 package for simulating Perseus with Gazebo Fortress.</description>
+  <maintainer email="1388693+DingoOz@users.noreply.github.com">DingoOz</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>gazebo_ros</depend>
+  <depend>perseus_description</depend>
+  <depend>perseus_hardware</depend> <!-- Not sure if this is actually needed for simulation -->
+  <depend>rclcpp</depend>
+  <depend>backward_ros</depend>
+    
+  <export>
+    <build_type>ament_cmake</build_type>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <gazebo_ros gazebo_media_path="${prefix}/worlds"/>
+  </export>
+</package>

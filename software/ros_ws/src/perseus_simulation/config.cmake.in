@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+
+find_package(gazebo_ros REQUIRED)
+find_package(gazebo_ros2_control REQUIRED)
+find_package(controller_interface REQUIRED)
+find_package(hardware_interface REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(perseus_description REQUIRED)
+find_package(perseus_hardware REQUIRED)
+
+if(NOT TARGET perseus_simulation::perseus_simulation)
+  include("${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}_targets.cmake")
+endif()
+
+check_required_components(perseus_simulation)
