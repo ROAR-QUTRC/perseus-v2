@@ -25,6 +25,7 @@ namespace networking
         /// @brief Handler to be run after connecting the socket
         std::function<bool(int)> postConnect{};
     };
+    /// @brief A RAII wrapper around network sockets providing a simple interface for sending and receiving data
     class Client
     {
     public:
