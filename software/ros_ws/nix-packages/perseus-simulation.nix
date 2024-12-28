@@ -4,9 +4,9 @@
   buildRosPackage,
   ament-cmake,
   backward-ros,
-  gz-msgs9,
-  gz-sim7,
-  gz-transport12,
+  gz-msgs10,
+  gz-sim8,
+  gz-transport13,
   perseus-description,
   perseus-hardware,
   rclcpp,
@@ -24,9 +24,9 @@ buildRosPackage rec {
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
     backward-ros
-    gz-msgs9
-    gz-sim7
-    gz-transport12
+    gz-msgs10
+    gz-sim8
+    gz-transport13
     perseus-description
     perseus-hardware
     rclcpp
