@@ -4,7 +4,7 @@
   buildRosPackage,
   ament-cmake,
   backward-ros,
-  gazebo-ros,
+  gazebo-ros-pkgs,
   perseus-description,
   perseus-hardware,
   rclcpp,
@@ -19,7 +19,7 @@ buildRosPackage rec {
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
     backward-ros
-    gazebo-ros
+    gazebo-ros-pkgs
     perseus-description
     perseus-hardware
     rclcpp
