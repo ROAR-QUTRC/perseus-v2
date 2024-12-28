@@ -4,10 +4,15 @@
   buildRosPackage,
   ament-cmake,
   backward-ros,
+  gz-msgs9,
   gz-sim7,
+  gz-transport12,
   perseus-description,
   perseus-hardware,
   rclcpp,
+  ros-gz-bridge,
+  ros-gz-interfaces,
+  ros-gz-sim,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-simulation";
@@ -19,10 +24,15 @@ buildRosPackage rec {
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
     backward-ros
+    gz-msgs9
     gz-sim7
+    gz-transport12
     perseus-description
     perseus-hardware
     rclcpp
+    ros-gz-bridge
+    ros-gz-interfaces
+    ros-gz-sim
   ];
   nativeBuildInputs = [ ament-cmake ];
 
