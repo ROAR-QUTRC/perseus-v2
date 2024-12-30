@@ -68,9 +68,84 @@
             # import ros workspace packages + fixes
             (import ./software/overlay.nix rosDistro)
             (final: prev: {
-              # alias the output to pkgs.ros to make it easier to use
               ros = final.rosPackages.${rosDistro}.overrideScope (
-                rosFinal: rosPrev: { manualDomainId = toString productionDomainId; }
+                rosFinal: rosPrev: {
+                  manualDomainId = toString productionDomainId;
+
+                  # Override gz-transport-vendor to include libsodium
+                  gz-transport-vendor = rosPrev.gz-transport-vendor.overrideAttrs (oldAttrs: {
+                    nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [
+                      final.makeWrapper
+                      final.pkg-config
+                    ];
+                    buildInputs = (oldAttrs.buildInputs or [ ]) ++ [
+                      final.libsodium
+                      final.zeromq
+                    ];
+                    propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or [ ]) ++ [
+                      final.libsodium
+                      final.zeromq
+                    ];
+
+                    LDFLAGS = "-L${final.libsodium}/lib -lsodium -L${final.zeromq}/lib -lzmq -Wl,-rpath,${final.libsodium}/lib -Wl,-rpath,${final.zeromq}/lib";
+
+                    PKG_CONFIG_PATH = "${final.libsodium}/lib/pkgconfig:${final.zeromq}/lib/pkgconfig:$PKG_CONFIG_PATH";
+
+                    postFixup =
+                      (oldAttrs.postFixup or "")
+                      + ''
+                        for f in $out/bin/*; do
+                          if [ -f "$f" ]; then
+                            wrapProgram "$f" \
+                              --prefix LD_LIBRARY_PATH : "${
+                                final.lib.makeLibraryPath [
+                                  final.libsodium
+                                  final.zeromq
+                                ]
+                              }" \
+                              --prefix PKG_CONFIG_PATH : "${final.libsodium}/lib/pkgconfig:${final.zeromq}/lib/pkgconfig"
+                          fi
+                        done
+                      '';
+                  });
+
+                  # Override gz-sim-vendor to include libsodium
+                  gz-sim-vendor = rosPrev.gz-sim-vendor.overrideAttrs (oldAttrs: {
+                    nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [
+                      final.makeWrapper
+                      final.pkg-config
+                    ];
+                    buildInputs = (oldAttrs.buildInputs or [ ]) ++ [
+                      final.libsodium
+                      final.zeromq
+                    ];
+                    propagatedBuildInputs = (oldAttrs.propagatedBuildInputs or [ ]) ++ [
+                      final.libsodium
+                      final.zeromq
+                    ];
+
+                    LDFLAGS = "-L${final.libsodium}/lib -lsodium -L${final.zeromq}/lib -lzmq -Wl,-rpath,${final.libsodium}/lib -Wl,-rpath,${final.zeromq}/lib";
+
+                    PKG_CONFIG_PATH = "${final.libsodium}/lib/pkgconfig:${final.zeromq}/lib/pkgconfig:$PKG_CONFIG_PATH";
+
+                    postFixup =
+                      (oldAttrs.postFixup or "")
+                      + ''
+                        for f in $out/bin/*; do
+                          if [ -f "$f" ]; then
+                            wrapProgram "$f" \
+                              --prefix LD_LIBRARY_PATH : "${
+                                final.lib.makeLibraryPath [
+                                  final.libsodium
+                                  final.zeromq
+                                ]
+                              }" \
+                              --prefix PKG_CONFIG_PATH : "${final.libsodium}/lib/pkgconfig:${final.zeromq}/lib/pkgconfig"
+                          fi
+                        done
+                      '';
+                  });
+                }
               );
               unstable = pkgs-unstable;
             })
@@ -113,6 +188,38 @@
         };
         # Packages needed to run the simulation
         simPkgs = {
+          inherit (pkgs)
+            libsodium
+            zeromq
+            ;
+          inherit (pkgs.ros)
+            # Gazebo Garden/Ignition vendors
+            gz-cmake-vendor
+            gz-common-vendor
+            gz-dartsim-vendor
+            gz-fuel-tools-vendor
+            gz-gui-vendor
+            gz-launch-vendor
+            gz-math-vendor
+            gz-msgs-vendor
+            gz-ogre-next-vendor
+            gz-physics-vendor
+            gz-plugin-vendor
+            gz-rendering-vendor
+            gz-sensors-vendor
+            gz-sim-vendor
+            gz-tools-vendor
+            gz-transport-vendor
+            gz-utils-vendor
+            gz-sim-fixed
+            # ROS 2 Gazebo integration
+            ros-gz-bridge
+            ros-gz-image
+            ros-gz-interfaces
+            ros-gz-sim
+            ros-gz-sim-demos
+            ;
+
         };
 
         # --- ROS WORKSPACES ---
@@ -122,6 +229,7 @@
             ros,
             name ? "ROAR",
             additionalPkgs ? { },
+            additionalShellHook ? "",
           }:
           let
             workspace = (
@@ -151,7 +259,22 @@
         simulation = mkWorkspace {
           inherit (pkgs) ros;
           name = "ROAR Simulation";
-          additionalPkgs = simPkgs;
+          additionalPkgs = simPkgs // {
+            inherit (pkgs)
+              zeromq
+              libsodium
+              ;
+          };
+          #Gazebo is currently broken on Wayland
+          additionalShellHook = ''
+            export LD_LIBRARY_PATH=${
+              pkgs.lib.makeLibraryPath [
+                pkgs.zeromq
+                pkgs.libsodium
+              ]
+            }:$LD_LIBRARY_PATH
+            unset QT_QPA_PLATFORM
+          '';
         };
 
         # --- PYTHON (UV) WORKSPACES ---

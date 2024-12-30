@@ -33,6 +33,10 @@ let
         rviz2-fixed = prev.writeShellScriptBin "rviz2-fixed" ''
           NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure "github:nix-community/nixGL" "${prev.lib.getExe rosPrev.rviz2}" -- "$@"
         '';
+        # wrap gz sim with nixGL
+        gz-sim-fixed = prev.writeShellScriptBin "gz-sim-fixed" ''
+          NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure "github:nix-community/nixGL" -- gz sim "$@"
+        '';
       })
     ] rosFinal rosPrev);
 in
