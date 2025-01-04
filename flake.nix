@@ -32,6 +32,10 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
@@ -45,7 +49,7 @@
       pyproject-build-systems,
       treefmt-nix,
       ...
-    }:
+    }@inputs:
     nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -247,7 +251,10 @@
           # formatting = treefmtEval.config.build.check self;
         };
       }
-    );
+    )
+    // {
+      homeConfigurations = (import ./software/home-manager/default.nix) inputs;
+    };
   nixConfig = {
     # note from James Nichol - I set up a custom cache at https://qutrc-roar.cachix.org
     # Currently I'm compiling for x86-64 and aarch64 on my machine and pushing to it whenever I make changes
