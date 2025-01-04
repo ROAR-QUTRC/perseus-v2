@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-set -e
+set -euo pipefail
 
 shopt -s globstar # Enable globstar for recursive globbing
 
