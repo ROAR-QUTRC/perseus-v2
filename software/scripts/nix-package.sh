@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 # cd to the software directory
 cd "$(git rev-parse --show-toplevel)"/software
