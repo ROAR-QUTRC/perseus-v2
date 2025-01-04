@@ -16,12 +16,15 @@ jobs:
       software: ${{ steps.filter.outputs.software }}
       docs: ${{ steps.filter.outputs.docs }}
       docs-shell: ${{ steps.filter.outputs.docs-shell }}
+      formatter-config: ${{ steps.filter.outputs.formatter-config }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: .github/filters.yaml
+  # We don't want to run commit actions on pull request workflows (ie, after the merge commit),
+  # only on push, so all commit+push steps are filtered by the event name
   format:
     name: Format and lint
     concurrency:
@@ -30,18 +33,26 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    needs: changes
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v29
       - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Update `treefmt.toml`
+        if: ${{ (github.event_name != 'pull_request') &&  (needs.changes.outputs.formatter-config == 'true') }}
+        id: update-config
+        run: nix run -L .#tools.treefmt-write-config
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        if: ${{ steps.update-config.outcome == 'success' }}
+        with:
+          commit_message: "chore: Update `treefmt.toml`"
       - name: Format and lint repository
         run: nix fmt
       - uses: stefanzweifel/git-auto-commit-action@v5
-        # don't want to run the commit action on pull request workflows (ie, after the merge commit), only on push
-        # note: this applies to all push workflows, not just this job
         if: ${{ github.event_name != 'pull_request' }}
+        id: push-format
         with:
-          commit_message: "Run format and lint"
+          commit_message: "chore: Format and lint"
   docs-shell:
     name: Build docs dev shell
     runs-on: ubuntu-latest
