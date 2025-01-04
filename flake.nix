@@ -177,6 +177,7 @@
           cd "$(git rev-parse --show-toplevel)"
           cp ${treefmtEval.config.build.configFile} ./treefmt.toml
           chmod +w treefmt.toml
+          sed -i 's,command.*/,command = ",' treefmt.toml
         '';
 
         # --- FORMATTING ---
