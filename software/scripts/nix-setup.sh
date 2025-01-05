@@ -45,6 +45,15 @@ else
   RESTART_NIX_DAEMON=true
 fi
 
+DISABLE_WARN_DIRTY="warn-dirty = false"
+if grep -Fq "$DISABLE_WARN_DIRTY" /etc/nix/nix.conf; then
+  echo "Dirty git tree warning already disabled!"
+else
+  echo "Disabling dirty git tree warning..."
+  echo "$DISABLE_WARN_DIRTY" | sudo tee -a /etc/nix/nix.conf
+  RESTART_NIX_DAEMON=true
+fi
+
 # restart Nix daemon so above changes take effect - but only if needed
 if [ "${RESTART_NIX_DAEMON:-}" = true ]; then
   echo "Restarting nix daemon"
