@@ -17,9 +17,9 @@
     oh-my-zsh = {
       enable = true;
       plugins = [
-        "git"
         "sudo"
       ];
+      # theme doesn't really matter since we're using p10k, though
       theme = "eastwood";
 
       extraConfig = ''
