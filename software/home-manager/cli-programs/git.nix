@@ -28,4 +28,5 @@
     enable = true;
     package = pkgs.unstable.gh;
   };
+  programs.zsh.oh-my-zsh.plugins = [ "git" ];
 }
