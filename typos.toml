@@ -5,9 +5,9 @@ extend-ignore-re = [
   # https://github.com/crate-ci/typos/blob/master/docs/reference.md
   # for the origin of these two regexes
   # disable lines with trailing commented spellchecker:disable-line
-  "(?Rm)^.*(?:#|//|%)\\s*spellchecker:disable-line$",
+  "(?Rm)^.*(?:#|//|%)\\s*spellchecker:\\s*disable-line$",
   # disable blocks between spellchecker:off and spellchecker:on
-  "(?s)(?:#|//|%)\\s*spellchecker:off.*?\\n\\s*(?:#|//|%)\\s*spellchecker:on",
+  "(?s)(?:#|//|%)\\s*spellchecker:\\s*off.*?\\n\\s*(?:#|//|%)\\s*spellchecker:\\s*on",
 ]
 
 [type.md]
