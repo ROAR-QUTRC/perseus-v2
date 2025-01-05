@@ -5,6 +5,21 @@ on:
     # note: the time is semi-random
     - cron: "42 0 * * 1"
 jobs:
+  global-vars:
+    name: Setup global variables
+    runs-on: ubuntu-latest
+    outputs:
+      nix-conf: ${{ steps.nix-conf.outputs.nix-conf }}
+    steps:
+      - name: Export Nix config
+        id: nix-conf
+        run: |
+          {
+            echo 'nix-conf<<NIX_EOF'
+            echo 'extra-trusted-substituters = https://roar-qutrc.cachix.org https://ros.cachix.org'
+            echo 'extra-trusted-public-keys = roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA= ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo='
+            echo 'NIX_EOF'
+          } >> "$GITHUB_OUTPUT"
   intersphinx:
     if: ${{ github.ref == 'refs/heads/main' }}
     concurrency:
@@ -12,9 +27,12 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    needs: global-vars
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v29
+        with:
+          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Update intersphinx inventory files
         run: nix run .#docs.fetch-inventories
