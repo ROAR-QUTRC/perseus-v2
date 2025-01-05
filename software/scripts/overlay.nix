@@ -28,6 +28,7 @@ in
       docs-shell = build-cachix-script "docs-shell";
     };
     clean = build-wrapped-script "clean" (with prev; [ git ]);
+    machine-setup = build-wrapped-script "machine-setup" (with prev; [ git ]);
     vcan-setup = build-wrapped-script "vcan-setup" (
       with prev;
       [
