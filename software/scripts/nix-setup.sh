@@ -25,14 +25,28 @@ else
   echo "Nix already present on system!"
 fi
 
-# add current user to nix trusted-users so we can do things like configure binary caching
-if grep -Fq "$USER" /etc/nix/nix.conf; then
-  echo "Nix trusted-users already set up!"
+# Add the ROS overlay binary cache + our own cache to the trusted substituters and keys.
+# Allows us to use them in the flake.
+EXTRA_TRUSTED_SUBSTITUTERS="extra-trusted-substituters = https://roar-qutrc.cachix.org https://ros.cachix.org"
+if grep -Fq "$EXTRA_TRUSTED_SUBSTITUTERS" /etc/nix/nix.conf; then
+  echo "Extra trusted substituters already present!"
 else
-  echo "Adding current user to nix trusted-users..."
-  echo "trusted-users = root $USER" | sudo tee -a /etc/nix/nix.conf
+  echo "Adding extra trusted substituters..."
+  echo "$EXTRA_TRUSTED_SUBSTITUTERS" | sudo tee -a /etc/nix/nix.conf
+  RESTART_NIX_DAEMON=true
+fi
 
-  # restart Nix daemon so above changes take effect
+EXTRA_TRUSTED_KEYS="extra-trusted-public-keys = roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA= ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo="
+if grep -Fq "$EXTRA_TRUSTED_KEYS" /etc/nix/nix.conf; then
+  echo "Extra trusted keys already present!"
+else
+  echo "Adding extra trusted keys..."
+  echo "$EXTRA_TRUSTED_KEYS" | sudo tee -a /etc/nix/nix.conf
+  RESTART_NIX_DAEMON=true
+fi
+
+# restart Nix daemon so above changes take effect - but only if needed
+if [ "${RESTART_NIX_DAEMON:-}" = true ]; then
   echo "Restarting nix daemon"
   sudo systemctl restart nix-daemon
 fi

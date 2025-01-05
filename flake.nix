@@ -257,19 +257,11 @@
       homeConfigurations = (import ./software/home-manager/default.nix) inputs;
     };
   nixConfig = {
-    # note from James Nichol - I set up a custom cache at https://qutrc-roar.cachix.org
-    # Currently I'm compiling for x86-64 and aarch64 on my machine and pushing to it whenever I make changes
-    # to the Nix config - contact me if you want an auth token to push your own builds
     extra-substituters = [
       "https://roar-qutrc.cachix.org"
       "https://ros.cachix.org"
-      "https://qutrc-roar.cachix.org"
     ];
-    extra-trusted-public-keys = [
-      "roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA="
-      "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo="
-      "qutrc-roar.cachix.org-1:lARPhJL+PLuGd021HeN8CQOGGiYVEVGws5za+39M1Z0="
-    ];
+
     # note that this is normally a VERY BAD IDEA but it may be needed so the docs can have internet access,
     # with certain configurations. Currently, everything is configured to work offline with cached files in the git repo.
 
