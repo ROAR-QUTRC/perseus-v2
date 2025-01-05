@@ -7,6 +7,22 @@ on:
 permissions:
   contents: read
 jobs:
+  # set up variables shared between jobs
+  global-vars:
+    name: Setup global variables
+    runs-on: ubuntu-latest
+    outputs:
+      nix-conf: ${{ steps.nix-conf.outputs.nix-conf }}
+    steps:
+      - name: Export Nix config
+        id: nix-conf
+        run: |
+          {
+            echo 'nix-conf<<NIX_EOF'
+            echo 'extra-trusted-substituters = https://roar-qutrc.cachix.org https://ros.cachix.org'
+            echo 'extra-trusted-public-keys = roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA= ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo='
+            echo 'NIX_EOF'
+          } >> "$GITHUB_OUTPUT"
   # get the file changes to filter other jobs
   changes:
     name: Detect changes
@@ -33,10 +49,12 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: changes
+    needs: [changes, global-vars]
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v29
+        with:
+          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Update `treefmt.toml`
         if: ${{ (github.event_name != 'pull_request') &&  (needs.changes.outputs.formatter-config == 'true') }}
@@ -58,10 +76,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: binary-deployment
     if: ${{ (needs.changes.outputs.docs-shell == 'true') || (needs.changes.outputs.manual == 'true') }}
-    needs: [changes, format]
+    needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v29
+        with:
+          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Upload docs dev shell to Cachix
         run: nix run -L .#scripts.cachix.docs-shell
@@ -72,10 +92,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: docs-deployment
     if: ${{ (needs.changes.outputs.docs == 'true') || (needs.changes.outputs.manual == 'true') }}
-    needs: [changes, format, docs-shell]
+    needs: [changes, format, docs-shell, global-vars]
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v29
+        with:
+          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build docs
         run: nix build -L .#docs
@@ -105,10 +127,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: binary-deployment
     if: ${{ (needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true') }}
-    needs: [changes, format]
+    needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v29
+        with:
+          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build repository
         run: nix build -L
