@@ -1,0 +1,7 @@
+# Add Nix files to path available with sudo.
+# Since /nix is owned by root:root, it's fine to be at the start.
+# The rest are standard secure_path, until the last one,
+# which is the currently active home-manager profile.
+# Technically, not being owned by root, it *is* a security risk,
+# but given that it's isolated to the specific user, it's *probably* fine
+Defaults:SUBSTITUTE_USER secure_path="/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:SUBSTITUTE_HOME/.nix-profile/bin"

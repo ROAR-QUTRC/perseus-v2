@@ -21,6 +21,7 @@
     ./shell
     ./cli-programs
     ./gui-programs
+    ./config-files
   ];
 
   # Let Home Manager install and manage itself.
