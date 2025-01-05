@@ -6,9 +6,10 @@
 }@inputs:
 let
   # build a configuration:
+  # - Adds the unstable nixpkgs overlay so unstable packages can be accessed from `pkgs.unstable`
   # - Loads the current home.nix file which in turn loads all the default config
   # - If a hostname is provided, loads the machine-specific config from machines/${hostname}/default.nix
-  # - Adds the unstable nixpkgs overlay so unstable packages can be accessed from `pkgs.unstable`
+  # - Attempts to load any user-specific config from users/${username}/default.nix
   buildConfig =
     {
       system,
@@ -21,6 +22,7 @@ let
       pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
       configAttrName = if hostname != "" then "${username}@${hostname}" else username;
       machineConfig = ./machines/${hostname}/default.nix;
+      userConfig = ./users/${username}/default.nix;
     in
     {
       ${configAttrName} = home-manager.lib.homeManagerConfiguration {
@@ -36,7 +38,8 @@ let
             )
             ./home.nix
           ]
-          ++ pkgs.lib.lists.optional ((hostname != "") && (builtins.pathExists machineConfig)) machineConfig;
+          ++ pkgs.lib.lists.optional ((hostname != "") && (builtins.pathExists machineConfig)) machineConfig
+          ++ pkgs.lib.lists.optional (builtins.pathExists userConfig) userConfig;
         extraSpecialArgs = {
           inherit
             inputs
@@ -75,5 +78,14 @@ buildConfigs [
     system = "x86_64-linux";
     username = "qutrc";
     hostname = "gcs";
+  }
+  # personal systems
+  {
+    system = "aarch64-linux";
+    username = "jcnic";
+  }
+  {
+    system = "aarch64-linux";
+    username = "dingo";
   }
 ]
