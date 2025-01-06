@@ -234,10 +234,11 @@
         };
 
         apps = {
-          default = {
+          perseus = {
             type = "app";
             program = "${pkgs.lib.getExe perseus}";
           };
+          default = self.apps.${system}.perseus;
           ros2 = {
             type = "app";
             program = "${default}/bin/ros2";
