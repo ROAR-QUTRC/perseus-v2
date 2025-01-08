@@ -171,7 +171,7 @@
 		<p class="mt-2 opacity-60">
 			Position: ({Math.round(turtlePose.x)}, {Math.round(turtlePose.y)})
 		</p>
-		<p class="opacity-60">Active turle id: {settings.groups.General.TurtleId.value}</p>
+		<p class="opacity-60">Active turtle id: {settings.groups.General.TurtleId.value}</p>
 	</div>
 </div>
 

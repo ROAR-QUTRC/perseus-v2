@@ -13,7 +13,7 @@
 	// on:change event handler triggers twice lol
 	let lastTimeStamp = -1;
 	const updateWidgetPosition = (event: any, name: string) => {
-		// if the differnce in time stamps is less than 3ms, ignore the event
+		// if the difference in time stamps is less than 3ms, ignore the event
 		if (!(event.timeStamp - lastTimeStamp < 3)) {
 			lastTimeStamp = event.timeStamp;
 

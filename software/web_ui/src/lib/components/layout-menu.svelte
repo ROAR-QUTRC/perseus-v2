@@ -39,7 +39,7 @@
 	};
 </script>
 
-<!-- Can add catagories to the layout for better organisation if needed -->
+<!-- Can add categories to the layout for better organisation if needed -->
 
 <Dialog.Root
 	open={showLayoutDialog !== 'closed'}
