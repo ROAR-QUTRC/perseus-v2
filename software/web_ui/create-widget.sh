@@ -1,14 +1,14 @@
 #!/bin/bash
 
 if [ "$EUID" -eq 0 ]; then
-	echo "Error: Please run this script as a non-root user"
-	exit 1
+  echo "Error: Please run this script as a non-root user"
+  exit 1
 fi
 
 if [ -z "$1" ]; then
-    echo "Error: Please provide a component name"
-    echo "Usage: ./create-component.sh ComponentName"
-    exit 1
+  echo "Error: Please provide a component name"
+  echo "Usage: ./create-component.sh ComponentName"
+  exit 1
 fi
 
 WIDGET_NAME="$(echo "$1" | sed -r 's/(^|-)([a-z])/\U\2/g' | sed 's/^./\l&/')"
@@ -21,11 +21,11 @@ WIDGET_PATH="$WIDGET_DIR/$WIDGET_NAME.svelte"
 
 # Check if file already exists
 if [ -f "$WIDGET_PATH" ]; then
-    echo "Error: Widget $WIDGET_NAME already exists at $WIDGET_PATH"
-    exit 1
+  echo "Error: Widget $WIDGET_NAME already exists at $WIDGET_PATH"
+  exit 1
 fi
 
-cat > "$WIDGET_PATH" << EOF
+cat >"$WIDGET_PATH" <<EOF
 <script lang="ts" module>
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
 	import type { WidgetSettingsType } from '\$lib/scripts/state.svelte';
