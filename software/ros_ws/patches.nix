@@ -18,6 +18,20 @@ let
           '';
       }
     );
+    # rosbridge incorrectly depends on the bson package instead of pymongo which is what it actually needs
+    # (pymongo provides its own bson implementation, which behaves differently to the bson package)
+    rosbridge-library = rosPrev.rosbridge-library.overrideAttrs (
+      {
+        propagatedBuildInputs ? [ ],
+        ...
+      }:
+      let
+        filteredPropagatedBuildInputs = rosFinal.lib.remove rosPrev.python3Packages.bson propagatedBuildInputs;
+      in
+      {
+        propagatedBuildInputs = filteredPropagatedBuildInputs ++ [ rosPrev.python3Packages.pymongo ];
+      }
+    );
   };
 in
 {

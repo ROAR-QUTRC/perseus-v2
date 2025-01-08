@@ -104,6 +104,7 @@
         standardPkgs = {
           inherit (pkgs) can-utils bashInteractive;
           inherit (pkgs.ros)
+            rosbridge-suite
             rviz2-fixed
             rosbag2
             teleop-twist-keyboard
