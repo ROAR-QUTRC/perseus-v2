@@ -11,7 +11,7 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-WIDGET_NAME="$(echo $1 | sed -r 's/(^|-)([a-z])/\U\2/g' | sed 's/^./\l&/')"
+WIDGET_NAME="$(echo "$1" | sed -r 's/(^|-)([a-z])/\U\2/g' | sed 's/^./\l&/')"
 WIDGET_DIR="./src/lib/widgets"
 
 # Create widget directory if it doesn't exist
