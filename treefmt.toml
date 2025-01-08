@@ -38,7 +38,7 @@ options = []
 command = "prettier"
 excludes = []
 includes = ["*.cjs", "*.css", "*.html", "*.js", "*.json", "*.json5", "*.jsx", "*.md", "*.mdx", "*.mjs", "*.scss", "*.ts", "*.tsx", "*.vue", "*.yaml", "*.yml"]
-options = ["--write"]
+options = ["--write", "--config", "/nix/store/7hwqsfz22awhc8j32myqgj3j6b752f8y-prettierrc.json"]
 
 [formatter.ruff-check]
 command = "ruff"

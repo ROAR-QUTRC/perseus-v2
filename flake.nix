@@ -102,7 +102,12 @@
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
         standardPkgs = {
-          inherit (pkgs) can-utils bashInteractive;
+          inherit (pkgs)
+            bashInteractive
+            can-utils
+            nodejs_22
+            yarn
+            ;
           inherit (pkgs.ros)
             rosbridge-suite
             rviz2-fixed
