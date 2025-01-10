@@ -78,7 +78,7 @@
 						<Sheet.Title>{widgetData.name}</Sheet.Title>
 					</Sheet.Header>
 					{#each Object.keys(widgetData.settings.groups) as group}
-						<Collapsible.Root>
+						<Collapsible.Root open={true}>
 							<Collapsible.Trigger>
 								<Button variant="outline" class="min-w-[200px] justify-between">
 									{changeCase.sentenceCase(group)}
@@ -132,7 +132,7 @@
 											</Select.Root>
 										{:else if widgetData.settings.groups[group][field].type === 'button' && widgetData.settings.groups[group][field].action !== undefined}
 											<Button
-												variant="ghost"
+												variant="outline"
 												size="sm"
 												onclick={() =>
 													handleClick(widgetData.settings.groups[group][field].action!)}
