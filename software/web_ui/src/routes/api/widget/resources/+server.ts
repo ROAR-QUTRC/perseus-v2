@@ -13,10 +13,10 @@ export const GET: RequestHandler = async (req) => {
 				.split(' ')
 				.map((time) => parseInt(time));
 
-			// algorithm refernce mainly from: https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
+			// algorithm reference mainly from: https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
 			// check the man page for /proc/stat for the order of the values
-			const idle: number = times[3] + times[4]; // calcualte idle time
-			const active: number = times[0] + times[1] + times[2] + times[5] + times[6] + times[7]; // calcuate active time
+			const idle: number = times[3] + times[4]; // calculate idle time
+			const active: number = times[0] + times[1] + times[2] + times[5] + times[6] + times[7]; // calculate active time
 
 			// calculate the delta between the current and previous values
 			const idleDelta: number = idle - prevIdle;
