@@ -358,6 +358,12 @@ bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::jso
     RCLCPP_DEBUG(this->get_logger(), "Successfully sent %zd bytes", sent);
     return true;
 }
+catch (const std::exception& e)
+{
+    RCLCPP_ERROR(this->get_logger(), "Error sending JSON request: %s", e.what());
+    return false;
+}
+}
 
 nlohmann::json M2M2Lidar::_receiveJsonResponse()
 {
@@ -546,6 +552,19 @@ void M2M2Lidar::_readSensorData()
 
     RCLCPP_DEBUG(this->get_logger(), "Publishing scan with %zu ranges", scan.ranges.size());
     _scanPublisher->publish(scan);
+}
+
+void swap(M2M2Lidar& first, M2M2Lidar& second) noexcept
+{
+    using std::swap;
+
+    // Add the client to the swap operations
+    swap(first._client, second._client);
+    swap(first._requestId, second._requestId);
+    swap(first._config, second._config);
+    swap(first._scanPublisher, second._scanPublisher);
+    swap(first._imuPublisher, second._imuPublisher);
+    swap(first._readTimer, second._readTimer);
 }
 
 int main(int argc, char** argv)
