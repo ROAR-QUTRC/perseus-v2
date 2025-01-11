@@ -6,6 +6,12 @@ project(
   VERSION 0.0.1
   LANGUAGES CXX)
 
+message(STATUS "CMAKE_PROJECT_NAME: ${CMAKE_PROJECT_NAME}")
+message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
+message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
 set(default_build_type "Debug")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -53,23 +59,74 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+find_package(simple_networking QUIET)
+if(NOT simple_networking_FOUND)
+  message(STATUS "simple_networking not found, adding subdirectory...")
+  message(
+    STATUS
+      "Attempting to add simple_networking from: ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared/simple-networking"
+  )
+  # add_subdirectory(../../../shared/hi-can-raw hi-can-raw)
+  add_subdirectory(../../../shared/simple-networking simple-networking)
+endif()
+
 # COMPILE (Executables)
 
 # Find all source files in the src directory
 file(GLOB_RECURSE M2M2_LIDAR_CODE_SOURCES src/m2m2_lidar/*.cpp)
 # Add the target with those sources
-add_executable(m2m2_lidar ${M2M2_LIDAR_CODE_SOURCES})
-# Set the include directories
+add_library(${PROJECT_NAME} SHARED ${M2M2_LIDAR_CODE_SOURCES})
+
+# Add include directories for the library
 target_include_directories(
-  m2m2_lidar
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/m2m2_lidar>)
+  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                         $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 
+ament_target_dependencies(${PROJECT_NAME} PUBLIC
+                          ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC simple_networking OpenSSL::Crypto)
+
+# Add exec target
+add_executable(m2m2_lidar ${M2M2_LIDAR_CODE_SOURCES})
+
+# Add include dirs for exec
+
+target_include_directories(m2m2_lidar
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Add dependencies for the executable
 ament_target_dependencies(m2m2_lidar PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(m2m2_lidar PUBLIC ${PROJECT_NAME} simple_networking
+                                        OpenSSL::Crypto)
 
-target_link_libraries(m2m2_lidar PRIVATE OpenSSL::Crypto)
+# ^^^^^^^^^^^^^^^^^^^^^^
 
-# INSTALL (ROS Executables)
+# INSTALL (Libraries)
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
+
+# Headers
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+
+# install(ROS Executables)
 install(TARGETS m2m2_lidar DESTINATION lib/${PROJECT_NAME})
+
+# CMake configuration
+install(
+  EXPORT export_${PROJECT_NAME}
+  FILE ${PROJECT_NAME}-config.cmake
+  DESTINATION lib/cmake/${PROJECT_NAME})
+# Versioning
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION}
+                                                 SOVERSION 1)
+# ROS LIBRARY POST-INSTALL
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # ROS FINALISATION
 ament_package()

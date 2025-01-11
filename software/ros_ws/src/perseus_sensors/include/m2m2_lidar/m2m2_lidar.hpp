@@ -3,26 +3,32 @@
 #include <chrono>
 #include <cmath>
 #include <iomanip>
-#include <nlohmann/json.hpp>  // JSON parsing
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
 
+#include "simple_networking/client.hpp"
+
 /**
- * @brief Main class for interfacing with the M2M2 Lidar sensor
+ * @brief ROS2 driver node for the M2M2 LIDAR sensor
  *
- * This class handles both the network communication and protocol parsing
- * for the M2M2 Lidar. While this combines two responsibilities, they are
- * tightly coupled for this specific sensor and the data flow between
- * them is well-defined.
+ * @details Handles communication with the M2M2 LIDAR sensor over TCP/IP,
+ * processes incoming data, and publishes LaserScan and IMU messages.
+ * The driver maintains the connection to the sensor and provides configuration
+ * capabilities.
  */
 class M2M2Lidar : public rclcpp::Node
 {
 public:
+    /**
+     * @brief Configuration parameters for the M2M2 LIDAR sensor
+     */
     struct sensor_config_t
     {
         double scanFrequency;
@@ -31,69 +37,57 @@ public:
         double maxRange;
     };
 
+    /**
+     * @brief Construct a new M2M2Lidar node
+     *
+     * @param options Node options for ROS2 configuration
+     * @throws std::runtime_error If initialization fails
+     */
     explicit M2M2Lidar(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
-    virtual ~M2M2Lidar();                              // destructor virtual because class inherits from rclcpp::Node
-    M2M2Lidar(M2M2Lidar&& other) noexcept;             // move constructor
-    M2M2Lidar& operator=(M2M2Lidar&& other) noexcept;  // move assignment operator
-    // Copy operations (Rule of 5)
-    M2M2Lidar(const M2M2Lidar& other) = delete;             // Lidar can only have own owner
-    M2M2Lidar& operator=(const M2M2Lidar& other) = delete;  // Lidar can only have own owner
 
-    // Friend functions (helper)
-    friend void swap(M2M2Lidar& first, M2M2Lidar& second) noexcept
-    {
-        using std::swap;
+    // Rule of 5
+    ~M2M2Lidar() override = default;
+    M2M2Lidar(M2M2Lidar&& other) noexcept = default;
+    M2M2Lidar& operator=(M2M2Lidar&& other) noexcept = default;
+    M2M2Lidar(const M2M2Lidar& other) = delete;
+    M2M2Lidar& operator=(const M2M2Lidar& other) = delete;
 
-        // Swap all member variables
-        swap(first._requestId, second._requestId);
-        swap(first._sensorAddress, second._sensorAddress);
-        swap(first._sensorPort, second._sensorPort);
-        swap(first._socket, second._socket);
-        swap(first._isConnected, second._isConnected);
-        swap(first._config, second._config);
-        swap(first._scanPublisher, second._scanPublisher);
-        swap(first._imuPublisher, second._imuPublisher);
-        swap(first._readTimer, second._readTimer);
-    }
+    // Declare friend function for swapping
+    friend void swap(M2M2Lidar& first, M2M2Lidar& second) noexcept;
 
 private:
+    // constants
     static constexpr double SCAN_FREQUENCY = 15.0;  // SI unit: Hz
     static constexpr double MIN_RANGE = 0.1;        // SI unit: meters
     static constexpr double MAX_RANGE = 30.0;       // SI unit: meters
     static constexpr float INVALID_DISTANCE = 100000.0f;
     static constexpr float EPSILON = 0.0001f;
-    static constexpr size_t SOCKET_BUFFER_SIZE = 4096;  // Size in bytes for socket read operations
+    static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
 
-    static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
+    /**
+     * @brief Check if two floating point values are equal within epsilon
+     */
+    [[nodiscard]] static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
 
-    // Data
-    std::vector<uint8_t> _decodeBase64(const std::string& encoded);
-    std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64Encoded);
-
-    // Network
-    bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
-    nlohmann::json _receiveJsonResponse();
+    // Network communication methods
+    [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
+    [[nodiscard]] nlohmann::json _receiveJsonResponse();
     void _sendCommand(const std::vector<uint8_t>& command);
-    std::optional<std::vector<uint8_t>> _receiveData();
 
-    // Protocol handling
-    std::vector<uint8_t> _createConfigCommand(const sensor_config_t& config);
-    // std::optional<sensor_msgs::msg::LaserScan> _parseLaserScanData(const std::vector<uint8_t>& data);
-    // std::optional<sensor_msgs::msg::Imu> _parseImuData(const std::vector<uint8_t>& data);
+    // Data processing methods
+    [[nodiscard]] std::vector<uint8_t> _decodeBase64(const std::string& encoded);
+    [[nodiscard]] std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64Encoded);
+    [[nodiscard]] std::vector<uint8_t> _createConfigCommand(const sensor_config_t& config);
 
-    // ROS setup
+    // ROS setup and operation methods
     void _initializePublishers();
-    void _publishData();
     void _readSensorData();
 
     // Member variables
-    static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
-    int _requestId;
-    std::string _sensorAddress;
-    uint16_t _sensorPort;
-    int _socket;
-    bool _isConnected;
-    sensor_config_t _config;
+
+    std::int32_t _requestId{0};
+    std::optional<networking::Client> _client;
+    sensor_config_t _config{};
 
     // ROS2 publishers
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr _scanPublisher;

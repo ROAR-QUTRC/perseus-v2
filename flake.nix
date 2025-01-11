@@ -71,6 +71,7 @@
             nix-ros-workspace.overlays.default
             # import ros workspace packages + fixes
             (import ./software/overlay.nix rosDistro)
+            (import ./packages/overlay.nix)
             (final: prev: {
               # alias the output to pkgs.ros to make it easier to use
               ros = final.rosPackages.${rosDistro}.overrideScope (
@@ -102,7 +103,7 @@
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
         standardPkgs = {
-          inherit (pkgs) can-utils bashInteractive;
+          inherit (pkgs) groot2 can-utils bashInteractive;
           inherit (pkgs.ros)
             rviz2-fixed
             rosbag2
