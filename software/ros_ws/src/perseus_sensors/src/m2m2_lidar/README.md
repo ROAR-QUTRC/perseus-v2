@@ -27,7 +27,7 @@ source install/setup.bash
 2. Run the `m2m2_lidar` node:
 
 ```
-ros2 run sensors m2m2_lidar
+ros2 run perseus_sensors m2m2_lidar
 ```
 
 ## Configuration

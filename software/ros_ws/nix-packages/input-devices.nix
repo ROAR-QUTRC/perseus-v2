@@ -7,7 +7,6 @@
   ament-pep257,
   geometry-msgs,
   python3Packages,
-  pythonPackages,
   rclpy,
   sensor-msgs,
 }:
@@ -23,7 +22,7 @@ buildRosPackage rec {
     ament-copyright
     ament-flake8
     ament-pep257
-    pythonPackages.pytest
+    python3Packages.pytest
   ];
   propagatedBuildInputs = [
     geometry-msgs
