@@ -6,12 +6,6 @@ project(
   VERSION 0.0.1
   LANGUAGES CXX)
 
-message(STATUS "CMAKE_PROJECT_NAME: ${CMAKE_PROJECT_NAME}")
-message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
-message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
-message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
-message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
-
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
 set(default_build_type "Debug")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -66,7 +60,6 @@ if(NOT simple_networking_FOUND)
     STATUS
       "Attempting to add simple_networking from: ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared/simple-networking"
   )
-  # add_subdirectory(../../../shared/hi-can-raw hi-can-raw)
   add_subdirectory(../../../shared/simple-networking simple-networking)
 endif()
 
@@ -99,8 +92,6 @@ target_include_directories(m2m2_lidar
 ament_target_dependencies(m2m2_lidar PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 target_link_libraries(m2m2_lidar PUBLIC ${PROJECT_NAME} simple_networking
                                         OpenSSL::Crypto)
-
-# ^^^^^^^^^^^^^^^^^^^^^^
 
 # INSTALL (Libraries)
 install(
