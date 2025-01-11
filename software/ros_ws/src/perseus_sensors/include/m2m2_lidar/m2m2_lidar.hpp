@@ -45,6 +45,29 @@ public:
      * @throws std::runtime_error If initialization fails
      */
     explicit M2M2Lidar(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+    virtual ~M2M2Lidar();                              // destructor virtual because class inherits from rclcpp::Node
+    M2M2Lidar(M2M2Lidar&& other) noexcept;             // move constructor
+    M2M2Lidar& operator=(M2M2Lidar&& other) noexcept;  // move assignment operator
+    // Copy operations (Rule of 5)
+    M2M2Lidar(const M2M2Lidar& other) = delete;             // Lidar can only have own owner
+    M2M2Lidar& operator=(const M2M2Lidar& other) = delete;  // Lidar can only have own owner
+
+    // Friend functions (helper)
+    friend void swap(M2M2Lidar& first, M2M2Lidar& second) noexcept
+    {
+        using std::swap;
+
+        // Swap all member variables
+        swap(first._requestId, second._requestId);
+        swap(first._sensorAddress, second._sensorAddress);
+        swap(first._sensorPort, second._sensorPort);
+        swap(first._socket, second._socket);
+        swap(first._isConnected, second._isConnected);
+        swap(first._config, second._config);
+        swap(first._scanPublisher, second._scanPublisher);
+        swap(first._imuPublisher, second._imuPublisher);
+        swap(first._readTimer, second._readTimer);
+    }
 
 private:
     // constants

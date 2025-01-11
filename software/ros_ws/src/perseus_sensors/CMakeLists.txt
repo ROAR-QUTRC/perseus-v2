@@ -68,6 +68,17 @@ endif()
 # Find all source files in the src directory
 file(GLOB_RECURSE M2M2_LIDAR_CODE_SOURCES src/m2m2_lidar/*.cpp)
 # Add the target with those sources
+add_library(${PROJECT_NAME} SHARED ${M2M2_LIDAR_CODE_SOURCES})
+
+# Add include directories for the library
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                         $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+
+ament_target_dependencies(${PROJECT_NAME} PUBLIC
+                          ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC simple_networking OpenSSL::Crypto)
 
 # Add exec target
 add_executable(m2m2_lidar ${M2M2_LIDAR_CODE_SOURCES})
@@ -78,9 +89,46 @@ target_include_directories(m2m2_lidar
 
 # Add dependencies for the executable
 ament_target_dependencies(m2m2_lidar PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(m2m2_lidar PUBLIC simple_networking OpenSSL::Crypto)
+target_link_libraries(m2m2_lidar PUBLIC ${PROJECT_NAME} simple_networking
+                                        OpenSSL::Crypto)
 
-# Install ROS Executable
+# INSTALL (Libraries)
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
+
+# Headers
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+
+# install(ROS Executables)
 install(TARGETS m2m2_lidar DESTINATION lib/${PROJECT_NAME})
 
+# CMake configuration
+install(
+  EXPORT export_${PROJECT_NAME}
+  FILE ${PROJECT_NAME}-config.cmake
+  DESTINATION lib/cmake/${PROJECT_NAME})
+# Versioning
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION}
+                                                 SOVERSION 1)
+# ROS LIBRARY POST-INSTALL
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+# CMake configuration
+install(
+  EXPORT export_${PROJECT_NAME}
+  FILE ${PROJECT_NAME}-config.cmake
+  DESTINATION lib/cmake/${PROJECT_NAME})
+# Versioning
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION}
+                                                 SOVERSION 1)
+# ROS LIBRARY POST-INSTALL
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+# ROS FINALISATION
 ament_package()
