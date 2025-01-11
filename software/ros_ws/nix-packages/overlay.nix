@@ -1,8 +1,8 @@
-self: super: {
-  autonomy = super.callPackage ./autonomy.nix { };
-  input-devices = super.callPackage ./input-devices.nix { };
-  perseus = super.callPackage ./perseus.nix { };
-  perseus-description = super.callPackage ./perseus-description.nix { };
-  perseus-hardware = super.callPackage ./perseus-hardware.nix { };
-  perseus-sensors = super.callPackage ./perseus-sensors.nix { };
+final: prev: {
+  autonomy = final.callPackage ./autonomy.nix { };
+  input-devices = final.callPackage ./input-devices.nix { };
+  perseus = final.callPackage ./perseus.nix { };
+  perseus-description = final.callPackage ./perseus-description.nix { };
+  perseus-hardware = final.callPackage ./perseus-hardware.nix { };
+  perseus-sensors = final.callPackage ./perseus-sensors.nix { };
 }
