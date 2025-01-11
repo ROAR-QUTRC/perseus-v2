@@ -8,6 +8,7 @@
   nav2-bringup,
   rclcpp,
   slam-toolbox,
+  xacro,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-autonomy";
@@ -25,6 +26,7 @@ buildRosPackage rec {
     nav2-bringup
     rclcpp
     slam-toolbox
+    xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
 

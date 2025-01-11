@@ -1,5 +1,11 @@
 ## Autonomy Package
 
+To run without actual Perseus hardware set use_mock_hardware to true when launching:
+
+```
+ros2 launch autonomy mapping_using_slam_toolbox.launch.py use_mock_hardware:=true
+```
+
 This ROS2 package is intended to cover functionality to:
 
 - create maps of the locally experienced environment from sensor data (lidar and depth cameras)
