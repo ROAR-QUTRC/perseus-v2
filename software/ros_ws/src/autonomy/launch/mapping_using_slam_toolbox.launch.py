@@ -1,65 +1,195 @@
-import os
-
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.substitutions import (
+    LaunchConfiguration,
+    PathJoinSubstitution,
+    Command,
+    FindExecutable,
+)
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.actions import Node
-
-# Assumptions
-# SLAM parameters will be stored in autonomy/config/slam_params.yaml
-# RViz configuration will be stored in autonomy/rviz/perseus_slam.rviz
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    # Launch configuration variables
+    # ARGUMENTS
+    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    use_legacy_hardware = LaunchConfiguration("use_legacy_hardware")
+    can_bus = LaunchConfiguration("can_bus")
     use_sim_time = LaunchConfiguration("use_sim_time")
     slam_params_file = LaunchConfiguration("slam_params_file")
 
-    # Declare launch arguments
-    declare_use_sim_time_argument = DeclareLaunchArgument(
-        "use_sim_time", default_value="false", description="Use simulation/Gazebo clock"
-    )
-
-    # Assuming we'll store SLAM parameters in the autonomy package
-    declare_slam_params_file_cmd = DeclareLaunchArgument(
-        "slam_params_file",
-        default_value=os.path.join(
-            get_package_share_directory("autonomy"), "config", "slam_params.yaml"
+    arguments = [
+        DeclareLaunchArgument(
+            "use_mock_hardware",
+            default_value="False",
+            description="Use mock hardware components which mirror commands to state interfaces",
         ),
-        description="Full path to the ROS2 parameters file for SLAM Toolbox",
+        DeclareLaunchArgument(
+            "use_legacy_hardware",
+            default_value="True",
+            description="Use legacy hardware (MCB) interfaces",
+        ),
+        DeclareLaunchArgument(
+            "can_bus",
+            default_value="can0",
+            description="CAN bus to use for hardware communications",
+        ),
+        DeclareLaunchArgument(
+            "use_sim_time",
+            default_value="false",
+            description="Use simulation/Gazebo clock",
+        ),
+        DeclareLaunchArgument(
+            "slam_params_file",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("autonomy"), "config", "slam_toolbox_params.yaml"]
+            ),
+            description="Full path to the ROS2 parameters file for SLAM Toolbox",
+        ),
+    ]
+
+    # CONFIG FILES
+    controller_config = PathJoinSubstitution(
+        [FindPackageShare("perseus"), "config", "perseus_controllers.yaml"]
     )
 
-    # SLAM Toolbox node
-    slam_toolbox_node = Node(
-        parameters=[slam_params_file, {"use_sim_time": use_sim_time}],
+    # XACRO FILES
+    robot_description_xacro = PathJoinSubstitution(
+        [FindPackageShare("perseus"), "urdf", "perseus.urdf.xacro"]
+    )
+    robot_description_content = ParameterValue(
+        Command(
+            [
+                FindExecutable(name="xacro"),
+                # pass through all the arguments
+                " ",
+                robot_description_xacro,
+                " ",
+                "use_mock_hardware:=",
+                use_mock_hardware,
+                " ",
+                "use_legacy_hardware:=",
+                use_legacy_hardware,
+                " ",
+                "can_bus:=",
+                can_bus,
+            ]
+        ),
+        value_type=str,
+    )
+
+    # NODES
+    controller_manager = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[controller_config],
+        output="both",  # output to both screen and log file
+        remappings=[
+            ("~/robot_description", "/robot_description"),
+            ("/perseus_base_controller/cmd_vel", "/cmd_vel"),
+        ],
+    )
+
+    robot_state_publisher = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[
+            {
+                "robot_description": robot_description_content,
+                "use_sim_time": use_sim_time,
+                "publish_frequency": 30.0,
+                "frame_prefix": "",  # Ensure no frame prefix is added
+            }
+        ],
+        remappings=[
+            ("/tf", "tf"),
+            ("/tf_static", "tf_static"),
+        ],
+    )
+
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
+    )
+
+    base_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "perseus_base_controller",
+            "--controller-manager",
+            "/controller_manager",
+        ],
+    )
+    static_tf_publisher = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_map_odom_publisher",
+        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
+    )
+
+    slam_toolbox = Node(
         package="slam_toolbox",
         executable="async_slam_toolbox_node",
         name="slam_toolbox",
         output="screen",
+        parameters=[
+            slam_params_file,
+            {
+                "use_sim_time": use_sim_time,
+                "odom_frame": "odom",
+                "base_frame": "chassis",
+                "map_frame": "map",
+                "scan_topic": "/scan",
+            },
+        ],
     )
 
-    # RViz node
-    # Assuming we'll create a custom RViz config in the autonomy package
-    rviz_config_dir = os.path.join(
-        get_package_share_directory("autonomy"), "rviz", "perseus_slam.rviz"
+    # RViz with nixGL support
+    rviz_config_dir = PathJoinSubstitution(
+        [FindPackageShare("autonomy"), "rviz", "perseus_slam.rviz"]
     )
-
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        arguments=["-d", rviz_config_dir],
+    rviz = ExecuteProcess(
+        cmd=[
+            "nix",
+            "run",
+            "--impure",
+            "github:nix-community/nixGL",
+            "--",
+            "rviz2",
+            "-d",
+            rviz_config_dir,
+        ],
         output="screen",
+        additional_env={
+            "NIXPKGS_ALLOW_UNFREE": "1",
+            "QT_QPA_PLATFORM": "xcb",
+            "QT_SCREEN_SCALE_FACTORS": "1",
+            "ROS_NAMESPACE": "/",
+            "RMW_QOS_POLICY_HISTORY": "keep_last",
+            "RMW_QOS_POLICY_DEPTH": "100",
+        },
     )
 
-    # Create and return launch description
-    ld = LaunchDescription()
+    nodes = [
+        robot_state_publisher,
+        controller_manager,
+        base_controller_spawner,
+        joint_state_broadcaster_spawner,
+        static_tf_publisher,
+        slam_toolbox,
+        rviz,
+    ]
 
-    # Add all actions to launch description
-    ld.add_action(declare_use_sim_time_argument)
-    ld.add_action(declare_slam_params_file_cmd)
-    ld.add_action(slam_toolbox_node)
-    ld.add_action(rviz_node)
+    # EVENT HANDLERS
+    handlers = []
 
-    return ld
+    # Return the launch description
+    return LaunchDescription(arguments + nodes + handlers)
