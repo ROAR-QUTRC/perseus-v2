@@ -44,7 +44,7 @@
 				},
 				divideBy1024: {
 					type: 'switch',
-					description: 'Calcuate memory using 1024 not 1000'
+					description: 'Calculate memory using 1024 not 1000'
 				}
 			}
 		}
