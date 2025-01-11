@@ -18,7 +18,12 @@
 
 /**
  * @brief ROS2 driver node for the M2M2 LIDAR sensor
+ * @brief ROS2 driver node for the M2M2 LIDAR sensor
  *
+ * @details Handles communication with the M2M2 LIDAR sensor over TCP/IP,
+ * processes incoming data, and publishes LaserScan and IMU messages.
+ * The driver maintains the connection to the sensor and provides configuration
+ * capabilities.
  * @details Handles communication with the M2M2 LIDAR sensor over TCP/IP,
  * processes incoming data, and publishes LaserScan and IMU messages.
  * The driver maintains the connection to the sensor and provides configuration
@@ -27,6 +32,9 @@
 class M2M2Lidar : public rclcpp::Node
 {
 public:
+    /**
+     * @brief Configuration parameters for the M2M2 LIDAR sensor
+     */
     /**
      * @brief Configuration parameters for the M2M2 LIDAR sensor
      */
@@ -44,6 +52,12 @@ public:
      * @param options Node options for ROS2 configuration
      * @throws std::runtime_error If initialization fails
      */
+    /**
+     * @brief Construct a new M2M2Lidar node
+     *
+     * @param options Node options for ROS2 configuration
+     * @throws std::runtime_error If initialization fails
+     */
     explicit M2M2Lidar(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
     // Rule of 5
@@ -51,11 +65,18 @@ public:
 
 private:
     // constants
+    // constants
     static constexpr double SCAN_FREQUENCY = 15.0;  // SI unit: Hz
     static constexpr double MIN_RANGE = 0.1;        // SI unit: meters
     static constexpr double MAX_RANGE = 30.0;       // SI unit: meters
     static constexpr float INVALID_DISTANCE = 100000.0f;
     static constexpr float EPSILON = 0.0001f;
+    static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
+
+    /**
+     * @brief Check if two floating point values are equal within epsilon
+     */
+    [[nodiscard]] static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
     static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
     // for imu
     static constexpr char const* IMU_COMMAND = "getimuinrobotcoordinate";
@@ -68,6 +89,9 @@ private:
     // Network communication methods
     [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
     [[nodiscard]] nlohmann::json _receiveJsonResponse();
+    // Network communication methods
+    [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
+    [[nodiscard]] nlohmann::json _receiveJsonResponse();
     void _sendCommand(const std::vector<uint8_t>& command);
 
     // Data processing methods
@@ -75,12 +99,22 @@ private:
     [[nodiscard]] std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64Encoded);
     [[nodiscard]] std::vector<uint8_t> _createConfigCommand(const sensor_config_t& config);
 
+    // Data processing methods
+    [[nodiscard]] std::vector<uint8_t> _decodeBase64(const std::string& encoded);
+    [[nodiscard]] std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64Encoded);
+    [[nodiscard]] std::vector<uint8_t> _createConfigCommand(const sensor_config_t& config);
+
+    // ROS setup and operation methods
     // ROS setup and operation methods
     void _initializePublishers();
     void _readSensorData();
     void _readImuData();
 
     // Member variables
+
+    std::int32_t _requestId{0};
+    std::optional<networking::Client> _client;
+    sensor_config_t _config{};
 
     std::int32_t _requestId{0};
     std::optional<networking::Client> _client;
