@@ -1,15 +1,12 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { exec } from 'child_process';
-import os from 'os';
-import { cpuUsage } from 'process';
 
-let prevTimes: number[] = [];
 let prevIdle: number = 0;
 let prevActive: number = 0;
 
 export const GET: RequestHandler = async (req) => {
-	return new Promise((resolve, reject) => {
-		exec('cat /proc/stat', (error, stdout, stderr) => {
+	let cpuPromise = new Promise((resolve, reject) => {
+		exec('cat /proc/stat && free -t', (error, stdout, stderr) => {
 			const times: number[] = stdout
 				.split('\n')[0]
 				.replace('cpu  ', '') // the two traliing spaces look weird and may break things
@@ -28,11 +25,32 @@ export const GET: RequestHandler = async (req) => {
 			// calculate the cpu usage
 			const cpuUsage: number = activeDelta / (activeDelta + idleDelta);
 
-			prevTimes = times;
 			prevIdle = idle;
 			prevActive = active;
 
-			resolve(new Response(JSON.stringify({ cpuUsage: Math.round(cpuUsage * 10000) / 100 })));
+			resolve(JSON.stringify({ cpuUsage: Math.round(cpuUsage * 10000) / 100 }));
 		});
 	});
+
+	let memPromise = new Promise((resolve, reject) => {
+		exec('free -tb', (error, stdout, stderr) => {
+			// For both totals and swap:
+			// 0: total
+			// 1: used
+			// 2: free
+			// all values in bytes
+			const totals: string[] = stdout
+				.split('\n')[3]
+				.split(' ')
+				.filter((info) => info !== '' && info !== 'Total:');
+			const swap: string[] = stdout
+				.split('\n')[2]
+				.split(' ')
+				.filter((info) => info !== '' && info !== 'Swap:');
+
+			resolve(JSON.stringify({ total: totals, swap: swap }));
+		});
+	});
+
+	return new Response(JSON.stringify(await Promise.all([cpuPromise, memPromise])));
 };
