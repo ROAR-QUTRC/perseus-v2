@@ -57,6 +57,8 @@ private:
     static constexpr float INVALID_DISTANCE = 100000.0f;
     static constexpr float EPSILON = 0.0001f;
     static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
+    // for imu
+    static constexpr char const* IMU_COMMAND = "getimuinrobotcoordinate";
 
     /**
      * @brief Check if two floating point values are equal within epsilon
@@ -76,6 +78,7 @@ private:
     // ROS setup and operation methods
     void _initializePublishers();
     void _readSensorData();
+    void _readImuData();
 
     // Member variables
 
@@ -87,4 +90,5 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr _scanPublisher;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr _imuPublisher;
     rclcpp::TimerBase::SharedPtr _readTimer;
+    rclcpp::TimerBase::SharedPtr _imuTimer;
 };
