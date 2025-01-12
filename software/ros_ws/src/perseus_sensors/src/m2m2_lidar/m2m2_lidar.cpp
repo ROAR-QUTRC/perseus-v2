@@ -77,6 +77,8 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     this->declare_parameter("frame_id", "lidar_frame");
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
+    this->declare_parameter("imu_frame_id", "imu_link");
+    this->declare_parameter("imu_rate", 100);  // Hz
 
     // Get the parameters
     std::string sensorIp;
@@ -148,11 +150,16 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
 
     _sendCommand(_createConfigCommand(defaultConfig));
 
-    // Initialize publishers and timer
+    // Initialise publishers and timer
     _initializePublishers();
     _readTimer = this->create_wall_timer(
         std::chrono::milliseconds(100),
         std::bind(&M2M2Lidar::_readSensorData, this));
+
+    // Imu timer initialisation
+    _imuTimer = this->create_wall_timer(
+        std::chrono::milliseconds(10),  // 100Hz rate for IMU data
+        std::bind(&M2M2Lidar::_readImuData, this));
 
     RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
 }
@@ -546,6 +553,67 @@ void M2M2Lidar::_readSensorData()
 
     RCLCPP_DEBUG(this->get_logger(), "Publishing scan with %zu ranges", scan.ranges.size());
     _scanPublisher->publish(scan);
+}
+
+void M2M2Lidar::_readImuData()
+{
+    RCLCPP_DEBUG(this->get_logger(), "Requesting IMU data...");
+
+    if (!_sendJsonRequest(IMU_COMMAND))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to send IMU data request");
+        return;
+    }
+
+    auto response = _receiveJsonResponse();
+    if (response.empty() || !response.contains("result"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to receive valid IMU response");
+        return;
+    }
+
+    // Create and populate IMU message
+    auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
+    imu_msg->header.stamp = this->now();
+    imu_msg->header.frame_id = this->get_parameter("frame_id").as_string();
+
+    // Extract data from response
+    const auto& result = response["result"];
+
+    // Set orientation quaternion
+    if (result.contains("quaternion"))
+    {
+        imu_msg->orientation.w = result["quaternion"]["w"];
+        imu_msg->orientation.x = result["quaternion"]["x"];
+        imu_msg->orientation.y = result["quaternion"]["y"];
+        imu_msg->orientation.z = result["quaternion"]["z"];
+    }
+
+    // Set angular velocity from gyro
+    if (result.contains("gyro"))
+    {
+        imu_msg->angular_velocity.x = result["gyro"]["x"];
+        imu_msg->angular_velocity.y = result["gyro"]["y"];
+        imu_msg->angular_velocity.z = result["gyro"]["z"];
+    }
+
+    // Set linear acceleration
+    if (result.contains("acc"))
+    {
+        imu_msg->linear_acceleration.x = result["acc"]["x"];
+        imu_msg->linear_acceleration.y = result["acc"]["y"];
+        imu_msg->linear_acceleration.z = result["acc"]["z"];
+    }
+
+    // Set covariance matrices to unknown
+    std::fill(imu_msg->orientation_covariance.begin(),
+              imu_msg->orientation_covariance.end(), -1);
+    std::fill(imu_msg->angular_velocity_covariance.begin(),
+              imu_msg->angular_velocity_covariance.end(), -1);
+    std::fill(imu_msg->linear_acceleration_covariance.begin(),
+              imu_msg->linear_acceleration_covariance.end(), -1);
+
+    _imuPublisher->publish(std::move(imu_msg));
 }
 
 int main(int argc, char** argv)
