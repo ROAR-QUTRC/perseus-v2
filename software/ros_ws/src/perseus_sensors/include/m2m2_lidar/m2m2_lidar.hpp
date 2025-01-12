@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <iomanip>
@@ -47,13 +48,6 @@ public:
 
     // Rule of 5
     ~M2M2Lidar() override = default;
-    M2M2Lidar(M2M2Lidar&& other) noexcept = default;
-    M2M2Lidar& operator=(M2M2Lidar&& other) noexcept = default;
-    M2M2Lidar(const M2M2Lidar& other) = delete;
-    M2M2Lidar& operator=(const M2M2Lidar& other) = delete;
-
-    // Declare friend function for swapping
-    friend void swap(M2M2Lidar& first, M2M2Lidar& second) noexcept;
 
 private:
     // constants

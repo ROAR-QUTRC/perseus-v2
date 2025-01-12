@@ -50,6 +50,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "simple_networking/client.hpp"  //supports the nampespace usage in the constructor
 
 using std::string;
 using std::vector;
@@ -58,6 +59,7 @@ using namespace std::chrono_literals;
 M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     : Node("m2m2_lidar", options)
 {
+    using namespace networking;
     // Set up ROS logging
     auto ret = rcutils_logging_set_logger_level(
         get_logger().get_name(),
@@ -77,15 +79,17 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     this->declare_parameter("imu_topic", "imu");
 
     // Get the parameters
-    const std::string sensorIp = this->get_parameter("sensor_ip").as_string();
-    const int sensorPort = this->get_parameter("sensor_port").as_int();
+    std::string sensorIp;
+    uint16_t sensorPort;
+    sensorIp = this->get_parameter("sensor_ip").as_string();
+    sensorPort = this->get_parameter("sensor_port").as_int();
 
     RCLCPP_INFO(this->get_logger(),
                 "Attempting connection to sensor at %s:%d",
                 sensorIp.c_str(), sensorPort);
 
     // Configure socket handlers
-    networking::socket_config_handlers_t handlers{
+    socket_config_handlers_t handlers{
         .preBind = nullptr,
         .preConnect = [this](int fd) -> bool
         {
@@ -95,72 +99,64 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
             };
             if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
             {
-                RCLCPP_ERROR(this->get_logger(), "Failed to set receive timeout: %s", strerror(errno));
+                RCLCPP_INFO(this->get_logger(), "Failed to set receive timeout: %s", strerror(errno));
                 return false;
             }
             if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
             {
-                RCLCPP_ERROR(this->get_logger(), "Failed to set send timeout: %s", strerror(errno));
+                RCLCPP_INFO(this->get_logger(), "Failed to set send timeout: %s", strerror(errno));
                 return false;
             }
             int keepaliveEnabled = 1;
             if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keepaliveEnabled, sizeof(keepaliveEnabled)) < 0)
             {
-                RCLCPP_ERROR(this->get_logger(), "Failed to set keepalive: %s", strerror(errno));
+                RCLCPP_INFO(this->get_logger(), "Failed to set keepalive: %s", strerror(errno));
                 return false;
             }
             return true;
         },
         .postConnect = nullptr};
 
-    try
+    // Initialize the client using emplace
+    _client.emplace(
+        address_t{
+            .hostname = sensorIp,
+            .service = std::to_string(sensorPort)},
+        socket_protocol::TCP,
+        address_t{},
+        handlers);
+
+    // Test connection with ping
+    if (!_sendJsonRequest("ping"))
     {
-        // Initialize the client using emplace
-        _client.emplace(
-            networking::address_t{
-                .hostname = sensorIp,
-                .service = std::to_string(sensorPort)},
-            networking::socket_protocol::TCP,
-            networking::address_t{},
-            handlers);
-
-        // Test connection with ping
-        if (!_sendJsonRequest("ping"))
-        {
-            throw std::runtime_error("Failed to send initial ping");
-        }
-
-        auto pingResponse = _receiveJsonResponse();
-        if (pingResponse.empty())
-        {
-            throw std::runtime_error("No response to initial ping");
-        }
-
-        RCLCPP_DEBUG(this->get_logger(), "Ping successful, configuring sensor...");
-
-        // Create and send initial configuration
-        sensor_config_t defaultConfig{
-            .scanFrequency = 15.0,
-            .angularResolution = 0.25,
-            .minRange = 0.1,
-            .maxRange = 30.0,
-        };
-
-        _sendCommand(_createConfigCommand(defaultConfig));
-
-        // Initialize publishers and timer
-        _initializePublishers();
-        _readTimer = this->create_wall_timer(
-            std::chrono::milliseconds(100),
-            std::bind(&M2M2Lidar::_readSensorData, this));
-
-        RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
+        throw std::runtime_error("Failed to send initial ping");
     }
-    catch (const std::exception& e)
+
+    auto pingResponse = _receiveJsonResponse();
+    if (pingResponse.empty())
     {
-        RCLCPP_ERROR(this->get_logger(), "Failed to initialize M2M2Lidar: %s", e.what());
-        throw;
+        throw std::runtime_error("No response to initial ping");
     }
+
+    RCLCPP_DEBUG(this->get_logger(), "Ping successful, configuring sensor...");
+
+    // Create and send initial configuration
+    sensor_config_t defaultConfig{
+        .scanFrequency = 15.0,
+        .angularResolution = 0.25,
+        .minRange = 0.1,
+        .maxRange = 30.0,
+    };
+
+    _sendCommand(_createConfigCommand(defaultConfig));
+
+    // Initialize publishers and timer
+    _initializePublishers();
+    _readTimer = this->create_wall_timer(
+        std::chrono::milliseconds(100),
+        std::bind(&M2M2Lidar::_readSensorData, this));
+
+    RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
 }
 
 void M2M2Lidar::_initializePublishers()
@@ -183,67 +179,59 @@ bool M2M2Lidar::isWithinEpsilon(float a, float b, float epsilon)
  */
 vector<uint8_t> M2M2Lidar::_decodeBase64(const string& encoded)
 {
+    // Calculate the maximum possible decoded length
+    size_t maxDecodedLength = ((encoded.length() + 3) / 4) * 3;
+
+    // Create a buffer for the decoded data
+    vector<uint8_t> decoded(maxDecodedLength);
+
+    // Create and initialize the decoding context
+    EVP_ENCODE_CTX* context = EVP_ENCODE_CTX_new();
+    if (!context)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to create Base64 decoding context");
+        throw std::runtime_error("Base64 context creation failed");
+    }
+
     try
     {
-        // Calculate the maximum possible decoded length
-        size_t maxDecodedLength = ((encoded.length() + 3) / 4) * 3;
+        EVP_DecodeInit(context);
 
-        // Create a buffer for the decoded data
-        vector<uint8_t> decoded(maxDecodedLength);
+        // Process the input data
+        int outputLength;
+        int result = EVP_DecodeUpdate(context,
+                                      decoded.data(), &outputLength,
+                                      reinterpret_cast<const unsigned char*>(encoded.data()),
+                                      encoded.length());
 
-        // Create and initialize the decoding context
-        EVP_ENCODE_CTX* context = EVP_ENCODE_CTX_new();
-        if (!context)
+        if (result < 0)
         {
-            RCLCPP_ERROR(this->get_logger(), "Failed to create Base64 decoding context");
-            throw std::runtime_error("Base64 context creation failed");
+            throw std::runtime_error("Failed to decode Base64 data");
         }
 
-        try
+        // Finalize the decoding
+        int finalLength;
+        result = EVP_DecodeFinal(context, decoded.data() + outputLength, &finalLength);
+
+        if (result < 0)
         {
-            EVP_DecodeInit(context);
-
-            // Process the input data
-            int outputLength;
-            int result = EVP_DecodeUpdate(context,
-                                          decoded.data(), &outputLength,
-                                          reinterpret_cast<const unsigned char*>(encoded.data()),
-                                          encoded.length());
-
-            if (result < 0)
-            {
-                throw std::runtime_error("Failed to decode Base64 data");
-            }
-
-            // Finalize the decoding
-            int finalLength;
-            result = EVP_DecodeFinal(context, decoded.data() + outputLength, &finalLength);
-
-            if (result < 0)
-            {
-                throw std::runtime_error("Failed to finalize Base64 decoding");
-            }
-
-            // Cleanup and resize
-            EVP_ENCODE_CTX_free(context);
-            decoded.resize(outputLength + finalLength);
-
-            RCLCPP_DEBUG(this->get_logger(),
-                         "Successfully decoded %zu Base64 bytes to %zu bytes",
-                         encoded.length(), decoded.size());
-
-            return decoded;
+            throw std::runtime_error("Failed to finalize Base64 decoding");
         }
-        catch (...)
-        {
-            EVP_ENCODE_CTX_free(context);
-            throw;
-        }
+
+        // Cleanup and resize
+        EVP_ENCODE_CTX_free(context);
+        decoded.resize(outputLength + finalLength);
+
+        RCLCPP_DEBUG(this->get_logger(),
+                     "Successfully decoded %zu Base64 bytes to %zu bytes",
+                     encoded.length(), decoded.size());
+
+        return decoded;
     }
-    catch (const std::exception& e)
+    catch (...)
     {
-        RCLCPP_ERROR(this->get_logger(), "Base64 decoding error: %s", e.what());
-        return vector<uint8_t>();
+        EVP_ENCODE_CTX_free(context);
+        throw;
     }
 }
 
@@ -343,125 +331,101 @@ vector<std::tuple<float, float, bool>> M2M2Lidar::_decodeLaserPoints(const strin
 
 bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::json& args)
 {
-    if (!_client)
+    assert(_client && "Network client should be initialised by constructor");
+
+    // Create the JSON request structure
+    nlohmann::json request = {
+        {"command", command},
+        {"request_id", _requestId++}};
+
+    if (!args.is_null())
     {
-        RCLCPP_ERROR(this->get_logger(), "Attempted to send request with uninitialized client");
+        request["args"] = args;
+    }
+
+    // Convert to string and add delimiters
+    std::string full_message = request.dump() + "\r\n\r\n";
+
+    // Use the networking library to send the data
+    ssize_t sent = _client->transmit(full_message);
+
+    if (sent != static_cast<ssize_t>(full_message.length()))
+    {
+        RCLCPP_ERROR(this->get_logger(),
+                     "Failed to send complete message: only sent %zd of %zu bytes",
+                     sent, full_message.length());
         return false;
     }
 
-    try
-    {
-        // Create the JSON request structure
-        nlohmann::json request = {
-            {"command", command},
-            {"request_id", _requestId++}};
-
-        if (!args.is_null())
-        {
-            request["args"] = args;
-        }
-
-        // Convert to string and add delimiters
-        std::string full_message = request.dump() + "\r\n\r\n";
-
-        // Use the networking library to send the data
-        ssize_t sent = _client->transmit(full_message);
-
-        if (sent != static_cast<ssize_t>(full_message.length()))
-        {
-            RCLCPP_ERROR(this->get_logger(),
-                         "Failed to send complete message: only sent %zd of %zu bytes",
-                         sent, full_message.length());
-            return false;
-        }
-
-        RCLCPP_DEBUG(this->get_logger(), "Successfully sent %zd bytes", sent);
-        return true;
-    }
-    catch (const std::exception& e)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Error sending JSON request: %s", e.what());
-        return false;
-    }
+    RCLCPP_DEBUG(this->get_logger(), "Successfully sent %zd bytes", sent);
+    return true;
 }
 
 nlohmann::json M2M2Lidar::_receiveJsonResponse()
 {
-    if (!_client)
+    assert(_client && "Network client should be initialised by constructor");
+
+    std::vector<uint8_t> received;
+    const auto timeout = std::chrono::seconds(2);
+    auto startTime = std::chrono::steady_clock::now();
+    bool foundDelim = false;
+
+    RCLCPP_DEBUG(this->get_logger(), "Waiting for response...");
+
+    while (!foundDelim)
     {
-        RCLCPP_ERROR(this->get_logger(), "Attempted to receive response with uninitialized client");
-        return nlohmann::json();
-    }
-
-    try
-    {
-        std::vector<uint8_t> received;
-        const auto timeout = std::chrono::seconds(2);
-        auto startTime = std::chrono::steady_clock::now();
-        bool foundDelim = false;
-
-        RCLCPP_DEBUG(this->get_logger(), "Waiting for response...");
-
-        while (!foundDelim)
+        // Check for timeout
+        auto now = std::chrono::steady_clock::now();
+        if (now - startTime > timeout)
         {
-            // Check for timeout
-            auto now = std::chrono::steady_clock::now();
-            if (now - startTime > timeout)
-            {
-                RCLCPP_ERROR(this->get_logger(), "Timeout waiting for response");
-                return nlohmann::json();
-            }
-
-            // Try to receive some data
-            auto chunk = _client->receive(1024, false);  // non-blocking receive
-
-            if (!chunk)
-            {
-                // No data available yet, sleep briefly and try again
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
-
-            // Add the received data to our buffer
-            received.insert(received.end(), chunk->begin(), chunk->end());
-
-            // Check for delimiter
-            if (received.size() >= 4)
-            {
-                std::string_view lastFour(
-                    reinterpret_cast<const char*>(&received[received.size() - 4]),
-                    4);
-                if (lastFour == "\r\n\r\n")
-                {
-                    foundDelim = true;
-                    RCLCPP_DEBUG(this->get_logger(),
-                                 "Found delimiter after %zu bytes", received.size());
-                }
-            }
-        }
-
-        // Remove the delimiter
-        received.resize(received.size() - 4);
-
-        // Convert to string and parse JSON
-        std::string response_str(received.begin(), received.end());
-        try
-        {
-            auto json = nlohmann::json::parse(response_str);
-            RCLCPP_DEBUG(this->get_logger(), "Successfully parsed JSON response");
-            return json;
-        }
-        catch (const nlohmann::json::exception& e)
-        {
-            RCLCPP_ERROR(this->get_logger(),
-                         "JSON parse error: %s\nResponse preview: %s",
-                         e.what(), response_str.substr(0, 100).c_str());
+            RCLCPP_ERROR(this->get_logger(), "Timeout waiting for response");
             return nlohmann::json();
         }
+
+        // Try to receive some data
+        auto chunk = _client->receive(1024, false);  // non-blocking receive
+
+        if (!chunk)
+        {
+            // No data available yet, sleep briefly and try again
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
+
+        // Add the received data to our buffer
+        received.insert(received.end(), chunk->begin(), chunk->end());
+
+        // Check for delimiter
+        if (received.size() >= 4)
+        {
+            std::string_view lastFour(
+                reinterpret_cast<const char*>(&received[received.size() - 4]),
+                4);
+            if (lastFour == "\r\n\r\n")
+            {
+                foundDelim = true;
+                RCLCPP_DEBUG(this->get_logger(),
+                             "Found delimiter after %zu bytes", received.size());
+            }
+        }
     }
-    catch (const std::exception& e)
+
+    // Remove the delimiter
+    received.resize(received.size() - 4);
+
+    // Convert to string and parse JSON
+    std::string response_str(received.begin(), received.end());
+    try
     {
-        RCLCPP_ERROR(this->get_logger(), "Error receiving JSON response: %s", e.what());
+        auto json = nlohmann::json::parse(response_str);
+        RCLCPP_DEBUG(this->get_logger(), "Successfully parsed JSON response");
+        return json;
+    }
+    catch (const nlohmann::json::exception& e)
+    {
+        RCLCPP_ERROR(this->get_logger(),
+                     "JSON parse error: %s\nResponse preview: %s",
+                     e.what(), response_str.substr(0, 100).c_str());
         return nlohmann::json();
     }
 }
@@ -515,30 +479,19 @@ vector<uint8_t> M2M2Lidar::_createConfigCommand(const sensor_config_t& config)
 
 void M2M2Lidar::_sendCommand(const std::vector<uint8_t>& command)
 {
-    if (!_client)
+    assert(_client && "Network client should be initialised by constructor");
+
+    ssize_t bytesSent = _client->transmit(command);
+
+    if (bytesSent != static_cast<ssize_t>(command.size()))
     {
-        throw std::runtime_error("Attempted to send command with uninitialized client");
+        throw std::runtime_error(
+            std::format("Incomplete command transmission: sent {} of {} bytes",
+                        bytesSent, command.size()));
     }
 
-    try
-    {
-        ssize_t bytesSent = _client->transmit(command);
-
-        if (bytesSent != static_cast<ssize_t>(command.size()))
-        {
-            throw std::runtime_error(
-                std::format("Incomplete command transmission: sent {} of {} bytes",
-                            bytesSent, command.size()));
-        }
-
-        RCLCPP_DEBUG(this->get_logger(),
-                     "Successfully sent command of %zu bytes", command.size());
-    }
-    catch (const std::exception& e)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Error sending command: %s", e.what());
-        throw;
-    }
+    RCLCPP_DEBUG(this->get_logger(),
+                 "Successfully sent command of %zu bytes", command.size());
 }
 
 void M2M2Lidar::_readSensorData()
@@ -595,19 +548,6 @@ void M2M2Lidar::_readSensorData()
 
     RCLCPP_DEBUG(this->get_logger(), "Publishing scan with %zu ranges", scan.ranges.size());
     _scanPublisher->publish(scan);
-}
-
-void swap(M2M2Lidar& first, M2M2Lidar& second) noexcept
-{
-    using std::swap;
-
-    // Add the client to the swap operations
-    swap(first._client, second._client);
-    swap(first._requestId, second._requestId);
-    swap(first._config, second._config);
-    swap(first._scanPublisher, second._scanPublisher);
-    swap(first._imuPublisher, second._imuPublisher);
-    swap(first._readTimer, second._readTimer);
 }
 
 int main(int argc, char** argv)
