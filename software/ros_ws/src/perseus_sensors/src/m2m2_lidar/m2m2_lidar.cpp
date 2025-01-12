@@ -48,9 +48,9 @@
 
 #include <bit>  // For std::bit_cast
 
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "simple_networking/client.hpp"  //supports the nampespace usage in the constructor
 
 using std::string;
@@ -536,7 +536,7 @@ void M2M2Lidar::_getPose()
     }
 
     // Populate the pose message
-    const auto &result = response["result"];
+    const auto& result = response["result"];
     geometry_msgs::msg::PoseStamped pose_stamped_msg;
     pose_stamped_msg.header.stamp = this->now();
     pose_stamped_msg.header.frame_id = this->get_parameter("frame_id").as_string();
@@ -607,8 +607,8 @@ void M2M2Lidar::_getIMUData()
         RCLCPP_DEBUG(this->get_logger(), "Successfully received imu data");
     }
 
-    // Populate the 
-    const auto &result = response["result"];
+    // Populate the
+    const auto& result = response["result"];
     sensor_msgs::msg::Imu imu_msg;
     imu_msg.header.stamp = this->now();
     imu_msg.header.frame_id = this->get_parameter("frame_id").as_string();
@@ -624,7 +624,7 @@ void M2M2Lidar::_getIMUData()
     imu_msg.angular_velocity.y = result["gyro"]["y"].get<double>();
     imu_msg.angular_velocity.z = result["gyro"]["z"].get<double>();
 
-    // Populate the linear accleration
+    // Populate the linear acceleration
     imu_msg.linear_acceleration.x = result["acc"]["x"].get<double>();
     imu_msg.linear_acceleration.y = result["acc"]["y"].get<double>();
     imu_msg.linear_acceleration.z = result["acc"]["z"].get<double>();
