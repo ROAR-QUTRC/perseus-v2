@@ -50,6 +50,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "simple_networking/client.hpp"  //supports the nampespace usage in the constructor
 
 using std::string;
@@ -77,6 +78,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     this->declare_parameter("frame_id", "lidar_frame");
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
+    this->declare_parameter("pose_topic", "pose");
 
     // Get the parameters
     std::string sensorIp;
@@ -155,6 +157,11 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     _readTimer = this->create_wall_timer(
         std::chrono::milliseconds(100),
         std::bind(&M2M2Lidar::_readSensorData, this));
+    _imuDataTimer = this->create_wall_timer(std::chrono::milliseconds(100),
+                                            std::bind(&M2M2Lidar::_getIMUData, this));
+
+    _poseTimer = this->create_wall_timer(std::chrono::milliseconds(100),
+                                         std::bind(&M2M2Lidar::_getPose, this));
 
     RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
 }
@@ -166,6 +173,8 @@ void M2M2Lidar::_initializePublishers()
         this->get_parameter("scan_topic").as_string(), qos);
     _imuPublisher = this->create_publisher<sensor_msgs::msg::Imu>(
         this->get_parameter("imu_topic").as_string(), qos);
+    _posePublisher = this->create_publisher<geometry_msgs::msg::PoseStamped>(
+        this->get_parameter("pose_topic").as_string(), qos);
 }
 
 bool M2M2Lidar::isWithinEpsilon(float a, float b, float epsilon)
@@ -492,6 +501,136 @@ void M2M2Lidar::_sendCommand(const std::vector<uint8_t>& command)
 
     RCLCPP_DEBUG(this->get_logger(),
                  "Successfully sent command of %zu bytes", command.size());
+}
+
+void M2M2Lidar::_getPose()
+{
+    RCLCPP_DEBUG(this->get_logger(), "Requesting pose data...");
+    if (!_sendJsonRequest("getpose"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to send getpose command");
+        return;
+    }
+    else
+    {
+        RCLCPP_DEBUG(this->get_logger(), "Successfully sent getpose command");
+    }
+
+    auto response = _receiveJsonResponse();
+
+    if (response.empty() ||
+        response["result"].is_null() ||
+        !response["result"].contains("roll") ||
+        !response["result"].contains("pitch") ||
+        !response["result"].contains("yaw") ||
+        !response["result"].contains("x") ||
+        !response["result"].contains("y") ||
+        !response["result"].contains("z"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to receive valid pose data response");
+        return;
+    }
+    else
+    {
+        RCLCPP_DEBUG(this->get_logger(), "Successfully received pose data");
+    }
+
+    // Populate the pose message
+    const auto &result = response["result"];
+    geometry_msgs::msg::PoseStamped pose_stamped_msg;
+    pose_stamped_msg.header.stamp = this->now();
+    pose_stamped_msg.header.frame_id = this->get_parameter("frame_id").as_string();
+
+    // Set position
+    pose_stamped_msg.pose.position.x = result["x"].get<double>();
+    pose_stamped_msg.pose.position.y = result["y"].get<double>();
+    pose_stamped_msg.pose.position.z = result["z"].get<double>();
+
+    // Set orientation
+    // Convert Euler angles to quaternion
+    double cos_roll = cos((result["roll"].get<double>()) * 0.5);
+    double sin_roll = sin((result["roll"].get<double>()) * 0.5);
+    double cos_pitch = cos((result["pitch"].get<double>()) * 0.5);
+    double sin_pitch = sin((result["pitch"].get<double>()) * 0.5);
+    double cos_yaw = cos((result["yaw"].get<double>()) * 0.5);
+    double sin_yaw = sin((result["yaw"].get<double>()) * 0.5);
+
+    /* For debugging
+    RCLCPP_DEBUG(this->get_logger(), "roll: %f", result["roll"].get<double>());
+    RCLCPP_DEBUG(this->get_logger(), "pitch: %f", ( result["pitch"].get<double>() ));
+    RCLCPP_DEBUG(this->get_logger(), "yaw: %f", ( result["yaw"].get<double>() ));
+
+    RCLCPP_DEBUG(this->get_logger(), "cos_roll: %f", cos_roll);
+    RCLCPP_DEBUG(this->get_logger(), "sin_roll: %f", sin_roll);
+    RCLCPP_DEBUG(this->get_logger(), "cos_pitch: %f", cos_pitch);
+    RCLCPP_DEBUG(this->get_logger(), "sin_pitch: %f", sin_pitch);
+    RCLCPP_DEBUG(this->get_logger(), "cos_yaw: %f", cos_yaw);
+    RCLCPP_DEBUG(this->get_logger(), "sin_yaw: %f", sin_yaw);
+    */
+
+    pose_stamped_msg.pose.orientation.w = cos_roll * cos_pitch * cos_yaw + sin_roll * sin_pitch * sin_yaw;
+    pose_stamped_msg.pose.orientation.x = sin_roll * cos_pitch * cos_yaw - cos_roll * sin_pitch * sin_yaw;
+    pose_stamped_msg.pose.orientation.y = cos_roll * sin_pitch * cos_yaw + sin_roll * cos_pitch * sin_yaw;
+    pose_stamped_msg.pose.orientation.z = cos_roll * cos_pitch * sin_yaw - sin_roll * sin_pitch * cos_yaw;
+
+    _posePublisher->publish(pose_stamped_msg);
+    RCLCPP_DEBUG(this->get_logger(), "Successfully publish pose data");
+}
+
+void M2M2Lidar::_getIMUData()
+{
+    RCLCPP_DEBUG(this->get_logger(), "Requesting imu data...");
+
+    if (!_sendJsonRequest("getimuinrobotcoordinate"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to send getimuinrobotcoordinate command");
+        return;
+    }
+    else
+    {
+        RCLCPP_DEBUG(this->get_logger(), "Successfully sent getimuinrobotcoordinate command");
+    }
+
+    auto response = _receiveJsonResponse();
+
+    if (response.empty() ||
+        response["result"].is_null() ||
+        !response["result"].contains("acc") ||
+        !response["result"].contains("gyro") ||
+        !response["result"].contains("quaternion"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to receive valid imu data response");
+        return;
+    }
+    else
+    {
+        RCLCPP_DEBUG(this->get_logger(), "Successfully received imu data");
+    }
+
+    // Populate the 
+    const auto &result = response["result"];
+    sensor_msgs::msg::Imu imu_msg;
+    imu_msg.header.stamp = this->now();
+    imu_msg.header.frame_id = this->get_parameter("frame_id").as_string();
+
+    // Populate the orientation
+    imu_msg.orientation.x = result["quaternion"]["x"].get<double>();
+    imu_msg.orientation.y = result["quaternion"]["y"].get<double>();
+    imu_msg.orientation.z = result["quaternion"]["z"].get<double>();
+    imu_msg.orientation.w = result["quaternion"]["w"].get<double>();
+
+    // Populate the angular velocity
+    imu_msg.angular_velocity.x = result["gyro"]["x"].get<double>();
+    imu_msg.angular_velocity.y = result["gyro"]["y"].get<double>();
+    imu_msg.angular_velocity.z = result["gyro"]["z"].get<double>();
+
+    // Populate the linear accleration
+    imu_msg.linear_acceleration.x = result["acc"]["x"].get<double>();
+    imu_msg.linear_acceleration.y = result["acc"]["y"].get<double>();
+    imu_msg.linear_acceleration.z = result["acc"]["z"].get<double>();
+
+    _imuPublisher->publish(imu_msg);
+    RCLCPP_DEBUG(this->get_logger(), "Successfully publish imu data");
 }
 
 void M2M2Lidar::_readSensorData()
