@@ -3,13 +3,13 @@
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <iomanip>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <stdexcept>
 #include <string>
 #include <thread>
