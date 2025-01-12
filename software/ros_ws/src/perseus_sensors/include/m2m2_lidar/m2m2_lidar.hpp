@@ -9,6 +9,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -73,6 +74,8 @@ private:
     // ROS setup and operation methods
     void _initializePublishers();
     void _readSensorData();
+    void _getIMUData();
+    void _getPose();
 
     // Member variables
 
@@ -83,5 +86,8 @@ private:
     // ROS2 publishers
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr _scanPublisher;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr _imuPublisher;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr _posePublisher;
     rclcpp::TimerBase::SharedPtr _readTimer;
+    rclcpp::TimerBase::SharedPtr _imuDataTimer;
+    rclcpp::TimerBase::SharedPtr _poseTimer;
 };
