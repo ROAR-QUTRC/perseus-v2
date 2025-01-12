@@ -46,9 +46,6 @@ public:
      */
     explicit M2M2Lidar(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
-    // Rule of 5
-    ~M2M2Lidar() override = default;
-
 private:
     // constants
     static constexpr double SCAN_FREQUENCY = 15.0;  // SI unit: Hz
