@@ -44,36 +44,36 @@ To begin developing a widget run the command: `./create-widget.sh <file-name>`. 
 
     ```ts
     export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-    	groups: {
-    		general: {
-    			textSetting: {
-    				type: 'text', // options are: text, number, switch, select, button
-    				value: 'Some text' // This is a default value
-    			},
-    			hereIsAButton: {
-    				type: 'button',
-    				action: () => {
-    					// action is executed on button press
-    					console.log('Button clicked');
-    					return 'Success'; // string return value is printed in a toast
-    				}
-    			}
-    		},
-    		Advanced: {
-    			booleanSwitch: {
-    				type: 'switch',
-    				description: 'This is a switch' // fields with descriptions get a question mark next to their label
-    			},
-    			selectOptions: {
-    				type: 'select',
-    				options: [
-    					{ value: '1', label: 'Option 1' },
-    					{ value: '2', label: 'Option 2' },
-    					{ value: '3', label: 'Option 3' }
-    				]
-    			}
-    		}
-    	}
+      groups: {
+        general: {
+          textSetting: {
+            type: "text", // options are: text, number, switch, select, button
+            value: "Some text", // This is a default value
+          },
+          hereIsAButton: {
+            type: "button",
+            action: () => {
+              // action is executed on button press
+              console.log("Button clicked");
+              return "Success"; // string return value is printed in a toast
+            },
+          },
+        },
+        Advanced: {
+          booleanSwitch: {
+            type: "switch",
+            description: "This is a switch", // fields with descriptions get a question mark next to their label
+          },
+          selectOptions: {
+            type: "select",
+            options: [
+              { value: "1", label: "Option 1" },
+              { value: "2", label: "Option 2" },
+              { value: "3", label: "Option 3" },
+            ],
+          },
+        },
+      },
     });
 
     console.log(settings.groups.Advanced.booleanSwitch.value); // logs the state of the switch
@@ -107,7 +107,7 @@ nvm install --lts
 
 If you have other versions of node already installed check the [nvm docs](https://github.com/nvm-sh/nvm) on how to setup environments or change the active node version.
 
-Finnaly, install yarn with:
+Finally, install yarn with:
 
 ```
 npm install --global yarn
