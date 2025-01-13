@@ -7,6 +7,7 @@
   ament-lint-common,
   nav2-bringup,
   rclcpp,
+  robot-localization,
   slam-toolbox,
   xacro,
 }:
@@ -25,6 +26,7 @@ buildRosPackage rec {
   propagatedBuildInputs = [
     nav2-bringup
     rclcpp
+    robot-localization
     slam-toolbox
     xacro
   ];

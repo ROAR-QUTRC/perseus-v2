@@ -27,6 +27,7 @@ endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 find_package(ament_cmake)
+find_package(robot_localization REQUIRED)
 
 # Install the package's resource files These directories will only be installed
 # if they exist
