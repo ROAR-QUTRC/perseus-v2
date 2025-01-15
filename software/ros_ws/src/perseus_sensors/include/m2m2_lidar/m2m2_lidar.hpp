@@ -78,6 +78,7 @@ private:
      */
     [[nodiscard]] static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
     static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
+    static constexpr size_t INTERPOLATED_POINTS = 4096;  // Number of points per scan
     // for imu
     static constexpr char const* IMU_COMMAND = "getimuinrobotcoordinate";
 
@@ -97,14 +98,9 @@ private:
     // Data processing methods
     [[nodiscard]] std::vector<uint8_t> _decodeBase64(const std::string& encoded);
     [[nodiscard]] std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64Encoded);
+    [[nodiscard]] std::vector<std::tuple<float, float, bool>> _interpolatePoints(const std::vector<std::tuple<float, float, bool>>& points);
     [[nodiscard]] std::vector<uint8_t> _createConfigCommand(const sensor_config_t& config);
 
-    // Data processing methods
-    [[nodiscard]] std::vector<uint8_t> _decodeBase64(const std::string& encoded);
-    [[nodiscard]] std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64Encoded);
-    [[nodiscard]] std::vector<uint8_t> _createConfigCommand(const sensor_config_t& config);
-
-    // ROS setup and operation methods
     // ROS setup and operation methods
     void _initializePublishers();
     void _readSensorData();
