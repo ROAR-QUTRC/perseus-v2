@@ -32,6 +32,10 @@ void SleepAction::onHalt()
     RCLCPP_INFO(logger(), "%s: onHalt", name().c_str());
 }
 
+// Plugin registration.
+// The class SleepAction will self register with name  "SleepAction".
+CreateRosNodePlugin(SleepAction, "SleepAction");
+
 void ExportNodesToXML(const std::string& filename, int argc, char** argv)
 {
     // Initialize the ROS2 node
