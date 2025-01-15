@@ -74,12 +74,18 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     RCLCPP_DEBUG(this->get_logger(), "Starting M2M2Lidar initialization...");
     this->declare_parameter("sensor_ip", "192.168.1.243");
     this->declare_parameter("sensor_port", 1445);
+<<<<<<< HEAD
     // this->declare_parameter("frame_id", "lidar_frame");
     this->declare_parameter("frame_id", "laser_frame");  // testing for autonomy mapping
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
 <<<<<<< HEAD
 =======
+=======
+    this->declare_parameter("frame_id", "laser_frame");
+    this->declare_parameter("scan_topic", "scan");
+    this->declare_parameter("imu_topic", "imu");
+>>>>>>> 1e24fe2 (perseus_sensors: fixed imu frame id)
     this->declare_parameter("imu_frame_id", "imu_frame");
     this->declare_parameter("imu_rate", 100);  // Hz
 >>>>>>> bd5ccf6 (autonomy: frame update pre m2m2 bugfix)
@@ -747,7 +753,6 @@ void M2M2Lidar::_readSensorData()
     sensor_msgs::msg::LaserScan scan;
     scan.header.stamp = this->now();
 
-    // scan->header.frame_id = this->get_parameter("frame_id").as_string();
     scan.header.frame_id = this->get_parameter("frame_id").as_string();
 
     scan.angle_min = std::get<0>(points.front());
