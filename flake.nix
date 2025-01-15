@@ -110,6 +110,7 @@
             teleop-twist-keyboard
             joy
             demo-nodes-cpp
+            tf2-tools
             ;
         };
         # Packages which should be available only in the dev shell
