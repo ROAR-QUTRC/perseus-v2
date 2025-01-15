@@ -131,6 +131,12 @@
             joy
             demo-nodes-cpp
             tf2-tools
+            rqt-gui
+            rqt-gui-py
+            rqt-graph
+            rqt-plot
+            rqt-reconfigure
+            rqt-common-plugins
             ;
         };
         # Packages which should be available only in the dev shell
