@@ -1,3 +1,4 @@
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import (
@@ -7,13 +8,23 @@ from launch.substitutions import (
     FindExecutable,
 )
 from launch_ros.parameter_descriptions import ParameterValue
-from launch_ros.actions import Node
+from launch_ros.actions import LifecycleNode, Node
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.events.lifecycle import ChangeState
+from lifecycle_msgs.msg import Transition
 
 
 def generate_launch_description():
     # ARGUMENTS
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    #use_lifecycle_manager = LaunchConfiguration("use_lifecycle_manager")
+
+    # declare_use_lifecycle_manager = DeclareLaunchArgument(
+    #     "use_lifecycle_manager",
+    #     default_value="false",
+    #     description="Enable bond connection during node activation",
+    # )
+
     use_legacy_hardware = LaunchConfiguration("use_legacy_hardware")
     can_bus = LaunchConfiguration("can_bus")
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -128,12 +139,23 @@ def generate_launch_description():
             "/controller_manager",
         ],
     )
+    
     static_tf_publisher = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="static_map_odom_publisher",
-        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
-    )
+            package="tf2_ros",
+            executable="static_transform_publisher",
+            name="static_map_odom_publisher",
+            #arguments=["0", "0", "0", "0", "0", "0", "base_link", "lidar_frame"],
+            arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
+        )
+        # Node(
+        # # Base link to LIDAR transform
+        #     package="tf2_ros",
+        #     executable="static_transform_publisher",
+        #     name="lidar_tf_publisher",
+        #     arguments=["0", "0", "0.2", "0", "0", "0", "odom", "lidar_frame"],
+        # ),
+    
+      
 
     slam_toolbox = Node(
         package="slam_toolbox",
@@ -141,14 +163,17 @@ def generate_launch_description():
         name="slam_toolbox",
         output="screen",
         parameters=[
-            slam_params_file,
-            {
-                "use_sim_time": use_sim_time,
-                "odom_frame": "odom",
-                "base_frame": "chassis",
-                "map_frame": "map",
-                "scan_topic": "/scan",
-            },
+        #     get_package_share_directory("autonomy")
+        #     + "/config/slam_toolbox_params.yaml",
+            
+        slam_params_file,
+            # {
+            #     "use_sim_time": use_sim_time,
+            #     "odom_frame": "odom",
+            #     "base_frame": "base_link",
+            #     "map_frame": "map",
+            #     "scan_topic": "/scan",
+            # },
         ],
     )
 
@@ -187,9 +212,10 @@ def generate_launch_description():
         slam_toolbox,
         rviz,
     ]
-
+     
     # EVENT HANDLERS
     handlers = []
 
     # Return the launch description
     return LaunchDescription(arguments + nodes + handlers)
+    
