@@ -1,9 +1,8 @@
 <script lang="ts" module>
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
-	import { Chart, type ChartConfiguration } from 'chart.js';
-
+	
 	export const name = 'Resource Monitor';
-
+	
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
 			general: {
@@ -49,6 +48,7 @@
 <script lang="ts">
 	import { io, Socket } from 'socket.io-client';
 	import { onMount } from 'svelte';
+	import Chart, { type ChartConfiguration } from 'chart.js/auto';
 
 	interface MonitorData {
 		cpu: number;
