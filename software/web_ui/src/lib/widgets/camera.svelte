@@ -12,21 +12,34 @@
 <script lang="ts">
 	import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import ROSLIB from 'roslib';
+	import { onMount } from 'svelte';
 
 	let cameraTopic = new ROSLIB.Topic({
 		ros: ros.value!,
-		name: '/v4l2_camera/image_raw',
-		messageType: 'sensor_msgs/msg/Image'
+		name: '/image_raw/compressed',
+		messageType: 'sensor_msgs/msg/CompressedImage'
 	});
 
-	console.log(cameraTopic);
+	onMount(() => {
+		const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+		const ctx = canvas.getContext('2d');
+		ctx?.clearRect(0, 0, canvas.width, canvas.height);
 
-	cameraTopic.subscribe((message) => {
-		cameraData = message;
-		console.log(message);
+		cameraTopic.subscribe((message: any) => {
+			let img = new Image();
+			img.src = 'data:image/jpeg;base64,' + message.data;
+			ctx?.drawImage(img, 0, 0);
+			cameraTopic.unsubscribe();
+		});
+
+		return () => {
+			cameraTopic.unsubscribe();
+		};
 	});
 
-	let cameraData = $state()
+	let cameraData = $state();
 </script>
 
-<p>{cameraData}</p>
+<!-- <p class=" w-[50%] text-wrap">{cameraData}</p> -->
+<!-- <img alt="" src="data:image/png;base64,{cameraData}" /> -->
+<canvas id="canvas" width="640" height="480"></canvas>

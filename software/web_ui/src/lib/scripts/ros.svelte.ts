@@ -1,4 +1,5 @@
 import ROSLIB from 'roslib';
+import { onDestroy } from 'svelte';
 
 export let ros = $state<{ value: ROSLIB.Ros | null }>({
 	value: null
@@ -7,6 +8,7 @@ export let ros = $state<{ value: ROSLIB.Ros | null }>({
 let connected = $state<boolean>(false);
 let retryTimeout: number = 0;
 
+export let ipAddress: string | null = null;
 export const isConnected = () => {
 	return connected;
 };
@@ -17,8 +19,9 @@ export const connect = (address: string) => {
 	});
 
 	ros.value.on('connection', () => {
-		console.log('Connected to websocket server.');
+		console.log('Connected to rosbridge server.');
 		connected = true;
+		ipAddress = address;
 	});
 
 	ros.value.on('error', (error) => {
