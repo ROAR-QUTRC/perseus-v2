@@ -123,14 +123,15 @@
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
         standardPkgs = {
-          # note: we need bashInteractive so running `bash` in zsh works properly
-          inherit (pkgs)
-            groot2
-            can-utils
-            bashInteractive
-            nixgl-script
+          inherit (pkgs) groot2 can-utils bashInteractive;
+          inherit (pkgs.ros)
+            rviz2-fixed
+            rosbag2
+            teleop-twist-keyboard
+            joy
+            demo-nodes-cpp
+            tf2-tools
             ;
-          inherit (pkgs.ros) rviz2-fixed rosbag2 demo-nodes-cpp;
         };
         # Packages which should be available only in the dev shell
         devShellPkgs = {
