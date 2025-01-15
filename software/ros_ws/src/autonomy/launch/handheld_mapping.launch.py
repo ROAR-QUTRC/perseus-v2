@@ -137,6 +137,7 @@ def generate_launch_description():
         ],
         package="slam_toolbox",
         executable="lifelong_slam_toolbox_node",
+        # executable="async_slam_toolbox_node",
         name="slam_toolbox",
         output="screen",
         namespace="",
@@ -180,15 +181,21 @@ def generate_launch_description():
         Node(
             package="tf2_ros",
             executable="static_transform_publisher",
-            name="lidar_tf_publisher",
-            arguments=["0", "0", "0.2", "0", "0", "0", "odom", "base_footprint"],
+            name="odom_tf_publisher",
+            arguments=["0", "0", "0.0", "0", "0", "0", "odom", "base_footprint"],
         ),
         # Base link to IMU transform
         Node(
             package="tf2_ros",
             executable="static_transform_publisher",
             name="imu_tf_publisher",
-            arguments=["0", "0", "0.1", "0", "0", "0", "base_footprint", "lidar_frame"],
+            arguments=["0", "0", "0.1", "0", "0", "0", "base_footprint", "laser_frame"],
+        ),
+        Node(
+            package="tf2_ros",
+            executable="static_transform_publisher",
+            name="imu_tf_publisher",
+            arguments=["0", "0", "0.4", "0", "0", "0", "base_footprint", "imu_frame"],
         ),
         # Add diagnostic node to check TF timing
         Node(

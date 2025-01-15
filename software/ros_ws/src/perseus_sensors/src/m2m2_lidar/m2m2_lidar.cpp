@@ -74,9 +74,15 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     RCLCPP_DEBUG(this->get_logger(), "Starting M2M2Lidar initialization...");
     this->declare_parameter("sensor_ip", "192.168.1.243");
     this->declare_parameter("sensor_port", 1445);
-    this->declare_parameter("frame_id", "lidar_frame");
+    // this->declare_parameter("frame_id", "lidar_frame");
+    this->declare_parameter("frame_id", "laser_frame");  // testing for autonomy mapping
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
+<<<<<<< HEAD
+=======
+    this->declare_parameter("imu_frame_id", "imu_frame");
+    this->declare_parameter("imu_rate", 100);  // Hz
+>>>>>>> bd5ccf6 (autonomy: frame update pre m2m2 bugfix)
 
     // Get the parameters
     std::string sensorIp;
@@ -638,3 +644,208 @@ vector<uint8_t> M2M2Lidar::_decodeBase64(const string& encoded)
         rclcpp::shutdown();
         return 0;
     }
+<<<<<<< HEAD
+=======
+}
+
+/**
+ * @brief Creates a configuration command packet for the M2M2 LIDAR sensor.
+ *
+ * @details Constructs a byte sequence following the sensor's protocol format for
+ * configuration commands. Note that this function may become deprecated as hardware
+ * testing progresses - the m2m2 LIDAR's default configuration may be sufficient
+ * without manual configuration. Testing will confirm or not.
+ *
+ */
+vector<uint8_t> M2M2Lidar::_createConfigCommand(const sensor_config_t& config)
+{
+    // Protocol-related constants
+    static constexpr uint8_t PROTOCOL_HEADER = 0xAA;
+    static constexpr uint8_t PROTOCOL_FOOTER = 0x55;
+
+    // Define valid ranges for our parameters
+    static constexpr double MIN_SCAN_FREQUENCY = 0.0;
+    static constexpr double MAX_SCAN_FREQUENCY = 255.0;  // uint8_t max
+    static constexpr double MIN_ANGULAR_RESOLUTION = 0.0;
+    static constexpr double MAX_ANGULAR_RESOLUTION = 2.55;
+
+    vector<uint8_t> command;
+    command.push_back(PROTOCOL_HEADER);
+    command.push_back(0x01);  // command type for configuration
+
+    // clamp scan frequency to valid uint8_t and round to nearest integer
+    double clampedFrequency = std::clamp(config.scanFrequency,
+                                         MIN_SCAN_FREQUENCY,
+                                         MAX_SCAN_FREQUENCY);
+    command.push_back(static_cast<uint8_t>(std::round(clampedFrequency)));
+
+    // Clamp angular resolution, scale by 100, and ensure it fits in uint8_t
+    double scaledResolution = std::clamp(config.angularResolution * 100.0,
+                                         MIN_ANGULAR_RESOLUTION * 100.0,
+                                         MAX_ANGULAR_RESOLUTION * 100.0);
+    command.push_back(static_cast<uint8_t>(std::round(scaledResolution)));
+
+    // Add configuration parameters if needed - this might go-away post hardware testing
+    command.push_back(static_cast<uint8_t>(config.scanFrequency));
+    command.push_back(static_cast<uint8_t>(config.angularResolution * 100));
+
+    // Add footer
+    command.push_back(PROTOCOL_FOOTER);
+
+    return command;
+}
+
+void M2M2Lidar::_sendCommand(const std::vector<uint8_t>& command)
+{
+    assert(_client && "Network client should be initialised by constructor");
+
+    ssize_t bytesSent = _client->transmit(command);
+
+    if (bytesSent != static_cast<ssize_t>(command.size()))
+    {
+        throw std::runtime_error(
+            std::format("Incomplete command transmission: sent {} of {} bytes",
+                        bytesSent, command.size()));
+    }
+
+    RCLCPP_DEBUG(this->get_logger(),
+                 "Successfully sent command of %zu bytes", command.size());
+}
+
+void M2M2Lidar::_readSensorData()
+{
+    RCLCPP_DEBUG(this->get_logger(), "Requesting laser scan data...");
+
+    if (!_sendJsonRequest("getlaserscan"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to send getlaserscan command");
+        return;
+    }
+
+    auto response = _receiveJsonResponse();
+    if (response.empty() ||
+        response["result"].is_null() ||
+        !response["result"].contains("laser_points"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to receive valid laser scan response");
+        return;
+    }
+
+    string base64Points = response["result"]["laser_points"];
+    RCLCPP_DEBUG(this->get_logger(), "Received base64 data of length: %zu", base64Points.length());
+
+    auto points = _decodeLaserPoints(base64Points);
+    RCLCPP_DEBUG(this->get_logger(), "Decoded %zu points", points.size());
+
+    if (points.empty())
+    {
+        RCLCPP_WARN(this->get_logger(), "No valid points decoded from laser scan");
+        return;
+    }
+
+    // Populate the LaserScan message
+    sensor_msgs::msg::LaserScan scan;
+    scan.header.stamp = this->now();
+
+    // scan->header.frame_id = this->get_parameter("frame_id").as_string();
+    scan.header.frame_id = this->get_parameter("frame_id").as_string();
+
+    scan.angle_min = std::get<0>(points.front());
+    scan.angle_max = std::get<0>(points.back());
+    scan.angle_increment = (scan.angle_max - scan.angle_min) / (points.size() - 1);
+    scan.time_increment = 1.0 / (SCAN_FREQUENCY * points.size());
+    scan.scan_time = 1.0 / SCAN_FREQUENCY;
+    scan.range_min = MIN_RANGE;
+    scan.range_max = MAX_RANGE;
+
+    scan.ranges.reserve(points.size());
+    for (const auto& [angle, distance, valid] : points)
+    {
+        scan.ranges.push_back(valid ? distance : 0.0);
+    }
+
+    RCLCPP_DEBUG(this->get_logger(), "Publishing scan with %zu ranges", scan.ranges.size());
+    _scanPublisher->publish(scan);
+}
+
+void M2M2Lidar::_readImuData()
+{
+    RCLCPP_DEBUG(this->get_logger(), "Requesting IMU data...");
+
+    if (!_sendJsonRequest(IMU_COMMAND))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to send IMU data request");
+        return;
+    }
+
+    auto response = _receiveJsonResponse();
+    if (response.empty() || !response.contains("result"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to receive valid IMU response");
+        return;
+    }
+
+    // Create and populate IMU message
+    auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
+    imu_msg->header.stamp = this->now();
+    imu_msg->header.frame_id = this->get_parameter("imu_frame_id").as_string();
+
+    // Extract data from response
+    const auto& result = response["result"];
+
+    // Set orientation quaternion
+    if (result.contains("quaternion"))
+    {
+        imu_msg->orientation.w = result["quaternion"]["w"];
+        imu_msg->orientation.x = result["quaternion"]["x"];
+        imu_msg->orientation.y = result["quaternion"]["y"];
+        imu_msg->orientation.z = result["quaternion"]["z"];
+    }
+
+    // Set angular velocity from gyro
+    if (result.contains("gyro"))
+    {
+        imu_msg->angular_velocity.x = result["gyro"]["x"];
+        imu_msg->angular_velocity.y = result["gyro"]["y"];
+        imu_msg->angular_velocity.z = result["gyro"]["z"];
+    }
+
+    // Set linear acceleration
+    if (result.contains("acc"))
+    {
+        imu_msg->linear_acceleration.x = result["acc"]["x"];
+        imu_msg->linear_acceleration.y = result["acc"]["y"];
+        imu_msg->linear_acceleration.z = result["acc"]["z"];
+    }
+
+    // Set covariance matrices to unknown
+    std::fill(imu_msg->orientation_covariance.begin(),
+              imu_msg->orientation_covariance.end(), -1);
+    std::fill(imu_msg->angular_velocity_covariance.begin(),
+              imu_msg->angular_velocity_covariance.end(), -1);
+    std::fill(imu_msg->linear_acceleration_covariance.begin(),
+              imu_msg->linear_acceleration_covariance.end(), -1);
+
+    _imuPublisher->publish(std::move(imu_msg));
+}
+
+int main(int argc, char** argv)
+{
+    rclcpp::init(argc, argv);
+
+    try
+    {
+        auto node = std::make_shared<M2M2Lidar>();
+        RCLCPP_INFO(rclcpp::get_logger("main"), "Starting M2M2Lidar node...");
+        rclcpp::spin(node);
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("main"), "Error running M2M2Lidar: %s", e.what());
+        return 1;
+    }
+
+    rclcpp::shutdown();
+    return 0;
+}
+>>>>>>> bd5ccf6 (autonomy: frame update pre m2m2 bugfix)
