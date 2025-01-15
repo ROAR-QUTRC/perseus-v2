@@ -63,7 +63,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     // Set up ROS logging
     auto ret = rcutils_logging_set_logger_level(
         get_logger().get_name(),
-        RCUTILS_LOG_SEVERITY_DEBUG);
+        RCUTILS_LOG_SEVERITY_INFO);
 
     if (ret != RCUTILS_RET_OK)
     {
@@ -738,16 +738,25 @@ void M2M2Lidar::_readSensorData()
     }
 
     string base64Points = response["result"]["laser_points"];
-    RCLCPP_DEBUG(this->get_logger(), "Received base64 data of length: %zu", base64Points.length());
-
-    auto points = _decodeLaserPoints(base64Points);
-    RCLCPP_DEBUG(this->get_logger(), "Decoded %zu points", points.size());
-
-    if (points.empty())
+    auto rawPoints = _decodeLaserPoints(base64Points);
+    if (rawPoints.empty())
     {
         RCLCPP_WARN(this->get_logger(), "No valid points decoded from laser scan");
         return;
     }
+
+    auto points = _interpolatePoints(rawPoints);
+
+    // RCLCPP_DEBUG(this->get_logger(), "Received base64 data of length: %zu", base64Points.length());
+
+    // auto points = _decodeLaserPoints(base64Points);
+    // RCLCPP_DEBUG(this->get_logger(), "Decoded %zu points", points.size());
+
+    // if (points.empty())
+    // {
+    //     RCLCPP_WARN(this->get_logger(), "No valid points decoded from laser scan");
+    //     return;
+    // }
 
     // Populate the LaserScan message
     sensor_msgs::msg::LaserScan scan;
@@ -832,6 +841,122 @@ void M2M2Lidar::_readImuData()
               imu_msg->linear_acceleration_covariance.end(), -1);
 
     _imuPublisher->publish(std::move(imu_msg));
+}
+
+std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
+    const std::vector<std::tuple<float, float, bool>>& input_points)
+{
+    using namespace std;
+
+    if (input_points.empty())
+        return {};
+
+    // First normalize and sort points by angle
+    vector<tuple<float, float, bool>> points;
+    points.reserve(input_points.size());
+
+    // Normalize angles to [0, 2π]
+    for (const auto& point : input_points)
+    {
+        float angle = get<0>(point);
+        // Normalize angle to [0, 2π]
+        while (angle < 0) angle += 2 * M_PI;
+        while (angle >= 2 * M_PI) angle -= 2 * M_PI;
+        points.emplace_back(angle, get<1>(point), get<2>(point));
+    }
+
+    // Sort by angle
+    sort(points.begin(), points.end(),
+         [](const auto& a, const auto& b)
+         { return get<0>(a) < get<0>(b); });
+
+    vector<tuple<float, float, bool>> interpolated;
+    interpolated.reserve(INTERPOLATED_POINTS);
+
+    // Calculate angle increment
+    float angleIncrement = 2 * M_PI / INTERPOLATED_POINTS;
+
+    // For each desired interpolation point
+    for (size_t i = 0; i < INTERPOLATED_POINTS; ++i)
+    {
+        float targetAngle = i * angleIncrement;
+
+        // Find points that bracket our target angle
+        size_t idx = 0;
+        while (idx < points.size() && get<0>(points[idx]) < targetAngle)
+        {
+            idx++;
+        }
+
+        // Handle edge cases
+        if (idx == 0)
+        {
+            // Interpolate between last and first point
+            auto p1 = points.back();
+            auto p2 = points.front();
+
+            // Adjust angle for wrap-around
+            float a1 = get<0>(p1);
+            float a2 = get<0>(p2) + 2 * M_PI;
+
+            if (!get<2>(p1) && !get<2>(p2))
+            {
+                interpolated.emplace_back(targetAngle, INVALID_DISTANCE, false);
+                continue;
+            }
+
+            if (!get<2>(p1))
+            {
+                interpolated.emplace_back(targetAngle, get<1>(p2), true);
+                continue;
+            }
+
+            if (!get<2>(p2))
+            {
+                interpolated.emplace_back(targetAngle, get<1>(p1), true);
+                continue;
+            }
+
+            float t = (targetAngle - a1) / (a2 - a1);
+            float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
+            interpolated.emplace_back(targetAngle, dist, true);
+        }
+        else if (idx == points.size())
+        {
+            // Use last point's value
+            interpolated.emplace_back(targetAngle, get<1>(points.back()), get<2>(points.back()));
+        }
+        else
+        {
+            // Normal interpolation between two points
+            auto& p1 = points[idx - 1];
+            auto& p2 = points[idx];
+
+            if (!get<2>(p1) && !get<2>(p2))
+            {
+                interpolated.emplace_back(targetAngle, INVALID_DISTANCE, false);
+                continue;
+            }
+
+            if (!get<2>(p1))
+            {
+                interpolated.emplace_back(targetAngle, get<1>(p2), true);
+                continue;
+            }
+
+            if (!get<2>(p2))
+            {
+                interpolated.emplace_back(targetAngle, get<1>(p1), true);
+                continue;
+            }
+
+            float t = (targetAngle - get<0>(p1)) / (get<0>(p2) - get<0>(p1));
+            float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
+            interpolated.emplace_back(targetAngle, dist, true);
+        }
+    }
+
+    return interpolated;
 }
 
 int main(int argc, char** argv)
