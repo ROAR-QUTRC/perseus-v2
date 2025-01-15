@@ -74,10 +74,10 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     RCLCPP_DEBUG(this->get_logger(), "Starting M2M2Lidar initialization...");
     this->declare_parameter("sensor_ip", "192.168.1.243");
     this->declare_parameter("sensor_port", 1445);
-    this->declare_parameter("frame_id", "lidar_frame");
+    this->declare_parameter("frame_id", "laser_frame");
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
-    this->declare_parameter("imu_frame_id", "imu_link");
+    this->declare_parameter("imu_frame_id", "imu_frame");
     this->declare_parameter("imu_rate", 100);  // Hz
 
     // Get the parameters
@@ -536,7 +536,6 @@ void M2M2Lidar::_readSensorData()
     sensor_msgs::msg::LaserScan scan;
     scan.header.stamp = this->now();
 
-    // scan->header.frame_id = this->get_parameter("frame_id").as_string();
     scan.header.frame_id = this->get_parameter("frame_id").as_string();
 
     scan.angle_min = std::get<0>(points.front());
@@ -577,7 +576,7 @@ void M2M2Lidar::_readImuData()
     // Create and populate IMU message
     auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
     imu_msg->header.stamp = this->now();
-    imu_msg->header.frame_id = this->get_parameter("frame_id").as_string();
+    imu_msg->header.frame_id = this->get_parameter("imu_frame_id").as_string();
 
     // Extract data from response
     const auto& result = response["result"];
