@@ -48,19 +48,9 @@ public:
      * @param options Node options for ROS2 configuration
      * @throws std::runtime_error If initialization fails
      */
-    /**
-     * @brief Construct a new M2M2Lidar node
-     *
-     * @param options Node options for ROS2 configuration
-     * @throws std::runtime_error If initialization fails
-     */
     explicit M2M2Lidar(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
-    // Rule of 5
-    ~M2M2Lidar() override = default;
-
 private:
-    // constants
     // constants
     static constexpr double SCAN_FREQUENCY = 15.0;  // SI unit: Hz
     static constexpr double MIN_RANGE = 0.1;        // SI unit: meters
