@@ -26,8 +26,35 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-find_package(ament_cmake)
-find_package(robot_localization REQUIRED)
+# COMPILER SETUP
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+# Add -Werror flag for release builds
+if(CMAKE_BUILD_TYPE MATCHES "Rel.*")
+  add_compile_options(-Werror)
+endif()
+
+# Set the C++ standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# INCLUDE DEPENDENCIES public dependencies (which should propagate)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp robot_localization) # robot_localiztion
+                                                            # will be used in
+                                                            # the very near
+                                                            # future
+
+# packages which must be present but aren't linked against
+set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
+
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 # Install the package's resource files These directories will only be installed
 # if they exist
