@@ -10,36 +10,53 @@
 </script>
 
 <script lang="ts">
-	import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
-	import ROSLIB from 'roslib';
-	import { onMount } from 'svelte';
+    import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+    import ROSLIB from 'roslib';
+    import { onMount } from 'svelte';
 
-	let cameraTopic = new ROSLIB.Topic({
-		ros: ros.value!,
-		name: '/image_raw/compressed',
-		messageType: 'sensor_msgs/msg/CompressedImage'
-	});
+    let cameraTopic = new ROSLIB.Topic({
+        ros: ros.value!,
+        name: '/image_raw/compressed',
+        messageType: 'sensor_msgs/msg/CompressedImage'
+    });
 
-	onMount(() => {
-		const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-		const ctx = canvas.getContext('2d');
-		ctx?.clearRect(0, 0, canvas.width, canvas.height);
+	function dataURItoBlob(dataURI: any) {
+      // convert base64 to raw binary data held in a string
+      // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+      var byteString = atob(dataURI.split(',')[1]);
 
-		cameraTopic.subscribe((message: any) => {
-			let img = new Image();
-			img.src = 'data:image/jpeg;base64,' + message.data;
-			ctx?.drawImage(img, 0, 0);
-			cameraTopic.unsubscribe();
-		});
+      // separate out the mime component
+      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
 
-		return () => {
-			cameraTopic.unsubscribe();
-		};
-	});
+      // write the bytes of the string to an ArrayBuffer
+      var ab = new ArrayBuffer(byteString.length);
+      var ia = new Uint8Array(ab);
+      for (var i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+      }
 
-	let cameraData = $state();
+      // write the ArrayBuffer to a blob, and you're done
+      var blob = new Blob([ab], {type: mimeString});
+      return blob;
+    }
+
+	let canvas = $state<HTMLCanvasElement>();
+    onMount(() => {
+		const ctx = canvas!.getContext('2d');
+        cameraTopic.subscribe((message: any) => {
+			
+			createImageBitmap(dataURItoBlob("data:image/png;base64," + message.data)).then((data) => {
+				canvas!.width = data.width;
+				canvas!.height = data.height;
+				ctx!.drawImage(data, 0, 0);
+				data.close();
+			});
+        });
+
+        return () => {
+            cameraTopic.unsubscribe();
+        };
+    });
 </script>
 
-<!-- <p class=" w-[50%] text-wrap">{cameraData}</p> -->
-<!-- <img alt="" src="data:image/png;base64,{cameraData}" /> -->
-<canvas id="canvas" width="640" height="480"></canvas>
+<canvas bind:this={canvas}></canvas>
