@@ -18,12 +18,8 @@
 
 /**
  * @brief ROS2 driver node for the M2M2 LIDAR sensor
- * @brief ROS2 driver node for the M2M2 LIDAR sensor
  *
- * @details Handles communication with the M2M2 LIDAR sensor over TCP/IP,
- * processes incoming data, and publishes LaserScan and IMU messages.
- * The driver maintains the connection to the sensor and provides configuration
- * capabilities.
+
  * @details Handles communication with the M2M2 LIDAR sensor over TCP/IP,
  * processes incoming data, and publishes LaserScan and IMU messages.
  * The driver maintains the connection to the sensor and provides configuration
@@ -72,12 +68,6 @@ private:
     static constexpr float INVALID_DISTANCE = 100000.0f;
     static constexpr float EPSILON = 0.0001f;
     static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
-
-    /**
-     * @brief Check if two floating point values are equal within epsilon
-     */
-    [[nodiscard]] static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
-    static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
     static constexpr size_t INTERPOLATED_POINTS = 4096;  // Number of points per scan
     // for imu
     static constexpr char const* IMU_COMMAND = "getimuinrobotcoordinate";
@@ -87,9 +77,6 @@ private:
      */
     [[nodiscard]] static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
 
-    // Network communication methods
-    [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
-    [[nodiscard]] nlohmann::json _receiveJsonResponse();
     // Network communication methods
     [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
     [[nodiscard]] nlohmann::json _receiveJsonResponse();
@@ -107,11 +94,6 @@ private:
     void _readImuData();
 
     // Member variables
-
-    std::int32_t _requestId{0};
-    std::optional<networking::Client> _client;
-    sensor_config_t _config{};
-
     std::int32_t _requestId{0};
     std::optional<networking::Client> _client;
     sensor_config_t _config{};
