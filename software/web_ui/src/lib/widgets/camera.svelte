@@ -20,13 +20,10 @@
         messageType: 'sensor_msgs/msg/CompressedImage'
     });
 
-	function dataURItoBlob(dataURI: any) {
+	function dataURItoBlob(imageFormat: string, dataURI: string) {
       // convert base64 to raw binary data held in a string
       // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-      var byteString = atob(dataURI.split(',')[1]);
-
-      // separate out the mime component
-      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+      var byteString = atob(dataURI);
 
       // write the bytes of the string to an ArrayBuffer
       var ab = new ArrayBuffer(byteString.length);
@@ -36,7 +33,7 @@
       }
 
       // write the ArrayBuffer to a blob, and you're done
-      var blob = new Blob([ab], {type: mimeString});
+      var blob = new Blob([ab], {type: imageFormat});
       return blob;
     }
 
@@ -45,12 +42,23 @@
 		const ctx = canvas!.getContext('2d');
         cameraTopic.subscribe((message: any) => {
 			
-			createImageBitmap(dataURItoBlob("data:image/png;base64," + message.data)).then((data) => {
-				canvas!.width = data.width;
-				canvas!.height = data.height;
-				ctx!.drawImage(data, 0, 0);
-				data.close();
-			});
+			if (canvas !== undefined && ctx !== null) {
+				createImageBitmap(dataURItoBlob("image/jpeg", message.data)).then((data) => {
+					canvas!.width = data.width;
+					canvas!.height = data.height;
+					ctx.drawImage(data, 0, 0);
+					data.close();
+				ctx.beginPath();
+				ctx.fillStyle = 'red';
+				ctx.rect(20, 20, 20, 20);
+				ctx.rect(60, 20, 20, 20);
+				ctx.rect(20, 60, 10, 10);
+				ctx.rect(70, 60, 10, 10);
+				ctx.rect(30, 70, 40, 10);
+				ctx.fill();
+				});
+			}
+
         });
 
         return () => {
