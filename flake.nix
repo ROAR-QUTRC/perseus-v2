@@ -225,7 +225,10 @@
           cd "$(git rev-parse --show-toplevel)"
           cp ${treefmtEval.config.build.configFile} ./treefmt.toml
           chmod +w treefmt.toml
-          sed -i 's,command.*/,command = ",' treefmt.toml
+          # strip out Nix store prefix path from the config,
+          # along with ruff-check (it just causes errors when trying to "format" in VSCode,
+          # since it's a linter)
+          sed -i -e 's,command.*/,command = ",' -e "/\[formatter\.ruff-check\]/,/^$/d" treefmt.toml
         '';
 
         # --- FORMATTING ---
