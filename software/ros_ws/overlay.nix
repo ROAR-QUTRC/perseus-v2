@@ -28,10 +28,12 @@ let
         devPackages = (builtins.intersectAttrs (packagingOverlay null null) rosFinal) // {
           inherit (prev) colcon-ignore; # always include colcon-ignore in dev packages
         };
-        # additionally, override rviz by default to wrap it with nixGL since most people are on Ubuntu not NixOS
-        # also provide native rviz with an alias
+        # wrap gz and rviz with nixGL
         rviz2-fixed = prev.writeShellScriptBin "rviz2-fixed" ''
           NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure "github:nix-community/nixGL" "${prev.lib.getExe rosPrev.rviz2}" -- "$@"
+        '';
+        gz-sim-fixed = prev.writeShellScriptBin "gz-sim-fixed" ''
+          NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure "github:nix-community/nixGL" -- gz sim "$@"
         '';
       })
     ] rosFinal rosPrev);
