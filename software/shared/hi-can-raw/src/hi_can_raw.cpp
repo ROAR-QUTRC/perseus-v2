@@ -47,9 +47,7 @@ RawCanInterface& RawCanInterface::operator=(RawCanInterface&& other) noexcept
 
 void RawCanInterface::transmit(const Packet& packet)
 {
-    struct can_frame frame
-    {
-    };
+    struct can_frame frame{};
 
     // set CAN ID, as well as necessary flags
     frame.can_id = static_cast<addressing::raw_address_t>(packet.getAddress());
@@ -81,9 +79,7 @@ void RawCanInterface::transmit(const Packet& packet)
 
 std::optional<Packet> RawCanInterface::receive(bool blocking)
 {
-    struct can_frame frame
-    {
-    };
+    struct can_frame frame{};
     const ssize_t bytesRead = recv((int)_socket, &frame, sizeof(frame), blocking ? 0 : MSG_DONTWAIT);
     if (bytesRead < 0)
     {
@@ -157,9 +153,7 @@ void RawCanInterface::_configureSocket(const int& socket)
     }
 
     // Bind socket to the specified CAN interface
-    struct sockaddr_can addr
-    {
-    };
+    struct sockaddr_can addr{};
     addr.can_family = AF_CAN;
     addr.can_ifindex = interface_idx;
     if (bind(socket, (struct sockaddr*)&addr, sizeof(addr)) < 0)
