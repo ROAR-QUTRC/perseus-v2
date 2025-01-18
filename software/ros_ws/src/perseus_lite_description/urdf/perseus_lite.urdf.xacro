@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="perseus_lite" params="prefix">
+    <!-- Import components -->
+    <xacro:include filename="$(find perseus_lite_description)/urdf/chassis.urdf.xacro"/>
+    <xacro:include filename="$(find perseus_lite_description)/urdf/rocker.urdf.xacro"/>
+    
+    <!-- Scale factor for Perseus Lite -->
+    <xacro:property name="scale" value="0.5"/>
+
+    <link name="${prefix}base_link"/>
+
+    <!--BASE_FOOTPRINT_LINK-->
+    <joint name="base_footprint_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="base_footprint"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="base_footprint">
+    </link>
+
+    <!-- CHASSIS -->
+    <xacro:chassis />
+    <joint name="chassis_joint" type="fixed">
+      <origin xyz="${0.21 * scale} 0.0 ${0.35 * scale}" rpy="0.0 0.0 -${pi/2}"/>
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}chassis"/>
+    </joint>
+
+    <!-- ROCKER ARMS -->
+    <!-- LEFT -->
+    <xacro:rocker side="left">
+      <origin xyz="${-0.275 * scale} ${-0.075 * scale} ${0.05 * scale}" rpy="0.0 0.0 ${-pi/2}"/>
+    </xacro:rocker>
+    <!-- RIGHT -->
+    <xacro:rocker side="right">
+      <origin xyz="${0.275 * scale} ${-0.075 * scale} ${0.05 * scale}" rpy="0.0 0.0 ${-pi/2}"/>
+    </xacro:rocker>
+  </xacro:macro>
+</robot>
