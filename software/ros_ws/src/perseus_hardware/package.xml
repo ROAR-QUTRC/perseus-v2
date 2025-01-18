@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>perseus_hardware</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>Perseus rover hardware interface plugins for ROS2 control</description>
   <maintainer email="59348282+RandomSpaceship@users.noreply.github.com">james</maintainer>
   <license>MIT</license>

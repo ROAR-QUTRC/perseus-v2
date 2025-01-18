@@ -7,7 +7,7 @@
 
 stdenv.mkDerivation rec {
   pname = "hi-can-common";
-  version = "0.0.0";
+  version = "0.0.1";
 
   src = cleanCmakeSource {
     src = ./.;
