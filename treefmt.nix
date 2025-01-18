@@ -5,7 +5,7 @@
   projectRootFile = "flake.nix";
 
   # enable formatters and linters
-  programs.actionlint.enable = true;
+  programs.actionlint.enable = false; # TODO: Re-enable (see #85)
   programs.clang-format.enable = true;
   programs.cmake-format.enable = true;
   programs.dos2unix.enable = true;
