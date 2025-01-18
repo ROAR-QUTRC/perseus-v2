@@ -3,7 +3,10 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  ament-lint-auto,
+  ament-lint-common,
   joint-state-publisher,
+  joint-state-publisher-gui,
   robot-state-publisher,
   rviz2,
   urdf,
@@ -17,8 +20,13 @@ buildRosPackage rec {
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
+  checkInputs = [
+    ament-lint-auto
+    ament-lint-common
+  ];
   propagatedBuildInputs = [
     joint-state-publisher
+    joint-state-publisher-gui
     robot-state-publisher
     rviz2
     urdf

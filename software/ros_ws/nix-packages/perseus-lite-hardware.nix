@@ -3,6 +3,8 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  ament-lint-auto,
+  ament-lint-common,
   boost,
   hardware-interface,
   pluginlib,
@@ -17,6 +19,10 @@ buildRosPackage rec {
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
+  checkInputs = [
+    ament-lint-auto
+    ament-lint-common
+  ];
   propagatedBuildInputs = [
     boost
     hardware-interface
