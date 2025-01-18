@@ -1,0 +1,8 @@
+<root BTCPP_format="4">
+    <TreeNodesModel>
+        <Action ID="SleepAction">
+            <input_port name="msec" type="unsigned int"/>
+            <input_port name="action_name" type="std::string" default="">Action server name</input_port>
+        </Action>
+    </TreeNodesModel>
+</root>

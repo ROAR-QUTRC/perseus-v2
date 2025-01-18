@@ -24,29 +24,30 @@ ament_target_dependencies(${EXEC1} ${THIS_PACKAGE_DEPS})
 # Add Plugins
 # ================================
 
-add_library(example_plugin SHARED src/example_plugin.cpp)
-target_compile_definitions(example_plugin PRIVATE BT_PLUGIN_EXPORT)
-ament_target_dependencies(example_plugin ${THIS_PACKAGE_DEPS})
+# add_library(example_plugin SHARED src/example_plugin.cpp)
+# target_compile_definitions(example_plugin PRIVATE BT_PLUGIN_EXPORT)
+# ament_target_dependencies(example_plugin ${THIS_PACKAGE_DEPS})
 
-# For the tree node generation for groot2 visualization
-add_executable(gen_bt_nodes src/generate_tree_nodes.cpp src/example_plugin.cpp)
-ament_target_dependencies(gen_bt_nodes ${THIS_PACKAGE_DEPS})
+# # For the tree node generation for groot2 visualization
+# add_executable(gen_bt_nodes src/generate_tree_nodes.cpp
+# src/example_plugin.cpp) ament_target_dependencies(gen_bt_nodes
+# ${THIS_PACKAGE_DEPS})
 
 # ================================
 # Install execs
 # ================================
-install(TARGETS ${EXEC1} example_plugin gen_bt_nodes
-        DESTINATION lib/${PROJECT_NAME})
+# install(TARGETS ${EXEC1} example_plugin gen_bt_nodes DESTINATION
+# lib/${PROJECT_NAME})
+install(TARGETS ${EXEC1} DESTINATION lib/${PROJECT_NAME})
 
 # ================================
 # INSTALL plugins for other packages to load
 # ================================
 
-install(
-  TARGETS example_plugin
-  LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
-  ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
-  RUNTIME DESTINATION share/${PROJECT_NAME}/bt_plugins)
+# install( TARGETS example_plugin LIBRARY DESTINATION
+# share/${PROJECT_NAME}/bt_plugins ARCHIVE DESTINATION
+# share/${PROJECT_NAME}/bt_plugins RUNTIME DESTINATION
+# share/${PROJECT_NAME}/bt_plugins)
 
 # ================================
 # Install BT.xmls

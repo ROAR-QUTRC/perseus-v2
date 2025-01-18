@@ -1,8 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-    <BehaviorTree ID="MainTree">
-      <Sequence>
-        <SleepAction name="sleepA" action_name="sleep_service" msec="2000"/>
-      </Sequence>
-    </BehaviorTree>
-  </root>
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <SleepAction name="sleepA"
+                   msec="2000"
+                   action_name="sleep_service"/>
+      <IfThenElse>
+        <Fallback>
+          <Inverter>
+            <AlwaysFailure/>
+          </Inverter>
+        </Fallback>
+      </IfThenElse>
+      <AlwaysFailure/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="SleepAction">
+      <input_port name="msec"
+                  type="unsigned int"/>
+      <input_port name="action_name"
+                  type="std::string">Action server name</input_port>
+    </Action>
+  </TreeNodesModel>
+
+</root>

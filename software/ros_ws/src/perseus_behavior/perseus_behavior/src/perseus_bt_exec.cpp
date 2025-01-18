@@ -1,11 +1,14 @@
-#include <behaviortree_cpp/loggers/bt_cout_logger.h>
-
 #include <behaviortree_ros2/tree_execution_server.hpp>
 
-class PerseusBehaviorServer : public BT::TreeExecutionServer
+#include "behaviortree_cpp/loggers/bt_cout_logger.h"
+
+class PerseusBTServer : public BT::TreeExecutionServer
 {
+private:
+    std::shared_ptr<BT::StdCoutLogger> logger_cout_;
+
 public:
-    PerseusBehaviorServer(const rclcpp::NodeOptions& options) : TreeExecutionServer(options)
+    explicit PerseusBTServer(const rclcpp::NodeOptions& options) : BT::TreeExecutionServer(std::make_shared<rclcpp::Node>("perseus_bt_action_server", options))
     {
     }
 
@@ -14,25 +17,22 @@ public:
         logger_cout_ = std::make_shared<BT::StdCoutLogger>(tree);
     }
 
-    std::optional<std::string> onTreeExecutionCompleted(BT::NodeStatus status,
-                                                        bool was_cancelled) override
+    std::optional<std::string> onTreeExecutionCompleted(BT::NodeStatus status, bool was_cancelled) override
     {
-        // NOT really needed, even if logger_cout_ may contain a dangling pointer of the tree
-        // at this point
         logger_cout_.reset();
         return std::nullopt;
     }
-
-private:
-    std::shared_ptr<BT::StdCoutLogger> logger_cout_;
 };
 
 int main(int argc, char* argv[])
 {
     rclcpp::init(argc, argv);
 
+    std::string custom_action_name = "bt_execution";
+
     rclcpp::NodeOptions options;
-    auto action_server = std::make_shared<PerseusBehaviorServer>(options);
+    options.parameter_overrides().push_back({"action_name", custom_action_name});
+    auto action_server = std::make_shared<PerseusBTServer>(options);
 
     // This workaround is for a bug in MultiThreadedExecutor where it can deadlock when spinning without a timeout.
     // Deadlock is caused when Publishers or Subscribers are dynamically removed as the node is spinning.
