@@ -124,7 +124,12 @@ jobs:
           repository: ./docs
   build:
     name: Build software
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # note: ARM build doesn't have to be any particular version,
+        # but latest LTS is always a good choice
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
     environment: binary-deployment
     if: ${{ (needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true') }}
     needs: [changes, format, global-vars]
