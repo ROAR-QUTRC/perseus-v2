@@ -12,7 +12,7 @@
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-input-devices";
-  version = "0.0.0";
+  version = "0.0.1";
 
   src = ./../src/input_devices;
 
