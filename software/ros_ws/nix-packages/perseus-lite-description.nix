@@ -35,7 +35,7 @@ buildRosPackage rec {
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "URDF description for Perseus Lite robot";
-    license = with lib.licenses; [ "TODO-CATKIN-PACKAGE-LICENSE" ];
+    description = "Package containing description for Perseus Lite robot";
+    license = with lib.licenses; [ mit ];
   };
 }

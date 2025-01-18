@@ -34,6 +34,6 @@ buildRosPackage rec {
 
   meta = {
     description = "Hardware interface for Perseus Lite robot";
-    license = with lib.licenses; [ "TODO-CATKIN-PACKAGE-LICENSE" ];
+    license = with lib.licenses; [ mit ];
   };
 }
