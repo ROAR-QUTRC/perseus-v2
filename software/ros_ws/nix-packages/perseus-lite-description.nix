@@ -3,14 +3,9 @@
   lib,
   buildRosPackage,
   ament-cmake,
-  hardware-interface,
   joint-state-publisher,
-  pluginlib,
-  rclcpp,
-  rclcpp-lifecycle,
   robot-state-publisher,
   rviz2,
-  serial,
   urdf,
   xacro,
 }:
@@ -18,26 +13,21 @@ buildRosPackage rec {
   pname = "ros-jazzy-perseus-lite-description";
   version = "0.1.0";
 
-  src = ./../src/perseus_lite_hardware;
+  src = ./../src/perseus_lite_description;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
-    hardware-interface
     joint-state-publisher
-    pluginlib
-    rclcpp
-    rclcpp-lifecycle
     robot-state-publisher
     rviz2
-    serial
     urdf
     xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "URDF description and hardware interface for Perseus Lite robot";
+    description = "URDF description for Perseus Lite robot";
     license = with lib.licenses; [ "TODO-CATKIN-PACKAGE-LICENSE" ];
   };
 }
