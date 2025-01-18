@@ -3,11 +3,11 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  boost,
   hardware-interface,
   pluginlib,
   rclcpp,
   rclcpp-lifecycle,
-  serial,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-lite-hardware";
@@ -18,11 +18,11 @@ buildRosPackage rec {
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
+    boost
     hardware-interface
     pluginlib
     rclcpp
     rclcpp-lifecycle
-    serial
   ];
   nativeBuildInputs = [ ament-cmake ];
 
