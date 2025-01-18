@@ -1,9 +1,3 @@
-[formatter.actionlint]
-command = "actionlint"
-excludes = []
-includes = [".github/workflows/*.yml", ".github/workflows/*.yaml"]
-options = []
-
 [formatter.clang-format]
 command = "clang-format"
 excludes = []
