@@ -58,7 +58,7 @@ namespace perseus_lite_hardware
         static constexpr size_t BUFFER_SIZE = 256;
 
         [[nodiscard]] bool sendServoCommand(
-            uint8_t id, uint8_t cmd, std::span<const uint8_t> data) const noexcept;
+            uint8_t id, uint8_t cmd, std::span<const uint8_t> data) noexcept;
         void processResponse(std::span<const uint8_t> response) noexcept;
         [[nodiscard]] bool updateServoStates(uint8_t id, size_t index) const noexcept;
         void startAsyncRead() noexcept;

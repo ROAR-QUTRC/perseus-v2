@@ -10,7 +10,7 @@ namespace perseus_lite_hardware
 
     namespace
     {
-        constexpr std::string_view LOGGER_NAME = "ST3215SystemHardware";
+        static const char* const LOGGER_NAME = "ST3215SystemHardware";
         constexpr auto READ_TIMEOUT = std::chrono::milliseconds(10);
         constexpr auto WRITE_TIMEOUT = std::chrono::milliseconds(1);
     }  // namespace
@@ -149,24 +149,15 @@ namespace perseus_lite_hardware
 
             serial_port_.open(serial_port);
 
-            // Configure serial port with structured bindings
-            const auto [ec1, _] = serial_port_.set_option(
-                boost::asio::serial_port_base::baud_rate(baud_rate));
-            if (ec1)
-                throw boost::system::system_error(ec1);
-
-            const boost::asio::serial_port_base::character_size char_size(8);
-            const boost::asio::serial_port_base::stop_bits stop_bits(
-                boost::asio::serial_port_base::stop_bits::one);
-            const boost::asio::serial_port_base::parity parity(
-                boost::asio::serial_port_base::parity::none);
-            const boost::asio::serial_port_base::flow_control flow_control(
-                boost::asio::serial_port_base::flow_control::none);
-
-            serial_port_.set_option(char_size);
-            serial_port_.set_option(stop_bits);
-            serial_port_.set_option(parity);
-            serial_port_.set_option(flow_control);
+            // Configure serial port settings
+            serial_port_.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
+            serial_port_.set_option(boost::asio::serial_port_base::character_size(8));
+            serial_port_.set_option(boost::asio::serial_port_base::stop_bits(
+                boost::asio::serial_port_base::stop_bits::one));
+            serial_port_.set_option(boost::asio::serial_port_base::parity(
+                boost::asio::serial_port_base::parity::none));
+            serial_port_.set_option(boost::asio::serial_port_base::flow_control(
+                boost::asio::serial_port_base::flow_control::none));
 
             // Start IO thread
             io_thread_ = std::thread([this]
@@ -215,7 +206,7 @@ namespace perseus_lite_hardware
 
     bool ST3215SystemHardware::sendServoCommand(
         const uint8_t id, const uint8_t cmd,
-        const std::span<const uint8_t> data) const noexcept
+        const std::span<const uint8_t> data) noexcept
     {
         if (!serial_port_.is_open())
         {
@@ -284,7 +275,11 @@ namespace perseus_lite_hardware
                         it != servo_ids_.end())
                     {
                         const auto index = std::distance(servo_ids_.begin(), it);
-                        updateServoStates(id, index);
+                        if (!updateServoStates(id, index))
+                        {
+                            RCLCPP_WARN(rclcpp::get_logger(LOGGER_NAME),
+                                        "Failed to update state for servo %d", id);
+                        }
                     }
                 }
             }
