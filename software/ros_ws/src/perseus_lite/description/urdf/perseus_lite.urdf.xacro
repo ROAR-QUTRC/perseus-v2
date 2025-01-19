@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="perseus">
+  <xacro:arg name="prefix" default="" />
+  <xacro:arg name="can_bus" default="can0" />
+  <xacro:arg name="use_mock_hardware" default="false" />
+  <xacro:arg name="use_legacy_hardware" default="true" />
+  
+  <xacro:property name="use_legacy_hardware" value="$(arg use_legacy_hardware)" />
+  <xacro:property name="real_hardware_plugin"
+    value="${'perseus_hardware/McbSystemHardware' if use_legacy_hardware else 'perseus_hardware/VescSystemHardware'}" />
+  <xacro:property name="use_mock_hardware" value="$(arg use_mock_hardware)" />
+  <xacro:property name="hardware_plugin"
+    value="${'mock_components/GenericSystem' if use_mock_hardware else real_hardware_plugin}" />
+
+  <!-- Import URDF description -->
+  <xacro:include filename="$(find perseus_description)/urdf/perseus.urdf.xacro" />
+  <!-- Import colours for rviz -->
+  <xacro:include filename="$(find perseus_description)/urdf/perseus.materials.xacro" />
+  <!-- Import ros2_control description -->
+  <xacro:include filename="$(find perseus_description)/ros2_control/perseus.ros2_control.xacro" />
+
+  <!-- Instantiate the description and the ROS2 control information -->
+  <xacro:perseus prefix="$(arg prefix)" />
+  <xacro:perseus_ros2_control name="Perseus" prefix="$(arg prefix)" can_bus="$(arg can_bus)" hardware_plugin="${hardware_plugin}"/>
+</robot>
