@@ -108,9 +108,10 @@ namespace perseus_lite_hardware
                 "load",
                 &current_loads_[i]);
 
+            // Custom temperature interface (fixed from HW_IF_TEMPERATURE)
             state_interfaces.emplace_back(
                 info_.joints[i].name,
-                hardware_interface::HW_IF_TEMPERATURE,
+                "temperature",
                 &temperatures_[i]);
         }
 
