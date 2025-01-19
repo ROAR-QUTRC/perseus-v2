@@ -110,7 +110,6 @@
             teleop-twist-keyboard
             joy
             demo-nodes-cpp
-            hardware_interface
             ;
         };
         # Packages which should be available only in the dev shell
