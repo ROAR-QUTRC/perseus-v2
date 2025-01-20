@@ -9,14 +9,14 @@ def generate_launch_description():
                 package="input_devices",
                 executable="xbox_controller",
                 name="xbox_controller",
-                output="screen",
+                output="both",
                 emulate_tty=True,
             ),
             Node(
                 package="joy",
                 executable="joy_node",
                 name="joy_node",
-                output="screen",
+                output="both",
                 emulate_tty=True,
             ),
         ]
