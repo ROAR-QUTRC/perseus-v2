@@ -236,7 +236,7 @@
                 };
               }
               ''
-                touch $out
+                mkdir $out
               '';
           scripts =
             pkgs.runCommandNoCC "roar-scripts"
@@ -244,7 +244,7 @@
                 passthru = pkgs.scripts;
               }
               ''
-                touch $out
+                mkdir $out
               '';
         };
 
