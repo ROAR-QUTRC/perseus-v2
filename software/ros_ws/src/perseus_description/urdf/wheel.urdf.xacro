@@ -4,7 +4,7 @@
     <link name="${prefix}${end}_${side}_wheel">
       <inertial>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-        <mass value="0.01"/>
+        <mass value="1.0"/>
         <inertia ixx="0.051473" iyy="0.029155" izz="0.029154" ixy="0.0" iyz="0.0" ixz="0.0"/>
       </inertial>
 
@@ -13,14 +13,12 @@
         <geometry>
           <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
         </geometry>
-        <!-- <material name="orange"></material> -->
       </visual>
 
       <collision>
         <origin xyz="0.0 -0.015 0.0" rpy="1.570796 0.0 0.0"/>
         <geometry>
           <cylinder length="0.115" radius="0.145" />
-          <!--mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/wheel.dae"/-->
         </geometry>
       </collision>
     </link>
