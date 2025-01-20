@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="perseus">
+  <xacro:arg name="prefix" default="" />
+  <xacro:arg name="can_bus" default="can0" />
+  <xacro:arg name="hardware_plugin" default="perseus_hardware/VescSystemHardware" />
+
+  <!-- Import URDF description -->
+  <xacro:include filename="$(find perseus_description)/urdf/perseus.urdf.xacro" />
+  <!-- Import colours for rviz -->
+  <xacro:include filename="$(find perseus_description)/urdf/perseus.materials.xacro" />
+  <!-- Import ros2_control description -->
+  <xacro:include filename="$(find perseus_description)/ros2_control/perseus.ros2_control.xacro" />
+
+  <!-- Instantiate the description and the ROS2 control information -->
+  <xacro:perseus prefix="$(arg prefix)" />
+  <xacro:perseus_ros2_control name="Perseus" prefix="$(arg prefix)" can_bus="$(arg can_bus)" hardware_plugin="$(arg hardware_plugin)"/>
+</robot>

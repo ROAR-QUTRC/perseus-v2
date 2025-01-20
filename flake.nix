@@ -37,14 +37,20 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # nixGL
-    # nixgl = {
-    #   url = "github:nix-community/nixGL";
-    #   inputs = {
-    #     nixpkgs.follows = "nixpkgs";
-    #     flake-utils.follows = "nix-ros-overlay/flake-utils";
-    #   };
-    # };
+    # note: nix-gl-host works way better than NixGL on Nvidia hardware,
+    # but breaks down everywhere else. Might look into fixing it at some point,
+    # since it's both faster and in my opinion a better solution than NixGL.
+    nix-gl-host = {
+      url = "github:numtide/nix-gl-host";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nixgl = {
+      url = "github:nix-community/nixGL";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "nix-ros-overlay/flake-utils";
+      };
+    };
   };
   outputs =
     {
@@ -57,7 +63,8 @@
       uv2nix,
       pyproject-build-systems,
       treefmt-nix,
-      # nixgl,
+      nix-gl-host,
+      nixgl,
       ...
     }@inputs:
     nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (
@@ -73,7 +80,9 @@
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
-            # nixgl.overlay
+            nixgl.overlay
+            # TODO: Look into fixing nix-gl-host? Doesn't work on Intel hardware
+            nix-gl-host.overlays.default
             # get the ros packages
             nix-ros-overlay.overlays.default
             # fix colcon (silence warnings, add extensions)
@@ -84,6 +93,7 @@
             (import ./software/overlay.nix rosDistro)
             (import ./packages/overlay.nix)
             (final: prev: {
+              inherit self; # add self access for hacks like nixGL
               # alias the output to pkgs.ros to make it easier to use
               ros = final.rosPackages.${rosDistro};
               # and add pkgs.unstable access
@@ -113,59 +123,23 @@
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
         standardPkgs = {
-          inherit (pkgs) groot2 can-utils bashInteractive;
-          inherit (pkgs.ros)
-            rviz2-fixed
-            rosbag2
-            teleop-twist-keyboard
-            joy
-            demo-nodes-cpp
-            ros2-control
-            ros2-controllers
-            controller-manager
-            joint-state-broadcaster
-            diff-drive-controller
-            controller-interface
-            hardware-interface
+          # note: we need bashInteractive so running `bash` in zsh works properly
+          inherit (pkgs)
+            groot2
+            can-utils
+            bashInteractive
+            nixgl-script
             ;
+          inherit (pkgs.ros) rviz2-fixed rosbag2 demo-nodes-cpp;
         };
         # Packages which should be available only in the dev shell
         devShellPkgs = {
           inherit (pkgs) man-pages man-pages-posix stdmanpages;
         };
         # Packages needed to run the simulation
-        simPkgs = {
-          inherit (pkgs.ros)
-            # Gazebo Garden/Ignition vendors
-            gz-cmake-vendor
-            gz-common-vendor
-            gz-dartsim-vendor
-            gz-fuel-tools-vendor
-            gz-gui-vendor
-            gz-launch-vendor
-            gz-math-vendor
-            gz-msgs-vendor
-            gz-ogre-next-vendor
-            gz-physics-vendor
-            gz-plugin-vendor
-            gz-rendering-vendor
-            gz-sensors-vendor
-            gz-sim-vendor
-            gz-tools-vendor
-            gz-transport-vendor
-            gz-utils-vendor
-            gz-sim-fixed
-            gz-ros2-control
-            gz-ros2-control-demos
-            # ROS 2 Gazebo integration
-            ros-gz-bridge
-            ros-gz-image
-            ros-gz-interfaces
-            ros-gz-sim
-            ros-gz-sim-demos
-            ;
-
-        };
+        # Note: May not be needed, most needed packages should
+        # already be brought in as deps of the simulation workspace packages
+        simPkgs = { };
 
         # --- ROS WORKSPACES ---
         # function to build a ROS workspace which modifies the dev shell hook to set up environment variables
@@ -173,27 +147,23 @@
           {
             ros,
             name ? "ROAR",
+            additionalDevPkgs ? { },
             additionalPkgs ? { },
           }:
-          let
-            workspace = (
-              ros.callPackage ros.buildROSWorkspace {
-                inherit devPackages name;
-                prebuiltPackages = standardPkgs // additionalPkgs;
-                prebuiltShellPackages = devShellPkgs // formatters;
-                releaseDomainId = productionDomainId;
-                environmentDomainId = devDomainId;
-                forceReleaseDomainId = true;
+          ros.callPackage ros.buildROSWorkspace {
+            inherit name;
+            devPackages = devPackages // additionalDevPkgs;
+            prebuiltPackages = standardPkgs // additionalPkgs;
+            prebuiltShellPackages = devShellPkgs // formatters;
+            releaseDomainId = productionDomainId;
+            environmentDomainId = devDomainId;
+            forceReleaseDomainId = true;
 
-                # enable coloured ros2 launch output
-                postShellHook = ''
-                  export RCUTILS_COLORIZED_OUTPUT=1
-                '';
-              }
-            );
-          in
-          # override the env attribute (cli environment) with our modifications
-          workspace;
+            # enable coloured ros2 launch output
+            postShellHook = ''
+              export RCUTILS_COLORIZED_OUTPUT=1
+            '';
+          };
 
         # Actually build the workspaces
         default = mkWorkspace {
@@ -204,6 +174,7 @@
           inherit (pkgs) ros;
           name = "ROAR Simulation";
           additionalPkgs = simPkgs;
+          additionalDevPkgs = pkgs.ros.simDevPackages;
         };
 
         # --- PYTHON (UV) WORKSPACES ---

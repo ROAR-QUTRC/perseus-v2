@@ -6,6 +6,7 @@
   controller-manager,
   diff-drive-controller,
   joint-state-broadcaster,
+  mecanum-drive-controller,
   perseus-hardware,
   robot-state-publisher,
   ros2controlcli,
@@ -25,6 +26,7 @@ buildRosPackage rec {
     controller-manager
     diff-drive-controller
     joint-state-broadcaster
+    mecanum-drive-controller
     perseus-hardware
     robot-state-publisher
     ros2controlcli

@@ -5,13 +5,13 @@ controller_manager:
     lock_memory: False
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
-    perseus_base_controller:
+    diff_drive_base_controller:
       type: diff_drive_controller/DiffDriveController
 joint_state_broadcaster:
   ros__parameters:
     map_interface_to_joint_state:
       effort: current
-perseus_base_controller:
+diff_drive_base_controller:
   ros__parameters:
     # Hardware configuration
     left_wheel_names: ["front_left_wheel_joint", "rear_left_wheel_joint"]
@@ -33,13 +33,9 @@ perseus_base_controller:
 
     # Kinematic limits
     # If min_* is not specified, defaults to -max_*
-    linear.x.has_velocity_limits: true
-    linear.x.has_acceleration_limits: true
-    linear.x.has_jerk_limits: false
     linear.x.max_velocity: 1.7
     linear.x.max_acceleration: 10.0
-    angular.z.has_velocity_limits: true
-    angular.z.has_acceleration_limits: true
-    angular.z.has_jerk_limits: false
+    linear.x.max_jerk: .NAN
     angular.z.max_velocity: 5.0
     angular.z.max_acceleration: 10.0
+    angular.z.max_jerk: .NAN

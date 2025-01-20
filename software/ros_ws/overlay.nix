@@ -8,38 +8,55 @@ let
   # the full set of packages, with patches applied
   patchedPkgs = prev // patchesOverlay;
 
+  # add a wrapper to run GUI tools with nixGL, including setting needed environment variables
+  nixgl-script = prev.writeShellScriptBin "nixgl" ''
+    NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure ${final.self}#pkgs.nixgl.auto.nixGLDefault -- "$@"
+  '';
+
   rosPkgsOverlay =
     rosFinal: rosPrev:
     # use composeManyExtensions to "combine" the overlays in the order specified
     (prev.lib.composeManyExtensions [
       # add all the workspace packages to the output ros package set
       packagingOverlay
-      (rosFinal: rosPrev: {
-        /*
-          as well as including all of them in a single attribute set to make package selection easier
+      (
+        rosFinal: rosPrev:
+        let
+          /*
+            The intersection of the full custom package set and the workspace packages overlay
+            selects the fully resolved packages out of the custom package set,
+            getting us only the dev packages.
 
-          The intersection of the full custom package set and the workspace packages overlay
-          selects the fully resolved packages out of the custom package set,
-          getting us only the dev packages.
-
-          That then gets merged with the colcon-ignore package so colcon doesn't try
-          and build things from the (already built!) result symlink that nix build generates
-        */
-        devPackages = (builtins.intersectAttrs (packagingOverlay null null) rosFinal) // {
-          inherit (prev) colcon-ignore; # always include colcon-ignore in dev packages
-        };
-        # wrap gz and rviz with nixGL
-        rviz2-fixed = prev.writeShellScriptBin "rviz2-fixed" ''
-          NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure "github:nix-community/nixGL" "${prev.lib.getExe rosPrev.rviz2}" -- "$@"
-        '';
-        gz-sim-fixed = prev.writeShellScriptBin "gz-sim-fixed" ''
-          NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure "github:nix-community/nixGL" -- gz sim "$@"
-        '';
-      })
+            That then gets merged with the colcon-ignore package so colcon doesn't try
+            and build things from the (already built!) result symlink that nix build generates
+          */
+          allDevPackages = (builtins.intersectAttrs (packagingOverlay null null) rosFinal) // {
+            inherit (prev) colcon-ignore; # always include colcon-ignore in dev packages
+          };
+          /*
+            However, for the final output, we want to remove simulation packages,
+            so people don't download gazebo if they don't need to
+          */
+          devPackages = builtins.removeAttrs allDevPackages [ "perseus-simulation" ];
+          # just take the ones we *removed* from devPackages
+          simDevPackages = builtins.removeAttrs allDevPackages (builtins.attrNames devPackages);
+        in
+        {
+          inherit devPackages simDevPackages;
+          # wrap gz and rviz with nixGL
+          rviz2-fixed = prev.writeShellScriptBin "rviz2-fixed" ''
+            ${final.nixgl-script} "${prev.lib.getExe rosPrev.rviz2}" "$@"
+          '';
+          gz-sim-fixed = prev.writeShellScriptBin "gz-sim-fixed" ''
+            ${final.nixgl-script} gz sim "$@"
+          '';
+        }
+      )
     ] rosFinal rosPrev);
 in
 patchesOverlay
 // {
+  inherit nixgl-script;
   rosPackages = patchedPkgs.rosPackages // {
     ${rosDistro} = patchedPkgs.rosPackages.${rosDistro}.overrideScope rosPkgsOverlay;
   };
