@@ -6,9 +6,12 @@
   ament-flake8,
   ament-pep257,
   geometry-msgs,
+  joy,
   python3Packages,
   rclpy,
   sensor-msgs,
+  teleop-twist-joy,
+  teleop-twist-keyboard,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-input-devices";
@@ -17,7 +20,6 @@ buildRosPackage rec {
   src = ./../src/input_devices;
 
   buildType = "ament_python";
-  buildInputs = [ python3Packages.pygame ];
   checkInputs = [
     ament-copyright
     ament-flake8
@@ -26,12 +28,16 @@ buildRosPackage rec {
   ];
   propagatedBuildInputs = [
     geometry-msgs
+    joy
+    python3Packages.pygame
     rclpy
     sensor-msgs
+    teleop-twist-joy
+    teleop-twist-keyboard
   ];
 
   meta = {
-    description = "Nodes which publish input device data to topics";
+    description = "Nodes and launch files for handling input devices";
     license = with lib.licenses; [ mit ];
   };
 }
