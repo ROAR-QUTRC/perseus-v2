@@ -1,7 +1,0 @@
-<launch>
-
-  <node pkg="perseus_behavior" exec="perseus_bt_exec" output="screen">
-    <param from="$(find-pkg-share perseus_behavior)/config/perseus_bt_config.yaml"/>
-  </node>
-
-</launch>

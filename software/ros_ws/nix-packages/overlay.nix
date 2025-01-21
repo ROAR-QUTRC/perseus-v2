@@ -2,6 +2,7 @@ final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   perseus = final.callPackage ./perseus.nix { };
+  perseus-behavior = final.callPackage ./perseus-behavior.nix { };
   perseus-description = final.callPackage ./perseus-description.nix { };
   perseus-hardware = final.callPackage ./perseus-hardware.nix { };
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };

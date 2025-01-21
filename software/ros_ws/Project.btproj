@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4" project_name="Project">
+    <include path="src/perseus_behavior/perseus_behavior/behavior_trees/perseus_bt.xml"/>
+    <include path="src/perseus_behavior/perseus_behavior/config/tree_nodes.xml"/>
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Action ID="SleepAction">
+            <input_port name="msec" type="unsigned int"/>
+            <input_port name="action_name" type="std::string">Action server name</input_port>
+        </Action>
+    </TreeNodesModel>
+</root>
