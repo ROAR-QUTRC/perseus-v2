@@ -13,7 +13,7 @@
 	/*
 	gstreamer webrtcsink example:
 
-	run these commands in seperate terminals:
+	run these commands in separate terminals:
 	~$ 											gst-launch-1.0 webrtcsink name=ws meta="meta,name=gst-stream" libcamerasrc ! ws.
 	~/gst-plugins-rs/net/webrtc/signalling $    WEBRTCSINK_SIGNALLING_SERVER_LOG=debug cargo run --bin gst-webrtc-signalling-server -- --port 8443
 	~/gst-plugins-rs/net/webrtc/gstwebrtc-api $ npm start
