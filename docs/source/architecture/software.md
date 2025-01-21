@@ -60,6 +60,10 @@ This is the digital heart of the rover, and contains pretty much everything whic
 By convention for ROS2 projects, all the actual code in this directory is located under the `src/` subdirectory - everything else in `ros_ws/` is build infrastructure.
 The most important packages are are detailed below - if you want more information, there should be `README` files in each package's source directory.
 
+:::{warning}
+When creating a new ROS2 package you must stage the ROS2 package in git (locally) before attempting to build with nix. Failure to add to git will result in nix not being able to see the new ROS2 package and your nix build will fail.
+:::
+
 #### `perseus`
 
 This is a "meta-package" which depends on the other packages and contains ROS2 launch files for the main tasks needed to bring up the rover.
@@ -92,6 +96,10 @@ To ensure that this doesn't happen at all, run a clean after every git pull or a
 
 ### Shared Libraries
 
+:::{tip}
+Shared libraries can be made available to your ROS2 package and nodes by including them as a dependency in your package's package.xml and then running the script 'nix-package.sh'
+:::
+
 #### Hi-CAN
 
 Abbreviated from "hierarchical CAN", Hi-CAN is the library implementing the standards laid out [here](project:/architecture/can-bus.md), and is shared across ROS and native code, as well as firmware.
@@ -102,6 +110,17 @@ Since this particular library is shared between both the ROS code _and_ the firm
 However, this on its own is not particularly useful - which is where implementations come in.
 The `hi-can-raw` library implements {class}`hi_can::FilteredCanInterface` using the Linux SocketCAN [`RAW_CAN`](https://docs.kernel.org/networking/can.html#raw-protocol-sockets-with-can-filters-sock-raw) interface, and is what most code uses to interface with the CAN bus.
 The `hi-can-net` library is currently unused, but may become an implementation of {class}`hi_can::CanInterface` which forwards all traffic over a network connection.
+
+#### Simple-networking
+
+The simple-networking library provides a modern C++ implementation for handling network socket communications, with a primary focus on client-side operations.
+
+It offers an object-oriented wrapper around traditional POSIX socket operations, supporting both TCP and UDP protocols. The library implements RAII principles through its Client class, which manages socket creation, configuration, connection and cleanup while providing exception-based error handling for robust failure management.
+
+The library distinguishes itself through flexible socket configuration using handler callbacks, support for custom bind addresses and a clean abstraction over low-level socket operations. It provides convenient methods for transmitting and receiving both string and binary data, with support for both blocking and non-blocking operations. Error handling is comprehensive, with descriptive error messages that include both the operation context and underlying system error details.
+:::{warning}
+This library is not used for ROS2 communications, it exists for scenarios such as a creating a ROS2 driver node which needs to interface with a specific sensor via ethernet.
+:::
 
 ## Web UI
 

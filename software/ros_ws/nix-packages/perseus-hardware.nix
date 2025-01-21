@@ -13,7 +13,7 @@
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-hardware";
-  version = "0.0.0";
+  version = "0.0.1";
 
   src = ./../src/perseus_hardware;
 

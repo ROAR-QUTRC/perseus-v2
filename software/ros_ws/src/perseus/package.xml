@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>perseus</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>Perseus V2 Rover Bringup</description>
 
   <maintainer email="59348282+RandomSpaceship@users.noreply.github.com">james</maintainer>
@@ -10,16 +10,23 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>perseus_hardware</depend>
+  <!-- base -->
+  <exec_depend>perseus_hardware</exec_depend>
 
+  <!-- ros2 control -->
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>diff_drive_controller</exec_depend>
+  <exec_depend>mecanum_drive_controller</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>ros2controlcli</exec_depend>
+
+  <!-- launching -->
   <exec_depend>ros2launch</exec_depend>
-  <exec_depend>rviz2</exec_depend>
   <exec_depend>xacro</exec_depend>
+
+  <!-- GUI tools -->
+  <exec_depend>rviz2</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
