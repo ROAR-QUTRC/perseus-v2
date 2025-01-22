@@ -4,8 +4,8 @@
     <link name="${prefix}${end}_${side}_wheel">
       <inertial>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-        <mass value="1.0"/>
-        <inertia ixx="0.051473" iyy="0.029155" izz="0.029154" ixy="0.0" iyz="0.0" ixz="0.0"/>
+        <mass value="1.0"/>        
+        <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
       </inertial>
 
       <visual>
@@ -20,6 +20,11 @@
         <geometry>
           <cylinder length="0.115" radius="0.145" />
         </geometry>
+        <contact>
+          <lateral_friction value="0.8"/>
+          <rolling_friction value="0.1"/>
+          <spinning_friction value="0.1"/>
+        </contact>
       </collision>
     </link>
 
@@ -33,7 +38,7 @@
       <parent link="${prefix}${end}_${side}_motor"/>
       <child link="${prefix}${end}_${side}_wheel"/>
       <origin xyz="-0.125 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
-      <dynamics damping="1.0" friction="1.0"/>
+      <dynamics damping="0.2" friction="0.3"/>
     </joint>
   </xacro:macro>
 </robot>
