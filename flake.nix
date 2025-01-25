@@ -130,7 +130,20 @@
             bashInteractive
             nixgl-script
             ;
-          inherit (pkgs.ros) rviz2-fixed rosbag2 demo-nodes-cpp;
+          inherit (pkgs.ros)
+            rviz2-fixed
+            rosbag2
+            teleop-twist-keyboard
+            joy
+            demo-nodes-cpp
+            tf2-tools
+            rqt-gui
+            rqt-gui-py
+            rqt-graph
+            rqt-plot
+            rqt-reconfigure
+            rqt-common-plugins
+            ;
         };
         # Packages which should be available only in the dev shell
         devShellPkgs = {

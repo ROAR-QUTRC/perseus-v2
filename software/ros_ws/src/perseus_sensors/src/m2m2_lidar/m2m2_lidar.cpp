@@ -52,6 +52,8 @@
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "simple_networking/client.hpp"  //supports the nampespace usage in the constructor
 
+const std::string M2M2Lidar::IMU_COMMAND = "getimuinrobotcoordinate";
+
 using std::string;
 using std::vector;
 using namespace std::chrono_literals;
@@ -63,7 +65,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     // Set up ROS logging
     auto ret = rcutils_logging_set_logger_level(
         get_logger().get_name(),
-        RCUTILS_LOG_SEVERITY_DEBUG);
+        RCUTILS_LOG_SEVERITY_INFO);
 
     if (ret != RCUTILS_RET_OK)
     {
@@ -74,9 +76,11 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     RCLCPP_DEBUG(this->get_logger(), "Starting M2M2Lidar initialization...");
     this->declare_parameter("sensor_ip", "192.168.1.243");
     this->declare_parameter("sensor_port", 1445);
-    this->declare_parameter("frame_id", "lidar_frame");
+    this->declare_parameter("frame_id", "laser_frame");
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
+    this->declare_parameter("imu_frame_id", "imu_frame");
+    this->declare_parameter("imu_rate", 100);  // Hz
 
     // Get the parameters
     std::string sensorIp;
@@ -149,10 +153,16 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     _sendCommand(_createConfigCommand(defaultConfig));
 
     // Initialize publishers and timer
+    RCLCPP_DEBUG(this->get_logger(), "Setting up ROS publishers and timers...");
     _initializePublishers();
     _readTimer = this->create_wall_timer(
         std::chrono::milliseconds(100),
         std::bind(&M2M2Lidar::_readSensorData, this));
+
+    // Imu timer initialisation
+    _imuTimer = this->create_wall_timer(
+        std::chrono::milliseconds(10),  // 100Hz rate for IMU data
+        std::bind(&M2M2Lidar::_readImuData, this));
 
     RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
 }
@@ -512,22 +522,19 @@ void M2M2Lidar::_readSensorData()
     }
 
     string base64Points = response["result"]["laser_points"];
-    RCLCPP_DEBUG(this->get_logger(), "Received base64 data of length: %zu", base64Points.length());
-
-    auto points = _decodeLaserPoints(base64Points);
-    RCLCPP_DEBUG(this->get_logger(), "Decoded %zu points", points.size());
-
-    if (points.empty())
+    auto rawPoints = _decodeLaserPoints(base64Points);
+    if (rawPoints.empty())
     {
         RCLCPP_WARN(this->get_logger(), "No valid points decoded from laser scan");
         return;
     }
 
+    auto points = _interpolatePoints(rawPoints);
+
     // Populate the LaserScan message
     sensor_msgs::msg::LaserScan scan;
     scan.header.stamp = this->now();
 
-    // scan->header.frame_id = this->get_parameter("frame_id").as_string();
     scan.header.frame_id = this->get_parameter("frame_id").as_string();
 
     scan.angle_min = std::get<0>(points.front());
@@ -546,6 +553,210 @@ void M2M2Lidar::_readSensorData()
 
     RCLCPP_DEBUG(this->get_logger(), "Publishing scan with %zu ranges", scan.ranges.size());
     _scanPublisher->publish(scan);
+}
+
+void M2M2Lidar::_readImuData()
+{
+    RCLCPP_DEBUG(this->get_logger(), "Requesting IMU data...");
+
+    if (!_sendJsonRequest(IMU_COMMAND))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to send IMU data request");
+        return;
+    }
+
+    auto response = _receiveJsonResponse();
+    if (response.empty() || !response.contains("result"))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to receive valid IMU response");
+        return;
+    }
+
+    // Create and populate IMU message
+    auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
+    imu_msg->header.stamp = this->now();
+    imu_msg->header.frame_id = this->get_parameter("imu_frame_id").as_string();
+
+    // Extract data from response
+    const auto& result = response["result"];
+
+    // Set orientation quaternion
+    if (result.contains("quaternion"))
+    {
+        imu_msg->orientation.w = result["quaternion"]["w"];
+        imu_msg->orientation.x = result["quaternion"]["x"];
+        imu_msg->orientation.y = result["quaternion"]["y"];
+        imu_msg->orientation.z = result["quaternion"]["z"];
+    }
+
+    // Set angular velocity from gyro
+    if (result.contains("gyro"))
+    {
+        imu_msg->angular_velocity.x = result["gyro"]["x"];
+        imu_msg->angular_velocity.y = result["gyro"]["y"];
+        imu_msg->angular_velocity.z = result["gyro"]["z"];
+    }
+
+    // Set linear acceleration
+    if (result.contains("acc"))
+    {
+        imu_msg->linear_acceleration.x = result["acc"]["x"];
+        imu_msg->linear_acceleration.y = result["acc"]["y"];
+        imu_msg->linear_acceleration.z = result["acc"]["z"];
+    }
+
+    // Set covariance matrices to unknown
+    std::fill(imu_msg->orientation_covariance.begin(),
+              imu_msg->orientation_covariance.end(), -1);
+    std::fill(imu_msg->angular_velocity_covariance.begin(),
+              imu_msg->angular_velocity_covariance.end(), -1);
+    std::fill(imu_msg->linear_acceleration_covariance.begin(),
+              imu_msg->linear_acceleration_covariance.end(), -1);
+
+    _imuPublisher->publish(std::move(imu_msg));
+}
+
+std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
+    const std::vector<std::tuple<float, float, bool>>& input_points)
+{
+    using namespace std;
+
+    if (input_points.empty())
+        return {};
+
+    // First normalize and sort points by angle
+    vector<tuple<float, float, bool>> points;
+    points.reserve(input_points.size());
+
+    // Normalize angles to [0, 2*pi] range
+    for (const auto& point : input_points)
+    {
+        float angle = get<0>(point);
+        /**
+         * @brief Normalize angle to [0, 2π] range
+         *
+         * @details This normalization is crucial for consistent LIDAR point processing:
+         *          - Ensures all angles are positive and less than 2*pi
+         *          - Handles wrap-around cases (e.g. -pi/2 becomes 3*pi / 2)
+         *
+         * The algorithm uses std::trunc to calculate the exact number of full rotations
+         * needed to avoid any potential precision loss from repeated floating-point operations.
+         */
+        const auto tau = 2 * std::numbers::pi;
+        angle -= std::trunc(angle / tau) * tau;
+        if (angle < 0)
+            angle += tau;
+        points.emplace_back(angle, get<1>(point), get<2>(point));
+    }
+
+    // Sort by angle
+    sort(points.begin(), points.end(),
+         [](const auto& a, const auto& b)
+         { return get<0>(a) < get<0>(b); });
+
+    vector<tuple<float, float, bool>> interpolated;
+    interpolated.reserve(INTERPOLATED_POINTS);
+
+    // Calculate angle increment
+    float angleIncrement = 2 * M_PI / INTERPOLATED_POINTS;
+
+    // Track index between iterations since points are sorted by angle
+    size_t sourcePointIndex = 0;
+
+    // For each desired interpolation point
+    for (size_t i = 0; i < INTERPOLATED_POINTS; ++i)
+    {
+        float targetAngle = i * angleIncrement;
+
+        // Find points that bracket our target angle
+        // C++20 approach using ranges to find next point
+        // 1. views::drop - Skip elements we've already processed
+        // 2. find_if - Search for first point with angle >= target
+        // 3. distance - Get index of found point
+
+        if (auto foundIterator = std::ranges::find_if(points | std::views::drop(sourcePointIndex),
+                                                      [targetAngle](const auto& point)
+                                                      {
+                                                          return std::get<0>(point) >= targetAngle;
+                                                      });
+            foundIterator != points.end())
+        {
+            sourcePointIndex = std::distance(points.begin(), foundIterator);
+        }
+        else
+        {
+            sourcePointIndex = points.size();
+        }
+
+        // Handle edge cases
+        if (sourcePointIndex == 0)
+        {
+            // Interpolate between last and first point
+            auto p1 = points.back();
+            auto p2 = points.front();
+
+            // Adjust angle for wrap-around
+            float a1 = get<0>(p1);
+            float a2 = get<0>(p2) + 2 * M_PI;
+
+            if (!get<2>(p1) && !get<2>(p2))
+            {
+                interpolated.emplace_back(targetAngle, INVALID_DISTANCE, false);
+                continue;
+            }
+
+            if (!get<2>(p1))
+            {
+                interpolated.emplace_back(targetAngle, get<1>(p2), true);
+                continue;
+            }
+
+            if (!get<2>(p2))
+            {
+                interpolated.emplace_back(targetAngle, get<1>(p1), true);
+                continue;
+            }
+
+            float t = (targetAngle - a1) / (a2 - a1);
+            float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
+            interpolated.emplace_back(targetAngle, dist, true);
+        }
+        else if (sourcePointIndex == points.size())
+        {
+            // Use last point's value
+            interpolated.emplace_back(targetAngle, get<1>(points.back()), get<2>(points.back()));
+        }
+        else
+        {
+            // Normal interpolation between two points
+            auto& p1 = points[sourcePointIndex - 1];
+            auto& p2 = points[sourcePointIndex];
+
+            if (!get<2>(p1) && !get<2>(p2))
+            {
+                interpolated.emplace_back(targetAngle, INVALID_DISTANCE, false);
+                continue;
+            }
+
+            if (!get<2>(p1))
+            {
+                interpolated.emplace_back(targetAngle, get<1>(p2), true);
+                continue;
+            }
+
+            if (!get<2>(p2))
+            {
+                interpolated.emplace_back(targetAngle, get<1>(p1), true);
+                continue;
+            }
+
+            float t = (targetAngle - get<0>(p1)) / (get<0>(p2) - get<0>(p1));
+            float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
+            interpolated.emplace_back(targetAngle, dist, true);
+        }
+    }
+
+    return interpolated;
 }
 
 int main(int argc, char** argv)
