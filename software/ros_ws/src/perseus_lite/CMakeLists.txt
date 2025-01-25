@@ -1,7 +1,7 @@
 # PROJECT SETUP
 cmake_minimum_required(VERSION 3.16)
 
-project(perseus VERSION 0.0.1)
+project(perseus_lite VERSION 0.0.1)
 
 find_package(ament_cmake REQUIRED)
 
