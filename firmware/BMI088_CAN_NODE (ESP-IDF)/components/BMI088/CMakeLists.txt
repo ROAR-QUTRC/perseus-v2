@@ -1,0 +1,12 @@
+idf_component_register(
+    SRCS 
+        "src/bmi08a.c"
+        "src/bmi08g.c"
+        "src/bmi08xa.c"
+        "src/bmi088_anymotiona.c"
+        "src/bmi088_mma.c"
+    INCLUDE_DIRS 
+        "include"
+    REQUIRES 
+        driver
+)
