@@ -14,14 +14,6 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     # ARGUMENTS
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    # use_lifecycle_manager = LaunchConfiguration("use_lifecycle_manager")
-
-    # declare_use_lifecycle_manager = DeclareLaunchArgument(
-    #     "use_lifecycle_manager",
-    #     default_value="false",
-    #     description="Enable bond connection during node activation",
-    # )
-
     use_legacy_hardware = LaunchConfiguration("use_legacy_hardware")
     can_bus = LaunchConfiguration("can_bus")
     use_sim_time = LaunchConfiguration("use_sim_time")
