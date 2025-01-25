@@ -4,6 +4,7 @@ final: prev: {
   perseus = final.callPackage ./perseus.nix { };
   perseus-description = final.callPackage ./perseus-description.nix { };
   perseus-hardware = final.callPackage ./perseus-hardware.nix { };
+  perseus-lite = final.callPackage ./perseus-lite.nix { };
   perseus-lite-description = final.callPackage ./perseus-lite-description.nix { };
   perseus-lite-hardware = final.callPackage ./perseus-lite-hardware.nix { };
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };
