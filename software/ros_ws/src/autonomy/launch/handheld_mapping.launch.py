@@ -90,20 +90,20 @@ def generate_launch_description():
             package="tf2_ros",
             executable="static_transform_publisher",
             name="odom_tf_publisher",
-            arguments=["0", "0", "0.0", "0", "0", "0", "odom", "base_footprint"],
+            arguments=["0", "0", "0.0", "0", "0", "0", "odom", "base_link"],
         ),
         # Base link to IMU transform
         Node(
             package="tf2_ros",
             executable="static_transform_publisher",
             name="imu_tf_publisher",
-            arguments=["0", "0", "0.1", "0", "0", "0", "base_footprint", "laser_frame"],
+            arguments=["0", "0", "0.1", "0", "0", "0", "base_link", "laser_frame"],
         ),
         Node(
             package="tf2_ros",
             executable="static_transform_publisher",
             name="imu_tf_publisher",
-            arguments=["0", "0", "0.4", "0", "0", "0", "base_footprint", "imu_frame"],
+            arguments=["0", "0", "0.4", "0", "0", "0", "base_link", "imu_frame"],
         ),
         # Add diagnostic node to check TF timing
         Node(
