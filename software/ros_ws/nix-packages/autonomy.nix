@@ -5,7 +5,9 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
+  nav2-bringup,
   rclcpp,
+  robot-localization,
   ros2launch,
   rviz2,
   slam-toolbox,
@@ -24,7 +26,9 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
+    nav2-bringup
     rclcpp
+    robot-localization
     ros2launch
     rviz2
     slam-toolbox
