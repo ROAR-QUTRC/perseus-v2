@@ -52,6 +52,8 @@
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "simple_networking/client.hpp"  //supports the nampespace usage in the constructor
 
+const std::string M2M2Lidar::IMU_COMMAND = "getimuinrobotcoordinate";
+
 using std::string;
 using std::vector;
 using namespace std::chrono_literals;
@@ -626,13 +628,24 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
     vector<tuple<float, float, bool>> points;
     points.reserve(input_points.size());
 
-    // Normalize angles to [0, 2π]
+    // Normalize angles to [0, 2*pi] range
     for (const auto& point : input_points)
     {
         float angle = get<0>(point);
-        // Normalize angle to [0, 2π]
-        while (angle < 0) angle += 2 * M_PI;
-        while (angle >= 2 * M_PI) angle -= 2 * M_PI;
+        /**
+         * @brief Normalize angle to [0, 2π] range
+         *
+         * @details This normalization is crucial for consistent LIDAR point processing:
+         *          - Ensures all angles are positive and less than 2*pi
+         *          - Handles wrap-around cases (e.g. -pi/2 becomes 3*pi / 2)
+         *
+         * The algorithm uses std::trunc to calculate the exact number of full rotations
+         * needed to avoid any potential precision loss from repeated floating-point operations.
+         */
+        const auto tau = 2 * std::numbers::pi;
+        angle -= std::trunc(angle / tau) * tau;
+        if (angle < 0)
+            angle += tau;
         points.emplace_back(angle, get<1>(point), get<2>(point));
     }
 
@@ -647,20 +660,36 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
     // Calculate angle increment
     float angleIncrement = 2 * M_PI / INTERPOLATED_POINTS;
 
+    // Track index between iterations since points are sorted by angle
+    size_t sourcePointIndex = 0;
+
     // For each desired interpolation point
     for (size_t i = 0; i < INTERPOLATED_POINTS; ++i)
     {
         float targetAngle = i * angleIncrement;
 
         // Find points that bracket our target angle
-        size_t idx = 0;
-        while (idx < points.size() && get<0>(points[idx]) < targetAngle)
+        // C++20 approach using ranges to find next point
+        // 1. views::drop - Skip elements we've already processed
+        // 2. find_if - Search for first point with angle >= target
+        // 3. distance - Get index of found point
+
+        if (auto foundIterator = std::ranges::find_if(points | std::views::drop(sourcePointIndex),
+                                                      [targetAngle](const auto& point)
+                                                      {
+                                                          return std::get<0>(point) >= targetAngle;
+                                                      });
+            foundIterator != points.end())
         {
-            idx++;
+            sourcePointIndex = std::distance(points.begin(), foundIterator);
+        }
+        else
+        {
+            sourcePointIndex = points.size();
         }
 
         // Handle edge cases
-        if (idx == 0)
+        if (sourcePointIndex == 0)
         {
             // Interpolate between last and first point
             auto p1 = points.back();
@@ -692,7 +721,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
             float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
             interpolated.emplace_back(targetAngle, dist, true);
         }
-        else if (idx == points.size())
+        else if (sourcePointIndex == points.size())
         {
             // Use last point's value
             interpolated.emplace_back(targetAngle, get<1>(points.back()), get<2>(points.back()));
@@ -700,8 +729,8 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
         else
         {
             // Normal interpolation between two points
-            auto& p1 = points[idx - 1];
-            auto& p2 = points[idx];
+            auto& p1 = points[sourcePointIndex - 1];
+            auto& p2 = points[sourcePointIndex];
 
             if (!get<2>(p1) && !get<2>(p2))
             {

@@ -1,11 +1,14 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cmath>
 #include <iomanip>
 #include <nlohmann/json.hpp>
+#include <numbers>
 #include <optional>
+#include <ranges>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
@@ -53,7 +56,7 @@ private:
     static constexpr std::string_view REQUEST_DELIM{"\r\n\r\n"};
     static constexpr size_t INTERPOLATED_POINTS = 4096;  // Number of points per scan
     // for imu
-    static constexpr char const* IMU_COMMAND = "getimuinrobotcoordinate";
+    static const std::string IMU_COMMAND;
 
     /**
      * @brief Check if two floating point values are equal within epsilon
