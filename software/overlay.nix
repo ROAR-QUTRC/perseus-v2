@@ -34,5 +34,5 @@ composed
 // {
   sharedDevPackages = (builtins.intersectAttrs (shared null null) final);
   nativeDevPackages = (builtins.intersectAttrs (native null null) final);
-  # rosDevPackages provided by its ordinary overlay
+  # ros dev package sets provided in the ros overlay files
 }

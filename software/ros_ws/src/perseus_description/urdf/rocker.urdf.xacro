@@ -29,27 +29,14 @@
         <origin xyz="0.2 0.0 -0.05" rpy="0.0 0.3 0.0"/>
         <geometry>
           <box size="0.4 0.05 0.03" />
-          <!--mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/rocker_${side}.dae"/-->
         </geometry>
       </collision>
     </link>
 
-    <joint name="${side}_rocker_joint" type="fixed"> <!-- revolute -->
-      <!-- <limit effort="100.0" lower="-0.24" upper="0.24" velocity="100.0"/>
-      <dynamics damping="0.1" friction="1.0"/> -->
-
+    <joint name="${prefix}${side}_rocker_joint" type="fixed">
       <xacro:insert_block name="origin"/>
-      <!-- <axis xyz="0 1 0"/> -->
-
-      <parent link="chassis"/>
-      <child link="${side}_rocker"/>
-
-      <!-- <xacro:if value="${side == 'right'}">
-        <mimic joint="flange_bearing_to_differential_bar"/>
-      </xacro:if>
-      <xacro:if value="${side == 'left'}">
-        <mimic joint="flange_bearing_to_differential_bar" multiplier="-1"/>
-      </xacro:if> -->
+      <parent link="${prefix}chassis"/>
+      <child link="${prefix}${side}_rocker"/>
     </joint>
 
     <!-- FRONT MOTOR -->
@@ -72,5 +59,4 @@
       </xacro:if>
     </xacro:motor_wheel>
   </xacro:macro>
-
 </robot>

@@ -6,6 +6,7 @@
   controller-manager,
   diff-drive-controller,
   joint-state-broadcaster,
+  mecanum-drive-controller,
   perseus-hardware,
   robot-state-publisher,
   ros2controlcli,
@@ -15,7 +16,7 @@
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus";
-  version = "0.0.0";
+  version = "0.0.1";
 
   src = ./../src/perseus;
 
@@ -25,6 +26,7 @@ buildRosPackage rec {
     controller-manager
     diff-drive-controller
     joint-state-broadcaster
+    mecanum-drive-controller
     perseus-hardware
     robot-state-publisher
     ros2controlcli

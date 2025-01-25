@@ -93,10 +93,8 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
         .preBind = nullptr,
         .preConnect = [this](int fd) -> bool
         {
-            struct timeval timeoutValue
-            {
-                .tv_sec = 2, .tv_usec = 0
-            };
+            struct timeval timeoutValue{
+                .tv_sec = 2, .tv_usec = 0};
             if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
             {
                 RCLCPP_INFO(this->get_logger(), "Failed to set receive timeout: %s", strerror(errno));

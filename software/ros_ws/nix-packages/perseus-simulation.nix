@@ -3,37 +3,33 @@
   lib,
   buildRosPackage,
   ament-cmake,
-  ament-lint-auto,
-  ament-lint-common,
-  rclcpp,
-  ros2launch,
-  rviz2,
-  slam-toolbox,
-  xacro,
+  gz-ros2-control,
+  perseus,
+  ros-gz-bridge,
+  ros-gz-image,
+  ros-gz-interfaces,
+  ros-gz-sim,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-autonomy";
+  pname = "ros-jazzy-perseus-simulation";
   version = "0.0.1";
 
-  src = ./../src/autonomy;
+  src = ./../src/perseus_simulation;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
-  checkInputs = [
-    ament-lint-auto
-    ament-lint-common
-  ];
   propagatedBuildInputs = [
-    rclcpp
-    ros2launch
-    rviz2
-    slam-toolbox
-    xacro
+    gz-ros2-control
+    perseus
+    ros-gz-bridge
+    ros-gz-image
+    ros-gz-interfaces
+    ros-gz-sim
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "ROAR Autonomy software control stack";
+    description = "Package for simulating the Perseus rover using Gazebo.";
     license = with lib.licenses; [ mit ];
   };
 }
