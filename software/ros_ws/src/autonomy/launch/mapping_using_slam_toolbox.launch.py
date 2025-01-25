@@ -12,7 +12,10 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    # Launch configuration variables
+    # ARGUMENTS
+    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    use_legacy_hardware = LaunchConfiguration("use_legacy_hardware")
+    can_bus = LaunchConfiguration("can_bus")
     use_sim_time = LaunchConfiguration("use_sim_time")
     slam_params_file = LaunchConfiguration("slam_params_file")
 
