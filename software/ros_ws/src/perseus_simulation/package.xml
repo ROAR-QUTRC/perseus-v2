@@ -1,22 +1,24 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>perseus_hardware</name>
+  <name>perseus_simulation</name>
   <version>0.0.1</version>
-  <description>Perseus rover hardware interface plugins for ROS2 control</description>
+  <description>Package for simulating the Perseus rover using Gazebo.</description>
+
   <maintainer email="59348282+RandomSpaceship@users.noreply.github.com">james</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>hi_can_raw</build_depend>
+  <!-- base -->
+  <exec_depend>perseus</exec_depend>
 
-  <depend>hi_can</depend>
-  <depend>backward_ros</depend>
-  <depend>hardware_interface</depend>
-  <depend>pluginlib</depend>
-  <depend>rclcpp</depend>
-  <depend>rclcpp_lifecycle</depend>
+  <!-- simulation -->
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>ros_gz_image</exec_depend>
+  <exec_depend>ros_gz_interfaces</exec_depend>
+  <exec_depend>gz_ros2_control</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

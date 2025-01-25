@@ -8,6 +8,8 @@
   nav2-bringup,
   rclcpp,
   robot-localization,
+  ros2launch,
+  rviz2,
   slam-toolbox,
   xacro,
 }:
@@ -27,6 +29,8 @@ buildRosPackage rec {
     nav2-bringup
     rclcpp
     robot-localization
+    ros2launch
+    rviz2
     slam-toolbox
     xacro
   ];

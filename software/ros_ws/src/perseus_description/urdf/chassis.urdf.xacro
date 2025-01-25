@@ -22,7 +22,6 @@
         <!-- Modified to make collision more simple, chassis mesh replaced with box -->
         <geometry>
           <box size="0.475 0.525 0.2" />
-          <!--mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/chassis.dae"/-->
         </geometry>
       </collision>
     </link>
@@ -75,18 +74,13 @@
         <origin xyz="0.0 0.0 -0.01" rpy="0.0 0.0 0.0"/>
         <geometry>
           <box size="0.5 0.05 0.03" />
-          <!--mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/-->
         </geometry>
       </collision>
     </link>
 
-    <!-- <joint name="${prefix}differential_bar_joint" type="revolute"> -->
-      <!-- <limit upper="0.349066" lower="-0.349066" effort="100" velocity="100"/> -->
-      <!-- <dynamics damping="10.0" friction="10.0"/> -->
     <joint name="${prefix}differential_bar_joint" type="fixed">
       <origin xyz="0.0 0.0 0.05" rpy="${pi} 0.0 ${-pi/2}"/>
       <axis xyz="0.0 0.0 1.0"/>
-
       <parent link="${prefix}flange_bearing"/>
       <child link="${prefix}differential_bar"/>
     </joint>

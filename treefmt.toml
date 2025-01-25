@@ -13,7 +13,7 @@ options = ["-i"]
 [formatter.cmake-format]
 command = "cmake-format"
 excludes = []
-includes = ["CMakeLists.txt", "**/CMakeLists.txt", "**/*.cmake", "*.cmake", "CMakeLists.txt"]
+includes = ["*.cmake", "CMakeLists.txt", "CMakeLists.txt", "**/CMakeLists.txt", "**/*.cmake"]
 options = ["--in-place"]
 
 [formatter.dos2unix]
@@ -40,12 +40,6 @@ excludes = []
 includes = ["*.cjs", "*.css", "*.html", "*.js", "*.json", "*.json5", "*.jsx", "*.md", "*.mdx", "*.mjs", "*.scss", "*.ts", "*.tsx", "*.vue", "*.yaml", "*.yml"]
 options = ["--write"]
 
-[formatter.ruff-check]
-command = "ruff"
-excludes = []
-includes = ["*.py", "*.pyi"]
-options = ["check", "--fix"]
-
 [formatter.ruff-format]
 command = "ruff"
 excludes = []
@@ -62,7 +56,7 @@ options = []
 command = "shfmt"
 excludes = []
 includes = ["*.sh", "*.bash", "*.envrc", "*.envrc.*"]
-options = ["-i", "2", "-s", "-w"]
+options = ["-s", "-w", "-i", "2"]
 
 [formatter.taplo]
 command = "taplo"
@@ -84,3 +78,4 @@ options = []
 
 [global]
 excludes = ["*.lock", "*.patch", "package-lock.json", "go.mod", "go.sum", ".gitignore", ".gitmodules", ".hgignore", ".svnignore", "build/**", "result/**", "generated/**", "treefmt.toml", "docs/figures-source/**", "docs/pyproject/**", "docs/source/_static/fonts/**", "docs/source/robots.txt", "docs/source/intersphinx/**", "*.rviz", "setup.cfg", "software/ros_ws/src/**/resource/**", "*.drawio", "*.svg", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.ico", "*.pdf"]
+on-unmatched = "warn"

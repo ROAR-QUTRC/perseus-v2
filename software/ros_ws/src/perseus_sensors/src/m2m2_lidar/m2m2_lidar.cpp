@@ -152,7 +152,8 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
 
     _sendCommand(_createConfigCommand(defaultConfig));
 
-    // Initialise publishers and timer
+    // Initialize publishers and timer
+    RCLCPP_DEBUG(this->get_logger(), "Setting up ROS publishers and timers...");
     _initializePublishers();
     _readTimer = this->create_wall_timer(
         std::chrono::milliseconds(100),

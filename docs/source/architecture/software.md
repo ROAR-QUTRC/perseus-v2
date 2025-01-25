@@ -60,6 +60,10 @@ This is the digital heart of the rover, and contains pretty much everything whic
 By convention for ROS2 projects, all the actual code in this directory is located under the `src/` subdirectory - everything else in `ros_ws/` is build infrastructure.
 The most important packages are are detailed below - if you want more information, there should be `README` files in each package's source directory.
 
+:::{warning}
+When creating a new ROS2 package you must stage the ROS2 package in git (locally) before attempting to build with nix. Failure to add to git will result in nix not being able to see the new ROS2 package and your nix build will fail.
+:::
+
 #### `perseus`
 
 This is a "meta-package" which depends on the other packages and contains ROS2 launch files for the main tasks needed to bring up the rover.

@@ -59,7 +59,7 @@ endforeach()
 # Install the package's resource files These directories will only be installed
 # if they exist
 install(
-  DIRECTORY launch config rviz params maps
+  DIRECTORY launch config rviz params maps worlds
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
