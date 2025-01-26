@@ -7,11 +7,51 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
     diff_drive_base_controller:
       type: diff_drive_controller/DiffDriveController
-# Parameters for individual controllers go here (not under controller_manager)
+# Hardware interface configuration
+Perseus_Lite:
+  ros__parameters:
+    joints:
+      front_left_wheel_joint:
+        command_interfaces:
+          - position
+          - velocity
+        state_interfaces:
+          - position
+          - velocity
+          - load
+          - temperature
+      front_right_wheel_joint:
+        command_interfaces:
+          - position
+          - velocity
+        state_interfaces:
+          - position
+          - velocity
+          - load
+          - temperature
+      rear_left_wheel_joint:
+        command_interfaces:
+          - position
+          - velocity
+        state_interfaces:
+          - position
+          - velocity
+          - load
+          - temperature
+      rear_right_wheel_joint:
+        command_interfaces:
+          - position
+          - velocity
+        state_interfaces:
+          - position
+          - velocity
+          - load
+          - temperature
+# Parameters for individual controllers
 joint_state_broadcaster:
   ros__parameters:
-    # Fix: Use "interface_names" instead of "map_interface_to_joint_state"
-    interface_names: current # Or your hardware interface (e.g., "effort")
+    map_interface_to_joint_state:
+      effort: current
 diff_drive_base_controller:
   ros__parameters:
     # Hardware configuration
@@ -20,20 +60,20 @@ diff_drive_base_controller:
     wheel_separation: 0.714
     wheels_per_side: 2
     wheel_radius: 0.147
+    write_op_modes: ["velocity"]
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
-    open_loop: false
+    open_loop: true #just for testing
     # ROS I/O configuration
     publish_rate: 50.0
     odom_frame_id: odom
     base_frame_id: base_link
     enable_odom_tf: true
-    cmd_vel_timeout: 0.1
+    cmd_vel_timeout: 0.5
     #publish_limited_velocity: true
     #use_stamped_vel: false
 
     # Kinematic limits
-    # If min_* is not specified, defaults to -max_*
     linear.x.max_velocity: 1.7
     linear.x.max_acceleration: 10.0
     linear.x.max_jerk: .NAN

@@ -36,5 +36,19 @@
       <origin xyz="-0.0625 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
       <dynamics damping="0.5" friction="0.5"/>
     </joint>
+  
+  <transmission name="${prefix}${end}_${side}_wheel_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}${end}_${side}_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/> 
+        <state_interface name="temperature"/>
+      </joint>
+      <actuator name="${prefix}${end}_${side}_wheel_motor">
+        <mechanical_reduction>1.0</mechanical_reduction>
+      </actuator>
+    </transmission>
+
   </xacro:macro>
 </robot>

@@ -1,5 +1,16 @@
 ST3215 System Hardware for Perseus Lite
 
+## Implementation Notes
+
+Current this code breaks due to ::write()
+write() causes the manager controller to be listed. Not yet sure why.
+
+Tested method as non blocking:
+on_init()
+export_state_interfaces()
+on_configure()
+read()
+
 ## Overview
 
 This ROS 2 hardware interface provides a comprehensive driver for controlling the ST3215 servo motors used in the Perseus Lite robot. The implementation supports precise motor control, state monitoring, and integration with ROS 2 Control framework.

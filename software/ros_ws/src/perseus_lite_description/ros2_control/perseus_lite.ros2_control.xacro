@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="perseus_lite_ros2_control" params="name prefix hardware_plugin serial_port">
+  <xacro:macro name="perseus_lite_ros2_control" params="name prefix hardware_plugin serial_port baud_rate">
     <ros2_control name="${name}" type="system">
       <hardware>
         <plugin>${hardware_plugin}</plugin>
         <param name="serial_port">${serial_port}</param>
-        <param name="baud_rate">115200</param>
+        <param name="baud_rate">${baud_rate}</param>
       </hardware>
 
       <joint name="${prefix}front_left_wheel_joint">
