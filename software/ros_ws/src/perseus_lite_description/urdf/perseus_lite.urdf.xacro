@@ -1,16 +1,20 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="hardware_plugin" default="perseus_lite_hardware/ST3215SystemHardware"/>
+  <xacro:arg name="hardware_type" default="st3215"/>
+  <xacro:arg name="use_mock_hardware" default="false"/>
+  <xacro:arg name="serial_port" default="/dev/ttyUSB0"/>
+
+  <xacro:include filename="$(find perseus_lite_description)/ros2_control/perseus_lite.ros2_control.xacro" />
+  
   <xacro:macro name="perseus_lite" params="prefix">
-    <!-- Import components -->
     <xacro:include filename="$(find perseus_lite_description)/urdf/chassis.urdf.xacro"/>
     <xacro:include filename="$(find perseus_lite_description)/urdf/rocker.urdf.xacro"/>
     
-    <!-- Scale factor for Perseus Lite -->
     <xacro:property name="scale" value="0.5"/>
 
     <link name="${prefix}base_link"/>
 
-    <!--BASE_FOOTPRINT_LINK-->
     <joint name="base_footprint_joint" type="fixed">
       <parent link="base_link"/>
       <child link="base_footprint"/>
@@ -20,7 +24,6 @@
     <link name="base_footprint">
     </link>
 
-    <!-- CHASSIS -->
     <xacro:chassis />
     <joint name="chassis_joint" type="fixed">
       <origin xyz="${0.21 * scale} 0.0 ${0.35 * scale}" rpy="0.0 0.0 -${pi/2}"/>
@@ -28,14 +31,18 @@
       <child link="${prefix}chassis"/>
     </joint>
 
-    <!-- ROCKER ARMS -->
-    <!-- LEFT -->
     <xacro:rocker side="left">
       <origin xyz="${-0.275 * scale} ${-0.075 * scale} ${0.05 * scale}" rpy="0.0 0.0 ${-pi/2}"/>
     </xacro:rocker>
-    <!-- RIGHT -->
     <xacro:rocker side="right">
       <origin xyz="${0.275 * scale} ${-0.075 * scale} ${0.05 * scale}" rpy="0.0 0.0 ${-pi/2}"/>
     </xacro:rocker>
+
+    <xacro:perseus_lite_ros2_control 
+      name="PerseusLite" 
+      prefix="${prefix}"
+      hardware_plugin="$(arg hardware_plugin)"
+      serial_port="$(arg serial_port)"/>
   </xacro:macro>
 </robot>
+

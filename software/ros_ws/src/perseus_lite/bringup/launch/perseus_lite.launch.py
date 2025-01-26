@@ -15,8 +15,8 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     # ARGUMENTS
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    use_legacy_hardware = LaunchConfiguration("use_legacy_hardware")
-    can_bus = LaunchConfiguration("can_bus")
+    hardware_type = LaunchConfiguration("hardware_type")
+    serial_port = LaunchConfiguration("serial_port")
 
     arguments = [
         DeclareLaunchArgument(
@@ -25,45 +25,45 @@ def generate_launch_description():
             description="Use mock hardware components which mirror commands to state interfaces",
         ),
         DeclareLaunchArgument(
-            "use_legacy_hardware",
-            default_value="True",
-            description="Use legacy hardware (MCB) interfaces",
+            "hardware_type",
+            default_value="st3215",
+            description="Hardware type (st3215/mock)",
         ),
         DeclareLaunchArgument(
-            "can_bus",
-            default_value="can0",
-            description="CAN bus to use for hardware communications",
+            "serial_port",
+            default_value="/dev/ttyUSB0",
+            description="Serial port for ST3215 servos",
         ),
     ]
 
     # CONFIG FILES
     controller_config = PathJoinSubstitution(
-        [FindPackageShare("perseus"), "config", "perseus_controllers.yaml"]
+        [FindPackageShare("perseus_lite"), "config", "perseus_lite_controllers.yaml"]
     )
 
     # XACRO FILES
-    # these all need to be run with the xacro command
-    # to convert them to standard XML before they can be used
     robot_description_xacro = PathJoinSubstitution(
-        [FindPackageShare("perseus"), "urdf", "perseus.urdf.xacro"]
+        [FindPackageShare("perseus_lite"), "urdf", "perseus_lite.urdf.xacro"]
     )
-    # run xacro to generate the final output
+
     robot_description_content = ParameterValue(
         Command(
             [
                 FindExecutable(name="xacro"),
-                # pass through all the arguments
                 " ",
                 robot_description_xacro,
+                " ",
+                # Change this to match perseus_lite_hardware plugin name
+                "hardware_plugin:=perseus_lite_hardware/ST3215SystemHardware",
                 " ",
                 "use_mock_hardware:=",
                 use_mock_hardware,
                 " ",
-                "use_legacy_hardware:=",
-                use_legacy_hardware,
+                "hardware_type:=",
+                hardware_type,
                 " ",
-                "can_bus:=",
-                can_bus,
+                "serial_port:=",
+                serial_port,
             ]
         ),
         value_type=str,
@@ -74,42 +74,37 @@ def generate_launch_description():
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[controller_config],
-        output="both",  # output to both screen and log file
+        output="both",
         remappings=[
             ("~/robot_description", "/robot_description"),
             ("/perseus_base_controller/cmd_vel", "/cmd_vel"),
         ],
     )
+
     robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
         parameters=[{"robot_description": robot_description_content}],
     )
+
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=[
-            "joint_state_broadcaster",
-        ],
+        arguments=["joint_state_broadcaster"],
     )
+
     base_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=[
-            "perseus_base_controller",
-        ],
+        arguments=["perseus_base_controller"],
     )
 
     nodes = [
         robot_state_publisher,
         controller_manager,
-        base_controller_spawner,
         joint_state_broadcaster_spawner,
+        base_controller_spawner,
     ]
 
-    # EVENT HANDLERS
-    handlers = []
-
-    # actually return the launch description
-    return LaunchDescription(arguments + nodes + handlers)
+    return LaunchDescription(arguments + nodes)
