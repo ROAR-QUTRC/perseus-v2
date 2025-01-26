@@ -31,7 +31,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "serial_port",
-            default_value="/dev/ttyUSB0",
+            default_value="/dev/ttyACM0",
             description="Serial port for ST3215 servos",
         ),
     ]
@@ -43,7 +43,11 @@ def generate_launch_description():
 
     # XACRO FILES
     robot_description_xacro = PathJoinSubstitution(
-        [FindPackageShare("perseus_lite"), "urdf", "perseus_lite.urdf.xacro"]
+        [
+            FindPackageShare("perseus_lite_description"),
+            "urdf",
+            "perseus_lite.urdf.xacro",
+        ]
     )
 
     robot_description_content = ParameterValue(
@@ -77,7 +81,7 @@ def generate_launch_description():
         output="both",
         remappings=[
             ("~/robot_description", "/robot_description"),
-            ("/perseus_base_controller/cmd_vel", "/cmd_vel"),
+            ("/diff_drive_base_controller/cmd_vel", "/cmd_vel"),
         ],
     )
 
@@ -97,7 +101,7 @@ def generate_launch_description():
     base_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["perseus_base_controller"],
+        arguments=["diff_drive_base_controller"],
     )
 
     nodes = [

@@ -175,6 +175,61 @@ namespace perseus_lite_hardware
         }
     }
 
+    hardware_interface::CallbackReturn ST3215SystemHardware::on_cleanup(
+        const rclcpp_lifecycle::State&)
+    {
+        if (serial_port_.is_open())
+        {
+            serial_port_.close();
+        }
+
+        if (io_thread_.joinable())
+        {
+            io_context_.stop();
+            io_thread_.join();
+        }
+
+        return hardware_interface::CallbackReturn::SUCCESS;
+    }
+
+    hardware_interface::CallbackReturn ST3215SystemHardware::on_activate(
+        const rclcpp_lifecycle::State&)
+    {
+        // Reset command positions to current positions to avoid sudden movements
+        std::fill(command_positions_.begin(), command_positions_.end(), 0.0);
+        std::fill(command_speeds_.begin(), command_speeds_.end(), 0.0);
+        return hardware_interface::CallbackReturn::SUCCESS;
+    }
+
+    hardware_interface::CallbackReturn ST3215SystemHardware::on_deactivate(
+        const rclcpp_lifecycle::State&)
+    {
+        // Stop all servos
+        std::fill(command_speeds_.begin(), command_speeds_.end(), 0.0);
+        auto result = write(rclcpp::Time(), rclcpp::Duration::from_seconds(0));
+        return (result == hardware_interface::return_type::OK)
+                   ? hardware_interface::CallbackReturn::SUCCESS
+                   : hardware_interface::CallbackReturn::ERROR;
+    }
+
+    hardware_interface::return_type ST3215SystemHardware::read(
+        const rclcpp::Time&, const rclcpp::Duration&)
+    {
+        std::lock_guard<std::mutex> lock(serial_mutex_);
+
+        for (size_t i = 0; i < servo_ids_.size(); ++i)
+        {
+            // Request servo status for each servo
+            if (!sendServoCommand(servo_ids_[i], 0x02, {}))  // 0x02 is typically a status read command
+            {
+                RCLCPP_WARN(rclcpp::get_logger(LOGGER_NAME),
+                            "Failed to request status for servo %d", servo_ids_[i]);
+            }
+        }
+
+        return hardware_interface::return_type::OK;
+    }
+
     hardware_interface::return_type ST3215SystemHardware::write(
         const rclcpp::Time&, const rclcpp::Duration&)
     {
@@ -305,6 +360,71 @@ namespace perseus_lite_hardware
         if (!error) {
             startAsyncWrite();
         } });
+    }
+
+    void ST3215SystemHardware::startAsyncRead() noexcept
+    {
+        serial_port_.async_read_some(
+            boost::asio::buffer(read_buffer_),
+            [this](const boost::system::error_code& error, std::size_t bytes_transferred)
+            {
+                if (!error)
+                {
+                    // Process the received data
+                    processResponse(std::span{read_buffer_.data(), bytes_transferred});
+                }
+
+                // Schedule next read
+                scheduleNextRead();
+            });
+    }
+
+    void ST3215SystemHardware::startAsyncWrite() noexcept
+    {
+        if (write_queue_.empty())
+        {
+            return;
+        }
+
+        const auto& packet = write_queue_.front();
+
+        boost::asio::async_write(
+            serial_port_,
+            boost::asio::buffer(packet),
+            [this](const boost::system::error_code& error, std::size_t)
+            {
+                if (!error)
+                {
+                    std::lock_guard<std::mutex> lock(serial_mutex_);
+                    write_queue_.pop();
+                }
+
+                // Schedule next write
+                scheduleNextWrite();
+            });
+    }
+
+    bool ST3215SystemHardware::updateServoStates(uint8_t id, size_t index) noexcept
+    {
+        try
+        {
+            // This method would parse the servo response and update the corresponding states
+            // For the ST3215 servo, you might need to implement specific parsing logic
+
+            // Example placeholder implementation
+            current_positions_[index] = 0.0;   // Replace with actual position reading
+            current_velocities_[index] = 0.0;  // Replace with actual velocity reading
+            current_loads_[index] = 0.0;       // Replace with actual load reading
+            temperatures_[index] = 25.0;       // Replace with actual temperature reading
+
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
+                         "Error updating servo %d states: %s", id, e.what());
+            return false;
+        }
     }
 
 }  // namespace perseus_lite_hardware

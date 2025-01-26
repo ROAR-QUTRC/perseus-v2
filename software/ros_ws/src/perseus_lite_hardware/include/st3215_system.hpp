@@ -60,7 +60,7 @@ namespace perseus_lite_hardware
         [[nodiscard]] bool sendServoCommand(
             uint8_t id, uint8_t cmd, std::span<const uint8_t> data) noexcept;
         void processResponse(std::span<const uint8_t> response) noexcept;
-        [[nodiscard]] bool updateServoStates(uint8_t id, size_t index) const noexcept;
+        [[nodiscard]] bool updateServoStates(uint8_t id, size_t index) noexcept;
         void startAsyncRead() noexcept;
         void startAsyncWrite() noexcept;
         void scheduleNextRead() noexcept;

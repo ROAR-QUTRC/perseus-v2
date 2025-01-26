@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="perseus_lite" params="prefix">
+  <xacro:macro name="perseus" params="prefix">
     <!-- Import components -->
     <xacro:include filename="$(find perseus_description)/urdf/chassis.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/rocker.urdf.xacro"/>

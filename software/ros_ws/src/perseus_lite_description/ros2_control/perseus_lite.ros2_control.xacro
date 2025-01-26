@@ -8,27 +8,37 @@
         <param name="baud_rate">115200</param>
       </hardware>
 
-      <xacro:macro name="ros2_control_joint" params="name id">
-        <joint name="${prefix}${name}_wheel_joint">
-          <param name="id">${id}</param>
-          <command_interface name="position"/>
-          <command_interface name="velocity"/>
-          <state_interface name="position"/>
-          <state_interface name="velocity"/>
-          <state_interface name="load"/>
-          
-          <param name="encoder_resolution">4096</param>
-          <param name="max_velocity">30.0</param>
-          <param name="min_position">-180.0</param>
-          <param name="max_position">180.0</param>
-        </joint>
-      </xacro:macro>
+      <joint name="${prefix}front_left_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="temperature"/>
+        <param name="id">1</param>
+      </joint>
 
-      <!-- Define the four wheel joints -->
-      <xacro:ros2_control_joint name="front_left" id="1"/>
-      <xacro:ros2_control_joint name="front_right" id="2"/>
-      <xacro:ros2_control_joint name="rear_left" id="3"/>
-      <xacro:ros2_control_joint name="rear_right" id="4"/>
+      <joint name="${prefix}front_right_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="temperature"/>
+        <param name="id">2</param>
+      </joint>
+
+      <joint name="${prefix}rear_left_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="temperature"/>
+        <param name="id">3</param>
+      </joint>
+
+      <joint name="${prefix}rear_right_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="temperature"/>
+        <param name="id">4</param>
+      </joint>
     </ros2_control>
   </xacro:macro>
 </robot>

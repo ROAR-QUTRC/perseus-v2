@@ -24,14 +24,14 @@ Feetech ST3215 Continuous Servo (12-bit encoder, Serial communication interface)
 Serial Port Configuration
 The hardware interface requires two key parameters in the robot configuration:
 
-serial_port: Path to the serial device (e.g., /dev/ttyUSB0)
+serial_port: Path to the serial device (e.g., /dev/ttyACM0)
 baud_rate: Communication speed (recommended: 115200)
 
 Servo ID Configuration
 Each joint must have a unique id parameter specifying the servo's address.
 Example YAML Configuration
 yamlCopyhardware:
-serial_port: /dev/ttyUSB0
+serial_port: /dev/ttyACM0
 baud_rate: 115200
 joints:
 front_left_wheel:

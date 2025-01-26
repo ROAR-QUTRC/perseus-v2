@@ -1,18 +1,29 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:arg name="hardware_plugin" default="perseus_lite_hardware/ST3215SystemHardware"/>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="perseus_lite">
+  <!-- Default arguments -->
+  <xacro:arg name="prefix" default="" />
+  <xacro:arg name="use_mock_hardware" default="false" />
+  <xacro:arg name="serial_port" default="/dev/ttyACM0" />
   <xacro:arg name="hardware_type" default="st3215"/>
-  <xacro:arg name="use_mock_hardware" default="false"/>
-  <xacro:arg name="serial_port" default="/dev/ttyUSB0"/>
 
+  <!-- Hardware plugin selection -->
+  <xacro:property name="real_hardware_plugin" value="perseus_lite_hardware/ST3215SystemHardware" />
+  <xacro:property name="use_mock_hardware" value="$(arg use_mock_hardware)" />
+  <xacro:property name="hardware_plugin"
+    value="${'mock_components/GenericSystem' if use_mock_hardware else real_hardware_plugin}" />
+
+  <!-- Import dependencies -->
+  <!-- <xacro:include filename="$(find perseus_lite_description)/urdf/perseus_lite.urdf.xacro" /> -->
+  <xacro:include filename="$(find perseus_lite_description)/urdf/chassis.urdf.xacro"/>
+  <xacro:include filename="$(find perseus_lite_description)/urdf/rocker.urdf.xacro"/>
+  <xacro:include filename="$(find perseus_lite_description)/urdf/perseus_lite.materials.xacro" />
   <xacro:include filename="$(find perseus_lite_description)/ros2_control/perseus_lite.ros2_control.xacro" />
-  
-  <xacro:macro name="perseus_lite" params="prefix">
-    <xacro:include filename="$(find perseus_lite_description)/urdf/chassis.urdf.xacro"/>
-    <xacro:include filename="$(find perseus_lite_description)/urdf/rocker.urdf.xacro"/>
-    
-    <xacro:property name="scale" value="0.5"/>
 
+  <!-- Scale for Perseus Lite - DO I NEED THIS?-->
+  <xacro:property name="scale" value="0.5"/>
+
+  <!-- Main macro definition -->
+  <xacro:macro name="perseus_lite" params="prefix">
     <link name="${prefix}base_link"/>
 
     <joint name="base_footprint_joint" type="fixed">
@@ -38,11 +49,14 @@
       <origin xyz="${0.275 * scale} ${-0.075 * scale} ${0.05 * scale}" rpy="0.0 0.0 ${-pi/2}"/>
     </xacro:rocker>
 
+    <!-- ROS2 Control -->
     <xacro:perseus_lite_ros2_control 
-      name="PerseusLite" 
+      name="Perseus_Lite" 
       prefix="${prefix}"
-      hardware_plugin="$(arg hardware_plugin)"
+      hardware_plugin="${hardware_plugin}"
       serial_port="$(arg serial_port)"/>
   </xacro:macro>
-</robot>
 
+  <!-- Instantiate the description -->
+  <xacro:perseus_lite prefix="$(arg prefix)" />
+</robot>
