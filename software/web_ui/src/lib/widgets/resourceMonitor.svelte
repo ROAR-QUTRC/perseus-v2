@@ -1,8 +1,8 @@
 <script lang="ts" module>
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
-	
+
 	export const name = 'Resource Monitor';
-	
+
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
 			general: {

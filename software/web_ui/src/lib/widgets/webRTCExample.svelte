@@ -20,52 +20,11 @@
 	*/
 
 	import { onMount } from 'svelte';
-	import { io, Socket } from 'socket.io-client';
-
-	function dataURItoBlob(imageFormat: string, dataURI: string) {
-		// convert base64 to raw binary data held in a string
-		// doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-		var byteString = atob(dataURI);
-
-		// write the bytes of the string to an ArrayBuffer
-		var ab = new ArrayBuffer(byteString.length);
-		var ia = new Uint8Array(ab);
-		for (var i = 0; i < byteString.length; i++) {
-			ia[i] = byteString.charCodeAt(i);
-		}
-
-		// write the ArrayBuffer to a blob, and you're done
-		var blob = new Blob([ab], { type: imageFormat });
-		return blob;
-	}
-
-	let canvas = $state<HTMLCanvasElement>();
-	onMount(() => {
-		const socket: Socket = io();
-		const ctx = canvas!.getContext('2d');
-		socket.on('video', async (message: { raw: any; info: any }) => {
-			if (canvas !== undefined && ctx !== null) {
-				createImageBitmap(dataURItoBlob('image/jpeg', message.raw)).then((data) => {
-					canvas!.width = data.width;
-					canvas!.height = data.height;
-					ctx.drawImage(data, 0, 0);
-					data.close();
-					// ctx.beginPath();
-					// ctx.fillStyle = 'red';
-					// ctx.rect(20, 20, 20, 20);
-					// ctx.rect(60, 20, 20, 20);
-					// ctx.rect(20, 60, 10, 10);
-					// ctx.rect(70, 60, 10, 10);
-					// ctx.rect(30, 70, 40, 10);
-					// ctx.fill();
-				});
-			}
-		});
-
-		return () => {};
-	});
 </script>
 
 <!-- <img src={image} alt="img" /> -->
 
-<canvas bind:this={canvas}></canvas>
+<!-- <canvas bind:this={canvas}></canvas> -->
+
+<!-- svelte-ignore a11y_missing_attribute -->
+<iframe src="http://10.1.1.74:8888/mystream" scrolling="no" class="h-[100%] w-[100%]"></iframe>

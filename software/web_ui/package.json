@@ -43,15 +43,21 @@
     "vite": "^5.0.3"
   },
   "dependencies": {
+    "@cycjimmy/jsmpeg-player": "^6.1.2",
+    "@penggy/easy-rtp-parser": "^1.0.2",
     "change-case": "^5.4.4",
     "chart.js": "^4.4.7",
+    "is-rtp": "^2.0.0",
     "mode-watcher": "^0.5.0",
+    "node-rtp": "^0.1.1",
     "radix-svelte": "^0.9.0",
     "remult": "^0.27.24",
     "roslib": "^1.4.1",
+    "simple-rtp-parser": "^1.0.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "svelte-grid-extended": "^1.2.1",
-    "svelte-radix": "^2.0.1"
+    "svelte-radix": "^2.0.1",
+    "yellowstone": "^3.0.1"
   }
 }
