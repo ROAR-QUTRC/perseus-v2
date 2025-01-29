@@ -2,26 +2,37 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="MainTree">
     <Sequence>
-      <SleepAction name="sleepA"
-                   msec="2000"
-                   action_name="sleep_service"/>
-      <IfThenElse>
-        <Fallback>
-          <Inverter>
-            <AlwaysFailure/>
-          </Inverter>
-        </Fallback>
-      </IfThenElse>
-      <AlwaysFailure/>
+      <Spin spin_dist="1.57"/>
+      <Wait wait_duration="5.0"/>
     </Sequence>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
-    <Action ID="SleepAction">
-      <input_port name="msec"
-                  type="unsigned int"/>
-      <input_port name="action_name"
+    <Action ID="Spin">
+      <input_port name="spin_dist"
+                  default="1.570000"
+                  type="double">Spin distance</input_port>
+      <input_port name="time_allowance"
+                  default="10.000000"
+                  type="double">Allowed time for spinning</input_port>
+      <input_port name="is_recovery"
+                  default="true"
+                  type="bool">True if recovery</input_port>
+      <output_port name="error_code_id"
+                   type="unsigned short">The spin behavior error code</output_port>
+      <input_port name="server_timeout"
+                  type="std::chrono::milliseconds"/>
+      <input_port name="server_name"
+                  type="std::string">Action server name</input_port>
+    </Action>
+    <Action ID="Wait">
+      <input_port name="wait_duration"
+                  default="1.000000"
+                  type="double">Wait time</input_port>
+      <input_port name="server_timeout"
+                  type="std::chrono::milliseconds"/>
+      <input_port name="server_name"
                   type="std::string">Action server name</input_port>
     </Action>
   </TreeNodesModel>
