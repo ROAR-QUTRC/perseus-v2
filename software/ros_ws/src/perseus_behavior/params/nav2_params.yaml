@@ -20,7 +20,7 @@ bt_navigator:
     # plugin_lib_names is used to add custom BT plugins to the executor (vector of strings).
     # Built-in plugins are added automatically
     # plugin_lib_names: []
-    default_nav_to_pose_bt_xml: "behavior_trees/perseus_bt.xml"
+    default_nav_to_pose_bt_xml: "perseus_behavior/behavior_trees/perseus_bt.xml"
     error_code_names:
       - compute_path_error_code
       - follow_path_error_code
