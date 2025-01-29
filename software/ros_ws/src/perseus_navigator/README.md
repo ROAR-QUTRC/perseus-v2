@@ -1,4 +1,4 @@
-# perseus_behavior package
+# perseus_navigator package
 
 ## Structure
 
@@ -6,7 +6,9 @@
 .
 ├── behavior_trees
 ├── params
-└── launch
+├── launch
+├── include
+└── src
 ```
 
 Joint publishing :

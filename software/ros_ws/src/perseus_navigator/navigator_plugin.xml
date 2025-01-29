@@ -1,0 +1,7 @@
+<library path="perseus_navigator">
+    <class
+        type="perseus_navigator::PerseusNavigator"
+        base_class_type="nav2_core::NavigatorBase">
+        <description>Navigate Perseus Rover</description>
+    </class>
+</library>
