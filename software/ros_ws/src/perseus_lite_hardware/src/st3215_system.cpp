@@ -188,7 +188,7 @@ namespace perseus_lite_hardware
             // set the serves as wheel mode and enable torque
             const uint8_t MODE_REGISTER = 33;    // SMS_STS_MODE register
             const uint8_t TORQUE_REGISTER = 40;  // SMS_STS_TORQUE_ENABLE register
-            const uint8_t WHEEL_MODE_VALUE = 2;
+            const uint8_t WHEEL_MODE_VALUE = 1;  // tested in FT tool - then set goal velocity (46)
             const uint8_t TORQUE_ENABLE_VALUE = 1;
             const uint8_t CMD_WRITE = 0x03;
 
@@ -429,17 +429,43 @@ namespace perseus_lite_hardware
         {
             for (size_t i = 0; i < servo_ids_.size(); ++i)
             {
+                // Log input command speed
+                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                            "Servo %d - Input command speed (rad/s): %f",
+                            servo_ids_[i], command_speeds_[i]);
+
                 // Convert velocity command to servo units
                 // ST3215 expects -1000 to 1000 for velocity
                 const double normalized_velocity = command_speeds_[i] * (60.0 / (2.0 * M_PI));  // to RPM
+
+                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                            "Servo %d - Converted to RPM: %f",
+                            servo_ids_[i], normalized_velocity);
+
+                // Debug print the MAX_RPM value being used
+                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                            "Servo %d - Using MAX_RPM value: %f",
+                            servo_ids_[i], MAX_RPM);
+
+                // For testing, use a fixed value instead of the conversion
+                // int16_t servo_speed = 500;  // Uncomment this line to test with fixed speed
+
+                // Normal conversion (comment out when testing fixed speed)
                 int16_t servo_speed = static_cast<int16_t>(
                     std::clamp(normalized_velocity * (1000.0 / MAX_RPM), -1000.0, 1000.0));
+
+                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                            "Servo %d - Calculated servo speed (before direction): %d",
+                            servo_ids_[i], servo_speed);
 
                 // Convert to protocol format (handle negative values per SMS/STS protocol)
                 if (servo_speed < 0)
                 {
                     servo_speed = -servo_speed;
                     servo_speed |= (1 << 15);  // Set direction bit
+                    RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
+                                 "Servo %d - Negative speed detected, after direction bit: %d",
+                                 servo_ids_[i], servo_speed);
                 }
 
                 // Build write command for velocity - format matches SMS_STS::write_speed
@@ -447,6 +473,11 @@ namespace perseus_lite_hardware
                     REG_GOAL_SPEED_L,
                     static_cast<uint8_t>(servo_speed & 0xFF),
                     static_cast<uint8_t>((servo_speed >> 8) & 0xFF)};
+
+                // Debug print the final bytes being sent
+                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                            "Servo %d - Final velocity bytes: 0x%02X 0x%02X",
+                            servo_ids_[i], vel_data[1], vel_data[2]);
 
                 if (!sendServoCommand(servo_ids_[i], CMD_WRITE, std::span{vel_data}))
                 {

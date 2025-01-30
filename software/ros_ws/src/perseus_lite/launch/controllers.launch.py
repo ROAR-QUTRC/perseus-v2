@@ -32,7 +32,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[controller_config, use_sim_time_param],
-        arguments=["--ros-args", "--log-level", "debug"],
+        # arguments=["--ros-args", "--log-level", "debug"],
         output="both",  # output to both screen and log file
         remappings=[],
         condition=IfCondition(launch_controller_manager),

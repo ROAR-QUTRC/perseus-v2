@@ -2,14 +2,20 @@ ST3215 System Hardware for Perseus Lite
 
 ## Implementation Notes
 
-Current this code breaks due to ::write()
-write() causes the manager controller to be listed. Not yet sure why.
+ROS2 Jazzy diff_drive_controller requires stamped messages. This code is useful to debug with:
 
-Tested method as non blocking:
-on_init()
-export_state_interfaces()
-on_configure()
-read()
+```
+ros2 topic pub -r 10 --qos-durability volatile --times 20 /cmd_vel geometry_msgs/msg/TwistStamped "{
+  header: {
+    stamp: {sec: 0, nanosec: 0},
+    frame_id: 'base_link'
+  },
+  twist: {
+    linear: {x: 0.5, y: 0.0, z: 0.0},
+    angular: {x: 0.0, y: 0.0, z: 0.0}
+  }
+}"
+```
 
 ## Overview
 
