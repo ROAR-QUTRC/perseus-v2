@@ -1,0 +1,9 @@
+# Goal definition
+int32 input_value
+string behavior_tree
+---
+# Result definition
+int32 output_value
+---
+# Feedback definition
+builtin_interfaces/Duration navigation_time
