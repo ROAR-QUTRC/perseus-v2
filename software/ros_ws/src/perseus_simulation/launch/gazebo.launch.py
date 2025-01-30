@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, OpaqueFunction
+from launch.actions import ExecuteProcess, OpaqueFunction, DeclareLaunchArgument
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
@@ -20,6 +20,16 @@ def generate_launch_description():
     gz_world_path = PathJoinSubstitution(
         [FindPackageShare("perseus_simulation"), "worlds", gz_world]
     )
+
+    arguments = [
+        DeclareLaunchArgument(
+            "gz_world",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("perseus_simulation"), "worlds", gz_world]
+            ),
+            description="The world file from `perseus_simulation` to use",
+        ),
+    ]
 
     # IMPORTED LAUNCH FILES
     def gz_launch(context):
@@ -98,4 +108,4 @@ def generate_launch_description():
         gz_spawn_entity,
     ]
 
-    return LaunchDescription(launch_files + nodes)
+    return LaunchDescription(arguments + launch_files + nodes)
