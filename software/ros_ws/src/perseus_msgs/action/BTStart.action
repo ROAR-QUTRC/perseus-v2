@@ -1,9 +1,14 @@
-# Goal definition
-int32 input_value
+#goal definition
+
+std_msgs/String command
 string behavior_tree
 ---
-# Result definition
-int32 output_value
+#result definition
+
+builtin_interfaces/Duration total_elapsed_time
+uint16 error_code
+string error_msg
 ---
-# Feedback definition
+#feedback definition
+
 builtin_interfaces/Duration navigation_time

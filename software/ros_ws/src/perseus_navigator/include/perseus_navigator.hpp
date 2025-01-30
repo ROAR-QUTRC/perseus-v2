@@ -8,16 +8,17 @@
 #include "nav2_util/odometry_utils.hpp"
 #include "nav2_util/robot_utils.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "perseus_msgs/action/bt_start.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 
 namespace perseus_navigator
 {
 
-    class PerseusNavigator : public nav2_core::BehaviorTreeNavigator<nav2_msgs::action::NavigateToPose>
+    class PerseusNavigator : public nav2_core::BehaviorTreeNavigator<perseus_msgs::action::BTStart>
     {
     public:
-        using ActionT = nav2_msgs::action::NavigateToPose;
+        using ActionT = perseus_msgs::action::BTStart;
 
         /**
          * @brief Construct a new Perseus Navigator object

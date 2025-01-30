@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.8)
 project(perseus_navigator)
 
+# Enable all warnings for better code quality
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
-
 find_package(navigation2 REQUIRED)
 find_package(nav2_common REQUIRED)
 
@@ -23,31 +24,46 @@ find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(perseus_msgs REQUIRED) # Ensure perseus_msgs is found
 
 # ==================================
 # Create the Plugin Library
 # ==================================
 add_library(
-  ${PROJECT_NAME} SHARED src/perseus_navigator.cpp # Change this to your actual
+  ${PROJECT_NAME} SHARED src/perseus_navigator.cpp # Ensure this is the correct
                                                    # implementation file
 )
 
+# Ensure the correct include directories are used
 target_include_directories(
   ${PROJECT_NAME}
-  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp> # For
+                                                                        # generated
+                                                                        # action
+                                                                        # headers
+)
 
-target_link_libraries(
+# ✅ Use ONLY `ament_target_dependencies()`, no `target_link_libraries()`
+ament_target_dependencies(
   ${PROJECT_NAME}
-  PUBLIC nav2_util::nav2_util_core pluginlib::pluginlib rclcpp::rclcpp
-         rclcpp_action::rclcpp_action tf2_ros::tf2_ros)
-
-target_link_libraries(
-  ${PROJECT_NAME} PRIVATE ament_index_cpp::ament_index_cpp
-                          rclcpp_lifecycle::rclcpp_lifecycle)
+  geometry_msgs
+  nav2_core
+  nav2_msgs
+  nav2_util
+  nav_msgs
+  pluginlib
+  rclcpp
+  rclcpp_action
+  tf2_ros
+  perseus_msgs # Ensure perseus_msgs is properly linked
+  rosidl_runtime_cpp # Needed for message types
+)
 
 # ==================================
-# Install BT.xmls, launch and params
+# Install BT.xmls, launch, and params
 # ==================================
 install(DIRECTORY behavior_trees launch params
         DESTINATION share/${PROJECT_NAME}/)
@@ -64,10 +80,11 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
+# Plugin description file
 pluginlib_export_plugin_description_file(nav2_core navigator_plugin.xml)
 
-ament_export_libraries(${PROJECT_NAME}) # Export library for use in other
-                                        # packages
+# Export libraries and dependencies
+ament_export_libraries(${PROJECT_NAME})
 ament_export_dependencies(
   geometry_msgs
   nav2_core
@@ -77,8 +94,11 @@ ament_export_dependencies(
   pluginlib
   rclcpp
   rclcpp_action
-  tf2_ros)
+  tf2_ros
+  perseus_msgs
+  rosidl_runtime_cpp)
 
 ament_export_targets(export_${PROJECT_NAME})
 
+# Finalize package
 ament_package()

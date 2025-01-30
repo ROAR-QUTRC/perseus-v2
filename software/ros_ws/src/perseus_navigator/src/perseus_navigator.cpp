@@ -47,7 +47,9 @@ namespace perseus_navigator
 
     bool PerseusNavigator::goalReceived(ActionT::Goal::ConstSharedPtr goal)
     {
-        auto bt_filename = goal->behavior_tree;
+        std::string pkg_share_dir = ament_index_cpp::get_package_share_directory("perseus_navigator");
+        auto bt_filename = pkg_share_dir + "/behavior_trees/" + goal->behavior_tree;
+
         if (!bt_action_server_->loadBehaviorTree(bt_filename))
         {
             RCLCPP_ERROR(
