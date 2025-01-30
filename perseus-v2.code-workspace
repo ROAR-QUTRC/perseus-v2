@@ -3,9 +3,10 @@
         {
             "path": "."
         },
-        // {
-        //     "path": "Software/native/can-interface"
-        // }
+        {
+            "name": "Light Tower Firmware",
+            "path": "firmware/light-tower"
+        }
     ],
     "settings": {
         "nixEnvSelector.suggestion": true,
@@ -107,6 +108,9 @@
         },
         "[javascript]": {
             "editor.defaultFormatter": "ibecker.treefmt-vscode"
+        },
+        "[ignore]": {
+            "editor.formatOnSave": true
         },
     },
     "extensions": {
