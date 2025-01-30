@@ -6,6 +6,7 @@ from launch.substitutions import (
     LaunchConfiguration,
 )
 
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -20,20 +21,22 @@ def generate_launch_description():
     robot_description_xacro = PathJoinSubstitution(
         [FindPackageShare("perseus"), "urdf", "perseus.urdf.xacro"]
     )
-    robot_description_content = Command(
-        [
-            FindExecutable(name="xacro"),
-            " ",
-            robot_description_xacro,
-            " use_sim:=",
-            use_sim_time,
-            " hardware_plugin:=",
-            hardware_plugin,
-            " can_bus:=",
-            can_bus,
-        ]
+    robot_description_content = ParameterValue(
+        Command(
+            [
+                FindExecutable(name="xacro"),
+                " ",
+                robot_description_xacro,
+                " use_sim:=",
+                use_sim_time,
+                " hardware_plugin:=",
+                hardware_plugin,
+                " can_bus:=",
+                can_bus,
+            ]
+        ),
+        value_type=str,
     )
-
     # NODES
     robot_state_publisher = Node(
         package="robot_state_publisher",
