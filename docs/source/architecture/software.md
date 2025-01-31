@@ -115,7 +115,7 @@ The `hi-can-net` library is currently unused, but may become an implementation o
 
 The simple-networking library provides a modern C++ implementation for handling network socket communications, with a primary focus on client-side operations.
 
-It offers an object-oriented wrapper around traditional POSIX socket operations, supporting both TCP and UDP protocols. The library implements RAII principles through its 'networking::Client' class, which manages socket creation, configuration, connection and cleanup while providing exception-based error handling for robust failure management.
+It offers an object-oriented wrapper around traditional POSIX socket operations, supporting both TCP and UDP protocols. The library implements RAII principles through its {expr}`networking::Client` class, which manages socket creation, configuration, connection and cleanup while providing exception-based error handling for robust failure management.
 
 The library distinguishes itself through flexible socket configuration using handler callbacks, support for custom bind addresses and a clean abstraction over low-level socket operations. It provides convenient methods for transmitting and receiving both string and binary data, with support for both blocking and non-blocking operations. Error handling is comprehensive, with descriptive error messages that include both the operation context and underlying system error details.
 :::{warning}
