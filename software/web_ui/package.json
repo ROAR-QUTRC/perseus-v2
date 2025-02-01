@@ -45,6 +45,7 @@
   "dependencies": {
     "@cycjimmy/jsmpeg-player": "^6.1.2",
     "@penggy/easy-rtp-parser": "^1.0.2",
+    "@roamhq/wrtc": "^0.8.0",
     "change-case": "^5.4.4",
     "chart.js": "^4.4.7",
     "is-rtp": "^2.0.0",
