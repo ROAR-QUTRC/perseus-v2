@@ -133,7 +133,7 @@ The Perseus-UI is a web UI that is almost entirely independent of the rover core
 
 The Rover UI uses SvelteKit meaning that it does not need a server to be run and can be started by running these commands in the root directory:
 
-```bash
+```shell
 yarn # This installs dependencies
 yarn build # Build the server
 yarn start # Runs the built server on port 3000
@@ -144,7 +144,7 @@ yarn start # Runs the built server on port 3000
 :::{note}
 If you don't have node/yarn I'd recommend these steps:
 
-Instal node version manager with this script (you will need to restart your shell once its installed):
+Install node version manager with this script (you will need to restart your shell once its installed):
 
 ```
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
@@ -170,11 +170,11 @@ npm install --global yarn
 
 #### Client
 
-The UI library used is [shadcn-svelte](https://next.shadcn-svelte.com), for ROS connections use [roslibjs](https://robotwebtools.github.io/roslibjs/index.html).
+The UI library used is [shadcn-svelte](https://next.shadcn-svelte.com), with [roslibjs](https://robotwebtools.github.io/roslibjs/index.html) used for communication with the ROS stack.
 
 #### Server
 
-SvelteKit provides a number of methods of assisting with server communication however I would recommend using the node server and websockets to prevent weird bugs from components rerendering. Since Svelte doesn't provide a native interface for creating custom node servers an injected server is used. For development and testing use write your node server code in the vite plugin inside `vite.config.ts` and copy this code into `web-ui/src/server/server.js` for production (alternatively create a new file that exports a function and call it in both then develop from that file).
+SvelteKit provides a number of methods of assisting with server communication, however I would recommend using the node server and WebSockets to prevent weird bugs from components re-rendering. Since Svelte doesn't provide a native interface for creating custom node servers an injected server is used. For development and testing use write your node server code in the vite plugin inside `vite.config.ts` and copy this code into `web-ui/src/server/server.js` for production (alternatively create a new file that exports a function and call it in both then develop from that file).
 
 #### Widgets
 
@@ -241,7 +241,7 @@ To begin developing a widget run the command: `./create-widget.sh <file-name>`. 
     ```
 
 - The second script tag is where your code should go as it is run client side when the component is rendered. The settings can be accessed here without an import and to listen for changes wrap the value you want to check in either a `$derived` or `$effect` rune. Furthermore, use `toast('message')` to send a toast from your widget.
-- The remainder of the file is where mark down goes. Tailwind classes can be used on widgets for styling or a `<style></style>` block.
+- The remainder of the file is where mark down goes. Tailwind classes can be used on widgets for styling or a `<style></style>` block, although the former is strongly preferred if possible.
 
 ## Firmware
 
