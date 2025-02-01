@@ -657,7 +657,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
     interpolated.reserve(INTERPOLATED_POINTS);
 
     // Calculate angle increment
-    float angleIncrement = 2 * M_PI / INTERPOLATED_POINTS;
+    float angleIncrement = 2 * std::numbers::pi / INTERPOLATED_POINTS;
 
     // Track index between iterations since points are sorted by angle
     size_t sourcePointIndex = 0;
@@ -696,7 +696,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
 
             // Adjust angle for wrap-around
             float a1 = get<0>(p1);
-            float a2 = get<0>(p2) + 2 * M_PI;
+            float a2 = get<0>(p2) + 2 * std::numbers::pi;
 
             if (!get<2>(p1) && !get<2>(p2))
             {
@@ -717,7 +717,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
             }
 
             float t = (targetAngle - a1) / (a2 - a1);
-            float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
+            float dist = std::lerp(get<1>(p1), get<1>(p2), t);
             interpolated.emplace_back(targetAngle, dist, true);
         }
         else if (sourcePointIndex == points.size())
@@ -750,7 +750,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
             }
 
             float t = (targetAngle - get<0>(p1)) / (get<0>(p2) - get<0>(p1));
-            float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
+            float dist = std::lerp(get<1>(p1), get<1>(p2), t);
             interpolated.emplace_back(targetAngle, dist, true);
         }
     }
