@@ -4,6 +4,7 @@ from launch.actions import (
     EmitEvent,
     LogInfo,
     RegisterEventHandler,
+    GroupAction,
 )
 from launch.conditions import IfCondition
 from launch.events import matches_action
@@ -14,7 +15,6 @@ from launch.substitutions import (
     PathJoinSubstitution,
 )
 from launch_ros.actions import LifecycleNode, Node
-from launch.actions import GroupAction
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState
 from launch_ros.substitutions import FindPackageShare
@@ -22,21 +22,25 @@ from lifecycle_msgs.msg import Transition
 
 
 def generate_launch_description():
+    # ARGUMENTS
     autostart = LaunchConfiguration("autostart")
     use_lifecycle_manager = LaunchConfiguration("use_lifecycle_manager")
 
-    declare_autostart_cmd = DeclareLaunchArgument(
-        "autostart",
-        default_value="true",
-        description="Automatically startup the slamtoolbox. "
-        "Ignored when use_lifecycle_manager is true.",
-    )
-    declare_use_lifecycle_manager = DeclareLaunchArgument(
-        "use_lifecycle_manager",
-        default_value="false",
-        description="Enable bond connection during node activation",
-    )
+    arguments = [
+        DeclareLaunchArgument(
+            "autostart",
+            default_value="true",
+            description="Automatically startup the slamtoolbox. "
+            "Ignored when use_lifecycle_manager is true.",
+        ),
+        DeclareLaunchArgument(
+            "use_lifecycle_manager",
+            default_value="false",
+            description="Enable bond connection during node activation",
+        ),
+    ]
 
+    # NODES
     start_lifelong_slam_toolbox_node = LifecycleNode(
         parameters=[
             PathJoinSubstitution(
@@ -51,6 +55,7 @@ def generate_launch_description():
         namespace="",
     )
 
+    # EVENTS
     configure_event = EmitEvent(
         event=ChangeState(
             lifecycle_node_matcher=matches_action(start_lifelong_slam_toolbox_node),
@@ -114,11 +119,6 @@ def generate_launch_description():
         ),
     ]
 
-    ld = LaunchDescription()
-
-    ld.add_action(declare_autostart_cmd)
-    ld.add_action(declare_use_lifecycle_manager)
-
     # Group localization nodes together
     localization_group = GroupAction(
         [
@@ -129,9 +129,13 @@ def generate_launch_description():
         ]
     )
 
-    ld.add_action(localization_group)
-    ld.add_action(start_lifelong_slam_toolbox_node)
-    ld.add_action(configure_event)
-    ld.add_action(activate_event)
+    # Combine all launch elements
+    launch_elements = [
+        *arguments,
+        localization_group,
+        start_lifelong_slam_toolbox_node,
+        configure_event,
+        activate_event,
+    ]
 
-    return ld
+    return LaunchDescription(launch_elements)
