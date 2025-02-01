@@ -83,16 +83,10 @@ target_link_libraries(m2m2_lidar PUBLIC simple_networking OpenSSL::Crypto)
 # Install ROS Executable
 install(TARGETS m2m2_lidar DESTINATION lib/${PROJECT_NAME})
 
-# CMake configuration
-install(
-  EXPORT export_${PROJECT_NAME}
-  FILE ${PROJECT_NAME}-config.cmake
-  DESTINATION lib/cmake/${PROJECT_NAME})
 # Versioning
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION}
-                                                 SOVERSION 1)
+set_target_properties(m2m2_lidar PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION
+                                                                       1)
 # ROS LIBRARY POST-INSTALL
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # ROS FINALISATION
