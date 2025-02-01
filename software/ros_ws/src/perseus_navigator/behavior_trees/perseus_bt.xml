@@ -1,14 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
   <BehaviorTree ID="MainTree">
-    <Sequence>
-      <Spin spin_dist="1.57"/>
-      <Wait wait_duration="5.0"/>
-    </Sequence>
+    <RecoveryNode number_of_retries="1">
+      <RateController hz="1">
+        <RoundRobin>
+          <AlwaysSuccess/>
+          <AlwaysSuccess/>
+          <AlwaysFailure/>
+        </RoundRobin>
+      </RateController>
+      <PipelineSequence>
+        <Spin spin_dist="1.570000"
+              time_allowance="10.000000"
+              is_recovery="true"
+              error_code_id="0"
+              />
+        <Wait wait_duration="5.0"
+              />
+      </PipelineSequence>
+    </RecoveryNode>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
+    <Control ID="PipelineSequence"/>
+    <Decorator ID="RateController">
+      <input_port name="hz"
+                  default="10.000000"
+                  type="double">Rate</input_port>
+    </Decorator>
+    <Control ID="RecoveryNode">
+      <input_port name="number_of_retries"
+                  default="1"
+                  type="int">Number of retries</input_port>
+    </Control>
+    <Control ID="RoundRobin"/>
     <Action ID="Spin">
       <input_port name="spin_dist"
                   default="1.570000"

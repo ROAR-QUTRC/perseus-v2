@@ -1,0 +1,38 @@
+#
+# bt_navigator
+#
+bt_navigator:
+  ros__parameters:
+    global_frame: map
+    robot_base_frame: base_link
+    odom_topic: odom
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    wait_for_service_timeout: 1000
+    action_server_result_timeout: 900.0
+    navigators: ["basic_navigation"]
+    basic_navigation:
+      plugin: "perseus_navigator::PerseusNavigator"
+    error_code_names:
+      - false_start
+#
+# behavior server
+#
+behavior_server:
+  ros__parameters:
+    cycle_frequency: 10.0
+    behavior_plugins: ["wait", "spin"]
+    wait:
+      plugin: "nav2_behaviors::Wait"
+    spin:
+      plugin: "nav2_behaviors::Spin"
+    local_frame: odom
+    global_frame: map
+    robot_base_frame: base_link
+    #
+    # Spin params
+    #
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2

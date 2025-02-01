@@ -1,14 +1,20 @@
-#goal definition
+####################################
 
+# Error Codes
+
+uint16 NONE=0
+uint16 UNKNOWN=10000
+
+####################################
+
+#goal definition
 std_msgs/String command
 string behavior_tree
 ---
 #result definition
-
 builtin_interfaces/Duration total_elapsed_time
 uint16 error_code
 string error_msg
 ---
 #feedback definition
-
 builtin_interfaces/Duration navigation_time

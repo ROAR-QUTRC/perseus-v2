@@ -58,22 +58,28 @@ namespace perseus_navigator
             return false;
         }
 
+        start_time_ = clock_->now();
+
         // TODO: Decide how to start goals
         return true;
     }
 
     void PerseusNavigator::goalCompleted(
-        typename ActionT::Result::SharedPtr /*result*/,
-        const nav2_behavior_tree::BtStatus /*final_bt_status*/
-    )
+        typename ActionT::Result::SharedPtr result,
+        const nav2_behavior_tree::BtStatus final_bt_status)
     {
+        if (final_bt_status == nav2_behavior_tree::BtStatus::SUCCEEDED)
+        {
+            result->total_elapsed_time = clock_->now() - start_time_;
+        }
     }
 
     void PerseusNavigator::onLoop()
     {
-        // TODO: Replace with feedback publisher
-        rclcpp::Duration estimated_duration = rclcpp::Duration::from_seconds(0.0);
-        RCLCPP_INFO(logger_, "RUNNING. Current Duration: %.6f", estimated_duration.seconds());
+        auto feedback_msg = std::make_shared<ActionT::Feedback>();
+
+        feedback_msg->navigation_time = clock_->now() - start_time_;
+        bt_action_server_->publishFeedback(feedback_msg);
     }
 
     void PerseusNavigator::onPreempt(ActionT::Goal::ConstSharedPtr /*goal*/)
