@@ -124,7 +124,8 @@ This library is not used for ROS2 communications, it exists for scenarios such a
 
 ## Perseus-UI
 
-The Perseus-UI is a web UI that is almost entirely independant of the rover core software. The UI is a SvelteKit + Vite app with an injected Node.js server. There are two main components to Perseus-UI:
+The Perseus-UI is a web UI that is almost entirely independent of the rover core software. The UI is a SvelteKit + Vite app with an injected Node.js server. There are two main components to Perseus-UI:
+
 - Widgets -> Typically a single svelte component that provide an interface for a specific functionality on the rover.
 - Layouts -> A group of widgets that are regularly used together.
 
@@ -137,10 +138,11 @@ yarn # This installs dependencies
 yarn build # Build the server
 yarn start # Runs the built server on port 3000
 ```
+
 **Note:** Any hydration related errors can be ignored
 
 :::{note}
-If you don't have node/yarn I'd recomend these steps:
+If you don't have node/yarn I'd recommend these steps:
 
 Instal node version manager with this script (you will need to restart your shell once its installed):
 
@@ -161,6 +163,7 @@ Finally, install yarn with:
 ```
 npm install --global yarn
 ```
+
 :::
 
 ### Developing for the UI
@@ -171,7 +174,7 @@ The UI library used is [shadcn-svelte](https://next.shadcn-svelte.com), for ROS 
 
 #### Server
 
-SvelteKit provides a number of methods of assisting with server communication however I would recommend using the node server and websockets to prevent weird bugs from components rerendering. Since Svelte doesn't provide a native interface for creating custom node servers an injected server is used. For development and testing use write your node server code in the vite plugin inside `vite.config.ts` and copy this code into `web-ui/src/server/server.js` for production (alternatively create a new file that exports a function and call it in both then develop from that file). 
+SvelteKit provides a number of methods of assisting with server communication however I would recommend using the node server and websockets to prevent weird bugs from components rerendering. Since Svelte doesn't provide a native interface for creating custom node servers an injected server is used. For development and testing use write your node server code in the vite plugin inside `vite.config.ts` and copy this code into `web-ui/src/server/server.js` for production (alternatively create a new file that exports a function and call it in both then develop from that file).
 
 #### Widgets
 
@@ -198,7 +201,7 @@ To begin developing a widget run the command: `./create-widget.sh <file-name>`. 
 - The first script tag with the `module` property is a server only module. This is used here as it is only run once when the component is first loaded and it also allows for exports that are used to expose some properties. You likely will not need to write your own code here.
 
   - **name -** This string is the unique name of the widget that will be displayed at the top of the widget and is used to ensure duplicates of widgets are not loaded.
-  - **settings -** This is the object that structures the settings/state panel of each widget, this will automically update across all connected devices when saved and will persist between sessions. Here is an example settings object and how to access the value of each setting:
+  - **settings -** This is the object that structures the settings/state panel of each widget, this will automatically update across all connected devices when saved and will persist between sessions. Here is an example settings object and how to access the value of each setting:
 
     ```ts
     export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
