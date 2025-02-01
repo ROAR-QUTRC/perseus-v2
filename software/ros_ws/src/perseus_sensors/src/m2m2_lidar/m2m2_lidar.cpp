@@ -638,8 +638,6 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
          *          - Ensures all angles are positive and less than 2*pi
          *          - Handles wrap-around cases (e.g. -pi/2 becomes 3*pi / 2)
          *
-         * The algorithm uses std::trunc to calculate the exact number of full rotations
-         * needed to avoid any potential precision loss from repeated floating-point operations.
          */
         const auto tau = 2 * std::numbers::pi;
         angle -= std::trunc(angle / tau) * tau;
