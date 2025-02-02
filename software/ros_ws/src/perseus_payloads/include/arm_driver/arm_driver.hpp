@@ -3,7 +3,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 
-#include "st3215_servo/st3215.hpp"  // Include the servo library
+#include "st3215_servo.hpp"
 
 class ArmDriver : public rclcpp::Node
 {
@@ -15,7 +15,7 @@ private:
     rclcpp::TimerBase::SharedPtr _sweep_timer;
 
     // Servo instance
-    std::unique_ptr<ST3215> _servo;
+    std::unique_ptr<st3215::ServoManager> _servoManager;
 
     // Sweep control variables
     bool _sweep_direction{true};  // true = increasing position

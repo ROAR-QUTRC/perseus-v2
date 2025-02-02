@@ -2,19 +2,24 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+using namespace st3215;
+
 ArmDriver::ArmDriver(const rclcpp::NodeOptions& options)
     : Node("arm_driver", options)
 {
     // Create and configure the servo
     try
     {
-        _servo = std::make_unique<ST3215>("/dev/ttyUSB0", 1);  // Servo ID 1
+        _servoManager = std::make_unique<ServoManager>("/dev/ttyUSB0");  // Servo ID 1
 
+        // Add servo ID 1
+        _servoManager->addServo(1);
+        auto servo = _servoManager->getServo(1);
         // Configure servo parameters
-        _servo->setOperatingMode(ST3215::OperatingMode::POSITION);
-        _servo->setTorqueEnable(true);
-        _servo->setSpeedLimit(500);   // Set moderate speed
-        _servo->setAcceleration(50);  // Set moderate acceleration
+        servo->setOperatingMode(operating_mode_t::POSITION);
+        servo->setTorque(true);
+        // servo->setSpeedLimit(500);   // Set moderate speed
+        // servo->setAcceleration(50);  // Set moderate acceleration
 
         RCLCPP_INFO(get_logger(), "Successfully connected to servo ID 1");
     }
@@ -61,11 +66,11 @@ void ArmDriver::_sweep_callback()
         }
 
         // Command the servo to move to the new position
-        _servo->setGoalPosition(_current_pos);
+        _servoManager->getServo(1)->setPosition(_current_pos);
 
         // Get actual position from servo and publish
-        uint16_t actual_pos = _servo->getPresentPosition();
-        _publish_joint_state(actual_pos);
+        // uint16_t actual_pos = _servoManager->getServo(1)->getPosition();
+        // _publish_joint_state(actual_pos);
     }
     catch (const std::exception& e)
     {

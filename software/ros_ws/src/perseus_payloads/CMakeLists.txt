@@ -67,16 +67,12 @@ endforeach()
 find_package(hi_can_raw QUIET)
 if(NOT hi_can_raw_FOUND)
   message(STATUS "hi-can-raw not found, adding subdirectory...")
-  message(
-    STATUS "Attempting to add hi-can-raw from: ../../../shared/hi-can-raw")
   add_subdirectory(../../../shared/hi-can-raw hi-can-raw)
 endif()
 
 find_package(st3215_servo QUIET)
 if(NOT st3215_servo_FOUND)
   message(STATUS "st3215-servo not found, adding subdirectory...")
-  message(STATUS "Attempting
-to add st3215-servo from: ../../../shared/st3215-servo")
   add_subdirectory(../../../shared/st3215-servo st3215-servo)
 endif()
 

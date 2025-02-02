@@ -2,9 +2,7 @@
   stdenv,
   cleanCmakeSource,
   cmake,
-  fd-wrapper,
-  ptr-wrapper,
-  hi-can,
+  boost,
 }:
 
 stdenv.mkDerivation rec {
@@ -18,9 +16,7 @@ stdenv.mkDerivation rec {
 
   # due to header files, these need to propagate
   propagatedBuildInputs = [
-    fd-wrapper
-    ptr-wrapper
-    hi-can
+    boost
   ];
   nativeBuildInputs = [ cmake ];
 }

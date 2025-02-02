@@ -1,5 +1,5 @@
 # PROJECT SETUP
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.30)
 
 project(
   st3215_servo
@@ -38,21 +38,21 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Let's go back to add_subdirectory but in a more controlled way
-if(NOT TARGET fd_wrapper)
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../fd-wrapper fd_wrapper
-                   EXCLUDE_FROM_ALL)
-endif()
+# INCLUDE DEPENDENCIES
 
-if(NOT TARGET ptr_wrapper)
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../ptr-wrapper ptr_wrapper
-                   EXCLUDE_FROM_ALL)
-endif()
+# public dependencies (which should propagate)
+set(THIS_PACKAGE_INCLUDE_DEPENDS Boost)
 
-if(NOT TARGET hi_can)
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../hi-can hi_can
-                   EXCLUDE_FROM_ALL)
-endif()
+# packages which must be present but aren't linked against
+set(THIS_PACKAGE_BUILD_DEPENDS)
+
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 # COMPILE (Libraries)
 
@@ -68,7 +68,7 @@ target_include_directories(
                          $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 
 # Link against the targets directly
-target_link_libraries(${PROJECT_NAME} PUBLIC fd_wrapper ptr_wrapper hi_can)
+target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost)
 
 # INSTALL (Libraries)
 include(GNUInstallDirs)

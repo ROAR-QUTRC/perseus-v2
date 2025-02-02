@@ -5,4 +5,5 @@ final: prev: {
   hi-can-net = final.callPackage ./hi-can-net { };
   ptr-wrapper = final.callPackage ./ptr-wrapper { };
   simple-networking = final.callPackage ./simple-networking { };
+  st3215-servo = final.callPackage ./st3215-servo { };
 }
