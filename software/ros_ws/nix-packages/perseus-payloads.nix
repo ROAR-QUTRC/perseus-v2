@@ -8,6 +8,7 @@
   hi-can-raw,
   rclcpp,
   sensor-msgs,
+  st3215-servo,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-payloads";
@@ -23,6 +24,7 @@ buildRosPackage rec {
     hi-can-raw
     rclcpp
     sensor-msgs
+    st3215-servo
   ];
   nativeBuildInputs = [ ament-cmake ];
 
