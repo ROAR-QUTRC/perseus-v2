@@ -35,16 +35,20 @@
 	};
 
 	const saveState = () => {
-		toast.success('State saved');
-		repo(Layout).update(layouts.value[layouts.active].id, {
-			widgets: layouts.value[layouts.active].widgets.map((widget) => {
-				if (widget.name === widgetData.name) {
-					widget.state = JSON.stringify(widgetData.settings);
-					console.log(widget.state);
-				}
-				return widget;
+		repo(Layout)
+			.update(layouts.value[layouts.active].id, {
+				widgets: layouts.value[layouts.active].widgets.map((widget) => {
+					// if the widget name matches update its state
+					if (widget.name === widgetData.name) {
+						widget.state = JSON.stringify(widgetData.settings);
+						console.log(widget.state);
+					}
+					return widget;
+				})
 			})
-		});
+			.then(() => {
+				toast.success('State saved');
+			});
 	};
 
 	const getSelectValue = (field: {
@@ -88,11 +92,7 @@
 							</Collapsible.Trigger>
 							<Collapsible.Content class="my-2 ml-2 border-l-2 pl-2">
 								<HoverCard.Root closeDelay={200} openDelay={100}>
-									{@const printme = widgetData.settings.groups[group]}
-									{@debug printme}
 									{#each Object.keys(widgetData.settings.groups[group]) as field}
-										{@const printmetype = widgetData.settings.groups[group][field].type}
-										{@debug printmetype}
 										{#if widgetData.settings.groups[group][field].type !== 'button'}
 											<div class="flex">
 												<Label>{changeCase.sentenceCase(field)}</Label>

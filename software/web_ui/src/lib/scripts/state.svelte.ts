@@ -1,6 +1,7 @@
 import { type Component } from 'svelte';
 import { Layout } from '../../shared/Layout';
 
+// represents the entire widget
 export interface WidgetType {
 	name: string;
 	component: Component;
@@ -13,6 +14,7 @@ export interface WidgetType {
 	};
 }
 
+// represents the settings of the widget
 export interface WidgetSettingsType {
 	groups: Record<
 		string,
@@ -22,7 +24,7 @@ export interface WidgetSettingsType {
 				type: 'text' | 'number' | 'select' | 'switch' | 'button';
 				description?: string;
 				value?: string;
-				options?: { value: string; label: string }[];
+				options?: { value: string; label: string }[]; // these are not saved as options are typically session dependent
 				action?: () => string | null;
 			}
 		>
@@ -45,62 +47,41 @@ export const getWidgetByName = (
 	return availableWidgets.find((widget) => widget.name === name);
 };
 
-const compareKeys = (a: WidgetSettingsType, b: WidgetSettingsType): boolean | undefined => {
-	if (a && b) {
-		// Deep clone the objects to prevent mutation
-		let aKeys = JSON.parse(JSON.stringify(a.groups));
-		let bKeys = JSON.parse(JSON.stringify(b.groups));
-
-		Object.keys(aKeys).forEach((group) => {
-			Object.keys(aKeys[group]).forEach((field) => {
-				aKeys[group][field].value = undefined;
-			});
-		});
-		Object.keys(bKeys).forEach((group) => {
-			Object.keys(bKeys[group]).forEach((field) => {
-				bKeys[group][field].value = undefined;
-			});
-		});
-
-		return JSON.stringify(aKeys) === JSON.stringify(bKeys);
-	}
-	return undefined;
-};
-
 export const getWidgetsByLayoutId = (id: string): Array<WidgetType> => {
 	const layout = layouts.value.find((layout) => layout.id === id);
 	if (layout === undefined) return [];
 	let widgets: Array<WidgetType> = [];
-	for (const widget of layout.widgets) {
-		const widgetData = getWidgetByName(widget.name);
-		if (widgetData) {
-			// set the persisted state of each widget.
-			if (widget.state) {
-				const persistedState: WidgetSettingsType = JSON.parse(widget.state);
-				// console.log(
-				// 	`Widget '${widget.name}' has a${compareKeys(widgetData.settings, persistedState) ? ' ' : 'n in'}valid persisted state`,
-				// 	persistedState
-				// );
 
-				// If the state is valid and the structure of the settings has not changed, the state is applied to the settings
-				if (compareKeys(widgetData.settings, persistedState)) {
-					widgetData.settings.groups = persistedState.groups;
-				}
-				// If a change in the settings structure is detected, the state is assumed to be invalid and will be ignored
-				else {
-					widget.state = undefined;
-				}
+	for (const widgetState of layout.widgets) {
+		const widgetTemplate = getWidgetByName(widgetState.name);
+
+		// Widget exists if there is a template
+		if (widgetTemplate) {
+			// set the persisted state of each widget.
+			if (widgetState.state) {
+				let persistedState: WidgetSettingsType = JSON.parse(widgetState.state);
+
+				Object.keys(widgetTemplate.settings.groups).forEach((group) => {
+					Object.keys(widgetTemplate.settings.groups[group]).forEach((field) => {
+						if (widgetTemplate.settings.groups[group][field].type === 'button') {
+							persistedState.groups[group][field].action =
+								widgetTemplate.settings.groups[group][field].action;
+						}
+					});
+				});
+
+				widgetTemplate.settings.groups = persistedState.groups;
 			}
 
 			widgets.push({
-				name: widget.name,
-				component: widgetData.component,
-				settings: widgetData.settings,
+				name: widgetState.name,
+				component: widgetTemplate.component,
+				settings: widgetTemplate.settings,
 				layoutProps: {
-					x: widget.x,
-					y: widget.y,
-					w: widget.w,
-					h: widget.h
+					x: widgetState.x,
+					y: widgetState.y,
+					w: widgetState.w,
+					h: widgetState.h
 				}
 			});
 		}
