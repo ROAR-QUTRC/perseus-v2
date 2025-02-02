@@ -55,7 +55,6 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@v29
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Update `treefmt.toml`
         if: ${{ (github.event_name != 'pull_request') &&  (needs.changes.outputs.formatter-config == 'true') }}
         id: update-config
@@ -82,7 +81,6 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@v29
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Upload docs dev shell to Cachix
         run: nix run -L .#scripts.cachix.docs-shell
     env:
@@ -98,7 +96,6 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@v29
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build docs
         run: nix build -L .#docs
       # From here, deploying to the website repo
@@ -133,7 +130,6 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@v29
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build repository
         run: nix build -L
       - name: Upload build to Cachix
