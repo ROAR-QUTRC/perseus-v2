@@ -1,16 +1,5 @@
 #include "hi_can_parameter.hpp"
 
-#define DESERIALIZE_BOILERPLATE(_type, _rawData, _serializedData) \
-    _type _rawData;                                               \
-    if ((_serializedData).size() != sizeof(_rawData))             \
-        throw std::invalid_argument("Data size does not match");  \
-    std::copy((_serializedData).begin(), (_serializedData).end(), reinterpret_cast<uint8_t*>(&(_rawData)));
-
-#define SERIALIZE_BOILERPLATE(_type, _rawData, _dataBuf) \
-    std::vector<uint8_t> _dataBuf;                       \
-    _type _rawData;                                      \
-    _dataBuf.resize(sizeof(_rawData));
-
 using namespace hi_can;
 using namespace parameters;
 using namespace addressing;
@@ -60,54 +49,51 @@ namespace hi_can::parameters::drive::vesc
 
     void status_1_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
-        DESERIALIZE_BOILERPLATE(raw_status_1_t, rawData, serializedData);
+        SimpleSerializable<raw_status_1_t> rawData(serializedData);
         rpm = ntohl(rawData.rpm);
         current = ntohs(rawData.current) / 10.0;
         dutyCycle = ntohs(rawData.dutyCycle) / 1000.0;
     }
     std::vector<uint8_t> status_1_t::serializeData()
     {
-        SERIALIZE_BOILERPLATE(raw_status_1_t, rawData, dataBuf);
+        SimpleSerializable<raw_status_1_t> rawData;
         rawData.rpm = htonl(rpm);
         rawData.current = htons(current) * 10.0;
         rawData.dutyCycle = htons(dutyCycle) * 1000.0;
-        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
-        return dataBuf;
+        return rawData.serializeData();
     }
 
     void status_2_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
-        DESERIALIZE_BOILERPLATE(raw_status_2_t, rawData, serializedData);
+        SimpleSerializable<raw_status_2_t> rawData(serializedData);
         ah = ntohl(rawData.ah) / 10000.0;
         ahCharge = ntohl(rawData.ahCharge) / 10000.0;
     }
     std::vector<uint8_t> status_2_t::serializeData()
     {
-        SERIALIZE_BOILERPLATE(raw_status_2_t, rawData, dataBuf);
+        SimpleSerializable<raw_status_2_t> rawData;
         rawData.ah = htonl(ah) * 10000.0;
         rawData.ahCharge = htonl(ahCharge) * 10000.0;
-        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
-        return dataBuf;
+        return rawData.serializeData();
     }
 
     void status_3_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
-        DESERIALIZE_BOILERPLATE(raw_status_3_t, rawData, serializedData);
+        SimpleSerializable<raw_status_3_t> rawData(serializedData);
         wh = ntohl(rawData.wh) / 10000.0;
         whCharge = ntohl(rawData.whCharge) / 10000.0;
     }
     std::vector<uint8_t> status_3_t::serializeData()
     {
-        SERIALIZE_BOILERPLATE(raw_status_3_t, rawData, dataBuf);
+        SimpleSerializable<raw_status_3_t> rawData;
         rawData.wh = htonl(wh) * 10000.0;
         rawData.whCharge = htonl(whCharge) * 10000.0;
-        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
-        return dataBuf;
+        return rawData.serializeData();
     }
 
     void status_4_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
-        DESERIALIZE_BOILERPLATE(raw_status_4_t, rawData, serializedData);
+        SimpleSerializable<raw_status_4_t> rawData(serializedData);
         tempFet = ntohs(rawData.tempFet) / 10.0;
         tempMotor = ntohs(rawData.tempMotor) / 10.0;
         currentIn = ntohs(rawData.currentIn) / 10.0;
@@ -115,33 +101,31 @@ namespace hi_can::parameters::drive::vesc
     }
     std::vector<uint8_t> status_4_t::serializeData()
     {
-        SERIALIZE_BOILERPLATE(raw_status_4_t, rawData, dataBuf);
+        SimpleSerializable<raw_status_4_t> rawData;
         rawData.tempFet = htons(tempFet) * 10.0;
         rawData.tempMotor = htons(tempMotor) * 10.0;
         rawData.currentIn = htons(currentIn) * 10.0;
         rawData.pidPos = htons(pidPos) * 50.0;
-        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
-        return dataBuf;
+        return rawData.serializeData();
     }
 
     void status_5_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
-        DESERIALIZE_BOILERPLATE(raw_status_5_t, rawData, serializedData);
+        SimpleSerializable<raw_status_5_t> rawData(serializedData);
         tachometer = ntohl(rawData.tachometer) / 6.0;
         voltsIn = ntohs(rawData.voltsIn) / 10.0;
     }
     std::vector<uint8_t> status_5_t::serializeData()
     {
-        SERIALIZE_BOILERPLATE(raw_status_5_t, rawData, dataBuf);
+        SimpleSerializable<raw_status_5_t> rawData;
         rawData.tachometer = htonl(tachometer) * 6.0;
         rawData.voltsIn = htons(voltsIn) * 10.0;
-        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
-        return dataBuf;
+        return rawData.serializeData();
     }
 
     void status_6_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
-        DESERIALIZE_BOILERPLATE(raw_status_6_t, rawData, serializedData);
+        SimpleSerializable<raw_status_6_t> rawData(serializedData);
         adc1 = ntohs(rawData.adc1) / 1000.0;
         adc2 = ntohs(rawData.adc2) / 1000.0;
         adc3 = ntohs(rawData.adc3) / 1000.0;
@@ -149,13 +133,12 @@ namespace hi_can::parameters::drive::vesc
     }
     std::vector<uint8_t> status_6_t::serializeData()
     {
-        SERIALIZE_BOILERPLATE(raw_status_6_t, rawData, dataBuf);
+        SimpleSerializable<raw_status_6_t> rawData;
         rawData.adc1 = htons(adc1) * 1000.0;
         rawData.adc2 = htons(adc2) * 1000.0;
         rawData.adc3 = htons(adc3) * 1000.0;
         rawData.ppm = htons(ppm) * 1000.0;
-        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
-        return dataBuf;
+        return rawData.serializeData();
     }
 
     VescParameterGroup::VescParameterGroup(uint8_t vescId, steady_clock::duration transmissionInterval) : _vescId(vescId)
@@ -237,73 +220,6 @@ namespace hi_can::parameters::drive::vesc
 
 namespace hi_can::parameters::legacy::drive::motors
 {
-#pragma pack(push, 1)
-    struct raw_speed_t
-    {
-        bool enabled = false;
-        motor_direction direction = motor_direction::STOP;
-        int16_t speed = 0;
-    };
-    struct raw_status_t
-    {
-        bool ready = false;
-        int16_t realSpeed = 0;
-        int16_t realCurrent = 0;
-    };
-    struct raw_limits_t
-    {
-        int16_t maxCurrent = 0;
-        int16_t rampSpeed = 0;
-    };
-#pragma pack(pop)
-
-    void speed_t::deserializeData(const std::vector<uint8_t>& serializedData)
-    {
-        DESERIALIZE_BOILERPLATE(raw_speed_t, rawData, serializedData);
-        enabled = rawData.enabled;
-        direction = rawData.direction;
-        speed = rawData.speed;
-    }
-    std::vector<uint8_t> speed_t::serializeData()
-    {
-        SERIALIZE_BOILERPLATE(raw_speed_t, rawData, dataBuf);
-        rawData.enabled = enabled;
-        rawData.direction = direction;
-        rawData.speed = speed;
-        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
-        return dataBuf;
-    }
-    void status_t::deserializeData(const std::vector<uint8_t>& serializedData)
-    {
-        DESERIALIZE_BOILERPLATE(raw_status_t, rawData, serializedData);
-        ready = rawData.ready;
-        realSpeed = rawData.realSpeed;
-        realCurrent = rawData.realCurrent;
-    }
-    std::vector<uint8_t> status_t::serializeData()
-    {
-        SERIALIZE_BOILERPLATE(raw_status_t, rawData, dataBuf);
-        rawData.ready = ready;
-        rawData.realSpeed = realSpeed;
-        rawData.realCurrent = realCurrent;
-        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
-        return dataBuf;
-    }
-    void limits_t::deserializeData(const std::vector<uint8_t>& serializedData)
-    {
-        DESERIALIZE_BOILERPLATE(raw_limits_t, rawData, serializedData);
-        maxCurrent = rawData.maxCurrent;
-        rampSpeed = rawData.rampSpeed;
-    }
-    std::vector<uint8_t> limits_t::serializeData()
-    {
-        SERIALIZE_BOILERPLATE(raw_limits_t, rawData, dataBuf);
-        rawData.maxCurrent = maxCurrent;
-        rawData.rampSpeed = rampSpeed;
-        std::copy_n(reinterpret_cast<uint8_t*>(&rawData), sizeof(rawData), dataBuf.begin());
-        return dataBuf;
-    }
-
     EscParameterGroup::EscParameterGroup(const addressing::legacy::address_t& deviceAddress)
         : _deviceAddress(deviceAddress)
     {
@@ -359,8 +275,7 @@ namespace hi_can::parameters::legacy::drive::motors
             PacketManager::callback_config_t{
                 .dataCallback = [this](const Packet& packet)
                 {
-                    DESERIALIZE_BOILERPLATE(int64_t, rawData, packet.getData());
-                    _position = rawData;
+                    _position = SimpleSerializable<wrapped_value_t<int64_t>>(packet.getData()).value;
                 },
             });
         _callbacks.emplace_back(

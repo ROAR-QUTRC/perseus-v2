@@ -62,32 +62,86 @@ namespace hi_can::parameters
     class BidirectionalSerializable : public Serializable, public Deserializable
     {
     };
+    template <double scalingFactor>
+    struct scaled_int32_t : public BidirectionalSerializable
+    {
+        double value = 0;
+
+        void deserializeData(const std::vector<uint8_t>& serializedData) override
+        {
+            int32_t rawData;
+            if (serializedData.size() != sizeof(rawData))
+                throw std::invalid_argument("Data size does not match");
+            std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(&rawData));
+            value = ntohl(rawData) / scalingFactor;
+        }
+        std::vector<uint8_t> serializeData() override
+        {
+            int32_t rawData = htonl(static_cast<int32_t>(round(value * scalingFactor)));
+            std::vector<uint8_t> dataBuf;
+            dataBuf.resize(sizeof(rawData));
+            std::copy_n(reinterpret_cast<uint8_t* const>(&rawData), sizeof(rawData), dataBuf.begin());
+            return dataBuf;
+        }
+    };
+    template <double scalingFactor>
+    struct scaled_int16_t : public BidirectionalSerializable
+    {
+        double value = 0;
+
+        void deserializeData(const std::vector<uint8_t>& serializedData) override
+        {
+            int16_t rawData;
+            if (serializedData.size() != sizeof(rawData))
+                throw std::invalid_argument("Data size does not match");
+            std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(&rawData));
+            value = ntohs(rawData) / scalingFactor;
+        }
+        std::vector<uint8_t> serializeData() override
+        {
+            int16_t rawData = htons(static_cast<int16_t>(round(value * scalingFactor)));
+            std::vector<uint8_t> dataBuf;
+            dataBuf.resize(sizeof(rawData));
+            std::copy_n(reinterpret_cast<uint8_t* const>(&rawData), sizeof(rawData), dataBuf.begin());
+            return dataBuf;
+        }
+    };
+    template <typename T>
+    struct wrapped_value_t
+    {
+        wrapped_value_t() = default;
+        wrapped_value_t(T value) : value(value) {}
+        T value{};
+    };
+    template <typename T>
+    class SimpleSerializable : public BidirectionalSerializable, public T
+    {
+    public:
+        using T::T;
+
+        SimpleSerializable(const std::vector<uint8_t>& serializedData)
+        {
+            deserializeData(serializedData);
+        }
+        void deserializeData(const std::vector<uint8_t>& serializedData) override
+        {
+            if (serializedData.size() != sizeof(T))
+                throw std::invalid_argument("Data size does not match");
+            std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(static_cast<T*>(this)));
+        }
+        std::vector<uint8_t> serializeData() override
+        {
+            std::vector<uint8_t> dataBuf;
+            dataBuf.resize(sizeof(T));
+            std::copy_n(reinterpret_cast<uint8_t* const>(static_cast<T*>(this)), sizeof(T), dataBuf.begin());
+            return dataBuf;
+        }
+    };
+
     namespace drive
     {
         namespace vesc
         {
-            template <double scalingFactor>
-            struct scaled_int32_t : public BidirectionalSerializable
-            {
-                double value = 0;
-
-                void deserializeData(const std::vector<uint8_t>& serializedData) override
-                {
-                    int32_t rawData;
-                    if (serializedData.size() != sizeof(rawData))
-                        throw std::invalid_argument("Data size does not match");
-                    std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(&rawData));
-                    value = ntohl(rawData) / scalingFactor;
-                }
-                std::vector<uint8_t> serializeData() override
-                {
-                    int32_t rawData = htonl(static_cast<int32_t>(round(value * scalingFactor)));
-                    std::vector<uint8_t> dataBuf;
-                    dataBuf.resize(sizeof(rawData));
-                    std::copy_n(reinterpret_cast<uint8_t* const>(&rawData), sizeof(rawData), dataBuf.begin());
-                    return dataBuf;
-                }
-            };
             // COMMAND STRUCTS
             struct set_duty_t : public scaled_int32_t<100000.0>
             {
@@ -238,38 +292,34 @@ namespace hi_can::parameters
         {
             namespace motors
             {
+#pragma pack(push, 1)
                 enum class motor_direction : int8_t
                 {
                     REVERSE = -1,
                     STOP = 0,
                     FORWARD = 1,
                 };
-                struct speed_t : public BidirectionalSerializable
+                struct _speed_t
                 {
                     bool enabled = false;
                     motor_direction direction = motor_direction::STOP;
                     int16_t speed = 0;
-
-                    void deserializeData(const std::vector<uint8_t>& serializedData) override;
-                    std::vector<uint8_t> serializeData() override;
                 };
-                struct status_t : public BidirectionalSerializable
+                struct _status_t
                 {
                     bool ready = false;
                     int16_t realSpeed = 0;
                     int16_t realCurrent = 0;
-
-                    void deserializeData(const std::vector<uint8_t>& serializedData) override;
-                    std::vector<uint8_t> serializeData() override;
                 };
-                struct limits_t : public BidirectionalSerializable
+                struct _limits_t
                 {
                     int16_t maxCurrent = 0;
                     int16_t rampSpeed = 0;
-
-                    void deserializeData(const std::vector<uint8_t>& serializedData) override;
-                    std::vector<uint8_t> serializeData() override;
                 };
+#pragma pack(pop)
+                typedef SimpleSerializable<_speed_t> speed_t;
+                typedef SimpleSerializable<_status_t> status_t;
+                typedef SimpleSerializable<_limits_t> limits_t;
                 class EscParameterGroup : public ParameterGroup
                 {
                 public:
@@ -304,6 +354,22 @@ namespace hi_can::parameters
                 namespace power_bus
                 {
                 }
+            }
+        }
+        namespace excavation
+        {
+            namespace bucket
+            {
+#pragma pack(push, 1)
+                struct _motor_speed_t
+                {
+                    _motor_speed_t() = default;
+                    _motor_speed_t(bool enable, int16_t speed) : enable(enable), speed(speed) {}
+                    bool enable = 0;
+                    int16_t speed = 0;
+                };
+#pragma pack(pop)
+                typedef SimpleSerializable<_motor_speed_t> motor_speed_t;
             }
         }
     }
