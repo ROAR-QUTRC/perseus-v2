@@ -123,7 +123,12 @@
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
         standardPkgs = {
-          inherit (pkgs) groot2 can-utils bashInteractive;
+          inherit (pkgs)
+            groot2
+            can-utils
+            bashInteractive
+            nixgl-script
+            ;
           inherit (pkgs.ros)
             rviz2-fixed
             rosbag2

@@ -84,8 +84,7 @@ target_link_libraries(m2m2_lidar PUBLIC simple_networking OpenSSL::Crypto)
 install(TARGETS m2m2_lidar DESTINATION lib/${PROJECT_NAME})
 
 # Versioning
-set_target_properties(m2m2_lidar PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION
-                                                                       1)
+set_target_properties(m2m2_lidar PROPERTIES VERSION ${PROJECT_VERSION})
 # ROS LIBRARY POST-INSTALL
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
