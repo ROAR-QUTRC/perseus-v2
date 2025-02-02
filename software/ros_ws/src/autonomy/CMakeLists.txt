@@ -26,6 +26,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+# COMPILER SETUP
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -38,10 +39,9 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# INCLUDE DEPENDENCIES
+# INCLUDE DEPENDENCIES public dependencies (which should propagate)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp robot_localization)
 
-# public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS)
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS ament_cmake)
 
@@ -53,7 +53,8 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-# INSTALL (ROS)
+# Install the package's resource files These directories will only be installed
+# if they exist
 install(
   DIRECTORY config launch maps rviz urdf worlds
   DESTINATION share/${PROJECT_NAME}

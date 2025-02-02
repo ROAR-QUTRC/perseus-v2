@@ -5,9 +5,9 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
+  navigation2,
   rclcpp,
-  ros2launch,
-  rviz2,
+  robot-localization,
   slam-toolbox,
   xacro,
 }:
@@ -24,9 +24,9 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
+    navigation2
     rclcpp
-    ros2launch
-    rviz2
+    robot-localization
     slam-toolbox
     xacro
   ];
