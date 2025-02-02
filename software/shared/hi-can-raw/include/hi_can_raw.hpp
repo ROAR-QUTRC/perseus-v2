@@ -9,17 +9,16 @@ namespace hi_can
     class RawCanInterface : public FilteredCanInterface
     {
     public:
+        // note: Providing a default parameter allows the move constructor to work without an explicit default constructor
         /// @brief Instantiates a new RawCanInterface
         /// @param interfaceName The interface name (can0, vcan1, etc) to use
-        RawCanInterface(const std::string& interfaceName);
+        RawCanInterface(const std::string& interfaceName = "any");
         // copy constructor
         RawCanInterface(const RawCanInterface& other);
         // move constructor
         RawCanInterface(RawCanInterface&& other) noexcept;
         // copy assignment
         RawCanInterface& operator=(RawCanInterface other);
-        // move assignment
-        RawCanInterface& operator=(RawCanInterface&& other) noexcept;
 
         friend void swap(RawCanInterface& first, RawCanInterface& second) noexcept
         {
@@ -39,9 +38,6 @@ namespace hi_can
         static int _createSocket();
         void _configureSocket(const int& socket);
         void _updateFilters();
-
-        // we only allow a default constructor for the move constructor, so make it private
-        RawCanInterface() = default;
 
         // note: NOT const to allow for copy-and-swap
         std::string _interfaceName{};

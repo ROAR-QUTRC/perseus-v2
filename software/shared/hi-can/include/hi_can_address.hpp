@@ -505,8 +505,10 @@ namespace hi_can
                     {
                         BUCKET = 0x00,
                     };
-                    namespace bucket {
-                        namespace motors {
+                    namespace bucket
+                    {
+                        namespace motors
+                        {
                             constexpr uint8_t GROUP_ID = 0x01;
                             enum class parameter
                             {
