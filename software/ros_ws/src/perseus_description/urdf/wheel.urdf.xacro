@@ -20,13 +20,35 @@
         <geometry>
           <cylinder length="0.115" radius="0.145" />
         </geometry>
-        <contact>
-          <lateral_friction value="0.8"/>
-          <rolling_friction value="0.1"/>
-          <spinning_friction value="0.1"/>
-        </contact>
       </collision>
     </link>
+    <!-- we need to use the gazebo tag to add in properties normally only found in SDF files -->
+    <gazebo reference="${prefix}${end}_${side}_wheel">
+      <!-- TODO: Fix the material tag (this isn't the proper way to do it, and spits out warnings) -->
+      <material>Gazebo/Orange</material>
+      <!-- see http://sdformat.org/spec?ver=1.12&elem=collision -->
+      <collision>
+        <surface>
+            <friction>
+                <ode>
+                    <!--
+                    In this case, the wheels need lower sideways than forwards coefficients of friction
+                    so that the rover can turn (skid steer) -->
+                    <!-- forward coefficient of friction -->
+                    <mu>1</mu>
+                    <!-- perpendicular coefficient of friction -->
+                    <mu2>0.3</mu2>
+                    <!--
+                    However, since mu/mu2 are normally relative to world coordinates,
+                    the rover would only be able to turn 90 degrees either way before they swapped, making turning impossible.
+                    To solve this, we need to specify the direction that mu/mu2 are relative to.
+                    -->
+                    <fdir1>1 0 0</fdir1>
+                </ode>
+            </friction>
+        </surface>
+      </collision>
+    </gazebo>
 
     <joint name="${prefix}${end}_${side}_wheel_joint" type="continuous">
       <xacro:if value="${side == 'left'}">

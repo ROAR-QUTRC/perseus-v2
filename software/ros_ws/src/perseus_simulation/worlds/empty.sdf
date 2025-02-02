@@ -1,0 +1,88 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+    <world name="empty">
+        <physics name="1ms" type="ignored">
+            <max_step_size>0.001</max_step_size>
+            <real_time_factor>1.0</real_time_factor>
+        </physics>
+
+        <plugin filename="libgz-sim-physics-system" name="gz::sim::systems::Physics" />
+        <plugin filename="libgz-sim-user-commands-system" name="gz::sim::systems::UserCommands" />
+        <plugin filename="libgz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster" />
+        <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+            <render_engine>ogre2</render_engine>
+        </plugin>
+        <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact" />
+        <plugin name="gz::sim::systems::Imu" filename="gz-sim-imu-system" />
+
+        <light name='sun' type='directional'>
+            <pose>0 0 10 0 0 0</pose>
+            <cast_shadows>true</cast_shadows>
+            <intensity>1</intensity>
+            <direction>-0.5 0.1 -0.9</direction>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <attenuation>
+                <range>1000</range>
+                <linear>0.01</linear>
+                <constant>0.9</constant>
+                <quadratic>0.001</quadratic>
+            </attenuation>
+            <spot>
+                <inner_angle>0</inner_angle>
+                <outer_angle>0</outer_angle>
+                <falloff>0</falloff>
+            </spot>
+        </light>
+        
+        <model name='ground_plane'>
+        <static>true</static>
+        <link name='link'>
+            <collision name='collision'>
+            <geometry>
+                <plane>
+                <normal>0 0 1</normal>
+                <size>100 100</size>
+                </plane>
+            </geometry>
+            <surface>
+                <friction>
+                <ode/>
+                </friction>
+                <bounce/>
+                <contact/>
+            </surface>
+            </collision>
+            <visual name='visual'>
+            <geometry>
+                <plane>
+                <normal>0 0 1</normal>
+                <size>100 100</size>
+                </plane>
+            </geometry>
+            <material>
+                <ambient>0.8 0.8 0.8 1</ambient>
+                <diffuse>0.8 0.8 0.8 1</diffuse>
+                <specular>0.8 0.8 0.8 1</specular>
+            </material>
+            </visual>
+            <pose>0 0 0 0 0 0</pose>
+            <inertial>
+            <pose>0 0 0 0 0 0</pose>
+            <mass>1</mass>
+            <inertia>
+                <ixx>1</ixx>
+                <ixy>0</ixy>
+                <ixz>0</ixz>
+                <iyy>1</iyy>
+                <iyz>0</iyz>
+                <izz>1</izz>
+            </inertia>
+            </inertial>
+            <enable_wind>false</enable_wind>
+        </link>
+        <pose>0 0 0 0 0 0</pose>
+        <self_collide>false</self_collide>
+        </model>
+    </world>
+</sdf>

@@ -4,7 +4,7 @@
     <!-- Import components -->
     <xacro:include filename="$(find perseus_description)/urdf/chassis.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/rocker.urdf.xacro"/>
-    <!-- <xacro:include filename="$(find perseus_description)/urdf/sensors.urdf.xacro"/> -->
+    <xacro:include filename="$(find perseus_description)/urdf/sensors.urdf.xacro"/>
 
     <link name="${prefix}base_link"/>
 
@@ -25,5 +25,7 @@
     <xacro:rocker side="right">
       <origin xyz="0.275 -0.075 0.05" rpy="0.0 0.0 ${-pi/2}"/>
     </xacro:rocker>
+    <xacro:sensors>
+    </xacro:sensors>
   </xacro:macro>
 </robot>
