@@ -22,6 +22,37 @@
         <origin xyz="0 0 0.23" rpy="0 0 0"/>
     </joint>
 
+
+    <!-- M2M2 Lidar -->
+    <link name="${prefix}m2m2_lidar_frame">
+        <inertial>
+            <mass value="0.165"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0" ixz="0" 
+                     iyy="0.0001" iyz="0" 
+                     izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.055 0.055 0.080"/>
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.055 0.055 0.080"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="${prefix}m2m2_lidar_joint" type="fixed">
+        <parent link="${prefix}base_link"/>
+        <child link="${prefix}m2m2_lidar_frame"/>
+        <origin xyz="0.2 0.4 0.35" rpy="0 0 0"/>
+    </joint>
+
     <gazebo reference="${prefix}laser_frame">
         <material>Gazebo/Black</material>
         <sensor name="laser" type="gpu_lidar">
