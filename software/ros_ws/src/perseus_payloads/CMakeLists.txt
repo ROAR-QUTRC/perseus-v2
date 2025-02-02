@@ -72,6 +72,14 @@ if(NOT hi_can_raw_FOUND)
   add_subdirectory(../../../shared/hi-can-raw hi-can-raw)
 endif()
 
+find_package(st3215_servo QUIET)
+if(NOT st3215_servo_FOUND)
+  message(STATUS "st3215-servo not found, adding subdirectory...")
+  message(STATUS "Attempting
+to add st3215-servo from: ../../../shared/st3215-servo")
+  add_subdirectory(../../../shared/st3215-servo st3215-servo)
+endif()
+
 # COMPILE (Executables)
 
 # Find all source files for the executables
@@ -94,7 +102,7 @@ ament_target_dependencies(arm_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
 ament_target_dependencies(bucket_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           ${BUCKET_DRIVER_INCLUDE_DEPENDS})
 
-# target_link_libraries(arm_driver PUBLIC st3215_lib)
+target_link_libraries(arm_driver PUBLIC st3215_servo)
 target_link_libraries(bucket_driver PUBLIC hi_can_raw)
 
 # Install ROS Executable

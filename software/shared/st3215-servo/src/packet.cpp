@@ -16,16 +16,25 @@ Packet::Packet(uint8_t id, instruction_t instruction, std::span<const uint8_t> p
                         id, BROADCAST_ID));
     }
 
-    const uint8_t length = parameters.size() + 2;  // +2 for instruction and checksum
-    if (length + 4 > MAX_PACKET_SIZE)              // +4 for header(2), id, and length
+    const size_t param_size = parameters.size();
+    // Check if param_size + 2 can safely fit in uint8_t before conversion
+    if (param_size > static_cast<size_t>(std::numeric_limits<uint8_t>::max() - 2))
+    {
+        throw std::invalid_argument("Parameters too large for packet");
+    }
+
+    const uint8_t length = static_cast<uint8_t>(param_size + 2);  // +2 for instruction and checksum
+    const size_t total_size = static_cast<size_t>(length) + 4;    // +4 for header(2), id, and length
+
+    if (total_size > static_cast<size_t>(MAX_PACKET_SIZE))
     {
         throw std::invalid_argument(
             std::format("Packet too large: {}. Maximum size is {}",
-                        length + 4, MAX_PACKET_SIZE));
+                        total_size, MAX_PACKET_SIZE));
     }
 
     // Construct packet: [0xFF, 0xFF, ID, Length, Instruction, Parameters, Checksum]
-    _data.reserve(length + 4);
+    _data.reserve(total_size);
 
     // Header
     _data.insert(_data.end(), PACKET_HEADER.begin(), PACKET_HEADER.end());
@@ -41,7 +50,6 @@ Packet::Packet(uint8_t id, instruction_t instruction, std::span<const uint8_t> p
     // Checksum
     _data.push_back(_calculateChecksum());
 }
-
 Packet Packet::createRead(uint8_t id, uint8_t address, uint8_t size)
 {
     if (size == 0 || size > memory_table::get_register_size(address))
@@ -128,12 +136,13 @@ Packet Packet::createPing(uint8_t id)
 
 Packet Packet::parse(std::span<const uint8_t> data)
 {
+    const size_t data_size = data.size();
     // Validate minimum size
-    if (data.size() < MIN_PACKET_SIZE)
+    if (data_size < static_cast<size_t>(MIN_PACKET_SIZE))
     {
         throw std::invalid_argument(
             std::format("Packet too small: {}. Minimum size is {}",
-                        data.size(), MIN_PACKET_SIZE));
+                        data_size, MIN_PACKET_SIZE));
     }
 
     // Validate header
@@ -144,16 +153,18 @@ Packet Packet::parse(std::span<const uint8_t> data)
 
     // Validate length
     const uint8_t length = data[3];
+    const size_t expected_size = static_cast<size_t>(length) + 4;  // Total size = length + header(2) + id + length
+
     if (length < 2)  // Must have at least instruction and checksum
     {
         throw std::invalid_argument(
             std::format("Invalid packet length: {}", length));
     }
-    if (data.size() != length + 4)  // Total size = length + header(2) + id + length
+    if (data_size != expected_size)
     {
         throw std::invalid_argument(
             std::format("Packet size mismatch: expected {}, got {}",
-                        length + 4, data.size()));
+                        expected_size, data_size));
     }
 
     // Create packet and validate checksum
@@ -177,13 +188,13 @@ std::span<const uint8_t> Packet::getParameters() const
     return std::span<const uint8_t>(_data.data() + 5, _data.size() - 6);  // Exclude checksum
 }
 
-error_t Packet::getError() const
+st3215::error_t Packet::getError() const
 {
     if (!isStatusPacket())
     {
         throw std::runtime_error("Not a status packet");
     }
-    return static_cast<error_t>(getParameters()[0]);
+    return static_cast<st3215::error_t>(getParameters()[0]);
 }
 
 bool Packet::isStatusPacket() const

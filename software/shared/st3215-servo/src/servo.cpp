@@ -9,6 +9,14 @@
 using namespace st3215;
 using namespace memory_table;
 
+// Maximum number of servos supported by protocol
+static constexpr uint8_t MAX_SERVOS = 253;
+
+bool Servo::_isValidId(uint8_t id)
+{
+    return id <= MAX_SERVOS || id == BROADCAST_ID;
+}
+
 Servo::Servo(uint8_t id, ServoManager& manager)
     : _id(id),
       _manager(manager),
@@ -126,9 +134,9 @@ bool Servo::ping(uint32_t timeout_ms)
     try
     {
         auto packet = Packet::createPing(_id);
-        _manager.getPort().write(packet.getData());
+        _manager.sendPacket(packet);
 
-        auto response = _manager.readPacket(timeout_ms);
+        auto response = _manager.receivePacket(timeout_ms);
         return response.has_value() && response->getId() == _id;
     }
     catch (const std::exception&)
@@ -140,7 +148,8 @@ bool Servo::ping(uint32_t timeout_ms)
 std::vector<uint8_t> Servo::read(uint8_t address, uint8_t size)
 {
     auto packet = Packet::createRead(_id, address, size);
-    auto response = _manager.sendAndReceive(packet);
+    _manager.sendPacket(packet);
+    auto response = _manager.receivePacket();
 
     if (!response)
     {
@@ -148,8 +157,11 @@ std::vector<uint8_t> Servo::read(uint8_t address, uint8_t size)
             std::format("Failed to read from servo {} at address {:#x}", _id, address));
     }
 
+    // Convert to StatusPacket to access parameter data
+    StatusPacket statusPacket = StatusPacket::parse(response->getData());
+
     // Check for servo errors
-    auto error = response->getError();
+    auto error = statusPacket.getError();
     if (error != error_t::NONE)
     {
         throw std::runtime_error(
@@ -157,8 +169,8 @@ std::vector<uint8_t> Servo::read(uint8_t address, uint8_t size)
     }
 
     return std::vector<uint8_t>(
-        response->getParameterData().begin(),
-        response->getParameterData().end());
+        statusPacket.getParameterData().begin(),
+        statusPacket.getParameterData().end());
 }
 
 void Servo::write(uint8_t address, std::span<const uint8_t> data)
@@ -168,7 +180,9 @@ void Servo::write(uint8_t address, std::span<const uint8_t> data)
     if (_id != BROADCAST_ID)
     {
         // Wait for response unless it's a broadcast
-        auto response = _manager.sendAndReceive(packet);
+        _manager.sendPacket(packet);
+        auto response = _manager.receivePacket();
+
         if (!response)
         {
             throw std::runtime_error(
@@ -186,7 +200,7 @@ void Servo::write(uint8_t address, std::span<const uint8_t> data)
     else
     {
         // For broadcast, just send the packet
-        _manager.getPort().write(packet.getData());
+        _manager.sendPacket(packet);
     }
 }
 

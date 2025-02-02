@@ -38,52 +38,43 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# INCLUDE POSSIBLY LOCAL DEPENDENCIES
-
-# check if libraries are already present (Nix build), if not, add them
-find_package(fd_wrapper QUIET)
-if(NOT fd_wrapper_FOUND)
-  message(STATUS "fd_wrapper not found, adding subdirectory...")
-  add_subdirectory(../fd-wrapper fd-wrapper)
-else()
-  message(STATUS "fd_wrapper found")
+# Let's go back to add_subdirectory but in a more controlled way
+if(NOT TARGET fd_wrapper)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../fd-wrapper fd_wrapper
+                   EXCLUDE_FROM_ALL)
 endif()
 
-find_package(ptr_wrapper QUIET)
-if(NOT ptr_wrapper_FOUND)
-  message(STATUS "ptr_wrapper not found, adding subdirectory...")
-  add_subdirectory(../ptr-wrapper ptr-wrapper)
-else()
-  message(STATUS "ptr_wrapper found")
+if(NOT TARGET ptr_wrapper)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../ptr-wrapper ptr_wrapper
+                   EXCLUDE_FROM_ALL)
 endif()
 
-find_package(hi_can QUIET)
-if(NOT hi_can_FOUND)
-  message(STATUS "hi_can not found, adding subdirectory...")
-  add_subdirectory(../hi-can hi-can)
-else()
-  message(STATUS "hi_can found")
+if(NOT TARGET hi_can)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../hi-can hi_can
+                   EXCLUDE_FROM_ALL)
 endif()
 
 # COMPILE (Libraries)
 
 # Find all source files in the src directory
 file(GLOB_RECURSE CODE_SOURCES src/*.cpp)
+
 # Add the target with those sources
 add_library(${PROJECT_NAME} SHARED ${CODE_SOURCES})
+
 # Set the include directories for the library
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                          $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 
+# Link against the targets directly
 target_link_libraries(${PROJECT_NAME} PUBLIC fd_wrapper ptr_wrapper hi_can)
 
 # INSTALL (Libraries)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-# CMake packaging - see https://blog.vito.nyc/posts/cmake-pkg/ for a good
-# explanation
+# CMake packaging
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.cmake.in
                ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake @ONLY)
 write_basic_package_version_file(
@@ -99,6 +90,7 @@ install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 # Versioning
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+
 # The main install - default locations are fine
 install(
   TARGETS ${PROJECT_NAME}

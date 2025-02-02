@@ -89,7 +89,8 @@
             "regex": "cpp",
             "source_location": "cpp",
             "ranges": "cpp",
-            "valarray": "cpp"
+            "valarray": "cpp",
+            "*.ipp": "cpp"
         },
         "C_Cpp.default.cppStandard": "c++20",
         "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",

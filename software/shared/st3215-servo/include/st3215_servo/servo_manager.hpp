@@ -11,6 +11,10 @@
 
 namespace st3215
 {
+
+    // Default timeout for servo communications (in milliseconds)
+    static constexpr uint32_t DEFAULT_TIMEOUT = 100;
+
     /**
      * @brief Manager class for controlling multiple ST3215 servos
      * @details Provides thread-safe access to multiple servos on a single serial bus
@@ -24,7 +28,7 @@ namespace st3215
          * @param baudRate Communication baud rate
          * @throws std::runtime_error if port cannot be opened
          */
-        explicit ServoManager(const std::string& port = "/dev/ttyUSB0",
+        explicit ServoManager(const std::string& port = "/dev/ttyACM0",
                               uint32_t baudRate = 1000000);
 
         // Prevent copying - we manage unique serial port resources
@@ -34,6 +38,9 @@ namespace st3215
         // Allow moving
         ServoManager(ServoManager&&) noexcept = default;
         ServoManager& operator=(ServoManager&&) noexcept = default;
+
+        void sendPacket(const Packet& packet);
+        std::optional<Packet> receivePacket(uint32_t timeout_ms = DEFAULT_TIMEOUT);
 
         /**
          * @brief Add a servo to the manager

@@ -27,6 +27,11 @@ namespace st3215
         static constexpr size_t MIN_PACKET_SIZE = 6;
 
         /**
+         * @brief Default constructor for internal use in parse()
+         */
+        Packet() = default;
+
+        /**
          * @brief Constructor for creating a new packet
          * @param id Servo ID (0-253, 254 for broadcast)
          * @param instruction Instruction type
@@ -106,10 +111,10 @@ namespace st3215
 
         /**
          * @brief Get any error code from a status packet
-         * @return error_t Error code from the packet
+         * @return st3215::error_t Error code from the packet
          * @throws std::runtime_error if this is not a status packet
          */
-        error_t getError() const;
+        st3215::error_t getError() const;
 
         /**
          * @brief Check if this is a status packet (response from servo)

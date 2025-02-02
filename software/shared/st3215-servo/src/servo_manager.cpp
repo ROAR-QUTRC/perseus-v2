@@ -56,7 +56,7 @@ std::shared_ptr<Servo> ServoManager::addServo(uint8_t id)
             std::format("Servo with ID {} already exists", id));
     }
 
-    auto servo = std::make_shared<Servo>(id, *this);
+    auto servo = Servo::create(id, *this);
 
     // Verify servo responds before adding
     if (!servo->ping())
@@ -273,7 +273,8 @@ void ServoManager::_sendPacket(const Packet& packet)
 
     try
     {
-        write(_port, buffer(packet.getData()));
+        auto data = packet.getData();
+        write(_port, buffer(data.data(), data.size()));
     }
     catch (const boost::system::system_error& e)
     {
@@ -336,7 +337,7 @@ std::optional<StatusPacket> ServoManager::_receivePacket(uint32_t timeout_ms)
             }
 
             // Check if we have a complete packet
-            if (buffer.size() >= 4 && buffer.size() >= buffer[3] + 4)
+            if (buffer.size() >= 4 && buffer.size() >= static_cast<size_t>(buffer[3]) + 4)
             {
                 try
                 {

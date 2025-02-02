@@ -84,7 +84,7 @@ namespace st3215
 
         /**
          * @brief Check if servo is moving
-         * @return bool True if servo is moving
+         * @return bool True if servo responds
          * @throws std::runtime_error if communication fails
          */
         bool isMoving();
@@ -130,12 +130,29 @@ namespace st3215
         void factoryReset(bool resetId = false);
 
     private:
-        /**
-         * @brief Constructor - only ServoManager can create Servo instances
-         * @param id Servo ID
-         * @param manager Parent ServoManager
-         */
+        // Make constructor private but accessible to EnableMakeShared and ServoManager
         Servo(uint8_t id, ServoManager& manager);
+
+        // Static helper struct for creation
+        struct EnableMakeShared;
+
+        static std::shared_ptr<Servo> create(uint8_t id, ServoManager& manager)
+        {
+            // This struct gives us access to the private constructor
+            struct EnableMakeShared : public Servo
+            {
+                EnableMakeShared(uint8_t id, ServoManager& manager)
+                    : Servo(id, manager) {}
+            };
+            return std::make_shared<EnableMakeShared>(id, manager);
+        }
+
+        /**
+         * @brief Validate a servo ID
+         * @param id ID to validate
+         * @return true if ID is valid
+         */
+        static bool _isValidId(uint8_t id);
 
         /**
          * @brief Read a 2-byte value from memory
@@ -161,7 +178,8 @@ namespace st3215
          * @param name Parameter name for error message
          * @throws std::invalid_argument if value is out of range
          */
-        static void _checkRange(auto value, auto min, auto max, const char* name)
+        template <typename T1, typename T2, typename T3>
+        static void _checkRange(T1 value, T2 min, T3 max, const char* name)
         {
             if (value < min || value > max)
             {
