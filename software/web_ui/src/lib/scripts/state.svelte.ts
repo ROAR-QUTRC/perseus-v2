@@ -37,11 +37,7 @@ export let layouts = $state<{ active: number; value: Array<Layout> }>({
 
 export let activeWidgets = $state<{ value: Array<WidgetType> }>({ value: [] });
 
-export let availableWidgets = $state<Array<WidgetType>>([
-	// { name: ExampleA.name, component: ExampleA.default, settings: ExampleA.settings },
-	// { name: ExampleB.name, component: ExampleB.default, settings: ExampleB.settings },
-	// { name: ThisIsATest.name, component: ThisIsATest.default, settings: ThisIsATest.settings }
-]);
+export let availableWidgets = $state<Array<WidgetType>>([]);
 
 export const getWidgetByName = (
 	name: string

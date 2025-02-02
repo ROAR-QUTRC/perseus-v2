@@ -2,7 +2,7 @@
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
-	export const name = 'Video - WebRTC';
+	export const name = 'Video - WebRTC - old';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
@@ -21,6 +21,7 @@
 			}
 		]
 	});
+
 	let peerId = $state<string | null>(null);
 	let remoteId = $state<string | null>(null);
 	let callSessionId: string | null = null;
