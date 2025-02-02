@@ -43,7 +43,7 @@ void Packet::setData(const std::vector<uint8_t>& data)
 
 void Packet::setAddress(const flagged_address_t& address)
 {
-    if (address > MAX_ADDRESS)
+    if (address.address > MAX_ADDRESS)
         throw std::invalid_argument("Address is invalid");
     _address = address;
 }

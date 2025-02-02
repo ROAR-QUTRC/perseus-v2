@@ -147,6 +147,7 @@
         # Packages which should be available only in the dev shell
         devShellPkgs = {
           inherit (pkgs) man-pages man-pages-posix stdmanpages;
+          inherit (pkgs.unstable) gcovr;
         };
         # Packages needed to run the simulation
         # Note: May not be needed, most needed packages should

@@ -82,11 +82,56 @@ install(
 install(EXPORT ${PROJECT_NAME}_targets
         DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
 
-# TESTING find_package(GTest REQUIRED) enable_testing()
+# TESTING SETUP (Libraries)
+if(NOT DEFINED BUILD_TESTING)
+  option(BUILD_TESTING "Build tests" ON)
+endif()
+if(NOT DEFINED TEST_COVERAGE)
+  # only enable coverage if we're building tests and it's a debug build
+  set(DEFAULT_TEST_COVERAGE OFF)
+  if(BUILD_TESTING AND CMAKE_BUILD_TYPE MATCHES "Debug")
+    set(DEFAULT_TEST_COVERAGE ON)
+  endif()
+  option(TEST_COVERAGE "Enable test coverage" ${DEFAULT_TEST_COVERAGE})
+endif()
 
-# add_executable(interface_test tests/packet_manager_test.cpp)
-# target_link_libraries(interface_test GTest::gtest_main)
-# target_include_directories(interface_test PUBLIC
-# ${CMAKE_CURRENT_SOURCE_DIR}/include)
+function(add_library_test TEST_NAME)
+  cmake_parse_arguments(PARSE_ARGV 1 ARGS "EXCLUDE_DEFAULT" ""
+                        "SOURCE_FILES;LINK_LIBRARIES;INCLUDE_DIRECTORIES")
+  set(TEST_TARGET_NAME ${TEST_NAME}_tests)
+  if(NOT ARGS_EXCLUDE_DEFAULT)
+    list(APPEND ARGS_SOURCE_FILES tests/${TEST_NAME}.cpp)
+  endif()
+  add_executable(${TEST_TARGET_NAME} ${ARGS_SOURCE_FILES}
+                                     ${ARGS_UNPARSED_ARGUMENTS})
+  target_link_libraries(${TEST_TARGET_NAME} GTest::gtest_main ${PROJECT_NAME}
+                        ${ARGS_LINK_LIBRARIES})
+  target_include_directories(${TEST_TARGET_NAME}
+                             PRIVATE ${ARGS_INCLUDE_DIRECTORIES})
+  if(TEST_COVERAGE)
+    target_compile_options(${TEST_TARGET_NAME} PRIVATE --coverage -O0 -g
+                                                       -Wno-cpp)
+    target_link_options(${TEST_TARGET_NAME} PRIVATE --coverage)
+  endif()
+  gtest_discover_tests(${TEST_TARGET_NAME}
+                       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+endfunction()
 
-# include(GoogleTest) gtest_discover_tests(interface_test)
+if(BUILD_TESTING)
+  enable_testing()
+
+  find_package(GTest REQUIRED)
+  include(GoogleTest)
+
+  if(TEST_COVERAGE)
+    target_compile_options(
+      ${PROJECT_NAME} PRIVATE --coverage -O0 -g -fkeep-inline-functions
+                              -Wno-cpp)
+    target_link_options(${PROJECT_NAME} PRIVATE --coverage)
+  endif()
+
+  add_library_test(addresses)
+  add_library_test(filter)
+  add_library_test(packet_manager)
+  add_library_test(packet)
+endif()
