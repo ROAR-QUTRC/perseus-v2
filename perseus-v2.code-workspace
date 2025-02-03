@@ -89,7 +89,9 @@
             "regex": "cpp",
             "source_location": "cpp",
             "ranges": "cpp",
-            "valarray": "cpp"
+            "valarray": "cpp",
+            "*.tcc": "cpp",
+            "coroutine": "cpp"
         },
         "C_Cpp.default.cppStandard": "c++20",
         "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
@@ -107,6 +109,10 @@
         },
         "[javascript]": {
             "editor.defaultFormatter": "ibecker.treefmt-vscode"
+        },
+        "files.exclude": {
+            "**/.direnv": true,
+            "**/ros_ws/install": true
         },
     },
     "extensions": {
