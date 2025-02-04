@@ -6,6 +6,14 @@
         {
             "name": "Light Tower Firmware",
             "path": "firmware/light-tower"
+        },
+        {
+            "name": "BMS Firmware",
+            "path": "firmware/battery-management-system"
+        },
+        {
+            "name": "example",
+            "path": "firmware/espidf-arduino-blink"
         }
     ],
     "settings": {
