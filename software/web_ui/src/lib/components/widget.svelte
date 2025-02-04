@@ -41,7 +41,6 @@
 					// if the widget name matches update its state
 					if (widget.name === widgetData.name) {
 						widget.state = JSON.stringify(widgetData.settings);
-						console.log(widget.state);
 					}
 					return widget;
 				})
@@ -52,8 +51,7 @@
 	};
 
 	const getSelectValue = (field: {
-		type: 'text' | 'number' | 'select' | 'switch' | 'button';
-		description?: string;
+		type: 'text' | 'number' | 'select' | 'switch' | 'button' | 'readonly';
 		value?: string;
 		options?: { value: string; label: string }[];
 		action?: () => string | null;
@@ -111,6 +109,7 @@
 										{#if widgetData.settings.groups[group][field].type === 'switch'}
 											<Switch
 												class="my-2"
+												disabled={widgetData.settings.groups[group][field].disabled}
 												checked={widgetData.settings.groups[group][field].value === 'true'
 													? true
 													: false}
@@ -122,6 +121,7 @@
 											<br />
 										{:else if widgetData.settings.groups[group][field].type === 'select'}
 											<Select.Root
+												disabled={widgetData.settings.groups[group][field].disabled}
 												type="single"
 												name={field}
 												bind:value={widgetData.settings.groups[group][field].value}
@@ -138,15 +138,22 @@
 										{:else if widgetData.settings.groups[group][field].type === 'button'}
 											<Button
 												variant="outline"
+												class="mb-2"
 												size="sm"
-												disabled={widgetData.settings.groups[group][field].action === undefined}
+												disabled={widgetData.settings.groups[group][field].action === undefined ||
+													widgetData.settings.groups[group][field].disabled}
 												onclick={() =>
 													handleClick(widgetData.settings.groups[group][field].action!)}
 											>
 												{changeCase.sentenceCase(field)}
 											</Button>
+										{:else if widgetData.settings.groups[group][field].type === 'readonly'}
+											<p class=" overflow-hidden truncate p-1">
+												{widgetData.settings.groups[group][field].value}
+											</p>
 										{:else}
 											<Input
+												disabled={widgetData.settings.groups[group][field].disabled}
 												class="my-2"
 												type={widgetData.settings.groups[group][field].type}
 												bind:value={widgetData.settings.groups[group][field].value}

@@ -10,6 +10,13 @@
 </script>
 
 <script lang="ts">
+	/*
+	Gstreamer command:
+	gst-launch-1.0 webrtcsink run-signalling-server=true stun-server=NULL name=ws \
+	v4l2src device=/dev/video0 ! video/x-raw, width=640, height=480 ! videoconvert ! ws. \
+	videotestsrc ! ws.
+	*/
+
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 
@@ -27,6 +34,7 @@
 	let callSessionId: string | null = null;
 
 	let remoteVideo = $state<null | HTMLVideoElement>(null);
+	let remoteVideo2 = $state<null | HTMLVideoElement>(null);
 
 	const wsSend = (data: any) => {
 		if (!ws) return;
@@ -47,8 +55,11 @@
 
 	peerConnection.ontrack = (event) => {
 		console.log('ontrack', event);
-		if (remoteVideo) {
-			remoteVideo.srcObject = event.streams[0];
+		if (remoteVideo && remoteVideo2) {
+			if (remoteVideo.srcObject) {
+				remoteVideo2.srcObject = new MediaStream([event.track]);
+				return;
+			} else remoteVideo.srcObject = new MediaStream([event.track]);
 		}
 	};
 
@@ -158,3 +169,4 @@
 
 <!-- svelte-ignore a11y_media_has_caption -->
 <video bind:this={remoteVideo} playsinline autoplay muted></video>
+<video bind:this={remoteVideo2} playsinline autoplay muted></video>

@@ -21,10 +21,11 @@ export interface WidgetSettingsType {
 		Record<
 			string,
 			{
-				type: 'text' | 'number' | 'select' | 'switch' | 'button';
+				type: 'text' | 'number' | 'select' | 'switch' | 'button' | 'readonly';
 				description?: string;
 				value?: string;
 				options?: { value: string; label: string }[]; // these are not saved as options are typically session dependent
+				disabled?: boolean;
 				action?: () => string | null;
 			}
 		>

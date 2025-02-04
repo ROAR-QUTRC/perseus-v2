@@ -2,158 +2,149 @@
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
-	export const name = 'New Widget';
+	export const name = 'Video - WebRTC';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-		groups: {}
+		groups: {
+			registerCamera: {
+				name: {
+					type: 'text',
+					description: 'Enter the name of the stream',
+					value: 'Camera 1'
+				},
+				host: {
+					type: 'text',
+					description: 'Select the ip of the host that the stream is hosted on',
+					options: [],
+					value: '10.1.1.133'
+				},
+				port: {
+					type: 'number',
+					description: 'Enter the port of the host that the stream is hosted on',
+					value: '8443'
+				},
+				StartSession: {
+					type: 'button',
+					description: 'Start a new session',
+					action: () => {
+						if (Object.keys(settings.groups).includes(settings.groups.registerCamera.name.value!)) {
+							return 'Session already exists';
+						}
+
+						settings.groups.registerCamera.cameraConfig.value += `${settings.groups.registerCamera.name.value}@${
+							settings.groups.registerCamera.host.value
+						}:${settings.groups.registerCamera.port.value},`;
+
+						return 'Created session';
+					}
+				},
+				debugMode: {
+					type: 'switch',
+					description: 'Enable debug mode',
+					value: 'false'
+				},
+				cameraConfig: {
+					// cameraname@ip:port,cameraName@ip:port
+					type: 'readonly',
+					description: 'Read only, for internal use',
+					value: ''
+				}
+			}
+		}
 	});
 </script>
 
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import { WebRtcSession } from '$lib/widgets/videoWebrtc/webrtc.svelte';
+	import VideoWrapper from '$lib/widgets/videoWebrtc/videoWrapper.svelte';
+	import panzoom from 'panzoom';
 
-	let ws: WebSocket | null = null;
-	let peerConnection: RTCPeerConnection | null = new RTCPeerConnection({
-		iceServers: [
-			{
-				urls: 'stun:stun.l.google.com:19302'
-			}
-		]
-	});
-	let peerId = $state<string | null>(null);
-	let remoteId = $state<string | null>(null);
-	let callSessionId: string | null = null;
+	// ensure settings buttons have actions
+	$effect(() => {
+		let config: string | string[] | undefined = settings.groups.registerCamera.cameraConfig.value;
+		if (config && config.length > 0) {
+			console.log('configging');
 
-	let remoteVideo = $state<null | HTMLVideoElement>(null);
+			config = settings.groups.registerCamera.cameraConfig
+				.value!.split(',')
+				.filter((session) => session !== '');
 
-	const wsSend = (data: any) => {
-		if (!ws) return;
-		console.log('Sending:', data);
-		ws.send(JSON.stringify(data));
-	};
+			config.forEach((camera) => {
+				let [name, host] = camera.split('@');
+				let [ip, port] = host.split(':');
 
-	peerConnection.onicecandidate = (event) => {
-		console.log('onicecandidate', event);
-		if (event.candidate && callSessionId !== null) {
-			wsSend({
-				type: 'peer',
-				sessionId: callSessionId,
-				ice: event.candidate.toJSON()
+				// if no action is defined, add a close session action
+				if (!settings.groups[name] || !settings.groups[name].closeSession?.action) {
+					// Create settings field
+					settings.groups[name] = {
+						closeSession: {
+							type: 'button',
+							description: 'Close the session',
+							action: () => {
+								settings.groups.registerCamera.cameraConfig.value =
+									settings.groups.registerCamera.cameraConfig.value!.replace(camera + ',', '');
+								delete settings.groups[name];
+								return 'Session closed';
+							}
+						}
+					};
+
+					// Create media source
+					const i = mediaSources.push(new WebRtcSession(name, ip, port, false));
+					mediaSources[i - 1].onNewTrack = (track, info) => {
+						console.log(tracks.length);
+						if (!tracks.find((t) => t.info.clientId === info.clientId)) {
+							tracks.push({ stream: track, info: info });
+						}
+					};
+				}
+			});
+
+			// ensure connections to each source and close connected that no longer exist
+			mediaSources.filter((source) => {
+				if (!config?.includes(`${source.name}@${source.ip}:${source.port}`)) {
+					if (source.signallingSocket) {
+						source.signallingSocket.close();
+					}
+					return false;
+				} else return true;
 			});
 		}
-	};
+	});
 
-	peerConnection.ontrack = (event) => {
-		console.log('ontrack', event);
-		if (remoteVideo) {
-			remoteVideo.srcObject = event.streams[0];
-		}
-	};
+	let mediaSources = $state<WebRtcSession[]>([]); // Connections made to devices
+	let tracks = $state<
+		{ stream: MediaStream; info: { clientId: string; producerId: string; sessionId: string } }[]
+	>([]); // Tracks from the devices
 
 	onMount(() => {
-		ws = new WebSocket('ws://10.1.1.74:8443');
-		ws.onmessage = (event) => {
-			// console.log(event);
-			const data = JSON.parse(event.data);
-			switch (data.type) {
-				case 'welcome':
-					peerId = data.peerId;
-					break;
-				case 'peerStatusChanged':
-					console.log('Client status: ', data.roles);
-					if (data.roles.includes('listener')) {
-						wsSend({
-							type: 'list'
-						});
-					}
-					if (data.roles.includes('producer')) {
-						console.log('New producer found:', data.peerId);
-						remoteId = data.peerId;
-					}
-					break;
-				case 'list':
-					if (data.producers.length > 0) {
-						console.log('Found producers:', data.producers);
-						remoteId = data.producers[0].id;
-					}
-					break;
-				case 'sessionStarted':
-					console.log('Session started:', data);
-					callSessionId = data.sessionId;
-					break;
-				case 'peer':
-					console.log('Peer message:', data);
-					if (data.sdp) {
-						peerConnection
-							.setRemoteDescription(data.sdp)
-							.then(() => {
-								return peerConnection.createAnswer();
-							})
-							.then((answer) => {
-								return peerConnection.setLocalDescription(answer);
-							})
-							.then(() => {
-								wsSend({
-									type: 'peer',
-									sessionId: data.sessionId,
-									sdp: peerConnection.localDescription!.toJSON()
-								});
-							});
-					} else if (data.ice) {
-						peerConnection.addIceCandidate(new RTCIceCandidate(data.ice));
-					} else {
-						console.log('Unknown peer message:', data);
-					}
-					break;
-
-				default:
-					console.log('unknown message', data);
-			}
-		};
-
 		return () => {
-			if (ws) ws.close();
+			mediaSources.forEach((source) => {
+				if (source.signallingSocket) {
+					source.signallingSocket.close();
+				}
+			});
 		};
 	});
 
-	const registerClient = () => {
-		wsSend({
-			type: 'setPeerStatus',
-			roles: ['listener'],
-			meta: {
-				name: 'gst-stream'
-			}
-		});
-	};
-
-	const call = () => {
-		wsSend({
-			type: 'startSession',
-			peerId: remoteId
-		});
-	};
-
-	const test = () => {
-		settings.groups = {
-			...settings.groups,
-			general: {
-				testSetting: {
-					type: 'number',
-					description: 'Test setting',
-					value: '42'
-				}
-			}
-		};
+	let instance;
+	const initPanZoom = (node: HTMLElement) => {
+		instance = panzoom(node, { maxZoom: 2, minZoom: 0.5 });
 	};
 </script>
 
-<p>Client ID: {peerId}</p>
-<p>Remote ID: {remoteId}</p>
-
-<Button onclick={registerClient}>Register</Button>
-<Button onclick={call}>Call</Button>
-<Button onclick={test}>Test</Button>
-
-<!-- svelte-ignore a11y_media_has_caption -->
-<video bind:this={remoteVideo} playsinline autoplay muted></video>
+<div class="h-full w-full">
+	<div class="flex flex-row flex-wrap bg-orange-400" use:initPanZoom>
+		{#each tracks as track, i}
+			<div class=" m-1 bg-slate-500">
+				<p>{i}</p>
+				<p>Client id: {track.info.clientId}</p>
+				<p>Producer id: {track.info.producerId}</p>
+				<p>Session id: {track.info.sessionId}</p>
+				<!-- svelte-ignore a11y_media_has_caption -->
+				<VideoWrapper media={track.stream} />
+			</div>
+		{/each}
+	</div>
+</div>
