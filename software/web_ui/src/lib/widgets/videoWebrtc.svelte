@@ -94,9 +94,9 @@
 					const i = mediaSources.push(new WebRtcSession(name, ip, port, false));
 					mediaSources[i - 1].onNewTrack = (track, info) => {
 						console.log(tracks.length);
-						if (!tracks.find((t) => t.info.clientId === info.clientId)) {
-							tracks.push({ stream: track, info: info });
-						}
+						// if (!tracks.find((t) => t.info.clientId === info.clientId)) {
+						tracks.push({ stream: track, info: info });
+						// }
 					};
 				}
 			});

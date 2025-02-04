@@ -45,6 +45,7 @@ export class WebRtcSession {
 		};
 		this.peerConnection.ontrack = (event) => {
 			this.debug('ontrack:', event);
+			console.log(event);
 			if (this.onNewTrack)
 				this.onNewTrack(new MediaStream([event.track]), {
 					clientId: this.clientId!,
