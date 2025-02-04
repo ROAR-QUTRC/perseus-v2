@@ -45,6 +45,7 @@
         # non-formattable file types
         "*.drawio"
         "*.svg"
+        "*.ttf"
         "*.png"
         "*.jpg"
         "*.jpeg"
