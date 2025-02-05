@@ -1,23 +1,34 @@
-# Autonomy & Mapping
+# Autonomy and Mapping Operations Manual
 
-## Using mapping
+## Map Generation Using SLAM
 
-This guide assumes that you have followed the guide to Perseus Teleoperation and are able to teleoperate Perseus.
+### Prerequisites
 
-This guide assumes that:
+Before proceeding with mapping operations, ensure:
 
-- Perseus is on and working
-- You have ssh'd into Perseus and are able to execute commands on Perseus
-- You have a laptop with the Perseus software stack running on the same network as Perseus.
-- only one m2m2 lidar is attached.
+1. Perseus robot system is operational
+2. SSH access to Perseus is established and functional
+3. Your development laptop:
+   - Has the Perseus software stack installed
+   - Is connected to the same network as Perseus
+4. A single M2M2 LiDAR unit is connected to Perseus
 
-To create a map whilst moving Perseus through the environment you will need to have the m2m2 lidar attached, publishing the laser scan points and launch mapping which will start the slam toolbox and open rviz2 to visualise the map.
+### M2M2 LiDAR Configuration
 
-## Determine the IP address of the m2m2 lidar
+#### IP Address Configuration
 
-With the m2m2 lidar plugged into ethernet, and provided 5V use a scan or the Unifi console to determine the IP address of the m2m2 lidar. For the purpose of this guide it is assumed that the IP address is 192.168.1.137 but use the actual address found.
+1. Connect the M2M2 LiDAR to:
+   - Ethernet port
+   - 5V power supply
+2. Determine the LiDAR's IP address using either:
+   - Network scan utility
+   - UniFi console interface
 
-## Commands to run on Perseus
+Note: This documentation uses 192.168.1.137 as an example IP address. Replace this with your actual LiDAR IP address.
+
+### Perseus System Configuration
+
+Execute the following commands on the Perseus system:
 
 ```console
 cd /perseus-v2/software/ros_ws
@@ -26,21 +37,21 @@ source install/setup.bash
 ros2 run perseus_sensors m2m2_lidar --ros-args -p sensor_ip:=192.168.1.137 -p sensor_port:=1446
 ```
 
-:::{note}
-Port 1446 is the default port that the m2m2 uses, this can be changed via the web admin functionality of the m2m2 lidar.
-:::
+Technical Note: The M2M2 LiDAR utilises port 1446 by default. This port can be reconfigured through the M2M2's web administration interface if required.
 
-You can check the m2m2 lidar is operating as expected by monitoring the terminal messages as well as viewing the available topics via:
+#### Verification
 
-```console
-ros2 topic list
-```
+Verify LiDAR operation by:
 
-Look for the scan topic.
+1. Monitoring terminal output for expected messages
+2. Confirming scan topic presence:
+   ```console
+   ros2 topic list
+   ```
 
-## Commands to run on Laptop
+### Development Laptop Configuration
 
-Run the following in a new terminal on the Laptop:
+Execute these commands in a new terminal session on your development laptop:
 
 ```console
 cd /perseus-v2/software/ros_ws
@@ -49,9 +60,13 @@ source install/setup.bash
 ros2 launch autonomy mapping_using_slam_toolbox.launch.py
 ```
 
-Amongst other things, this will launch rviz2 showing Perseus and the map being created.
+This sequence launches RViz2, providing visualisation of Perseus and the developing map.
 
-Note that the map will only update once Perseus has moved or turned sufficiently far to trigger and update. Parameters including these trigger values are found in the file `config/slam_toolbox_params.yaml`.
+### Technical Notes
+
+- Map updates occur only after Perseus has executed sufficient movement or rotation to trigger an update
+- Update trigger parameters are configurable in `config/slam_toolbox_params.yaml`
+- The system utilises ROS2's SLAM Toolbox for mapping functionality
 
 ## Mapping & Autonomous Task - Australian Rover Challenge 2025
 
