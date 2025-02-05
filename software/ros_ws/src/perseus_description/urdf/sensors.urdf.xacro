@@ -80,7 +80,8 @@
                     <max>12</max>
                 </range>
             </ray>
-            <gz_frame_id>${prefix}laser_frame</gz_frame_id>
+            <!-- <gz_frame_id>${prefix}laser_frame</gz_frame_id> -->
+            <frame>${prefix}laser_frame</frame>
         </sensor>
     </gazebo>
 

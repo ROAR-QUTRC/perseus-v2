@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 
-# from launch.actions import RegisterEventHandler
-# from launch.event_handlers import OnProcessExit
+from launch.actions import RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
@@ -61,23 +61,24 @@ def generate_launch_description():
     # to launch them in sequence
     nodes = [
         controller_manager,
-        base_controller_spawner,
-        joint_state_broadcaster_spawner,
+        # base_controller_spawner,
+        # joint_state_broadcaster_spawner,
     ]
 
     # EVENT HANDLERS
     handlers = [
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=gz_spawn_entity, # after gz spawn or after CM launch
-        #         on_exit=[joint_state_broadcaster_spawner],
-        #     )
-        # ),
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=joint_state_broadcaster_spawner,
-        #         on_exit=[base_controller_spawner],
-        #     )
-        # ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                # target_action=gz_spawn_entity,  # after gz spawn or after CM launch
+                target_action=controller_manager,  # after gz spawn or after CM launch
+                on_exit=[joint_state_broadcaster_spawner],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=joint_state_broadcaster_spawner,
+                on_exit=[base_controller_spawner],
+            )
+        ),
     ]
     return LaunchDescription(arguments + nodes + handlers)
