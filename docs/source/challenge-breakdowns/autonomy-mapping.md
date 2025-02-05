@@ -31,10 +31,8 @@ Note: This documentation uses 192.168.1.137 as an example IP address. Replace th
 Execute the following commands on the Perseus system:
 
 ```console
-cd /perseus-v2/software/ros_ws
-colcon build
-source install/setup.bash
-ros2 run perseus_sensors m2m2_lidar --ros-args -p sensor_ip:=192.168.1.137 -p sensor_port:=1446
+cd perseus-v2
+nix run .#ros2 -- run perseus_sensors m2m2_lidar --ros-args -p sensor_ip:=192.168.1.137 -p sensor_port:=1446
 ```
 
 Technical Note: The M2M2 LiDAR utilises port 1446 by default. This port can be reconfigured through the M2M2's web administration interface if required.
@@ -46,7 +44,7 @@ Verify LiDAR operation by:
 1. Monitoring terminal output for expected messages
 2. Confirming scan topic presence:
    ```console
-   ros2 topic list
+   nix run .#ros2 -- topic list
    ```
 
 ### Development Laptop Configuration
@@ -54,10 +52,8 @@ Verify LiDAR operation by:
 Execute these commands in a new terminal session on your development laptop:
 
 ```console
-cd /perseus-v2/software/ros_ws
-colcon build
-source install/setup.bash
-ros2 launch autonomy mapping_using_slam_toolbox.launch.py
+cd perseus-v2
+nix run .#ros2 -- launch autonomy mapping_using_slam_toolbox.launch.py
 ```
 
 This sequence launches RViz2, providing visualisation of Perseus and the developing map.
