@@ -61,19 +61,19 @@ def generate_launch_description():
     # to launch them in sequence
     nodes = [
         controller_manager,
+        joint_state_broadcaster_spawner,
         # base_controller_spawner,
-        # joint_state_broadcaster_spawner,
     ]
 
     # EVENT HANDLERS
     handlers = [
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                # target_action=gz_spawn_entity,  # after gz spawn or after CM launch
-                target_action=controller_manager,  # after gz spawn or after CM launch
-                on_exit=[joint_state_broadcaster_spawner],
-            )
-        ),
+        # RegisterEventHandler(
+        #     event_handler=OnProcessExit(
+        #         # target_action=gz_spawn_entity,  # after gz spawn or after CM launch
+        #         target_action=controller_manager,  # after gz spawn or after CM launch
+        #         on_exit=[joint_state_broadcaster_spawner],
+        #     )
+        # ),
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=joint_state_broadcaster_spawner,
