@@ -25,16 +25,19 @@
       <xacro:ros2_control_joint name="rear_right" id="3"/>
     </ros2_control>
 
-    <gazebo>
-      <plugin filename="libgz_ros2_control-system.so"
-        name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-        <ros>
-          <namespace>${namespace}</namespace>
-          <!-- <remapping>/diff_drive_base_controller/cmd_vel:=/cmd_vel</remapping> -->
-        </ros>
-        <parameters>$(find perseus)/config/perseus_controllers.yaml</parameters>
-        <parameters>$(find perseus_simulation)/config/ros2_control_sim.yaml</parameters>
-      </plugin>
-    </gazebo>
+    <xacro:property name="is_sim" value='${hardware_plugin == "gz_ros2_control/GazeboSimSystem"}' />
+    <xacro:if value="${is_sim}">
+      <gazebo>
+        <plugin filename="libgz_ros2_control-system.so"
+          name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+          <ros>
+            <namespace>${namespace}</namespace>
+            <!-- <remapping>/diff_drive_base_controller/cmd_vel:=/cmd_vel</remapping> -->
+          </ros>
+          <parameters>$(find perseus)/config/perseus_controllers.yaml</parameters>
+          <parameters>$(find perseus_simulation)/config/ros2_control_sim.yaml</parameters>
+        </plugin>
+      </gazebo>
+    </xacro:if>
   </xacro:macro>
 </robot>
