@@ -11,6 +11,7 @@
 #include "system_common.hpp"
 
 #define GEARBOX_RATIO 40.0
+#define ERPM_DIVISOR  7.0
 
 using namespace perseus_hardware;
 using namespace hardware_interface;
@@ -215,8 +216,8 @@ return_type VescSystemHardware::read(
     for (size_t i = 0; i < _commandSpeeds.size(); i++)
     {
         auto& paramGroup = _parameterGroups[i];
-        const auto& status = paramGroup.getStatus1();
-        const auto& motorRPM = status.rpm;
+        const auto status = paramGroup.getStatus1();
+        const auto motorRPM = status.rpm / ERPM_DIVISOR;
 
         // note (and same for write() but in reverse):
         // We need to convert from motor RPM to wheel radians per second,
@@ -230,7 +231,7 @@ return_type VescSystemHardware::read(
         _realSpeeds[i] = radiansPerSecond;
         _realCurrents[i] = status.current;
 
-        const auto& status4 = paramGroup.getStatus4();
+        const auto status4 = paramGroup.getStatus4();
         // TODO: Test to see which would be more appropriate to use
         // (probably motor temp)
         _realTemperatures[i] = std::max(status4.tempFet, status4.tempMotor);
@@ -250,7 +251,7 @@ return_type VescSystemHardware::write(
         double wheelRPM = revsPerSecond * 60.0;
         double motorRPM = wheelRPM * GEARBOX_RATIO;
 
-        motorRPM = std::clamp(motorRPM, static_cast<double>(INT32_MIN), static_cast<double>(INT32_MAX));
+        motorRPM = std::clamp(motorRPM * ERPM_DIVISOR, static_cast<double>(INT32_MIN), static_cast<double>(INT32_MAX));
         _parameterGroups[i].getSetRpm().value = static_cast<int32_t>(std::round(motorRPM));
     }
 
