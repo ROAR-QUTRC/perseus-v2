@@ -1,3 +1,23 @@
+export interface WebRtcSessionType {
+	name: string;
+	ip: string;
+	port: string;
+	signallingSocket?: WebSocket;
+	enableDebuging?: boolean;
+
+	clientId?: string | null;
+	producerId?: string | null;
+	sessionId?: string | null;
+
+	peerConnection?: RTCPeerConnection;
+	tracks: MediaStream[];
+
+	// onNewTrack: (
+	// 	track: MediaStream,
+	// 	sessionInfo: { clientId: string; producerId: string; sessionId: string }
+	// ) => void;
+}
+
 export class WebRtcSession {
 	name: string;
 	ip: string;
@@ -5,13 +25,11 @@ export class WebRtcSession {
 	signallingSocket: WebSocket;
 	enableDebuging: boolean;
 
-	clientId = $state<string | null>(null);
-	producerId = $state<string | null>(null);
+	clientId: string | null = null;
+	producerId: string | null = null;
 	sessionId: string | null = null;
 
 	peerConnection: RTCPeerConnection;
-	videoElements = $state<HTMLVideoElement[]>([]);
-	tracks = $state<MediaStream[]>([]);
 
 	onNewTrack:
 		| ((
@@ -43,9 +61,10 @@ export class WebRtcSession {
 				});
 			}
 		};
+
 		this.peerConnection.ontrack = (event) => {
 			this.debug('ontrack:', event);
-			console.log(event);
+			this.debug(this.peerConnection);
 			if (this.onNewTrack)
 				this.onNewTrack(new MediaStream([event.track]), {
 					clientId: this.clientId!,

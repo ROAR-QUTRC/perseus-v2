@@ -62,9 +62,13 @@ export const getWidgetsByLayoutId = (id: string): Array<WidgetType> => {
 			if (widgetState.state) {
 				let persistedState: WidgetSettingsType = JSON.parse(widgetState.state);
 
+				// load button actions from template
 				Object.keys(widgetTemplate.settings.groups).forEach((group) => {
 					Object.keys(widgetTemplate.settings.groups[group]).forEach((field) => {
-						if (widgetTemplate.settings.groups[group][field].type === 'button') {
+						if (
+							widgetTemplate.settings.groups[group][field].type === 'button' &&
+							persistedState.groups[group]
+						) {
 							persistedState.groups[group][field].action =
 								widgetTemplate.settings.groups[group][field].action;
 						}
