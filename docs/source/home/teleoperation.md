@@ -118,7 +118,7 @@ Note: Control messages are only sent when the terminal has focus and receives ke
 
 ```console
 cd perseus-v2/software/ros_ws
-nix run .#ros2 -- run input_devices xbox_controller --ros-args --param use_stamped_msg:=true
+nix run .#ros2 -- run input_devices xbox_controller --ros-args -p use_stamped_msg:=true -r /input_devices/cmd_vel:=/cmd_vel
 ```
 
 ### Safe Operation
