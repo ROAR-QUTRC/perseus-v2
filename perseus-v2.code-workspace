@@ -6,6 +6,10 @@
         {
             "name": "Light Tower Firmware",
             "path": "firmware/light-tower"
+        },
+        {
+            "name": "Processing Plant Firmware",
+            "path": "firmware/processing-plant"
         }
     ],
     "settings": {
