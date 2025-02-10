@@ -7,8 +7,14 @@
 		{
 			"name": "camera 1",
 			"device": "/dev/video0",
-			"maxResolution": "640x480",
-			"minResolution": "320x240"
+			"maxResolution": {
+				"width": 640,
+				"height": 480
+			},
+			"minResolution": {
+				"width": 320,
+				"height": 240
+			}
 		}
 	]
 }
