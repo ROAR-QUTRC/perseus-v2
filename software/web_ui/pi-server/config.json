@@ -1,0 +1,14 @@
+{
+	"webServer": {
+		"ip": "localhost",
+		"port": 5173
+	},
+	"cameras": [
+		{
+			"name": "camera 1",
+			"device": "/dev/video0",
+			"maxResolution": "640x480",
+			"minResolution": "320x240"
+		}
+	]
+}
