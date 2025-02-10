@@ -15,6 +15,8 @@
 	import SettingsForm from './settings-form.svelte';
 	import { repo } from 'remult';
 	import { Layout } from '../../shared/Layout';
+	import { localStore } from '$lib/scripts/localStore.svelte';
+	import { onMount } from 'svelte';
 
 	let open = $state(false);
 	let showLayoutDialog = $state<'closed' | 'manage' | 'create'>('closed');
@@ -37,6 +39,22 @@
 		});
 		showLayoutDialog = 'closed';
 	};
+
+	let activeLayoutStore = localStore('activeLayout', 0);
+
+	const changeLayout = (i: number) => {
+		activeLayoutStore.value = i;
+		layouts.active = i;
+		activeWidgets.value = getWidgetsByLayoutId(layouts.value[layouts.active].id);
+	};
+
+	onMount(() => {
+		layouts.active = activeLayoutStore.value;
+
+		return () => {
+			activeLayoutStore.value = layouts.active;
+		};
+	});
 </script>
 
 <!-- Can add categories to the layout for better organisation if needed -->
@@ -68,14 +86,7 @@
 						{#each layouts.value as layout, i}
 							<HoverCard.Root openDelay={100} closeDelay={100}>
 								<HoverCard.Trigger>
-									<Command.Item
-										onSelect={() => {
-											layouts.active = i;
-											activeWidgets.value = getWidgetsByLayoutId(layouts.value[layouts.active].id);
-										}}
-										value={layout.id}
-										class="text-sm"
-									>
+									<Command.Item onSelect={() => changeLayout(i)} value={layout.id} class="text-sm">
 										{layout.title}
 
 										{#if layouts.active === i}

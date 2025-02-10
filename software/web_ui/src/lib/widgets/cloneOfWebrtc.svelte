@@ -2,7 +2,7 @@
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
-	export const name = 'Video - WebRTC - old';
+	export const name = 'Video - WebRTC - old - clone';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
@@ -21,7 +21,13 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 
 	let ws: WebSocket | null = null;
-	let peerConnection: RTCPeerConnection | null = new RTCPeerConnection();
+	let peerConnection: RTCPeerConnection | null = new RTCPeerConnection({
+		iceServers: [
+			{
+				urls: 'stun:stun.l.google.com:19302'
+			}
+		]
+	});
 
 	let peerId = $state<string | null>(null);
 	let remoteId = $state<string | null>(null);
@@ -58,7 +64,7 @@
 	};
 
 	onMount(() => {
-		ws = new WebSocket('ws://10.1.1.133:8443');
+		ws = new WebSocket('ws://192.168.1.80:8443');
 		ws.onmessage = (event) => {
 			// console.log(event);
 			const data = JSON.parse(event.data);
