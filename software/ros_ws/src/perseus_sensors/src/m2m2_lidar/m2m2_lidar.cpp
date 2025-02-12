@@ -183,19 +183,47 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
         RCLCPP_DEBUG(this->get_logger(), "Sending initial configuration...");
         _sendCommand(_createConfigCommand(defaultConfig));
 
+        // small delay to let the m2m2 stabilize
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
         // Initialize publishers and timer
         RCLCPP_DEBUG(this->get_logger(), "Initializing publishers...");
         _initializePublishers();
 
         RCLCPP_DEBUG(this->get_logger(), "Creating timers...");
+
+        // Create the laser scan timer as before
         _readTimer = this->create_wall_timer(
             std::chrono::milliseconds(100),
             std::bind(&M2M2Lidar::_readSensorData, this));
 
-        // Imu timer initialization
+        // Create IMU timer with gradual speed-up logic
+        const auto initial_imu_period = std::chrono::milliseconds(50);  // Start at 20Hz
         _imuTimer = this->create_wall_timer(
-            std::chrono::milliseconds(10),  // 100Hz rate for IMU data
-            std::bind(&M2M2Lidar::_readImuData, this));
+            initial_imu_period,
+            [this]()
+            {
+                // Static counter persists between calls
+                static int call_count = 0;
+
+                // Call the IMU read function
+                _readImuData();
+
+                // After 10 successful calls (about 500ms), speed up to full rate
+                if (call_count++ == 10)
+                {
+                    RCLCPP_DEBUG(this->get_logger(),
+                                 "Switching IMU timer to full speed (100Hz)");
+
+                    // Cancel the current timer
+                    _imuTimer->cancel();
+
+                    // Create new timer at full speed
+                    _imuTimer = this->create_wall_timer(
+                        std::chrono::milliseconds(10),  // 100Hz
+                        std::bind(&M2M2Lidar::_readImuData, this));
+                }
+            });
 
         RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
     }
@@ -630,11 +658,18 @@ void M2M2Lidar::_readSensorData()
 
 void M2M2Lidar::_readImuData()
 {
+    static int error_count = 0;
     RCLCPP_DEBUG(this->get_logger(), "Requesting IMU data...");
 
     if (!_sendJsonRequest(IMU_COMMAND))
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to send IMU data request");
+        error_count++;
+        if (error_count > 5)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Multiple IMU request failures - may need to reconnect");
+        }
         return;
     }
 
@@ -642,8 +677,16 @@ void M2M2Lidar::_readImuData()
     if (response.empty() || !response.contains("result"))
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to receive valid IMU response");
+        error_count++;
+        if (error_count > 5)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Multiple IMU response failures - may need to reconnect");
+        }
         return;
     }
+
+    error_count = 0;
 
     // Create and populate IMU message
     auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
