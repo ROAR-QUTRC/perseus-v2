@@ -128,19 +128,22 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
         address_t{},
         handlers);
 
-    // Test connection with ping
-    if (!_sendJsonRequest("ping"))
+    // Test connection with getlaserscan
+    if (!_sendJsonRequest("getlaserscan"))
     {
-        throw std::runtime_error("Failed to send initial ping");
+        throw std::runtime_error("Failed to send initial getlaserscan command");
     }
 
-    auto pingResponse = _receiveJsonResponse();
-    if (pingResponse.empty())
+    auto testResponse = _receiveJsonResponse();
+    if (testResponse.empty() ||
+        !testResponse.contains("result") ||
+        !testResponse["result"].contains("code") ||
+        testResponse["result"]["code"] != 1)
     {
-        throw std::runtime_error("No response to initial ping");
+        throw std::runtime_error("Failed to get valid response from sensor");
     }
 
-    RCLCPP_DEBUG(this->get_logger(), "Ping successful, configuring sensor...");
+    RCLCPP_DEBUG(this->get_logger(), "Connection test successful, configuring sensor...");
 
     // Create and send initial configuration
     sensor_config_t defaultConfig{
@@ -370,7 +373,7 @@ bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::jso
 
 nlohmann::json M2M2Lidar::_receiveJsonResponse()
 {
-    assert(_client && "Network client should be initialised by constructor");
+    assert(_client && "Network client should be initialized by constructor");
 
     std::vector<uint8_t> received;
     const auto timeout = std::chrono::seconds(2);
@@ -429,14 +432,43 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
     try
     {
         auto json = nlohmann::json::parse(response_str);
-        RCLCPP_DEBUG(this->get_logger(), "Successfully parsed JSON response");
+
+        // Log the entire response at debug level
+        RCLCPP_DEBUG(this->get_logger(), "Received JSON response: %s",
+                     json.dump().substr(0, 200).c_str());
+
+        // Check response structure and code
+        if (json.contains("result"))
+        {
+            const auto& result = json["result"];
+            if (result.contains("code"))
+            {
+                int code = result["code"];
+                if (code == 0)
+                {
+                    std::string codeStr = result.value("codestr", "unknown_error");
+                    RCLCPP_WARN(this->get_logger(),
+                                "Command returned error code 0 (%s)", codeStr.c_str());
+                }
+                else if (code == 1)
+                {
+                    RCLCPP_DEBUG(this->get_logger(), "Command successful (code 1)");
+                }
+                else
+                {
+                    RCLCPP_WARN(this->get_logger(),
+                                "Unknown response code: %d", code);
+                }
+            }
+        }
+
         return json;
     }
     catch (const nlohmann::json::exception& e)
     {
         RCLCPP_ERROR(this->get_logger(),
-                     "JSON parse error: %s\nResponse preview: %s",
-                     e.what(), response_str.substr(0, 100).c_str());
+                     "JSON parse error: %s\nResponse preview: %.100s",
+                     e.what(), response_str.c_str());
         return nlohmann::json();
     }
 }
@@ -518,7 +550,8 @@ void M2M2Lidar::_readSensorData()
     auto response = _receiveJsonResponse();
     if (response.empty() ||
         response["result"].is_null() ||
-        !response["result"].contains("laser_points"))
+        !response["result"].contains("laser_points") ||
+        response["result"]["code"] != 1)  // 1 is success code
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to receive valid laser scan response");
         return;
