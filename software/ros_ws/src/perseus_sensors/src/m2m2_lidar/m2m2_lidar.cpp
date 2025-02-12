@@ -66,7 +66,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     // Set up ROS logging
     auto ret = rcutils_logging_set_logger_level(
         get_logger().get_name(),
-        RCUTILS_LOG_SEVERITY_DEBUG);
+        RCUTILS_LOG_SEVERITY_INFO);
 
     if (ret != RCUTILS_RET_OK)
     {
