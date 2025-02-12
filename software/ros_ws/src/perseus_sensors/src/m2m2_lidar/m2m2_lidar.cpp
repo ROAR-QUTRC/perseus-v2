@@ -62,10 +62,11 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     : Node("m2m2_lidar", options)
 {
     using namespace networking;
+
     // Set up ROS logging
     auto ret = rcutils_logging_set_logger_level(
         get_logger().get_name(),
-        RCUTILS_LOG_SEVERITY_INFO);
+        RCUTILS_LOG_SEVERITY_DEBUG);
 
     if (ret != RCUTILS_RET_OK)
     {
@@ -83,90 +84,126 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     this->declare_parameter("imu_rate", 100);  // Hz
 
     // Get the parameters
-    std::string sensorIp;
-    uint16_t sensorPort;
-    sensorIp = this->get_parameter("sensor_ip").as_string();
-    sensorPort = this->get_parameter("sensor_port").as_int();
+    std::string sensorIp = this->get_parameter("sensor_ip").as_string();
+    uint16_t sensorPort = this->get_parameter("sensor_port").as_int();
 
     RCLCPP_INFO(this->get_logger(),
                 "Attempting connection to sensor at %s:%d",
                 sensorIp.c_str(), sensorPort);
 
-    // Configure socket handlers
-    socket_config_handlers_t handlers{
-        .preBind = nullptr,
-        .preConnect = [this](int fd) -> bool
+    try
+    {
+        // Configure socket handlers
+        socket_config_handlers_t handlers{
+            .preBind = nullptr,
+            .preConnect = [this](int fd) -> bool
+            {
+                RCLCPP_DEBUG(this->get_logger(), "Setting up socket options...");
+
+                struct timeval timeoutValue{
+                    .tv_sec = 2,
+                    .tv_usec = 0};
+
+                if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
+                {
+                    RCLCPP_ERROR(this->get_logger(), "Failed to set receive timeout: %s", strerror(errno));
+                    return false;
+                }
+
+                if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
+                {
+                    RCLCPP_ERROR(this->get_logger(), "Failed to set send timeout: %s", strerror(errno));
+                    return false;
+                }
+
+                int keepaliveEnabled = 1;
+                if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keepaliveEnabled, sizeof(keepaliveEnabled)) < 0)
+                {
+                    RCLCPP_ERROR(this->get_logger(), "Failed to set keepalive: %s", strerror(errno));
+                    return false;
+                }
+
+                RCLCPP_DEBUG(this->get_logger(), "Socket options configured successfully");
+                return true;
+            },
+            .postConnect = nullptr};
+
+        RCLCPP_DEBUG(this->get_logger(), "Creating network client...");
+
+        // Initialize the client using emplace
+        _client.emplace(
+            address_t{
+                .hostname = sensorIp,
+                .service = std::to_string(sensorPort)},
+            socket_protocol::TCP,
+            address_t{},
+            handlers);
+
+        RCLCPP_DEBUG(this->get_logger(), "Network client created, testing connection...");
+
+        // Test connection with getlaserscan
+        if (!_sendJsonRequest("getlaserscan"))
         {
-            struct timeval timeoutValue{
-                .tv_sec = 2, .tv_usec = 0};
-            if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
-            {
-                RCLCPP_INFO(this->get_logger(), "Failed to set receive timeout: %s", strerror(errno));
-                return false;
-            }
-            if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
-            {
-                RCLCPP_INFO(this->get_logger(), "Failed to set send timeout: %s", strerror(errno));
-                return false;
-            }
-            int keepaliveEnabled = 1;
-            if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keepaliveEnabled, sizeof(keepaliveEnabled)) < 0)
-            {
-                RCLCPP_INFO(this->get_logger(), "Failed to set keepalive: %s", strerror(errno));
-                return false;
-            }
-            return true;
-        },
-        .postConnect = nullptr};
+            throw std::runtime_error("Failed to send initial getlaserscan command");
+        }
 
-    // Initialize the client using emplace
-    _client.emplace(
-        address_t{
-            .hostname = sensorIp,
-            .service = std::to_string(sensorPort)},
-        socket_protocol::TCP,
-        address_t{},
-        handlers);
+        RCLCPP_DEBUG(this->get_logger(), "Sent initial getlaserscan, waiting for response...");
 
-    // Test connection with getlaserscan
-    if (!_sendJsonRequest("getlaserscan"))
-    {
-        throw std::runtime_error("Failed to send initial getlaserscan command");
+        auto testResponse = _receiveJsonResponse();
+        if (testResponse.empty())
+        {
+            throw std::runtime_error("No response received from sensor");
+        }
+
+        if (!testResponse.contains("result"))
+        {
+            throw std::runtime_error("Invalid response format - missing 'result' field");
+        }
+
+        if (!testResponse["result"].contains("code"))
+        {
+            throw std::runtime_error("Invalid response format - missing 'code' field");
+        }
+
+        if (testResponse["result"]["code"] != 1)
+        {
+            throw std::runtime_error("Invalid response code from sensor");
+        }
+
+        RCLCPP_DEBUG(this->get_logger(), "Connection test successful, configuring sensor...");
+
+        // Create and send initial configuration
+        sensor_config_t defaultConfig{
+            .scanFrequency = 15.0,
+            .angularResolution = 0.25,
+            .minRange = 0.1,
+            .maxRange = 30.0,
+        };
+
+        RCLCPP_DEBUG(this->get_logger(), "Sending initial configuration...");
+        _sendCommand(_createConfigCommand(defaultConfig));
+
+        // Initialize publishers and timer
+        RCLCPP_DEBUG(this->get_logger(), "Initializing publishers...");
+        _initializePublishers();
+
+        RCLCPP_DEBUG(this->get_logger(), "Creating timers...");
+        _readTimer = this->create_wall_timer(
+            std::chrono::milliseconds(100),
+            std::bind(&M2M2Lidar::_readSensorData, this));
+
+        // Imu timer initialization
+        _imuTimer = this->create_wall_timer(
+            std::chrono::milliseconds(10),  // 100Hz rate for IMU data
+            std::bind(&M2M2Lidar::_readImuData, this));
+
+        RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
     }
-
-    auto testResponse = _receiveJsonResponse();
-    if (testResponse.empty() ||
-        !testResponse.contains("result") ||
-        !testResponse["result"].contains("code") ||
-        testResponse["result"]["code"] != 1)
+    catch (const std::exception& e)
     {
-        throw std::runtime_error("Failed to get valid response from sensor");
+        RCLCPP_ERROR(this->get_logger(), "Failed to initialize M2M2Lidar: %s", e.what());
+        throw;
     }
-
-    RCLCPP_DEBUG(this->get_logger(), "Connection test successful, configuring sensor...");
-
-    // Create and send initial configuration
-    sensor_config_t defaultConfig{
-        .scanFrequency = 15.0,
-        .angularResolution = 0.25,
-        .minRange = 0.1,
-        .maxRange = 30.0,
-    };
-
-    _sendCommand(_createConfigCommand(defaultConfig));
-
-    // Initialise publishers and timer
-    _initializePublishers();
-    _readTimer = this->create_wall_timer(
-        std::chrono::milliseconds(100),
-        std::bind(&M2M2Lidar::_readSensorData, this));
-
-    // Imu timer initialisation
-    _imuTimer = this->create_wall_timer(
-        std::chrono::milliseconds(10),  // 100Hz rate for IMU data
-        std::bind(&M2M2Lidar::_readImuData, this));
-
-    RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
 }
 
 void M2M2Lidar::_initializePublishers()
