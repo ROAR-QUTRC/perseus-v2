@@ -385,6 +385,10 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
         auto now = std::chrono::steady_clock::now();
         if (now - startTime > timeout)
         {
+            if (received.empty())
+            {
+                RCLCPP_ERROR(this->get_logger(), "No data received from sensor.");
+            }
             RCLCPP_ERROR(this->get_logger(), "Timeout waiting for response");
             return nlohmann::json();
         }
