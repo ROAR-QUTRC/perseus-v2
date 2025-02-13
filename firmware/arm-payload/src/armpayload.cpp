@@ -4,7 +4,7 @@ This firmware is intended to control Perseus' arm payload sub-assembly.acosh
 Primarily there is a Linear actuator that needs to be controlled to raise and lower
 the robotic arm platform.
 
-Additionally, there is a i2c controlled Ultrasonic sensor that needs to be read 
+Additionally, there is a i2c controlled Ultrasonic sensor that needs to be read
 (this is the piicodev ultrasonic sensor). This reads the position of the platform.
 
 The onboard RGB LED on pin 38 is used for status/debug.
@@ -14,7 +14,7 @@ The onboard RGB LED on pin 38 is used for status/debug.
 * add h-bridge control for linear actuator
 * add ultrasonic sensor [DONE]
 * add RFID reader
-* add CAN watchog timers
+* add CAN watchdog timers
 * add checks to see if linear actuators already at limits before moving
 * use both cores with FreeRTOS (one for CANBUS?)
 
@@ -34,20 +34,23 @@ The onboard RGB LED on pin 38 is used for status/debug.
 #define NUM_LEDS 1
 
 // PiicoDev Ultrasonic sensor constants
-#define PIICODEV_ULTRASONIC_ADDR 0x35
+#define PIICODEV_ULTRASONIC_ADDR       0x35
 #define PIICODEV_ULTRASONIC_REG_STATUS 0x08
-#define PIICODEV_ULTRASONIC_REG_RAW 0x05
+#define PIICODEV_ULTRASONIC_REG_RAW    0x05
 #define PIICODEV_ULTRASONIC_REG_PERIOD 0x06
-#define PIICODEV_ULTRASONIC_REG_LED 0x07
+#define PIICODEV_ULTRASONIC_REG_LED    0x07
 
 // Class to handle the PiicoDev Ultrasonic sensor
-class PiicoDevUltrasonic {
+class PiicoDevUltrasonic
+{
 public:
-    PiicoDevUltrasonic(TwoWire& wire = Wire, uint8_t addr = PIICODEV_ULTRASONIC_ADDR) 
-        : wire_(wire), addr_(addr) {
+    PiicoDevUltrasonic(TwoWire& wire = Wire, uint8_t addr = PIICODEV_ULTRASONIC_ADDR)
+        : wire_(wire), addr_(addr)
+    {
     }
 
-    bool begin() {
+    bool begin()
+    {
         wire_.begin();
         // Set default sample period to 20ms
         setSamplePeriod(20);
@@ -55,24 +58,28 @@ public:
     }
 
     // Returns true when a new range sample is available
-    bool newSampleAvailable() {
+    bool newSampleAvailable()
+    {
         uint8_t status = readRegister(PIICODEV_ULTRASONIC_REG_STATUS);
         return status & 0x01;
     }
 
     // Returns the pulse round-trip time in microseconds
-    uint16_t getRoundTripTime() {
+    uint16_t getRoundTripTime()
+    {
         return readRegister16(PIICODEV_ULTRASONIC_REG_RAW);
     }
 
     // Returns the measured distance in millimeters
-    float getDistanceMm() {
+    float getDistanceMm()
+    {
         const float millimeters_per_microsecond = 0.343;
         return round(getRoundTripTime() * millimeters_per_microsecond / 2);
     }
 
     // Set the sample period in milliseconds
-    void setSamplePeriod(uint16_t period_ms) {
+    void setSamplePeriod(uint16_t period_ms)
+    {
         writeRegister16(PIICODEV_ULTRASONIC_REG_PERIOD, period_ms);
     }
 
@@ -80,7 +87,8 @@ private:
     TwoWire& wire_;
     uint8_t addr_;
 
-    uint8_t readRegister(uint8_t reg) {
+    uint8_t readRegister(uint8_t reg)
+    {
         wire_.beginTransmission(addr_);
         wire_.write(reg);
         wire_.endTransmission(false);
@@ -88,7 +96,8 @@ private:
         return wire_.read();
     }
 
-    uint16_t readRegister16(uint8_t reg) {
+    uint16_t readRegister16(uint8_t reg)
+    {
         wire_.beginTransmission(addr_);
         wire_.write(reg);
         wire_.endTransmission(false);
@@ -98,7 +107,8 @@ private:
         return value;
     }
 
-    void writeRegister16(uint8_t reg, uint16_t value) {
+    void writeRegister16(uint8_t reg, uint16_t value)
+    {
         wire_.beginTransmission(addr_);
         wire_.write(reg);
         wire_.write(value >> 8);
@@ -135,11 +145,14 @@ void setup()
     Serial.println("Brightness set to 25%");
 
     // Initialize ultrasonic sensor
-    if (!ultrasonic.begin()) {
+    if (!ultrasonic.begin())
+    {
         Serial.println("Failed to initialize ultrasonic sensor!");
         leds[0] = CRGB::Red;  // Show error state
         FastLED.show();
-    } else {
+    }
+    else
+    {
         Serial.println("Ultrasonic sensor initialized");
     }
 
@@ -160,25 +173,32 @@ void loop()
 {
     static unsigned long lastPrint = 0;
     const unsigned long PRINT_INTERVAL = 1000;  // Print every second
-    
+
     // Read distance if new sample available
-    if (ultrasonic.newSampleAvailable()) {
+    if (ultrasonic.newSampleAvailable())
+    {
         float distance = ultrasonic.getDistanceMm();
-        
+
         // Print reading every PRINT_INTERVAL ms
-        if (millis() - lastPrint >= PRINT_INTERVAL) {
+        if (millis() - lastPrint >= PRINT_INTERVAL)
+        {
             Serial.print("Distance: ");
             Serial.print(distance);
             Serial.println(" mm");
             lastPrint = millis();
-            
+
             // Visual feedback - LED color based on distance
-            if (distance < 100) {
-                leds[0] = CRGB::Red;      // Too close
-            } else if (distance < 300) {
-                leds[0] = CRGB::Yellow;   // Medium range
-            } else {
-                leds[0] = CRGB::Green;    // Good distance
+            if (distance < 100)
+            {
+                leds[0] = CRGB::Red;  // Too close
+            }
+            else if (distance < 300)
+            {
+                leds[0] = CRGB::Yellow;  // Medium range
+            }
+            else
+            {
+                leds[0] = CRGB::Green;  // Good distance
             }
             FastLED.show();
         }
