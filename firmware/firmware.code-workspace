@@ -1,6 +1,10 @@
 {
     "folders": [
         {
+            "name": "Arm Payload Firmware",
+            "path": "./arm-payload"
+        },
+        {
             "name": "Light Tower Firmware",
             "path": "./light-tower"
         },
