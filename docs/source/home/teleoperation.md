@@ -95,7 +95,7 @@ The Perseus compute modules (Orin, Pi5 etc) require appropriate date/time inform
 If the Unifi UX has access to the Internet then it is possible to sync the time with
 
 ```console
-sudo chronyc makestep
+sudo chronyd -q
 ```
 
 ### Perseus Software Launch
