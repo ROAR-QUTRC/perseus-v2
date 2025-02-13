@@ -1,3 +1,31 @@
+/*
+This firmware is intended to control Perseus' arm payload sub-assembly.acosh
+
+Primarily there is a Linear actuator that needs to be controlled to raise and lower
+the robotic arm platform.
+
+Additionally, there is a i2c controlled Ultrasonic sensor that needs to be read 
+(this is the piicodev ultrasonic sensor). This reads the position of the platform.
+
+The onboard RGB LED on pin 38 is used for status/debug.
+
+//TODO
+* add CANBUS
+* add h-bridge control for linear actuator
+* add ultrasonic sensor
+* add RFID reader
+
+
+
+***Stretch goals
+* add PID for linear actuator
+* add a LED matrix for status display
+
+*/
+
+
+
+
 #include <Arduino.h>
 #include <FastLED.h>
 
@@ -25,9 +53,9 @@ void setup()
     FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS);
     Serial.println("FastLED initialized");
 
-    // Set maximum brightness for testing
-    FastLED.setBrightness(255);
-    Serial.println("Brightness set to maximum");
+    // Set 25% brightness for testing
+    FastLED.setBrightness(64);
+    Serial.println("Brightness set to 25%");
 
     // Show we're alive by setting to white briefly
     leds[0] = CRGB::White;
