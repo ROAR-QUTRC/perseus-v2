@@ -42,13 +42,14 @@
 	};
 
 	onMount(() => {
-		ws = new WebSocket('ws://10.1.1.133:8443');
+		ws = new WebSocket(`ws://${ip}:${port}`);
 		ws.onmessage = (event) => {
 			// console.log(event);
 			const data = JSON.parse(event.data);
 			switch (data.type) {
 				case 'welcome':
 					peerId = data.peerId;
+					// registerClient();
 					break;
 				case 'peerStatusChanged':
 					console.log('Client status: ', data.roles);
@@ -56,6 +57,7 @@
 						wsSend({
 							type: 'list'
 						});
+						// call();
 					}
 					if (data.roles.includes('producer')) {
 						console.log('New producer found:', data.peerId);

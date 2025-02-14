@@ -14,8 +14,9 @@ config.cameras.forEach((camera) => {
 	console.log(
 		`[${camera.name}] - Adding stream from ${camera.device} at ${camera.minResolution.width}x${camera.minResolution.height}`
 	);
+	if (camera.device === 'libcamera') gstArgs.push('libcamerasrc');
+	else gstArgs.push('v4l2src', `device=${camera.device}`);
 	gstArgs.push(
-		camera.device === 'libcamera' ? 'libcamerasrc' : `v4l2src device=${camera.device}`,
 		`!`,
 		`video/x-raw, width=${camera.minResolution.width}, height=${camera.minResolution.height}`,
 		`!`,
@@ -23,6 +24,8 @@ config.cameras.forEach((camera) => {
 		`!`,
 		`ws.`
 	);
+
+	console.log(gstArgs.join());
 });
 exec('hostname -I', (_, stdout, __) => {
 	socket.send({
