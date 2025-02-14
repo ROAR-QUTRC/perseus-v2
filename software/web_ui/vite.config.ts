@@ -3,6 +3,7 @@ import { defineConfig, type ViteDevServer } from 'vite';
 
 import { Server } from 'socket.io';
 import { resourceMonitor } from './src/server/scripts/resourceMonitorSocket';
+import { cameraSocket } from './src/server/scripts/camerasSocket';
 
 let clientCount: number = 0;
 
@@ -23,6 +24,8 @@ export const webSocketServer = {
 				clientCount--;
 				console.log(`Client disconnected. ${clientCount} clients connected`);
 			});
+
+			cameraSocket(socket, io);
 		});
 
 		resourceMonitor(io);

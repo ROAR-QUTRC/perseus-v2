@@ -1,33 +1,11 @@
-<script lang="ts" module>
-	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
-	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
-
-	export const name = 'Video - WebRTC - old - clone';
-
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-		groups: {}
-	});
-</script>
-
 <script lang="ts">
-	/*
-	Gstreamer command:
-	gst-launch-1.0 webrtcsink run-signalling-server=true stun-server=NULL name=ws \
-	v4l2src device=/dev/video0 ! video/x-raw, width=640, height=480 ! videoconvert ! ws. \
-	videotestsrc ! ws.
-	*/
+	let { ip, port, cameras }: { ip: string; port: number; cameras: object[] } = $props();
 
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 
 	let ws: WebSocket | null = null;
-	let peerConnection: RTCPeerConnection | null = new RTCPeerConnection({
-		iceServers: [
-			{
-				urls: 'stun:stun.l.google.com:19302'
-			}
-		]
-	});
+	let peerConnection: RTCPeerConnection | null = new RTCPeerConnection();
 
 	let peerId = $state<string | null>(null);
 	let remoteId = $state<string | null>(null);
@@ -64,7 +42,7 @@
 	};
 
 	onMount(() => {
-		ws = new WebSocket('ws://192.168.1.80:8443');
+		ws = new WebSocket('ws://10.1.1.133:8443');
 		ws.onmessage = (event) => {
 			// console.log(event);
 			const data = JSON.parse(event.data);
@@ -145,27 +123,15 @@
 			peerId: remoteId
 		});
 	};
-
-	const test = () => {
-		settings.groups = {
-			...settings.groups,
-			general: {
-				testSetting: {
-					type: 'number',
-					description: 'Test setting',
-					value: '42'
-				}
-			}
-		};
-	};
 </script>
+
+<p>{ip}:{port}</p>
 
 <p>Client ID: {peerId}</p>
 <p>Remote ID: {remoteId}</p>
 
 <Button onclick={registerClient}>Register</Button>
 <Button onclick={call}>Call</Button>
-<Button onclick={test}>Test</Button>
 
 <!-- svelte-ignore a11y_media_has_caption -->
 <video bind:this={remoteVideo} playsinline autoplay muted></video>
