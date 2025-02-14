@@ -21,9 +21,10 @@ config.cameras.forEach((camera) => {
 		`video/x-raw, width=${camera.minResolution.width}, height=${camera.minResolution.height}`,
 		`!`,
 		`videoconvert`,
-		`!`,
-		`ws.`
+		`!`
 	);
+	if (camera.device === 'libcamera') gstArgs.push('queue', '!');
+	gstArgs.push('ws.');
 
 	console.log(gstArgs.join());
 });
