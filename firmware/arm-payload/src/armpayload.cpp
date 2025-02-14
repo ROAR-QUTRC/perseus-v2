@@ -10,7 +10,7 @@
 
 // class PiicoDevRFID {
 // public:
-//     PiicoDevRFID(TwoWire& wire = Wire, uint8_t addr = PIICODEV_RFID_ADDR) 
+//     PiicoDevRFID(TwoWire& wire = Wire, uint8_t addr = PIICODEV_RFID_ADDR)
 //         : wire_(wire), addr_(addr) {
 //     }
 
@@ -37,7 +37,7 @@
 
 //         // Add null terminator
 //         String textWithNull = text + '\0';
-        
+
 //         // Write command
 //         wire_.beginTransmission(addr_);
 //         wire_.write(0x87);  // Write command
@@ -69,13 +69,13 @@
 
 //     Serial.println("\nPiicoDev RFID Writer");
 //     Serial.println("Initializing...");
-    
+
 //     // Start I2C
 //     Wire.begin();
 
 //     // Wait for serial monitor and init RFID
 //     delay(1000);
-    
+
 //     if (!rfid.begin()) {
 //         Serial.println("Failed to initialize RFID module!");
 //         while (1) { delay(100); }
@@ -93,12 +93,12 @@
 //     if (millis() - lastCheck >= CHECK_INTERVAL) {
 //         if (rfid.tagPresent()) {
 //             Serial.println("Tag detected! Writing text...");
-            
+
 //             if (rfid.writeText(textToWrite)) {
 //                 Serial.println("Success! Text written to tag.");
 //                 Serial.println("Text written: " + textToWrite);
 //                 Serial.println("\nYou can now remove the tag.");
-                
+
 //                 // Wait for tag removal
 //                 while (rfid.tagPresent()) {
 //                     delay(100);
@@ -118,7 +118,7 @@ This firmware is intended to control Perseus' arm payload sub-assembly.
 Primarily there is a Linear actuator that needs to be controlled to raise and lower
 the robotic arm platform.
 
-Additionally, there is a i2c controlled Ultrasonic sensor that needs to be read 
+Additionally, there is a i2c controlled Ultrasonic sensor that needs to be read
 (this is the piicodev ultrasonic sensor). This reads the position of the platform.
 
 The onboard RGB LED on pin 38 is used for status/debug.
@@ -128,7 +128,7 @@ The onboard RGB LED on pin 38 is used for status/debug.
 * add h-bridge control for linear actuator
 * add ultrasonic sensor [DONE]
 * add RFID reader [DONE]
-* add CAN watchog timers
+* add CAN watchdog timers
 * add checks to see if linear actuators already at limits before moving
 * use both cores with FreeRTOS (one for CANBUS?)
 
@@ -146,11 +146,11 @@ The onboard RGB LED on pin 38 is used for status/debug.
 #define NUM_LEDS 1
 
 // PiicoDev Ultrasonic sensor constants
-#define PIICODEV_ULTRASONIC_ADDR 0x35
+#define PIICODEV_ULTRASONIC_ADDR       0x35
 #define PIICODEV_ULTRASONIC_REG_STATUS 0x08
-#define PIICODEV_ULTRASONIC_REG_RAW 0x05
+#define PIICODEV_ULTRASONIC_REG_RAW    0x05
 #define PIICODEV_ULTRASONIC_REG_PERIOD 0x06
-#define PIICODEV_ULTRASONIC_REG_LED 0x07
+#define PIICODEV_ULTRASONIC_REG_LED    0x07
 
 // Distance thresholds for LED control (in mm)
 #define MIN_DISTANCE 50
@@ -163,34 +163,45 @@ The onboard RGB LED on pin 38 is used for status/debug.
 CRGB leds[NUM_LEDS];
 
 // Class to handle the PiicoDev Ultrasonic sensor
-class PiicoDevUltrasonic {
+class PiicoDevUltrasonic
+{
 public:
-    PiicoDevUltrasonic(TwoWire& wire = Wire, uint8_t addr = PIICODEV_ULTRASONIC_ADDR) 
-        : wire_(wire), addr_(addr) {
+    PiicoDevUltrasonic(TwoWire& wire = Wire, uint8_t addr = PIICODEV_ULTRASONIC_ADDR)
+        : wire_(wire), addr_(addr)
+    {
     }
 
-    bool begin() {
+    bool begin()
+    {
         wire_.begin();
         // Set default sample period to 20ms
         setSamplePeriod(20);
         return true;
     }
 
-    bool newSampleAvailable() {
+    // Returns true when a new range sample is available
+    bool newSampleAvailable()
+    {
         uint8_t status = readRegister(PIICODEV_ULTRASONIC_REG_STATUS);
         return status & 0x01;
     }
 
-    uint16_t getRoundTripTime() {
+    // Returns the pulse round-trip time in microseconds
+    uint16_t getRoundTripTime()
+    {
         return readRegister16(PIICODEV_ULTRASONIC_REG_RAW);
     }
 
-    float getDistanceMm() {
+    // Returns the measured distance in millimeters
+    float getDistanceMm()
+    {
         const float millimeters_per_microsecond = 0.343;
         return round(getRoundTripTime() * millimeters_per_microsecond / 2);
     }
 
-    void setSamplePeriod(uint16_t period_ms) {
+    // Set the sample period in milliseconds
+    void setSamplePeriod(uint16_t period_ms)
+    {
         writeRegister16(PIICODEV_ULTRASONIC_REG_PERIOD, period_ms);
     }
 
@@ -198,7 +209,8 @@ private:
     TwoWire& wire_;
     uint8_t addr_;
 
-    uint8_t readRegister(uint8_t reg) {
+    uint8_t readRegister(uint8_t reg)
+    {
         wire_.beginTransmission(addr_);
         wire_.write(reg);
         wire_.endTransmission(false);
@@ -206,7 +218,8 @@ private:
         return wire_.read();
     }
 
-    uint16_t readRegister16(uint8_t reg) {
+    uint16_t readRegister16(uint8_t reg)
+    {
         wire_.beginTransmission(addr_);
         wire_.write(reg);
         wire_.endTransmission(false);
@@ -216,7 +229,8 @@ private:
         return value;
     }
 
-    void writeRegister16(uint8_t reg, uint16_t value) {
+    void writeRegister16(uint8_t reg, uint16_t value)
+    {
         wire_.beginTransmission(addr_);
         wire_.write(reg);
         wire_.write(value >> 8);
@@ -226,16 +240,19 @@ private:
 };
 
 // Class to handle the PiicoDev RFID reader
-class PiicoDevRFID {
+class PiicoDevRFID
+{
 public:
-    PiicoDevRFID(TwoWire& wire = Wire, uint8_t addr = PIICODEV_RFID_ADDR) 
-        : wire_(wire), addr_(addr) {
+    PiicoDevRFID(TwoWire& wire = Wire, uint8_t addr = PIICODEV_RFID_ADDR)
+        : wire_(wire), addr_(addr)
+    {
     }
 
-    bool begin() {
+    bool begin()
+    {
         wire_.begin();
         delay(50);
-        
+
         // Following Python reference implementation initialization
         writeRegister(0x2A, 0x80);  // _REG_T_MODE
         writeRegister(0x2B, 0xA9);  // _REG_T_PRESCALER
@@ -245,53 +262,63 @@ public:
         writeRegister(0x11, 0x3D);  // _REG_MODE
         writeRegister(0x03, 0x80);  // _REG_DIV_I_EN
         writeRegister(0x02, 0x20);  // _REG_COM_I_EN
-        
+
         // Turn antenna on
         uint8_t value = readRegister(0x14);  // _REG_TX_CONTROL
-        if (~(value & 0x03)) {
+        if (~(value & 0x03))
+        {
             writeRegister(0x14, value | 0x83);
         }
-        
+
         return true;
     }
 
-    bool tagPresent() {
+    bool tagPresent()
+    {
         // Reset the registers before checking
         writeRegister(0x01, 0x00);  // _CMD_IDLE
         writeRegister(0x05, 0x00);  // _REG_FIFO_LEVEL
-        
+
         // Send REQA command
         writeRegister(0x0D, 0x07);  // _REG_BIT_FRAMING, 7 bits
-        
+
         uint8_t cmd[] = {0x26};  // REQA command
         writeData(cmd, 1);
-        
+
         writeRegister(0x0A, 0x80);  // Clear FIFO buffer
         writeRegister(0x01, 0x0C);  // _CMD_TRANSCEIVE
-        
+
         delay(1);  // Wait for response
-        
-        uint8_t status = readRegister(0x06);  // Read error register
+
+        uint8_t status = readRegister(0x06);    // Read error register
         uint8_t irqFlags = readRegister(0x04);  // Read interrupt flags
-        
-        Serial.print("RFID Status: 0x"); Serial.println(status, HEX);
-        Serial.print("IRQ Flags: 0x"); Serial.println(irqFlags, HEX);
-        
+
+        Serial.print("RFID Status: 0x");
+        Serial.println(status, HEX);
+        Serial.print("IRQ Flags: 0x");
+        Serial.println(irqFlags, HEX);
+
         return (status == 0) && (irqFlags & 0x01);
     }
 
-    String readText() {
+    String readText()
+    {
         String text = "";
-        if (!tagPresent()) {
+        if (!tagPresent())
+        {
             return text;
         }
 
         // Read from NTAG memory starting at page 4
-        for (uint8_t page = 4; page < 40; page += 4) {
+        for (uint8_t page = 4; page < 40; page += 4)
+        {
             uint8_t buffer[16];
-            if (readDataPage(page, buffer)) {
-                for (int i = 0; i < 16; i++) {
-                    if (buffer[i] == 0) return text;  // Found null terminator
+            if (readDataPage(page, buffer))
+            {
+                for (int i = 0; i < 16; i++)
+                {
+                    if (buffer[i] == 0)
+                        return text;  // Found null terminator
                     text += (char)buffer[i];
                 }
             }
@@ -304,54 +331,64 @@ private:
     TwoWire& wire_;
     uint8_t addr_;
 
-    void writeRegister(uint8_t reg, uint8_t value) {
+    void writeRegister(uint8_t reg, uint8_t value)
+    {
         wire_.beginTransmission(addr_);
         wire_.write(reg);
         wire_.write(value);
-        if (wire_.endTransmission() != 0) {
+        if (wire_.endTransmission() != 0)
+        {
             Serial.print("Error writing register 0x");
             Serial.println(reg, HEX);
         }
     }
 
-    uint8_t readRegister(uint8_t reg) {
+    uint8_t readRegister(uint8_t reg)
+    {
         wire_.beginTransmission(addr_);
         wire_.write(reg);
-        if (wire_.endTransmission(false) != 0) {
+        if (wire_.endTransmission(false) != 0)
+        {
             Serial.print("Error reading register 0x");
             Serial.println(reg, HEX);
             return 0;
         }
-        
-        if (wire_.requestFrom(addr_, (uint8_t)1) != 1) {
+
+        if (wire_.requestFrom(addr_, (uint8_t)1) != 1)
+        {
             Serial.println("Error requesting data");
             return 0;
         }
-        
+
         return wire_.read();
     }
-    
-    void writeData(uint8_t* data, uint8_t length) {
+
+    void writeData(uint8_t* data, uint8_t length)
+    {
         wire_.beginTransmission(addr_);
         wire_.write(0x09);  // FIFO data register
-        for (uint8_t i = 0; i < length; i++) {
+        for (uint8_t i = 0; i < length; i++)
+        {
             wire_.write(data[i]);
         }
         wire_.endTransmission();
     }
-    
-    bool readDataPage(uint8_t page, uint8_t* buffer) {
+
+    bool readDataPage(uint8_t page, uint8_t* buffer)
+    {
         uint8_t cmd[] = {0x30, page};  // READ command
         writeData(cmd, 2);
-        
+
         // Request 16 bytes (one page)
         wire_.requestFrom(addr_, (uint8_t)16);
-        if (wire_.available() != 16) {
+        if (wire_.available() != 16)
+        {
             Serial.println("Error reading page data");
             return false;
         }
-        
-        for (int i = 0; i < 16; i++) {
+
+        for (int i = 0; i < 16; i++)
+        {
             buffer[i] = wire_.read();
         }
         return true;
@@ -362,7 +399,8 @@ private:
 PiicoDevUltrasonic ultrasonic;
 PiicoDevRFID rfid;
 
-void setup() {
+void setup()
+{
     // Initialize LED pin as output first
     pinMode(LED_PIN, OUTPUT);
 
@@ -383,20 +421,26 @@ void setup() {
     Serial.println("Brightness set to 100%");
 
     // Initialize ultrasonic sensor
-    if (!ultrasonic.begin()) {
+    if (!ultrasonic.begin())
+    {
         Serial.println("Failed to initialize ultrasonic sensor!");
         leds[0] = CRGB::Red;  // Show error state
         FastLED.show();
-    } else {
+    }
+    else
+    {
         Serial.println("Ultrasonic sensor initialized");
     }
 
     // Initialize RFID reader
-    if (!rfid.begin()) {
+    if (!rfid.begin())
+    {
         Serial.println("Failed to initialize RFID reader!");
         leds[0] = CRGB::Red;  // Show error state
         FastLED.show();
-    } else {
+    }
+    else
+    {
         Serial.println("RFID reader initialized");
     }
 
@@ -410,37 +454,41 @@ void setup() {
     Serial.println("Setup complete - entering main loop");
 }
 
-void loop() {
+void loop()
+{
     static unsigned long lastPrint = 0;
     static unsigned long lastRFIDCheck = 0;
     static unsigned long lastHeartbeat = 0;
-    const unsigned long PRINT_INTERVAL = 100;      // Print every 100ms
-    const unsigned long RFID_CHECK_INTERVAL = 500; // Check RFID every 500ms
-    const unsigned long HEARTBEAT_INTERVAL = 2000; // Heartbeat every 2 seconds
-    
+    const unsigned long PRINT_INTERVAL = 100;       // Print every 100ms
+    const unsigned long RFID_CHECK_INTERVAL = 500;  // Check RFID every 500ms
+    const unsigned long HEARTBEAT_INTERVAL = 2000;  // Heartbeat every 2 seconds
+
     // Heartbeat to confirm loop is running
-    if (millis() - lastHeartbeat >= HEARTBEAT_INTERVAL) {
+    if (millis() - lastHeartbeat >= HEARTBEAT_INTERVAL)
+    {
         Serial.println("\nHeartbeat - system running");
         lastHeartbeat = millis();
     }
 
     // Read distance if new sample available
-    if (ultrasonic.newSampleAvailable()) {
+    if (ultrasonic.newSampleAvailable())
+    {
         float distance = ultrasonic.getDistanceMm();
-        
+
         // Print reading every PRINT_INTERVAL ms
-        if (millis() - lastPrint >= PRINT_INTERVAL) {
+        if (millis() - lastPrint >= PRINT_INTERVAL)
+        {
             Serial.print("Distance: ");
             Serial.print(distance);
             Serial.println(" mm");
             lastPrint = millis();
-            
+
             // Constrain distance to our range
             float constrainedDistance = constrain(distance, MIN_DISTANCE, MAX_DISTANCE);
-            
+
             // Map distance to LED brightness (inverted - closer = brighter)
             uint8_t brightness = map(constrainedDistance, MIN_DISTANCE, MAX_DISTANCE, 255, 0);
-            
+
             // Set pure red color with mapped brightness
             leds[0] = CRGB(brightness, 0, 0);
             FastLED.show();
@@ -448,15 +496,20 @@ void loop() {
     }
 
     // Check for RFID tags
-    if (millis() - lastRFIDCheck >= RFID_CHECK_INTERVAL) {
+    if (millis() - lastRFIDCheck >= RFID_CHECK_INTERVAL)
+    {
         Serial.println("Checking for RFID tag...");
-        if (rfid.tagPresent()) {
+        if (rfid.tagPresent())
+        {
             Serial.println("Tag detected!");
             String text = rfid.readText();
-            if (text.length() > 0) {
+            if (text.length() > 0)
+            {
                 Serial.print("Message read: ");
                 Serial.println(text);
-            } else {
+            }
+            else
+            {
                 Serial.println("No text found on tag");
             }
             // Flash LED white to indicate tag read
@@ -467,5 +520,5 @@ void loop() {
         lastRFIDCheck = millis();
     }
 
-    delay(10); // Short delay to prevent overwhelming I2C bus
+    delay(10);  // Short delay to prevent overwhelming I2C bus
 }
