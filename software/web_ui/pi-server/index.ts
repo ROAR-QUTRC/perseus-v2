@@ -15,8 +15,7 @@ config.cameras.forEach((camera) => {
 		`[${camera.name}] - Adding stream from ${camera.device} at ${camera.minResolution.width}x${camera.minResolution.height}`
 	);
 	gstArgs.push(
-		`v4l2src`,
-		`device=${camera.device}`,
+		camera.device === 'libcamera' ? 'libcamerasrc' : `v4l2src device=${camera.device}`,
 		`!`,
 		`video/x-raw, width=${camera.minResolution.width}, height=${camera.minResolution.height}`,
 		`!`,
