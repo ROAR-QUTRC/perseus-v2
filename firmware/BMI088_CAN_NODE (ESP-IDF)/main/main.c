@@ -14,18 +14,18 @@
 #include "bmi088_mm.h"
 
 // Define SPI pins
-#define PIN_NUM_MISO 19
-#define PIN_NUM_MOSI 23
-#define PIN_NUM_CLK  18
-#define PIN_NUM_CS_ACCEL   5
-#define PIN_NUM_CS_GYRO    4
+#define PIN_NUM_MISO 3
+#define PIN_NUM_MOSI 4
+#define PIN_NUM_CLK  2
+#define PIN_NUM_CS_ACCEL   1
+#define PIN_NUM_CS_GYRO    5
 
 // Add after existing includes
 #include "esp_log.h"
 
 // Add after existing defines
 #define TAG "BMI088"
-#define SENSOR_READ_DELAY_MS 100
+#define SENSOR_READ_DELAY_MS 2
 
 // Global device structure
 struct bmi08_dev bmi08dev;
@@ -140,7 +140,7 @@ esp_err_t init_spi(void) {
     };
 
     spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = 1000000,  // 1 MHz
+        .clock_speed_hz = 10000000,  // 10 MHz
         .mode = 0,                  // SPI mode 0
         .spics_io_num = -1,        // CS pin handled manually
         .queue_size = 7,
