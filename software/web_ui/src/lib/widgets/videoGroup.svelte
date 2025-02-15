@@ -16,13 +16,22 @@
 
 	let socket: Socket = io();
 
-	let devices = $state<{ ip: string; port: number; cameras: object[] }[]>([]);
+	let devices = $state<{ ip: string; port: number; groupName: string; cameras: object[] }[]>([]);
+
+	$inspect(devices);
 
 	socket.on('camera-event', (event) => {
 		switch (event.action) {
 			case 'init':
+				console.log(event.data);
 				// TODO: check if device already has ip
-				devices.push({ ip: event.data.location.ip, port: 8443, cameras: event.data.cameras });
+				if (devices.find((device) => device.ip === event.data.ip) === undefined)
+					devices.push({
+						ip: event.data.ip,
+						port: 8443,
+						groupName: event.data.groupName,
+						cameras: event.data.cameras
+					});
 				break;
 			case 'get-streams':
 				break;
@@ -38,5 +47,10 @@
 </script>
 
 {#each devices as device}
-	<WebrtcClient ip={device.ip} port={device.port} cameras={device.cameras} />
+	<WebrtcClient
+		ip={device.ip}
+		port={device.port}
+		groupName={device.groupName}
+		cameras={device.cameras}
+	/>
 {/each}

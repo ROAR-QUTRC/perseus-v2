@@ -1,8 +1,13 @@
 <script lang="ts">
-	let { ip, port, cameras }: { ip: string; port: number; cameras: object[] } = $props();
+	let {
+		ip,
+		port,
+		groupName,
+		cameras
+	}: { ip: string; port: number; groupName: string; cameras: any[] } = $props();
 
 	import { onMount } from 'svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import VideoWrapper from './videoWrapper.svelte';
 
 	let ws: WebSocket | null = null;
 	let peerConnection: RTCPeerConnection | null = new RTCPeerConnection();
@@ -11,12 +16,10 @@
 	let remoteId = $state<string | null>(null);
 	let callSessionId: string | null = null;
 
-	let remoteVideo = $state<null | HTMLVideoElement>(null);
-	let remoteVideo2 = $state<null | HTMLVideoElement>(null);
+	let tracks = $state<MediaStream[]>([]);
 
 	const wsSend = (data: any) => {
 		if (!ws) return;
-		console.log('Sending:', data);
 		ws.send(JSON.stringify(data));
 	};
 
@@ -33,49 +36,40 @@
 
 	peerConnection.ontrack = (event) => {
 		console.log('ontrack', event);
-		if (remoteVideo && remoteVideo2) {
-			if (remoteVideo.srcObject) {
-				remoteVideo2.srcObject = new MediaStream([event.track]);
-				return;
-			} else remoteVideo.srcObject = new MediaStream([event.track]);
-		}
+		tracks.push(new MediaStream([event.track]));
 	};
 
 	onMount(() => {
 		ws = new WebSocket(`ws://${ip}:${port}`);
+		ws.onerror = (event) => {
+			console.log('[WS Error] -', event);
+		};
 		ws.onmessage = (event) => {
 			// console.log(event);
 			const data = JSON.parse(event.data);
 			switch (data.type) {
 				case 'welcome':
 					peerId = data.peerId;
-					// registerClient();
 					break;
 				case 'peerStatusChanged':
-					console.log('Client status: ', data.roles);
 					if (data.roles.includes('listener')) {
 						wsSend({
 							type: 'list'
 						});
-						// call();
 					}
 					if (data.roles.includes('producer')) {
-						console.log('New producer found:', data.peerId);
 						remoteId = data.peerId;
 					}
 					break;
 				case 'list':
 					if (data.producers.length > 0) {
-						console.log('Found producers:', data.producers);
 						remoteId = data.producers[0].id;
 					}
 					break;
 				case 'sessionStarted':
-					console.log('Session started:', data);
 					callSessionId = data.sessionId;
 					break;
 				case 'peer':
-					console.log('Peer message:', data);
 					if (data.sdp) {
 						peerConnection
 							.setRemoteDescription(data.sdp)
@@ -109,32 +103,41 @@
 		};
 	});
 
-	const registerClient = () => {
-		wsSend({
-			type: 'setPeerStatus',
-			roles: ['listener'],
-			meta: {
-				name: 'gst-stream'
-			}
-		});
-	};
+	$effect(() => {
+		if (peerId) {
+			wsSend({
+				type: 'setPeerStatus',
+				roles: ['listener'],
+				meta: {
+					name: 'gst-stream'
+				}
+			});
+		}
+	});
 
-	const call = () => {
-		wsSend({
-			type: 'startSession',
-			peerId: remoteId
-		});
-	};
+	$effect(() => {
+		if (remoteId) {
+			wsSend({
+				type: 'startSession',
+				peerId: remoteId
+			});
+		}
+	});
 </script>
 
-<p>{ip}:{port}</p>
-
+<!-- FOR DEBUGGING -->
+<!-- <p>{ip}:{port}</p>
 <p>Client ID: {peerId}</p>
-<p>Remote ID: {remoteId}</p>
+<p>Remote ID: {remoteId}</p> -->
+<strong class="ml-2">{groupName}</strong>
 
-<Button onclick={registerClient}>Register</Button>
-<Button onclick={call}>Call</Button>
-
-<!-- svelte-ignore a11y_media_has_caption -->
-<video bind:this={remoteVideo} playsinline autoplay muted></video>
-<video bind:this={remoteVideo2} playsinline autoplay muted></video>
+<div class="m-1 flex w-fit flex-row flex-wrap overflow-hidden rounded-[4px]">
+	{#each tracks as track, i}
+		<div class="relative">
+			<VideoWrapper media={track} />
+			<p class="absolute bottom-1 left-1 rounded-[4px] bg-card bg-opacity-60 px-2 py-1">
+				{cameras[i].name}
+			</p>
+		</div>
+	{/each}
+</div>

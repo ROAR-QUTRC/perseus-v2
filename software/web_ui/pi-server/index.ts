@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import config from './config.json';
 import { exec, spawn } from 'child_process';
+import { group } from 'console';
 
 const socket: Socket = io(`http://${config.webServer.ip}:${config.webServer.port}`, {
 	reconnection: true,
@@ -15,6 +16,7 @@ config.cameras.forEach((camera) => {
 		`[${camera.name}] - Adding stream from ${camera.device} at ${camera.minResolution.width}x${camera.minResolution.height}`
 	);
 	if (camera.device === 'libcamera') gstArgs.push('libcamerasrc');
+	else if (camera.device === 'test') gstArgs.push('videotestsrc');
 	else gstArgs.push('v4l2src', `device=${camera.device}`);
 	gstArgs.push(
 		`!`,
@@ -25,15 +27,14 @@ config.cameras.forEach((camera) => {
 	);
 	if (camera.device === 'libcamera') gstArgs.push('queue', '!');
 	gstArgs.push('ws.');
-
-	console.log(gstArgs.join());
 });
 exec('hostname -I', (_, stdout, __) => {
 	socket.send({
 		type: 'camera',
 		action: 'init',
-		data: { location: { ip: stdout.split(' ')[0] }, cameras: config.cameras }
+		data: { ip: stdout.split(' ')[0], groupName: config.groupName, cameras: config.cameras }
 	});
+	console.log('sended data');
 });
 console.log('---- Set up complete ----');
 
@@ -58,7 +59,7 @@ socket.on('camera-event', (event) => {
 				socket.send({
 					type: 'camera',
 					action: 'init',
-					data: { location: { ip: stdout.split(' ')[0] }, cameras: config.cameras }
+					data: { ip: stdout.split(' ')[0], groupName: config.groupName, cameras: config.cameras }
 				});
 			});
 			break;
