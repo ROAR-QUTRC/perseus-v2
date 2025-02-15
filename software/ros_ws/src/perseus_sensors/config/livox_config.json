@@ -1,0 +1,46 @@
+{
+  "lidar_summary_info": {
+    "lidar_type": 8 // Protocol type index for the LiDAR - do not change this value
+  },
+  "MID360": {
+    // Configuration block specific to MID360 LiDAR
+    "lidar_net_info": {
+      // Network ports used by the LiDAR - do not change these default ports
+      "cmd_data_port": 56100, // Port for sending commands to LiDAR
+      "push_msg_port": 56200, // Port for status messages from LiDAR
+      "point_data_port": 56300, // Port for receiving point cloud data
+      "imu_data_port": 56400, // Port for receiving IMU data
+      "log_data_port": 56500 // Port for logging information
+    },
+    "host_net_info": {
+      // Network configuration for the host computer
+      "cmd_data_ip": "192.168.1.5", // Host IP for sending commands
+      "cmd_data_port": 56101, // Local port for commands
+      "push_msg_ip": "192.168.1.5", // Host IP for receiving status messages
+      "push_msg_port": 56201, // Local port for status messages
+      "point_data_ip": "192.168.1.5", // Host IP for receiving point cloud data
+      "point_data_port": 56301, // Local port for point cloud data
+      "imu_data_ip": "192.168.1.5", // Host IP for receiving IMU data
+      "imu_data_port": 56401, // Local port for IMU data
+      "log_data_ip": "", // Host IP for logs (empty = disabled)
+      "log_data_port": 56501 // Local port for logs
+    }
+  },
+  "lidar_configs": [
+    // Array of LiDAR devices to configure
+    {
+      "ip": "192.168.1.100", // IP address of the LiDAR unit
+      "pcl_data_type": 1, // Point cloud data format: 1=32-bit Cartesian, 2=16-bit Cartesian, 3=Spherical
+      "pattern_mode": 0, // Scan pattern: 0=non-repeating, 1=repeating, 2=repeating (low rate)
+      "extrinsic_parameter": {
+        // Physical mounting position of the LiDAR
+        "roll": 0.0, // Rotation around X axis in degrees
+        "pitch": 0.0, // Rotation around Y axis in degrees
+        "yaw": 0.0, // Rotation around Z axis in degrees
+        "x": 0, // Translation along X axis in millimeters
+        "y": 0, // Translation along Y axis in millimeters
+        "z": 0 // Translation along Z axis in millimeters
+      }
+    }
+  ]
+}
