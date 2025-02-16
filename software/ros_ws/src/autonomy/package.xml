@@ -4,14 +4,18 @@
   <name>autonomy</name>
   <version>0.0.1</version>
   <description>ROAR Autonomy software control stack</description>
-  <maintainer email="dingo.australia@gmail.com">Nigel</maintainer>
+  <maintainer email="1388693+DingoOz@users.noreply.github.com">Nigel H-S</maintainer>
+  
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
   <depend>slam_toolbox</depend>
-  <depend>nav2_bringup</depend>
+  <depend>navigation2</depend>
+  <depend>xacro</depend>
+  <depend>robot_localization</depend>
+  
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

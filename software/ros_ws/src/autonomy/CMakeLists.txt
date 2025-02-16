@@ -1,5 +1,10 @@
-cmake_minimum_required(VERSION 3.8)
-project(autonomy)
+# PROJECT SETUP
+cmake_minimum_required(VERSION 3.23)
+
+project(
+  autonomy
+  VERSION 0.0.1
+  LANGUAGES CXX)
 
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
 set(default_build_type "Debug")
@@ -14,8 +19,14 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
                                                "MinSizeRel" "RelWithDebInfo")
 endif()
+# we always want debug info for stack tracing, so switch to RelWithDebInfo from
+# Release
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+# COMPILER SETUP
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -24,17 +35,30 @@ if(CMAKE_BUILD_TYPE MATCHES "Rel.*")
   add_compile_options(-Werror)
 endif()
 
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(slam_toolbox REQUIRED)
-find_package(nav2_bringup REQUIRED)
+# Set the C++ standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  set(ament_cmake_copyright_FOUND TRUE)
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
+# INCLUDE DEPENDENCIES public dependencies (which should propagate)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp robot_localization)
 
+# packages which must be present but aren't linked against
+set(THIS_PACKAGE_BUILD_DEPENDS ament_cmake)
+
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+# Install the package's resource files These directories will only be installed
+# if they exist
+install(
+  DIRECTORY config launch maps rviz urdf worlds
+  DESTINATION share/${PROJECT_NAME}
+  OPTIONAL)
+
+# ROS FINALISATION
 ament_package()

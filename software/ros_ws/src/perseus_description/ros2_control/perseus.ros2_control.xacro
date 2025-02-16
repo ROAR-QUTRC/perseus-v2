@@ -1,17 +1,12 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="perseus_ros2_control" params="name prefix can_bus hardware_plugin">
-    <xacro:property name="is_mock" value="${hardware_plugin == 'mock_components/GenericSystem'}"/>
+  <xacro:macro name="perseus_ros2_control" params="namespace:='' name prefix can_bus:='can0' hardware_plugin">
     <ros2_control name="${name}" type="system">
       <hardware>
         <plugin>${hardware_plugin}</plugin>
-        <xacro:unless value="${is_mock}">
-          <param name="can_bus">${can_bus}</param>
-        </xacro:unless>
-        <xacro:if value="${is_mock}">
-          <!-- Enable velocity -> position integration over time -->
-          <param name="calculate_dynamics">true</param>
-        </xacro:if>
+        <param name="can_bus">${can_bus}</param>
+        <!-- Enable velocity -> position integration over time for mock hardware -->
+        <param name="calculate_dynamics">true</param>
       </hardware>
 
       <xacro:macro name="ros2_control_joint" params="name id">
@@ -29,5 +24,20 @@
       <xacro:ros2_control_joint name="rear_left" id="2"/>
       <xacro:ros2_control_joint name="rear_right" id="3"/>
     </ros2_control>
+
+    <xacro:property name="is_sim" value='${hardware_plugin == "gz_ros2_control/GazeboSimSystem"}' />
+    <xacro:if value="${is_sim}">
+      <gazebo>
+        <plugin filename="libgz_ros2_control-system.so"
+          name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+          <ros>
+            <namespace>${namespace}</namespace>
+            <!-- <remapping>/diff_drive_base_controller/cmd_vel:=/cmd_vel</remapping> -->
+          </ros>
+          <parameters>$(find perseus)/config/perseus_controllers.yaml</parameters>
+          <parameters>$(find perseus_simulation)/config/ros2_control_sim.yaml</parameters>
+        </plugin>
+      </gazebo>
+    </xacro:if>
   </xacro:macro>
 </robot>

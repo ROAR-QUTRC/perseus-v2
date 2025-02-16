@@ -5,9 +5,11 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
-  nav2-bringup,
+  navigation2,
   rclcpp,
+  robot-localization,
   slam-toolbox,
+  xacro,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-autonomy";
@@ -22,9 +24,11 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
-    nav2-bringup
+    navigation2
     rclcpp
+    robot-localization
     slam-toolbox
+    xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
 

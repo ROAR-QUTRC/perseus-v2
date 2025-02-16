@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+  <xacro:macro name="sensors" params="prefix:=^">
+    <link name="${prefix}laser_frame">
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.06" length="0.06"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.06" length="0.06"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="${prefix}laser_joint" type="fixed">
+        <parent link="${prefix}chassis"/>
+        <child link="${prefix}laser_frame"/>
+        <origin xyz="0 0 0.23" rpy="0 0 0"/>
+    </joint>
+
+
+    <!-- M2M2 Lidar -->
+    <link name="${prefix}m2m2_lidar_frame">
+        <inertial>
+            <mass value="0.165"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0" ixz="0" 
+                     iyy="0.0001" iyz="0" 
+                     izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.055 0.055 0.080"/>
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.055 0.055 0.080"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="${prefix}m2m2_lidar_joint" type="fixed">
+        <parent link="${prefix}base_link"/>
+        <child link="${prefix}m2m2_lidar_frame"/>
+        <origin xyz="0.2 0.4 0.35" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="${prefix}laser_frame">
+        <material>Gazebo/Black</material>
+        <sensor name="laser" type="gpu_lidar">
+            <pose>0 0 0 0 0 0</pose>
+            <visualize>true</visualize>
+            <update_rate>10</update_rate>
+            <topic>scan</topic>
+            <ray>
+                <scan>
+                    <horizontal>
+                        <samples>360</samples>
+                        <min_angle>-3.14</min_angle>
+                        <max_angle>3.14</max_angle>
+                    </horizontal>
+                    <!-- vertical scan probably requires some kind of pointcloud, laserscan message doesn't show in rviz -->
+                    <!-- <vertical>
+                        <samples>10</samples>
+                        <resolution>1</resolution>
+                        <min_angle>0</min_angle>
+                        <max_angle>1.03</max_angle> 
+                    </vertical> -->
+                </scan>
+                <range>
+                    <min>0.3</min>
+                    <max>12</max>
+                </range>
+            </ray>
+            <!-- <gz_frame_id>${prefix}laser_frame</gz_frame_id> -->
+            <frame>${prefix}laser_frame</frame>
+        </sensor>
+    </gazebo>
+
+    <gazebo reference="${prefix}chassis">
+        <material>Gazebo/Grey</material>
+        <sensor name="imu_sensor" type="imu">
+            <always_on>1</always_on>
+            <update_rate>10</update_rate>
+            <visualize>true</visualize>
+            <topic>imu</topic>
+        </sensor>
+    </gazebo>
+  </xacro:macro>
+</robot>

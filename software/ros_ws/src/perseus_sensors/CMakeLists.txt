@@ -53,23 +53,38 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+find_package(simple_networking QUIET)
+if(NOT simple_networking_FOUND)
+  message(STATUS "simple_networking not found, adding subdirectory...")
+  message(
+    STATUS
+      "Attempting to add simple_networking from: ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared/simple-networking"
+  )
+  add_subdirectory(../../../shared/simple-networking simple-networking)
+endif()
+
 # COMPILE (Executables)
 
 # Find all source files in the src directory
 file(GLOB_RECURSE M2M2_LIDAR_CODE_SOURCES src/m2m2_lidar/*.cpp)
 # Add the target with those sources
+
+# Add exec target
 add_executable(m2m2_lidar ${M2M2_LIDAR_CODE_SOURCES})
-# Set the include directories
-target_include_directories(
-  m2m2_lidar
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/m2m2_lidar>)
 
+# Add include dirs for exec
+target_include_directories(m2m2_lidar
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Add dependencies for the executable
 ament_target_dependencies(m2m2_lidar PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(m2m2_lidar PUBLIC simple_networking OpenSSL::Crypto)
 
-target_link_libraries(m2m2_lidar PRIVATE OpenSSL::Crypto)
-
-# INSTALL (ROS Executables)
+# Install ROS Executable
 install(TARGETS m2m2_lidar DESTINATION lib/${PROJECT_NAME})
+
+# ROS LIBRARY POST-INSTALL
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # ROS FINALISATION
 ament_package()

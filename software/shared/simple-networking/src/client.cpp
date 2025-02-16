@@ -128,9 +128,7 @@ int Client::_createBoundSocket(struct addrinfo*& currentAddr, struct addrinfo* c
 int Client::_createSocket(const socket_config_handlers_t& configHandlers)
 {
     // perform address resolution
-    struct addrinfo hints
-    {
-    };
+    struct addrinfo hints{};
     std::fill_n(reinterpret_cast<uint8_t*>(&hints), sizeof(hints), 0);
     hints.ai_family = AF_UNSPEC;  // don't care whether it's IPv4 or IPv6
     hints.ai_socktype = (_protocol == socket_protocol::TCP) ? SOCK_STREAM : SOCK_DGRAM;

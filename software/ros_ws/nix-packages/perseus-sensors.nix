@@ -8,6 +8,7 @@
   openssl,
   rclcpp,
   sensor-msgs,
+  simple-networking,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-sensors";
@@ -23,6 +24,7 @@ buildRosPackage rec {
     openssl
     rclcpp
     sensor-msgs
+    simple-networking
   ];
   nativeBuildInputs = [ ament-cmake ];
 

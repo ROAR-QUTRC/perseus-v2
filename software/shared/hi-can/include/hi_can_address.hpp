@@ -495,6 +495,40 @@ namespace hi_can
                     }
                 }
             }
+            namespace excavation
+            {
+                constexpr uint8_t SYSTEM_ID = 0x03;
+                namespace bucket
+                {
+                    constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                    enum class device
+                    {
+                        BUCKET = 0x00,
+                    };
+                    namespace bucket
+                    {
+                        namespace motors
+                        {
+                            constexpr uint8_t GROUP_ID = 0x01;
+                            enum class parameter
+                            {
+                                LIFT_SPEED = 0x00,
+                                TILT_SPEED = 0x01,
+                                JAWS_SPEED = 0x02,
+                            };
+                        }
+                        namespace manipulation
+                        {
+                            constexpr uint8_t GROUP_ID = 0x02;
+                            enum class parameter
+                            {
+                                SPIN_SPEED = 0x00,
+                                ELECTROMAGNET = 0x01,
+                            };
+                        }
+                    }
+                }
+            }
         }
         // PARAMETER GROUPS
         namespace status

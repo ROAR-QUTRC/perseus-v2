@@ -37,7 +37,7 @@ in
 {
   rosPackages = prev.rosPackages // {
     # we need to use overrideScope and an overlay to apply the changes
-    # so that they propagate properly (eg most of nav2 is dependent on nav-2d-utils)
+    # so that they propagate properly
     ${rosDistro} = prev.rosPackages.${rosDistro}.overrideScope rosOverlay;
   };
 }
