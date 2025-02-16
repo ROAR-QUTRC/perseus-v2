@@ -1,12 +1,13 @@
 #pragma once
 
+#include <fcntl.h>
+#include <termios.h>
+
 #include <boost/asio.hpp>
+#include <chrono>
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <cstdint>
-#include <termios.h>
-#include <fcntl.h>
-#include <chrono>
 
 class ST3215ServoReader
 {
@@ -16,7 +17,7 @@ public:
      * @param port Serial port path (e.g., "/dev/ttyACM0")
      * @param baud_rate Baud rate for serial communication
      */
-    ST3215ServoReader(const std::string &port, unsigned int baud_rate);
+    ST3215ServoReader(const std::string& port, unsigned int baud_rate);
 
     /**
      * @brief Destructor ensures serial port is properly closed
@@ -39,7 +40,7 @@ public:
      */
     void writePosition(uint8_t servo_id, uint16_t position);
 
-/**
+    /**
      * @brief Writes to a control register of the servo
      * @param servo_id ID of the servo to write to
      * @param address Register address
@@ -56,7 +57,7 @@ private:
      * @param data Data bytes to write
      * @return Vector containing the complete command packet
      */
-    std::vector<uint8_t> _createWriteCommand(uint8_t id, uint8_t address, const std::vector<uint8_t> &data);
+    std::vector<uint8_t> _createWriteCommand(uint8_t id, uint8_t address, const std::vector<uint8_t>& data);
 
     /**
      * @brief Performs a single attempt to read the position
@@ -65,7 +66,7 @@ private:
      * @return Current position value (0-4095)
      * @throws std::runtime_error if communication fails
      */
-    uint16_t _readPositionOnce(uint8_t servo_id, const std::chrono::milliseconds &timeout);
+    uint16_t _readPositionOnce(uint8_t servo_id, const std::chrono::milliseconds& timeout);
 
     /**
      * @brief Creates a read command packet according to ST3215 protocol

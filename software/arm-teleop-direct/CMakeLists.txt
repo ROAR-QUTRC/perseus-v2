@@ -14,15 +14,8 @@ find_package(yaml-cpp REQUIRED)
 include_directories(${PROJECT_SOURCE_DIR}/include ${CURSES_INCLUDE_DIR})
 
 # Add executable
-add_executable(${PROJECT_NAME} 
-    main.cpp
-    src/perseus-arm-teleop.cpp
-)
+add_executable(${PROJECT_NAME} main.cpp src/perseus-arm-teleop.cpp)
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    Boost::system
-    ${CURSES_LIBRARIES}
-    yaml-cpp
-    pthread
-)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system ${CURSES_LIBRARIES}
+                                              yaml-cpp pthread)

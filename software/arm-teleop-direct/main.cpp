@@ -1,24 +1,25 @@
-#include "perseus-arm-teleop.hpp"
-#include <iostream>
-#include <thread>
-#include <filesystem>
-#include <vector>
-#include <algorithm>
 #include <ncurses.h>
-#include <csignal>
-#include <atomic>
 #include <yaml-cpp/yaml.h>
+
+#include <algorithm>
+#include <atomic>
 #include <chrono>
-#include <iomanip>
-#include <sstream>
+#include <csignal>
+#include <filesystem>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <thread>
+#include <vector>
+
+#include "perseus-arm-teleop.hpp"
 
 const int16_t SERVO_REFRESH_DELAY_MS = 25;
 // Global variables for cleanup
-static ST3215ServoReader *reader1_ptr = nullptr;
-static ST3215ServoReader *reader2_ptr = nullptr;
-static WINDOW *ncurses_win = nullptr;
-
+static ST3215ServoReader* reader1_ptr = nullptr;
+static ST3215ServoReader* reader2_ptr = nullptr;
+static WINDOW* ncurses_win = nullptr;
 
 static std::atomic<bool> running(true);
 
@@ -28,7 +29,7 @@ std::vector<std::string> findSerialPorts()
     std::vector<std::string> ports;
     const std::filesystem::path dev_path("/dev");
 
-    for (const auto &entry : std::filesystem::directory_iterator(dev_path))
+    for (const auto& entry : std::filesystem::directory_iterator(dev_path))
     {
         std::string filename = entry.path().filename().string();
         if (filename.find("ttyUSB") != std::string::npos ||
@@ -43,7 +44,7 @@ std::vector<std::string> findSerialPorts()
 }
 
 // Let user select ports for both arms
-std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::string> &ports)
+std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::string>& ports)
 {
     if (ports.empty())
     {
@@ -76,7 +77,7 @@ std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::str
 
         if (selection1 == 0)
         {
-            return selectSerialPorts(findSerialPorts()); // Rescan and restart
+            return selectSerialPorts(findSerialPorts());  // Rescan and restart
         }
 
         if (selection1 > 0 && selection1 <= ports.size())
@@ -105,7 +106,7 @@ std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::str
 
         if (selection2 == 0)
         {
-            return selectSerialPorts(findSerialPorts()); // Rescan and restart
+            return selectSerialPorts(findSerialPorts());  // Rescan and restart
         }
 
         if (selection2 > 0 && selection2 <= ports.size() && selection2 != selection1)
@@ -133,7 +134,7 @@ std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::str
 }
 
 // Create a colored progress bar string
-void displayProgressBar(WINDOW *ncurses_win, int y, int x, uint16_t current, uint16_t min, uint16_t max)
+void displayProgressBar(WINDOW* ncurses_win, int y, int x, uint16_t current, uint16_t min, uint16_t max)
 {
     // Clamp values to 0-4095
     current = std::min(current, static_cast<uint16_t>(4095));
@@ -158,13 +159,13 @@ void displayProgressBar(WINDOW *ncurses_win, int y, int x, uint16_t current, uin
         {
             if (i == minPos)
             {
-                wattron(ncurses_win, COLOR_PAIR(1)); // Blue for min
+                wattron(ncurses_win, COLOR_PAIR(1));  // Blue for min
                 waddch(ncurses_win, '#');
                 wattroff(ncurses_win, COLOR_PAIR(1));
             }
             else if (i == maxPos)
             {
-                wattron(ncurses_win, COLOR_PAIR(2)); // Green for max
+                wattron(ncurses_win, COLOR_PAIR(2));  // Green for max
                 waddch(ncurses_win, '#');
                 wattroff(ncurses_win, COLOR_PAIR(2));
             }
@@ -172,13 +173,13 @@ void displayProgressBar(WINDOW *ncurses_win, int y, int x, uint16_t current, uin
             {
                 if (i < minPos)
                 {
-                    wattron(ncurses_win, COLOR_PAIR(3) | A_DIM); // Dimmed white for positions before min
+                    wattron(ncurses_win, COLOR_PAIR(3) | A_DIM);  // Dimmed white for positions before min
                     waddch(ncurses_win, '#');
                     wattroff(ncurses_win, COLOR_PAIR(3) | A_DIM);
                 }
                 else
                 {
-                    wattron(ncurses_win, COLOR_PAIR(3)); // Bright white for current valid position
+                    wattron(ncurses_win, COLOR_PAIR(3));  // Bright white for current valid position
                     waddch(ncurses_win, '#');
                     wattroff(ncurses_win, COLOR_PAIR(3));
                 }
@@ -213,7 +214,7 @@ struct ServoData
     uint16_t min = 4095;
     uint16_t max = 0;
     std::string error;
-    bool mirroring = false; // Whether this servo is mirroring arm 1
+    bool mirroring = false;  // Whether this servo is mirroring arm 1
 };
 
 // Scale a position value from one range to another
@@ -235,9 +236,9 @@ std::string getWorkingDirectory()
 
 // Display servo values in ncurses window for both arms
 // Display servo values in ncurses window for both arms
-void displayServoValues(WINDOW *win,
-                        const std::vector<ServoData> &arm1_data,
-                        const std::vector<ServoData> &arm2_data)
+void displayServoValues(WINDOW* win,
+                        const std::vector<ServoData>& arm1_data,
+                        const std::vector<ServoData>& arm2_data)
 {
     werase(ncurses_win);
 
@@ -254,7 +255,7 @@ void displayServoValues(WINDOW *win,
     for (size_t i = 0; i < 6; ++i)
     {
         int row = i + 5;
-        const auto &servo = arm1_data[i];
+        const auto& servo = arm1_data[i];
 
         if (servo.error.empty())
         {
@@ -280,14 +281,14 @@ void displayServoValues(WINDOW *win,
     for (size_t i = 0; i < 6; ++i)
     {
         int row = i + 13;
-        const auto &servo = arm2_data[i];
+        const auto& servo = arm2_data[i];
 
         if (servo.error.empty())
         {
             // If mirroring is active, highlight the entire row
             if (servo.mirroring && has_colors())
             {
-                wattron(ncurses_win, COLOR_PAIR(4) | A_BOLD); // New color pair for mirroring
+                wattron(ncurses_win, COLOR_PAIR(4) | A_BOLD);  // New color pair for mirroring
             }
 
             mvwprintw(ncurses_win, row, 2, "%-8d %8u  %8u  %8u  ",
@@ -331,10 +332,10 @@ void displayServoValues(WINDOW *win,
     wrefresh(ncurses_win);
 }
 
-void exportCalibrationData(const std::vector<ServoData> &arm1_data,
-                           const std::vector<ServoData> &arm2_data,
-                           const std::string &port1,
-                           const std::string &port2)
+void exportCalibrationData(const std::vector<ServoData>& arm1_data,
+                           const std::vector<ServoData>& arm2_data,
+                           const std::string& port1,
+                           const std::string& port2)
 {
     YAML::Node config;
 
@@ -385,34 +386,46 @@ void exportCalibrationData(const std::vector<ServoData> &arm1_data,
 void disableTorqueAndCleanup()
 {
     // First disable ncurses if it's active
-    if (ncurses_win != nullptr) {
+    if (ncurses_win != nullptr)
+    {
         mvwprintw(ncurses_win, 27, 0, "Disabling servo torque...");
         wrefresh(ncurses_win);
     }
 
     // Disable torque for all servos on both arms
-    if (reader1_ptr != nullptr) {
-        for (uint8_t i = 1; i <= 6; ++i) {
-            try {
+    if (reader1_ptr != nullptr)
+    {
+        for (uint8_t i = 1; i <= 6; ++i)
+        {
+            try
+            {
                 reader1_ptr->writeControlRegister(i, 0x28, 0);  // 0x28 is torque enable register
-            } catch (...) {
+            }
+            catch (...)
+            {
                 // Ignore errors during shutdown
             }
         }
     }
 
-    if (reader2_ptr != nullptr) {
-        for (uint8_t i = 1; i <= 6; ++i) {
-            try {
+    if (reader2_ptr != nullptr)
+    {
+        for (uint8_t i = 1; i <= 6; ++i)
+        {
+            try
+            {
                 reader2_ptr->writeControlRegister(i, 0x28, 0);  // 0x28 is torque enable register
-            } catch (...) {
+            }
+            catch (...)
+            {
                 // Ignore errors during shutdown
             }
         }
     }
 
     // Clean up ncurses
-    if (ncurses_win != nullptr) {
+    if (ncurses_win != nullptr)
+    {
         endwin();
         ncurses_win = nullptr;
     }
@@ -424,9 +437,8 @@ void signalHandler(int signum)
     disableTorqueAndCleanup();
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-
     std::vector<ServoData> arm1_data(6);
     std::vector<ServoData> arm2_data(6);
     try
@@ -465,10 +477,10 @@ int main(int argc, char *argv[])
         if (has_colors())
         {
             start_color();
-            init_pair(1, COLOR_BLUE, COLOR_BLACK);   // For min value
-            init_pair(2, COLOR_GREEN, COLOR_BLACK);  // For max value
-            init_pair(3, COLOR_WHITE, COLOR_BLACK);  // For current value
-            init_pair(4, COLOR_YELLOW, COLOR_BLACK); // For mirrored servos
+            init_pair(1, COLOR_BLUE, COLOR_BLACK);    // For min value
+            init_pair(2, COLOR_GREEN, COLOR_BLACK);   // For max value
+            init_pair(3, COLOR_WHITE, COLOR_BLACK);   // For current value
+            init_pair(4, COLOR_YELLOW, COLOR_BLACK);  // For mirrored servos
         }
 
         // Initialize servo readers and data storage for both arms
@@ -485,13 +497,13 @@ int main(int argc, char *argv[])
             {
                 try
                 {
-                    auto &servo = arm1_data[i];
+                    auto& servo = arm1_data[i];
                     servo.current = reader1.readPosition(i + 1);
                     servo.min = std::min(servo.min, servo.current);
                     servo.max = std::max(servo.max, servo.current);
                     servo.error.clear();
                 }
-                catch (const std::exception &e)
+                catch (const std::exception& e)
                 {
                     arm1_data[i].error = e.what();
                 }
@@ -502,20 +514,20 @@ int main(int argc, char *argv[])
             {
                 try
                 {
-                    auto &servo = arm2_data[i];
+                    auto& servo = arm2_data[i];
                     servo.current = reader2.readPosition(i + 1);
                     servo.min = std::min(servo.min, servo.current);
                     servo.max = std::max(servo.max, servo.current);
                     servo.error.clear();
                 }
-                catch (const std::exception &e)
+                catch (const std::exception& e)
                 {
                     arm2_data[i].error = e.what();
                 }
             }
 
             // Update display with both arms' data
-            displayServoValues(ncurses_win, arm1_data, arm2_data); 
+            displayServoValues(ncurses_win, arm1_data, arm2_data);
 
             // Handle keyboard input for saving
             int ch = wgetch(ncurses_win);
@@ -532,15 +544,15 @@ int main(int argc, char *argv[])
                     wrefresh(ncurses_win);
 
                     // Wait for any key
-                    nodelay(ncurses_win, FALSE); // Switch to blocking mode temporarily
+                    nodelay(ncurses_win, FALSE);  // Switch to blocking mode temporarily
                     wgetch(ncurses_win);
-                    nodelay(ncurses_win, TRUE); // Switch back to non-blocking
+                    nodelay(ncurses_win, TRUE);  // Switch back to non-blocking
 
                     // Clear status line
                     mvwprintw(ncurses_win, 25, 0, "                                                                        ");
                     wrefresh(ncurses_win);
                 }
-                catch (const std::exception &e)
+                catch (const std::exception& e)
                 {
                     mvwprintw(ncurses_win, 25, 0, "                                                                        ");
                     mvwprintw(ncurses_win, 25, 0, "Error saving calibration: %s", e.what());
@@ -596,10 +608,10 @@ int main(int argc, char *argv[])
                         // Update the current position in our data structure
                         arm2_data[i].current = scaledPos;
                     }
-                    catch (const std::exception &e)
+                    catch (const std::exception& e)
                     {
                         arm2_data[i].error = std::string("Mirror error: ") + e.what();
-                        arm2_data[i].mirroring = false; // Disable mirroring on error
+                        arm2_data[i].mirroring = false;  // Disable mirroring on error
                     }
                 }
             }
@@ -613,7 +625,7 @@ int main(int argc, char *argv[])
         std::cout << "Program terminated by user." << std::endl;
         return 0;
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         disableTorqueAndCleanup();
         std::cerr << "Error: " << e.what() << std::endl;
