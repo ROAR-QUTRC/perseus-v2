@@ -3,7 +3,7 @@ export interface WebRtcSessionType {
 	ip: string;
 	port: string;
 	signallingSocket?: WebSocket;
-	enableDebuging?: boolean;
+	enableDebugging?: boolean;
 
 	clientId?: string | null;
 	producerId?: string | null;
@@ -23,7 +23,7 @@ export class WebRtcSession {
 	ip: string;
 	port: string;
 	signallingSocket: WebSocket;
-	enableDebuging: boolean;
+	enableDebugging: boolean;
 
 	clientId: string | null = null;
 	producerId: string | null = null;
@@ -42,7 +42,7 @@ export class WebRtcSession {
 		this.name = name;
 		this.ip = ip;
 		this.port = port;
-		this.enableDebuging = debug;
+		this.enableDebugging = debug;
 
 		this.signallingSocket = new WebSocket(`ws://${ip}:${port}`);
 
@@ -85,7 +85,7 @@ export class WebRtcSession {
 
 	private onSignal = (message: any) => {
 		const data = JSON.parse(message.data);
-		// this.debug('recieved:', data);
+		// this.debug('received:', data);
 		switch (data.type) {
 			case 'welcome':
 				this.clientId = data.peerId;
@@ -139,7 +139,7 @@ export class WebRtcSession {
 				}
 				break;
 			default:
-				this.debug('recieved:', data);
+				this.debug('received:', data);
 				break;
 		}
 	};
@@ -152,7 +152,7 @@ export class WebRtcSession {
 	}
 
 	private debug(...args: any[]) {
-		if (this.enableDebuging) {
+		if (this.enableDebugging) {
 			for (let i = 0; i < args.length; i++) {
 				console.log(`[WebRtc - ${this.name}]`, args[i]);
 			}
