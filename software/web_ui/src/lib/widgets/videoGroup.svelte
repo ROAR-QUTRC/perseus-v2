@@ -18,12 +18,12 @@
 
 	let devices = $state<{ ip: string; port: number; groupName: string; cameras: object[] }[]>([]);
 
-	$inspect(devices);
+	// $inspect(devices);
 
 	socket.on('camera-event', (event) => {
+		console.log(event);
 		switch (event.action) {
 			case 'init':
-				console.log(event.data);
 				// TODO: check if device already has ip
 				if (devices.find((device) => device.ip === event.data.ip) === undefined)
 					devices.push({
@@ -34,6 +34,12 @@
 					});
 				break;
 			case 'get-streams':
+				break;
+			case 'kill':
+				const index = devices.findIndex((device) => device.ip === event.data.ip);
+				console.log(index);
+				devices.splice(index, 1);
+				console.log('Stream HAS ENDED!!!');
 				break;
 			default:
 				console.log(event);
@@ -53,4 +59,9 @@
 		groupName={device.groupName}
 		cameras={device.cameras}
 	/>
+{:else}
+	<p>
+		No active streams. Check that peripheral servers are running and that you are on the correct
+		network.
+	</p>
 {/each}

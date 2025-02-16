@@ -34,14 +34,13 @@ exec('hostname -I', (_, stdout, __) => {
 		action: 'init',
 		data: { ip: stdout.split(' ')[0], groupName: config.groupName, cameras: config.cameras }
 	});
-	console.log('sended data');
 });
 console.log('---- Set up complete ----');
 
 // 'webrtcsink run-signalling-server=true stun-server=NULL name=ws v4l2src device=/dev/video0 ! video/x-raw, width=640, height=480 ! videoconvert ! ws. videotestsrc ! ws.'.split(' ')
 let gstreamerInstance = spawn('gst-launch-1.0', gstArgs);
 
-// gstreamerInstance.stdout.pipe(process.stdout);
+gstreamerInstance.stdout.pipe(process.stdout);
 gstreamerInstance.stderr.pipe(process.stderr);
 
 socket.on('connect', () => {
@@ -64,6 +63,7 @@ socket.on('camera-event', (event) => {
 			});
 			break;
 		case 'init': // ignore events sent by self
+		case 'kill':
 			break;
 		default:
 			console.log(event);
@@ -71,3 +71,26 @@ socket.on('camera-event', (event) => {
 });
 
 console.log();
+
+// handle ctrl + c
+process.on('SIGINT', async (event) => {
+	await new Promise(async (resolve) => {
+		console.log('---- Releasing Cameras ----');
+		gstreamerInstance.kill();
+		console.log('---- Closing websockets ----');
+		await new Promise((resolve) =>
+			exec('hostname -I', (_, stdout, __) => {
+				socket.send({
+					type: 'camera',
+					action: 'kill',
+					data: { ip: stdout.split(' ')[0] }
+				});
+				resolve(null);
+			})
+		);
+		socket.close();
+		console.log('---- Saying Goodbye ----');
+		resolve(null);
+	});
+	console.log(event);
+});

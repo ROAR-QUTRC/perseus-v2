@@ -24,7 +24,7 @@
 	};
 
 	peerConnection.onicecandidate = (event) => {
-		console.log('onicecandidate', event);
+		// console.log('onicecandidate', event);
 		if (event.candidate && callSessionId !== null) {
 			wsSend({
 				type: 'peer',
@@ -34,15 +34,24 @@
 		}
 	};
 
+	const logger = (event: any) => {
+		console.log(event.type, '->', event);
+	};
+
+	// peerConnection.onconnectionstatechange = logger
+	// peerConnection.onicecandidateerror = logger;
+
 	peerConnection.ontrack = (event) => {
-		console.log('ontrack', event);
+		// console.log('ontrack', event);
 		tracks.push(new MediaStream([event.track]));
 	};
 
-	onMount(() => {
+	const connectToSignallingServer = () => {
 		ws = new WebSocket(`ws://${ip}:${port}`);
 		ws.onerror = (event) => {
-			console.log('[WS Error] -', event);
+			// if there is a websocket error just try again
+			setTimeout(() => connectToSignallingServer(), 200);
+			// console.log('[WS Error] -', event);
 		};
 		ws.onmessage = (event) => {
 			// console.log(event);
@@ -97,8 +106,13 @@
 					console.log('unknown message', data);
 			}
 		};
+	};
+
+	onMount(() => {
+		connectToSignallingServer();
 
 		return () => {
+			if (peerConnection) peerConnection.close();
 			if (ws) ws.close();
 		};
 	});
@@ -131,7 +145,7 @@
 <p>Remote ID: {remoteId}</p> -->
 <strong class="ml-2">{groupName}</strong>
 
-<div class="m-1 flex w-fit flex-row flex-wrap overflow-hidden rounded-[4px]">
+<div class="m-1 mb-3 flex w-fit flex-row flex-wrap overflow-hidden rounded-[4px]">
 	{#each tracks as track, i}
 		<div class="relative">
 			<VideoWrapper media={track} />
