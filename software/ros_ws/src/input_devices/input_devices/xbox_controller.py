@@ -263,9 +263,7 @@ class XboxController(Node):
         speed_mode = (
             "High Speed"
             if is_high_speed
-            else "Regular Speed"
-            if is_regular_speed
-            else "Disabled"
+            else "Regular Speed" if is_regular_speed else "Disabled"
         )
         self.get_logger().debug(f"  Speed Mode: {speed_mode}")
 
