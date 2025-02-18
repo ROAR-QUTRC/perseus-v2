@@ -13,6 +13,9 @@ public/
 # draw.io stuff
 .$*
 
+# ESP-IDF
+managed_components/
+
 # Prerequisites
 *.d
 
