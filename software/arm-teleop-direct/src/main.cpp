@@ -240,7 +240,7 @@ std::string getWorkingDirectory()
 
 // Display servo values in ncurses window for both arms
 // Display servo values in ncurses window for both arms
-void displayServoValues(WINDOW* win,
+void displayServoValues([[maybe_unused]] WINDOW* win,
                         const std::vector<ServoData>& arm1_data,
                         const std::vector<ServoData>& arm2_data)
 {
@@ -435,7 +435,7 @@ void disableTorqueAndCleanup()
     }
 }
 
-void signalHandler(int signum)
+void signalHandler([[maybe_unused]] int signum)
 {
     running = false;
     disableTorqueAndCleanup();
