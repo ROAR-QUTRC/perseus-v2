@@ -17,14 +17,16 @@ namespace hi_can
     class Packet
     {
     public:
-        /// @brief Default constructor - zero address, no data
-        Packet() = default;
+        /// @brief Default constructor
+        /// @param address THe address of the packet
+        /// @note Address is set to MAX_ADDRESS by default to make it very obvious that the packet is invalid if it gets transmitted
+        explicit Packet(const addressing::flagged_address_t& address = addressing::MAX_ADDRESS) : Packet(address, nullptr, 0) {}
 
         /// @brief Construct a packet from an address and data array
         /// @param address The address of the packet
         /// @param data The packet data
         /// @param dataLen The length of the data array
-        Packet(const addressing::flagged_address_t& address, const uint8_t data[] = nullptr, size_t dataLen = 0);
+        Packet(const addressing::flagged_address_t& address, const uint8_t data[], size_t dataLen);
         /// @brief Construct a packet from an address and data vector
         /// @param address The address of the packet
         /// @param data The data vector
@@ -127,7 +129,7 @@ namespace hi_can
 
     private:
         /// @brief The packet address
-        addressing::flagged_address_t _address = addressing::MAX_ADDRESS;
+        addressing::flagged_address_t _address{};
         /// @brief The packet data
         std::vector<uint8_t> _data{};
     };

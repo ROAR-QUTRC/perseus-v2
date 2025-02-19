@@ -202,17 +202,17 @@ namespace hi_can
                                       GROUP_ADDRESS_BITS -
                                       PARAM_ADDRESS_BITS) = 0;
 
-            standard_address_t(const uint8_t& system = 0x00,
-                               const uint8_t& subsystem = 0x00,
-                               const uint8_t& device = 0x00,
-                               const uint8_t& group = 0x00,
-                               const uint8_t& parameter = 0x00)
+            standard_address_t(const uint8_t system = 0x00,
+                               const uint8_t subsystem = 0x00,
+                               const uint8_t device = 0x00,
+                               const uint8_t group = 0x00,
+                               const uint8_t parameter = 0x00)
                 : system(system),
                   subsystem(subsystem),
                   device(device),
                   group(group),
                   parameter(parameter) {}
-            standard_address_t(standard_address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
+            standard_address_t(const standard_address_t& deviceAddress, const uint8_t group, const uint8_t parameter)
                 : system(deviceAddress.system),
                   subsystem(deviceAddress.subsystem),
                   device(deviceAddress.device),
@@ -274,7 +274,7 @@ namespace hi_can
                 /// @brief VESC command packet address
                 struct address_t : public structured_address_t
                 {
-                    address_t(const uint8_t& vesc, const command_id& command) : vesc(vesc), command(command) {}
+                    address_t(const uint8_t vesc, const command_id command) : vesc(vesc), command(command) {}
                     /// @brief The VESC device ID
                     uint8_t vesc = static_cast<uint8_t>(device::FRONT_LEFT);
                     /// @brief The VESC command ID
@@ -391,17 +391,17 @@ namespace hi_can
                 /// @brief Padding to fill out the rest of 32 bits so it's aligned
                 const uint8_t _padding : (32 - 5 - 4 - 8 - 8 - 4) = 0;
 
-                address_t(const uint8_t& system = 0x00,
-                          const uint8_t& subsystem = 0x00,
-                          const uint8_t& device = 0x00,
-                          const uint8_t& group = 0x00,
-                          const uint8_t& parameter = 0x00)
+                address_t(const uint8_t system = 0x00,
+                          const uint8_t subsystem = 0x00,
+                          const uint8_t device = 0x00,
+                          const uint8_t group = 0x00,
+                          const uint8_t parameter = 0x00)
                     : system(system),
                       subsystem(subsystem),
                       device(device),
                       group(group),
                       parameter(parameter) {}
-                address_t(address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
+                address_t(const address_t& deviceAddress, const uint8_t group, const uint8_t parameter)
                     : system(deviceAddress.system),
                       subsystem(deviceAddress.subsystem),
                       device(deviceAddress.device),

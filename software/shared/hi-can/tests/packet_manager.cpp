@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <queue>
+#include <vector>
 
 #include "hi_can.hpp"
 
@@ -23,11 +24,15 @@ public:
         return packet;
     }
 
-    void queueReceive(const Packet& packet)
-    {
-        receiveQueue.push(packet);
-    }
-
     std::queue<Packet> receiveQueue;
     std::queue<Packet> transmitQueue;
 };
+
+TEST(CanInterface, ReceiveAll)
+{
+    FifoCanInterface interface;
+    Packet packet(addressing::flagged_address_t(0x12345678), std::vector<uint8_t>{0x01, 0x02, 0x03, 0x04});
+    interface.receiveQueue.push(packet);
+    interface.receiveAll();
+    EXPECT_EQ(interface.receiveQueue.size(), 0);
+}
