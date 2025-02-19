@@ -1,5 +1,9 @@
 #pragma once
 
+// Forward declare WINDOW type to avoid ncurses/boost conflicts
+struct _win_st;
+typedef struct _win_st WINDOW;
+
 #include <fcntl.h>
 #include <termios.h>
 

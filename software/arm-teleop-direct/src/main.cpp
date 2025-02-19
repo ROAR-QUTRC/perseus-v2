@@ -1,4 +1,10 @@
-#include <ncurses.h>
+// Include guard to handle Boost.Asio before ncurses
+#ifndef PERSEUS_ARM_ASIO_INCLUDES
+#define PERSEUS_ARM_ASIO_INCLUDES
+#include "perseus-arm-teleop.hpp"
+#endif
+
+#include <curses.h>
 #include <yaml-cpp/yaml.h>
 
 #include <algorithm>
@@ -12,8 +18,6 @@
 #include <sstream>
 #include <thread>
 #include <vector>
-
-#include "perseus-arm-teleop.hpp"
 
 const int16_t SERVO_REFRESH_DELAY_MS = 25;
 // Global variables for cleanup
