@@ -2,6 +2,8 @@
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'Resource Monitor';
+	export const description =
+		'Shows the CPU, memory, and network usage of the device that Perseus-UI is currently running on';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {

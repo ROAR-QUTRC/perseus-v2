@@ -3,6 +3,8 @@
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'TurtleSim Teleop';
+	export const description = 'Demo node - control the ROS turtlesim example';
+	export const group = 'ROS';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {

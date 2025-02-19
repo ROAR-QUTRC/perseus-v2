@@ -8,6 +8,7 @@
 	} from '$lib/scripts/state.svelte';
 
 	export const name = 'Widget Group';
+	export const description = 'Used to group multiple widgets together';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}

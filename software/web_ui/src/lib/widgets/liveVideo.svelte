@@ -3,7 +3,7 @@
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'Video - WebRTC - old';
-	export const description = 'Video widget using WebRTC';
+	export const description = "Don't use this! Instead use: Video - WebRTC";
 	export const group = 'Gstreamer';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({

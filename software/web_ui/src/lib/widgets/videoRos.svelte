@@ -3,6 +3,9 @@
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'Video - ROS2';
+	export const description =
+		'Video stream from ROS2 camera - Warning: This does not use proper HTML videos and may have high latency.';
+	export const group = 'ROS';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}

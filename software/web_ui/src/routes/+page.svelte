@@ -6,7 +6,8 @@
 		activeWidgets,
 		availableWidgets,
 		getWidgetsByLayoutId,
-		layouts
+		layouts,
+		type WidgetType
 	} from '$lib/scripts/state.svelte';
 	import { repo } from 'remult';
 	import { Layout } from '../shared/Layout';
@@ -21,6 +22,19 @@
 	import ConnectionMenu from '$lib/components/connection-menu.svelte';
 
 	let unSub: (() => void) | null = null;
+	let widgetGroups = $state<Array<Array<WidgetType>>>([]);
+
+	widgetGroups = Object.values(
+		availableWidgets.reduce((acc: any, item) => {
+			// If group is not specified put it in the Misc group
+			if (!item.group) item.group = 'Misc';
+			// Append the item to the array for each group
+			acc[item.group] = [...(acc[item.group] || []), item];
+			return acc;
+		}, {})
+	);
+
+	$inspect(widgetGroups);
 
 	$effect(() => {
 		unSub = repo(Layout)
@@ -103,22 +117,24 @@
 						<Command.Input placeholder="Search widgets..." />
 						<Command.List>
 							<Command.Empty>No widgets found.</Command.Empty>
-							<Command.Group>
-								{#each availableWidgets as widget}
-									<Command.Item
-										onclick={() => {
-											widgetList.includes(widget.name)
-												? removeWidget(widget.name)
-												: addWidget(widget.name);
-										}}
-									>
-										{widget.name}
-										{#if widgetList.includes(widget.name)}
-											<Check class="ml-auto h-4 w-4" />
-										{/if}
-									</Command.Item>
-								{/each}
-							</Command.Group>
+							{#each widgetGroups as group}
+								<Command.Group heading={group[0].group}>
+									{#each group as widget}
+										<Command.Item
+											onclick={() => {
+												widgetList.includes(widget.name)
+													? removeWidget(widget.name)
+													: addWidget(widget.name);
+											}}
+										>
+											{widget.name}
+											{#if widgetList.includes(widget.name)}
+												<Check class="ml-auto h-4 w-4" />
+											{/if}
+										</Command.Item>
+									{/each}
+								</Command.Group>
+							{/each}
 						</Command.List>
 					</Command.Root>
 				</Popover.Content>

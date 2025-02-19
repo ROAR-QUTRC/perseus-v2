@@ -3,6 +3,9 @@
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'Video canvas - WebRTC';
+	export const description =
+		"For viewing multiple video streams that are being handled by the video servers run with 'yarn camera'";
+	export const group = 'Gstreamer';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}

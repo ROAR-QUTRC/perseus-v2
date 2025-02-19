@@ -3,6 +3,9 @@
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'Node viewer';
+	export const description =
+		'This widget allows you to view the topics, services, and other details of a node.';
+	export const group = 'ROS';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
