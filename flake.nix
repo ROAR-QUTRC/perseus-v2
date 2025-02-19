@@ -128,6 +128,8 @@
             can-utils
             bashInteractive
             nixgl-script
+            ncurses
+            glibcLocales
             ;
           inherit (pkgs.ros)
             rviz2-fixed
