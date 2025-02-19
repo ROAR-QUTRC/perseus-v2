@@ -3,13 +3,14 @@
 #include <array>
 #include <chrono>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <thread>
 
 using namespace boost::asio;
 
-ST3215ServoReader::ST3215ServoReader(const std::string& port, unsigned int baud_rate)
+ST3215ServoReader::ST3215ServoReader(const std::string& port, unsigned int baud_rate, uint8_t acceleration)
     : _io_service(), _serial_port(_io_service)
 {
     try
@@ -70,6 +71,21 @@ ST3215ServoReader::ST3215ServoReader(const std::string& port, unsigned int baud_
 
         // Initial delay to let port settle - ACM devices often need more time
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        // Set acceleration for all servos (1-6)
+        for (uint8_t id = 1; id <= 6; ++id)
+        {
+            try
+            {
+                writeControlRegister(id, 0x29, acceleration);                // 0x29 is acceleration register
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));  // Wait between writes
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Warning: Failed to set acceleration for servo " << static_cast<int>(id)
+                          << ": " << e.what() << std::endl;
+            }
+        }
     }
     catch (const boost::system::system_error& e)
     {
