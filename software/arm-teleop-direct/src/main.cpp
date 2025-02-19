@@ -488,8 +488,8 @@ int main(int argc, char* argv[])
         }
 
         // Initialize servo readers and data storage for both arms
-        ST3215ServoReader reader1(port_path1, 1000000, 40);
-        ST3215ServoReader reader2(port_path2, 1000000, 40);
+        ST3215ServoReader reader1(port_path1, 1000000, 30);
+        ST3215ServoReader reader2(port_path2, 1000000, 30);
         reader1_ptr = &reader1;
         reader2_ptr = &reader2;
 
@@ -568,24 +568,41 @@ int main(int argc, char* argv[])
                     wrefresh(ncurses_win);
                 }
             }
+
             else if (ch >= '1' && ch <= '6')
             {
                 int servo_idx = ch - '1';
-                arm2_data[servo_idx].mirroring = !arm2_data[servo_idx].mirroring;
+                bool new_mirror_state = !arm2_data[servo_idx].mirroring;
+                arm2_data[servo_idx].mirroring = new_mirror_state;
 
-                // Update display immediately with color
-                mvwprintw(ncurses_win, 27, 0, "                                                                        ");
-                if (has_colors())
+                try
                 {
-                    wattron(ncurses_win, COLOR_PAIR(4) | A_BOLD);
+                    // Set torque based on mirroring state (0x28 is torque enable register)
+                    reader2.writeControlRegister(servo_idx + 1, 0x28, new_mirror_state ? 1 : 0);
+
+                    // Update display immediately with color
+                    mvwprintw(ncurses_win, 27, 0, "                                                                        ");
+                    if (has_colors())
+                    {
+                        wattron(ncurses_win, COLOR_PAIR(4) | A_BOLD);
+                    }
+                    mvwprintw(ncurses_win, 27, 0, "Servo %d mirroring %s, torque %s",
+                              servo_idx + 1,
+                              new_mirror_state ? "enabled" : "disabled",
+                              new_mirror_state ? "enabled" : "disabled");
+                    if (has_colors())
+                    {
+                        wattroff(ncurses_win, COLOR_PAIR(4) | A_BOLD);
+                    }
                 }
-                mvwprintw(ncurses_win, 27, 0, "Servo %d mirroring %s",
-                          servo_idx + 1,
-                          arm2_data[servo_idx].mirroring ? "enabled" : "disabled");
-                if (has_colors())
+                catch (const std::exception& e)
                 {
-                    wattroff(ncurses_win, COLOR_PAIR(4) | A_BOLD);
+                    // Handle torque control error
+                    mvwprintw(ncurses_win, 27, 0, "Error controlling torque for servo %d: %s",
+                              servo_idx + 1, e.what());
+                    arm2_data[servo_idx].mirroring = !new_mirror_state;  // Revert mirroring state on error
                 }
+
                 wrefresh(ncurses_win);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 mvwprintw(ncurses_win, 27, 0, "                                                                        ");
