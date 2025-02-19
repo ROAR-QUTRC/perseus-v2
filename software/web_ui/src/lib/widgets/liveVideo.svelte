@@ -3,6 +3,8 @@
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'Video - WebRTC - old';
+	export const description = 'Video widget using WebRTC';
+	export const group = 'Gstreamer';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
@@ -10,13 +12,6 @@
 </script>
 
 <script lang="ts">
-	/*
-	Gstreamer command:
-	gst-launch-1.0 webrtcsink run-signalling-server=true stun-server=NULL name=ws \
-	v4l2src device=/dev/video0 ! video/x-raw, width=640, height=480 ! videoconvert ! ws. \
-	videotestsrc ! ws.
-	*/
-
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 

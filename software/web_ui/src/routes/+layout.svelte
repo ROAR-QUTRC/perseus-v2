@@ -6,7 +6,9 @@
 		availableWidgets.push({
 			name: (widgets[widget] as any).name,
 			settings: (widgets[widget] as any).settings,
-			component: (widgets[widget] as any).default
+			component: (widgets[widget] as any).default,
+			description: (widgets[widget] as any).description,
+			group: (widgets[widget] as any).group
 		});
 	}
 </script>

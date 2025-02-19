@@ -79,6 +79,7 @@
 				<div class="space-y-2">
 					<Sheet.Header>
 						<Sheet.Title>{widgetData.name}</Sheet.Title>
+						<Sheet.Description>{widgetData.description}</Sheet.Description>
 					</Sheet.Header>
 					{#each Object.keys(widgetData.settings.groups) as group}
 						<Collapsible.Root open={true}>
