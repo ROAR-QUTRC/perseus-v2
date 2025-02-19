@@ -28,7 +28,7 @@ fi
 NIX_CONFIG_FILE_PATH="/etc/nix/nix.conf"
 DET_NIX_CONFIG_FILE_PATH="/etc/nix/nix.custom.conf"
 if test -f "$DET_NIX_CONFIG_FILE_PATH"; then
-    NIX_CONFIG_FILE_PATH="$DET_NIX_CONFIG_FILE_PATH"
+  NIX_CONFIG_FILE_PATH="$DET_NIX_CONFIG_FILE_PATH"
 fi
 # Add the ROS overlay binary cache + our own cache to the trusted substituters and keys.
 # Allows us to use them in the flake.
