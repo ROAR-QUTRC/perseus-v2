@@ -21,7 +21,7 @@ public:
      * @param port Serial port path (e.g., "/dev/ttyACM0")
      * @param baud_rate Baud rate for serial communication
      */
-    ST3215ServoReader(const std::string& port, unsigned int baud_rate);
+    ST3215ServoReader(const std::string& port, unsigned int baud_rate, uint8_t acceleration = 128);
 
     /**
      * @brief Destructor ensures serial port is properly closed
