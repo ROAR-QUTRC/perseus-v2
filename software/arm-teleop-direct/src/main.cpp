@@ -28,7 +28,7 @@ static ST3215ServoReader* reader2_ptr = nullptr;
 static WINDOW* ncurses_win = nullptr;
 
 static std::atomic<bool> running(true);
-static std::atomic<bool> torque_protection(true);  // Global flag for torque protection
+static std::atomic<bool> torque_protection(false);  // Global flag for torque protection
 
 // Find available serial ports
 std::vector<std::string> findSerialPorts()
