@@ -400,16 +400,18 @@ void displayServoValues([[maybe_unused]] WINDOW* win,
     mvwprintw(ncurses_win, 23, 0, "3. Press keys 1-6 to toggle mirroring for each servo");
     mvwprintw(ncurses_win, 24, 0, "4. Press 't' to toggle torque protection (%s)",
               torque_protection.load() ? "ON" : "OFF");
-    mvwprintw(ncurses_win, 25, 0, "5. Press Ctrl+C to exit");
+    mvwprintw(ncurses_win, 25, 0, "5. Press 'l' to load calibration from file");
+    mvwprintw(ncurses_win, 26, 0, "6. Press Ctrl+C to exit");
+
     // Add color legend if colors are available
     if (has_colors())
     {
-        mvwprintw(ncurses_win, 25, 0, "Legend: ");
+        mvwprintw(ncurses_win, 27, 0, "Legend: ");
         wattron(ncurses_win, COLOR_PAIR(4) | A_BOLD);
         wprintw(ncurses_win, "Yellow rows = Mirrored servos");
         wattroff(ncurses_win, COLOR_PAIR(4) | A_BOLD);
     }
-    mvwprintw(ncurses_win, 26, 0, "Save directory: %s", getWorkingDirectory().c_str());
+    mvwprintw(ncurses_win, 28, 0, "Save directory: %s", getWorkingDirectory().c_str());
 
     wrefresh(ncurses_win);
 }
@@ -502,6 +504,66 @@ void exportCalibrationData(const std::vector<ServoData>& arm1_data,
     catch (const std::exception& e)
     {
         throw;  // Re-throw other exceptions
+    }
+}
+
+void loadCalibrationData(std::vector<ServoData>& arm1_data,
+                         std::vector<ServoData>& arm2_data,
+                         const std::string& filename = "arm_calibration.yaml")
+{
+    try
+    {
+        YAML::Node config = YAML::LoadFile(filename);
+
+        // Load arm 1 servo data
+        if (config["arm1"] && config["arm1"]["servos"])
+        {
+            auto arm1_servos = config["arm1"]["servos"];
+            for (size_t i = 0; i < std::min(arm1_data.size(), arm1_servos.size()); ++i)
+            {
+                auto servo = arm1_servos[i];
+                if (servo["min"] && servo["max"])
+                {
+                    arm1_data[i].min = servo["min"].as<uint16_t>();
+                    arm1_data[i].max = servo["max"].as<uint16_t>();
+                    // Ensure current position stays within new bounds
+                    arm1_data[i].current = std::max(arm1_data[i].min,
+                                                    std::min(arm1_data[i].max,
+                                                             arm1_data[i].current));
+                }
+            }
+        }
+
+        // Load arm 2 servo data
+        if (config["arm2"] && config["arm2"]["servos"])
+        {
+            auto arm2_servos = config["arm2"]["servos"];
+            for (size_t i = 0; i < std::min(arm2_data.size(), arm2_servos.size()); ++i)
+            {
+                auto servo = arm2_servos[i];
+                if (servo["min"] && servo["max"])
+                {
+                    arm2_data[i].min = servo["min"].as<uint16_t>();
+                    arm2_data[i].max = servo["max"].as<uint16_t>();
+                    // Ensure current position stays within new bounds
+                    arm2_data[i].current = std::max(arm2_data[i].min,
+                                                    std::min(arm2_data[i].max,
+                                                             arm2_data[i].current));
+                }
+                if (servo["mirroring"])
+                {
+                    arm2_data[i].mirroring = servo["mirroring"].as<bool>();
+                }
+            }
+        }
+    }
+    catch (const YAML::Exception& e)
+    {
+        throw std::runtime_error(std::string("YAML error while loading calibration: ") + e.what());
+    }
+    catch (const std::exception& e)
+    {
+        throw std::runtime_error(std::string("Error loading calibration: ") + e.what());
     }
 }
 
@@ -728,6 +790,45 @@ int main(int argc, char* argv[])
                 wrefresh(ncurses_win);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 mvwprintw(ncurses_win, 27, 0, "                                                                        ");
+            }
+            else if (ch == 'l' || ch == 'L')
+            {
+                mvwprintw(ncurses_win, 29, 0, "Loading calibration data...");
+                wrefresh(ncurses_win);
+
+                try
+                {
+                    loadCalibrationData(arm1_data, arm2_data);
+                    mvwprintw(ncurses_win, 29, 0, "                                                    ");
+                    mvwprintw(ncurses_win, 29, 0, "Calibration data loaded successfully!");
+                    wrefresh(ncurses_win);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                }
+                catch (const std::exception& e)
+                {
+                    mvwprintw(ncurses_win, 29, 0, "                                                    ");
+                    mvwprintw(ncurses_win, 29, 0, "Error loading calibration: %s", e.what());
+                    wrefresh(ncurses_win);
+                    std::this_thread::sleep_for(std::chrono::seconds(2));
+                }
+
+                mvwprintw(ncurses_win, 29, 0, "                                                    ");
+                wrefresh(ncurses_win);
+
+                // Update mirroring states for arm2
+                for (size_t i = 0; i < 6; ++i)
+                {
+                    try
+                    {
+                        reader2.writeControlRegister(i + 1, 0x28,
+                                                     arm2_data[i].mirroring ? 1 : 0);
+                    }
+                    catch (const std::exception& e)
+                    {
+                        arm2_data[i].error = std::string("Failed to set torque: ") + e.what();
+                        arm2_data[i].mirroring = false;
+                    }
+                }
             }
             else if (ch == 's' || ch == 'S')
             {
