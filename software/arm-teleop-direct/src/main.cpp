@@ -419,50 +419,90 @@ void exportCalibrationData(const std::vector<ServoData>& arm1_data,
                            const std::string& port1,
                            const std::string& port2)
 {
-    YAML::Node config;
-
-    // Add metadata
-    auto now = std::chrono::system_clock::now();
-    auto time = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time), "%Y-%m-%d_%H-%M-%S");
-
-    config["timestamp"] = ss.str();
-    config["arm1_port"] = port1;
-    config["arm2_port"] = port2;
-
-    // Add calibration data for arm 1
-    YAML::Node arm1_node;
-    for (size_t i = 0; i < arm1_data.size(); ++i)
+    try
     {
-        YAML::Node servo;
-        servo["id"] = i + 1;
-        servo["min"] = arm1_data[i].min;
-        servo["max"] = arm1_data[i].max;
-        arm1_node["servos"].push_back(servo);
-    }
-    config["arm1"] = arm1_node;
+        YAML::Node config;
 
-    // Add calibration data for arm 2
-    YAML::Node arm2_node;
-    for (size_t i = 0; i < arm2_data.size(); ++i)
+        // Add metadata including timestamp
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&time), "%Y-%m-%d_%H-%M-%S");
+        config["timestamp"] = ss.str();
+
+        // Add port information
+        config["arm1_port"] = port1;
+        config["arm2_port"] = port2;
+
+        // Add calibration data for arm 1
+        YAML::Node arm1_node;
+        for (size_t i = 0; i < arm1_data.size(); ++i)
+        {
+            YAML::Node servo;
+            servo["id"] = i + 1;
+            servo["min"] = arm1_data[i].min;
+            servo["max"] = arm1_data[i].max;
+            // Add current mirroring state
+            servo["mirroring"] = false;  // Arm 1 servos are never mirrored
+            arm1_node["servos"].push_back(servo);
+        }
+        config["arm1"] = arm1_node;
+
+        // Add calibration data for arm 2
+        YAML::Node arm2_node;
+        for (size_t i = 0; i < arm2_data.size(); ++i)
+        {
+            YAML::Node servo;
+            servo["id"] = i + 1;
+            servo["min"] = arm2_data[i].min;
+            servo["max"] = arm2_data[i].max;
+            // Include mirroring state for arm 2
+            servo["mirroring"] = arm2_data[i].mirroring;
+            arm2_node["servos"].push_back(servo);
+        }
+        config["arm2"] = arm2_node;
+
+        // Fixed filename for consistency
+        const std::string filename = "arm_calibration.yaml";
+
+        // Open file with overwrite permissions
+        std::ofstream fout(filename, std::ios::out | std::ios::trunc);
+        if (!fout.is_open())
+        {
+            throw std::runtime_error("Failed to open file for writing: " + filename);
+        }
+
+        // Write configuration with error checking
+        fout << config;
+        if (fout.fail())
+        {
+            fout.close();
+            throw std::runtime_error("Failed to write data to file: " + filename);
+        }
+
+        // Ensure all data is written and close file
+        fout.flush();
+        if (fout.fail())
+        {
+            fout.close();
+            throw std::runtime_error("Failed to flush data to file: " + filename);
+        }
+        fout.close();
+
+        // Check for any errors that occurred during close
+        if (fout.fail())
+        {
+            throw std::runtime_error("Error occurred while closing file: " + filename);
+        }
+    }
+    catch (const YAML::Exception& e)
     {
-        YAML::Node servo;
-        servo["id"] = i + 1;
-        servo["min"] = arm2_data[i].min;
-        servo["max"] = arm2_data[i].max;
-        arm2_node["servos"].push_back(servo);
+        throw std::runtime_error(std::string("YAML error while saving calibration: ") + e.what());
     }
-    config["arm2"] = arm2_node;
-
-    // Create filename with timestamp
-    std::string filename = ss.str() + "_perseus_arm_calibration.yaml";
-
-    // Save to file
-    std::ofstream fout(filename);
-    fout << config;
-
-    std::cout << "\nCalibration data exported to: " << filename << std::endl;
+    catch (const std::exception& e)
+    {
+        throw;  // Re-throw other exceptions
+    }
 }
 
 void disableTorqueAndCleanup()
