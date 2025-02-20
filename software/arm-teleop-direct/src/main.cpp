@@ -737,13 +737,31 @@ int main(int argc, char* argv[])
                         int16_t torque = reader2.readLoad(i + 1);
                         servo.torque = torque;
 
-                        // Check if torque exceeds safety threshold
+                        // Only apply software torque protection if enabled
                         if (torque_protection.load() && std::abs(torque) > TORQUE_SAFETY_THRESHOLD)
                         {
-                            // Disable torque and mirroring
+                            // Disable torque
                             reader2.writeControlRegister(i + 1, 0x28, 0);  // 0x28 is torque enable register
                             servo.error = "Torque limit exceeded - disabled";
                             servo.mirroring = false;  // Disable mirroring when torque limit is exceeded
+                        }
+                        else if (servo.error.find("Overload") != std::string::npos)
+                        {
+                            // If we have an overload error but torque protection is off, try to re-enable
+                            try
+                            {
+                                reader2.writeControlRegister(i + 1, 0x28, 1);  // Re-enable torque
+                                servo.error.clear();
+                            }
+                            catch (const std::exception& e)
+                            {
+                                // If re-enable fails, keep the error
+                                servo.error = std::string("Failed to re-enable servo: ") + e.what();
+                            }
+                        }
+                        else
+                        {
+                            servo.error.clear();  // Clear any previous errors
                         }
                     }
                     else
