@@ -447,3 +447,70 @@ void ST3215ServoReader::writeControlRegister(uint8_t servo_id, uint8_t address, 
         return;
     }
 }
+
+int16_t ST3215ServoReader::readLoad(uint8_t servo_id)
+{
+    const int MAX_RETRIES = 3;
+    const auto timeout = std::chrono::milliseconds(200);
+
+    for (int retry = 0; retry < MAX_RETRIES; ++retry)
+    {
+        try
+        {
+            // Create read load command packet (address 0x3C for load, 2 bytes)
+            std::vector<uint8_t> command = _createReadCommand(servo_id, 0x3C, 2);
+
+            // Clear any existing data
+            ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+            // Send command
+            boost::system::error_code write_ec;
+            size_t written = boost::asio::write(_serial_port, buffer(command), write_ec);
+
+            if (write_ec || written != command.size())
+            {
+                throw std::runtime_error("Failed to write command");
+            }
+
+            // Ensure minimum response time
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+            // Read response
+            std::array<uint8_t, 8> response;  // Header(4) + Error(1) + Data(2) + Checksum(1)
+            size_t read = boost::asio::read(_serial_port, buffer(response), write_ec);
+
+            if (write_ec || read != response.size())
+            {
+                throw std::runtime_error("Failed to read response");
+            }
+
+            // Validate response
+            if (response[0] != 0xFF || response[1] != 0xFF || response[2] != servo_id)
+            {
+                throw std::runtime_error("Invalid response header");
+            }
+
+            // Check for servo errors
+            if (response[4] != 0x00)
+            {
+                std::stringstream ss;
+                ss << "Servo reported error 0x" << std::hex << static_cast<int>(response[4]);
+                throw std::runtime_error(ss.str());
+            }
+
+            // Load value is in little-endian format
+            return static_cast<int16_t>(response[5] | (response[6] << 8));
+        }
+        catch (const std::runtime_error& e)
+        {
+            if (retry == MAX_RETRIES - 1)
+            {
+                throw;
+            }
+            ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+    throw std::runtime_error("Maximum retries exceeded");
+}

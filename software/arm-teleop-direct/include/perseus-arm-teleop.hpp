@@ -53,6 +53,14 @@ public:
      */
     void writeControlRegister(uint8_t servo_id, uint8_t address, uint8_t value);
 
+    /**
+     * @brief Reads the current load/torque value from a specified servo
+     * @param servo_id ID of the servo to read from
+     * @return Current load value (-1000 to +1000)
+     * @throws std::runtime_error if communication fails
+     */
+    int16_t readLoad(uint8_t servo_id);
+
 private:
     /**
      * @brief Creates a write command packet according to ST3215 protocol
