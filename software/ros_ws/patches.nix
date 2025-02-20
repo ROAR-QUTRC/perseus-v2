@@ -48,7 +48,7 @@ in
           ...
         }:
         rec {
-          version = "1.14.0-beta";
+          version = "1.14.0-alpha.1";
           src = final.fetchFromGitLab {
             domain = "gitlab.freedesktop.org";
             owner = "gstreamer";
