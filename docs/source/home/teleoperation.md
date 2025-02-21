@@ -125,9 +125,14 @@ Note: Control messages are only sent when the terminal has focus and receives ke
 
 #### Xbox Controller
 
+:::{note}
+Make sure that the Xbox controller connects to your laptop!
+Sometimes you may need to re-pair, even if you've paired to it before.
+:::
+
 ```console
-cd perseus-v2/software/ros_ws
-nix run .#ros2 -- run input_devices xbox_controller --ros-args -p use_stamped_msg:=true -r /input_devices/cmd_vel:=/cmd_vel
+cd perseus-v2
+nix run .#xbox_controller
 ```
 
 ### Safe Operation
@@ -153,8 +158,11 @@ E-Stop activation causes immediate stopping. While this may cause abrupt deceler
 
 #### Initial Testing
 
+For Xbox controller input, the triggers act as dead man's switches.
+The right trigger is for low-speed movement, and the left trigger is for high-speed movement (double the rate of low-speed by default).
+
 Test Perseus's movement systematically:
 
-1. Begin with slow speeds
+1. Begin with slow speeds (right trigger only)
 2. Test forward and backward motion separately from turning
 3. Verify movement matches expected directions

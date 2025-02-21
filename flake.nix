@@ -201,9 +201,6 @@
         };
 
         # --- SCRIPTS ---
-        perseus = pkgs.writeShellScriptBin "perseus" ''
-          ${default}/bin/ros2 launch perseus perseus.launch.py "$@"
-        '';
         treefmt-write-config = pkgs.writeShellScriptBin "treefmt-write-config" ''
           cd "$(git rev-parse --show-toplevel)"
           cp ${treefmtEval.config.build.configFile} ./treefmt.toml
@@ -267,21 +264,36 @@
           docs = docs.shell;
         };
 
-        apps = {
-          perseus = {
-            type = "app";
-            program = "${pkgs.lib.getExe perseus}";
+        apps =
+          let
+            mkRosLaunchScript =
+              name: package: launchFile:
+              pkgs.writeShellScriptBin name ''
+                ${default}/bin/ros2 launch ${launchFile} "$@"
+              '';
+            mkRosLaunchApp =
+              name: package: launchFile:
+              let
+                script = mkRosLaunchScript name package launchFile;
+              in
+              {
+                type = "app";
+                program = "${pkgs.lib.getExe script}";
+              };
+          in
+          {
+            perseus = mkRosLaunchApp "perseus" "perseus" "perseus.launch.py";
+            default = self.apps.${system}.perseus;
+            xbox_controller = mkRosLaunchApp "xbox_controller" "input_devices" "xbox_controller.launch.py";
+            ros2 = {
+              type = "app";
+              program = "${default}/bin/ros2";
+            };
+            clean = {
+              type = "app";
+              program = "${pkgs.scripts.clean}/bin/clean";
+            };
           };
-          default = self.apps.${system}.perseus;
-          ros2 = {
-            type = "app";
-            program = "${default}/bin/ros2";
-          };
-          clean = {
-            type = "app";
-            program = "${pkgs.scripts.clean}/bin/clean";
-          };
-        };
         formatter = treefmtEval.config.build.wrapper;
         checks = {
           # formatting = treefmtEval.config.build.check self;
