@@ -4,5 +4,6 @@ final: prev: {
   livox-sdk2 = prev.callPackage ./livox-sdk2 { };
   livox-ros-driver2 = prev.callPackage ./livox-ros-driver2 {
     inherit (final) livox-sdk2;
+    ros = final.ros; # Pass the ros package set
   };
 }
