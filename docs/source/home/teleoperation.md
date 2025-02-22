@@ -17,39 +17,38 @@ The following conditions must be met before beginning:
 
 ## Summary
 
-1. Establish network availability
-2. Connect laptop to network
-3. Power on Perseus
+1. Power on Perseus
+2. Establish network availability
+3. Connect laptop to network
 4. Verify network connection
 5. Access Perseus system
-6. Launch Perseus software
-7. Launch control software
-8. Operate Perseus safely
-
-### Network Setup
-
-Connect the Unifi UX to power using the supplied power adaptor. The boot process takes approximately 3 minutes. A complete boot is indicated when the screen displays a connected device counter instead of a progress bar.
-
-:::{warning}
-The Unifi UX requires specific power specifications via its USB-C port. Use the supplied mains power adaptor or verify compatibility with Unifi documentation before using alternative power sources.
-:::
-
-Once booted, the system broadcasts a WiFi network with the SSID "ROAR-QUTRC".
-
-To enable Internet access, connect the Unifi UX's WAN port (marked with a globe symbol) to an Internet-enabled network via ethernet.
-
-### Network Connection
-
-Connect the laptop to the "ROAR-QUTRC" WiFi network using the provided credentials.
+6. Manually confirm date/time
+7. Launch Perseus software
+8. Launch control software
+9. Operate Perseus safely
 
 ### Perseus Power-up
 
 1. Verify the E-stop is in the "up" (de-latched) position. Rotation may be necessary to unlatch if previously pressed.
 2. Connect the battery's XT90 connector to the power meter.
 
+### Network Setup
+
+The Unifi UX is currently housed inside Perseus. Confirm that the power and network cables are connected to the Unifi UX. Once Perseus is powered on, the Unifi UX boot process should start automatically and take approximately 3 minutes. A complete boot is indicated when the screen displays a connected device counter instead of a progress bar and wifi devices can see the SSID "QUTRC-ROAR".
+
+:::{warning}
+The Unifi UX requires specific power specifications via its USB-C port. Use the onboard DC-DC power adaptor and avoid using externally grounded power sources.
+:::
+
+To enable Internet access, connect the Unifi UX's WAN port (marked with a globe symbol) to an Internet-enabled network via ethernet.
+
+### Network Connection
+
+Connect the laptop to the "QUTRC-ROAR" WiFi network using the provided credentials (ask in Discord).
+
 ### Network Verification
 
-Perseus should automatically connect to the ROAR-QUTRC network. Verify the connection using one of these methods:
+Perseus should automatically connect to the QUTRC-ROAR network. Verify the connection using one of these methods:
 
 - Check the Unifi console for connected devices
 - Use arp-scan on the laptop to list devices with allocated IP addresses:
@@ -67,7 +66,7 @@ Perseus should automatically connect to the ROAR-QUTRC network. Verify the conne
 
 2. Laptop Connectivity
 
-   - Verify connection to "ROAR-QUTRC" network
+   - Verify connection to "QUTRC-ROAR" network
    - Check signal strength (maintain line of sight with Unifi UX if possible)
    - Confirm IP address allocation using `ip addr`
 
@@ -87,6 +86,16 @@ Access Perseus via SSH from the laptop:
 
 ```console
 ssh qutrc@big-brain.local
+```
+
+### Manually confirm the date/time
+
+The Perseus compute modules (Orin, Pi5 etc) require appropriate date/time information. As they do not have a realtime backup clock source it is prudent to manually set the correct date/time after start up.
+
+If the Unifi UX has access to the Internet then it is possible to sync the time with
+
+```console
+sudo chronyd -q
 ```
 
 ### Perseus Software Launch
@@ -116,9 +125,14 @@ Note: Control messages are only sent when the terminal has focus and receives ke
 
 #### Xbox Controller
 
+:::{note}
+Make sure that the Xbox controller connects to your laptop!
+Sometimes you may need to re-pair, even if you've paired to it before.
+:::
+
 ```console
-cd perseus-v2/software/ros_ws
-nix run .#ros2 -- run input_devices xbox_controller --ros-args -p use_stamped_msg:=true -r /input_devices/cmd_vel:=/cmd_vel
+cd perseus-v2
+nix run .#xbox_controller
 ```
 
 ### Safe Operation
@@ -144,8 +158,11 @@ E-Stop activation causes immediate stopping. While this may cause abrupt deceler
 
 #### Initial Testing
 
+For Xbox controller input, the triggers act as dead man's switches.
+The right trigger is for low-speed movement, and the left trigger is for high-speed movement (double the rate of low-speed by default).
+
 Test Perseus's movement systematically:
 
-1. Begin with slow speeds
+1. Begin with slow speeds (right trigger only)
 2. Test forward and backward motion separately from turning
 3. Verify movement matches expected directions
