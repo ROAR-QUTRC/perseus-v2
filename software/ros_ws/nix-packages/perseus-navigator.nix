@@ -15,6 +15,7 @@
   nav2-msgs,
   nav2-util,
   navigation2,
+  perseus-msgs,
   pluginlib,
   rclcpp,
   rclcpp-action,
@@ -48,6 +49,7 @@ buildRosPackage rec {
     nav2-msgs
     nav2-util
     navigation2
+    perseus-msgs
     pluginlib
     rclcpp
     rclcpp-action
