@@ -130,6 +130,7 @@
             nodejs_22
             yarn
             nixgl-script
+            libnice
             ;
           inherit (pkgs.gst_all_1)
             gstreamer
