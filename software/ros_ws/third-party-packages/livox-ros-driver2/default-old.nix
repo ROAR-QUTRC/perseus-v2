@@ -4,9 +4,9 @@
   fetchFromGitHub,
   cmake,
   pkg-config,
-  ros,
   livox-sdk2,
   pcl,
+  amen,
 }:
 
 stdenv.mkDerivation rec {
@@ -23,29 +23,25 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     cmake
     pkg-config
-    ros.ament-cmake-auto
-    ros.ament-cmake-ros
-    ros.rosidl-default-generators
+    ament-cmake-auto
+    ament-cmake-ros
+    rosidl-default-generators
   ];
 
   buildInputs = [
-    ros.rclcpp
-    ros.sensor-msgs
-    ros.std-msgs
-    ros.tf2
-    ros.tf2-ros
+    rclcpp
+    sensor-msgs
+    std-msgs
+    tf2
+    tf2-ros
     livox-sdk2
-    ros.ament-index-cpp
-    ros.rosidl-default-runtime
-    ros.rclcpp-components
+    ament-index-cpp
+    rosidl-default-runtime
+    rclcpp-components
     pcl
   ];
 
   prePatch = ''
-    # Setup package.xml
-    cp package_ROS2.xml package.xml
-    sed -i '/<\/package>/i \  <member_of_group>rosidl_interface_packages</member_of_group>' package.xml
-
     # Modify CMakeLists.txt to set ROS_EDITION to ROS2
     sed -i 's/if(ROS_EDITION STREQUAL "ROS2")/if(TRUE)/' CMakeLists.txt
   '';
@@ -77,9 +73,13 @@ stdenv.mkDerivation rec {
 
     export AMENT_PREFIX_PATH="$AMENT_PREFIX_PATH''${AMENT_PREFIX_PATH:+:}$out/share"
     export CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH:${livox-sdk2}:${pcl}"
-    export CPATH="$CPATH:${ros.rclcpp}/include:${ros.sensor-msgs}/include:${livox-sdk2}/include:${ros.rclcpp-components}/include"
+    export CPATH="$CPATH:${rclcpp}/include:${sensor-msgs}/include:${livox-sdk2}/include:${rclcpp-components}/include"
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${livox-sdk2}/lib"
   '';
+
+  patches = [
+
+  ];
 
   postInstall = ''
     # Install include files

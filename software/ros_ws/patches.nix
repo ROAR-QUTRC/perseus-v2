@@ -156,6 +156,20 @@ let
         propagatedBuildInputs = propagatedBuildInputs ++ [ rosFinal.visualization-msgs ];
       }
     );
+    livox-ros-driver2 = rosPrev.livox-ros-driver2.overrideAttrs (
+      {
+        buildInputs ? [ ],
+        patches ? [ ],
+        ...
+      }:
+      {
+        buildInputs = buildInputs ++ [ final.livox-sdk2 ];
+        patches = patches ++ [
+          ./patches/livox-ros-driver2/rename-files.patch
+          ./patches/livox-ros-driver2/livox-ros-driver2.patch
+        ];
+      }
+    );
   };
 in
 {
