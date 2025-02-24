@@ -34,13 +34,6 @@
 		}
 	};
 
-	const logger = (event: any) => {
-		console.log(event.type, '->', event);
-	};
-
-	// peerConnection.onconnectionstatechange = logger
-	// peerConnection.onicecandidateerror = logger;
-
 	peerConnection.ontrack = (event) => {
 		// console.log('ontrack', event);
 		tracks.push(new MediaStream([event.track]));
@@ -149,7 +142,7 @@
 	{#each tracks as track, i}
 		<div class="relative">
 			<VideoWrapper media={track} />
-			<p class="absolute bottom-1 left-1 rounded-[4px] bg-card bg-opacity-60 px-2 py-1">
+			<p class="bg-card absolute bottom-1 left-1 rounded-[4px] bg-opacity-60 px-2 py-1">
 				{cameras[i].name}
 			</p>
 		</div>

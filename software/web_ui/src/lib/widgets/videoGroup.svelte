@@ -21,10 +21,7 @@
 
 	let devices = $state<{ ip: string; port: number; groupName: string; cameras: object[] }[]>([]);
 
-	// $inspect(devices);
-
 	socket.on('camera-event', (event) => {
-		console.log(event);
 		switch (event.action) {
 			case 'init':
 				// TODO: check if device already has ip
@@ -40,9 +37,7 @@
 				break;
 			case 'kill':
 				const index = devices.findIndex((device) => device.ip === event.data.ip);
-				console.log(index);
 				devices.splice(index, 1);
-				console.log('Stream HAS ENDED!!!');
 				break;
 			default:
 				console.log(event);

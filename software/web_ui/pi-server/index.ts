@@ -1,7 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import config from "./config.json";
 import { exec, spawn } from "child_process";
-import { group } from "console";
 
 const socket: Socket = io(
   `http://${config.webServer.ip}:${config.webServer.port}`,

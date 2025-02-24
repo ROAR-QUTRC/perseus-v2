@@ -34,8 +34,6 @@
 		}, {})
 	);
 
-	$inspect(widgetGroups);
-
 	$effect(() => {
 		unSub = repo(Layout)
 			.liveQuery()
