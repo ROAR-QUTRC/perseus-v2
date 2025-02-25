@@ -53,6 +53,7 @@
         "*.bmp"
         "*.ico"
         "*.pdf"
+        "*sdkconfig*"
       ];
     };
     formatter = {
