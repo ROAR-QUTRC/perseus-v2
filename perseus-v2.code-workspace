@@ -4,12 +4,16 @@
             "path": "."
         },
         {
+            "name": "BMS Firmware",
+            "path": "./firmware/battery-management-system"
+        },
+        {
             "name": "Light Tower Firmware",
-            "path": "firmware/light-tower"
+            "path": "./firmware/light-tower"
         },
         {
             "name": "Processing Plant Firmware",
-            "path": "firmware/processing-plant"
+            "path": "./firmware/processing-plant"
         }
     ],
     "settings": {

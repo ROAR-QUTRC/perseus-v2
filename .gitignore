@@ -13,6 +13,9 @@ public/
 # draw.io stuff
 .$*
 
+# ESP-IDF
+managed_components/
+
 # Prerequisites
 *.d
 
@@ -316,7 +319,6 @@ CATKIN_IGNORE
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
-!.vscode/extensions.json
 !.vscode/*.code-snippets
 !.vscode/c_cpp_properties.json
 
