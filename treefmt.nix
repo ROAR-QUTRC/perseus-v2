@@ -16,7 +16,14 @@
   programs.shfmt.enable = true;
   # TODO: Look into enabling mypy
   programs.nixfmt.enable = true;
-  programs.prettier.enable = true;
+  programs.prettier = {
+    enable = true;
+    settings = {
+      pluginSearchDirs = [
+        "./software/web_ui"
+      ];
+    };
+  };
   programs.taplo.enable = true;
   programs.typos.enable = true;
   programs.yamlfmt.enable = true;
