@@ -91,6 +91,8 @@ private:
     std::optional<networking::Client> _client;
     sensor_config_t _config{};
 
+    bool _readImu{true};  // Default to true (on)
+
     // ROS2 publishers
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr _scanPublisher;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr _imuPublisher;

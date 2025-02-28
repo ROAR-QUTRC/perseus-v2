@@ -1,6 +1,10 @@
 {
     "folders": [
         {
+            "name": "BMS Firmware",
+            "path": "./battery-management-system"
+        },
+        {
             "name": "Light Tower Firmware",
             "path": "./light-tower"
         },

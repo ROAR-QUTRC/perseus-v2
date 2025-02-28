@@ -39,11 +39,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # COMPILE (Libraries)
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
 # Find all source files in the src directory
 file(GLOB_RECURSE CODE_SOURCES src/*.cpp)
 # Add the target with those sources
-add_library(${PROJECT_NAME} SHARED ${CODE_SOURCES})
+add_library(${PROJECT_NAME} ${CODE_SOURCES})
 # Set the include directories for the library
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -79,8 +80,10 @@ install(
   RUNTIME)
 
 # The last of the CMake packaging info
-install(EXPORT ${PROJECT_NAME}_targets
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
+if(BUILD_SHARED_LIBS)
+  install(EXPORT ${PROJECT_NAME}_targets
+          DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
+endif(BUILD_SHARED_LIBS)
 
 # TESTING find_package(GTest REQUIRED) enable_testing()
 
