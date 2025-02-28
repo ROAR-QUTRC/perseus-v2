@@ -130,6 +130,7 @@
             nixgl-script
             ;
           inherit (pkgs.ros)
+            livox-ros-driver2
             rviz2-fixed
             rosbag2
             teleop-twist-keyboard
@@ -227,10 +228,6 @@
         # rover development environment
         packages = {
           inherit default simulation docs;
-
-          # Add Livox packages explicitly
-          livox-sdk2 = pkgs.livox-sdk2;
-          livox-ros-driver2 = pkgs.livox-ros-driver2;
 
           # Output the entire package set to make certain debugging easier
           # Note that it needs to be a derivation though to make nix flake commands happy, so we just touch the output file
