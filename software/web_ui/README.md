@@ -89,4 +89,3 @@ To begin developing a widget run the command: `./create-widget.sh <file-name>`. 
 - Battery
 - Motor stats
 - BMS (power bus states)
-
