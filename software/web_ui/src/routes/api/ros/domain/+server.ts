@@ -2,9 +2,9 @@ import type { RequestHandler } from "@sveltejs/kit";
 import { exec } from "child_process";
 
 export const POST: RequestHandler = async ({ request }) => {
-  const { comainId } = await request.json();
+  const { domainId } = await request.json();
 
-  exec(`export ROS_DOMAIN_ID=${comainId}`, (error, stdout, stderr) => {
+  exec(`export ROS_DOMAIN_ID=${domainId}`, (error, stdout, stderr) => {
     if (error) {
       console.error(`exec error: ${error}`);
       return;
@@ -15,7 +15,7 @@ export const POST: RequestHandler = async ({ request }) => {
     }
   });
 
-  return new Response(JSON.stringify(comainId));
+  return new Response(JSON.stringify(domainId));
 };
 
 export const GET: RequestHandler = async (req) => {
