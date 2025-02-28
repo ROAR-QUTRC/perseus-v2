@@ -6,7 +6,7 @@ This repo contains the UI for controlling/viewing outputs from sensors on the ro
 
 The Rover UI uses SvelteKit meaning that it does not need a server to be run and can be started by running this command in the root directory:
 
-```bash
+```shell
 yarn # This installs dependencies
 yarn host # This runs the server
 ```
