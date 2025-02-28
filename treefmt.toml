@@ -77,5 +77,5 @@ includes = ["*.yaml", "*.yml"]
 options = []
 
 [global]
-excludes = ["*.lock", "*.patch", "package-lock.json", "go.mod", "go.sum", ".gitignore", ".gitmodules", ".hgignore", ".svnignore", "build/**", "result/**", "generated/**", "treefmt.toml", "docs/figures-source/**", "docs/pyproject/**", "docs/source/_static/fonts/**", "docs/source/robots.txt", "docs/source/intersphinx/**", "*.rviz", "setup.cfg", "software/ros_ws/src/**/resource/**", "*.drawio", "*.svg", "*.ttf", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.ico", "*.pdf"]
+excludes = ["*.lock", "*.patch", "package-lock.json", "go.mod", "go.sum", ".gitignore", ".gitmodules", ".hgignore", ".svnignore", "build/**", "result/**", "generated/**", "treefmt.toml", "docs/figures-source/**", "docs/pyproject/**", "docs/source/_static/fonts/**", "docs/source/robots.txt", "docs/source/intersphinx/**", "*.rviz", "setup.cfg", "software/ros_ws/src/**/resource/**", "*.drawio", "*.svg", "*.ttf", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.ico", "*.pdf", "*sdkconfig*"]
 on-unmatched = "warn"
