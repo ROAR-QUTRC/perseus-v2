@@ -144,7 +144,10 @@ jobs:
           commit_message: "chore: Update Nix packaging"
   build:
     name: Build software
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
     environment: binary-deployment
     # this job should run even if `package` is skipped, but not if `format` fails,
     # hence the "strange" conditions
