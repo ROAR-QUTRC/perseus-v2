@@ -52,7 +52,7 @@ jobs:
     needs: [changes, global-vars]
     steps:
       - uses: actions/checkout@v4
-      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
       - name: Update `treefmt.toml`
@@ -78,7 +78,7 @@ jobs:
     needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
-      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
       - name: Upload docs dev shell to Cachix
@@ -93,7 +93,7 @@ jobs:
     needs: [changes, format, docs-shell, global-vars]
     steps:
       - uses: actions/checkout@v4
-      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
       - name: Build docs
@@ -127,7 +127,7 @@ jobs:
     needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
-      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
       - name: Build repository
