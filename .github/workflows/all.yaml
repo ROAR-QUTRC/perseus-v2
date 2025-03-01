@@ -90,7 +90,12 @@ jobs:
     name: Build docs
     runs-on: ubuntu-latest
     environment: docs-deployment
-    if: ${{ (needs.changes.outputs.docs == 'true') || (needs.changes.outputs.manual == 'true') }}
+    # GitHub applies an implicit `success()` to the `if` condition
+    # unless you manually specify another status check function.
+    # Therefore, since we want this to run regardless of the docs dev shell,
+    # we need to add `!cancelled()` (or `always()`) to the condition to remove the implicit `success()`
+    # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#status-check-functions
+    if: ${{ (!cancelled()) && (needs.format.result == 'success') &&  ((needs.changes.outputs.docs == 'true') || (needs.changes.outputs.manual == 'true')) }}
     needs: [changes, format, docs-shell, global-vars]
     steps:
       - uses: actions/checkout@v4
