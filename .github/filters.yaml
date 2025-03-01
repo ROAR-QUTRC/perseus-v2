@@ -22,9 +22,8 @@ software:
   # ignore script updates
   - "!software/scripts/**"
   - "!software/ros_ws/colcon/**"
-  # we don't care about package.xml updates since they don't affect the nix build,
-  # we only care about it when the nix files get updated
-  - "!software/ros_ws/**/package.xml"
 formatter-config:
   - flake.nix
   - treefmt.nix
+packages:
+  - "software/**/package.xml"

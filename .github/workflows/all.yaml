@@ -33,6 +33,7 @@ jobs:
       docs: ${{ steps.filter.outputs.docs }}
       docs-shell: ${{ steps.filter.outputs.docs-shell }}
       formatter-config: ${{ steps.filter.outputs.formatter-config }}
+      packages: ${{ steps.filter.outputs.packages }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -119,17 +120,43 @@ jobs:
         with:
           commit_message: "Update generated docs"
           repository: ./docs
-  build:
-    name: Build software
+  package:
+    name: Re-generate Nix packaging
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
     runs-on: ubuntu-latest
-    environment: binary-deployment
-    if: ${{ (needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true') }}
+    if: ${{ !cancelled() && ((needs.changes.outputs.packages == 'true') || (needs.changes.outputs.manual == 'true')) }}
     needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
+      - run: ./software/scripts/nix-package.sh --no-commit
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        name: Commit and push changes
+        with:
+          commit_message: "chore: Update Nix packaging"
+  build:
+    name: Build software
+    runs-on: ubuntu-latest
+    environment: binary-deployment
+    # this job should run even if `package` is skipped, but not if `format` fails,
+    # hence the "strange" conditions
+    if: ${{ !cancelled() && (needs.format.result == 'success') && (needs.package.result != 'failure') && ((needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true')) }}
+    needs: [changes, format, global-vars, package]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nixbuild/nix-quick-install-action@v30
+        with:
+          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
+      - if: ${{ needs.changes.outputs.packages == 'true' }}
+        run: ./software/scripts/nix-package.sh --no-commit
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        if: ${{ needs.changes.outputs.packages == 'true' }}
+        name: Commit and push changes
+        with:
+          commit_message: "chore: Update Nix packaging"
       - name: Build repository
         run: nix build -L
       - name: Upload build to Cachix
