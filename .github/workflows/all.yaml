@@ -12,13 +12,13 @@ jobs:
     name: Setup global variables
     runs-on: ubuntu-latest
     outputs:
-      nix-conf: ${{ steps.nix-conf.outputs.nix-conf }}
+      nix_conf: ${{ steps.export-vars.outputs.nix_conf }}
     steps:
       - name: Export Nix config
-        id: nix-conf
+        id: export-vars
         run: |
           {
-            echo 'nix-conf<<NIX_EOF'
+            echo 'nix_conf<<NIX_EOF'
             echo 'extra-trusted-substituters = https://roar-qutrc.cachix.org https://ros.cachix.org'
             echo 'extra-trusted-public-keys = roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA= ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo='
             echo 'NIX_EOF'
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
         with:
-          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
+          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
       - name: Update `treefmt.toml`
         if: ${{ (github.event_name != 'pull_request') &&  (needs.changes.outputs.formatter-config == 'true') }}
         id: update-config
@@ -81,7 +81,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
         with:
-          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
+          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
       - name: Upload docs dev shell to Cachix
         run: nix run -L .#scripts.cachix.docs-shell
     env:
@@ -101,7 +101,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
         with:
-          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
+          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
       - name: Build docs
         run: nix build -L .#docs
       # From here, deploying to the website repo
@@ -136,7 +136,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
         with:
-          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
+          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
       - run: ./software/scripts/nix-package.sh --no-commit
       - uses: stefanzweifel/git-auto-commit-action@v5
         name: Commit and push changes
@@ -157,7 +157,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
         with:
-          nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
+          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
       - if: ${{ needs.changes.outputs.packages == 'true' }}
         run: ./software/scripts/nix-package.sh --no-commit
       - uses: stefanzweifel/git-auto-commit-action@v5
