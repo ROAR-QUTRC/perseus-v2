@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   # set up variables shared between jobs
   global-vars:
@@ -13,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       nix_conf: ${{ steps.export-vars.outputs.nix_conf }}
+      format_msg: ${{ steps.export-vars.outputs.format_msg }}
+      package_msg: ${{ steps.export-vars.outputs.package_msg }}
     steps:
       - name: Export Nix config
         id: export-vars
@@ -22,6 +27,10 @@ jobs:
             echo 'extra-trusted-substituters = https://roar-qutrc.cachix.org https://ros.cachix.org'
             echo 'extra-trusted-public-keys = roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA= ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo='
             echo 'NIX_EOF'
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "format_msg=chore: Format and lint"
+            echo "package_msg=chore: Update Nix packaging"
           } >> "$GITHUB_OUTPUT"
   # get the file changes to filter other jobs
   changes:
@@ -34,30 +43,57 @@ jobs:
       docs-shell: ${{ steps.filter.outputs.docs-shell }}
       formatter-config: ${{ steps.filter.outputs.formatter-config }}
       packages: ${{ steps.filter.outputs.packages }}
+      skip-format: ${{ steps.previous-format.outputs.skip }}
+      skip-package: ${{ steps.previous-package.outputs.skip }}
+    needs: global-vars
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: .github/filters.yaml
+      - name: Check for previous formatting
+        id: previous-format
+        # WARNING: The commit message check is fragile and may break if the commit message changes,
+        # hence it's determined by the global-vars job
+        # We can skip the format job if the last message was a format *or* package message,
+        # since package will always run after format
+        run: |
+          case "$(git log -1 --pretty=format:%B)" in
+            "${{ needs.global-vars.outputs.package_msg }}"|"${{ needs.global-vars.outputs.format_msg }}")
+              echo "skip=true" >> "$GITHUB_OUTPUT";;
+            *)
+              echo "skip=false" >> "$GITHUB_OUTPUT";;
+          esac
+      - name: Check for previous packaging
+        id: previous-package
+        # same thing as the format check job
+        run: |
+          if [ "$(git log -1 --pretty=format:%B)" = "${{ needs.global-vars.outputs.package_msg }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi;
   # We don't want to run commit actions on pull request workflows (ie, after the merge commit),
   # only on push, so all commit+push steps are filtered by the event name
   format:
     name: Format and lint
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
     # needed to push changes if needed
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    environment: actions-runtime
+    if: ${{ needs.changes.outputs.skip-format != 'true' }}
     needs: [changes, global-vars]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.REPO_DEPLOY_KEY }}
       - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
       - name: Update `treefmt.toml`
-        if: ${{ (github.event_name != 'pull_request') &&  (needs.changes.outputs.formatter-config == 'true') }}
+        if: ${{ (github.event_name != 'pull_request') &&  needs.changes.outputs.formatter-config }}
         id: update-config
         run: nix run -L .#tools.treefmt-write-config
       - uses: stefanzweifel/git-auto-commit-action@v5
@@ -70,12 +106,12 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         id: push-format
         with:
-          commit_message: "chore: Format and lint"
+          commit_message: ${{ needs.global-vars.outputs.format_msg }}
   docs-shell:
     name: Build docs dev shell
     runs-on: ubuntu-latest
     environment: binary-deployment
-    if: ${{ (needs.changes.outputs.docs-shell == 'true') || (needs.changes.outputs.manual == 'true') }}
+    if: ${{ !cancelled() && (needs.format.result == 'success') && (needs.changes.outputs.docs-shell || needs.changes.outputs.manual) }}
     needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
@@ -95,7 +131,7 @@ jobs:
     # Therefore, since we want this to run regardless of the docs dev shell,
     # we need to add `!cancelled()` (or `always()`) to the condition to remove the implicit `success()`
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#status-check-functions
-    if: ${{ (!cancelled()) && (needs.format.result == 'success') &&  ((needs.changes.outputs.docs == 'true') || (needs.changes.outputs.manual == 'true')) }}
+    if: ${{ !cancelled() && (needs.format.result == 'success') &&  (needs.changes.outputs.docs || needs.changes.outputs.manual) }}
     needs: [changes, format, docs-shell, global-vars]
     steps:
       - uses: actions/checkout@v4
@@ -127,13 +163,14 @@ jobs:
           repository: ./docs
   package:
     name: Re-generate Nix packaging
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
     runs-on: ubuntu-latest
-    if: ${{ !cancelled() && ((needs.changes.outputs.packages == 'true') || (needs.changes.outputs.manual == 'true')) }}
+    environment: actions-runtime
+    if: ${{ !cancelled() && (needs.format.result != 'failure') && !needs.changes.outputs.skip-package && needs.changes.outputs.packages && (github.event_name != 'pull_request') }}
     needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.REPO_DEPLOY_KEY }}
       - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
@@ -141,7 +178,7 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v5
         name: Commit and push changes
         with:
-          commit_message: "chore: Update Nix packaging"
+          commit_message: ${{ needs.global-vars.outputs.package_msg }}
   build:
     name: Build software
     strategy:
@@ -150,21 +187,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     environment: binary-deployment
     # this job should run even if `package` is skipped, but not if `format` fails,
-    # hence the "strange" conditions
-    if: ${{ !cancelled() && (needs.format.result == 'success') && (needs.package.result != 'failure') && ((needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true')) }}
+    # hence the unusual conditions
+    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.package.result != 'failure') && (needs.changes.outputs.software || needs.changes.outputs.manual) }}
     needs: [changes, format, global-vars, package]
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
-      - if: ${{ needs.changes.outputs.packages == 'true' }}
-        run: ./software/scripts/nix-package.sh --no-commit
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        if: ${{ needs.changes.outputs.packages == 'true' }}
-        name: Commit and push changes
-        with:
-          commit_message: "chore: Update Nix packaging"
       - name: Build repository
         run: nix build -L
       - name: Upload build to Cachix
