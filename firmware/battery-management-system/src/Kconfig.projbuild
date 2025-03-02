@@ -1,0 +1,71 @@
+menu "Power Bus Configuration"
+    config PRECHARGE_VOLTAGE
+        int "Precharge threshold voltage (mV)"
+        default "21000"
+        range "10000" "30000"
+        help
+            Voltage to reach for precharge to be successful
+    config COMPUTE_PRECHARGE_VOLTAGE
+        int "Compute bus precharge threshold voltage (mV)"
+        default "18000"
+        range "10000" "30000"
+        help
+            Voltage to reach for compute bus precharge to be successful
+    config AUX_PRECHARGE_VOLTAGE
+        int "Aux bus precharge threshold voltage (mV)"
+        default "15000"
+        range "10000" "30000"
+        help
+            Voltage to reach for compute bus precharge to be successful
+        
+    config PRECHARGE_TIME
+        int "Precharge time (mS)"
+        default "25"
+        range "5" "30"
+        help
+            Time (in tenths of a millisecond) to precharge for
+
+    config PRECHARGE_RETRY_WAIT_TIME
+        int "Precharge retry wait time (mS)"
+        default "3000"
+        range "500" "10000"
+        help
+            Time to wait between precharge retry attempts
+
+    config PRECHARGE_RETRY_COUNT
+        int "Precharge retry count"
+        default "5"
+        range "1" "10"
+        help
+            Number of precharge retry attempts before determining short circuit
+
+    config PRECHARGE_INRUSH_TIME
+        int "Switch inrush time (mS)"
+        default "100"
+        range "0" "1000"
+        help
+            Disable overload detection for this long after precharging (for inrush current)
+
+            
+    config BUS_CAP_DISCHARGE_TIME
+        int "Capacitor discharge time (mS)"
+        default "500"
+        range "0" "10000"
+        help
+            Disable switch error for this long after bus turns off (capacitors keeping voltage up causes switch error)
+            
+    config SWITCH_ERROR_DEBOUNCE_TIME
+        int "Switch error debounce time (mS)"
+        default "10"
+        range "0" "10000"
+        help
+            Switch error must be active for this long to cause error
+
+    config DEFAULT_SOFTWARE_FUSE_CURRENT
+        int "Soft fuse current (mA)"
+        default "10000"
+        range "500" "100000"
+        help
+            Software fuse current. If bus current goes above this value, the bus enters an overload error state.
+
+endmenu
