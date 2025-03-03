@@ -83,7 +83,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     environment: actions-runtime
-    if: ${{ needs.changes.outputs.skip-format != 'true' }}
+    if: ${{ !needs.changes.outputs.skip-format }}
     needs: [changes, global-vars]
     steps:
       - uses: actions/checkout@v4
@@ -111,7 +111,7 @@ jobs:
     name: Build docs dev shell
     runs-on: ubuntu-latest
     environment: binary-deployment
-    if: ${{ !cancelled() && (needs.format.result == 'success') && (needs.changes.outputs.docs-shell || needs.changes.outputs.manual) }}
+    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.changes.outputs.docs-shell || needs.changes.outputs.manual) }}
     needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
@@ -131,7 +131,7 @@ jobs:
     # Therefore, since we want this to run regardless of the docs dev shell,
     # we need to add `!cancelled()` (or `always()`) to the condition to remove the implicit `success()`
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#status-check-functions
-    if: ${{ !cancelled() && (needs.format.result == 'success') &&  (needs.changes.outputs.docs || needs.changes.outputs.manual) }}
+    if: ${{ !cancelled() && (needs.format.result != 'failure') &&  (needs.changes.outputs.docs || needs.changes.outputs.manual) }}
     needs: [changes, format, docs-shell, global-vars]
     steps:
       - uses: actions/checkout@v4
