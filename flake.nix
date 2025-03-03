@@ -280,7 +280,7 @@
             mkRosLaunchScript =
               name: package: launchFile:
               pkgs.writeShellScriptBin name ''
-                ${default}/bin/ros2 launch ${launchFile} "$@"
+                ${default}/bin/ros2 launch ${package} ${launchFile} "$@"
               '';
             mkRosLaunchApp =
               name: package: launchFile:
