@@ -125,11 +125,22 @@
         standardPkgs = {
           inherit (pkgs)
             groot2
-            can-utils
             bashInteractive
+            can-utils
+            nodejs_22
+            yarn
             nixgl-script
+            libnice
+            ;
+          inherit (pkgs.gst_all_1)
+            gstreamer
+            gst-plugins-base
+            gst-plugins-good
+            gst-plugins-bad
+            gst-plugins-rs
             ;
           inherit (pkgs.ros)
+            rosbridge-suite
             rviz2-fixed
             rosbag2
             teleop-twist-keyboard
