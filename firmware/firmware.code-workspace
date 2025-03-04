@@ -1,5 +1,9 @@
 {
     "folders": [
+		{
+            "name": "Shared Libraries",
+            "path": "./components"
+        },
         {
             "name": "BMS Firmware",
             "path": "./battery-management-system"

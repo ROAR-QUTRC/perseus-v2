@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#include <hi_can.hpp>
+#include <hi_can_twai.hpp>
 
 void setup()
 {
