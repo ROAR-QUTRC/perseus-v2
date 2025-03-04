@@ -44,6 +44,8 @@
 </script>
 
 <script lang="ts">
+	// Switch this to twist stamped messages
+	// publish twist stamp messages for joystick control
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Gauge from './motorStats/gauge.svelte';
 	import { onMount } from 'svelte';
