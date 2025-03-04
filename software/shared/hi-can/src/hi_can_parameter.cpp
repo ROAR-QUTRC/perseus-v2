@@ -317,3 +317,25 @@ namespace hi_can::parameters::legacy::drive::motors
         return packets;
     }
 }
+namespace hi_can::parameters::legacy::power::control::power_bus
+{
+    PowerBusParameterGroup::PowerBusParameterGroup(const addressing::legacy::address_t& deviceAddress,
+                                                   addressing::legacy::power::control::rcb::groups bus)
+        : _deviceAddress(deviceAddress)
+    {
+        using namespace hi_can::addressing::legacy;
+
+        _callbacks.emplace_back(
+            filter_t{
+                .address = static_cast<flagged_address_t>(
+                    address_t(deviceAddress,
+                              static_cast<uint8_t>(bus),
+                              static_cast<uint8_t>(addressing::legacy::power::control::power_bus::parameter::POWER_STATUS)))},
+            PacketManager::callback_config_t{
+                .dataCallback = [this](const Packet& packet)
+                {
+                    _status.deserializeData(packet.getData());
+                },
+            });
+    }
+}
