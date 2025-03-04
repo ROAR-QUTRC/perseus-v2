@@ -6,7 +6,7 @@ This repo contains the UI for controlling/viewing outputs from sensors on the ro
 
 The Rover UI uses SvelteKit meaning that it does not need a server to be run and can be started by running this command in the root directory:
 
-```bash
+```shell
 yarn # This installs dependencies
 yarn host # This runs the server
 ```
@@ -16,7 +16,6 @@ This command with host the UI so with Vite so that it can be accessed by any dev
 
 ### Developing
 
-To begin developing a widget run the command: `./create-widget.sh <file-name>`. The `file-name` argument is just the name of the file that contains the widget and **NOT** the widget name. This should generate a new file `/src/lib/widgets<file-name>.svelte` with this template contents:
 To begin developing a widget run the command: `./create-widget.sh <file-name>`. The `file-name` argument is just the name of the file that contains the widget and **NOT** the widget name. This should generate a new file `/src/lib/widgets<file-name>.svelte` with this template contents:
 
 ```svelte
@@ -90,25 +89,3 @@ To begin developing a widget run the command: `./create-widget.sh <file-name>`. 
 - Battery
 - Motor stats
 - BMS (power bus states)
-
-## Dont have node/yarn?
-
-Instal node version manager with this script (you will need to restart your shell once its installed):
-
-```
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-```
-
-Install the latest lts version of node:
-
-```
-nvm install --lts
-```
-
-If you have other versions of node already installed check the [nvm docs](https://github.com/nvm-sh/nvm) on how to setup environments or change the active node version.
-
-Finally, install yarn with:
-
-```
-npm install --global yarn
-```

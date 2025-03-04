@@ -7,7 +7,14 @@ options = []
 [formatter.clang-format]
 command = "clang-format"
 excludes = []
-includes = ["*.c", "*.cc", "*.cpp", "*.h", "*.hh", "*.hpp"]
+includes = [
+    "*.c",
+    "*.cc",
+    "*.cpp",
+    "*.h",
+    "*.hh",
+    "*.hpp",
+]
 options = ["-i"]
 
 [formatter.cmake-format]
@@ -37,8 +44,25 @@ options = []
 [formatter.prettier]
 command = "prettier"
 excludes = []
-includes = ["*.cjs", "*.css", "*.html", "*.js", "*.json", "*.json5", "*.jsx", "*.md", "*.mdx", "*.mjs", "*.scss", "*.ts", "*.tsx", "*.vue", "*.yaml", "*.yml"]
-options = ["--write", "--config", "/nix/store/l7mrbxcf0izkddvpba1xai4ajfw39px8-prettierrc.json"]
+includes = [
+    "*.cjs",
+    "*.css",
+    "*.html",
+    "*.js",
+    "*.json",
+    "*.json5",
+    "*.jsx",
+    "*.md",
+    "*.mdx",
+    "*.mjs",
+    "*.scss",
+    "*.ts",
+    "*.tsx",
+    "*.vue",
+    "*.yaml",
+    "*.yml",
+]
+options = ["--write", "--config", "/nix/store/mv86pjvpyzhvqb1cpzfa1lzpz0501d68-prettierrc.json"]
 
 [formatter.ruff-format]
 command = "ruff"
@@ -77,5 +101,38 @@ includes = ["*.yaml", "*.yml"]
 options = []
 
 [global]
-excludes = ["*.lock", "*.patch", "package-lock.json", "go.mod", "go.sum", ".gitignore", ".gitmodules", ".hgignore", ".svnignore", "build/**", "result/**", "generated/**", "treefmt.toml", "docs/figures-source/**", "docs/pyproject/**", "docs/source/_static/fonts/**", "docs/source/robots.txt", "docs/source/intersphinx/**", "*.rviz", "setup.cfg", "software/ros_ws/src/**/resource/**", "*.drawio", "*.svg", "*.ttf", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.ico", "*.pdf"]
+excludes = [
+    "*.lock",
+    "*.patch",
+    "package-lock.json",
+    "go.mod",
+    "go.sum",
+    ".gitignore",
+    ".gitmodules",
+    ".hgignore",
+    ".svnignore",
+    "build/**",
+    "result/**",
+    "generated/**",
+    "treefmt.toml",
+    "docs/figures-source/**",
+    "docs/pyproject/**",
+    "docs/source/_static/fonts/**",
+    "docs/source/robots.txt",
+    "docs/source/intersphinx/**",
+    "*.rviz",
+    "setup.cfg",
+    "software/ros_ws/src/**/resource/**",
+    "*.drawio",
+    "*.svg",
+    "*.ttf",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.bmp",
+    "*.ico",
+    "*.pdf",
+    "*sdkconfig*",
+]
 on-unmatched = "warn"
