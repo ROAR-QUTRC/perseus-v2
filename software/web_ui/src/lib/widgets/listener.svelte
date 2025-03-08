@@ -25,7 +25,7 @@
 		e.preventDefault();
 		const publisher = new ROSLIB.Topic({
 			ros: ros.value!,
-			name: '/set_rcb_packets',
+			name: '/ros_to_can',
 			messageType: 'std_msgs/String'
 		});
 
@@ -40,7 +40,7 @@
 	onMount(() => {
 		const listener = new ROSLIB.Topic({
 			ros: ros.value!,
-			name: '/rcb_packets',
+			name: '/can_to_ros',
 			messageType: 'std_msgs/String'
 		});
 

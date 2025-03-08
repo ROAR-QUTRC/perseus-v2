@@ -5,21 +5,25 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
 
+using namespace hi_can::addressing::legacy::power::control::rcb;
+
 class RcbDriver : public rclcpp::Node
 {
 public:
     explicit RcbDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+
+    void cleanup();
 
 private:
     void _canToRos();
     void _rosToCan(std_msgs::msg::String::UniquePtr msg);
 
     constexpr static auto PACKET_TIMEOUT = std::chrono::milliseconds(100);
-    const std::vector<hi_can::addressing::legacy::power::control::rcb::groups> BUS_GROUPS = {
-        hi_can::addressing::legacy::power::control::rcb::groups::COMPUTE_BUS,
-        hi_can::addressing::legacy::power::control::rcb::groups::DRIVE_BUS,
-        hi_can::addressing::legacy::power::control::rcb::groups::AUX_BUS,
-        hi_can::addressing::legacy::power::control::rcb::groups::SPARE_BUS,
+    const std::vector<groups> BUS_GROUPS = {
+        groups::COMPUTE_BUS,
+        groups::DRIVE_BUS,
+        groups::AUX_BUS,
+        groups::SPARE_BUS,
     };
 
     std::optional<hi_can::RawCanInterface> _canInterface;
