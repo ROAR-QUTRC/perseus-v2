@@ -123,7 +123,7 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
 
         _canInterface->transmit(Packet(
             static_cast<addressing::flagged_address_t>(address),
-            immediate_control_t({true, false, 0}).serializeData()));
+            immediate_control_t(_immediate_control_t{true, false, 0}).serializeData()));
     }
     catch (const std::exception& e)
     {
