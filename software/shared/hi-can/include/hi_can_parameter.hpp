@@ -119,6 +119,10 @@ namespace hi_can::parameters
     public:
         using T::T;
 
+        SimpleSerializable(const T& value)
+        {
+            static_cast<T&>(*this) = value;
+        }
         SimpleSerializable(const std::vector<uint8_t>& serializedData)
         {
             deserializeData(serializedData);
