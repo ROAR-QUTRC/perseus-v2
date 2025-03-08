@@ -6,103 +6,129 @@
 RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
     : Node("rcb_driver", options)
 {
-    _canInterface = hi_can::RawCanInterface(this->declare_parameter("can_bus", "can0"));
-    _killTimer = this->create_timer(ACTUATOR_TIMEOUT, std::bind(&RcbDriver::_timeoutCallback, this));
-    _actuatorSubscription =
-        this->create_subscription<actuator_msgs::msg::Actuators>("bucket_actuators", 10, std::bind(&RcbDriver::_actuatorCallback, this, std::placeholders::_1));
-    RCLCPP_INFO(this->get_logger(), "Bucket driver node initialized");
-}
-
-void RcbDriver::_actuatorCallback(const actuator_msgs::msg::Actuators::SharedPtr msg)
-{
-    constexpr size_t ACTUATOR_COUNT = 4;
-    if ((msg->velocity.size() != ACTUATOR_COUNT) || (msg->normalized.size() != 1))
+    try
     {
-        RCLCPP_ERROR_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Received actuator message with incorrect number of actuators");
+        _canInterface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "vcan0")));
+        _packetManager.emplace(_canInterface.value());
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_FATAL(this->get_logger(), "Failed to initialise CAN bus: %s", e.what());
         return;
     }
 
-    _killTimer->reset();
-    _timedOut = false;
-    _writeActuators(msg->velocity[0], msg->velocity[1], msg->velocity[2], msg->velocity[3], std::abs(msg->normalized[0]) > 0.5);
-}
-void RcbDriver::_timeoutCallback()
-{
-    if (!_timedOut)
+    try
     {
-        _writeActuators(0, 0, 0, 0, false);
-        _timedOut = true;
+        // change this to reflect the actual number of groups
+        _parameterGroups.reserve(1);
     }
-}
-
-void RcbDriver::_writeActuators(double lift, double tilt, double jaws, double rotate, bool magnet)
-{
-    constexpr double ACTUATOR_MAX_SPEED = 0.1;  // m/s
-    constexpr double ROTATE_MAX_SPEED = 1.5;    // rad/s (this is a rough guesstimate)
-    constexpr double LINEAR_CONVERSION_FACTOR = INT16_MAX / ACTUATOR_MAX_SPEED;
-    constexpr double ANGULAR_CONVERSION_FACTOR = INT16_MAX / ROTATE_MAX_SPEED;
-
-    // actuator speeds -> PWM values
-    const int16_t liftPwm = static_cast<int16_t>(
-        std::clamp(lift * LINEAR_CONVERSION_FACTOR,
-                   static_cast<double>(INT16_MIN),
-                   static_cast<double>(INT16_MAX)));
-    const int16_t tiltPwm = static_cast<int16_t>(
-        std::clamp(tilt * LINEAR_CONVERSION_FACTOR,
-                   static_cast<double>(INT16_MIN),
-                   static_cast<double>(INT16_MAX)));
-    const int16_t jawsPwm = static_cast<int16_t>(
-        std::clamp(jaws * LINEAR_CONVERSION_FACTOR,
-                   static_cast<double>(INT16_MIN),
-                   static_cast<double>(INT16_MAX)));
-    const int16_t rotatePwm = static_cast<int16_t>(
-        std::clamp(rotate * ANGULAR_CONVERSION_FACTOR,
-                   static_cast<double>(INT16_MIN),
-                   static_cast<double>(INT16_MAX)));
+    catch (const std::exception& e)
+    {
+        RCLCPP_FATAL(this->get_logger(), "Failed to reserve memory for parameter groups: %s", e.what());
+        return;
+    }
 
     using namespace hi_can;
     using namespace addressing::legacy;
-    using namespace excavation::bucket::bucket;
-    using namespace parameters::legacy::excavation::bucket;
+    using namespace addressing::legacy::power::control::rcb;
 
-    const address_t baseAddress(excavation::SYSTEM_ID,
-                                excavation::bucket::SUBSYSTEM_ID,
-                                static_cast<uint8_t>(excavation::bucket::device::BUCKET));
+    // iterate the id's of the rcb groups enum
+    for (auto& group : this->BUS_GROUPS)
+    {
+        try
+        {
+            // create parameter groups
+            _parameterGroups.emplace_back(
+                address_t(
+                    power::SYSTEM_ID,
+                    power::control::SUBSYSTEM_ID,
+                    static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
+                group);
 
-    const address_t liftAddress(baseAddress,
-                                motors::GROUP_ID,
-                                static_cast<uint8_t>(motors::parameter::LIFT_SPEED));
-    _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(liftAddress),
-               motor_speed_t(liftPwm != 0, liftPwm).serializeData()));
+            RCLCPP_INFO(
+                this->get_logger(),
+                "Added parameter group with address %X %X %X %X",
+                power::SYSTEM_ID,
+                power::control::SUBSYSTEM_ID,
+                static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD),
+                static_cast<uint8_t>(group));
 
-    const address_t tiltAddress(baseAddress,
-                                motors::GROUP_ID,
-                                static_cast<uint8_t>(motors::parameter::TILT_SPEED));
-    _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(tiltAddress),
-               motor_speed_t(tiltPwm != 0, tiltPwm).serializeData()));
+            _packetManager->addGroup(_parameterGroups.back());
+        }
+        catch (const std::exception& e)
+        {
+            RCLCPP_FATAL(this->get_logger(), "Failed to set up parameter group: %s", e.what());
+        }
+    }
 
-    const address_t jawsAddress(baseAddress,
-                                motors::GROUP_ID,
-                                static_cast<uint8_t>(motors::parameter::JAWS_SPEED));
-    _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(jawsAddress),
-               motor_speed_t(jawsPwm != 0, jawsPwm).serializeData()));
+    // TODO: This should be moved over to a packet manager callback in future. This is currently not possible.
+    // init publisher and subscriber
+    _packetPublisher = this->create_publisher<std_msgs::msg::String>("rcb_packets", 10);
+    _packetTimeoutTimer = this->create_wall_timer(PACKET_TIMEOUT, std::bind(&RcbDriver::_canToRos, this));
+    _packetSubscriber = this->create_subscription<std_msgs::msg::String>("set_rcb_packets", 10, std::bind(&RcbDriver::_rosToCan, this, std::placeholders::_1));
 
-    const address_t rotateAddress(baseAddress,
-                                  manipulation::GROUP_ID,
-                                  static_cast<uint8_t>(manipulation::parameter::SPIN_SPEED));
-    _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(rotateAddress),
-               motor_speed_t(rotatePwm != 0, rotatePwm).serializeData()));
+    RCLCPP_INFO(this->get_logger(), "Rover control board driver node initialized");
+}
 
-    const address_t magnetAddress(baseAddress,
-                                  manipulation::GROUP_ID,
-                                  static_cast<uint8_t>(manipulation::parameter::ELECTROMAGNET));
-    _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(magnetAddress),
-               parameters::SimpleSerializable<parameters::wrapped_value_t<bool>>(magnet).serializeData()));
+void RcbDriver::_canToRos()
+{
+    try
+    {
+        _packetManager->handleReceive();
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Receive failed: %s", e.what());
+    }
+
+    auto message = std_msgs::msg::String();
+
+    message.data = "[";
+    bool isFirst = true;
+    for (auto& group : _parameterGroups)
+    {
+        message.data += isFirst ? "{" : ",{";
+        isFirst = false;
+        const auto& data = group.getStatus();
+        const bool isOff = data.status == hi_can::parameters::legacy::power::control::power_bus::power_status::OFF;
+        message.data += std::format("\"current\": \"{0}\", \"voltage\": \"{1}\", \"power_off\": \"{2}\"", data.current, data.voltage, isOff);
+        message.data += "}";
+    }
+    message.data += "]";
+
+    this->_packetPublisher->publish(message);
+}
+
+void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
+{
+    using namespace hi_can;
+    using namespace addressing::legacy;
+    using namespace hi_can::parameters::legacy::power::control::power_bus;
+
+    try
+    {
+        RCLCPP_INFO(get_logger(), "Transmitting packet: %s", msg->data.c_str());
+
+        const address_t baseAddress(
+            power::SYSTEM_ID,
+            power::control::SUBSYSTEM_ID,
+            static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD));
+
+        // const std::string targetBus = msg->data.
+
+        const address_t address(
+            baseAddress,
+            static_cast<uint8_t>(power::control::rcb::groups::AUX_BUS),
+            static_cast<uint8_t>(power::control::power_bus::parameter::CONTROL_IMMEDIATE));
+
+        _canInterface->transmit(Packet(
+            static_cast<addressing::flagged_address_t>(address),
+            immediate_control_t({true, false, 0}).serializeData()));
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_WARN(get_logger(), "Error transmitting packet: %s", e.what());
+    }
 }
 
 int main(int argc, char** argv)
@@ -112,12 +138,12 @@ int main(int argc, char** argv)
     try
     {
         auto node = std::make_shared<RcbDriver>();
-        RCLCPP_INFO(rclcpp::get_logger("main"), "Starting bucket driver node");
+        RCLCPP_INFO(rclcpp::get_logger("main"), "Starting rcb driver node");
         rclcpp::spin(node);
     }
     catch (const std::exception& e)
     {
-        RCLCPP_ERROR(rclcpp::get_logger("main"), "Error running bucket driver: %s", e.what());
+        RCLCPP_ERROR(rclcpp::get_logger("main"), "Error running rcb driver: %s", e.what());
         return 1;
     }
 

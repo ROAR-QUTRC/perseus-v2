@@ -46,6 +46,15 @@
 		// 	}
 		// );
 
+		ros.value!.getParams(
+			(params: any) => {
+				console.log(params);
+			},
+			(error) => {
+				console.error(error);
+			}
+		);
+
 		ros.value!.getNodeDetails(
 			value,
 			(subscriptions: string[], publications: string[], services: string[]) => {

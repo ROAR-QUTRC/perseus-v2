@@ -1,9 +1,9 @@
 #pragma once
 
-#include <actuator_msgs/msg/actuators.hpp>
 #include <chrono>
 #include <hi_can_raw.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
 
 class RcbDriver : public rclcpp::Node
 {
@@ -11,16 +11,22 @@ public:
     explicit RcbDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
 private:
-    void _actuatorCallback(const actuator_msgs::msg::Actuators::SharedPtr msg);
-    void _timeoutCallback();
+    void _canToRos();
+    void _rosToCan(std_msgs::msg::String::UniquePtr msg);
 
-    void _writeActuators(double lift, double tilt, double jaws, double rotate, bool magnet);
+    constexpr static auto PACKET_TIMEOUT = std::chrono::milliseconds(100);
+    const std::vector<hi_can::addressing::legacy::power::control::rcb::groups> BUS_GROUPS = {
+        hi_can::addressing::legacy::power::control::rcb::groups::COMPUTE_BUS,
+        hi_can::addressing::legacy::power::control::rcb::groups::DRIVE_BUS,
+        hi_can::addressing::legacy::power::control::rcb::groups::AUX_BUS,
+        hi_can::addressing::legacy::power::control::rcb::groups::SPARE_BUS,
+    };
 
-    constexpr static auto ACTUATOR_TIMEOUT = std::chrono::milliseconds(300);
+    std::optional<hi_can::RawCanInterface> _canInterface;
+    std::optional<hi_can::PacketManager> _packetManager;
+    std::vector<hi_can::parameters::legacy::power::control::power_bus::PowerBusParameterGroup> _parameterGroups;
 
-    bool _timedOut = false;
-    hi_can::RawCanInterface _canInterface;
-
-    rclcpp::Subscription<actuator_msgs::msg::Actuators>::SharedPtr _actuatorSubscription;
-    rclcpp::TimerBase::SharedPtr _killTimer;
+    rclcpp::TimerBase::SharedPtr _packetTimeoutTimer;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _packetPublisher;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _packetSubscriber;
 };
