@@ -1,6 +1,4 @@
-#include <curses.h>
-#include <yaml-cpp/yaml.h>
-
+// First include standard libraries and Boost
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -15,8 +13,13 @@
 #include <thread>
 #include <vector>
 
+// Include project headers
 #include "arm_teleop/leader_controller.hpp"
 #include "perseus-arm-teleop.hpp"
+
+// Include curses last to avoid macro conflicts with Boost
+#include <curses.h>
+#include <yaml-cpp/yaml.h>
 
 const int16_t SERVO_REFRESH_DELAY_MS = 25;
 const int16_t TORQUE_SAFETY_THRESHOLD = 800;  // 80% of maximum torque

@@ -1,12 +1,12 @@
 #pragma once
 
 #include <mutex>
+#include <perseus-arm-teleop.hpp>
+#include <simple_networking.hpp>
 #include <string>
 #include <vector>
 
-#include "../../shared/simple-networking/include/simple_networking.hpp"
 #include "networked_arm_controller.hpp"
-#include "perseus-arm-teleop.hpp"
 
 namespace arm_teleop
 {

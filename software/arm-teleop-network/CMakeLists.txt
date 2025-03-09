@@ -52,12 +52,40 @@ find_package(yaml-cpp REQUIRED)
 find_package(simple_networking QUIET)
 if(NOT simple_networking_FOUND)
   message(STATUS "simple_networking not found, adding subdirectory...")
-  message(
-    STATUS
-      "Attempting to add simple_networking from: ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared/simple-networking"
-  )
-  add_subdirectory(../shared/simple-networking simple-networking)
+
+  # First try to find it in a standard location relative to this project
+  set(SIMPLE_NETWORKING_DIR
+      "${CMAKE_CURRENT_SOURCE_DIR}/../shared/simple-networking")
+
+  if(EXISTS "${SIMPLE_NETWORKING_DIR}/CMakeLists.txt")
+    message(STATUS "Adding simple_networking from: ${SIMPLE_NETWORKING_DIR}")
+    add_subdirectory(${SIMPLE_NETWORKING_DIR} simple-networking)
+  else()
+    message(
+      FATAL_ERROR
+        "Could not find simple_networking. Please specify its location with -DSIMPLE_NETWORKING_DIR=<path>"
+    )
+  endif()
 endif()
+
+# For finding or adding arm-teleop-direct
+set(ARM_TELEOP_DIRECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../arm-teleop-direct")
+set(ARM_TELEOP_DIRECT_INCLUDE_DIR "${ARM_TELEOP_DIRECT_DIR}/include")
+
+# Ensure the include directory exists
+if(NOT EXISTS "${ARM_TELEOP_DIRECT_INCLUDE_DIR}")
+  message(
+    FATAL_ERROR
+      "Could not find arm-teleop-direct include directory at ${ARM_TELEOP_DIRECT_INCLUDE_DIR}"
+  )
+endif()
+
+# Create header-only interface for arm-teleop-direct
+message(STATUS "Creating header-only interface for arm-teleop-direct")
+add_library(arm_teleop_direct INTERFACE)
+target_include_directories(arm_teleop_direct
+                           INTERFACE "${ARM_TELEOP_DIRECT_INCLUDE_DIR}")
+set(ARM_TELEOP_DIRECT_TARGET "arm_teleop_direct")
 
 # COMPILE (Libraries) Common library for shared functionality
 add_library(
@@ -68,12 +96,14 @@ add_library(
 # Set include directories for the library
 target_include_directories(
   arm_teleop_common
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PUBLIC ${ARM_TELEOP_DIRECT_INCLUDE_DIR})
 
 # Link dependencies
 target_link_libraries(
   arm_teleop_common
   PUBLIC simple_networking
+  PUBLIC ${ARM_TELEOP_DIRECT_TARGET}
   PRIVATE Boost::system
   PRIVATE ${CURSES_LIBRARIES}
   PRIVATE yaml-cpp

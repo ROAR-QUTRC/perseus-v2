@@ -147,7 +147,10 @@ namespace arm_teleop
 
     std::vector<NetworkedArmController::ServoData> FollowerController::getServoData() const
     {
-        std::lock_guard<std::mutex> lock(_dataLock);
+        // Create a copy of the data to return
+        // We need to use a const_cast here since we're in a const method but need to lock the mutex
+        // This is safe because we're not modifying the data, just protecting access to it
+        std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(_dataLock));
         return _servoData;
     }
 
