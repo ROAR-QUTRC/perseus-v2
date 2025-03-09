@@ -1,0 +1,12 @@
+/.github/ @RandomSpaceship
+/firmware/ @RandomSpaceship
+/hardware/ @RandomSpaceship
+/packages/ @RandomSpaceship
+*.nix @RandomSpaceship
+
+# no owner for auto-generated packages
+/software/ros_ws/nix-packages 
+
+# package owners
+/software/ros_ws/src/perseus_payloads/**/arm_driver/ @DingoOz
+/software/ros_ws/src/perseus_sensors/**/m2m2_lidar/ @DingoOz
