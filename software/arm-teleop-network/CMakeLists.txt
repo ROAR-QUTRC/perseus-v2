@@ -2,8 +2,8 @@
 cmake_minimum_required(VERSION 3.23)
 
 project(
-  arm-teleop-network
-  VERSION 0.1.0
+  arm-teleop-direct
+  VERSION 0.0.1
   LANGUAGES CXX)
 
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
@@ -38,105 +38,41 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Address CMP0167 warning
-if(POLICY CMP0167)
-  cmake_policy(SET CMP0167 NEW)
-endif()
+# INCLUDE DEPENDENCIES
 
-# INCLUDE DEPENDENCIES Required external packages
+# public dependencies (which should propagate)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp)
+# packages which must be present but aren't linked against
+set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
+
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+# Find other required packages
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(Curses REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-# For finding or adding simple_networking
-find_package(simple_networking QUIET)
-if(NOT simple_networking_FOUND)
-  message(STATUS "simple_networking not found, adding subdirectory...")
+# COMPILE (Executables)
 
-  # First try to find it in a standard location relative to this project
-  set(SIMPLE_NETWORKING_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}/../shared/simple-networking")
-
-  if(EXISTS "${SIMPLE_NETWORKING_DIR}/CMakeLists.txt")
-    message(STATUS "Adding simple_networking from: ${SIMPLE_NETWORKING_DIR}")
-    add_subdirectory(${SIMPLE_NETWORKING_DIR} simple-networking)
-  else()
-    message(
-      FATAL_ERROR
-        "Could not find simple_networking. Please specify its location with -DSIMPLE_NETWORKING_DIR=<path>"
-    )
-  endif()
-endif()
-
-# For finding or adding arm-teleop-direct
-set(ARM_TELEOP_DIRECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../arm-teleop-direct")
-set(ARM_TELEOP_DIRECT_INCLUDE_DIR "${ARM_TELEOP_DIRECT_DIR}/include")
-
-# Ensure the include directory exists
-if(NOT EXISTS "${ARM_TELEOP_DIRECT_INCLUDE_DIR}")
-  message(
-    FATAL_ERROR
-      "Could not find arm-teleop-direct include directory at ${ARM_TELEOP_DIRECT_INCLUDE_DIR}"
-  )
-endif()
-
-# Create header-only interface for arm-teleop-direct
-message(STATUS "Creating header-only interface for arm-teleop-direct")
-add_library(arm_teleop_direct INTERFACE)
-target_include_directories(arm_teleop_direct
-                           INTERFACE "${ARM_TELEOP_DIRECT_INCLUDE_DIR}")
-set(ARM_TELEOP_DIRECT_TARGET "arm_teleop_direct")
-
-# COMPILE (Libraries) Common library for shared functionality
-add_library(
-  arm_teleop_common STATIC
-  src/network_protocol.cpp src/networked_arm_controller.cpp
-  src/leader_controller.cpp src/follower_controller.cpp)
-
-# Set include directories for the library
+# Find all source files in the src directory
+file(GLOB_RECURSE CODE_SOURCES src/*.cpp)
+# Add the target with those sources
+add_executable(${PROJECT_NAME} ${CODE_SOURCES})
+# Set the include directories
 target_include_directories(
-  arm_teleop_common
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  PUBLIC ${ARM_TELEOP_DIRECT_INCLUDE_DIR})
+  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
-# Link dependencies
-target_link_libraries(
-  arm_teleop_common
-  PUBLIC simple_networking
-  PUBLIC ${ARM_TELEOP_DIRECT_TARGET}
-  PRIVATE Boost::system
-  PRIVATE ${CURSES_LIBRARIES}
-  PRIVATE yaml-cpp
-  PRIVATE pthread)
-
-# COMPILE (Executables) Leader executable
-add_executable(arm-teleop-leader src/leader_main.cpp)
-target_include_directories(
-  arm-teleop-leader
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-target_link_libraries(
-  arm-teleop-leader
-  PRIVATE arm_teleop_common
-  PRIVATE Boost::system
-  PRIVATE ${CURSES_LIBRARIES}
-  PRIVATE yaml-cpp
-  PRIVATE pthread)
-
-# Follower executable
-add_executable(arm-teleop-follower src/follower_main.cpp)
-target_include_directories(
-  arm-teleop-follower
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-target_link_libraries(
-  arm-teleop-follower
-  PRIVATE arm_teleop_common
-  PRIVATE Boost::system
-  PRIVATE ${CURSES_LIBRARIES}
-  PRIVATE yaml-cpp
-  PRIVATE pthread)
+# Link private dependencies
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system ${CURSES_LIBRARIES}
+                                              yaml-cpp pthread)
 
 # INSTALL (Executables)
-install(TARGETS arm-teleop-leader arm-teleop-follower RUNTIME DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 # Versioning
-set_target_properties(arm-teleop-leader PROPERTIES VERSION ${PROJECT_VERSION})
-set_target_properties(arm-teleop-follower PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
