@@ -2,8 +2,8 @@
 cmake_minimum_required(VERSION 3.23)
 
 project(
-  arm-teleop-direct
-  VERSION 0.0.1
+  arm-teleop-network
+  VERSION 0.1.0
   LANGUAGES CXX)
 
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
@@ -58,21 +58,72 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(Curses REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
+# Check if simple_networking is available
+find_package(simple_networking QUIET)
+if(NOT simple_networking_FOUND)
+  message(STATUS "simple_networking not found, adding subdirectory...")
+  # Add the directory with its CMakeLists.txt
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../shared/simple-networking
+                   simple-networking)
+endif()
+
+# COMPILE (Protocol Library)
+
+# Protocol library
+add_library(arm-servo-protocol src/arm-servo-protocol.cpp)
+
+target_include_directories(
+  arm-servo-protocol
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+# Network interface library
+add_library(arm-network src/arm-network.cpp)
+
+target_include_directories(
+  arm-network PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+target_link_libraries(
+  arm-network
+  PUBLIC arm-servo-protocol
+  PUBLIC simple_networking)
+
 # COMPILE (Executables)
 
-# Find all source files in the src directory
-file(GLOB_RECURSE CODE_SOURCES src/*.cpp)
-# Add the target with those sources
-add_executable(${PROJECT_NAME} ${CODE_SOURCES})
-# Set the include directories
-target_include_directories(
-  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+# Leader Arm Executable
+add_executable(arm-teleop-leader src/leader-main.cpp src/perseus-arm-teleop.cpp)
 
-# Link private dependencies
-target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system ${CURSES_LIBRARIES}
-                                              yaml-cpp pthread)
+target_include_directories(
+  arm-teleop-leader
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+target_link_libraries(
+  arm-teleop-leader
+  PRIVATE arm-servo-protocol
+  PRIVATE arm-network
+  PRIVATE Boost::system
+  PRIVATE ${CURSES_LIBRARIES}
+  PRIVATE yaml-cpp
+  PRIVATE pthread)
+
+# Follower Arm Executable
+add_executable(arm-teleop-follower src/follower-main.cpp
+                                   src/perseus-arm-teleop.cpp)
+
+target_include_directories(
+  arm-teleop-follower
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+target_link_libraries(
+  arm-teleop-follower
+  PRIVATE arm-servo-protocol
+  PRIVATE arm-network
+  PRIVATE Boost::system
+  PRIVATE ${CURSES_LIBRARIES}
+  PRIVATE yaml-cpp
+  PRIVATE pthread)
 
 # INSTALL (Executables)
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+install(TARGETS arm-teleop-leader arm-teleop-follower RUNTIME DESTINATION bin)
 # Versioning
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(arm-teleop-leader PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(arm-teleop-follower PROPERTIES VERSION ${PROJECT_VERSION})
