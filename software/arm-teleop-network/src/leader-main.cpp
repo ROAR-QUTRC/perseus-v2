@@ -252,8 +252,8 @@ void displayTorqueBar(WINDOW* win, int y, int x, int16_t torque)
     waddch(win, ']');
 }
 
-// Display follower status in the UI
-void displayFollowerStatus(WINDOW* win, bool connected)
+// Display follower status and IP address in the UI
+void displayFollowerStatus(WINDOW* win, bool connected, const std::string& ip_address = "")
 {
     int y = 29;  // Position at the bottom of the display
 
@@ -278,12 +278,37 @@ void displayFollowerStatus(WINDOW* win, bool connected)
     {
         wprintw(win, connected ? "CONNECTED" : "DISCONNECTED");
     }
+
+    // Display follower IP address on the line after the servo table
+    // Display follower IP address on the line after the servo table
+    mvwprintw(win, 12, 0, "Follower: ");
+
+    if (has_colors())
+    {
+        if (connected && !ip_address.empty())
+        {
+            wattron(win, COLOR_PAIR(2) | A_BOLD);  // Green for connected IP
+            wprintw(win, "%s", ip_address.c_str());
+            wattroff(win, COLOR_PAIR(2) | A_BOLD);
+        }
+        else
+        {
+            wattron(win, COLOR_PAIR(5) | A_BOLD);  // Red for not connected
+            wprintw(win, "N/C");
+            wattroff(win, COLOR_PAIR(5) | A_BOLD);
+        }
+    }
+    else
+    {
+        wprintw(win, "%s", connected ? ip_address.c_str() : "N/C");
+    }
 }
 
 // Display servo values in ncurses window
 void displayServoValues(WINDOW* win,
                         const std::vector<ServoData>& arm_data,
-                        bool follower_connected)
+                        bool follower_connected,
+                        const std::string& follower_ip_address = "")
 {
     werase(win);
 
@@ -348,7 +373,7 @@ void displayServoValues(WINDOW* win,
     }
 
     // Display follower connection status
-    displayFollowerStatus(win, follower_connected);
+    displayFollowerStatus(win, follower_connected, follower_connected ? follower_ip_address : "");
 
     wrefresh(win);
 }
@@ -486,7 +511,7 @@ void loadCalibrationData(std::vector<ServoData>& arm_data,
 }
 
 // Connect to a follower arm over the network
-bool connectToFollower(perseus::ArmNetworkInterface** network_ptr_ref, WINDOW* win)
+bool connectToFollower(perseus::ArmNetworkInterface** network_ptr_ref, WINDOW* win, std::string& follower_ip)
 {
     // If already have a network interface, clean it up
     if (*network_ptr_ref)
@@ -569,6 +594,7 @@ bool connectToFollower(perseus::ArmNetworkInterface** network_ptr_ref, WINDOW* w
                 mvwprintw(win, 17, 0, "Connected to follower at %s:%d", ip_address, port);
                 wrefresh(win);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
+                follower_ip = ip_address;  // Store the IP address
                 return true;
             }
 
@@ -652,6 +678,7 @@ void signalHandler([[maybe_unused]] int signum)
 int main(int argc, char* argv[])
 {
     std::vector<ServoData> arm_data(6);
+    std::string follower_ip_address = "";  // Store the follower IP address
     try
     {
         // Set up signal handling
@@ -752,7 +779,8 @@ int main(int argc, char* argv[])
             // Update display with arm data and network status
             displayServoValues(ncurses_win,
                                arm_data,
-                               network_ptr ? network_ptr->isConnected() : false);
+                               network_ptr ? network_ptr->isConnected() : false,
+                               follower_ip_address);
 
             // Handle keyboard input
             int ch = wgetch(ncurses_win);
@@ -856,7 +884,7 @@ int main(int argc, char* argv[])
             else if (ch == 'c' || ch == 'C')
             {
                 // Connect to a different follower
-                connectToFollower(&network_ptr, ncurses_win);
+                connectToFollower(&network_ptr, ncurses_win, follower_ip_address);
             }
             else if (ch >= '1' && ch <= '6')
             {
