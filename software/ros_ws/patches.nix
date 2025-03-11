@@ -32,6 +32,19 @@ let
         propagatedBuildInputs = filteredPropagatedBuildInputs ++ [ rosPrev.python3Packages.pymongo ];
       }
     );
+
+    librealsense2 = rosPrev.librealsense2.overrideAttrs (
+      {
+        cmakeFlags ? [ ],
+        ...
+      }:
+      {
+        cmakeFlags = cmakeFlags ++ [
+          "-DCHECK_FOR_UPDATES=OFF"
+          "-DBUILD_GRAPHICAL_EXAMPLES=OFF"
+        ];
+      }
+    );
   };
 in
 {
