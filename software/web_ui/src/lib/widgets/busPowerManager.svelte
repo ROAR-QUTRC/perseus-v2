@@ -75,6 +75,8 @@
 			<p class="mt-2">Current: {bus.current}</p>
 			<p>Voltage: {bus.voltage}</p>
 		</div>
+	{:else}
+		<p>Looking for buses... Make sure the rosbridge is connected.</p>
 	{/each}
 </div>
 
