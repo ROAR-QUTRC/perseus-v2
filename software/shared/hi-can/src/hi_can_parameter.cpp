@@ -35,8 +35,9 @@ namespace hi_can::parameters::drive::vesc
     };
     struct raw_status_5_t
     {
-        int32_t tachometer;
-        int16_t voltsIn;
+        int32_t tachometer;// 4 bytes
+        int16_t voltsIn;   // 2 bytes
+        uint16_t padding;  // 2 bytes | Should fix the VESC status feedback issue.
     };
     struct raw_status_6_t
     {
