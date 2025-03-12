@@ -136,12 +136,80 @@ void bq76942::writeSecurityKeys(const security_keys_t& keys)
 
 bq76942::manufacturer_data_t bq76942::readManufacturerData()
 {
-    const auto data = readSubcommand(subcommand::MANU_DATA);
-    manufacturer_data_t manuData;
-    if (data.size() != manuData.size())
+    const auto dataVec = readSubcommand(subcommand::MANU_DATA);
+    manufacturer_data_t dataArr;
+    if (dataVec.size() != dataArr.size())
         throw std::runtime_error("Manufacturer data size mismatch");
-    std::copy(data.begin(), data.end(), manuData.begin());
-    return manuData;
+    std::copy(dataVec.begin(), dataVec.end(), dataArr.begin());
+    return dataArr;
+}
+
+void bq76942::writeManufacturerData(const manufacturer_data_t& dataArr)
+{
+    std::vector<uint8_t> dataVec(dataArr.size(), 0);
+    std::copy(dataArr.begin(), dataArr.end(), dataVec.begin());
+    writeSubcommand(subcommand::MANU_DATA, dataVec);
+}
+
+bq76942::da_status_5_t bq76942::readDAStatus5()
+{
+    const raw_da_status_5_t rawStatus = readRawDAStatus5();
+    const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
+    return da_status_5_t{
+        .vreg18AdcCounts = rawStatus.vreg18AdcCounts,
+        .vssAdcCounts = rawStatus.vssAdcCounts,
+        .maxCellVoltage = rawStatus.maxCellVoltage,
+        .minCellVoltage = rawStatus.minCellVoltage,
+        .batteryVoltageSum = rawStatus.batteryVoltageSum * (daConfig.userVoltsIsCentivolts ? 10 : 1),
+        .cellTemperature = _rawTempToCelsius(rawStatus.cellTemperature),
+        .fetTemperature = _rawTempToCelsius(rawStatus.fetTemperature),
+        .maxCellTemperature = _rawTempToCelsius(rawStatus.maxCellTemperature),
+        .minCellTemperature = _rawTempToCelsius(rawStatus.minCellTemperature),
+        .avgCellTemperature = _rawTempToCelsius(rawStatus.avgCellTemperature),
+        .cc3Current = userAmpsToMilliamps(rawStatus.cc3Current, daConfig),
+        .cc1Current = userAmpsToMilliamps(rawStatus.cc1Current, daConfig),
+        .cc2Counts = rawStatus.cc2Counts,
+        .cc3Counts = rawStatus.cc3Counts,
+    };
+}
+
+bq76942::da_status_6_t bq76942::readDAStatus6()
+{
+    const raw_da_status_6_t rawStatus = readRawDAStatus6();
+    const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
+    return da_status_6_t{
+        .accumulatedCharge = userAmpsToMilliamps(rawStatus.accumulatedCharge, daConfig),
+        //     .accumulatedChargeTime =,
+        // .cfetoffCounts =,
+        // .dfetoffCounts =,
+        // .alertCounts =,
+        // .ts1Counts =,
+        // .ts2Counts =,
+    };
+}
+
+float bq76942::userAmpsToMilliamps(const float& userAmps, const da_configuration_t& config)
+{
+    switch (config.userAmps)
+    {
+    default:
+        return userAmps;
+    case user_amps::DECIMILLIAMP:
+        return userAmps / 10.0f;
+    case user_amps::MILLIAMP:
+        return userAmps;
+    case user_amps::CENTIAMP:
+        return userAmps * 10;
+    case user_amps::DECIAMP:
+        return userAmps * 100;
+    }
+}
+
+int32_t bq76942::userVoltsToMillivolts(const int16_t& userVolts, const da_configuration_t& config)
+{
+    if (config.userVoltsIsCentivolts)
+        return userVolts * 10;
+    return userVolts;
 }
 
 std::vector<uint8_t> bq76942::readDirect(const uint8_t registerAddr, const size_t bytes)
@@ -317,45 +385,23 @@ int16_t bq76942::readCellVoltage(const uint8_t cell)
 int32_t bq76942::readStackVoltage()
 {
     const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
-    int32_t stackVoltageInUserVolts = readDirect<int16_t>(direct_command::STACK_VOLTAGE);
-    if (daConfig.userVoltsIsCentivolts)
-        return stackVoltageInUserVolts * 10;
-    return stackVoltageInUserVolts;
+    return userVoltsToMillivolts(readDirect<int16_t>(direct_command::STACK_VOLTAGE), daConfig);
 }
 
 int32_t bq76942::readPackVoltage()
 {
     const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
-    int32_t packVoltageInUserVolts = readDirect<int16_t>(direct_command::PACK_PIN_VOLTAGE);
-    if (daConfig.userVoltsIsCentivolts)
-        return packVoltageInUserVolts * 10;
-    return packVoltageInUserVolts;
+    return userVoltsToMillivolts(readDirect<int16_t>(direct_command::PACK_PIN_VOLTAGE), daConfig);
 }
 
 int32_t bq76942::readLdVoltage()
 {
     const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
-    int32_t ldVoltageInUserVolts = readDirect<int16_t>(direct_command::LD_PIN_VOLTAGE);
-    if (daConfig.userVoltsIsCentivolts)
-        return ldVoltageInUserVolts * 10;
-    return ldVoltageInUserVolts;
+    return userVoltsToMillivolts(readDirect<int16_t>(direct_command::LD_PIN_VOLTAGE), daConfig);
 }
 
 float bq76942::readCC2Current()
 {
     const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
-    int32_t cc2CurrentInUserAmps = readDirect<int16_t>(direct_command::CC2_CURRENT);
-    switch (daConfig.userAmps)
-    {
-    default:
-        return cc2CurrentInUserAmps;
-    case user_amps::DECIMILLIAMP:
-        return cc2CurrentInUserAmps / 10.0f;
-    case user_amps::MILLIAMP:
-        return cc2CurrentInUserAmps;
-    case user_amps::CENTIAMP:
-        return cc2CurrentInUserAmps * 10;
-    case user_amps::DECIAMP:
-        return cc2CurrentInUserAmps * 100;
-    }
+    return userAmpsToMilliamps(readDirect<int16_t>(direct_command::CC2_CURRENT), daConfig);
 }

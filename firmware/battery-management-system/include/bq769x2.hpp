@@ -1571,8 +1571,8 @@ public:
         float maxCellTemperature;
         float minCellTemperature;
         float avgCellTemperature;
-        int32_t cc3Current;
-        int32_t cc1Current;
+        float cc3Current;
+        float cc1Current;
         int32_t cc2Counts;
         int32_t cc3Counts;
     };
@@ -2639,6 +2639,9 @@ public:
     const Power power{*this};
     const Protections protections{*this};
     const PermanentFail permanentFail{*this};
+
+    float userAmpsToMilliamps(const float& userAmps, const da_configuration_t& config);
+    int32_t userVoltsToMillivolts(const int16_t& userVolts, const da_configuration_t& config);
 
     std::vector<uint8_t> readDirect(const uint8_t registerAddr, const size_t bytes);
     template <typename T>
