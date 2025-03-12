@@ -1,6 +1,6 @@
 {
     "folders": [
-		{
+        {
             "name": "Shared Libraries",
             "path": "./components"
         },
@@ -15,7 +15,11 @@
         {
             "name": "Processing Plant Firmware",
             "path": "./processing-plant"
-        }
+        },
+        {
+            "name": "Workspace Root",
+            "path": ".."
+        },
     ],
     "settings": {
         "files.associations": {
