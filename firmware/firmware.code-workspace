@@ -23,6 +23,7 @@
     ],
     "settings": {
         "files.associations": {
+            "*.scad": "scad",
             "array": "cpp",
             "atomic": "cpp",
             "bit": "cpp",
@@ -104,7 +105,9 @@
             "ranges": "cpp",
             "valarray": "cpp",
             "*.tcc": "cpp",
-            "coroutine": "cpp"
+            "coroutine": "cpp",
+            "netfwd": "cpp",
+            "stdfloat": "cpp"
         },
         "C_Cpp.default.cppStandard": "c++20",
         "editor.formatOnSave": true,

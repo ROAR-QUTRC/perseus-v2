@@ -2,9 +2,11 @@
 
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <numeric>
 #include <stdexcept>
+#include <type.hpp>
 #include <type_traits>
 #include <vector>
 
@@ -507,7 +509,8 @@ public:
     };
     enum class comm_type : uint8_t
     {
-        DEFAULT = 0x00,
+        // for some reason, naming this DEFAULT breaks the *entire* file (over 1.4k errors)
+        DEFAULT_1 = 0x00,
         DEFAULT_2 = 0xFF,
         HDQ_ON_ALERT_PIN = 0x03,
         HDQ_ON_HDQ_PIN = 0x04,
@@ -542,6 +545,7 @@ public:
     };
     enum class adc_pin_function : uint8_t
     {
+        UNUSED = 0,
         ADC_INPUT_OR_THERMISTOR = 3,
     };
     enum class cfetoff_pin_function : uint8_t
@@ -612,7 +616,7 @@ public:
     {
         struct
         {
-            bool : 15;                       // RSVD_0
+            uint16_t : 15;                   // RSVD_0
             bool inDeepsleep : 1;            // DEEPSLEEP
             bool hasLoadDetectTimedOut : 1;  // LD_TIMEOUT
             // was pullup active during previous measurement?
@@ -746,21 +750,20 @@ public:
         };
         uint8_t raw = 0x00;
     };
-
     union battery_status_t
     {
         struct
         {
-            bool inSleep : 1;                  // SLEEP
-            bool : 1;                          // RSVD_0
-            bool shutdownPending : 1;          // SD_CMD
-            bool permanentFailActive : 1;      // PF
-            bool safetyFaultActive : 1;        // SS
-            bool fuseActive : 1;               // FUSE
-            security_state securityState : 2;  // SEC[1:0]
-            bool otpWriteBlocked : 1;          // OTPB
-            bool pendingOtpWrite : 1;          // OTPW
-            bool checkingCellOpenWire : 1;     // COW_CHK
+            bool inSleep : 1;                           // SLEEP
+            bool : 1;                                   // RSVD_0
+            bool shutdownPending : 1;                   // SD_CMD
+            bool permanentFailActive : 1;               // PF
+            bool safetyFaultActive : 1;                 // SS
+            bool fuseActive : 1;                        // FUSE
+            bq76942::security_state securityState : 2;  // SEC[1:0]
+            bool otpWriteBlocked : 1;                   // OTPB
+            bool pendingOtpWrite : 1;                   // OTPW
+            bool checkingCellOpenWire : 1;              // COW_CHK
             // whether or not the previous reset was due to the watchdog timer
             // NOTE: Independent of Host Watchdog settings
             bool wasWatchdogReset : 1;  // WD
@@ -813,7 +816,6 @@ public:
         };
         uint8_t raw = 0x0000;
     };
-
     union manufacturing_status_t
     {
         struct
@@ -846,16 +848,16 @@ public:
     {
         struct
         {
-            struct reg2
+            struct
             {
-                regulator_voltage voltage : 3;  // REG2V_[2:0]
-                bool enable : 1;                // REG2_EN
-            };
-            struct reg1
+                bq76942::regulator_voltage voltage : 3;  // REG2V_[2:0]
+                bool enable : 1;                         // REG2_EN
+            } reg1;
+            struct
             {
-                regulator_voltage voltage : 3;  // REG1V_[2:0]
-                bool enable : 1;                // REG1_EN
-            };
+                bq76942::regulator_voltage voltage : 3;  // REG1V_[2:0]
+                bool enable : 1;                         // REG1_EN
+            } reg2;
         };
         uint8_t raw = 0x00;
     };
@@ -933,7 +935,6 @@ public:
         permanent_fail_c_t pfStatusC;
         permanent_fail_d_t pfStatusD;
     };
-
     struct da_status_1_t
     {
         int32_t cell1VoltageCounts;
@@ -1075,10 +1076,10 @@ public:
             // set: 1.5ms per conversion (but lower accuracy)
             bool useFastAdc : 1;  // FASTADC
             // measurement loop speed during cell balancing
-            measurement_loop_speed cellBalanceLoopSpeed : 2;  // CB_LOOP_SLOW_[1:0]
+            bq76942::measurement_loop_speed cellBalanceLoopSpeed : 2;  // CB_LOOP_SLOW_[1:0]
             // measurement loop speed during normal operation
-            measurement_loop_speed loopSpeed : 2;    // LOOP_SLOW_[1:0]
-            coulomb_conversion_speed wakeSpeed : 2;  // WK_SPD_[1:0]
+            bq76942::measurement_loop_speed loopSpeed : 2;    // LOOP_SLOW_[1:0]
+            bq76942::coulomb_conversion_speed wakeSpeed : 2;  // WK_SPD_[1:0]
         };
         uint16_t raw = 0x0000;
     };
@@ -1096,8 +1097,8 @@ public:
     {
         struct
         {
-            bool : 2;                         // RSVD_0
-            hwd_toggle_option hwdAction : 2;  // TOGGLE_OPT_[1:0]
+            bool : 2;                                  // RSVD_0
+            bq76942::hwd_toggle_option hwdAction : 2;  // TOGGLE_OPT_[1:0]
             // Regulator off time in seconds before turning back on
             uint8_t toggleTime : 4;  // TOGGLE_TIME_[3:0]
         };
@@ -1123,7 +1124,7 @@ public:
         {
             union
             {
-                struct function
+                struct
                 {
                     bool isActiveLow : 1;  // OPT[5]
                     bool : 1;              // OPT[4]
@@ -1137,14 +1138,14 @@ public:
                     bool disableHighZDrive : 1;         // OPT[1]
                     bool enablePulldown : 1;            // OPT[0]
                     cfetoff_pin_function function : 2;  // PINFXN[1:0]
-                };
-                struct adc
+                } function;
+                struct
                 {
                     pullup_config pullupConfig : 2;        // OPT[5:4]
                     polynomial_selection polynomial : 2;   // OPT[3:2]
                     measurement_type measurementType : 2;  // OPT[1:0]
                     adc_pin_function function : 2;         // PINFXN[1:0]
-                };
+                } adc;
             };
         };
         uint8_t raw = 0x00;
@@ -1155,7 +1156,7 @@ public:
         {
             union
             {
-                struct function
+                struct
                 {
                     bool isActiveLow : 1;  // OPT[5]
                     // clear: acts as DFETOFF
@@ -1171,14 +1172,14 @@ public:
                     bool disableHighZDrive : 1;         // OPT[1]
                     bool enablePulldown : 1;            // OPT[0]
                     dfetoff_pin_function function : 2;  // PINFXN[1:0]
-                };
-                struct adc
+                } function;
+                struct
                 {
                     pullup_config pullupConfig : 2;        // OPT[5:4]
                     polynomial_selection polynomial : 2;   // OPT[3:2]
                     measurement_type measurementType : 2;  // OPT[1:0]
                     adc_pin_function function : 2;         // PINFXN[1:0]
-                };
+                } adc;
             };
         };
         uint8_t raw = 0x00;
@@ -1189,7 +1190,7 @@ public:
         {
             union
             {
-                struct function
+                struct
                 {
                     bool isActiveLow : 1;  // OPT[5]
                     bool : 1;              // OPT[4]
@@ -1203,14 +1204,14 @@ public:
                     bool disableHighZDrive : 1;       // OPT[1]
                     bool enablePulldown : 1;          // OPT[0]
                     alert_pin_function function : 2;  // PINFXN[1:0]
-                };
-                struct adc
+                } function;
+                struct
                 {
                     pullup_config pullupConfig : 2;        // OPT[5:4]
                     polynomial_selection polynomial : 2;   // OPT[3:2]
                     measurement_type measurementType : 2;  // OPT[1:0]
                     adc_pin_function function : 2;         // PINFXN[1:0]
-                };
+                } adc;
             };
         };
         uint8_t raw = 0x00;
@@ -1221,13 +1222,13 @@ public:
         {
             union
             {
-                struct adc
+                struct
                 {
                     pullup_config pullupConfig : 2;        // OPT[5:4]
                     polynomial_selection polynomial : 2;   // OPT[3:2]
                     measurement_type measurementType : 2;  // OPT[1:0]
                     adc_pin_function function : 2;         // PINFXN[1:0]
-                };
+                } adc;
             };
         };
         uint8_t raw = 0x00;
@@ -1238,7 +1239,7 @@ public:
         {
             union
             {
-                struct function
+                struct
                 {
                     bool isActiveLow : 1;  // OPT[5]
                     bool : 1;              // OPT[4]
@@ -1252,14 +1253,14 @@ public:
                     bool disableHighZDrive : 1;     // OPT[1]
                     bool enablePulldown : 1;        // OPT[0]
                     hdq_pin_function function : 2;  // PINFXN[1:0]
-                };
-                struct adc
+                } function;
+                struct
                 {
                     pullup_config pullupConfig : 2;        // OPT[5:4]
                     polynomial_selection polynomial : 2;   // OPT[3:2]
                     measurement_type measurementType : 2;  // OPT[1:0]
                     adc_pin_function function : 2;         // PINFXN[1:0]
-                };
+                } adc;
             };
         };
         uint8_t raw = 0x00;
@@ -1270,7 +1271,7 @@ public:
         {
             union
             {
-                struct function
+                struct
                 {
                     bool isActiveLow : 1;  // OPT[5]
                     bool : 1;              // OPT[4]
@@ -1284,14 +1285,14 @@ public:
                     bool disableHighZDrive : 1;      // OPT[1]
                     bool enablePulldown : 1;         // OPT[0]
                     dchg_pin_function function : 2;  // PINFXN[1:0]
-                };
-                struct adc
+                } function;
+                struct
                 {
                     pullup_config pullupConfig : 2;        // OPT[5:4]
                     polynomial_selection polynomial : 2;   // OPT[3:2]
                     measurement_type measurementType : 2;  // OPT[1:0]
                     adc_pin_function function : 2;         // PINFXN[1:0]
-                };
+                } adc;
             };
         };
         uint8_t raw = 0x00;
@@ -1302,7 +1303,7 @@ public:
         {
             union
             {
-                struct function
+                struct
                 {
                     bool isActiveLow : 1;  // OPT[5]
                     bool : 1;              // OPT[4]
@@ -1316,14 +1317,14 @@ public:
                     bool disableHighZDrive : 1;      // OPT[1]
                     bool enablePulldown : 1;         // OPT[0]
                     ddsg_pin_function function : 2;  // PINFXN[1:0]
-                };
-                struct adc
+                } function;
+                struct
                 {
                     pullup_config pullupConfig : 2;        // OPT[5:4]
                     polynomial_selection polynomial : 2;   // OPT[3:2]
                     measurement_type measurementType : 2;  // OPT[1:0]
                     adc_pin_function function : 2;         // PINFXN[1:0]
-                };
+                } adc;
             };
         };
         uint8_t raw = 0x00;
@@ -1551,10 +1552,8 @@ public:
         };
         uint8_t raw = 0x00;
     };
-
 #pragma pack(pop)
 
-    typedef alarm_status_t;
     typedef std::array<uint8_t, 32> manufacturer_data_t;
     typedef voltage_snapshot_t cuv_snapshot_t;
     typedef voltage_snapshot_t cov_snapshot_t;
@@ -1588,6 +1587,7 @@ public:
     };
 
     constexpr static auto SUBCOMMAND_TIMEOUT = std::chrono::milliseconds(10);
+    constexpr static int MAX_RETRIES = 3;
 
     bq76942(uint8_t address = 0x08);
 
@@ -1622,7 +1622,7 @@ public:
     alarm_status_t readAlarmRawStatus() { return readDirect<alarm_status_t>(direct_command::ALARM_RAW_STATUS); }
     alarm_status_t readAlarmEnable() { return readDirect<alarm_status_t>(direct_command::ALARM_ENABLE); }
     void writeAlarmEnable(const alarm_status_t& alarmEnable) { writeDirect(direct_command::ALARM_ENABLE, alarmEnable); }
-    float readTemperature(const temperature_sensor& sensor) { return _rawTempToCelsius(readDirect<int16_t>(static_cast<direct_command>(sensor))); }
+    float readTemperature(const temperature_sensor& sensor) { return rawTempToCelsius(readDirect<int16_t>(static_cast<direct_command>(sensor))); }
     fet_status_t readFetStatus() { return readDirect<fet_status_t>(direct_command::FET_STATUS); }
 
     // --- COMMAND ONLY SUBCOMMANDS ---
@@ -2433,8 +2433,8 @@ public:
         std::chrono::seconds readShortCircuitRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCD_RECOVERY_TIME)); }
         void writeShortCircuitRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SCD_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
 
-        int32_t readOcd3Threshold() const;
-        void writeOcd3Threshold(const int32_t& threshold);
+        float readOcd3Threshold() const;
+        void writeOcd3Threshold(const float& threshold);
         std::chrono::seconds readOcd3Delay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCD3_DELAY)); };
         void writeOcd3Delay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OCD3_DELAY, static_cast<uint8_t>(delay.count())); }
         int16_t readOcdRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCD_RECOVERY_THRESHOLD); }
@@ -2451,12 +2451,12 @@ public:
 
         uint8_t readShortCircuitLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::SCDL_LATCH_LIMIT); }
         void writeShortCircuitLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::SCDL_LATCH_LIMIT, limit); }
-        std::chrono::seconds readShortCircuitCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_COUNTER_DEC_DELAY)); }
-        void writeShortCircuitCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
-        std::chrono::seconds readShortCircuitRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_RECOVERY_TIME)); }
-        void writeShortCircuitRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
-        int16_t readShortCircuitRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SCDL_RECOVERY_THRESHOLD); }
-        void writeShortCircuitRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_THRESHOLD, threshold); }
+        std::chrono::seconds readShortCircuitLatchCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_COUNTER_DEC_DELAY)); }
+        void writeShortCircuitLatchCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
+        std::chrono::seconds readShortCircuitLatchRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_RECOVERY_TIME)); }
+        void writeShortCircuitLatchRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+        int16_t readShortCircuitLatchRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SCDL_RECOVERY_THRESHOLD); }
+        void writeShortCircuitLatchRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_THRESHOLD, threshold); }
 
         int8_t readOtcThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTC_THRESHOLD); }
         void writeOtcThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTC_THRESHOLD, threshold, -40, 120); }
@@ -2524,8 +2524,8 @@ public:
         void writePrechargeTimeoutCurrentThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::PTO_CHARGE_THRESHOLD, threshold, 0, 1000); }
         std::chrono::seconds readPrechargeTimeoutDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint16_t>(data_register::PTO_DELAY)); }
         void writePrechargeTimeoutDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::PTO_DELAY, static_cast<uint16_t>(delay.count())); }
-        int16_t readPrechargeResetCharge() const;
-        void writePrechargeResetCurrent(const int16_t& charge);
+        float readPrechargeResetCharge() const;
+        void writePrechargeResetCurrent(const float& charge) const;
 
     protected:
         Protections(bq76942& parent) : _parent(parent) {}
@@ -2560,11 +2560,11 @@ public:
         std::chrono::seconds readTosDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::TOS_DELAY)); }
         void writeTosDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::TOS_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int32_t readSoccThreshold() const;
-        void writeSoccThreshold(const int32_t& threshold);
+        float readSoccThreshold() const;
+        void writeSoccThreshold(const float& threshold) const;
 
-        int32_t readSocdThreshold() const;
-        void writeSocdThreshold(const int32_t& threshold);
+        float readSocdThreshold() const;
+        void writeSocdThreshold(const float& threshold) const;
 
         int8_t readSotThreshold() const { return _parent.readSubcommand<int8_t>(data_register::SOT_THRESHOLD); }
         void writeSotThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::SOT_THRESHOLD, threshold, -40, 120); }
@@ -2639,9 +2639,6 @@ public:
     const Power power{*this};
     const Protections protections{*this};
     const PermanentFail permanentFail{*this};
-
-    float userAmpsToMilliamps(const float& userAmps, const da_configuration_t& config);
-    int32_t userVoltsToMillivolts(const int16_t& userVolts, const da_configuration_t& config);
 
     std::vector<uint8_t> readDirect(const uint8_t registerAddr, const size_t bytes);
     template <typename T>
@@ -2743,17 +2740,24 @@ public:
         if ((data < minimum) || (data > maximum))
         {
             throw std::out_of_range(std::format("Value {} is out of range for register {:#x} - must be between {} and {}",
-                                                data, registerAddr, minimum, maximum));
+                                                data, static_cast<uint16_t>(registerAddr), minimum, maximum));
         }
         writeSubcommand(registerAddr, data);
     }
 
+    static float rawTempToCelsius(int16_t raw) { return kelvinToCelsius(raw / 10.0f); }
+    static float kelvinToCelsius(float kelvin) { return kelvin - 273.15f; }
+    static float getUserAmpsMultiplier(const da_configuration_t& config);
+    static int16_t getUserVoltsMultiplier(const da_configuration_t& config);
+
 private:
     uint8_t _address;
 
-    uint8_t _calculateChecksum(uint16_t registerAddr, const std::vector<uint8_t>& data) const;
-    static float _rawTempToCelsius(int16_t raw) { return _kelvinToCelsius(raw / 10.0f); }
-    static float _kelvinToCelsius(float kelvin) { return kelvin - 273.15f; }
+    std::vector<uint8_t> _readDirect(const uint8_t registerAddr, const size_t bytes);
+    void _writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>& data);
+    std::vector<uint8_t> _readSubcommand(const uint16_t registerAddr);
+    void _writeSubcommand(const uint16_t registerAddr, const std::vector<uint8_t>& data);
+    static uint8_t _calculateChecksum(uint16_t registerAddr, const std::vector<uint8_t>& data);
 
     /// @brief Temporary buffer for storing data so CRCs can be calculated
     std::vector<uint8_t> _dataBuf;

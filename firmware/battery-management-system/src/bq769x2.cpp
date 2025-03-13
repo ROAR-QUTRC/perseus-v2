@@ -60,6 +60,7 @@ void bq76942::setGPO(const gpo& pin, const bool state)
     switch (pin)
     {
     default:
+        throw std::invalid_argument("Invalid GPO pin");
         break;
     case gpo::CFETOFF:
         writeSubcommand(state ? cmd_only_subcommand::CFETOFF_HI : cmd_only_subcommand::CFETOFF_LO);
@@ -160,14 +161,14 @@ bq76942::da_status_5_t bq76942::readDAStatus5()
         .vssAdcCounts = rawStatus.vssAdcCounts,
         .maxCellVoltage = rawStatus.maxCellVoltage,
         .minCellVoltage = rawStatus.minCellVoltage,
-        .batteryVoltageSum = rawStatus.batteryVoltageSum * (daConfig.userVoltsIsCentivolts ? 10 : 1),
-        .cellTemperature = _rawTempToCelsius(rawStatus.cellTemperature),
-        .fetTemperature = _rawTempToCelsius(rawStatus.fetTemperature),
-        .maxCellTemperature = _rawTempToCelsius(rawStatus.maxCellTemperature),
-        .minCellTemperature = _rawTempToCelsius(rawStatus.minCellTemperature),
-        .avgCellTemperature = _rawTempToCelsius(rawStatus.avgCellTemperature),
-        .cc3Current = userAmpsToMilliamps(rawStatus.cc3Current, daConfig),
-        .cc1Current = userAmpsToMilliamps(rawStatus.cc1Current, daConfig),
+        .batteryVoltageSum = rawStatus.batteryVoltageSum * getUserVoltsMultiplier(daConfig),
+        .cellTemperature = rawTempToCelsius(rawStatus.cellTemperature),
+        .fetTemperature = rawTempToCelsius(rawStatus.fetTemperature),
+        .maxCellTemperature = rawTempToCelsius(rawStatus.maxCellTemperature),
+        .minCellTemperature = rawTempToCelsius(rawStatus.minCellTemperature),
+        .avgCellTemperature = rawTempToCelsius(rawStatus.avgCellTemperature),
+        .cc3Current = static_cast<float>(rawStatus.cc3Current) * getUserVoltsMultiplier(daConfig),
+        .cc1Current = static_cast<float>(rawStatus.cc1Current) * getUserVoltsMultiplier(daConfig),
         .cc2Counts = rawStatus.cc2Counts,
         .cc3Counts = rawStatus.cc3Counts,
     };
@@ -177,42 +178,239 @@ bq76942::da_status_6_t bq76942::readDAStatus6()
 {
     const raw_da_status_6_t rawStatus = readRawDAStatus6();
     const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
+
+    const float accChargeInteger = rawStatus.accumulatedCharge;
+    // TODO: check if this is correct
+    const float accChargeFractional = static_cast<float>(rawStatus.accumulatedChargeFraction) / (1ULL << 32);
+
     return da_status_6_t{
-        .accumulatedCharge = userAmpsToMilliamps(rawStatus.accumulatedCharge, daConfig),
-        //     .accumulatedChargeTime =,
-        // .cfetoffCounts =,
-        // .dfetoffCounts =,
-        // .alertCounts =,
-        // .ts1Counts =,
-        // .ts2Counts =,
+        .accumulatedCharge = (accChargeInteger + accChargeFractional) * getUserAmpsMultiplier(daConfig),
+        .accumulatedChargeTime = std::chrono::seconds(rawStatus.accumulatedChargeTime),
+        .cfetoffCounts = rawStatus.cfetoffCounts,
+        .dfetoffCounts = rawStatus.dfetoffCounts,
+        .alertCounts = rawStatus.alertCounts,
+        .ts1Counts = rawStatus.ts1Counts,
+        .ts2Counts = rawStatus.ts2Counts,
     };
 }
 
-float bq76942::userAmpsToMilliamps(const float& userAmps, const da_configuration_t& config)
+std::vector<uint8_t> bq76942::readDirect(const uint8_t registerAddr, const size_t bytes)
+{
+    for (int i = 0; i <= MAX_RETRIES; i++)
+    {
+        try
+        {
+            return _readDirect(registerAddr, bytes);
+        }
+        catch (...)
+        {
+            if (i >= MAX_RETRIES)
+                throw;
+            std::this_thread::sleep_for(1ms);
+        }
+    }
+    // control can never reach here (the loop will either return or throw),
+    // but let's make the compiler happy
+    return {};
+}
+
+void bq76942::writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>& data)
+{
+    for (int i = 0; i <= MAX_RETRIES; i++)
+    {
+        try
+        {
+            _writeDirect(registerAddr, data);
+            return;
+        }
+        catch (...)
+        {
+            if (i >= MAX_RETRIES)
+                throw;
+            std::this_thread::sleep_for(1ms);
+        }
+    }
+}
+
+std::vector<uint8_t> bq76942::readSubcommand(const uint16_t registerAddr)
+{
+    for (int i = 0; i <= MAX_RETRIES; i++)
+    {
+        try
+        {
+            return _readSubcommand(registerAddr);
+        }
+        catch (...)
+        {
+            if (i >= MAX_RETRIES)
+                throw;
+            std::this_thread::sleep_for(1ms);
+        }
+    }
+    // control can never reach here (the loop will either return or throw),
+    // but let's make the compiler happy
+    return {};
+}
+
+void bq76942::writeSubcommand(const uint16_t registerAddr, const std::vector<uint8_t>& data)
+{
+    // no need for retries here since it should be handled by the underlying directWrite calls
+    _writeSubcommand(registerAddr, data);
+}
+
+float bq76942::getUserAmpsMultiplier(const da_configuration_t& config)
 {
     switch (config.userAmps)
     {
     default:
-        return userAmps;
+        return 1.0f;
+        break;
     case user_amps::DECIMILLIAMP:
-        return userAmps / 10.0f;
+        return 0.1f;
+        break;
     case user_amps::MILLIAMP:
-        return userAmps;
+        return 1.0f;
+        break;
     case user_amps::CENTIAMP:
-        return userAmps * 10;
+        return 10.0f;
+        break;
     case user_amps::DECIAMP:
-        return userAmps * 100;
+        return 100.0f;
+        break;
     }
 }
 
-int32_t bq76942::userVoltsToMillivolts(const int16_t& userVolts, const da_configuration_t& config)
+int32_t bq76942::readStackVoltage()
 {
-    if (config.userVoltsIsCentivolts)
-        return userVolts * 10;
-    return userVolts;
+    return readDirect<int16_t>(direct_command::STACK_VOLTAGE) * getUserVoltsMultiplier(settings.configuration.readDAConfiguration());
 }
 
-std::vector<uint8_t> bq76942::readDirect(const uint8_t registerAddr, const size_t bytes)
+int32_t bq76942::readPackVoltage()
+{
+    return readDirect<int16_t>(direct_command::PACK_PIN_VOLTAGE) * getUserVoltsMultiplier(settings.configuration.readDAConfiguration());
+}
+
+int32_t bq76942::readLdVoltage()
+{
+    return readDirect<int16_t>(direct_command::LD_PIN_VOLTAGE) * getUserVoltsMultiplier(settings.configuration.readDAConfiguration());
+}
+
+float bq76942::readCC2Current()
+{
+    return readDirect<int16_t>(direct_command::CC2_CURRENT) * getUserAmpsMultiplier(settings.configuration.readDAConfiguration());
+}
+
+int16_t bq76942::Calibration::Voltage::readCellGain(const uint8_t& cell) const
+{
+    if (cell >= 16)
+    {
+        throw std::invalid_argument("Invalid cell number");
+    }
+    const int16_t registerAddr = static_cast<uint16_t>(bq76942::data_register::CELL_1_GAIN) + (2 * cell);
+    return _parent.readDirect<int16_t>(registerAddr);
+}
+
+void bq76942::Calibration::Voltage::writeCellGain(const uint8_t& cell, const int16_t& gain) const
+{
+    if (cell >= 16)
+    {
+        throw std::invalid_argument("Invalid cell number");
+    }
+    const int16_t registerAddr = static_cast<uint16_t>(bq76942::data_register::CELL_1_GAIN) + (2 * cell);
+    _parent.writeDirect(registerAddr, gain);
+}
+
+uint32_t bq76942::Settings::readDsgCurrentThreshold() const
+{
+    return _parent.readSubcommand<int16_t>(data_register::DSG_CURRENT_THRESHOLD) * getUserAmpsMultiplier(configuration.readDAConfiguration());
+}
+
+int16_t bq76942::Settings::readCellInterconnectResistance(const uint8_t& cell)
+{
+    if (cell >= 16)
+    {
+        throw std::invalid_argument("Invalid cell number");
+    }
+    const int16_t registerAddr = static_cast<uint16_t>(bq76942::data_register::CELL_1_INTERCONNECT) + (2 * cell);
+    return _parent.readDirect<int16_t>(registerAddr);
+}
+
+void bq76942::Settings::writeCellInterconnectResistance(const uint8_t& cell, const int16_t& resistance)
+{
+    if (cell >= 16)
+    {
+        throw std::invalid_argument("Invalid cell number");
+    }
+    const int16_t registerAddr = static_cast<uint16_t>(bq76942::data_register::CELL_1_INTERCONNECT) + (2 * cell);
+    _parent.writeDirect(registerAddr, resistance);
+}
+
+float bq76942::Protections::readOcd3Threshold() const
+{
+    return _parent.readSubcommand<int16_t>(data_register::OCD3_THRESHOLD) * getUserAmpsMultiplier(_parent.settings.configuration.readDAConfiguration());
+}
+
+void bq76942::Protections::writeOcd3Threshold(const float& threshold)
+{
+    const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / _parent.getUserAmpsMultiplier(_parent.settings.configuration.readDAConfiguration())));
+    _parent.writeSubcommandClamped<int16_t>(data_register::OCD3_THRESHOLD, roundedThreshold, std::numeric_limits<int16_t>::min(), 0);
+}
+
+float bq76942::Protections::readPrechargeResetCharge() const
+{
+    return _parent.readSubcommand<int16_t>(data_register::PTO_RESET) * getUserAmpsMultiplier(_parent.settings.configuration.readDAConfiguration());
+}
+
+void bq76942::Protections::writePrechargeResetCurrent(const float& charge) const
+{
+    const int16_t roundedCharge = static_cast<int16_t>(std::round(charge / _parent.getUserAmpsMultiplier(_parent.settings.configuration.readDAConfiguration())));
+    _parent.writeSubcommandClamped<int16_t>(data_register::PTO_RESET, roundedCharge, 0, 10000);
+}
+
+float bq76942::PermanentFail::readSoccThreshold() const
+{
+    const da_configuration_t daConfig = _parent.settings.configuration.readDAConfiguration();
+    return _parent.readSubcommand<int16_t>(data_register::SOCC_THRESHOLD) * getUserAmpsMultiplier(daConfig);
+}
+
+void bq76942::PermanentFail::writeSoccThreshold(const float& threshold) const
+{
+    const da_configuration_t daConfig = _parent.settings.configuration.readDAConfiguration();
+    const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / getUserAmpsMultiplier(daConfig)));
+    _parent.writeSubcommand(data_register::SOCC_THRESHOLD, roundedThreshold);
+}
+
+float bq76942::PermanentFail::readSocdThreshold() const
+{
+    const da_configuration_t daConfig = _parent.settings.configuration.readDAConfiguration();
+    return _parent.readSubcommand<int16_t>(data_register::SOCD_THRESHOLD) * getUserAmpsMultiplier(daConfig);
+}
+
+void bq76942::PermanentFail::writeSocdThreshold(const float& threshold) const
+{
+    const da_configuration_t daConfig = _parent.settings.configuration.readDAConfiguration();
+    const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / getUserAmpsMultiplier(daConfig)));
+    _parent.writeSubcommand(data_register::SOCD_THRESHOLD, roundedThreshold);
+}
+
+int16_t bq76942::getUserVoltsMultiplier(const da_configuration_t& config)
+{
+    if (config.userVoltsIsCentivolts)
+        return 10;
+    return 1;
+}
+
+int16_t bq76942::readCellVoltage(const uint8_t cell)
+{
+    if (cell >= 16)
+    {
+        throw std::invalid_argument("Invalid cell number");
+    }
+    const int8_t address = static_cast<uint8_t>(direct_command::CELL_1_VOLTAGE) + (2 * cell);
+    return readDirect<int16_t>(address);
+}
+
+std::vector<uint8_t> bq76942::_readDirect(const uint8_t registerAddr, const size_t bytes)
 {
     if (bytes == 0)
     {
@@ -263,7 +461,7 @@ std::vector<uint8_t> bq76942::readDirect(const uint8_t registerAddr, const size_
     return realDataBuf;
 }
 
-void bq76942::writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>& data)
+void bq76942::_writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>& data)
 {
     Wire.beginTransmission(_address);
     Wire.write(registerAddr);
@@ -287,7 +485,7 @@ void bq76942::writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>
     }
 }
 
-std::vector<uint8_t> bq76942::readSubcommand(const uint16_t registerAddr)
+std::vector<uint8_t> bq76942::_readSubcommand(const uint16_t registerAddr)
 {
     writeDirect(direct_command::SUBCOMMAND, registerAddr);
     // most subcommands take between 400-660us to complete,
@@ -341,7 +539,8 @@ std::vector<uint8_t> bq76942::readSubcommand(const uint16_t registerAddr)
     }
     return data;
 }
-void bq76942::writeSubcommand(const uint16_t registerAddr, const std::vector<uint8_t>& data)
+
+void bq76942::_writeSubcommand(const uint16_t registerAddr, const std::vector<uint8_t>& data)
 {
     if (data.size() > 32)
     {
@@ -361,7 +560,7 @@ void bq76942::writeSubcommand(const uint16_t registerAddr, const std::vector<uin
     writeDirect(direct_command::TRANSFER_CHECKSUM, dataLenChecksum);
 }
 
-uint8_t bq76942::_calculateChecksum(uint16_t registerAddr, const std::vector<uint8_t>& data) const
+uint8_t bq76942::_calculateChecksum(uint16_t registerAddr, const std::vector<uint8_t>& data)
 {
     uint8_t checksum = 0;
     // checksum includes the subcommand as well as the data
@@ -370,38 +569,4 @@ uint8_t bq76942::_calculateChecksum(uint16_t registerAddr, const std::vector<uin
     for (const uint8_t byte : data)
         checksum += byte;
     return ~checksum;
-}
-
-int16_t bq76942::readCellVoltage(const uint8_t cell)
-{
-    if (cell > 16)
-    {
-        throw std::invalid_argument("Invalid cell number");
-    }
-    int8_t address = static_cast<uint8_t>(direct_command::CELL_1_VOLTAGE) + 2 * cell;
-    return readDirect<int16_t>(address);
-}
-
-int32_t bq76942::readStackVoltage()
-{
-    const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
-    return userVoltsToMillivolts(readDirect<int16_t>(direct_command::STACK_VOLTAGE), daConfig);
-}
-
-int32_t bq76942::readPackVoltage()
-{
-    const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
-    return userVoltsToMillivolts(readDirect<int16_t>(direct_command::PACK_PIN_VOLTAGE), daConfig);
-}
-
-int32_t bq76942::readLdVoltage()
-{
-    const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
-    return userVoltsToMillivolts(readDirect<int16_t>(direct_command::LD_PIN_VOLTAGE), daConfig);
-}
-
-float bq76942::readCC2Current()
-{
-    const da_configuration_t daConfig = settings.configuration.readDAConfiguration();
-    return userAmpsToMilliamps(readDirect<int16_t>(direct_command::CC2_CURRENT), daConfig);
 }
