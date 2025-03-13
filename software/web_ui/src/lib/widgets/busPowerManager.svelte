@@ -41,6 +41,7 @@
 		});
 
 		publisher.publish(message);
+		publisher.unsubscribe();
 	};
 
 	const busNames = ['compute', 'drive', 'aux', 'spare'];
@@ -55,6 +56,10 @@
 		listener.subscribe((message: any) => {
 			busState = JSON.parse(message.data);
 		});
+
+		return () => {
+			listener.unsubscribe();
+		};
 	});
 </script>
 

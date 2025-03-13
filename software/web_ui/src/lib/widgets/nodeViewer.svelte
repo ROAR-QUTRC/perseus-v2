@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { ros } from '$lib/scripts/ros.svelte';
+	import { isConnected, ros } from '$lib/scripts/ros.svelte';
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'Node viewer';
@@ -24,9 +24,10 @@
 		publications: { name: string; type: string }[];
 		services: { name: string; type: string }[];
 	}>();
+	let selectedNode = $state<string>('');
 
 	const getNodes = async () => {
-		ros.value!.getNodes(
+		ros.value?.getNodes(
 			(nodes) => {
 				nodesList = nodes;
 			},
@@ -37,32 +38,13 @@
 	};
 
 	const changeSelectedNode = (value: string) => {
-		// ros.value!.getTopicsAndRawTypes(
-		// 	(topics) => {
-		// 		console.log(topics);
-		// 	},
-		// 	(error) => {
-		// 		console.error(error);
-		// 	}
-		// );
-
-		ros.value!.getParams(
-			(params: any) => {
-				console.log(params);
-			},
-			(error) => {
-				console.error(error);
-			}
-		);
-
+		selectedNode = value;
 		ros.value!.getNodeDetails(
 			value,
 			(subscriptions: string[], publications: string[], services: string[]) => {
 				let subList: { name: string; type: string }[] = [];
 				for (let i = 0; i < subscriptions.length; i++) {
-					ros.value!.getTopicType(subscriptions[i], (type) => {
-						subList.push({ name: subscriptions[i], type: type });
-					});
+					subList.push({ name: subscriptions[i], type: '' });
 				}
 				for (let i = 0; i < publications.length; i++) {
 					ros.value!.getTopicType(publications[i], (type) => {
@@ -76,9 +58,6 @@
 				}
 
 				nodeData = { subscriptions: subList, publications: [], services: [] };
-
-				// console.log(nodeData);
-				// nodeData = { subscriptions: subscriptions, publications: publications, services: services };
 			},
 			(error) => {
 				console.error(error);
@@ -86,53 +65,73 @@
 		);
 	};
 
-	getNodes();
+	// When the client connects to ros bridge, get the list of nodes
+	$effect(() => {
+		if (isConnected()) {
+			getNodes();
+		}
+	});
 </script>
 
-<div class="h-[100%] w-[100%] flex-col">
-	<div class="flex items-center">
-		<Button variant="outline" onclick={getNodes} class="mr-2 grow-0"><Reload /></Button>
-		<Select.Root type="single" onValueChange={(value) => changeSelectedNode(value)}>
-			<Select.Trigger class="grow-0">Select a node</Select.Trigger>
-			<Select.Content>
-				{#each nodesList as node}
-					<Select.Item value={node}>{node}</Select.Item>
-				{/each}
-			</Select.Content>
-		</Select.Root>
-	</div>
+{#if isConnected()}
+	<div class="h-full w-full flex-col">
+		<div class="flex items-center">
+			<Button variant="outline" onclick={getNodes} class="mr-2 grow-0"><Reload /></Button>
+			<Select.Root type="single" onValueChange={(value) => changeSelectedNode(value)}>
+				<Select.Trigger class="grow-0"
+					>{selectedNode === '' ? 'Select a node...' : selectedNode}</Select.Trigger
+				>
+				<Select.Content>
+					{#each nodesList as node}
+						<Select.Item value={node}>{node}</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+		</div>
 
-	{#if nodeData}
-		<ScrollArea orientation="both" class="mt-2 grow rounded-md border p-3">
-			<div>
-				<strong>Publications:</strong>
-				<div class="ml-8">
-					{#each nodeData?.publications as pub}
-						<div class="mb-1 flex">
-							<p>{pub.name}</p>
-							<kbd class="ml-1 rounded-md border px-[2px]">{pub.type}</kbd>
-						</div>
-					{/each}
+		{#if nodeData}
+			<ScrollArea orientation="both" class="mt-2 grow rounded-md border p-3">
+				<div>
+					<strong>Publications:</strong>
+					<div class="ml-8">
+						{#each nodeData?.publications as pub}
+							<div class="mb-1 flex">
+								<p>{pub.name}</p>
+								<kbd class="ml-1 rounded-md border px-[2px]">{pub.type}</kbd>
+							</div>
+						{/each}
+					</div>
+					<strong>Subscriptions:</strong>
+					<div class="ml-8">
+						{#each nodeData?.subscriptions as sub}
+							<div class="mb-1 flex">
+								<p>{sub.name}</p>
+								{#if sub.type !== ''}
+									<kbd class="ml-1 rounded-md border px-[2px]">{sub.type}</kbd>
+								{/if}
+							</div>
+						{/each}
+					</div>
+					<strong>Services:</strong>
+					<div class="ml-8">
+						{#each nodeData?.services as serv}
+							<div class="mb-1 flex">
+								<p>{serv.name}</p>
+								<kbd class="ml-1 rounded-md border px-[2px]">{serv.type}</kbd>
+							</div>
+						{/each}
+					</div>
 				</div>
-				<strong>Subscriptions:</strong>
-				<div class="ml-8">
-					{#each nodeData?.subscriptions as sub}
-						<div class="mb-1 flex">
-							<p>{sub.name}</p>
-							<kbd class="ml-1 rounded-md border px-[2px]">{sub.type}</kbd>
-						</div>
-					{/each}
-				</div>
-				<strong>Services:</strong>
-				<div class="ml-8">
-					{#each nodeData?.services as serv}
-						<div class="mb-1 flex">
-							<p>{serv.name}</p>
-							<kbd class="ml-1 rounded-md border px-[2px]">{serv.type}</kbd>
-						</div>
-					{/each}
-				</div>
+			</ScrollArea>
+		{/if}
+	</div>
+{:else}
+	<div class="relative h-full w-full">
+		<div class="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-card">
+			<div class="absolute left-[50%] top-[50%] w-[80%] -translate-x-[50%] -translate-y-[50%]">
+				<p class="text-center text-2xl">No ROS Connection found.</p>
+				<p class="text-center">Make sure the rosbridge is running and the client is connected.</p>
 			</div>
-		</ScrollArea>
-	{/if}
-</div>
+		</div>
+	</div>
+{/if}
