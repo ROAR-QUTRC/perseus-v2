@@ -1743,6 +1743,11 @@ joi@^17.13.3:
     "@sideway/formula" "^3.0.1"
     "@sideway/pinpoint" "^2.0.0"
 
+json-formatter-js@^2.5.23:
+  version "2.5.23"
+  resolved "https://registry.yarnpkg.com/json-formatter-js/-/json-formatter-js-2.5.23.tgz#b7dd0a1da7e6cbea8e76743d7d8dc1238866cc73"
+  integrity sha512-Cbm8wHXjo/C56aCePP1VuKvjxoMEmL7g7Ckss1oWFFlCsvOEEbye1kTeaNNaqba1Cl6YpIOYAnK65pUQ8mDIUQ==
+
 json-schema-to-ts@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/json-schema-to-ts/-/json-schema-to-ts-3.1.1.tgz#81f3acaf5a34736492f6f5f51870ef9ece1ca853"
