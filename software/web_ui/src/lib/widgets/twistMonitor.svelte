@@ -9,6 +9,12 @@
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
 			General: {
+				topic: {
+					type: 'select',
+					description: 'ROS topic to subscribe to',
+					options: [],
+					value: ''
+				},
 				gaugeSize: {
 					type: 'number',
 					description: 'Size of the gauge in pixels',
@@ -35,7 +41,7 @@
 </script>
 
 <script lang="ts">
-	import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import { isConnected, ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import ROSLIB from 'roslib';
 	import { onMount } from 'svelte';
 
@@ -79,24 +85,45 @@
 		canvas_arrow(context!, canvasSize / 2, canvasSize / 2, canvasSize / 2 + y, canvasSize / 2 + x);
 	};
 
-	let twistTopic = new ROSLIB.Topic({
-		ros: ros.value!,
-		name: '/turtle1/cmd_vel',
-		messageType: 'geometry_msgs/msg/Twist'
-	});
+	let twistTopic: ROSLIB.Topic | null = null;
 
-	twistTopic.subscribe((message: any) => {
-		twist.x = message.linear.x;
-		twist.y = message.linear.y;
-		twist.rotation = message.angular.z;
+	$effect(() => {
+		if (isConnected()) {
+			if (settings.groups.General.topic.value !== '') {
+				twistTopic = new ROSLIB.Topic({
+					ros: ros.value!,
+					name: settings.groups.General.topic.value!,
+					messageType: 'geometry_msgs/msg/Twist'
+				});
 
-		context?.clearRect(0, 0, canvasSize, canvasSize);
-		context?.beginPath();
-		drawArrow(
-			(twist.x / Number(settings.groups.General.MaxXValue.value)) * (canvasSize / 2),
-			twist.y
-		);
-		context?.stroke();
+				twistTopic.subscribe((message: any) => {
+					twist.x = message.linear.x;
+					twist.y = message.linear.y;
+					twist.rotation = message.angular.z;
+
+					context?.clearRect(0, 0, canvasSize, canvasSize);
+					context?.beginPath();
+					drawArrow(
+						(twist.x / Number(settings.groups.General.MaxXValue.value)) * (canvasSize / 2),
+						twist.y
+					);
+					context?.stroke();
+				});
+			}
+
+			// only add twist topics to the dropdown
+			ros.value?.getTopics((topics) => {
+				settings.groups.General.topic.options = [];
+				for (let i = 0; i < topics.types.length; i++) {
+					if (topics.types[i].includes('Twist')) {
+						settings.groups.General.topic.options.push({
+							value: topics.topics[i],
+							label: topics.topics[i]
+						});
+					}
+				}
+			});
+		}
 	});
 
 	onMount(() => {
@@ -110,7 +137,7 @@
 		}
 
 		return () => {
-			twistTopic.unsubscribe();
+			if (twistTopic) twistTopic.unsubscribe();
 		};
 	});
 </script>
