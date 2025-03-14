@@ -228,7 +228,7 @@
 			<tr class="border">
 				<th class="border p-2">Topic</th>
 				<th class="border p-2">Last Data</th>
-				<th class="min-w-[120px] border p-2">Frequency</th>
+				<th class="min-w-[140px] border p-2">Frequency</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -236,13 +236,16 @@
 				<tr class="border">
 					<td class="border p-2">{monitor.topic}</td>
 					<td class="border p-2">{monitor.lastData}</td>
-					<td
-						class="min-w-[120px] border p-2 text-black"
-						style:background-color={getColor(
-							Math.abs(monitor.currentFrequency - monitor.targetFrequency) /
-								Number(settings.groups.general.maxFrequencyError.value!)
-						)}
-						>{Math.round(monitor.currentFrequency * 100) / 100}Hz / {monitor.targetFrequency}Hz</td
+					<td class="min-w-[140px] border p-2 text-black"
+						><p
+							class="rounded-[10px] py-2 text-center"
+							style:background-color={getColor(
+								Math.abs(monitor.currentFrequency - monitor.targetFrequency) /
+									Number(settings.groups.general.maxFrequencyError.value!)
+							)}
+						>
+							{Math.round(monitor.currentFrequency * 100) / 100}Hz / {monitor.targetFrequency}Hz
+						</p></td
 					>
 				</tr>
 			{/each}
