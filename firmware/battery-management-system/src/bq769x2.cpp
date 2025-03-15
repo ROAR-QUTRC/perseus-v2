@@ -345,12 +345,12 @@ void bq76942::Settings::writeCellInterconnectResistance(const uint8_t& cell, con
     _parent.writeDirect(registerAddr, resistance);
 }
 
-float bq76942::Protections::readOcd3Threshold() const
+float bq76942::Protections::OverCurrentDischarge::readTier3Threshold() const
 {
     return _parent.readSubcommand<int16_t>(data_register::OCD3_THRESHOLD) * getUserAmpsMultiplier(_parent.settings.configuration.readDAConfiguration());
 }
 
-void bq76942::Protections::writeOcd3Threshold(const float& threshold)
+void bq76942::Protections::OverCurrentDischarge::writeTier3Threshold(const float& threshold)
 {
     const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / _parent.getUserAmpsMultiplier(_parent.settings.configuration.readDAConfiguration())));
     _parent.writeSubcommandClamped<int16_t>(data_register::OCD3_THRESHOLD, roundedThreshold, std::numeric_limits<int16_t>::min(), 0);
@@ -367,26 +367,26 @@ void bq76942::Protections::writePrechargeResetCurrent(const float& charge) const
     _parent.writeSubcommandClamped<int16_t>(data_register::PTO_RESET, roundedCharge, 0, 10000);
 }
 
-float bq76942::PermanentFail::readSoccThreshold() const
+float bq76942::PermanentFail::readChargeCurrentThreshold() const
 {
     const da_configuration_t daConfig = _parent.settings.configuration.readDAConfiguration();
     return _parent.readSubcommand<int16_t>(data_register::SOCC_THRESHOLD) * getUserAmpsMultiplier(daConfig);
 }
 
-void bq76942::PermanentFail::writeSoccThreshold(const float& threshold) const
+void bq76942::PermanentFail::writeChargeCurrentThreshold(const float& threshold) const
 {
     const da_configuration_t daConfig = _parent.settings.configuration.readDAConfiguration();
     const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / getUserAmpsMultiplier(daConfig)));
     _parent.writeSubcommand(data_register::SOCC_THRESHOLD, roundedThreshold);
 }
 
-float bq76942::PermanentFail::readSocdThreshold() const
+float bq76942::PermanentFail::readDischargeCurrentThreshold() const
 {
     const da_configuration_t daConfig = _parent.settings.configuration.readDAConfiguration();
     return _parent.readSubcommand<int16_t>(data_register::SOCD_THRESHOLD) * getUserAmpsMultiplier(daConfig);
 }
 
-void bq76942::PermanentFail::writeSocdThreshold(const float& threshold) const
+void bq76942::PermanentFail::writeDischargeCurrentThreshold(const float& threshold) const
 {
     const da_configuration_t daConfig = _parent.settings.configuration.readDAConfiguration();
     const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / getUserAmpsMultiplier(daConfig)));

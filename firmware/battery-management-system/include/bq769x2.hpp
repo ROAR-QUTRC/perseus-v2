@@ -1404,14 +1404,14 @@ public:
     {
         struct
         {
-            bool fetOvertemperature : 1;        // OTF
-            bool internalOvertemperature : 1;   // OTINT
-            bool : 1;                           // RSVD_0
-            bool chargeOvertemperature : 1;     // OTC
-            bool : 1;                           // RSVD_0
-            bool internalUndertemperature : 1;  // UTINT
-            bool : 1;                           // RSVD_0
-            bool chargeUndertemperature : 1;    // UTC
+            bool overTempFet : 1;        // OTF
+            bool overTempInternal : 1;   // OTINT
+            bool : 1;                    // RSVD_0
+            bool overTempCharge : 1;     // OTC
+            bool : 1;                    // RSVD_0
+            bool underTempInternal : 1;  // UTINT
+            bool : 1;                    // RSVD_0
+            bool underTempCharge : 1;    // UTC
         };
         uint8_t raw = 0x00;
     };
@@ -1447,13 +1447,13 @@ public:
     {
         struct
         {
-            bool fetOvertemperature : 1;         // OTF
-            bool internalOvertemperature : 1;    // OTINT
-            bool dischargeOvertemperature : 1;   // OTD
-            bool : 2;                            // RSVD_0
-            bool internalUndertemperature : 1;   // UTINT
-            bool dischargeUndertemperature : 1;  // UTD
-            bool : 1;                            // RSVD_0
+            bool overTempFet : 1;         // OTF
+            bool overTempInternal : 1;    // OTINT
+            bool overTempDischarge : 1;   // OTD
+            bool : 2;                     // RSVD_0
+            bool underTempInternal : 1;   // UTINT
+            bool underTempDischarge : 1;  // UTD
+            bool : 1;                     // RSVD_0
         };
         uint8_t raw = 0x00;
     };
@@ -1692,8 +1692,8 @@ public:
     raw_da_status_6_t readRawDAStatus6() { return readSubcommand<raw_da_status_6_t>(subcommand::DA_STATUS_6); };
     da_status_6_t readDAStatus6();
     da_status_7_t readDAStatus7() { return readSubcommand<da_status_7_t>(subcommand::DA_STATUS_7); };
-    voltage_snapshot_t readCuvSnapshot() { return readSubcommand<voltage_snapshot_t>(subcommand::CUV_SNAPSHOT); };
-    voltage_snapshot_t readCovSnapshot() { return readSubcommand<voltage_snapshot_t>(subcommand::COV_SNAPSHOT); };
+    voltage_snapshot_t readCellUnderVoltSnapshot() { return readSubcommand<voltage_snapshot_t>(subcommand::CUV_SNAPSHOT); };
+    voltage_snapshot_t readCellOverVoltSnapshot() { return readSubcommand<voltage_snapshot_t>(subcommand::COV_SNAPSHOT); };
     cb_active_cells_t readCBActiveCells() { return readSubcommand<cb_active_cells_t>(subcommand::CB_ACTIVE_CELLS); };
     void writeCBActiveCells(const cb_active_cells_t& cells) { writeSubcommand(subcommand::CB_ACTIVE_CELLS, cells); }
     std::chrono::seconds readCellBalancingTime() { return std::chrono::seconds(readSubcommand<uint16_t>(subcommand::CB_STATUS_1)); };
@@ -1704,8 +1704,8 @@ public:
     otp_write_result_t readOtpWriteCheckResult() { return readSubcommand<otp_write_result_t>(subcommand::OTP_WR_CHECK); }
     otp_write_result_t readOtpWriteResult() { return readSubcommand<otp_write_result_t>(subcommand::OTP_WRITE); }
     cal1_t readCal1() { return readSubcommand<cal1_t>(subcommand::READ_CAL1); }
-    uint16_t calibrateCuvThreshold() { return readSubcommand<uint16_t>(subcommand::CAL_CUV); }
-    uint16_t calibrateCovThreshold() { return readSubcommand<uint16_t>(subcommand::CAL_COV); }
+    uint16_t calibrateCellUnderVoltThreshold() { return readSubcommand<uint16_t>(subcommand::CAL_CUV); }
+    uint16_t calibrateCellOverVoltThreshold() { return readSubcommand<uint16_t>(subcommand::CAL_COV); }
 
     // --- DATA REGISTERS ---
     class Calibration final
@@ -1960,12 +1960,12 @@ public:
         void writeCoulombCounterDeadband(const int16_t& deadband) const { _parent.writeSubcommand(data_register::COULOMB_COUNTER_DEADBAND, deadband); }
 
         // Calibration:CUV
-        uint16_t readCuvThresholdOverride() const { return _parent.readSubcommand<uint16_t>(data_register::CUV_THRESHOLD_OVERRIDE); }
-        void writeCuvThresholdOverride(const uint16_t& threshold) const { _parent.writeSubcommand(data_register::CUV_THRESHOLD_OVERRIDE, threshold); }
+        uint16_t readCellUnderVoltThresholdOverride() const { return _parent.readSubcommand<uint16_t>(data_register::CUV_THRESHOLD_OVERRIDE); }
+        void writeCellUnderVoltThresholdOverride(const uint16_t& threshold) const { _parent.writeSubcommand(data_register::CUV_THRESHOLD_OVERRIDE, threshold); }
 
         // Calibration:COV
-        uint16_t readCovThresholdOverride() const { return _parent.readSubcommand<uint16_t>(data_register::COV_THRESHOLD_OVERRIDE); }
-        void writeCovThresholdOverride(const uint16_t& threshold) const { _parent.writeSubcommand(data_register::COV_THRESHOLD_OVERRIDE, threshold); }
+        uint16_t readCellOverVoltThresholdOverride() const { return _parent.readSubcommand<uint16_t>(data_register::COV_THRESHOLD_OVERRIDE); }
+        void writeCellOverVoltThresholdOverride(const uint16_t& threshold) const { _parent.writeSubcommand(data_register::COV_THRESHOLD_OVERRIDE, threshold); }
 
         const Voltage voltage{_parent};
         const Current current{_parent};
@@ -2346,166 +2346,259 @@ public:
     class Protections final
     {
     public:
-        float readCuvThreshold() const { return _parent.readSubcommand<uint8_t>(data_register::CUV_THRESHOLD) * 50.6; }
-        void writeCuvThreshold(const float& threshold) const
+        // Protections:CUV
+        class CellUnderVoltage final
         {
-            const uint8_t roundedThreshold = static_cast<uint8_t>(std::round(threshold / 50.6));
-            _parent.writeSubcommandClamped<uint8_t>(data_register::CUV_THRESHOLD, roundedThreshold, 20, 90);
-        }
-        std::chrono::microseconds readCuvDelay() const { return std::chrono::microseconds(_parent.readSubcommand<uint16_t>(data_register::CUV_DELAY) * 3300L); }
-        void writeCuvDelay(const std::chrono::microseconds& delay) const
+        public:
+            float readThreshold() const { return _parent.readSubcommand<uint8_t>(data_register::CUV_THRESHOLD) * 50.6; }
+            void writeThreshold(const float& threshold) const
+            {
+                const uint8_t roundedThreshold = static_cast<uint8_t>(std::round(threshold / 50.6));
+                _parent.writeSubcommandClamped<uint8_t>(data_register::CUV_THRESHOLD, roundedThreshold, 20, 90);
+            }
+            std::chrono::microseconds readActivationDelay() const { return std::chrono::microseconds(_parent.readSubcommand<uint16_t>(data_register::CUV_DELAY) * 3300L); }
+            void writeActivationDelay(const std::chrono::microseconds& delay) const
+            {
+                const uint16_t roundedDelay = static_cast<uint16_t>(std::round(delay.count() / 3300.0));
+                _parent.writeSubcommandClamped<uint16_t>(data_register::CUV_DELAY, roundedDelay, 1, 2047);
+            }
+            float readRecoveryHysteresis() const { return _parent.readSubcommand<uint8_t>(data_register::CUV_RECOVERY_HYSTERESIS) * 50.6; }
+            void writeRecoveryHysteresis(const float& hysteresis) const
+            {
+                const uint8_t roundedHysteresis = static_cast<uint8_t>(std::round(hysteresis / 50.6));
+                _parent.writeSubcommandClamped<uint8_t>(data_register::CUV_RECOVERY_HYSTERESIS, roundedHysteresis, 2, 20);
+            }
+
+        protected:
+            CellUnderVoltage(bq76942& parent) : _parent(parent) {}
+            CellUnderVoltage(CellUnderVoltage&) = delete;
+            CellUnderVoltage& operator=(CellUnderVoltage&) = delete;
+
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
+        // Protections:[COV, COVL]
+        class CellOverVoltage final
         {
-            const uint16_t roundedDelay = static_cast<uint16_t>(std::round(delay.count() / 3300.0));
-            _parent.writeSubcommandClamped<uint16_t>(data_register::CUV_DELAY, roundedDelay, 1, 2047);
-        }
-        float readCuvRecoveryHysteresis() const { return _parent.readSubcommand<uint8_t>(data_register::CUV_RECOVERY_HYSTERESIS) * 50.6; }
-        void writeCuvRecoveryHysteresis(const float& hysteresis) const
+        public:
+            float readThreshold() const { return _parent.readSubcommand<uint8_t>(data_register::COV_THRESHOLD) * 50.6; }
+            void writeThreshold(const float& threshold) const
+            {
+                const uint8_t roundedThreshold = static_cast<uint8_t>(std::round(threshold / 50.6));
+                _parent.writeSubcommandClamped<uint8_t>(data_register::COV_THRESHOLD, roundedThreshold, 20, 110);
+            }
+            std::chrono::microseconds readActivationDelay() const { return std::chrono::microseconds(_parent.readSubcommand<uint16_t>(data_register::COV_DELAY) * 3300L); }
+            void writeActivationDelay(const std::chrono::microseconds& delay) const
+            {
+                const uint16_t roundedDelay = static_cast<uint16_t>(std::round(delay.count() / 3300.0));
+                _parent.writeSubcommandClamped<uint16_t>(data_register::COV_DELAY, roundedDelay, 1, 2047);
+            }
+            float readRecoveryHysteresis() const { return _parent.readSubcommand<uint8_t>(data_register::COV_RECOVERY_HYSTERESIS) * 50.6; }
+            void writeRecoveryHysteresis(const float& hysteresis) const
+            {
+                const uint8_t roundedHysteresis = static_cast<uint8_t>(std::round(hysteresis / 50.6));
+                _parent.writeSubcommandClamped<uint8_t>(data_register::COV_RECOVERY_HYSTERESIS, roundedHysteresis, 2, 20);
+            }
+
+            uint8_t readLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::COVL_LATCH_LIMIT); }
+            void writeLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::COVL_LATCH_LIMIT, limit); }
+            std::chrono::seconds readLatchCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::COVL_COUNTER_DEC_DELAY)); }
+            void writeLatchCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::COVL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
+            std::chrono::seconds readLatchRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::COVL_RECOVERY_TIME)); }
+            void writeLatchRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::COVL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+
+        protected:
+            CellOverVoltage(bq76942& parent) : _parent(parent) {}
+            CellOverVoltage(CellOverVoltage&) = delete;
+            CellOverVoltage& operator=(CellOverVoltage&) = delete;
+
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
+
+        class OverCurrentCharge final
         {
-            const uint8_t roundedHysteresis = static_cast<uint8_t>(std::round(hysteresis / 50.6));
-            _parent.writeSubcommandClamped<uint8_t>(data_register::CUV_RECOVERY_HYSTERESIS, roundedHysteresis, 2, 20);
-        }
+        public:
+            uint16_t readThresholdVoltage() const { return static_cast<uint16_t>(_parent.readSubcommand<uint8_t>(data_register::OCC_THRESHOLD)) * 2; }
+            void writeThresholdVoltage(const uint16_t& voltage) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OCC_THRESHOLD, static_cast<uint8_t>(voltage / 2), 2, 62); }
+            std::chrono::microseconds readActivationDelay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::OCC_DELAY) * 3300L) + 6600L); };
+            void writeActivationDelay(const std::chrono::microseconds& delay) const
+            {
+                const uint8_t roundedDelay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
+                _parent.writeSubcommandClamped<uint8_t>(data_register::OCC_DELAY, roundedDelay, 1, 127);
+            }
+            int16_t readRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCC_RECOVERY_THRESHOLD); }
+            void writeRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCC_RECOVERY_THRESHOLD, threshold); }
+            int32_t readRecoveryPackStackDelta() const { return static_cast<int32_t>(_parent.readSubcommand<int16_t>(data_register::OCC_PACK_TOS_DELTA)) * 10; }
+            void writeRecoveryPackStackDelta(const int32_t& delta) const { _parent.writeSubcommandClamped<int16_t>(data_register::OCC_PACK_TOS_DELTA, static_cast<int32_t>(delta / 10), 10, 8500); }
 
-        float readCovThreshold() const { return _parent.readSubcommand<uint8_t>(data_register::COV_THRESHOLD) * 50.6; }
-        void writeCovThreshold(const float& threshold) const
+        protected:
+            OverCurrentCharge(bq76942& parent) : _parent(parent) {}
+            OverCurrentCharge(OverCurrentCharge&) = delete;
+            OverCurrentCharge& operator=(OverCurrentCharge&) = delete;
+
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
+
+        class OverCurrentDischarge final
         {
-            const uint8_t roundedThreshold = static_cast<uint8_t>(std::round(threshold / 50.6));
-            _parent.writeSubcommandClamped<uint8_t>(data_register::COV_THRESHOLD, roundedThreshold, 20, 110);
-        }
-        std::chrono::microseconds readCovDelay() const { return std::chrono::microseconds(_parent.readSubcommand<uint16_t>(data_register::COV_DELAY) * 3300L); }
-        void writeCovDelay(const std::chrono::microseconds& delay) const
+        public:
+            // note: no need to upgrade the type here, since the max of 100*2 = 200 is still within the uint8_t range
+            uint8_t readTier1Threshold() const { return _parent.readSubcommand<uint8_t>(data_register::OCD1_THRESHOLD) * 2; }
+            void writeTier1Threshold(const uint8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OCD1_THRESHOLD, threshold / 2, 2, 100); }
+            std::chrono::microseconds readTier1Delay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::OCD1_DELAY) * 3300L) + 6600L); }
+            void writeTier1Delay(const std::chrono::microseconds& delay) const
+            {
+                const uint8_t roundedDelay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
+                _parent.writeSubcommandClamped<uint8_t>(data_register::OCD1_DELAY, roundedDelay, 1, 127);
+            }
+            uint8_t readTier2Threshold() const { return _parent.readSubcommand<uint8_t>(data_register::OCD2_THRESHOLD) * 2; }
+            void writeTier2Threshold(const uint8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OCD2_THRESHOLD, threshold / 2, 2, 100); }
+            std::chrono::microseconds readTier2Delay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::OCD2_DELAY) * 3300L) + 6600L); }
+            void writeTier2Delay(const std::chrono::microseconds& delay) const
+            {
+                const uint8_t roundedDelay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
+                _parent.writeSubcommandClamped<uint8_t>(data_register::OCD2_DELAY, roundedDelay, 1, 127);
+            }
+
+            float readTier3Threshold() const;
+            void writeTier3Threshold(const float& threshold);
+            std::chrono::seconds readTier3Delay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCD3_DELAY)); };
+            void writeTier3Delay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OCD3_DELAY, static_cast<uint8_t>(delay.count())); }
+
+            int16_t readRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCD_RECOVERY_THRESHOLD); }
+            void writeRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCD_RECOVERY_THRESHOLD, threshold); }
+
+            uint8_t readLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::OCDL_LATCH_LIMIT); }
+            void writeLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::OCDL_LATCH_LIMIT, limit); }
+            std::chrono::seconds readLatchCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCDL_COUNTER_DEC_DELAY)); }
+            void writeLatchCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
+            std::chrono::seconds readLatchRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCDL_RECOVERY_TIME)); }
+            void writeLatchRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::OCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+            int16_t readLatchRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCDL_RECOVERY_THRESHOLD); }
+            void writeLatchRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCDL_RECOVERY_THRESHOLD, threshold); }
+
+        protected:
+            OverCurrentDischarge(bq76942& parent) : _parent(parent) {}
+            OverCurrentDischarge(OverCurrentDischarge&) = delete;
+            OverCurrentDischarge& operator=(OverCurrentDischarge&) = delete;
+
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
+
+        class ShortCircuit final
         {
-            const uint16_t roundedDelay = static_cast<uint16_t>(std::round(delay.count() / 3300.0));
-            _parent.writeSubcommandClamped<uint16_t>(data_register::COV_DELAY, roundedDelay, 1, 2047);
-        }
-        float readCovRecoveryHysteresis() const { return _parent.readSubcommand<uint8_t>(data_register::COV_RECOVERY_HYSTERESIS) * 50.6; }
-        void writeCovRecoveryHysteresis(const float& hysteresis) const
+        public:
+            short_circuit_discharge_threshold readThreshold() const { return _parent.readSubcommand<short_circuit_discharge_threshold>(data_register::SCD_THRESHOLD); }
+            void writeThreshold(const short_circuit_discharge_threshold& threshold) const { _parent.writeSubcommand(data_register::SCD_THRESHOLD, threshold); }
+            std::chrono::microseconds readActivationDelay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::SCD_DELAY) - 1) * 15); }
+            void writeActivationDelay(const std::chrono::microseconds& delay) const
+            {
+                const uint8_t roundedDelay = static_cast<uint8_t>(std::round(delay.count() / 15.0) + 1);
+                _parent.writeSubcommandClamped<uint8_t>(data_register::SCD_DELAY, roundedDelay, 1, 31);
+            }
+            std::chrono::seconds readRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCD_RECOVERY_TIME)); }
+            void writeRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SCD_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+
+            uint8_t readLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::SCDL_LATCH_LIMIT); }
+            void writeLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::SCDL_LATCH_LIMIT, limit); }
+            std::chrono::seconds readLatchCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_COUNTER_DEC_DELAY)); }
+            void writeLatchCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
+            std::chrono::seconds readLatchRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_RECOVERY_TIME)); }
+            void writeLatchRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+            int16_t readLatchRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SCDL_RECOVERY_THRESHOLD); }
+            void writeLatchRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_THRESHOLD, threshold); }
+
+        protected:
+            ShortCircuit(bq76942& parent) : _parent(parent) {}
+            ShortCircuit(ShortCircuit&) = delete;
+            ShortCircuit& operator=(ShortCircuit&) = delete;
+
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
+
+        class OverTemperature final
         {
-            const uint8_t roundedHysteresis = static_cast<uint8_t>(std::round(hysteresis / 50.6));
-            _parent.writeSubcommandClamped<uint8_t>(data_register::COV_RECOVERY_HYSTERESIS, roundedHysteresis, 2, 20);
-        }
+        public:
+            int8_t readChargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTC_THRESHOLD); }
+            void writeChargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTC_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds readChargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTC_DELAY)); }
+            void writeChargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTC_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t readChargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTC_RECOVERY); }
+            void writeChargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTC_RECOVERY, threshold, -40, 120); }
 
-        uint8_t readCovlLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::COVL_LATCH_LIMIT); }
-        void writeCovlLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::COVL_LATCH_LIMIT, limit); }
-        std::chrono::seconds readCovlCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::COVL_COUNTER_DEC_DELAY)); }
-        void writeCovlCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::COVL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
-        std::chrono::seconds readCovlRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::COVL_RECOVERY_TIME)); }
-        void writeCovlRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::COVL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+            int8_t readDischargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_THRESHOLD); }
+            void writeDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds readDischargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTD_DELAY)); }
+            void writeDischargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTD_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t readDischargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_RECOVERY); }
+            void writeDischargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_RECOVERY, threshold, -40, 120); }
 
-        uint16_t readOccThresholdVoltage() const { return static_cast<uint16_t>(_parent.readSubcommand<uint8_t>(data_register::OCC_THRESHOLD)) * 2; }
-        void writeOccThresholdVoltage(const uint16_t& voltage) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OCC_THRESHOLD, static_cast<uint8_t>(voltage / 2), 2, 62); }
-        std::chrono::microseconds readOccDelay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::OCC_DELAY) * 3300L) + 6600L); };
-        void writeOccDelay(const std::chrono::microseconds& delay) const
+            int8_t readFetThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_THRESHOLD); }
+            void writeFetThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_THRESHOLD, threshold, 0, 150); }
+            std::chrono::seconds readFetDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTF_DELAY)); }
+            void writeFetDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTF_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t readFetRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_RECOVERY); }
+            void writeFetRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
+
+            int8_t readInternalThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTINT_THRESHOLD); }
+            void writeInternalThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTINT_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds readInternalDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTINT_DELAY)); }
+            void writeInternalDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTINT_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t readInternalRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTINT_RECOVERY); }
+            void writeInternalRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTINT_RECOVERY, threshold, -40, 120); }
+
+        protected:
+            OverTemperature(bq76942& parent) : _parent(parent) {}
+            OverTemperature(OverTemperature&) = delete;
+            OverTemperature& operator=(OverTemperature&) = delete;
+
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
+
+        class UnderTemperature final
         {
-            const uint8_t roundedDelay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
-            _parent.writeSubcommandClamped<uint8_t>(data_register::OCC_DELAY, roundedDelay, 1, 127);
-        }
-        int16_t readOccRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCC_RECOVERY_THRESHOLD); }
-        void writeOccRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCC_RECOVERY_THRESHOLD, threshold); }
-        int32_t readOccPackTosDelta() const { return static_cast<int32_t>(_parent.readSubcommand<int16_t>(data_register::OCC_PACK_TOS_DELTA)) * 10; }
-        void writeOccPackTosDelta(const int32_t& delta) const { _parent.writeSubcommandClamped<int16_t>(data_register::OCC_PACK_TOS_DELTA, static_cast<int32_t>(delta / 10), 10, 8500); }
+        public:
+            int8_t readChargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTC_THRESHOLD); }
+            void writeChargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTC_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds readChargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::UTC_DELAY)); }
+            void writeChargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::UTC_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t readChargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTC_RECOVERY); }
+            void writeChargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTC_RECOVERY, threshold, -40, 120); }
 
-        // note: no need to upgrade the type here, since the max of 100*2 = 200 is still within the uint8_t range
-        uint8_t readOcd1Threshold() const { return _parent.readSubcommand<uint8_t>(data_register::OCD1_THRESHOLD) * 2; }
-        void writeOcd1Threshold(const uint8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OCD1_THRESHOLD, threshold / 2, 2, 100); }
-        std::chrono::microseconds readOcd1Delay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::OCD1_DELAY) * 3300L) + 6600L); }
-        void writeOcd1Delay(const std::chrono::microseconds& delay) const
-        {
-            const uint8_t roundedDelay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
-            _parent.writeSubcommandClamped<uint8_t>(data_register::OCD1_DELAY, roundedDelay, 1, 127);
-        }
-        uint8_t readOcd2Threshold() const { return _parent.readSubcommand<uint8_t>(data_register::OCD2_THRESHOLD) * 2; }
-        void writeOcd2Threshold(const uint8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OCD2_THRESHOLD, threshold / 2, 2, 100); }
-        std::chrono::microseconds readOcd2Delay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::OCD2_DELAY) * 3300L) + 6600L); }
-        void writeOcd2Delay(const std::chrono::microseconds& delay) const
-        {
-            const uint8_t roundedDelay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
-            _parent.writeSubcommandClamped<uint8_t>(data_register::OCD2_DELAY, roundedDelay, 1, 127);
-        }
+            int8_t readDischargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTD_THRESHOLD); }
+            void writeDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTD_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds readDischargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::UTD_DELAY)); }
+            void writeDischargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::UTD_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t readDischargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTD_RECOVERY); }
+            void writeDischargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTD_RECOVERY, threshold, -40, 120); }
 
-        short_circuit_discharge_threshold readShortCircuitThreshold() const { return _parent.readSubcommand<short_circuit_discharge_threshold>(data_register::SCD_THRESHOLD); }
-        void writeShortCircuitThreshold(const short_circuit_discharge_threshold& threshold) const { _parent.writeSubcommand(data_register::SCD_THRESHOLD, threshold); }
-        std::chrono::microseconds readShortCircuitDelay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::SCD_DELAY) - 1) * 15); }
-        void writeShortCircuitDelay(const std::chrono::microseconds& delay) const
-        {
-            const uint8_t roundedDelay = static_cast<uint8_t>(std::round(delay.count() / 15.0) + 1);
-            _parent.writeSubcommandClamped<uint8_t>(data_register::SCD_DELAY, roundedDelay, 1, 31);
-        }
-        std::chrono::seconds readShortCircuitRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCD_RECOVERY_TIME)); }
-        void writeShortCircuitRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SCD_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+            int8_t readInternalThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTINT_THRESHOLD); }
+            void writeInternalThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTINT_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds readInternalDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::UTINT_DELAY)); }
+            void writeInternalDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::UTINT_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t readInternalRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTINT_RECOVERY); }
+            void writeInternalRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTINT_RECOVERY, threshold, -40, 120); }
 
-        float readOcd3Threshold() const;
-        void writeOcd3Threshold(const float& threshold);
-        std::chrono::seconds readOcd3Delay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCD3_DELAY)); };
-        void writeOcd3Delay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OCD3_DELAY, static_cast<uint8_t>(delay.count())); }
-        int16_t readOcdRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCD_RECOVERY_THRESHOLD); }
-        void writeOcdRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCD_RECOVERY_THRESHOLD, threshold); }
+        protected:
+            UnderTemperature(bq76942& parent) : _parent(parent) {}
+            UnderTemperature(UnderTemperature&) = delete;
+            UnderTemperature& operator=(UnderTemperature&) = delete;
 
-        uint8_t readOcdlLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::OCDL_LATCH_LIMIT); }
-        void writeOcdlLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::OCDL_LATCH_LIMIT, limit); }
-        std::chrono::seconds readOcdlCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCDL_COUNTER_DEC_DELAY)); }
-        void writeOcdlCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
-        std::chrono::seconds readOcdlRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCDL_RECOVERY_TIME)); }
-        void writeOcdlRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::OCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
-        int16_t readOcdlRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCDL_RECOVERY_THRESHOLD); }
-        void writeOcdlRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCDL_RECOVERY_THRESHOLD, threshold); }
-
-        uint8_t readShortCircuitLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::SCDL_LATCH_LIMIT); }
-        void writeShortCircuitLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::SCDL_LATCH_LIMIT, limit); }
-        std::chrono::seconds readShortCircuitLatchCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_COUNTER_DEC_DELAY)); }
-        void writeShortCircuitLatchCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
-        std::chrono::seconds readShortCircuitLatchRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_RECOVERY_TIME)); }
-        void writeShortCircuitLatchRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
-        int16_t readShortCircuitLatchRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SCDL_RECOVERY_THRESHOLD); }
-        void writeShortCircuitLatchRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_THRESHOLD, threshold); }
-
-        int8_t readOtcThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTC_THRESHOLD); }
-        void writeOtcThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTC_THRESHOLD, threshold, -40, 120); }
-        std::chrono::seconds readOtcDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTC_DELAY)); }
-        void writeOtcDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTC_DELAY, static_cast<uint8_t>(delay.count())); }
-        int8_t readOtcRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTC_RECOVERY); }
-        void writeOtcRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTC_RECOVERY, threshold, -40, 120); }
-
-        int8_t readOtdThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_THRESHOLD); }
-        void writeOtdThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_THRESHOLD, threshold, -40, 120); }
-        std::chrono::seconds readOtdDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTD_DELAY)); }
-        void writeOtdDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTD_DELAY, static_cast<uint8_t>(delay.count())); }
-        int8_t readOtdRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_RECOVERY); }
-        void writeOtdRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_RECOVERY, threshold, -40, 120); }
-
-        int8_t readOtfThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_THRESHOLD); }
-        void writeOtfThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_THRESHOLD, threshold, 0, 150); }
-        std::chrono::seconds readOtfDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTF_DELAY)); }
-        void writeOtfDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTF_DELAY, static_cast<uint8_t>(delay.count())); }
-        int8_t readOtfRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_RECOVERY); }
-        void writeOtfRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
-
-        int8_t readOtintThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTINT_THRESHOLD); }
-        void writeOtintThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTINT_THRESHOLD, threshold, -40, 120); }
-        std::chrono::seconds readOtintDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTINT_DELAY)); }
-        void writeOtintDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTINT_DELAY, static_cast<uint8_t>(delay.count())); }
-        int8_t readOtintRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTINT_RECOVERY); }
-        void writeOtintRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTINT_RECOVERY, threshold, -40, 120); }
-
-        int8_t readUtcThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTC_THRESHOLD); }
-        void writeUtcThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTC_THRESHOLD, threshold, -40, 120); }
-        std::chrono::seconds readUtcDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::UTC_DELAY)); }
-        void writeUtcDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::UTC_DELAY, static_cast<uint8_t>(delay.count())); }
-        int8_t readUtcRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTC_RECOVERY); }
-        void writeUtcRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTC_RECOVERY, threshold, -40, 120); }
-
-        int8_t readUtdThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTD_THRESHOLD); }
-        void writeUtdThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTD_THRESHOLD, threshold, -40, 120); }
-        std::chrono::seconds readUtdDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::UTD_DELAY)); }
-        void writeUtdDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::UTD_DELAY, static_cast<uint8_t>(delay.count())); }
-        int8_t readUtdRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTD_RECOVERY); }
-        void writeUtdRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTD_RECOVERY, threshold, -40, 120); }
-
-        int8_t readUtintThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTINT_THRESHOLD); }
-        void writeUtintThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTINT_THRESHOLD, threshold, -40, 120); }
-        std::chrono::seconds readUtintDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::UTINT_DELAY)); }
-        void writeUtintDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::UTINT_DELAY, static_cast<uint8_t>(delay.count())); }
-        int8_t readUtintRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTINT_RECOVERY); }
-        void writeUtintRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTINT_RECOVERY, threshold, -40, 120); }
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
 
         std::chrono::seconds readRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::PROTECTIONS_RECOVERY_TIME)); }
         void writeRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::PROTECTIONS_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
@@ -2527,6 +2620,14 @@ public:
         float readPrechargeResetCharge() const;
         void writePrechargeResetCurrent(const float& charge) const;
 
+        const CellUnderVoltage underVoltage{_parent};
+        const CellOverVoltage overVoltage{_parent};
+        const OverCurrentCharge overCurrentCharge{_parent};
+        const OverCurrentDischarge overCurrentDischarge{_parent};
+        const ShortCircuit shortCircuit{_parent};
+        const OverTemperature overTemp{_parent};
+        const UnderTemperature underTemp{_parent};
+
     protected:
         Protections(bq76942& parent) : _parent(parent) {}
         Protections(Protections&) = delete;
@@ -2545,65 +2646,117 @@ public:
         std::chrono::seconds readCopperDepositionDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::CU_DEP_DELAY)); }
         void writeCopperDepositionDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::CU_DEP_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int16_t readSuvThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SUV_THRESHOLD); }
-        void writeSuvThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::SUV_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
-        std::chrono::seconds readSuvDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SUV_DELAY)); }
-        void writeSuvDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SUV_DELAY, static_cast<uint8_t>(delay.count())); }
+        int16_t readUnderVoltageThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SUV_THRESHOLD); }
+        void writeUnderVoltageThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::SUV_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
+        std::chrono::seconds readUnderVoltageDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SUV_DELAY)); }
+        void writeUnderVoltageDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SUV_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int16_t readSovThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SOV_THRESHOLD); }
-        void writeSovThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::SOV_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
-        std::chrono::seconds readSovDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SOV_DELAY)); }
-        void writeSovDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SOV_DELAY, static_cast<uint8_t>(delay.count())); }
+        int16_t readOverVoltageThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SOV_THRESHOLD); }
+        void writeOverVoltageThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::SOV_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
+        std::chrono::seconds readOverVoltageDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SOV_DELAY)); }
+        void writeOverVoltageDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SOV_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int16_t readTosThreshold() const { return _parent.readSubcommand<int16_t>(data_register::TOS_THRESHOLD); }
-        void writeTosThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::TOS_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
-        std::chrono::seconds readTosDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::TOS_DELAY)); }
-        void writeTosDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::TOS_DELAY, static_cast<uint8_t>(delay.count())); }
+        int16_t readStackThreshold() const { return _parent.readSubcommand<int16_t>(data_register::TOS_THRESHOLD); }
+        void writeStackThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::TOS_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
+        std::chrono::seconds readStackDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::TOS_DELAY)); }
+        void writeStackDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::TOS_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        float readSoccThreshold() const;
-        void writeSoccThreshold(const float& threshold) const;
+        float readChargeCurrentThreshold() const;
+        void writeChargeCurrentThreshold(const float& threshold) const;
 
-        float readSocdThreshold() const;
-        void writeSocdThreshold(const float& threshold) const;
+        float readDischargeCurrentThreshold() const;
+        void writeDischargeCurrentThreshold(const float& threshold) const;
 
-        int8_t readSotThreshold() const { return _parent.readSubcommand<int8_t>(data_register::SOT_THRESHOLD); }
-        void writeSotThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::SOT_THRESHOLD, threshold, -40, 120); }
-        std::chrono::seconds readSotDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SOT_DELAY)); }
-        void writeSotDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SOT_DELAY, static_cast<uint8_t>(delay.count())); }
+        int8_t readOverTempCellThreshold() const { return _parent.readSubcommand<int8_t>(data_register::SOT_THRESHOLD); }
+        void writeOverTempCellThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::SOT_THRESHOLD, threshold, -40, 120); }
+        std::chrono::seconds readOverTempCellDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SOT_DELAY)); }
+        void writeOverTempCellDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SOT_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int8_t readSotfThreshold() const { return _parent.readSubcommand<int8_t>(data_register::SOTF_THRESHOLD); }
-        void writeSotfThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::SOTF_THRESHOLD, threshold, 0, 150); }
-        std::chrono::seconds readSotfDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SOTF_DELAY)); }
-        void writeSotfDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SOTF_DELAY, static_cast<uint8_t>(delay.count())); }
+        int8_t readOverTempFetThreshold() const { return _parent.readSubcommand<int8_t>(data_register::SOTF_THRESHOLD); }
+        void writeOverTempFetThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::SOTF_THRESHOLD, threshold, 0, 150); }
+        std::chrono::seconds readOverTempFetDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SOTF_DELAY)); }
+        void writeOverTempFetDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SOTF_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int16_t readVimrCheckVoltage() const { return _parent.readSubcommand<int16_t>(data_register::VIMR_CHECK_VOLTAGE); }
-        void writeVimrCheckVoltage(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMR_CHECK_VOLTAGE, voltage, 0, 5500); }
-        int16_t readVimrMaxRelaxCurrent() const { return _parent.readSubcommand<int16_t>(data_register::VIMR_MAX_RELAX_CURRENT); }
-        void writeVimrMaxRelaxCurrent(const int16_t& current) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMR_MAX_RELAX_CURRENT, current, 10, std::numeric_limits<int16_t>::max()); }
-        int16_t readVimrThreshold() const { return _parent.readSubcommand<int16_t>(data_register::VIMR_THRESHOLD); }
-        void writeVimrThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMR_THRESHOLD, threshold, 0, 5500); }
-        std::chrono::seconds readVimrDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::VIMR_DELAY)); }
-        void writeVimrDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::VIMR_DELAY, static_cast<uint8_t>(delay.count())); }
-        std::chrono::seconds readVimrRelaxMinDuration() const { return std::chrono::seconds(_parent.readSubcommand<uint16_t>(data_register::VIMR_RELAX_MIN_DURATION)); }
-        void writeVimrRelaxMinDuration(const std::chrono::seconds& duration) const { _parent.writeSubcommand(data_register::VIMR_RELAX_MIN_DURATION, static_cast<uint16_t>(duration.count())); }
+        class VoltageImbalanceRelaxed final
+        {
+        public:
+            int16_t readCheckVoltage() const { return _parent.readSubcommand<int16_t>(data_register::VIMR_CHECK_VOLTAGE); }
+            void writeCheckVoltage(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMR_CHECK_VOLTAGE, voltage, 0, 5500); }
+            int16_t readMaxRelaxCurrent() const { return _parent.readSubcommand<int16_t>(data_register::VIMR_MAX_RELAX_CURRENT); }
+            void writeMaxRelaxCurrent(const int16_t& current) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMR_MAX_RELAX_CURRENT, current, 10, std::numeric_limits<int16_t>::max()); }
+            int16_t readThreshold() const { return _parent.readSubcommand<int16_t>(data_register::VIMR_THRESHOLD); }
+            void writeThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMR_THRESHOLD, threshold, 0, 5500); }
+            std::chrono::seconds readActivationDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::VIMR_DELAY)); }
+            void writeActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::VIMR_DELAY, static_cast<uint8_t>(delay.count())); }
+            std::chrono::seconds readRelaxMinDuration() const { return std::chrono::seconds(_parent.readSubcommand<uint16_t>(data_register::VIMR_RELAX_MIN_DURATION)); }
+            void writeRelaxMinDuration(const std::chrono::seconds& duration) const { _parent.writeSubcommand(data_register::VIMR_RELAX_MIN_DURATION, static_cast<uint16_t>(duration.count())); }
 
-        int16_t readVimaCheckVoltage() const { return _parent.readSubcommand<int16_t>(data_register::VIMA_CHECK_VOLTAGE); }
-        void writeVimaCheckVoltage(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMA_CHECK_VOLTAGE, voltage, 0, 5500); }
-        int16_t readVimaMinActiveCurrent() const { return _parent.readSubcommand<int16_t>(data_register::VIMA_MIN_ACTIVE_CURRENT); }
-        void writeVimaMinActiveCurrent(const int16_t& current) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMA_MIN_ACTIVE_CURRENT, current, 10, std::numeric_limits<int16_t>::max()); }
-        int16_t readVimaThreshold() const { return _parent.readSubcommand<int16_t>(data_register::VIMA_THRESHOLD); }
-        void writeVimaThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMA_THRESHOLD, threshold, 0, 5500); }
-        std::chrono::seconds readVimaDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::VIMA_DELAY)); }
-        void writeVimaDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::VIMA_DELAY, static_cast<uint8_t>(delay.count())); }
+        protected:
+            VoltageImbalanceRelaxed(bq76942& parent) : _parent(parent) {}
+            VoltageImbalanceRelaxed(VoltageImbalanceRelaxed&) = delete;
+            VoltageImbalanceRelaxed& operator=(VoltageImbalanceRelaxed&) = delete;
 
-        int16_t readCfetfThreshold() const { return _parent.readSubcommand<int16_t>(data_register::CFETF_OFF_THRESHOLD); }
-        void writeCfetfThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::CFETF_OFF_THRESHOLD, threshold, 10, 5000); }
-        std::chrono::seconds readCfetfDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::CFETF_OFF_DELAY)); }
-        void writeCfetfDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::CFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
-        int16_t readDfetfThreshold() const { return _parent.readSubcommand<int16_t>(data_register::DFETF_OFF_THRESHOLD); }
-        void writeDfetfThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::DFETF_OFF_THRESHOLD, threshold, -5000, -10); }
-        std::chrono::seconds readDfetfDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::DFETF_OFF_DELAY)); }
-        void writeDfetfDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::DFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
+
+        class VoltageImbalanceActive final
+        {
+        public:
+            int16_t readCheckVoltage() const { return _parent.readSubcommand<int16_t>(data_register::VIMA_CHECK_VOLTAGE); }
+            void writeCheckVoltage(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMA_CHECK_VOLTAGE, voltage, 0, 5500); }
+            int16_t readMinActiveCurrent() const { return _parent.readSubcommand<int16_t>(data_register::VIMA_MIN_ACTIVE_CURRENT); }
+            void writeMinActiveCurrent(const int16_t& current) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMA_MIN_ACTIVE_CURRENT, current, 10, std::numeric_limits<int16_t>::max()); }
+            int16_t readThreshold() const { return _parent.readSubcommand<int16_t>(data_register::VIMA_THRESHOLD); }
+            void writeThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMA_THRESHOLD, threshold, 0, 5500); }
+            std::chrono::seconds readActivationDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::VIMA_DELAY)); }
+            void writeActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::VIMA_DELAY, static_cast<uint8_t>(delay.count())); }
+
+        protected:
+            VoltageImbalanceActive(bq76942& parent) : _parent(parent) {}
+            VoltageImbalanceActive(VoltageImbalanceActive&) = delete;
+            VoltageImbalanceActive& operator=(VoltageImbalanceActive&) = delete;
+
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
+
+        class ChargeFetFail final
+        {
+        public:
+            int16_t readThreshold() const { return _parent.readSubcommand<int16_t>(data_register::CFETF_OFF_THRESHOLD); }
+            void writeThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::CFETF_OFF_THRESHOLD, threshold, 10, 5000); }
+            std::chrono::seconds readActivationDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::CFETF_OFF_DELAY)); }
+            void writeActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::CFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
+
+        protected:
+            ChargeFetFail(bq76942& parent) : _parent(parent) {}
+            ChargeFetFail(ChargeFetFail&) = delete;
+            ChargeFetFail& operator=(ChargeFetFail&) = delete;
+
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
+        class DischargeFetFail final
+        {
+        public:
+            int16_t readThreshold() const { return _parent.readSubcommand<int16_t>(data_register::DFETF_OFF_THRESHOLD); }
+            void writeThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::DFETF_OFF_THRESHOLD, threshold, -5000, -10); }
+            std::chrono::seconds readActivationDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::DFETF_OFF_DELAY)); }
+            void writeActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::DFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
+
+        protected:
+            DischargeFetFail(bq76942& parent) : _parent(parent) {}
+            DischargeFetFail(DischargeFetFail&) = delete;
+            DischargeFetFail& operator=(DischargeFetFail&) = delete;
+
+        private:
+            friend class bq76942;
+            bq76942& _parent;
+        };
 
         int16_t readVssfThreshold() const { return _parent.readSubcommand<int16_t>(data_register::VSSF_FAIL_THRESHOLD); }
         void writeVssfThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::VSSF_FAIL_THRESHOLD, threshold, 1, std::numeric_limits<int16_t>::max()); };
@@ -2616,6 +2769,11 @@ public:
         void writeLfofDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::LFOF_DELAY, static_cast<uint8_t>(delay.count())); }
         std::chrono::seconds readHardwareMuxfDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::HWMX_DELAY)); }
         void writeHardwareMuxfDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::HWMX_DELAY, static_cast<uint8_t>(delay.count())); }
+
+        const VoltageImbalanceRelaxed voltageImbalanceRelaxed{_parent};
+        const VoltageImbalanceActive voltageImbalanceActive{_parent};
+        const ChargeFetFail chargeFetFail{_parent};
+        const DischargeFetFail dischargeFetFail{_parent};
 
     protected:
         PermanentFail(bq76942& parent) : _parent(parent)

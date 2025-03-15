@@ -14,12 +14,17 @@ void setup()
     try
     {
         // bq76942 bq;
+        // bq.reset();
         // bq.writeSubcommand(bq76942::cmd_only_subcommand::RESET);
     }
     catch (std::exception& e)
     {
         printf(std::format("Error resetting BMS: {}\n", e.what()).c_str());
     }
+    bq76942::alarm_sf_alert_mask_c_t mask{
+        .overcurrentDischarge3 = true,
+    };
+    printf(std::format("Mask: {:#04x}\n", mask.raw).c_str());
 }
 
 void loop()
@@ -39,7 +44,6 @@ void loop()
     try
     {
         // bq76942 bq;
-        // // bq.writeSubcommand(bq76942::cmd_only_subcommand::RESET);
         // // delay(100);
         // bq.writeSubcommand<uint16_t>(bq76942::data_register::VCELL_MODE, 0x011F);
         // bq.writeSubcommand<uint8_t>(bq76942::data_register::DA_CONFIGURATION, 0b00000010);
