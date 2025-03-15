@@ -3,7 +3,7 @@
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'Bus Power Manager';
-	export const description = 'Enable and disable differnt buses on the rover control board';
+	export const description = 'Enable and disable different buses on the rover control board';
 	export const group = 'CAN Bus';
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({

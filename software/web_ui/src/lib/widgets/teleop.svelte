@@ -3,7 +3,7 @@
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 	import { onMount } from 'svelte';
 
-	export const name = 'Joystick Teleop';
+	export const name = 'Joystick Teleop - Under development';
 	export const description = 'Control the rover with a joystick';
 	export const group = 'ROS';
 

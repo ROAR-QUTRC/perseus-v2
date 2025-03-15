@@ -13,7 +13,7 @@
 					type: 'number',
 					value: '10',
 					description:
-						'This is used to caluculate the colours used in the table. The for larger numbers values with greater error will be closer to green.'
+						'This is used to calculate the colours used in the table. The for larger numbers values with greater error will be closer to green.'
 				}
 			},
 			newMonitor: {
