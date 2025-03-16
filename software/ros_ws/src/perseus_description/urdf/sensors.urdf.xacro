@@ -50,7 +50,7 @@
     <joint name="${prefix}m2m2_lidar_joint" type="fixed">
         <parent link="${prefix}base_link"/>
         <child link="${prefix}m2m2_lidar_frame"/>
-        <origin xyz="0.2 0.4 0.35" rpy="0 0 0"/>
+        <origin xyz="0.2 0.4 0.35" rpy="0 0 -1.57"/>
     </joint>
 
     <gazebo reference="${prefix}laser_frame">
