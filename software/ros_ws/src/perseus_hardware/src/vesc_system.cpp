@@ -235,6 +235,8 @@ return_type VescSystemHardware::read(
         // TODO: Test to see which would be more appropriate to use
         // (probably motor temp)
         _realTemperatures[i] = std::max(status4.tempFet, status4.tempMotor);
+        const auto status5 = paramGroup.getStatus5();
+        _realPositions[i] = status5.tachometer;
     }
 
     return return_type::OK;

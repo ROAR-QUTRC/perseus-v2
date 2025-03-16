@@ -35,8 +35,9 @@ namespace hi_can::parameters::drive::vesc
     };
     struct raw_status_5_t
     {
-        int32_t tachometer;
-        int16_t voltsIn;
+        int32_t tachometer;  // 4 bytes
+        int16_t voltsIn;     // 2 bytes
+        uint16_t padding;    // 2 bytes | Should fix the VESC status feedback issue.
     };
     struct raw_status_6_t
     {
@@ -50,9 +51,9 @@ namespace hi_can::parameters::drive::vesc
     void status_1_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
         SimpleSerializable<raw_status_1_t> rawData(serializedData);
-        rpm = ntohl(rawData.rpm);
-        current = ntohs(rawData.current) / 10.0;
-        dutyCycle = ntohs(rawData.dutyCycle) / 1000.0;
+        rpm = static_cast<int32_t>(ntohl(rawData.rpm));
+        current = static_cast<int16_t>(ntohs(rawData.current)) / 10.0;
+        dutyCycle = static_cast<int16_t>(ntohs(rawData.dutyCycle)) / 1000.0;
     }
     std::vector<uint8_t> status_1_t::serializeData()
     {
@@ -66,8 +67,8 @@ namespace hi_can::parameters::drive::vesc
     void status_2_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
         SimpleSerializable<raw_status_2_t> rawData(serializedData);
-        ah = ntohl(rawData.ah) / 10000.0;
-        ahCharge = ntohl(rawData.ahCharge) / 10000.0;
+        ah = static_cast<int32_t>(ntohl(rawData.ah)) / 10000.0;
+        ahCharge = static_cast<int32_t>(ntohl(rawData.ahCharge)) / 10000.0;
     }
     std::vector<uint8_t> status_2_t::serializeData()
     {
@@ -80,8 +81,8 @@ namespace hi_can::parameters::drive::vesc
     void status_3_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
         SimpleSerializable<raw_status_3_t> rawData(serializedData);
-        wh = ntohl(rawData.wh) / 10000.0;
-        whCharge = ntohl(rawData.whCharge) / 10000.0;
+        wh = static_cast<int32_t>(ntohl(rawData.wh)) / 10000.0;
+        whCharge = static_cast<int32_t>(ntohl(rawData.whCharge)) / 10000.0;
     }
     std::vector<uint8_t> status_3_t::serializeData()
     {
@@ -112,13 +113,14 @@ namespace hi_can::parameters::drive::vesc
     void status_5_t::deserializeData(const std::vector<uint8_t>& serializedData)
     {
         SimpleSerializable<raw_status_5_t> rawData(serializedData);
-        tachometer = ntohl(rawData.tachometer) / 6.0;
+        tachometer = static_cast<int32_t>(ntohl(rawData.tachometer)) / 6.0;
         voltsIn = ntohs(rawData.voltsIn) / 10.0;
     }
     std::vector<uint8_t> status_5_t::serializeData()
     {
         SimpleSerializable<raw_status_5_t> rawData;
-        rawData.tachometer = htonl(tachometer) * 6.0;
+        // TODO: this ain't right, needs to  be multiplied before conversion
+        rawData.tachometer = static_cast<int32_t>(htonl(tachometer)) * 6.0;
         rawData.voltsIn = htons(voltsIn) * 10.0;
         return rawData.serializeData();
     }
