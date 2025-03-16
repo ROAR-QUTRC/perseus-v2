@@ -4,7 +4,7 @@
 	let { media }: { media: MediaStream } = $props();
 	let video: HTMLVideoElement | null = null;
 
-	onMount(() => {
+	$effect(() => {
 		if (video) {
 			video.srcObject = media;
 		}

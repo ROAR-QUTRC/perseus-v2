@@ -39,11 +39,17 @@
 
 	export interface CameraEventType {
 		type: 'camera';
-		action: 'group-description' | 'kill' | 'request-groups' | 'request-stream' | 'producer-ready';
+		action:
+			| 'group-description'
+			| 'kill'
+			| 'request-groups'
+			| 'request-stream'
+			| 'producer-ready'
+			| 'group-terminated';
 		data: {
 			ip?: string;
 			groupName?: string;
-			cameraName?: string;
+			// cameraName?: string;
 			resolution?: { width: number; height: number };
 			device?: string;
 		};
@@ -53,30 +59,34 @@
 <script lang="ts">
 	import WebrtcClient from '$lib/widgets/videoWebrtc/webrtcClient.svelte';
 	import { io, type Socket } from 'socket.io-client';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	let socket: Socket = io();
 
+	// keep track of available devices
 	let devices = $state<
 		{
 			groupName: string;
 			ip: string;
-			port: number;
 		}[]
 	>([]);
-	// $inspect(devices);
+	// keep track of the active devices for this widget
+	let configObject = $state<Record<string, { deviceIp: string; cameras: string[] }>>({});
 
 	socket.on('camera-event', (event: CameraEventType) => {
 		// console.log(event);
 		switch (event.action) {
 			case 'group-description':
 				if (devices.find((device) => device.groupName === event.data.groupName) === undefined) {
+					// Add new device if it has a camera in this widgets config
 					devices.push({
 						ip: event.data.ip!,
-						port: 8443,
 						groupName: event.data.groupName!
 					});
+					if (configObject[event.data.groupName!] !== undefined) {
+						configObject[event.data.groupName!].deviceIp = event.data.ip!;
+					}
 
 					// Add group to the settings
 					if (
@@ -91,7 +101,7 @@
 						});
 					}
 
-					// Tell server to start streams
+					// Tell server to start streams that are registered to that group
 					for (const camera of settings.groups.cameraSetup.config.value!.split(',')) {
 						const [group, name, device] = camera.split('.');
 						if (group === event.data.groupName) {
@@ -100,7 +110,6 @@
 								action: 'request-stream',
 								data: {
 									groupName: group,
-									cameraName: name,
 									device: device,
 									resolution: { width: 320, height: 240 }
 								}
@@ -112,9 +121,16 @@
 					toast.error('Device already exists');
 				}
 				break;
-			case 'kill':
-				const index = devices.findIndex((device) => device.groupName === event.data.groupName);
+			case 'group-terminated':
+				// remove the group when it goes offline
+				let index = devices.findIndex((device) => device.groupName === event.data.groupName);
 				devices.splice(index, 1);
+				index = settings.groups.cameraSetup.group.options!.indexOf({
+					value: event.data.groupName!,
+					label: event.data.groupName!
+				});
+				settings.groups.cameraSetup.group.options!.splice(index, 1);
+				configObject[event.data.groupName!].deviceIp = '';
 				break;
 			case 'request-groups':
 			case 'request-stream':
@@ -126,51 +142,103 @@
 	});
 
 	$effect(() => {
+		console.log('config changed');
+
 		// ensure config has been applied
 		let config: string | string[] | undefined = settings.groups.cameraSetup.config.value;
 		if (config === undefined || config === '') return;
 		config = config.split(',').filter((camera) => camera !== '');
-		config.forEach((camera) => {
-			const [group, name, device] = camera.split('.');
-			settings.groups[group + ': ' + name] = {
-				resolution: {
-					type: 'select',
-					description: 'Resolution of the camera',
-					options: [
-						{ value: '1920x1080', label: '1920x1080' },
-						{ value: '1280x720', label: '1280x720' },
-						{ value: '640x480', label: '640x480' },
-						{ value: '320x240', label: '320x240' }
-					],
-					value: '320x240'
-				},
-				device: {
-					type: 'text',
-					disabled: true,
-					value: device
-				},
-				restartCamera: {
-					type: 'button',
-					description: 'Restart camera stream',
-					action: () => {
-						return 'TODO';
+		untrack(() => {
+			config.forEach((camera) => {
+				const [group, name, device] = camera.split('.');
+				let ip = devices.find((device) => device.groupName === group)?.ip;
+				if (configObject[group] === undefined)
+					configObject[group] = { deviceIp: ip ? ip : '', cameras: [] };
+				if (!configObject[group].cameras.includes(device)) configObject[group].cameras.push(device);
+
+				settings.groups[group + ', ' + name] = {
+					resolution: {
+						type: 'select',
+						description: 'Resolution of the camera',
+						options: [
+							{ value: '1920x1080', label: '1920x1080' },
+							{ value: '1280x720', label: '1280x720' },
+							{ value: '640x480', label: '640x480' },
+							{ value: '320x240', label: '320x240' }
+						],
+						value: '320x240'
+					},
+					device: {
+						type: 'text',
+						disabled: true,
+						value: device
+					},
+					restartCamera: {
+						type: 'button',
+						description: 'Restart camera stream',
+						action: () => {
+							let resolution = settings.groups[group + ', ' + name].resolution.value!.split('x');
+							socket.send({
+								type: 'camera',
+								action: 'request-stream',
+								data: {
+									groupName: group,
+									device: device,
+									resolution: { width: Number(resolution[0]), height: Number(resolution[1]) }
+								}
+							} as CameraEventType);
+							return 'Told camera to resize';
+						}
+					},
+					stop: {
+						type: 'button',
+						description: 'Stop camera stream',
+						action: () => {
+							// socket.send({ type: 'camera', action: 'request-stream', data: { groupName: group } });
+							// return 'Killed camera stream';
+							return 'TODO';
+						}
+					},
+					delete: {
+						type: 'button',
+						description: 'Delete camera stream',
+						action: () => {
+							// Tell camera server to stop stream
+							// socket.send({
+							// 	type: 'camera',
+							// 	action: 'kill',
+							// 	data: { groupName: group, device: device }
+							// } as CameraEventType);
+
+							configObject[group].cameras = configObject[group].cameras.filter(
+								(camera) => camera !== device
+							);
+							if (configObject[group].cameras.length === 0) {
+								delete configObject[group];
+							}
+
+							// Remove camera from config
+							settings.groups.cameraSetup.config.value =
+								settings.groups.cameraSetup.config.value!.replace(camera + ',', '');
+							delete settings.groups[group + ', ' + name];
+
+							return 'Deleted camera stream';
+						}
 					}
-				},
-				stop: {
-					type: 'button',
-					description: 'Stop camera stream',
-					action: () => {
-						// socket.send({ type: 'camera', action: 'request-stream', data: { groupName: group } });
-						// return 'Killed camera stream';
-						return 'TODO';
-					}
-				}
-			};
+				};
+			});
 		});
 	});
 
 	onMount(() => {
 		settings.groups.cameraSetup.create.action = (): string => {
+			if (
+				settings.groups.cameraSetup.group.value === undefined ||
+				settings.groups.cameraSetup.name.value === undefined ||
+				settings.groups.cameraSetup.device.value === undefined
+			) {
+				return 'Please fill out all fields';
+			}
 			settings.groups.cameraSetup.config.value +=
 				settings.groups.cameraSetup.group.value +
 				'.' +
@@ -179,8 +247,26 @@
 				settings.groups.cameraSetup.device.value +
 				',';
 
+			socket.send({
+				type: 'camera',
+				action: 'request-stream',
+				data: {
+					groupName: settings.groups.cameraSetup.group.value,
+					device: settings.groups.cameraSetup.device.value,
+					resolution: { width: 320, height: 240 }
+				}
+			} as CameraEventType);
+
+			settings.groups.cameraSetup.group.value = undefined;
+			settings.groups.cameraSetup.name.value = undefined;
+			settings.groups.cameraSetup.device.value = undefined;
+
 			return 'Created new camera';
 		};
+		settings.groups.cameraSetup.group.options = [];
+		settings.groups.cameraSetup.group.value = undefined;
+		settings.groups.cameraSetup.name.value = undefined;
+		settings.groups.cameraSetup.device.value = undefined;
 
 		// request video group data
 		socket.send({ type: 'camera', action: 'request-groups' });
@@ -191,8 +277,16 @@
 	});
 </script>
 
-{#each devices as device}
-	<WebrtcClient ip={device.ip} port={device.port} groupName={device.groupName} />
+{#each Object.keys(configObject) as device}
+	{#if configObject[device].deviceIp !== ''}
+		<WebrtcClient
+			ip={configObject[device].deviceIp}
+			groupName={device}
+			cameras={configObject[device].cameras}
+		/>
+	{:else}
+		<p>Waiting for {device} to come online...</p>
+	{/if}
 {:else}
 	<p>
 		No active streams. Check that peripheral servers are running and that you are on the correct

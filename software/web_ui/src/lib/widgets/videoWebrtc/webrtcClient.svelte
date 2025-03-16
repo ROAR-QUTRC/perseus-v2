@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { ip, port, groupName }: { ip: string; port: number; groupName: string } = $props();
+	let { ip, groupName, cameras }: { ip: string; groupName: string; cameras: string[] } = $props();
 
 	import { onMount } from 'svelte';
 	import VideoWrapper from './videoWrapper.svelte';
@@ -20,12 +20,12 @@
 
 	const wsSend = (data: any) => {
 		if (!ws) return;
-		console.log('Sending:', data);
+		// console.log('Sending:', data);
 		ws.send(JSON.stringify(data));
 	};
 
 	const connectToSignallingServer = () => {
-		ws = new WebSocket(`ws://${ip}:${port}`);
+		ws = new WebSocket(`ws://${ip}:${8443}`);
 		ws.onerror = (event) => {
 			// if there is a websocket error just try again
 			setTimeout(() => connectToSignallingServer(), 200);
@@ -33,7 +33,7 @@
 		};
 		ws.onmessage = (event) => {
 			const data = JSON.parse(event.data);
-			console.log(data);
+			// console.log(data);
 			switch (data.type) {
 				case 'welcome':
 					peerId = data.peerId;
@@ -45,28 +45,34 @@
 						});
 					}
 					if (data.roles.includes('producer')) {
-						peerConnections[data.peerId] = {
-							sessionId: '',
-							name: data.meta.name,
-							connection: null,
-							track: null
-						};
+						if (cameras.includes(data.meta.name)) {
+							peerConnections[data.peerId] = {
+								sessionId: '',
+								name: data.meta.name,
+								connection: null,
+								track: null
+							};
 
-						wsSend({
-							type: 'startSession',
-							peerId: data.peerId
-						});
+							wsSend({
+								type: 'startSession',
+								peerId: data.peerId
+							});
+						}
 					}
 					break;
 				case 'list':
 					if (data.producers.length > 0) {
+						console.log('Producers:', data.producers);
+						console.log('Cameras:', cameras);
 						data.producers.forEach((producer: any) => {
-							peerConnections[producer.id] = {
-								sessionId: '',
-								name: producer.meta.name,
-								connection: null,
-								track: null
-							};
+							if (cameras.includes(producer.meta.name)) {
+								peerConnections[producer.id] = {
+									sessionId: '',
+									name: producer.meta.name,
+									connection: null,
+									track: null
+								};
+							}
 						});
 						Object.keys(peerConnections).forEach((connection) => {
 							if (peerConnections[connection].connection === null) {
@@ -146,11 +152,32 @@
 					}
 					break;
 
+				case 'endSession':
+					// remove stream when session ends
+					const sessionToEnd: string | undefined = Object.keys(peerConnections).find(
+						(key) => peerConnections[key].sessionId === data.sessionId
+					);
+					if (sessionToEnd) delete peerConnections[sessionToEnd!];
+					break;
+
 				default:
 					console.log('unknown message', data);
 			}
 		};
 	};
+
+	// create or remove peerconnections when the cameras prop changes
+	$effect(() => {
+		const connections = Object.keys(peerConnections);
+		for (const connection of connections) {
+			if (!cameras.includes(peerConnections[connection].name)) {
+				console.log('Removing:', peerConnections[connection]);
+				peerConnections[connection].connection?.close();
+				peerConnections[connection].track = null;
+				delete peerConnections[connection];
+			}
+		}
+	});
 
 	onMount(() => {
 		connectToSignallingServer();
@@ -179,8 +206,8 @@
 </script>
 
 <!-- FOR DEBUGGING -->
-<p>{ip}:{port}</p>
-<p>Client ID: {peerId}</p>
+<!-- <p>{ip}:{port}</p>
+<p>Client ID: {peerId}</p> -->
 <strong class="ml-2">{groupName}</strong>
 
 <div class="m-1 mb-3 flex w-fit flex-row flex-wrap overflow-hidden rounded-[4px]">
@@ -190,8 +217,10 @@
 				<VideoWrapper media={peerConnections[peer].track} />
 			{/if}
 			<p class="absolute bottom-1 left-1 rounded-[4px] bg-card bg-opacity-60 px-2 py-1">
-				{peerConnections[peer].name}
+				{peerConnections[peer].name} ({peerConnections[peer].sessionId})
 			</p>
 		</div>
+	{:else}
+		<p class="ml-2">Waiting for streams...</p>
 	{/each}
 </div>
