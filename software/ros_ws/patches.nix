@@ -45,6 +45,17 @@ let
         ];
       }
     );
+    rtabmap = rosPrev.rtabmap.overrideAttrs (
+      {
+        cmakeFlags ? [ ],
+        ...
+      }:
+      {
+        cmakeFlags = cmakeFlags ++ [
+          "-DWITH_QT=OFF"
+        ];
+      }
+    );
   };
 in
 {
