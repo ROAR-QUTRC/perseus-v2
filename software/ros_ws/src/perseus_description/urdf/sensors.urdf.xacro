@@ -53,7 +53,7 @@
         <origin xyz="0.2 0.4 0.35" rpy="0 0 -1.57"/>
     </joint>
 
-    <gazebo reference="${prefix}laser_frame">
+    <gazebo reference="${prefix}m2m2_lidar_frame">
         <material>Gazebo/Black</material>
         <sensor name="laser" type="gpu_lidar">
             <pose>0 0 0 0 0 0</pose>
@@ -81,7 +81,7 @@
                 </range>
             </ray>
             <!-- <gz_frame_id>${prefix}laser_frame</gz_frame_id> -->
-            <frame>${prefix}laser_frame</frame>
+            <frame>${prefix}m2m2_lidar_frame</frame>
         </sensor>
     </gazebo>
 
