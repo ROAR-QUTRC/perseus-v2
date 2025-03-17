@@ -3,12 +3,11 @@
 #include <algorithm>
 #include <cstdint>
 
-RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
-    : Node("rcb_driver", options)
+RcbDriver::RcbDriver(const rclcpp::NodeOptions& options) : Node("rcb_driver", options)
 {
     try
     {
-        _canInterface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "vcan0")));
+        _canInterface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "can0")));
         _packetManager.emplace(_canInterface.value());
     }
     catch (const std::exception& e)
@@ -38,12 +37,9 @@ RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
         try
         {
             // create parameter groups
-            _parameterGroups.emplace_back(
-                address_t(
-                    power::SYSTEM_ID,
-                    power::control::SUBSYSTEM_ID,
-                    static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
-                group);
+            _parameterGroups.emplace_back(address_t(power::SYSTEM_ID, power::control::SUBSYSTEM_ID,
+                                                    static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
+                                          group);
 
             _packetManager->addGroup(_parameterGroups.back());
         }
@@ -57,7 +53,8 @@ RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
     // init publisher and subscriber
     _packetPublisher = this->create_publisher<std_msgs::msg::String>("can_to_ros", 10);
     _packetTimeoutTimer = this->create_wall_timer(PACKET_TIMEOUT, std::bind(&RcbDriver::_canToRos, this));
-    _packetSubscriber = this->create_subscription<std_msgs::msg::String>("ros_to_can", 10, std::bind(&RcbDriver::_rosToCan, this, std::placeholders::_1));
+    _packetSubscriber = this->create_subscription<std_msgs::msg::String>(
+        "ros_to_can", 10, std::bind(&RcbDriver::_rosToCan, this, std::placeholders::_1));
 
     RCLCPP_INFO(this->get_logger(), "Rover control board driver node initialized");
 }
@@ -83,7 +80,8 @@ void RcbDriver::_canToRos()
         isFirst = false;
         const auto& data = group.getStatus();
         const bool isOff = data.status == hi_can::parameters::legacy::power::control::power_bus::power_status::OFF;
-        message.data += std::format("\"current\": \"{0}\", \"voltage\": \"{1}\", \"power_off\": \"{2}\"", data.current, data.voltage, isOff);
+        message.data += std::format("\"current\": \"{0}\", \"voltage\": \"{1}\", \"power_off\": \"{2}\"", data.current,
+                                    data.voltage, isOff);
         message.data += "}";
     }
     message.data += "]";
@@ -131,16 +129,13 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
         }
         RCLCPP_INFO(get_logger(), "Telling %s bus to turn %s", busName.c_str(), turnOn ? "on" : "off");
 
-        const address_t address(
-            power::SYSTEM_ID,
-            power::control::SUBSYSTEM_ID,
-            static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD),
-            static_cast<uint8_t>(this->BUS_GROUPS[bus]),
-            static_cast<uint8_t>(power::control::power_bus::parameter::CONTROL_IMMEDIATE));
+        const address_t address(power::SYSTEM_ID, power::control::SUBSYSTEM_ID,
+                                static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD),
+                                static_cast<uint8_t>(this->BUS_GROUPS[bus]),
+                                static_cast<uint8_t>(power::control::power_bus::parameter::CONTROL_IMMEDIATE));
 
-        _canInterface->transmit(Packet(
-            static_cast<addressing::flagged_address_t>(address),
-            immediate_control_t(_immediate_control_t{turnOn, false, 0}).serializeData()));
+        _canInterface->transmit(Packet(static_cast<addressing::flagged_address_t>(address),
+                                       immediate_control_t(_immediate_control_t{turnOn, false, 0}).serializeData()));
     }
     catch (const std::exception& e)
     {
