@@ -181,6 +181,9 @@ let
         patches = patches ++ [
           ./patches/livox-ros-driver2/rename-files.patch
           ./patches/livox-ros-driver2/livox-ros-driver2.patch
+        ];
+      }
+    );
 
     librealsense2 = rosPrev.librealsense2.overrideAttrs (
       {

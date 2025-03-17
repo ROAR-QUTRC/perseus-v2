@@ -14,13 +14,13 @@
     },
     "host_net_info": {
       // Network configuration for the host computer
-      "cmd_data_ip": "192.168.1.5", // Host IP for sending commands
+      "cmd_data_ip": "192.168.1.11", // Host IP for sending commands
       "cmd_data_port": 56101, // Local port for commands
-      "push_msg_ip": "192.168.1.5", // Host IP for receiving status messages
+      "push_msg_ip": "192.168.1.11", // Host IP for receiving status messages
       "push_msg_port": 56201, // Local port for status messages
-      "point_data_ip": "192.168.1.5", // Host IP for receiving point cloud data
+      "point_data_ip": "192.168.1.11", // Host IP for receiving point cloud data
       "point_data_port": 56301, // Local port for point cloud data
-      "imu_data_ip": "192.168.1.5", // Host IP for receiving IMU data
+      "imu_data_ip": "192.168.1.11", // Host IP for receiving IMU data
       "imu_data_port": 56401, // Local port for IMU data
       "log_data_ip": "", // Host IP for logs (empty = disabled)
       "log_data_port": 56501 // Local port for logs
@@ -29,7 +29,7 @@
   "lidar_configs": [
     // Array of LiDAR devices to configure
     {
-      "ip": "192.168.1.100", // IP address of the LiDAR unit
+      "ip": "192.168.1.21", // IP address of the LiDAR unit
       "pcl_data_type": 1, // Point cloud data format: 1=32-bit Cartesian, 2=16-bit Cartesian, 3=Spherical
       "pattern_mode": 0, // Scan pattern: 0=non-repeating, 1=repeating, 2=repeating (low rate)
       "extrinsic_parameter": {
