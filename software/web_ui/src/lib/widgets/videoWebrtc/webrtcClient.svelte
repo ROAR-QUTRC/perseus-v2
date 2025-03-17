@@ -1,5 +1,11 @@
 <script lang="ts">
-	let { ip, groupName, cameras }: { ip: string; groupName: string; cameras: string[] } = $props();
+	let {
+		ip,
+		groupName,
+		cameras,
+		cameraNames
+	}: { ip: string; groupName: string; cameras: string[]; cameraNames: Record<string, string> } =
+		$props();
 
 	import { onMount } from 'svelte';
 	import VideoWrapper from './videoWrapper.svelte';
@@ -217,7 +223,7 @@
 				<VideoWrapper media={peerConnections[peer].track} />
 			{/if}
 			<p class="absolute bottom-1 left-1 rounded-[4px] bg-card bg-opacity-60 px-2 py-1">
-				{peerConnections[peer].name} ({peerConnections[peer].sessionId})
+				{cameraNames[peerConnections[peer].name]}
 			</p>
 		</div>
 	{:else}

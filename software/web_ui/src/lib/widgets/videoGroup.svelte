@@ -73,6 +73,7 @@
 	>([]);
 	// keep track of the active devices for this widget
 	let configObject = $state<Record<string, { deviceIp: string; cameras: string[] }>>({});
+	let cameraNameMap = $state<Record<string, string>>({});
 
 	socket.on('camera-event', (event: CameraEventType) => {
 		// console.log(event);
@@ -154,7 +155,10 @@
 				let ip = devices.find((device) => device.groupName === group)?.ip;
 				if (configObject[group] === undefined)
 					configObject[group] = { deviceIp: ip ? ip : '', cameras: [] };
-				if (!configObject[group].cameras.includes(device)) configObject[group].cameras.push(device);
+				if (!configObject[group].cameras.includes(device)) {
+					configObject[group].cameras.push(device);
+					cameraNameMap[device] = name;
+				}
 
 				settings.groups[group + ', ' + name] = {
 					resolution: {
@@ -213,6 +217,9 @@
 							configObject[group].cameras = configObject[group].cameras.filter(
 								(camera) => camera !== device
 							);
+							if (cameraNameMap[device] !== undefined) {
+								delete cameraNameMap[device];
+							}
 							if (configObject[group].cameras.length === 0) {
 								delete configObject[group];
 							}
@@ -283,6 +290,7 @@
 			ip={configObject[device].deviceIp}
 			groupName={device}
 			cameras={configObject[device].cameras}
+			cameraNames={cameraNameMap}
 		/>
 	{:else}
 		<p>Waiting for {device} to come online...</p>
