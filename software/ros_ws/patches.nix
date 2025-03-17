@@ -181,6 +181,16 @@ let
         patches = patches ++ [
           ./patches/livox-ros-driver2/rename-files.patch
           ./patches/livox-ros-driver2/livox-ros-driver2.patch
+
+    librealsense2 = rosPrev.librealsense2.overrideAttrs (
+      {
+        cmakeFlags ? [ ],
+        ...
+      }:
+      {
+        cmakeFlags = cmakeFlags ++ [
+          "-DCHECK_FOR_UPDATES=OFF"
+          "-DBUILD_GRAPHICAL_EXAMPLES=OFF"
         ];
       }
     );
