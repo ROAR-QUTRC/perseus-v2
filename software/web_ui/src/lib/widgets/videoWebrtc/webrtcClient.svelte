@@ -218,14 +218,12 @@
 
 <div class="m-1 mb-3 flex w-fit flex-row flex-wrap overflow-hidden rounded-[4px]">
 	{#each Object.keys(peerConnections) as peer, i}
-		<div class="relative">
-			{#if peerConnections[peer].track}
-				<VideoWrapper media={peerConnections[peer].track} />
-			{/if}
-			<p class="absolute bottom-1 left-1 rounded-[4px] bg-card bg-opacity-60 px-2 py-1">
-				{cameraNames[peerConnections[peer].name]}
-			</p>
-		</div>
+		{#if peerConnections[peer].track}
+			<VideoWrapper
+				media={peerConnections[peer].track}
+				name={cameraNames[peerConnections[peer].name]}
+			/>
+		{/if}
 	{:else}
 		<p class="ml-2">Waiting for streams...</p>
 	{/each}
