@@ -111,8 +111,7 @@
 								action: 'request-stream',
 								data: {
 									groupName: group,
-									device: device,
-									resolution: { width: 320, height: 240 }
+									device: device
 								}
 							} as CameraEventType);
 						}
@@ -143,8 +142,6 @@
 	});
 
 	$effect(() => {
-		console.log('config changed');
-
 		// ensure config has been applied
 		let config: string | string[] | undefined = settings.groups.cameraSetup.config.value;
 		if (config === undefined || config === '') return;
@@ -192,15 +189,6 @@
 								}
 							} as CameraEventType);
 							return 'Told camera to resize';
-						}
-					},
-					stop: {
-						type: 'button',
-						description: 'Stop camera stream',
-						action: () => {
-							// socket.send({ type: 'camera', action: 'request-stream', data: { groupName: group } });
-							// return 'Killed camera stream';
-							return 'TODO';
 						}
 					},
 					delete: {
@@ -259,8 +247,7 @@
 				action: 'request-stream',
 				data: {
 					groupName: settings.groups.cameraSetup.group.value,
-					device: settings.groups.cameraSetup.device.value,
-					resolution: { width: 320, height: 240 }
+					device: settings.groups.cameraSetup.device.value
 				}
 			} as CameraEventType);
 

@@ -127,7 +127,7 @@
 		const listener = new ROSLIB.Topic({
 			ros: ros.value,
 			name: topic,
-			messageType: 'std_msgs/String'
+			messageType: 'geometry_msgs/msg/TwistStamped'
 		});
 
 		listener.subscribe((message) => onMessage(message, topic));

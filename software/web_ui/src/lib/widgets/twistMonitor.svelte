@@ -93,19 +93,20 @@
 				twistTopic = new ROSLIB.Topic({
 					ros: ros.value!,
 					name: settings.groups.General.topic.value!,
-					messageType: 'geometry_msgs/msg/Twist'
+					messageType: 'geometry_msgs/msg/TwistStamped'
 				});
 
 				twistTopic.subscribe((message: any) => {
-					twist.x = message.linear.x;
-					twist.y = message.linear.y;
-					twist.rotation = message.angular.z;
+					// Switch data so that controls are correct directions
+					twist.y = message.twist.linear.x;
+					twist.x = message.twist.linear.y;
+					twist.rotation = -message.twist.angular.z;
 
 					context?.clearRect(0, 0, canvasSize, canvasSize);
 					context?.beginPath();
 					drawArrow(
 						(twist.x / Number(settings.groups.General.MaxXValue.value)) * (canvasSize / 2),
-						twist.y
+						(twist.y / Number(settings.groups.General.MaxYValue.value)) * (canvasSize / 2)
 					);
 					context?.stroke();
 				});
@@ -197,11 +198,11 @@
 	<div class="-mt-[40px] flex flex-row gap-2">
 		<div>
 			<p>Angular:</p>
-			<p>z: {twist.rotation}</p>
+			<p>z: {Math.round(twist.rotation * 100) / 100}</p>
 		</div>
 		<div>
 			<p>Linear:</p>
-			<p>x: {twist.x}, y: {twist.y}</p>
+			<p>x: {Math.round(twist.x * 100) / 100}, y: {Math.round(twist.y * 100) / 100}</p>
 		</div>
 	</div>
 </div>
