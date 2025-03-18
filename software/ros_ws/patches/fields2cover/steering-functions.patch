@@ -1,0 +1,16 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4360b94..8529d38 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -40,7 +40,10 @@ install(TARGETS ${PROJECT_NAME}
+   EXPORT ${PROJECT_NAME}-targets
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+-  PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}/steering_functions"
+ )
++install(DIRECTORY include/ DESTINATION include/)
++install(EXPORT ${PROJECT_NAME}-targets
++        FILE ${PROJECT_NAME}-config.cmake
++        DESTINATION lib/${PROJECT_NAME})
+ 
+ export(PACKAGE steering_functions)
