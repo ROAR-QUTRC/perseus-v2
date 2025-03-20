@@ -59,7 +59,7 @@ if (ip) {
 
 // start the signalling server
 let signallingServer = spawn('gst-webrtc-signalling-server');
-// signallingServer.stdout.pipe(process.stdout);
+signallingServer.stdout.pipe(process.stdout);
 
 let gstInstances: {
 	device: string;
