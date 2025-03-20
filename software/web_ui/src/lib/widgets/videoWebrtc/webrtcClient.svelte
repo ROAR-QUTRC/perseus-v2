@@ -72,12 +72,14 @@
 						console.log('Cameras:', cameras);
 						data.producers.forEach((producer: any) => {
 							if (cameras.includes(producer.meta.name)) {
-								peerConnections[producer.id] = {
-									sessionId: '',
-									name: producer.meta.name,
-									connection: null,
-									track: null
-								};
+								// only that have not been added already
+								if (!peerConnections[producer.id])
+									peerConnections[producer.id] = {
+										sessionId: '',
+										name: producer.meta.name,
+										connection: null,
+										track: null
+									};
 							}
 						});
 						Object.keys(peerConnections).forEach((connection) => {
