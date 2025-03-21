@@ -235,6 +235,11 @@ return_type VescSystemHardware::read(
         // TODO: Test to see which would be more appropriate to use
         // (probably motor temp)
         _realTemperatures[i] = std::max(status4.tempFet, status4.tempMotor);
+
+        const auto status5 = paramGroup.getStatus5();
+        double wheelTachometer = status5.tachometer / GEARBOX_RATIO;
+        double wheelRevolutions = wheelTachometer / ERPM_DIVISOR;
+        _realPositions[i] = wheelRevolutions * (2 * std::numbers::pi);
     }
 
     return return_type::OK;
