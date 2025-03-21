@@ -1,19 +1,41 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import type { MotorStatsType } from '../motorStats.svelte';
 
 	// source of svg magicness: https://animation-svelte.vercel.app/magic/circular-progress-bar
 	let {
-		rpm,
-		targetRpm,
-		current,
-		temperature
-	}: { rpm: number; targetRpm: number; current: number; temperature: number } = $props();
+		motorData,
+		primaryReadoutType,
+		secondaryReadoutType
+	}: {
+		motorData: MotorStatsType;
+		primaryReadoutType: string | undefined;
+		secondaryReadoutType: string | undefined;
+	} = $props();
+
+	let primaryReadout = $derived.by(() => getReadoutData(primaryReadoutType!));
+	let secondaryReadout = $derived.by(() => getReadoutData(secondaryReadoutType!));
+
+	const getReadoutData = (type: string) => {
+		switch (type) {
+			case 'rpm':
+				return `RPM: ${Math.round(motorData.currentRPM * 100) / 100}`;
+			case 'difference':
+				return `Diff: ${Math.round((motorData.targetRPM - motorData.currentRPM) * 100) / 100}`;
+			case 'current':
+				return `Amps: ${Math.round(motorData.current * 100) / 100}`;
+			case 'temperature':
+				return `Temp: ${Math.round(motorData.temperature * 100) / 100}`;
+			default:
+				return 0;
+		}
+	};
 
 	onMount(() => {
-		rpm = 23;
-		targetRpm = 50;
-		current = 10;
-		temperature = 30;
+		motorData.currentRPM = 23;
+		motorData.targetRPM = 50;
+		motorData.current = 10;
+		motorData.temperature = 30;
 	});
 </script>
 
@@ -28,13 +50,13 @@
 		<circle
 			r="45"
 			stroke="#db26293f"
-			style:--stroke-percent={(targetRpm / 2) * 0.8}
+			style:--stroke-percent={(motorData.targetRPM / 2) * 0.8}
 			style:--circumference={2 * Math.PI * 45}
 		/>
 		<circle
 			r="45"
 			stroke="#db26293f"
-			style:--stroke-percent={(-targetRpm / 2) * 0.8}
+			style:--stroke-percent={(-motorData.targetRPM / 2) * 0.8}
 			style:--circumference={2 * Math.PI * 45}
 			style:transform="scale(-1, 1)"
 		/>
@@ -43,13 +65,13 @@
 		<circle
 			r="45"
 			stroke="#db2629"
-			style:--stroke-percent={(rpm / 2) * 0.8}
+			style:--stroke-percent={(motorData.currentRPM / 2) * 0.8}
 			style:--circumference={2 * Math.PI * 45}
 		/>
 		<circle
 			r="45"
 			stroke="#db2629"
-			style:--stroke-percent={(-rpm / 2) * 0.8}
+			style:--stroke-percent={(-motorData.currentRPM / 2) * 0.8}
 			style:--circumference={2 * Math.PI * 45}
 			style:transform="scale(-1, 1)"
 		/>
@@ -58,13 +80,13 @@
 		<circle
 			r="40"
 			stroke="#00f"
-			style:--stroke-percent={(current / 2) * 0.8}
+			style:--stroke-percent={(motorData.current / 2) * 0.8}
 			style:--circumference={2 * Math.PI * 40}
 		/>
 		<circle
 			r="40"
 			stroke="#00f"
-			style:--stroke-percent={(-current / 2) * 0.8}
+			style:--stroke-percent={(-motorData.current / 2) * 0.8}
 			style:--circumference={2 * Math.PI * 40}
 			style:transform="scale(-1, 1)"
 		/>
@@ -82,8 +104,8 @@
 		class="absolute left-[50%] top-[50%] w-[200px] rounded-lg border border-card-foreground bg-background p-2"
 		style:transform="translateY(-50%)"
 	>
-		<p class="text-2xl">RPM: {Math.round(rpm * 100) / 100}</p>
-		<p class="">Temp: {Math.round(temperature * 100) / 100}</p>
+		<p class="text-2xl">{primaryReadout}</p>
+		<p class="">{secondaryReadout}</p>
 	</div>
 </div>
 
