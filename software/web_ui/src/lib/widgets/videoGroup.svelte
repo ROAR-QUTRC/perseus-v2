@@ -10,6 +10,7 @@
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
 			cameraSetup: {
+				// TODO: Remove the group field since it can be inferred from the config to simplify the UI
 				group: {
 					type: 'select',
 					description: 'Name of the camera group',
