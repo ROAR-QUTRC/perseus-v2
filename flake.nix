@@ -141,6 +141,7 @@
             ;
           inherit (pkgs.ros)
             rosbridge-suite
+            livox-ros-driver2
             rviz2-fixed
             rosbag2
             teleop-twist-keyboard

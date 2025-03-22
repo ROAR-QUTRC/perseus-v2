@@ -1,54 +1,45 @@
 <script lang="ts">
 	let {
 		ip,
-		port,
 		groupName,
-		cameras
-	}: { ip: string; port: number; groupName: string; cameras: any[] } = $props();
+		cameras,
+		cameraNames
+	}: { ip: string; groupName: string; cameras: string[]; cameraNames: Record<string, string> } =
+		$props();
 
 	import { onMount } from 'svelte';
 	import VideoWrapper from './videoWrapper.svelte';
 
 	let ws: WebSocket | null = null;
-	let peerConnection: RTCPeerConnection | null = new RTCPeerConnection();
-
+	let peerConnections = $state<
+		Record<
+			string,
+			{
+				sessionId: string;
+				name: string;
+				connection: RTCPeerConnection | null;
+				track: MediaStream | null;
+			}
+		>
+	>({});
 	let peerId = $state<string | null>(null);
-	let remoteId = $state<string | null>(null);
-	let callSessionId: string | null = null;
-
-	let tracks = $state<MediaStream[]>([]);
 
 	const wsSend = (data: any) => {
 		if (!ws) return;
+		// console.log('Sending:', data);
 		ws.send(JSON.stringify(data));
 	};
 
-	peerConnection.onicecandidate = (event) => {
-		// console.log('onicecandidate', event);
-		if (event.candidate && callSessionId !== null) {
-			wsSend({
-				type: 'peer',
-				sessionId: callSessionId,
-				ice: event.candidate.toJSON()
-			});
-		}
-	};
-
-	peerConnection.ontrack = (event) => {
-		// console.log('ontrack', event);
-		tracks.push(new MediaStream([event.track]));
-	};
-
 	const connectToSignallingServer = () => {
-		ws = new WebSocket(`ws://${ip}:${port}`);
+		ws = new WebSocket(`ws://${ip}:${8443}`);
 		ws.onerror = (event) => {
 			// if there is a websocket error just try again
 			setTimeout(() => connectToSignallingServer(), 200);
 			// console.log('[WS Error] -', event);
 		};
 		ws.onmessage = (event) => {
-			// console.log(event);
 			const data = JSON.parse(event.data);
+			// console.log(data);
 			switch (data.type) {
 				case 'welcome':
 					peerId = data.peerId;
@@ -60,39 +51,121 @@
 						});
 					}
 					if (data.roles.includes('producer')) {
-						remoteId = data.peerId;
+						if (cameras.includes(data.meta.name)) {
+							peerConnections[data.peerId] = {
+								sessionId: '',
+								name: data.meta.name,
+								connection: null,
+								track: null
+							};
+
+							wsSend({
+								type: 'startSession',
+								peerId: data.peerId
+							});
+						}
 					}
 					break;
 				case 'list':
 					if (data.producers.length > 0) {
-						remoteId = data.producers[0].id;
+						console.log('Producers:', data.producers);
+						console.log('Cameras:', cameras);
+						data.producers.forEach((producer: any) => {
+							if (cameras.includes(producer.meta.name)) {
+								// only that have not been added already
+								if (!peerConnections[producer.id])
+									peerConnections[producer.id] = {
+										sessionId: '',
+										name: producer.meta.name,
+										connection: null,
+										track: null
+									};
+							}
+						});
+						Object.keys(peerConnections).forEach((connection) => {
+							if (peerConnections[connection].connection === null) {
+								wsSend({
+									type: 'startSession',
+									peerId: connection
+								});
+							}
+						});
+						console.log('Remote ID:', data.producers[0].meta);
 					}
 					break;
 				case 'sessionStarted':
-					callSessionId = data.sessionId;
+					// When we are told that a new session is started create a new peer connection and set event handlers
+					peerConnections[data.peerId] = {
+						sessionId: data.sessionId,
+						name: peerConnections[data.peerId]?.name || 'Unknown',
+						connection: new RTCPeerConnection(),
+						track: null
+					};
+
+					peerConnections[data.peerId].connection!.onicecandidate = (event) => {
+						// console.log('onicecandidate', event);
+						if (event.candidate && data.sessionId !== null) {
+							wsSend({
+								type: 'peer',
+								sessionId: data.sessionId,
+								ice: event.candidate.toJSON()
+							});
+						}
+					};
+
+					peerConnections[data.peerId].connection!.ontrack = (event) => {
+						// console.log('ontrack', event);
+						peerConnections[data.peerId].track = new MediaStream([event.track]);
+					};
 					break;
 				case 'peer':
+					// Peer messages are for negotiating the connection
+
+					// get the producer ID
+					const remoteId: string | undefined = Object.keys(peerConnections).find(
+						(key) => peerConnections[key].sessionId === data.sessionId
+					);
+
+					if (!remoteId) {
+						console.error('No remote ID found for session ID:', data.sessionId);
+						return;
+					}
+
+					if (peerConnections[remoteId].connection === null) {
+						console.error('No connection found for remote ID:', remoteId);
+						return;
+					}
+
+					// acknowledge sdp and ice negotiation
 					if (data.sdp) {
-						peerConnection
+						peerConnections[remoteId].connection
 							.setRemoteDescription(data.sdp)
 							.then(() => {
-								return peerConnection.createAnswer();
+								return peerConnections[remoteId].connection!.createAnswer();
 							})
 							.then((answer) => {
-								return peerConnection.setLocalDescription(answer);
+								return peerConnections[remoteId].connection!.setLocalDescription(answer);
 							})
 							.then(() => {
 								wsSend({
 									type: 'peer',
 									sessionId: data.sessionId,
-									sdp: peerConnection.localDescription!.toJSON()
+									sdp: peerConnections[remoteId].connection!.localDescription!.toJSON()
 								});
 							});
 					} else if (data.ice) {
-						peerConnection.addIceCandidate(new RTCIceCandidate(data.ice));
+						peerConnections[remoteId].connection.addIceCandidate(new RTCIceCandidate(data.ice));
 					} else {
 						console.log('Unknown peer message:', data);
 					}
+					break;
+
+				case 'endSession':
+					// remove stream when session ends
+					const sessionToEnd: string | undefined = Object.keys(peerConnections).find(
+						(key) => peerConnections[key].sessionId === data.sessionId
+					);
+					if (sessionToEnd) delete peerConnections[sessionToEnd!];
 					break;
 
 				default:
@@ -101,11 +174,28 @@
 		};
 	};
 
+	// create or remove peerconnections when the cameras prop changes
+	$effect(() => {
+		const connections = Object.keys(peerConnections);
+		for (const connection of connections) {
+			if (!cameras.includes(peerConnections[connection].name)) {
+				console.log('Removing:', peerConnections[connection]);
+				peerConnections[connection].connection?.close();
+				peerConnections[connection].track = null;
+				delete peerConnections[connection];
+			}
+		}
+	});
+
 	onMount(() => {
 		connectToSignallingServer();
 
 		return () => {
-			if (peerConnection) peerConnection.close();
+			// if (peerConnection) peerConnection.close();
+			// close peer connections
+			Object.keys(peerConnections).forEach((key) => {
+				peerConnections[key].connection?.close();
+			});
 			if (ws) ws.close();
 		};
 	});
@@ -121,30 +211,22 @@
 			});
 		}
 	});
-
-	$effect(() => {
-		if (remoteId) {
-			wsSend({
-				type: 'startSession',
-				peerId: remoteId
-			});
-		}
-	});
 </script>
 
 <!-- FOR DEBUGGING -->
 <!-- <p>{ip}:{port}</p>
-<p>Client ID: {peerId}</p>
-<p>Remote ID: {remoteId}</p> -->
+<p>Client ID: {peerId}</p> -->
 <strong class="ml-2">{groupName}</strong>
 
 <div class="m-1 mb-3 flex w-fit flex-row flex-wrap overflow-hidden rounded-[4px]">
-	{#each tracks as track, i}
-		<div class="relative">
-			<VideoWrapper media={track} />
-			<p class="bg-card absolute bottom-1 left-1 rounded-[4px] bg-opacity-60 px-2 py-1">
-				{cameras[i].name}
-			</p>
-		</div>
+	{#each Object.keys(peerConnections) as peer, i}
+		{#if peerConnections[peer].track}
+			<VideoWrapper
+				media={peerConnections[peer].track}
+				name={cameraNames[peerConnections[peer].name]}
+			/>
+		{/if}
+	{:else}
+		<p class="ml-2">Waiting for streams...</p>
 	{/each}
 </div>

@@ -60,6 +60,7 @@
 				</div>
 				<div
 					class="absolute bottom-0 right-0 m-1 hover:cursor-nwse-resize"
+					style:z-index="50"
 					slot="resizeHandle"
 					let:resizeStart
 				>
