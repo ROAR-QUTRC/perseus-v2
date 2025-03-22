@@ -257,6 +257,8 @@ return_type VescSystemHardware::write(
         double motorRPM = wheelRPM * GEARBOX_RATIO;
 
         motorRPM = std::clamp(motorRPM * ERPM_DIVISOR, static_cast<double>(INT32_MIN), static_cast<double>(INT32_MAX));
+        motorRPM *= 100000;
+        motorRPM /= 4000;
         _parameterGroups[i].getSetRpm().value = static_cast<int32_t>(std::round(motorRPM));
     }
 

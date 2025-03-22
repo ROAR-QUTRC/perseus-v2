@@ -147,7 +147,8 @@ namespace hi_can::parameters::drive::vesc
     {
         using namespace addressing::drive::vesc;
         _transmissions.emplace_back(
-            address_t(vescId, command_id::SET_RPM),
+            // TODO: FIX
+            address_t(vescId, command_id::SET_DUTY),
             PacketManager::transmission_config_t{
                 .generator = [this]() -> auto
                 {
