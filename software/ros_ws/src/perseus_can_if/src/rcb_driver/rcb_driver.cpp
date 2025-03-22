@@ -2,12 +2,13 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <nlohmann/json.hpp>
 
 RcbDriver::RcbDriver(const rclcpp::NodeOptions& options) : Node("rcb_driver", options)
 {
     try
     {
-        _canInterface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "can0")));
+        _canInterface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "vcan0")));
         _packetManager.emplace(_canInterface.value());
     }
     catch (const std::exception& e)
@@ -71,20 +72,16 @@ void RcbDriver::_canToRos()
     }
 
     auto message = std_msgs::msg::String();
+    nlohmann::json busData = nlohmann::json::array();
 
-    message.data = "[";
-    bool isFirst = true;
     for (auto& group : _parameterGroups)
     {
-        message.data += isFirst ? "{" : ",{";
-        isFirst = false;
         const auto& data = group.getStatus();
-        const bool isOff = data.status == hi_can::parameters::legacy::power::control::power_bus::power_status::OFF;
-        message.data += std::format("\"current\": \"{0}\", \"voltage\": \"{1}\", \"power_off\": \"{2}\"", data.current,
-                                    data.voltage, isOff);
-        message.data += "}";
+
+        busData.push_back({{"current", data.current}, {"voltage", data.voltage}, {"power_off", data.status}});
     }
-    message.data += "]";
+
+    message.data = busData.dump();
 
     this->_packetPublisher->publish(message);
 }
@@ -107,6 +104,8 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
             return;
         }
         const bool turnOn = (msg->data[1] - '0') == 1;
+
+        using namespace hi_can::addressing::legacy::power::control::rcb;
 
         // Log the bus group for debugging purposes
         std::string busName;
