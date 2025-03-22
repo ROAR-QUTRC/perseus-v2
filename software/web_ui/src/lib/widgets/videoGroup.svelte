@@ -20,9 +20,9 @@
 					description: 'Name of the camera in the group'
 				},
 				device: {
-					type: 'text',
-					description:
-						'Device that video is streamed from. Use the linux device name (e.g. /dev/video0) or "test"'
+					type: 'select',
+					description: 'Device that video is streamed from.',
+					options: []
 				},
 				create: {
 					type: 'button',
@@ -52,6 +52,7 @@
 			// cameraName?: string;
 			resolution?: { width: number; height: number };
 			device?: string;
+			cameras?: string[];
 		};
 	}
 </script>
@@ -64,11 +65,12 @@
 
 	let socket: Socket = io();
 
-	// keep track of available devices
+	// keep track of connected camera servers
 	let devices = $state<
 		{
 			groupName: string;
 			ip: string;
+			cameras?: string[];
 		}[]
 	>([]);
 	// keep track of the active devices for this widget
@@ -80,10 +82,11 @@
 		switch (event.action) {
 			case 'group-description':
 				if (devices.find((device) => device.groupName === event.data.groupName) === undefined) {
-					// Add new device if it has a camera in this widgets config
+					// Add new device if it doesn't exist
 					devices.push({
 						ip: event.data.ip!,
-						groupName: event.data.groupName!
+						groupName: event.data.groupName!,
+						cameras: event.data.cameras
 					});
 					if (configObject[event.data.groupName!] !== undefined) {
 						configObject[event.data.groupName!].deviceIp = event.data.ip!;
@@ -103,8 +106,8 @@
 					}
 
 					// Tell server to start streams that are registered to that group
-					for (const camera of settings.groups.cameraSetup.config.value!.split(',')) {
-						const [group, name, device] = camera.split('.');
+					for (const camera of settings.groups.cameraSetup.config.value!.split('\n')) {
+						const [group, name, device] = camera.split(',');
 						if (group === event.data.groupName) {
 							socket.send({
 								type: 'camera',
@@ -141,14 +144,27 @@
 		}
 	});
 
+	// Switch the options when the selected device group changes
+	$effect(() => {
+		if (settings.groups.cameraSetup.group.value === undefined) return;
+		let group = settings.groups.cameraSetup.group.value;
+		let cameras = devices.find((device) => device.groupName === group)?.cameras;
+		settings.groups.cameraSetup.device.options = cameras?.map((camera) => {
+			return {
+				value: camera,
+				label: camera.replace('-video-index0', '').replace('usb-', '').replaceAll('_', ' ')
+			};
+		});
+	});
+
 	$effect(() => {
 		// ensure config has been applied
 		let config: string | string[] | undefined = settings.groups.cameraSetup.config.value;
 		if (config === undefined || config === '') return;
-		config = config.split(',').filter((camera) => camera !== '');
+		config = config.split('\n').filter((camera) => camera !== '');
 		untrack(() => {
 			config.forEach((camera) => {
-				const [group, name, device] = camera.split('.');
+				const [group, name, device] = camera.split(',');
 				let ip = devices.find((device) => device.groupName === group)?.ip;
 				if (configObject[group] === undefined)
 					configObject[group] = { deviceIp: ip ? ip : '', cameras: [] };
@@ -157,7 +173,7 @@
 					cameraNameMap[device] = name;
 				}
 
-				settings.groups[group + ', ' + name] = {
+				settings.groups[group + ' ' + name] = {
 					resolution: {
 						type: 'select',
 						description: 'Resolution of the camera',
@@ -178,7 +194,7 @@
 						type: 'button',
 						description: 'Restart camera stream',
 						action: () => {
-							let resolution = settings.groups[group + ', ' + name].resolution.value!.split('x');
+							let resolution = settings.groups[group + ' ' + name].resolution.value!.split('x');
 							socket.send({
 								type: 'camera',
 								action: 'request-stream',
@@ -214,8 +230,8 @@
 
 							// Remove camera from config
 							settings.groups.cameraSetup.config.value =
-								settings.groups.cameraSetup.config.value!.replace(camera + ',', '');
-							delete settings.groups[group + ', ' + name];
+								settings.groups.cameraSetup.config.value!.replace(camera + '\n', '');
+							delete settings.groups[group + ' ' + name];
 
 							return 'Deleted camera stream';
 						}
@@ -236,11 +252,11 @@
 			}
 			settings.groups.cameraSetup.config.value +=
 				settings.groups.cameraSetup.group.value +
-				'.' +
+				',' +
 				settings.groups.cameraSetup.name.value +
-				'.' +
+				',' +
 				settings.groups.cameraSetup.device.value +
-				',';
+				'\n';
 
 			socket.send({
 				type: 'camera',

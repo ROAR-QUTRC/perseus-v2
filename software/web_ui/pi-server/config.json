@@ -1,45 +1,7 @@
 {
-  "groupName": "RaspberryPi",
-  "webServer": {
-    "ip": "localhost",
-    "port": 5173
-  },
-  "cameras": [
-    {
-      "name": "camera 1",
-      "device": "/dev/video0",
-      "maxResolution": {
-        "width": 640,
-        "height": 480
-      },
-      "minResolution": {
-        "width": 320,
-        "height": 240
-      }
-    },
-    {
-      "name": "USB webcam",
-      "device": "/dev/video2",
-      "maxResolution": {
-        "width": 640,
-        "height": 480
-      },
-      "minResolution": {
-        "width": 320,
-        "height": 240
-      }
-    },
-    {
-      "name": "test video",
-      "device": "test",
-      "maxResolution": {
-        "width": 640,
-        "height": 480
-      },
-      "minResolution": {
-        "width": 320,
-        "height": 240
-      }
-    }
-  ]
+	"groupName": "RaspberryPi",
+	"webServer": {
+		"ip": "localhost",
+		"port": 5173
+	}
 }
