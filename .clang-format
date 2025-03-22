@@ -6,6 +6,7 @@ BreakBeforeBraces: Allman
 AllowShortIfStatementsOnASingleLine: false
 IndentCaseLabels: false
 ColumnLimit: 0
+# ColumnLimit: 140
 AccessModifierOffset: -4
 NamespaceIndentation: All
 FixNamespaceComments: false
@@ -13,3 +14,4 @@ AlignConsecutiveMacros: true
 DerivePointerAlignment: false
 ReferenceAlignment: Left
 PointerAlignment: Left
+PackConstructorInitializersStyle: Never
