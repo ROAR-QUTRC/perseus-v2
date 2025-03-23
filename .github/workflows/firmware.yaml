@@ -23,7 +23,7 @@ jobs:
           filters: .github/filters-firmware.yaml
   build-bms:
     runs-on: ubuntu-latest
-    if: ${{ !needs.changes.outputs.bms }}
+    if: ${{ (needs.changes.outputs.bms != 'false') }}
     needs: changes
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
         run: pio run
   build-light-tower:
     runs-on: ubuntu-latest
-    if: ${{ !needs.changes.outputs.light-tower }}
+    if: ${{ (needs.changes.outputs.light-tower != 'false') }}
     needs: changes
     steps:
       - uses: actions/checkout@v4
@@ -63,7 +63,7 @@ jobs:
         run: pio run
   build-processing-plant:
     runs-on: ubuntu-latest
-    if: ${{ !needs.changes.outputs.processing-plant }}
+    if: ${{ (needs.changes.outputs.processing-plant != 'false') }}
     needs: changes
     steps:
       - uses: actions/checkout@v4
@@ -83,7 +83,7 @@ jobs:
         run: pio run
   build-elevator-module:
     runs-on: ubuntu-latest
-    if: ${{ !needs.changes.outputs.processing-plant }}
+    if: ${{ (needs.changes.outputs.processing-plant != 'false') }}
     needs: changes
     steps:
       - uses: actions/checkout@v4
