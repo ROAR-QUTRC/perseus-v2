@@ -1,0 +1,72 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e19af13..488953d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -80,33 +80,12 @@ if(${CMAKE_VERSION} VERSION_LESS 3.14)
+ endif(${CMAKE_VERSION} VERSION_LESS 3.14)
+ 
+ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+-FetchContent_Declare(json FETCHCONTENT_UPDATES_DISCONNECTED
+-  URL https://github.com/nlohmann/json/releases/download/v3.10.5/json.tar.xz
+-)
+-FetchContent_Declare(tinyxml2 FETCHCONTENT_UPDATES_DISCONNECTED
+-  GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
+-  GIT_TAG c2d30872e20621955ca7feb9168bad996d591a19
+-)
+-FetchContent_Declare(steering_functions FETCHCONTENT_UPDATES_DISCONNECTED
+-  GIT_REPOSITORY https://github.com/Fields2Cover/steering_functions.git
+-  GIT_TAG 33fc010017efa1ef2c8a2d4779fcda94b4b30d20
+-)
+-FetchContent_Declare(spline FETCHCONTENT_UPDATES_DISCONNECTED
+-  GIT_REPOSITORY https://github.com/Fields2Cover/spline.git
+-  GIT_TAG 1b5d4bad29082997076b264de84ca6d46c2ae6ab
+-)
+-FetchContent_Declare(matplotlib_cpp FETCHCONTENT_UPDATES_DISCONNECTED
+-  GIT_REPOSITORY https://github.com/Fields2Cover/matplotlib-cpp.git
+-  GIT_TAG 75c15d0c907a4b68bca5ef97032302bd14ccab8e
+-)
+ 
+-FetchContent_MakeAvailable(
+-  json
+-  tinyxml2
+-  steering_functions
+-  spline
+-  matplotlib_cpp
+-)
++find_package(nlohmann_json REQUIRED)
++find_package(tinyxml2 REQUIRED)
++find_package(steering_functions REQUIRED)
++find_package(spline REQUIRED)
++find_package(matplotlib_cpp REQUIRED)
+ 
+ find_package(GDAL 3.0 REQUIRED)
+ 
+@@ -221,9 +200,6 @@ set_target_properties(Fields2Cover
+ install(
+   TARGETS
+     Fields2Cover
+-    tinyxml2
+-    steering_functions
+-    nlohmann_json
+   EXPORT Fields2Cover-targets
+   LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+   ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
+@@ -261,7 +237,7 @@ install(
+     "${CMAKE_CURRENT_BINARY_DIR}/Fields2CoverConfig.cmake"
+     "${CMAKE_CURRENT_BINARY_DIR}/Fields2CoverConfigVersion.cmake"
+   DESTINATION
+-    ${INSTALL_CMAKE_DIR}/cmake/fields2cover
++    ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}
+ )
+ 
+ install(
+@@ -272,9 +248,6 @@ install(
+ export(
+   TARGETS
+     Fields2Cover
+-    tinyxml2
+-    steering_functions
+-    nlohmann_json
+   FILE
+     Fields2Cover-${type}-Targets.cmake
+ )

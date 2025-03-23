@@ -1,0 +1,33 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 15e8090..3071b40 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -69,25 +69,20 @@ install(TARGETS matplotlib_cpp
+ # Install targets file
+ install(EXPORT matplotlib_cpp-targets
+   FILE ${PACKAGE_NAME}Targets.cmake
+-  DESTINATION ${INSTALL_CMAKE_DIR}/cmake/matplotlib_cpp
+-)
+-
++  DESTINATION lib/cmake/${PACKAGE_NAME})
+ # Install matplotlib_cppConfig.cmake
+ include(CMakePackageConfigHelpers)
+ configure_package_config_file(
+   ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PACKAGE_NAME}Config.cmake.in
+   ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}Config.cmake
+-  INSTALL_DESTINATION ${INSTALL_CMAKE_DIR}/cmake/matplotlib_cpp
++  INSTALL_DESTINATION lib/cmake/${PACKAGE_NAME}
+ )
+ 
+ install(FILES
+   ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}Config.cmake
+-  DESTINATION ${INSTALL_CMAKE_DIR}/cmake/matplotlib_cpp
++  DESTINATION lib/cmake/${PACKAGE_NAME}
+ )
+ 
+-export(TARGETS matplotlib_cpp
+-  FILE ${PACKAGE_NAME}Config.cmake)
+-
+ # Install headers
+ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/matplotlibcpp.h"
+   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

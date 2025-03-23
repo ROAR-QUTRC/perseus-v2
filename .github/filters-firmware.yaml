@@ -1,0 +1,15 @@
+common: &common
+  - ".github/workflows/firmware.yaml"
+  - ".github/filters-firmware.yaml"
+  - "software/shared/hi-can/**"
+  - "software/shared/crc/**"
+  - "software/shared/type/**"
+bms:
+  - *common
+  - "firmware/battery-management-system/**"
+light-tower:
+  - *common
+  - "firmware/light-tower/**"
+processing-plant:
+  - *common
+  - "firmware/processing-plant/**"

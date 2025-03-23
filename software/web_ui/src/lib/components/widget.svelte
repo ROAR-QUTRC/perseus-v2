@@ -14,6 +14,7 @@
 	import { Layout } from '../../shared/Layout';
 	import { toast } from 'svelte-sonner';
 	import * as changeCase from 'change-case';
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 
 	// this is an element property
 	let { widgetData, dragHandle }: { widgetData: WidgetType; dragHandle: any } = $props();
@@ -76,34 +77,36 @@
 			<!-- Settings sheet -->
 
 			<Sheet.Content class="">
-				<div class="space-y-2">
+				<div class="flex h-[calc(100%-40px)] flex-col space-y-2">
 					<Sheet.Header>
 						<Sheet.Title>{widgetData.name}</Sheet.Title>
 						<Sheet.Description>{widgetData.description}</Sheet.Description>
 					</Sheet.Header>
-					{#each Object.keys(widgetData.settings.groups) as group}
-						<Collapsible.Root open={true}>
-							<Collapsible.Trigger>
-								<Button variant="outline" class="min-w-[200px] justify-between">
-									{changeCase.sentenceCase(group)}
-									<CaretSort class="ml-auto h-4 w-4 shrink-0 opacity-50" />
-								</Button>
-							</Collapsible.Trigger>
-							<Collapsible.Content class="my-2 ml-2 border-l-2 pl-2">
-								<HoverCard.Root closeDelay={200} openDelay={100}>
+					<ScrollArea class="h-auto pr-4">
+						{#each Object.keys(widgetData.settings.groups) as group}
+							<Collapsible.Root open={true}>
+								<Collapsible.Trigger>
+									<Button variant="outline" class="min-w-[200px] justify-between">
+										{changeCase.sentenceCase(group)}
+										<CaretSort class="ml-auto h-4 w-4 shrink-0 opacity-50" />
+									</Button>
+								</Collapsible.Trigger>
+								<Collapsible.Content class="my-2 ml-2 border-l-2 pl-2">
 									{#each Object.keys(widgetData.settings.groups[group]) as field}
 										{#if widgetData.settings.groups[group][field].type !== 'button'}
 											<div class="flex">
 												<Label>{changeCase.sentenceCase(field)}</Label>
 												{#if widgetData.settings.groups[group][field].description}
-													<HoverCard.Trigger>
-														<QuestionMarkCircled
-															class="ml-2 size-4 opacity-50 hover:cursor-pointer"
-														/>
-													</HoverCard.Trigger>
-													<HoverCard.Content class="p-2">
-														{widgetData.settings.groups[group][field].description}
-													</HoverCard.Content>
+													<HoverCard.Root closeDelay={200} openDelay={100}>
+														<HoverCard.Trigger>
+															<QuestionMarkCircled
+																class="ml-2 size-4 opacity-50 hover:cursor-pointer"
+															/>
+														</HoverCard.Trigger>
+														<HoverCard.Content class="p-2">
+															{widgetData.settings.groups[group][field].description}
+														</HoverCard.Content>
+													</HoverCard.Root>
 												{/if}
 											</div>
 										{/if}
@@ -161,10 +164,10 @@
 											/>
 										{/if}
 									{/each}
-								</HoverCard.Root>
-							</Collapsible.Content>
-						</Collapsible.Root>
-					{/each}
+								</Collapsible.Content>
+							</Collapsible.Root>
+						{/each}
+					</ScrollArea>
 				</div>
 				<div class="mt-4 flex space-x-2">
 					<Button size="sm" class="w-full" onclick={saveState}>Save State</Button>

@@ -299,6 +299,18 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.2.9.tgz#50dea3616bc8191fb8e112283b49eaff03e78429"
   integrity sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==
 
+"@fortawesome/fontawesome-common-types@6.7.2":
+  version "6.7.2"
+  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-6.7.2.tgz#7123d74b0c1e726794aed1184795dbce12186470"
+  integrity sha512-Zs+YeHUC5fkt7Mg1l6XTniei3k4bwG/yo3iFUtZWd/pMx9g3fdvkSK9E0FOC+++phXOka78uJcYb8JaFkW52Xg==
+
+"@fortawesome/free-solid-svg-icons@^6.7.2":
+  version "6.7.2"
+  resolved "https://registry.yarnpkg.com/@fortawesome/free-solid-svg-icons/-/free-solid-svg-icons-6.7.2.tgz#fe25883b5eb8464a82918599950d283c465b57f6"
+  integrity sha512-GsBrnOzU8uj0LECDfD5zomZJIjrPhIlWU82AHwa2s40FKH+kcxQaBvBo3Z4TxyZHIyX8XTDxsyA33/Vx9eFuQA==
+  dependencies:
+    "@fortawesome/fontawesome-common-types" "6.7.2"
+
 "@gcornut/valibot-json-schema@^0.31.0":
   version "0.31.0"
   resolved "https://registry.yarnpkg.com/@gcornut/valibot-json-schema/-/valibot-json-schema-0.31.0.tgz#40e4848a2059b711145d45a311bbab01bf125208"
@@ -929,17 +941,18 @@ binary-extensions@^2.0.0:
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-2.3.0.tgz#f6e14a97858d327252200242d4ccfe522c445522"
   integrity sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==
 
-bits-ui@^1.0.0-next.76:
-  version "1.0.0-next.78"
-  resolved "https://registry.yarnpkg.com/bits-ui/-/bits-ui-1.0.0-next.78.tgz#a0384e714135344205f63df7ff062c39d13ce58a"
-  integrity sha512-jZjG2ObZ/CNyCNaXecpItC7hRXqJAgEfMhr06/eNrf3wHiiPyhdcy4OkzLcJyxeOrDyj+xma8cZTd3JRWqJdAw==
+bits-ui@^1.3.6:
+  version "1.3.6"
+  resolved "https://registry.yarnpkg.com/bits-ui/-/bits-ui-1.3.6.tgz#9b0fe5db7934db06fa0cea9b468251bfe991ca58"
+  integrity sha512-0Ee7Ox5KqIBdio/+TG387Xlj6QJ0S7tHVS2K4DYiBHxBRbm6ni13i/pOoNDjeME6NOGUZxbSe4dNZIW3pGlxZA==
   dependencies:
     "@floating-ui/core" "^1.6.4"
     "@floating-ui/dom" "^1.6.7"
     "@internationalized/date" "^3.5.6"
     esm-env "^1.1.2"
-    runed "^0.22.0"
-    svelte-toolbelt "^0.7.0"
+    runed "^0.23.2"
+    svelte-toolbelt "^0.7.1"
+    tabbable "^6.2.0"
 
 body-parser@1.20.3:
   version "1.20.3"
@@ -1730,6 +1743,11 @@ joi@^17.13.3:
     "@sideway/formula" "^3.0.1"
     "@sideway/pinpoint" "^2.0.0"
 
+json-formatter-js@^2.5.23:
+  version "2.5.23"
+  resolved "https://registry.yarnpkg.com/json-formatter-js/-/json-formatter-js-2.5.23.tgz#b7dd0a1da7e6cbea8e76743d7d8dc1238866cc73"
+  integrity sha512-Cbm8wHXjo/C56aCePP1VuKvjxoMEmL7g7Ckss1oWFFlCsvOEEbye1kTeaNNaqba1Cl6YpIOYAnK65pUQ8mDIUQ==
+
 json-schema-to-ts@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/json-schema-to-ts/-/json-schema-to-ts-3.1.1.tgz#81f3acaf5a34736492f6f5f51870ef9ece1ca853"
@@ -2241,17 +2259,10 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-runed@^0.20.0:
-  version "0.20.0"
-  resolved "https://registry.yarnpkg.com/runed/-/runed-0.20.0.tgz#dcd0db39a35a3041bdfc1704f5fd7eb7ac6f9a2c"
-  integrity sha512-YqPxaUdWL5nUXuSF+/v8a+NkVN8TGyEGbQwTA25fLY35MR/2bvZ1c6sCbudoo1kT4CAJPh4kUkcgGVxW127WKw==
-  dependencies:
-    esm-env "^1.0.0"
-
-runed@^0.22.0:
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/runed/-/runed-0.22.0.tgz#903087d14786de1305c04dcf926e9d8faad6c435"
-  integrity sha512-ZWVXWhOr0P5xdNgtviz6D1ivLUDWKLCbeC5SUEJ3zBkqLReVqWHenFxMNFeFaiC5bfxhFxyxzyzB+98uYFtwdA==
+runed@^0.23.2:
+  version "0.23.4"
+  resolved "https://registry.yarnpkg.com/runed/-/runed-0.23.4.tgz#0b68fd24434e65dd8cbd9f7072521d6f5f409eba"
+  integrity sha512-9q8oUiBYeXIDLWNK5DfCWlkL0EW3oGbk845VdKlPeia28l751VpfesaB/+7pI6rnbx1I6rqoZ2fZxptOJLxILA==
   dependencies:
     esm-env "^1.0.0"
 
@@ -2528,6 +2539,11 @@ svelte-check@^4.0.0:
     picocolors "^1.0.0"
     sade "^1.7.4"
 
+svelte-fa@^4.0.3:
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/svelte-fa/-/svelte-fa-4.0.3.tgz#64aed1a809f86f4a070dbcf733211b29f2b5c4dd"
+  integrity sha512-saZ8yACM0k9Aexey+2NXU1W0MBosU5lBsRgqFCJKM+Taw7d0HyimPaPAjmvY/Xkyi3UwEYL/Sdu1IZJv/p0Flw==
+
 svelte-grid-extended@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/svelte-grid-extended/-/svelte-grid-extended-1.2.1.tgz#b8336bca885ae9fcaa54f722292aa9e696fbe7a3"
@@ -2559,13 +2575,13 @@ svelte-toolbelt@^0.5.0:
     clsx "^2.1.1"
     style-to-object "^1.0.8"
 
-svelte-toolbelt@^0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/svelte-toolbelt/-/svelte-toolbelt-0.7.0.tgz#ba27b64bc15ae5d8c714cff4a26dc3216364aaf5"
-  integrity sha512-i/Tv4NwAWWqJnK5H0F8y/ubDnogDYlwwyzKhrspTUFzrFuGnYshqd2g4/R43ds841wmaFiSW/HsdsdWhPOlrAA==
+svelte-toolbelt@^0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/svelte-toolbelt/-/svelte-toolbelt-0.7.1.tgz#63e9c6629456a1a0dd57812f85426e4631fd754e"
+  integrity sha512-HcBOcR17Vx9bjaOceUvxkY3nGmbBmCBBbuWLLEWO6jtmWH8f/QoWmbyUfQZrpDINH39en1b8mptfPQT9VKQ1xQ==
   dependencies:
     clsx "^2.1.1"
-    runed "^0.20.0"
+    runed "^0.23.2"
     style-to-object "^1.0.8"
 
 svelte@^5.0.0:
@@ -2612,6 +2628,11 @@ sveltekit-superforms@^2.22.1:
     yup "^1.6.1"
     zod "^3.24.1"
     zod-to-json-schema "^3.24.1"
+
+tabbable@^6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/tabbable/-/tabbable-6.2.0.tgz#732fb62bc0175cfcec257330be187dcfba1f3b97"
+  integrity sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==
 
 tailwind-merge@2.5.4:
   version "2.5.4"

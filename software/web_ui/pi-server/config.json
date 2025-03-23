@@ -18,6 +18,18 @@
       }
     },
     {
+      "name": "USB webcam",
+      "device": "/dev/video2",
+      "maxResolution": {
+        "width": 640,
+        "height": 480
+      },
+      "minResolution": {
+        "width": 320,
+        "height": 240
+      }
+    },
+    {
       "name": "test video",
       "device": "test",
       "maxResolution": {
