@@ -81,3 +81,23 @@ jobs:
       - name: Build PlatformIO Project
         working-directory: ./firmware/processing-plant
         run: pio run
+  build-elevator-module:
+    runs-on: ubuntu-latest
+    if: ${{ !needs.changes.outputs.processing-plant }}
+    needs: changes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Build PlatformIO Project
+        working-directory: ./firmware/elevator-module
+        run: pio run
