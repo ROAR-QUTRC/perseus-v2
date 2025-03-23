@@ -63,6 +63,7 @@
 	import { io, type Socket } from 'socket.io-client';
 	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 
 	let socket: Socket = io();
 
@@ -288,20 +289,22 @@
 	});
 </script>
 
-{#each Object.keys(configObject) as device}
-	{#if configObject[device].deviceIp !== ''}
-		<WebrtcClient
-			ip={configObject[device].deviceIp}
-			groupName={device}
-			cameras={configObject[device].cameras}
-			cameraNames={cameraNameMap}
-		/>
+<ScrollArea orientation="both" class="h-full w-full">
+	{#each Object.keys(configObject) as device}
+		{#if configObject[device].deviceIp !== ''}
+			<WebrtcClient
+				ip={configObject[device].deviceIp}
+				groupName={device}
+				cameras={configObject[device].cameras}
+				cameraNames={cameraNameMap}
+			/>
+		{:else}
+			<p>Waiting for {device} to come online...</p>
+		{/if}
 	{:else}
-		<p>Waiting for {device} to come online...</p>
-	{/if}
-{:else}
-	<p>
-		No active streams. Check that peripheral servers are running and that you are on the correct
-		network.
-	</p>
-{/each}
+		<p>
+			No active streams. Check that peripheral servers are running and that you are on the correct
+			network.
+		</p>
+	{/each}
+</ScrollArea>
