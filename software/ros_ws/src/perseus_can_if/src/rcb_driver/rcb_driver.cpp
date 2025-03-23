@@ -102,7 +102,7 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
         auto data = nlohmann::json::parse(msg->data);
 
         auto group = std::find_if(BUS_GROUPS.begin(), BUS_GROUPS.end(), [&data](const auto& pair)
-                                  { return pair.first == data["bus"]; });
+                                  { return pair.first == data["bus"].dump(); });
 
         using namespace hi_can::addressing::legacy::power::control::rcb;
 
