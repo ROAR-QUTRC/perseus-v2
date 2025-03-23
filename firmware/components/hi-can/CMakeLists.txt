@@ -1,7 +1,14 @@
 # Register the component
 idf_component_register(
-  SRC_DIRS ../../../software/shared/hi-can/src ./src INCLUDE_DIRS
-  ../../../software/shared/hi-can/include ./include REQUIRES board-support driver)
+  SRC_DIRS
+  ../../../software/shared/hi-can/src
+  ./src
+  INCLUDE_DIRS
+  ../../../software/shared/hi-can/include
+  ./include
+  REQUIRES
+  board-support
+  driver)
 # # set(BUILD_SHARED_LIBS OFF) #
 # add_subdirectory(../../../../software/shared/hi-can hi-can) #
 # target_link_libraries(${COMPONENT_LIB} INTERFACE hi-can) # To build a

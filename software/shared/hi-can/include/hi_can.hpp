@@ -71,7 +71,10 @@ namespace hi_can
     public:
         /// @brief Constructs a new @ref SoftwareFilteredCanInterface using the given interface for I/O
         /// @param interface The interface to use for I/O
-        SoftwareFilteredCanInterface(const std::shared_ptr<CanInterface> interface) : _interface(interface) {}
+        SoftwareFilteredCanInterface(const std::shared_ptr<CanInterface> interface)
+            : _interface(interface)
+        {
+        }
 
         // note: docs inherited from base class
         void transmit(const Packet& packet) override { _interface->transmit(packet); }
