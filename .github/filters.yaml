@@ -1,7 +1,9 @@
 common: &common
   - "flake.nix"
   - "flake.lock"
-  - ".github/**"
+  - ".github/filters.yaml"
+  - ".github/workflows/all.yaml"
+  - ".github/workflows/intersphinx.yaml"
 docs-shell:
   - *common
   - "docs/**/*.nix"
