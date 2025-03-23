@@ -1,0 +1,13 @@
+menu "Board Hardware Support"
+    choice BSP_BOARD
+        prompt "Board hardware revision"
+        default BSP_BOARD_SBB_V0R1
+        help
+            Select the hardware variant of the board
+        
+        config BSP_BOARD_SBB_V0R1
+            bool "SBB V0R1"
+        config BSP_BOARD_SBB_V2
+            bool "SBB V2"
+    endchoice
+endmenu
