@@ -110,7 +110,10 @@ namespace hi_can::parameters
     struct wrapped_value_t
     {
         wrapped_value_t() = default;
-        wrapped_value_t(T value) : value(value) {}
+        wrapped_value_t(T value)
+            : value(value)
+        {
+        }
         T value{};
     };
     template <typename T>
@@ -420,7 +423,11 @@ namespace hi_can::parameters
                 struct _motor_speed_t
                 {
                     _motor_speed_t() = default;
-                    _motor_speed_t(bool enable, int16_t speed) : enable(enable), speed(speed) {}
+                    _motor_speed_t(bool enable, int16_t speed)
+                        : enable(enable),
+                          speed(speed)
+                    {
+                    }
                     bool enable = 0;
                     int16_t speed = 0;
                 };

@@ -89,7 +89,9 @@ namespace hi_can
                 : address(address & (isExtended ? MAX_ADDRESS : MAX_SHORT_ADDRESS)),
                   isRtr(isRtr),
                   isError(isError),
-                  isExtended(isExtended) {}
+                  isExtended(isExtended)
+            {
+            }
 
             /// @brief Convert a flagged address to a raw address
             constexpr explicit operator raw_address_t() const override
@@ -211,13 +213,17 @@ namespace hi_can
                   subsystem(subsystem),
                   device(device),
                   group(group),
-                  parameter(parameter) {}
+                  parameter(parameter)
+            {
+            }
             standard_address_t(standard_address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
                 : system(deviceAddress.system),
                   subsystem(deviceAddress.subsystem),
                   device(deviceAddress.device),
                   group(group),
-                  parameter(parameter) {}
+                  parameter(parameter)
+            {
+            }
 
             constexpr operator raw_address_t() const override
             {
@@ -274,7 +280,11 @@ namespace hi_can
                 /// @brief VESC command packet address
                 struct address_t : public structured_address_t
                 {
-                    address_t(const uint8_t& vesc, const command_id& command) : vesc(vesc), command(command) {}
+                    address_t(const uint8_t& vesc, const command_id& command)
+                        : vesc(vesc),
+                          command(command)
+                    {
+                    }
                     /// @brief The VESC device ID
                     uint8_t vesc = static_cast<uint8_t>(device::FRONT_LEFT);
                     /// @brief The VESC command ID
@@ -400,13 +410,17 @@ namespace hi_can
                       subsystem(subsystem),
                       device(device),
                       group(group),
-                      parameter(parameter) {}
+                      parameter(parameter)
+                {
+                }
                 address_t(address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
                     : system(deviceAddress.system),
                       subsystem(deviceAddress.subsystem),
                       device(deviceAddress.device),
                       group(group),
-                      parameter(parameter) {}
+                      parameter(parameter)
+                {
+                }
 
                 constexpr operator raw_address_t() const override
                 {
