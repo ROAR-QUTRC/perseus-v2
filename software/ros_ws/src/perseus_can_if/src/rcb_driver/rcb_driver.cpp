@@ -4,7 +4,8 @@
 #include <cstdint>
 #include <nlohmann/json.hpp>
 
-RcbDriver::RcbDriver(const rclcpp::NodeOptions& options) : Node("rcb_driver", options)
+RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
+    : Node("rcb_driver", options)
 {
     try
     {

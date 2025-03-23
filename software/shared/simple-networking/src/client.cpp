@@ -19,7 +19,9 @@ using std::string;
 using namespace networking;
 
 Client::Client(const address_t& address, const socket_protocol protocol, const address_t& bindAddress, const socket_config_handlers_t& configHandlers)
-    : _address(address), _bindAddress(bindAddress), _protocol(protocol)
+    : _address(address),
+      _bindAddress(bindAddress),
+      _protocol(protocol)
 {
     _socket = FdWrapper(std::bind(&Client::_createSocket, this, configHandlers));
 }

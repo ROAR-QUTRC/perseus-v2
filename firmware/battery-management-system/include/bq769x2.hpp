@@ -984,7 +984,7 @@ public:
         bool enableDeepSleepLDO : 1 = false;              // DPSLP_LDO
         bool enableDeepSleepChargerWake : 1 = true;       // DPSLP_PD
         bool disableShutdownTS2Wake : 1 = false;          // SHUT_TS2
-        bool enableDeepSleepOvertempShutdown : 1 = true;  // DPSLP_OT
+        bool enableDeepSleepOvertempShutdown : 1 = true;  // DPSLP_OT spellchecker:disable-line
         uint8_t _rsvd14 : 2 = 0;                          // RSVD_0
     };
     struct reg0_config_t
@@ -1525,7 +1525,10 @@ public:
             void setAdcGain(const int16_t& gain) const { _parent.writeSubcommand(data_register::ADC_GAIN, gain); }
 
         protected:
-            Voltage(bq76942& parent) : _parent(parent) {}
+            Voltage(bq76942& parent)
+                : _parent(parent)
+            {
+            }
 
             Voltage(Voltage&) = delete;
             Voltage& operator=(Voltage&) = delete;
@@ -1548,7 +1551,10 @@ public:
             void setCapacityGain(const float& gain) const { _parent.writeSubcommand(data_register::CAPACITY_GAIN, gain); }
 
         protected:
-            Current(bq76942& parent) : _parent(parent) {}
+            Current(bq76942& parent)
+                : _parent(parent)
+            {
+            }
 
             Current(Current&) = delete;
             Current& operator=(Current&) = delete;
@@ -1576,7 +1582,10 @@ public:
             void setBoardOffsetCurrent(const int16_t& offset) const { _parent.writeSubcommand(data_register::BOARD_OFFSET, offset); }
 
         protected:
-            CurrentOffset(bq76942& parent) : _parent(parent) {}
+            CurrentOffset(bq76942& parent)
+                : _parent(parent)
+            {
+            }
 
             CurrentOffset(CurrentOffset&) = delete;
             CurrentOffset& operator=(CurrentOffset&) = delete;
@@ -1611,7 +1620,10 @@ public:
             void setDdsgOffset(const int8_t& offset) const { _parent.writeSubcommand(data_register::DDSG_TEMP_OFFSET, offset); }
 
         protected:
-            Temperature(bq76942& parent) : _parent(parent) {}
+            Temperature(bq76942& parent)
+                : _parent(parent)
+            {
+            }
 
             Temperature(Temperature&) = delete;
             Temperature& operator=(Temperature&) = delete;
@@ -1635,7 +1647,10 @@ public:
             void setMaximumTemp(const int16_t& temp) const { _parent.writeSubcommand(data_register::INT_MAXIMUM_TEMP, temp); }
 
         protected:
-            InternalTempModel(bq76942& parent) : _parent(parent) {}
+            InternalTempModel(bq76942& parent)
+                : _parent(parent)
+            {
+            }
 
             InternalTempModel(InternalTempModel&) = delete;
             InternalTempModel& operator=(InternalTempModel&) = delete;
@@ -1671,7 +1686,10 @@ public:
             void setAdc0(const int16_t& adc) const { _parent.writeSubcommand(data_register::T18K_ADC0, adc); }
 
         protected:
-            T18KModel(bq76942& parent) : _parent(parent) {}
+            T18KModel(bq76942& parent)
+                : _parent(parent)
+            {
+            }
 
             T18KModel(T18KModel&) = delete;
             T18KModel& operator=(T18KModel&) = delete;
@@ -1707,7 +1725,10 @@ public:
             void setAdc0(const int16_t& adc) const { _parent.writeSubcommand(data_register::T180K_ADC0, adc); }
 
         protected:
-            T180KModel(bq76942& parent) : _parent(parent) {}
+            T180KModel(bq76942& parent)
+                : _parent(parent)
+            {
+            }
 
             T180KModel(T180KModel&) = delete;
             T180KModel& operator=(T180KModel&) = delete;
@@ -1745,7 +1766,10 @@ public:
             void setAdc0(const int16_t& adc) const { _parent.writeSubcommand(data_register::CUSTOM_ADC0, adc); }
 
         protected:
-            CustomTemperatureModel(bq76942& parent) : _parent(parent) {}
+            CustomTemperatureModel(bq76942& parent)
+                : _parent(parent)
+            {
+            }
 
             CustomTemperatureModel(const CustomTemperatureModel&) = delete;
             CustomTemperatureModel& operator=(const CustomTemperatureModel&) = delete;
@@ -1811,7 +1835,10 @@ public:
             void setBlowTimeout(const std::chrono::seconds& timeout) const { _parent.writeSubcommand<uint8_t>(data_register::FUSE_BLOW_TIMEOUT, timeout.count()); }
 
         protected:
-            Fuse(bq76942& parent) : _parent(parent) {}
+            Fuse(bq76942& parent)
+                : _parent(parent)
+            {
+            }
 
             Fuse(Fuse&) = delete;
             Fuse& operator=(Fuse&) = delete;
@@ -1869,7 +1896,10 @@ public:
             void setCC3Samples(const uint8_t& samples) const { _parent.writeSubcommand(data_register::CC3_SAMPLES, samples); }
 
         protected:
-            Configuration(bq76942& parent) : _parent(parent) {}
+            Configuration(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             Configuration(Configuration&) = delete;
             Configuration& operator=(Configuration&) = delete;
 
@@ -1906,7 +1936,10 @@ public:
             void setBodyDiodeThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::BODY_DIODE_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
 
         protected:
-            Protection(bq76942& parent) : _parent(parent) {}
+            Protection(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             Protection(Protection&) = delete;
             Protection& operator=(Protection&) = delete;
 
@@ -1938,7 +1971,10 @@ public:
             void setPermanentFailMaskD(const permanent_fail_d_t& failures) const { _parent.writeSubcommand(data_register::PF_ALERT_MASK_D, failures); }
 
         protected:
-            Alarm(bq76942& parent) : _parent(parent) {}
+            Alarm(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             Alarm(Alarm&) = delete;
             Alarm& operator=(Alarm&) = delete;
 
@@ -1961,7 +1997,10 @@ public:
             void setEnabledD(const permanent_fail_d_t& failures) const { _parent.writeSubcommand(data_register::ENABLED_PF_D, failures); }
 
         protected:
-            PermanentFailure(bq76942& parent) : _parent(parent) {}
+            PermanentFailure(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             PermanentFailure(PermanentFailure&) = delete;
             PermanentFailure& operator=(PermanentFailure&) = delete;
 
@@ -1992,7 +2031,10 @@ public:
             void setPredischargeStopDelta(uint16_t voltage) const { _parent.writeSubcommand(data_register::PREDISCHARGE_STOP_DELTA, static_cast<uint8_t>(voltage / 10)); }
 
         protected:
-            Fet(bq76942& parent) : _parent(parent) {}
+            Fet(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             Fet(Fet&) = delete;
             Fet& operator=(Fet&) = delete;
 
@@ -2047,7 +2089,10 @@ public:
             void setStopDeltaRelax(const uint8_t& voltage) const { _parent.writeSubcommand(data_register::CELL_BALANCE_STOP_DELTA_RELAX, voltage); }
 
         protected:
-            CellBalancing(bq76942& parent) : _parent(parent) {}
+            CellBalancing(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             CellBalancing(CellBalancing&) = delete;
             CellBalancing& operator=(CellBalancing&) = delete;
 
@@ -2073,7 +2118,9 @@ public:
               permanentFailure(parent),
               fet(parent),
               cellBalancing(parent),
-              _parent(parent) {}
+              _parent(parent)
+        {
+        }
 
         Settings(Settings&) = delete;
         Settings& operator=(Settings&) = delete;
@@ -2119,7 +2166,10 @@ public:
             void setRamFailShutdownTime(const std::chrono::seconds& time) const { _parent.writeSubcommand<uint8_t>(data_register::RAM_FAIL_SHUTDOWN_TIME, static_cast<uint8_t>(time.count())); }
 
         protected:
-            Shutdown(bq76942& parent) : _parent(parent) {}
+            Shutdown(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             Shutdown(Shutdown&) = delete;
             Shutdown& operator=(Shutdown&) = delete;
 
@@ -2146,7 +2196,10 @@ public:
             void setChargerPackTosDelta(const int32_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::SLEEP_CHARGER_PACK_TOS_DELTA, static_cast<int16_t>(voltage / 10), 10, 8500); }
 
         protected:
-            Sleep(bq76942& parent) : _parent(parent) {}
+            Sleep(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             Sleep(Sleep&) = delete;
             Sleep& operator=(Sleep&) = delete;
 
@@ -2162,7 +2215,9 @@ public:
         Power(bq76942& parent)
             : shutdown(parent),
               sleep(parent),
-              _parent(parent) {}
+              _parent(parent)
+        {
+        }
         Power(Power&) = delete;
         Power& operator=(Power&) = delete;
 
@@ -2202,7 +2257,10 @@ public:
             }
 
         protected:
-            CellUnderVoltage(bq76942& parent) : _parent(parent) {}
+            CellUnderVoltage(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             CellUnderVoltage(CellUnderVoltage&) = delete;
             CellUnderVoltage& operator=(CellUnderVoltage&) = delete;
 
@@ -2241,7 +2299,10 @@ public:
             void setLatchRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::COVL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
 
         protected:
-            CellOverVoltage(bq76942& parent) : _parent(parent) {}
+            CellOverVoltage(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             CellOverVoltage(CellOverVoltage&) = delete;
             CellOverVoltage& operator=(CellOverVoltage&) = delete;
 
@@ -2267,7 +2328,10 @@ public:
             void setRecoveryPackStackDelta(const int32_t& delta) const { _parent.writeSubcommandClamped<int16_t>(data_register::OCC_PACK_TOS_DELTA, static_cast<int32_t>(delta / 10), 10, 8500); }
 
         protected:
-            OverCurrentCharge(bq76942& parent) : _parent(parent) {}
+            OverCurrentCharge(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             OverCurrentCharge(OverCurrentCharge&) = delete;
             OverCurrentCharge& operator=(OverCurrentCharge&) = delete;
 
@@ -2315,7 +2379,10 @@ public:
             void setLatchRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCDL_RECOVERY_THRESHOLD, threshold); }
 
         protected:
-            OverCurrentDischarge(bq76942& parent) : _parent(parent) {}
+            OverCurrentDischarge(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             OverCurrentDischarge(OverCurrentDischarge&) = delete;
             OverCurrentDischarge& operator=(OverCurrentDischarge&) = delete;
 
@@ -2348,7 +2415,10 @@ public:
             void setLatchRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_THRESHOLD, threshold); }
 
         protected:
-            ShortCircuit(bq76942& parent) : _parent(parent) {}
+            ShortCircuit(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             ShortCircuit(ShortCircuit&) = delete;
             ShortCircuit& operator=(ShortCircuit&) = delete;
 
@@ -2389,7 +2459,10 @@ public:
             void setInternalRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTINT_RECOVERY, threshold, -40, 120); }
 
         protected:
-            OverTemperature(bq76942& parent) : _parent(parent) {}
+            OverTemperature(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             OverTemperature(OverTemperature&) = delete;
             OverTemperature& operator=(OverTemperature&) = delete;
 
@@ -2423,7 +2496,10 @@ public:
             void setInternalRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTINT_RECOVERY, threshold, -40, 120); }
 
         protected:
-            UnderTemperature(bq76942& parent) : _parent(parent) {}
+            UnderTemperature(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             UnderTemperature(UnderTemperature&) = delete;
             UnderTemperature& operator=(UnderTemperature&) = delete;
 
@@ -2469,7 +2545,9 @@ public:
               shortCircuit(parent),
               overTemp(parent),
               underTemp(parent),
-              _parent(parent) {}
+              _parent(parent)
+        {
+        }
         Protections(Protections&) = delete;
         Protections& operator=(Protections&) = delete;
 
@@ -2532,7 +2610,10 @@ public:
             void setRelaxMinDuration(const std::chrono::seconds& duration) const { _parent.writeSubcommand(data_register::VIMR_RELAX_MIN_DURATION, static_cast<uint16_t>(duration.count())); }
 
         protected:
-            VoltageImbalanceRelaxed(bq76942& parent) : _parent(parent) {}
+            VoltageImbalanceRelaxed(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             VoltageImbalanceRelaxed(VoltageImbalanceRelaxed&) = delete;
             VoltageImbalanceRelaxed& operator=(VoltageImbalanceRelaxed&) = delete;
 
@@ -2554,7 +2635,10 @@ public:
             void setActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::VIMA_DELAY, static_cast<uint8_t>(delay.count())); }
 
         protected:
-            VoltageImbalanceActive(bq76942& parent) : _parent(parent) {}
+            VoltageImbalanceActive(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             VoltageImbalanceActive(VoltageImbalanceActive&) = delete;
             VoltageImbalanceActive& operator=(VoltageImbalanceActive&) = delete;
 
@@ -2572,7 +2656,10 @@ public:
             void setActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::CFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
 
         protected:
-            ChargeFetFail(bq76942& parent) : _parent(parent) {}
+            ChargeFetFail(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             ChargeFetFail(ChargeFetFail&) = delete;
             ChargeFetFail& operator=(ChargeFetFail&) = delete;
 
@@ -2589,7 +2676,10 @@ public:
             void setActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::DFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
 
         protected:
-            DischargeFetFail(bq76942& parent) : _parent(parent) {}
+            DischargeFetFail(bq76942& parent)
+                : _parent(parent)
+            {
+            }
             DischargeFetFail(DischargeFetFail&) = delete;
             DischargeFetFail& operator=(DischargeFetFail&) = delete;
 

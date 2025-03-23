@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import config from "./config.json";
+import config from "./config.js";
 import { spawn } from "child_process";
 import { networkInterfaces } from "os";
 import fs from "node:fs";

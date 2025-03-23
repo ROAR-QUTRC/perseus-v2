@@ -14,4 +14,4 @@ AlignConsecutiveMacros: true
 DerivePointerAlignment: false
 ReferenceAlignment: Left
 PointerAlignment: Left
-PackConstructorInitializersStyle: Never
+PackConstructorInitializers: Never

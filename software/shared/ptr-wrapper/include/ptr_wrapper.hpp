@@ -12,7 +12,9 @@ public:
     PtrWrapper() = default;
     PtrWrapper(T* ptr, std::function<void(T*)> deallocator)
         : PtrWrapper([ptr](void)
-                     { return ptr; }, deallocator) {}
+                     { return ptr; }, deallocator)
+    {
+    }
     PtrWrapper(std::function<T*(void)> allocator, std::function<void(T*)> deallocator)
         : _deallocator(deallocator)
     {
