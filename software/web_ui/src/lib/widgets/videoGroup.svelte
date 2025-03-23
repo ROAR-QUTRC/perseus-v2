@@ -151,6 +151,10 @@
 		if (settings.groups.cameraSetup.group.value === undefined) return;
 		let group = settings.groups.cameraSetup.group.value;
 		let cameras = devices.find((device) => device.groupName === group)?.cameras;
+		// dont add cameras that are already running
+		if (cameras !== undefined) {
+			cameras = cameras.filter((camera) => !Object.keys(configObject).includes(camera));
+		}
 		settings.groups.cameraSetup.device.options = cameras?.map((camera) => {
 			return {
 				value: camera,

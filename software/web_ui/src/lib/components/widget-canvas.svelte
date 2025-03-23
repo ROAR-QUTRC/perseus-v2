@@ -33,42 +33,44 @@
 	};
 </script>
 
-{#if layouts.value.length !== 0}
-	<Grid cols={10} rows={10} gap={5}>
-		{#each activeWidgets.value as widgetData}
-			<GridItem
-				id={widgetData.name}
-				x={widgetData.layoutProps!.x}
-				y={widgetData.layoutProps!.y}
-				w={widgetData.layoutProps!.w}
-				h={widgetData.layoutProps!.h}
-				on:change={(e) => updateWidgetPosition(e, widgetData.name)}
-			>
-				<div class="h-[100%]" slot="moveHandle" let:moveStart>
-					<Widget {widgetData}>
-						{#snippet dragHandle()}
-							<Card.Title
-								class={cn('flex-1 overflow-hidden text-ellipsis text-nowrap p-2', {
-									'hover:cursor-move': !activeLayout.isLocked
-								})}
-								onpointerdown={activeLayout.isLocked ? () => {} : moveStart}
-							>
-								{widgetData.name}
-							</Card.Title>
-						{/snippet}
-					</Widget>
-				</div>
-				<div
-					class="absolute bottom-0 right-0 m-1 hover:cursor-nwse-resize"
-					style:z-index="50"
-					slot="resizeHandle"
-					let:resizeStart
+{#key layouts.active}
+	{#if layouts.value.length !== 0}
+		<Grid cols={10} rows={10} gap={5}>
+			{#each activeWidgets.value as widgetData}
+				<GridItem
+					id={widgetData.name}
+					x={widgetData.layoutProps!.x}
+					y={widgetData.layoutProps!.y}
+					w={widgetData.layoutProps!.w}
+					h={widgetData.layoutProps!.h}
+					on:change={(e) => updateWidgetPosition(e, widgetData.name)}
 				>
-					{#if !activeLayout.isLocked}
-						<CornerBottomRight onpointerdown={resizeStart} />
-					{/if}
-				</div>
-			</GridItem>
-		{/each}
-	</Grid>
-{/if}
+					<div class="h-[100%]" slot="moveHandle" let:moveStart>
+						<Widget {widgetData}>
+							{#snippet dragHandle()}
+								<Card.Title
+									class={cn('flex-1 overflow-hidden text-ellipsis text-nowrap p-2', {
+										'hover:cursor-move': !activeLayout.isLocked
+									})}
+									onpointerdown={activeLayout.isLocked ? () => {} : moveStart}
+								>
+									{widgetData.name}
+								</Card.Title>
+							{/snippet}
+						</Widget>
+					</div>
+					<div
+						class="absolute bottom-0 right-0 m-1 hover:cursor-nwse-resize"
+						style:z-index="50"
+						slot="resizeHandle"
+						let:resizeStart
+					>
+						{#if !activeLayout.isLocked}
+							<CornerBottomRight onpointerdown={resizeStart} />
+						{/if}
+					</div>
+				</GridItem>
+			{/each}
+		</Grid>
+	{/if}
+{/key}
