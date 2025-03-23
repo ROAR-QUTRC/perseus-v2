@@ -61,9 +61,13 @@ jobs:
         run: |
           case "$(git log -1 --pretty=format:%B)" in
             "${{ needs.global-vars.outputs.package_msg }}"|"${{ needs.global-vars.outputs.format_msg }}")
-              echo "skip=true" >> "$GITHUB_OUTPUT";;
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "Skipping format job because of previous formatting or packaging"
+              ;;
             *)
-              echo "skip=false" >> "$GITHUB_OUTPUT";;
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              echo "Format job will run"
+              ;;
           esac
       - name: Check for previous packaging
         id: previous-package
@@ -71,8 +75,10 @@ jobs:
         run: |
           if [ "$(git log -1 --pretty=format:%B)" = "${{ needs.global-vars.outputs.package_msg }}" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Skipping package job because of previous packaging"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Package job will run"
           fi;
   # We don't want to run commit actions on pull request workflows (ie, after the merge commit),
   # only on push, so all commit+push steps are filtered by the event name
@@ -83,7 +89,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     environment: actions-runtime
-    if: ${{ !needs.changes.outputs.skip-format }}
+    if: ${{ needs.changes.outputs.skip-format != 'true' }}
     needs: [changes, global-vars]
     steps:
       - uses: actions/checkout@v4
@@ -111,7 +117,7 @@ jobs:
     name: Build docs dev shell
     runs-on: ubuntu-latest
     environment: binary-deployment
-    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.changes.outputs.docs-shell || needs.changes.outputs.manual) }}
+    if: ${{ !cancelled() && (needs.format.result != 'failure') && ((needs.changes.outputs.docs-shell == 'true') || (needs.changes.outputs.manual == 'true')) }}
     needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
@@ -131,7 +137,7 @@ jobs:
     # Therefore, since we want this to run regardless of the docs dev shell,
     # we need to add `!cancelled()` (or `always()`) to the condition to remove the implicit `success()`
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#status-check-functions
-    if: ${{ !cancelled() && (needs.format.result != 'failure') &&  (needs.changes.outputs.docs || needs.changes.outputs.manual) }}
+    if: ${{ !cancelled() && (needs.format.result != 'failure') &&  ((needs.changes.outputs.docs == 'true') || (needs.changes.outputs.manual == 'true')) }}
     needs: [changes, format, docs-shell, global-vars]
     steps:
       - uses: actions/checkout@v4
@@ -165,7 +171,7 @@ jobs:
     name: Re-generate Nix packaging
     runs-on: ubuntu-latest
     environment: actions-runtime
-    if: ${{ !cancelled() && (needs.format.result != 'failure') && !needs.changes.outputs.skip-package && needs.changes.outputs.packages && (github.event_name != 'pull_request') }}
+    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.changes.outputs.skip-package != 'true') && (needs.changes.outputs.packages == 'true') && (github.event_name != 'pull_request') }}
     needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
@@ -188,7 +194,7 @@ jobs:
     environment: binary-deployment
     # this job should run even if `package` is skipped, but not if `format` fails,
     # hence the unusual conditions
-    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.package.result != 'failure') && (needs.changes.outputs.software || needs.changes.outputs.manual) }}
+    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.package.result != 'failure') && ((needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true')) }}
     needs: [changes, format, global-vars, package]
     steps:
       - uses: actions/checkout@v4

@@ -9,7 +9,8 @@
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-bq76942::bq76942(uint8_t address) : _address(address)
+bq76942::bq76942(uint8_t address)
+    : _address(address)
 {
     Wire.beginTransmission(_address);
     if (Wire.endTransmission())
@@ -117,7 +118,7 @@ bq76942::firmware_version_t bq76942::getFirmwareVersion()
 bq76942::security_keys_t bq76942::getSecurityKeys()
 {
     security_keys_t rawKeys = readSubcommand<security_keys_t>(subcommand::SECURITY_KEYS);
-    // keys are stored in big-endian format so wew need to re-construct them manually
+    // keys are stored in big-endian format so we need to re-construct them manually
     return security_keys_t{
         .unseal = {
             .step1 = static_cast<uint16_t>((rawKeys.unseal.step1Bytes[0] << 8) | rawKeys.unseal.step1Bytes[1]),

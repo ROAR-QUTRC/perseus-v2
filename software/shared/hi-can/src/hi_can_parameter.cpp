@@ -143,7 +143,8 @@ namespace hi_can::parameters::drive::vesc
         return rawData.serializeData();
     }
 
-    VescParameterGroup::VescParameterGroup(uint8_t vescId, steady_clock::duration transmissionInterval) : _vescId(vescId)
+    VescParameterGroup::VescParameterGroup(uint8_t vescId, steady_clock::duration transmissionInterval)
+        : _vescId(vescId)
     {
         using namespace addressing::drive::vesc;
         _transmissions.emplace_back(

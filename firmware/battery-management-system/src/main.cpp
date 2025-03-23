@@ -197,7 +197,7 @@ void setup()
             .shortCircuitDischargeLatch = true,
             .overcurrentDischarge3 = true,
         });
-        // defaut body diode setting is fine
+        // default body diode setting is fine
 
         // Settings:Alarm
         bq.settings.alarm.setDefaultMask({

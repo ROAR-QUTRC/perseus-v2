@@ -1,5 +1,4 @@
 name: PlatformIO CI
-
 on:
   push:
   pull_request:
@@ -7,7 +6,6 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-
 jobs:
   changes:
     name: Detect changes
@@ -22,7 +20,7 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
-          filters: .github/filters.yaml
+          filters: .github/filters-firmware.yaml
   build-bms:
     runs-on: ubuntu-latest
     if: ${{ !needs.changes.outputs.bms }}
@@ -37,13 +35,12 @@ jobs:
           key: ${{ runner.os }}-pio
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
       - name: Build PlatformIO Project
         working-directory: ./firmware/battery-management-system
-        run:
-            pio run
+        run: pio run
   build-light-tower:
     runs-on: ubuntu-latest
     if: ${{ !needs.changes.outputs.light-tower }}
@@ -58,13 +55,12 @@ jobs:
           key: ${{ runner.os }}-pio
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
       - name: Build PlatformIO Project
         working-directory: ./firmware/battery-management-system
-        run:
-            pio run
+        run: pio run
   build-processing-plant:
     runs-on: ubuntu-latest
     if: ${{ !needs.changes.outputs.processing-plant }}
@@ -79,10 +75,9 @@ jobs:
           key: ${{ runner.os }}-pio
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
       - name: Build PlatformIO Project
         working-directory: ./firmware/battery-management-system
-        run:
-            pio run
+        run: pio run

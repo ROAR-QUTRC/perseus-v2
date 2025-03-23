@@ -7,7 +7,7 @@ menu "Hi-CAN Configuration"
             Number of times to attempt recovery if node enters an error state
     
     config HI_CAN_BUS_TX_TIME
-        int "TX message maxumum queue time"
+        int "TX message maximum queue time"
         default "100"
         range "0" "10000"
         help

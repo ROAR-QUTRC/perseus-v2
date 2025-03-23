@@ -85,7 +85,7 @@ install(TARGETS m2m2_lidar DESTINATION lib/${PROJECT_NAME})
 
 # Install launch
 install(
-  DIRECTORY launch config 
+  DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
