@@ -1,5 +1,10 @@
 #include <Arduino.h>
 
+#include <chrono>
+#include <hi_can_twai.hpp>
+#include <optional>
+#include <thread>
+
 #define IN1 13
 #define IN2 14
 #define IN3 21
@@ -8,18 +13,15 @@
 #define ENA 48
 #define ENB 45
 
-#define FORWARD 0b10
-#define REVERSE 0b01
-#define BRAKE 0
+using namespace std::chrono;
+using namespace std::chrono_literals;
+using namespace hi_can;
 
-void actuate(int direction, int rate) 
-{
+std::optional<PacketManager> packetManager;
 
-    digitalWrite(IN1, direction > 0);
-    digitalWrite(IN2, direction < 0);
-    analogWrite(ENA, rate);
-}
-
+void handleMotorSpeedData(const Packet& packet);
+void stopMotor();
+void setMotorSpeed(int16_t speed);
 
 void setup()
 {
@@ -30,27 +32,51 @@ void setup()
     pinMode(IN4, OUTPUT);
     pinMode(IN3, OUTPUT);
     pinMode(ENB, OUTPUT);
+
+    auto& interface = TwaiInterface::getInstance();
+    packetManager.emplace(interface);
+    using namespace addressing;
+    using namespace shared::elevator::elevator;
+    standard_address_t motorAddress{DEVICE_ADDRESS, motor::GROUP_ID, static_cast<uint8_t>(motor::parameter::SPEED)};
+    packetManager->setCallback(filter_t{static_cast<flagged_address_t>(motorAddress)},
+                               {
+                                   .dataCallback = handleMotorSpeedData,
+                                   .timeoutCallback = std::bind(setMotorSpeed, 0),
+                                   .timeout = 200ms,
+                               });
 }
 
 void loop()
 {
-    for(int i = 0; i <= 255; i++)
+    using namespace hi_can;
+    try
     {
-        actuate(1, i);
-        delay(100);
+        auto& interface = TwaiInterface::getInstance();
+        interface.receiveAll(true);
     }
-    for(int i = 255; i >= 0; i--)
+    catch (const std::exception& e)
     {
-        actuate(1, i);
-        delay(100);
+        printf(std::format("{}\n", e.what()).c_str());
     }
-    // digitalWrite(IN1, 0);
-    // digitalWrite(IN2, 0);
-    // delay(2000);
-    // digitalWrite(IN1, 1);
-    // digitalWrite(IN2, 0);
-    // digitalWrite(ENA, 1);
-    // delay(5000);
-
 }
 
+void handleMotorSpeedData(const Packet& packet)
+{
+    using namespace parameters::shared::elevator::elevator::motor;
+    try
+    {
+        setMotorSpeed(static_cast<int16_t>(std::round(speed_t{packet.getData()}.value)));
+    }
+    catch (const std::exception& e)
+    {
+        printf(std::format("Failed to parse speed packet: {}\n", e.what()).c_str());
+    }
+}
+
+void setMotorSpeed(int16_t speed)
+{
+    speed = map(speed, std::numeric_limits<int16_t>::min(), std::numeric_limits<int16_t>::max(), -255, 255);
+    digitalWrite(IN1, speed > 0);
+    digitalWrite(IN2, speed < 0);
+    analogWrite(ENA, abs(speed));
+}
