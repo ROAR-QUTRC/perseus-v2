@@ -194,6 +194,7 @@ let
         cmakeFlags = cmakeFlags ++ [
           "-DCHECK_FOR_UPDATES=OFF"
           "-DBUILD_GRAPHICAL_EXAMPLES=OFF"
+          "-DFORCE_RSUSB_BACKEND=TRUE"
         ];
       }
     );
