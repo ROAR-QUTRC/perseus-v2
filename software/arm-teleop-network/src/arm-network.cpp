@@ -207,16 +207,24 @@ namespace perseus
                         
                         if (!server_initialized) {
                             std::cout << "Starting server on port " << _port << "..." << std::endl;
-                            
-                            // Set up the TCP server
-                            boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), _port);
-                            acceptor.open(endpoint.protocol());
-                            acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-                            acceptor.bind(endpoint);
-                            acceptor.listen();
-                            server_initialized = true;
-                            
-                            std::cout << "Server started on port " << _port << ", waiting for connections..." << std::endl;
+                            try {
+                                // Set up the TCP server
+                                boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), _port);
+                                std::cout << "Created endpoint" << std::endl;
+                                acceptor.open(endpoint.protocol());
+                                std::cout << "Opened acceptor" << std::endl;
+                                acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+                                std::cout << "Set reuse address option" << std::endl;
+                                acceptor.bind(endpoint);
+                                std::cout << "Bound to endpoint" << std::endl;
+                                acceptor.listen();
+                                std::cout << "Now listening" << std::endl;
+                                server_initialized = true;
+                                
+                                std::cout << "Server started on port " << _port << ", waiting for connections..." << std::endl;
+                            } catch (const std::exception& e) {
+                                std::cerr << "Error initializing server: " << e.what() << std::endl;
+                            }
                         }
                         
                         // Non-blocking accept
