@@ -294,9 +294,9 @@ namespace hi_can::parameters
     }
     namespace shared
     {
-        namespace lifter_platform
+        namespace elevator
         {
-            namespace lifter
+            namespace elevator
             {
                 namespace motor
                 {
