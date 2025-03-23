@@ -2,6 +2,9 @@
 
 #include <ctime>
 #include <iostream>
+#include <boost/asio.hpp>
+
+//Note Server is implemented in this file and not simple-networking.
 
 namespace perseus
 {
@@ -193,20 +196,103 @@ namespace perseus
                         std::this_thread::sleep_for(reconnect_interval);
                     }
                 }
-                else
+                else // Server mode
                 {
-                    // Server mode not implemented in this example
-                    // For a complete implementation, you would:
-                    // 1. Create a TCP server socket
-                    // 2. Accept connections
-                    // 3. Handle multiple clients if needed
-                    // 4. Process messages similar to client mode
-
-                    // For simplicity, we're showing client mode only for now
-                    std::cerr << "Server mode not implemented in this example" << std::endl;
-                    _running = false;
+                    try {
+                        static bool server_initialized = false;
+                        static boost::asio::io_service io_service;
+                        static boost::asio::ip::tcp::acceptor acceptor(io_service);
+                        static boost::asio::ip::tcp::socket socket(io_service);
+                        static std::vector<uint8_t> receive_buffer(1024);
+                        
+                        if (!server_initialized) {
+                            std::cout << "Starting server on port " << _port << "..." << std::endl;
+                            
+                            // Set up the TCP server
+                            boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), _port);
+                            acceptor.open(endpoint.protocol());
+                            acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+                            acceptor.bind(endpoint);
+                            acceptor.listen();
+                            server_initialized = true;
+                            
+                            std::cout << "Server started on port " << _port << ", waiting for connections..." << std::endl;
+                        }
+                        
+                        // Non-blocking accept
+                        if (!_connected) {
+                            boost::system::error_code ec;
+                            // Start an accept
+                            acceptor.accept(socket, ec);
+                            
+                            if (!ec) {
+                                // Connection successful
+                                std::cout << "Client connected from " << socket.remote_endpoint().address().to_string() 
+                                          << ":" << socket.remote_endpoint().port() << std::endl;
+                                _connected = true;
+                            }
+                        }
+                        
+                        // Process data for connected client
+                        if (_connected && socket.is_open()) {
+                            // Send any queued messages
+                            {
+                                std::lock_guard<std::mutex> lock(_outgoingMutex);
+                                while (!_outgoingMessages.empty()) {
+                                    try {
+                                        auto& message = _outgoingMessages.front();
+                                        boost::asio::write(socket, boost::asio::buffer(message));
+                                        _outgoingMessages.pop();
+                                    }
+                                    catch (const std::exception& e) {
+                                        std::cerr << "Error sending message: " << e.what() << std::endl;
+                                        _connected = false;
+                                        socket.close();
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // Check for incoming data (non-blocking)
+                            boost::system::error_code ec;
+                            size_t available = socket.available(ec);
+                            
+                            if (!ec && available > 0) {
+                                // Make sure buffer is large enough
+                                if (receive_buffer.size() < available) {
+                                    receive_buffer.resize(available);
+                                }
+                                
+                                // Read the data
+                                size_t bytes_read = socket.read_some(boost::asio::buffer(receive_buffer), ec);
+                                
+                                if (!ec && bytes_read > 0) {
+                                    // Create a correctly sized buffer with just the data we received
+                                    std::vector<uint8_t> data(receive_buffer.begin(), receive_buffer.begin() + bytes_read);
+                                    _processMessage(data);
+                                }
+                                else if (ec) {
+                                    std::cerr << "Error reading from socket: " << ec.message() << std::endl;
+                                    _connected = false;
+                                    socket.close();
+                                }
+                            }
+                            else if (ec) {
+                                std::cerr << "Error checking socket: " << ec.message() << std::endl;
+                                _connected = false;
+                                socket.close();
+                            }
+                        }
+                        
+                        // Prevent CPU spinning
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    }
+                    catch (const std::exception& e) {
+                        std::cerr << "Server error: " << e.what() << std::endl;
+                        _connected = false;
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                    }
                 }
-
                 // Brief sleep to prevent CPU spinning
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
