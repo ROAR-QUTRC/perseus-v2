@@ -537,6 +537,13 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
+# Board Hardware Support
+#
+CONFIG_BSP_BOARD_SBB_V0R1=y
+# CONFIG_BSP_BOARD_SBB_V2 is not set
+# end of Board Hardware Support
+
+#
 # Hi-CAN Configuration
 #
 CONFIG_HI_CAN_BUS_RECOVERY_ATTEMPTS=5
@@ -545,15 +552,8 @@ CONFIG_HI_CAN_BUS_TX_TIME=100
 CONFIG_HI_CAN_BAUD_500K=y
 # CONFIG_HI_CAN_BAUD_250K is not set
 # CONFIG_HI_CAN_BAUD_125K is not set
-# CONFIG_HI_CAN_NO_ACK is not set
+CONFIG_HI_CAN_NO_ACK=y
 # end of Hi-CAN Configuration
-
-#
-# Board Hardware Support
-#
-CONFIG_BSP_BOARD_SBB_V0R1=y
-# CONFIG_BSP_BOARD_SBB_V2 is not set
-# end of Board Hardware Support
 
 #
 # Arduino Configuration
