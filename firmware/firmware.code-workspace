@@ -17,6 +17,10 @@
             "path": "./processing-plant"
         },
         {
+            "name": "Elevator Module Firmware",
+            "path": "./elevator-module"
+        },
+        {
             "name": "Workspace Root",
             "path": ".."
         },
@@ -125,7 +129,8 @@
             "xstring": "cpp",
             "xtr1common": "cpp",
             "xtree": "cpp",
-            "xutility": "cpp"
+            "xutility": "cpp",
+            "*.inc": "cpp"
         },
         "C_Cpp.default.cppStandard": "c++20",
         "editor.formatOnSave": true,
