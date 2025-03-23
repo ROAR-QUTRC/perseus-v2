@@ -59,7 +59,7 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
       - name: Build PlatformIO Project
-        working-directory: ./firmware/battery-management-system
+        working-directory: ./firmware/light-tower
         run: pio run
   build-processing-plant:
     runs-on: ubuntu-latest
@@ -79,5 +79,5 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
       - name: Build PlatformIO Project
-        working-directory: ./firmware/battery-management-system
+        working-directory: ./firmware/processing-plant
         run: pio run
