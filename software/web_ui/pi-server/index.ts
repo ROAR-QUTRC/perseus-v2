@@ -106,7 +106,7 @@ const startStream = (device: string, resolution: { height: number; width: number
 
 // listen for camera events
 socket.on('camera-event', (event: CameraEventType) => {
-	if (event.data.groupName && event.data.groupName !== config.groupName) return;
+	if (event.data && event.data.groupName !== config.groupName) return;
 	switch (event.action) {
 		case 'request-groups':
 			socket.send(initMessage);
