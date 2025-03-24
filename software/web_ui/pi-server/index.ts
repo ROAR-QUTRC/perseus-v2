@@ -1,7 +1,8 @@
 import { io, Socket } from "socket.io-client";
-import config from "./config.json";
-import { exec, spawn } from "child_process";
+import config from "./config.js";
+import { spawn } from "child_process";
 import { networkInterfaces } from "os";
+import fs from "node:fs";
 
 interface CameraEventType {
   type: "camera";
@@ -19,6 +20,7 @@ interface CameraEventType {
     // cameraName?: string;
     resolution?: { width: number; height: number };
     device?: string;
+    cameras?: string[];
   };
 }
 
@@ -47,12 +49,23 @@ let net = networkInterfaces();
 let networkIf = net[Object.keys(net)[1]];
 let ip: string | undefined = undefined;
 
+// get the ip address of the server
 if (networkIf) ip = networkIf[0].address;
+
+// get a list of cameras
+let cameras: string[] = fs
+  .readdirSync("/dev/v4l/by-id")
+  .filter((file) => file.endsWith("-index0")); // index 0 is the video and index 1 is the device metadata
+cameras.forEach((camera: string) => {
+  console.log(
+    `[Camera server] Found camera: ${camera.replace("-video-index0", "").replace("usb-", "").replaceAll("_", " ")}`,
+  );
+});
 
 let initMessage: CameraEventType = {
   type: "camera",
   action: "group-description",
-  data: { groupName: config.groupName, ip: ip },
+  data: { groupName: config.groupName, ip: ip, cameras: cameras },
 };
 
 if (ip) {
@@ -80,7 +93,7 @@ const startStream = (
   let gstArgs = ["webrtcsink", "stun-server=NULL", "name=ws"];
   gstArgs.push(`meta="meta,name=${device}"`); // assign a name to the stream
   if (device === "test") gstArgs.push("videotestsrc");
-  else gstArgs.push("v4l2src", `device=${device}`);
+  else gstArgs.push("v4l2src", `device=/dev/v4l/by-id/${device}`);
   gstArgs.push(
     `!`,
     `video/x-raw, width=${resolution.width}, height=${resolution.height}`,
@@ -103,6 +116,7 @@ const startStream = (
 
 // listen for camera events
 socket.on("camera-event", (event: CameraEventType) => {
+  if (event.data && event.data.groupName !== config.groupName) return;
   switch (event.action) {
     case "request-groups":
       socket.send(initMessage);

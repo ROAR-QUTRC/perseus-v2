@@ -9,7 +9,10 @@ from launch.substitutions import (
     LaunchConfiguration,
 )
 from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import (
+    PythonLaunchDescriptionSource,
+    AnyLaunchDescriptionSource,
+)
 
 from launch_ros.substitutions import FindPackageShare
 
@@ -94,9 +97,26 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
         }.items(),
     )
+    rosbridge_launch = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("rosbridge_server"),
+                        "launch",
+                        "rosbridge_websocket_launch.xml",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
+        rosbridge_launch,
     ]
 
     return LaunchDescription(arguments + launch_files)
