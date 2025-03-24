@@ -356,14 +356,14 @@ void displayServoValues(WINDOW* win,
     }
 
     mvwprintw(win, 11, 0, "--------------------------------------------------------");
-    mvwprintw(win, 12, 0, "Leader Calibration: ");
-    for (size_t i = 0; i < 6; ++i)
-    {
-        int row = i + 13;
-        const auto& cal = leader_cal[i];
-        mvwprintw(win, row, 2, "Servo %d:  Min: %4u  Max: %4u",
-                  static_cast<int>(i + 1), cal.min, cal.max);
-    }
+    // mvwprintw(win, 12, 0, "Leader Calibration: ");
+    // for (size_t i = 0; i < 6; ++i)
+    //{
+    //     int row = i + 13;
+    //     const auto& cal = leader_cal[i];
+    //     mvwprintw(win, row, 2, "Servo %d:  Min: %4u  Max: %4u",
+    //               static_cast<int>(i + 1), cal.min, cal.max);
+    // }
 
     // Add instructions and status
     mvwprintw(win, 15, 0, "Instructions:");
