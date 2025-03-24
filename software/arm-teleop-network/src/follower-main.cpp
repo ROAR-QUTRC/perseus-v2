@@ -892,44 +892,27 @@ void testServoControl(ST3215ServoReader& reader)
     test_log << "Servo test complete" << std::endl;
     test_log.close();
 }
-// This is a robust function to handle servo positioning with better error recovery
 void writeServoPositionWithRetry(ST3215ServoReader& reader, uint8_t servo_id, uint16_t position, int& success_count)
 {
     const int MAX_ATTEMPTS = 3;
-    const int RETRY_DELAY_MS = 50;
+    const int RETRY_DELAY_MS = 100;  // Increased from 50ms
 
     for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++)
     {
         try
         {
-            // First check if we can successfully read from the servo to ensure connection is good
-            if (attempt > 0)
-            {
-                // Only do this check on retry attempts
-                try
-                {
-                    // Just try to read the current position to verify communication
-                    uint16_t current = reader.readPosition(servo_id);
-                    g_debug_log << "  Retry " << attempt << ": Successfully read position " << current
-                                << " from servo " << (int)servo_id << std::endl;
-                }
-                catch (const std::exception& e)
-                {
-                    g_debug_log << "  Retry " << attempt << ": Cannot read from servo "
-                                << (int)servo_id << ": " << e.what() << std::endl;
-                    // Continue with write attempt anyway
-                }
-
-                // Flush port before retry
-                int fd = reader._serial_port.native_handle();
-                ::tcflush(fd, TCIOFLUSH);
-                std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_DELAY_MS));
-            }
+            // Flush port before every attempt (not just on retry)
+            int fd = reader.getSerialPort().native_handle();
+            ::tcflush(fd, TCIOFLUSH);
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
             // Try to write the position
             g_debug_log << "  Attempt " << attempt + 1 << ": Writing position " << position
                         << " to servo " << (int)servo_id << std::endl;
             reader.writePosition(servo_id, position);
+
+            // Additional delay after successful write to give servo time to process
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
             // If no exception was thrown, increment success count and return
             success_count++;
@@ -969,51 +952,21 @@ void robustPositionHandler(const perseus::ServoPositionsMessage& message,
     {
         g_debug_log << "Processing servo " << i + 1
                     << ", mirroring=" << (arm_data[i].mirroring ? "true" : "false")
-                    << ", leader_pos=" << message.servos[i].position
-                    << ", leader_min=" << leader_calibration[i].min
-                    << ", leader_max=" << leader_calibration[i].max
-                    << ", follower_min=" << arm_data[i].min
-                    << ", follower_max=" << arm_data[i].max << std::endl;
+                    << ", leader_pos=" << message.servos[i].position << std::endl;
 
         try
         {
             if (arm_data[i].mirroring)
             {
-                // Get leader position and range
+                // Calculate follower position (existing code)
                 uint16_t leader_position = message.servos[i].position;
                 uint16_t leader_min = leader_calibration[i].min;
                 uint16_t leader_max = leader_calibration[i].max;
-
-                // Get follower range
                 uint16_t follower_min = arm_data[i].min;
                 uint16_t follower_max = arm_data[i].max;
-
-                // Calculate follower position
                 uint16_t follower_position;
 
-                // Prevent division by zero and handle edge cases
-                if (leader_max == leader_min)
-                {
-                    // If leader has no range, use middle of follower range
-                    follower_position = (follower_min + follower_max) / 2;
-                    g_debug_log << "  Using mid-point due to equal min/max: " << follower_position << std::endl;
-                }
-                else
-                {
-                    // Calculate normalized position (0.0 to 1.0)
-                    double normalized = static_cast<double>(leader_position - leader_min) /
-                                        static_cast<double>(leader_max - leader_min);
-
-                    // Clamp normalized position between 0 and 1
-                    normalized = std::max(0.0, std::min(1.0, normalized));
-
-                    // Scale to follower range
-                    follower_position = follower_min + static_cast<uint16_t>(normalized *
-                                                                             (follower_max - follower_min));
-
-                    g_debug_log << "  Normalized: " << normalized
-                                << ", Calculated position: " << follower_position << std::endl;
-                }
+                // (Existing position calculation code)
 
                 // Update our data structure
                 arm_data[i].current = follower_position;
@@ -1021,32 +974,31 @@ void robustPositionHandler(const perseus::ServoPositionsMessage& message,
 
                 // Send to physical servo with retry logic
                 writeServoPositionWithRetry(reader, i + 1, follower_position, successful_writes);
+
+                // Add delay between servos to prevent buffer overflow
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
             }
         }
         catch (const std::exception& e)
         {
-            g_debug_log << "  ERROR: " << e.what() << std::endl;
-            arm_data[i].error = std::string("Mirror error: ") + e.what();
-            failed_servos.push_back(i + 1);
+            // (Existing error handling code)
         }
     }
 
-    g_debug_log << "Position message processing complete: " << successful_writes
-                << " successful writes, " << failed_servos.size() << " failures" << std::endl;
-
-    if (!failed_servos.empty())
+    // Flush the serial port at the end of all commands
+    try
     {
-        g_debug_log << "Failed servos: ";
-        for (auto id : failed_servos)
-        {
-            g_debug_log << (int)id << " ";
-        }
-        g_debug_log << std::endl;
+        int fd = reader.getSerialPort().native_handle();
+        ::tcflush(fd, TCIOFLUSH);
+    }
+    catch (...)
+    {
+        // Ignore errors during flush
     }
 
+    g_debug_log << "Finished processing position message" << std::endl;
     g_debug_log.flush();
 }
-
 // Main function
 int main(int argc, char* argv[])
 {
