@@ -88,6 +88,8 @@ void RcbDriver::_canToRos()
 
     message.data = busData.dump();
 
+    RCLCPP_INFO(get_logger(), "Publishing message: %s", message.data.c_str());
+
     this->_packetPublisher->publish(message);
 }
 
@@ -104,6 +106,8 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
 
         auto group = std::find_if(BUS_GROUPS.begin(), BUS_GROUPS.end(), [&data](const auto& pair)
                                   { return pair.first == data["bus"].dump(); });
+
+        RCLCPP_INFO(get_logger(), "Received message: %s", data.dump().c_str());
 
         using namespace hi_can::addressing::legacy::power::control::rcb;
 
