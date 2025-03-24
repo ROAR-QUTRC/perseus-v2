@@ -2,6 +2,19 @@
 
 Terminal based Arm Teleop for Perseus
 
+## To build
+
+```
+mkdir build
+```
+
+```
+cmake ..
+make
+```
+
+The run the binaries found there.
+
 ## TODO
 
 - Handle rollover of values (joint #2 really needs this)
