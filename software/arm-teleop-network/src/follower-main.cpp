@@ -848,7 +848,6 @@ int main(int argc, char* argv[])
         // Set up callbacks for network messages
         // Modified callback function for the follower-main.cpp file
         // Fixed position mapping function for follower-main.cpp
-
         network_ptr->setServoPositionsCallback([&arm_data, &reader](const perseus::ServoPositionsMessage& message)
                                                {
             g_debug_log << "Received position message with " << sizeof(message.servos)/sizeof(message.servos[0]) 
@@ -906,12 +905,14 @@ int main(int argc, char* argv[])
                         g_debug_log << "  Writing position " << follower_position << " to servo " << i+1 << std::endl;
                         reader.writePosition(i + 1, follower_position);
                         g_debug_log << "  Successfully wrote position" << std::endl;
-                        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                        
+                        // Add a delay between servo commands to prevent communication issues
+                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
                     }
                 } catch (const std::exception& e) {
                     g_debug_log << "  ERROR: " << e.what() << std::endl;
                     arm_data[i].error = std::string("Mirror error: ") + e.what();
-                    arm_data[i].mirroring = false;
+                    // Don't disable mirroring - we want it to keep trying
                 }
             }
             g_debug_log << "Finished processing position message" << std::endl;
