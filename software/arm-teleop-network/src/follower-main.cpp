@@ -29,7 +29,6 @@ static ST3215ServoReader* reader_ptr = nullptr;
 static WINDOW* ncurses_win = nullptr;
 static perseus::ArmNetworkInterface* network_ptr = nullptr;
 
-static std::atomic<bool> calibration_mode(false);  // When true, follower records its own min/max
 static std::atomic<bool> running(true);
 static std::atomic<bool> torque_protection(true);  // Default to ON for follower
 
@@ -37,8 +36,8 @@ static std::atomic<bool> torque_protection(true);  // Default to ON for follower
 struct ServoData
 {
     uint16_t current = 0;
-    uint16_t min = 0;
-    uint16_t max = 4095;
+    uint16_t min = 4095;  // Start with maximum possible value
+    uint16_t max = 0;     // Start with minimum possible value
     int16_t torque = 0;
     std::string error;
     bool mirroring = false;
@@ -369,13 +368,14 @@ void displayServoValues(WINDOW* win,
     // Add instructions and status
     mvwprintw(win, 15, 0, "Instructions:");
     mvwprintw(win, 16, 0, "1. This is a follower arm waiting for commands from the leader");
-    mvwprintw(win, 17, 0, "2. Press 't' to toggle torque protection (%s)",
+    mvwprintw(win, 17, 0, "2. Auto-calibration is always active (updates min/max positions)");
+    mvwprintw(win, 18, 0, "3. Press 't' to toggle torque protection (%s)",
               torque_protection.load() ? "ON" : "OFF");
-    mvwprintw(win, 18, 0, "3. Press 's' to save calibration");
-    mvwprintw(win, 19, 0, "4. Press 'l' to load calibration from file");
-    mvwprintw(win, 20, 0, "5. Press 'r' to reset mirroring for all servos");
-    mvwprintw(win, 21, 0, "6. Press 'c' to change listen port (currently %d)", perseus::DEFAULT_PORT);
-    mvwprintw(win, 22, 0, "7. Press Ctrl+C to exit");
+    mvwprintw(win, 19, 0, "4. Press 's' to save calibration");
+    mvwprintw(win, 20, 0, "5. Press 'l' to load calibration from file");
+    mvwprintw(win, 21, 0, "6. Press 'r' to reset mirroring for all servos");
+    mvwprintw(win, 22, 0, "7. Press 'c' to change listen port (currently %d)", perseus::DEFAULT_PORT);
+    mvwprintw(win, 23, 0, "8. Press Ctrl+C to exit");
 
     // Add color legend if colors are available
     if (has_colors())
@@ -390,6 +390,13 @@ void displayServoValues(WINDOW* win,
     displayLeaderStatus(win, leader_connected);
 
     wrefresh(win);
+}
+
+void updateServoCalibration(std::vector<ServoData>& arm_data, uint16_t position, size_t servo_index)
+{
+    // Update min/max based on actual observations
+    arm_data[servo_index].min = std::min(arm_data[servo_index].min, position);
+    arm_data[servo_index].max = std::max(arm_data[servo_index].max, position);
 }
 
 // Scale a position value from one range to another
@@ -830,12 +837,8 @@ int main(int argc, char* argv[])
                     uint16_t current_position = reader.readPosition(i + 1);
                     arm_data[i].current = current_position;
 
-                    if (calibration_mode.load())
-                    {
-                        // Track min/max for calibration when in calibration mode
-                        arm_data[i].min = std::min(arm_data[i].min, current_position);
-                        arm_data[i].max = std::max(arm_data[i].max, current_position);
-                    }
+                    // Always update min/max based on actual positions (not just in calibration mode)
+                    updateServoCalibration(arm_data, current_position, i);
 
                     // Read torque for all servos
                     int16_t torque = reader.readLoad(i + 1);
@@ -916,26 +919,6 @@ int main(int argc, char* argv[])
                     wattron(ncurses_win, COLOR_PAIR(new_state ? 2 : 5) | A_BOLD);
                 }
                 mvwprintw(ncurses_win, 26, 0, "Torque protection %s", new_state ? "ENABLED" : "DISABLED");
-                if (has_colors())
-                {
-                    wattroff(ncurses_win, COLOR_PAIR(new_state ? 2 : 5) | A_BOLD);
-                }
-                wrefresh(ncurses_win);
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                mvwprintw(ncurses_win, 26, 0, "                                                                        ");
-            }
-            // Add to keyboard handler
-            else if (ch == 'a' || ch == 'A')
-            {
-                bool new_state = !calibration_mode.load();
-                calibration_mode.store(new_state);
-
-                mvwprintw(ncurses_win, 26, 0, "                                                                        ");
-                if (has_colors())
-                {
-                    wattron(ncurses_win, COLOR_PAIR(new_state ? 2 : 5) | A_BOLD);
-                }
-                mvwprintw(ncurses_win, 26, 0, "Calibration mode %s", new_state ? "ENABLED" : "DISABLED");
                 if (has_colors())
                 {
                     wattroff(ncurses_win, COLOR_PAIR(new_state ? 2 : 5) | A_BOLD);
