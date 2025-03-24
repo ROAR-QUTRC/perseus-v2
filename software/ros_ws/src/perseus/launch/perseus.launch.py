@@ -97,6 +97,22 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
         }.items(),
     )
+    twist_mux_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus"),
+                        "launch",
+                        "twist_mux.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
     rosbridge_launch = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(
             [
@@ -116,6 +132,7 @@ def generate_launch_description():
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
+        twist_mux_launch,
         rosbridge_launch,
     ]
 
