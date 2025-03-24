@@ -814,11 +814,15 @@ int main(int argc, char* argv[])
         reader_ptr = &reader;
 
         // Test servo control to verify hardware is working
+        // Test servo control to verify hardware is working
         testServoControl(*reader_ptr);
 
-        // Pre-enable mirroring on servos
+        // Pre-enable mirroring on servos with proper range values
         for (int i = 0; i < arm_data.size(); i++)
         {
+            // Set reasonable default min/max values that span the servo's range
+            arm_data[i].min = 1000;  // Lower than center
+            arm_data[i].max = 3000;  // Higher than center
             arm_data[i].mirroring = true;
 
             try
@@ -833,7 +837,7 @@ int main(int argc, char* argv[])
             {
                 g_debug_log << "Error enabling mirroring for servo " << (i + 1) << ": " << e.what() << std::endl;
                 arm_data[i].error = std::string("Startup error: ") + e.what();
-                arm_data[i].mirroring = false;
+                // Don't disable mirroring here
             }
         }
 
@@ -1005,30 +1009,25 @@ int main(int argc, char* argv[])
                 }
                 catch (const std::exception& e)
                 {
-                    if (arm_data[i].mirroring)
-                    {
-                        arm_data[i].error = e.what();
-                        arm_data[i].mirroring = false;
-                        arm_data[i].torque = 0;
+                    arm_data[i].error = e.what();
+                    g_debug_log << "Error with servo " << (i + 1) << ": " << e.what() << std::endl;
 
-                        // Send error status to leader
-                        if (network_ptr && network_ptr->isConnected())
-                        {
-                            perseus::StatusMessage status;
-                            status.header.protocol_version = perseus::PROTOCOL_VERSION;
-                            status.header.type = perseus::MessageType::STATUS_INFO;
-                            status.status = perseus::ArmStatus::ERROR_COMMUNICATION;
-                            status.error_servo_id = i + 1;
-                            status.error_message = arm_data[i].error;
+                    // Don't disable mirroring - just log the error and continue
 
-                            network_ptr->sendStatus(status);
-                        }
-                    }
-                    else
+                    // Only reset torque value for display purposes
+                    arm_data[i].torque = 0;  // Reset torque on error
+
+                    // Send error status to leader
+                    if (network_ptr && network_ptr->isConnected())
                     {
-                        arm_data[i].error = e.what();
-                        arm_data[i].current = 0;  // Reset current on error
-                        arm_data[i].torque = 0;   // Reset torque on error
+                        perseus::StatusMessage status;
+                        status.header.protocol_version = perseus::PROTOCOL_VERSION;
+                        status.header.type = perseus::MessageType::STATUS_INFO;
+                        status.status = perseus::ArmStatus::ERROR_COMMUNICATION;
+                        status.error_servo_id = i + 1;
+                        status.error_message = arm_data[i].error;
+
+                        network_ptr->sendStatus(status);
                     }
                 }
             }
