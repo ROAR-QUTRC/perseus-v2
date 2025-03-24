@@ -755,7 +755,7 @@ int main(int argc, char* argv[])
         network_ptr = new perseus::ArmNetworkInterface(listen_port);
 
         // Set up callbacks for network messages
-        network_ptr->setServoPositionsCallback([&arm_data, &leader_calibration, &reader](const perseus::ServoPositionsMessage& message)
+        network_ptr->setServoPositionsCallback([&arm_data, &reader](const perseus::ServoPositionsMessage& message)
                                                {
     for (int i = 0; i < 6; i++) 
     {
@@ -805,7 +805,7 @@ int main(int argc, char* argv[])
                 }
             } });
 
-        network_ptr->setCalibrationCallback([&arm_data, &leader_calibration](const perseus::CalibrationMessage& message)
+        network_ptr->setCalibrationCallback([&arm_data](const perseus::CalibrationMessage& message)
                                             {
                 for (int i = 0; i < 6; i++) {
                     // Store leader's calibration values for mapping
