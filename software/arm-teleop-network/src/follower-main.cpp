@@ -906,6 +906,7 @@ int main(int argc, char* argv[])
                         g_debug_log << "  Writing position " << follower_position << " to servo " << i+1 << std::endl;
                         reader.writePosition(i + 1, follower_position);
                         g_debug_log << "  Successfully wrote position" << std::endl;
+                        std::this_thread::sleep_for(std::chrono::milliseconds(5));
                     }
                 } catch (const std::exception& e) {
                     g_debug_log << "  ERROR: " << e.what() << std::endl;
