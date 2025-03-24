@@ -936,7 +936,7 @@ void writeServoPositionWithRetry(ST3215ServoReader& reader, uint8_t servo_id, ui
     }
 }
 
-// Updated function for the ServoPositionsCallback
+// Fixed position handler function for follower-main.cpp
 void robustPositionHandler(const perseus::ServoPositionsMessage& message,
                            std::vector<ServoData>& arm_data,
                            ST3215ServoReader& reader)
@@ -958,19 +958,39 @@ void robustPositionHandler(const perseus::ServoPositionsMessage& message,
         {
             if (arm_data[i].mirroring)
             {
-                // Calculate follower position (existing code)
+                // Calculate follower position based on calibration data
                 uint16_t leader_position = message.servos[i].position;
                 uint16_t leader_min = leader_calibration[i].min;
                 uint16_t leader_max = leader_calibration[i].max;
                 uint16_t follower_min = arm_data[i].min;
                 uint16_t follower_max = arm_data[i].max;
-                uint16_t follower_position;
 
-                // (Existing position calculation code)
+                // Scale the position from leader's range to follower's range
+                uint16_t follower_position = scalePosition(
+                    leader_position,
+                    leader_min,
+                    leader_max,
+                    follower_min,
+                    follower_max);
+
+                g_debug_log << "  Scaled position: " << leader_position
+                            << " -> " << follower_position
+                            << " (L:" << leader_min << "-" << leader_max
+                            << ", F:" << follower_min << "-" << follower_max << ")" << std::endl;
 
                 // Update our data structure
                 arm_data[i].current = follower_position;
                 arm_data[i].torque = message.servos[i].torque;
+
+                // Check torque protection
+                if (torque_protection.load() && std::abs(message.servos[i].torque) > TORQUE_SAFETY_THRESHOLD)
+                {
+                    g_debug_log << "  WARNING: Torque threshold exceeded for servo " << (i + 1)
+                                << ": " << message.servos[i].torque << std::endl;
+
+                    // Skip this servo if torque is too high
+                    continue;
+                }
 
                 // Send to physical servo with retry logic
                 writeServoPositionWithRetry(reader, i + 1, follower_position, successful_writes);
@@ -978,10 +998,18 @@ void robustPositionHandler(const perseus::ServoPositionsMessage& message,
                 // Add delay between servos to prevent buffer overflow
                 std::this_thread::sleep_for(std::chrono::milliseconds(30));
             }
+            else
+            {
+                g_debug_log << "  Skipping servo " << (i + 1) << " (mirroring disabled)" << std::endl;
+            }
         }
         catch (const std::exception& e)
         {
-            // (Existing error handling code)
+            g_debug_log << "  ERROR processing servo " << (i + 1) << ": " << e.what() << std::endl;
+            failed_servos.push_back(i + 1);
+
+            // Don't change mirroring state here, just record the error
+            arm_data[i].error = std::string("Position error: ") + e.what();
         }
     }
 
@@ -993,12 +1021,26 @@ void robustPositionHandler(const perseus::ServoPositionsMessage& message,
     }
     catch (...)
     {
-        // Ignore errors during flush
+        g_debug_log << "Error flushing serial port" << std::endl;
     }
 
-    g_debug_log << "Finished processing position message" << std::endl;
+    g_debug_log << "Finished processing position message - "
+                << successful_writes << " successful writes, "
+                << failed_servos.size() << " failures" << std::endl;
+
+    if (!failed_servos.empty())
+    {
+        g_debug_log << "Failed servos: ";
+        for (auto id : failed_servos)
+        {
+            g_debug_log << id << " ";
+        }
+        g_debug_log << std::endl;
+    }
+
     g_debug_log.flush();
 }
+
 // Main function
 int main(int argc, char* argv[])
 {
