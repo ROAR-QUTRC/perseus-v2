@@ -154,7 +154,7 @@
             rqt-plot
             rqt-reconfigure
             rqt-common-plugins
-	    rmw-cyclonedds-cpp
+            rmw-cyclonedds-cpp
             ;
         };
         # Packages which should be available only in the dev shell
