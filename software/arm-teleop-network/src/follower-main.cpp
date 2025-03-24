@@ -654,13 +654,20 @@ void exportCalibrationData(const std::vector<ServoData>& arm_data,
 }
 
 // Load calibration data from a YAML file
+// Load calibration data from a YAML file
 void loadCalibrationData(std::vector<ServoData>& arm_data,
                          std::vector<LeaderCalibration>& leader_calibration,
                          const std::string& filename = "follower_arm_calibration.yaml")
 {
     try
     {
+        mvwprintw(ncurses_win, 26, 0, "Loading calibration from %s...", filename.c_str());
+        wrefresh(ncurses_win);
+
         YAML::Node config = YAML::LoadFile(filename);
+
+        // Temporary storage for tracking which servos need mirroring updates
+        std::vector<std::pair<uint8_t, bool>> mirroring_updates;
 
         // Load follower arm servo data
         if (config["follower_arm"] && config["follower_arm"]["servos"])
@@ -673,17 +680,26 @@ void loadCalibrationData(std::vector<ServoData>& arm_data,
                 {
                     arm_data[i].min = servo["min"].as<uint16_t>();
                     arm_data[i].max = servo["max"].as<uint16_t>();
+
                     // Ensure current position stays within new bounds
                     arm_data[i].current = std::max(arm_data[i].min,
                                                    std::min(arm_data[i].max,
                                                             arm_data[i].current));
                 }
+
+                // Check if mirroring status is changing
                 if (servo["mirroring"])
                 {
-                    arm_data[i].mirroring = servo["mirroring"].as<bool>();
+                    bool new_mirroring = servo["mirroring"].as<bool>();
+                    if (arm_data[i].mirroring != new_mirroring)
+                    {
+                        mirroring_updates.push_back({static_cast<uint8_t>(i + 1), new_mirroring});
+                    }
+                    arm_data[i].mirroring = new_mirroring;
                 }
             }
         }
+
         // Load leader arm calibration data
         if (config["leader_arm"] && config["leader_arm"]["servos"])
         {
@@ -698,6 +714,41 @@ void loadCalibrationData(std::vector<ServoData>& arm_data,
                 }
             }
         }
+
+        // Apply mirroring changes to actual servos
+        if (reader_ptr != nullptr && !mirroring_updates.empty())
+        {
+            mvwprintw(ncurses_win, 27, 0, "Applying mirroring settings to servos...");
+            wrefresh(ncurses_win);
+
+            for (const auto& update : mirroring_updates)
+            {
+                uint8_t servo_id = update.first;
+                bool enable_mirroring = update.second;
+
+                try
+                {
+                    // Set torque enable/disable based on mirroring
+                    reader_ptr->writeControlRegister(servo_id, 0x28, enable_mirroring ? 1 : 0);
+                    mvwprintw(ncurses_win, 27, 0, "Updated servo %d: mirroring %s",
+                              servo_id, enable_mirroring ? "ON" : "OFF");
+                    wrefresh(ncurses_win);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+                catch (const std::exception& e)
+                {
+                    mvwprintw(ncurses_win, 27, 0, "Error setting servo %d: %s", servo_id, e.what());
+                    wrefresh(ncurses_win);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                }
+            }
+
+            mvwprintw(ncurses_win, 27, 0, "                                                    ");
+        }
+
+        mvwprintw(ncurses_win, 26, 0, "Calibration loaded successfully!");
+        wrefresh(ncurses_win);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     catch (const YAML::Exception& e)
     {
@@ -708,7 +759,6 @@ void loadCalibrationData(std::vector<ServoData>& arm_data,
         throw std::runtime_error(std::string("Error loading calibration: ") + e.what());
     }
 }
-
 std::ofstream g_debug_log("follower_debug.log");
 
 void testServoControl(ST3215ServoReader& reader)
