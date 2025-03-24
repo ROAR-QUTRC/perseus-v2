@@ -133,6 +133,7 @@
             libnice
             ncurses
             glibcLocales
+            yaml-cpp
             ;
           inherit (pkgs.gst_all_1)
             gstreamer
