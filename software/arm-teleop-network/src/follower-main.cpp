@@ -1281,12 +1281,21 @@ int main(int argc, char* argv[])
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
         // Initialize ncurses
+        std::cout << "Initializing ncurses..." << std::endl;
         ncurses_win = initscr();
+        if (ncurses_win == nullptr)
+        {
+            std::cerr << "Failed to initialize ncurses window!" << std::endl;
+            throw std::runtime_error("ncurses initialization failed");
+        }
+        std::cout << "ncurses window initialized successfully." << std::endl;
+
         cbreak();
         noecho();
         curs_set(0);
         nodelay(ncurses_win, TRUE);
         keypad(ncurses_win, TRUE);
+        std::cout << "ncurses configuration complete." << std::endl;
 
         // Initialize colors if terminal supports them
         if (has_colors())
@@ -1299,6 +1308,9 @@ int main(int argc, char* argv[])
             init_pair(5, COLOR_RED, COLOR_BLACK);     // For high torque/errors
             init_pair(6, COLOR_WHITE, COLOR_BLACK);   // For low torque (grey)
         }
+
+        clear();
+        refresh();
 
         // Initialize servo reader for follower arm
         ST3215ServoReader reader(port_path, 115200, 30);  // 30 sets the acceleration (magic number)
