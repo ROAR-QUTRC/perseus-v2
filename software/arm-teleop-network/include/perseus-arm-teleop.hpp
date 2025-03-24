@@ -1,3 +1,4 @@
+// Add this to perseus-arm-teleop.hpp
 #pragma once
 
 // Forward declare WINDOW type to avoid ncurses/boost conflicts
@@ -61,7 +62,16 @@ public:
      */
     int16_t readLoad(uint8_t servo_id);
 
-private:
+    /**
+     * @brief Gets a reference to the serial port for low-level operations
+     * @return Reference to the serial port object
+     */
+    boost::asio::serial_port& getSerialPort() { return _serial_port; }
+
+    // Make _serial_port private but declare follower-main.cpp as a friend to access it
+    // For an immediate fix, we'll temporarily make this public to avoid larger changes
+    // A better architectural solution would be to fully encapsulate this and add proper accessor methods
+public:  // Change this back to private once proper accessor methods are added
     /**
      * @brief Creates a write command packet according to ST3215 protocol
      * @param id Servo ID
