@@ -1316,8 +1316,11 @@ int main(int argc, char* argv[])
         refresh();
 
         // Initialize servo reader for follower arm
+        std::cout << "Servo reader started" << std::endl;
         ST3215ServoReader reader(port_path, 115200, 30);  // 30 sets the acceleration (magic number)
+        std::cout << "Servo reader finished." << std::endl;
         reader_ptr = &reader;
+        std::cout << "Servo reader pointer initialized." << std::endl;
 
         // Test servo control to verify hardware is working
         // Test servo control to verify hardware is working
