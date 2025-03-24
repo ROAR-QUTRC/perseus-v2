@@ -116,7 +116,6 @@ std::string selectSerialPort(const std::vector<std::string>& ports)
 
     return port;
 }
-
 // Create a colored progress bar string
 void displayProgressBar(WINDOW* win, int y, int x, uint16_t current, uint16_t min, uint16_t max)
 {
@@ -144,20 +143,20 @@ void displayProgressBar(WINDOW* win, int y, int x, uint16_t current, uint16_t mi
             if (i == minPos)
             {
                 wattron(win, COLOR_PAIR(1));  // Blue for min
-                waddch(win, '#');
+                waddch(win, '|');
                 wattroff(win, COLOR_PAIR(1));
             }
             else if (i == maxPos)
             {
                 wattron(win, COLOR_PAIR(2));  // Green for max
-                waddch(win, '#');
+                waddch(win, '|');
                 wattroff(win, COLOR_PAIR(2));
             }
             else if (i < currentPos)
             {
-                if (i < minPos)
+                if (i < minPos || i > maxPos)
                 {
-                    wattron(win, COLOR_PAIR(3) | A_DIM);  // Dimmed white for positions before min
+                    wattron(win, COLOR_PAIR(3) | A_DIM);  // Dimmed white for positions outside range
                     waddch(win, '#');
                     wattroff(win, COLOR_PAIR(3) | A_DIM);
                 }
@@ -175,10 +174,18 @@ void displayProgressBar(WINDOW* win, int y, int x, uint16_t current, uint16_t mi
         }
         else
         {
-            // For non-color displays, still show all positions but with different characters
-            if (i < currentPos)
+            // For non-color displays, show positions with different characters
+            if (i == minPos)
             {
-                waddch(win, (i < minPos) ? '.' : '#');
+                waddch(win, '[');
+            }
+            else if (i == maxPos)
+            {
+                waddch(win, ']');
+            }
+            else if (i < currentPos)
+            {
+                waddch(win, '#');
             }
             else
             {
