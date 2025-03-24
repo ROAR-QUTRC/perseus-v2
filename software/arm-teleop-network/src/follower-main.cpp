@@ -709,6 +709,62 @@ void loadCalibrationData(std::vector<ServoData>& arm_data,
     }
 }
 
+std::ofstream g_debug_log("follower_debug.log");
+
+void testServoControl(ST3215ServoReader& reader)
+{
+    std::ofstream test_log("servo_test.log");
+    test_log << "Starting servo test..." << std::endl;
+
+    // Try to move each servo to a specific position
+    for (uint8_t servo_id = 1; servo_id <= 6; servo_id++)
+    {
+        try
+        {
+            // First enable torque
+            test_log << "Enabling torque for servo " << (int)servo_id << std::endl;
+            reader.writeControlRegister(servo_id, 0x28, 1);  // Enable torque
+
+            // Read current position
+            uint16_t current_pos = reader.readPosition(servo_id);
+            test_log << "Current position of servo " << (int)servo_id << ": " << current_pos << std::endl;
+
+            // Move to middle position (around 2048)
+            uint16_t target_pos = 2048;
+            test_log << "Moving servo " << (int)servo_id << " to position " << target_pos << std::endl;
+            reader.writePosition(servo_id, target_pos);
+
+            // Wait a bit
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+            // Read new position
+            uint16_t new_pos = reader.readPosition(servo_id);
+            test_log << "New position of servo " << (int)servo_id << ": " << new_pos << std::endl;
+
+            // Calculate difference
+            int diff = abs(static_cast<int>(new_pos) - static_cast<int>(target_pos));
+            if (diff < 200)
+            {
+                test_log << "Servo " << (int)servo_id << " moved successfully (diff: " << diff << ")" << std::endl;
+            }
+            else
+            {
+                test_log << "Servo " << (int)servo_id << " did not move as expected (diff: " << diff << ")" << std::endl;
+            }
+
+            // Disable torque
+            reader.writeControlRegister(servo_id, 0x28, 0);  // Disable torque
+        }
+        catch (const std::exception& e)
+        {
+            test_log << "ERROR testing servo " << (int)servo_id << ": " << e.what() << std::endl;
+        }
+    }
+
+    test_log << "Servo test complete" << std::endl;
+    test_log.close();
+}
+
 // Main function
 int main(int argc, char* argv[])
 {
@@ -767,75 +823,111 @@ int main(int argc, char* argv[])
 
         network_ptr->setServoPositionsCallback([&arm_data, &reader](const perseus::ServoPositionsMessage& message)
                                                {
-    for (int i = 0; i < 6; i++) {
-        try {
-            if (arm_data[i].mirroring) {
-                // Get leader position and range
-                uint16_t leader_position = message.servos[i].position;
-                uint16_t leader_min = leader_calibration[i].min;
-                uint16_t leader_max = leader_calibration[i].max;
-                
-                // Get follower range
-                uint16_t follower_min = arm_data[i].min;
-                uint16_t follower_max = arm_data[i].max;
-                
-                // Calculate follower position
-                uint16_t follower_position;
-                
-                // Prevent division by zero and handle edge cases
-                if (leader_max == leader_min) {
-                    // If leader has no range, use middle of follower range
-                    follower_position = (follower_min + follower_max) / 2;
-                } else {
-                    // Calculate normalized position (0.0 to 1.0)
-                    double normalized = static_cast<double>(leader_position - leader_min) / 
-                                      static_cast<double>(leader_max - leader_min);
-                    
-                    // Clamp normalized position between 0 and 1
-                    normalized = std::max(0.0, std::min(1.0, normalized));
-                    
-                    // Scale to follower range
-                    follower_position = follower_min + static_cast<uint16_t>(normalized * 
-                                      (follower_max - follower_min));
-                }
-                
-                // Update our data structure
-                arm_data[i].current = follower_position;
-                arm_data[i].torque = message.servos[i].torque;
-                
-                // Send to physical servo - this is the critical part
-                reader.writePosition(i + 1, follower_position);
-            }
-        } catch (const std::exception& e) {
-            arm_data[i].error = std::string("Mirror error: ") + e.what();
-            arm_data[i].mirroring = false;
-        }
-    } });
-        network_ptr->setServoMirroringCallback([&arm_data, &reader](const perseus::ServoMirroringMessage& message)
-                                               {
-            if (message.servo_id >= 1 && message.servo_id <= 6) {
-                size_t idx = message.servo_id - 1;
-                arm_data[idx].mirroring = message.mirroring;
-                
+            g_debug_log << "Received position message with " << sizeof(message.servos)/sizeof(message.servos[0]) 
+                        << " servo positions" << std::endl;
+            
+            for (int i = 0; i < 6; i++) {
+                g_debug_log << "Processing servo " << i+1 
+                            << ", mirroring=" << (arm_data[i].mirroring ? "true" : "false") 
+                            << ", leader_pos=" << message.servos[i].position 
+                            << ", leader_min=" << leader_calibration[i].min
+                            << ", leader_max=" << leader_calibration[i].max
+                            << ", follower_min=" << arm_data[i].min
+                            << ", follower_max=" << arm_data[i].max << std::endl;
+                            
                 try {
-                    // Enable/disable torque based on mirroring state
-                    reader.writeControlRegister(message.servo_id, 0x28, message.mirroring ? 1 : 0);
-                    
-                    if (!message.mirroring) {
-                        arm_data[idx].error.clear();
+                    if (arm_data[i].mirroring) {
+                        // Get leader position and range
+                        uint16_t leader_position = message.servos[i].position;
+                        uint16_t leader_min = leader_calibration[i].min;
+                        uint16_t leader_max = leader_calibration[i].max;
+                        
+                        // Get follower range
+                        uint16_t follower_min = arm_data[i].min;
+                        uint16_t follower_max = arm_data[i].max;
+                        
+                        // Calculate follower position
+                        uint16_t follower_position;
+                        
+                        // Prevent division by zero and handle edge cases
+                        if (leader_max == leader_min) {
+                            // If leader has no range, use middle of follower range
+                            follower_position = (follower_min + follower_max) / 2;
+                            g_debug_log << "  Using mid-point due to equal min/max: " << follower_position << std::endl;
+                        } else {
+                            // Calculate normalized position (0.0 to 1.0)
+                            double normalized = static_cast<double>(leader_position - leader_min) / 
+                                              static_cast<double>(leader_max - leader_min);
+                            
+                            // Clamp normalized position between 0 and 1
+                            normalized = std::max(0.0, std::min(1.0, normalized));
+                            
+                            // Scale to follower range
+                            follower_position = follower_min + static_cast<uint16_t>(normalized * 
+                                              (follower_max - follower_min));
+                            
+                            g_debug_log << "  Normalized: " << normalized 
+                                        << ", Calculated position: " << follower_position << std::endl;
+                        }
+                        
+                        // Update our data structure
+                        arm_data[i].current = follower_position;
+                        arm_data[i].torque = message.servos[i].torque;
+                        
+                        // Send to physical servo - this is the critical part
+                        g_debug_log << "  Writing position " << follower_position << " to servo " << i+1 << std::endl;
+                        reader.writePosition(i + 1, follower_position);
+                        g_debug_log << "  Successfully wrote position" << std::endl;
                     }
                 } catch (const std::exception& e) {
-                    arm_data[idx].error = std::string("Torque control error: ") + e.what();
+                    g_debug_log << "  ERROR: " << e.what() << std::endl;
+                    arm_data[i].error = std::string("Mirror error: ") + e.what();
+                    arm_data[i].mirroring = false;
                 }
-            } });
+            }
+            g_debug_log << "Finished processing position message" << std::endl;
+            g_debug_log.flush(); });
+
+        network_ptr->setServoMirroringCallback([&arm_data, &reader](const perseus::ServoMirroringMessage& message)
+                                               {
+                g_debug_log << "Received mirroring message for servo " << (int)message.servo_id 
+                            << ", mirroring=" << (message.mirroring ? "true" : "false") << std::endl;
+                
+                if (message.servo_id >= 1 && message.servo_id <= 6) {
+                    size_t idx = message.servo_id - 1;
+                    arm_data[idx].mirroring = message.mirroring;
+                    
+                    try {
+                        // Enable/disable torque based on mirroring state
+                        g_debug_log << "  Setting torque " << (message.mirroring ? "ON" : "OFF") 
+                                    << " for servo " << (int)message.servo_id << std::endl;
+                        reader.writeControlRegister(message.servo_id, 0x28, message.mirroring ? 1 : 0);
+                        g_debug_log << "  Successfully set torque" << std::endl;
+                        
+                        if (!message.mirroring) {
+                            arm_data[idx].error.clear();
+                        }
+                    } catch (const std::exception& e) {
+                        g_debug_log << "  ERROR setting torque: " << e.what() << std::endl;
+                        arm_data[idx].error = std::string("Torque control error: ") + e.what();
+                    }
+                }
+                g_debug_log.flush(); });
 
         network_ptr->setCalibrationCallback([&arm_data](const perseus::CalibrationMessage& message)
                                             {
-                for (int i = 0; i < 6; i++) {
-                    // Store leader's calibration values for mapping
-                    leader_calibration[i].min = message.servos[i].min;
-                    leader_calibration[i].max = message.servos[i].max;
-                } });
+                    g_debug_log << "Received calibration message" << std::endl;
+                    
+                    for (int i = 0; i < 6; i++) {
+                        // Store leader's calibration values for mapping
+                        leader_calibration[i].min = message.servos[i].min;
+                        leader_calibration[i].max = message.servos[i].max;
+                        
+                        g_debug_log << "  Servo " << i+1 << " leader calibration: min=" 
+                                    << leader_calibration[i].min << ", max=" << leader_calibration[i].max << std::endl;
+                    }
+                    g_debug_log.flush(); });
+
         // Start the network interface
         if (!network_ptr->start())
         {
