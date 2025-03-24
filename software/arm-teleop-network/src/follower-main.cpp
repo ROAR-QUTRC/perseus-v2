@@ -763,14 +763,13 @@ int main(int argc, char* argv[])
 
         // Set up callbacks for network messages
         // Modified callback function for the follower-main.cpp file
+        // Fixed position mapping function for follower-main.cpp
+
         network_ptr->setServoPositionsCallback([&arm_data, &reader](const perseus::ServoPositionsMessage& message)
                                                {
-    for (int i = 0; i < 6; i++) 
-    {
-        try 
-        {
-            if (arm_data[i].mirroring) 
-            {
+    for (int i = 0; i < 6; i++) {
+        try {
+            if (arm_data[i].mirroring) {
                 // Get leader position and range
                 uint16_t leader_position = message.servos[i].position;
                 uint16_t leader_min = leader_calibration[i].min;
@@ -780,35 +779,38 @@ int main(int argc, char* argv[])
                 uint16_t follower_min = arm_data[i].min;
                 uint16_t follower_max = arm_data[i].max;
                 
-                // Calculate percentage of leader position within leader range
-                double percentage = 0.0;
-                if (leader_max != leader_min) { // Prevent division by zero
-                    percentage = static_cast<double>(leader_position - leader_min) / 
-                                 static_cast<double>(leader_max - leader_min);
+                // Calculate follower position
+                uint16_t follower_position;
+                
+                // Prevent division by zero and handle edge cases
+                if (leader_max == leader_min) {
+                    // If leader has no range, use middle of follower range
+                    follower_position = (follower_min + follower_max) / 2;
+                } else {
+                    // Calculate normalized position (0.0 to 1.0)
+                    double normalized = static_cast<double>(leader_position - leader_min) / 
+                                      static_cast<double>(leader_max - leader_min);
+                    
+                    // Clamp normalized position between 0 and 1
+                    normalized = std::max(0.0, std::min(1.0, normalized));
+                    
+                    // Scale to follower range
+                    follower_position = follower_min + static_cast<uint16_t>(normalized * 
+                                      (follower_max - follower_min));
                 }
-                
-                // Calculate follower position based on same percentage of follower range
-                uint16_t follower_position = follower_min + 
-                    static_cast<uint16_t>(percentage * (follower_max - follower_min));
-                
-                // Clamp to valid range just to be safe
-                follower_position = std::max(follower_min, std::min(follower_max, follower_position));
                 
                 // Update our data structure
                 arm_data[i].current = follower_position;
                 arm_data[i].torque = message.servos[i].torque;
                 
-                // Send to physical servo
+                // Send to physical servo - this is the critical part
                 reader.writePosition(i + 1, follower_position);
             }
-        } 
-        catch (const std::exception& e) 
-        {
+        } catch (const std::exception& e) {
             arm_data[i].error = std::string("Mirror error: ") + e.what();
             arm_data[i].mirroring = false;
         }
     } });
-
         network_ptr->setServoMirroringCallback([&arm_data, &reader](const perseus::ServoMirroringMessage& message)
                                                {
             if (message.servo_id >= 1 && message.servo_id <= 6) {
