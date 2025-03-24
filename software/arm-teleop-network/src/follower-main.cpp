@@ -32,6 +32,8 @@ static perseus::ArmNetworkInterface* network_ptr = nullptr;
 static std::atomic<bool> running(true);
 static std::atomic<bool> torque_protection(true);  // Default to ON for follower
 
+std::ofstream g_debug_log("follower_debug.log");
+
 // Structure to hold servo data
 struct ServoData
 {
@@ -379,12 +381,13 @@ void displayServoValues(WINDOW* win,
     mvwprintw(win, 20, 0, "5. Press 'l' to load calibration from file");
     mvwprintw(win, 21, 0, "6. Press 'r' to reset mirroring for all servos");
     mvwprintw(win, 22, 0, "7. Press 'c' to change listen port (currently %d)", perseus::DEFAULT_PORT);
-    mvwprintw(win, 23, 0, "8. Press Ctrl+C to exit");
+    mvwprintw(win, 23, 0, "8. Press 'd' to run servo diagnostics");
+    mvwprintw(win, 24, 0, "9. Press Ctrl+C to exit");
 
     // Add color legend if colors are available
     if (has_colors())
     {
-        mvwprintw(win, 24, 0, "Legend: ");
+        mvwprintw(win, 25, 0, "Legend: ");
         wattron(win, COLOR_PAIR(4) | A_BOLD);
         wprintw(win, "Yellow rows = Mirrored servos");
         wattroff(win, COLOR_PAIR(4) | A_BOLD);
@@ -403,41 +406,67 @@ void updateServoCalibration(std::vector<ServoData>& arm_data, uint16_t position,
     arm_data[servo_index].max = std::max(arm_data[servo_index].max, position);
 }
 
-// Scale a position value from one range to another
+// Improved scale position function with better handling of edge cases and ranges
 uint16_t scalePosition(uint16_t pos, uint16_t srcMin, uint16_t srcMax, uint16_t destMin, uint16_t destMax)
 {
-    // Ensure we don't divide by zero
-    if (srcMax == srcMin)
-        return destMin;
+    // Debug logging for input values
+    g_debug_log << "scalePosition: pos=" << pos
+                << ", srcRange=" << srcMin << "-" << srcMax
+                << ", destRange=" << destMin << "-" << destMax << std::endl;
 
-    // Also handle inverted ranges by checking if max < min
+    // Ensure proper ranges to avoid division by zero
+    if (srcMin == srcMax)
+    {
+        g_debug_log << "  WARNING: Source min equals max, returning destination min" << std::endl;
+        return destMin;
+    }
+
+    // Handle different range orientations (normal or inverted)
     bool srcInverted = srcMax < srcMin;
     bool destInverted = destMax < destMin;
 
-    // If one range is inverted but not the other, we need to invert the position
-    bool needInversion = srcInverted != destInverted;
-
-    // Normalize the ranges for calculation
+    // Swap values if ranges are inverted to simplify calculations
     uint16_t normalizedSrcMin = srcInverted ? srcMax : srcMin;
     uint16_t normalizedSrcMax = srcInverted ? srcMin : srcMax;
     uint16_t normalizedDestMin = destInverted ? destMax : destMin;
     uint16_t normalizedDestMax = destInverted ? destMin : destMax;
 
-    // Clamp pos to source range to prevent out-of-range values
-    pos = std::max(std::min(pos, std::max(srcMin, srcMax)), std::min(srcMin, srcMax));
+    // Clamp input position to source range
+    uint16_t clampedPos = std::max(std::min(pos, std::max(srcMin, srcMax)),
+                                   std::min(srcMin, srcMax));
 
-    // If we need inversion, invert pos within source range
-    if (needInversion)
+    if (clampedPos != pos)
     {
-        pos = srcMin + srcMax - pos;
+        g_debug_log << "  Clamped position from " << pos << " to " << clampedPos << std::endl;
+        pos = clampedPos;
     }
 
-    // Calculate the scaling factor and apply it
-    double scale = static_cast<double>(normalizedDestMax - normalizedDestMin) /
-                   static_cast<double>(normalizedSrcMax - normalizedSrcMin);
+    // Calculate normalized position (0.0-1.0) within source range
+    double normalizedPos;
+    if (srcInverted)
+    {
+        normalizedPos = static_cast<double>(normalizedSrcMax - pos) /
+                        (normalizedSrcMax - normalizedSrcMin);
+    }
+    else
+    {
+        normalizedPos = static_cast<double>(pos - normalizedSrcMin) /
+                        (normalizedSrcMax - normalizedSrcMin);
+    }
 
-    return static_cast<uint16_t>(normalizedDestMin +
-                                 (pos - normalizedSrcMin) * scale);
+    // Apply inversion if needed (when one range is inverted but not the other)
+    if (srcInverted != destInverted)
+    {
+        normalizedPos = 1.0 - normalizedPos;
+    }
+
+    // Map to destination range
+    uint16_t result = normalizedDestMin +
+                      static_cast<uint16_t>(normalizedPos *
+                                            (normalizedDestMax - normalizedDestMin));
+
+    g_debug_log << "  Result: " << result << std::endl;
+    return result;
 }
 
 // Change the follower's listen port
@@ -770,8 +799,6 @@ void loadCalibrationData(std::vector<ServoData>& arm_data,
     }
 }
 
-std::ofstream g_debug_log("follower_debug.log");
-
 void testServoControl(ST3215ServoReader& reader)
 {
     std::ofstream test_log("servo_test.log");
@@ -1041,6 +1068,193 @@ void robustPositionHandler(const perseus::ServoPositionsMessage& message,
     g_debug_log.flush();
 }
 
+// Add these diagnostic functions to follower-main.cpp
+
+// Function to verify servo torque state
+bool verifyServoTorqueState(ST3215ServoReader& reader, uint8_t servo_id, bool expected_state)
+{
+    try
+    {
+        // Read the torque enable register (0x28)
+        std::vector<uint8_t> command = reader._createReadCommand(servo_id, 0x28, 1);
+
+        // Clear any existing data
+        int fd = reader.getSerialPort().native_handle();
+        ::tcflush(fd, TCIOFLUSH);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        // Send command
+        boost::system::error_code write_ec;
+        size_t written = boost::asio::write(reader.getSerialPort(), boost::asio::buffer(command), write_ec);
+
+        if (write_ec || written != command.size())
+        {
+            g_debug_log << "Failed to write torque state verification command" << std::endl;
+            return false;
+        }
+
+        // Ensure minimum response time
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        // Read response
+        std::array<uint8_t, 7> response;  // Header(4) + Error(1) + Data(1) + Checksum(1)
+        size_t read = boost::asio::read(reader.getSerialPort(), boost::asio::buffer(response), write_ec);
+
+        if (write_ec || read != response.size())
+        {
+            g_debug_log << "Failed to read torque state response" << std::endl;
+            return false;
+        }
+
+        // Check response
+        if (response[0] != 0xFF || response[1] != 0xFF || response[2] != servo_id)
+        {
+            g_debug_log << "Invalid torque state response header" << std::endl;
+            return false;
+        }
+
+        // Check for errors
+        if (response[4] != 0x00)
+        {
+            g_debug_log << "Servo error during torque state verification: 0x"
+                        << std::hex << (int)response[4] << std::dec << std::endl;
+            return false;
+        }
+
+        // Get the torque state from the response
+        bool actual_state = (response[5] != 0);
+
+        g_debug_log << "Servo " << (int)servo_id << " torque state: "
+                    << (actual_state ? "ENABLED" : "DISABLED")
+                    << " (expected: " << (expected_state ? "ENABLED" : "DISABLED") << ")" << std::endl;
+
+        return (actual_state == expected_state);
+    }
+    catch (const std::exception& e)
+    {
+        g_debug_log << "Exception verifying torque state: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+// Function to run diagnostics on all servos
+void runServoDiagnostics(ST3215ServoReader& reader, std::vector<ServoData>& arm_data)
+{
+    g_debug_log << "\n======== SERVO DIAGNOSTICS ========" << std::endl;
+
+    for (uint8_t servo_id = 1; servo_id <= 6; servo_id++)
+    {
+        size_t idx = servo_id - 1;
+        bool expected_mirroring = arm_data[idx].mirroring;
+
+        g_debug_log << "----- Servo " << (int)servo_id << " -----" << std::endl;
+        g_debug_log << "Internal mirroring state: " << (expected_mirroring ? "ENABLED" : "DISABLED") << std::endl;
+
+        try
+        {
+            // Verify position reading
+            uint16_t position = reader.readPosition(servo_id);
+            g_debug_log << "Current position: " << position << std::endl;
+
+            // Verify torque state matches our internal state
+            bool torque_state_correct = verifyServoTorqueState(reader, servo_id, expected_mirroring);
+
+            if (!torque_state_correct)
+            {
+                g_debug_log << "WARNING: Torque state mismatch for servo " << (int)servo_id << std::endl;
+                g_debug_log << "Attempting to correct torque state..." << std::endl;
+
+                // Try to set the torque state to match our internal state
+                reader.writeControlRegister(servo_id, 0x28, expected_mirroring ? 1 : 0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+                // Verify again
+                bool corrected = verifyServoTorqueState(reader, servo_id, expected_mirroring);
+                g_debug_log << "Correction " << (corrected ? "succeeded" : "failed") << std::endl;
+            }
+
+            // Check calibration values
+            g_debug_log << "Min position: " << arm_data[idx].min << std::endl;
+            g_debug_log << "Max position: " << arm_data[idx].max << std::endl;
+
+            if (arm_data[idx].min >= arm_data[idx].max)
+            {
+                g_debug_log << "WARNING: Invalid calibration range (min >= max)" << std::endl;
+            }
+
+            // Check leader calibration values if available
+            if (leader_calibration.size() > idx)
+            {
+                g_debug_log << "Leader calibration - Min: " << leader_calibration[idx].min
+                            << ", Max: " << leader_calibration[idx].max << std::endl;
+
+                if (leader_calibration[idx].min >= leader_calibration[idx].max)
+                {
+                    g_debug_log << "WARNING: Invalid leader calibration range (min >= max)" << std::endl;
+                }
+            }
+            else
+            {
+                g_debug_log << "WARNING: No leader calibration data available" << std::endl;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            g_debug_log << "ERROR during diagnostics: " << e.what() << std::endl;
+        }
+    }
+
+    g_debug_log << "===================================" << std::endl;
+    g_debug_log.flush();
+}
+
+// Add this function to test move a single servo
+bool testMoveServo(ST3215ServoReader& reader, uint8_t servo_id, uint16_t target_position)
+{
+    g_debug_log << "Testing servo " << (int)servo_id << " movement to position " << target_position << std::endl;
+
+    try
+    {
+        // Ensure torque is enabled for the test
+        g_debug_log << "Enabling torque..." << std::endl;
+        reader.writeControlRegister(servo_id, 0x28, 1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+        // Read current position
+        uint16_t start_position = reader.readPosition(servo_id);
+        g_debug_log << "Starting position: " << start_position << std::endl;
+
+        // Move to target position
+        g_debug_log << "Moving to position " << target_position << "..." << std::endl;
+        reader.writePosition(servo_id, target_position);
+
+        // Wait for movement
+        g_debug_log << "Waiting for movement..." << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+        // Read new position
+        uint16_t end_position = reader.readPosition(servo_id);
+        g_debug_log << "Ending position: " << end_position << std::endl;
+
+        // Check if movement was substantial
+        int movement = std::abs(static_cast<int>(end_position) - static_cast<int>(start_position));
+        int distance_to_target = std::abs(static_cast<int>(end_position) - static_cast<int>(target_position));
+
+        g_debug_log << "Movement amount: " << movement << " units" << std::endl;
+        g_debug_log << "Distance to target: " << distance_to_target << " units" << std::endl;
+
+        bool success = (movement > 100) && (distance_to_target < 200);
+        g_debug_log << "Movement test " << (success ? "SUCCEEDED" : "FAILED") << std::endl;
+
+        return success;
+    }
+    catch (const std::exception& e)
+    {
+        g_debug_log << "ERROR during movement test: " << e.what() << std::endl;
+        return false;
+    }
+}
+
 // Main function
 int main(int argc, char* argv[])
 {
@@ -1127,31 +1341,74 @@ int main(int argc, char* argv[])
         network_ptr->setServoPositionsCallback([&arm_data, &reader](const perseus::ServoPositionsMessage& message)
                                                { robustPositionHandler(message, arm_data, reader); });
 
+        // Enhanced mirroring state handler for follower-main.cpp
         network_ptr->setServoMirroringCallback([&arm_data, &reader](const perseus::ServoMirroringMessage& message)
                                                {
-                g_debug_log << "Received mirroring message for servo " << (int)message.servo_id 
-                            << ", mirroring=" << (message.mirroring ? "true" : "false") << std::endl;
-                
-                if (message.servo_id >= 1 && message.servo_id <= 6) {
-                    size_t idx = message.servo_id - 1;
-                    arm_data[idx].mirroring = message.mirroring;
-                    
-                    try {
-                        // Enable/disable torque based on mirroring state
-                        g_debug_log << "  Setting torque " << (message.mirroring ? "ON" : "OFF") 
-                                    << " for servo " << (int)message.servo_id << std::endl;
-                        reader.writeControlRegister(message.servo_id, 0x28, message.mirroring ? 1 : 0);
-                        g_debug_log << "  Successfully set torque" << std::endl;
-                        
-                        if (!message.mirroring) {
-                            arm_data[idx].error.clear();
-                        }
-                    } catch (const std::exception& e) {
-                        g_debug_log << "  ERROR setting torque: " << e.what() << std::endl;
-                        arm_data[idx].error = std::string("Torque control error: ") + e.what();
-                    }
-                }
-                g_debug_log.flush(); });
+    g_debug_log << "======== Mirroring Message ========" << std::endl;
+    g_debug_log << "Received mirroring message for servo " << (int)message.servo_id 
+                << ", mirroring=" << (message.mirroring ? "true" : "false") << std::endl;
+    
+    if (message.servo_id < 1 || message.servo_id > 6) {
+        g_debug_log << "ERROR: Invalid servo ID " << (int)message.servo_id << std::endl;
+        return;
+    }
+    
+    size_t idx = message.servo_id - 1;
+    bool previous_state = arm_data[idx].mirroring;
+    
+    g_debug_log << "Previous mirroring state: " << (previous_state ? "true" : "false") << std::endl;
+    
+    // Update our internal state
+    arm_data[idx].mirroring = message.mirroring;
+    
+    // First attempt to clear any previous errors
+    arm_data[idx].error.clear();
+    
+    // Multiple retry attempts for reliability
+    const int MAX_ATTEMPTS = 3;
+    bool success = false;
+    
+    for (int attempt = 0; attempt < MAX_ATTEMPTS && !success; attempt++) {
+        try {
+            g_debug_log << "Attempt " << (attempt + 1) << " to set torque for servo " 
+                       << (int)message.servo_id << std::endl;
+            
+            // Clear the serial port buffer
+            int fd = reader.getSerialPort().native_handle();
+            ::tcflush(fd, TCIOFLUSH);
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            
+            // Enable/disable torque based on mirroring state
+            uint8_t torque_value = message.mirroring ? 1 : 0;
+            g_debug_log << "Setting torque register (0x28) to " << (int)torque_value << std::endl;
+            
+            reader.writeControlRegister(message.servo_id, 0x28, torque_value);
+            
+            g_debug_log << "Successfully set torque for servo " << (int)message.servo_id 
+                       << " to " << (message.mirroring ? "ON" : "OFF") << std::endl;
+            
+            success = true;
+        } 
+        catch (const std::exception& e) {
+            g_debug_log << "ERROR on attempt " << (attempt + 1) 
+                       << ": " << e.what() << std::endl;
+            
+            // Wait longer between retries
+            std::this_thread::sleep_for(std::chrono::milliseconds(100 * (attempt + 1)));
+        }
+    }
+    
+    if (!success) {
+        g_debug_log << "Failed to set torque after " << MAX_ATTEMPTS << " attempts" << std::endl;
+        arm_data[idx].error = "Failed to set torque state";
+        
+        // Revert our internal state since we couldn't update the hardware
+        arm_data[idx].mirroring = previous_state;
+    }
+    
+    g_debug_log << "Final mirroring state: " << (arm_data[idx].mirroring ? "true" : "false") << std::endl;
+    g_debug_log << "====================================" << std::endl;
+    g_debug_log.flush(); });
 
         network_ptr->setCalibrationCallback([&arm_data](const perseus::CalibrationMessage& message)
                                             {
@@ -1269,6 +1526,16 @@ int main(int argc, char* argv[])
                 wrefresh(ncurses_win);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 mvwprintw(ncurses_win, 26, 0, "                                                                        ");
+            }
+            else if (ch == 'd' || ch == 'D')
+            {
+                mvwprintw(ncurses_win, 26, 0, "Running servo diagnostics...");
+                wrefresh(ncurses_win);
+                runServoDiagnostics(*reader_ptr, arm_data);
+                mvwprintw(ncurses_win, 26, 0, "Diagnostics complete. Check log file.");
+                wrefresh(ncurses_win);
+                std::this_thread::sleep_for(std::chrono::seconds(2));
+                mvwprintw(ncurses_win, 26, 0, "                                                    ");
             }
             else if (ch == 's' || ch == 'S')
             {
