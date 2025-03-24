@@ -654,7 +654,6 @@ void exportCalibrationData(const std::vector<ServoData>& arm_data,
 }
 
 // Load calibration data from a YAML file
-// Load calibration data from a YAML file
 void loadCalibrationData(std::vector<ServoData>& arm_data,
                          std::vector<LeaderCalibration>& leader_calibration,
                          const std::string& filename = "follower_arm_calibration.yaml")
@@ -728,11 +727,18 @@ void loadCalibrationData(std::vector<ServoData>& arm_data,
 
                 try
                 {
+                    // Clear the serial port first
+                    int fd = reader_ptr->getSerialPort().native_handle();
+                    ::tcflush(fd, TCIOFLUSH);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
                     // Set torque enable/disable based on mirroring
                     reader_ptr->writeControlRegister(servo_id, 0x28, enable_mirroring ? 1 : 0);
                     mvwprintw(ncurses_win, 27, 0, "Updated servo %d: mirroring %s",
                               servo_id, enable_mirroring ? "ON" : "OFF");
                     wrefresh(ncurses_win);
+
+                    // Add sufficient delay between commands
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
                 catch (const std::exception& e)
@@ -759,6 +765,7 @@ void loadCalibrationData(std::vector<ServoData>& arm_data,
         throw std::runtime_error(std::string("Error loading calibration: ") + e.what());
     }
 }
+
 std::ofstream g_debug_log("follower_debug.log");
 
 void testServoControl(ST3215ServoReader& reader)
@@ -766,53 +773,274 @@ void testServoControl(ST3215ServoReader& reader)
     std::ofstream test_log("servo_test.log");
     test_log << "Starting servo test..." << std::endl;
 
-    // Try to move each servo to a specific position
+    // First, try to ping all servos to ensure basic communication
+    test_log << "Performing basic communication test..." << std::endl;
+    std::vector<uint8_t> responsive_servos;
+
     for (uint8_t servo_id = 1; servo_id <= 6; servo_id++)
     {
         try
         {
-            // First enable torque
-            test_log << "Enabling torque for servo " << (int)servo_id << std::endl;
-            reader.writeControlRegister(servo_id, 0x28, 1);  // Enable torque
-
-            // Read current position
+            // Try to read current position - just to check if servo is responsive
             uint16_t current_pos = reader.readPosition(servo_id);
-            test_log << "Current position of servo " << (int)servo_id << ": " << current_pos << std::endl;
-
-            // Move to middle position (around 2048)
-            uint16_t target_pos = 2048;
-            test_log << "Moving servo " << (int)servo_id << " to position " << target_pos << std::endl;
-            reader.writePosition(servo_id, target_pos);
-
-            // Wait a bit
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-            // Read new position
-            uint16_t new_pos = reader.readPosition(servo_id);
-            test_log << "New position of servo " << (int)servo_id << ": " << new_pos << std::endl;
-
-            // Calculate difference
-            int diff = abs(static_cast<int>(new_pos) - static_cast<int>(target_pos));
-            if (diff < 200)
-            {
-                test_log << "Servo " << (int)servo_id << " moved successfully (diff: " << diff << ")" << std::endl;
-            }
-            else
-            {
-                test_log << "Servo " << (int)servo_id << " did not move as expected (diff: " << diff << ")" << std::endl;
-            }
-
-            // Disable torque
-            reader.writeControlRegister(servo_id, 0x28, 0);  // Disable torque
+            test_log << "Servo " << (int)servo_id << " is responsive. Current position: " << current_pos << std::endl;
+            responsive_servos.push_back(servo_id);
         }
         catch (const std::exception& e)
         {
-            test_log << "ERROR testing servo " << (int)servo_id << ": " << e.what() << std::endl;
+            test_log << "Servo " << (int)servo_id << " not responding: " << e.what() << std::endl;
+        }
+    }
+
+    test_log << "Found " << responsive_servos.size() << " responsive servos." << std::endl;
+
+    // Try to move each responsive servo to a specific position
+    if (!responsive_servos.empty())
+    {
+        test_log << "Testing servo control..." << std::endl;
+
+        for (uint8_t servo_id : responsive_servos)
+        {
+            try
+            {
+                // First enable torque
+                test_log << "Enabling torque for servo " << (int)servo_id << std::endl;
+
+                // Try multiple times to enable torque
+                const int MAX_ATTEMPTS = 3;
+                bool torque_enabled = false;
+
+                for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++)
+                {
+                    try
+                    {
+                        reader.writeControlRegister(servo_id, 0x28, 1);  // Enable torque
+                        torque_enabled = true;
+                        test_log << "Successfully enabled torque for servo " << (int)servo_id << std::endl;
+                        break;
+                    }
+                    catch (const std::exception& e)
+                    {
+                        test_log << "Attempt " << (attempt + 1) << " failed to enable torque: " << e.what() << std::endl;
+                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    }
+                }
+
+                if (!torque_enabled)
+                {
+                    test_log << "Could not enable torque for servo " << (int)servo_id << " after " << MAX_ATTEMPTS << " attempts" << std::endl;
+                    continue;
+                }
+
+                // Read current position
+                uint16_t current_pos = reader.readPosition(servo_id);
+                test_log << "Current position of servo " << (int)servo_id << ": " << current_pos << std::endl;
+
+                // Move to middle position (around 2048)
+                uint16_t target_pos = 2048;
+                test_log << "Moving servo " << (int)servo_id << " to position " << target_pos << std::endl;
+
+                int success_count = 0;
+                writeServoPositionWithRetry(reader, servo_id, target_pos, success_count);
+
+                // Wait a bit longer for movement to complete
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+                // Read new position
+                uint16_t new_pos = reader.readPosition(servo_id);
+                test_log << "New position of servo " << (int)servo_id << ": " << new_pos << std::endl;
+
+                // Calculate difference
+                int diff = abs(static_cast<int>(new_pos) - static_cast<int>(target_pos));
+                if (diff < 200)
+                {
+                    test_log << "Servo " << (int)servo_id << " moved successfully (diff: " << diff << ")" << std::endl;
+                }
+                else
+                {
+                    test_log << "Servo " << (int)servo_id << " did not move as expected (diff: " << diff << ")" << std::endl;
+                }
+
+                // Disable torque
+                reader.writeControlRegister(servo_id, 0x28, 0);  // Disable torque
+                test_log << "Disabled torque for servo " << (int)servo_id << std::endl;
+            }
+            catch (const std::exception& e)
+            {
+                test_log << "ERROR testing servo " << (int)servo_id << ": " << e.what() << std::endl;
+
+                // Try to disable torque in case of error
+                try
+                {
+                    reader.writeControlRegister(servo_id, 0x28, 0);
+                }
+                catch (...)
+                {
+                    // Ignore errors when disabling
+                }
+            }
+
+            // Add delay between servos to avoid bus contention
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
 
     test_log << "Servo test complete" << std::endl;
     test_log.close();
+}
+// This is a robust function to handle servo positioning with better error recovery
+void writeServoPositionWithRetry(ST3215ServoReader& reader, uint8_t servo_id, uint16_t position, int& success_count)
+{
+    const int MAX_ATTEMPTS = 3;
+    const int RETRY_DELAY_MS = 50;
+
+    for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++)
+    {
+        try
+        {
+            // First check if we can successfully read from the servo to ensure connection is good
+            if (attempt > 0)
+            {
+                // Only do this check on retry attempts
+                try
+                {
+                    // Just try to read the current position to verify communication
+                    uint16_t current = reader.readPosition(servo_id);
+                    g_debug_log << "  Retry " << attempt << ": Successfully read position " << current
+                                << " from servo " << (int)servo_id << std::endl;
+                }
+                catch (const std::exception& e)
+                {
+                    g_debug_log << "  Retry " << attempt << ": Cannot read from servo "
+                                << (int)servo_id << ": " << e.what() << std::endl;
+                    // Continue with write attempt anyway
+                }
+
+                // Flush port before retry
+                int fd = reader._serial_port.native_handle();
+                ::tcflush(fd, TCIOFLUSH);
+                std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_DELAY_MS));
+            }
+
+            // Try to write the position
+            g_debug_log << "  Attempt " << attempt + 1 << ": Writing position " << position
+                        << " to servo " << (int)servo_id << std::endl;
+            reader.writePosition(servo_id, position);
+
+            // If no exception was thrown, increment success count and return
+            success_count++;
+            g_debug_log << "  Successfully wrote position to servo " << (int)servo_id << std::endl;
+            return;
+        }
+        catch (const std::exception& e)
+        {
+            g_debug_log << "  Error on attempt " << attempt + 1 << " writing to servo "
+                        << (int)servo_id << ": " << e.what() << std::endl;
+
+            if (attempt == MAX_ATTEMPTS - 1)
+            {
+                // Last attempt failed, rethrow
+                throw;
+            }
+
+            // Wait before retry, with increasing delay
+            std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_DELAY_MS * (attempt + 1)));
+        }
+    }
+}
+
+// Updated function for the ServoPositionsCallback
+void robustPositionHandler(const perseus::ServoPositionsMessage& message,
+                           std::vector<ServoData>& arm_data,
+                           ST3215ServoReader& reader)
+{
+    g_debug_log << "Received position message with " << sizeof(message.servos) / sizeof(message.servos[0])
+                << " servo positions" << std::endl;
+
+    int successful_writes = 0;
+    std::vector<uint8_t> failed_servos;
+
+    // Process each servo in sequence
+    for (int i = 0; i < 6; i++)
+    {
+        g_debug_log << "Processing servo " << i + 1
+                    << ", mirroring=" << (arm_data[i].mirroring ? "true" : "false")
+                    << ", leader_pos=" << message.servos[i].position
+                    << ", leader_min=" << leader_calibration[i].min
+                    << ", leader_max=" << leader_calibration[i].max
+                    << ", follower_min=" << arm_data[i].min
+                    << ", follower_max=" << arm_data[i].max << std::endl;
+
+        try
+        {
+            if (arm_data[i].mirroring)
+            {
+                // Get leader position and range
+                uint16_t leader_position = message.servos[i].position;
+                uint16_t leader_min = leader_calibration[i].min;
+                uint16_t leader_max = leader_calibration[i].max;
+
+                // Get follower range
+                uint16_t follower_min = arm_data[i].min;
+                uint16_t follower_max = arm_data[i].max;
+
+                // Calculate follower position
+                uint16_t follower_position;
+
+                // Prevent division by zero and handle edge cases
+                if (leader_max == leader_min)
+                {
+                    // If leader has no range, use middle of follower range
+                    follower_position = (follower_min + follower_max) / 2;
+                    g_debug_log << "  Using mid-point due to equal min/max: " << follower_position << std::endl;
+                }
+                else
+                {
+                    // Calculate normalized position (0.0 to 1.0)
+                    double normalized = static_cast<double>(leader_position - leader_min) /
+                                        static_cast<double>(leader_max - leader_min);
+
+                    // Clamp normalized position between 0 and 1
+                    normalized = std::max(0.0, std::min(1.0, normalized));
+
+                    // Scale to follower range
+                    follower_position = follower_min + static_cast<uint16_t>(normalized *
+                                                                             (follower_max - follower_min));
+
+                    g_debug_log << "  Normalized: " << normalized
+                                << ", Calculated position: " << follower_position << std::endl;
+                }
+
+                // Update our data structure
+                arm_data[i].current = follower_position;
+                arm_data[i].torque = message.servos[i].torque;
+
+                // Send to physical servo with retry logic
+                writeServoPositionWithRetry(reader, i + 1, follower_position, successful_writes);
+            }
+        }
+        catch (const std::exception& e)
+        {
+            g_debug_log << "  ERROR: " << e.what() << std::endl;
+            arm_data[i].error = std::string("Mirror error: ") + e.what();
+            failed_servos.push_back(i + 1);
+        }
+    }
+
+    g_debug_log << "Position message processing complete: " << successful_writes
+                << " successful writes, " << failed_servos.size() << " failures" << std::endl;
+
+    if (!failed_servos.empty())
+    {
+        g_debug_log << "Failed servos: ";
+        for (auto id : failed_servos)
+        {
+            g_debug_log << (int)id << " ";
+        }
+        g_debug_log << std::endl;
+    }
+
+    g_debug_log.flush();
 }
 
 // Main function
@@ -899,74 +1127,7 @@ int main(int argc, char* argv[])
         // Modified callback function for the follower-main.cpp file
         // Fixed position mapping function for follower-main.cpp
         network_ptr->setServoPositionsCallback([&arm_data, &reader](const perseus::ServoPositionsMessage& message)
-                                               {
-            g_debug_log << "Received position message with " << sizeof(message.servos)/sizeof(message.servos[0]) 
-                        << " servo positions" << std::endl;
-            
-            for (int i = 0; i < 6; i++) {
-                g_debug_log << "Processing servo " << i+1 
-                            << ", mirroring=" << (arm_data[i].mirroring ? "true" : "false") 
-                            << ", leader_pos=" << message.servos[i].position 
-                            << ", leader_min=" << leader_calibration[i].min
-                            << ", leader_max=" << leader_calibration[i].max
-                            << ", follower_min=" << arm_data[i].min
-                            << ", follower_max=" << arm_data[i].max << std::endl;
-                            
-                try {
-                    if (arm_data[i].mirroring) {
-                        // Get leader position and range
-                        uint16_t leader_position = message.servos[i].position;
-                        uint16_t leader_min = leader_calibration[i].min;
-                        uint16_t leader_max = leader_calibration[i].max;
-                        
-                        // Get follower range
-                        uint16_t follower_min = arm_data[i].min;
-                        uint16_t follower_max = arm_data[i].max;
-                        
-                        // Calculate follower position
-                        uint16_t follower_position;
-                        
-                        // Prevent division by zero and handle edge cases
-                        if (leader_max == leader_min) {
-                            // If leader has no range, use middle of follower range
-                            follower_position = (follower_min + follower_max) / 2;
-                            g_debug_log << "  Using mid-point due to equal min/max: " << follower_position << std::endl;
-                        } else {
-                            // Calculate normalized position (0.0 to 1.0)
-                            double normalized = static_cast<double>(leader_position - leader_min) / 
-                                              static_cast<double>(leader_max - leader_min);
-                            
-                            // Clamp normalized position between 0 and 1
-                            normalized = std::max(0.0, std::min(1.0, normalized));
-                            
-                            // Scale to follower range
-                            follower_position = follower_min + static_cast<uint16_t>(normalized * 
-                                              (follower_max - follower_min));
-                            
-                            g_debug_log << "  Normalized: " << normalized 
-                                        << ", Calculated position: " << follower_position << std::endl;
-                        }
-                        
-                        // Update our data structure
-                        arm_data[i].current = follower_position;
-                        arm_data[i].torque = message.servos[i].torque;
-                        
-                        // Send to physical servo - this is the critical part
-                        g_debug_log << "  Writing position " << follower_position << " to servo " << i+1 << std::endl;
-                        reader.writePosition(i + 1, follower_position);
-                        g_debug_log << "  Successfully wrote position" << std::endl;
-                        
-                        // Add a delay between servo commands to prevent communication issues
-                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                    }
-                } catch (const std::exception& e) {
-                    g_debug_log << "  ERROR: " << e.what() << std::endl;
-                    arm_data[i].error = std::string("Mirror error: ") + e.what();
-                    // Don't disable mirroring - we want it to keep trying
-                }
-            }
-            g_debug_log << "Finished processing position message" << std::endl;
-            g_debug_log.flush(); });
+                                               { robustPositionHandler(message, arm_data, reader); });
 
         network_ptr->setServoMirroringCallback([&arm_data, &reader](const perseus::ServoMirroringMessage& message)
                                                {
