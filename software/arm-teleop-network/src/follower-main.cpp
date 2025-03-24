@@ -304,6 +304,7 @@ void displayServoValues(WINDOW* win,
 
         if (servo.error.empty())
         {
+            // Enable yellow highlighting for mirrored servos
             if (servo.mirroring && has_colors())
             {
                 wattron(win, COLOR_PAIR(4) | A_BOLD);
@@ -322,6 +323,7 @@ void displayServoValues(WINDOW* win,
             // Display position bar
             displayProgressBar(win, row, 49, servo.current, servo.min, servo.max);
 
+            // Disable yellow highlighting after printing
             if (servo.mirroring && has_colors())
             {
                 wattroff(win, COLOR_PAIR(4) | A_BOLD);
