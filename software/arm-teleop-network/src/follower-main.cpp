@@ -1259,6 +1259,9 @@ bool testMoveServo(ST3215ServoReader& reader, uint8_t servo_id, uint16_t target_
 // Main function
 int main(int argc, char* argv[])
 {
+    std::cout << "About to enter main loop..." << std::endl;
+    g_debug_log << "About to enter main loop..." << std::endl;
+    g_debug_log.flush();
     std::vector<ServoData> arm_data(6);
     try
     {
@@ -1519,6 +1522,8 @@ int main(int argc, char* argv[])
                                leader_calibration,  // This parameter was missing
                                network_ptr ? network_ptr->isConnected() : false);
 
+            mvwprintw(ncurses_win, 0, 0, "PERSEUS TEST");
+            wrefresh(ncurses_win);
             // Handle keyboard input
             int ch = wgetch(ncurses_win);
             if (ch == 't' || ch == 'T')
