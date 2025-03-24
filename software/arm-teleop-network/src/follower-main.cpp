@@ -762,6 +762,7 @@ int main(int argc, char* argv[])
         network_ptr = new perseus::ArmNetworkInterface(listen_port);
 
         // Set up callbacks for network messages
+        // Modified callback function for the follower-main.cpp file
         network_ptr->setServoPositionsCallback([&arm_data, &reader](const perseus::ServoPositionsMessage& message)
                                                {
     for (int i = 0; i < 6; i++) 
@@ -770,21 +771,35 @@ int main(int argc, char* argv[])
         {
             if (arm_data[i].mirroring) 
             {
-                // Map position from leader range to follower range
-                uint16_t mapped_position = scalePosition(
-                    message.servos[i].position,
-                    leader_calibration[i].min,
-                    leader_calibration[i].max,
-                    arm_data[i].min,
-                    arm_data[i].max
-                );
+                // Get leader position and range
+                uint16_t leader_position = message.servos[i].position;
+                uint16_t leader_min = leader_calibration[i].min;
+                uint16_t leader_max = leader_calibration[i].max;
+                
+                // Get follower range
+                uint16_t follower_min = arm_data[i].min;
+                uint16_t follower_max = arm_data[i].max;
+                
+                // Calculate percentage of leader position within leader range
+                double percentage = 0.0;
+                if (leader_max != leader_min) { // Prevent division by zero
+                    percentage = static_cast<double>(leader_position - leader_min) / 
+                                 static_cast<double>(leader_max - leader_min);
+                }
+                
+                // Calculate follower position based on same percentage of follower range
+                uint16_t follower_position = follower_min + 
+                    static_cast<uint16_t>(percentage * (follower_max - follower_min));
+                
+                // Clamp to valid range just to be safe
+                follower_position = std::max(follower_min, std::min(follower_max, follower_position));
                 
                 // Update our data structure
-                arm_data[i].current = mapped_position;
+                arm_data[i].current = follower_position;
                 arm_data[i].torque = message.servos[i].torque;
                 
                 // Send to physical servo
-                reader.writePosition(i + 1, mapped_position);
+                reader.writePosition(i + 1, follower_position);
             }
         } 
         catch (const std::exception& e) 
