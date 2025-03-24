@@ -29,6 +29,7 @@ static ST3215ServoReader* reader_ptr = nullptr;
 static WINDOW* ncurses_win = nullptr;
 static perseus::ArmNetworkInterface* network_ptr = nullptr;
 
+static std::atomic<bool> calibration_mode(false);  // When true, follower records its own min/max
 static std::atomic<bool> running(true);
 static std::atomic<bool> torque_protection(true);  // Default to ON for follower
 
@@ -42,6 +43,16 @@ struct ServoData
     std::string error;
     bool mirroring = false;
 };
+
+// Structure to hold leader calibration data
+struct LeaderCalibration
+{
+    uint16_t min = 0;
+    uint16_t max = 4095;
+};
+
+// Global array to store leader calibration for mapping
+static std::vector<LeaderCalibration> leader_calibration(6);
 
 // Find available serial ports
 std::vector<std::string> findSerialPorts()
@@ -287,8 +298,10 @@ void displayLeaderStatus(WINDOW* win, bool connected)
     }
 }
 // Display servo values in ncurses window
+// Update display with arm data and network status
 void displayServoValues(WINDOW* win,
                         const std::vector<ServoData>& arm_data,
+                        const std::vector<LeaderCalibration>& leader_cal,
                         bool leader_connected)
 {
     werase(win);
@@ -344,6 +357,14 @@ void displayServoValues(WINDOW* win,
     }
 
     mvwprintw(win, 11, 0, "--------------------------------------------------------");
+    mvwprintw(win, 12, 0, "Leader Calibration: ");
+    for (size_t i = 0; i < 6; ++i)
+    {
+        int row = i + 13;
+        const auto& cal = leader_cal[i];
+        mvwprintw(win, row, 2, "Servo %d:  Min: %4u  Max: %4u",
+                  static_cast<int>(i + 1), cal.min, cal.max);
+    }
 
     // Add instructions and status
     mvwprintw(win, 15, 0, "Instructions:");
@@ -378,9 +399,34 @@ uint16_t scalePosition(uint16_t pos, uint16_t srcMin, uint16_t srcMax, uint16_t 
     if (srcMax == srcMin)
         return destMin;
 
+    // Also handle inverted ranges by checking if max < min
+    bool srcInverted = srcMax < srcMin;
+    bool destInverted = destMax < destMin;
+
+    // If one range is inverted but not the other, we need to invert the position
+    bool needInversion = srcInverted != destInverted;
+
+    // Normalize the ranges for calculation
+    uint16_t normalizedSrcMin = srcInverted ? srcMax : srcMin;
+    uint16_t normalizedSrcMax = srcInverted ? srcMin : srcMax;
+    uint16_t normalizedDestMin = destInverted ? destMax : destMin;
+    uint16_t normalizedDestMax = destInverted ? destMin : destMax;
+
+    // Clamp pos to source range to prevent out-of-range values
+    pos = std::max(std::min(pos, std::max(srcMin, srcMax)), std::min(srcMin, srcMax));
+
+    // If we need inversion, invert pos within source range
+    if (needInversion)
+    {
+        pos = srcMin + srcMax - pos;
+    }
+
     // Calculate the scaling factor and apply it
-    double scale = static_cast<double>(destMax - destMin) / static_cast<double>(srcMax - srcMin);
-    return static_cast<uint16_t>(destMin + (pos - srcMin) * scale);
+    double scale = static_cast<double>(normalizedDestMax - normalizedDestMin) /
+                   static_cast<double>(normalizedSrcMax - normalizedSrcMin);
+
+    return static_cast<uint16_t>(normalizedDestMin +
+                                 (pos - normalizedSrcMin) * scale);
 }
 
 // Change the follower's listen port
@@ -517,6 +563,7 @@ void signalHandler([[maybe_unused]] int signum)
 
 // Export calibration data to a YAML file
 void exportCalibrationData(const std::vector<ServoData>& arm_data,
+                           const std::vector<LeaderCalibration>& leader_calibration,
                            const std::string& port)
 {
     try
@@ -546,6 +593,16 @@ void exportCalibrationData(const std::vector<ServoData>& arm_data,
         }
         config["follower_arm"] = arm_node;
 
+        YAML::Node leader_node;
+        for (size_t i = 0; i < leader_calibration.size(); ++i)
+        {
+            YAML::Node servo;
+            servo["id"] = i + 1;
+            servo["min"] = leader_calibration[i].min;
+            servo["max"] = leader_calibration[i].max;
+            leader_node["servos"].push_back(servo);
+        }
+        config["leader_arm"] = leader_node;
         // Fixed filename for consistency
         const std::string filename = "follower_arm_calibration.yaml";
 
@@ -591,6 +648,7 @@ void exportCalibrationData(const std::vector<ServoData>& arm_data,
 
 // Load calibration data from a YAML file
 void loadCalibrationData(std::vector<ServoData>& arm_data,
+                         std::vector<LeaderCalibration>& leader_calibration,
                          const std::string& filename = "follower_arm_calibration.yaml")
 {
     try
@@ -616,6 +674,20 @@ void loadCalibrationData(std::vector<ServoData>& arm_data,
                 if (servo["mirroring"])
                 {
                     arm_data[i].mirroring = servo["mirroring"].as<bool>();
+                }
+            }
+        }
+        // Load leader arm calibration data
+        if (config["leader_arm"] && config["leader_arm"]["servos"])
+        {
+            auto leader_servos = config["leader_arm"]["servos"];
+            for (size_t i = 0; i < std::min(leader_calibration.size(), leader_servos.size()); ++i)
+            {
+                auto servo = leader_servos[i];
+                if (servo["min"] && servo["max"])
+                {
+                    leader_calibration[i].min = servo["min"].as<uint16_t>();
+                    leader_calibration[i].max = servo["max"].as<uint16_t>();
                 }
             }
         }
@@ -683,23 +755,37 @@ int main(int argc, char* argv[])
         network_ptr = new perseus::ArmNetworkInterface(listen_port);
 
         // Set up callbacks for network messages
-        network_ptr->setServoPositionsCallback([&arm_data, &reader](const perseus::ServoPositionsMessage& message)
+        network_ptr->setServoPositionsCallback([&arm_data, &leader_calibration, &reader](const perseus::ServoPositionsMessage& message)
                                                {
-            for (int i = 0; i < 6; i++) {
-                try {
-                    if (arm_data[i].mirroring) {
-                        // Update our data structure
-                        arm_data[i].current = message.servos[i].position;
-                        arm_data[i].torque = message.servos[i].torque;
-                        
-                        // Send to physical servo
-                        reader.writePosition(i + 1, message.servos[i].position);
-                    }
-                } catch (const std::exception& e) {
-                    arm_data[i].error = std::string("Mirror error: ") + e.what();
-                    arm_data[i].mirroring = false;
-                }
-            } });
+    for (int i = 0; i < 6; i++) 
+    {
+        try 
+        {
+            if (arm_data[i].mirroring) 
+            {
+                // Map position from leader range to follower range
+                uint16_t mapped_position = scalePosition(
+                    message.servos[i].position,
+                    leader_calibration[i].min,
+                    leader_calibration[i].max,
+                    arm_data[i].min,
+                    arm_data[i].max
+                );
+                
+                // Update our data structure
+                arm_data[i].current = mapped_position;
+                arm_data[i].torque = message.servos[i].torque;
+                
+                // Send to physical servo
+                reader.writePosition(i + 1, mapped_position);
+            }
+        } 
+        catch (const std::exception& e) 
+        {
+            arm_data[i].error = std::string("Mirror error: ") + e.what();
+            arm_data[i].mirroring = false;
+        }
+    } });
 
         network_ptr->setServoMirroringCallback([&arm_data, &reader](const perseus::ServoMirroringMessage& message)
                                                {
@@ -719,13 +805,13 @@ int main(int argc, char* argv[])
                 }
             } });
 
-        network_ptr->setCalibrationCallback([&arm_data](const perseus::CalibrationMessage& message)
+        network_ptr->setCalibrationCallback([&arm_data, &leader_calibration](const perseus::CalibrationMessage& message)
                                             {
-            for (int i = 0; i < 6; i++) {
-                arm_data[i].min = message.servos[i].min;
-                arm_data[i].max = message.servos[i].max;
-            } });
-
+                for (int i = 0; i < 6; i++) {
+                    // Store leader's calibration values for mapping
+                    leader_calibration[i].min = message.servos[i].min;
+                    leader_calibration[i].max = message.servos[i].max;
+                } });
         // Start the network interface
         if (!network_ptr->start())
         {
@@ -743,6 +829,13 @@ int main(int argc, char* argv[])
                     // Always read current position for all servos
                     uint16_t current_position = reader.readPosition(i + 1);
                     arm_data[i].current = current_position;
+
+                    if (calibration_mode.load())
+                    {
+                        // Track min/max for calibration when in calibration mode
+                        arm_data[i].min = std::min(arm_data[i].min, current_position);
+                        arm_data[i].max = std::max(arm_data[i].max, current_position);
+                    }
 
                     // Read torque for all servos
                     int16_t torque = reader.readLoad(i + 1);
@@ -807,6 +900,7 @@ int main(int argc, char* argv[])
             // Update display with arm data and network status
             displayServoValues(ncurses_win,
                                arm_data,
+                               leader_calibration,  // This parameter was missing
                                network_ptr ? network_ptr->isConnected() : false);
 
             // Handle keyboard input
@@ -830,6 +924,26 @@ int main(int argc, char* argv[])
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 mvwprintw(ncurses_win, 26, 0, "                                                                        ");
             }
+            // Add to keyboard handler
+            else if (ch == 'a' || ch == 'A')
+            {
+                bool new_state = !calibration_mode.load();
+                calibration_mode.store(new_state);
+
+                mvwprintw(ncurses_win, 26, 0, "                                                                        ");
+                if (has_colors())
+                {
+                    wattron(ncurses_win, COLOR_PAIR(new_state ? 2 : 5) | A_BOLD);
+                }
+                mvwprintw(ncurses_win, 26, 0, "Calibration mode %s", new_state ? "ENABLED" : "DISABLED");
+                if (has_colors())
+                {
+                    wattroff(ncurses_win, COLOR_PAIR(new_state ? 2 : 5) | A_BOLD);
+                }
+                wrefresh(ncurses_win);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                mvwprintw(ncurses_win, 26, 0, "                                                                        ");
+            }
             else if (ch == 's' || ch == 'S')
             {
                 mvwprintw(ncurses_win, 26, 0, "Saving calibration data...");
@@ -837,7 +951,7 @@ int main(int argc, char* argv[])
 
                 try
                 {
-                    exportCalibrationData(arm_data, port_path);
+                    exportCalibrationData(arm_data, leader_calibration, port_path);
                     mvwprintw(ncurses_win, 26, 0, "                                                                        ");
                     mvwprintw(ncurses_win, 26, 0, "Calibration data saved successfully! Press any key to continue");
                     wrefresh(ncurses_win);
@@ -869,7 +983,7 @@ int main(int argc, char* argv[])
 
                 try
                 {
-                    loadCalibrationData(arm_data);
+                    loadCalibrationData(arm_data, leader_calibration);
                     mvwprintw(ncurses_win, 26, 0, "                                                    ");
                     mvwprintw(ncurses_win, 26, 0, "Calibration data loaded successfully!");
                     wrefresh(ncurses_win);
