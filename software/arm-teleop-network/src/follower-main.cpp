@@ -50,6 +50,10 @@ struct LeaderCalibration
     uint16_t max = 4095;
 };
 
+// Add after the leader_calibration declaration
+// Forward declaration
+void writeServoPositionWithRetry(ST3215ServoReader& reader, uint8_t servo_id, uint16_t position, int& success_count);
+
 // Global array to store leader calibration for mapping
 static std::vector<LeaderCalibration> leader_calibration(6);
 
@@ -1096,7 +1100,7 @@ int main(int argc, char* argv[])
         testServoControl(*reader_ptr);
 
         // Pre-enable mirroring on servos with proper range values
-        for (int i = 0; i < arm_data.size(); i++)
+        for (size_t i = 0; i < arm_data.size(); i++)
         {
             // Set reasonable default min/max values that span the servo's range
             arm_data[i].min = 1000;  // Lower than center
