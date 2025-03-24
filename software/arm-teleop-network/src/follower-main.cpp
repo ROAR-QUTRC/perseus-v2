@@ -612,46 +612,43 @@ int main(int argc, char* argv[])
         // Main loop
         while (running)
         {
-            // Read all servo torque values from follower arm for monitoring
+            // Read all servo positions and torque values from follower arm
             for (uint8_t i = 0; i < 6; ++i)
             {
                 try
                 {
-                    if (arm_data[i].mirroring)
+                    // Always read current position for all servos
+                    uint16_t current_position = reader.readPosition(i + 1);
+                    arm_data[i].current = current_position;
+
+                    // Read torque for all servos
+                    int16_t torque = reader.readLoad(i + 1);
+                    arm_data[i].torque = torque;
+
+                    // Check if torque exceeds safety threshold for mirrored servos
+                    if (arm_data[i].mirroring && torque_protection.load() && std::abs(torque) > TORQUE_SAFETY_THRESHOLD)
                     {
-                        // Read torque for mirrored servos
-                        int16_t torque = reader.readLoad(i + 1);
-                        arm_data[i].torque = torque;
+                        // Disable torque
+                        reader.writeControlRegister(i + 1, 0x28, 0);  // 0x28 is torque enable register
+                        arm_data[i].error = "Torque limit exceeded - disabled";
+                        arm_data[i].mirroring = false;
 
-                        // Check if torque exceeds safety threshold
-                        if (torque_protection.load() && std::abs(torque) > TORQUE_SAFETY_THRESHOLD)
+                        // Send status to leader if connected
+                        if (network_ptr && network_ptr->isConnected())
                         {
-                            // Disable torque
-                            reader.writeControlRegister(i + 1, 0x28, 0);  // 0x28 is torque enable register
-                            arm_data[i].error = "Torque limit exceeded - disabled";
-                            arm_data[i].mirroring = false;
+                            perseus::StatusMessage status;
+                            status.header.protocol_version = perseus::PROTOCOL_VERSION;
+                            status.header.type = perseus::MessageType::STATUS_INFO;
+                            status.status = perseus::ArmStatus::ERROR_TORQUE;
+                            status.error_servo_id = i + 1;
+                            status.error_message = arm_data[i].error;
 
-                            // Send status to leader if connected
-                            if (network_ptr && network_ptr->isConnected())
-                            {
-                                perseus::StatusMessage status;
-                                status.header.protocol_version = perseus::PROTOCOL_VERSION;
-                                status.header.type = perseus::MessageType::STATUS_INFO;
-                                status.status = perseus::ArmStatus::ERROR_TORQUE;
-                                status.error_servo_id = i + 1;
-                                status.error_message = arm_data[i].error;
-
-                                network_ptr->sendStatus(status);
-                            }
-                        }
-                        else if (!arm_data[i].error.empty())
-                        {
-                            arm_data[i].error.clear();
+                            network_ptr->sendStatus(status);
                         }
                     }
-                    else
+                    else if (!arm_data[i].error.empty())
                     {
-                        arm_data[i].torque = 0;  // Not mirroring, so zero out torque display
+                        arm_data[i].error.clear();
                     }
                 }
                 catch (const std::exception& e)
@@ -674,6 +671,12 @@ int main(int argc, char* argv[])
 
                             network_ptr->sendStatus(status);
                         }
+                    }
+                    else
+                    {
+                        arm_data[i].error = e.what();
+                        arm_data[i].current = 0;  // Reset current on error
+                        arm_data[i].torque = 0;   // Reset torque on error
                     }
                 }
             }
