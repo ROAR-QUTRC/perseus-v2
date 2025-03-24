@@ -813,6 +813,30 @@ int main(int argc, char* argv[])
         ST3215ServoReader reader(port_path, 1000000, 30);  // 30 sets the acceleration (magic number)
         reader_ptr = &reader;
 
+        // Test servo control to verify hardware is working
+        testServoControl(*reader_ptr);
+
+        // Pre-enable mirroring on servos
+        for (int i = 0; i < arm_data.size(); i++)
+        {
+            arm_data[i].mirroring = true;
+
+            try
+            {
+                g_debug_log << "Enabling mirroring for servo " << (i + 1) << " at startup" << std::endl;
+
+                // Enable torque for the servo
+                reader_ptr->writeControlRegister(i + 1, 0x28, 1);
+                g_debug_log << "Successfully enabled torque for servo " << (i + 1) << std::endl;
+            }
+            catch (const std::exception& e)
+            {
+                g_debug_log << "Error enabling mirroring for servo " << (i + 1) << ": " << e.what() << std::endl;
+                arm_data[i].error = std::string("Startup error: ") + e.what();
+                arm_data[i].mirroring = false;
+            }
+        }
+
         // Set up network interface for receiving commands
         uint16_t listen_port = (argc > 2) ? static_cast<uint16_t>(std::stoi(argv[2])) : perseus::DEFAULT_PORT;
         network_ptr = new perseus::ArmNetworkInterface(listen_port);
