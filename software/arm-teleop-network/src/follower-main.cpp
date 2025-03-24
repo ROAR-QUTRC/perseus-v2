@@ -1324,7 +1324,7 @@ int main(int argc, char* argv[])
 
         // Test servo control to verify hardware is working
         // Test servo control to verify hardware is working
-        testServoControl(*reader_ptr);
+        // testServoControl(*reader_ptr);
 
         // Pre-enable mirroring on servos with proper range values
         for (size_t i = 0; i < arm_data.size(); i++)
@@ -1349,6 +1349,8 @@ int main(int argc, char* argv[])
                 // Don't disable mirroring here
             }
         }
+
+        std::cout << "Setting up network interfaces" << std::endl;
 
         // Set up network interface for receiving commands
         uint16_t listen_port = (argc > 2) ? static_cast<uint16_t>(std::stoi(argv[2])) : perseus::DEFAULT_PORT;
