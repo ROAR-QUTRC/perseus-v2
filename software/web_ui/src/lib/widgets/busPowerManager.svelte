@@ -9,12 +9,6 @@
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
 	});
-
-	export interface BusDataType {
-		power_off: string;
-		current: string;
-		voltage: string;
-	}
 </script>
 
 <script lang="ts">
@@ -26,9 +20,11 @@
 	import { sentenceCase } from 'change-case';
 
 	// Widget logic goes here
-	let busState = $state<BusDataType[]>([]);
+	let busState = $state<Record<string, { power_off: string; current: string; voltage: string }>>(
+		{}
+	);
 
-	const toggleBusPower = (e: Event, data: string) => {
+	const toggleBusPower = (e: Event, bus: string) => {
 		e.preventDefault();
 		const publisher = new ROSLIB.Topic({
 			ros: ros.value!,
@@ -37,14 +33,14 @@
 		});
 
 		const message = new ROSLIB.Message({
-			data: data
+			data: JSON.stringify({ bus: bus, on: busState[bus].power_off === 'true' ? '1' : '0' })
 		});
+
+		console.log(message);
 
 		publisher.publish(message);
 		publisher.unsubscribe();
 	};
-
-	const busNames = ['compute', 'drive', 'aux', 'spare'];
 
 	onMount(() => {
 		const listener = new ROSLIB.Topic({
@@ -64,21 +60,21 @@
 </script>
 
 <div class="flex h-full w-full">
-	{#each busState as bus, i}
+	{#each Object.keys(busState) as bus, i}
 		<div class="mx-[5px] mb-auto w-[calc(25%-10px)] min-w-[60px] max-w-[130px] flex-col">
-			<p class="mb-2 text-center">{sentenceCase(busNames[i])}</p>
+			<p class="mb-2 text-center">{sentenceCase(bus)}</p>
 			<button
 				class="aspect-square cursor-pointer rounded-[50%] border"
-				onclick={(e) => toggleBusPower(e, `${i}${bus.power_off === 'true' ? '1' : '0'}`)}
+				onclick={(e) => toggleBusPower(e, bus)}
 			>
 				<Fa
 					icon={faPowerOff}
 					class="power-button"
-					color={bus.power_off === 'true' ? '#f00' : '#0f0'}
+					color={busState[bus].power_off === 'true' ? '#f00' : '#0f0'}
 				/>
 			</button>
-			<p class="mt-2">Current: {bus.current}</p>
-			<p>Voltage: {bus.voltage}</p>
+			<p class="mt-2">Current: {busState[bus].current}</p>
+			<p>Voltage: {busState[bus].voltage}</p>
 		</div>
 	{:else}
 		<p>Looking for buses... Make sure the rosbridge is connected.</p>

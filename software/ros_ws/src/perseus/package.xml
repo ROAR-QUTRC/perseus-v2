@@ -12,6 +12,7 @@
 
   <!-- base -->
   <exec_depend>perseus_hardware</exec_depend>
+  <exec_depend>twist_mux</exec_depend>
 
   <!-- ros2 control -->
   <exec_depend>controller_manager</exec_depend>

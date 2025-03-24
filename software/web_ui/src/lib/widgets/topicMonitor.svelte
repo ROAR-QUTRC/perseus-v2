@@ -37,6 +37,7 @@
 <script lang="ts">
 	// TODO: make this use isConnected instead of ros.value === null
 	import { isConnected, ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
 
@@ -64,8 +65,10 @@
 				monitors = [];
 			});
 		} else {
-			rosConnected = true;
-			innit();
+			untrack(() => {
+				rosConnected = true;
+				innit();
+			});
 		}
 	});
 
@@ -95,18 +98,22 @@
 			config = config.split(',');
 			for (const monitor of config) {
 				const [topic, frequency] = monitor.split('@');
+				if (monitors.find((monitor) => monitor.topic === topic)) continue; // skip is monitor is added
 				addMonitor(topic, Number(frequency), true);
 			}
 		}
 	};
 
-	const onMessage = (message: ROSLIB.Message, topic: string) => {
+	const onMessage = (message: any, topic: string) => {
 		const index = monitors.findIndex((monitor) => monitor.topic === topic);
 		if (index === -1) {
 			console.error('How are we subscribed to a topic with no monitor?');
 			return;
 		}
-		monitors[index].lastData = JSON.stringify(message);
+		if (message.data !== undefined)
+			monitors[index].lastData = JSON.stringify(JSON.parse(message.data), null, 2)
+				.replaceAll('\n', '<br>')
+				.replaceAll(' ', '&nbsp;&nbsp;&nbsp;&nbsp;');
 
 		// update frequency
 		monitors[index].currentFrequency = 1000 / (Date.now() - monitors[index].lastMessage);
@@ -123,57 +130,67 @@
 			if (monitor.topic === topic) return 'Monitor already exists';
 		}
 
-		// subscribe to ros topic
-		const listener = new ROSLIB.Topic({
-			ros: ros.value,
-			name: topic,
-			messageType: 'geometry_msgs/msg/TwistStamped'
-		});
+		// Find the topic type
+		ros.value.getTopicType(
+			topic,
+			(topicType) => {
+				// subscribe to ros topic
+				const listener = new ROSLIB.Topic({
+					ros: ros.value!,
+					name: topic,
+					messageType: topicType
+				});
 
-		listener.subscribe((message) => onMessage(message, topic));
+				listener.subscribe((message) => onMessage(message, topic));
 
-		// if this is a new monitor, add it to the config
-		if (!loadedFromConfig) settings.groups.newMonitor.config.value += topic + '@' + frequency + ',';
+				// if this is a new monitor, add it to the config
+				if (!loadedFromConfig)
+					settings.groups.newMonitor.config.value += topic + '@' + frequency + ',';
 
-		// add monitor to state
-		monitors.push({
-			topic: topic,
-			listener: listener,
-			lastData: '',
-			targetFrequency: frequency,
-			currentFrequency: 0,
-			lastMessage: Date.now()
-		});
+				// add monitor to state
+				monitors.push({
+					topic: topic,
+					listener: listener,
+					lastData: '',
+					targetFrequency: frequency,
+					currentFrequency: 0,
+					lastMessage: Date.now()
+				});
 
-		// create settings node for monitor
-		settings.groups[topic] = {
-			expectedFrequency: {
-				type: 'number',
-				value: String(frequency)
-			},
-			updateMonitor: {
-				type: 'button',
-				action: () => {
-					const frequency = settings.groups[topic].expectedFrequency.value;
-					if (frequency === '' || frequency === undefined) return 'Invalid frequency';
-					const index = monitors.findIndex((monitor) => monitor.topic === topic);
-					if (index === -1) {
-						console.error('How are we subscribed to a topic with no monitor?');
-						return 'Monitor not found';
+				// create settings node for monitor
+				settings.groups[topic] = {
+					expectedFrequency: {
+						type: 'number',
+						value: String(frequency)
+					},
+					updateMonitor: {
+						type: 'button',
+						action: () => {
+							const frequency = settings.groups[topic].expectedFrequency.value;
+							if (frequency === '' || frequency === undefined) return 'Invalid frequency';
+							const index = monitors.findIndex((monitor) => monitor.topic === topic);
+							if (index === -1) {
+								console.error('How are we subscribed to a topic with no monitor?');
+								return 'Monitor not found';
+							}
+							monitors[index].targetFrequency = Number(frequency);
+
+							// update readonly config
+							const config = settings.groups.newMonitor.config.value!.split(',');
+							const topicIndex = config.findIndex((config) => config.split('@')[0] === topic);
+							if (topicIndex === -1) return 'Monitor not found in config';
+							config[topicIndex] = topic + '@' + frequency;
+							settings.groups.newMonitor.config.value = config.join(',');
+
+							return 'Monitor updated';
+						}
 					}
-					monitors[index].targetFrequency = Number(frequency);
-
-					// update readonly config
-					const config = settings.groups.newMonitor.config.value!.split(',');
-					const topicIndex = config.findIndex((config) => config.split('@')[0] === topic);
-					if (topicIndex === -1) return 'Monitor not found in config';
-					config[topicIndex] = topic + '@' + frequency;
-					settings.groups.newMonitor.config.value = config.join(',');
-
-					return 'Monitor updated';
-				}
+				};
+			},
+			(error) => {
+				console.error('Error getting topic type', error);
 			}
-		};
+		);
 
 		return 'Monitor created';
 	};
@@ -185,18 +202,8 @@
 		var hue = ((1 - value) * 120).toString(10);
 		return ['hsl(', hue, ',100%,50%)'].join('');
 	}
-	function getColorValue(value: number) {
-		//value from 0 to 1
-		value = Math.abs(value);
-		if (value > 1) value = 1;
-		if (value < 0) value = 0;
-		var hue = ((1 - value) * 120).toString(10);
-		return value;
-	}
 
 	onMount(() => {
-		innit();
-
 		// add action for button
 		settings.groups.newMonitor.createMonitor.action = (): string => {
 			return addMonitor(settings.groups.newMonitor.topic.value, 10, false);
@@ -213,45 +220,51 @@
 	});
 </script>
 
-<div class="relative h-full w-full">
-	<div
-		class="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-card"
-		class:hidden={rosConnected}
-	>
-		<div class="absolute left-[50%] top-[50%] w-[80%] -translate-x-[50%] -translate-y-[50%]">
-			<p class="text-center text-2xl">No ROS Connection found.</p>
-			<p class="text-center">Make sure the rosbridge is running and the client is connected.</p>
+<ScrollArea class="h-full pr-4" orientation="vertical">
+	<div class="relative h-full w-full">
+		<div
+			class="bg-card absolute left-0 top-0 flex h-full w-full items-center justify-center"
+			class:hidden={rosConnected}
+		>
+			<div class="absolute left-[50%] top-[50%] w-[80%] -translate-x-[50%] -translate-y-[50%]">
+				<p class="text-center text-2xl">No ROS Connection found.</p>
+				<p class="text-center">Make sure the rosbridge is running and the client is connected.</p>
+			</div>
 		</div>
-	</div>
-	<table class="w-full table-auto">
-		<thead>
-			<tr class="border">
-				<th class="border p-2">Topic</th>
-				<th class="border p-2">Last Data</th>
-				<th class="min-w-[140px] border p-2">Frequency</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each monitors as monitor}
+		<table class="w-full table-auto">
+			<thead>
 				<tr class="border">
-					<td class="border p-2">{monitor.topic}</td>
-					<td class="border p-2">{monitor.lastData}</td>
-					<td class="min-w-[140px] border p-2 text-black"
-						><p
-							class="rounded-[10px] py-2 text-center"
-							style:background-color={getColor(
-								Math.abs(monitor.currentFrequency - monitor.targetFrequency) /
-									Number(settings.groups.general.maxFrequencyError.value!)
-							)}
-						>
-							{Math.round(monitor.currentFrequency * 100) / 100}Hz / {monitor.targetFrequency}Hz
-						</p></td
-					>
+					<th class="border p-2">Topic</th>
+					<th class="border p-2">Last Data</th>
+					<th class="min-w-[140px] border p-2">Frequency</th>
 				</tr>
-			{/each}
-		</tbody>
-	</table>
-	{#if monitors.length === 0}
-		<p class="w-full border border-t-0 p-2 text-center">Add a monitor in the widget settings.</p>
-	{/if}
-</div>
+			</thead>
+			<tbody>
+				{#each monitors as monitor}
+					<tr class="border">
+						<td class="border p-2">{monitor.topic}</td>
+						<td class="border p-2"
+							><ScrollArea class="h-[200px]" orientation="vertical"
+								>{@html monitor.lastData}</ScrollArea
+							></td
+						>
+						<td class="min-w-[140px] border p-2 text-black"
+							><p
+								class="rounded-[10px] py-2 text-center"
+								style:background-color={getColor(
+									Math.abs(monitor.currentFrequency - monitor.targetFrequency) /
+										Number(settings.groups.general.maxFrequencyError.value!)
+								)}
+							>
+								{Math.round(monitor.currentFrequency * 100) / 100}Hz / {monitor.targetFrequency}Hz
+							</p></td
+						>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+		{#if monitors.length === 0}
+			<p class="w-full border border-t-0 p-2 text-center">Add a monitor in the widget settings.</p>
+		{/if}
+	</div>
+</ScrollArea>
