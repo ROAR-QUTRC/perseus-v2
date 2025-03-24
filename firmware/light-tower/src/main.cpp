@@ -6,9 +6,9 @@
 #include <optional>
 #include <thread>
 
-#define DATA_PIN 12
+#define DATA_PIN 15
 
-constexpr size_t HIGH_DENSITY_LEDS_PER_RING = 29;
+constexpr size_t HIGH_DENSITY_LEDS_PER_RING = 30;
 constexpr size_t HIGH_DENSITY_RING_COUNT = 3;
 constexpr size_t HIGH_DENSITY_LED_COUNT = HIGH_DENSITY_LEDS_PER_RING * HIGH_DENSITY_RING_COUNT;
 
