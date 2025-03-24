@@ -16,6 +16,8 @@ typedef struct _win_st WINDOW;
 class ST3215ServoReader
 {
 public:
+    boost::asio : serial_port& getSerialPort() { return _serial_port; }
+
     /**
      * @brief Constructs a new ST3215ServoReader
      * @param port Serial port path (e.g., "/dev/ttyACM0")
