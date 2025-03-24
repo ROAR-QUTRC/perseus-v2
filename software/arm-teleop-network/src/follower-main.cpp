@@ -919,6 +919,7 @@ void testServoControl(ST3215ServoReader& reader)
     test_log << "Servo test complete" << std::endl;
     test_log.close();
 }
+
 void writeServoPositionWithRetry(ST3215ServoReader& reader, uint8_t servo_id, uint16_t position, int& success_count)
 {
     const int MAX_ATTEMPTS = 3;
@@ -1300,7 +1301,7 @@ int main(int argc, char* argv[])
         }
 
         // Initialize servo reader for follower arm
-        ST3215ServoReader reader(port_path, 1000000, 30);  // 30 sets the acceleration (magic number)
+        ST3215ServoReader reader(port_path, 115200, 30);  // 30 sets the acceleration (magic number)
         reader_ptr = &reader;
 
         // Test servo control to verify hardware is working

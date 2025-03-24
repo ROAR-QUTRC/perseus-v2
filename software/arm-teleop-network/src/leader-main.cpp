@@ -720,7 +720,7 @@ int main(int argc, char* argv[])
         }
 
         // Initialize servo reader for leader arm
-        ST3215ServoReader reader(port_path, 1000000, 30);  // 30 sets the acceleration (magic number)
+        ST3215ServoReader reader(port_path, 115200, 30);  // 30 sets the acceleration (magic number)
         reader_ptr = &reader;
 
         // Main loop
