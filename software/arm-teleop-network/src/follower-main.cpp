@@ -279,7 +279,6 @@ void displayLeaderStatus(WINDOW* win, bool connected)
         wprintw(win, connected ? "CONNECTED" : "DISCONNECTED");
     }
 }
-
 // Display servo values in ncurses window
 void displayServoValues(WINDOW* win,
                         const std::vector<ServoData>& arm_data,
@@ -344,14 +343,16 @@ void displayServoValues(WINDOW* win,
     mvwprintw(win, 16, 0, "1. This is a follower arm waiting for commands from the leader");
     mvwprintw(win, 17, 0, "2. Press 't' to toggle torque protection (%s)",
               torque_protection.load() ? "ON" : "OFF");
-    mvwprintw(win, 18, 0, "3. Press 'r' to reset mirroring for all servos");
-    mvwprintw(win, 19, 0, "4. Press 'c' to change listen port (currently %d)", perseus::DEFAULT_PORT);
-    mvwprintw(win, 20, 0, "5. Press Ctrl+C to exit");
+    mvwprintw(win, 18, 0, "3. Press 's' to save calibration");
+    mvwprintw(win, 19, 0, "4. Press 'l' to load calibration from file");
+    mvwprintw(win, 20, 0, "5. Press 'r' to reset mirroring for all servos");
+    mvwprintw(win, 21, 0, "6. Press 'c' to change listen port (currently %d)", perseus::DEFAULT_PORT);
+    mvwprintw(win, 22, 0, "7. Press Ctrl+C to exit");
 
     // Add color legend if colors are available
     if (has_colors())
     {
-        mvwprintw(win, 22, 0, "Legend: ");
+        mvwprintw(win, 24, 0, "Legend: ");
         wattron(win, COLOR_PAIR(4) | A_BOLD);
         wprintw(win, "Yellow rows = Mirrored servos");
         wattroff(win, COLOR_PAIR(4) | A_BOLD);
@@ -505,6 +506,121 @@ void signalHandler([[maybe_unused]] int signum)
 {
     running = false;
     disableTorqueAndCleanup();
+}
+
+// Export calibration data to a YAML file
+void exportCalibrationData(const std::vector<ServoData>& arm_data,
+                           const std::string& port)
+{
+    try
+    {
+        YAML::Node config;
+
+        // Add metadata including timestamp
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&time), "%Y-%m-%d_%H-%M-%S");
+        config["timestamp"] = ss.str();
+
+        // Add port information
+        config["follower_port"] = port;
+
+        // Add calibration data for follower arm
+        YAML::Node arm_node;
+        for (size_t i = 0; i < arm_data.size(); ++i)
+        {
+            YAML::Node servo;
+            servo["id"] = i + 1;
+            servo["min"] = arm_data[i].min;
+            servo["max"] = arm_data[i].max;
+            servo["mirroring"] = arm_data[i].mirroring;
+            arm_node["servos"].push_back(servo);
+        }
+        config["follower_arm"] = arm_node;
+
+        // Fixed filename for consistency
+        const std::string filename = "follower_arm_calibration.yaml";
+
+        // Open file with overwrite permissions
+        std::ofstream fout(filename, std::ios::out | std::ios::trunc);
+        if (!fout.is_open())
+        {
+            throw std::runtime_error("Failed to open file for writing: " + filename);
+        }
+
+        // Write configuration with error checking
+        fout << config;
+        if (fout.fail())
+        {
+            fout.close();
+            throw std::runtime_error("Failed to write data to file: " + filename);
+        }
+
+        // Ensure all data is written and close file
+        fout.flush();
+        if (fout.fail())
+        {
+            fout.close();
+            throw std::runtime_error("Failed to flush data to file: " + filename);
+        }
+        fout.close();
+
+        // Check for any errors that occurred during close
+        if (fout.fail())
+        {
+            throw std::runtime_error("Error occurred while closing file: " + filename);
+        }
+    }
+    catch (const YAML::Exception& e)
+    {
+        throw std::runtime_error(std::string("YAML error while saving calibration: ") + e.what());
+    }
+    catch (const std::exception& e)
+    {
+        throw;  // Re-throw other exceptions
+    }
+}
+
+// Load calibration data from a YAML file
+void loadCalibrationData(std::vector<ServoData>& arm_data,
+                         const std::string& filename = "follower_arm_calibration.yaml")
+{
+    try
+    {
+        YAML::Node config = YAML::LoadFile(filename);
+
+        // Load follower arm servo data
+        if (config["follower_arm"] && config["follower_arm"]["servos"])
+        {
+            auto arm_servos = config["follower_arm"]["servos"];
+            for (size_t i = 0; i < std::min(arm_data.size(), arm_servos.size()); ++i)
+            {
+                auto servo = arm_servos[i];
+                if (servo["min"] && servo["max"])
+                {
+                    arm_data[i].min = servo["min"].as<uint16_t>();
+                    arm_data[i].max = servo["max"].as<uint16_t>();
+                    // Ensure current position stays within new bounds
+                    arm_data[i].current = std::max(arm_data[i].min,
+                                                   std::min(arm_data[i].max,
+                                                            arm_data[i].current));
+                }
+                if (servo["mirroring"])
+                {
+                    arm_data[i].mirroring = servo["mirroring"].as<bool>();
+                }
+            }
+        }
+    }
+    catch (const YAML::Exception& e)
+    {
+        throw std::runtime_error(std::string("YAML error while loading calibration: ") + e.what());
+    }
+    catch (const std::exception& e)
+    {
+        throw std::runtime_error(std::string("Error loading calibration: ") + e.what());
+    }
 }
 
 // Main function
@@ -706,6 +822,62 @@ int main(int argc, char* argv[])
                 wrefresh(ncurses_win);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 mvwprintw(ncurses_win, 26, 0, "                                                                        ");
+            }
+            else if (ch == 's' || ch == 'S')
+            {
+                mvwprintw(ncurses_win, 26, 0, "Saving calibration data...");
+                wrefresh(ncurses_win);
+
+                try
+                {
+                    exportCalibrationData(arm_data, port_path);
+                    mvwprintw(ncurses_win, 26, 0, "                                                                        ");
+                    mvwprintw(ncurses_win, 26, 0, "Calibration data saved successfully! Press any key to continue");
+                    wrefresh(ncurses_win);
+
+                    // Wait for any key
+                    nodelay(ncurses_win, FALSE);  // Switch to blocking mode temporarily
+                    wgetch(ncurses_win);
+                    nodelay(ncurses_win, TRUE);  // Switch back to non-blocking
+
+                    // Clear status line
+                    mvwprintw(ncurses_win, 26, 0, "                                                                        ");
+                    wrefresh(ncurses_win);
+                }
+                catch (const std::exception& e)
+                {
+                    mvwprintw(ncurses_win, 26, 0, "                                                    ");
+                    mvwprintw(ncurses_win, 26, 0, "Error saving calibration: %s", e.what());
+                    wrefresh(ncurses_win);
+                    std::this_thread::sleep_for(std::chrono::seconds(2));
+                }
+
+                mvwprintw(ncurses_win, 26, 0, "                                                    ");
+                wrefresh(ncurses_win);
+            }
+            else if (ch == 'l' || ch == 'L')
+            {
+                mvwprintw(ncurses_win, 26, 0, "Loading calibration data...");
+                wrefresh(ncurses_win);
+
+                try
+                {
+                    loadCalibrationData(arm_data);
+                    mvwprintw(ncurses_win, 26, 0, "                                                    ");
+                    mvwprintw(ncurses_win, 26, 0, "Calibration data loaded successfully!");
+                    wrefresh(ncurses_win);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                }
+                catch (const std::exception& e)
+                {
+                    mvwprintw(ncurses_win, 26, 0, "                                                    ");
+                    mvwprintw(ncurses_win, 26, 0, "Error loading calibration: %s", e.what());
+                    wrefresh(ncurses_win);
+                    std::this_thread::sleep_for(std::chrono::seconds(2));
+                }
+
+                mvwprintw(ncurses_win, 26, 0, "                                                    ");
+                wrefresh(ncurses_win);
             }
             else if (ch == 'r' || ch == 'R')
             {
