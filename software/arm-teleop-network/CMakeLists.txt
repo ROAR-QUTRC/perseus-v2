@@ -85,7 +85,8 @@ target_include_directories(
 target_link_libraries(
   arm-network
   PUBLIC arm-servo-protocol
-  PUBLIC simple_networking)
+  PUBLIC simple_networking
+  PUBLIC Boost::system)
 
 # COMPILE (Executables)
 
@@ -94,7 +95,9 @@ add_executable(arm-teleop-leader src/leader-main.cpp src/perseus-arm-teleop.cpp)
 
 target_include_directories(
   arm-teleop-leader
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PUBLIC ${CURSES_INCLUDE_DIR}
+  PUBLIC ${YAML_CPP_INCLUDE_DIR})
 
 target_link_libraries(
   arm-teleop-leader
@@ -111,7 +114,9 @@ add_executable(arm-teleop-follower src/follower-main.cpp
 
 target_include_directories(
   arm-teleop-follower
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PUBLIC ${CURSES_INCLUDE_DIR}
+  PUBLIC ${YAML_CPP_INCLUDE_DIR})
 
 target_link_libraries(
   arm-teleop-follower
