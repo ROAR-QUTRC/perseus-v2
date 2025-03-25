@@ -1,42 +1,42 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.actions import DeclareLaunchArgument
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    # Define launch arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    params_file = LaunchConfiguration('params_file')
+    
+    declare_params_file = DeclareLaunchArgument(
+        'params_file',
+        default_value=PathJoinSubstitution([
+            FindPackageShare('autonomy'),
+            'config',
+            'cmd_vel_mux.yaml'
+        ]),
+        description='Full path to the ROS2 parameters file for cmd_vel multiplexer'
+    )
+    
+    declare_use_sim_time = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='Use simulation clock if true'
+    )
 
-    # Multiplexer configuration
     mux_node = Node(
         package='topic_tools',
         executable='mux',
         name='cmd_vel_mux',
         output='screen',
-        parameters=[{
-            'use_sim_time': use_sim_time
-        }],
-        arguments=[
-            'cmd_vel',                                          # Output topic
-            'cmd_vel_nav',                                      # Input from Nav2
-            'diff_base_controller/cmd_vel',                     # Input from your controller
-            '--timeout', '5.0',                                 # Timeout for switching
-            '--default', 'diff_base_controller/cmd_vel'         # Default input topic
-        ],
-        remappings=[
-            ('cmd_vel', '/cmd_vel'),                                 # Remap to robot's cmd_vel
-            ('cmd_vel_nav', '/nav2/cmd_vel'),                        # Nav2 output
-            ('diff_base_controller/cmd_vel', '/controller/cmd_vel')  # Your controller
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            params_file
         ]
     )
 
     return LaunchDescription([
-        # Declare launch arguments
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='false',
-            description='Use simulation clock if true'
-        ),
-        
+        declare_use_sim_time,
+        declare_params_file,
         mux_node
     ])
