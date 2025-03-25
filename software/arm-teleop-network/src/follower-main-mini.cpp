@@ -3,6 +3,7 @@
 #include <csignal>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 #include "arm-network-mini.hpp"
 #include "perseus-arm-teleop-mini.hpp"
@@ -18,15 +19,82 @@ void signalHandler(int signum)
     running = false;
 }
 
+// Helper function to find available serial ports
+std::vector<std::string> getAvailableSerialPorts()
+{
+    std::vector<std::string> ports;
+
+    // On Linux, try common serial device patterns
+    const std::string patterns[] = {
+        "/dev/ttyACM",
+        "/dev/ttyUSB",
+        "/dev/ttyS"};
+
+    for (const auto& pattern : patterns)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            std::string port = pattern + std::to_string(i);
+            FILE* file = fopen(port.c_str(), "r");
+            if (file)
+            {
+                fclose(file);
+                ports.push_back(port);
+            }
+        }
+    }
+
+    return ports;
+}
+
 int main(int argc, char* argv[])
 {
     // Set up signal handling
     signal(SIGINT, signalHandler);
 
-    std::string serial_port = "/dev/ttyACM0";
+    std::string serial_port = "/dev/ttyACM0";  // Default port
+
+    // Use command-line argument for serial port if provided
     if (argc > 1)
     {
         serial_port = argv[1];
+    }
+    else
+    {
+        // Try to find available ports
+        std::cout << "No serial port specified, searching for available ports..." << std::endl;
+        auto ports = getAvailableSerialPorts();
+
+        if (ports.empty())
+        {
+            std::cout << "No serial ports found. Using default: " << serial_port << std::endl;
+        }
+        else if (ports.size() == 1)
+        {
+            serial_port = ports[0];
+            std::cout << "Found one serial port: " << serial_port << std::endl;
+        }
+        else
+        {
+            std::cout << "Found multiple serial ports:" << std::endl;
+            for (size_t i = 0; i < ports.size(); i++)
+            {
+                std::cout << i + 1 << ": " << ports[i] << std::endl;
+            }
+
+            std::cout << "Enter the number of the port to use (1-" << ports.size() << "): ";
+            int selection;
+            std::cin >> selection;
+
+            if (selection > 0 && selection <= static_cast<int>(ports.size()))
+            {
+                serial_port = ports[selection - 1];
+            }
+            else
+            {
+                std::cout << "Invalid selection, using default: " << serial_port << std::endl;
+            }
+        }
     }
 
     try
@@ -40,7 +108,7 @@ int main(int argc, char* argv[])
         ST3215ServoReaderMini* reader = nullptr;
         try
         {
-            reader = new ST3215ServoReaderMini(serial_port, 115200);
+            reader = new ST3215ServoReaderMini(serial_port, 1000000);  // Using 1Mbps as specified for SO-100
             reader_ptr = reader;
             std::cout << " success!" << std::endl;
         }
@@ -82,7 +150,7 @@ int main(int argc, char* argv[])
                 std::cout << "WARNING: No servos responded to position queries" << std::endl;
                 std::cout << "Possible issues:" << std::endl;
                 std::cout << "  - Servo power may be off" << std::endl;
-                std::cout << "  - Baud rate might be incorrect (currently using 115200)" << std::endl;
+                std::cout << "  - Baud rate might be incorrect (trying 1000000 bps)" << std::endl;
                 std::cout << "  - USB connection may be unstable" << std::endl;
                 std::cout << "Will continue anyway, but servo control may not work" << std::endl;
             }
@@ -157,6 +225,17 @@ int main(int argc, char* argv[])
                 if (reader)
                 {
                     std::cout << "Servo status: AVAILABLE" << std::endl;
+
+                    // Periodically read servo positions to verify connection is still good
+                    try
+                    {
+                        uint16_t pos = reader->readPosition(1);
+                        std::cout << "Servo 1 current position: " << pos << std::endl;
+                    }
+                    catch (const std::exception& e)
+                    {
+                        std::cerr << "Error reading from servo 1: " << e.what() << std::endl;
+                    }
                 }
                 else
                 {
