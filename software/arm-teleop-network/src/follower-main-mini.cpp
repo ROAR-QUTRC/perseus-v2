@@ -27,8 +27,8 @@ int main()
         std::cout << "Starting follower program..." << std::endl;
 
         // Open the serial port
-        std::cout << "Opening serial port /dev/ttyUSB0..." << std::endl;
-        ST3215ServoReaderMini reader("/dev/ttyUSB0", 115200);
+        std::cout << "Opening serial port /dev/ttyACM0..." << std::endl;
+        ST3215ServoReaderMini reader("/dev/ttyACM0", 115200);
         reader_ptr = &reader;
         std::cout << "Serial port opened successfully" << std::endl;
 
