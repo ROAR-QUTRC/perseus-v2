@@ -19,8 +19,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
                                                "MinSizeRel" "RelWithDebInfo")
 endif()
-# we always want debug info for stack tracing, so switch to RelWithDebInfo from
-# Release
+# we always want debug info for stack tracing, so switch to RelWithDebInfo from Release
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
@@ -62,21 +61,20 @@ find_package(yaml-cpp REQUIRED)
 find_package(simple_networking QUIET)
 if(NOT simple_networking_FOUND)
   message(STATUS "simple_networking not found, adding subdirectory...")
-  # Add the directory with its CMakeLists.txt
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../shared/simple-networking
                    simple-networking)
 endif()
 
-# COMPILE (Protocol Library)
+# COMPILE (Original Protocol Library)
 
-# Protocol library
+# Original Protocol library
 add_library(arm-servo-protocol src/arm-servo-protocol.cpp)
 
 target_include_directories(
   arm-servo-protocol
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
-# Network interface library
+# Original Network interface library
 add_library(arm-network src/arm-network.cpp)
 
 target_include_directories(
@@ -88,9 +86,30 @@ target_link_libraries(
   PUBLIC simple_networking
   PUBLIC Boost::system)
 
-# COMPILE (Executables)
+# COMPILE (Minimal Protocol Library)
 
-# Leader Arm Executable
+# Minimal Protocol library
+add_library(arm-servo-protocol-mini src/arm-servo-protocol-mini.cpp)
+
+target_include_directories(
+  arm-servo-protocol-mini
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+# Minimal Network interface library
+add_library(arm-network-mini src/arm-network-mini.cpp)
+
+target_include_directories(
+  arm-network-mini
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+target_link_libraries(
+  arm-network-mini
+  PUBLIC arm-servo-protocol-mini
+  PUBLIC Boost::system)
+
+# COMPILE (Original Executables)
+
+# Original Leader Arm Executable
 add_executable(arm-teleop-leader src/leader-main.cpp src/perseus-arm-teleop.cpp)
 
 target_include_directories(
@@ -108,7 +127,7 @@ target_link_libraries(
   PRIVATE yaml-cpp
   PRIVATE pthread)
 
-# Follower Arm Executable
+# Original Follower Arm Executable
 add_executable(arm-teleop-follower src/follower-main.cpp
                                    src/perseus-arm-teleop.cpp)
 
@@ -127,8 +146,46 @@ target_link_libraries(
   PRIVATE yaml-cpp
   PRIVATE pthread)
 
-# INSTALL (Executables)
-install(TARGETS arm-teleop-leader arm-teleop-follower RUNTIME DESTINATION bin)
+# COMPILE (Minimal Executables)
+
+# Minimal Leader Arm Executable
+add_executable(arm-teleop-leader-mini src/leader-main-mini.cpp
+                                      src/perseus-arm-teleop-mini.cpp)
+
+target_include_directories(
+  arm-teleop-leader-mini
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+target_link_libraries(
+  arm-teleop-leader-mini
+  PRIVATE arm-servo-protocol-mini
+  PRIVATE arm-network-mini
+  PRIVATE Boost::system
+  PRIVATE pthread)
+
+# Minimal Follower Arm Executable
+add_executable(arm-teleop-follower-mini src/follower-main-mini.cpp
+                                        src/perseus-arm-teleop-mini.cpp)
+
+target_include_directories(
+  arm-teleop-follower-mini
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+target_link_libraries(
+  arm-teleop-follower-mini
+  PRIVATE arm-servo-protocol-mini
+  PRIVATE arm-network-mini
+  PRIVATE Boost::system
+  PRIVATE pthread)
+
+# INSTALL (All Executables)
+install(TARGETS arm-teleop-leader arm-teleop-follower arm-teleop-leader-mini
+                arm-teleop-follower-mini RUNTIME DESTINATION bin)
+
 # Versioning
 set_target_properties(arm-teleop-leader PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(arm-teleop-follower PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(arm-teleop-leader-mini PROPERTIES VERSION
+                                                        ${PROJECT_VERSION})
+set_target_properties(arm-teleop-follower-mini PROPERTIES VERSION
+                                                          ${PROJECT_VERSION})
