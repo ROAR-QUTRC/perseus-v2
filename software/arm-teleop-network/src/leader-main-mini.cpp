@@ -10,10 +10,10 @@ int main()
     try
     {
         std::cout << "Starting leader program..." << std::endl;
-        ST3215ServoReaderMini reader("/dev/ttyUSB0", 115200);
+        ST3215ServoReaderMini reader("/dev/ttyACM0", 115200);
         std::cout << "Serial port opened successfully" << std::endl;
 
-        perseus::ArmNetworkInterfaceMini network(perseus::ArmNetworkInterfaceMini::Mode::Client, "127.0.0.1");
+        perseus::ArmNetworkInterfaceMini network(perseus::ArmNetworkInterfaceMini::Mode::Client, "192.168.1.254");
         std::cout << "Network interface created" << std::endl;
 
         if (network.start())
