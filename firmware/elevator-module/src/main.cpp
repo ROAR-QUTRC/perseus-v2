@@ -7,11 +7,11 @@
 
 #define IN1 13
 #define IN2 14
-#define IN3 21
-#define IN4 47
+// #define IN3 21
+// #define IN4 47
 
 #define ENA 48
-#define ENB 45
+// #define ENB 45
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -20,7 +20,6 @@ using namespace hi_can;
 std::optional<PacketManager> packetManager;
 
 void handleMotorSpeedData(const Packet& packet);
-void stopMotor();
 void setMotorSpeed(int16_t speed);
 
 void setup()
@@ -29,9 +28,9 @@ void setup()
     pinMode(IN2, OUTPUT);
     pinMode(ENA, OUTPUT);
 
-    pinMode(IN4, OUTPUT);
-    pinMode(IN3, OUTPUT);
-    pinMode(ENB, OUTPUT);
+    // pinMode(IN4, OUTPUT);
+    // pinMode(IN3, OUTPUT);
+    // pinMode(ENB, OUTPUT);
 
     auto& interface = TwaiInterface::getInstance();
     packetManager.emplace(interface);
