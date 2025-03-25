@@ -15,6 +15,12 @@ make
 
 The run the binaries found there.
 
+# TODO for mini
+
+Need to correct arm-servo-protocol-mini
+
+This currently does not build, trying to fix the fact that follower-mini is blocked trying to read position from servo 1
+
 ## TODO
 
 - Handle rollover of values (joint #2 really needs this)
