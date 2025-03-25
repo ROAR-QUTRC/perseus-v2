@@ -9,7 +9,7 @@ int main()
 {
     try
     {
-        ST3215ServoReaderMini reader("/dev/ttyUSB0", 115200);
+        ST3215ServoReaderMini reader("/dev/ttyACM0", 115200);
         perseus::ArmNetworkInterfaceMini network(perseus::ArmNetworkInterfaceMini::Mode::Server);
         network.start();
 

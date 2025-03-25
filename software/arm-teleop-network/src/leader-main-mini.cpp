@@ -9,8 +9,8 @@ int main()
 {
     try
     {
-        ST3215ServoReaderMini reader("/dev/ttyUSB0", 115200);
-        perseus::ArmNetworkInterfaceMini network(perseus::ArmNetworkInterfaceMini::Mode::Client, "127.0.0.1");
+        ST3215ServoReaderMini reader("/dev/ttyACM0", 115200);
+        perseus::ArmNetworkInterfaceMini network(perseus::ArmNetworkInterfaceMini::Mode::Client, "192.168.1.254");
         network.start();
 
         while (true)
