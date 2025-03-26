@@ -11,15 +11,166 @@
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
+steady_clock::time_point lastPowerFlow;
+
+void setupBms();
+
 void setup()
 {
     bsp::initI2C();
+    std::this_thread::sleep_for(1s);
+    setupBms();
+
     Serial.begin(115200);
     hi_can::TwaiInterface::getInstance();
+    lastPowerFlow = steady_clock::now();
+}
+
+void loop()
+{
+    using namespace hi_can;
+
+    // auto& interface = TwaiInterface::getInstance();
+    try
+    {
+        // interface.transmit(Packet{});
+    }
+    catch (const std::exception& e)
+    {
+        printf(std::format("{}\n", e.what()).c_str());
+    }
+
     try
     {
         bq76942 bq;
-        bq.reset();
+        auto data = bq.getFetStatus();
+        bool pchg = data.prechargeFetOn;
+        bool chg = data.chargeFetOn;
+        bool dsg = data.dischargeFetOn;
+        bool pdsg = data.predischargeFetOn;
+
+        auto status5 = bq.getDAStatus5();
+        auto status6 = bq.getDAStatus6();
+        float current = bq.getCC2Current();
+        // printf(std::format("Charge: {:.1f}\n", status6.accumulatedCharge).c_str());
+        printf(std::format("PCHG {:d}  CHG {:d}  DSG {:d}  PDSG {:d} stack vtg {:04}, pack {:04d} current {:07.1f} charge {:.1f}\n",
+                           pchg, chg, dsg, pdsg,
+                           bq.getStackVoltage(), bq.getPackVoltage(),
+                           current, status6.accumulatedCharge)
+                   .c_str());
+
+        // bq.enableAllFets();
+        auto status = bq.getBatteryStatus();
+        bool configUpdate = status.inConfigUpdateMode;
+        bool inPrechargeMode = status.inPrechargeMode;
+        bool sleepAllowed = status.sleepAllowed;
+        bool fullResetOccurred = status.fullResetOccurred;
+        bool wasWatchdogReset = status.wasWatchdogReset;
+        bool checkingCellOpenWire = status.checkingCellOpenWire;
+        bool pendingOtpWrite = status.pendingOtpWrite;
+        bool otpWriteBlocked = status.otpWriteBlocked;
+        bq76942::security_state securityState = status.securityState;
+        bool fuseActive = status.fuseActive;
+        bool safetyFaultActive = status.safetyFaultActive;
+        bool permanentFailActive = status.permanentFailActive;
+        bool shutdownPending = status.shutdownPending;
+        bool inSleep = status.inSleep;
+
+        printf(std::format("Config update: {} Precharge: {}, Sleep allowed: {}, Full reset: {}, Watchdog reset: {}, Cell open wire: {}, Pending OTP write: {}, OTP write blocked: {}\n", configUpdate, inPrechargeMode, sleepAllowed, fullResetOccurred, wasWatchdogReset, checkingCellOpenWire, pendingOtpWrite, otpWriteBlocked).c_str());
+        printf(std::format("Security state: {}, Fuse active: {}, Safety fault active: {}, Permanent fail active: {}, Shutdown pending: {}, In sleep: {}\n", static_cast<uint8_t>(securityState), fuseActive, safetyFaultActive, permanentFailActive, shutdownPending, inSleep).c_str());
+
+        // print cell voltages
+        // for (uint8_t i = 0; i < 10; i++)
+        // {
+        //     printf(std::format("{}: {:05d} ", i, bq.getCellVoltage(i)).c_str());
+        // }
+        // printf("\n");
+
+        // print alarm regs
+        auto alarmAStatus = bq.getSafetyStatusA();
+        auto alarmBStatus = bq.getSafetyStatusB();
+        auto alarmCStatus = bq.getSafetyStatusC();
+        printf(std::format("A: {:08b} B: {:08b} C: {:08b}\n",
+                           *reinterpret_cast<uint8_t*>(&alarmAStatus),
+                           *reinterpret_cast<uint8_t*>(&alarmBStatus),
+                           *reinterpret_cast<uint8_t*>(&alarmCStatus))
+                   .c_str());
+
+        auto pfAStatus = bq.getPermanentFailStatusA();
+        auto pfBStatus = bq.getPermanentFailStatusB();
+        auto pfCStatus = bq.getPermanentFailStatusC();
+        auto pfDStatus = bq.getPermanentFailStatusD();
+        printf(std::format("PF A: {:08b} B: {:08b} C: {:08b} D: {:08b}\n",
+                           *reinterpret_cast<uint8_t*>(&pfAStatus),
+                           *reinterpret_cast<uint8_t*>(&pfBStatus),
+                           *reinterpret_cast<uint8_t*>(&pfCStatus),
+                           *reinterpret_cast<uint8_t*>(&pfDStatus))
+                   .c_str());
+
+        // auto fetStatus = bq.getFetStatus();
+        // bool chargeFetOn = fetStatus.chargeFetOn;
+        // bool prechargeFetOn = fetStatus.prechargeFetOn;
+        // bool dischargeFetOn = fetStatus.dischargeFetOn;
+        // bool predischargeFetOn = fetStatus.predischargeFetOn;
+        // bool dchgAsserted = fetStatus.dchgAsserted;
+        // bool ddsgAsserted = fetStatus.ddsgAsserted;
+        // bool alertAsserted = fetStatus.alertAsserted;
+
+        // printf(std::format("FET stat chg {:d} pchg {:d} dsg {:d} pdsg {:d} dchA {:d} dsgA {:d} alA {:d}\n",
+        //                    chargeFetOn, prechargeFetOn, dischargeFetOn, predischargeFetOn,
+        //                    dchgAsserted, ddsgAsserted, alertAsserted)
+        //            .c_str());
+
+        bq.toggleFuse();
+        auto fetOpt = bq.getManufacturingStatus();
+        bool fetEn = fetOpt.autonomousFets;
+        printf(std::format("fet en {:d}\n", fetEn).c_str());
+        if(!fetEn)
+        {
+            printf("Reconfiguring BMS...\n");
+            std::this_thread::sleep_for(1s);
+            setupBms();
+        }
+
+        // bool chgOff = fetCtl.forceChargeOff;
+        // bool pchgOff = fetCtl.forcePrechargeOff;
+        // bool dsgOff = fetCtl.forceDischargeOff;
+        // bool pdsgOff = fetCtl.forcePredischargeOff;
+        // printf(std::format("force off pdsg {:d} dchg {:d} pchg {:d} chg {:d}\n",
+        //                    pdsgOff, dsgOff, pchgOff, chgOff)
+        //            .c_str());
+        for (int i = 0; i < 10; i++)
+        {
+            printf(std::format("Cell {}: {}\n", i, bq.getCellVoltage(i)).c_str());
+        }
+
+        if (abs(current) > 100)
+        {
+            lastPowerFlow = steady_clock::now();
+        }
+
+        if (steady_clock::now() - lastPowerFlow > 30s)
+        {
+            printf("Shutting down\n");
+            bq.shutdown();
+            std::this_thread::sleep_for(10s);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        printf(std::format("err: {}\n", e.what()).c_str());
+        std::this_thread::sleep_for(500ms);
+    }
+    // vTaskDelay(2000);
+    vTaskDelay(50);
+}
+
+void setupBms()
+{
+    try
+    {
+        bq76942 bq;
+        // bq.reset();
         std::this_thread::sleep_for(100ms);
 
         bq.enterConfigUpdateMode();
@@ -256,7 +407,7 @@ void setup()
         bq.settings.fet.setPrechargeStopVoltage(prechargeThreshold);
         // predischarge is voltage delta based only, no timeout
         bq.settings.fet.setPredischargeTimeout(0ms);
-        bq.settings.fet.setPredischargeStopDelta(4000);
+        bq.settings.fet.setPredischargeStopDelta(5000);
 
         // Settings:Current Thresholds
         bq.settings.setDsgCurrentThreshold(100);
@@ -362,7 +513,7 @@ void setup()
         // Protections:SCDL
         bq.protections.shortCircuit.setLatchLimit(3);
         bq.protections.shortCircuit.setLatchCounterDecDelay(20s);
-        bq.protections.shortCircuit.setLatchRecoveryTime(30s);
+        bq.protections.shortCircuit.setLatchRecoveryTime(15s);
 
         // Protections:OTC
 
@@ -443,125 +594,7 @@ void setup()
     }
     catch (std::exception& e)
     {
-        printf(std::format("Error resetting BMS: {}\n", e.what()).c_str());
-    }
-}
-
-void loop()
-{
-    using namespace hi_can;
-
-    // auto& interface = TwaiInterface::getInstance();
-    try
-    {
-        // interface.transmit(Packet{});
-    }
-    catch (const std::exception& e)
-    {
-        printf(std::format("{}\n", e.what()).c_str());
+        printf(std::format("Error configuring BMS: {}\n", e.what()).c_str());
     }
 
-    try
-    {
-        bq76942 bq;
-        auto data = bq.getFetStatus();
-        bool pchg = data.prechargeFetOn;
-        bool chg = data.chargeFetOn;
-        bool dsg = data.dischargeFetOn;
-        bool pdsg = data.predischargeFetOn;
-
-        auto status5 = bq.getDAStatus5();
-        auto status6 = bq.getDAStatus6();
-        // printf(std::format("Charge: {:.1f}\n", status6.accumulatedCharge).c_str());
-        printf(std::format("PCHG {:d}  CHG {:d}  DSG {:d}  PDSG {:d} stack vtg {:04}, pack {:04d} current {:07.1f} charge {:.1f}\n",
-                           pchg, chg, dsg, pdsg,
-                           bq.getStackVoltage(), bq.getPackVoltage(),
-                           bq.getCC2Current(), status6.accumulatedCharge)
-                   .c_str());
-
-        // bq.enableAllFets();
-        auto status = bq.getBatteryStatus();
-        bool configUpdate = status.inConfigUpdateMode;
-        bool inPrechargeMode = status.inPrechargeMode;
-        bool sleepAllowed = status.sleepAllowed;
-        bool fullResetOccurred = status.fullResetOccurred;
-        bool wasWatchdogReset = status.wasWatchdogReset;
-        bool checkingCellOpenWire = status.checkingCellOpenWire;
-        bool pendingOtpWrite = status.pendingOtpWrite;
-        bool otpWriteBlocked = status.otpWriteBlocked;
-        bq76942::security_state securityState = status.securityState;
-        bool fuseActive = status.fuseActive;
-        bool safetyFaultActive = status.safetyFaultActive;
-        bool permanentFailActive = status.permanentFailActive;
-        bool shutdownPending = status.shutdownPending;
-        bool inSleep = status.inSleep;
-
-        printf(std::format("Config update: {} Precharge: {}, Sleep allowed: {}, Full reset: {}, Watchdog reset: {}, Cell open wire: {}, Pending OTP write: {}, OTP write blocked: {}\n", configUpdate, inPrechargeMode, sleepAllowed, fullResetOccurred, wasWatchdogReset, checkingCellOpenWire, pendingOtpWrite, otpWriteBlocked).c_str());
-        printf(std::format("Security state: {}, Fuse active: {}, Safety fault active: {}, Permanent fail active: {}, Shutdown pending: {}, In sleep: {}\n", static_cast<uint8_t>(securityState), fuseActive, safetyFaultActive, permanentFailActive, shutdownPending, inSleep).c_str());
-
-        // print cell voltages
-        // for (uint8_t i = 0; i < 10; i++)
-        // {
-        //     printf(std::format("{}: {:05d} ", i, bq.getCellVoltage(i)).c_str());
-        // }
-        // printf("\n");
-
-        // print alarm regs
-        auto alarmAStatus = bq.getSafetyStatusA();
-        auto alarmBStatus = bq.getSafetyStatusB();
-        auto alarmCStatus = bq.getSafetyStatusC();
-        printf(std::format("A: {:08b} B: {:08b} C: {:08b}\n",
-                           *reinterpret_cast<uint8_t*>(&alarmAStatus),
-                           *reinterpret_cast<uint8_t*>(&alarmBStatus),
-                           *reinterpret_cast<uint8_t*>(&alarmCStatus))
-                   .c_str());
-
-        auto pfAStatus = bq.getPermanentFailStatusA();
-        auto pfBStatus = bq.getPermanentFailStatusB();
-        auto pfCStatus = bq.getPermanentFailStatusC();
-        auto pfDStatus = bq.getPermanentFailStatusD();
-        printf(std::format("PF A: {:08b} B: {:08b} C: {:08b} D: {:08b}\n",
-                           *reinterpret_cast<uint8_t*>(&pfAStatus),
-                           *reinterpret_cast<uint8_t*>(&pfBStatus),
-                           *reinterpret_cast<uint8_t*>(&pfCStatus),
-                           *reinterpret_cast<uint8_t*>(&pfDStatus))
-                   .c_str());
-
-        // auto fetStatus = bq.getFetStatus();
-        // bool chargeFetOn = fetStatus.chargeFetOn;
-        // bool prechargeFetOn = fetStatus.prechargeFetOn;
-        // bool dischargeFetOn = fetStatus.dischargeFetOn;
-        // bool predischargeFetOn = fetStatus.predischargeFetOn;
-        // bool dchgAsserted = fetStatus.dchgAsserted;
-        // bool ddsgAsserted = fetStatus.ddsgAsserted;
-        // bool alertAsserted = fetStatus.alertAsserted;
-
-        // printf(std::format("FET stat chg {:d} pchg {:d} dsg {:d} pdsg {:d} dchA {:d} dsgA {:d} alA {:d}\n",
-        //                    chargeFetOn, prechargeFetOn, dischargeFetOn, predischargeFetOn,
-        //                    dchgAsserted, ddsgAsserted, alertAsserted)
-        //            .c_str());
-
-        bq.toggleFuse();
-        auto fetOpt = bq.getManufacturingStatus();
-        bool fetEn = fetOpt.autonomousFets;
-        printf(std::format("fet en {:d}\n", fetEn).c_str());
-
-        // bool chgOff = fetCtl.forceChargeOff;
-        // bool pchgOff = fetCtl.forcePrechargeOff;
-        // bool dsgOff = fetCtl.forceDischargeOff;
-        // bool pdsgOff = fetCtl.forcePredischargeOff;
-        // printf(std::format("force off pdsg {:d} dchg {:d} pchg {:d} chg {:d}\n",
-        //                    pdsgOff, dsgOff, pchgOff, chgOff)
-        //            .c_str());
-        for (int i = 0; i < 10; i++)
-        {
-            printf(std::format("Cell {}: {}\n", i, bq.getCellVoltage(i)).c_str());
-        }
-    }
-    catch (const std::exception& e)
-    {
-        printf(std::format("err: {}\n", e.what()).c_str());
-    }
-    // vTaskDelay(2000);
-    vTaskDelay(50);
 }
