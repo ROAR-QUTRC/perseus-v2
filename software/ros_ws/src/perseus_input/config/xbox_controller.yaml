@@ -1,0 +1,12 @@
+generic_controller:
+  ros__parameters:
+    update_rate: 10
+    allow_republish_update: true
+    deadman:
+      axis: 6
+    forward:
+      axis: 0
+      scaling: 1.0
+    turn:
+      axis: 1
+      scaling: 1.0

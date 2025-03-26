@@ -1,0 +1,39 @@
+generic_controller:
+  ros__parameters:
+    max_update_rate: 20
+    drive:
+      forward:
+        axis: 0
+        scaling: 1.0
+        enable:
+          axis: 6
+          is_less_than: true
+          threshold: -0.5
+        high_speed_enable:
+          button: 0
+          scaling: 2.0
+      turn:
+        axis: 1
+        scaling: 1.0
+        enable:
+          follows: "drive.forward.enable"
+        high_speed_enable:
+          follows: "drive.forward.high_speed_enable"
+          scaling: 1.5
+    bucket:
+      lift:
+        axis: 3
+        scaling: 1.0
+      tilt:
+        axis: 4
+        scaling: 1.0
+      jaws:
+        button_positive: 5
+        button_negative: 6
+        scaling: 1.0
+      rotate:
+        axis: 7
+        scaling: 1.0
+      electromagnet:
+        button: 8
+        press_to_release: true
