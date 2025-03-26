@@ -11,7 +11,8 @@
 using namespace boost::asio;
 
 ST3215ServoReader::ST3215ServoReader(const std::string& port, unsigned int baud_rate, uint8_t acceleration)
-    : _io_service(), _serial_port(_io_service)
+    : _io_service(),
+      _serial_port(_io_service)
 {
     try
     {
