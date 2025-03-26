@@ -19,7 +19,7 @@ ST3215ServoReader::ST3215ServoReader(const std::string& port, unsigned int baud_
         _serial_port.open(port);
 
         // Get the native handle for low-level configuration
-        int fd = reader.getSerialPort().native_handle();
+        int fd = _serial_port.native_handle();
 
         // Configure ACM port settings
         struct termios to;
