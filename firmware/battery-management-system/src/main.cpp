@@ -149,7 +149,7 @@ void loop()
             lastPowerFlow = steady_clock::now();
         }
 
-        if (steady_clock::now() - lastPowerFlow > 30s)
+        if (steady_clock::now() - lastPowerFlow > 15s)
         {
             printf("Shutting down\n");
             bq.shutdown();
