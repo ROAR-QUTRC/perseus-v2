@@ -125,7 +125,7 @@ void loop()
         auto fetOpt = bq.getManufacturingStatus();
         bool fetEn = fetOpt.autonomousFets;
         printf(std::format("fet en {:d}\n", fetEn).c_str());
-        if(!fetEn)
+        if (!fetEn)
         {
             printf("Reconfiguring BMS...\n");
             std::this_thread::sleep_for(1s);
@@ -596,5 +596,4 @@ void setupBms()
     {
         printf(std::format("Error configuring BMS: {}\n", e.what()).c_str());
     }
-
 }

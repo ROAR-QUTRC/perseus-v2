@@ -192,7 +192,7 @@ bq76942::da_status_6_t bq76942::getDAStatus6()
 
     const float accChargeInteger = static_cast<float>(rawStatus.accumulatedCharge);
     float accChargeFractional = static_cast<float>(rawStatus.accumulatedChargeFraction) / (1ULL << 32);
-    accChargeFractional -= 0.5; // starts initialised to +0.5 userAh, zero that out
+    accChargeFractional -= 0.5;  // starts initialised to +0.5 userAh, zero that out
 
     return da_status_6_t{
         .accumulatedCharge = (accChargeInteger + accChargeFractional) * getUserAmpsMultiplier(daConfig),
