@@ -11,8 +11,7 @@
 using namespace boost::asio;
 
 ST3215ServoReader::ST3215ServoReader(const std::string& port, unsigned int baud_rate, uint8_t acceleration)
-    : _io_service(),
-      _serial_port(_io_service)
+    : _io_service(), _serial_port(_io_service)
 {
     try
     {
@@ -350,12 +349,6 @@ void ST3215ServoReader::writePosition(uint8_t servo_id, uint16_t position)
     // Clamp position to valid range
     position = std::min(position, static_cast<uint16_t>(4095));
 
-    // Clear all IO buffers before sending a new command
-    ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
-
-    // Brief delay to ensure buffers are clear
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
     // Create data bytes (little-endian)
     std::vector<uint8_t> data = {
         static_cast<uint8_t>(position & 0xFF),
@@ -364,256 +357,98 @@ void ST3215ServoReader::writePosition(uint8_t servo_id, uint16_t position)
     // Create write command packet
     std::vector<uint8_t> command = _createWriteCommand(servo_id, 0x2A, data);  // 0x2A is goal position address
 
-    // Send command with retry logic
-    const int MAX_WRITE_ATTEMPTS = 3;
+    // Send command
     boost::system::error_code write_ec;
-    size_t written = 0;
+    size_t written = boost::asio::write(_serial_port, buffer(command), write_ec);
 
-    for (int attempt = 0; attempt < MAX_WRITE_ATTEMPTS; attempt++)
+    if (write_ec)
     {
-        if (attempt > 0)
-        {
-            // Clear buffers before retry
-            ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10 * (attempt + 1)));
-        }
-
-        try
-        {
-            written = boost::asio::write(_serial_port, buffer(command), write_ec);
-
-            if (!write_ec && written == command.size())
-            {
-                break;  // Success
-            }
-        }
-        catch (...)
-        {
-            // Continue to next attempt
-        }
-
-        // If this is the last attempt and we still failed
-        if (attempt == MAX_WRITE_ATTEMPTS - 1 &&
-            (write_ec || written != command.size()))
-        {
-            if (write_ec)
-            {
-                throw std::runtime_error(std::string("Write error: ") + write_ec.message());
-            }
-            else
-            {
-                throw std::runtime_error("Failed to write complete command");
-            }
-        }
+        throw std::runtime_error(std::string("Write error: ") + write_ec.message());
     }
 
-    // Wait for minimum response time, longer for stability
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    if (written != command.size())
+    {
+        throw std::runtime_error("Failed to write complete command");
+    }
 
-    // Try to read status packet, but don't fail if we can't get it
+    // Wait for minimum response time
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    // Read status packet
+    std::array<uint8_t, 6> response;  // Status packet is 6 bytes
+    size_t read = 0;
+
     try
     {
-        std::array<uint8_t, 32> response_buffer;
-        boost::system::error_code read_ec;
+        read = boost::asio::read(_serial_port, buffer(response), write_ec);
+    }
+    catch (const boost::system::system_error& e)
+    {
+        // Ignore read errors as the servo might not respond
+        return;
+    }
 
-        // Non-blocking read with timeout
-        auto start_time = std::chrono::steady_clock::now();
-        const auto timeout = std::chrono::milliseconds(50);
-        size_t bytes_read = 0;
-
-        while (std::chrono::steady_clock::now() - start_time < timeout)
+    if (read >= 4 && response[0] == 0xFF && response[1] == 0xFF &&
+        response[2] == servo_id && response[3] >= 2)
+    {
+        // Check for servo errors if we got a valid response
+        if (response[4] != 0x00)
         {
-            size_t available = _serial_port.available(read_ec);
-            if (read_ec || available == 0)
-            {
-                // No data or error, wait a bit and try again
-                std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                continue;
-            }
-
-            // Read what's available
-            size_t to_read = std::min(available, response_buffer.size() - bytes_read);
-            size_t read = _serial_port.read_some(
-                buffer(response_buffer.data() + bytes_read, to_read), read_ec);
-
-            if (read_ec)
-            {
-                break;  // Error reading
-            }
-
-            bytes_read += read;
-
-            // Check if we have a complete packet (at least 6 bytes)
-            if (bytes_read >= 6 &&
-                response_buffer[0] == 0xFF &&
-                response_buffer[1] == 0xFF &&
-                response_buffer[2] == servo_id)
-            {
-                // Check for servo errors
-                if (response_buffer[4] != 0x00)
-                {
-                    std::string error = "Servo errors:";
-                    if (response_buffer[4] & 0x01)
-                        error += " Input Voltage";
-                    if (response_buffer[4] & 0x02)
-                        error += " Angle Limit";
-                    if (response_buffer[4] & 0x04)
-                        error += " Overheating";
-                    if (response_buffer[4] & 0x08)
-                        error += " Range";
-                    if (response_buffer[4] & 0x10)
-                        error += " Checksum";
-                    if (response_buffer[4] & 0x20)
-                        error += " Overload";
-                    if (response_buffer[4] & 0x40)
-                        error += " Instruction";
-                    throw std::runtime_error(error);
-                }
-
-                // Success
-                break;
-            }
-
-            // If we've read a lot but still don't have a valid packet, something might be wrong
-            if (bytes_read >= 20)
-            {
-                break;
-            }
+            std::string error = "Servo errors:";
+            if (response[4] & 0x01)
+                error += " Input Voltage";
+            if (response[4] & 0x02)
+                error += " Angle Limit";
+            if (response[4] & 0x04)
+                error += " Overheating";
+            if (response[4] & 0x08)
+                error += " Range";
+            if (response[4] & 0x10)
+                error += " Checksum";
+            if (response[4] & 0x20)
+                error += " Overload";
+            if (response[4] & 0x40)
+                error += " Instruction";
+            throw std::runtime_error(error);
         }
     }
-    catch (...)
-    {
-        // Ignore read errors - the write operation itself was successful
-    }
-
-    // One final flush to clear any remaining data
-    ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
 }
 
-// Improved writeControlRegister function with better error handling
 void ST3215ServoReader::writeControlRegister(uint8_t servo_id, uint8_t address, uint8_t value)
 {
-    // Clear buffers first
-    ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
     std::vector<uint8_t> data = {value};
     std::vector<uint8_t> command = _createWriteCommand(servo_id, address, data);
 
-    // Try multiple times to send the command
-    const int MAX_ATTEMPTS = 3;
-    for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++)
+    boost::system::error_code write_ec;
+    size_t written = boost::asio::write(_serial_port, buffer(command), write_ec);
+
+    if (write_ec)
     {
-        try
-        {
-            boost::system::error_code write_ec;
-            size_t written = boost::asio::write(_serial_port, buffer(command), write_ec);
+        throw std::runtime_error(std::string("Write error: ") + write_ec.message());
+    }
 
-            if (write_ec)
-            {
-                if (attempt == MAX_ATTEMPTS - 1)
-                {
-                    throw std::runtime_error(std::string("Write error: ") + write_ec.message());
-                }
-                continue;  // Try again
-            }
+    if (written != command.size())
+    {
+        throw std::runtime_error("Failed to write complete command");
+    }
 
-            if (written != command.size())
-            {
-                if (attempt == MAX_ATTEMPTS - 1)
-                {
-                    throw std::runtime_error("Failed to write complete command");
-                }
-                continue;  // Try again
-            }
+    // Wait for minimum response time
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-            // Wait longer between commands
-            std::this_thread::sleep_for(std::chrono::milliseconds(30));
-
-            // Success, try to read response but don't fail if we can't
-            try
-            {
-                std::array<uint8_t, 32> response;
-
-                // Set timeout for read
-                auto start_time = std::chrono::steady_clock::now();
-                const auto timeout = std::chrono::milliseconds(50);
-                bool valid_response = false;
-                size_t bytes_read = 0;
-
-                // Try to read with timeout
-                while (std::chrono::steady_clock::now() - start_time < timeout)
-                {
-                    boost::system::error_code read_ec;
-                    size_t available = _serial_port.available(read_ec);
-
-                    if (read_ec || available == 0)
-                    {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                        continue;
-                    }
-
-                    size_t to_read = std::min(available, response.size() - bytes_read);
-                    size_t read = _serial_port.read_some(
-                        buffer(response.data() + bytes_read, to_read), read_ec);
-
-                    if (read_ec)
-                    {
-                        break;  // Error reading
-                    }
-
-                    bytes_read += read;
-
-                    // Check if we have a complete response
-                    if (bytes_read >= 6 &&
-                        response[0] == 0xFF &&
-                        response[1] == 0xFF &&
-                        response[2] == servo_id)
-                    {
-                        valid_response = true;
-                        break;
-                    }
-
-                    // If we've read a lot but still don't have a valid packet, something might be wrong
-                    if (bytes_read >= 20)
-                    {
-                        break;
-                    }
-                }
-
-                // Clear any remaining data
-                ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
-
-                if (valid_response)
-                {
-                    return;  // Success!
-                }
-            }
-            catch (...)
-            {
-                // Ignore read errors
-            }
-
-            // If we got here, we wrote the command but didn't get a valid response
-            // Still consider it a success for control registers
-            return;
-        }
-        catch (const std::exception&)
-        {
-            if (attempt == MAX_ATTEMPTS - 1)
-            {
-                throw;  // Last attempt failed, rethrow
-            }
-
-            // Clean up and wait before retry
-            ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
-            std::this_thread::sleep_for(std::chrono::milliseconds(20 * (attempt + 1)));
-        }
+    // Read status packet
+    std::array<uint8_t, 6> response;
+    try
+    {
+        boost::asio::read(_serial_port, buffer(response), write_ec);
+    }
+    catch (const boost::system::system_error& e)
+    {
+        // Ignore read errors as the servo might not respond
+        return;
     }
 }
-Last edited 6 minutes ago
-    int16_t
-    ST3215ServoReader::readLoad(uint8_t servo_id)
+
+int16_t ST3215ServoReader::readLoad(uint8_t servo_id)
 {
     const int MAX_RETRIES = 3;
     const auto timeout = std::chrono::milliseconds(200);
