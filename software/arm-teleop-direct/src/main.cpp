@@ -668,8 +668,8 @@ int main(int argc, char* argv[])
         }
 
         // Initialize servo readers and data storage for both arms
-        ST3215ServoReader reader1(port_path1, 1000000, 30);  // 30 sets the acceleration (magic number)
-        ST3215ServoReader reader2(port_path2, 1000000, 30);
+        ST3215ServoReader reader1(port_path1, 115200, 30);  // 30 sets the acceleration (magic number)
+        ST3215ServoReader reader2(port_path2, 115200, 30);
         reader1_ptr = &reader1;
         reader2_ptr = &reader2;
 
