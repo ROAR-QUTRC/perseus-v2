@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
         ST3215ServoReaderMini* reader = nullptr;
         try
         {
-            reader = new ST3215ServoReaderMini(serial_port, 1000000);  // Using 1Mbps as specified for SO-100
+            reader = new ST3215ServoReaderMini(serial_port, 115200);  // Using 115200 as specified for SO-100
             reader_ptr = reader;
             std::cout << " success!" << std::endl;
         }
