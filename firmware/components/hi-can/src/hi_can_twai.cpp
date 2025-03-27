@@ -15,15 +15,15 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 using std::string;
 
-TwaiInterface& TwaiInterface::getInstance(pin_pair_t pins, uint8_t controllerId)
+TwaiInterface& TwaiInterface::getInstance(pin_pair_t pins, uint8_t controllerId, addressing::filter_t filter)
 {
     static std::optional<TwaiInterface> instance;
     if (!instance)
-        instance = TwaiInterface(pins, controllerId);
+        instance = TwaiInterface(pins, controllerId, filter);
     return *instance;
 }
 
-TwaiInterface::TwaiInterface(pin_pair_t pins, uint8_t controllerId = 0)
+TwaiInterface::TwaiInterface(pin_pair_t pins, uint8_t controllerId, addressing::filter_t filter)
     : _controllerId(controllerId)
 {
 #ifndef CONFIG_HI_CAN_NO_ACK
@@ -44,7 +44,13 @@ TwaiInterface::TwaiInterface(pin_pair_t pins, uint8_t controllerId = 0)
     twai_timing_config_t timingConfig = TWAI_TIMING_CONFIG_500KBITS();
 #endif
 
-    twai_filter_config_t filterConfig = TWAI_FILTER_CONFIG_ACCEPT_ALL();
+    twai_filter_config_t filterConfig = {
+        .acceptance_code = filter.address.address << 3,
+        // TWAI filter requires MSB to be rightmost, and RTR filtering is bit 3
+        // Additionally, the acceptance mask is "set bit to ignore" rather than "clear to ignore" like SocketCAN
+        .acceptance_mask = ((~filter.mask) << 3) | 0x00000004,
+        .single_filter = true,
+    };
 
     if (twai_driver_install_v2(&generalConfig, &timingConfig, &filterConfig, &_twaiBus) == ESP_OK)
     {
@@ -116,7 +122,7 @@ std::optional<Packet> TwaiInterface::receive(bool blocking)
             throw std::runtime_error("TWAI driver not installed");
     }
     Packet packet{
-        addressing::flagged_address_t(message.identifier, message.extd, message.rtr, false),
+        addressing::flagged_address_t(message.identifier, message.rtr, false, message.extd),
         message.data, message.data_length_code};
 
     if (_receiveCallback)
@@ -149,12 +155,14 @@ void TwaiInterface::handle()
 
 TwaiInterface& hi_can::TwaiInterface::addFilter(const addressing::filter_t& address)
 {
+    FilteredCanInterface::addFilter(address);
     // TODO: IMPLEMENT
     return *this;
 }
 
 TwaiInterface& hi_can::TwaiInterface::removeFilter(const addressing::filter_t& address)
 {
+    FilteredCanInterface::removeFilter(address);
     // TODO: IMPLEMENT
     return *this;
 }
