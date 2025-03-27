@@ -33,7 +33,7 @@ const address_t rcbAddress{power::SYSTEM_ID,
 
 PowerBusParameterGroup computeBus{rcbAddress, power::control::rcb::groups::COMPUTE_BUS};
 PowerBusParameterGroup driveBus{rcbAddress, power::control::rcb::groups::DRIVE_BUS};
-PowerBusParameterGroup auxBux{rcbAddress, power::control::rcb::groups::AUX_BUS};
+PowerBusParameterGroup auxBus{rcbAddress, power::control::rcb::groups::AUX_BUS};
 PowerBusParameterGroup spareBus{rcbAddress, power::control::rcb::groups::SPARE_BUS};
 
 std::optional<PacketManager> packetManager;
@@ -45,11 +45,15 @@ void setup()
     FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, LED_COUNT);
 
     // initialise the CAN interface
-    auto& interface = TwaiInterface::getInstance();
+    auto& interface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
+                                                 addressing::filter_t{
+                                                     .address = 0x01000000,
+                                                     .mask = hi_can::addressing::DEVICE_MASK,
+                                                 });
     packetManager.emplace(interface);
     packetManager->addGroup(computeBus);
     packetManager->addGroup(driveBus);
-    packetManager->addGroup(auxBux);
+    packetManager->addGroup(auxBus);
     packetManager->addGroup(spareBus);
 }
 
@@ -57,13 +61,20 @@ void loop()
 {
     static steady_clock::time_point lastUpdate = steady_clock::now();
 
+    // TwaiInterface::getInstance().handle();
     packetManager->handle(false);
 
     // needs delay in between LED updates so they actually refresh
     if ((steady_clock::now() - lastUpdate) > 50ms)
     {
         lastUpdate = steady_clock::now();
-        setRingStatus(0, computeBus.getStatus().status, driveBus.getStatus().status, auxBux.getStatus().status, spareBus.getStatus().status);
+        printf(std::format("Compute: {}  Drive: {}  Aux: {}  Spare: {}\n",
+                           static_cast<uint8_t>(computeBus.getStatus().status),
+                           static_cast<uint8_t>(driveBus.getStatus().status),
+                           static_cast<uint8_t>(auxBus.getStatus().status),
+                           static_cast<uint8_t>(spareBus.getStatus().status))
+                   .c_str());
+        setRingStatus(0, computeBus.getStatus().status, driveBus.getStatus().status, auxBus.getStatus().status, spareBus.getStatus().status);
     }
     // feed WDT
     std::this_thread::sleep_for(1ms);
