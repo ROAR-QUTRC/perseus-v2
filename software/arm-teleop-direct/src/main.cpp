@@ -35,7 +35,16 @@ std::vector<std::string> findSerialPorts()
 {
     std::vector<std::string> ports;
     const std::filesystem::path dev_path("/dev");
+    const std::filesystem::path virtual_port_symlink("/home/dingo/leader_follower");
 
+    // Check if the symlink to the virtual port exists and add it
+    if (std::filesystem::exists(virtual_port_symlink))
+    {
+        // Add the symlink path as-is, since we want to use the symlink itself
+        ports.push_back(virtual_port_symlink.string());
+    }
+
+    // Find physical serial ports
     for (const auto& entry : std::filesystem::directory_iterator(dev_path))
     {
         std::string filename = entry.path().filename().string();
@@ -49,7 +58,6 @@ std::vector<std::string> findSerialPorts()
     std::sort(ports.begin(), ports.end());
     return ports;
 }
-
 // Let user select ports for both arms
 std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::string>& ports)
 {
