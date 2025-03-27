@@ -1,6 +1,10 @@
 {
     "folders": [
         {
+            "name": "Shared Libraries",
+            "path": "./components"
+        },
+        {
             "name": "BMS Firmware",
             "path": "./battery-management-system"
         },
@@ -11,10 +15,15 @@
         {
             "name": "Processing Plant Firmware",
             "path": "./processing-plant"
-        }
+        },
+        {
+            "name": "Workspace Root",
+            "path": ".."
+        },
     ],
     "settings": {
         "files.associations": {
+            "*.scad": "scad",
             "array": "cpp",
             "atomic": "cpp",
             "bit": "cpp",
@@ -96,12 +105,44 @@
             "ranges": "cpp",
             "valarray": "cpp",
             "*.tcc": "cpp",
-            "coroutine": "cpp"
+            "coroutine": "cpp",
+            "netfwd": "cpp",
+            "stdfloat": "cpp",
+            "ios": "cpp",
+            "locale": "cpp",
+            "queue": "cpp",
+            "xfacet": "cpp",
+            "xhash": "cpp",
+            "xiosbase": "cpp",
+            "xlocale": "cpp",
+            "xlocbuf": "cpp",
+            "xlocinfo": "cpp",
+            "xlocmes": "cpp",
+            "xlocmon": "cpp",
+            "xlocnum": "cpp",
+            "xloctime": "cpp",
+            "xmemory": "cpp",
+            "xstring": "cpp",
+            "xtr1common": "cpp",
+            "xtree": "cpp",
+            "xutility": "cpp"
         },
         "C_Cpp.default.cppStandard": "c++20",
         "editor.formatOnSave": true,
         "editor.detectIndentation": true,
         "git.openRepositoryInParentFolders": "always",
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/.DS_Store": true,
+            "**/Thumbs.db": true,
+            "**/.classpath": true,
+            "**/.project": true,
+            "**/.settings": true,
+            "**/.factorypath": true,
+            "**/node_modules": false
+        },
     },
     "extensions": {
         "recommendations": [

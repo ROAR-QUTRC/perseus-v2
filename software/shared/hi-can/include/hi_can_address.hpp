@@ -89,7 +89,9 @@ namespace hi_can
                 : address(address & (isExtended ? MAX_ADDRESS : MAX_SHORT_ADDRESS)),
                   isRtr(isRtr),
                   isError(isError),
-                  isExtended(isExtended) {}
+                  isExtended(isExtended)
+            {
+            }
 
             /// @brief Convert a flagged address to a raw address
             constexpr explicit operator raw_address_t() const override
@@ -211,13 +213,17 @@ namespace hi_can
                   subsystem(subsystem),
                   device(device),
                   group(group),
-                  parameter(parameter) {}
+                  parameter(parameter)
+            {
+            }
             standard_address_t(standard_address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
                 : system(deviceAddress.system),
                   subsystem(deviceAddress.subsystem),
                   device(deviceAddress.device),
                   group(group),
-                  parameter(parameter) {}
+                  parameter(parameter)
+            {
+            }
 
             constexpr operator raw_address_t() const override
             {
@@ -274,7 +280,11 @@ namespace hi_can
                 /// @brief VESC command packet address
                 struct address_t : public structured_address_t
                 {
-                    address_t(const uint8_t& vesc, const command_id& command) : vesc(vesc), command(command) {}
+                    address_t(const uint8_t& vesc, const command_id& command)
+                        : vesc(vesc),
+                          command(command)
+                    {
+                    }
                     /// @brief The VESC device ID
                     uint8_t vesc = static_cast<uint8_t>(device::FRONT_LEFT);
                     /// @brief The VESC command ID
@@ -347,12 +357,6 @@ namespace hi_can
         {
             /// @brief The post-landing system ID
             constexpr uint8_t SYSTEM_ID = 0x03;
-            /// @brief Namespace containing all addresses in the bucket subsystem
-            namespace bucket
-            {
-                /// @brief The bucket subsystem ID
-                constexpr uint8_t SUBSYSTEM_ID = 0x00;
-            };
         }
         /// @brief Namespace containing all addresses in the excavation system
         namespace excavation
@@ -371,6 +375,28 @@ namespace hi_can
         {
             /// @brief The space resources system ID
             constexpr uint8_t SYSTEM_ID = 0x05;
+        }
+        namespace shared
+        {
+            /// @brief System ID for devices not specific to one system only
+            constexpr uint8_t SYSTEM_ID = 0x06;
+            namespace lifter_platform
+            {
+                /// @brief The lifter platform subsystem ID
+                constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                namespace lifter
+                {
+                    constexpr uint8_t DEVICE_ID = 0x00;
+                    namespace motor
+                    {
+                        constexpr uint8_t GROUP_ID = 0x01;
+                        enum class parameter
+                        {
+                            SPEED = 0x00,
+                        };
+                    }
+                };
+            }
         }
         // legacy addresses for old hardware
         /// @brief Namespace containing all addresses in the legacy system
@@ -400,13 +426,17 @@ namespace hi_can
                       subsystem(subsystem),
                       device(device),
                       group(group),
-                      parameter(parameter) {}
+                      parameter(parameter)
+                {
+                }
                 address_t(address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
                     : system(deviceAddress.system),
                       subsystem(deviceAddress.subsystem),
                       device(deviceAddress.device),
                       group(group),
-                      parameter(parameter) {}
+                      parameter(parameter)
+                {
+                }
 
                 constexpr operator raw_address_t() const override
                 {

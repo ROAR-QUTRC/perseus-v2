@@ -11,9 +11,9 @@
 
   <depend>rclcpp</depend>
   <depend>backward_ros</depend>
-  <depend>actuator_msgs</depend>
-  <depend>sensor_msgs</depend>
   <depend>hi_can_raw</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nlohmann-json-dev</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
