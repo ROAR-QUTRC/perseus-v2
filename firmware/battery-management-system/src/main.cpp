@@ -12,6 +12,7 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 
 steady_clock::time_point lastPowerFlow;
+bool hasHadLoad = false;
 
 void setupBms();
 
@@ -22,7 +23,7 @@ void setup()
     setupBms();
 
     Serial.begin(115200);
-    hi_can::TwaiInterface::getInstance();
+    auto& interface = hi_can::TwaiInterface::getInstance();
     lastPowerFlow = steady_clock::now();
 }
 
@@ -149,7 +150,17 @@ void loop()
             lastPowerFlow = steady_clock::now();
         }
 
-        if (steady_clock::now() - lastPowerFlow > 15s)
+        if (abs(current) > 100)
+        {
+            hasHadLoad = true;
+        }
+        if (steady_clock::now() - lastPowerFlow > 30s)
+        {
+            printf("Shutting down\n");
+            bq.shutdown();
+            std::this_thread::sleep_for(10s);
+        }
+        if ((steady_clock::now())-lastPowerFlow > 1s && hasHadLoad)
         {
             printf("Shutting down\n");
             bq.shutdown();
@@ -160,6 +171,7 @@ void loop()
     {
         printf(std::format("err: {}\n", e.what()).c_str());
         std::this_thread::sleep_for(500ms);
+        lastPowerFlow = steady_clock::now();  // delay shutdown
     }
     // vTaskDelay(2000);
     vTaskDelay(50);
