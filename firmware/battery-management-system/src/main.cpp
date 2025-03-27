@@ -154,13 +154,14 @@ void loop()
         {
             hasHadLoad = true;
         }
+
         if (steady_clock::now() - lastPowerFlow > 30s)
         {
             printf("Shutting down\n");
             bq.shutdown();
             std::this_thread::sleep_for(10s);
         }
-        if ((steady_clock::now())-lastPowerFlow > 1s && hasHadLoad)
+        if ((steady_clock::now() - lastPowerFlow) > 1s && hasHadLoad)
         {
             printf("Shutting down\n");
             bq.shutdown();
