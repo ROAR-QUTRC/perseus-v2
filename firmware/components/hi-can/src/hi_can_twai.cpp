@@ -115,9 +115,14 @@ std::optional<Packet> TwaiInterface::receive(bool blocking)
         if (err == ESP_ERR_INVALID_STATE)
             throw std::runtime_error("TWAI driver not installed");
     }
-    return Packet{
+    Packet packet{
         addressing::flagged_address_t(message.identifier, message.extd, message.rtr, false),
         message.data, message.data_length_code};
+
+    if (_receiveCallback)
+        _receiveCallback(packet);
+
+    return packet;
 }
 
 void TwaiInterface::handle()
