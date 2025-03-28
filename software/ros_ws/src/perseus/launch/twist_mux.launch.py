@@ -28,6 +28,17 @@ def generate_launch_description():
         output="screen",
         parameters=[use_sim_time_param, mux_config],
     )
+    twist_stamper = Node(
+        package="twist_stamper",
+        executable="twist_stamper",
+        output="screen",
+        parameters=[use_sim_time_param],
+        remappings=[
+            ('/cmd_vel_in', '/cmd_vel_nav'),
+            ('/cmd_vel_out', '/cmd_vel_nav_stamped'),
+        ]
+
+    )
 
     nodes = [
         twist_mux,
