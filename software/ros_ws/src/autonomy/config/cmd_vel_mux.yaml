@@ -1,0 +1,14 @@
+cmd_vel_mux:
+  ros__parameters:
+    publisher: "/cmd_vel" # Output topic that goes to your robot
+    subscribers:
+      - name: "Navigation"
+        topic: "cmd_vel_nav"
+        timeout: 0.5
+        priority: 1
+        short_desc: "Navigation stack velocity commands"
+      - name: "Differential Base Controller"
+        topic: "/diff_base_controller/cmd_vel"
+        timeout: 0.2
+        priority: 10
+        short_desc: "Differential drive base controller commands"
