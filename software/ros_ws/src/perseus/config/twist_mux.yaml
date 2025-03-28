@@ -3,7 +3,7 @@ twist_mux:
     use_stamped: true
     topics:
       navigation:
-        topic: cmd_vel
+        topic: cmd_vel_nav_stamped
         timeout: 0.5
         priority: 10
       joystick:
