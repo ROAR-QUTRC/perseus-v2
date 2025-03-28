@@ -7,6 +7,11 @@
 #include <thread>
 #include <vector>
 
+/* Terminology:
+- Band refers to one of the transparent windows on the light tower
+- Ring refers to the concentric loop of LEDs inside, usually 2 or more loops of LED strip
+*/
+
 #define DATA_PIN 15
 
 constexpr size_t HIGH_DENSITY_LEDS_PER_RING = 30;
@@ -131,6 +136,7 @@ void setRingStatus(int mainRing, power_status compute, power_status drive, power
 
 void startupAnimation()
 {
+    size_t ledIndex = 0;
     fill_solid(&leds[ledIndex], LED_COUNT, CRGB::Black);
     for (int i = 0; i <= LED_COUNT; i++)
     {
@@ -139,31 +145,40 @@ void startupAnimation()
         FastLED.show();
         std::this_thread::sleep_for(5s / LED_COUNT);
     }
-
-    std::vector<size_t> ringSizes = {HIGH_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT};
+    
+    std::vector<size_t> bandSizes = {HIGH_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT};
+    std::vector<size_t> ringCount = {HIGH_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT};
     steady_clock::duration animationTime = 5s;
     int rotationCount = 3;
     steady_clock::duration stepTime = animationTime / (rotationCount * HIGH_DENSITY_LED_COUNT);
     float currentPos = 0.0f;
+    
     steady_clock::time_point startTime = steady_clock::now();
-    while ((steady_clock::now() -))
+    while((steady_clock::now() - startTime < 10s)) {
         size_t currentOffset = 0;
-    for (size_t i = 0; i <= ringSizes.size(); i++)
-    {
-        size_t ringSize = ringSizes[i];
-        bool isReversed = i % 2;
-        size_t rotationOffset = ringSize - static_cast<size_t>(std::round(currentPos * ringSize));
-
-        fill_solid(&leds[ledIndex], ringSize, CRGB::Black);
-        for (size_t j = 0; j <= ringSize; j++)
+        for (size_t i = 0; i <= bandSizes.size(); i++) // Loop over all bands
         {
-            size_t ledOffset = (rotationOffset + j) % ringSize;
-            leds[ledOffset + currentOffset] = CRGB::White;
+            size_t bandSize = bandSizes[i];
+            bool isReversed = i % 2;
+            size_t rotationOffset = bandSize - static_cast<size_t>(std::round(currentPos * bandSize));
+
+            fill_solid(&leds[ledIndex], bandSize, CRGB::Black);
+
+
+            for (size_t j = 0; j <= ringCount[i]; j++)
+            {
+                for (size_t k = 0; k <= (bandSize/ringCount[i])/2 ; k++) // loop over each LED in a half ring (bandSize/ringCount = Num of LEDs for a ring)
+                {
+                    size_t ledOffset = (rotationOffset + k) % bandSize; 
+                    leds[ledOffset + currentOffset + (j*bandSize/ringCount[i])] = CRGB::White;
+                }
+
+            }
+            currentOffset += bandSize;
         }
-        currentOffset += ringSize;
+        FastLED.show();
+        std::this_thread::sleep_for(stepTime);
+        currentPos += 1.0f/ HIGH_DENSITY_LED_COUNT;
     }
-    FastLED.show();
-    std::this_thread::sleep_for(stepTime);
-    currentPos += 1.0f / HIGH_DENSITY_LED_COUNT;
-}
-}
+}  
+    
