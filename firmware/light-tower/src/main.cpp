@@ -5,6 +5,7 @@
 #include <hi_can_twai.hpp>
 #include <optional>
 #include <thread>
+#include <vector>
 
 #define DATA_PIN 15
 
@@ -126,4 +127,43 @@ void setRingStatus(int mainRing, power_status compute, power_status drive, power
     fill_solid(&leds[ledIndex], LOW_DENSITY_LED_COUNT, statusToColor(spare));
 
     FastLED.show();
+}
+
+void startupAnimation() 
+{
+    fill_solid(&leds[ledIndex], LED_COUNT, CRGB::Black);
+    for (int i = 0; i <= LED_COUNT; i++)
+    {
+        // insert 50ms delay for smoother transition
+        leds[ledIndex] = CRGB::White;
+        FastLED.show();
+        std::this_thread::sleep_for(5s / LED_COUNT);
+    }
+    
+    std::vector<size_t> ringSizes = {HIGH_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT};
+    steady_clock::duration animationTime = 5s;
+    int rotationCount = 3;
+    steady_clock::duration stepTime = animationTime / (rotationCount * HIGH_DENSITY_LED_COUNT);
+    float currentPos = 0.0f;
+    steady_clock::time_point startTime = steady_clock::now();
+    while((steady_clock::now() - ))    
+    size_t currentOffset = 0;
+        for (size_t i = 0; i <= ringSizes.size(); i++)
+        {
+            size_t ringSize = ringSizes[i];
+            bool isReversed = i % 2;
+            size_t rotationOffset = ringSize - static_cast<size_t>(std::round(currentPos * ringSize));
+
+            fill_solid(&leds[ledIndex], ringSize, CRGB::Black);
+            for (size_t j = 0; j <= ringSize; j++)
+            {
+                size_t ledOffset = (rotationOffset + j) % ringSize;
+                leds[ledOffset + currentOffset] = CRGB::White;
+            }
+            currentOffset += ringSize;
+        }
+        FastLED.show();
+        std::this_thread::sleep_for(stepTime);
+        currentPos += 1.0f/ HIGH_DENSITY_LED_COUNT;
+    }
 }

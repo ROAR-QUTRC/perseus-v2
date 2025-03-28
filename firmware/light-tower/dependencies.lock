@@ -456,6 +456,6 @@ direct_dependencies:
 - espressif/rmaker_common
 - idf
 - joltwallet/littlefs
-manifest_hash: 273ae73e6edae7543fbb11d29f025de2603ec65ff33acfdd78888cdf970aa1cb
+manifest_hash: 3d989247bcd9507ed24aa50aaffcaf8aa4181a01f3ae989e777017fd532a219e
 target: esp32s3
 version: 2.0.0
