@@ -9,7 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "node ./src/server/server.js",
-    "camera": "npx tsx pi-server/index.ts"
+    "camera": "npx --offline tsx pi-server/index.ts"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^3.0.0",
