@@ -1,16 +1,17 @@
-#include <rclcpp/rclcpp.hpp>
-#include <geometry_msgs/msg/twist.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 #include <tf2/LinearMath/Quaternion.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
 #include <chrono>
+#include <geometry_msgs/msg/twist.hpp>
 #include <memory>
+#include <nav_msgs/msg/odometry.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 class CmdVelToOdomNode : public rclcpp::Node
 {
 public:
     CmdVelToOdomNode()
-    : Node("cmd_vel_to_odom_node")
+        : Node("cmd_vel_to_odom_node")
     {
         // Initialize position and orientation
         x_ = 0.0;
@@ -37,51 +38,51 @@ private:
     {
         // Get current time
         auto current_time = this->get_clock()->now();
-        
+
         // Calculate time difference
         double dt = (current_time - last_time_).seconds();
-        
+
         // Extract velocities
         double vx = msg->linear.x;
         double vy = msg->linear.y;
         double vth = msg->angular.z;
-        
+
         // Calculate change in position and orientation
         double delta_x = (vx * cos(theta_) - vy * sin(theta_)) * dt;
         double delta_y = (vx * sin(theta_) + vy * cos(theta_)) * dt;
         double delta_th = vth * dt;
-        
+
         // Update position and orientation
         x_ += delta_x;
         y_ += delta_y;
         theta_ += delta_th;
-        
+
         // Normalize theta to [-pi, pi]
         theta_ = atan2(sin(theta_), cos(theta_));
-        
+
         last_time_ = current_time;
     }
 
     void publish_odom()
     {
         auto odom_msg = nav_msgs::msg::Odometry();
-        
+
         // Header
         auto current_time = this->get_clock()->now();
         odom_msg.header.stamp = current_time;
         odom_msg.header.frame_id = "odom";
         odom_msg.child_frame_id = "base_link";
-        
+
         // Position
         odom_msg.pose.pose.position.x = x_;
         odom_msg.pose.pose.position.y = y_;
         odom_msg.pose.pose.position.z = 0.0;
-        
+
         // Orientation
         tf2::Quaternion q;
         q.setRPY(0.0, 0.0, theta_);
         odom_msg.pose.pose.orientation = tf2::toMsg(q);
-        
+
         // Publish
         publisher_->publish(odom_msg);
     }
@@ -94,7 +95,7 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
 };
 
-int main(int argc, char * argv[])
+int main(int argc, char* argv[])
 {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<CmdVelToOdomNode>();
