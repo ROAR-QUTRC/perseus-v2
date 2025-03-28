@@ -539,25 +539,6 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
-# Board Hardware Support
-#
-CONFIG_BSP_BOARD_SBB_V0R1=y
-# CONFIG_BSP_BOARD_SBB_V2 is not set
-# end of Board Hardware Support
-
-#
-# Hi-CAN Configuration
-#
-CONFIG_HI_CAN_BUS_RECOVERY_ATTEMPTS=5
-CONFIG_HI_CAN_BUS_TX_TIME=100
-# CONFIG_HI_CAN_BAUD_1M is not set
-CONFIG_HI_CAN_BAUD_500K=y
-# CONFIG_HI_CAN_BAUD_250K is not set
-# CONFIG_HI_CAN_BAUD_125K is not set
-CONFIG_HI_CAN_NO_ACK=y
-# end of Hi-CAN Configuration
-
-#
 # Arduino Configuration
 #
 CONFIG_ARDUINO_VARIANT="esp32s3"
@@ -642,6 +623,35 @@ CONFIG_ARDUINO_SELECTIVE_SimpleBLE=y
 # CONFIG_ARDUINO_SELECTIVE_RainMaker is not set
 # CONFIG_ARDUINO_SELECTIVE_OpenThread is not set
 # CONFIG_ARDUINO_SELECTIVE_Insights is not set
+# end of Arduino Configuration
+
+#
+# Board Hardware Support
+#
+CONFIG_BSP_BOARD_SBB_V0R1=y
+# CONFIG_BSP_BOARD_SBB_V2 is not set
+# end of Board Hardware Support
+
+#
+# Hi-CAN Configuration
+#
+CONFIG_HI_CAN_BUS_RECOVERY_ATTEMPTS=5
+CONFIG_HI_CAN_BUS_TX_TIME=100
+# CONFIG_HI_CAN_BAUD_1M is not set
+CONFIG_HI_CAN_BAUD_500K=y
+# CONFIG_HI_CAN_BAUD_250K is not set
+# CONFIG_HI_CAN_BAUD_125K is not set
+CONFIG_HI_CAN_NO_ACK=y
+# end of Hi-CAN Configuration
+
+#
+# Arduino Configuration
+#
+
+#
+# Debug Log Configuration
+#
+# end of Debug Log Configuration
 # end of Arduino Configuration
 
 #

@@ -13,3 +13,6 @@ light-tower:
 processing-plant:
   - *common
   - "firmware/processing-plant/**"
+elevator-module:
+  - *common
+  - "firmware/elevator-module/**"
