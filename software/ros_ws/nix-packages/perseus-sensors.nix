@@ -8,6 +8,7 @@
   openssl,
   rclcpp,
   realsense2-camera,
+  realsense2-description,
   rtabmap,
   sensor-msgs,
   simple-networking,
@@ -26,6 +27,7 @@ buildRosPackage rec {
     openssl
     rclcpp
     realsense2-camera
+    realsense2-description
     rtabmap
     sensor-msgs
     simple-networking

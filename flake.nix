@@ -141,6 +141,7 @@
             ;
           inherit (pkgs.ros)
             rosbridge-suite
+            livox-ros-driver2
             rviz2-fixed
             rosbag2
             teleop-twist-keyboard
@@ -153,6 +154,7 @@
             rqt-plot
             rqt-reconfigure
             rqt-common-plugins
+            rmw-cyclonedds-cpp
             ;
         };
         # Packages which should be available only in the dev shell
@@ -182,8 +184,10 @@
             environmentDomainId = devDomainId;
             forceReleaseDomainId = true;
 
-            # enable coloured ros2 launch output
             postShellHook = ''
+              # use CycloneDDS ROS middleware
+              export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+              # enable coloured ros2 launch output
               export RCUTILS_COLORIZED_OUTPUT=1
             '';
           };

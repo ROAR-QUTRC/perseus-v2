@@ -110,7 +110,10 @@ namespace hi_can::parameters
     struct wrapped_value_t
     {
         wrapped_value_t() = default;
-        wrapped_value_t(T value) : value(value) {}
+        wrapped_value_t(T value)
+            : value(value)
+        {
+        }
         T value{};
     };
     template <typename T>
@@ -119,6 +122,10 @@ namespace hi_can::parameters
     public:
         using T::T;
 
+        SimpleSerializable(const T& value)
+        {
+            static_cast<T&>(*this) = value;
+        }
         SimpleSerializable(const std::vector<uint8_t>& serializedData)
         {
             deserializeData(serializedData);
@@ -285,6 +292,21 @@ namespace hi_can::parameters
     {
 
     }
+    namespace shared
+    {
+        namespace lifter_platform
+        {
+            namespace lifter
+            {
+                namespace motor
+                {
+                    struct speed_t : public scaled_int16_t<1.0>
+                    {
+                    };
+                }
+            }
+        }
+    }
 
     namespace legacy
     {
@@ -350,9 +372,61 @@ namespace hi_can::parameters
                 namespace contactor
                 {
 
+#pragma pack(push, 1)
+                    struct _control_t
+                    {
+                        bool immediate_shutdown : 1 = false;
+                        uint8_t _reserved : 7 = 0;   // padding to make a full byte
+                        uint8_t shutdown_timer = 0;  // if a non-0 value is received, shutdown in that many seconds
+                    };
+#pragma pack(pop)
+                    typedef SimpleSerializable<_control_t> control_t;
                 }
                 namespace power_bus
                 {
+                    enum class power_status : uint8_t
+                    {
+                        OFF = 0,        // bus off
+                        ON,             // bus on
+                        PRECHARGING,    // bus is precharging
+                        SHORT_CIRCUIT,  // precharging failed - short circuit
+                        SWITCH_FAILED,  // main switch not turning on - estop?
+                        OVERLOAD,       // software fuse triggered
+                        FAULT,          // switch reporting fault
+                    };
+#pragma pack(push, 1)
+                    struct _status_t
+                    {
+                        power_status status = power_status::OFF;
+                        uint16_t voltage = 0;  // in mV
+                        uint32_t current = 0;  // in mA
+                    };
+                    struct _immediate_control_t
+                    {
+                        bool bus_target_state : 1 = false;  // bus on/off state
+                        bool clear_error : 1 = false;       // retry if an error has occurred
+                        uint8_t _reserved : 6 = 0;          // padding to make a full byte
+                    };
+                    struct _scheduled_control_t
+                    {
+                        uint8_t bus_off_time = 0;  // if a non-0 value is received, turn off bus in that many seconds
+                        uint8_t bus_on_time = 0;   // if a non-0 value is received, turn on bus in that many seconds
+                    };
+#pragma pack(pop)
+                    typedef SimpleSerializable<_status_t> status_t;
+                    typedef SimpleSerializable<_immediate_control_t> immediate_control_t;
+                    typedef SimpleSerializable<_scheduled_control_t> scheduled_control_t;
+                    class PowerBusParameterGroup : public ParameterGroup
+                    {
+                    public:
+                        PowerBusParameterGroup(const addressing::legacy::address_t& deviceAddress, addressing::legacy::power::control::rcb::groups bus);
+
+                        auto& getStatus() { return _status; }
+
+                    private:
+                        addressing::legacy::address_t _deviceAddress;
+                        status_t _status{};
+                    };
                 }
             }
         }
@@ -364,7 +438,11 @@ namespace hi_can::parameters
                 struct _motor_speed_t
                 {
                     _motor_speed_t() = default;
-                    _motor_speed_t(bool enable, int16_t speed) : enable(enable), speed(speed) {}
+                    _motor_speed_t(bool enable, int16_t speed)
+                        : enable(enable),
+                          speed(speed)
+                    {
+                    }
                     bool enable = 0;
                     int16_t speed = 0;
                 };

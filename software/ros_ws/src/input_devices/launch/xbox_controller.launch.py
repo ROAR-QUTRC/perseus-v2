@@ -52,7 +52,7 @@ def generate_launch_description():
                 "high_high_speed_multiplier": high_speed_multiplier,
             }
         ],
-        remappings=[("/input_devices/cmd_vel", "/cmd_vel")],
+        remappings=[("/input_devices/cmd_vel", "/joy_vel")],
     )
     nodes = [joy_node, controller_node]
 
