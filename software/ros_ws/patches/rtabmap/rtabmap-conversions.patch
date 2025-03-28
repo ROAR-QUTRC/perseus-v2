@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3dd23609..6d7f9f6a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -19,7 +19,7 @@ find_package(tf2 REQUIRED)
+ find_package(tf2_eigen REQUIRED)
+ find_package(tf2_geometry_msgs REQUIRED)
+ 
+-find_package(RTABMap 0.21.5 REQUIRED)
++find_package(RTABMap 0.21.4 REQUIRED)
+ 
+ include_directories(
+   ${CMAKE_CURRENT_SOURCE_DIR}/include
