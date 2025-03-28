@@ -145,18 +145,19 @@ void startupAnimation()
         FastLED.show();
         std::this_thread::sleep_for(5s / LED_COUNT);
     }
-    
+
     std::vector<size_t> bandSizes = {HIGH_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT};
     std::vector<size_t> ringCount = {HIGH_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT};
     steady_clock::duration animationTime = 5s;
     int rotationCount = 3;
     steady_clock::duration stepTime = animationTime / (rotationCount * HIGH_DENSITY_LED_COUNT);
     float currentPos = 0.0f;
-    
+
     steady_clock::time_point startTime = steady_clock::now();
-    while((steady_clock::now() - startTime < 10s)) {
+    while ((steady_clock::now() - startTime < 10s))
+    {
         size_t currentOffset = 0;
-        for (size_t i = 0; i <= bandSizes.size(); i++) // Loop over all bands
+        for (size_t i = 0; i <= bandSizes.size(); i++)  // Loop over all bands
         {
             size_t bandSize = bandSizes[i];
             bool isReversed = i % 2;
@@ -164,21 +165,18 @@ void startupAnimation()
 
             fill_solid(&leds[ledIndex], bandSize, CRGB::Black);
 
-
             for (size_t j = 0; j <= ringCount[i]; j++)
             {
-                for (size_t k = 0; k <= (bandSize/ringCount[i])/2 ; k++) // loop over each LED in a half ring (bandSize/ringCount = Num of LEDs for a ring)
+                for (size_t k = 0; k <= (bandSize / ringCount[i]) / 2; k++)  // loop over each LED in a half ring (bandSize/ringCount = Num of LEDs for a ring)
                 {
-                    size_t ledOffset = (rotationOffset + k) % bandSize; 
-                    leds[ledOffset + currentOffset + (j*bandSize/ringCount[i])] = CRGB::White;
+                    size_t ledOffset = (rotationOffset + k) % bandSize;
+                    leds[ledOffset + currentOffset + (j * bandSize / ringCount[i])] = CRGB::White;
                 }
-
             }
             currentOffset += bandSize;
         }
         FastLED.show();
         std::this_thread::sleep_for(stepTime);
-        currentPos += 1.0f/ HIGH_DENSITY_LED_COUNT;
+        currentPos += 1.0f / HIGH_DENSITY_LED_COUNT;
     }
-}  
-    
+}
