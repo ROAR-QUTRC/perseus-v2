@@ -22,8 +22,6 @@
         <origin xyz="0 0 0.23" rpy="0 0 0"/>
     </joint>
 
-
-    <!-- M2M2 Lidar -->
     <link name="${prefix}m2m2_lidar_frame">
         <inertial>
             <mass value="0.165"/>
