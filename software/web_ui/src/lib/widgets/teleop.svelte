@@ -21,8 +21,8 @@
 </script>
 
 <script lang="ts">
-	// import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
-	// import ROSLIB from 'roslib';
+	import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import ROSLIB from 'roslib';
 
 	let joystickRadius = $derived<number>(Number(settings.groups.General.joyStickRadius.value));
 
