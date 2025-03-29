@@ -8,9 +8,9 @@ slam_toolbox:
     ceres_dogleg_type: TRADITIONAL_DOGLEG
     ceres_loss_function: None
     # ROS Parameters
-    odom_frame_id: lidar_frame
+    odom_frame: odom
     map_frame: map
-    base_frame_id: lidar_frame
+    base_frame: base_footprint
     scan_topic: /scan
     use_map_saver: true
     mode: mapping #localization
