@@ -1,9 +1,12 @@
-#include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "rclcpp/rclcpp.hpp"
 
-class TopicRemapper : public rclcpp::Node {
+class TopicRemapper : public rclcpp::Node
+{
 public:
-    TopicRemapper() : Node("topic_remapper") {
+    TopicRemapper()
+        : Node("topic_remapper")
+    {
         // Subscribe to /cmd_vel_nav
         subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
             "/cmd_vel_nav", 10,
@@ -14,7 +17,8 @@ public:
     }
 
 private:
-    void callback(const geometry_msgs::msg::Twist::SharedPtr msg) {
+    void callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+    {
         // Republish the received message
         publisher_->publish(*msg);
     }
@@ -23,7 +27,8 @@ private:
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[])
+{
     rclcpp::init(argc, argv);
     auto node = std::make_shared<TopicRemapper>();
     rclcpp::spin(node);

@@ -37,7 +37,6 @@ amcl:
     z_rand: 0.5
     z_short: 0.05
     scan_topic: scan
-
 bt_navigator:
   ros__parameters:
     global_frame: map
@@ -61,7 +60,6 @@ bt_navigator:
     # plugin_lib_names is used to add custom BT plugins to the executor (vector of strings).
     # Built-in plugins are added automatically
     # plugin_lib_names: []
-
     error_code_name_prefixes:
       - assisted_teleop
       - backup
@@ -75,7 +73,6 @@ bt_navigator:
       - spin
       - undock_robot
       - wait
-
 controller_server:
   ros__parameters:
     controller_frequency: 20.0
@@ -88,7 +85,6 @@ controller_server:
     goal_checker_plugins: ["general_goal_checker"] # "precise_goal_checker"
     controller_plugins: ["FollowPath"]
     use_realtime_priority: false
-
     # Progress checker parameters
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
@@ -134,10 +130,7 @@ controller_server:
         time_step: 3
       AckermannConstraints:
         min_turning_r: 0.2
-      critics: [
-        "ConstraintCritic", "CostCritic", "GoalCritic",
-        "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic",
-        "PathAngleCritic", "PreferForwardCritic"]
+      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic"]
       ConstraintCritic:
         enabled: true
         cost_power: 1
@@ -193,7 +186,6 @@ controller_server:
       #   enabled: true
       #   twirling_cost_power: 1
       #   twirling_cost_weight: 10.0
-
 local_costmap:
   local_costmap:
     ros__parameters:
@@ -241,7 +233,6 @@ local_costmap:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
       always_send_full_costmap: True
-
 global_costmap:
   global_costmap:
     ros__parameters:
@@ -281,21 +272,18 @@ global_costmap:
         cost_scaling_factor: 3.0
         inflation_radius: 0.7
       always_send_full_costmap: True
-
 # The yaml_filename does not need to be specified since it going to be set by defaults in launch.
 # If you'd rather set it in the yaml, remove the default "map" value in the tb3_simulation_launch.py
 # file & provide full path to map below. If CLI map configuration or launch default is provided, that will be used.
 # map_server:
 #   ros__parameters:
 #     yaml_filename: ""
-
 map_saver:
   ros__parameters:
     save_map_timeout: 5.0
     free_thresh_default: 0.25
     occupied_thresh_default: 0.65
     map_subscribe_transient_local: True
-
 planner_server:
   ros__parameters:
     expected_planner_frequency: 20.0
@@ -306,7 +294,6 @@ planner_server:
       tolerance: 0.5
       use_astar: false
       allow_unknown: true
-
 smoother_server:
   ros__parameters:
     smoother_plugins: ["simple_smoother"]
@@ -315,7 +302,6 @@ smoother_server:
       tolerance: 1.0e-10
       max_its: 1000
       do_refinement: True
-
 behavior_server:
   ros__parameters:
     local_costmap_topic: local_costmap/costmap_raw
@@ -348,7 +334,6 @@ behavior_server:
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
-
 waypoint_follower:
   ros__parameters:
     loop_rate: 20
@@ -359,7 +344,6 @@ waypoint_follower:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
       enabled: True
       waypoint_pause_duration: 200
-
 velocity_smoother:
   ros__parameters:
     smoothing_frequency: 20.0
@@ -373,7 +357,6 @@ velocity_smoother:
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-
 collision_monitor:
   ros__parameters:
     base_frame_id: "base_footprint"
@@ -404,7 +387,6 @@ collision_monitor:
       min_height: 0.15
       max_height: 2.0
       enabled: True
-
 docking_server:
   ros__parameters:
     controller_frequency: 50.0
@@ -418,17 +400,15 @@ docking_server:
     fixed_frame: "odom"
     dock_backwards: false
     dock_prestaging_tolerance: 0.5
-
     # Types of docks
-    dock_plugins: ['simple_charging_dock']
+    dock_plugins: ["simple_charging_dock"]
     simple_charging_dock:
-      plugin: 'opennav_docking::SimpleChargingDock'
+      plugin: "opennav_docking::SimpleChargingDock"
       docking_threshold: 0.05
       staging_x_offset: -0.7
       use_external_detection_pose: true
       use_battery_status: false # true
       use_stall_detection: false # true
-
       external_detection_timeout: 1.0
       external_detection_translation_x: -0.18
       external_detection_translation_y: 0.0
@@ -436,7 +416,6 @@ docking_server:
       external_detection_rotation_pitch: -1.57
       external_detection_rotation_yaw: 0.0
       filter_coef: 0.1
-
     # Dock instances
     # The following example illustrates configuring dock instances.
     # docks: ['home_dock']  # Input your docks here
@@ -444,7 +423,6 @@ docking_server:
     #   type: 'simple_charging_dock'
     #   frame: map
     #   pose: [0.0, 0.0, 0.0]
-
     controller:
       k_phi: 3.0
       k_delta: 2.0
@@ -457,11 +435,10 @@ docking_server:
       projection_time: 5.0
       simulation_step: 0.1
       dock_collision_threshold: 0.3
-
 loopback_simulator:
   ros__parameters:
     base_frame_id: "base_footprint"
     odom_frame_id: "odom"
     map_frame_id: "map"
-    scan_frame_id: "base_scan"  # tb4_loopback_simulator.launch.py remaps to 'rplidar_link'
+    scan_frame_id: "base_scan" # tb4_loopback_simulator.launch.py remaps to 'rplidar_link'
     update_duration: 0.02
