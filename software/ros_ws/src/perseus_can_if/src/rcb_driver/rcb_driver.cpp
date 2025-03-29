@@ -89,7 +89,6 @@ void RcbDriver::_canToRos()
 
     message.data = busData.dump();
 
-
     this->_packetPublisher->publish(message);
 }
 
