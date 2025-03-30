@@ -1,7 +1,7 @@
 <script lang="ts" module>
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 
 	export const name = 'Joystick Teleop - Under development';
 	export const description = 'Control the rover with a joystick';
@@ -14,6 +14,11 @@
 					type: 'number',
 					description: 'Joystick Radius in pixels',
 					value: '64'
+				},
+				speedMultiplyer: {
+					type: 'number',
+					description: 'Speed multiplyer for the joystick',
+					value: '1'
 				}
 			}
 		}
@@ -23,6 +28,7 @@
 <script lang="ts">
 	import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import ROSLIB from 'roslib';
+	import { linear } from 'svelte/easing';
 
 	let joystickRadius = $derived<number>(Number(settings.groups.General.joyStickRadius.value));
 
@@ -37,6 +43,9 @@
 
 	let joystickOrigin = { x: 0, y: 0 };
 	let mousePosition = { x: 0, offsetX: 0, y: 0, offsetY: 0 };
+	let output = { x: 0, y: 0 };
+
+	let topic: ROSLIB.Topic;
 
 	const updateJoystick = (x: number, y: number) => {
 		joystickHandle.style.left = `calc(${x}px - ${joystickRadius / 8}px)`;
@@ -94,25 +103,96 @@
 			}
 			// calculate bounds
 			updateJoystick(x, y);
+
+			output.x =
+				((Math.round(x) - joystickOrigin.x) /
+					Number(settings.groups.General.joyStickRadius.value!)) *
+				2;
+			output.y =
+				(-(Math.round(y) - joystickOrigin.y) /
+					Number(settings.groups.General.joyStickRadius.value!)) *
+				2;
 			data =
 				`<p>joystick position: ${joystickOrigin.x}, ${joystickOrigin.y}.</br>` +
 				`mouse position: ${mousePosition.x}, ${mousePosition.y}. mouse position offset: ${mousePosition.offsetX}, ${mousePosition.offsetY}.<p/>` +
-				`<p>Magnitude: ${Math.round(magnitude)} -> should limit: ${limit}</br>(x, y) -> (${Math.round(x)}, ${Math.round(y)})</p>`;
+				`<p>Magnitude: ${Math.round(magnitude)} -> should limit: ${limit}</br>(x, y) -> (${Math.round(x)}, ${Math.round(y)})</p>` +
+				`<p>Translate to ros: ${output.x} ${output.y} (rel pos)</p>`;
 		}
 	};
 
 	const onStop = () => {
+		output.x = 0;
+		output.y = 0;
 		joystickActive = false;
-		joystickContainer?.removeChild(joystickHandle);
-		joystickContainer?.removeChild(joystickBase);
+		if (joystickContainer?.children.length! > 0) {
+			joystickContainer?.removeChild(joystickHandle);
+			joystickContainer?.removeChild(joystickBase);
+		}
 	};
 
+	let intervalHandle: NodeJS.Timeout;
 	onMount(() => {
 		if (!joystickContainer) return;
 
 		joystickContainer.addEventListener('pointerdown', onStart);
 		joystickContainer.addEventListener('pointermove', onMove);
 		joystickContainer.addEventListener('pointerup', onStop);
+
+		intervalHandle = setInterval(() => {
+			// send ros message every 75ms to prevent flooding the network
+			let multiplyer = Number(settings.groups.General.speedMultiplyer.value);
+			topic.publish({
+				header: {}, // Leaving this empty forces ROS bridge to fill in the timestamp.
+				twist: {
+					linear: {
+						x: output.y * multiplyer,
+						y: 0,
+						z: 0
+					},
+					angular: {
+						x: 0,
+						y: 0,
+						z: output.x * multiplyer
+					}
+				}
+			});
+		}, 75);
+
+		topic = new ROSLIB.Topic({
+			ros: ros.value!,
+			name: 'cmd_vel',
+			messageType: 'geometry_msgs/TwistStamped'
+		});
+
+		return () => {
+			joystickContainer?.removeEventListener('pointerdown', onStart);
+			joystickContainer?.removeEventListener('pointermove', onMove);
+			joystickContainer?.removeEventListener('pointerup', onStop);
+			clearInterval(intervalHandle);
+			topic.publish({
+				header: {}, // Leaving this empty forces ROS bridge to fill in the timestamp.
+				twist: {
+					linear: {
+						x: 0,
+						y: 0,
+						z: 0
+					},
+					angular: {
+						x: 0,
+						y: 0,
+						z: 0
+					}
+				}
+			});
+		};
+	});
+
+	$effect(() => {
+		let multiplyer = Number(settings.groups.General.speedMultiplyer.value);
+		untrack(() => {
+			if (multiplyer < 0) settings.groups.General.speedMultiplyer.value = '0';
+			if (multiplyer > 2.5) settings.groups.General.speedMultiplyer.value = '2.5';
+		});
 	});
 </script>
 
@@ -122,7 +202,7 @@
 	style:z-index="2"
 >
 	<!-- <p style:z-index="-1">{data}</p> -->
-	{@html data}
+	<!-- {@html data} -->
 </div>
 <!-- Message must be on a lower z index so it doesn't trigger a mouse down event -->
 {#if !joystickActive}
