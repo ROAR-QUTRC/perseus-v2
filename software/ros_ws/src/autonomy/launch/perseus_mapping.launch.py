@@ -50,7 +50,6 @@ def generate_launch_description():
     )
 
     start_async_slam_toolbox_node = LifecycleNode(
-
         parameters=[
             slam_params_file,
             {
@@ -68,7 +67,6 @@ def generate_launch_description():
     configure_event = EmitEvent(
         event=ChangeState(
             lifecycle_node_matcher=matches_action(start_async_slam_toolbox_node),
-
             transition_id=Transition.TRANSITION_CONFIGURE,
         ),
         condition=IfCondition(
@@ -79,7 +77,6 @@ def generate_launch_description():
     activate_event = RegisterEventHandler(
         OnStateTransition(
             target_lifecycle_node=start_async_slam_toolbox_node,
-
             start_state="configuring",
             goal_state="inactive",
             entities=[
@@ -89,7 +86,6 @@ def generate_launch_description():
                         lifecycle_node_matcher=matches_action(
                             start_async_slam_toolbox_node
                         ),
-
                         transition_id=Transition.TRANSITION_ACTIVATE,
                     )
                 ),
