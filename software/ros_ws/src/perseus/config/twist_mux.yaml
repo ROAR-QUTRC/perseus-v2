@@ -6,11 +6,15 @@ twist_mux:
         topic: cmd_vel_nav_stamped
         timeout: 0.5
         priority: 10
-      joystick:
-        topic: joy_vel
+      web_ui:
+        topic: web_vel
         timeout: 0.5
-        priority: 100
+        priority: 80
       keyboard:
         topic: key_vel
         timeout: 0.5
         priority: 90
+      joystick:
+        topic: joy_vel
+        timeout: 0.5
+        priority: 100
