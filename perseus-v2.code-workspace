@@ -120,6 +120,15 @@
             "editor.defaultFormatter": "ibecker.treefmt-vscode"
         },
         "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/.DS_Store": true,
+            "**/Thumbs.db": true,
+            "**/.classpath": true,
+            "**/.project": true,
+            "**/.settings": true,
+            "**/.factorypath": true,
             "**/.direnv": true,
             "**/ros_ws/install": true
         },

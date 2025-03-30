@@ -6,8 +6,9 @@
         "limitSymbolsToIncludedHeaders": false
       },
       "includePath": [
-        "${workspaceFolder}/**",
         "${env:ROS_WORKSPACE_ENV_PATH}/include/**",
+        "${workspaceFolder}/**/include",
+        "${workspaceFolder}/software/**",
         "/usr/include/**"
       ],
       "name": "Linux",
