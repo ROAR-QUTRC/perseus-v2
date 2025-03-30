@@ -1,3 +1,6 @@
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -7,31 +10,24 @@ from launch.actions import (
 )
 from launch.conditions import IfCondition
 from launch.events import matches_action
-from launch.substitutions import (
-    AndSubstitution,
-    LaunchConfiguration,
-    NotSubstitution,
-    PathJoinSubstitution,
-)
-from launch_ros.actions import LifecycleNode, Node
+from launch.substitutions import AndSubstitution, LaunchConfiguration, NotSubstitution
+from launch_ros.actions import LifecycleNode
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState
-from launch_ros.substitutions import FindPackageShare
 from lifecycle_msgs.msg import Transition
 
 
 def generate_launch_description():
-    # Launch configurations
     autostart = LaunchConfiguration("autostart")
     use_lifecycle_manager = LaunchConfiguration("use_lifecycle_manager")
     use_sim_time = LaunchConfiguration("use_sim_time")
     slam_params_file = LaunchConfiguration("slam_params_file")
 
-    # Declare launch arguments as variables
-    declare_autostart = DeclareLaunchArgument(
+    declare_autostart_cmd = DeclareLaunchArgument(
         "autostart",
         default_value="true",
-        description="Automatically startup the slamtoolbox. Ignored when use_lifecycle_manager is true.",
+        description="Automatically startup the slamtoolbox. "
+        "Ignored when use_lifecycle_manager is true.",
     )
 
     declare_use_lifecycle_manager = DeclareLaunchArgument(
@@ -40,20 +36,20 @@ def generate_launch_description():
         description="Enable bond connection during node activation",
     )
 
-    declare_use_sim_time = DeclareLaunchArgument(
-        "use_sim_time", default_value="false", description="Use simulation/Gazebo clock"
+    declare_use_sim_time_argument = DeclareLaunchArgument(
+        "use_sim_time", default_value="true", description="Use simulation/Gazebo clock"
     )
-
-    declare_slam_params_file = DeclareLaunchArgument(
+    declare_slam_params_file_cmd = DeclareLaunchArgument(
         "slam_params_file",
-        default_value=PathJoinSubstitution(
-            [FindPackageShare("slam_toolbox"), "config", "slam_toolbox_params.yaml"]
+        default_value=os.path.join(
+            get_package_share_directory("slam_toolbox"),
+            "config",
+            "mapper_params_online_async.yaml",
         ),
-        description="Full path to the ROS2 parameters file for slam_toolbox",
+        description="Full path to the ROS2 parameters file to use for the slam_toolbox node",
     )
 
-    # SLAM Toolbox Node as variable
-    slam_toolbox_node = LifecycleNode(
+    start_async_slam_toolbox_node = LifecycleNode(
         parameters=[
             slam_params_file,
             {
@@ -68,10 +64,9 @@ def generate_launch_description():
         namespace="",
     )
 
-    # Lifecycle events as variables
     configure_event = EmitEvent(
         event=ChangeState(
-            lifecycle_node_matcher=matches_action(slam_toolbox_node),
+            lifecycle_node_matcher=matches_action(start_async_slam_toolbox_node),
             transition_id=Transition.TRANSITION_CONFIGURE,
         ),
         condition=IfCondition(
@@ -81,14 +76,16 @@ def generate_launch_description():
 
     activate_event = RegisterEventHandler(
         OnStateTransition(
-            target_lifecycle_node=slam_toolbox_node,
+            target_lifecycle_node=start_async_slam_toolbox_node,
             start_state="configuring",
             goal_state="inactive",
             entities=[
                 LogInfo(msg="[LifecycleLaunch] Slamtoolbox node is activating."),
                 EmitEvent(
                     event=ChangeState(
-                        lifecycle_node_matcher=matches_action(slam_toolbox_node),
+                        lifecycle_node_matcher=matches_action(
+                            start_async_slam_toolbox_node
+                        ),
                         transition_id=Transition.TRANSITION_ACTIVATE,
                     )
                 ),
@@ -99,22 +96,14 @@ def generate_launch_description():
         ),
     )
 
-    # TF Monitor as variable
-    tf_monitor_node = Node(
-        package="tf2_ros", executable="tf2_monitor", name="tf_monitor", output="screen"
-    )
-
-    # Build LaunchDescription
     ld = LaunchDescription()
 
-    # Add actions using variables
-    ld.add_action(declare_autostart)
+    ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_use_lifecycle_manager)
-    ld.add_action(declare_use_sim_time)
-    ld.add_action(declare_slam_params_file)
-    ld.add_action(slam_toolbox_node)
+    ld.add_action(declare_use_sim_time_argument)
+    ld.add_action(declare_slam_params_file_cmd)
+    ld.add_action(start_async_slam_toolbox_node)
     ld.add_action(configure_event)
     ld.add_action(activate_event)
-    ld.add_action(tf_monitor_node)
 
     return ld

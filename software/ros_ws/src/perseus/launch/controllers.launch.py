@@ -50,7 +50,7 @@ def generate_launch_description():
         arguments=[
             "diff_drive_base_controller",
             "--controller-ros-args",
-            "--remap /diff_drive_base_controller/cmd_vel:=/cmd_vel_out",
+            "--remap /diff_drive_base_controller/cmd_vel:=/cmd_vel_out --remap /diff_drive_base_controller/odom:=/odom",
         ],
         parameters=[use_sim_time_param],
     )
