@@ -160,7 +160,7 @@
 
 		topic = new ROSLIB.Topic({
 			ros: ros.value!,
-			name: 'cmd_vel',
+			name: 'web_vel',
 			messageType: 'geometry_msgs/TwistStamped'
 		});
 
