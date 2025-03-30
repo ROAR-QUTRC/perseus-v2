@@ -16,7 +16,6 @@
 
     <link name="${prefix}base_footprint"/>
 
-
     <!-- CHASSIS -->
     <xacro:chassis />
     <joint name="${prefix}chassis_joint" type="fixed">
