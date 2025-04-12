@@ -1,4 +1,6 @@
 (fp_lib_table
   (version 7)
-  (lib (name "Board Footprints")(type "KiCad")(uri "../libraries/Board_Footprints.pretty")(options "")(descr ""))
+  (lib (name "Project PCB")(type "KiCad")(uri "${KIPRJMOD} /../libraries/Project_PCB.pretty")(options "")(descr ""))
+  (lib (name "SMD")(type "KiCad")(uri "${KIPRJMOD} /../libraries/SMD.pretty")(options "")(descr ""))
+  (lib (name "THT")(type "KiCad")(uri "${KIPRJMOD} /../libraries/THT.pretty")(options "")(descr ""))
 )

@@ -1,0 +1,8 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "Project_PCB")(type "KiCad")(uri "${KIPRJMOD} /../libraries/Project_PCB.kicad_sym")(options "")(descr ""))
+  (lib (name "PMIC_MotorDriver")(type "KiCad")(uri "${KIPRJMOD} /../libraries/PMIC_MotorDriver.kicad_sym")(options "")(descr ""))
+  (lib (name "Capacitor")(type "KiCad")(uri "${KIPRJMOD} /../libraries/Capacitor.kicad_sym")(options "")(descr ""))
+  (lib (name "Resistor")(type "KiCad")(uri "${KIPRJMOD} /../libraries/Resistor.kicad_sym")(options "")(descr ""))
+  (lib (name "Manufacturer_Connectors")(type "KiCad")(uri "C:/Users/jcnic/Docs_Offline/VSCode_Projects/perseus-v2/hardware/libraries/Connectors.kicad_sym")(options "")(descr ""))
+)
