@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.23)
 
 project(
   arm-teleop-direct
-  VERSION 0.0.1
+  VERSION 1.0.0
   LANGUAGES CXX)
 
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
