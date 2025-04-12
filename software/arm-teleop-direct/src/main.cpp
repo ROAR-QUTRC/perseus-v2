@@ -158,7 +158,7 @@ void displayProgressBar(WINDOW* ncurses_win, int y, int x, uint16_t current, uin
     min = std::min(min, static_cast<uint16_t>(limits::MAX_POSITION));
     max = std::min(max, static_cast<uint16_t>(limits::MAX_POSITION));
 
-    const size_t barLength = 40;
+    const size_t barLength = ui::POSITION_BAR_LENGTH;
 
     // Calculate positions
     size_t currentPos = static_cast<size_t>((static_cast<double>(current) / limits::MAX_POSITION) * barLength);
@@ -794,8 +794,6 @@ int main(int argc, char* argv[])
                     }
                 }
             }
-
-            // ... rest of the function ...
 
             // Delay to prevent overwhelming servos
             std::this_thread::sleep_for(std::chrono::milliseconds(ui::SERVO_REFRESH_DELAY_MS));
