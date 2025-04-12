@@ -12,10 +12,7 @@
   ros2controlcli,
   ros2launch,
   rviz2,
-<<<<<<< HEAD
   twist-mux,
-=======
->>>>>>> eef4c7e (chore: nix-packages)
   xacro,
 }:
 buildRosPackage rec {
@@ -36,10 +33,7 @@ buildRosPackage rec {
     ros2controlcli
     ros2launch
     rviz2
-<<<<<<< HEAD
     twist-mux
-=======
->>>>>>> eef4c7e (chore: nix-packages)
     xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
