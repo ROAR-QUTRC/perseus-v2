@@ -20,8 +20,9 @@ public:
      * @brief Constructs a new ST3215ServoReader
      * @param port Serial port path (e.g., "/dev/ttyACM0")
      * @param baud_rate Baud rate for serial communication
+     * @param acceleration Acceleration value for servo movement (0-255)
      */
-    ST3215ServoReader(const std::string& port, unsigned int baud_rate, uint8_t acceleration = 128);
+    ST3215ServoReader(const std::string& port, unsigned int baud_rate, uint8_t acceleration = 30);
 
     /**
      * @brief Destructor ensures serial port is properly closed
@@ -67,7 +68,7 @@ public:
      */
     boost::asio::serial_port& getSerialPort() { return _serial_port; }
 
-public:  // Change this back to private once proper accessor methods are added
+private:
     /**
      * @brief Creates a write command packet according to ST3215 protocol
      * @param id Servo ID

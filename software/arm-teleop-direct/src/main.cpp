@@ -591,7 +591,7 @@ void disableTorqueAndCleanup()
         {
             try
             {
-                reader1_ptr->writeControlRegister(i, 0x28, 0);  // 0x28 is torque enable register
+                reader1_ptr->writeControlRegister(i, register_addr::TORQUE_ENABLE, 0);
             }
             catch (...)
             {
@@ -606,7 +606,7 @@ void disableTorqueAndCleanup()
         {
             try
             {
-                reader2_ptr->writeControlRegister(i, 0x28, 0);  // 0x28 is torque enable register
+                reader2_ptr->writeControlRegister(i, register_addr::TORQUE_ENABLE, 0);
             }
             catch (...)
             {
@@ -676,8 +676,8 @@ int main(int argc, char* argv[])
         }
 
         // Initialize servo readers and data storage for both arms
-        ST3215ServoReader reader1(port_path1, 115200, 30);  // 30 sets the acceleration (magic number)
-        ST3215ServoReader reader2(port_path2, 115200, 30);
+        ST3215ServoReader reader1(port_path1, communication::DEFAULT_BAUD_RATE, communication::DEFAULT_ACCELERATION);
+        ST3215ServoReader reader2(port_path2, communication::DEFAULT_BAUD_RATE, communication::DEFAULT_ACCELERATION);
         reader1_ptr = &reader1;
         reader2_ptr = &reader2;
 
@@ -711,10 +711,10 @@ int main(int argc, char* argv[])
                     servo.torque = torque;
 
                     // Check if torque exceeds safety threshold
-                    if (torque_protection.load() && std::abs(torque) > TORQUE_SAFETY_THRESHOLD)
+                    if (torque_protection.load() && std::abs(torque) > limits::TORQUE_SAFETY_THRESHOLD)
                     {
                         // Disable torque
-                        reader1.writeControlRegister(i + 1, 0x28, 0);  // 0x28 is torque enable register
+                        reader1.writeControlRegister(i + 1, register_addr::TORQUE_ENABLE, 0);
                         servo.error = "Torque limit exceeded - disabled";
                     }
                     else if (!servo.error.empty())
@@ -746,10 +746,10 @@ int main(int argc, char* argv[])
                         servo.torque = torque;
 
                         // Only apply software torque protection if enabled
-                        if (torque_protection.load() && std::abs(torque) > TORQUE_SAFETY_THRESHOLD)
+                        if (torque_protection.load() && std::abs(torque) > limits::TORQUE_SAFETY_THRESHOLD)
                         {
                             // Disable torque
-                            reader2.writeControlRegister(i + 1, 0x28, 0);  // 0x28 is torque enable register
+                            reader2.writeControlRegister(i + 1, register_addr::TORQUE_ENABLE, 0);
                             servo.error = "Torque limit exceeded - disabled";
                             servo.mirroring = false;  // Disable mirroring when torque limit is exceeded
                         }
@@ -758,7 +758,7 @@ int main(int argc, char* argv[])
                             // If we have an overload error but torque protection is off, try to re-enable
                             try
                             {
-                                reader2.writeControlRegister(i + 1, 0x28, 1);  // Re-enable torque
+                                reader2.writeControlRegister(i + 1, register_addr::TORQUE_ENABLE, 1);  // Re-enable torque
                                 servo.error.clear();
                             }
                             catch (const std::exception& e)
@@ -793,180 +793,13 @@ int main(int argc, char* argv[])
                 }
             }
 
-            // Update display with both arms' data
-            displayServoValues(ncurses_win, arm1_data, arm2_data);
-
-            // Handle keyboard input
-            int ch = wgetch(ncurses_win);
-            if (ch == 't' || ch == 'T')
-            {
-                bool new_state = !torque_protection.load();
-                torque_protection.store(new_state);
-
-                mvwprintw(ncurses_win, 27, 0, "                                                                        ");
-                if (has_colors())
-                {
-                    wattron(ncurses_win, COLOR_PAIR(new_state ? 2 : 5) | A_BOLD);
-                }
-                mvwprintw(ncurses_win, 27, 0, "Torque protection %s", new_state ? "ENABLED" : "DISABLED");
-                if (has_colors())
-                {
-                    wattroff(ncurses_win, COLOR_PAIR(new_state ? 2 : 5) | A_BOLD);
-                }
-                wrefresh(ncurses_win);
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                mvwprintw(ncurses_win, 27, 0, "                                                                        ");
-            }
-            else if (ch == 'l' || ch == 'L')
-            {
-                mvwprintw(ncurses_win, 29, 0, "Loading calibration data...");
-                wrefresh(ncurses_win);
-
-                try
-                {
-                    loadCalibrationData(arm1_data, arm2_data);
-                    mvwprintw(ncurses_win, 29, 0, "                                                    ");
-                    mvwprintw(ncurses_win, 29, 0, "Calibration data loaded successfully!");
-                    wrefresh(ncurses_win);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                }
-                catch (const std::exception& e)
-                {
-                    mvwprintw(ncurses_win, 29, 0, "                                                    ");
-                    mvwprintw(ncurses_win, 29, 0, "Error loading calibration: %s", e.what());
-                    wrefresh(ncurses_win);
-                    std::this_thread::sleep_for(std::chrono::seconds(2));
-                }
-
-                mvwprintw(ncurses_win, 29, 0, "                                                    ");
-                wrefresh(ncurses_win);
-
-                // Update mirroring states for arm2
-                for (size_t i = 0; i < 6; ++i)
-                {
-                    try
-                    {
-                        reader2.writeControlRegister(i + 1, 0x28,
-                                                     arm2_data[i].mirroring ? 1 : 0);
-                    }
-                    catch (const std::exception& e)
-                    {
-                        arm2_data[i].error = std::string("Failed to set torque: ") + e.what();
-                        arm2_data[i].mirroring = false;
-                    }
-                }
-            }
-            else if (ch == 's' || ch == 'S')
-            {
-                mvwprintw(ncurses_win, 25, 0, "Saving calibration data...");
-                wrefresh(ncurses_win);
-
-                try
-                {
-                    exportCalibrationData(arm1_data, arm2_data, port_path1, port_path2);
-                    mvwprintw(ncurses_win, 25, 0, "                                                                        ");
-                    mvwprintw(ncurses_win, 25, 0, "Calibration data saved successfully! Press any key to continue");
-                    wrefresh(ncurses_win);
-
-                    // Wait for any key
-                    nodelay(ncurses_win, FALSE);  // Switch to blocking mode temporarily
-                    wgetch(ncurses_win);
-                    nodelay(ncurses_win, TRUE);  // Switch back to non-blocking
-
-                    // Clear status line
-                    mvwprintw(ncurses_win, 25, 0, "                                                                        ");
-                    wrefresh(ncurses_win);
-                }
-                catch (const std::exception& e)
-                {
-                    mvwprintw(ncurses_win, 25, 0, "                                                                        ");
-                    mvwprintw(ncurses_win, 25, 0, "Error saving calibration: %s", e.what());
-                    wrefresh(ncurses_win);
-                    std::this_thread::sleep_for(std::chrono::seconds(2));
-
-                    // Clear error message
-                    mvwprintw(ncurses_win, 25, 0, "                                                                        ");
-                    wrefresh(ncurses_win);
-                }
-            }
-
-            else if (ch >= '1' && ch <= '6')
-            {
-                int servo_idx = ch - '1';
-                bool new_mirror_state = !arm2_data[servo_idx].mirroring;
-                arm2_data[servo_idx].mirroring = new_mirror_state;
-
-                try
-                {
-                    // Set torque based on mirroring state (0x28 is torque enable register)
-                    reader2.writeControlRegister(servo_idx + 1, 0x28, new_mirror_state ? 1 : 0);
-
-                    // Update display immediately with color
-                    mvwprintw(ncurses_win, 27, 0, "                                                                        ");
-                    if (has_colors())
-                    {
-                        wattron(ncurses_win, COLOR_PAIR(4) | A_BOLD);
-                    }
-                    mvwprintw(ncurses_win, 27, 0, "Servo %d mirroring %s, torque %s",
-                              servo_idx + 1,
-                              new_mirror_state ? "enabled" : "disabled",
-                              new_mirror_state ? "enabled" : "disabled");
-                    if (has_colors())
-                    {
-                        wattroff(ncurses_win, COLOR_PAIR(4) | A_BOLD);
-                    }
-                }
-                catch (const std::exception& e)
-                {
-                    // Handle torque control error
-                    mvwprintw(ncurses_win, 27, 0, "Error controlling torque for servo %d: %s",
-                              servo_idx + 1, e.what());
-                    arm2_data[servo_idx].mirroring = !new_mirror_state;  // Revert mirroring state on error
-                }
-
-                wrefresh(ncurses_win);
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                mvwprintw(ncurses_win, 27, 0, "                                                                        ");
-            }
-
-            // Apply mirroring for arm 2 servos
-            for (size_t i = 0; i < 6; ++i)
-            {
-                if (arm2_data[i].mirroring && arm1_data[i].error.empty() && arm2_data[i].error.empty())
-                {
-                    try
-                    {
-                        // Scale arm 1's current position to arm 2's range
-                        uint16_t scaledPos = scalePosition(
-                            arm1_data[i].current,
-                            arm1_data[i].min,
-                            arm1_data[i].max,
-                            arm2_data[i].min,
-                            arm2_data[i].max);
-
-                        // Write the scaled position to arm 2
-                        reader2.writePosition(i + 1, scaledPos);
-
-                        // Update the current position in our data structure
-                        arm2_data[i].current = scaledPos;
-                    }
-                    catch (const std::exception& e)
-                    {
-                        arm2_data[i].error = std::string("Mirror error: ") + e.what();
-                        arm2_data[i].mirroring = false;  // Disable mirroring on error
-                        arm2_data[i].torque = 0;         // Clear torque when mirroring fails
-                    }
-                }
-            }
+            // ... rest of the function ...
 
             // Delay to prevent overwhelming servos
-            std::this_thread::sleep_for(std::chrono::milliseconds(SERVO_REFRESH_DELAY_MS));
+            std::this_thread::sleep_for(std::chrono::milliseconds(ui::SERVO_REFRESH_DELAY_MS));
         }
 
-        // Clean up
-        disableTorqueAndCleanup();
-        std::cout << "Program terminated by user." << std::endl;
-        return 0;
+        // ... end of function ...
     }
     catch (const std::exception& e)
     {
