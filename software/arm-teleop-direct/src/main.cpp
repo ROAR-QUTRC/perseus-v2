@@ -19,8 +19,10 @@
 #include <thread>
 #include <vector>
 
-const int16_t SERVO_REFRESH_DELAY_MS = 25;
-const int16_t TORQUE_SAFETY_THRESHOLD = 800;  // 80% of maximum torque
+#include "servo-constants.hpp"
+
+// Use the servo constants namespace for easier access to constants
+using namespace perseus::servo;
 
 // Global variables for cleanup
 static ST3215ServoReader* reader1_ptr = nullptr;
