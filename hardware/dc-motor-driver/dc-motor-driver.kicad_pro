@@ -460,8 +460,15 @@
     }
   },
   "libraries": {
-    "pinned_footprint_libs": [],
-    "pinned_symbol_libs": []
+    "pinned_footprint_libs": [
+      "THT",
+      "Project PCB"
+    ],
+    "pinned_symbol_libs": [
+      "Manufacturer_Connectors",
+      "Resistor",
+      "Capacitor"
+    ]
   },
   "meta": {
     "filename": "dc-motor-driver.kicad_pro",
@@ -622,6 +629,35 @@
     "subpart_first_id": 65,
     "subpart_id_separator": 0
   },
-  "sheets": [],
+  "sheets": [
+    [
+      "fc286157-4263-4a46-ad05-98b3354aa28a",
+      "Root"
+    ],
+    [
+      "7de317d4-3d1e-4d6a-9df4-d39eb3e35b32",
+      "Driver_1"
+    ],
+    [
+      "92e3a97b-4604-4305-8719-7a31c2be7d8e",
+      "Driver_2"
+    ],
+    [
+      "cb7f55f2-47ab-49cc-bc72-89df683d7d50",
+      "Driver_3"
+    ],
+    [
+      "40f5114d-d621-443c-9e87-66cb3392bce6",
+      "Driver_4"
+    ],
+    [
+      "47ca5528-118a-41e5-93e9-251f6cf35694",
+      "Driver_5"
+    ],
+    [
+      "d9a6d9bc-65d3-41fc-becf-b57a61750c4d",
+      "Driver_6"
+    ]
+  ],
   "text_variables": {}
 }

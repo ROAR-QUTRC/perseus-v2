@@ -5,51 +5,36 @@
 	(uuid "088e7184-8f29-4d97-bbf4-3a0dfb16c037")
 	(paper "A4")
 	(lib_symbols
-		(symbol "2025-04-07_10-39-51:DRV8874PWPR"
+		(symbol "Capacitor:C_100n_50V_0603"
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0.254)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U"
-				(at 0 2.54 0)
-				(effects
-					(font
-						(size 1.524 1.524)
-					)
-				)
-			)
-			(property "Value" "DRV8874PWPR"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.524 1.524)
-					)
-				)
-			)
-			(property "Footprint" "PWP0016J_N"
-				(at 0 0 0)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
 				(effects
 					(font
 						(size 1.27 1.27)
-						(italic yes)
 					)
-					(hide yes)
+					(justify left)
 				)
 			)
-			(property "Datasheet" "DRV8874PWPR"
-				(at 0 0 0)
+			(property "Value" "100n"
+				(at 0.635 -2.54 0)
 				(effects
 					(font
 						(size 1.27 1.27)
-						(italic yes)
 					)
-					(hide yes)
+					(justify left)
 				)
 			)
-			(property "Description" ""
-				(at 0 0 0)
+			(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+				(at 24.638 -5.842 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -57,15 +42,16 @@
 					(hide yes)
 				)
 			)
-			(property "ki_locked" ""
-				(at 0 0 0)
+			(property "Datasheet" "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/609/CL10B104KB8NNNC_Spec.pdf"
+				(at 0 14.224 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
-			(property "ki_keywords" "DRV8874PWPR"
+			(property "Description" "Unpolarized capacitor"
 				(at 0 0 0)
 				(effects
 					(font
@@ -74,7 +60,53 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "PWP0016J_N PWP0016J_M PWP0016J_L PWP0016J_NV"
+			(property "Value 2" "50V"
+				(at 2.54 -4.318 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 3" "X7R"
+				(at 2.794 -6.096 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supplier" "DigiKey"
+				(at -7.62 12.192 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Part No" "1276-1000-1-ND"
+				(at 0 12.192 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL10B104KB8NNNC/3886658"
+				(at 0.254 16.51 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
 				(at 0 0 0)
 				(effects
 					(font
@@ -83,13 +115,22 @@
 					(hide yes)
 				)
 			)
-			(symbol "DRV8874PWPR_0_1"
+			(property "ki_fp_filters" "C_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "C_100n_50V_0603_0_1"
 				(polyline
 					(pts
-						(xy -15.24 33.02) (xy -15.24 -33.02)
+						(xy -2.032 0.762) (xy 2.032 0.762)
 					)
 					(stroke
-						(width 0.2032)
+						(width 0.508)
 						(type default)
 					)
 					(fill
@@ -98,80 +139,22 @@
 				)
 				(polyline
 					(pts
-						(xy -15.24 -33.02) (xy 15.24 -33.02)
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
 					)
 					(stroke
-						(width 0.2032)
+						(width 0.508)
 						(type default)
 					)
 					(fill
 						(type none)
 					)
 				)
-				(polyline
-					(pts
-						(xy 15.24 33.02) (xy -15.24 33.02)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 15.24 -33.02) (xy 15.24 33.02)
-					)
-					(stroke
-						(width 0.2032)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin power_in line
-					(at -20.32 27.94 0)
-					(length 5.08)
-					(name "VM"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "11"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -20.32 20.32 0)
-					(length 5.08)
-					(name "VCP"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "12"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -20.32 10.16 0)
-					(length 5.08)
-					(name "EN_IN1"
+			)
+			(symbol "C_100n_50V_0603_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 2.794)
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -186,10 +169,10 @@
 						)
 					)
 				)
-				(pin input line
-					(at -20.32 5.08 0)
-					(length 5.08)
-					(name "PH_IN2"
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -197,240 +180,6 @@
 						)
 					)
 					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -20.32 0 0)
-					(length 5.08)
-					(name "SLEEP_N"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin open_collector line
-					(at -20.32 -5.08 0)
-					(length 5.08)
-					(name "FAULT_N"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -20.32 -10.16 0)
-					(length 5.08)
-					(name "VREF"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at -20.32 -15.24 0)
-					(length 5.08)
-					(name "IPROPI"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -20.32 -20.32 0)
-					(length 5.08)
-					(name "IMODE"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -20.32 -25.4 0)
-					(length 5.08)
-					(name "PMODE"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "16"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at 20.32 27.94 180)
-					(length 5.08)
-					(name "OUT1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 20.32 20.32 180)
-					(length 5.08)
-					(name "PGND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "9"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at 20.32 12.7 180)
-					(length 5.08)
-					(name "OUT2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 20.32 -2.54 180)
-					(length 5.08)
-					(name "CPH"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "13"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 20.32 -10.16 180)
-					(length 5.08)
-					(name "CPL"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "14"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 20.32 -25.4 180)
-					(length 5.08)
-					(name "PAD"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "17"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 20.32 -27.94 180)
-					(length 5.08)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "15"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -441,31 +190,102 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Connector:Conn_01x03_Pin"
-			(pin_names
-				(offset 1.016)
+		(symbol "Capacitor:C_100u_35V"
+			(pin_numbers
 				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "J"
-				(at 0 5.08 0)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Value" "Conn_01x03_Pin"
-				(at 0 -5.08 0)
+			(property "Value" "100u"
+				(at 0.635 -2.54 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Footprint" ""
+			(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x7.7"
+				(at 0.762 -11.43 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.we-online.com/components/products/datasheet/865080545012.pdf"
+				(at 5.08 -17.78 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Description" "Polarized 100u 35V capacitor"
+				(at 0 10.16 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "35V"
+				(at 0.762 -4.572 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Supplier" "DigiKey"
+				(at 5.08 -22.86 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Part No" "732-8511-1-ND"
+				(at 15.24 -22.86 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/w%C3%BCrth-elektronik/865080545012/5728106"
+				(at 5.08 -20.32 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
 				(at 0 0 0)
 				(effects
 					(font
@@ -474,7 +294,7 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "~"
+			(property "ki_fp_filters" "CP_Elec_6.3x7.7"
 				(at 0 0 0)
 				(effects
 					(font
@@ -483,81 +303,12 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "Generic connector, single row, 01x03, script generated"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_locked" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "connector"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "Connector*:*_1x??_*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "Conn_01x03_Pin_1_1"
+			(symbol "C_100u_35V_0_1"
 				(rectangle
-					(start 0.8636 2.667)
-					(end 0 2.413)
+					(start -2.286 0.508)
+					(end 2.286 1.016)
 					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start 0.8636 0.127)
-					(end 0 -0.127)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start 0.8636 -2.413)
-					(end 0 -2.667)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 2.54) (xy 0.8636 2.54)
-					)
-					(stroke
-						(width 0.1524)
+						(width 0)
 						(type default)
 					)
 					(fill
@@ -566,10 +317,10 @@
 				)
 				(polyline
 					(pts
-						(xy 1.27 0) (xy 0.8636 0)
+						(xy -1.778 2.286) (xy -0.762 2.286)
 					)
 					(stroke
-						(width 0.1524)
+						(width 0)
 						(type default)
 					)
 					(fill
@@ -578,20 +329,33 @@
 				)
 				(polyline
 					(pts
-						(xy 1.27 -2.54) (xy 0.8636 -2.54)
+						(xy -1.27 2.794) (xy -1.27 1.778)
 					)
 					(stroke
-						(width 0.1524)
+						(width 0)
 						(type default)
 					)
 					(fill
 						(type none)
 					)
 				)
+				(rectangle
+					(start 2.286 -0.508)
+					(end -2.286 -1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+			)
+			(symbol "C_100u_35V_1_1"
 				(pin passive line
-					(at 5.08 2.54 180)
-					(length 3.81)
-					(name "Pin_1"
+					(at 0 3.81 270)
+					(length 2.794)
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -607,9 +371,9 @@
 					)
 				)
 				(pin passive line
-					(at 5.08 0 180)
-					(length 3.81)
-					(name "Pin_2"
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -624,17 +388,369 @@
 						)
 					)
 				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Capacitor:C_10u_16V_0805"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "10u"
+				(at 0.635 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+				(at 24.638 -5.842 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/658/CL21A106KOQNNNG_Spec.pdf"
+				(at 0 14.224 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Unpolarized capacitor"
+				(at 0 -11.684 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "16V"
+				(at 2.54 -4.318 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 3" "X5R"
+				(at 2.794 -6.096 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supplier" "DigiKey"
+				(at -7.366 11.938 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Part No" "1276-6455-1-ND"
+				(at 0 11.938 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL21A106KOQNNNG/3894417"
+				(at 0.254 16.256 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "C_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "C_10u_16V_0805_0_1"
+				(polyline
+					(pts
+						(xy -2.032 0.762) (xy 2.032 0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "C_10u_16V_0805_1_1"
 				(pin passive line
-					(at 5.08 -2.54 180)
-					(length 3.81)
-					(name "Pin_3"
+					(at 0 3.81 270)
+					(length 2.794)
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
 							)
 						)
 					)
-					(number "3"
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Capacitor:C_22n_50V_0603"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "22n"
+				(at 0.635 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+				(at 24.638 -5.842 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.passivecomponent.com/wp-content/uploads/datasheet/WTC_MLCC_General_Purpose.pdf"
+				(at 0 14.224 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Unpolarized capacitor"
+				(at 0 -11.684 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "50V"
+				(at 2.54 -4.318 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 3" "X7R"
+				(at 2.794 -6.096 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supplier" "DigiKey"
+				(at -7.366 11.938 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Part No" "1292-1414-1-ND"
+				(at 0 11.938 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/walsin-technology-corporation/0603B223J500CT/9354911"
+				(at 0.254 16.256 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "C_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "C_22n_50V_0603_0_1"
+				(polyline
+					(pts
+						(xy -2.032 0.762) (xy 2.032 0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "C_22n_50V_0603_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 2.794)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -835,36 +951,32 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:C"
-			(pin_numbers
+		(symbol "Jumper:Jumper_3_Bridged12"
+			(pin_names
+				(offset 0)
 				(hide yes)
 			)
-			(pin_names
-				(offset 0.254)
-			)
 			(exclude_from_sim no)
-			(in_bom yes)
+			(in_bom no)
 			(on_board yes)
-			(property "Reference" "C"
-				(at 0.635 2.54 0)
+			(property "Reference" "JP"
+				(at -2.54 -2.54 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(justify left)
 				)
 			)
-			(property "Value" "C"
-				(at 0.635 -2.54 0)
+			(property "Value" "Jumper_3_Bridged12"
+				(at 0 2.794 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(justify left)
 				)
 			)
 			(property "Footprint" ""
-				(at 0.9652 -3.81 0)
+				(at 0 0 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -881,7 +993,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "Unpolarized capacitor"
+			(property "Description" "Jumper, 3-pole, pins 1+2 closed/bridged"
 				(at 0 0 0)
 				(effects
 					(font
@@ -890,7 +1002,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "cap capacitor"
+			(property "ki_keywords" "Jumper SPDT"
 				(at 0 0 0)
 				(effects
 					(font
@@ -899,7 +1011,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "C_*"
+			(property "ki_fp_filters" "Jumper* TestPoint*3Pads* TestPoint*Bridge*"
 				(at 0 0 0)
 				(effects
 					(font
@@ -908,13 +1020,48 @@
 					(hide yes)
 				)
 			)
-			(symbol "C_0_1"
-				(polyline
-					(pts
-						(xy -2.032 0.762) (xy 2.032 0.762)
-					)
+			(symbol "Jumper_3_Bridged12_0_0"
+				(circle
+					(center -3.302 0)
+					(radius 0.508)
 					(stroke
-						(width 0.508)
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 0 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 3.302 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Jumper_3_Bridged12_0_1"
+				(arc
+					(start -3.048 0.508)
+					(mid -1.651 0.9912)
+					(end -0.254 0.508)
+					(stroke
+						(width 0)
 						(type default)
 					)
 					(fill
@@ -923,10 +1070,10 @@
 				)
 				(polyline
 					(pts
-						(xy -2.032 -0.762) (xy 2.032 -0.762)
+						(xy 0 -1.27) (xy 0 -0.508)
 					)
 					(stroke
-						(width 0.508)
+						(width 0)
 						(type default)
 					)
 					(fill
@@ -934,11 +1081,11 @@
 					)
 				)
 			)
-			(symbol "C_1_1"
+			(symbol "Jumper_3_Bridged12_1_1"
 				(pin passive line
-					(at 0 3.81 270)
-					(length 2.794)
-					(name "~"
+					(at -6.35 0 0)
+					(length 2.54)
+					(name "A"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -955,8 +1102,8 @@
 				)
 				(pin passive line
 					(at 0 -3.81 90)
-					(length 2.794)
-					(name "~"
+					(length 2.54)
+					(name "C"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -971,21 +1118,36 @@
 						)
 					)
 				)
+				(pin passive line
+					(at 6.35 0 180)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:C_Polarized"
-			(pin_numbers
-				(hide yes)
-			)
+		(symbol "PMIC_MotorDriver:DRV8874PWPR"
 			(pin_names
-				(offset 0.254)
+				(offset 1.016)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "C"
-				(at 0.635 2.54 0)
+			(property "Reference" "U"
+				(at -12.7 20.828 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -993,8 +1155,8 @@
 					(justify left)
 				)
 			)
-			(property "Value" "C_Polarized"
-				(at 0.635 -2.54 0)
+			(property "Value" "DRV8874PWPR"
+				(at -12.7 19.05 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1002,8 +1164,8 @@
 					(justify left)
 				)
 			)
-			(property "Footprint" ""
-				(at 0.9652 -3.81 0)
+			(property "Footprint" "Package_SO:HTSSOP-16-1EP_4.4x5mm_P0.65mm_EP3.4x5mm_Mask2.66x2.46mm_ThermalVias"
+				(at 32.766 26.162 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1011,7 +1173,52 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "~"
+			(property "Datasheet" "https://www.ti.com/lit/gpn/drv8874"
+				(at 5.08 24.13 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "H-Bridge Motor Driver, HTSSOP-16"
+				(at 22.86 -25.4 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supplier" "DigiKey"
+				(at 8.89 -22.86 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supplier Part No" "296-DRV8874PWPRCT-ND"
+				(at 26.67 -22.86 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/texas-instruments/DRV8874PWPR/11502339"
+				(at 50.8 -20.32 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "H-Bridge Motor Driver"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1020,7 +1227,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "Polarized capacitor"
+			(property "ki_fp_filters" "HTSSOP-16*EP*"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1029,77 +1236,60 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "cap capacitor"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "CP_*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "C_Polarized_0_1"
+			(symbol "DRV8874PWPR_0_1"
 				(rectangle
-					(start -2.286 0.508)
-					(end 2.286 1.016)
+					(start -12.7 17.78)
+					(end 12.7 -17.78)
 					(stroke
-						(width 0)
+						(width 0.254)
 						(type default)
 					)
 					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.778 2.286) (xy -0.762 2.286)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 2.794) (xy -1.27 1.778)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start 2.286 -0.508)
-					(end -2.286 -1.016)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type outline)
+						(type background)
 					)
 				)
 			)
-			(symbol "C_Polarized_1_1"
-				(pin passive line
-					(at 0 3.81 270)
-					(length 2.794)
-					(name "~"
+			(symbol "DRV8874PWPR_1_1"
+				(pin power_in line
+					(at -17.78 15.24 0)
+					(length 5.08)
+					(name "VM"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -17.78 7.62 0)
+					(length 5.08)
+					(name "VCP"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -17.78 2.54 0)
+					(length 5.08)
+					(name "EN_IN1"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1114,10 +1304,10 @@
 						)
 					)
 				)
-				(pin passive line
-					(at 0 -3.81 90)
-					(length 2.794)
-					(name "~"
+				(pin input line
+					(at -17.78 0 0)
+					(length 5.08)
+					(name "PH_IN2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1132,10 +1322,244 @@
 						)
 					)
 				)
+				(pin input line
+					(at -17.78 -5.08 0)
+					(length 5.08)
+					(name "~{SLEEP}"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -17.78 -7.62 0)
+					(length 5.08)
+					(name "VREF"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -17.78 -10.16 0)
+					(length 5.08)
+					(name "IMODE"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -17.78 -12.7 0)
+					(length 5.08)
+					(name "PMODE"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "16"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -2.54 -22.86 90)
+					(length 5.08)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "15"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 -22.86 90)
+					(length 5.08)
+					(name "PGND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 2.54 -22.86 90)
+					(length 5.08)
+					(name "GND(PAD)"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "17"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at 17.78 15.24 180)
+					(length 5.08)
+					(name "OUT1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at 17.78 12.7 180)
+					(length 5.08)
+					(name "OUT2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 17.78 7.62 180)
+					(length 5.08)
+					(name "CPH"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 17.78 0 180)
+					(length 5.08)
+					(name "CPL"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin open_collector line
+					(at 17.78 -5.08 180)
+					(length 5.08)
+					(name "~{FAULT}"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 17.78 -10.16 180)
+					(length 5.08)
+					(name "IPROPI"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:R"
+		(symbol "Resistor:R_10k_0603"
 			(pin_numbers
 				(hide yes)
 			)
@@ -1146,23 +1570,25 @@
 			(in_bom yes)
 			(on_board yes)
 			(property "Reference" "R"
-				(at 2.032 0 90)
+				(at 1.27 -1.016 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Value" "R"
-				(at 0 0 90)
+			(property "Value" "10k"
+				(at 1.27 1.016 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Footprint" ""
-				(at -1.778 0 90)
+			(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+				(at 4.064 0 90)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1170,8 +1596,8 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
+			(property "Datasheet" "https://www.yageo.com/upload/media/product/products/datasheet/rchip/PYu-RC_Group_51_RoHS_L_12.pdf"
+				(at 0 33.02 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1180,7 +1606,36 @@
 				)
 			)
 			(property "Description" "Resistor"
-				(at 0 0 0)
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supplier" "DigiKey"
+				(at -7.366 28.702 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Part No" "311-10.0KHRCT-ND"
+				(at 0 28.448 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/yageo/RC0603FR-0710KL/726880"
+				(at 0.254 30.734 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1206,10 +1661,10 @@
 					(hide yes)
 				)
 			)
-			(symbol "R_0_1"
+			(symbol "R_10k_0603_0_1"
 				(rectangle
-					(start -1.016 -2.54)
-					(end 1.016 2.54)
+					(start -1.016 2.54)
+					(end 1.016 -2.54)
 					(stroke
 						(width 0.254)
 						(type default)
@@ -1219,7 +1674,317 @@
 					)
 				)
 			)
-			(symbol "R_1_1"
+			(symbol "R_10k_0603_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Resistor:R_20k_0603"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 1.27 -1.016 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "20k"
+				(at 1.27 1.016 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+				(at 4.064 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.yageo.com/upload/media/product/productsearch/datasheet/rchip/PYu-AC_51_RoHS_L_11.pdf"
+				(at -0.254 25.4 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supplier" "DigiKey"
+				(at -7.366 20.32 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Part No" "13-AC0603FR-1320KLCT-ND"
+				(at 0 20.066 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/yageo/AC0603FR-1320KL/14008244"
+				(at 0 23.114 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_20k_0603_0_1"
+				(rectangle
+					(start -1.016 2.54)
+					(end 1.016 -2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_20k_0603_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Resistor:R_2k2_0603"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 1.27 -1.016 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "2k2"
+				(at 1.27 1.016 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+				(at 4.064 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.yageo.com/upload/media/product/productsearch/datasheet/rchip/PYu-RC_51_RoHS_P_5.pdf"
+				(at 0 33.02 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supplier" "DigiKey"
+				(at -7.366 27.94 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Part No" "YAG1296CT-ND"
+				(at 0.762 27.686 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/yageo/RC0603FR-072K2P/4935311"
+				(at 0 30.48 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_2k2_0603_0_1"
+				(rectangle
+					(start -1.016 2.54)
+					(end 1.016 -2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_2k2_0603_1_1"
 				(pin passive line
 					(at 0 3.81 270)
 					(length 1.27)
@@ -1613,7 +2378,7 @@
 	)
 	(text "PWM"
 		(exclude_from_sim no)
-		(at 137.16 121.285 0)
+		(at 87.63 67.31 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1621,19 +2386,20 @@
 		)
 		(uuid "48626ecf-f6e6-4aa7-9114-9c4bdce714a5")
 	)
-	(text "current chop"
+	(text "GND: Auto retry, fixed off-time\n20K: Auto retry, cycle-by-cycle\n62K: Latch off, cycle-by-cycle\nHi-Z: Latch off, fixed off-time"
 		(exclude_from_sim no)
-		(at 144.145 102.235 0)
+		(at 52.07 69.85 0)
 		(effects
 			(font
-				(size 1.27 1.27)
+				(size 0.762 0.762)
 			)
+			(justify left)
 		)
 		(uuid "bcd0141d-e0d7-411c-bc50-3ba6cf2a1e72")
 	)
-	(text "PH/EN CTRL"
+	(text "PH/EN"
 		(exclude_from_sim no)
-		(at 140.97 126.365 0)
+		(at 80.01 67.31 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1642,338 +2408,240 @@
 		(uuid "fce9dce3-dafe-4be7-bc97-47e5ed1a4352")
 	)
 	(junction
-		(at 120.65 52.07)
+		(at 63.5 25.4)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "14cb5e53-fdb0-448c-81d3-1debf63c7067")
+		(uuid "2f40cc43-984b-4073-b3b2-3b68d8157be4")
 	)
 	(junction
-		(at 106.045 52.07)
+		(at 50.8 33.02)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "1a1c6701-8504-483e-8b4f-645d59532bfd")
+		(uuid "57e23df0-bb00-4aa3-9c8d-23509f8bfddc")
 	)
 	(junction
-		(at 113.665 59.69)
+		(at 76.2 25.4)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "4d6f2eed-b50e-46af-895a-95fd433a835e")
+		(uuid "a1c53f45-d18f-40ba-b23d-ce066c149a76")
 	)
 	(junction
-		(at 99.06 90.17)
+		(at 50.8 25.4)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "4f0d375b-31fa-4916-8244-ed65cc142b8d")
+		(uuid "a3c4c637-a01a-46ba-b303-a83ad23f7a9a")
 	)
 	(junction
-		(at 132.715 52.07)
+		(at 119.38 50.8)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "563fd53d-69e8-4fde-b098-bd1e539f1e13")
+		(uuid "b8df5aae-18dd-4b08-a6ae-2e9843a95f82")
 	)
 	(junction
-		(at 122.555 95.25)
+		(at 101.6 63.5)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "7199c579-56bd-4e8f-8c21-0ea1730c5b65")
+		(uuid "f9ad6d2f-2e8d-482c-aebc-d38fd320e9ed")
 	)
 	(junction
-		(at 180.975 67.31)
+		(at 64.77 48.26)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "8d882482-9f36-4811-8ded-137a336bfbef")
-	)
-	(junction
-		(at 86.995 90.17)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "9b20e26e-8791-4c17-9e60-c56c9f9e84d4")
-	)
-	(junction
-		(at 92.71 98.425)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "cf581276-7db1-47ba-bbc7-15ab0f314a81")
-	)
-	(junction
-		(at 180.975 107.95)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "ebd6ede3-4557-493b-b0f5-0af48071640a")
+		(uuid "fd773d67-04b6-4bf0-b573-90ac1e2528ae")
 	)
 	(wire
 		(pts
-			(xy 120.65 52.07) (xy 132.715 52.07)
+			(xy 119.38 50.8) (xy 121.92 50.8)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "0ee163c0-e553-4bc6-98dd-c83b7301f858")
+		(uuid "01f75b9c-51a8-4d7a-8e23-73655520cc32")
 	)
 	(wire
 		(pts
-			(xy 180.975 82.55) (xy 184.785 82.55)
+			(xy 76.2 33.02) (xy 83.82 33.02)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "1d7912ab-afac-48b9-aee2-c73a76f400f1")
+		(uuid "02e8bb4d-d8ec-41cd-8e5a-5ceb70da4861")
 	)
 	(wire
 		(pts
-			(xy 180.975 90.17) (xy 184.785 90.17)
+			(xy 82.55 38.1) (xy 83.82 38.1)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "329957f5-97bc-4eed-9ee8-04ea4821c114")
+		(uuid "0738faca-e356-49ef-a0d5-d8905a2dfe58")
 	)
 	(wire
 		(pts
-			(xy 99.06 90.17) (xy 140.335 90.17)
+			(xy 50.8 25.4) (xy 63.5 25.4)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "336a8485-510d-4cea-a3ef-27e7e70c94c6")
+		(uuid "2f7a4bfc-ca5a-41dc-a1e5-f1790ccb78bd")
 	)
 	(wire
 		(pts
-			(xy 106.045 52.07) (xy 120.65 52.07)
+			(xy 99.06 63.5) (xy 101.6 63.5)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "3cc05f40-58d9-4147-942e-7f9f1791702e")
+		(uuid "3859104d-9ddf-4a1a-837e-4cdfa693039b")
 	)
 	(wire
 		(pts
-			(xy 179.07 67.31) (xy 180.975 67.31)
+			(xy 119.38 45.72) (xy 121.92 45.72)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "3d9fc875-c40a-42e5-9999-66881681b1aa")
+		(uuid "3cfb5779-813b-4dd6-ac79-835e0b086443")
 	)
 	(wire
 		(pts
-			(xy 132.715 52.07) (xy 140.335 52.07)
+			(xy 83.82 53.34) (xy 83.82 57.15)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "3db5a9b2-62a6-44f7-aed9-fa0f7e68f22b")
+		(uuid "5288d478-3924-4054-89cc-135cdd96fb5d")
 	)
 	(wire
 		(pts
-			(xy 184.785 67.31) (xy 180.975 67.31)
+			(xy 121.92 25.4) (xy 119.38 25.4)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "4494c5d6-42a4-4eaa-9166-2a810418c9ae")
+		(uuid "56764515-2b68-4b09-8aa0-25334254ca72")
 	)
 	(wire
 		(pts
-			(xy 99.06 90.17) (xy 99.06 90.805)
+			(xy 73.66 59.69) (xy 73.66 50.8)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "491a161a-c560-41f8-9647-8c11b149b16e")
+		(uuid "6a2e837e-df9a-4213-b1d1-ad05d47fa325")
 	)
 	(wire
 		(pts
-			(xy 132.715 59.69) (xy 140.335 59.69)
+			(xy 64.77 48.26) (xy 83.82 48.26)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "51d4dcf0-dfbd-4cd5-b56f-dbc52bd67356")
+		(uuid "6e6366d8-ee96-4bb8-8a1f-2ca6d6c1e8f9")
 	)
 	(wire
 		(pts
-			(xy 92.71 98.425) (xy 99.06 98.425)
+			(xy 82.55 40.64) (xy 83.82 40.64)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "52135827-91b0-45af-9f70-95c79c505013")
+		(uuid "aaf2ad54-ea77-40ca-a3bd-93767ba67a76")
 	)
 	(wire
 		(pts
-			(xy 184.785 52.07) (xy 180.975 52.07)
+			(xy 121.92 27.94) (xy 119.38 27.94)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "5bba07fc-978b-4dfc-bba2-650f2667cae5")
+		(uuid "aeb2add0-261c-47ef-86e2-160934fe3fb3")
 	)
 	(wire
 		(pts
-			(xy 121.285 95.25) (xy 122.555 95.25)
+			(xy 73.66 50.8) (xy 83.82 50.8)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "5fb97436-cc14-4701-9834-5db3012421e7")
+		(uuid "b4fd1222-51bb-4608-a4b1-a6dc63975cbf")
 	)
 	(wire
 		(pts
-			(xy 132.08 100.33) (xy 140.335 100.33)
+			(xy 63.5 25.4) (xy 76.2 25.4)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "6474ccd5-24fb-4249-b238-50942add6206")
+		(uuid "b5d873cc-f866-4ddc-8e0f-fbff64b7c4c1")
 	)
 	(wire
 		(pts
-			(xy 131.445 126.365) (xy 133.985 126.365)
+			(xy 54.61 48.26) (xy 57.15 48.26)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "6adf949e-0e91-49ea-a516-e7d9c549a973")
+		(uuid "bcae4c94-0397-4bc6-af98-3b2245dd73ad")
 	)
 	(wire
 		(pts
-			(xy 86.995 98.425) (xy 92.71 98.425)
+			(xy 101.6 63.5) (xy 104.14 63.5)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "864e4b93-ed7e-4bb4-ab7e-0d1bf584f380")
+		(uuid "e36bb762-3121-4da9-b75c-1d15e816cc04")
 	)
 	(wire
 		(pts
-			(xy 131.445 123.825) (xy 140.335 123.825)
+			(xy 50.8 33.02) (xy 63.5 33.02)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "87983388-0bf5-419d-8b90-28e92e7df436")
+		(uuid "e3fe7fea-b963-4daf-a1fd-de5a143b99f0")
 	)
 	(wire
 		(pts
-			(xy 122.555 95.25) (xy 140.335 95.25)
+			(xy 82.55 45.72) (xy 83.82 45.72)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "8dfd82db-ce92-49e4-84c0-cb692e88b5f0")
+		(uuid "ef57ec44-be1b-47b3-8096-79302ca9a496")
 	)
 	(wire
 		(pts
-			(xy 86.995 90.17) (xy 99.06 90.17)
+			(xy 76.2 25.4) (xy 83.82 25.4)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "8f2d459e-af71-4cf5-b466-d366d025f101")
+		(uuid "f1c0d077-286f-4fb1-baac-a43ef6d55da8")
 	)
-	(wire
-		(pts
-			(xy 140.335 123.825) (xy 140.335 105.41)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9ce55915-95db-4ee5-a50f-c793b6bf1d57")
-	)
-	(wire
-		(pts
-			(xy 86.995 90.805) (xy 86.995 90.17)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a3927a32-a2ea-4944-b0fb-0e937144134d")
-	)
-	(wire
-		(pts
-			(xy 106.045 59.69) (xy 113.665 59.69)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a83953ab-1c93-43ea-80ec-aeec48a9c2c9")
-	)
-	(wire
-		(pts
-			(xy 180.975 105.41) (xy 180.975 107.95)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c2c63e0b-e6b7-42c1-bfc7-76aff38123a1")
-	)
-	(wire
-		(pts
-			(xy 113.665 59.69) (xy 120.65 59.69)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c582aac4-f6c2-499e-af02-a9d4fed65704")
-	)
-	(wire
-		(pts
-			(xy 184.785 52.07) (xy 184.785 58.42)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c8531ed4-00d1-403f-8774-6e6b8f8a7301")
-	)
-	(wire
-		(pts
-			(xy 131.445 121.285) (xy 133.985 121.285)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d26ff018-8351-4212-92b0-d7d20b5f33b5")
-	)
-	(wire
-		(pts
-			(xy 184.785 60.96) (xy 184.785 67.31)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e713880a-342c-4e79-be8d-0e2d24621384")
-	)
-	(hierarchical_label "MOT_nSLEEP"
-		(shape output)
-		(at 140.335 80.01 180)
+	(hierarchical_label "~{SLEEP}"
+		(shape input)
+		(at 82.55 45.72 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1982,9 +2650,9 @@
 		)
 		(uuid "3b7542da-ab8e-42c0-9e31-9dc398b4011f")
 	)
-	(hierarchical_label "MOT_IN1"
+	(hierarchical_label "IN1"
 		(shape input)
-		(at 140.335 69.85 180)
+		(at 82.55 38.1 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1993,9 +2661,9 @@
 		)
 		(uuid "7f7a25e1-1a4f-4ecf-b023-9bd3689236ab")
 	)
-	(hierarchical_label "MOT_IN2"
+	(hierarchical_label "IN2"
 		(shape input)
-		(at 140.335 74.93 180)
+		(at 82.55 40.64 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2004,20 +2672,20 @@
 		)
 		(uuid "92bbac87-4269-45cd-aa8c-48ec94c8f2df")
 	)
-	(hierarchical_label "MOT_nFAULT"
+	(hierarchical_label "~{FAULT}"
 		(shape output)
-		(at 140.335 85.09 180)
+		(at 121.92 45.72 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right)
+			(justify left)
 		)
 		(uuid "a7f4205d-5269-40bd-9c20-dd971d81e88a")
 	)
-	(hierarchical_label "MOT_ILIM"
+	(hierarchical_label "I_LIM"
 		(shape input)
-		(at 79.375 90.17 180)
+		(at 54.61 48.26 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2026,28 +2694,45 @@
 		)
 		(uuid "e55a85b0-0780-4060-a341-3feab787fcec")
 	)
-	(hierarchical_label "MOT_ISENSE"
+	(hierarchical_label "I_SENSE"
 		(shape output)
-		(at 121.285 95.25 180)
+		(at 121.92 50.8 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right)
+			(justify left)
 		)
 		(uuid "fcab7b21-23d9-4ad3-995e-be45b182a15c")
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 180.975 107.95 0)
+		(lib_id "PMIC_MotorDriver:DRV8874PWPR")
+		(at 101.6 40.64 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "020d4eb8-f54a-44df-a4bf-ea9f610011cc")
-		(property "Reference" "#PWR011"
-			(at 180.975 114.3 0)
+		(fields_autoplaced yes)
+		(uuid "16b1207f-aba5-44d5-a5c3-a4bc003492cb")
+		(property "Reference" "U1"
+			(at 101.6 17.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "DRV8874PWPR"
+			(at 101.6 20.32 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_SO:HTSSOP-16-1EP_4.4x5mm_P0.65mm_EP3.4x5mm_Mask2.66x2.46mm_ThermalVias"
+			(at 134.366 14.478 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2055,16 +2740,8 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "GND"
-			(at 180.975 111.76 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 180.975 107.95 0)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/drv8874"
+			(at 106.68 16.51 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2072,8 +2749,8 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
-			(at 180.975 107.95 0)
+		(property "Description" "H-Bridge Motor Driver, HTSSOP-16"
+			(at 124.46 66.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2081,8 +2758,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 180.975 107.95 0)
+		(property "Supplier" "DigiKey"
+			(at 110.49 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2090,67 +2767,8 @@
 				(hide yes)
 			)
 		)
-		(pin "1"
-			(uuid "7a9c769c-b56a-48d3-98be-3023d7cfb6b8")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "#PWR056")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "#PWR020")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "#PWR038")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "#PWR011")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "#PWR029")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "#PWR047")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C")
-		(at 86.995 94.615 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "07731573-2ec5-4c08-ac13-71cd485fe32b")
-		(property "Reference" "C1"
-			(at 89.535 93.345 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "0.1uF"
-			(at 89.535 95.885 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
-			(at 87.9602 98.425 0)
+		(property "Supplier Part No" "296-DRV8874PWPRCT-ND"
+			(at 128.27 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2158,8 +2776,8 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
-			(at 86.995 94.615 0)
+		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/texas-instruments/DRV8874PWPR/11502339"
+			(at 152.4 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2167,304 +2785,81 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Unpolarized capacitor"
-			(at 86.995 94.615 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
+		(pin "6"
+			(uuid "9e5bbafa-36a5-41fd-b206-a5a345929074")
 		)
-		(property "Supplier" "Digikey"
-			(at 86.995 94.615 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
+		(pin "17"
+			(uuid "aae196dd-7198-4cb5-8b82-5f64b27b02b6")
 		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL05B104KP5NNNC/3886660"
-			(at 86.995 94.615 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_part_number" "1276-1002-1-ND"
-			(at 86.995 94.615 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "613ef43b-7b97-4730-a912-157111fe79b9")
+		(pin "11"
+			(uuid "de6d8e91-214d-42e5-a918-ee07e0ee233b")
 		)
 		(pin "2"
-			(uuid "ae4471fe-89e3-4779-8d65-52ddced4c0dd")
+			(uuid "d432eda9-36ca-44ae-a18b-40225d63941f")
 		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "C31")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "C7")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "C19")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "C1")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "C13")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "C25")
-					(unit 1)
-				)
-			)
+		(pin "7"
+			(uuid "fbc22929-783c-426a-b947-605c4d896440")
 		)
-	)
-	(symbol
-		(lib_id "Device:C")
-		(at 99.06 94.615 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "100592f1-6892-49ec-aacc-9cf508ebab43")
-		(property "Reference" "C2"
-			(at 102.235 93.345 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
+		(pin "16"
+			(uuid "75bfa0b1-f4b2-4298-a245-03603bd6ffc3")
 		)
-		(property "Value" "10uF"
-			(at 102.235 95.885 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
+		(pin "15"
+			(uuid "59165687-18b5-4012-8add-3ce57a3bad87")
 		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
-			(at 100.0252 98.425 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
+		(pin "9"
+			(uuid "efd85776-2d84-48a2-809b-c282b25dc754")
 		)
-		(property "Datasheet" "~"
-			(at 99.06 94.615 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
+		(pin "8"
+			(uuid "b4fad160-8066-4b98-8797-7dddc49b534c")
 		)
-		(property "Description" "Unpolarized capacitor"
-			(at 99.06 94.615 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
+		(pin "10"
+			(uuid "e94bb6e1-12d6-4675-bdb9-a45a701ea473")
 		)
-		(property "Supplier" "Digikey"
-			(at 99.06 94.615 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
+		(pin "14"
+			(uuid "e7c495ed-2d96-4c0c-989d-74740a25f4d8")
 		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL05A106MP5NUNC/3887108"
-			(at 99.06 94.615 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
+		(pin "5"
+			(uuid "7dedc145-c6aa-4d86-a975-2eca8a48b68a")
 		)
-		(property "Supplier_part_number" "1276-1450-1-ND"
-			(at 99.06 94.615 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
+		(pin "12"
+			(uuid "bdedd894-2c3c-4c85-9bb9-13bb9d59b912")
 		)
 		(pin "1"
-			(uuid "1121de21-1db0-4ec7-8987-07023208295a")
+			(uuid "3f9af4e2-6267-4fb8-ad1e-287047555e5c")
 		)
-		(pin "2"
-			(uuid "be87ea7c-833f-475a-814a-97605d544e38")
+		(pin "3"
+			(uuid "77aa6016-8619-4cdb-8f8a-046716f76895")
 		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "C32")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "C8")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "C20")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "C2")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "C14")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "C26")
-					(unit 1)
-				)
-			)
+		(pin "13"
+			(uuid "927c7e4a-1a1d-40da-ae8d-4eb1340af4b7")
 		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 132.08 104.14 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "1dd4ed01-2da9-4e82-a942-58f54060c67d")
-		(property "Reference" "R3"
-			(at 133.985 102.8699 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "20k"
-			(at 133.985 105.4099 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0201_0603Metric_Pad0.64x0.40mm_HandSolder"
-			(at 130.302 104.14 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 132.08 104.14 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 132.08 104.14 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier" "Digikey"
-			(at 132.08 104.14 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/panasonic-electronic-components/ERJ-1GNF2002C/2036258"
-			(at 132.08 104.14 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_part_number" "P122813CT-ND"
-			(at 132.08 104.14 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "6011ed98-f12c-4cba-a7da-1ee94cdf4351")
-		)
-		(pin "2"
-			(uuid "8619deaf-254e-44f9-8ac1-bfed605db80d")
+		(pin "4"
+			(uuid "f08cb1b7-ac57-4b2c-994a-d39a11681fde")
 		)
 		(instances
 			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "R18")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "U4")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "R6")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "R12")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "U5")
 					(unit 1)
 				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "R3")
+					(reference "U1")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "R9")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "U2")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "R15")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "U3")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "U6")
 					(unit 1)
 				)
 			)
@@ -2472,15 +2867,15 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 122.555 102.87 0)
+		(at 119.38 58.42 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(uuid "200784b9-7fe8-4d61-b79d-cd1494c7d6a0")
-		(property "Reference" "#PWR06"
-			(at 122.555 109.22 0)
+		(property "Reference" "#PWR014"
+			(at 119.38 64.77 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2489,7 +2884,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 122.555 106.68 0)
+			(at 119.38 62.23 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2497,7 +2892,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 122.555 102.87 0)
+			(at 119.38 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2506,7 +2901,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 122.555 102.87 0)
+			(at 119.38 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2515,7 +2910,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 122.555 102.87 0)
+			(at 119.38 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2524,32 +2919,32 @@
 			)
 		)
 		(pin "1"
-			(uuid "3db60d50-d191-4366-b584-771e1e577e04")
+			(uuid "aa9d8ac5-3619-471c-acc3-98c8933de4cf")
 		)
 		(instances
 			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "#PWR051")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "#PWR038")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "#PWR015")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "#PWR033")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "#PWR046")
 					(unit 1)
 				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "#PWR06")
+					(reference "#PWR014")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "#PWR024")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "#PWR022")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "#PWR042")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "#PWR030")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "#PWR054")
 					(unit 1)
 				)
 			)
@@ -2557,16 +2952,15 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 133.985 121.285 0)
+		(at 90.17 60.96 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "267b49e7-497f-4a03-83bf-70a68d187f93")
-		(property "Reference" "#PWR08"
-			(at 133.985 125.095 0)
+		(property "Reference" "#PWR010"
+			(at 90.17 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2575,7 +2969,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 133.985 116.84 0)
+			(at 90.17 64.77 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2583,7 +2977,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 133.985 121.285 0)
+			(at 90.17 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2592,7 +2986,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 133.985 121.285 0)
+			(at 90.17 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2601,7 +2995,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3V3\""
-			(at 133.985 121.285 0)
+			(at 90.17 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2610,65 +3004,48 @@
 			)
 		)
 		(pin "1"
-			(uuid "909f00cc-035c-4eb5-bb4c-4817e8d75c29")
+			(uuid "37621022-4c10-4acb-b363-375bbfd84918")
 		)
 		(instances
 			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "#PWR053")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "#PWR034")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "#PWR017")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "#PWR035")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "#PWR042")
 					(unit 1)
 				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "#PWR08")
+					(reference "#PWR010")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "#PWR018")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
 					(reference "#PWR026")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "#PWR044")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "#PWR050")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
-		(at 83.185 90.17 90)
+		(lib_id "power:GND")
+		(at 64.77 55.88 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "32406a5c-8ea8-4d1a-93ab-e85539942809")
-		(property "Reference" "R1"
-			(at 83.185 84.455 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "4.7k"
-			(at 83.185 86.995 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0201_0603Metric_Pad0.64x0.40mm_HandSolder"
-			(at 83.185 91.948 90)
+		(uuid "3c56400f-c207-46da-ab52-a4bd861feb0f")
+		(property "Reference" "#PWR07"
+			(at 64.77 62.23 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2676,8 +3053,504 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
-			(at 83.185 90.17 0)
+		(property "Value" "GND"
+			(at 64.77 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 64.77 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 64.77 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 64.77 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "851d2f98-e872-4838-a37f-c409f3a074e1")
+		)
+		(instances
+			(project "dc-motor-driver"
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "#PWR031")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "#PWR039")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
+					(reference "#PWR07")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "#PWR015")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "#PWR023")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "#PWR047")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Capacitor:C_100n_50V_0603")
+		(at 76.2 29.21 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "3ea2b414-16e0-4201-a694-7956256088f3")
+		(property "Reference" "C22"
+			(at 80.01 26.6699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 80.01 29.2099 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 100.838 35.052 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/609/CL10B104KB8NNNC_Spec.pdf"
+			(at 76.2 14.986 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 76.2 29.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "50V"
+			(at 80.01 31.7499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "X7R"
+			(at 78.994 35.306 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 68.58 17.018 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Part No" "1276-1000-1-ND"
+			(at 76.2 17.018 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL10B104KB8NNNC/3886658"
+			(at 76.454 12.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "35044ca2-29f5-4f6f-86ec-bb497089ae28")
+		)
+		(pin "1"
+			(uuid "83eca250-61fb-4b82-b46a-63b0094b93ec")
+		)
+		(instances
+			(project ""
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "C29")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "C34")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
+					(reference "C22")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "C23")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "C28")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "C35")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 101.6 63.5 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "55b3751a-b663-44c6-ad5d-d04e73a26fe3")
+		(property "Reference" "#PWR013"
+			(at 101.6 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 101.6 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 101.6 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 101.6 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 101.6 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2b0bb37e-d857-4fae-9116-7a01bf51e4e1")
+		)
+		(instances
+			(project "dc-motor-driver"
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "#PWR037")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "#PWR045")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
+					(reference "#PWR013")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "#PWR021")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "#PWR029")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "#PWR053")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 73.66 67.31 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "571e3072-2772-4292-ae7d-bb99ec07fdfc")
+		(property "Reference" "#PWR012"
+			(at 73.66 73.66 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 73.66 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 73.66 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 73.66 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 73.66 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6cf59140-a47f-42d1-a5f8-a23e488c9027")
+		)
+		(instances
+			(project "dc-motor-driver"
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "#PWR036")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "#PWR044")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
+					(reference "#PWR012")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "#PWR020")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "#PWR028")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "#PWR052")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 77.47 60.96 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6d20a010-ea33-4906-bbbd-9a5d3135bac5")
+		(property "Reference" "#PWR011"
+			(at 77.47 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 77.47 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 77.47 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 77.47 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 77.47 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4bebd6d5-a415-4ef9-bc7e-d8083c944ac4")
+		)
+		(instances
+			(project "dc-motor-driver"
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "#PWR035")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "#PWR043")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
+					(reference "#PWR011")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "#PWR019")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "#PWR027")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "#PWR051")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Resistor:R_2k2_0603")
+		(at 119.38 54.61 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7f91c292-e340-49ea-b8b2-7f2c1586c3f0")
+		(property "Reference" "R2"
+			(at 121.92 53.3399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2k2"
+			(at 121.92 55.8799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 123.444 54.61 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.yageo.com/upload/media/product/productsearch/datasheet/rchip/PYu-RC_51_RoHS_P_5.pdf"
+			(at 119.38 21.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2686,7 +3559,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 83.185 90.17 0)
+			(at 119.38 54.61 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2694,26 +3567,28 @@
 				(hide yes)
 			)
 		)
-		(property "Supplier" "Digikey"
-			(at 83.185 90.17 0)
+		(property "Supplier" "DigiKey"
+			(at 112.014 26.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 				(hide yes)
 			)
 		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/yageo/RC0201FR-074K7L/1948894"
-			(at 83.185 90.17 0)
+		(property "Supplier Part No" "YAG1296CT-ND"
+			(at 120.142 26.924 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 				(hide yes)
 			)
 		)
-		(property "Supplier_part_number" "311-4.70KMCT-ND"
-			(at 83.185 90.17 0)
+		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/yageo/RC0603FR-072K2P/4935311"
+			(at 119.38 24.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2722,687 +3597,69 @@
 			)
 		)
 		(pin "1"
-			(uuid "844ee4f9-6293-4e5b-9dc1-671f75e8edea")
+			(uuid "d36970f4-10dd-40c3-86ec-9a8b44f11f1f")
 		)
 		(pin "2"
-			(uuid "96f537e4-b701-4c8b-a629-9be5e85d3396")
+			(uuid "8e26dbcd-dd00-493f-bd3c-1262e5d65d73")
 		)
 		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "R16")
+			(project ""
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "R6")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "R4")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "R10")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "R1")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "R7")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "R13")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 92.71 98.425 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "3c56400f-c207-46da-ab52-a4bd861feb0f")
-		(property "Reference" "#PWR03"
-			(at 92.71 104.775 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 92.71 102.235 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 92.71 98.425 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 92.71 98.425 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 92.71 98.425 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "f3f5f106-d424-4d8b-97f6-476b3ff015aa")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "#PWR048")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "#PWR012")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "#PWR030")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "#PWR03")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "#PWR021")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "#PWR039")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "2025-04-07_10-39-51:DRV8874PWPR")
-		(at 160.655 80.01 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "558e9d1b-05b1-4bf5-8227-745b017051e2")
-		(property "Reference" "U1"
-			(at 160.655 42.545 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "DRV8874PWPR"
-			(at 160.655 45.085 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Footprint" "Package_DFN_QFN:DRV8874PWPR"
-			(at 160.655 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "DRV8874PWPR"
-			(at 160.655 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 160.655 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier" "Digikey"
-			(at 160.655 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/texas-instruments/DRV8874PWPR/11502339"
-			(at 160.655 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_part_number" "296-DRV8874PWPRCT-ND"
-			(at 160.655 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "4"
-			(uuid "c802daa4-9b1e-4755-b294-349ee17729c6")
-		)
-		(pin "13"
-			(uuid "0fbc33de-565d-41ca-ad14-9fc5828177a7")
-		)
-		(pin "11"
-			(uuid "bd683114-191d-44b2-b5bd-1cf76177cd4f")
-		)
-		(pin "10"
-			(uuid "31eecf00-5f65-4278-9f2a-c72ba1732892")
-		)
-		(pin "2"
-			(uuid "86b63ee4-b00d-48d3-b208-6e0bde632dd9")
-		)
-		(pin "3"
-			(uuid "3561543d-0aa6-4f60-b44c-39a801179dcb")
-		)
-		(pin "17"
-			(uuid "d28fdac4-1714-4607-a97f-c603325e5864")
-		)
-		(pin "8"
-			(uuid "9e101037-aae0-487c-8aa5-032a9a25d99a")
-		)
-		(pin "6"
-			(uuid "aa5d76df-0ac0-43dc-a0da-6f5296773637")
-		)
-		(pin "5"
-			(uuid "4fc37f49-210d-4cde-9b74-55bed59587a6")
-		)
-		(pin "14"
-			(uuid "d3cbdf44-1c17-4feb-94b4-c9e320c67a6f")
-		)
-		(pin "12"
-			(uuid "e2c98ad7-20bd-4fe0-a39a-53f3f74ed017")
-		)
-		(pin "9"
-			(uuid "4ba0a57f-0dd0-41e1-a89f-dfad13b949d4")
-		)
-		(pin "7"
-			(uuid "9c693f29-a46a-4124-b2c1-3854a8d897f9")
-		)
-		(pin "16"
-			(uuid "2e1d82b2-6dd6-4289-b9b5-6d84bdaad78e")
-		)
-		(pin "15"
-			(uuid "fc584eab-4b9d-4576-b948-892f449fdfee")
-		)
-		(pin "1"
-			(uuid "c5178608-1692-4a47-8b21-1d22109d7a35")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "U6")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "U2")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "U4")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "U1")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "U3")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "U5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 180.975 59.69 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "55b3751a-b663-44c6-ad5d-d04e73a26fe3")
-		(property "Reference" "#PWR010"
-			(at 180.975 66.04 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 180.975 63.5 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 180.975 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 180.975 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 180.975 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "ca66c0a8-e6a2-4f0e-90df-881645a9e02a")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "#PWR055")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "#PWR019")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "#PWR037")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "#PWR010")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "#PWR028")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "#PWR046")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 132.08 107.95 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "571e3072-2772-4292-ae7d-bb99ec07fdfc")
-		(property "Reference" "#PWR07"
-			(at 132.08 114.3 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 132.08 111.76 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 132.08 107.95 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 132.08 107.95 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 132.08 107.95 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "dc442f05-45e2-4c91-b17a-895bb9dd66be")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "#PWR052")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "#PWR016")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "#PWR034")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "#PWR07")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "#PWR025")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "#PWR043")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 122.555 99.06 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "6b2e1606-7f9e-4fc1-a904-71112d3c385e")
-		(property "Reference" "R2"
-			(at 124.46 96.52 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "2.2k"
-			(at 124.46 98.425 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0201_0603Metric_Pad0.64x0.40mm_HandSolder"
-			(at 124.333 99.06 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 122.555 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "IPROPI"
-			(at 127.635 100.33 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier" "Digikey"
-			(at 122.555 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/yageo/RC0201FR-072K2L/5280432"
-			(at 122.555 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_part_number" "YAG2572CT-ND"
-			(at 122.555 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "50d7d749-42a8-4d37-9d5e-e625fd40a2eb")
-		)
-		(pin "2"
-			(uuid "b18fbf6f-51d5-4690-a0fa-3c9a4f264466")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "R17")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "R5")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "R11")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "R8")
 					(unit 1)
 				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
 					(reference "R2")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "R8")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "R3")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "R14")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "R5")
 					(unit 1)
 				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 133.985 126.365 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "6d20a010-ea33-4906-bbbd-9a5d3135bac5")
-		(property "Reference" "#PWR09"
-			(at 133.985 132.715 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 133.985 130.175 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 133.985 126.365 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 133.985 126.365 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 133.985 126.365 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "e9c49b47-353a-43e2-83bb-270c9d18d82b")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "#PWR054")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "#PWR018")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "#PWR036")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "#PWR09")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "#PWR027")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "#PWR045")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "R9")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Polarized")
-		(at 106.045 55.88 0)
+		(lib_id "Jumper:Jumper_3_Bridged12")
+		(at 83.82 60.96 180)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
-		(uuid "7e3e80f2-6343-4a55-9688-630ce7b41ad1")
-		(property "Reference" "C3"
-			(at 108.585 54.61 0)
+		(fields_autoplaced yes)
+		(uuid "88f62bf8-f6ef-4eec-a7b1-b39544b63ce3")
+		(property "Reference" "JP1"
+			(at 83.82 64.77 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
-		(property "Value" "100uF"
-			(at 108.585 57.15 0)
+		(property "Value" "Jumper_3_Bridged12"
+			(at 83.82 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
+				(hide yes)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x7.7"
-			(at 107.0102 59.69 0)
+		(property "Footprint" "Jumper:SolderJumper-3_P1.3mm_Bridged12_RoundedPad1.0x1.5mm"
+			(at 83.82 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3411,7 +3668,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 106.045 55.88 0)
+			(at 83.82 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3419,35 +3676,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Polarized capacitor"
-			(at 106.045 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier" "Digikey"
-			(at 106.045 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/w%C3%BCrth-elektronik/865080545012/5728106"
-			(at 106.045 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_part_number" "732-8511-1-ND"
-			(at 106.045 55.88 0)
+		(property "Description" "Jumper, 3-pole, pins 1+2 closed/bridged"
+			(at 83.82 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3456,35 +3686,38 @@
 			)
 		)
 		(pin "1"
-			(uuid "8b1be7bf-edc6-434c-84ba-d481acc7b104")
+			(uuid "97eb76f5-56c5-4067-b8e0-6b9c317d36ac")
 		)
 		(pin "2"
-			(uuid "77c22fc7-f318-4ffa-8c58-e89eec332ade")
+			(uuid "bacf98d9-a2c0-4480-be22-0b47c1825353")
+		)
+		(pin "3"
+			(uuid "545e9807-ea59-44a0-98ae-7204ec8ca0cc")
 		)
 		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "C33")
+			(project ""
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "JP4")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "C9")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "C21")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "JP5")
 					(unit 1)
 				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "C3")
+					(reference "JP1")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "C15")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "JP2")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "C27")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "JP3")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "JP6")
 					(unit 1)
 				)
 			)
@@ -3492,7 +3725,7 @@
 	)
 	(symbol
 		(lib_id "power:VCC")
-		(at 106.045 52.07 0)
+		(at 50.8 25.4 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3500,8 +3733,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "92206868-11cf-4743-a3b1-8ef24b38bb15")
-		(property "Reference" "#PWR04"
-			(at 106.045 55.88 0)
+		(property "Reference" "#PWR08"
+			(at 50.8 29.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3510,7 +3743,7 @@
 			)
 		)
 		(property "Value" "VCC"
-			(at 106.045 46.99 0)
+			(at 50.8 20.32 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3518,7 +3751,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 106.045 52.07 0)
+			(at 50.8 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3527,7 +3760,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 106.045 52.07 0)
+			(at 50.8 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3536,7 +3769,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 106.045 52.07 0)
+			(at 50.8 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3545,32 +3778,298 @@
 			)
 		)
 		(pin "1"
-			(uuid "4698ed01-3467-4c1c-a3fc-6efe4aa72395")
+			(uuid "c733b86b-5c56-43de-b6b7-88495ecdbe53")
 		)
 		(instances
 			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "#PWR049")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "#PWR032")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "#PWR013")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "#PWR031")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "#PWR040")
 					(unit 1)
 				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "#PWR04")
+					(reference "#PWR08")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "#PWR022")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "#PWR016")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "#PWR040")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "#PWR024")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "#PWR048")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Capacitor:C_100n_50V_0603")
+		(at 63.5 29.21 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9c6a0d3d-9256-47c4-b17f-8859160fa056")
+		(property "Reference" "C4"
+			(at 67.31 26.6699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 67.31 29.2099 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 88.138 35.052 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/609/CL10B104KB8NNNC_Spec.pdf"
+			(at 63.5 14.986 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 63.5 29.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "50V"
+			(at 67.31 31.7499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "X7R"
+			(at 66.294 35.306 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 55.88 17.018 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Part No" "1276-1000-1-ND"
+			(at 63.5 17.018 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL10B104KB8NNNC/3886658"
+			(at 63.754 12.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "3bcd50c2-d567-4983-a95a-d49c0419b9e2")
+		)
+		(pin "2"
+			(uuid "e77b6edb-b423-46b1-8bb6-b687b199a54e")
+		)
+		(instances
+			(project ""
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "C11")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "C16")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
+					(reference "C4")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "C5")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "C10")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "C17")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Capacitor:C_100u_35V")
+		(at 50.8 29.21 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "9cb2fbc7-9eac-41c8-9e55-f102d0f4448e")
+		(property "Reference" "C2"
+			(at 54.102 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100u"
+			(at 54.102 29.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x7.7"
+			(at 51.562 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.we-online.com/components/products/datasheet/865080545012.pdf"
+			(at 55.88 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Description" "Polarized 100u 35V capacitor"
+			(at 50.8 19.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "35V"
+			(at 54.102 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 55.88 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Part No" "732-8511-1-ND"
+			(at 66.04 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/w%C3%BCrth-elektronik/865080545012/5728106"
+			(at 55.88 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "9c5671ad-4544-4b6e-9cb2-f10bbd486377")
+		)
+		(pin "2"
+			(uuid "671a74ec-ab34-4e8a-aa44-c68cd60dc203")
+		)
+		(instances
+			(project ""
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "C20")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "C26")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
+					(reference "C2")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "C8")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "C14")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "C32")
 					(unit 1)
 				)
 			)
@@ -3578,16 +4077,15 @@
 	)
 	(symbol
 		(lib_id "Connector:Screw_Terminal_01x02")
-		(at 189.865 60.96 0)
-		(mirror x)
+		(at 127 25.4 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(uuid "a2cad9df-e572-47e7-b3cb-ecd78803bf4a")
-		(property "Reference" "J3"
-			(at 193.04 60.9601 0)
+		(property "Reference" "J4"
+			(at 130.175 25.3999 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3596,7 +4094,7 @@
 			)
 		)
 		(property "Value" "MOT"
-			(at 193.04 58.4201 0)
+			(at 130.175 27.9399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3605,7 +4103,7 @@
 			)
 		)
 		(property "Footprint" "TerminalBlock_4Ucon:TerminalBlock_4Ucon_1x02_P3.50mm_Horizontal"
-			(at 189.865 60.96 0)
+			(at 127 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3614,7 +4112,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 189.865 60.96 0)
+			(at 127 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3623,7 +4121,7 @@
 			)
 		)
 		(property "Description" "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 189.865 60.96 0)
+			(at 127 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3632,7 +4130,7 @@
 			)
 		)
 		(property "Supplier" ""
-			(at 189.865 60.96 0)
+			(at 127 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3640,7 +4138,7 @@
 			)
 		)
 		(property "Supplier_link" ""
-			(at 189.865 60.96 0)
+			(at 127 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3648,7 +4146,7 @@
 			)
 		)
 		(property "Supplier_part_number" ""
-			(at 189.865 60.96 0)
+			(at 127 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3656,51 +4154,52 @@
 			)
 		)
 		(pin "1"
-			(uuid "75fa2e34-8e93-4317-86cf-3c815cc7c925")
+			(uuid "593d4aed-9437-4dd0-963a-8b362fd82b59")
 		)
 		(pin "2"
-			(uuid "796a5f52-bcb4-44ba-ac88-d77c2c64a280")
+			(uuid "b385fd3f-c99b-4910-b3cd-8e78d4876380")
 		)
 		(instances
-			(project ""
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "J13")
+			(project "dc-motor-driver"
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "J10")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "J5")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "J9")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "J12")
 					(unit 1)
 				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "J3")
+					(reference "J4")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "J7")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "J6")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "J11")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "J8")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "J14")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
-		(at 120.65 55.88 0)
+		(lib_id "Capacitor:C_22n_50V_0603")
+		(at 119.38 36.83 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "b4089014-80d3-4d8e-a6cf-e90fc31775b6")
-		(property "Reference" "C4"
-			(at 123.19 54.61 0)
+		(fields_autoplaced yes)
+		(uuid "a7313a1c-362f-41cb-817a-280aa4a8746c")
+		(property "Reference" "C6"
+			(at 123.19 34.2899 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3708,8 +4207,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "0.1uF"
-			(at 123.19 57.15 0)
+		(property "Value" "22n"
+			(at 123.19 36.8299 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3717,8 +4216,8 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
-			(at 121.6152 59.69 0)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 144.018 42.672 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3726,8 +4225,8 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
-			(at 120.65 55.88 0)
+		(property "Datasheet" "https://www.passivecomponent.com/wp-content/uploads/datasheet/WTC_MLCC_General_Purpose.pdf"
+			(at 119.38 22.606 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3736,7 +4235,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 120.65 55.88 0)
+			(at 119.38 48.514 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3744,8 +4243,17 @@
 				(hide yes)
 			)
 		)
-		(property "Supplier" "Digikey"
-			(at 120.65 55.88 0)
+		(property "Value 2" "50V"
+			(at 123.19 39.3699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "X7R"
+			(at 122.174 42.926 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3753,54 +4261,182 @@
 				(hide yes)
 			)
 		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL05B104KP5NNNC/3886660"
-			(at 120.65 55.88 0)
+		(property "Supplier" "DigiKey"
+			(at 112.014 24.892 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Part No" "1292-1414-1-ND"
+			(at 119.38 24.892 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/walsin-technology-corporation/0603B223J500CT/9354911"
+			(at 119.634 20.574 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
 			)
-		)
-		(property "Supplier_part_number" "1276-1002-1-ND"
-			(at 120.65 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "53638103-3022-46c2-9593-2b826169c2a4")
 		)
 		(pin "2"
-			(uuid "09752840-c72a-4557-995f-a6285c04bf70")
+			(uuid "31234cc2-a625-4ab6-8f1f-fc0321065410")
+		)
+		(pin "1"
+			(uuid "518eb086-f782-4d89-8567-cc4faab91535")
 		)
 		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "C34")
+			(project ""
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "C24")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "C10")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "C22")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "C30")
 					(unit 1)
 				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "C4")
+					(reference "C6")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "C16")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "C12")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "C28")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "C18")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "C36")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Resistor:R_10k_0603")
+		(at 60.96 48.26 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "cd70bcc5-0af9-4dc5-9b6e-26d7a743618d")
+		(property "Reference" "R1"
+			(at 60.96 41.91 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10k"
+			(at 60.96 44.45 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 60.96 44.196 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.yageo.com/upload/media/product/products/datasheet/rchip/PYu-RC_Group_51_RoHS_L_12.pdf"
+			(at 27.94 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 60.96 48.26 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 32.258 55.626 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Part No" "311-10.0KHRCT-ND"
+			(at 32.512 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/yageo/RC0603FR-0710KL/726880"
+			(at 30.226 48.006 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "cec084be-717e-41fd-bfe3-b4861b647d93")
+		)
+		(pin "1"
+			(uuid "d7dace79-4403-450e-be6e-e39094498a81")
+		)
+		(instances
+			(project ""
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "R10")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "R11")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
+					(reference "R1")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "R4")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "R7")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "R12")
 					(unit 1)
 				)
 			)
@@ -3808,15 +4444,15 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 113.665 59.69 0)
+		(at 50.8 33.02 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(uuid "d9aa0033-d881-47a8-bfe7-ab505329fc19")
-		(property "Reference" "#PWR05"
-			(at 113.665 66.04 0)
+		(property "Reference" "#PWR09"
+			(at 50.8 39.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3825,7 +4461,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 113.665 63.5 0)
+			(at 55.88 37.338 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3833,7 +4469,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 113.665 59.69 0)
+			(at 50.8 33.02 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3842,7 +4478,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 113.665 59.69 0)
+			(at 50.8 33.02 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3851,7 +4487,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 113.665 59.69 0)
+			(at 50.8 33.02 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3860,279 +4496,49 @@
 			)
 		)
 		(pin "1"
-			(uuid "16699e82-6cb4-4219-bd3a-5277131e6116")
+			(uuid "e14ee7bf-76cd-401c-872b-9a2fa83d3fc1")
 		)
 		(instances
 			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "#PWR050")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "#PWR033")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "#PWR014")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "#PWR032")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "#PWR05")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "#PWR023")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
 					(reference "#PWR041")
 					(unit 1)
 				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:Conn_01x03_Pin")
-		(at 126.365 123.825 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "d9b9176b-5741-4f87-b19a-79ccb0e2c49d")
-		(property "Reference" "J2"
-			(at 128.905 116.205 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "IMODE"
-			(at 128.905 118.745 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
-			(at 126.365 123.825 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 126.365 123.825 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Generic connector, single row, 01x03, script generated"
-			(at 126.365 123.825 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier" ""
-			(at 126.365 123.825 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier_link" ""
-			(at 126.365 123.825 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier_part_number" ""
-			(at 126.365 123.825 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "d27148a8-0547-45c2-a2ed-6e02e38f415f")
-		)
-		(pin "2"
-			(uuid "a3e5c20d-a997-4461-91fd-27e7508a6b85")
-		)
-		(pin "3"
-			(uuid "37e5e1ba-e5cf-44c2-831a-f0e847ef82f7")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "J12")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "J4")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "J8")
-					(unit 1)
-				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "J2")
+					(reference "#PWR09")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "J6")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "#PWR017")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "J10")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "#PWR025")
 					(unit 1)
 				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C")
-		(at 132.715 55.88 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "de749040-ab2a-451f-ad3b-6b4d0334b512")
-		(property "Reference" "C5"
-			(at 135.255 54.61 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "0.1uF"
-			(at 135.255 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
-			(at 133.6802 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 132.715 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor"
-			(at 132.715 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier" "Digikey"
-			(at 132.715 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL05B104KP5NNNC/3886660"
-			(at 132.715 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supplier_part_number" "1276-1002-1-ND"
-			(at 132.715 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "0298916e-4f52-4f76-a662-24a74566a8a2")
-		)
-		(pin "2"
-			(uuid "5dd423d9-41ee-4650-bc48-e766fbe9f8a1")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "C35")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "C11")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "C23")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "C5")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "C17")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "C29")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "#PWR049")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
-		(at 184.785 86.36 0)
+		(lib_id "Capacitor:C_10u_16V_0805")
+		(at 64.77 52.07 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "ed51d886-a059-40a0-b14e-52f08ad43bbd")
-		(property "Reference" "C6"
-			(at 188.595 85.0899 0)
+		(uuid "ea683cac-bac1-42c4-bbf9-492d2203a861")
+		(property "Reference" "C1"
+			(at 68.58 49.5299 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4140,8 +4546,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "0.022uF"
-			(at 188.595 87.6299 0)
+		(property "Value" "10u"
+			(at 68.58 52.0699 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4149,8 +4555,8 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
-			(at 185.7502 90.17 0)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 89.408 57.912 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4158,8 +4564,8 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
-			(at 184.785 86.36 0)
+		(property "Datasheet" "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/658/CL21A106KOQNNNG_Spec.pdf"
+			(at 64.77 37.846 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4168,7 +4574,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 184.785 86.36 0)
+			(at 64.77 63.754 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4176,8 +4582,17 @@
 				(hide yes)
 			)
 		)
-		(property "Supplier" "Digikey"
-			(at 184.785 86.36 0)
+		(property "Value 2" "16V"
+			(at 68.58 54.6099 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "X5R"
+			(at 67.564 58.166 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4185,17 +4600,28 @@
 				(hide yes)
 			)
 		)
-		(property "Supplier_link" "https://www.digikey.com.au/en/products/detail/murata-electronics/GRM155R71H223KA12D/965898"
-			(at 184.785 86.36 0)
+		(property "Supplier" "DigiKey"
+			(at 57.404 40.132 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 				(hide yes)
 			)
 		)
-		(property "Supplier_part_number" "490-3884-1-ND"
-			(at 184.785 86.36 0)
+		(property "Supplier Part No" "1276-6455-1-ND"
+			(at 64.77 40.132 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL21A106KOQNNNG/3894417"
+			(at 65.024 35.814 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4204,35 +4630,153 @@
 			)
 		)
 		(pin "1"
-			(uuid "9f501ca9-a123-4f71-a844-7b1b1f93c3fb")
+			(uuid "1ec76186-a91c-4ab9-a6cb-8105553e31dc")
 		)
 		(pin "2"
-			(uuid "d266a8f5-2f71-4a3c-b81c-e3397ea13ac6")
+			(uuid "32a5ebad-da4e-4cf7-b796-3f7fd35ce183")
 		)
 		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/04fd2f40-c8d4-40a1-bffe-8c2f7af014a3"
-					(reference "C36")
+			(project ""
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "C9")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/19e50c93-4337-41b4-a116-8e5a3fc51cfb"
-					(reference "C12")
-					(unit 1)
-				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/35b9d1b6-03b4-451e-998d-5cacf622f45d"
-					(reference "C24")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "C13")
 					(unit 1)
 				)
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
-					(reference "C6")
+					(reference "C1")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/a3c2a18d-f404-4208-b512-99d09985ffbb"
-					(reference "C18")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "C3")
 					(unit 1)
 				)
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/f934ebb1-5add-4ca2-8af6-95ec20e7eaa5"
-					(reference "C30")
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "C7")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "C15")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Resistor:R_20k_0603")
+		(at 73.66 63.5 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "effc0230-4f3e-4f03-8463-d92bb5d1646c")
+		(property "Reference" "R19"
+			(at 68.58 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "20k"
+			(at 68.58 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 77.724 63.5 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.yageo.com/upload/media/product/productsearch/datasheet/rchip/PYu-AC_51_RoHS_L_11.pdf"
+			(at 73.406 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 73.66 63.5 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 66.294 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Part No" "13-AC0603FR-1320KLCT-ND"
+			(at 73.66 43.434 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/yageo/AC0603FR-1320KL/14008244"
+			(at 73.66 40.386 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6e6a0195-650e-41ae-8dd9-9e333da797fe")
+		)
+		(pin "2"
+			(uuid "c142f3dc-2ccd-4e4c-b7ec-3acd6c17a816")
+		)
+		(instances
+			(project ""
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/40f5114d-d621-443c-9e87-66cb3392bce6"
+					(reference "R22")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/47ca5528-118a-41e5-93e9-251f6cf35694"
+					(reference "R23")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/7de317d4-3d1e-4d6a-9df4-d39eb3e35b32"
+					(reference "R19")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/92e3a97b-4604-4305-8719-7a31c2be7d8e"
+					(reference "R20")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/cb7f55f2-47ab-49cc-bc72-89df683d7d50"
+					(reference "R21")
+					(unit 1)
+				)
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a/d9a6d9bc-65d3-41fc-becf-b57a61750c4d"
+					(reference "R24")
 					(unit 1)
 				)
 			)
