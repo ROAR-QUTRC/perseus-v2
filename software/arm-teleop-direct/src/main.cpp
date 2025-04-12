@@ -154,16 +154,16 @@ std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::str
 void displayProgressBar(WINDOW* ncurses_win, int y, int x, uint16_t current, uint16_t min, uint16_t max)
 {
     // Clamp values to 0-4095
-    current = std::min(current, static_cast<uint16_t>(4095));
-    min = std::min(min, static_cast<uint16_t>(4095));
-    max = std::min(max, static_cast<uint16_t>(4095));
+    current = std::min(current, static_cast<uint16_t>(limits::MAX_POSITION));
+    min = std::min(min, static_cast<uint16_t>(limits::MAX_POSITION));
+    max = std::min(max, static_cast<uint16_t>(limits::MAX_POSITION));
 
     const size_t barLength = 40;
 
     // Calculate positions
-    size_t currentPos = static_cast<size_t>((static_cast<double>(current) / 4095.0) * barLength);
-    size_t minPos = static_cast<size_t>((static_cast<double>(min) / 4095.0) * barLength);
-    size_t maxPos = static_cast<size_t>((static_cast<double>(max) / 4095.0) * barLength);
+    size_t currentPos = static_cast<size_t>((static_cast<double>(current) / limits::MAX_POSITION) * barLength);
+    size_t minPos = static_cast<size_t>((static_cast<double>(min) / limits::MAX_POSITION) * barLength);
+    size_t maxPos = static_cast<size_t>((static_cast<double>(max) / limits::MAX_POSITION) * barLength);
 
     // Print opening bracket
     mvwaddch(ncurses_win, y, x, '[');
@@ -228,7 +228,7 @@ void displayProgressBar(WINDOW* ncurses_win, int y, int x, uint16_t current, uin
 struct ServoData
 {
     uint16_t current = 0;
-    uint16_t min = 4095;
+    uint16_t min = limits::MAX_POSITION;
     uint16_t max = 0;
     int16_t torque = 0;  // New field for torque feedback
     std::string error;
@@ -238,8 +238,8 @@ struct ServoData
 // Create a colored torque bar string
 void displayTorqueBar(WINDOW* win, int y, int x, int16_t torque)
 {
-    const int width = 5;
-    const int16_t max_display = 100;  // Scale display to ±100
+    const int width = ui::TORQUE_BAR_WIDTH;
+    const int16_t max_display = ui::MAX_DISPLAY_TORQUE;  // Scale display to ±100
 
     // Scale torque to display width
     int scaled = static_cast<int>((std::abs(static_cast<float>(torque)) / max_display) * width);

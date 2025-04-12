@@ -8,7 +8,10 @@
 #include <stdexcept>
 #include <thread>
 
+#include "servo-constants.hpp"
+
 using namespace boost::asio;
+using namespace perseus::servo;
 
 ST3215ServoReader::ST3215ServoReader(const std::string& port, unsigned int baud_rate, uint8_t acceleration)
     : _io_service(),
@@ -71,15 +74,15 @@ ST3215ServoReader::ST3215ServoReader(const std::string& port, unsigned int baud_
         _serial_port.set_option(serial_port::flow_control(serial_port::flow_control::none));
 
         // Initial delay to let port settle - ACM devices often need more time
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(timing::PORT_SETTLE_TIME);
 
         // Set acceleration for all servos (1-6)
         for (uint8_t id = 1; id <= 6; ++id)
         {
             try
             {
-                writeControlRegister(id, 0x29, acceleration);                // 0x29 is acceleration register
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));  // Wait between writes
+                writeControlRegister(id, register_addr::ACCELERATION, acceleration);
+                std::this_thread::sleep_for(timing::MIN_RESPONSE_TIME);  // Wait between writes
             }
             catch (const std::exception& e)
             {
@@ -112,23 +115,21 @@ ST3215ServoReader::~ST3215ServoReader()
 
 uint16_t ST3215ServoReader::readPosition(uint8_t servo_id)
 {
-    const int MAX_RETRIES = 3;
-    const auto timeout = std::chrono::milliseconds(200);  // Increased timeout for ACM
-    for (int retry = 0; retry < MAX_RETRIES; ++retry)
+    for (int retry = 0; retry < communication::MAX_RETRIES; ++retry)
     {
         try
         {
-            return _readPositionOnce(servo_id, timeout);
+            return _readPositionOnce(servo_id, timing::DEFAULT_TIMEOUT);
         }
         catch (const std::runtime_error& e)
         {
-            if (retry == MAX_RETRIES - 1)
+            if (retry == communication::MAX_RETRIES - 1)
             {
                 throw;  // Re-throw if this was our last retry
             }
             // Flush the port and wait before retry
             ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));  // Longer delay between retries
+            std::this_thread::sleep_for(timing::RETRY_DELAY);
         }
     }
     throw std::runtime_error("Maximum retries exceeded");
@@ -140,11 +141,11 @@ uint16_t ST3215ServoReader::readPosition(uint8_t servo_id)
 uint16_t ST3215ServoReader::_readPositionOnce(uint8_t servo_id, const std::chrono::milliseconds& timeout)
 {
     // Create read position command packet
-    std::vector<uint8_t> command = _createReadCommand(servo_id, 0x38, 2);
+    std::vector<uint8_t> command = _createReadCommand(servo_id, register_addr::PRESENT_POSITION, 2);
 
     // Clear any existing data and wait for port to clear
     ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(timing::COMMAND_INTERVAL);
 
     // Send command with retry
     boost::system::error_code write_ec;
@@ -160,7 +161,7 @@ uint16_t ST3215ServoReader::_readPositionOnce(uint8_t servo_id, const std::chron
             write_attempts++;
             if (write_attempts < MAX_WRITE_ATTEMPTS)
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                std::this_thread::sleep_for(timing::MIN_RESPONSE_TIME);
                 continue;
             }
         }
@@ -175,8 +176,8 @@ uint16_t ST3215ServoReader::_readPositionOnce(uint8_t servo_id, const std::chron
         throw std::runtime_error("Failed to write complete command");
     }
 
-    // Ensure minimum response time - ST3215 needs at least 10ms
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    // Ensure minimum response time
+    std::this_thread::sleep_for(timing::MIN_RESPONSE_TIME);
 
     // Read response using a fixed buffer
     std::array<uint8_t, 256> response_buffer;
@@ -218,7 +219,7 @@ uint16_t ST3215ServoReader::_readPositionOnce(uint8_t servo_id, const std::chron
     }
 
     // Validate header
-    if (response_buffer[0] != 0xFF || response_buffer[1] != 0xFF)
+    if (response_buffer[0] != protocol::HEADER1 || response_buffer[1] != protocol::HEADER2)
     {
         throw std::runtime_error("Invalid header markers");
     }
@@ -273,19 +274,19 @@ uint16_t ST3215ServoReader::_readPositionOnce(uint8_t servo_id, const std::chron
     if (response_buffer[HEADER_SIZE] != 0x00)
     {
         std::string error = "Servo errors:";
-        if (response_buffer[HEADER_SIZE] & 0x01)
+        if (response_buffer[HEADER_SIZE] & error_bits::INPUT_VOLTAGE)
             error += " Input Voltage";
-        if (response_buffer[HEADER_SIZE] & 0x02)
+        if (response_buffer[HEADER_SIZE] & error_bits::ANGLE_LIMIT)
             error += " Angle Limit";
-        if (response_buffer[HEADER_SIZE] & 0x04)
+        if (response_buffer[HEADER_SIZE] & error_bits::OVERHEATING)
             error += " Overheating";
-        if (response_buffer[HEADER_SIZE] & 0x08)
+        if (response_buffer[HEADER_SIZE] & error_bits::RANGE)
             error += " Range";
-        if (response_buffer[HEADER_SIZE] & 0x10)
+        if (response_buffer[HEADER_SIZE] & error_bits::CHECKSUM)
             error += " Checksum";
-        if (response_buffer[HEADER_SIZE] & 0x20)
+        if (response_buffer[HEADER_SIZE] & error_bits::OVERLOAD)
             error += " Overload";
-        if (response_buffer[HEADER_SIZE] & 0x40)
+        if (response_buffer[HEADER_SIZE] & error_bits::INSTRUCTION)
             error += " Instruction";
         throw std::runtime_error(error);
     }
@@ -298,13 +299,13 @@ uint16_t ST3215ServoReader::_readPositionOnce(uint8_t servo_id, const std::chron
 std::vector<uint8_t> ST3215ServoReader::_createReadCommand(uint8_t id, uint8_t address, uint8_t size)
 {
     std::vector<uint8_t> command = {
-        0xFF, 0xFF,  // Header
-        id,          // Servo ID
-        0x04,        // Length (always 4 for read command)
-        0x02,        // READ instruction
-        address,     // Starting address
-        size,        // Number of bytes to read
-        0x00         // Checksum (to be calculated)
+        protocol::HEADER1, protocol::HEADER2,  // Header
+        id,                                    // Servo ID
+        0x04,                                  // Length (always 4 for read command)
+        instruction::READ,                     // READ instruction
+        address,                               // Starting address
+        size,                                  // Number of bytes to read
+        0x00                                   // Checksum (to be calculated)
     };
 
     // Calculate checksum
@@ -324,11 +325,11 @@ std::vector<uint8_t> ST3215ServoReader::_createWriteCommand(uint8_t id, uint8_t 
     command.reserve(data.size() + 6);  // Pre-allocate space
 
     // Header
-    command.push_back(0xFF);
-    command.push_back(0xFF);
+    command.push_back(protocol::HEADER1);
+    command.push_back(protocol::HEADER2);
     command.push_back(id);
-    command.push_back(data.size() + 3);  // Length (data size + 3 bytes for instruction, address, and checksum)
-    command.push_back(0x03);             // WRITE instruction
+    command.push_back(data.size() + 3);     // Length (data size + 3 bytes for instruction, address, and checksum)
+    command.push_back(instruction::WRITE);  // WRITE instruction
     command.push_back(address);
 
     // Data
@@ -348,7 +349,7 @@ std::vector<uint8_t> ST3215ServoReader::_createWriteCommand(uint8_t id, uint8_t 
 void ST3215ServoReader::writePosition(uint8_t servo_id, uint16_t position)
 {
     // Clamp position to valid range
-    position = std::min(position, static_cast<uint16_t>(4095));
+    position = std::min(position, limits::MAX_POSITION);
 
     // Create data bytes (little-endian)
     std::vector<uint8_t> data = {
@@ -356,7 +357,7 @@ void ST3215ServoReader::writePosition(uint8_t servo_id, uint16_t position)
         static_cast<uint8_t>((position >> 8) & 0xFF)};
 
     // Create write command packet
-    std::vector<uint8_t> command = _createWriteCommand(servo_id, 0x2A, data);  // 0x2A is goal position address
+    std::vector<uint8_t> command = _createWriteCommand(servo_id, register_addr::GOAL_POSITION, data);
 
     // Send command
     boost::system::error_code write_ec;
@@ -373,7 +374,7 @@ void ST3215ServoReader::writePosition(uint8_t servo_id, uint16_t position)
     }
 
     // Wait for minimum response time
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(timing::MIN_RESPONSE_TIME);
 
     // Read status packet
     std::array<uint8_t, 6> response;  // Status packet is 6 bytes
@@ -389,26 +390,26 @@ void ST3215ServoReader::writePosition(uint8_t servo_id, uint16_t position)
         return;
     }
 
-    if (read >= 4 && response[0] == 0xFF && response[1] == 0xFF &&
+    if (read >= 4 && response[0] == protocol::HEADER1 && response[1] == protocol::HEADER2 &&
         response[2] == servo_id && response[3] >= 2)
     {
         // Check for servo errors if we got a valid response
         if (response[4] != 0x00)
         {
             std::string error = "Servo errors:";
-            if (response[4] & 0x01)
+            if (response[4] & error_bits::INPUT_VOLTAGE)
                 error += " Input Voltage";
-            if (response[4] & 0x02)
+            if (response[4] & error_bits::ANGLE_LIMIT)
                 error += " Angle Limit";
-            if (response[4] & 0x04)
+            if (response[4] & error_bits::OVERHEATING)
                 error += " Overheating";
-            if (response[4] & 0x08)
+            if (response[4] & error_bits::RANGE)
                 error += " Range";
-            if (response[4] & 0x10)
+            if (response[4] & error_bits::CHECKSUM)
                 error += " Checksum";
-            if (response[4] & 0x20)
+            if (response[4] & error_bits::OVERLOAD)
                 error += " Overload";
-            if (response[4] & 0x40)
+            if (response[4] & error_bits::INSTRUCTION)
                 error += " Instruction";
             throw std::runtime_error(error);
         }
@@ -434,7 +435,7 @@ void ST3215ServoReader::writeControlRegister(uint8_t servo_id, uint8_t address, 
     }
 
     // Wait for minimum response time
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(timing::MIN_RESPONSE_TIME);
 
     // Read status packet
     std::array<uint8_t, 6> response;
@@ -451,19 +452,16 @@ void ST3215ServoReader::writeControlRegister(uint8_t servo_id, uint8_t address, 
 
 int16_t ST3215ServoReader::readLoad(uint8_t servo_id)
 {
-    const int MAX_RETRIES = 3;
-    const auto timeout = std::chrono::milliseconds(200);
-
-    for (int retry = 0; retry < MAX_RETRIES; ++retry)
+    for (int retry = 0; retry < communication::MAX_RETRIES; ++retry)
     {
         try
         {
-            // Create read load command packet (address 0x3C for load, 2 bytes)
-            std::vector<uint8_t> command = _createReadCommand(servo_id, 0x3C, 2);
+            // Create read load command packet
+            std::vector<uint8_t> command = _createReadCommand(servo_id, register_addr::PRESENT_LOAD, 2);
 
             // Clear any existing data
             ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            std::this_thread::sleep_for(timing::COMMAND_INTERVAL);
 
             // Send command
             boost::system::error_code write_ec;
@@ -475,7 +473,7 @@ int16_t ST3215ServoReader::readLoad(uint8_t servo_id)
             }
 
             // Ensure minimum response time
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(timing::MIN_RESPONSE_TIME);
 
             // Read response
             std::array<uint8_t, 8> response;  // Header(4) + Error(1) + Data(2) + Checksum(1)
@@ -487,7 +485,7 @@ int16_t ST3215ServoReader::readLoad(uint8_t servo_id)
             }
 
             // Validate response
-            if (response[0] != 0xFF || response[1] != 0xFF || response[2] != servo_id)
+            if (response[0] != protocol::HEADER1 || response[1] != protocol::HEADER2 || response[2] != servo_id)
             {
                 throw std::runtime_error("Invalid response header");
             }
@@ -505,12 +503,12 @@ int16_t ST3215ServoReader::readLoad(uint8_t servo_id)
         }
         catch (const std::runtime_error& e)
         {
-            if (retry == MAX_RETRIES - 1)
+            if (retry == communication::MAX_RETRIES - 1)
             {
                 throw;
             }
             ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(timing::RETRY_DELAY);
         }
     }
     throw std::runtime_error("Maximum retries exceeded");
