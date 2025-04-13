@@ -1,0 +1,56 @@
+(version 1)
+# Constraints taken from JLCPCB (generally stricter than PCBway)
+
+# --- DRILLING ---
+(rule "Drill Diameter"
+	(constraint hole_size (min "0.15mm") (max "6.3mm")))
+(rule "NPTH Dia"
+	(constraint hole_size (min "0.5mm"))
+	(condition "A.Pad_Type == 'NPTH, mechanical'"))
+(rule "Plated Slot"
+	(constraint hole_size (min "0.5mm"))
+	(condition "(A.Hole_Size_X != A.Hole_Size_Y) && A.isPlated()"))
+(rule "Non-Plated Slot"
+	(constraint hole_size (min "1.0mm"))
+	(condition "(A.Hole_Size_X != A.Hole_Size_Y) && !A.isPlated()"))
+# Via hole-to-hole in default constraints
+(rule "Pad Hole-to-Hole" 
+	(constraint hole_to_hole (min "0.45mm"))
+	(condition "A.Pad_Type == 'Through-hole' && B.Pad_Type == 'Through-hole'"))
+# ignoring edge constraints
+
+# --- TRACES ---
+(rule "PTH annular ring"
+	(constraint annular_width (min "0.15mm"))
+	(condition "A.Pad_Type == 'Through-hole'"))
+(rule "PTH annular ring recommended"
+	(severity warning)
+	(constraint annular_width (min "0.2mm"))
+	(condition "A.Pad_Type == 'Through-hole'"))
+(rule "NPTH annular ring"
+	(constraint annular_width (min "0.45mm"))
+	(condition "A.Pad_Type == 'NPTH, mechanical'"))
+# ignoring BGA, trace coils
+# can't test hatched grid, same-net track spacing
+(rule "Inner layer via to copper"
+	(constraint hole_clearance (min "0.2mm"))
+	(layer inner)
+	(condition "A.Type == 'Via'"))
+(rule "Inner layer PTH to copper"
+	(constraint hole_clearance (min "0.3mm"))
+	(layer inner)
+	(condition "A.Pad_Type == 'Through-hole'"))
+# pad to track, SMD pad to pad are both below standard minimum clearance
+(rule "Via to track"
+	(constraint hole_clearance (min "0.2mm"))
+	(condition "A.Type == 'Via' && B.Type == 'Track'"))
+(rule "PTH to track"
+	(constraint hole_clearance (min "0.5mm"))
+	(condition "A.Pad_Type == 'Through-hole' && B.Type == 'Track'"))
+(rule "NPTH to track"
+	(constraint hole_clearance (min "0.2mm"))
+	(condition "A.Pad_Type == 'NPTH, mechanical' && B.Type == 'Track'"))
+
+# --- SOLDERMASK ---
+
+# --- LEGEND ---
