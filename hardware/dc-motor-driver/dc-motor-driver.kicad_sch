@@ -3183,6 +3183,16 @@
 		)
 		(uuid "15ba119b-20c8-491f-8a9a-4e547bbbcd0f")
 	)
+	(label "BANK3_ILIM"
+		(at 129.54 134.62 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "17388e26-6673-4d85-aa50-cd8278a6e2e9")
+	)
 	(label "BANK2_I_SENSE"
 		(at 186.69 30.48 90)
 		(effects
@@ -3544,7 +3554,7 @@
 		(uuid "ccb6136e-fd5e-4955-a580-85eea97d78d5")
 	)
 	(label "BANK2_ILIM"
-		(at 129.54 134.62 180)
+		(at 129.54 132.08 180)
 		(effects
 			(font
 				(size 1.27 1.27)
