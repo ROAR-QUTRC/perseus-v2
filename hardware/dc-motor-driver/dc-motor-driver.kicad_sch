@@ -2012,17 +2012,6 @@
 			(embedded_fonts no)
 		)
 	)
-	(text "Bank 3"
-		(exclude_from_sim no)
-		(at 207.01 25.4 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "448065e0-5fdc-4f1f-adab-3d41c8422df6")
-	)
 	(text "Bank 2"
 		(exclude_from_sim no)
 		(at 153.67 25.4 0)
@@ -2035,6 +2024,19 @@
 			(justify left)
 		)
 		(uuid "924845d7-afd7-48b3-894a-b343aeb49962")
+	)
+	(text "Bank 3\n"
+		(exclude_from_sim no)
+		(at 207.01 25.4 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+				(thickness 0.508)
+				(bold yes)
+			)
+			(justify left)
+		)
+		(uuid "bc2e69fd-d26d-4d46-8510-6835257afc3f")
 	)
 	(text "Bank 1"
 		(exclude_from_sim no)
@@ -2150,6 +2152,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "df4baed7-9ffd-4c21-8f1b-fe9b3cf975ef")
+	)
+	(junction
+		(at 201.93 38.1)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "ed60c32b-e86f-4fcc-ae61-e3fdba95c229")
 	)
 	(junction
 		(at 100.33 40.64)
@@ -2294,6 +2302,16 @@
 			(type default)
 		)
 		(uuid "240da8c5-dee2-4ec2-8120-8d3d164d3e0e")
+	)
+	(wire
+		(pts
+			(xy 201.93 38.1) (xy 207.01 38.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "278556f0-fe9d-4238-8904-77ec54d8c27f")
 	)
 	(wire
 		(pts
@@ -2544,6 +2562,16 @@
 			(type default)
 		)
 		(uuid "66cc9bed-2433-4295-8d02-a8d400585a26")
+	)
+	(wire
+		(pts
+			(xy 191.77 38.1) (xy 201.93 38.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "675eec85-89ae-42db-a349-be2560647d53")
 	)
 	(wire
 		(pts
@@ -2877,6 +2905,16 @@
 	)
 	(wire
 		(pts
+			(xy 207.01 63.5) (xy 201.93 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c8684c94-91d6-422b-9817-3cd043d4bd36")
+	)
+	(wire
+		(pts
 			(xy 184.15 48.26) (xy 184.15 60.96)
 		)
 		(stroke
@@ -2884,6 +2922,16 @@
 			(type default)
 		)
 		(uuid "c8d01fc8-22e2-4d39-8776-28af7fb30f55")
+	)
+	(wire
+		(pts
+			(xy 201.93 63.5) (xy 201.93 38.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cbc7d705-020a-48f7-893a-1ddb02e828f8")
 	)
 	(wire
 		(pts
@@ -3184,6 +3232,16 @@
 			(justify right bottom)
 		)
 		(uuid "1e320890-31cc-41d8-ac63-0afed6053fb4")
+	)
+	(label "BANK3_ILIM"
+		(at 191.77 38.1 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "1fa82897-1f94-40ed-99b0-ba41e668c66a")
 	)
 	(label "MOT4_IN1"
 		(at 185.42 119.38 180)
