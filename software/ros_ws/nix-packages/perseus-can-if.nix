@@ -7,9 +7,6 @@
   hi-can-raw,
   nlohmann_json,
   actuator-msgs,
-  ament-cmake,
-  backward-ros,
-  hi-can-raw,
   rclcpp,
   sensor-msgs,
 }:
