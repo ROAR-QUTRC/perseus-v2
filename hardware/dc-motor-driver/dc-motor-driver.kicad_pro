@@ -58,7 +58,28 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "annular_width|130050000|129550000|96633711-3f44-4799-bbe9-10672d92c105|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "annular_width|143550000|129550000|7ec68104-f866-4fbe-a98c-6528ee04c453|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "silk_edge_clearance|128940000|140000000|42eb697d-db2f-43fb-96ec-3e89bbcf6ade|b778dfbb-2fa0-4b5c-bef4-7e6558c490f7",
+          ""
+        ],
+        [
+          "silk_edge_clearance|144660000|140000000|42eb697d-db2f-43fb-96ec-3e89bbcf6ade|fc79000a-adc4-45a9-97f0-9a1b5b47869b",
+          ""
+        ],
+        [
+          "silk_edge_clearance|144660000|140010000|42eb697d-db2f-43fb-96ec-3e89bbcf6ade|af1d7f99-5dfe-4d2e-bcc6-eb46ba62db5d",
+          ""
+        ]
+      ],
       "meta": {
         "version": 2
       },
@@ -131,10 +152,10 @@
         "min_hole_to_hole": 0.2,
         "min_microvia_diameter": 0.2,
         "min_microvia_drill": 0.1,
-        "min_resolved_spokes": 2,
-        "min_silk_clearance": 0.0,
-        "min_text_height": 1.0,
-        "min_text_thickness": 0.153,
+        "min_resolved_spokes": 1,
+        "min_silk_clearance": 0.1,
+        "min_text_height": 0.7,
+        "min_text_thickness": 0.14,
         "min_through_hole_diameter": 0.3,
         "min_track_width": 0.1524,
         "min_via_annular_width": 0.15,
@@ -477,7 +498,7 @@
       "no_connect_dangling": "warning",
       "pin_not_connected": "error",
       "pin_not_driven": "error",
-      "pin_to_pin": "warning",
+      "pin_to_pin": "error",
       "power_pin_not_driven": "error",
       "same_local_global_label": "warning",
       "similar_label_and_power": "warning",
@@ -495,12 +516,20 @@
   "libraries": {
     "pinned_footprint_libs": [
       "THT",
-      "Project PCB"
+      "Project PCB",
+      "SMD"
     ],
     "pinned_symbol_libs": [
       "Manufacturer_Connectors",
       "Resistor",
-      "Capacitor"
+      "Capacitor",
+      "PMIC_MotorDriver",
+      "PMIC_SwitchesDrivers",
+      "PMIC, Load Switches & Drivers",
+      "PMIC, Motor Drivers",
+      "Manufacturer Connectors",
+      "Project_PCB",
+      "Semiconductor_Diodes"
     ]
   },
   "meta": {
@@ -650,7 +679,7 @@
       "version": 1
     },
     "net_format_name": "",
-    "page_layout_descr_file": "",
+    "page_layout_descr_file": "../templates/sheet.kicad_wks",
     "plot_directory": "",
     "space_save_all_events": true,
     "spice_current_sheet_as_root": false,
@@ -692,5 +721,9 @@
       "Driver_6"
     ]
   ],
-  "text_variables": {}
+  "text_variables": {
+    "DRAWN_BY": "James Nichol, Maurice Blake",
+    "PROJECT": "Perseus Rover",
+    "SUBSYSTEM": "Excavation & Construction"
+  }
 }

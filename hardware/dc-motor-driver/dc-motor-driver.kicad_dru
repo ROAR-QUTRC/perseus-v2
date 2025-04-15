@@ -26,7 +26,8 @@
 (rule "PTH annular ring recommended"
 	(severity warning)
 	(constraint annular_width (min "0.2mm"))
-	(condition "A.Pad_Type == 'Through-hole'"))
+	# check if not part of an IC footprint (likely thermal via)
+	(condition "A.Pad_Type == 'Through-hole' && !A.memberOfFootprint('U*')"))
 (rule "NPTH annular ring"
 	(constraint annular_width (min "0.45mm"))
 	(condition "A.Pad_Type == 'NPTH, mechanical'"))

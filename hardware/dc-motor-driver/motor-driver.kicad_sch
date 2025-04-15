@@ -4,6 +4,10 @@
 	(generator_version "9.0")
 	(uuid "088e7184-8f29-4d97-bbf4-3a0dfb16c037")
 	(paper "A4")
+	(title_block
+		(title "Motor Driver")
+		(rev "V0R1")
+	)
 	(lib_symbols
 		(symbol "Capacitor:C_100n_50V_0603"
 			(pin_numbers
