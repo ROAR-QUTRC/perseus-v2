@@ -32,9 +32,7 @@
 
 	const changeAddress = async (value?: string) => {
 		if (value === 'server') {
-			const res = await fetch('/api/ros/domain', { method: 'GET' });
-			const data = await res.json();
-			address.value = data; // get ip from the server
+			address.value = window.location.hostname; // get ip from the server
 			disableServerIP = true;
 		} else {
 			address.value = value || customAddress; // use the custom value if there is no param
