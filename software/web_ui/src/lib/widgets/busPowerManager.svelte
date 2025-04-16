@@ -20,9 +20,7 @@
 	import { sentenceCase } from 'change-case';
 
 	// Widget logic goes here
-	let busState = $state<Record<string, { power_off: string; current: string; voltage: string }>>(
-		{}
-	);
+	let busState = $state<Record<string, { status: string; current: string; voltage: string }>>({});
 
 	const toggleBusPower = (e: Event, bus: string) => {
 		e.preventDefault();
@@ -33,7 +31,7 @@
 		});
 
 		const message = new ROSLIB.Message({
-			data: JSON.stringify({ bus: bus, on: !busState[bus].power_off ? '1' : '0' })
+			data: JSON.stringify({ bus: bus, on: busState[bus].status ? '1' : '0' })
 		});
 
 		publisher.publish(message);
@@ -68,7 +66,7 @@
 				<Fa
 					icon={faPowerOff}
 					class="power-button"
-					color={busState[bus].power_off == '0' ? '#f00' : '#0f0'}
+					color={busState[bus].status == '1' ? '#f00' : '#0f0'}
 				/>
 			</button>
 			<p class="mt-2">Current: {busState[bus].current}</p>
