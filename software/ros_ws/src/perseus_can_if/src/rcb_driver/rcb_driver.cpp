@@ -84,7 +84,7 @@ void RcbDriver::_canToRos()
         const auto& data = group.getStatus();
 
         // RCLCPP_INFO(get_logger(), "Publishing message: current: %d, voltage: %d, status: %d", data.current, data.voltage, data.status == hi_can::parameters::legacy::power::control::power_bus::power_status::OFF);
-        busData[name] = {{"current", data.current}, {"voltage", data.voltage}, {"status", data.status}};
+        busData[name] = {{"current", data.current}, {"voltage", data.voltage}, {"status", static_cast<int>(data.status)}};
     }
 
     message.data = busData.dump();
