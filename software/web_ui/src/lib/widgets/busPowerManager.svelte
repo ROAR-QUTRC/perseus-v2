@@ -33,10 +33,8 @@
 		});
 
 		const message = new ROSLIB.Message({
-			data: JSON.stringify({ bus: bus, on: busState[bus].power_off === 'true' ? '1' : '0' })
+			data: JSON.stringify({ bus: bus, on: !busState[bus].power_off ? '1' : '0' })
 		});
-
-		console.log(message);
 
 		publisher.publish(message);
 		publisher.unsubscribe();
@@ -70,7 +68,7 @@
 				<Fa
 					icon={faPowerOff}
 					class="power-button"
-					color={busState[bus].power_off === 'true' ? '#f00' : '#0f0'}
+					color={busState[bus].power_off == '0' ? '#f00' : '#0f0'}
 				/>
 			</button>
 			<p class="mt-2">Current: {busState[bus].current}</p>

@@ -83,7 +83,7 @@ void RcbDriver::_canToRos()
     {
         const auto& data = group.getStatus();
 
-        RCLCPP_INFO(get_logger(), "Publishing message: current: %d, voltage: %d, status: %d", data.current, data.voltage, data.status == hi_can::parameters::legacy::power::control::power_bus::power_status::OFF);
+        // RCLCPP_INFO(get_logger(), "Publishing message: current: %d, voltage: %d, status: %d", data.current, data.voltage, data.status == hi_can::parameters::legacy::power::control::power_bus::power_status::OFF);
         busData[name] = {{"current", data.current}, {"voltage", data.voltage}, {"power_off", data.status}};
     }
 
@@ -102,11 +102,10 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
     {
         // Parse the message
         auto data = nlohmann::json::parse(msg->data);
-
         auto group = std::find_if(BUS_GROUPS.begin(), BUS_GROUPS.end(), [&data](const auto& pair)
-                                  { return pair.first == data["bus"].dump(); });
+                                  { return pair.first == data["bus"].get<std::string>(); });
 
-        RCLCPP_INFO(get_logger(), "Received message: %s", data.dump().c_str());
+        RCLCPP_INFO(get_logger(), "Setting power state of bus: %s to %d", data["bus"].get<std::string>(), data["on"].get<bool>());
 
         using namespace hi_can::addressing::legacy::power::control::rcb;
 
