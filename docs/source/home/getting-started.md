@@ -22,7 +22,12 @@ gh repo clone ROAR-QUTRC/perseus-v2 # download the repository
 cd perseus-v2
 ```
 
-5. Run the setup script (it will prompt you for sudo permissions): `./software/scripts/nix-setup.sh`
+5. Run the setup script (it will prompt you for sudo permissions):
+
+```{code-block} console
+`./software/scripts/nix-setup.sh`
+```
+
 6. Restart your shell
 7. Run `cd ~/perseus-v2`
 8. Accept all config options when prompted with `y`
@@ -137,13 +142,13 @@ If you set the `ROS_DOMAIN_ID` environment variable manually, it will be used in
 
 For the curious among you, the `nix-setup.sh` script, in order:
 
-- Sets up git submodules (should never be necessary, but better to have it and not need it)
-- [Installs Nix](https://github.com/DeterminateSystems/nix-installer)
-- Configures Nix to allow your user to configure _it_ (adds you to `trusted-users`)
-  % TODO: This needs to be changed - the repo Cachix paths should be added to `trusted-substituters` instead, since `trusted-users` apparently has _many_ security issues.
-- Adds `direnv` setup to your `.zshrc` and `.bashrc` files
-- Allows `direnv` to configure based on the `.envrc` file present in this directory
-- Configures `direnv` to silence absurdly long info messages on activation [^direnv-versioning]
+-   Sets up git submodules (should never be necessary, but better to have it and not need it)
+-   [Installs Nix](https://github.com/DeterminateSystems/nix-installer)
+-   Configures Nix to allow your user to configure _it_ (adds you to `trusted-users`)
+    % TODO: This needs to be changed - the repo Cachix paths should be added to `trusted-substituters` instead, since `trusted-users` apparently has _many_ security issues.
+-   Adds `direnv` setup to your `.zshrc` and `.bashrc` files
+-   Allows `direnv` to configure based on the `.envrc` file present in this directory
+-   Configures `direnv` to silence absurdly long info messages on activation [^direnv-versioning]
 
 [^direnv-versioning]: This requires a modern version of `direnv` - if you see a text wall when it activates, you probably need a newer version. The standard version shipped with Ubuntu 22.04 is unfortunately too old for this to work.
 
