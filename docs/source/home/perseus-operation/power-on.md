@@ -1,12 +1,12 @@
 # Powering on Perseus
 
-This guide explains the correct proccess to power on persues.
+This guide explains the correct process to power on persues.
 
 ## Prerequisites
 
--   Charged batteries
--   Check cable connections (Including the can jump on the front of Perseus)
--   Know the differnce between drive stop button (green rectangle) and power button (round silver)
+- Charged batteries
+- Check cable connections (Including the can jump on the front of Perseus)
+- Know the difference between drive stop button (green rectangle) and power button (round silver)
 
 ## Guide
 
@@ -43,22 +43,22 @@ Note: Drive needs the drive stop button to be "down" additionally to bus power.
 
 ### Bands
 
-Each band represents a differnt bus on the rover. Going from the top down:
+Each band represents a different bus on the rover. Going from the top down:
 
--   Contactor (Largest band)
--   Compute
--   Drive
--   Aux
--   Spare
+- Contactor (Largest band)
+- Compute
+- Drive
+- Aux
+- Spare
 
 ### Colours
 
 Each colour represents a specific status:
 
--   Black - Off
--   Green - On
--   Yellow - Precharging
--   Red - Short-circuit
--   Flashing tangerine - Switch failed
--   Blue - Overload
--   Flashing red - Fault
+- Black - Off
+- Green - On
+- Yellow - Precharging
+- Red - Short-circuit
+- Flashing tangerine - Switch failed
+- Blue - Overload
+- Flashing red - Fault

@@ -86,10 +86,10 @@ Runs `software/scripts/clean.sh` to remove all generated/build directories from 
 Scripts to push build targets to Cachix.
 Current sub-attributes available:
 
--   `build`: Main build
--   `shell`: Dev shell environment
--   `all`: Both `build` and `shell`, as well packages for simulation
--   `docs-shell`: Shell environment for building the documentation
+- `build`: Main build
+- `shell`: Dev shell environment
+- `all`: Both `build` and `shell`, as well packages for simulation
+- `docs-shell`: Shell environment for building the documentation
 
 :::{note}
 This requires a Cachix auth token to succeed.

@@ -33,9 +33,9 @@ This is because the `pyproject.toml` and `uv.lock` files (defining the Python pr
 
 To:
 
--   Add dependencies: `uv add DEPENDENCY`
--   Remove dependencies: `uv remove DEPENDENCY`
--   Update the package versions in the lockfile: `uv lock --update`
+- Add dependencies: `uv add DEPENDENCY`
+- Remove dependencies: `uv remove DEPENDENCY`
+- Update the package versions in the lockfile: `uv lock --update`
 
 You will have to exit and re-enter the dev shell for any of these changes to take effect, as the Python environment is built and applied upon entering the dev shell.
 Alternatively, you can also run `uv run COMMAND` to run a command in the currently specified Python environment.
@@ -49,7 +49,7 @@ Whilst simply opening the built files from a file browser is fine 99% of the tim
 Run `nix run nixpkgs#darkhttpd -- DOCS_LOCATION` to start serving the documentation ({keys}`ctrl+c` to terminate).
 You may have to experiment with using either `localhost:8080` or the loopback address `127.0.0.1:8080` - sometimes one of these won't load correctly and certain features won't work.
 
--   Using `nix build`: `nix run nixpkgs#darkhttpd -- ./result/html`
--   Building with the dev shell: `nix run nixpkgs#darkhttpd -- ./docs/build/html` (assuming you're in the repository root)
+- Using `nix build`: `nix run nixpkgs#darkhttpd -- ./result/html`
+- Building with the dev shell: `nix run nixpkgs#darkhttpd -- ./docs/build/html` (assuming you're in the repository root)
 
 To serve on a different port than `8080`, add the `--port PORT` flag to the end of the command.

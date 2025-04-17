@@ -166,17 +166,17 @@ However, either way, they should come before any functions are defined.
 
 ##### Public
 
--   Types
--   Constructors and destructor
--   Handler functions
--   Accessors/mutators (preferably paired if applicable)
--   Other functions
+- Types
+- Constructors and destructor
+- Handler functions
+- Accessors/mutators (preferably paired if applicable)
+- Other functions
 
 ##### Private
 
--   Types
--   Internal methods
--   Variables
+- Types
+- Internal methods
+- Variables
 
 ##### Correct
 
@@ -373,10 +373,10 @@ If it's not clear what kind of class you're writing, then that's a suggestion th
 
 See [Effective C++ item 19: Treat class design as type design](https://blog.ycshao.com/2012/11/23/effective-c-item-19-treat-class-design-as-type-design/). It primarily comes down to:
 
--   Consider if you _really_ need what you're about to create
--   How will it be used?
--   What restrictions does it have?
--   Is it useful?
+- Consider if you _really_ need what you're about to create
+- How will it be used?
+- What restrictions does it have?
+- Is it useful?
 
 #### Avoid inheriting from classes that were not designed to be base classes
 
@@ -416,19 +416,19 @@ This also goes for _programs_ you write, not just functions and classes - for ex
 
 There should be no "bare" magic numbers in your code. They should be one of the following instead:
 
--   Commented - easiest but also worst solution
--   Converted to a _named_ constant
--   Explained by the variable names, such as `outputRevolutionsPerSecond = inputRpm*60;`
+- Commented - easiest but also worst solution
+- Converted to a _named_ constant
+- Explained by the variable names, such as `outputRevolutionsPerSecond = inputRpm*60;`
 
 ### Documentation
 
 All code in the project should be documented with [Doxygen](https://www.doxygen.nl/manual/docblocks.html) comments. This is only _required_ for top-level files/classes, but is _strongly encouraged_ for the entire public API. Finally, it is preferred that as much as possible is documented. The documentation priority list is:
 
--   File/module/class (purpose, usage, etc.)
--   Public API
--   Internal API/functions
--   Internal types (optional if self-descriptive enough)
--   Internal variables (also optional if self-descriptive)
+- File/module/class (purpose, usage, etc.)
+- Public API
+- Internal API/functions
+- Internal types (optional if self-descriptive enough)
+- Internal variables (also optional if self-descriptive)
 
 ## C++ Standards
 
@@ -651,9 +651,9 @@ Class names should always be `PascalCase` and _describe_ what they do, with mini
 
 ##### Common Pitfalls
 
--   `BaseSettings`: If you're prepending `Base` to a class, don't. This will just confuse later programmers, and serves instead as a suggestion that you need to rename the _child_ classes.
--   `ISerializable`: Just don't. Type definitions exist, you don't need to add useless prefixes.
--   `Utilities`: This is bad because if you're writing a utilities class, it almost certainly means that you need to refactor those utilities out somewhere closer to where they need to be.
+- `BaseSettings`: If you're prepending `Base` to a class, don't. This will just confuse later programmers, and serves instead as a suggestion that you need to rename the _child_ classes.
+- `ISerializable`: Just don't. Type definitions exist, you don't need to add useless prefixes.
+- `Utilities`: This is bad because if you're writing a utilities class, it almost certainly means that you need to refactor those utilities out somewhere closer to where they need to be.
 
 ##### Acceptable
 
@@ -700,18 +700,18 @@ If you're using VSCode, either set `Clang_format_style` to `file` (this is the d
 
 ```yaml
 {
-    BasedOnStyle: Google,
-    UseTab: Never,
-    IndentWidth: 4,
-    TabWidth: 4,
-    BreakBeforeBraces: Allman,
-    AllowShortIfStatementsOnASingleLine: false,
-    IndentCaseLabels: false,
-    ColumnLimit: 0,
-    AccessModifierOffset: -4,
-    NamespaceIndentation: All,
-    FixNamespaceComments: false,
-    AlignConsecutiveMacros: true,
+  BasedOnStyle: Google,
+  UseTab: Never,
+  IndentWidth: 4,
+  TabWidth: 4,
+  BreakBeforeBraces: Allman,
+  AllowShortIfStatementsOnASingleLine: false,
+  IndentCaseLabels: false,
+  ColumnLimit: 0,
+  AccessModifierOffset: -4,
+  NamespaceIndentation: All,
+  FixNamespaceComments: false,
+  AlignConsecutiveMacros: true,
 }
 ```
 
@@ -802,8 +802,8 @@ There should be no need to write custom memory management operators. Almost ever
 
 However, if in the extremely unlikely case that multiple people have agreed that custom memory management is the best solution, follow the following:
 
--   Always provide `new` and `delete` together
--   If you provide any class-specific new, provide all of the standard forms (plain, in-place, and `nothrow`)
+- Always provide `new` and `delete` together
+- If you provide any class-specific new, provide all of the standard forms (plain, in-place, and `nothrow`)
 
 #### Pimpl is useful, but unlikely to be necessary
 
@@ -989,18 +989,18 @@ Using the STL can result in... interesting... types sometimes - if you don't par
 
 Exceptions are, as the name suggests, for _exceptional_ behaviour. Before writing code which throws exceptions _or_ returns an error code, read through, at the very least, the first 8 items of the [ISO C++](https://isocpp.org/wiki/faq/exceptions) exceptions and error handling page - everything in that document is applicable and should be followed, but the first entries are the most important. The most important points are that exceptions separate the _happy path_ (everything succeeded) from the _bad path_ (errors occurred). Exceptions should not be used as another way to return ordinary data from a function - they should be reserved for errors only. Additionally, they should not be used for flow control - this is what if/else statements are for! Your code should both catch "expected" exceptions, and throw exceptions if it encounters _unexpected_ states. Errors which are part of normal operation, however, should perhaps be handled in other ways (eg `std::optional`). Good reasons to throw exceptions are:
 
--   An error occurs inside a class constructor (**this is what makes RAII possible**)
--   A syscall fails (eg `open()` fails)
+- An error occurs inside a class constructor (**this is what makes RAII possible**)
+- A syscall fails (eg `open()` fails)
 
 _Potentially_ valid reasons to throw exceptions, but which require more consideration, are:
 
--   The function received invalid data (depending on the function and what it's meant to do, this could be a valid or invalid reason)
+- The function received invalid data (depending on the function and what it's meant to do, this could be a valid or invalid reason)
 
 _Bad_ reasons to throw exceptions are:
 
--   An expected and recoverable error occurred
--   Internal state is corrupted or assumptions are violated (violations of invariants) - this is what `assert` is for!
--   You want to return a different data type from your function - use `std::variant` or redesign your code.
+- An expected and recoverable error occurred
+- Internal state is corrupted or assumptions are violated (violations of invariants) - this is what `assert` is for!
+- You want to return a different data type from your function - use `std::variant` or redesign your code.
 
 Exceptions should all be derived from the `std::exception` base class. No exceptions (pun intended). You should also **never ever** throw an exception from a class _destructor_ since this causes a whole bunch of nasty behaviour - there's no good way to handle this happening. Finally, try to make `try`/`catch` blocks as short as is reasonably possible.
 
@@ -1039,27 +1039,27 @@ If using `typedef` to alias types in the STL, functions, or complex types makes 
 
 Types can convey important information about your intentions. For example:
 
--   `size_t` conveys that it's an unsigned integer size/length of something
--   `std::chrono::duration` is explicitly a duration between two points
--   `std::optional` is explicitly a value which may or may not exist
-    These are just a few examples, but in short, consider whether the type you're using conveys the information that it should, and if it doesn't, check to see if there isn't a better suited type.
+- `size_t` conveys that it's an unsigned integer size/length of something
+- `std::chrono::duration` is explicitly a duration between two points
+- `std::optional` is explicitly a value which may or may not exist
+  These are just a few examples, but in short, consider whether the type you're using conveys the information that it should, and if it doesn't, check to see if there isn't a better suited type.
 
 #### Integer types
 
 Use the standard integer types in `<cstdint>` and `<climit>`. Prefer to explicitly state the size of the type - that is, prefer `int64_t` over `long`, or `uint8_t` over `unsigned char`.
 
--   Use `size_t` for unsigned integer types denoting length, size, or capacity.
--   Use `ssize_t` when you need a _signed_ integer type for the same reasons, but where a negative value may be returned on an error (do not _write_ code that does this! See above about error handling, only use this when libraries return it).
--   Use `off_t` for file positions and offsets.
--   Use `ptrdiff_t` for integers representing offset or difference between pointers.
+- Use `size_t` for unsigned integer types denoting length, size, or capacity.
+- Use `ssize_t` when you need a _signed_ integer type for the same reasons, but where a negative value may be returned on an error (do not _write_ code that does this! See above about error handling, only use this when libraries return it).
+- Use `off_t` for file positions and offsets.
+- Use `ptrdiff_t` for integers representing offset or difference between pointers.
 
 ## Python Standards
 
 Just follow the conventions in [PEP 8](https://peps.python.org/pep-0008). A couple of the most important notes are:
 
--   Classes: `PascalCase`
--   Variables: `snake_case` variable names
--   4 space indentation
+- Classes: `PascalCase`
+- Variables: `snake_case` variable names
+- 4 space indentation
 
 Everything in the general standards section still applies, and if there is a conflict between PEP 8 and what's specified in this document, this document takes priority.
 

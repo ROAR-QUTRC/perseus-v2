@@ -27,6 +27,7 @@ Without it, Nix will try to resolve the location by searching through a list of 
 :::
 
 [^shell-dot]: `.` in the context of paths just means "the current directory", and `..` means "the parent directory".
+
 [^nix-search]:
     Technically, it needs to point to a directory containing a `flake.nix` file (or one of its subdirectories - it'll search upwards), and since this project's `flake.nix` is in the repository root, that's why it needs to point there.
     Since it searches upwards, running `nix COMMAND .#blah` works no matter what directory you're in, as long as you're inside the repo.

@@ -2,8 +2,8 @@
 
 The Perseus-UI is a web UI that is almost entirely independent of the rover core software. The UI is a SvelteKit + Vite app with an injected Node.js server. There are two main components to Perseus-UI:
 
--   Widgets -> Typically a single svelte component that provide an interface for a specific functionality on the rover.
--   Layouts -> A group of widgets that are regularly used together.
+- Widgets -> Typically a single svelte component that provide an interface for a specific functionality on the rover.
+- Layouts -> A group of widgets that are regularly used together.
 
 ## Running Perseus-UI
 
@@ -74,47 +74,47 @@ To begin developing a widget run the command: `./create-widget.sh <file-name>`. 
 <p>New component</p>
 ```
 
--   The first script tag with the `module` property is a server only module. This is used here as it is only run once when the component is first loaded and it also allows for exports that are used to expose some properties. You likely will not need to write your own code here.
+- The first script tag with the `module` property is a server only module. This is used here as it is only run once when the component is first loaded and it also allows for exports that are used to expose some properties. You likely will not need to write your own code here.
 
-    -   **name -** This string is the unique name of the widget that will be displayed at the top of the widget and is used to ensure duplicates of widgets are not loaded.
-    -   **settings -** This is the object that structures the settings/state panel of each widget, this will automatically update across all connected devices when saved and will persist between sessions. Here is an example settings object and how to access the value of each setting:
+  - **name -** This string is the unique name of the widget that will be displayed at the top of the widget and is used to ensure duplicates of widgets are not loaded.
+  - **settings -** This is the object that structures the settings/state panel of each widget, this will automatically update across all connected devices when saved and will persist between sessions. Here is an example settings object and how to access the value of each setting:
 
-        ```ts
-        export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-            groups: {
-                general: {
-                    textSetting: {
-                        type: "text", // options are: text, number, switch, select, button
-                        value: "Some text", // This is a default value
-                    },
-                    hereIsAButton: {
-                        type: "button",
-                        action: () => {
-                            // action is executed on button press
-                            console.log("Button clicked");
-                            return "Success"; // string return value is printed in a toast
-                        },
-                    },
-                },
-                Advanced: {
-                    booleanSwitch: {
-                        type: "switch",
-                        description: "This is a switch", // fields with descriptions get a question mark next to their label
-                    },
-                    selectOptions: {
-                        type: "select",
-                        options: [
-                            { value: "1", label: "Option 1" },
-                            { value: "2", label: "Option 2" },
-                            { value: "3", label: "Option 3" },
-                        ],
-                    },
-                },
+    ```ts
+    export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
+      groups: {
+        general: {
+          textSetting: {
+            type: "text", // options are: text, number, switch, select, button
+            value: "Some text", // This is a default value
+          },
+          hereIsAButton: {
+            type: "button",
+            action: () => {
+              // action is executed on button press
+              console.log("Button clicked");
+              return "Success"; // string return value is printed in a toast
             },
-        });
+          },
+        },
+        Advanced: {
+          booleanSwitch: {
+            type: "switch",
+            description: "This is a switch", // fields with descriptions get a question mark next to their label
+          },
+          selectOptions: {
+            type: "select",
+            options: [
+              { value: "1", label: "Option 1" },
+              { value: "2", label: "Option 2" },
+              { value: "3", label: "Option 3" },
+            ],
+          },
+        },
+      },
+    });
 
-        console.log(settings.groups.Advanced.booleanSwitch.value); // logs the state of the switch
-        ```
+    console.log(settings.groups.Advanced.booleanSwitch.value); // logs the state of the switch
+    ```
 
--   The second script tag is where your code should go as it is run client side when the component is rendered. The settings can be accessed here without an import and to listen for changes wrap the value you want to check in either a `$derived` or `$effect` rune. Furthermore, use `toast('message')` to send a toast from your widget.
--   The remainder of the file is where mark down goes. Tailwind classes can be used on widgets for styling or a `<style></style>` block, although the former is strongly preferred if possible.
+- The second script tag is where your code should go as it is run client side when the component is rendered. The settings can be accessed here without an import and to listen for changes wrap the value you want to check in either a `$derived` or `$effect` rune. Furthermore, use `toast('message')` to send a toast from your widget.
+- The remainder of the file is where mark down goes. Tailwind classes can be used on widgets for styling or a `<style></style>` block, although the former is strongly preferred if possible.
