@@ -23,5 +23,7 @@ Finally, if you're wondering about a specific payload, those get their own [sect
 :titlesonly:
 :hidden:
 :glob:
+systems/hardware-index
+systems/software-index
 systems/*
 ```
