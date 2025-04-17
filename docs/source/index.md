@@ -31,6 +31,6 @@ systems-index
 standards-index
 development-index
 maintenance-index
-challenge-breakdowns
+challenge-breakdowns-index
 generated/index
 ```
