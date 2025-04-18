@@ -73,16 +73,45 @@
 		activeLayout.widgets.forEach((widget) => {
 			if (widget.name === label) throw new Error(`Widget already added: ${label}`);
 		});
+		// Find a location for the new widget
+		let x = 0;
+		let y = 0;
+		let foundPlace = false;
+		while (!foundPlace) {
+			// Check all the active widgets to see if the target space is available
+			let clearedAllWidgets = true;
+			activeLayout.widgets.forEach((widget) => {
+				// check current position is in the bound of this weidget
+				if (x >= widget.x && x < widget.x + widget.w && y >= widget.y && y < widget.y + widget.h) {
+					clearedAllWidgets = false;
+				}
+			});
+			// if it is then create the widget
+			if (clearedAllWidgets) {
+				foundPlace = true;
+			} else if (x == 9 && y == 9) {
+				// if it isnt and the last position is reached then throw an error
+				foundPlace = true;
+				throw new Error('No more space for widgets');
+			} else if (x == 9) {
+				// Move to next row
+				x = 0;
+				y++;
+			} else {
+				// Move to next column
+				x++;
+			}
+		}
 		// Add widget
 		repo(Layout).update(activeLayout.id, {
 			widgets: [
 				...activeLayout.widgets,
 				{
 					name: label,
-					x: 0,
-					y: 0,
-					w: 2,
-					h: 2
+					x: x,
+					y: y,
+					w: 1,
+					h: 1
 				}
 			]
 		});
