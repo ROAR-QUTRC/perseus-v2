@@ -33,7 +33,7 @@ cat >"$WIDGET_PATH" <<EOF
 	export const name = 'New Widget';
 	// These properties are optional
 	// export const description = 'Description of the widget goes here';
-	// export const group = 'Group Name';
+	// export const group: WidgetGroupType = 'Group Name';
 
 	export const settings: WidgetSettingsType = \$state<WidgetSettingsType>({
 		groups: {}
