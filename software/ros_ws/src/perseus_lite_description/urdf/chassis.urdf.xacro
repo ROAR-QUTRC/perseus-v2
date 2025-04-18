@@ -4,12 +4,13 @@
   <xacro:macro name="chassis" params="prefix:=^">
     <!-- CHASSIS -->
     <link name="${prefix}chassis">
-      <inertial>
+       <inertial>
         <!-- Scaled inertial properties for Perseus Lite -->
         <origin xyz="0.0 -0.08550236602 0.07366242988" rpy="0 0 0"/>
         <mass value="1.38449701513"/> <!-- Scaled by 0.5 -->
-        <inertia ixx="0.021308" iyy="0.011578" izz="0.028045" 
-                 ixy="0.0" iyz="0.000676" ixz="-0.0"/>
+        <!-- Updated inertia values using square scaling factor (0.5^2 = 0.25) -->
+        <inertia ixx="0.005327" iyy="0.002894" izz="0.007011" 
+                 ixy="0.0" iyz="0.000169" ixz="-0.0"/>
       </inertial>
 
       <visual>
