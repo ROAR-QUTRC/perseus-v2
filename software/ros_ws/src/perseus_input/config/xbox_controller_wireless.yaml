@@ -1,0 +1,43 @@
+generic_controller:
+  ros__parameters:
+    max_update_rate: 20
+    turbo_scaling: 2.0
+    drive:
+      forward:
+        turbo: 2.5
+        axis: 1
+        scaling: 0.7
+        enable:
+          axis: 5
+          is_less_than: true
+          threshold: -0.5
+        turbo_enable:
+          axis: 4
+          is_less_than: true
+          threshold: -0.5
+      turn:
+        turbo: 2.5
+        axis: 0
+        scaling: 0.5
+        enable:
+          follows: drive.forward.enable
+        turbo_enable:
+          follows: drive.forward.turbo_enable
+    bucket:
+      lift:
+        scaling: 0.1
+        axis: 3
+      tilt:
+        scaling: -0.1
+        axis: 2
+      jaws:
+        scaling: 0.1
+        button_positive: 7
+        button_negative: 6
+      rotate:
+        scaling: -0.5
+        axis: 6
+      magnet:
+        hold: true
+        button_positive: 0
+        button_negative: 1

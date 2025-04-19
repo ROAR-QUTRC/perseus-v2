@@ -79,7 +79,8 @@ speed_settings_t target; // target what?
 
 #### Booleans
 
-Boolean (true/false) variables should have a verb prefix indicating that they are a boolean, and what it does.
+Boolean (true/false) variables should be unambiguous in their naming such that you know exactly what it represents by looking at it.
+In most cases, this means that they should have a verb prefix indicating that they are a boolean, and what it does.
 
 ##### Acceptable
 
@@ -95,6 +96,22 @@ bool hasSettings;
 bool valid;
 bool exit;
 bool settings;
+```
+
+However, in some cases (such as as members of an appropriately named `struct`), it may be appropriate to omit a prefix.
+For example, the following code is acceptable as they are part of a status flag register struct:
+
+```cpp
+struct fet_status_t
+{
+    bool alertAsserted;
+    bool ddsgAsserted;
+    bool dchtAsserted;
+    bool preDischargeFetOn;
+    bool dischargeFetOn;
+    bool preChargeFetOn;
+    bool chargeFetOn;
+};
 ```
 
 #### Constants
@@ -143,7 +160,9 @@ private:
 
 #### Member Ordering
 
-Methods and variables inside a class should be ordered as so:
+Methods and variables inside a class should be ordered as follows.
+Constants have been excluded from the list, as it may make sense to place them before _or_ after type definitions under different circumstances.
+However, either way, they should come before any functions are defined.
 
 ##### Public
 

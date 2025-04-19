@@ -49,8 +49,16 @@ def generate_launch_description():
         package="tf2_ros",
         executable="static_transform_publisher",
         name="static_map_odom_publisher",
+        # arguments=["0", "0", "0", "0", "0", "0", "base_link", "lidar_frame"],
         arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
     )
+    # Node(
+    # # Base link to LIDAR transform
+    #     package="tf2_ros",
+    #     executable="static_transform_publisher",
+    #     name="lidar_tf_publisher",
+    #     arguments=["0", "0", "0.2", "0", "0", "0", "odom", "lidar_frame"],
+    # ),
 
     slam_toolbox = Node(
         package="slam_toolbox",
@@ -58,14 +66,16 @@ def generate_launch_description():
         name="slam_toolbox",
         output="screen",
         parameters=[
+            #     get_package_share_directory("autonomy")
+            #     + "/config/slam_toolbox_params.yaml",
             slam_params_file,
-            {
-                "use_sim_time": use_sim_time,
-                "odom_frame": "odom",
-                "base_frame": "chassis",
-                "map_frame": "map",
-                "scan_topic": "/scan",
-            },
+            # {
+            #     "use_sim_time": use_sim_time,
+            #     "odom_frame": "odom",
+            #     "base_frame": "base_link",
+            #     "map_frame": "map",
+            #     "scan_topic": "/scan",
+            # },
         ],
     )
 

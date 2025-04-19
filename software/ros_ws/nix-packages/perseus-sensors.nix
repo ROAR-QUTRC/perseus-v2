@@ -7,6 +7,8 @@
   nlohmann_json,
   openssl,
   rclcpp,
+  realsense2-camera,
+  realsense2-description,
   sensor-msgs,
   simple-networking,
 }:
@@ -23,6 +25,8 @@ buildRosPackage rec {
     nlohmann_json
     openssl
     rclcpp
+    realsense2-camera
+    realsense2-description
     sensor-msgs
     simple-networking
   ];

@@ -1,0 +1,83 @@
+name: PlatformIO CI
+on:
+  push:
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      manual: ${{ github.event_name == 'workflow_dispatch'}}
+      bms: ${{ steps.filter.outputs.bms }}
+      light-tower: ${{ steps.filter.outputs.light-tower }}
+      processing-plant: ${{ steps.filter.outputs.processing-plant }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: .github/filters-firmware.yaml
+  build-bms:
+    runs-on: ubuntu-latest
+    if: ${{ !needs.changes.outputs.bms }}
+    needs: changes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Build PlatformIO Project
+        working-directory: ./firmware/battery-management-system
+        run: pio run
+  build-light-tower:
+    runs-on: ubuntu-latest
+    if: ${{ !needs.changes.outputs.light-tower }}
+    needs: changes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Build PlatformIO Project
+        working-directory: ./firmware/battery-management-system
+        run: pio run
+  build-processing-plant:
+    runs-on: ubuntu-latest
+    if: ${{ !needs.changes.outputs.processing-plant }}
+    needs: changes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Build PlatformIO Project
+        working-directory: ./firmware/battery-management-system
+        run: pio run

@@ -62,15 +62,27 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     : Node("m2m2_lidar", options)
 {
     using namespace networking;
+<<<<<<< HEAD
     // Set up ROS logging
     auto ret = rcutils_logging_set_logger_level(
         get_logger().get_name(),
         RCUTILS_LOG_SEVERITY_INFO);
+=======
+>>>>>>> origin/main
 
-    if (ret != RCUTILS_RET_OK)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Failed to set logger level to DEBUG");
-    }
+    // Set up ROS logging to DEBUG explicitly
+    // auto ret = rcutils_logging_set_logger_level(
+    //     get_logger().get_name(),
+    //     RCUTILS_LOG_SEVERITY_DEBUG);  // Changed from INFO to DEBUG
+
+    // if (ret != RCUTILS_RET_OK)
+    // {
+    //     RCLCPP_ERROR(this->get_logger(), "Failed to set logger level to DEBUG");
+    // }
+    // else
+    // {
+    //     RCLCPP_DEBUG(this->get_logger(), "Logger level set to DEBUG successfully");
+    // }
 
     // Load and validate parameters
     RCLCPP_DEBUG(this->get_logger(), "Starting M2M2Lidar initialization...");
@@ -80,89 +92,162 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
     this->declare_parameter("imu_frame_id", "imu_frame");
+<<<<<<< HEAD
     this->declare_parameter("imu_rate", 100);  // Hz
+=======
+    this->declare_parameter("imu_rate", 100);   // Hz
+    this->declare_parameter("read_imu", true);  // if imu data should be read
+>>>>>>> origin/main
 
     // Get the parameters
-    std::string sensorIp;
-    uint16_t sensorPort;
-    sensorIp = this->get_parameter("sensor_ip").as_string();
-    sensorPort = this->get_parameter("sensor_port").as_int();
+    std::string sensorIp = this->get_parameter("sensor_ip").as_string();
+    uint16_t sensorPort = this->get_parameter("sensor_port").as_int();
 
     RCLCPP_INFO(this->get_logger(),
-                "Attempting connection to sensor at %s:%d",
-                sensorIp.c_str(), sensorPort);
+                "Attempting connection to sensor at %s:%d, read_imu: %s",
+                sensorIp.c_str(), sensorPort, _readImu ? "true" : "false");
 
     // Configure socket handlers
     socket_config_handlers_t handlers{
         .preBind = nullptr,
         .preConnect = [this](int fd) -> bool
         {
+            RCLCPP_DEBUG(this->get_logger(), "Setting up socket options...");
+
             struct timeval timeoutValue{
-                .tv_sec = 2, .tv_usec = 0};
+                .tv_sec = 5,
+                .tv_usec = 0};
+
             if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
             {
-                RCLCPP_INFO(this->get_logger(), "Failed to set receive timeout: %s", strerror(errno));
+                RCLCPP_ERROR(this->get_logger(), "Failed to set receive timeout: %s", strerror(errno));
                 return false;
             }
+
             if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeoutValue, sizeof(timeoutValue)) < 0)
             {
-                RCLCPP_INFO(this->get_logger(), "Failed to set send timeout: %s", strerror(errno));
+                RCLCPP_ERROR(this->get_logger(), "Failed to set send timeout: %s", strerror(errno));
                 return false;
             }
+
             int keepaliveEnabled = 1;
             if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keepaliveEnabled, sizeof(keepaliveEnabled)) < 0)
             {
-                RCLCPP_INFO(this->get_logger(), "Failed to set keepalive: %s", strerror(errno));
+                RCLCPP_ERROR(this->get_logger(), "Failed to set keepalive: %s", strerror(errno));
                 return false;
             }
+
+            RCLCPP_DEBUG(this->get_logger(), "Socket options configured successfully");
             return true;
         },
         .postConnect = nullptr};
 
-    // Initialize the client using emplace
-    _client.emplace(
-        address_t{
-            .hostname = sensorIp,
-            .service = std::to_string(sensorPort)},
-        socket_protocol::TCP,
-        address_t{},
-        handlers);
+    RCLCPP_INFO(this->get_logger(), "Creating network client...");
 
-    // Test connection with ping
-    if (!_sendJsonRequest("ping"))
+    try
     {
-        throw std::runtime_error("Failed to send initial ping");
+        // Initialize the client
+        _client.emplace(
+            address_t{
+                .hostname = sensorIp,
+                .service = std::to_string(sensorPort)},
+            socket_protocol::TCP,
+            address_t{},
+            handlers);
+        RCLCPP_INFO(this->get_logger(), "Network client created successfully");
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to create network client: %s", e.what());
+        throw;
     }
 
-    auto pingResponse = _receiveJsonResponse();
-    if (pingResponse.empty())
+    // Perform initial test but don’t throw on failure
+    RCLCPP_DEBUG(this->get_logger(), "Starting initial getlaserscan test...");
+    nlohmann::json request = {
+        {"command", "getlaserscan"},
+        {"request_id", _requestId++}};
+    std::string full_message = request.dump() + "\r\n\r\n";
+    RCLCPP_DEBUG(this->get_logger(), "Sending test request: %s", full_message.c_str());
+
+    if (_sendJsonRequest("getlaserscan"))
     {
-        throw std::runtime_error("No response to initial ping");
+        auto testResponse = _receiveJsonResponse();
+        if (testResponse.empty())
+        {
+            RCLCPP_WARN(this->get_logger(), "No response received from sensor during init test, proceeding anyway");
+        }
+        else if (!testResponse.contains("result") || !testResponse["result"].contains("code") || testResponse["result"]["code"] != 1)
+        {
+            RCLCPP_WARN(this->get_logger(), "Invalid response during init test: %s, proceeding anyway",
+                        testResponse.dump().c_str());
+        }
+        else
+        {
+            RCLCPP_DEBUG(this->get_logger(), "Connection test successful, configuring sensor...");
+        }
+    }
+    else
+    {
+        RCLCPP_WARN(this->get_logger(), "Failed to send initial getlaserscan command, proceeding anyway");
     }
 
-    RCLCPP_DEBUG(this->get_logger(), "Ping successful, configuring sensor...");
-
-    // Create and send initial configuration
+    // Send initial configuration regardless of test outcome
     sensor_config_t defaultConfig{
         .scanFrequency = 15.0,
         .angularResolution = 0.25,
         .minRange = 0.1,
         .maxRange = 30.0,
     };
-
+    RCLCPP_DEBUG(this->get_logger(), "Sending initial configuration...");
     _sendCommand(_createConfigCommand(defaultConfig));
 
+<<<<<<< HEAD
     // Initialize publishers and timer
     RCLCPP_DEBUG(this->get_logger(), "Setting up ROS publishers and timers...");
+=======
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Initialize publishers and timers
+    RCLCPP_DEBUG(this->get_logger(), "Initializing publishers...");
+>>>>>>> origin/main
     _initializePublishers();
+
+    RCLCPP_DEBUG(this->get_logger(), "Creating timers...");
     _readTimer = this->create_wall_timer(
         std::chrono::milliseconds(100),
         std::bind(&M2M2Lidar::_readSensorData, this));
 
+<<<<<<< HEAD
     // Imu timer initialisation
     _imuTimer = this->create_wall_timer(
         std::chrono::milliseconds(10),  // 100Hz rate for IMU data
         std::bind(&M2M2Lidar::_readImuData, this));
+=======
+    if (_readImu)
+    {
+        const auto initial_imu_period = std::chrono::milliseconds(50);
+        _imuTimer = this->create_wall_timer(
+            initial_imu_period,
+            [this]()
+            {
+                static int call_count = 0;
+                _readImuData();
+                if (call_count++ == 10)
+                {
+                    RCLCPP_DEBUG(this->get_logger(), "Switching IMU timer to full speed (100Hz)");
+                    _imuTimer->cancel();
+                    _imuTimer = this->create_wall_timer(
+                        std::chrono::milliseconds(10),
+                        std::bind(&M2M2Lidar::_readImuData, this));
+                }
+            });
+    }
+    else
+    {
+        RCLCPP_INFO(this->get_logger(), "IMU reading disabled by parameter 'read_imu'");
+    }
+>>>>>>> origin/main
 
     RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
 }
@@ -341,6 +426,8 @@ bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::jso
 {
     assert(_client && "Network client should be initialised by constructor");
 
+    // RCLCPP_INFO(this->get_logger(), "Preparing to send command: %s", command.c_str());
+
     // Create the JSON request structure
     nlohmann::json request = {
         {"command", command},
@@ -355,18 +442,29 @@ bool M2M2Lidar::_sendJsonRequest(const std::string& command, const nlohmann::jso
     std::string full_message = request.dump() + "\r\n\r\n";
 
     // Use the networking library to send the data
-    ssize_t sent = _client->transmit(full_message);
+    RCLCPP_DEBUG(this->get_logger(), "Full message to send: %s", full_message.c_str());
 
-    if (sent != static_cast<ssize_t>(full_message.length()))
+    // Use the networking library to send the data
+    try
     {
-        RCLCPP_ERROR(this->get_logger(),
-                     "Failed to send complete message: only sent %zd of %zu bytes",
-                     sent, full_message.length());
+        ssize_t sent = _client->transmit(full_message);
+
+        if (sent != static_cast<ssize_t>(full_message.length()))
+        {
+            RCLCPP_ERROR(this->get_logger(),
+                         "Failed to send complete message: only sent %zd of %zu bytes",
+                         sent, full_message.length());
+            return false;
+        }
+
+        RCLCPP_DEBUG(this->get_logger(), "Successfully sent %zd bytes", sent);
+        return true;
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Exception during transmit: %s", e.what());
         return false;
     }
-
-    RCLCPP_DEBUG(this->get_logger(), "Successfully sent %zd bytes", sent);
-    return true;
 }
 
 nlohmann::json M2M2Lidar::_receiveJsonResponse()
@@ -374,7 +472,7 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
     assert(_client && "Network client should be initialised by constructor");
 
     std::vector<uint8_t> received;
-    const auto timeout = std::chrono::seconds(2);
+    const auto timeout = std::chrono::seconds(5);
     auto startTime = std::chrono::steady_clock::now();
     bool foundDelim = false;
 
@@ -382,28 +480,54 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
 
     while (!foundDelim)
     {
-        // Check for timeout
         auto now = std::chrono::steady_clock::now();
         if (now - startTime > timeout)
         {
-            RCLCPP_ERROR(this->get_logger(), "Timeout waiting for response");
+            if (received.empty())
+            {
+                RCLCPP_INFO(this->get_logger(), "No data received from sensor after %ld seconds from initialisation",
+                            std::chrono::duration_cast<std::chrono::seconds>(timeout).count());
+            }
+            else
+            {
+                RCLCPP_ERROR(this->get_logger(), "Timeout waiting for response delimiter. Received %zu bytes: %.100s",
+                             received.size(), std::string(received.begin(), received.end()).c_str());
+                RCLCPP_DEBUG(this->get_logger(), "Full received data on timeout: %s",
+                             std::string(received.begin(), received.end()).c_str());
+            }
             return nlohmann::json();
         }
 
-        // Try to receive some data
-        auto chunk = _client->receive(1024, false);  // non-blocking receive
-
-        if (!chunk)
+        try
         {
-            // No data available yet, sleep briefly and try again
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
+            RCLCPP_DEBUG(this->get_logger(), "Attempting to receive data...");
+            auto chunk = _client->receive(4096, false);
+            if (!chunk)
+            {
+                RCLCPP_DEBUG(this->get_logger(), "No data available yet in this iteration");
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+            else
+            {
+                RCLCPP_DEBUG(this->get_logger(), "Received chunk of %zu bytes: %s",
+                             chunk->size(),
+                             std::string(chunk->begin(), chunk->end()).c_str());
+            }
+
+            received.insert(received.end(), chunk->begin(), chunk->end());
+            RCLCPP_DEBUG(this->get_logger(), "Current buffer size: %zu bytes, content: %s",
+                         received.size(),
+                         std::string(received.begin(), received.end()).c_str());
+        }
+        catch (const std::exception& e)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Exception during receive: %s", e.what());
+            RCLCPP_DEBUG(this->get_logger(), "Buffer state on exception: %s",
+                         std::string(received.begin(), received.end()).c_str());
+            return nlohmann::json();
         }
 
-        // Add the received data to our buffer
-        received.insert(received.end(), chunk->begin(), chunk->end());
-
-        // Check for delimiter
         if (received.size() >= 4)
         {
             std::string_view lastFour(
@@ -412,28 +536,24 @@ nlohmann::json M2M2Lidar::_receiveJsonResponse()
             if (lastFour == "\r\n\r\n")
             {
                 foundDelim = true;
-                RCLCPP_DEBUG(this->get_logger(),
-                             "Found delimiter after %zu bytes", received.size());
+                RCLCPP_DEBUG(this->get_logger(), "Found delimiter after %zu bytes", received.size());
+                RCLCPP_DEBUG(this->get_logger(), "Complete message received: %s",
+                             std::string(received.begin(), received.end() - 4).c_str());
             }
         }
     }
 
-    // Remove the delimiter
-    received.resize(received.size() - 4);
-
-    // Convert to string and parse JSON
-    std::string response_str(received.begin(), received.end());
+    std::string json_str(received.begin(), received.end() - 4);
     try
     {
-        auto json = nlohmann::json::parse(response_str);
-        RCLCPP_DEBUG(this->get_logger(), "Successfully parsed JSON response");
-        return json;
+        auto json_response = nlohmann::json::parse(json_str);
+        RCLCPP_DEBUG(this->get_logger(), "Parsed JSON: %s", json_response.dump().c_str());
+        return json_response;
     }
-    catch (const nlohmann::json::exception& e)
+    catch (const std::exception& e)
     {
-        RCLCPP_ERROR(this->get_logger(),
-                     "JSON parse error: %s\nResponse preview: %s",
-                     e.what(), response_str.substr(0, 100).c_str());
+        RCLCPP_ERROR(this->get_logger(), "Failed to parse JSON response: %s", e.what());
+        RCLCPP_DEBUG(this->get_logger(), "Raw data that failed parsing: %s", json_str.c_str());
         return nlohmann::json();
     }
 }
@@ -515,7 +635,8 @@ void M2M2Lidar::_readSensorData()
     auto response = _receiveJsonResponse();
     if (response.empty() ||
         response["result"].is_null() ||
-        !response["result"].contains("laser_points"))
+        !response["result"].contains("laser_points") ||
+        response["result"]["code"] != 1)  // 1 is success code
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to receive valid laser scan response");
         return;
@@ -557,11 +678,24 @@ void M2M2Lidar::_readSensorData()
 
 void M2M2Lidar::_readImuData()
 {
+<<<<<<< HEAD
+=======
+    static int error_count = 0;
+>>>>>>> origin/main
     RCLCPP_DEBUG(this->get_logger(), "Requesting IMU data...");
 
     if (!_sendJsonRequest(IMU_COMMAND))
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to send IMU data request");
+<<<<<<< HEAD
+=======
+        error_count++;
+        if (error_count > 5)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Multiple IMU request failures - may need to reconnect");
+        }
+>>>>>>> origin/main
         return;
     }
 
@@ -569,9 +703,23 @@ void M2M2Lidar::_readImuData()
     if (response.empty() || !response.contains("result"))
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to receive valid IMU response");
+<<<<<<< HEAD
         return;
     }
 
+=======
+        error_count++;
+        if (error_count > 5)
+        {
+            RCLCPP_WARN(this->get_logger(),
+                        "Multiple IMU response failures - may need to reconnect");
+        }
+        return;
+    }
+
+    error_count = 0;
+
+>>>>>>> origin/main
     // Create and populate IMU message
     auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
     imu_msg->header.stamp = this->now();
@@ -639,8 +787,11 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
          *          - Ensures all angles are positive and less than 2*pi
          *          - Handles wrap-around cases (e.g. -pi/2 becomes 3*pi / 2)
          *
+<<<<<<< HEAD
          * The algorithm uses std::trunc to calculate the exact number of full rotations
          * needed to avoid any potential precision loss from repeated floating-point operations.
+=======
+>>>>>>> origin/main
          */
         const auto tau = 2 * std::numbers::pi;
         angle -= std::trunc(angle / tau) * tau;
@@ -658,7 +809,11 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
     interpolated.reserve(INTERPOLATED_POINTS);
 
     // Calculate angle increment
+<<<<<<< HEAD
     float angleIncrement = 2 * M_PI / INTERPOLATED_POINTS;
+=======
+    float angleIncrement = 2 * std::numbers::pi / INTERPOLATED_POINTS;
+>>>>>>> origin/main
 
     // Track index between iterations since points are sorted by angle
     size_t sourcePointIndex = 0;
@@ -697,7 +852,11 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
 
             // Adjust angle for wrap-around
             float a1 = get<0>(p1);
+<<<<<<< HEAD
             float a2 = get<0>(p2) + 2 * M_PI;
+=======
+            float a2 = get<0>(p2) + 2 * std::numbers::pi;
+>>>>>>> origin/main
 
             if (!get<2>(p1) && !get<2>(p2))
             {
@@ -718,7 +877,11 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
             }
 
             float t = (targetAngle - a1) / (a2 - a1);
+<<<<<<< HEAD
             float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
+=======
+            float dist = std::lerp(get<1>(p1), get<1>(p2), t);
+>>>>>>> origin/main
             interpolated.emplace_back(targetAngle, dist, true);
         }
         else if (sourcePointIndex == points.size())
@@ -751,7 +914,11 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
             }
 
             float t = (targetAngle - get<0>(p1)) / (get<0>(p2) - get<0>(p1));
+<<<<<<< HEAD
             float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
+=======
+            float dist = std::lerp(get<1>(p1), get<1>(p2), t);
+>>>>>>> origin/main
             interpolated.emplace_back(targetAngle, dist, true);
         }
     }

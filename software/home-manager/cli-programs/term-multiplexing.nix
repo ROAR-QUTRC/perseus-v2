@@ -36,7 +36,7 @@
     programs.zellij = {
       enable = true;
       package = pkgs.unstable.zellij;
-      enableBashIntegration = config.programs.bash.enable;
+      enableBashIntegration = false;
       enableZshIntegration = config.programs.zsh.enable;
       settings = { };
     };

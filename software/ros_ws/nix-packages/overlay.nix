@@ -2,8 +2,11 @@ final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   perseus = final.callPackage ./perseus.nix { };
+  perseus-can-if = final.callPackage ./perseus-can-if.nix { };
   perseus-description = final.callPackage ./perseus-description.nix { };
   perseus-hardware = final.callPackage ./perseus-hardware.nix { };
+  perseus-input = final.callPackage ./perseus-input.nix { };
+  perseus-payloads = final.callPackage ./perseus-payloads.nix { };
   perseus-lite = final.callPackage ./perseus-lite.nix { };
   perseus-lite-description = final.callPackage ./perseus-lite-description.nix { };
   perseus-lite-hardware = final.callPackage ./perseus-lite-hardware.nix { };

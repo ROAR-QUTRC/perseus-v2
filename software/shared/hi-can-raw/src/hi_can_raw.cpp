@@ -39,11 +39,6 @@ RawCanInterface& RawCanInterface::operator=(RawCanInterface other)
     swap(*this, other);
     return *this;
 }
-RawCanInterface& RawCanInterface::operator=(RawCanInterface&& other) noexcept
-{
-    swap(*this, other);
-    return *this;
-}
 
 void RawCanInterface::transmit(const Packet& packet)
 {
@@ -147,7 +142,7 @@ void RawCanInterface::_configureSocket(const int& socket)
         if (ioctl(socket, SIOCGIFINDEX, &ifr) < 0)
         {
             string err = std::strerror(errno);
-            throw std::runtime_error("Failed to get interface index: " + err);
+            throw std::runtime_error("Failed to get interface index for \"" + _interfaceName + "\": " + err);
         }
         interface_idx = ifr.ifr_ifindex;
     }
@@ -159,7 +154,7 @@ void RawCanInterface::_configureSocket(const int& socket)
     if (bind(socket, (struct sockaddr*)&addr, sizeof(addr)) < 0)
     {
         string err = std::strerror(errno);
-        throw std::runtime_error("Failed to bind CAN socket: " + err);
+        throw std::runtime_error("Failed to bind CAN socket on interface \"" + _interfaceName + "\": " + err);
     }
 }
 

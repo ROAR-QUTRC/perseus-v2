@@ -30,10 +30,9 @@ jobs:
     needs: global-vars
     steps:
       - uses: actions/checkout@v4
-      - uses: nixbuild/nix-quick-install-action@v29
+      - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix-conf }}
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Update intersphinx inventory files
         run: nix run .#docs.fetch-inventories
       - uses: stefanzweifel/git-auto-commit-action@v5

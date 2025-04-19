@@ -3,9 +3,18 @@
         {
             "path": "."
         },
-        // {
-        //     "path": "Software/native/can-interface"
-        // }
+        {
+            "name": "BMS Firmware",
+            "path": "./firmware/battery-management-system"
+        },
+        {
+            "name": "Light Tower Firmware",
+            "path": "./firmware/light-tower"
+        },
+        {
+            "name": "Processing Plant Firmware",
+            "path": "./firmware/processing-plant"
+        }
     ],
     "settings": {
         "nixEnvSelector.suggestion": true,
@@ -89,7 +98,9 @@
             "regex": "cpp",
             "source_location": "cpp",
             "ranges": "cpp",
-            "valarray": "cpp"
+            "valarray": "cpp",
+            "*.tcc": "cpp",
+            "coroutine": "cpp"
         },
         "C_Cpp.default.cppStandard": "c++20",
         "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
@@ -107,6 +118,19 @@
         },
         "[javascript]": {
             "editor.defaultFormatter": "ibecker.treefmt-vscode"
+        },
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/.DS_Store": true,
+            "**/Thumbs.db": true,
+            "**/.classpath": true,
+            "**/.project": true,
+            "**/.settings": true,
+            "**/.factorypath": true,
+            "**/.direnv": true,
+            "**/ros_ws/install": true
         },
     },
     "extensions": {

@@ -42,8 +42,8 @@ class XboxController(Node):
         # Xbox controller axis mappings
         self.LEFT_STICK_Y_AXIS = 1
         self.RIGHT_STICK_X_AXIS = 2
-        self.RIGHT_TRIGGER_AXIS = 5  # Regular speed deadman switch
-        self.LEFT_TRIGGER_AXIS = 6  # High speed deadman switch
+        self.RIGHT_TRIGGER_AXIS = 4  # Regular speed deadman switch
+        self.LEFT_TRIGGER_AXIS = 5  # High speed deadman switch
 
         # Create range constraints as instance variables for use in callback
         self._speed_range = FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)

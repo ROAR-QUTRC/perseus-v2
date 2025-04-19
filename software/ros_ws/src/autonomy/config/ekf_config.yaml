@@ -1,5 +1,8 @@
 ### ekf_config.yaml ###
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 # The frequency (in Hz) at which the filter will output a position estimate
 frequency: 30.0
 # Whether to publish the acceleration state

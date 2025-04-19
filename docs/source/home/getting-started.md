@@ -22,7 +22,12 @@ gh repo clone ROAR-QUTRC/perseus-v2 # download the repository
 cd perseus-v2
 ```
 
-5. Run the setup script (it will prompt you for sudo permissions): `./software/scripts/nix-setup.sh`
+5. Run the setup script (it will prompt you for sudo permissions):
+
+```{code-block} console
+`./software/scripts/nix-setup.sh`
+```
+
 6. Restart your shell
 7. Run `cd ~/perseus-v2`
 8. Accept all config options when prompted with `y`

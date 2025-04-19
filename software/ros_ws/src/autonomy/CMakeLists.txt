@@ -40,10 +40,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # INCLUDE DEPENDENCIES public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp robot_localization) # robot_localiztion
-                                                            # will be used in
-                                                            # the very near
-                                                            # future
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp robot_localization)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)

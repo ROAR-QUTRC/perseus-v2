@@ -123,14 +123,26 @@
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
         standardPkgs = {
-          # note: we need bashInteractive so running `bash` in zsh works properly
           inherit (pkgs)
             groot2
-            can-utils
             bashInteractive
+            can-utils
+            nodejs_22
+            yarn
             nixgl-script
+            libnice
+            ;
+          inherit (pkgs.gst_all_1)
+            gstreamer
+            gst-plugins-base
+            gst-plugins-good
+            gst-plugins-bad
+            gst-plugins-rs
             ;
           inherit (pkgs.ros)
+            twist-stamper
+            rosbridge-suite
+            livox-ros-driver2
             rviz2-fixed
             rosbag2
             teleop-twist-keyboard
@@ -143,6 +155,7 @@
             rqt-plot
             rqt-reconfigure
             rqt-common-plugins
+            rmw-cyclonedds-cpp
             ;
         };
         # Packages which should be available only in the dev shell
@@ -172,8 +185,10 @@
             environmentDomainId = devDomainId;
             forceReleaseDomainId = true;
 
-            # enable coloured ros2 launch output
             postShellHook = ''
+              # use CycloneDDS ROS middleware
+              export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+              # enable coloured ros2 launch output
               export RCUTILS_COLORIZED_OUTPUT=1
             '';
           };
@@ -202,9 +217,6 @@
         };
 
         # --- SCRIPTS ---
-        perseus = pkgs.writeShellScriptBin "perseus" ''
-          ${default}/bin/ros2 launch perseus perseus.launch.py "$@"
-        '';
         treefmt-write-config = pkgs.writeShellScriptBin "treefmt-write-config" ''
           cd "$(git rev-parse --show-toplevel)"
           cp ${treefmtEval.config.build.configFile} ./treefmt.toml
@@ -268,21 +280,36 @@
           docs = docs.shell;
         };
 
-        apps = {
-          perseus = {
-            type = "app";
-            program = "${pkgs.lib.getExe perseus}";
+        apps =
+          let
+            mkRosLaunchScript =
+              name: package: launchFile:
+              pkgs.writeShellScriptBin name ''
+                ${default}/bin/ros2 launch ${package} ${launchFile} "$@"
+              '';
+            mkRosLaunchApp =
+              name: package: launchFile:
+              let
+                script = mkRosLaunchScript name package launchFile;
+              in
+              {
+                type = "app";
+                program = "${pkgs.lib.getExe script}";
+              };
+          in
+          {
+            perseus = mkRosLaunchApp "perseus" "perseus" "perseus.launch.py";
+            default = self.apps.${system}.perseus;
+            xbox_controller = mkRosLaunchApp "xbox_controller" "input_devices" "xbox_controller.launch.py";
+            ros2 = {
+              type = "app";
+              program = "${default}/bin/ros2";
+            };
+            clean = {
+              type = "app";
+              program = "${pkgs.scripts.clean}/bin/clean";
+            };
           };
-          default = self.apps.${system}.perseus;
-          ros2 = {
-            type = "app";
-            program = "${default}/bin/ros2";
-          };
-          clean = {
-            type = "app";
-            program = "${pkgs.scripts.clean}/bin/clean";
-          };
-        };
         formatter = treefmtEval.config.build.wrapper;
         checks = {
           # formatting = treefmtEval.config.build.check self;
