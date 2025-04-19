@@ -12,7 +12,7 @@
 </script>
 
 <script lang="ts">
-	import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import ROSLIB from 'roslib';
 	import Fa from 'svelte-fa';
 	import { faPowerOff } from '@fortawesome/free-solid-svg-icons';
@@ -25,7 +25,7 @@
 	const toggleBusPower = (e: Event, bus: string) => {
 		e.preventDefault();
 		const publisher = new ROSLIB.Topic({
-			ros: ros.value!,
+			ros: getRosConnection() as ROSLIB.Ros,
 			name: '/ros_to_can',
 			messageType: 'std_msgs/String'
 		});
@@ -39,15 +39,19 @@
 	};
 
 	onMount(() => {
-		const listener = new ROSLIB.Topic({
-			ros: ros.value!,
-			name: '/can_to_ros',
-			messageType: 'std_msgs/String'
-		});
+		let listener: ROSLIB.Topic;
 
-		listener.subscribe((message: any) => {
-			busState = JSON.parse(message.data);
-		});
+		if (getRosConnection()) {
+			listener = new ROSLIB.Topic({
+				ros: getRosConnection() as ROSLIB.Ros,
+				name: '/can_to_ros',
+				messageType: 'std_msgs/String'
+			});
+
+			listener.subscribe((message: any) => {
+				busState = JSON.parse(message.data);
+			});
+		}
 
 		return () => {
 			listener.unsubscribe();

@@ -41,7 +41,7 @@ cat >"$WIDGET_PATH" <<EOF
 </script>
 
 <script lang="ts">
-	// import { ros } from '\$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	// import { getRosConnection } from '\$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	// import ROSLIB from 'roslib';
 
 	// Widget logic goes here

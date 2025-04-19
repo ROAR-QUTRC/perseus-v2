@@ -26,9 +26,8 @@
 </script>
 
 <script lang="ts">
-	import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import ROSLIB from 'roslib';
-	import { linear } from 'svelte/easing';
 
 	let joystickRadius = $derived<number>(Number(settings.groups.General.joyStickRadius.value));
 
@@ -158,11 +157,13 @@
 			});
 		}, 75);
 
-		topic = new ROSLIB.Topic({
-			ros: ros.value!,
-			name: 'web_vel',
-			messageType: 'geometry_msgs/TwistStamped'
-		});
+		if (getRosConnection()) {
+			topic = new ROSLIB.Topic({
+				ros: getRosConnection() as ROSLIB.Ros,
+				name: 'web_vel',
+				messageType: 'geometry_msgs/TwistStamped'
+			});
+		}
 
 		return () => {
 			joystickContainer?.removeEventListener('pointerdown', onStart);

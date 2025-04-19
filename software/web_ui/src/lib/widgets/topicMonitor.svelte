@@ -36,7 +36,7 @@
 
 <script lang="ts">
 	// TODO: make this use isConnected instead of ros.value === null
-	import { isConnected, ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
@@ -55,7 +55,7 @@
 
 	let rosConnected = $state<boolean>(false);
 	$effect(() => {
-		if (!isConnected()) {
+		if (!getRosConnection()) {
 			untrack(() => {
 				rosConnected = false;
 				settings.groups.newMonitor.topic.options = [];
@@ -73,11 +73,13 @@
 	});
 
 	const innit = () => {
-		if (ros.value === null) return;
+		if (!getRosConnection()) return;
+
+		const ros = getRosConnection() as ROSLIB.Ros;
 
 		settings.groups.newMonitor.topic.value = '';
 
-		ros.value.getTopics(
+		ros.getTopics(
 			(topics) => {
 				const topicOptions = topics.topics.map((topic) => {
 					return {
@@ -121,7 +123,7 @@
 	};
 
 	const addMonitor = (topic: string | undefined, frequency: number, loadedFromConfig: boolean) => {
-		if (ros.value === null) return 'ROS not connected';
+		if (!getRosConnection()) return 'ROS not connected';
 
 		if (topic === '' || topic === undefined) return 'No topic selected';
 
@@ -130,13 +132,15 @@
 			if (monitor.topic === topic) return 'Monitor already exists';
 		}
 
+		const ros = getRosConnection() as ROSLIB.Ros;
+
 		// Find the topic type
-		ros.value.getTopicType(
+		ros.getTopicType(
 			topic,
 			(topicType) => {
 				// subscribe to ros topic
 				const listener = new ROSLIB.Topic({
-					ros: ros.value!,
+					ros: ros,
 					name: topic,
 					messageType: topicType
 				});

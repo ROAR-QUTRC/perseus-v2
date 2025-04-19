@@ -41,7 +41,7 @@
 </script>
 
 <script lang="ts">
-	import { isConnected, ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte';
 	import ROSLIB from 'roslib';
 	import { onMount } from 'svelte';
 
@@ -88,10 +88,11 @@
 	let twistTopic: ROSLIB.Topic | null = null;
 
 	$effect(() => {
-		if (isConnected()) {
+		if (getRosConnection()) {
+			const ros = getRosConnection() as ROSLIB.Ros;
 			if (settings.groups.General.topic.value !== '') {
 				twistTopic = new ROSLIB.Topic({
-					ros: ros.value!,
+					ros: ros,
 					name: settings.groups.General.topic.value!,
 					messageType: 'geometry_msgs/msg/TwistStamped'
 				});
@@ -113,7 +114,7 @@
 			}
 
 			// only add twist topics to the dropdown
-			ros.value?.getTopics((topics) => {
+			ros.getTopics((topics) => {
 				settings.groups.General.topic.options = [];
 				for (let i = 0; i < topics.types.length; i++) {
 					if (topics.types[i].includes('Twist')) {
@@ -176,7 +177,7 @@
 			/>
 		</svg>
 		<div
-			class="relative m-[40px] w-fit rounded-[50%] border border-card-foreground"
+			class="border-card-foreground relative m-[40px] w-fit rounded-[50%] border"
 			style:width={`${canvasSize}px`}
 			style:height={`${canvasSize}px`}
 		>

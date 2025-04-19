@@ -69,6 +69,12 @@
 	});
 
 	const addWidget = (label: string) => {
+		// Remove widgets that do not exist anymore
+		activeLayout.widgets = activeLayout.widgets.filter((widget) => {
+			return availableWidgets.some((availableWidget) => {
+				return availableWidget.name === widget.name;
+			});
+		});
 		// Check if widget is already added						<- maybe remove if this is desired behavior
 		activeLayout.widgets.forEach((widget) => {
 			if (widget.name === label) throw new Error(`Widget already added: ${label}`);

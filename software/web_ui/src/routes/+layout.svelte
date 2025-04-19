@@ -18,17 +18,17 @@
 	import '../app.css';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { onMount } from 'svelte';
-	import { connect, ros } from '$lib/scripts/ros.svelte';
 	import { availableWidgets } from '$lib/scripts/state.svelte';
 	import { localStore } from '$lib/scripts/localStore.svelte';
+	import { connectRos, disconnectRos, getRosConnection } from '$lib/scripts/ros-bridge.svelte';
 	let { children } = $props();
 
 	// automatically connect and disconnect from ROS-bridge
 	onMount(() => {
-		connect(localStore('rosAddress', 'localhost').value);
+		connectRos(localStore('rosAddress', window.location.hostname).value);
 		// This really should be it's own function (the return value is the onUnMount function)
 		return () => {
-			if (ros.value) ros.value.close();
+			if (getRosConnection()) disconnectRos();
 		};
 	});
 </script>
