@@ -22,31 +22,19 @@
 /**
  * @brief ROS2 driver node for the M2M2 LIDAR sensor
  *
-<<<<<<< HEAD
- * This class handles both the network communication and protocol parsing
- * for the M2M2 Lidar. While this combines two responsibilities, they are
- * tightly coupled for this specific sensor and the data flow between
- * them is well-defined.
-=======
-
  * @details Handles communication with the M2M2 LIDAR sensor over TCP/IP,
  * processes incoming data, and publishes LaserScan and IMU messages.
  * The driver maintains the connection to the sensor and provides configuration
  * capabilities.
->>>>>>> origin/main
+
  */
 class M2M2Lidar : public rclcpp::Node
 {
 public:
-<<<<<<< HEAD
-=======
     /**
      * @brief Configuration parameters for the M2M2 LIDAR sensor
      */
-    /**
-     * @brief Configuration parameters for the M2M2 LIDAR sensor
-     */
->>>>>>> origin/main
+
     struct sensor_config_t
     {
         double scanFrequency;

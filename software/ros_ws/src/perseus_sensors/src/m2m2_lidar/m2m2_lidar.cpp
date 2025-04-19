@@ -62,13 +62,6 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     : Node("m2m2_lidar", options)
 {
     using namespace networking;
-<<<<<<< HEAD
-    // Set up ROS logging
-    auto ret = rcutils_logging_set_logger_level(
-        get_logger().get_name(),
-        RCUTILS_LOG_SEVERITY_INFO);
-=======
->>>>>>> origin/main
 
     // Set up ROS logging to DEBUG explicitly
     // auto ret = rcutils_logging_set_logger_level(
@@ -92,12 +85,9 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     this->declare_parameter("scan_topic", "scan");
     this->declare_parameter("imu_topic", "imu");
     this->declare_parameter("imu_frame_id", "imu_frame");
-<<<<<<< HEAD
-    this->declare_parameter("imu_rate", 100);  // Hz
-=======
     this->declare_parameter("imu_rate", 100);   // Hz
     this->declare_parameter("read_imu", true);  // if imu data should be read
->>>>>>> origin/main
+
 
     // Get the parameters
     std::string sensorIp = this->get_parameter("sensor_ip").as_string();
@@ -202,15 +192,11 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     RCLCPP_DEBUG(this->get_logger(), "Sending initial configuration...");
     _sendCommand(_createConfigCommand(defaultConfig));
 
-<<<<<<< HEAD
-    // Initialize publishers and timer
-    RCLCPP_DEBUG(this->get_logger(), "Setting up ROS publishers and timers...");
-=======
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // Initialize publishers and timers
     RCLCPP_DEBUG(this->get_logger(), "Initializing publishers...");
->>>>>>> origin/main
+
     _initializePublishers();
 
     RCLCPP_DEBUG(this->get_logger(), "Creating timers...");
@@ -218,12 +204,6 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
         std::chrono::milliseconds(100),
         std::bind(&M2M2Lidar::_readSensorData, this));
 
-<<<<<<< HEAD
-    // Imu timer initialisation
-    _imuTimer = this->create_wall_timer(
-        std::chrono::milliseconds(10),  // 100Hz rate for IMU data
-        std::bind(&M2M2Lidar::_readImuData, this));
-=======
     if (_readImu)
     {
         const auto initial_imu_period = std::chrono::milliseconds(50);
@@ -247,7 +227,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     {
         RCLCPP_INFO(this->get_logger(), "IMU reading disabled by parameter 'read_imu'");
     }
->>>>>>> origin/main
+
 
     RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
 }
@@ -678,24 +658,20 @@ void M2M2Lidar::_readSensorData()
 
 void M2M2Lidar::_readImuData()
 {
-<<<<<<< HEAD
-=======
     static int error_count = 0;
->>>>>>> origin/main
+
     RCLCPP_DEBUG(this->get_logger(), "Requesting IMU data...");
 
     if (!_sendJsonRequest(IMU_COMMAND))
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to send IMU data request");
-<<<<<<< HEAD
-=======
         error_count++;
         if (error_count > 5)
         {
             RCLCPP_WARN(this->get_logger(),
                         "Multiple IMU request failures - may need to reconnect");
         }
->>>>>>> origin/main
+
         return;
     }
 
@@ -703,11 +679,6 @@ void M2M2Lidar::_readImuData()
     if (response.empty() || !response.contains("result"))
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to receive valid IMU response");
-<<<<<<< HEAD
-        return;
-    }
-
-=======
         error_count++;
         if (error_count > 5)
         {
@@ -719,7 +690,7 @@ void M2M2Lidar::_readImuData()
 
     error_count = 0;
 
->>>>>>> origin/main
+
     // Create and populate IMU message
     auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
     imu_msg->header.stamp = this->now();
@@ -787,11 +758,6 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
          *          - Ensures all angles are positive and less than 2*pi
          *          - Handles wrap-around cases (e.g. -pi/2 becomes 3*pi / 2)
          *
-<<<<<<< HEAD
-         * The algorithm uses std::trunc to calculate the exact number of full rotations
-         * needed to avoid any potential precision loss from repeated floating-point operations.
-=======
->>>>>>> origin/main
          */
         const auto tau = 2 * std::numbers::pi;
         angle -= std::trunc(angle / tau) * tau;
@@ -809,11 +775,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
     interpolated.reserve(INTERPOLATED_POINTS);
 
     // Calculate angle increment
-<<<<<<< HEAD
-    float angleIncrement = 2 * M_PI / INTERPOLATED_POINTS;
-=======
     float angleIncrement = 2 * std::numbers::pi / INTERPOLATED_POINTS;
->>>>>>> origin/main
 
     // Track index between iterations since points are sorted by angle
     size_t sourcePointIndex = 0;
@@ -852,11 +814,8 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
 
             // Adjust angle for wrap-around
             float a1 = get<0>(p1);
-<<<<<<< HEAD
-            float a2 = get<0>(p2) + 2 * M_PI;
-=======
             float a2 = get<0>(p2) + 2 * std::numbers::pi;
->>>>>>> origin/main
+
 
             if (!get<2>(p1) && !get<2>(p2))
             {
@@ -877,11 +836,8 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
             }
 
             float t = (targetAngle - a1) / (a2 - a1);
-<<<<<<< HEAD
-            float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
-=======
             float dist = std::lerp(get<1>(p1), get<1>(p2), t);
->>>>>>> origin/main
+
             interpolated.emplace_back(targetAngle, dist, true);
         }
         else if (sourcePointIndex == points.size())
@@ -914,11 +870,8 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
             }
 
             float t = (targetAngle - get<0>(p1)) / (get<0>(p2) - get<0>(p1));
-<<<<<<< HEAD
-            float dist = get<1>(p1) + t * (get<1>(p2) - get<1>(p1));
-=======
             float dist = std::lerp(get<1>(p1), get<1>(p2), t);
->>>>>>> origin/main
+
             interpolated.emplace_back(targetAngle, dist, true);
         }
     }
