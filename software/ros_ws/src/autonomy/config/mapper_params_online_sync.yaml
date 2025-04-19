@@ -13,15 +13,9 @@ slam_toolbox:
     publish_frame_projected_to_2d: true
     completebs: true
     map_frame: map
-<<<<<<< HEAD
-    base_frame: base_link
-    scan_topic: /scan
-    use_odometry: false
-=======
     base_frame: chassis
     scan_topic: /scan
     use_odometry: true
->>>>>>> origin/main
     use_map_saver: true
     mode: mapping #localization
     # if you'd like to immediately start continuing a map at a given pose
