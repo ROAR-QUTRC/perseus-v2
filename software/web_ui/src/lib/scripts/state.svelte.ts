@@ -5,7 +5,7 @@ import { Layout } from '../../shared/Layout';
 export interface WidgetType {
 	name: string;
 	description?: string;
-	group?: string;
+	group?: WidgetGroupType;
 	component: Component;
 	settings: WidgetSettingsType;
 	layoutProps?: {
