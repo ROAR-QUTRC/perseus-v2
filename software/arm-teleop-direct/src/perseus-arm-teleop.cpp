@@ -1,3 +1,5 @@
+// For controlling one pair of SO-100 arms
+
 #include "perseus-arm-teleop.hpp"
 
 #include <array>
