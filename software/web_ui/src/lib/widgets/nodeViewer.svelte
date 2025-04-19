@@ -5,6 +5,7 @@
 	export const description =
 		'This widget allows you to view the topics, services, and other details of a node.';
 	export const group = 'ROS';
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}

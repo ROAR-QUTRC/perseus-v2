@@ -6,6 +6,7 @@
 	// These properties are optional
 	// export const description = 'Description of the widget goes here';
 	export const group: WidgetGroupType = 'ROS';
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}

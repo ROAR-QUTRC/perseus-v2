@@ -6,6 +6,7 @@ export interface WidgetType {
 	name: string;
 	description?: string;
 	group?: WidgetGroupType;
+	isRosDependant?: boolean;
 	component: Component;
 	settings: WidgetSettingsType;
 	layoutProps?: {
@@ -82,6 +83,7 @@ export const getWidgetsByLayoutId = (id: string): Array<WidgetType> => {
 				name: widgetState.name,
 				description: widgetTemplate.description,
 				group: widgetTemplate.group,
+				isRosDependant: widgetTemplate.isRosDependant,
 				component: widgetTemplate.component,
 				settings: widgetTemplate.settings,
 				layoutProps: {

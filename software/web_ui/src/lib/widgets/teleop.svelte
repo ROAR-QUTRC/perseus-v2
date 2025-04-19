@@ -6,6 +6,7 @@
 	export const name = 'Joystick Teleop - Under development';
 	export const description = 'Control the rover with a joystick';
 	export const group = 'ROS';
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
