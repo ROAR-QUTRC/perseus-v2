@@ -88,7 +88,6 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     this->declare_parameter("imu_rate", 100);   // Hz
     this->declare_parameter("read_imu", true);  // if imu data should be read
 
-
     // Get the parameters
     std::string sensorIp = this->get_parameter("sensor_ip").as_string();
     uint16_t sensorPort = this->get_parameter("sensor_port").as_int();
@@ -227,7 +226,6 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
     {
         RCLCPP_INFO(this->get_logger(), "IMU reading disabled by parameter 'read_imu'");
     }
-
 
     RCLCPP_INFO(this->get_logger(), "M2M2Lidar initialization complete");
 }
@@ -690,7 +688,6 @@ void M2M2Lidar::_readImuData()
 
     error_count = 0;
 
-
     // Create and populate IMU message
     auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
     imu_msg->header.stamp = this->now();
@@ -815,7 +812,6 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
             // Adjust angle for wrap-around
             float a1 = get<0>(p1);
             float a2 = get<0>(p2) + 2 * std::numbers::pi;
-
 
             if (!get<2>(p1) && !get<2>(p2))
             {
