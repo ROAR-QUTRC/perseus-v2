@@ -5,6 +5,7 @@
 	export const name = 'Topic monitor';
 	export const description = 'Monitor the content and vitals of ROS topics';
 	export const group = 'ROS';
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {

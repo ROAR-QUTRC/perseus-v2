@@ -5,6 +5,7 @@
 	export const name = 'Bus Power Manager';
 	export const description = 'Enable and disable different buses on the rover control board';
 	export const group = 'CAN Bus';
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}

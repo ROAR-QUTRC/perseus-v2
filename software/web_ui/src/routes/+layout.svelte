@@ -8,6 +8,7 @@
 			settings: (widgets[widget] as any).settings,
 			component: (widgets[widget] as any).default,
 			description: (widgets[widget] as any).description,
+			isRosDependent: (widgets[widget] as any).isRosDependent,
 			group: (widgets[widget] as any).group
 		});
 	}

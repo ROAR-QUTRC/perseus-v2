@@ -34,6 +34,7 @@ cat >"$WIDGET_PATH" <<EOF
 	// These properties are optional
 	// export const description = 'Description of the widget goes here';
 	// export const group: WidgetGroupType = 'Group Name';
+	// export const isRosDependent = true; // Set to true if the widget requires a ROS connection
 
 	export const settings: WidgetSettingsType = \$state<WidgetSettingsType>({
 		groups: {}

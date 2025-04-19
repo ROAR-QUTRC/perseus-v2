@@ -68,7 +68,7 @@
 </script>
 
 <Card.Root class="h-[100%] min-h-[75px] flex-col">
-	{#if getRosConnection() && widgetData.group === 'ROS'}
+	{#if getRosConnection() && widgetData.isRosDependent}
 		<div class="flex border-b">
 			{@render dragHandle()}
 			<Sheet.Root bind:open>
@@ -189,7 +189,7 @@
 	{:else}
 		<!-- No ROS connection message -->
 
-		<div class="relative h-full w-full">
+		<div class="relative h-full w-full overflow-hidden">
 			<div class="bg-card absolute left-0 top-0 flex h-full w-full items-center justify-center">
 				<div class="absolute left-[50%] top-[50%] w-[80%] -translate-x-[50%] -translate-y-[50%]">
 					<p class="text-center text-2xl">No ROS Connection found.</p>

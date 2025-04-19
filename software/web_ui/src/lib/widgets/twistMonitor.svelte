@@ -5,6 +5,7 @@
 	export const name = 'Twistometer';
 	export const description = 'Vector based gauge to display raw ros twist messages';
 	export const group = 'ROS';
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
