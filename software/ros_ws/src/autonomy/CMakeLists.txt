@@ -43,7 +43,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp robot_localization)
 
 # packages which must be present but aren't linked against
-set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
+set(THIS_PACKAGE_BUILD_DEPENDS ament_cmake)
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -56,7 +56,7 @@ endforeach()
 # Install the package's resource files These directories will only be installed
 # if they exist
 install(
-  DIRECTORY launch config rviz params maps worlds
+  DIRECTORY config launch maps rviz urdf worlds
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
