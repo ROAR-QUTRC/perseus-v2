@@ -11,48 +11,60 @@
 #include <string_view>
 #include <vector>
 
-// EPROM
-#define SMS_STS_MODEL_L           3
-#define SMS_STS_MODEL_H           4
-#define SMS_STS_ID                5
-#define SMS_STS_BAUD_RATE         6
-#define SMS_STS_MIN_ANGLE_LIMIT_L 9
-#define SMS_STS_MIN_ANGLE_LIMIT_H 10
-#define SMS_STS_MAX_ANGLE_LIMIT_L 11
-#define SMS_STS_MAX_ANGLE_LIMIT_H 12
-#define SMS_STS_CW_DEAD           26
-#define SMS_STS_CCW_DEAD          27
-#define SMS_STS_OFS_L             31
-#define SMS_STS_OFS_H             32
-#define SMS_STS_MODE              33
-
-// SRAM
-#define SMS_STS_TORQUE_ENABLE   40
-#define SMS_STS_ACC             41
-#define SMS_STS_GOAL_POSITION_L 42
-#define SMS_STS_GOAL_POSITION_H 43
-#define SMS_STS_GOAL_TIME_L     44
-#define SMS_STS_GOAL_TIME_H     45
-#define SMS_STS_GOAL_SPEED_L    46
-#define SMS_STS_GOAL_SPEED_H    47
-#define SMS_STS_TORQUE_LIMIT_L  48
-#define SMS_STS_TORQUE_LIMIT_H  49
-#define SMS_STS_LOCK            55
-
-#define SMS_STS_PRESENT_POSITION_L  56
-#define SMS_STS_PRESENT_POSITION_H  57
-#define SMS_STS_PRESENT_SPEED_L     58
-#define SMS_STS_PRESENT_SPEED_H     59
-#define SMS_STS_PRESENT_LOAD_L      60
-#define SMS_STS_PRESENT_LOAD_H      61
-#define SMS_STS_PRESENT_VOLTAGE     62
-#define SMS_STS_PRESENT_TEMPERATURE 63
-#define SMS_STS_MOVING              66
-#define SMS_STS_PRESENT_CURRENT_L   69
-#define SMS_STS_PRESENT_CURRENT_H   70
-
+// Replace #define directives with enum classes
 namespace perseus_lite_hardware
 {
+    // EPROM registers
+    enum class ServoEpromRegister : uint8_t
+    {
+        MODEL_L = 3,
+        MODEL_H = 4,
+        ID = 5,
+        BAUD_RATE = 6,
+        MIN_ANGLE_LIMIT_L = 9,
+        MIN_ANGLE_LIMIT_H = 10,
+        MAX_ANGLE_LIMIT_L = 11,
+        MAX_ANGLE_LIMIT_H = 12,
+        CW_DEAD = 26,
+        CCW_DEAD = 27,
+        OFS_L = 31,
+        OFS_H = 32,
+        MODE = 33
+    };
+
+    // SRAM registers
+    enum class ServoSramRegister : uint8_t
+    {
+        TORQUE_ENABLE = 40,
+        ACC = 41,
+        GOAL_POSITION_L = 42,
+        GOAL_POSITION_H = 43,
+        GOAL_TIME_L = 44,
+        GOAL_TIME_H = 45,
+        GOAL_SPEED_L = 46,
+        GOAL_SPEED_H = 47,
+        TORQUE_LIMIT_L = 48,
+        TORQUE_LIMIT_H = 49,
+        LOCK = 55,
+        PRESENT_POSITION_L = 56,
+        PRESENT_POSITION_H = 57,
+        PRESENT_SPEED_L = 58,
+        PRESENT_SPEED_H = 59,
+        PRESENT_LOAD_L = 60,
+        PRESENT_LOAD_H = 61,
+        PRESENT_VOLTAGE = 62,
+        PRESENT_TEMPERATURE = 63,
+        MOVING = 66,
+        PRESENT_CURRENT_L = 69,
+        PRESENT_CURRENT_H = 70
+    };
+
+    // Command codes
+    enum class ServoCommand : uint8_t
+    {
+        READ = 0x02,
+        WRITE = 0x03
+    };
 
     class ST3215SystemHardware final : public hardware_interface::SystemInterface
     {
@@ -96,20 +108,6 @@ namespace perseus_lite_hardware
 
     private:
         static constexpr double MAX_RPM = 100.0;  // Maximum RPM rating of the ST3215 servo
-        // st3215 command codes
-        static constexpr uint8_t CMD_READ = 0x02;
-        static constexpr uint8_t CMD_WRITE = 0x03;
-        static constexpr uint8_t REG_GOAL_SPEED = 0x2E;
-        static constexpr uint8_t REG_PRESENT_POSITION = 0x38;
-        static constexpr uint8_t REG_PRESENT_SPEED = 0x3A;
-        static constexpr uint8_t REG_PRESENT_TEMP = 0x3F;
-
-        static constexpr uint8_t REG_MODE = SMS_STS_MODE;                              // 33
-        static constexpr uint8_t REG_TORQUE_ENABLE = SMS_STS_TORQUE_ENABLE;            // 40
-        static constexpr uint8_t REG_PRESENT_POSITION_L = SMS_STS_PRESENT_POSITION_L;  // 56
-        static constexpr uint8_t REG_PRESENT_SPEED_L = SMS_STS_PRESENT_SPEED_L;        // 58
-        static constexpr uint8_t REG_GOAL_SPEED_L = SMS_STS_GOAL_SPEED_L;              // 46
-
         static constexpr int16_t MAX_VELOCITY_RPM = 1000;
         static constexpr size_t BUFFER_SIZE = 256;
 
@@ -138,7 +136,7 @@ namespace perseus_lite_hardware
         std::vector<rclcpp::Time> _last_update_times_;
         static constexpr auto SERVO_TIMEOUT = std::chrono::seconds(1);
 
-        bool sendServoCommand(uint8_t id, uint8_t cmd, std::span<const uint8_t> data) noexcept;
+        bool sendServoCommand(uint8_t id, ServoCommand cmd, std::span<const uint8_t> data) noexcept;
         void processResponse(std::span<const uint8_t> response) noexcept;
         [[nodiscard]] bool updateServoStates(uint8_t id, size_t index) noexcept;
         void startAsyncRead() noexcept;

@@ -13,17 +13,19 @@ namespace
     {
         return params.find(key) != params.end();
     }
-
 }
 
 namespace perseus_lite_hardware
 {
-
     namespace
     {
         static const char* const LOGGER_NAME = "ST3215SystemHardware";
         constexpr auto READ_TIMEOUT = std::chrono::milliseconds(10);
         constexpr auto WRITE_TIMEOUT = std::chrono::milliseconds(1);
+        constexpr uint8_t WHEEL_MODE_VALUE = 1;                  // wheel mode setting for MODE register
+        constexpr uint8_t TORQUE_ENABLE_VALUE = 1;               // value to enable torque
+        constexpr uint8_t PRESENT_POSITION_REG = 0x38;           // Present position register used in protocol
+        constexpr uint16_t ENCODER_TICKS_PER_REVOLUTION = 4096;  // For position conversion
     }  // namespace
 
     ST3215SystemHardware::~ST3215SystemHardware()
@@ -185,12 +187,10 @@ namespace perseus_lite_hardware
             _serial_port_.set_option(boost::asio::serial_port_base::flow_control(
                 boost::asio::serial_port_base::flow_control::none));
 
-            // set the serves as wheel mode and enable torque
-            const uint8_t MODE_REGISTER = 33;    // SMS_STS_MODE register
-            const uint8_t TORQUE_REGISTER = 40;  // SMS_STS_TORQUE_ENABLE register
-            const uint8_t WHEEL_MODE_VALUE = 1;  // tested in FT tool - then set goal velocity (46)
-            const uint8_t TORQUE_ENABLE_VALUE = 1;
-            const uint8_t CMD_WRITE = 0x03;
+            // Set the servos as wheel mode and enable torque
+            // Using enum classes instead of #define constants
+            const uint8_t modeReg = static_cast<uint8_t>(ServoEpromRegister::MODE);
+            const uint8_t torqueReg = static_cast<uint8_t>(ServoSramRegister::TORQUE_ENABLE);
 
             // Set wheel mode and enable torque for each servo
             for (uint8_t servo_id : _servo_ids_)
@@ -199,7 +199,7 @@ namespace perseus_lite_hardware
                              "Setting wheel mode for servo %d", servo_id);
 
                 // Set wheel mode command
-                if (!sendServoCommand(servo_id, CMD_WRITE, std::array<uint8_t, 2>{MODE_REGISTER, WHEEL_MODE_VALUE}))
+                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{modeReg, WHEEL_MODE_VALUE}))
                 {
                     RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
                                  "Failed to set wheel mode for servo %d", servo_id);
@@ -213,7 +213,7 @@ namespace perseus_lite_hardware
                              "Enabling torque for servo %d", servo_id);
 
                 // Enable torque command
-                if (!sendServoCommand(servo_id, CMD_WRITE, std::array<uint8_t, 2>{TORQUE_REGISTER, TORQUE_ENABLE_VALUE}))
+                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{torqueReg, TORQUE_ENABLE_VALUE}))
                 {
                     RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
                                  "Failed to enable torque for servo %d", servo_id);
@@ -259,13 +259,13 @@ namespace perseus_lite_hardware
                 // According to protocol: READ(0x02) command starting at position register (0x38)
                 // Reading 8 bytes to get position(2), speed(2), load(2), temp(1), and moving status(1)
                 const std::array<uint8_t, 2> read_data{
-                    REG_PRESENT_POSITION,  // Start reading from position register (0x38)
+                    PRESENT_POSITION_REG,  // Start reading from position register (0x38)
                     8                      // Read 8 bytes total
                 };
 
                 {
                     std::lock_guard<std::mutex> lock(_serial_mutex_);
-                    if (!sendServoCommand(servo_id, CMD_READ, std::span{read_data}))
+                    if (!sendServoCommand(servo_id, ServoCommand::READ, std::span{read_data}))
                     {
                         RCLCPP_WARN(rclcpp::get_logger(LOGGER_NAME),
                                     "Failed to request status from servo %d", servo_id);
@@ -308,7 +308,6 @@ namespace perseus_lite_hardware
             }
 
             // Wait before starting next update cycle
-            // Adjust this delay based on your required update frequency
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
 
@@ -446,8 +445,10 @@ namespace perseus_lite_hardware
                 }
 
                 // Build write command for velocity - format matches SMS_STS::write_speed
+                // Using the enum class for the goal speed register
+                const uint8_t goalSpeedReg = static_cast<uint8_t>(ServoSramRegister::GOAL_SPEED_L);
                 const std::array<uint8_t, 3> vel_data{
-                    REG_GOAL_SPEED_L,
+                    goalSpeedReg,
                     static_cast<uint8_t>(servo_speed & 0xFF),
                     static_cast<uint8_t>((servo_speed >> 8) & 0xFF)};
 
@@ -456,7 +457,7 @@ namespace perseus_lite_hardware
                             "Servo %d - Final velocity bytes: 0x%02X 0x%02X",
                             _servo_ids_[i], vel_data[1], vel_data[2]);
 
-                if (!sendServoCommand(_servo_ids_[i], CMD_WRITE, std::span{vel_data}))
+                if (!sendServoCommand(_servo_ids_[i], ServoCommand::WRITE, std::span{vel_data}))
                 {
                     RCLCPP_WARN(rclcpp::get_logger(LOGGER_NAME),
                                 "Failed to send velocity command to servo %d", _servo_ids_[i]);
@@ -474,9 +475,8 @@ namespace perseus_lite_hardware
         }
     }
 
-    // temp test of sync not async
     bool ST3215SystemHardware::sendServoCommand(
-        const uint8_t id, const uint8_t cmd,
+        const uint8_t id, const ServoCommand cmd,
         const std::span<const uint8_t> data) noexcept
     {
         std::vector<uint8_t> packet;
@@ -487,7 +487,7 @@ namespace perseus_lite_hardware
         packet.insert(packet.end(), header.begin(), header.end());
         packet.push_back(id);
         packet.push_back(static_cast<uint8_t>(data.size() + 2));
-        packet.push_back(cmd);
+        packet.push_back(static_cast<uint8_t>(cmd));  // Convert enum class to uint8_t
         packet.insert(packet.end(), data.begin(), data.end());
 
         // Calculate checksum
@@ -498,7 +498,7 @@ namespace perseus_lite_hardware
         // Debug output - convert to hex string for readable output
         std::stringstream debug_ss;
         debug_ss << "Sending servo command - ID: 0x" << std::hex << static_cast<int>(id)
-                 << " CMD: 0x" << static_cast<int>(cmd) << " Packet: ";
+                 << " CMD: 0x" << static_cast<int>(static_cast<uint8_t>(cmd)) << " Packet: ";
         for (const auto& byte : packet)
         {
             debug_ss << "0x" << std::setw(2) << std::setfill('0')
@@ -646,7 +646,7 @@ namespace perseus_lite_hardware
                         raw_pos = -(raw_pos & ~(1 << 15));
                     }
                     // Convert to radians (4096 counts per revolution)
-                    state.position = raw_pos * (2.0 * M_PI / 4096.0);
+                    state.position = raw_pos * (2.0 * M_PI / ENCODER_TICKS_PER_REVOLUTION);
 
                     // Extract velocity (2 bytes, little endian)
                     int16_t raw_vel = static_cast<int16_t>(
@@ -806,6 +806,12 @@ namespace perseus_lite_hardware
         }
 
         return true;
+    }
+
+    void ST3215SystemHardware::updateServoStates() noexcept
+    {
+        // This is an empty implementation of the declared method in the header
+        // It might be used in future implementations or for more complex state updates
     }
 
 }  // namespace perseus_lite_hardware
