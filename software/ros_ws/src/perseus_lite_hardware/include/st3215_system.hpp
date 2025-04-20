@@ -114,11 +114,11 @@ namespace perseus_lite_hardware
         static constexpr size_t BUFFER_SIZE = 256;
 
         // Communication thread control
-        std::atomic<bool> comm_thread_running_{false};
-        std::thread comm_thread_;
+        std::atomic<bool> _comm_thread_running_{false};
+        std::thread _comm_thread_;
 
         // Thread-safe queues for commands and responses
-        mutable std::mutex state_mutex_;  // Protects servo state updates
+        mutable std::mutex _state_mutex_;  // Protects servo state updates
 
         // Servo state tracking
         struct ServoState
@@ -128,14 +128,14 @@ namespace perseus_lite_hardware
             double temperature{25.0};
             rclcpp::Time last_update{0, 0, RCL_ROS_TIME};
         };
-        std::vector<ServoState> servo_states_;
+        std::vector<ServoState> _servo_states_;
 
         // Thread management methods
         void communicationThread() noexcept;
         void updateServoStates() noexcept;
 
         // Communication timestamping and timeout
-        std::vector<rclcpp::Time> last_update_times_;
+        std::vector<rclcpp::Time> _last_update_times_;
         static constexpr auto SERVO_TIMEOUT = std::chrono::seconds(1);
 
         bool sendServoCommand(uint8_t id, uint8_t cmd, std::span<const uint8_t> data) noexcept;
@@ -150,21 +150,21 @@ namespace perseus_lite_hardware
             const rclcpp::Logger& logger) const;
 
         // Hardware state storage
-        std::vector<double> command_speeds_;      // Only velocity commands
-        std::vector<double> current_positions_;   // State feedback
-        std::vector<double> current_velocities_;  // State feedback
-        std::vector<double> temperatures_;        // State feedback
-        std::vector<uint8_t> servo_ids_;
+        std::vector<double> _command_speeds_;      // Only velocity commands
+        std::vector<double> _current_positions_;   // State feedback
+        std::vector<double> _current_velocities_;  // State feedback
+        std::vector<double> _temperatures_;        // State feedback
+        std::vector<uint8_t> _servo_ids_;
 
         // Communication members
-        mutable std::mutex serial_mutex_;
-        boost::asio::io_context io_context_;
-        boost::asio::serial_port serial_port_{io_context_};
-        boost::asio::steady_timer read_timer_{io_context_};
-        boost::asio::steady_timer write_timer_{io_context_};
-        std::thread io_thread_;
-        mutable std::queue<std::vector<uint8_t>> write_queue_;
-        std::array<uint8_t, BUFFER_SIZE> read_buffer_;
+        mutable std::mutex _serial_mutex_;
+        boost::asio::io_context _io_context_;
+        boost::asio::serial_port _serial_port_{_io_context_};
+        boost::asio::steady_timer _read_timer_{_io_context_};
+        boost::asio::steady_timer _write_timer_{_io_context_};
+        std::thread _io_thread_;
+        mutable std::queue<std::vector<uint8_t>> _write_queue_;
+        std::array<uint8_t, BUFFER_SIZE> _read_buffer_;
     };
 
 }  // namespace perseus_lite_hardware
