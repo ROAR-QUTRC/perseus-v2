@@ -3303,8 +3303,24 @@
 		(uuid "f8bba1d9-d704-4660-9790-abe25c500e97")
 	)
 	(no_connect
+		(at 129.54 96.52)
+		(uuid "06ff6da6-3449-46db-868b-3467e341a4e2")
+	)
+	(no_connect
+		(at 175.26 93.98)
+		(uuid "0b2925db-f8de-4549-8eac-0b6347343167")
+	)
+	(no_connect
+		(at 129.54 91.44)
+		(uuid "185a3675-d770-403c-851d-9dd22d0b566c")
+	)
+	(no_connect
 		(at 107.95 96.52)
 		(uuid "3a200bed-69f0-4c26-9277-c22197c2f40c")
+	)
+	(no_connect
+		(at 129.54 101.6)
+		(uuid "71f2b7fd-2370-4540-b25f-67cab80dd93f")
 	)
 	(no_connect
 		(at 107.95 93.98)
@@ -3315,8 +3331,28 @@
 		(uuid "7fc7ee10-e3af-4ef1-91f1-7564e6f3399d")
 	)
 	(no_connect
+		(at 175.26 91.44)
+		(uuid "8ec54e20-03a3-40c1-b355-8a6b43616915")
+	)
+	(no_connect
+		(at 175.26 88.9)
+		(uuid "9b2b8c1f-fd0c-41b7-960b-a768afc9d5ef")
+	)
+	(no_connect
+		(at 129.54 93.98)
+		(uuid "c81fa452-2202-422e-beb2-3f77e48d483c")
+	)
+	(no_connect
+		(at 129.54 99.06)
+		(uuid "e844b1e5-fce7-4ad7-aaac-efab8ab52de6")
+	)
+	(no_connect
 		(at 107.95 101.6)
 		(uuid "e84b64e4-050f-4660-896a-a896a1c58a25")
+	)
+	(no_connect
+		(at 175.26 96.52)
+		(uuid "eb6a929e-dd03-423c-8880-c300ff0ca2c2")
 	)
 	(no_connect
 		(at 107.95 91.44)
@@ -5021,7 +5057,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "MOT"
+		(property "Value" "MAG"
 			(at 271.145 90.1701 0)
 			(effects
 				(font
