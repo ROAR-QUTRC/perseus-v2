@@ -160,7 +160,7 @@
         "min_track_width": 0.1524,
         "min_via_annular_width": 0.15,
         "min_via_diameter": 0.5,
-        "solder_mask_to_copper_clearance": 0.05,
+        "solder_mask_to_copper_clearance": 0.005,
         "use_height_for_length_calcs": true
       },
       "teardrop_options": [
@@ -586,9 +586,9 @@
       "field_delimiter": ",",
       "keep_line_breaks": false,
       "keep_tabs": false,
-      "name": "CSV",
+      "name": "---",
       "ref_delimiter": ",",
-      "ref_range_delimiter": "",
+      "ref_range_delimiter": "-",
       "string_delimiter": "\""
     },
     "bom_presets": [],
@@ -602,33 +602,9 @@
           "show": true
         },
         {
-          "group_by": false,
-          "label": "Qty",
-          "name": "${QUANTITY}",
-          "show": true
-        },
-        {
           "group_by": true,
           "label": "Value",
           "name": "Value",
-          "show": true
-        },
-        {
-          "group_by": true,
-          "label": "DNP",
-          "name": "${DNP}",
-          "show": true
-        },
-        {
-          "group_by": true,
-          "label": "Exclude from BOM",
-          "name": "${EXCLUDE_FROM_BOM}",
-          "show": true
-        },
-        {
-          "group_by": true,
-          "label": "Exclude from Board",
-          "name": "${EXCLUDE_FROM_BOARD}",
           "show": true
         },
         {
@@ -642,12 +618,90 @@
           "label": "Datasheet",
           "name": "Datasheet",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Qty",
+          "name": "${QUANTITY}",
+          "show": true
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Supplier",
+          "name": "Supplier",
+          "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Supplier Link",
+          "name": "Supplier Link",
+          "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Supplier Part No",
+          "name": "Supplier Part No",
+          "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Supplier_link",
+          "name": "Supplier_link",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Supplier_part_number",
+          "name": "Supplier_part_number",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Value 2",
+          "name": "Value 2",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Value 3",
+          "name": "Value 3",
+          "show": false
+        },
+        {
+          "group_by": true,
+          "label": "DNP",
+          "name": "${DNP}",
+          "show": true
+        },
+        {
+          "group_by": true,
+          "label": "Exclude from BOM",
+          "name": "${EXCLUDE_FROM_BOM}",
+          "show": false
+        },
+        {
+          "group_by": true,
+          "label": "Exclude from Board",
+          "name": "${EXCLUDE_FROM_BOARD}",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
-      "include_excluded_from_bom": true,
-      "name": "Default Editing",
+      "include_excluded_from_bom": false,
+      "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
     },
