@@ -617,7 +617,7 @@ public:
         bool wasLoadDetectOn : 1 = 0;        // LD_ON
         bool hasLoadDetectTimedOut : 1 = 0;  // LD_TIMEOUT
         bool inDeepsleep : 1 = 0;            // DEEPSLEEP
-        uint16_t _rsvd4 : 15 = 0;            // RSVD_0
+        uint16_t _rsvd4 : 13 = 0;            // RSVD_0
     };
     struct protections_a_t
     {
@@ -1510,7 +1510,7 @@ public:
     {
     public:
         // Calibration:Voltage
-        class Voltage
+        class Voltage final
         {
         public:
             int16_t getCellGain(const uint8_t& cell) const;
