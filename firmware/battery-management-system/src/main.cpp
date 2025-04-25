@@ -16,14 +16,16 @@ bool hasHadLoad = false;
 
 constexpr float ACTIVITY_CURRENT = 100;
 
-void setupBms();
+void setupBms(bq76942& bq);
 void printBmsStatus(bq76942& bq);
 
 void setup()
 {
     bsp::initI2C();
     std::this_thread::sleep_for(1s);
-    setupBms();
+
+    bq76942 bq;
+    setupBms(bq);
 
     Serial.begin(115200);
     auto& interface = hi_can::TwaiInterface::getInstance();
@@ -54,7 +56,7 @@ void loop()
         {
             printf("Reconfiguring BMS (was it reset?)...\n");
             std::this_thread::sleep_for(1s);
-            setupBms();
+            setupBms(bq);
         }
 
         float cc2Current = bq.getCC2Current();
@@ -146,12 +148,10 @@ void printBmsStatus(bq76942& bq)
     }
 }
 
-void setupBms()
+void setupBms(bq76942& bq)
 {
     try
     {
-        bq76942 bq;
-
         // can't reset here, as that would power cycle this MCU
         // bq.reset();
         // std::this_thread::sleep_for(100ms);
