@@ -10,13 +10,13 @@
 
 buildRosPackage {
   pname = "rplidar_ros";
-  version = "2.1.5";
+  version = "ros2";
 
   src = fetchFromGitHub {
     owner = "Slamtec";
     repo = "rplidar_ros";
     rev = "ros2";
-    sha256 = "sha256-ukWwQM3tlUG3QftmpWt1B+TMK9iOicHzT1VVldaYA2A=";
+    sha256 = "sha256-oNoDa+IqtQPe8bpfMjHFj2yx7jFUhfbIqaPRQCU/zMQ=";
   };
 
   buildType = "ament_cmake";
