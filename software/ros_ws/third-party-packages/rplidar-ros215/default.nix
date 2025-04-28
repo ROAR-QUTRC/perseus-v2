@@ -15,8 +15,8 @@ buildRosPackage {
   src = fetchFromGitHub {
     owner = "Slamtec";
     repo = "rplidar_ros";
-    rev = "db43a04ee5c2fd8ef826bbaa19be4bab7b167c4d"; # Commit for 2.1.5 - verify this
-    sha256 = "sha256-0000000000000000000000000000000000000000000="; # Replace with real hash after first build attempt
+    rev = "2.1.5";
+    sha256 = "sha256-ukWwQM3tlUG3QftmpWt1B+TMK9iOicHzT1VVldaYA2A=";
   };
 
   buildType = "ament_cmake";
