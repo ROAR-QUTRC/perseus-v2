@@ -15,7 +15,7 @@ buildRosPackage {
   src = fetchFromGitHub {
     owner = "Slamtec";
     repo = "rplidar_ros";
-    rev = "2.1.5";
+    rev = "ros2";
     sha256 = "sha256-ukWwQM3tlUG3QftmpWt1B+TMK9iOicHzT1VVldaYA2A=";
   };
 
