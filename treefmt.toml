@@ -134,5 +134,6 @@ excludes = [
     "*.ico",
     "*.pdf",
     "*sdkconfig*",
+    "hardware/**",
 ]
 on-unmatched = "warn"
