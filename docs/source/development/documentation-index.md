@@ -1,4 +1,4 @@
-# Documentation Development
+# Documentation
 
 ## How to build
 

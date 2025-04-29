@@ -216,7 +216,7 @@ namespace hi_can
                   parameter(parameter)
             {
             }
-            standard_address_t(standard_address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
+            standard_address_t(const standard_address_t& deviceAddress, const uint8_t& group, const uint8_t& parameter)
                 : system(deviceAddress.system),
                   subsystem(deviceAddress.subsystem),
                   device(deviceAddress.device),
@@ -380,13 +380,13 @@ namespace hi_can
         {
             /// @brief System ID for devices not specific to one system only
             constexpr uint8_t SYSTEM_ID = 0x06;
-            namespace lifter_platform
+            namespace elevator
             {
-                /// @brief The lifter platform subsystem ID
+                /// @brief The elevator platform subsystem ID
                 constexpr uint8_t SUBSYSTEM_ID = 0x00;
-                namespace lifter
+                namespace elevator
                 {
-                    constexpr uint8_t DEVICE_ID = 0x00;
+                    const standard_address_t DEVICE_ADDRESS{SYSTEM_ID, SUBSYSTEM_ID, 0x00};
                     namespace motor
                     {
                         constexpr uint8_t GROUP_ID = 0x01;
