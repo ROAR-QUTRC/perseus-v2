@@ -12,6 +12,27 @@
 #include "hi_can.hpp"
 #include "hi_can_address.hpp"
 
+/**
+ * @brief Declare a scaled int32_t type with a scaling factor
+ *
+ * Defined as a macro because we need the using declaration to bring the constructor into scope
+ */
+#define HI_CAN_PARAM_DECLARE_SCALED_INT32_T(_className, _scalingFactor) \
+    struct _className : public scaled_int32_t<_scalingFactor>           \
+    {                                                                   \
+        using scaled_int32_t::scaled_int32_t;                           \
+    };
+/**
+ * @brief Declare a scaled int16_t type with a scaling factor
+ *
+ * Defined as a macro because we need the using declaration to bring the constructor into scope
+ */
+#define HI_CAN_PARAM_DECLARE_SCALED_INT16_T(_className, _scalingFactor) \
+    struct _className : public scaled_int16_t<_scalingFactor>           \
+    {                                                                   \
+        using scaled_int16_t::scaled_int16_t;                           \
+    };
+
 namespace hi_can::parameters
 {
     class ParameterGroup
@@ -67,13 +88,18 @@ namespace hi_can::parameters
     {
         double value = 0;
 
+        scaled_int32_t() = default;
+        scaled_int32_t(const std::vector<uint8_t>& serializedData)
+        {
+            deserializeData(serializedData);
+        }
         void deserializeData(const std::vector<uint8_t>& serializedData) override
         {
             int32_t rawData;
             if (serializedData.size() != sizeof(rawData))
                 throw std::invalid_argument("Data size does not match");
             std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(&rawData));
-            value = ntohl(rawData) / scalingFactor;
+            value = static_cast<int32_t>(ntohl(rawData)) / scalingFactor;
         }
         std::vector<uint8_t> serializeData() override
         {
@@ -89,13 +115,23 @@ namespace hi_can::parameters
     {
         double value = 0;
 
+        scaled_int16_t() = default;
+        scaled_int16_t(double value)
+            : value(value)
+        {
+        }
+        scaled_int16_t(const std::vector<uint8_t>& serializedData)
+        {
+            deserializeData(serializedData);
+        }
+
         void deserializeData(const std::vector<uint8_t>& serializedData) override
         {
             int16_t rawData;
             if (serializedData.size() != sizeof(rawData))
                 throw std::invalid_argument("Data size does not match");
             std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(&rawData));
-            value = ntohs(rawData) / scalingFactor;
+            value = static_cast<int16_t>(ntohs(rawData)) / scalingFactor;
         }
         std::vector<uint8_t> serializeData() override
         {
@@ -150,33 +186,16 @@ namespace hi_can::parameters
         namespace vesc
         {
             // COMMAND STRUCTS
-            struct set_duty_t : public scaled_int32_t<100000.0>
-            {
-            };
-            struct set_current_t : public scaled_int32_t<1000.0>
-            {
-            };
-            struct set_brake_t : public scaled_int32_t<1000.0>
-            {
-            };
-            struct set_rpm_t : public scaled_int32_t<1.0>
-            {
-            };
-            struct set_pos_t : public scaled_int32_t<1000000.0>
-            {
-            };
-            struct set_current_rel_t : public scaled_int32_t<100000.0>
-            {
-            };
-            struct set_current_brake_rel_t : public scaled_int32_t<100000.0>
-            {
-            };
-            struct set_current_handbrake_t : public scaled_int32_t<1000.0>
-            {
-            };
-            struct set_current_handbrake_rel_t : public scaled_int32_t<100000.0>
-            {
-            };
+            HI_CAN_PARAM_DECLARE_SCALED_INT32_T(set_duty_t, 100000.0)
+            HI_CAN_PARAM_DECLARE_SCALED_INT32_T(set_current_t, 1000.0)
+            HI_CAN_PARAM_DECLARE_SCALED_INT32_T(set_brake_t, 1000.0)
+            HI_CAN_PARAM_DECLARE_SCALED_INT32_T(set_rpm_t, 1.0)
+            HI_CAN_PARAM_DECLARE_SCALED_INT32_T(set_pos_t, 1000000.0)
+            HI_CAN_PARAM_DECLARE_SCALED_INT32_T(set_current_rel_t, 100000.0)
+            HI_CAN_PARAM_DECLARE_SCALED_INT32_T(set_current_brake_rel_t, 100000.0)
+            HI_CAN_PARAM_DECLARE_SCALED_INT32_T(set_current_handbrake_t, 1000.0)
+            HI_CAN_PARAM_DECLARE_SCALED_INT32_T(set_current_handbrake_rel_t, 100000.0)
+
             // STATUS STRUCTS
             struct status_1_t : public BidirectionalSerializable
             {
@@ -294,15 +313,13 @@ namespace hi_can::parameters
     }
     namespace shared
     {
-        namespace lifter_platform
+        namespace elevator
         {
-            namespace lifter
+            namespace elevator
             {
                 namespace motor
                 {
-                    struct speed_t : public scaled_int16_t<1.0>
-                    {
-                    };
+                    HI_CAN_PARAM_DECLARE_SCALED_INT16_T(speed_t, 1.0)
                 }
             }
         }
