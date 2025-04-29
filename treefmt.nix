@@ -61,6 +61,8 @@
         "*.ico"
         "*.pdf"
         "*sdkconfig*"
+        # PCBs (KiCAD)
+        "hardware/**"
       ];
     };
     formatter = {
