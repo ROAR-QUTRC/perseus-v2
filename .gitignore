@@ -15,6 +15,7 @@ public/
 
 # ESP-IDF
 managed_components/
+*.old
 
 # Prerequisites
 *.d
