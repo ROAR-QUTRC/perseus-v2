@@ -121,6 +121,10 @@ Although `nix build` searches for packages, you can build a dev shell with `nix 
 You can also use the same syntax with the other commands to, for example, run a package directly instead of an application with the same name.
 :::
 
+### Package Overrides and Patches
+
+When fixing issues with existing packages in the overlay, the proper approach is to apply fixes in `ros_ws/patches.nix` rather than in `third-party-packages`. The `third-party-packages` section should only be used for software that needs to be packaged from scratch. For existing packages, you can override just the specific attributes you need to modify (often upgrades to packages can just be the `version` and `src` fields).
+
 ## Nix Flakes
 
 A {term}`Nix flake` is a way of writing Nix expressions which has a standard syntax, as well as providing a way to lock inputs to specific versions, enhancing reproducibility.
