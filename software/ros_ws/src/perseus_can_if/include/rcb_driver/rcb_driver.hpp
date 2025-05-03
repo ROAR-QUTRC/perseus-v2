@@ -2,10 +2,12 @@
 
 #include <chrono>
 #include <hi_can_raw.hpp>
+#include <map>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <string>
 #include <tuple>
+#include <vector>
 
 class RcbDriver : public rclcpp::Node
 {
@@ -28,7 +30,7 @@ private:
 
     std::optional<hi_can::RawCanInterface> _canInterface;
     std::optional<hi_can::PacketManager> _packetManager;
-    std::vector<std::pair<std::string, hi_can::parameters::legacy::power::control::power_bus::PowerBusParameterGroup>> _parameterGroups;
+    std::unordered_map<std::string, std::shared_ptr<hi_can::parameters::legacy::power::control::power_bus::PowerBusParameterGroup>> _parameterGroups;
 
     rclcpp::TimerBase::SharedPtr _packetTimeoutTimer;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _packetPublisher;

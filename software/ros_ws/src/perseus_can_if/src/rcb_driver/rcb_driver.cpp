@@ -18,36 +18,30 @@ RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
         return;
     }
 
-    try
-    {
-        // change this to reflect the actual number of groups
-        _parameterGroups.reserve(4);
-    }
-    catch (const std::exception& e)
-    {
-        RCLCPP_FATAL(this->get_logger(), "Failed to reserve memory for parameter groups: %s", e.what());
-        return;
-    }
-
     using namespace hi_can;
     using namespace addressing::legacy;
     using namespace addressing::legacy::power::control::rcb;
     using namespace parameters::legacy::power::control::power_bus;
 
     // iterate the id's of the rcb groups enum
-    for (const auto& [name, id] : this->BUS_GROUPS)
+    for (const auto& [name, id] : RcbDriver::BUS_GROUPS)
     {
         try
         {
             // create parameter groups
-            _parameterGroups.emplace_back(std::make_pair(name,
-                                                         PowerBusParameterGroup{
-                                                             address_t(power::SYSTEM_ID,
-                                                                       power::control::SUBSYSTEM_ID,
-                                                                       static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
-                                                             id}));
-
-            _packetManager->addGroup(_parameterGroups.back().second);
+            auto [it, inserted] = _parameterGroups.emplace(name,
+                                                           std::make_shared<PowerBusParameterGroup>(
+                                                               address_t(power::SYSTEM_ID,
+                                                                         power::control::SUBSYSTEM_ID,
+                                                                         static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
+                                                               id));
+            if (!inserted)
+            {
+                RCLCPP_WARN(this->get_logger(), "Failed to emplace parameter group %s (ID 0x%x), it likely already exists", name.c_str(), static_cast<uint8_t>(id));
+                continue;
+            }
+            else
+                _packetManager->addGroup(*it->second);
         }
         catch (const std::exception& e)
         {
@@ -81,8 +75,7 @@ void RcbDriver::_canToRos()
 
     for (auto& [name, group] : _parameterGroups)
     {
-        const auto& data = group.getStatus();
-
+        const auto& data = group->getStatus();
         busData[name] = {{"current", data.current}, {"voltage", data.voltage}, {"power_off", data.status}};
     }
 
