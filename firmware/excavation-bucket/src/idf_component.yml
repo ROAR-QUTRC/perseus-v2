@@ -1,0 +1,2 @@
+dependencies:
+  espressif/arduino-esp32: ^3.1.3

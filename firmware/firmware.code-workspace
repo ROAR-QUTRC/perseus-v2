@@ -21,6 +21,10 @@
             "path": "./elevator-module"
         },
         {
+            "name": "Excavation Bucket Firmware",
+            "path": "./excavation-bucket"
+        },
+        {
             "name": "Workspace Root",
             "path": ".."
         },
