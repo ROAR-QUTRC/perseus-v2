@@ -204,11 +204,19 @@ namespace hi_can
                                       GROUP_ADDRESS_BITS -
                                       PARAM_ADDRESS_BITS) = 0;
 
-            standard_address_t(const uint8_t& system = 0x00,
-                               const uint8_t& subsystem = 0x00,
-                               const uint8_t& device = 0x00,
-                               const uint8_t& group = 0x00,
-                               const uint8_t& parameter = 0x00)
+            constexpr standard_address_t(const raw_address_t& address = 0)
+                : system((address >> SYSTEM_ADDRESS_POS) & ((1UL << SYSTEM_ADDRESS_BITS) - 1)),
+                  subsystem((address >> SUBSYSTEM_ADDRESS_POS) & ((1UL << SUBSYSTEM_ADDRESS_BITS) - 1)),
+                  device((address >> DEVICE_ADDRESS_POS) & ((1UL << DEVICE_ADDRESS_BITS) - 1)),
+                  group((address >> GROUP_ADDRESS_POS) & ((1UL << GROUP_ADDRESS_BITS) - 1)),
+                  parameter((address >> PARAM_ADDRESS_POS) & ((1UL << PARAM_ADDRESS_BITS) - 1))
+            {
+            }
+            constexpr standard_address_t(const uint8_t& system = 0x00,
+                                         const uint8_t& subsystem = 0x00,
+                                         const uint8_t& device = 0x00,
+                                         const uint8_t& group = 0x00,
+                                         const uint8_t& parameter = 0x00)
                 : system(system),
                   subsystem(subsystem),
                   device(device),
@@ -216,7 +224,7 @@ namespace hi_can
                   parameter(parameter)
             {
             }
-            standard_address_t(const standard_address_t& deviceAddress, const uint8_t& group, const uint8_t& parameter)
+            constexpr standard_address_t(const standard_address_t& deviceAddress, const uint8_t& group, const uint8_t& parameter)
                 : system(deviceAddress.system),
                   subsystem(deviceAddress.subsystem),
                   device(deviceAddress.device),
@@ -364,10 +372,48 @@ namespace hi_can
             /// @brief The excavation system ID
             constexpr uint8_t SYSTEM_ID = 0x04;
             /// @brief Namespace containing all addresses in the arm subsystem
-            namespace arm
+            namespace bucket
             {
-                /// @brief The arm subsystem ID
+                /// @brief The bucket subsystem ID
                 constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                /// @brief Namespace containing all addresses for the bucket controller
+                namespace controller
+                {
+                    /// @brief The bucket controller device ID
+                    constexpr uint8_t DEVICE_ID = 0x00;
+                    namespace actuators
+                    {
+                        enum class group
+                        {
+                            LIFT_MAIN = 0x00,
+                            LIFT_LEFT = 0x01,
+                            LIFT_RIGHT = 0x02,
+                            TILT_MAIN = 0x03,
+                            TILT_LEFT = 0x04,
+                            TILT_RIGHT = 0x05,
+                            JAWS_MAIN = 0x06,
+                            JAWS_LEFT = 0x07,
+                            JAWS_RIGHT = 0x08,
+                        };
+                        enum class parameter
+                        {
+                            SPEED = 0x00,
+                            POSITION = 0x01,
+                            CURRENT = 0x02,
+                            STATUS = 0x03,
+                        };
+                    }
+                    namespace magnet
+                    {
+                        constexpr uint8_t GROUP_ID = 0x09;
+                        enum class parameter
+                        {
+                            ENABLE = 0x00,
+                            ROTATE_SPEED = 0x01,
+                            ROTATE_POSITION = 0x02,
+                        };
+                    }
+                }
             }
         }
         /// @brief Namespace containing all addresses in the space resources system
