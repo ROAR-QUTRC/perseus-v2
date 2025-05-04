@@ -1,4 +1,6 @@
-# Architecture
+# Systems
+
+This section describes what systems are present on Perseus, what they are and what they do. For information how to develop each of these systems check their corresponding pages in the <project:development-index.md> section.
 
 Fundamentally, the rover is split into two main sub-systems: Hardware, and Software.
 The [_software_ architecture](project:/architecture/software.md) lays out how the _code_ interacts with itself and its environment, as well as which bits do what.
@@ -18,7 +20,8 @@ Finally, if you're wondering about a specific payload, those get their own [sect
 
 ```{toctree}
 :maxdepth: 1
+:titlesonly:
 :hidden:
 :glob:
-architecture/*
+systems/*
 ```
