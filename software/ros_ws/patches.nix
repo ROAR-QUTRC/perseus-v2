@@ -18,6 +18,17 @@ let
           '';
       }
     );
+
+    rplidar-ros = rosPrev.rplidar-ros.overrideAttrs ({
+      version = "2.0.0"; # Version based on the ROS2 branch
+      src = final.fetchFromGitHub {
+        owner = "Slamtec";
+        repo = "rplidar_ros";
+        rev = "ros2"; # Using the ros2 branch
+        sha256 = "sha256-oNoDa+IqtQPe8bpfMjHFj2yx7jFUhfbIqaPRQCU/zMQ="; # need to find the right hash
+      };
+    });
+
     # rosbridge incorrectly depends on the bson package instead of pymongo which is what it actually needs
     # (pymongo provides its own bson implementation, which behaves differently to the bson package)
     rosbridge-library = rosPrev.rosbridge-library.overrideAttrs (

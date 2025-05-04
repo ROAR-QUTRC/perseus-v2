@@ -156,6 +156,7 @@
             rqt-reconfigure
             rqt-common-plugins
             rmw-cyclonedds-cpp
+            rplidar-ros
             ;
         };
         # Packages which should be available only in the dev shell
