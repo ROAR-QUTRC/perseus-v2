@@ -381,38 +381,38 @@ namespace hi_can
                 {
                     /// @brief The bucket controller device ID
                     constexpr uint8_t DEVICE_ID = 0x00;
-                    namespace actuators
+                    enum class group
                     {
-                        enum class group
-                        {
-                            LIFT_MAIN = 0x00,
-                            LIFT_LEFT = 0x01,
-                            LIFT_RIGHT = 0x02,
-                            TILT_MAIN = 0x03,
-                            TILT_LEFT = 0x04,
-                            TILT_RIGHT = 0x05,
-                            JAWS_MAIN = 0x06,
-                            JAWS_LEFT = 0x07,
-                            JAWS_RIGHT = 0x08,
-                        };
-                        enum class parameter
-                        {
-                            SPEED = 0x00,
-                            POSITION = 0x01,
-                            CURRENT = 0x02,
-                            STATUS = 0x03,
-                        };
-                    }
-                    namespace magnet
+                        BANK_1 = 0x01,
+                        BANK_2 = 0x02,
+                        BANK_3 = 0x03,
+                        LIFT_BOTH = 0x04,
+                        LIFT_LEFT = 0x05,
+                        LIFT_RIGHT = 0x06,
+                        TILT_BOTH = 0x07,
+                        TILT_LEFT = 0x08,
+                        TILT_RIGHT = 0x09,
+                        JAWS_BOTH = 0x0a,
+                        JAWS_LEFT = 0x0b,
+                        JAWS_RIGHT = 0x0c,
+                        MAGNET = 0x0d,
+                    };
+                    enum class bank_parameter
                     {
-                        constexpr uint8_t GROUP_ID = 0x09;
-                        enum class parameter
-                        {
-                            ENABLE = 0x00,
-                            ROTATE_SPEED = 0x01,
-                            ROTATE_POSITION = 0x02,
-                        };
-                    }
+                        CURRENT_LIMIT = 0x00,
+                        STATUS = 0x01,
+                    };
+                    enum class actuator_parameter
+                    {
+                        SPEED = 0x00,
+                        POSITION = 0x01,
+                    };
+                    enum class magnet_parameter
+                    {
+                        ROTATE_SPEED = 0x00,
+                        ROTATE_POSITION = 0x01,
+                        MAGNET_ENABLE = 0x03,
+                    };
                 }
             }
         }
