@@ -64,6 +64,7 @@ public:
 
         if (speed > 0)
         {
+            pinMode(_pins.second, OUTPUT);
             digitalWrite(_pins.second, LOW);
             analogWrite(_pins.first, speed);
             analogWriteResolution(_pins.first, PWM_BITS);
@@ -71,6 +72,7 @@ public:
         }
         else if (speed < 0)
         {
+            pinMode(_pins.first, OUTPUT);
             digitalWrite(_pins.first, LOW);
             analogWrite(_pins.second, -speed);
             analogWriteResolution(_pins.second, PWM_BITS);
@@ -78,6 +80,8 @@ public:
         }
         else
         {
+            pinMode(_pins.first, OUTPUT);
+            pinMode(_pins.second, OUTPUT);
             digitalWrite(_pins.first, LOW);
             digitalWrite(_pins.second, LOW);
         }
@@ -173,17 +177,22 @@ public:
         _driverB.setSpeed(speed);
     }
 
+    float getCurrentLimit() const
+    {
+        return _currentLimit;
+    }
     void setCurrentLimit(float limit)
     {
         if (limit > MAX_CURRENT)
             limit = MAX_CURRENT;
-        if (limit < 0)
-            limit = 0;
+        _currentLimit = limit;
         float voltage = currentToVoltage(limit);
-        if (voltage > 3.3f)
-            voltage = 3.3f;
-        int8_t pwmValue = static_cast<int8_t>(map(voltage, 0, 3.3f, std::numeric_limits<int8_t>::min(), std::numeric_limits<int8_t>::max()));
+        const int8_t pwmValue = static_cast<int8_t>(
+            std::clamp((voltage * 255 / MAX_VOLTAGE) - 128,
+                       static_cast<float>(std::numeric_limits<int8_t>::min()),
+                       static_cast<float>(std::numeric_limits<int8_t>::max())));
         sdm_channel_set_duty(_currentLimitChannel, pwmValue);
+        printf(std::format("Set current limit to {:.02f} {:.02f} {}\n", limit, voltage, pwmValue).c_str());
     }
     float getAverageCurrent()
     {
@@ -196,6 +205,7 @@ public:
     }
 
 private:
+    float _currentLimit = 0.0f;
     sdm_channel_handle_t _currentLimitChannel;
 
     MotorDriver _driverA;
@@ -209,47 +219,31 @@ private:
 using namespace std::chrono;
 using namespace std::chrono_literals;
 using namespace hi_can;
+using namespace hi_can::addressing;
 
 std::optional<PacketManager> packetManager;
 
 void handleMotorSpeedData(const Packet& packet);
-void setMotorSpeed(const uint8_t& group, const int16_t& speed);
+void handleMotorCurrentData(const Packet& packet);
+void setMotorSpeed(const excavation::bucket::controller::group& group,
+                   const int16_t& speed);
+void setMotorCurrent(const excavation::bucket::controller::group& group,
+                     const uint16_t& current);
+void registerMotorBank(const excavation::bucket::controller::group& group,
+                       const uint8_t& speedParam);
 
 std::optional<MotorBank> motorBank1;
 std::optional<MotorBank> motorBank2;
 std::optional<MotorBank> motorBank3;
 
-constexpr addressing::standard_address_t DEVICE_ADDRESS{
-    addressing::excavation::SYSTEM_ID,
-    addressing::excavation::bucket::SUBSYSTEM_ID,
-    addressing::excavation::bucket::controller::DEVICE_ID,
+constexpr standard_address_t DEVICE_ADDRESS{
+    excavation::SYSTEM_ID,
+    excavation::bucket::SUBSYSTEM_ID,
+    excavation::bucket::controller::DEVICE_ID,
 };
 
 void setup()
 {
-    auto& interface = TwaiInterface::getInstance();
-    packetManager.emplace(interface);
-    using namespace addressing;
-    using namespace excavation::bucket::controller;
-    std::vector<actuators::group> groups = {
-        actuators::group::LIFT_MAIN,
-        actuators::group::TILT_MAIN,
-        actuators::group::JAWS_MAIN,
-    };
-    for (const auto& group : groups)
-    {
-        standard_address_t address{DEVICE_ADDRESS,
-                                   static_cast<uint8_t>(group),
-                                   static_cast<uint8_t>(actuators::parameter::SPEED)};
-        packetManager->setCallback(filter_t{
-                                       static_cast<flagged_address_t>(address),
-                                   },
-                                   {
-                                       .dataCallback = handleMotorSpeedData,
-                                       .timeoutCallback = std::bind(setMotorSpeed, static_cast<uint8_t>(group), (int16_t)0),
-                                       .timeout = 200ms,
-                                   });
-    }
     // reset drivers
     pinMode(SLEEP, OUTPUT);
     digitalWrite(SLEEP, LOW);
@@ -270,65 +264,196 @@ void setup()
                        BANK_3_CURRENT_LIMIT,
                        BANK_3_CURRENT_SENSE,
                        BANK_3_FAULT);
+
+    pinMode(MAGNET_PIN, OUTPUT);
+    digitalWrite(MAGNET_PIN, LOW);
+
+    auto& interface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
+                                                 filter_t{
+                                                     .address = static_cast<flagged_address_t>(DEVICE_ADDRESS),
+                                                     .mask = DEVICE_MASK,
+                                                 });
+    packetManager.emplace(interface);
+
+    using namespace excavation::bucket::controller;
+    const std::vector<group> actuatorGroups = {
+        group::LIFT_BOTH,
+        group::LIFT_LEFT,
+        group::LIFT_RIGHT,
+        group::TILT_BOTH,
+        group::TILT_LEFT,
+        group::TILT_RIGHT,
+        group::JAWS_BOTH,
+        group::JAWS_LEFT,
+        group::JAWS_RIGHT,
+    };
+
+    for (const auto& group : actuatorGroups)
+        registerMotorBank(group, static_cast<uint8_t>(actuator_parameter::SPEED));
+    registerMotorBank(group::MAGNET,
+                      static_cast<uint8_t>(magnet_parameter::ROTATE_SPEED));
+
+    using namespace parameters::excavation::bucket::controller;
+    packetManager->setTransmissionConfig(
+        static_cast<flagged_address_t>(
+            standard_address_t{DEVICE_ADDRESS,
+                               static_cast<uint8_t>(group::BANK_1),
+                               static_cast<uint8_t>(bank_parameter::CURRENT)}),
+        {
+            .generator = [=]()
+            {
+                return current_t{static_cast<uint16_t>(std::clamp(motorBank1->getCurrentLimit() * 1000,
+                                                                  static_cast<float>(std::numeric_limits<uint16_t>::min()),
+                                                                  static_cast<float>(std::numeric_limits<uint16_t>::max())))}
+                    .serializeData();
+            },
+            .interval = 100ms,
+            .shouldTransmitImmediately = true,
+        });
+    packetManager->setCallback(
+        filter_t{static_cast<flagged_address_t>(
+            standard_address_t{DEVICE_ADDRESS,
+                               static_cast<uint8_t>(group::BANK_1),
+                               static_cast<uint8_t>(bank_parameter::CURRENT)})},
+        {
+            .dataCallback = handleMotorCurrentData,
+        });
+    packetManager->setTransmissionConfig(
+        static_cast<flagged_address_t>(
+            standard_address_t{DEVICE_ADDRESS,
+                               static_cast<uint8_t>(group::BANK_2),
+                               static_cast<uint8_t>(bank_parameter::CURRENT)}),
+        {
+            .generator = [=]()
+            {
+                return current_t{static_cast<uint16_t>(std::clamp(motorBank2->getCurrentLimit() * 1000,
+                                                                  static_cast<float>(std::numeric_limits<uint16_t>::min()),
+                                                                  static_cast<float>(std::numeric_limits<uint16_t>::max())))}
+                    .serializeData();
+            },
+            .interval = 100ms,
+            .shouldTransmitImmediately = true,
+        });
+    packetManager->setCallback(
+        filter_t{static_cast<flagged_address_t>(
+            standard_address_t{DEVICE_ADDRESS,
+                               static_cast<uint8_t>(group::BANK_2),
+                               static_cast<uint8_t>(bank_parameter::CURRENT)})},
+        {
+            .dataCallback = handleMotorCurrentData,
+        });
 }
 
 void loop()
 {
-    packetManager->handle(true);
+    packetManager->handle();
     delay(1);
 }
 
 void handleMotorSpeedData(const Packet& packet)
 {
-    using namespace addressing;
     using namespace excavation::bucket::controller;
     using namespace hi_can::parameters::excavation::bucket::controller;
     try
     {
         standard_address_t address{packet.getAddress().address};
-        setMotorSpeed(static_cast<uint8_t>(
-                          standard_address_t(packet.getAddress().address).group),
-                      speed_t{packet.getData()}.value);
+        setMotorSpeed(
+            static_cast<group>(standard_address_t(packet.getAddress().address).group),
+            speed_t{packet.getData()}.value);
     }
     catch (const std::exception& e)
     {
         printf(std::format("Failed to parse speed packet: {}\n", e.what()).c_str());
     }
 }
-
-void setMotorSpeed(const uint8_t& group, const int16_t& speed)
+void handleMotorCurrentData(const Packet& packet)
 {
-    using namespace hi_can::addressing;
     using namespace excavation::bucket::controller;
+    using namespace hi_can::parameters::excavation::bucket::controller;
+    try
+    {
+        standard_address_t address{packet.getAddress().address};
+        setMotorCurrent(static_cast<group>(
+                            standard_address_t(packet.getAddress().address).group),
+                        current_t{packet.getData()}.value);
+    }
+    catch (const std::exception& e)
+    {
+        printf(std::format("Failed to parse current packet: {}\n", e.what()).c_str());
+    }
+}
+
+void setMotorSpeed(const excavation::bucket::controller::group& group, const int16_t& speed)
+{
+    using namespace excavation::bucket::controller;
+    printf(std::format("Setting motor (group) {:#x} to speed {}\n",
+                       static_cast<uint8_t>(group), speed)
+               .c_str());
     switch (group)
     {
-    case static_cast<uint8_t>(actuators::group::LIFT_MAIN):
-        setMotorSpeed(static_cast<uint8_t>(actuators::group::LIFT_LEFT), speed);
-        setMotorSpeed(static_cast<uint8_t>(actuators::group::LIFT_RIGHT), speed);
+    case group::LIFT_BOTH:
+        setMotorSpeed(group::LIFT_LEFT, speed);
+        setMotorSpeed(group::LIFT_RIGHT, speed);
         break;
-    case static_cast<uint8_t>(actuators::group::LIFT_LEFT):
-        motorBank1->setSpeedA(speed);
+    case group::LIFT_LEFT:
+        motorBank1->setSpeedB(speed);
         break;
-    case static_cast<uint8_t>(actuators::group::LIFT_RIGHT):
+    case group::LIFT_RIGHT:
         motorBank2->setSpeedA(speed);
         break;
-    case static_cast<uint8_t>(actuators::group::TILT_MAIN):
+    case group::TILT_BOTH:
         motorBank3->setSpeedB(speed);
         break;
-    case static_cast<uint8_t>(actuators::group::JAWS_MAIN):
-        setMotorSpeed(static_cast<uint8_t>(actuators::group::JAWS_LEFT), speed);
-        setMotorSpeed(static_cast<uint8_t>(actuators::group::JAWS_RIGHT), speed);
+    case group::JAWS_BOTH:
+        setMotorSpeed(group::JAWS_LEFT, speed);
+        setMotorSpeed(group::JAWS_RIGHT, speed);
         break;
-    case static_cast<uint8_t>(actuators::group::JAWS_LEFT):
+    case group::JAWS_LEFT:
         motorBank2->setSpeedB(speed);
         break;
-    case static_cast<uint8_t>(actuators::group::JAWS_RIGHT):
+    case group::JAWS_RIGHT:
         motorBank3->setSpeedA(speed);
         break;
-    case static_cast<uint8_t>(magnet::GROUP_ID):
-        motorBank1->setSpeedB(speed);
+    case group::MAGNET:
+        motorBank1->setSpeedA(speed);
         break;
     default:
         break;
     }
+}
+void setMotorCurrent(const excavation::bucket::controller::group& group,
+                     const uint16_t& current)
+{
+    using namespace excavation::bucket::controller;
+    printf(std::format("Setting {:#x} current to {}mA\n", static_cast<uint8_t>(group), current).c_str());
+    switch (group)
+    {
+    case group::BANK_1:
+        motorBank1->setCurrentLimit(current / 1000.0f);
+        break;
+    case group::BANK_2:
+        motorBank2->setCurrentLimit(current / 1000.0f);
+        break;
+    case group::BANK_3:
+        motorBank3->setCurrentLimit(current / 1000.0f);
+        break;
+    default:
+        break;
+    }
+}
+
+void registerMotorBank(const excavation::bucket::controller::group& group,
+                       const uint8_t& speedParam)
+{
+    const standard_address_t speedAddress{DEVICE_ADDRESS,
+                                          static_cast<uint8_t>(group),
+                                          static_cast<uint8_t>(speedParam)};
+    packetManager->setCallback(filter_t{
+                                   static_cast<flagged_address_t>(speedAddress),
+                               },
+                               {
+                                   .dataCallback = handleMotorSpeedData,
+                                   .timeoutCallback = std::bind(setMotorSpeed, group, (int16_t)0),
+                                   .timeout = 200ms,
+                               });
 }
