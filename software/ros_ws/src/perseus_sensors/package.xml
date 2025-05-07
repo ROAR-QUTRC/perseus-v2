@@ -15,6 +15,7 @@
   <depend>sensor_msgs</depend>
   <depend>openssl</depend>
   <depend>nlohmann-json-dev</depend>
+  <depend>rplidar-ros</depend>
   <exec_depend>realsense2-camera</exec_depend>
   <exec_depend>realsense2-description</exec_depend>
   
