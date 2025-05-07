@@ -20,7 +20,7 @@ let
     );
 
     rplidar-ros = rosPrev.rplidar-ros.overrideAttrs ({
-      version = "2.0.0"; # Version based on the ROS2 branch
+      version = "2.1.5"; # Version based on the ROS2 branch
       src = final.fetchFromGitHub {
         owner = "Slamtec";
         repo = "rplidar_ros";
