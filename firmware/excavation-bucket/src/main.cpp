@@ -33,9 +33,10 @@ static constexpr gpio_num_t BANK_3_FAULT = bsp::A6;
 static constexpr gpio_num_t SLEEP = GPIO_NUM_39;
 
 static constexpr uint8_t PWM_BITS = 12;
-static constexpr uint32_t PWM_FREQ = 1000;  // Hz
+static constexpr uint32_t PWM_FREQ = 1500;  // Hz
 
-static constexpr uint32_t PWM_MAX = (1 << PWM_BITS) - 1;  // 4095
+static constexpr uint32_t PWM_DEADBAND = 2;                              // 2 PWM steps of enforced deadband to reset cycle-by-cycle current chopping
+static constexpr uint32_t PWM_MAX = (1 << PWM_BITS) - 1 - PWM_DEADBAND;  // 4095
 
 class MotorDriver
 {
@@ -131,7 +132,7 @@ public:
         sdm_config_t config = {
             .gpio_num = _currentLimitPin,
             .clk_src = SDM_CLK_SRC_DEFAULT,
-            .sample_rate_hz = 1 * 1000 * 1000,
+            .sample_rate_hz = 1000 * 1000,
         };
         esp_err_t err = sdm_new_channel(&config, &_currentLimitChannel);
         if (err != ESP_OK)
@@ -155,7 +156,7 @@ public:
 
     virtual ~MotorBank()
     {
-        sdm_channel_set_duty(_currentLimitChannel, -128);
+        sdm_channel_set_pulse_density(_currentLimitChannel, -128);
         sdm_channel_disable(_currentLimitChannel);
         sdm_del_channel(_currentLimitChannel);
         pinMode(_currentLimitPin, INPUT);
@@ -191,7 +192,7 @@ public:
             std::clamp((voltage * 255 / MAX_VOLTAGE) - 128,
                        static_cast<float>(std::numeric_limits<int8_t>::min()),
                        static_cast<float>(std::numeric_limits<int8_t>::max())));
-        sdm_channel_set_duty(_currentLimitChannel, pwmValue);
+        sdm_channel_set_pulse_density(_currentLimitChannel, pwmValue);
         printf(std::format("Set current limit to {:.02f} {:.02f} {}\n", limit, voltage, pwmValue).c_str());
     }
     float getAverageCurrent()
