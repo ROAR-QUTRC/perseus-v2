@@ -25,6 +25,9 @@
 				createMonitor: {
 					type: 'button'
 				},
+				refreshTopics: {
+					type: 'button'
+				},
 				config: {
 					type: 'text',
 					value: '',
@@ -113,10 +116,10 @@
 			console.error('How are we subscribed to a topic with no monitor?');
 			return;
 		}
-		if (message.data !== undefined)
-			monitors[index].lastData = JSON.stringify(JSON.parse(message.data), null, 2)
-				.replaceAll('\n', '<br>')
-				.replaceAll(' ', '&nbsp;&nbsp;&nbsp;&nbsp;');
+
+		monitors[index].lastData = JSON.stringify(JSON.parse(JSON.stringify(message)), null, 2)
+			.replaceAll('\n', '<br>')
+			.replaceAll(' ', '&nbsp;&nbsp;&nbsp;&nbsp;');
 
 		// update frequency
 		monitors[index].currentFrequency = 1000 / (Date.now() - monitors[index].lastMessage);
@@ -145,7 +148,6 @@
 					name: topic,
 					messageType: topicType
 				});
-
 				listener.subscribe((message) => onMessage(message, topic));
 
 				// if this is a new monitor, add it to the config
@@ -199,6 +201,7 @@
 
 		return 'Monitor created';
 	};
+
 	function getColor(value: number) {
 		//value from 0 to 1
 		value = Math.abs(value);
@@ -209,9 +212,14 @@
 	}
 
 	onMount(() => {
-		// add action for button
+		// add action for buttons
 		settings.groups.newMonitor.createMonitor.action = (): string => {
 			return addMonitor(settings.groups.newMonitor.topic.value, 10, false);
+		};
+
+		settings.groups.newMonitor.refreshTopics.action = (): string => {
+			innit();
+			return 'Topics refreshed';
 		};
 
 		return () => {
@@ -248,10 +256,8 @@
 				{#each monitors as monitor}
 					<tr class="border">
 						<td class="border p-2">{monitor.topic}</td>
-						<td class="border p-2"
-							><ScrollArea class="h-[200px]" orientation="vertical"
-								>{@html monitor.lastData}</ScrollArea
-							></td
+						<td class="max-h-[200px] w-full overflow-hidden border p-2"
+							><ScrollArea class="" orientation="vertical">{@html monitor.lastData}</ScrollArea></td
 						>
 						<td class="min-w-[140px] border p-2 text-black"
 							><p

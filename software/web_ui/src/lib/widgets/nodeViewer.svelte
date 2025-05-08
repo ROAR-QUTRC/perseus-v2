@@ -77,24 +77,24 @@
 	});
 </script>
 
-{#if getRosConnection()}
-	<div class="h-full w-full flex-col">
-		<div class="flex items-center">
-			<Button variant="outline" onclick={getNodes} class="mr-2 grow-0"><Reload /></Button>
-			<Select.Root type="single" onValueChange={(value) => changeSelectedNode(value)}>
-				<Select.Trigger class="grow-0"
-					>{selectedNode === '' ? 'Select a node...' : selectedNode}</Select.Trigger
-				>
-				<Select.Content>
-					{#each nodesList as node}
-						<Select.Item value={node}>{node}</Select.Item>
-					{/each}
-				</Select.Content>
-			</Select.Root>
-		</div>
+<div class="h-full w-full flex-col">
+	<div class="flex items-center">
+		<Button variant="outline" onclick={getNodes} class="mr-2 grow-0"><Reload /></Button>
+		<Select.Root type="single" onValueChange={(value) => changeSelectedNode(value)}>
+			<Select.Trigger class="grow-0"
+				>{selectedNode === '' ? 'Select a node...' : selectedNode}</Select.Trigger
+			>
+			<Select.Content>
+				{#each nodesList as node}
+					<Select.Item value={node}>{node}</Select.Item>
+				{/each}
+			</Select.Content>
+		</Select.Root>
+	</div>
 
+	<div class="mt-2 h-[calc(100%-40px-0.5rem)] w-full">
 		{#if nodeData}
-			<ScrollArea orientation="both" class="mt-2 grow rounded-md border p-3">
+			<ScrollArea orientation="both" class="mt-2 h-full p-3">
 				<div>
 					<strong>Publications:</strong>
 					<div class="ml-8">
@@ -129,13 +129,4 @@
 			</ScrollArea>
 		{/if}
 	</div>
-{:else}
-	<div class="relative h-full w-full">
-		<div class="bg-card absolute left-0 top-0 flex h-full w-full items-center justify-center">
-			<div class="absolute left-[50%] top-[50%] w-[80%] -translate-x-[50%] -translate-y-[50%]">
-				<p class="text-center text-2xl">No ROS Connection found.</p>
-				<p class="text-center">Make sure the rosbridge is running and the client is connected.</p>
-			</div>
-		</div>
-	</div>
-{/if}
+</div>

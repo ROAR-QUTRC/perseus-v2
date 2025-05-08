@@ -24,17 +24,17 @@
 				MaxXValue: {
 					type: 'number',
 					description: 'Maximum value for the x axis',
-					value: '100'
+					value: '2'
 				},
 				MaxYValue: {
 					type: 'number',
 					description: 'Maximum value for the y axis',
-					value: '100'
+					value: '2'
 				},
 				MaxZValue: {
 					type: 'number',
 					description: 'Maximum value for the z axis',
-					value: '100'
+					value: '2'
 				}
 			}
 		}
