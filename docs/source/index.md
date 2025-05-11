@@ -26,7 +26,6 @@ If you checked out the repository at `~/perseus-v2`, `docs/source/index.md` (thi
 self
 home/getting-started
 home/*
-home/perseus-operation-index
 systems-index
 standards-index
 development-index
