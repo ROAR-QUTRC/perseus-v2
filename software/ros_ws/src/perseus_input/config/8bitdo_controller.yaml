@@ -32,13 +32,10 @@ generic_controller:
         axis: 2
       jaws:
         scaling: 0.1
-        button_positive: 10
-        button_negative: 9
-      rotate:
         scaling: 0.5
-        button_positive: 14
         button_negative: 13
+        button_positive: 14
       magnet:
         hold: true
-        button_positive: 0
-        button_negative: 1
+        button_positive: 11
+        button_negative: 12
