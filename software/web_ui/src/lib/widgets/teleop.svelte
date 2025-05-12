@@ -2,7 +2,7 @@
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
-	export const name = 'Joystick Teleop - Under development';
+	export const name = 'Joystick Teleop';
 	export const description = 'Control the rover with a joystick';
 	export const group = 'ROS';
 	export const isRosDependent = true;
