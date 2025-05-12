@@ -272,6 +272,8 @@
 	};
 </script>
 
+<svelte:window onblur={stopUnlockTimer} />
+
 <div
 	bind:this={joystick.container}
 	class="relative h-full w-full border bg-transparent"
