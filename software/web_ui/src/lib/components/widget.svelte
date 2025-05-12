@@ -68,7 +68,7 @@
 </script>
 
 <Card.Root class="h-[100%] min-h-[75px] flex-col">
-	{#if getRosConnection() && widgetData.isRosDependent}
+	{#if (widgetData.isRosDependent && getRosConnection()) || !widgetData.isRosDependent}
 		<div class="flex border-b">
 			{@render dragHandle()}
 			<Sheet.Root bind:open>

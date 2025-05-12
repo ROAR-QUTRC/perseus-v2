@@ -33,14 +33,18 @@
 <script lang="ts">
 	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import ROSLIB from 'roslib';
-	import { onMount, untrack } from 'svelte';
+	import { onMount } from 'svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	// wrapper for widget setting
 	let joystickRadius = $derived<number>(Number(settings.groups.General.joyStickRadius.value));
 
 	let topic: ROSLIB.Topic | null = null;
+	let intervalHandle: NodeJS.Timeout | null = null;
+	let lockingTimeoutHandle: NodeJS.Timeout | null = null;
 	let joystickValue = { x: 0, y: 0 };
 	let mousePosition = { x: 0, offsetX: 0, y: 0, offsetY: 0 };
+	let unlocked = $state<boolean>(false);
 	let data = $state<string>();
 	let joystick = $state<{
 		active: boolean;
@@ -117,6 +121,12 @@
 		joystick.container?.appendChild(joystickBase);
 		updateJoystick(mousePosition.x, mousePosition.y);
 
+		// reset locking timeout
+		if (lockingTimeoutHandle) {
+			clearTimeout(lockingTimeoutHandle);
+		}
+		lockingTimeoutHandle = null;
+
 		// debug
 		data =
 			`<p>joystick position: ${joystick.origin.x}, ${joystick.origin.y}.</br>` +
@@ -144,7 +154,7 @@
 		joystickValue.y = dy / halfRadius;
 
 		// add dead bands
-		const deadband = 0.1;
+		const deadband = 0.2;
 		joystickValue.x = deadbandAxis(joystickValue.x, deadband);
 		joystickValue.y = deadbandAxis(joystickValue.y, deadband);
 
@@ -162,6 +172,8 @@
 	const onStop = () => {
 		if (!joystick.active) return;
 		hideJoystick();
+
+		// send 0 message to terminate
 		if (topic) {
 			topic.publish({
 				header: {}, // Leaving this empty forces ROS bridge to fill in the timestamp.
@@ -179,9 +191,14 @@
 				}
 			});
 		}
+
+		// lock the joystick
+		lockingTimeoutHandle = setTimeout(() => {
+			unlocked = false;
+		}, 10000);
 	};
 
-	onMount(() => {
+	const initTeleop = () => {
 		if (!joystick.container) return;
 
 		joystick.container.addEventListener('pointerdown', onStart);
@@ -189,7 +206,7 @@
 		joystick.container.addEventListener('pointerup', onStop);
 		joystick.container.addEventListener('pointerleave', onStop);
 
-		const intervalHandle = setInterval(() => {
+		intervalHandle = setInterval(() => {
 			if (joystick.active && topic) {
 				topic.publish({
 					header: {}, // Leaving this empty forces ROS bridge to fill in the timestamp.
@@ -208,9 +225,13 @@
 				});
 			}
 		}, 75);
+	};
+
+	onMount(() => {
+		unlocked = false;
 
 		return () => {
-			clearInterval(intervalHandle);
+			if (intervalHandle) clearInterval(intervalHandle);
 		};
 	});
 
@@ -227,6 +248,28 @@
 			topic = null;
 		}
 	});
+
+	let unlocking = false;
+	const startUnlockTimer = () => {
+		unlocking = true;
+		setTimeout(() => {
+			if (unlocking) {
+				unlocked = true;
+				unlocking = false;
+				initTeleop();
+
+				// lock the joystick
+				lockingTimeoutHandle = setTimeout(() => {
+					unlocked = false;
+				}, 10000);
+			}
+		}, 1000);
+	};
+
+	const stopUnlockTimer = () => {
+		unlocking = false;
+		unlocked = false;
+	};
 </script>
 
 <div
@@ -240,9 +283,21 @@
 <!-- Message must be on a lower z index so it doesn't trigger a mouse down event -->
 {#if !joystick.active}
 	<p
-		class=" absolute left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%] text-xl"
+		class="absolute left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%] overflow-hidden text-xl"
+		style:filter={unlocked ? 'none' : 'blur(12px)'}
 		style:z-index="1"
 	>
 		Press and hold to start moving the joystick.
 	</p>
+{/if}
+
+{#if !unlocked}
+	<div
+		class="absolute left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%] overflow-hidden text-xl"
+		style:z-index="3"
+	>
+		<Button variant="outline" onpointerdown={startUnlockTimer} onpointerup={stopUnlockTimer}
+			>Hold to unlock</Button
+		>
+	</div>
 {/if}
