@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <hi_can_address.hpp>
 
 BucketDriver::BucketDriver(const rclcpp::NodeOptions& options)
     : Node("bucket_driver", options)
@@ -61,48 +62,49 @@ void BucketDriver::_writeActuators(double lift, double tilt, double jaws, double
                    static_cast<double>(INT16_MAX)));
 
     using namespace hi_can;
-    using namespace addressing::legacy;
-    using namespace excavation::bucket::bucket;
-    using namespace parameters::legacy::excavation::bucket;
+    using namespace addressing;
+    using namespace addressing::excavation;
+    using namespace addressing::excavation::bucket;
+    using namespace parameters::excavation::bucket::controller;
 
-    const address_t baseAddress(excavation::SYSTEM_ID,
-                                excavation::bucket::SUBSYSTEM_ID,
-                                static_cast<uint8_t>(excavation::bucket::device::BUCKET));
+    const standard_address_t baseAddress{SYSTEM_ID,
+                                         bucket::SUBSYSTEM_ID,
+                                         bucket::controller::DEVICE_ID};
 
-    const address_t liftAddress(baseAddress,
-                                motors::GROUP_ID,
-                                static_cast<uint8_t>(motors::parameter::LIFT_SPEED));
     _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(liftAddress),
-               motor_speed_t(liftPwm != 0, liftPwm).serializeData()));
+        Packet(static_cast<addressing::flagged_address_t>(
+                   standard_address_t{baseAddress,
+                                      static_cast<uint8_t>(controller::group::LIFT_BOTH),
+                                      static_cast<uint8_t>(controller::actuator_parameter::SPEED)}),
+               speed_t{liftPwm}.serializeData()));
 
-    const address_t tiltAddress(baseAddress,
-                                motors::GROUP_ID,
-                                static_cast<uint8_t>(motors::parameter::TILT_SPEED));
     _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(tiltAddress),
-               motor_speed_t(tiltPwm != 0, tiltPwm).serializeData()));
+        Packet(static_cast<addressing::flagged_address_t>(
+                   standard_address_t{baseAddress,
+                                      static_cast<uint8_t>(controller::group::TILT_BOTH),
+                                      static_cast<uint8_t>(controller::actuator_parameter::SPEED)}),
+               speed_t{tiltPwm}.serializeData()));
 
-    const address_t jawsAddress(baseAddress,
-                                motors::GROUP_ID,
-                                static_cast<uint8_t>(motors::parameter::JAWS_SPEED));
     _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(jawsAddress),
-               motor_speed_t(jawsPwm != 0, jawsPwm).serializeData()));
+        Packet(static_cast<addressing::flagged_address_t>(
+                   standard_address_t{baseAddress,
+                                      static_cast<uint8_t>(controller::group::JAWS_BOTH),
+                                      static_cast<uint8_t>(controller::actuator_parameter::SPEED)}),
+               speed_t{jawsPwm}.serializeData()));
 
-    const address_t rotateAddress(baseAddress,
-                                  manipulation::GROUP_ID,
-                                  static_cast<uint8_t>(manipulation::parameter::SPIN_SPEED));
     _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(rotateAddress),
-               motor_speed_t(rotatePwm != 0, rotatePwm).serializeData()));
+        Packet(static_cast<addressing::flagged_address_t>(
+                   standard_address_t{baseAddress,
+                                      static_cast<uint8_t>(controller::group::MAGNET),
+                                      static_cast<uint8_t>(controller::magnet_parameter::ROTATE_SPEED)}),
+               speed_t{rotatePwm}.serializeData()));
 
-    const address_t magnetAddress(baseAddress,
-                                  manipulation::GROUP_ID,
-                                  static_cast<uint8_t>(manipulation::parameter::ELECTROMAGNET));
     _canInterface.transmit(
-        Packet(static_cast<addressing::flagged_address_t>(magnetAddress),
-               parameters::SimpleSerializable<parameters::wrapped_value_t<bool>>(magnet).serializeData()));
+        Packet(static_cast<addressing::flagged_address_t>(
+                   standard_address_t{baseAddress,
+                                      static_cast<uint8_t>(controller::group::MAGNET),
+                                      static_cast<uint8_t>(controller::magnet_parameter::MAGNET_ENABLE)}),
+               magnet_t{magnet}.serializeData()));
 }
 
 int main(int argc, char** argv)

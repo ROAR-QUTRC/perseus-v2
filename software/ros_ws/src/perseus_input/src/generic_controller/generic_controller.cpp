@@ -1,11 +1,11 @@
-#include "generic_controller/generic_controller.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <limits>
 #include <map>
 #include <stdexcept>
+
+#include "generic_controller/generic_controller.hpp"
 
 GenericController::GenericController(const rclcpp::NodeOptions& options)
     : Node("generic_controller", options)
@@ -36,8 +36,8 @@ void GenericController::_joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg)
     double rotate = _axisParsers.at(ROTATE_BASE_NAME).getValue();
     bool magnet = _axisParsers.at(MAGNET_BASE_NAME).getValue() > 0.5;
 
-    RCLCPP_INFO(this->get_logger(), "Forward: %f, Turn: %f, Lift: %f, Tilt: %f, Jaws: %f, Rotate: %f, Magnet: %d",
-                forward, turn, lift, tilt, jaws, rotate, magnet);
+    RCLCPP_DEBUG(this->get_logger(), "Forward: %+2.2f, Turn: %+2.2f, Lift: %+2.2f, Tilt: %+2.2f, Jaws: %+2.2f, Rotate: %+2.2f, Magnet: %d",
+                 forward, turn, lift, tilt, jaws, rotate, magnet);
 
     geometry_msgs::msg::TwistStamped twistMsg;
     twistMsg.twist.linear.x = forward;
