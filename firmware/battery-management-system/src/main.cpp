@@ -19,7 +19,6 @@ constexpr float ACTIVITY_CURRENT = 100;
 void setupBms(bq76942& bq);
 void printBmsStatus(bq76942& bq);
 
-
 ////////////////////////
 // TESTING VARIABLES
 ////////////////////////
@@ -31,11 +30,11 @@ void printBmsStatus(bq76942& bq);
 #define noLoadTimeout 400s
 
 // This will set the battery cell overtemperature (TS1)
-#define cellProtectionTemp 35
+#define cellProtectionTemp  35
 #define cellProtectionDelay 2s
 
 // This will set the FET overtemperature (TS3)
-#define fetProtectionTemp 40
+#define fetProtectionTemp  40
 #define fetProtectionDelay 1s
 
 void setup()
@@ -566,7 +565,6 @@ void setupBms(bq76942& bq)
 
         // FOR REFERENCE THESE ARE THE PARAMETERS TO SET FOR OVERTEMP THRESHOLDS FOR BATTERY CELL (DISCHARGE) AND FET THRESHOLDS
 
-
         // int8_t getDischargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_THRESHOLD); }
         // void setDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_THRESHOLD, threshold, -40, 120); }
         // std::chrono::seconds getDischargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTD_DELAY)); }
@@ -581,14 +579,11 @@ void setupBms(bq76942& bq)
         // int8_t getFetRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_RECOVERY); }
         // void setFetRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
 
-
-
         // Protections:OTC (BATTERY OVERTEMP THRESHOLD)
         bq.protections.overTemp.setDischargeThreshold(cellProtectionTemp);
         // bq.protections.overTemp.setDischargeDelay(cellProtectionDelay);
 
         // Protections:OTD
-
 
         // Protections:OTF (FET OVERTEMP THRESHOLD)
         // bq.protections.overTemp.setFetThreshold(fetProtectionTemp);

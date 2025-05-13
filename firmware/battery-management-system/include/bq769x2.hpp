@@ -10,7 +10,8 @@
 #include <type_traits>
 #include <vector>
 
-struct AlarmRegister {
+struct AlarmRegister
+{
     const char* name;
     uint8_t value;
 };
