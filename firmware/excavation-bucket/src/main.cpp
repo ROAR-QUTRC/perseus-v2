@@ -221,7 +221,7 @@ public:
     }
     float getAverageCurrent()
     {
-        return voltageToCurrent(analogReadMilliVolts(_currentSensePin));
+        return voltageToCurrent(analogReadMilliVolts(_currentSensePin) / 1000.0f);
     }
 
     bool isInFault()
@@ -323,7 +323,7 @@ void setup()
         static_cast<flagged_address_t>(
             standard_address_t{DEVICE_ADDRESS,
                                static_cast<uint8_t>(group::BANK_1),
-                               static_cast<uint8_t>(bank_parameter::CURRENT_LIMIT)}),
+                               static_cast<uint8_t>(bank_parameter::STATUS)}),
         {
             .generator = [=]()
             {
