@@ -205,6 +205,27 @@ bq76942::da_status_6_t bq76942::getDAStatus6()
     };
 }
 
+// DAStatus7 CLASS STRUCT EXISTS BUT THIS NEEDS TO BE WRITTEN TO USE IT
+// bq76942::da_status_7_t bq76942::getDAStatus7()
+// {
+//     const raw_da_status_6_t rawStatus = getRawDAStatus6();
+//     const da_configuration_t daConfig = settings.configuration.getDAConfiguration();
+
+//     const float accChargeInteger = static_cast<float>(rawStatus.accumulatedCharge);
+//     float accChargeFractional = static_cast<float>(rawStatus.accumulatedChargeFraction) / (1ULL << 32);
+//     accChargeFractional -= 0.5;  // starts initialised to +0.5 userAh, zero that out
+
+//     return da_status_7_t{
+//         .accumulatedCharge = (accChargeInteger + accChargeFractional) * getUserAmpsMultiplier(daConfig),
+//         .accumulatedChargeTime = std::chrono::seconds(rawStatus.accumulatedChargeTime),
+//         .cfetoffCounts = rawStatus.cfetoffCounts,
+//         .dfetoffCounts = rawStatus.dfetoffCounts,
+//         .alertCounts = rawStatus.alertCounts,
+//         .ts1Counts = rawStatus.ts1Counts,
+//         .ts2Counts = rawStatus.ts2Counts,
+//     };
+// }
+
 std::vector<uint8_t> bq76942::readDirect(const uint8_t registerAddr, const size_t bytes)
 {
     for (int i = 0; i <= MAX_RETRIES; i++)
@@ -436,6 +457,18 @@ int16_t bq76942::getCellVoltage(const uint8_t cell)
         throw std::invalid_argument("Invalid cell number");
     }
     const int8_t address = static_cast<uint8_t>(direct_command::CELL_1_VOLTAGE) + (2 * cell);
+    return readDirect<int16_t>(address);
+}
+
+int16_t bq76942::getThermistorTemp1(void)
+{
+    const int8_t address = static_cast<uint8_t>(direct_command::TS1_TEMPERATURE);
+    return readDirect<int16_t>(address);
+}
+
+int16_t bq76942::getThermistorTemp2(void)
+{
+    const int8_t address = static_cast<uint8_t>(direct_command::TS3_TEMPERATURE);
     return readDirect<int16_t>(address);
 }
 

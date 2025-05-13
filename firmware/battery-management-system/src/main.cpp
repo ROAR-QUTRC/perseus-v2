@@ -19,6 +19,25 @@ constexpr float ACTIVITY_CURRENT = 100;
 void setupBms(bq76942& bq);
 void printBmsStatus(bq76942& bq);
 
+
+////////////////////////
+// TESTING VARIABLES
+////////////////////////
+
+// This will toggle all of the relevant temp sensing features in the safety protections except for chip internal temp protection
+#define tempSensing true
+
+// This sets how long the BMS will stay powered on waiting for a load of >100mA to be applied
+#define noLoadTimeout 400s
+
+// This will set the battery cell overtemperature (TS1)
+#define cellProtectionTemp 35
+#define cellProtectionDelay 2s
+
+// This will set the FET overtemperature (TS3)
+#define fetProtectionTemp 40
+#define fetProtectionDelay 1s
+
 void setup()
 {
     bsp::initI2C();
@@ -48,7 +67,7 @@ void loop()
 
     try
     {
-        bq76942 bq;
+        static bq76942 bq;
         printBmsStatus(bq);
 
         bq.toggleFuse();  // blinky light
@@ -60,18 +79,18 @@ void loop()
         }
 
         float cc2Current = bq.getCC2Current();
-        printf(std::format("CC2 current: {:07.1f} mA\n", cc2Current).c_str());
+        printf(std::format("CC2 current: {:07.1f} mA || ", cc2Current).c_str());
         if (abs(cc2Current) > ACTIVITY_CURRENT)
         {
             lastPowerFlow = steady_clock::now();
             hasHadLoad = true;
         }
 
-        const bool unloadedTimeout = steady_clock::now() - lastPowerFlow > 30s;
+        const bool unloadedTimeout = steady_clock::now() - lastPowerFlow > noLoadTimeout;
         const bool loadDropped = (steady_clock::now() - lastPowerFlow) > 1s && hasHadLoad;
         if (unloadedTimeout || loadDropped)
         {
-            printf("Shutting down\n");
+            printf("Shutting down.\n");
             bq.shutdown();
             // let BMS timeout and shut down
             std::this_thread::sleep_for(10s);
@@ -96,7 +115,7 @@ void printBmsStatus(bq76942& bq)
     bool pdsg = fetStatus.predischargeFetOn;
 
     auto status6 = bq.getDAStatus6();
-    printf(std::format("PCHG {:d}  CHG {:d}  DSG {:d}  PDSG {:d} stack vtg {:04} pack {:04d} charge {:.1f}\n",
+    printf(std::format("PCHG: {:d}  CHG: {:d}  DSG: {:d}  PDSG: {:d} STACK_VTG: {:04} PACK_VTG: {:04d} TOTAL_MA: {:.1f} || ",
                        pchg, chg, dsg, pdsg,
                        bq.getStackVoltage(), bq.getPackVoltage(),
                        status6.accumulatedCharge)
@@ -118,34 +137,72 @@ void printBmsStatus(bq76942& bq)
     bool shutdownPending = status.shutdownPending;
     bool inSleep = status.inSleep;
 
-    printf(std::format("Config update: {} Precharge: {}, Sleep allowed: {}, Full reset: {}, Watchdog reset: {}, Cell open wire: {}, Pending OTP write: {}, OTP write blocked: {}\n", configUpdate, inPrechargeMode, sleepAllowed, fullResetOccurred, wasWatchdogReset, checkingCellOpenWire, pendingOtpWrite, otpWriteBlocked).c_str());
-    printf(std::format("Security state: {}, Fuse active: {}, Safety fault active: {}, Permanent fail active: {}, Shutdown pending: {}, In sleep: {}\n", static_cast<uint8_t>(securityState), fuseActive, safetyFaultActive, permanentFailActive, shutdownPending, inSleep).c_str());
+    // printf(std::format("Config update: {} Precharge: {}, Sleep allowed: {}, Full reset: {}, Watchdog reset: {}, Cell open wire: {}, Pending OTP write: {}, OTP write blocked: {}\n", configUpdate, inPrechargeMode, sleepAllowed, fullResetOccurred, wasWatchdogReset, checkingCellOpenWire, pendingOtpWrite, otpWriteBlocked).c_str());
+    // printf(std::format("Security state: {}, Fuse active: {}, Safety fault active: {}, Permanent fail active: {}, Shutdown pending: {}, In sleep: {}\n", static_cast<uint8_t>(securityState), fuseActive, safetyFaultActive, permanentFailActive, shutdownPending, inSleep).c_str());
 
-    // print alarm regs
-    auto alarmAStatus = bq.getSafetyStatusA();
-    auto alarmBStatus = bq.getSafetyStatusB();
-    auto alarmCStatus = bq.getSafetyStatusC();
-    printf(std::format("A: {:08b} B: {:08b} C: {:08b}\n",
-                       *reinterpret_cast<uint8_t*>(&alarmAStatus),
-                       *reinterpret_cast<uint8_t*>(&alarmBStatus),
-                       *reinterpret_cast<uint8_t*>(&alarmCStatus))
-               .c_str());
+    // Read safety alarm registers and print only if anything is flagged
+    // Store full structs to avoid rvalue address errors
+    auto statusA = bq.getSafetyStatusA();
+    auto statusB = bq.getSafetyStatusB();
+    auto statusC = bq.getSafetyStatusC();
 
-    auto pfAStatus = bq.getPermanentFailStatusA();
-    auto pfBStatus = bq.getPermanentFailStatusB();
-    auto pfCStatus = bq.getPermanentFailStatusC();
-    auto pfDStatus = bq.getPermanentFailStatusD();
-    printf(std::format("PF A: {:08b} B: {:08b} C: {:08b} D: {:08b}\n",
-                       *reinterpret_cast<uint8_t*>(&pfAStatus),
-                       *reinterpret_cast<uint8_t*>(&pfBStatus),
-                       *reinterpret_cast<uint8_t*>(&pfCStatus),
-                       *reinterpret_cast<uint8_t*>(&pfDStatus))
-               .c_str());
+    uint8_t alarmAStatus = *reinterpret_cast<uint8_t*>(&statusA);
+    uint8_t alarmBStatus = *reinterpret_cast<uint8_t*>(&statusB);
+    uint8_t alarmCStatus = *reinterpret_cast<uint8_t*>(&statusC);
 
+    std::vector<AlarmRegister> safetyAlarms = {
+        {"ALARM A", alarmAStatus},
+        {"ALARM B", alarmBStatus},
+        {"ALARM C", alarmCStatus},
+    };
+
+    auto pfA = bq.getPermanentFailStatusA();
+    auto pfB = bq.getPermanentFailStatusB();
+    auto pfC = bq.getPermanentFailStatusC();
+    auto pfD = bq.getPermanentFailStatusD();
+
+    uint8_t pfAStatus = *reinterpret_cast<uint8_t*>(&pfA);
+    uint8_t pfBStatus = *reinterpret_cast<uint8_t*>(&pfB);
+    uint8_t pfCStatus = *reinterpret_cast<uint8_t*>(&pfC);
+    uint8_t pfDStatus = *reinterpret_cast<uint8_t*>(&pfD);
+
+    std::vector<AlarmRegister> permanentFails = {
+        {"PERM FAIL A", pfAStatus},
+        {"PERM FAIL B", pfBStatus},
+        {"PERM FAIL C", pfCStatus},
+        {"PERM FAIL D", pfDStatus},
+    };
+
+    for (const auto& alarm : safetyAlarms)
+    {
+        if (alarm.value != 0)
+        {
+            printf(std::format("\n{}: {:08b}\n", alarm.name, alarm.value).c_str());
+        }
+    }
+
+    for (const auto& pf : permanentFails)
+    {
+        if (pf.value != 0)
+        {
+            printf(std::format("\n{}: {:08b}\n", pf.name, pf.value).c_str());
+        }
+    }
+
+    // Print cell voltages
     for (int i = 0; i < 10; i++)
     {
-        printf(std::format("Cell {}: {}\n", i, bq.getCellVoltage(i)).c_str());
+        if (i >= 5 && i <= 8)
+        {
+            continue;
+        }
+        printf(std::format("Cell {}: {}  ", i, bq.getCellVoltage(i)).c_str());
     }
+
+    printf(" || TS1(BAT): %.1f °C ", (bq.getThermistorTemp1() - 2731.5) / 10.0f);
+    printf("TS3(FET): %.1f °C", (bq.getThermistorTemp2() - 2731.5) / 10.0f);
+
+    printf("\n");
 }
 
 void setupBms(bq76942& bq)
@@ -230,8 +287,27 @@ void setupBms(bq76942& bq)
 
         // TODO: Correct this when thermistors installed
         bq.settings.configuration.setTs1PinConfig(bq76942::ts_pin_configuration_t{
-            .function = bq76942::adc_pin_function::UNUSED,
+            .function = bq76942::adc_pin_function::ADC_INPUT_OR_THERMISTOR,
+            .measurementType = bq76942::measurement_type::CELL_THERMISTOR,
+            .polynomial = bq76942::polynomial_selection::POLYNOMIAL_18K,
+            .pullupConfig = bq76942::pullup_config::PULLUP_18K,
         });
+
+        bq.settings.configuration.setTs3PinConfig(bq76942::ts_pin_configuration_t{
+            .function = bq76942::adc_pin_function::ADC_INPUT_OR_THERMISTOR,
+            .measurementType = bq76942::measurement_type::FET_THERMISTOR,
+            .polynomial = bq76942::polynomial_selection::POLYNOMIAL_18K,
+            .pullupConfig = bq76942::pullup_config::PULLUP_18K,
+        });
+
+        // bq.settings.configuration.setTs1PinConfig(bq76942::ts_pin_configuration_t{
+        //     .function = bq76942::adc_pin_function::ADC_INPUT_OR_THERMISTOR,
+        // });
+
+        // bq.settings.configuration.setTs3PinConfig(bq76942::ts_pin_configuration_t{
+        //     .function = bq76942::adc_pin_function::ADC_INPUT_OR_THERMISTOR,
+        // });
+
         bq.settings.configuration.setCfetoffPinConfig(bq76942::cfetoff_pin_configuration_t{
             .function = bq76942::cfetoff_pin_function::SPI_CS_OR_UNUSED,
         });
@@ -246,10 +322,10 @@ void setupBms(bq76942& bq)
         });
 
         bq.settings.configuration.setDAConfiguration(bq76942::da_configuration_t{
-            .userAmps = bq76942::user_amps::CENTIAMP,
+            .userAmps = bq76942::user_amps::MILLIAMP,
             // TODO: CHANGE WHEN THERMISTORS INSTALLED
-            .useInternalAsCellTemperature = true,
-            .useInternalAsFetTemperature = true,
+            .useInternalAsCellTemperature = false,
+            .useInternalAsFetTemperature = false,
         });
         bq.settings.configuration.setVcellMode(connectedCells);
         // CC3 samples default is good
@@ -273,13 +349,13 @@ void setupBms(bq76942& bq)
             .shortCircuitDischarge = true,
         });
         bq.settings.protection.setEnabledB({
-            .undertempCharge = true,
-            .undertempDischarge = true,
+            .undertempCharge = tempSensing,
+            .undertempDischarge = tempSensing,
             .internalUndertemp = true,
-            .overtempCharge = true,
-            .overtempDischarge = true,
+            .overtempCharge = tempSensing,
+            .overtempDischarge = tempSensing,
             .internalOvertemp = true,
-            .fetOvertemp = true,
+            .fetOvertemp = tempSensing,
         });
         bq.settings.protection.setEnabledC({
             .hostWatchdogFault = true,
@@ -295,11 +371,11 @@ void setupBms(bq76942& bq)
             .shortCircuitDischarge = true,
         });
         bq.settings.protection.setChgFetB({
-            .undertempCharge = true,
+            .undertempCharge = tempSensing,
             .internalUndertemp = true,
-            .overtempCharge = true,
+            .overtempCharge = tempSensing,
             .internalOvertemp = true,
-            .fetOvertemp = true,
+            .fetOvertemp = tempSensing,
         });
         bq.settings.protection.setChgFetC({
             .hostWatchdogFault = true,
@@ -313,11 +389,11 @@ void setupBms(bq76942& bq)
             .shortCircuitDischarge = true,
         });
         bq.settings.protection.setDsgFetB({
-            .undertempDischarge = true,
+            .undertempDischarge = tempSensing,
             .internalUndertemp = true,
-            .overtempDischarge = true,
+            .overtempDischarge = tempSensing,
             .internalOvertemp = true,
-            .fetOvertemp = true,
+            .fetOvertemp = tempSensing,
         });
         bq.settings.protection.setDsgFetC({
             .hostWatchdogFault = true,
@@ -348,8 +424,8 @@ void setupBms(bq76942& bq)
             .safetyCellOvervoltage = true,
             .safetyOvercurrentCharge = true,
             .safetyOvercurrentDischarge = true,
-            .safetyOvertemp = true,
-            .safetyOvertempFet = true,
+            .safetyOvertemp = tempSensing,
+            .safetyOvertempFet = tempSensing,
             .copperDeposition = true,
         });
         bq.settings.permanentFailure.setEnabledB({
@@ -476,7 +552,7 @@ void setupBms(bq76942& bq)
         // Protections:OCD3
         // in mA
         bq.protections.overCurrentDischarge.setTier3Threshold(-90000.0f);
-        bq.protections.overCurrentDischarge.setTier3Delay(5s);
+        bq.protections.overCurrentDischarge.setTier3Delay(3s);
 
         // Protections:OCD
 
@@ -488,11 +564,35 @@ void setupBms(bq76942& bq)
         bq.protections.shortCircuit.setLatchCounterDecDelay(20s);
         bq.protections.shortCircuit.setLatchRecoveryTime(15s);
 
-        // Protections:OTC
+        // FOR REFERENCE THESE ARE THE PARAMETERS TO SET FOR OVERTEMP THRESHOLDS FOR BATTERY CELL (DISCHARGE) AND FET THRESHOLDS
+
+
+        // int8_t getDischargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_THRESHOLD); }
+        // void setDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_THRESHOLD, threshold, -40, 120); }
+        // std::chrono::seconds getDischargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTD_DELAY)); }
+        // void setDischargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTD_DELAY, static_cast<uint8_t>(delay.count())); }
+        // int8_t getDischargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_RECOVERY); }
+        // void setDischargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_RECOVERY, threshold, -40, 120); }
+
+        // int8_t getFetThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_THRESHOLD); }
+        // void setFetThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_THRESHOLD, threshold, 0, 150); }
+        // std::chrono::seconds getFetDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTF_DELAY)); }
+        // void setFetDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTF_DELAY, static_cast<uint8_t>(delay.count())); }
+        // int8_t getFetRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_RECOVERY); }
+        // void setFetRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
+
+
+
+        // Protections:OTC (BATTERY OVERTEMP THRESHOLD)
+        bq.protections.overTemp.setDischargeThreshold(cellProtectionTemp);
+        // bq.protections.overTemp.setDischargeDelay(cellProtectionDelay);
 
         // Protections:OTD
 
-        // Protections:OTF
+
+        // Protections:OTF (FET OVERTEMP THRESHOLD)
+        // bq.protections.overTemp.setFetThreshold(fetProtectionTemp);
+        // bq.protections.overTemp.setFetDelay(fetProtectionDelay);
 
         // Protections:OTINT
 

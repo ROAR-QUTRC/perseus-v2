@@ -10,6 +10,11 @@
 #include <type_traits>
 #include <vector>
 
+struct AlarmRegister {
+    const char* name;
+    uint8_t value;
+};
+
 class bq76942
 {
 public:
@@ -1409,6 +1414,8 @@ public:
     /// @brief Read the voltage of one of the cells
     /// @return The voltage of the cell in mV
     int16_t getCellVoltage(const uint8_t cell);
+    int16_t getThermistorTemp1();
+    int16_t getThermistorTemp2();
     /// @brief Read the voltage at the top of the battery stack
     /// @return The voltage of the stack in mV
     int32_t getStackVoltage();

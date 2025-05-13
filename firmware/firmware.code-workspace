@@ -125,7 +125,15 @@
             "xstring": "cpp",
             "xtr1common": "cpp",
             "xtree": "cpp",
-            "xutility": "cpp"
+            "xutility": "cpp",
+            "csetjmp": "cpp",
+            "cuchar": "cpp",
+            "expected": "cpp",
+            "filesystem": "cpp",
+            "generator": "cpp",
+            "hash_map": "cpp",
+            "stack": "cpp",
+            "text_encoding": "cpp"
         },
         "C_Cpp.default.cppStandard": "c++20",
         "editor.formatOnSave": true,
