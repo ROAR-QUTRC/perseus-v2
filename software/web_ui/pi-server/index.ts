@@ -4,6 +4,17 @@ import { spawn } from 'child_process';
 import { networkInterfaces } from 'os';
 import fs from 'node:fs';
 
+type videoTransformType =
+	| 'none'
+	| 'clockwise'
+	| 'counterclockwise'
+	| 'rotate-180'
+	| 'horizontal-flip'
+	| 'vertical-flip'
+	| 'upper-left-diagonal'
+	| 'upper-right-diagonal'
+	| 'automatic';
+
 interface CameraEventType {
 	type: 'camera';
 	action:
@@ -19,6 +30,7 @@ interface CameraEventType {
 		groupName?: string;
 		// cameraName?: string;
 		resolution?: { width: number; height: number };
+		transform?: videoTransformType;
 		device?: string;
 		cameras?: string[];
 	};
@@ -75,10 +87,16 @@ signallingServer.stdout.pipe(process.stdout);
 let gstInstances: {
 	device: string;
 	resolution: { width: number; height: number };
+	transform: videoTransformType;
 	instance: any;
 }[] = [];
 
-const startStream = (device: string, resolution: { height: number; width: number }) => {
+// webrtcsink stun-server=NULL name=ws meta="meta,name=usb-Quanta_HP_Wide_Vision_HD_Camera_01.00.00-video-index0" v4l2src device=/dev/v4l/by-id/usb-Quanta_HP_Wide_Vision_HD_Camera_01.00.00-video-index0 ! video/x-raw, width=320, height=240 ! videoconvert ! videoflip method=clockwise ! ws.
+const startStream = (
+	device: string,
+	resolution: { height: number; width: number },
+	transform: videoTransformType
+) => {
 	// start the camera stream
 	let gstArgs = ['webrtcsink', 'stun-server=NULL', 'name=ws'];
 	gstArgs.push(`meta="meta,name=${device}"`); // assign a name to the stream
@@ -86,15 +104,21 @@ const startStream = (device: string, resolution: { height: number; width: number
 	else gstArgs.push('v4l2src', `device=/dev/v4l/by-id/${device}`);
 	gstArgs.push(
 		`!`,
-		`video/x-raw, width=${resolution.width}, height=${resolution.height}`,
+		`video/x-raw,`,
+		`width=${resolution.width},`,
+		`height=${resolution.height}`,
 		`!`,
-		`videoconvert`,
-		`!`,
-		'ws.'
+		`videoconvert`
 	);
+
+	if (transform) gstArgs.push(`!`, `videoflip`, `method=${transform}`);
+
+	gstArgs.push(`!`, 'ws.');
+
 	gstInstances.push({
 		device: device,
 		resolution: resolution,
+		transform: transform,
 		instance: spawn('gst-launch-1.0', gstArgs)
 	});
 
@@ -120,16 +144,21 @@ socket.on('camera-event', (event: CameraEventType) => {
 				// if the stream is currently running
 				if (event.data.resolution) {
 					if (
-						gstInstances[index].resolution.width !== event.data.resolution.width &&
-						gstInstances[index].resolution.height !== event.data.resolution.height
+						(gstInstances[index].resolution.width !== event.data.resolution.width &&
+							gstInstances[index].resolution.height !== event.data.resolution.height) ||
+						gstInstances[index].transform !== event.data.transform
 					) {
 						// if the resolution is different restart the stream
 						console.log(
-							`[Camera server] Changing resolution of ${event.data.device} from ${gstInstances[index].resolution.width}x${gstInstances[index].resolution.height} to ${event.data.resolution.width}x${event.data.resolution.height}`
+							`[Camera server] Changing resolution of ${event.data.device} from ${gstInstances[index].resolution.width}x${gstInstances[index].resolution.height} to ${event.data.resolution.width}x${event.data.resolution.height} with transform: ${event.data.transform}`
 						);
 						gstInstances[index].instance.kill();
 						gstInstances.splice(index, 1);
-						startStream(event.data.device!, event.data.resolution);
+						startStream(
+							event.data.device!,
+							event.data.resolution,
+							event.data.transform ? event.data.transform : 'none'
+						);
 						break;
 					}
 				} else {
@@ -141,7 +170,8 @@ socket.on('camera-event', (event: CameraEventType) => {
 				console.log(`[Camera server] Starting stream for ${event.data.device}`);
 				startStream(
 					event.data.device!,
-					event.data.resolution ? event.data.resolution : { width: 320, height: 240 }
+					event.data.resolution ? event.data.resolution : { width: 320, height: 240 },
+					event.data.transform ? event.data.transform : 'none'
 				);
 			}
 			break;

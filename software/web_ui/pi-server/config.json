@@ -1,7 +1,7 @@
 {
-  "groupName": "RaspberryPi",
-  "webServer": {
-    "ip": "pi-brain",
-    "port": 3000
-  }
+	"groupName": "RaspberryPi",
+	"webServer": {
+		"ip": "localhost",
+		"port": 5173
+	}
 }
