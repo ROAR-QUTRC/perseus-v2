@@ -38,6 +38,17 @@
 		}
 	});
 
+	type videoTransformType =
+		| 'none'
+		| 'clockwise'
+		| 'counterclockwise'
+		| 'rotate-180'
+		| 'horizontal-flip'
+		| 'vertical-flip'
+		| 'upper-left-diagonal'
+		| 'upper-right-diagonal'
+		| 'automatic';
+
 	export interface CameraEventType {
 		type: 'camera';
 		action:
@@ -52,6 +63,7 @@
 			groupName?: string;
 			// cameraName?: string;
 			resolution?: { width: number; height: number };
+			transform?: videoTransformType;
 			device?: string;
 			cameras?: string[];
 		};
@@ -191,6 +203,22 @@
 						],
 						value: '320x240'
 					},
+					transform: {
+						type: 'select',
+						description: 'Transform the video stream',
+						options: [
+							{ value: 'none', label: 'None' },
+							{ value: 'clockwise', label: 'Clockwise' },
+							{ value: 'counterclockwise', label: 'Counterclockwise' },
+							{ value: 'rotate-180', label: 'Rotate 180 degrees' },
+							{ value: 'horizontal-flip', label: 'Horizontal flip' },
+							{ value: 'vertical-flip', label: 'Vertical flip' },
+							{ value: 'upper-left-diagonal', label: 'Upper left diagonal' },
+							{ value: 'upper-right-diagonal', label: 'Upper right diagonal' },
+							{ value: 'automatic', label: 'Automatic' }
+						],
+						value: 'none'
+					},
 					device: {
 						type: 'text',
 						disabled: true,
@@ -207,7 +235,8 @@
 								data: {
 									groupName: group,
 									device: device,
-									resolution: { width: Number(resolution[0]), height: Number(resolution[1]) }
+									resolution: { width: Number(resolution[0]), height: Number(resolution[1]) },
+									transform: settings.groups[group + ' ' + name].transform.value
 								}
 							} as CameraEventType);
 							return 'Told camera to resize';

@@ -5,7 +5,8 @@ import { Layout } from "../../shared/Layout";
 export interface WidgetType {
   name: string;
   description?: string;
-  group?: string;
+  group?: WidgetGroupType;
+  isRosDependent?: boolean;
   component: Component;
   settings: WidgetSettingsType;
   layoutProps?: {
@@ -85,6 +86,7 @@ export const getWidgetsByLayoutId = (id: string): Array<WidgetType> => {
         name: widgetState.name,
         description: widgetTemplate.description,
         group: widgetTemplate.group,
+        isRosDependent: widgetTemplate.isRosDependent,
         component: widgetTemplate.component,
         settings: widgetTemplate.settings,
         layoutProps: {
@@ -99,3 +101,6 @@ export const getWidgetsByLayoutId = (id: string): Array<WidgetType> => {
 
   return widgets;
 };
+
+// The widget group property is a string from the list of groups defined in this type:
+export type WidgetGroupType = "ROS" | "CAN Bus" | "Gstreamer" | "Misc";

@@ -5,6 +5,7 @@
 	export const name = 'Bus Power Manager';
 	export const description = 'Enable and disable different buses on the rover control board';
 	export const group = 'CAN Bus';
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
@@ -12,7 +13,7 @@
 </script>
 
 <script lang="ts">
-	import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import ROSLIB from 'roslib';
 	import Fa from 'svelte-fa';
 	import { faPowerOff } from '@fortawesome/free-solid-svg-icons';
@@ -20,38 +21,38 @@
 	import { sentenceCase } from 'change-case';
 
 	// Widget logic goes here
-	let busState = $state<Record<string, { power_off: string; current: string; voltage: string }>>(
-		{}
-	);
+	let busState = $state<Record<string, { status: string; current: string; voltage: string }>>({});
 
 	const toggleBusPower = (e: Event, bus: string) => {
 		e.preventDefault();
 		const publisher = new ROSLIB.Topic({
-			ros: ros.value!,
+			ros: getRosConnection() as ROSLIB.Ros,
 			name: '/ros_to_can',
 			messageType: 'std_msgs/String'
 		});
 
 		const message = new ROSLIB.Message({
-			data: JSON.stringify({ bus: bus, on: busState[bus].power_off === 'true' ? '1' : '0' })
+			data: JSON.stringify({ bus: bus, on: busState[bus].status ? '1' : '0' })
 		});
-
-		console.log(message);
 
 		publisher.publish(message);
 		publisher.unsubscribe();
 	};
 
 	onMount(() => {
-		const listener = new ROSLIB.Topic({
-			ros: ros.value!,
-			name: '/can_to_ros',
-			messageType: 'std_msgs/String'
-		});
+		let listener: ROSLIB.Topic;
 
-		listener.subscribe((message: any) => {
-			busState = JSON.parse(message.data);
-		});
+		if (getRosConnection()) {
+			listener = new ROSLIB.Topic({
+				ros: getRosConnection() as ROSLIB.Ros,
+				name: '/can_to_ros',
+				messageType: 'std_msgs/String'
+			});
+
+			listener.subscribe((message: any) => {
+				busState = JSON.parse(message.data);
+			});
+		}
 
 		return () => {
 			listener.unsubscribe();
@@ -70,7 +71,7 @@
 				<Fa
 					icon={faPowerOff}
 					class="power-button"
-					color={busState[bus].power_off === 'true' ? '#f00' : '#0f0'}
+					color={busState[bus].status == '1' ? '#f00' : '#0f0'}
 				/>
 			</button>
 			<p class="mt-2">Current: {busState[bus].current}</p>
