@@ -15,14 +15,14 @@
 					description: 'Joystick Radius in pixels',
 					value: '64'
 				},
-				linearSpeedMultiplyer: {
+				linearSpeedMultiplier: {
 					type: 'number',
-					description: 'Forwards and backwards speed multiplyer for the joystick',
+					description: 'Forwards and backwards speed multiplier for the joystick',
 					value: '1'
 				},
-				angularSpeedMultiplyer: {
+				angularSpeedMultiplier: {
 					type: 'number',
-					description: 'Left and right speed multiplyer for the joystick',
+					description: 'Left and right speed multiplier for the joystick',
 					value: '0.5'
 				}
 			}
@@ -212,14 +212,14 @@
 					header: {}, // Leaving this empty forces ROS bridge to fill in the timestamp.
 					twist: {
 						linear: {
-							x: -joystickValue.y * Number(settings.groups.General.linearSpeedMultiplyer.value),
+							x: -joystickValue.y * Number(settings.groups.General.linearSpeedMultiplier.value),
 							y: 0,
 							z: 0
 						},
 						angular: {
 							x: 0,
 							y: 0,
-							z: -joystickValue.x * Number(settings.groups.General.angularSpeedMultiplyer.value)
+							z: -joystickValue.x * Number(settings.groups.General.angularSpeedMultiplier.value)
 						}
 					}
 				});
