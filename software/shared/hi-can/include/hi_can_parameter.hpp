@@ -309,7 +309,15 @@ namespace hi_can::parameters
     }
     namespace excavation
     {
-
+        namespace bucket
+        {
+            namespace controller
+            {
+                typedef SimpleSerializable<wrapped_value_t<int16_t>> speed_t;
+                typedef SimpleSerializable<wrapped_value_t<uint16_t>> current_t;
+                typedef SimpleSerializable<wrapped_value_t<bool>> magnet_t;
+            }
+        }
     }
     namespace shared
     {

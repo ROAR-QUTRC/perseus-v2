@@ -197,6 +197,16 @@ let
         ];
       }
     );
+
+    perseus-input = rosPrev.perseus-input.overrideAttrs (
+      {
+        propagatedBuildInputs ? [ ],
+        ...
+      }:
+      {
+        propagatedBuildInputs = final.lib.remove rosFinal.perseus-input-config propagatedBuildInputs;
+      }
+    );
   };
 in
 {

@@ -36,8 +36,8 @@ void GenericController::_joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg)
     double rotate = _axisParsers.at(ROTATE_BASE_NAME).getValue();
     bool magnet = _axisParsers.at(MAGNET_BASE_NAME).getValue() > 0.5;
 
-    RCLCPP_INFO(this->get_logger(), "Forward: %f, Turn: %f, Lift: %f, Tilt: %f, Jaws: %f, Rotate: %f, Magnet: %d",
-                forward, turn, lift, tilt, jaws, rotate, magnet);
+    RCLCPP_DEBUG_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Forward: %+2.2f, Turn: %+2.2f, Lift: %+2.2f, Tilt: %+2.2f, Jaws: %+2.2f, Rotate: %+2.2f, Magnet: %d",
+                          forward, turn, lift, tilt, jaws, rotate, magnet);
 
     geometry_msgs::msg::TwistStamped twistMsg;
     twistMsg.twist.linear.x = forward;
@@ -67,7 +67,6 @@ GenericController::AxisParser::AxisParser(GenericController& parent, const std::
       _hasEnable(hasEnable)
 {
     using namespace rcl_interfaces::msg;
-    RCLCPP_ERROR(_parent.get_logger(), "AxisParser constructor called with paramBaseName: %s", paramBaseName.c_str());
 
     ParameterDescriptor axisDescriptor{};
     axisDescriptor.type = ParameterType::PARAMETER_INTEGER;
@@ -147,6 +146,7 @@ double GenericController::AxisParser::getValue()
     double axisValue = 0.0;
     int axisIdx = params[AXIS_IDX].as_int();
     bool hasAnalogAxis = axisIdx >= 0;
+    bool hold = _parent.get_parameter(_paramBaseName + ".hold").as_bool();
     if (hasAnalogAxis)
         axisValue = _parent._lastReceivedJoy->axes[axisIdx];
 
@@ -203,10 +203,12 @@ double GenericController::AxisParser::getValue()
     }
     else
         axisValue = 0.0;
+
     axisValue *= scaling;
-    if (buttonPositive || buttonNegative || hasAnalogAxis)
+    bool shouldUpdateAnalogAxis = hasAnalogAxis && (!hold || (abs(axisValue) > 0));
+    if (buttonPositive || buttonNegative || shouldUpdateAnalogAxis)
         _lastValue = axisValue;
-    else if (_parent.get_parameter(_paramBaseName + ".hold").as_bool())
+    else if (hold)
         return _lastValue;
 
     return axisValue;

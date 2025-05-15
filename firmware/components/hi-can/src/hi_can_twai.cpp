@@ -10,6 +10,7 @@
 
 #include "sdkconfig.h"
 
+using namespace bsp;
 using namespace hi_can;
 using namespace std::chrono;
 using namespace std::chrono_literals;

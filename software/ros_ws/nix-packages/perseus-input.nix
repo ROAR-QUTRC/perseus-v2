@@ -6,6 +6,7 @@
   ament-cmake,
   backward-ros,
   geometry-msgs,
+  perseus-input-config,
   rclcpp,
   sensor-msgs,
 }:
@@ -21,6 +22,7 @@ buildRosPackage rec {
     actuator-msgs
     backward-ros
     geometry-msgs
+    perseus-input-config
     rclcpp
     sensor-msgs
   ];
