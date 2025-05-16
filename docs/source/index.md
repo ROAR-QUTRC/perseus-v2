@@ -26,11 +26,11 @@ If you checked out the repository at `~/perseus-v2`, `docs/source/index.md` (thi
 self
 home/getting-started
 home/*
-tutorials-index
 systems-index
 standards-index
 development-index
 maintenance-index
 challenge-breakdowns-index
+tutorials-index
 generated/index
 ```
