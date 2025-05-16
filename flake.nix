@@ -130,6 +130,9 @@
             nodejs_22
             yarn
             nixgl-script
+            ncurses
+            glibcLocales
+            yaml-cpp
             libnice
             ;
           inherit (pkgs.gst_all_1)
