@@ -1,5 +1,3 @@
-#include "hi_can_twai.hpp"
-
 #include <driver/gpio.h>
 #include <unistd.h>
 
@@ -8,6 +6,7 @@
 #include <cstring>
 #include <stdexcept>
 
+#include "hi_can_twai.hpp"
 #include "sdkconfig.h"
 
 using namespace bsp;
@@ -135,7 +134,7 @@ std::optional<Packet> TwaiInterface::receive(bool blocking)
 void TwaiInterface::handle()
 {
     uint32_t alerts;
-    if (twai_read_alerts_v2(_twaiBus, &alerts, 0) != ESP_OK)
+    if (esp_err_t err = twai_read_alerts_v2(_twaiBus, &alerts, 0); (err != ESP_OK) && (err != ESP_ERR_TIMEOUT))
     {
         throw std::runtime_error("Failed to read alerts");
     }
@@ -151,7 +150,10 @@ void TwaiInterface::handle()
         }
     }
     else if (alerts & TWAI_ALERT_BUS_RECOVERED)
+    {
         _recoveryAttemptCount = 0;
+        twai_start_v2(_twaiBus);
+    }
 }
 
 TwaiInterface& hi_can::TwaiInterface::addFilter(const addressing::filter_t& address)
