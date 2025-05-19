@@ -1,3 +1,5 @@
+#include "hi_can_twai.hpp"
+
 #include <driver/gpio.h>
 #include <unistd.h>
 
@@ -6,7 +8,6 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "hi_can_twai.hpp"
 #include "sdkconfig.h"
 
 using namespace bsp;
