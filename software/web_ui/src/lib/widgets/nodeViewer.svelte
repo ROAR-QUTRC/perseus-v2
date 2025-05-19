@@ -1,11 +1,11 @@
 <script lang="ts" module>
-	import { isConnected, ros } from '$lib/scripts/ros.svelte';
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
 	export const name = 'Node viewer';
 	export const description =
 		'This widget allows you to view the topics, services, and other details of a node.';
 	export const group = 'ROS';
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
@@ -13,10 +13,12 @@
 </script>
 
 <script lang="ts">
+	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import * as Select from '$lib/components/ui/select/index';
 	import { Reload } from 'svelte-radix';
+	import type ROSLIB from 'roslib';
 
 	let nodesList = $state<string[]>([]);
 	let nodeData = $state<{
@@ -27,7 +29,7 @@
 	let selectedNode = $state<string>('');
 
 	const getNodes = async () => {
-		ros.value?.getNodes(
+		(getRosConnection() as ROSLIB.Ros).getNodes(
 			(nodes) => {
 				nodesList = nodes;
 			},
@@ -38,8 +40,10 @@
 	};
 
 	const changeSelectedNode = (value: string) => {
+		const ros = getRosConnection() as ROSLIB.Ros;
+
 		selectedNode = value;
-		ros.value!.getNodeDetails(
+		ros.getNodeDetails(
 			value,
 			(subscriptions: string[], publications: string[], services: string[]) => {
 				let subList: { name: string; type: string }[] = [];
@@ -47,12 +51,12 @@
 					subList.push({ name: subscriptions[i], type: '' });
 				}
 				for (let i = 0; i < publications.length; i++) {
-					ros.value!.getTopicType(publications[i], (type) => {
+					ros.getTopicType(publications[i], (type) => {
 						nodeData?.publications.push({ name: publications[i], type: type });
 					});
 				}
 				for (let i = 0; i < services.length; i++) {
-					ros.value!.getServiceType(services[i], (type) => {
+					ros.getServiceType(services[i], (type) => {
 						nodeData?.services.push({ name: services[i], type: type });
 					});
 				}
@@ -67,30 +71,30 @@
 
 	// When the client connects to ros bridge, get the list of nodes
 	$effect(() => {
-		if (isConnected()) {
+		if (getRosConnection()) {
 			getNodes();
 		}
 	});
 </script>
 
-{#if isConnected()}
-	<div class="h-full w-full flex-col">
-		<div class="flex items-center">
-			<Button variant="outline" onclick={getNodes} class="mr-2 grow-0"><Reload /></Button>
-			<Select.Root type="single" onValueChange={(value) => changeSelectedNode(value)}>
-				<Select.Trigger class="grow-0"
-					>{selectedNode === '' ? 'Select a node...' : selectedNode}</Select.Trigger
-				>
-				<Select.Content>
-					{#each nodesList as node}
-						<Select.Item value={node}>{node}</Select.Item>
-					{/each}
-				</Select.Content>
-			</Select.Root>
-		</div>
+<div class="h-full w-full flex-col">
+	<div class="flex items-center">
+		<Button variant="outline" onclick={getNodes} class="mr-2 grow-0"><Reload /></Button>
+		<Select.Root type="single" onValueChange={(value) => changeSelectedNode(value)}>
+			<Select.Trigger class="grow-0"
+				>{selectedNode === '' ? 'Select a node...' : selectedNode}</Select.Trigger
+			>
+			<Select.Content>
+				{#each nodesList as node}
+					<Select.Item value={node}>{node}</Select.Item>
+				{/each}
+			</Select.Content>
+		</Select.Root>
+	</div>
 
+	<div class="mt-2 h-[calc(100%-40px-0.5rem)] w-full">
 		{#if nodeData}
-			<ScrollArea orientation="both" class="mt-2 grow rounded-md border p-3">
+			<ScrollArea orientation="both" class="mt-2 h-full p-3">
 				<div>
 					<strong>Publications:</strong>
 					<div class="ml-8">
@@ -125,13 +129,4 @@
 			</ScrollArea>
 		{/if}
 	</div>
-{:else}
-	<div class="relative h-full w-full">
-		<div class="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-card">
-			<div class="absolute left-[50%] top-[50%] w-[80%] -translate-x-[50%] -translate-y-[50%]">
-				<p class="text-center text-2xl">No ROS Connection found.</p>
-				<p class="text-center">Make sure the rosbridge is running and the client is connected.</p>
-			</div>
-		</div>
-	</div>
-{/if}
+</div>
