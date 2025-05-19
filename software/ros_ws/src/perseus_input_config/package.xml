@@ -1,21 +1,13 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>perseus_input</name>
+  <name>perseus_input_config</name>
   <version>0.0.1</version>
-  <description>Nodes for handling input devices to operate Perseus</description>
+  <description>Config files for Perseus input nodes and launch files</description>
   <maintainer email="59348282+RandomSpaceship@users.noreply.github.com">james</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-
-  <depend>rclcpp</depend>
-  <depend>backward_ros</depend>
-  <depend>sensor_msgs</depend>
-  <depend>geometry_msgs</depend>
-  <depend>actuator_msgs</depend>
-
-  <exec_depend>perseus_input_config</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
