@@ -30,12 +30,12 @@ void printBmsStatus(bq76942& bq);
 #define noLoadTimeout 400s
 
 // This will set the battery cell overtemperature (TS1)
-int8_t cellProtectionTemp = 34;
+int8_t cellProtectionTemp = 40;
 int8_t cellRecoveryTemp = cellProtectionTemp - 3;
 std::chrono::seconds cellProtectionDelay = 2s;
 
 // This will set the FET overtemperature (TS3)
-int8_t fetProtectionTemp = 35;
+int8_t fetProtectionTemp = 50;
 int8_t fetRecoveryTemp = fetProtectionTemp - 3;
 std::chrono::seconds fetProtectionDelay = 1s;
 
@@ -326,7 +326,7 @@ void setupBms(bq76942& bq)
         });
 
         bq.settings.configuration.setDAConfiguration(bq76942::da_configuration_t{
-            .userAmps = bq76942::user_amps::MILLIAMP,
+            .userAmps = bq76942::user_amps::CENTIAMP,
             // TODO: CHANGE WHEN THERMISTORS INSTALLED
             .useInternalAsCellTemperature = false,
             .useInternalAsFetTemperature = false,
@@ -554,7 +554,7 @@ void setupBms(bq76942& bq)
         bq.protections.shortCircuit.setRecoveryTime(20s);
 
         // Protections:OCD3
-        // in mA
+        // in mA / userAmps, so centiamps?
         bq.protections.overCurrentDischarge.setTier3Threshold(-90000.0f);
         bq.protections.overCurrentDischarge.setTier3Delay(3s);
 
@@ -630,7 +630,7 @@ void setupBms(bq76942& bq)
         bq.permanentFail.setChargeCurrentThreshold(10000);
 
         // Permanent Fail:SOCD
-        bq.permanentFail.setDischargeCurrentThreshold(-200000);
+        bq.permanentFail.setDischargeCurrentThreshold(-5000); // in userA which is centiamps so 50A
 
         // Permanent Fail:SOT
 
