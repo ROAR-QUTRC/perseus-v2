@@ -124,8 +124,6 @@ void printBmsStatus(bq76942& bq)
                        status6.accumulatedCharge)
                .c_str());
 
-    
-    
     auto status = bq.getBatteryStatus();
     bool configUpdate = status.inConfigUpdateMode;
     bool inPrechargeMode = status.inPrechargeMode;
@@ -586,13 +584,11 @@ void setupBms(bq76942& bq)
         // int8_t getFetRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_RECOVERY); }
         // void setFetRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
 
-        // Protections:OTC 
-
-
         // Protections:OTD (BATTERY OVERTEMP THRESHOLD)
         bq.protections.overTemp.setDischargeThreshold(cellProtectionTemp);
-        bq.protections.overTemp.setDischargeRecoveryThreshold(cellRecoveryTemp);        
-        // bq.protections.overTemp.setDischargeDelay(cellProtectionDelay); // Standard is 2 secs
+        // bq.protections.overTemp.setDischargeDelay(cellProtectionDelay);
+
+        // Protections:OTD
 
         // Protections:OTF (FET OVERTEMP THRESHOLD)
         bq.protections.overTemp.setFetThreshold(fetProtectionTemp);
