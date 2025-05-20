@@ -19,7 +19,6 @@ constexpr float ACTIVITY_CURRENT = 100;
 void setupBms(bq76942& bq);
 void printBmsStatus(bq76942& bq);
 
-
 ////////////////////////
 // TESTING VARIABLES
 ////////////////////////
@@ -31,12 +30,14 @@ void printBmsStatus(bq76942& bq);
 #define noLoadTimeout 400s
 
 // This will set the battery cell overtemperature (TS1)
-#define cellProtectionTemp 35
-#define cellProtectionDelay 2s
+int8_t cellProtectionTemp = 34;
+int8_t cellRecoveryTemp = cellProtectionTemp - 3;
+std::chrono::seconds cellProtectionDelay = 2s;
 
 // This will set the FET overtemperature (TS3)
-#define fetProtectionTemp 40
-#define fetProtectionDelay 1s
+int8_t fetProtectionTemp = 35;
+int8_t fetRecoveryTemp = fetProtectionTemp - 3;
+std::chrono::seconds fetProtectionDelay = 1s;
 
 void setup()
 {
@@ -87,7 +88,9 @@ void loop()
         }
 
         const bool unloadedTimeout = steady_clock::now() - lastPowerFlow > noLoadTimeout;
-        const bool loadDropped = (steady_clock::now() - lastPowerFlow) > 1s && hasHadLoad;
+        // Commented this out to stop the BMS from shutting down after a load is removed
+        const bool loadDropped = false;
+        // const bool loadDropped = (steady_clock::now() - lastPowerFlow) > 1s && hasHadLoad;
         if (unloadedTimeout || loadDropped)
         {
             printf("Shutting down.\n");
@@ -103,7 +106,7 @@ void loop()
         std::this_thread::sleep_for(500ms);
         lastPowerFlow = steady_clock::now();  // delay shutdown
     }
-    vTaskDelay(50);
+    vTaskDelay(500);
 }
 
 void printBmsStatus(bq76942& bq)
@@ -115,12 +118,14 @@ void printBmsStatus(bq76942& bq)
     bool pdsg = fetStatus.predischargeFetOn;
 
     auto status6 = bq.getDAStatus6();
-    printf(std::format("PCHG: {:d}  CHG: {:d}  DSG: {:d}  PDSG: {:d} STACK_VTG: {:04} PACK_VTG: {:04d} TOTAL_MA: {:.1f} || ",
+    printf(std::format("PCHG: {:d}  CHG: {:d}  DSG: {:d}  PDSG: {:d} STACK_VTG: {:04} PACK_VTG: {:04d} LD_VTG: {:04d} TOTAL_MA: {:.1f} || ",
                        pchg, chg, dsg, pdsg,
-                       bq.getStackVoltage(), bq.getPackVoltage(),
+                       bq.getStackVoltage(), bq.getPackVoltage(), bq.getLdVoltage(),
                        status6.accumulatedCharge)
                .c_str());
 
+    
+    
     auto status = bq.getBatteryStatus();
     bool configUpdate = status.inConfigUpdateMode;
     bool inPrechargeMode = status.inPrechargeMode;
@@ -199,8 +204,9 @@ void printBmsStatus(bq76942& bq)
         printf(std::format("Cell {}: {}  ", i, bq.getCellVoltage(i)).c_str());
     }
 
-    printf(" || TS1(BAT): %.1f °C ", (bq.getThermistorTemp1() - 2731.5) / 10.0f);
-    printf("TS3(FET): %.1f °C", (bq.getThermistorTemp2() - 2731.5) / 10.0f);
+    // Print the temperature for both TS1 and TS3
+    printf(" || TS1(BAT): %.1f °C ", bq.rawTempToCelsius(bq.getThermistorTemp1()));
+    printf("TS3(FET): %.1f °C", bq.rawTempToCelsius(bq.getThermistorTemp2()));
 
     printf("\n");
 }
@@ -454,8 +460,8 @@ void setupBms(bq76942& bq)
         });
         // charge pump defaults are good (11V overdrive)
         // precharge disabled by default
-        // predischarge is voltage delta based only, no timeout
-        bq.settings.fet.setPredischargeTimeout(0ms);
+        // predischarge is voltage delta based, timeout at 5s, 0ms is no timeout
+        bq.settings.fet.setPredischargeTimeout(5000ms);
         bq.settings.fet.setPredischargeStopDelta(5000);
 
         // Settings:Current Thresholds
@@ -566,7 +572,6 @@ void setupBms(bq76942& bq)
 
         // FOR REFERENCE THESE ARE THE PARAMETERS TO SET FOR OVERTEMP THRESHOLDS FOR BATTERY CELL (DISCHARGE) AND FET THRESHOLDS
 
-
         // int8_t getDischargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_THRESHOLD); }
         // void setDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_THRESHOLD, threshold, -40, 120); }
         // std::chrono::seconds getDischargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTD_DELAY)); }
@@ -581,18 +586,18 @@ void setupBms(bq76942& bq)
         // int8_t getFetRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_RECOVERY); }
         // void setFetRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
 
+        // Protections:OTC 
 
 
-        // Protections:OTC (BATTERY OVERTEMP THRESHOLD)
+        // Protections:OTD (BATTERY OVERTEMP THRESHOLD)
         bq.protections.overTemp.setDischargeThreshold(cellProtectionTemp);
-        // bq.protections.overTemp.setDischargeDelay(cellProtectionDelay);
-
-        // Protections:OTD
-
+        bq.protections.overTemp.setDischargeRecoveryThreshold(cellRecoveryTemp);        
+        // bq.protections.overTemp.setDischargeDelay(cellProtectionDelay); // Standard is 2 secs
 
         // Protections:OTF (FET OVERTEMP THRESHOLD)
-        // bq.protections.overTemp.setFetThreshold(fetProtectionTemp);
-        // bq.protections.overTemp.setFetDelay(fetProtectionDelay);
+        bq.protections.overTemp.setFetThreshold(fetProtectionTemp);
+        bq.protections.overTemp.setFetRecoveryThreshold(fetRecoveryTemp);
+        // bq.protections.overTemp.setFetDelay(fetProtectionDelay); // Standard is 2 secs
 
         // Protections:OTINT
 

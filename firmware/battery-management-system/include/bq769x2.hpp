@@ -10,7 +10,8 @@
 #include <type_traits>
 #include <vector>
 
-struct AlarmRegister {
+struct AlarmRegister
+{
     const char* name;
     uint8_t value;
 };
@@ -2445,18 +2446,22 @@ public:
             void setChargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTC_RECOVERY, threshold, -40, 120); }
 
             int8_t getDischargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_THRESHOLD); }
-            void setDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_THRESHOLD, threshold, -40, 120); }
+            void setDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommand(data_register::OTD_THRESHOLD, threshold); }
+            // void setDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::OTD_THRESHOLD, threshold, -40, 120); }
             std::chrono::seconds getDischargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTD_DELAY)); }
             void setDischargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTD_DELAY, static_cast<uint8_t>(delay.count())); }
             int8_t getDischargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_RECOVERY); }
-            void setDischargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_RECOVERY, threshold, -40, 120); }
+            void setDischargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommand(data_register::OTD_RECOVERY, threshold); }
+            // void setDischargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::OTD_RECOVERY, threshold, -40, 120); }
 
             int8_t getFetThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_THRESHOLD); }
-            void setFetThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_THRESHOLD, threshold, 0, 150); }
+            void setFetThreshold(const int8_t& threshold) const { _parent.writeSubcommand(data_register::OTF_THRESHOLD, threshold); }
+            // void setFetThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::OTF_THRESHOLD, threshold, 0, 150); }
             std::chrono::seconds getFetDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTF_DELAY)); }
             void setFetDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTF_DELAY, static_cast<uint8_t>(delay.count())); }
             int8_t getFetRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_RECOVERY); }
-            void setFetRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
+            void setFetRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommand(data_register::OTF_RECOVERY, threshold); }
+            // void setFetRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
 
             int8_t getInternalThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTINT_THRESHOLD); }
             void setInternalThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTINT_THRESHOLD, threshold, -40, 120); }
