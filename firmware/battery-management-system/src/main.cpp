@@ -630,7 +630,7 @@ void setupBms(bq76942& bq)
         bq.permanentFail.setChargeCurrentThreshold(10000);
 
         // Permanent Fail:SOCD
-        bq.permanentFail.setDischargeCurrentThreshold(-5000); // in userA which is centiamps so 50A
+        bq.permanentFail.setDischargeCurrentThreshold(-5000);  // in userA which is centiamps so 50A
 
         // Permanent Fail:SOT
 
