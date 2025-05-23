@@ -39,5 +39,4 @@ generic_controller:
         axis: 6
       magnet:
         hold: true
-        button_positive: 0
-        button_negative: 1
+        axis: 7

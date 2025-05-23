@@ -45,7 +45,7 @@ def generate_launch_description():
         is_xbox, xbox_controller_config, eightbitdo_controller_config
     )
     preferred_config_path = PathJoinSubstitution(
-        [FindPackageShare("perseus_input"), "config", controller_config_name]
+        [FindPackageShare("perseus_input_config"), "config", controller_config_name]
     )
     config_path = IfElseSubstitution(
         EqualsSubstitution(config, ""), preferred_config_path, config

@@ -16,6 +16,10 @@
             "path": "./firmware/processing-plant"
         },
         {
+            "name": "Excavation Bucket Firmware",
+            "path": "./firmware/excavation-bucket"
+        },
+        {
             "name": "Hardware",
             "path": "./hardware"
         }
