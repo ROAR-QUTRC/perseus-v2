@@ -5,6 +5,7 @@
 	export const name = 'Topic monitor';
 	export const description = 'Monitor the content and vitals of ROS topics';
 	export const group = 'ROS';
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
@@ -24,6 +25,9 @@
 				createMonitor: {
 					type: 'button'
 				},
+				refreshTopics: {
+					type: 'button'
+				},
 				config: {
 					type: 'text',
 					value: '',
@@ -36,7 +40,7 @@
 
 <script lang="ts">
 	// TODO: make this use isConnected instead of ros.value === null
-	import { isConnected, ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
@@ -55,7 +59,7 @@
 
 	let rosConnected = $state<boolean>(false);
 	$effect(() => {
-		if (!isConnected()) {
+		if (!getRosConnection()) {
 			untrack(() => {
 				rosConnected = false;
 				settings.groups.newMonitor.topic.options = [];
@@ -73,11 +77,13 @@
 	});
 
 	const innit = () => {
-		if (ros.value === null) return;
+		if (!getRosConnection()) return;
+
+		const ros = getRosConnection() as ROSLIB.Ros;
 
 		settings.groups.newMonitor.topic.value = '';
 
-		ros.value.getTopics(
+		ros.getTopics(
 			(topics) => {
 				const topicOptions = topics.topics.map((topic) => {
 					return {
@@ -110,10 +116,10 @@
 			console.error('How are we subscribed to a topic with no monitor?');
 			return;
 		}
-		if (message.data !== undefined)
-			monitors[index].lastData = JSON.stringify(JSON.parse(message.data), null, 2)
-				.replaceAll('\n', '<br>')
-				.replaceAll(' ', '&nbsp;&nbsp;&nbsp;&nbsp;');
+
+		monitors[index].lastData = JSON.stringify(JSON.parse(JSON.stringify(message)), null, 2)
+			.replaceAll('\n', '<br>')
+			.replaceAll(' ', '&nbsp;&nbsp;&nbsp;&nbsp;');
 
 		// update frequency
 		monitors[index].currentFrequency = 1000 / (Date.now() - monitors[index].lastMessage);
@@ -121,7 +127,7 @@
 	};
 
 	const addMonitor = (topic: string | undefined, frequency: number, loadedFromConfig: boolean) => {
-		if (ros.value === null) return 'ROS not connected';
+		if (!getRosConnection()) return 'ROS not connected';
 
 		if (topic === '' || topic === undefined) return 'No topic selected';
 
@@ -130,17 +136,18 @@
 			if (monitor.topic === topic) return 'Monitor already exists';
 		}
 
+		const ros = getRosConnection() as ROSLIB.Ros;
+
 		// Find the topic type
-		ros.value.getTopicType(
+		ros.getTopicType(
 			topic,
 			(topicType) => {
 				// subscribe to ros topic
 				const listener = new ROSLIB.Topic({
-					ros: ros.value!,
+					ros: ros,
 					name: topic,
 					messageType: topicType
 				});
-
 				listener.subscribe((message) => onMessage(message, topic));
 
 				// if this is a new monitor, add it to the config
@@ -194,6 +201,7 @@
 
 		return 'Monitor created';
 	};
+
 	function getColor(value: number) {
 		//value from 0 to 1
 		value = Math.abs(value);
@@ -204,9 +212,14 @@
 	}
 
 	onMount(() => {
-		// add action for button
+		// add action for buttons
 		settings.groups.newMonitor.createMonitor.action = (): string => {
 			return addMonitor(settings.groups.newMonitor.topic.value, 10, false);
+		};
+
+		settings.groups.newMonitor.refreshTopics.action = (): string => {
+			innit();
+			return 'Topics refreshed';
 		};
 
 		return () => {
@@ -243,10 +256,8 @@
 				{#each monitors as monitor}
 					<tr class="border">
 						<td class="border p-2">{monitor.topic}</td>
-						<td class="border p-2"
-							><ScrollArea class="h-[200px]" orientation="vertical"
-								>{@html monitor.lastData}</ScrollArea
-							></td
+						<td class="max-h-[200px] w-full overflow-hidden border p-2"
+							><ScrollArea class="" orientation="vertical">{@html monitor.lastData}</ScrollArea></td
 						>
 						<td class="min-w-[140px] border p-2 text-black"
 							><p

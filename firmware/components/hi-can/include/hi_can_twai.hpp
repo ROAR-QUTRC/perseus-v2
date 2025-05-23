@@ -14,13 +14,7 @@ namespace hi_can
     class TwaiInterface : public FilteredCanInterface
     {
     public:
-        /**
-         * @brief Pair of pins to use for the CAN bus interface
-         *
-         * The first pin is for TX, and the second is RX.
-         */
-        typedef std::tuple<gpio_num_t, gpio_num_t> pin_pair_t;
-        static TwaiInterface& getInstance(pin_pair_t pins = std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), uint8_t controllerId = 0, addressing::filter_t filter = {});
+        static TwaiInterface& getInstance(bsp::pin_pair_t pins = std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), uint8_t controllerId = 0, addressing::filter_t filter = {});
         virtual ~TwaiInterface();
 
         // allow moving but not copying
@@ -63,7 +57,7 @@ namespace hi_can
     private:
         static constexpr uint8_t INVALID_INTERFACE_ID = 255;
         TwaiInterface() = default;  // FOR MOVE SEMANTICS ONLY
-        TwaiInterface(pin_pair_t pins, uint8_t controllerId, addressing::filter_t filter);
+        TwaiInterface(bsp::pin_pair_t pins, uint8_t controllerId, addressing::filter_t filter);
 
         uint8_t _controllerId = INVALID_INTERFACE_ID;
         twai_handle_t _twaiBus;
