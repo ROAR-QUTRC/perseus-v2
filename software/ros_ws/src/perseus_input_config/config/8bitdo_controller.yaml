@@ -18,7 +18,7 @@ generic_controller:
       turn:
         turbo: 2.5
         axis: 0
-        scaling: 0.5
+        scaling: 1.0
         enable:
           follows: drive.forward.enable
         turbo_enable:
@@ -40,5 +40,5 @@ generic_controller:
         button_negative: 13
       magnet:
         hold: true
-        button_positive: 0
-        button_negative: 1
+        button_positive: 11
+        button_negative: 12

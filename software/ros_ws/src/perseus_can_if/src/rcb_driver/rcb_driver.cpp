@@ -83,7 +83,15 @@ void RcbDriver::_canToRos()
     {
         const auto& data = group.getStatus();
 
-        busData[name] = {{"current", data.current}, {"voltage", data.voltage}, {"power_off", data.status}};
+        static int status = -1;
+        if (status != static_cast<int>(data.status))
+        {
+            status = static_cast<int>(data.status);
+            RCLCPP_INFO(get_logger(), "Bus %s status: %d", name.c_str(), status);
+        }
+
+        // RCLCPP_INFO(get_logger(), "Publishing message: current: %d, voltage: %d, status: %d", data.current, data.voltage, data.status == hi_can::parameters::legacy::power::control::power_bus::power_status::OFF);
+        busData[name] = {{"current", data.current}, {"voltage", data.voltage}, {"status", static_cast<int>(data.status)}};
     }
 
     message.data = busData.dump();
@@ -101,9 +109,10 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
     {
         // Parse the message
         auto data = nlohmann::json::parse(msg->data);
-
         auto group = std::find_if(BUS_GROUPS.begin(), BUS_GROUPS.end(), [&data](const auto& pair)
-                                  { return pair.first == data["bus"].dump(); });
+                                  { return pair.first == data["bus"].get<std::string>(); });
+
+        RCLCPP_INFO(get_logger(), "Setting power state of bus: %s to %s", data["bus"].get<std::string>().c_str(), data["on"].get<std::string>().c_str());
 
         using namespace hi_can::addressing::legacy::power::control::rcb;
 
@@ -113,7 +122,7 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
                                 static_cast<uint8_t>(power::control::power_bus::parameter::CONTROL_IMMEDIATE));
 
         _canInterface->transmit(Packet(static_cast<addressing::flagged_address_t>(address),
-                                       immediate_control_t(_immediate_control_t{data["on"].dump() == "0", false, 0}).serializeData()));
+                                       immediate_control_t(_immediate_control_t{data["on"].get<std::string>()[0] == '0', false, 0}).serializeData()));
     }
     catch (const std::exception& e)
     {
