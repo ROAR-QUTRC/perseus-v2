@@ -195,6 +195,7 @@ M2M2Lidar::M2M2Lidar(const rclcpp::NodeOptions& options)
 
     // Initialize publishers and timers
     RCLCPP_DEBUG(this->get_logger(), "Initializing publishers...");
+
     _initializePublishers();
 
     RCLCPP_DEBUG(this->get_logger(), "Creating timers...");
@@ -656,6 +657,7 @@ void M2M2Lidar::_readSensorData()
 void M2M2Lidar::_readImuData()
 {
     static int error_count = 0;
+
     RCLCPP_DEBUG(this->get_logger(), "Requesting IMU data...");
 
     if (!_sendJsonRequest(IMU_COMMAND))
@@ -667,6 +669,7 @@ void M2M2Lidar::_readImuData()
             RCLCPP_WARN(this->get_logger(),
                         "Multiple IMU request failures - may need to reconnect");
         }
+
         return;
     }
 
@@ -830,6 +833,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
 
             float t = (targetAngle - a1) / (a2 - a1);
             float dist = std::lerp(get<1>(p1), get<1>(p2), t);
+
             interpolated.emplace_back(targetAngle, dist, true);
         }
         else if (sourcePointIndex == points.size())
@@ -863,6 +867,7 @@ std::vector<std::tuple<float, float, bool>> M2M2Lidar::_interpolatePoints(
 
             float t = (targetAngle - get<0>(p1)) / (get<0>(p2) - get<0>(p1));
             float dist = std::lerp(get<1>(p1), get<1>(p2), t);
+
             interpolated.emplace_back(targetAngle, dist, true);
         }
     }
