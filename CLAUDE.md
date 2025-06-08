@@ -8,9 +8,10 @@ Perseus v2 is a lunar rover project with a comprehensive ROS 2-based software st
 
 ## Build System
 
-This project uses **Nix flakes** rather than traditional build systems for reproducibility and dependency management. 
+This project uses **Nix flakes** rather than traditional build systems for reproducibility and dependency management.
 
 ### Environment Setup
+
 ```bash
 # Enter development environment (sets up all dependencies)
 nix develop
@@ -18,11 +19,12 @@ nix develop
 # For simulation environment
 nix develop .#simulation
 
-# For documentation environment  
+# For documentation environment
 nix develop .#docs
 ```
 
 ### Key Build Commands
+
 ```bash
 # Build the default workspace (includes all ROS packages)
 nix build
@@ -42,11 +44,13 @@ nix fmt
 ## ROS 2 Workspace
 
 ### Environment Variables
-- ROS_DOMAIN_ID: 51 (development), 42 (production)  
+
+- ROS_DOMAIN_ID: 51 (development), 42 (production)
 - RMW_IMPLEMENTATION: rmw_cyclonedx_cpp (CycloneDDS middleware)
 - RCUTILS_COLORIZED_OUTPUT: 1 (colored output)
 
 ### Common ROS Commands
+
 ```bash
 # Launch full rover system
 nix run .#perseus
@@ -65,6 +69,7 @@ ros2 launch autonomy perseus_nav_bringup.launch.py
 ```
 
 ### Package Structure
+
 - `perseus/perseus_*`: Main rover packages (full system)
 - `perseus_lite/perseus_lite_*`: Simplified rover variant
 - `autonomy/`: Navigation and mapping functionality
@@ -76,18 +81,20 @@ ros2 launch autonomy perseus_nav_bringup.launch.py
 ## Native C++ Libraries (software/shared/)
 
 Shared libraries built with CMake, used across ROS and firmware:
+
 - `hi-can*`: CAN bus communication protocols
 - `crc/`: CRC calculation utilities
 - `simple-networking/`: Network communication
 - `fd-wrapper/`: File descriptor utilities
 
 Build pattern:
+
 ```bash
 mkdir build && cd build
 cmake .. && make
 ```
 
-## Web UI Development 
+## Web UI Development
 
 Located in `software/web_ui/`, built with SvelteKit + TypeScript.
 
@@ -106,6 +113,7 @@ yarn camera
 ```
 
 Key components:
+
 - Widget-based dashboard system in `src/lib/widgets/`
 - ROS bridge for real-time communication in `src/lib/scripts/ros-bridge.svelte.ts`
 - UI components in `src/lib/components/ui/`
@@ -113,15 +121,18 @@ Key components:
 ## Firmware Development
 
 ESP32-based firmware in `firmware/` using PlatformIO with ESP-IDF:
+
 - `battery-management-system/`: BMS controller
 - `elevator-module/`: Elevator control
-- `excavation-bucket/`: Bucket operations  
+- `excavation-bucket/`: Bucket operations
 - `light-tower/`: Status lighting
 
 ## Hardware Requirements
 
 ### OpenGL Applications
+
 ROS GUI tools (rviz2, Gazebo) require special handling on non-NixOS systems:
+
 ```bash
 # Use nixgl wrapper for OpenGL applications
 nixgl rviz2
@@ -129,6 +140,7 @@ nixgl gz sim
 ```
 
 ### CAN Bus Setup
+
 ```bash
 # Set up virtual CAN for testing
 ./software/scripts/vcan-setup.sh
@@ -137,18 +149,21 @@ nixgl gz sim
 ## Architecture Notes
 
 ### Communication Stack
+
 - **ROS 2**: High-level robot coordination and control
-- **CAN Bus**: Real-time motor control and sensor data  
+- **CAN Bus**: Real-time motor control and sensor data
 - **WebRTC/WebSocket**: Web UI communication
 - **hi-can protocol**: Custom CAN communication layer
 
 ### System Integration
+
 - ROS 2 packages handle high-level behaviors (navigation, teleoperation)
 - Hardware interface packages bridge ROS to CAN bus using hi-can libraries
 - Web UI provides operator interface via rosbridge
 - Firmware handles low-level motor control and sensor acquisition
 
 ### Development vs Production
+
 - Development uses domain ID 51 with additional debugging tools
-- Production uses domain ID 42 with minimal overhead  
+- Production uses domain ID 42 with minimal overhead
 - Nix flake provides both environments with same software versions
