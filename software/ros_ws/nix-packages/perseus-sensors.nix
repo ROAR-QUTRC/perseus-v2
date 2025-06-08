@@ -9,6 +9,7 @@
   rclcpp,
   realsense2-camera,
   realsense2-description,
+  rplidar-ros,
   sensor-msgs,
   simple-networking,
 }:
@@ -27,6 +28,7 @@ buildRosPackage rec {
     rclcpp
     realsense2-camera
     realsense2-description
+    rplidar-ros
     sensor-msgs
     simple-networking
   ];
