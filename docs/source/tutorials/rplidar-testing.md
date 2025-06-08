@@ -66,6 +66,7 @@ nix develop --command ros2 launch rplidar_ros rplidar_c1_launch.py
 ```
 
 This starts the RPLidar node with these default parameters:
+
 - Serial port: `/dev/ttyUSB0`
 - Baudrate: `460800`
 - Frame ID: `laser`
