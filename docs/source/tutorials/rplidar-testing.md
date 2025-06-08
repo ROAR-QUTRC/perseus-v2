@@ -173,5 +173,3 @@ The RPLidar data integrates with Perseus navigation through:
 - Topic remapping: `/scan` data is used by navigation algorithms
 - Frame transforms: The `laser` frame is linked to the robot's base frame
 - Sensor fusion: Combined with other sensors for autonomous navigation
-
-For full navigation setup, see the [Autonomy](../home/perseus-operation/autonomy.md) guide.
