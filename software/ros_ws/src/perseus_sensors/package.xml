@@ -17,6 +17,7 @@
   <depend>nlohmann-json-dev</depend>
   <exec_depend>realsense2-camera</exec_depend>
   <exec_depend>realsense2-description</exec_depend>
+  <exec_depend>rplidar_ros</exec_depend>
   
 
   <export>
