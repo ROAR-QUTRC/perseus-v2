@@ -178,8 +178,8 @@ namespace perseus_lite_hardware
 
             // Set the servos as wheel mode and enable torque
             // Using enum classes instead of #define constants
-            const uint8_t modeReg = static_cast<uint8_t>(ServoEpromRegister::MODE);
-            const uint8_t torqueReg = static_cast<uint8_t>(ServoSramRegister::TORQUE_ENABLE);
+            const uint8_t modeRegister = static_cast<uint8_t>(ServoEpromRegister::MODE);
+            const uint8_t torqueRegister = static_cast<uint8_t>(ServoSramRegister::TORQUE_ENABLE);
 
             // Set wheel mode and enable torque for each servo
             for (uint8_t servo_id : _servo_ids_)
@@ -188,7 +188,7 @@ namespace perseus_lite_hardware
                              "Setting wheel mode for servo %d", servo_id);
 
                 // Set wheel mode command
-                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{modeReg, WHEEL_MODE_VALUE}))
+                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{modeRegister, WHEEL_MODE_VALUE}))
                 {
                     RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
                                  "Failed to set wheel mode for servo %d", servo_id);
@@ -202,7 +202,7 @@ namespace perseus_lite_hardware
                              "Enabling torque for servo %d", servo_id);
 
                 // Enable torque command
-                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{torqueReg, TORQUE_ENABLE_VALUE}))
+                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{torqueRegister, TORQUE_ENABLE_VALUE}))
                 {
                     RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
                                  "Failed to enable torque for servo %d", servo_id);
@@ -432,9 +432,9 @@ namespace perseus_lite_hardware
 
                 // Build write command for velocity - format matches SMS_STS::write_speed
                 // Using the enum class for the goal speed register
-                const uint8_t goalSpeedReg = static_cast<uint8_t>(ServoSramRegister::GOAL_SPEED_L);
+                const uint8_t goalSpeedRegister = static_cast<uint8_t>(ServoSramRegister::GOAL_SPEED_L);
                 const std::array<uint8_t, 3> vel_data{
-                    goalSpeedReg,
+                    goalSpeedRegister,
                     static_cast<uint8_t>(servo_speed & 0xFF),
                     static_cast<uint8_t>((servo_speed >> 8) & 0xFF)};
 
