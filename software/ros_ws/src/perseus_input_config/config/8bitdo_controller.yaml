@@ -18,7 +18,7 @@ generic_controller:
       turn:
         turbo: 2.5
         axis: 0
-        scaling: 0.5
+        scaling: 1.0
         enable:
           follows: drive.forward.enable
         turbo_enable:
