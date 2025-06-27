@@ -71,7 +71,7 @@
 </script>
 
 <script lang="ts">
-	import WebrtcClient from '$lib/widgets/videoWebrtc/webrtcClient.svelte';
+	import WebrtcClient from '$lib/widgets/videoWebrtc-old/webrtcClient.svelte';
 	import { io, type Socket } from 'socket.io-client';
 	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -175,6 +175,7 @@
 		});
 	});
 
+	// Update the settings when the config changes
 	$effect(() => {
 		// ensure config has been applied
 		let config: string | string[] | undefined = settings.groups.cameraSetup.config.value;
@@ -276,6 +277,7 @@
 		});
 	});
 
+	// Initialise the camera setup settings and request the camera groups
 	onMount(() => {
 		settings.groups.cameraSetup.create.action = (): string => {
 			if (
