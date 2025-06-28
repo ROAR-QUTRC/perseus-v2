@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import config from './config.json';
 import fs, { watch } from 'node:fs';
 import { networkInterfaces } from 'os';
-import { spawn } from 'node:child_process';
+import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
 type videoTransformType =
 	| 'none'
@@ -17,14 +17,17 @@ type videoTransformType =
 
 interface CameraEventType {
 	type: 'camera';
-	action: 'group-description' | 'kill' | 'request-groups' | 'request-stream' | 'group-terminated';
+	action:
+		| 'group-description'
+		| 'kill'
+		| 'request-groups'
+		| 'request-stream'
+		| 'group-terminated'
+		| 'device-disconnect';
 	data: {
-		ip?: string;
 		devices?: string[];
-		properties?: {
-			resolution?: { width: number; height: number };
-			transform?: videoTransformType;
-		};
+		resolution?: { width: number; height: number };
+		transform?: videoTransformType;
 	};
 }
 
@@ -49,11 +52,11 @@ socket.on('connect', () => {
 
 let retryCount = 0;
 socket.on('connect_error', (error) => {
-	retryCount++;
-	if (retryCount > 15) {
-		log(`Giving up. Please check the config.`);
-		process.exit(1);
-	}
+	// retryCount++;
+	// if (retryCount > 15) {
+	// 	log(`Giving up. Please check the config.`);
+	// 	process.exit(1);
+	// }
 	log(`Connection error, please check the config. Retrying...`);
 });
 
@@ -84,11 +87,19 @@ watch('/dev/v4l/by-id', (eventType, filename) => {
 		if (videoDevices.includes(filename)) {
 			log(`Video device removed: ${formatDeviceName(filename)}`);
 			videoDevices = videoDevices.filter((device) => device !== filename);
+
+			socket.send({
+				type: 'camera',
+				action: 'device-disconnect',
+				data: { devices: [filename] }
+			});
 		} else {
 			log(`Video device added: ${formatDeviceName(filename)}`);
 			videoDevices.push(filename);
+
+			initMessage.data.devices = videoDevices;
+			socket.send(initMessage);
 		}
-		// TODO - send an event to the web server with the updated list of devices
 	}
 });
 
@@ -99,7 +110,7 @@ watch('/dev/v4l/by-id', (eventType, filename) => {
 let initMessage: CameraEventType = {
 	type: 'camera',
 	action: 'group-description',
-	data: { ip: ip, devices: videoDevices }
+	data: { devices: videoDevices }
 };
 
 if (ip) {
@@ -111,17 +122,6 @@ if (ip) {
 }
 
 // -------------------------------------
-//       Start signalling server
-// -------------------------------------
-
-// const signallingServer = spawn('gst-webrtc-signalling-server');
-// signallingServer.stdout.pipe(process.stdout);
-
-// signallingServer.stderr.on('data', (data) => {
-// 	log(` [ERROR] Signalling server: ${data}`);
-// });
-
-// -------------------------------------
 //        Handle socket events
 // -------------------------------------
 
@@ -130,13 +130,67 @@ let gstInstances: {
 	device: string;
 	resolution?: { width: number; height: number };
 	transform?: videoTransformType;
-	instance: any;
+	instance: ChildProcessWithoutNullStreams;
 }[] = [];
+
+const startStream = (
+	device: string,
+	resolution: { width: number; height: number },
+	transform: videoTransformType
+) => {
+	let gstArgs = [
+		'webrtcsink',
+		'stun-server=NULL',
+		'name=ws',
+		`signalling-server-host=${config.webserverIp}`,
+		`meta="meta,device=${device}"`
+	];
+	if (device === 'test') gstArgs.push('videotestsrc');
+	else gstArgs.push('v4l2src', `device=/dev/v4l/by-id/${device}`);
+	gstArgs.push(
+		'!',
+		`video/x-raw,width=${resolution.width},height=${resolution.height}`,
+		'!',
+		'videoconvert'
+	);
+	if (transform !== 'none') gstArgs.push('!', `videoflip`, `method=${transform}`);
+	gstArgs.push('!', 'ws.');
+
+	gstInstances.push({
+		device: device,
+		resolution: resolution,
+		transform: transform,
+		instance: spawn('gst-launch-1.0', gstArgs)
+	});
+
+	gstInstances.at(-1)!.instance.stdout.pipe(process.stdout);
+	gstInstances.at(-1)!.instance.stderr.pipe(process.stderr);
+};
 
 socket.on('camera-event', (event: CameraEventType) => {
 	// Return if the target device is not owned by this server
-	if (event.data.devices && !videoDevices.includes(event.data.devices[0])) return;
+	if (event.data && event.data.devices && !videoDevices.includes(event.data.devices[0])) return;
 	switch (event.action) {
+		case 'request-groups':
+			initMessage.data.devices = videoDevices;
+			socket.send(initMessage);
+			break;
+		case 'request-stream':
+			log(`Requesting stream for device: ${event.data?.devices?.[0]}`);
+			let index = gstInstances.findIndex(
+				(instance) => instance.device === event.data?.devices?.[0]
+			);
+
+			if (index !== -1) {
+			} else {
+				log(`Starting stream for device: ${event.data?.devices?.[0]}`);
+				startStream(
+					event.data.devices![0],
+					event.data.resolution ? event.data.resolution! : { width: 640, height: 480 },
+					event.data.transform ? event.data.transform! : 'none'
+				);
+			}
+			break;
 		case 'group-description':
 			// ignore self sent messages
 			break;
@@ -149,4 +203,13 @@ socket.on('camera-event', (event: CameraEventType) => {
 //    Gracefully shutdown the server
 // -------------------------------------
 
-process.on('SIGINT', () => {});
+process.on('SIGINT', () => {
+	log('Shutting down...');
+
+	initMessage.action = 'group-terminated';
+	socket.send(initMessage);
+	gstInstances.forEach((gstInstance) => {
+		gstInstance.instance.kill();
+	});
+	socket.close();
+});
