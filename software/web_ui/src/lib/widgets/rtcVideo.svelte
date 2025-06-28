@@ -82,7 +82,6 @@
 		ws
 	} from './webrtc/signalHandler.svelte';
 	import VideoWrapper from './webrtc/videoWrapper.svelte';
-	import WebrtcStream from './videoWebrtc-old/webrtcStream.svelte';
 
 	let socket: Socket = io();
 
@@ -255,9 +254,6 @@
 			});
 		};
 	});
-
-	$inspect(peerConnections);
-	$inspect(config);
 
 	// -------------------------------------
 	// Video settings functions
