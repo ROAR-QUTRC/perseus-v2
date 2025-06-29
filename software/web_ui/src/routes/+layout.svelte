@@ -26,7 +26,7 @@
 
 	// automatically connect and disconnect from ROS-bridge
 	onMount(() => {
-		// connectRos(localStore('rosAddress', window.location.hostname).value);
+		connectRos(localStore('rosAddress', window.location.hostname).value);
 		// This really should be it's own function (the return value is the onUnMount function)
 		return () => {
 			if (getRosConnection()) disconnectRos();
