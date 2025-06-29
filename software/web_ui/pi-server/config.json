@@ -1,4 +1,4 @@
 {
-  "webserverIp": "localhost",
-  "webserverPort": 5173
+  "webserverIp": "192.168.50.225",
+  "webserverPort": 3000
 }
