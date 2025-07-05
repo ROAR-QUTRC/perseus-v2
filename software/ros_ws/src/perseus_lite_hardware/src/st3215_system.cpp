@@ -580,6 +580,15 @@ namespace perseus_lite_hardware
             // Extract packet data (skip header, ID, length)
             const std::span packet{response.data() + i + PACKET_MIN_SIZE, static_cast<size_t>(length)};
 
+            // Validate index bounds before accessing arrays
+            if (static_cast<size_t>(index) >= _servo_states_.size())
+            {
+                RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
+                             "Invalid servo index %ld for ID %d (max: %zu)",
+                             index, id, _servo_states_.size());
+                continue;
+            }
+
             // Lock state mutex while updating
             std::lock_guard<std::mutex> state_lock(_state_mutex_);
             auto& state = _servo_states_[index];
@@ -665,6 +674,19 @@ namespace perseus_lite_hardware
     {
         try
         {
+            // Validate index bounds before accessing arrays
+            if (index >= _last_update_times_.size() || 
+                index >= _current_positions_.size() || 
+                index >= _current_velocities_.size() || 
+                index >= _temperatures_.size())
+            {
+                RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
+                             "Invalid servo index %zu for ID %d (max arrays: %zu, %zu, %zu, %zu)",
+                             index, id, _last_update_times_.size(), _current_positions_.size(),
+                             _current_velocities_.size(), _temperatures_.size());
+                return false;
+            }
+
             // Update the timestamp first
             _last_update_times_[index] = rclcpp::Clock(RCL_ROS_TIME).now();
 
