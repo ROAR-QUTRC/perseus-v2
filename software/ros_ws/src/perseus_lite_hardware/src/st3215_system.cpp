@@ -394,21 +394,21 @@ namespace perseus_lite_hardware
             {
                 // Log input command speed
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                            "Servo %d - Input command speed (rad/s): %f",
-                            _servo_ids_[i], _command_speeds_[i]);
+                             "Servo %d - Input command speed (rad/s): %f",
+                             _servo_ids_[i], _command_speeds_[i]);
 
                 // Convert velocity command to servo units
                 // ST3215 expects -1000 to 1000 for velocity
                 const double normalized_velocity = _command_speeds_[i] * RAD_S_TO_RPM;  // to RPM
 
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                            "Servo %d - Converted to RPM: %f",
-                            _servo_ids_[i], normalized_velocity);
+                             "Servo %d - Converted to RPM: %f",
+                             _servo_ids_[i], normalized_velocity);
 
                 // Debug print the MAX_RPM value being used
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                            "Servo %d - Using MAX_RPM value: %f",
-                            _servo_ids_[i], MAX_RPM);
+                             "Servo %d - Using MAX_RPM value: %f",
+                             _servo_ids_[i], MAX_RPM);
 
                 // Normal conversion (comment out when testing fixed speed)
                 int16_t servo_speed = static_cast<int16_t>(
@@ -417,8 +417,8 @@ namespace perseus_lite_hardware
                                static_cast<double>(MAX_VELOCITY_RPM)));
 
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                            "Servo %d - Calculated servo speed (before direction): %d",
-                            _servo_ids_[i], servo_speed);
+                             "Servo %d - Calculated servo speed (before direction): %d",
+                             _servo_ids_[i], servo_speed);
 
                 // Convert to protocol format (handle negative values per SMS/STS protocol)
                 if (servo_speed < 0)
@@ -440,8 +440,8 @@ namespace perseus_lite_hardware
 
                 // Debug print the final bytes being sent
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                            "Servo %d - Final velocity bytes: 0x%02X 0x%02X",
-                            _servo_ids_[i], vel_data[1], vel_data[2]);
+                             "Servo %d - Final velocity bytes: 0x%02X 0x%02X",
+                             _servo_ids_[i], vel_data[1], vel_data[2]);
 
                 if (!sendServoCommand(_servo_ids_[i], ServoCommand::WRITE, std::span{vel_data}))
                 {
