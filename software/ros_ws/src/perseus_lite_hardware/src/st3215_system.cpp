@@ -393,7 +393,7 @@ namespace perseus_lite_hardware
             for (size_t i = 0; i < _servo_ids_.size(); ++i)
             {
                 // Log input command speed
-                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                             "Servo %d - Input command speed (rad/s): %f",
                             _servo_ids_[i], _command_speeds_[i]);
 
@@ -401,12 +401,12 @@ namespace perseus_lite_hardware
                 // ST3215 expects -1000 to 1000 for velocity
                 const double normalized_velocity = _command_speeds_[i] * RAD_S_TO_RPM;  // to RPM
 
-                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                             "Servo %d - Converted to RPM: %f",
                             _servo_ids_[i], normalized_velocity);
 
                 // Debug print the MAX_RPM value being used
-                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                             "Servo %d - Using MAX_RPM value: %f",
                             _servo_ids_[i], MAX_RPM);
 
@@ -416,7 +416,7 @@ namespace perseus_lite_hardware
                                static_cast<double>(MIN_VELOCITY_RPM),
                                static_cast<double>(MAX_VELOCITY_RPM)));
 
-                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                             "Servo %d - Calculated servo speed (before direction): %d",
                             _servo_ids_[i], servo_speed);
 
@@ -439,7 +439,7 @@ namespace perseus_lite_hardware
                     static_cast<uint8_t>((servo_speed >> 8) & 0xFF)};
 
                 // Debug print the final bytes being sent
-                RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME),
+                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                             "Servo %d - Final velocity bytes: 0x%02X 0x%02X",
                             _servo_ids_[i], vel_data[1], vel_data[2]);
 
