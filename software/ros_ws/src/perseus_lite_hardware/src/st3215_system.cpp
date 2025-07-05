@@ -411,10 +411,20 @@ namespace perseus_lite_hardware
                              _servo_ids_[i], MAX_RPM);
 
                 // Normal conversion (comment out when testing fixed speed)
-                int16_t servo_speed = static_cast<int16_t>(
-                    std::clamp(normalized_velocity * (MAX_VELOCITY_RPM / MAX_RPM),
-                               static_cast<double>(MIN_VELOCITY_RPM),
-                               static_cast<double>(MAX_VELOCITY_RPM)));
+                // Safe conversion with overflow protection
+                double scaled_velocity = normalized_velocity * (MAX_VELOCITY_RPM / MAX_RPM);
+                double clamped_velocity = std::clamp(scaled_velocity,
+                                                   static_cast<double>(MIN_VELOCITY_RPM),
+                                                   static_cast<double>(MAX_VELOCITY_RPM));
+                
+                // Ensure value is within int16_t range before conversion
+                if (clamped_velocity > std::numeric_limits<int16_t>::max()) {
+                    clamped_velocity = std::numeric_limits<int16_t>::max();
+                } else if (clamped_velocity < std::numeric_limits<int16_t>::min()) {
+                    clamped_velocity = std::numeric_limits<int16_t>::min();
+                }
+                
+                int16_t servo_speed = static_cast<int16_t>(clamped_velocity);
 
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                              "Servo %d - Calculated servo speed (before direction): %d",
@@ -631,30 +641,43 @@ namespace perseus_lite_hardware
                 // Check if this is a status response (should have at least 8 bytes of data)
                 if (packet.size() >= STATUS_PACKET_DATA_SIZE)
                 {
-                    // Extract position (2 bytes, little endian)
-                    int16_t raw_pos = static_cast<int16_t>(
-                        packet[POSITION_LOW_BYTE_INDEX] | (packet[POSITION_HIGH_BYTE_INDEX] << 8));
+                    // Extract position (2 bytes, little endian) with safe conversion
+                    // Ensure we have valid indices before accessing packet data
+                    if (POSITION_LOW_BYTE_INDEX < packet.size() && POSITION_HIGH_BYTE_INDEX < packet.size())
+                    {
+                        uint16_t raw_pos_unsigned = static_cast<uint16_t>(
+                            packet[POSITION_LOW_BYTE_INDEX] | (static_cast<uint16_t>(packet[POSITION_HIGH_BYTE_INDEX]) << 8));
+                        
+                        // Safe conversion to signed integer
+                        int16_t raw_pos = static_cast<int16_t>(raw_pos_unsigned);
 
-                    // Handle position according to protocol (12-bit resolution)
-                    if (raw_pos & SIGN_BIT_MASK)
-                    {  // Check sign bit
-                        raw_pos = -(raw_pos & ~SIGN_BIT_MASK);
+                        // Handle position according to protocol (12-bit resolution)
+                        if (raw_pos & SIGN_BIT_MASK)
+                        {  // Check sign bit
+                            raw_pos = -(raw_pos & ~SIGN_BIT_MASK);
+                        }
+                        // Convert to radians (4096 counts per revolution)
+                        state.position = raw_pos * (RADIANS_PER_REVOLUTION / ENCODER_TICKS_PER_REVOLUTION);
                     }
-                    // Convert to radians (4096 counts per revolution)
-                    state.position = raw_pos * (RADIANS_PER_REVOLUTION / ENCODER_TICKS_PER_REVOLUTION);
 
-                    // Extract velocity (2 bytes, little endian)
-                    int16_t raw_vel = static_cast<int16_t>(
-                        packet[VELOCITY_LOW_BYTE_INDEX] | (packet[VELOCITY_HIGH_BYTE_INDEX] << 8));
+                    // Extract velocity (2 bytes, little endian) with safe conversion
+                    if (VELOCITY_LOW_BYTE_INDEX < packet.size() && VELOCITY_HIGH_BYTE_INDEX < packet.size())
+                    {
+                        uint16_t raw_vel_unsigned = static_cast<uint16_t>(
+                            packet[VELOCITY_LOW_BYTE_INDEX] | (static_cast<uint16_t>(packet[VELOCITY_HIGH_BYTE_INDEX]) << 8));
+                        
+                        // Safe conversion to signed integer
+                        int16_t raw_vel = static_cast<int16_t>(raw_vel_unsigned);
 
-                    // Handle velocity according to protocol (-1000 to 1000)
-                    if (raw_vel & SIGN_BIT_MASK)
-                    {  // Check sign bit
-                        raw_vel = -(raw_vel & ~SIGN_BIT_MASK);
+                        // Handle velocity according to protocol (-1000 to 1000)
+                        if (raw_vel & SIGN_BIT_MASK)
+                        {  // Check sign bit
+                            raw_vel = -(raw_vel & ~SIGN_BIT_MASK);
+                        }
+                        // Convert to rad/s (protocol units are roughly RPM/1000)
+                        const double rpm = raw_vel * (MAX_RPM / MAX_VELOCITY_RPM);
+                        state.velocity = rpm * RPM_TO_RAD_S;
                     }
-                    // Convert to rad/s (protocol units are roughly RPM/1000)
-                    const double rpm = raw_vel * (MAX_RPM / MAX_VELOCITY_RPM);
-                    state.velocity = rpm * RPM_TO_RAD_S;
 
                     // Extract temperature (1 byte)
                     state.temperature = static_cast<double>(packet[TEMPERATURE_BYTE_INDEX]);
