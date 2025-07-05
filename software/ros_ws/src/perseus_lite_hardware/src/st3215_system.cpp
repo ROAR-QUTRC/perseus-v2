@@ -366,22 +366,22 @@ namespace perseus_lite_hardware
                                          *get_clock(), 1000,  // Warn every 1 second
                                          "No response from servo %d for more than %ld seconds - implementing recovery",
                                          _servo_ids_[i], SERVO_TIMEOUT.count());
-                    
+
                     // Timeout recovery actions:
                     // 1. Set velocity to zero for safety
                     _current_velocities_[i] = 0.0;
-                    
+
                     // 2. Mark position as stale by not updating it (keep last known position)
                     // This prevents using potentially incorrect position data
-                    
+
                     // 3. Set temperature to a safe default to indicate stale data
                     _temperatures_[i] = ROOM_TEMPERATURE_CELSIUS;
-                    
+
                     // 4. Log detailed timeout information for debugging
                     RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                                "Servo %d timeout recovery: velocity set to 0, position held at %f, temperature reset to %zu",
-                                _servo_ids_[i], state.position, ROOM_TEMPERATURE_CELSIUS);
-                    
+                                 "Servo %d timeout recovery: velocity set to 0, position held at %f, temperature reset to %zu",
+                                 _servo_ids_[i], state.position, ROOM_TEMPERATURE_CELSIUS);
+
                     // Continue to next servo instead of using stale data
                     continue;
                 }
