@@ -675,9 +675,9 @@ namespace perseus_lite_hardware
         try
         {
             // Validate index bounds before accessing arrays
-            if (index >= _last_update_times_.size() || 
-                index >= _current_positions_.size() || 
-                index >= _current_velocities_.size() || 
+            if (index >= _last_update_times_.size() ||
+                index >= _current_positions_.size() ||
+                index >= _current_velocities_.size() ||
                 index >= _temperatures_.size())
             {
                 RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
