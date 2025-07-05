@@ -661,7 +661,6 @@ namespace perseus_lite_hardware
         }
     }
 
-
     bool ST3215SystemHardware::updateServoStates(uint8_t id, size_t index) noexcept
     {
         try
