@@ -414,16 +414,19 @@ namespace perseus_lite_hardware
                 // Safe conversion with overflow protection
                 double scaled_velocity = normalized_velocity * (MAX_VELOCITY_RPM / MAX_RPM);
                 double clamped_velocity = std::clamp(scaled_velocity,
-                                                   static_cast<double>(MIN_VELOCITY_RPM),
-                                                   static_cast<double>(MAX_VELOCITY_RPM));
-                
+                                                     static_cast<double>(MIN_VELOCITY_RPM),
+                                                     static_cast<double>(MAX_VELOCITY_RPM));
+
                 // Ensure value is within int16_t range before conversion
-                if (clamped_velocity > std::numeric_limits<int16_t>::max()) {
+                if (clamped_velocity > std::numeric_limits<int16_t>::max())
+                {
                     clamped_velocity = std::numeric_limits<int16_t>::max();
-                } else if (clamped_velocity < std::numeric_limits<int16_t>::min()) {
+                }
+                else if (clamped_velocity < std::numeric_limits<int16_t>::min())
+                {
                     clamped_velocity = std::numeric_limits<int16_t>::min();
                 }
-                
+
                 int16_t servo_speed = static_cast<int16_t>(clamped_velocity);
 
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
@@ -647,7 +650,7 @@ namespace perseus_lite_hardware
                     {
                         uint16_t raw_pos_unsigned = static_cast<uint16_t>(
                             packet[POSITION_LOW_BYTE_INDEX] | (static_cast<uint16_t>(packet[POSITION_HIGH_BYTE_INDEX]) << 8));
-                        
+
                         // Safe conversion to signed integer
                         int16_t raw_pos = static_cast<int16_t>(raw_pos_unsigned);
 
@@ -665,7 +668,7 @@ namespace perseus_lite_hardware
                     {
                         uint16_t raw_vel_unsigned = static_cast<uint16_t>(
                             packet[VELOCITY_LOW_BYTE_INDEX] | (static_cast<uint16_t>(packet[VELOCITY_HIGH_BYTE_INDEX]) << 8));
-                        
+
                         // Safe conversion to signed integer
                         int16_t raw_vel = static_cast<int16_t>(raw_vel_unsigned);
 
