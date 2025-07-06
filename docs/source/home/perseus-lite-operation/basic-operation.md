@@ -65,6 +65,7 @@ nix develop --command bash -c "source software/ros_ws/install/setup.bash && ros2
 ```
 
 You should see topics including:
+
 - `/cmd_vel` - Command velocity input
 - `/joint_states` - Real-time servo positions and velocities
 - `/diff_drive_base_controller/odom` - Odometry data
@@ -93,6 +94,7 @@ nix develop --command bash -c "source software/ros_ws/install/setup.bash && ros2
 The keyboard control interface provides the following commands:
 
 - **Movement Controls:**
+
   - `i` - Move forward
   - `k` - Stop
   - `,` - Move backward
@@ -159,6 +161,7 @@ If Perseus-Lite is not responding:
 4. Restart the Perseus-Lite system if necessary
 
 Common issues:
+
 - **No servo response**: Check USB connection and power
 - **Permission denied on /dev/ttyACM0**: Add user to dialout group or use sudo
 - **Locale warnings**: Use `export LC_ALL=C && export LANG=C` before commands
