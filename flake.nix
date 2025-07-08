@@ -131,6 +131,7 @@
             yarn
             nixgl-script
             libnice
+            glibcLocales
             ;
           inherit (pkgs.gst_all_1)
             gstreamer
@@ -190,6 +191,8 @@
               export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
               # enable coloured ros2 launch output
               export RCUTILS_COLORIZED_OUTPUT=1
+              # fix locale issues
+              export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
             '';
           };
 
