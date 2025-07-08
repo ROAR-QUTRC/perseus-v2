@@ -7,7 +7,7 @@
 #                     -=:___________/                           #
 # ------------------------------------------------------------- #
 #                         Livox runner                          #
-#                        [ Ask Dan :) ]                         #  
+#                        [ Ask Dan :) ]                         #
 # ------------------------------------------------------------- #
 #                                                               #
 # This launch file launches the livox driver.                   #
@@ -31,6 +31,7 @@ import shutil
 import socket
 from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
+
 
 def update_livox_config(config_file_path: str):
     """
@@ -69,14 +70,18 @@ def update_livox_config(config_file_path: str):
     with open(config_path, "w") as f:
         json.dump(config, f, indent=2)
 
-    print(f"Updated host IP to {host_ip} in {config_path}, backup saved to {backup_path}")
+    print(
+        f"Updated host IP to {host_ip} in {config_path}, backup saved to {backup_path}"
+    )
 
 
 def generate_launch_description():
     # Real file path
-    config_path = Path(
-        get_package_share_directory("perseus_sensors")
-    ) / "config" / "livox_config.json"
+    config_path = (
+        Path(get_package_share_directory("perseus_sensors"))
+        / "config"
+        / "livox_config.json"
+    )
 
     update_livox_config(str(config_path))
 
