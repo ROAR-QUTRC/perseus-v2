@@ -6,14 +6,14 @@ This guide covers teleoperation of Perseus using a keyboard or Xbox controller. 
 
 The following conditions must be met before beginning:
 
-- The laptop runs a Linux distribution with the latest code from the perseus-v2 Github repository:
-  ```console
-  git checkout main
-  git pull
-  ```
-- Required fonts are installed for rendering the Orin's zsh shell with the [`powerlevel10k`](https://github.com/romkatv/powerlevel10k) theme (available in /perseus-v2/fonts). You will likely have to set the font to be your terminal's default (it'll come up as `MesloLGS NF`), though you may need to restart your terminal for the font to be available after installation.
-- Xbox controller (if used) is paired with the laptop
-- Perseus has sufficient battery charge
+-   The laptop runs a Linux distribution with the latest code from the perseus-v2 Github repository:
+    ```console
+    git checkout main
+    git pull
+    ```
+-   Required fonts are installed for rendering the Orin's zsh shell with the [`powerlevel10k`](https://github.com/romkatv/powerlevel10k) theme (available in /perseus-v2/fonts). You will likely have to set the font to be your terminal's default (it'll come up as `MesloLGS NF`), though you may need to restart your terminal for the font to be available after installation.
+-   Xbox controller (if used) is paired with the laptop
+-   Perseus has sufficient battery charge
 
 ## Summary
 
@@ -50,35 +50,35 @@ Connect the laptop to the "QUTRC-ROAR" WiFi network using the provided credentia
 
 Perseus should automatically connect to the QUTRC-ROAR network. Verify the connection using one of these methods:
 
-- Check the Unifi console for connected devices
-- Use arp-scan on the laptop to list devices with allocated IP addresses:
-  ```console
-  sudo arp-scan --localnet
-  ```
+-   Check the Unifi console for connected devices
+-   Use arp-scan on the laptop to list devices with allocated IP addresses:
+    ```console
+    sudo arp-scan --localnet
+    ```
 
 #### Network Troubleshooting
 
 1. Physical Connectivity
 
-   - Confirm Unifi UX is powered and fully booted (screen shows device count)
-   - Verify power LED indicators are lit
-   - Check E-Stop position as it affects system power
+    - Confirm Unifi UX is powered and fully booted (screen shows device count)
+    - Verify power LED indicators are lit
+    - Check E-Stop position as it affects system power
 
 2. Laptop Connectivity
 
-   - Verify connection to "QUTRC-ROAR" network
-   - Check signal strength (maintain line of sight with Unifi UX if possible)
-   - Confirm IP address allocation using `ip addr`
+    - Verify connection to "QUTRC-ROAR" network
+    - Check signal strength (maintain line of sight with Unifi UX if possible)
+    - Confirm IP address allocation using `ip addr`
 
 3. Perseus Connectivity
 
-   ```console
-   # Verify Perseus visibility
-   ping big-brain.local
+    ```console
+    # Verify Perseus visibility
+    ping big-brain.local
 
-   # Alternative: network device scan
-   sudo arp-scan --localnet | grep -i nvidia
-   ```
+    # Alternative: network device scan
+    sudo arp-scan --localnet | grep -i nvidia
+    ```
 
 ### System Access
 
@@ -87,6 +87,10 @@ Access Perseus via SSH from the laptop:
 ```console
 ssh qutrc@big-brain.local
 ```
+
+:::{info}
+You must use [`zellij`](https://zellij.dev/) on rover compute units when running multiple commands to prevent the need for multiple ssh connections.
+:::
 
 ### Manually confirm the date/time
 
@@ -142,13 +146,13 @@ nix run .#xbox_controller
 Before operating Perseus:
 
 1. Ensure all bystanders:
-   - Are aware of Perseus's operation
-   - Know the E-Stop button location
-   - Understand they should press the E-Stop if they observe:
-     - Collision risks
-     - Unsafe behaviour
-     - Control issues
-     - Any hazardous situations
+    - Are aware of Perseus's operation
+    - Know the E-Stop button location
+    - Understand they should press the E-Stop if they observe:
+        - Collision risks
+        - Unsafe behaviour
+        - Control issues
+        - Any hazardous situations
 
 The E-Stop, a red mushroom-shaped button on Perseus's top, immediately cuts all power when pressed.
 
