@@ -1,8 +1,8 @@
 import { io, Socket } from "socket.io-client";
 import config from "./config.json";
-import { spawn } from "child_process";
+import fs, { watch } from "node:fs";
 import { networkInterfaces } from "os";
-import fs from "node:fs";
+import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 
 type videoTransformType =
   | "none"
@@ -20,26 +20,30 @@ interface CameraEventType {
   action:
     | "group-description"
     | "kill"
-    | "stream"
     | "request-groups"
     | "request-stream"
-    | "producer-ready"
-    | "group-terminated";
+    | "group-terminated"
+    | "device-disconnect";
   data: {
-    ip?: string;
-    groupName?: string;
-    // cameraName?: string;
+    devices?: string[];
     resolution?: { width: number; height: number };
     transform?: videoTransformType;
-    device?: string;
-    cameras?: string[];
+    forceRestart?: boolean;
   };
 }
 
-console.log("[Camera server] Starting...");
-// connect to the web servers websocket
+const log = (message: string) => {
+  console.log(`[Camera server] ${message}`);
+};
+
+log("Starting...");
+
+// -------------------------------------
+//        Web socket connection
+// -------------------------------------
+
 const socket: Socket = io(
-  `http://${config.webServer.ip}:${config.webServer.port}`,
+  `http://${config.webserverIp}:${config.webserverPort}`,
   {
     reconnection: true,
     reconnectionDelay: 1000,
@@ -47,80 +51,114 @@ const socket: Socket = io(
 );
 
 socket.on("connect", () => {
-  console.log("[Camera server][Socket] Connected!");
+  log("Connected to web server!");
 });
 
+let retryCount = 0;
 socket.on("connect_error", (error) => {
-  console.log(
-    "[Camera server][Socket] Connection error, please check the config. Retrying...",
-  );
+  // retryCount++;
+  // if (retryCount > 15) {
+  // 	log(`Giving up. Please check the config.`);
+  // 	process.exit(1);
+  // }
+  log(`Connection error, please check the config. Retrying...`);
 });
 
-// got this servers ip address
-let net = networkInterfaces();
-let networkIf = net[Object.keys(net)[1]];
-let ip: string | undefined = undefined;
+// -------------------------------------
+//           Get hardware info
+// -------------------------------------
 
-// get the ip address of the server
-if (networkIf) ip = networkIf[0].address;
+const formatDeviceName = (device: string): string =>
+  // @ts-ignore
+  device.replace("-video-index0", "").replace("usb-", "").replaceAll("_", " ");
 
-// get a list of cameras
-let cameras: string[] = fs
+// Get the list of video devices
+let videoDevices: string[] = fs
   .readdirSync("/dev/v4l/by-id")
   .filter((file) => file.endsWith("-index0")); // index 0 is the video and index 1 is the device metadata
-cameras.forEach((camera: string) => {
-  console.log(
-    `[Camera server] Found camera: ${camera.replace("-video-index0", "").replace("usb-", "").replaceAll("_", " ")}`,
-  );
+videoDevices.forEach((device: string) => {
+  log(`Found video device: ${formatDeviceName(device)}`);
 });
+
+// watch for changes in the video devices
+let fsWatcher = watch("/dev/v4l/by-id", (eventType, filename) => {
+  if (
+    eventType === "rename" &&
+    filename !== null &&
+    filename.endsWith("-index0")
+  ) {
+    if (videoDevices.includes(filename)) {
+      log(`Video device removed: ${formatDeviceName(filename)}`);
+      videoDevices = videoDevices.filter((device) => device !== filename);
+
+      // remove from gstInstances
+      let index = gstInstances.findIndex(
+        (instance) => instance.device === filename,
+      );
+      gstInstances[index].instance.kill();
+      gstInstances.splice(index, 1);
+
+      socket.send({
+        type: "camera",
+        action: "device-disconnect",
+        data: { devices: [filename] },
+      });
+    } else {
+      log(`Video device added: ${formatDeviceName(filename)}`);
+      videoDevices.push(filename);
+
+      initMessage.data.devices = videoDevices;
+      socket.send(initMessage);
+    }
+  }
+});
+
+// -------------------------------------
+//         Send initial message
+// -------------------------------------
 
 let initMessage: CameraEventType = {
   type: "camera",
   action: "group-description",
-  data: { groupName: config.groupName, ip: ip, cameras: cameras },
+  data: { devices: videoDevices },
 };
+socket.send(initMessage);
 
-if (ip) {
-  console.log(`[Camera server] IP address: ${ip}`);
-  socket.send(initMessage);
-} else {
-  console.error("[Camera server] Could not get IP address");
-}
+// -------------------------------------
+//        Handle socket events
+// -------------------------------------
 
-// start the signalling server
-let signallingServer = spawn("gst-webrtc-signalling-server");
-signallingServer.stdout.pipe(process.stdout);
-
+// Keep track of gstreamer instances since this info cannot be retrieved from the signalling server
 let gstInstances: {
   device: string;
-  resolution: { width: number; height: number };
-  transform: videoTransformType;
-  instance: any;
+  resolution?: { width: number; height: number };
+  transform?: videoTransformType;
+  instance: ChildProcessWithoutNullStreams;
 }[] = [];
 
-// webrtcsink stun-server=NULL name=ws meta="meta,name=usb-Quanta_HP_Wide_Vision_HD_Camera_01.00.00-video-index0" v4l2src device=/dev/v4l/by-id/usb-Quanta_HP_Wide_Vision_HD_Camera_01.00.00-video-index0 ! video/x-raw, width=320, height=240 ! videoconvert ! videoflip method=clockwise ! ws.
 const startStream = (
   device: string,
-  resolution: { height: number; width: number },
+  resolution: { width: number; height: number },
   transform: videoTransformType,
 ) => {
-  // start the camera stream
-  let gstArgs = ["webrtcsink", "stun-server=NULL", "name=ws"];
-  gstArgs.push(`meta="meta,name=${device}"`); // assign a name to the stream
+  let gstArgs = [
+    "webrtcsink",
+    "stun-server=NULL",
+    "name=ws",
+    `signaller::uri="ws://${config.webserverIp}:8443"`, // port is always default 8443
+    `meta="meta,device=${device}"`,
+  ];
   if (device === "test") gstArgs.push("videotestsrc");
   else gstArgs.push("v4l2src", `device=/dev/v4l/by-id/${device}`);
   gstArgs.push(
-    `!`,
-    `video/x-raw,`,
-    `width=${resolution.width},`,
-    `height=${resolution.height}`,
-    `!`,
-    `videoconvert`,
+    "!",
+    `video/x-raw,width=${resolution.width},height=${resolution.height}`,
+    "!",
+    "videoconvert",
   );
-
-  if (transform) gstArgs.push(`!`, `videoflip`, `method=${transform}`);
-
-  gstArgs.push(`!`, "ws.");
+  if (transform !== "none")
+    gstArgs.push("!", `videoflip`, `method=${transform}`);
+  gstArgs.push("!", "ws.");
 
   gstInstances.push({
     device: device,
@@ -129,96 +167,96 @@ const startStream = (
     instance: spawn("gst-launch-1.0", gstArgs),
   });
 
-  // console.log('[Camera server] Instance command:' + gstArgs.join(' '));
+  log("gst-launch1.0 " + gstArgs.join(" "));
 
-  gstInstances[gstInstances.length - 1].instance.stdout.pipe(process.stdout);
-  gstInstances[gstInstances.length - 1].instance.stderr.pipe(process.stderr);
+  gstInstances.at(-1)!.instance.stdout.pipe(process.stdout);
+  gstInstances.at(-1)!.instance.stderr.pipe(process.stderr);
 };
 
-// listen for camera events
 socket.on("camera-event", (event: CameraEventType) => {
-  if (event.data && event.data.groupName !== config.groupName) return;
+  // Return if the target device is not owned by this server
+  if (
+    event.data &&
+    event.data.devices &&
+    !videoDevices.includes(event.data.devices[0])
+  )
+    return;
   switch (event.action) {
     case "request-groups":
+      initMessage.data.devices = videoDevices;
       socket.send(initMessage);
       break;
     case "request-stream":
-      console.log("[Camera server] request-stream ", event.data);
-      // check if the camera is already streaming
-      let index = gstInstances.findIndex(
-        (instance) => instance.device === event.data.device,
+      // request stream
+      log(
+        `Requesting stream for device: ${formatDeviceName(event.data?.devices![0])} @ ${event.data?.resolution?.width}x${event.data?.resolution?.height} with transform: ${event.data?.transform}`,
       );
+      let index = gstInstances.findIndex(
+        (instance) => instance.device === event.data?.devices?.[0],
+      );
+
+      if (event.data.forceRestart && index !== -1) {
+        gstInstances[index].instance.kill();
+        gstInstances.splice(index, 1);
+      }
+
+      let shouldStartStream = true;
 
       if (index !== -1) {
-        // if the stream is currently running
-        if (event.data.resolution) {
+        // If the stream is already running, check if we need to restart it
+        if (event.data.resolution && event.data.transform) {
           if (
-            (gstInstances[index].resolution.width !==
-              event.data.resolution.width &&
-              gstInstances[index].resolution.height !==
-                event.data.resolution.height) ||
-            gstInstances[index].transform !== event.data.transform
+            event.data.resolution.width !==
+              gstInstances[index].resolution?.width ||
+            event.data.resolution.height !==
+              gstInstances[index].resolution?.height ||
+            event.data.transform !== gstInstances[index].transform
           ) {
-            // if the resolution is different restart the stream
-            console.log(
-              `[Camera server] Changing resolution of ${event.data.device} from ${gstInstances[index].resolution.width}x${gstInstances[index].resolution.height} to ${event.data.resolution.width}x${event.data.resolution.height} with transform: ${event.data.transform}`,
-            );
+            // Restart the stream with new preferences
             gstInstances[index].instance.kill();
             gstInstances.splice(index, 1);
-            startStream(
-              event.data.device!,
-              event.data.resolution,
-              event.data.transform ? event.data.transform : "none",
-            );
-            break;
+          } else {
+            shouldStartStream = false;
           }
         } else {
-          console.log(
-            `[Camera server] ${event.data.device} is already streaming`,
-          );
+          // device is already streaming and not preferences set
           break;
         }
-      } else {
-        // start the stream
-        console.log(`[Camera server] Starting stream for ${event.data.device}`);
+      }
+
+      if (shouldStartStream) {
+        // Validate arguments
+        if (!event.data.transform) event.data.transform = "none";
+        if (!event.data.resolution)
+          event.data.resolution = { width: 320, height: 240 };
         startStream(
-          event.data.device!,
-          event.data.resolution
-            ? event.data.resolution
-            : { width: 320, height: 240 },
-          event.data.transform ? event.data.transform : "none",
+          event.data.devices![0],
+          event.data.resolution,
+          event.data.transform,
         );
       }
-      break;
-    case "kill":
-      let instanceIndex = gstInstances.findIndex(
-        (instance) => instance.device === event.data.device,
-      );
-      if (instanceIndex !== -1) {
-        console.log(`[Camera server] Killing ${event.data.device}`);
-        gstInstances[instanceIndex].instance.kill();
-        gstInstances.splice(instanceIndex, 1);
-      }
-      break;
-    case "producer-ready":
-    case "group-description":
-      break;
 
+      break;
+    case "group-description":
+      // ignore self sent messages
+      break;
     default:
-      console.log("[Camera server] Received unhandled event: ", event);
+      log(`Unknown action: ${event.action}`);
   }
 });
-console.log("[Camera server] Started");
+
+// -------------------------------------
+//    Gracefully shutdown the server
+// -------------------------------------
 
 process.on("SIGINT", () => {
-  // tell clients to kill this group
+  log("Shutting down...");
+
   initMessage.action = "group-terminated";
   socket.send(initMessage);
-  signallingServer.kill();
-  gstInstances.forEach((instance) => {
-    instance.instance.kill();
+  gstInstances.forEach((gstInstance) => {
+    gstInstance.instance.kill();
   });
+  fsWatcher.close();
   socket.close();
-  console.log("[Camera server] Exiting...");
-  process.exit(1);
 });
