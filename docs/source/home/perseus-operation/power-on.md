@@ -4,9 +4,9 @@ This guide explains the correct process to power on persues.
 
 ## Prerequisites
 
--   Charged batteries
--   Check cable connections (Including the can jump on the front of Perseus)
--   Know the difference between drive stop button (green rectangle) and power button (round silver)
+- Charged batteries
+- Check cable connections (Including the can jump on the front of Perseus)
+- Know the difference between drive stop button (green rectangle) and power button (round silver)
 
 ## Guide
 
@@ -32,7 +32,7 @@ The power button has three status modes:
 :::
 
 1. Press and hold the power button until the contactor is enabled. This should take about one second and will make an audible click when the contactor has been engaged.
-2. Once the power button is flashing blue the rover controll board is successfully powered on.
+2. Once the power button is flashing blue the rover control board is successfully powered on.
 
 ### Power Rover Systems
 
@@ -67,20 +67,20 @@ Note: Drive needs the drive stop button to be "down" additionally to bus power.
 
 Each band represents a different bus on the rover. Going from the top down:
 
--   Contactor (Largest band)
--   Compute
--   Drive
--   Aux
--   Spare
+- Contactor (Largest band)
+- Compute
+- Drive
+- Aux
+- Spare
 
 ### Colours
 
 Each colour represents a specific status:
 
--   Black - Off
--   Green - On
--   Yellow - Precharging
--   Red - Short-circuit
--   Flashing tangerine - Switch failed
--   Blue - Overload
--   Flashing red - Fault
+- Black - Off
+- Green - On
+- Yellow - Precharging
+- Red - Short-circuit
+- Flashing tangerine - Switch failed
+- Blue - Overload
+- Flashing red - Fault
