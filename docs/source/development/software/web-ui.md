@@ -141,7 +141,7 @@ This component does two things, create an instance of the custom widget componen
 The function of the camera server is to:
 
 - Provide an interface to connected linux video devices
-- Generate Gstreamer pipelines and mange instances
+- Generate Gstreamer pipelines and manage instances
 - Communicate with the main web server
 
 **Linux device interface:**
