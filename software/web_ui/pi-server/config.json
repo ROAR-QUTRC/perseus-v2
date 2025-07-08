@@ -1,7 +1,4 @@
 {
-  "groupName": "RaspberryPi",
-  "webServer": {
-    "ip": "localhost",
-    "port": 5173
-  }
+  "webserverIp": "localhost",
+  "webserverPort": 3000
 }
