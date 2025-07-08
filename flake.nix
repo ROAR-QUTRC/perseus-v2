@@ -302,6 +302,7 @@
           in
           {
             perseus = mkRosLaunchApp "perseus" "perseus" "perseus.launch.py";
+            perseus-lite = mkRosLaunchApp "perseus-lite" "perseus_lite" "perseus_lite.launch.py";
             default = self.apps.${system}.perseus;
             xbox_controller = mkRosLaunchApp "xbox_controller" "input_devices" "xbox_controller.launch.py";
             ros2 = {
