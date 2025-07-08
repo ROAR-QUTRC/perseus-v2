@@ -100,6 +100,8 @@
 	};
 
 	const onStart = (e: PointerEvent) => {
+		if (!unlocked) return;
+
 		// set the joystick size before displaying
 		joystickBase.style.width = `${joystickRadius}px`;
 		joystickBase.style.height = `${joystickRadius}px`;
@@ -170,7 +172,7 @@
 	};
 
 	const onStop = () => {
-		if (!joystick.active) return;
+		if (!joystick.active || !unlocked) return;
 		hideJoystick();
 
 		// send 0 message to terminate

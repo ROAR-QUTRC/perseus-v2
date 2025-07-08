@@ -35,7 +35,7 @@ export interface WidgetSettingsType {
   >;
 }
 
-// Wrap the layouts in an object with the property value to allow the export to be reassigned
+// Wrap the layouts in an object with the property: value to allow the export to be reassigned
 export let layouts = $state<{ active: number; value: Array<Layout> }>({
   active: 0,
   value: [],

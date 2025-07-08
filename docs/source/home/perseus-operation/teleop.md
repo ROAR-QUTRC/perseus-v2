@@ -88,6 +88,10 @@ Access Perseus via SSH from the laptop:
 ssh qutrc@big-brain.local
 ```
 
+:::{info}
+You must use [`zellij`](https://zellij.dev/) on rover compute units when running multiple commands to prevent the need for multiple ssh connections.
+:::
+
 ### Manually confirm the date/time
 
 The Perseus compute modules (Orin, Pi5 etc) require appropriate date/time information. As they do not have a realtime backup clock source it is prudent to manually set the correct date/time after start up.

@@ -1,4 +1,3 @@
-import type { WidgetType } from "$lib/scripts/state.svelte";
 import { Entity, Fields } from "remult";
 
 @Entity("layout", {
