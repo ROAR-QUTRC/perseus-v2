@@ -120,7 +120,7 @@ namespace perseus_lite_hardware
 
     private:
         // Constants for ST3215 servo specifications
-        static constexpr double MAX_RPM = 100.0;                                             // Maximum RPM rating of the ST3215 servo
+        static constexpr double MAX_RPM = 45.0;                                              // Maximum RPM rating of the ST3215 servo
         static constexpr int16_t MAX_VELOCITY_RPM = 1000;                                    // Maximum velocity value in protocol
         static constexpr int16_t MIN_VELOCITY_RPM = -1000;                                   // Minimum velocity value in protocol
         static constexpr size_t BUFFER_SIZE = 256;                                           // Buffer size for serial communication

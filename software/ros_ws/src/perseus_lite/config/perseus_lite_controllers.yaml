@@ -59,7 +59,7 @@ diff_drive_base_controller:
     right_wheel_names: ["front_right_wheel_joint", "rear_right_wheel_joint"]
     wheel_separation: 0.714
     wheels_per_side: 2
-    wheel_radius: 0.147
+    wheel_radius: 0.0585
     write_op_modes: ["velocity"]
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
@@ -74,7 +74,7 @@ diff_drive_base_controller:
     #use_stamped_vel: false
 
     # Kinematic limits
-    linear.x.max_velocity: 1.7
+    linear.x.max_velocity: 0.25
     linear.x.max_acceleration: 10.0
     linear.x.max_jerk: .NAN
     angular.z.max_velocity: 5.0
