@@ -22,6 +22,7 @@ def generate_launch_description():
     # can_bus = LaunchConfiguration("can_bus")
     serial_port = LaunchConfiguration("serial_port")
     baud_rate = LaunchConfiguration("baud_rate")
+    cmd_vel_topic = LaunchConfiguration("cmd_vel_topic")
 
     arguments = [
         DeclareLaunchArgument(
@@ -55,6 +56,11 @@ def generate_launch_description():
             "baud_rate",
             default_value="1000000",
             description="Baud rate for ST3215 servos",
+        ),
+        DeclareLaunchArgument(
+            "cmd_vel_topic",
+            default_value="/cmd_vel",
+            description="Topic name for cmd_vel commands (use /joy_vel for xbox controller compatibility)",
         ),
         # DeclareLaunchArgument(
         #    "can_bus",
@@ -107,6 +113,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             "use_sim_time": use_sim_time,
+            "cmd_vel_topic": cmd_vel_topic,
         }.items(),
     )
     launch_files = [

@@ -18,6 +18,7 @@ def generate_launch_description():
     launch_controller_manager = LaunchConfiguration(
         "launch_controller_manager", default="true"
     )
+    cmd_vel_topic = LaunchConfiguration("cmd_vel_topic", default="/cmd_vel")
     use_sim_time_param = {"use_sim_time": use_sim_time}
 
     arguments = []
@@ -56,7 +57,7 @@ def generate_launch_description():
             "--controller-manager",
             "controller_manager",
             "--controller-ros-args",
-            "--remap /diff_drive_base_controller/cmd_vel:=/cmd_vel",
+            ["--remap /diff_drive_base_controller/cmd_vel:=", cmd_vel_topic],
             # "--ros-args",
             # "--log-level",
             # "debug",
