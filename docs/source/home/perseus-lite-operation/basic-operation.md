@@ -1,3 +1,22 @@
+# Quick Start
+
+To teleoperate with an Xbox controller, with Perseus-Lite powered up you will need to run
+
+## Terminal 1
+
+```console
+nix shell
+ros2 launch perseus_lite perseus_lite.launch.py cmd_vel_topic:=/joy_vel
+```
+
+Note the use of /jou_vel is only necessary until the mux code and the perseus-lite branches are merged.
+
+## Terminal 2
+
+```console
+nix run .#xbox_controller
+```
+
 # Basic Operation
 
 This guide covers the basic teleoperation of Perseus-Lite using keyboard control. Perseus-Lite is a simplified version of Perseus that provides essential rover functionality with streamlined hardware and software requirements.
@@ -12,7 +31,7 @@ The following conditions must be met before beginning:
   git pull
   ```
 - Perseus-Lite hardware is connected via USB (typically `/dev/ttyACM0`)
-- Perseus-Lite has sufficient battery charge
+- Perseus-Lite has sufficient battery charge or is powered by a 12V power supply
 
 ## Summary
 
