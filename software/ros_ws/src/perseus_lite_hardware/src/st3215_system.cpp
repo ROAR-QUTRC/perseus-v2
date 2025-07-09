@@ -418,7 +418,8 @@ namespace perseus_lite_hardware
 
                 // Apply direction correction for left-side servos (IDs 2 and 3)
                 double corrected_speed = _command_speeds_[i];
-                if (_servo_ids_[i] == 2 || _servo_ids_[i] == 3) {
+                if (_servo_ids_[i] == 2 || _servo_ids_[i] == 3)
+                {
                     corrected_speed = -corrected_speed;
                     RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                                  "Servo %d - Applied left-side direction correction: %f",
@@ -708,12 +709,13 @@ namespace perseus_lite_hardware
                         // Convert to rad/s (protocol units are roughly RPM/1000)
                         const double rpm = raw_vel * (MAX_RPM / MAX_VELOCITY_RPM);
                         double velocity_rad_s = rpm * RPM_TO_RAD_S;
-                        
+
                         // Apply direction correction for left-side servos (IDs 2 and 3)
-                        if (id == 2 || id == 3) {
+                        if (id == 2 || id == 3)
+                        {
                             velocity_rad_s = -velocity_rad_s;
                         }
-                        
+
                         state.velocity = velocity_rad_s;
                     }
 
