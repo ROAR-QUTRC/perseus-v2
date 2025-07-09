@@ -416,9 +416,18 @@ namespace perseus_lite_hardware
                              "Servo %d - Input command speed (rad/s): %f",
                              _servo_ids_[i], _command_speeds_[i]);
 
+                // Apply direction correction for left-side servos (IDs 2 and 3)
+                double corrected_speed = _command_speeds_[i];
+                if (_servo_ids_[i] == 2 || _servo_ids_[i] == 3) {
+                    corrected_speed = -corrected_speed;
+                    RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
+                                 "Servo %d - Applied left-side direction correction: %f",
+                                 _servo_ids_[i], corrected_speed);
+                }
+
                 // Convert velocity command to servo units
                 // ST3215 expects -1000 to 1000 for velocity
-                const double normalized_velocity = _command_speeds_[i] * RAD_S_TO_RPM;  // to RPM
+                const double normalized_velocity = corrected_speed * RAD_S_TO_RPM;  // to RPM
 
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                              "Servo %d - Converted to RPM: %f",
@@ -698,7 +707,14 @@ namespace perseus_lite_hardware
                         }
                         // Convert to rad/s (protocol units are roughly RPM/1000)
                         const double rpm = raw_vel * (MAX_RPM / MAX_VELOCITY_RPM);
-                        state.velocity = rpm * RPM_TO_RAD_S;
+                        double velocity_rad_s = rpm * RPM_TO_RAD_S;
+                        
+                        // Apply direction correction for left-side servos (IDs 2 and 3)
+                        if (id == 2 || id == 3) {
+                            velocity_rad_s = -velocity_rad_s;
+                        }
+                        
+                        state.velocity = velocity_rad_s;
                     }
 
                     // Extract temperature (1 byte)
