@@ -41,7 +41,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp rclcpp_lifecycle hardware_interface sensor_msgs geometry_msgs tf2 tf2_geometry_msgs OpenSSL nlohmann_json)
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+    rclcpp
+    rclcpp_lifecycle
+    hardware_interface
+    sensor_msgs
+    geometry_msgs
+    tf2
+    tf2_geometry_msgs
+    OpenSSL
+    nlohmann_json)
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
 
@@ -94,8 +103,8 @@ target_link_libraries(m2m2_lidar PUBLIC simple_networking OpenSSL::Crypto)
 file(GLOB_RECURSE I2C_IMU_CODE_SOURCES i2c_imu_driver/src/*.cpp)
 add_executable(i2c_imu_node ${I2C_IMU_CODE_SOURCES})
 
-target_include_directories(i2c_imu_node
-                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/i2c_imu_driver/include)
+target_include_directories(
+  i2c_imu_node PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/i2c_imu_driver/include)
 
 ament_target_dependencies(i2c_imu_node PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 target_link_libraries(i2c_imu_node PUBLIC fd_wrapper)
@@ -105,7 +114,8 @@ install(TARGETS m2m2_lidar i2c_imu_node DESTINATION lib/${PROJECT_NAME})
 
 # Install launch
 install(
-  DIRECTORY launch config i2c_imu_driver/launch i2c_imu_driver/config i2c_imu_driver/urdf
+  DIRECTORY launch config i2c_imu_driver/launch i2c_imu_driver/config
+            i2c_imu_driver/urdf
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 

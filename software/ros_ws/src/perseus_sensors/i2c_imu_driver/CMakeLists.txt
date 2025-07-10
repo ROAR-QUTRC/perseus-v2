@@ -41,13 +41,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS 
-    rclcpp 
-    rclcpp_lifecycle 
-    hardware_interface 
-    sensor_msgs 
-    geometry_msgs 
-    tf2 
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+    rclcpp
+    rclcpp_lifecycle
+    hardware_interface
+    sensor_msgs
+    geometry_msgs
+    tf2
     tf2_geometry_msgs)
 
 # packages which must be present but aren't linked against
