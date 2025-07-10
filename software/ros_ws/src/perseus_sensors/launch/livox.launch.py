@@ -7,7 +7,7 @@
 #                     -=:___________/                           #
 # ------------------------------------------------------------- #
 #                         Livox runner                          #
-#               [ Ask Dan :) if something breaks ]              #  
+#               [ Ask Dan :) if something breaks ]              #
 # ------------------------------------------------------------- #
 #                                                               #
 # This launch file launches the livox driver.                   #
@@ -30,9 +30,10 @@ import tempfile
 from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
 
+
 def create_livox_config(default_config_path: str):
     """
-    Creates a tempory file with correct host IP that the driver uses.
+    Creates a temporary file with correct host IP that the driver uses.
     """
     # Get path
     config_path = Path(default_config_path)
@@ -64,12 +65,11 @@ def create_livox_config(default_config_path: str):
 
     # Create temp file (starts with livox.******)
     with tempfile.NamedTemporaryFile(
-            mode="wt",
-            dir="/tmp",
-            delete=False,
-            prefix="livox.",
+        mode="wt",
+        dir="/tmp",
+        delete=False,
+        prefix="livox.",
     ) as temp:
-
         # Write updated config to temp
         json.dump(config, temp, indent=2)
 
@@ -80,6 +80,7 @@ def create_livox_config(default_config_path: str):
         print(f"Host IP: {host_ip}")
         print("=========================")
         return temp.name
+
 
 def generate_launch_description():
     # Real file path
