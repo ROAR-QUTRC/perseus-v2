@@ -1,6 +1,5 @@
 final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
-  i2c-imu-driver = final.callPackage ./i2c-imu-driver.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   perseus = final.callPackage ./perseus.nix { };
   perseus-can-if = final.callPackage ./perseus-can-if.nix { };
