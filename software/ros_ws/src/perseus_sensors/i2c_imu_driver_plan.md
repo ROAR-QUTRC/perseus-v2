@@ -7,6 +7,7 @@ This document outlines the professional implementation plan for adding an option
 ## Project Context
 
 Based on analysis of the Perseus v2 codebase, this implementation follows established patterns for:
+
 - Optional sensor integration (M2M2 LiDAR pattern)
 - Hardware interface abstraction (ST3215 servo system pattern)
 - Linux device access (file descriptor management)
@@ -47,11 +48,13 @@ perseus_sensors/i2c_imu_driver/
 ### 1. Hardware Interface Layer
 
 **Class: `I2cImuHardwareInterface`**
+
 - Extends `hardware_interface::SensorInterface`
 - Manages I2C device lifecycle (configure → activate → read → deactivate)
 - Provides sensor state interfaces for ROS 2 Control
 
 **Key Features:**
+
 - Device detection with graceful degradation
 - Async I/O with dedicated read thread
 - Timeout protection for I2C operations
@@ -60,12 +63,14 @@ perseus_sensors/i2c_imu_driver/
 ### 2. I2C Device Abstraction
 
 **Class: `I2cDevice`**
+
 - Low-level I2C communication wrapper
 - Uses Linux I2C API (`/dev/i2c-*`)
 - Implements FdWrapper pattern for resource management
 - Provides register read/write methods
 
 **Key Features:**
+
 - Device file descriptor management
 - I2C transaction handling
 - Error checking and timeout protection
@@ -74,12 +79,14 @@ perseus_sensors/i2c_imu_driver/
 ### 3. ROS 2 Node Implementation
 
 **Class: `I2cImuNode`**
+
 - Standalone ROS 2 node for IMU data publishing
 - Publishes `sensor_msgs/Imu` messages
 - Timer-based periodic reading (following M2M2 LiDAR pattern)
 - Parameter-based configuration
 
 **Key Features:**
+
 - Configurable update rate
 - Frame ID management
 - Covariance matrix handling
@@ -137,15 +144,15 @@ i2c_imu:
   device_address: 0x6A
   update_rate: 100
   frame_id: "imu_link"
-  required: false  # Optional hardware
+  required: false # Optional hardware
   timeout_ms: 1000
   retry_count: 3
-  
+
   # IMU-specific parameters
-  accel_range: 2  # ±2g
-  gyro_range: 250  # ±250°/s
-  filter_bandwidth: 42  # Hz
-  
+  accel_range: 2 # ±2g
+  gyro_range: 250 # ±250°/s
+  filter_bandwidth: 42 # Hz
+
   # Covariance matrices (if known)
   orientation_covariance: [0.1, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.1]
   angular_velocity_covariance: [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01]
@@ -158,15 +165,15 @@ i2c_imu:
 <!-- i2c_imu.urdf.xacro -->
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  
+
   <xacro:macro name="i2c_imu" params="parent_link xyz rpy">
-    
+
     <joint name="imu_joint" type="fixed">
       <parent link="${parent_link}"/>
       <child link="imu_link"/>
       <origin xyz="${xyz}" rpy="${rpy}"/>
     </joint>
-    
+
     <link name="imu_link">
       <visual>
         <geometry>
@@ -186,7 +193,7 @@ i2c_imu:
         <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
       </inertial>
     </link>
-    
+
     <gazebo reference="imu_link">
       <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
         <initial_orientation_as_reference>false</initial_orientation_as_reference>
@@ -197,9 +204,9 @@ i2c_imu:
         </ros>
       </plugin>
     </gazebo>
-    
+
   </xacro:macro>
-  
+
 </robot>
 ```
 
@@ -249,7 +256,7 @@ public:
     I2cDevice(const std::string& bus, uint8_t address);
     bool initialize();
     bool isConnected();
-    
+
 private:
     FdWrapper i2c_fd_;
     uint8_t device_address_;
@@ -266,7 +273,7 @@ public:
     hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
     hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
     hardware_interface::CallbackReturn on_read(const rclcpp::Time& time, const rclcpp::Duration& period) override;
-    
+
 private:
     std::unique_ptr<I2cDevice> i2c_device_;
     std::thread read_thread_;
@@ -277,11 +284,13 @@ private:
 ### 3. Error Handling Strategy
 
 **Graceful Degradation:**
+
 - IMU absence doesn't prevent system startup
 - Warning logs but continues operation
 - Navigation stack adapts to available sensors
 
 **Robust Communication:**
+
 - Device detection with retry mechanisms
 - Timeout protection for I2C operations
 - Meaningful error messages and logging
@@ -300,7 +309,7 @@ struct ImuData {
 
 // Processing pipeline
 ImuData raw_data = readRawData();
-ImuData calibrated_data = applyCalibraton(raw_data);
+ImuData calibrated_data = applyCalibration(raw_data);
 sensor_msgs::msg::Imu imu_msg = convertToRosMessage(calibrated_data);
 ```
 
