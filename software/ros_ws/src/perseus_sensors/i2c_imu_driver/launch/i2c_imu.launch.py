@@ -13,8 +13,8 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "device_address",
-                default_value="0x6A",
-                description="I2C device address (hex format)",
+                default_value="106",
+                description="I2C device address (0x6A = 106 decimal)",
             ),
             DeclareLaunchArgument(
                 "update_rate",
@@ -53,7 +53,7 @@ def generate_launch_description():
             ),
             # I2C IMU node
             Node(
-                package="i2c_imu_driver",
+                package="perseus_sensors",
                 executable="i2c_imu_node",
                 name="i2c_imu_node",
                 parameters=[

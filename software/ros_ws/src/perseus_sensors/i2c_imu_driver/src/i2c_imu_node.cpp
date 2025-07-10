@@ -206,53 +206,53 @@ namespace i2c_imu_driver
             return data;
         }
 
-        // This is a generic implementation - in a real scenario, you would
-        // read from specific registers based on your IMU chip datasheet.
-        // For example, for an MPU6050:
-        // - Accelerometer: registers 0x3B-0x40
-        // - Gyroscope: registers 0x43-0x48
-        // - Temperature: registers 0x41-0x42
+        // LSM6DSOX register addresses:
+        // - Accelerometer: registers 0x28-0x2D (OUTX_L_A to OUTZ_H_A)
+        // - Gyroscope: registers 0x22-0x27 (OUTX_L_G to OUTZ_H_G)
+        // - Temperature: registers 0x20-0x21 (OUT_TEMP_L to OUT_TEMP_H)
 
         uint8_t accel_data[6];
         uint8_t gyro_data[6];
         uint8_t temp_data[2];
 
-        // Read accelerometer data (example registers)
-        if (_i2c_device->readRegisters(0x3B, accel_data, 6, _timeout_ms))
+        // Read accelerometer data (LSM6DSOX registers 0x28-0x2D)
+        if (_i2c_device->readRegisters(0x28, accel_data, 6, _timeout_ms))
         {
-            // Convert raw data to acceleration values (example conversion)
-            int16_t accel_x_raw = (accel_data[0] << 8) | accel_data[1];
-            int16_t accel_y_raw = (accel_data[2] << 8) | accel_data[3];
-            int16_t accel_z_raw = (accel_data[4] << 8) | accel_data[5];
+            // LSM6DSOX uses little-endian format (LSB first)
+            int16_t accel_x_raw = (accel_data[1] << 8) | accel_data[0];
+            int16_t accel_y_raw = (accel_data[3] << 8) | accel_data[2];
+            int16_t accel_z_raw = (accel_data[5] << 8) | accel_data[4];
 
-            // Convert to m/s² (example scale factor for ±2g range)
-            constexpr double accel_scale = 9.81 / 16384.0;
+            // Convert to m/s² (LSM6DSOX ±2g range: 0.061 mg/LSB)
+            constexpr double accel_scale = 0.061e-3 * 9.81;  // mg to m/s²
             data.accel_x = accel_x_raw * accel_scale;
             data.accel_y = accel_y_raw * accel_scale;
             data.accel_z = accel_z_raw * accel_scale;
         }
 
-        // Read gyroscope data (example registers)
-        if (_i2c_device->readRegisters(0x43, gyro_data, 6, _timeout_ms))
+        // Read gyroscope data (LSM6DSOX registers 0x22-0x27)
+        if (_i2c_device->readRegisters(0x22, gyro_data, 6, _timeout_ms))
         {
-            // Convert raw data to angular velocity values (example conversion)
-            int16_t gyro_x_raw = (gyro_data[0] << 8) | gyro_data[1];
-            int16_t gyro_y_raw = (gyro_data[2] << 8) | gyro_data[3];
-            int16_t gyro_z_raw = (gyro_data[4] << 8) | gyro_data[5];
+            // LSM6DSOX uses little-endian format (LSB first)
+            int16_t gyro_x_raw = (gyro_data[1] << 8) | gyro_data[0];
+            int16_t gyro_y_raw = (gyro_data[3] << 8) | gyro_data[2];
+            int16_t gyro_z_raw = (gyro_data[5] << 8) | gyro_data[4];
 
-            // Convert to rad/s (example scale factor for ±250°/s range)
-            constexpr double gyro_scale = (250.0 * M_PI / 180.0) / 32768.0;
+            // Convert to rad/s (LSM6DSOX ±250 dps range: 8.75 mdps/LSB)
+            constexpr double gyro_scale = 8.75e-3 * M_PI / 180.0;  // mdps to rad/s
             data.gyro_x = gyro_x_raw * gyro_scale;
             data.gyro_y = gyro_y_raw * gyro_scale;
             data.gyro_z = gyro_z_raw * gyro_scale;
         }
 
-        // Read temperature data (example registers)
-        if (_i2c_device->readRegisters(0x41, temp_data, 2, _timeout_ms))
+        // Read temperature data (LSM6DSOX registers 0x20-0x21)
+        if (_i2c_device->readRegisters(0x20, temp_data, 2, _timeout_ms))
         {
-            // Convert raw data to temperature (example conversion)
-            int16_t temp_raw = (temp_data[0] << 8) | temp_data[1];
-            data.temperature = temp_raw / 340.0 + 36.53;  // Example MPU6050 formula
+            // LSM6DSOX uses little-endian format (LSB first)
+            int16_t temp_raw = (temp_data[1] << 8) | temp_data[0];
+            
+            // Convert to Celsius (LSM6DSOX: 256 LSB/°C, 25°C offset)
+            data.temperature = (temp_raw / 256.0) + 25.0;
         }
 
         return data;
@@ -320,41 +320,51 @@ namespace i2c_imu_driver
             return false;
         }
 
-        // This is a generic initialization - in a real scenario, you would
-        // configure your specific IMU based on its datasheet.
-        // For example, for an MPU6050:
-        // - Wake up the device (register 0x6B)
-        // - Configure accelerometer range (register 0x1C)
-        // - Configure gyroscope range (register 0x1B)
-        // - Configure sample rate (register 0x19)
+        // LSM6DSOX initialization sequence
+        // Register addresses from LSM6DSOX datasheet
 
         int retry_count = 0;
         while (retry_count < _retry_count)
         {
             try
             {
-                // Example: Wake up device (clear sleep bit)
-                if (!_i2c_device->writeRegister(0x6B, 0x00, _timeout_ms))
+                // Check WHO_AM_I register (0x0F) - should return 0x6C for LSM6DSOX
+                uint8_t who_am_i;
+                if (!_i2c_device->readRegisters(0x0F, &who_am_i, 1, _timeout_ms))
                 {
-                    throw std::runtime_error("Failed to wake up device");
+                    throw std::runtime_error("Failed to read WHO_AM_I register");
+                }
+                if (who_am_i != 0x6C)
+                {
+                    throw std::runtime_error("Invalid WHO_AM_I value: expected 0x6C, got 0x" + 
+                                           std::to_string(who_am_i));
                 }
 
-                // Example: Configure accelerometer to ±2g range
-                if (!_i2c_device->writeRegister(0x1C, 0x00, _timeout_ms))
+                // Reset device (CTRL3_C register 0x12, bit 0)
+                if (!_i2c_device->writeRegister(0x12, 0x01, _timeout_ms))
                 {
-                    throw std::runtime_error("Failed to configure accelerometer range");
+                    throw std::runtime_error("Failed to reset device");
                 }
 
-                // Example: Configure gyroscope to ±250°/s range
-                if (!_i2c_device->writeRegister(0x1B, 0x00, _timeout_ms))
+                // Wait for reset to complete
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+                // Configure accelerometer: ODR = 104 Hz, FS = ±2g (CTRL1_XL register 0x10)
+                if (!_i2c_device->writeRegister(0x10, 0x40, _timeout_ms))
                 {
-                    throw std::runtime_error("Failed to configure gyroscope range");
+                    throw std::runtime_error("Failed to configure accelerometer");
                 }
 
-                // Example: Set sample rate to 1kHz
-                if (!_i2c_device->writeRegister(0x19, 0x07, _timeout_ms))
+                // Configure gyroscope: ODR = 104 Hz, FS = ±250 dps (CTRL2_G register 0x11)
+                if (!_i2c_device->writeRegister(0x11, 0x40, _timeout_ms))
                 {
-                    throw std::runtime_error("Failed to configure sample rate");
+                    throw std::runtime_error("Failed to configure gyroscope");
+                }
+
+                // Enable block data update (CTRL3_C register 0x12, bit 6)
+                if (!_i2c_device->writeRegister(0x12, 0x40, _timeout_ms))
+                {
+                    throw std::runtime_error("Failed to enable block data update");
                 }
 
                 return true;
