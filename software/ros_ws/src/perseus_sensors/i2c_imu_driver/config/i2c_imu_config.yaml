@@ -1,0 +1,72 @@
+i2c_imu_node:
+  ros__parameters:
+    # I2C Configuration
+    i2c_bus: "/dev/i2c-7"
+    device_address: 0x6A
+    update_rate: 100.0
+    frame_id: "imu_link"
+    required: false  # Optional hardware
+    timeout_ms: 1000
+    retry_count: 3
+    
+    # IMU-specific parameters (example for MPU6050)
+    accel_range: 2  # ±2g
+    gyro_range: 250  # ±250°/s
+    filter_bandwidth: 42  # Hz
+    
+    # Calibration parameters
+    # Accelerometer calibration
+    accel_scale_x: 1.0
+    accel_scale_y: 1.0
+    accel_scale_z: 1.0
+    accel_offset_x: 0.0
+    accel_offset_y: 0.0
+    accel_offset_z: 0.0
+    
+    # Gyroscope calibration
+    gyro_scale_x: 1.0
+    gyro_scale_y: 1.0
+    gyro_scale_z: 1.0
+    gyro_offset_x: 0.0
+    gyro_offset_y: 0.0
+    gyro_offset_z: 0.0
+    
+    # Covariance matrices
+    # Orientation covariance (unknown orientation, set first element to -1)
+    orientation_covariance: [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    
+    # Angular velocity covariance (adjust based on sensor specs)
+    angular_velocity_covariance: [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01]
+    
+    # Linear acceleration covariance (adjust based on sensor specs)
+    linear_acceleration_covariance: [0.1, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.1]
+
+# Example configuration for different IMU types
+# Uncomment and modify as needed for your specific IMU
+
+# For MPU6050:
+# mpu6050_config:
+#   ros__parameters:
+#     i2c_bus: "/dev/i2c-1"
+#     device_address: 0x68
+#     accel_range: 2  # ±2g
+#     gyro_range: 250  # ±250°/s
+#     sample_rate: 1000  # Hz
+
+# For MPU9250:
+# mpu9250_config:
+#   ros__parameters:
+#     i2c_bus: "/dev/i2c-1"
+#     device_address: 0x68
+#     accel_range: 2  # ±2g
+#     gyro_range: 250  # ±250°/s
+#     enable_magnetometer: true
+
+# For LSM6DS3:
+# lsm6ds3_config:
+#   ros__parameters:
+#     i2c_bus: "/dev/i2c-1"
+#     device_address: 0x6A
+#     accel_range: 2  # ±2g
+#     gyro_range: 250  # ±250°/s
+#     odr: 104  # Output data rate in Hz

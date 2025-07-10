@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.23)
 
 project(
-  perseus_sensors
+  i2c_imu_driver
   VERSION 0.0.1
   LANGUAGES CXX)
 
@@ -41,7 +41,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp rclcpp_lifecycle hardware_interface sensor_msgs geometry_msgs tf2 tf2_geometry_msgs OpenSSL nlohmann_json)
+set(THIS_PACKAGE_INCLUDE_DEPENDS 
+    rclcpp 
+    rclcpp_lifecycle 
+    hardware_interface 
+    sensor_msgs 
+    geometry_msgs 
+    tf2 
+    tf2_geometry_msgs)
+
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
 
@@ -53,59 +61,39 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-find_package(simple_networking QUIET)
-if(NOT simple_networking_FOUND)
-  message(STATUS "simple_networking not found, adding subdirectory...")
+# Find fd-wrapper shared library
+find_package(fd-wrapper QUIET)
+if(NOT fd-wrapper_FOUND)
+  message(STATUS "fd-wrapper not found, adding subdirectory...")
   message(
     STATUS
-      "Attempting to add simple_networking from: ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared/simple-networking"
+      "Attempting to add fd-wrapper from: ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared/fd-wrapper"
   )
-  add_subdirectory(../../../shared/simple-networking simple-networking)
+  add_subdirectory(../../../shared/fd-wrapper fd-wrapper)
 endif()
 
-find_package(fd_wrapper QUIET)
-if(NOT fd_wrapper_FOUND)
-  message(STATUS "fd_wrapper not found, adding subdirectory...")
-  message(
-    STATUS
-      "Attempting to add fd_wrapper from: ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared/fd-wrapper"
-  )
-  add_subdirectory(../../../shared/fd-wrapper fd_wrapper)
-endif()
+# COMPILE (Executables and Libraries)
 
-# COMPILE (Executables)
+# Find all source files
+file(GLOB_RECURSE I2C_IMU_SOURCES src/*.cpp)
 
-# Find all source files in the src directory
-file(GLOB_RECURSE M2M2_LIDAR_CODE_SOURCES src/m2m2_lidar/*.cpp)
-# Add the target with those sources
+# Add executable target
+add_executable(i2c_imu_node ${I2C_IMU_SOURCES})
 
-# Add exec target
-add_executable(m2m2_lidar ${M2M2_LIDAR_CODE_SOURCES})
-
-# Add include dirs for exec
-target_include_directories(m2m2_lidar
+# Add include directories
+target_include_directories(i2c_imu_node
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add dependencies for the executable
-ament_target_dependencies(m2m2_lidar PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(m2m2_lidar PUBLIC simple_networking OpenSSL::Crypto)
-
-# I2C IMU Driver
-file(GLOB_RECURSE I2C_IMU_CODE_SOURCES i2c_imu_driver/src/*.cpp)
-add_executable(i2c_imu_node ${I2C_IMU_CODE_SOURCES})
-
-target_include_directories(i2c_imu_node
-                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/i2c_imu_driver/include)
-
 ament_target_dependencies(i2c_imu_node PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(i2c_imu_node PUBLIC fd_wrapper)
+target_link_libraries(i2c_imu_node PUBLIC fd-wrapper)
 
-# Install ROS Executables
-install(TARGETS m2m2_lidar i2c_imu_node DESTINATION lib/${PROJECT_NAME})
+# Install ROS Executable
+install(TARGETS i2c_imu_node DESTINATION lib/${PROJECT_NAME})
 
-# Install launch
+# Install launch, config, and urdf files
 install(
-  DIRECTORY launch config i2c_imu_driver/launch i2c_imu_driver/config i2c_imu_driver/urdf
+  DIRECTORY launch config urdf
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
