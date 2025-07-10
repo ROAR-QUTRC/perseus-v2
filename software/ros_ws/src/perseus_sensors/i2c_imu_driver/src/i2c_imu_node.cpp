@@ -250,7 +250,7 @@ namespace i2c_imu_driver
         {
             // LSM6DSOX uses little-endian format (LSB first)
             int16_t temp_raw = (temp_data[1] << 8) | temp_data[0];
-            
+
             // Convert to Celsius (LSM6DSOX: 256 LSB/°C, 25°C offset)
             data.temperature = (temp_raw / 256.0) + 25.0;
         }
@@ -336,8 +336,8 @@ namespace i2c_imu_driver
                 }
                 if (who_am_i != 0x6C)
                 {
-                    throw std::runtime_error("Invalid WHO_AM_I value: expected 0x6C, got 0x" + 
-                                           std::to_string(who_am_i));
+                    throw std::runtime_error("Invalid WHO_AM_I value: expected 0x6C, got 0x" +
+                                             std::to_string(who_am_i));
                 }
 
                 // Reset device (CTRL3_C register 0x12, bit 0)

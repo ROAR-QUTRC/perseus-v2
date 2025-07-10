@@ -9,8 +9,8 @@
 #include <cerrno>
 #include <cstring>
 #include <optional>
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 namespace i2c_imu_driver
 {
@@ -34,22 +34,23 @@ namespace i2c_imu_driver
         {
             return false;
         }
-        
+
         // Set slave address
         if (ioctl(fd, I2C_SLAVE, _device_address) < 0)
         {
             close(fd);
             return false;
         }
-        
+
         // Now create the FdWrapper with the already-opened file descriptor
         try
         {
             _i2c_fd = FdWrapper(
-                [fd]() -> int { return fd; },
+                [fd]() -> int
+                { return fd; },
                 nullptr,
-                [](int fd) { close(fd); }
-            );
+                [](int fd)
+                { close(fd); });
         }
         catch (const std::exception& e)
         {
