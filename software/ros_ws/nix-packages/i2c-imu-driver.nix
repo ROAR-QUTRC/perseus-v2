@@ -7,22 +7,17 @@
   fd-wrapper,
   geometry-msgs,
   hardware-interface,
-  nlohmann_json,
-  openssl,
   rclcpp,
   rclcpp-lifecycle,
-  realsense2-camera,
-  realsense2-description,
   sensor-msgs,
-  simple-networking,
   tf2,
   tf2-geometry-msgs,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-perseus-sensors";
-  version = "1.0.0";
+  pname = "ros-jazzy-i2c-imu-driver";
+  version = "0.0.1";
 
-  src = ./../src/perseus_sensors;
+  src = ./../src/perseus_sensors/i2c_imu_driver;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
@@ -31,21 +26,16 @@ buildRosPackage rec {
     fd-wrapper
     geometry-msgs
     hardware-interface
-    nlohmann_json
-    openssl
     rclcpp
     rclcpp-lifecycle
-    realsense2-camera
-    realsense2-description
     sensor-msgs
-    simple-networking
     tf2
     tf2-geometry-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "ROS 2 package for managing and processing point-cloud data from the Slamtec M2M2 lidar device which is accessed by TCP ethernet. Handles network access, data processing and provides ROS sensor message information.";
+    description = "ROS 2 package for I2C IMU sensor driver. Provides direct I2C communication with IMU sensors connected to the host system's I2C bus, publishes sensor_msgs/Imu messages, and integrates with hardware_interface for optional sensor support.";
     license = with lib.licenses; [ mit ];
   };
 }
