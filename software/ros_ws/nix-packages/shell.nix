@@ -38,7 +38,6 @@ pkgs.mkShell {
             backward-ros
             controller-manager
             diff-drive-controller
-            fd-wrapper
             geometry-msgs
             gz-ros2-control
             hardware-interface

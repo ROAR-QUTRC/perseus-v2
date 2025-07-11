@@ -4,7 +4,6 @@
   buildRosPackage,
   ament-cmake,
   backward-ros,
-  fd-wrapper,
   geometry-msgs,
   hardware-interface,
   nlohmann_json,
@@ -28,7 +27,6 @@ buildRosPackage rec {
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
     backward-ros
-    fd-wrapper
     geometry-msgs
     hardware-interface
     nlohmann_json
