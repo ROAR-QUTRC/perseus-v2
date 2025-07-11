@@ -46,9 +46,9 @@ namespace i2c_imu_driver
             .gyro_config_register = 0x11,
             .ctrl_register = 0x12,
             .reset_value = 0x01,
-            .accel_config_value = 0x40,                   // ODR = 104 Hz, FS = ±2g
-            .gyro_config_value = 0x40,                    // ODR = 104 Hz, FS = ±250 dps
-            .ctrl_value = 0x40,                           // Enable block data update
+            .accel_config_value = 0x40,  // ODR = 104 Hz, FS = ±2g
+            .gyro_config_value = 0x40,   // ODR = 104 Hz, FS = ±250 dps
+            .ctrl_value = 0x40,          // Enable block data update
             .accel_scale_factor = LSM6DSOX_ACCEL_SCALE_FACTOR,
             .gyro_scale_factor = LSM6DSOX_GYRO_SCALE_FACTOR,
             .temp_scale_factor = LSM6DSOX_TEMP_SCALE_FACTOR,
@@ -69,15 +69,15 @@ namespace i2c_imu_driver
             .accel_config_register = 0x1C,
             .gyro_config_register = 0x1B,
             .ctrl_register = 0x19,
-            .reset_value = 0x00,                                    // Exit sleep mode
-            .accel_config_value = 0x00,                             // ±2g range
-            .gyro_config_value = 0x00,                              // ±250 dps range
-            .ctrl_value = 0x07,                                     // Sample rate divider (1kHz / (1 + 7) = 125 Hz)
+            .reset_value = 0x00,         // Exit sleep mode
+            .accel_config_value = 0x00,  // ±2g range
+            .gyro_config_value = 0x00,   // ±250 dps range
+            .ctrl_value = 0x07,          // Sample rate divider (1kHz / (1 + 7) = 125 Hz)
             .accel_scale_factor = MPU_ACCEL_SCALE_FACTOR,
             .gyro_scale_factor = MPU_GYRO_SCALE_FACTOR,
             .temp_scale_factor = MPU_TEMP_SCALE_FACTOR,
             .temp_offset = MPU_TEMP_OFFSET,
-            .little_endian = false,                                 // Big-endian format
+            .little_endian = false,  // Big-endian format
             .data_bytes_per_axis = 2};
 
         // MPU9250 Configuration (similar to MPU6050 but with different WHO_AM_I)
@@ -93,15 +93,15 @@ namespace i2c_imu_driver
             .accel_config_register = 0x1C,
             .gyro_config_register = 0x1B,
             .ctrl_register = 0x19,
-            .reset_value = 0x00,                                    // Exit sleep mode
-            .accel_config_value = 0x00,                             // ±2g range
-            .gyro_config_value = 0x00,                              // ±250 dps range
-            .ctrl_value = 0x07,                                     // Sample rate divider (1kHz / (1 + 7) = 125 Hz)
+            .reset_value = 0x00,         // Exit sleep mode
+            .accel_config_value = 0x00,  // ±2g range
+            .gyro_config_value = 0x00,   // ±250 dps range
+            .ctrl_value = 0x07,          // Sample rate divider (1kHz / (1 + 7) = 125 Hz)
             .accel_scale_factor = MPU_ACCEL_SCALE_FACTOR,
             .gyro_scale_factor = MPU_GYRO_SCALE_FACTOR,
             .temp_scale_factor = MPU_TEMP_SCALE_FACTOR,
             .temp_offset = MPU_TEMP_OFFSET,
-            .little_endian = false,                                 // Big-endian format
+            .little_endian = false,  // Big-endian format
             .data_bytes_per_axis = 2};
 
         // LSM6DS3 Configuration
@@ -118,9 +118,9 @@ namespace i2c_imu_driver
             .gyro_config_register = 0x11,
             .ctrl_register = 0x12,
             .reset_value = 0x01,
-            .accel_config_value = 0x40,                   // ODR = 104 Hz, FS = ±2g
-            .gyro_config_value = 0x40,                    // ODR = 104 Hz, FS = ±250 dps
-            .ctrl_value = 0x40,                           // Enable block data update
+            .accel_config_value = 0x40,  // ODR = 104 Hz, FS = ±2g
+            .gyro_config_value = 0x40,   // ODR = 104 Hz, FS = ±250 dps
+            .ctrl_value = 0x40,          // Enable block data update
             .accel_scale_factor = LSM6DS3_ACCEL_SCALE_FACTOR,
             .gyro_scale_factor = LSM6DS3_GYRO_SCALE_FACTOR,
             .temp_scale_factor = LSM6DS3_TEMP_SCALE_FACTOR,
