@@ -72,15 +72,8 @@ if(NOT simple_networking_FOUND)
   add_subdirectory(../../../shared/simple-networking simple-networking)
 endif()
 
-find_package(fd_wrapper QUIET)
-if(NOT fd_wrapper_FOUND)
-  message(STATUS "fd_wrapper not found, adding subdirectory...")
-  message(
-    STATUS
-      "Attempting to add fd_wrapper from: ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared/fd-wrapper"
-  )
-  add_subdirectory(../../../shared/fd-wrapper fd_wrapper)
-endif()
+# fd_wrapper is already built as part of simple-networking
+# No need to add it separately
 
 # COMPILE (Executables)
 

@@ -11,6 +11,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "i2c_imu_driver/i2c_device.hpp"
+#include "i2c_imu_driver/imu_device_config.hpp"
 
 namespace i2c_imu_driver
 {
@@ -114,6 +115,10 @@ namespace i2c_imu_driver
         bool _required;
         std::chrono::milliseconds _timeout_ms;
         int _retry_count;
+        
+        // Device configuration
+        std::string _device_type;
+        const ImuDeviceConfig* _device_config;
 
         // IMU calibration parameters
         double _accel_scale_x{1.0};

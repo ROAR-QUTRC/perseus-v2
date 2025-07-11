@@ -8,7 +8,7 @@ namespace i2c_imu_driver
 {
 
     I2cImuNode::I2cImuNode(const rclcpp::NodeOptions& options)
-        : Node("i2c_imu_node", options)
+        : Node("i2c_imu_node", options), _device_config(nullptr)
     {
         // Initialize parameters
         _initializeParameters();
@@ -34,7 +34,7 @@ namespace i2c_imu_driver
         auto timer_period = std::chrono::milliseconds(static_cast<int>(1000.0 / _update_rate));
         _timer = create_wall_timer(timer_period, std::bind(&I2cImuNode::_timerCallback, this));
 
-        RCLCPP_INFO(get_logger(), "I2C IMU node initialized successfully");
+        RCLCPP_INFO(get_logger(), "I2C IMU node initialized successfully with device: %s", _device_type.c_str());
     }
 
     I2cImuNode::~I2cImuNode()
@@ -49,6 +49,7 @@ namespace i2c_imu_driver
     {
         // Declare and get parameters
         declare_parameter("i2c_bus", "/dev/i2c-7");
+        declare_parameter("device_type", ImuDeviceRegistry::getDefaultDevice());
         declare_parameter("device_address", 0x6A);
         declare_parameter("update_rate", 100.0);
         declare_parameter("frame_id", "imu_link");
@@ -81,12 +82,34 @@ namespace i2c_imu_driver
 
         // Get parameter values
         _i2c_bus_path = get_parameter("i2c_bus").as_string();
+        _device_type = get_parameter("device_type").as_string();
         _device_address = static_cast<uint8_t>(get_parameter("device_address").as_int());
         _update_rate = get_parameter("update_rate").as_double();
         _frame_id = get_parameter("frame_id").as_string();
         _required = get_parameter("required").as_bool();
         _timeout_ms = std::chrono::milliseconds(get_parameter("timeout_ms").as_int());
         _retry_count = get_parameter("retry_count").as_int();
+        
+        // Get device configuration
+        _device_config = ImuDeviceRegistry::getDeviceConfig(_device_type);
+        if (!_device_config)
+        {
+            auto supported_devices = ImuDeviceRegistry::getSupportedDevices();
+            std::string supported_list;
+            for (const auto& device : supported_devices)
+            {
+                if (!supported_list.empty()) supported_list += ", ";
+                supported_list += device;
+            }
+            throw std::runtime_error("Unsupported device type: " + _device_type + 
+                                   ". Supported devices: " + supported_list);
+        }
+        
+        // Use device default address if not explicitly set
+        if (get_parameter("device_address").as_int() == 0x6A) // Default value check
+        {
+            _device_address = _device_config->default_address;
+        }
 
         // Calibration parameters
         _accel_scale_x = get_parameter("accel_scale_x").as_double();
@@ -201,58 +224,85 @@ namespace i2c_imu_driver
         ImuData data;
         data.timestamp = std::chrono::steady_clock::now();
 
-        if (!_i2c_device || !_i2c_device->isConnected())
+        if (!_i2c_device || !_i2c_device->isConnected() || !_device_config)
         {
             return data;
         }
-
-        // LSM6DSOX register addresses:
-        // - Accelerometer: registers 0x28-0x2D (OUTX_L_A to OUTZ_H_A)
-        // - Gyroscope: registers 0x22-0x27 (OUTX_L_G to OUTZ_H_G)
-        // - Temperature: registers 0x20-0x21 (OUT_TEMP_L to OUT_TEMP_H)
 
         uint8_t accel_data[6];
         uint8_t gyro_data[6];
         uint8_t temp_data[2];
 
-        // Read accelerometer data (LSM6DSOX registers 0x28-0x2D)
-        if (_i2c_device->readRegisters(0x28, accel_data, 6, _timeout_ms))
+        // Read accelerometer data using device-specific register
+        if (_i2c_device->readRegisters(_device_config->accel_data_register, accel_data, 6, _timeout_ms))
         {
-            // LSM6DSOX uses little-endian format (LSB first)
-            int16_t accel_x_raw = (accel_data[1] << 8) | accel_data[0];
-            int16_t accel_y_raw = (accel_data[3] << 8) | accel_data[2];
-            int16_t accel_z_raw = (accel_data[5] << 8) | accel_data[4];
+            int16_t accel_x_raw, accel_y_raw, accel_z_raw;
+            
+            if (_device_config->little_endian)
+            {
+                // Little-endian format (LSB first)
+                accel_x_raw = (accel_data[1] << 8) | accel_data[0];
+                accel_y_raw = (accel_data[3] << 8) | accel_data[2];
+                accel_z_raw = (accel_data[5] << 8) | accel_data[4];
+            }
+            else
+            {
+                // Big-endian format (MSB first)
+                accel_x_raw = (accel_data[0] << 8) | accel_data[1];
+                accel_y_raw = (accel_data[2] << 8) | accel_data[3];
+                accel_z_raw = (accel_data[4] << 8) | accel_data[5];
+            }
 
-            // Convert to m/s² (LSM6DSOX ±2g range: 0.061 mg/LSB)
-            constexpr double accel_scale = 0.061e-3 * 9.81;  // mg to m/s²
-            data.accel_x = accel_x_raw * accel_scale;
-            data.accel_y = accel_y_raw * accel_scale;
-            data.accel_z = accel_z_raw * accel_scale;
+            // Convert to m/s² using device-specific scale factor
+            data.accel_x = accel_x_raw * _device_config->accel_scale_factor;
+            data.accel_y = accel_y_raw * _device_config->accel_scale_factor;
+            data.accel_z = accel_z_raw * _device_config->accel_scale_factor;
         }
 
-        // Read gyroscope data (LSM6DSOX registers 0x22-0x27)
-        if (_i2c_device->readRegisters(0x22, gyro_data, 6, _timeout_ms))
+        // Read gyroscope data using device-specific register
+        if (_i2c_device->readRegisters(_device_config->gyro_data_register, gyro_data, 6, _timeout_ms))
         {
-            // LSM6DSOX uses little-endian format (LSB first)
-            int16_t gyro_x_raw = (gyro_data[1] << 8) | gyro_data[0];
-            int16_t gyro_y_raw = (gyro_data[3] << 8) | gyro_data[2];
-            int16_t gyro_z_raw = (gyro_data[5] << 8) | gyro_data[4];
+            int16_t gyro_x_raw, gyro_y_raw, gyro_z_raw;
+            
+            if (_device_config->little_endian)
+            {
+                // Little-endian format (LSB first)
+                gyro_x_raw = (gyro_data[1] << 8) | gyro_data[0];
+                gyro_y_raw = (gyro_data[3] << 8) | gyro_data[2];
+                gyro_z_raw = (gyro_data[5] << 8) | gyro_data[4];
+            }
+            else
+            {
+                // Big-endian format (MSB first)
+                gyro_x_raw = (gyro_data[0] << 8) | gyro_data[1];
+                gyro_y_raw = (gyro_data[2] << 8) | gyro_data[3];
+                gyro_z_raw = (gyro_data[4] << 8) | gyro_data[5];
+            }
 
-            // Convert to rad/s (LSM6DSOX ±250 dps range: 8.75 mdps/LSB)
-            constexpr double gyro_scale = 8.75e-3 * M_PI / 180.0;  // mdps to rad/s
-            data.gyro_x = gyro_x_raw * gyro_scale;
-            data.gyro_y = gyro_y_raw * gyro_scale;
-            data.gyro_z = gyro_z_raw * gyro_scale;
+            // Convert to rad/s using device-specific scale factor
+            data.gyro_x = gyro_x_raw * _device_config->gyro_scale_factor;
+            data.gyro_y = gyro_y_raw * _device_config->gyro_scale_factor;
+            data.gyro_z = gyro_z_raw * _device_config->gyro_scale_factor;
         }
 
-        // Read temperature data (LSM6DSOX registers 0x20-0x21)
-        if (_i2c_device->readRegisters(0x20, temp_data, 2, _timeout_ms))
+        // Read temperature data using device-specific register
+        if (_i2c_device->readRegisters(_device_config->temp_data_register, temp_data, 2, _timeout_ms))
         {
-            // LSM6DSOX uses little-endian format (LSB first)
-            int16_t temp_raw = (temp_data[1] << 8) | temp_data[0];
+            int16_t temp_raw;
+            
+            if (_device_config->little_endian)
+            {
+                // Little-endian format (LSB first)
+                temp_raw = (temp_data[1] << 8) | temp_data[0];
+            }
+            else
+            {
+                // Big-endian format (MSB first)
+                temp_raw = (temp_data[0] << 8) | temp_data[1];
+            }
 
-            // Convert to Celsius (LSM6DSOX: 256 LSB/°C, 25°C offset)
-            data.temperature = (temp_raw / 256.0) + 25.0;
+            // Convert to Celsius using device-specific scale factor and offset
+            data.temperature = (temp_raw * _device_config->temp_scale_factor) + _device_config->temp_offset;
         }
 
         return data;
@@ -320,28 +370,33 @@ namespace i2c_imu_driver
             return false;
         }
 
-        // LSM6DSOX initialization sequence
-        // Register addresses from LSM6DSOX datasheet
+        if (!_device_config)
+        {
+            RCLCPP_ERROR(get_logger(), "Device configuration not available");
+            return false;
+        }
 
+        // Device-agnostic initialization sequence
         int retry_count = 0;
         while (retry_count < _retry_count)
         {
             try
             {
-                // Check WHO_AM_I register (0x0F) - should return 0x6C for LSM6DSOX
+                // Check WHO_AM_I register
                 uint8_t who_am_i;
-                if (!_i2c_device->readRegisters(0x0F, &who_am_i, 1, _timeout_ms))
+                if (!_i2c_device->readRegisters(_device_config->who_am_i_register, &who_am_i, 1, _timeout_ms))
                 {
                     throw std::runtime_error("Failed to read WHO_AM_I register");
                 }
-                if (who_am_i != 0x6C)
+                if (who_am_i != _device_config->who_am_i_value)
                 {
-                    throw std::runtime_error("Invalid WHO_AM_I value: expected 0x6C, got 0x" +
-                                             std::to_string(who_am_i));
+                    throw std::runtime_error("Invalid WHO_AM_I value: expected 0x" +
+                                             std::to_string(_device_config->who_am_i_value) + 
+                                             ", got 0x" + std::to_string(who_am_i));
                 }
 
-                // Reset device (CTRL3_C register 0x12, bit 0)
-                if (!_i2c_device->writeRegister(0x12, 0x01, _timeout_ms))
+                // Reset device
+                if (!_i2c_device->writeRegister(_device_config->reset_register, _device_config->reset_value, _timeout_ms))
                 {
                     throw std::runtime_error("Failed to reset device");
                 }
@@ -349,22 +404,22 @@ namespace i2c_imu_driver
                 // Wait for reset to complete
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-                // Configure accelerometer: ODR = 104 Hz, FS = ±2g (CTRL1_XL register 0x10)
-                if (!_i2c_device->writeRegister(0x10, 0x40, _timeout_ms))
+                // Configure accelerometer
+                if (!_i2c_device->writeRegister(_device_config->accel_config_register, _device_config->accel_config_value, _timeout_ms))
                 {
                     throw std::runtime_error("Failed to configure accelerometer");
                 }
 
-                // Configure gyroscope: ODR = 104 Hz, FS = ±250 dps (CTRL2_G register 0x11)
-                if (!_i2c_device->writeRegister(0x11, 0x40, _timeout_ms))
+                // Configure gyroscope
+                if (!_i2c_device->writeRegister(_device_config->gyro_config_register, _device_config->gyro_config_value, _timeout_ms))
                 {
                     throw std::runtime_error("Failed to configure gyroscope");
                 }
 
-                // Enable block data update (CTRL3_C register 0x12, bit 6)
-                if (!_i2c_device->writeRegister(0x12, 0x40, _timeout_ms))
+                // Configure control register
+                if (!_i2c_device->writeRegister(_device_config->ctrl_register, _device_config->ctrl_value, _timeout_ms))
                 {
-                    throw std::runtime_error("Failed to enable block data update");
+                    throw std::runtime_error("Failed to configure control register");
                 }
 
                 return true;
