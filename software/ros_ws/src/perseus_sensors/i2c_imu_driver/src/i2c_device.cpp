@@ -15,6 +15,10 @@
 namespace i2c_imu_driver
 {
 
+    // LSM6DSOX detection constants
+    const uint8_t LSM6DSOX_WHO_AM_I_REGISTER = 0x0F;
+    const uint8_t LSM6DSOX_WHO_AM_I_VALUE = 0x6C;
+
     I2cDevice::I2cDevice(const std::string& bus_path, uint8_t device_address)
         : _bus_path(bus_path),
           _device_address(device_address)
@@ -185,11 +189,10 @@ namespace i2c_imu_driver
             return false;
         }
 
-        // Try to read from WHO_AM_I register (0x0F) for LSM6DSOX
-        // Expected value is 0x6C for LSM6DSOX
+        // Try to read from WHO_AM_I register for LSM6DSOX
         struct i2c_msg msgs[2];
         struct i2c_rdwr_ioctl_data msgset;
-        uint8_t reg_addr = 0x0F;
+        uint8_t reg_addr = LSM6DSOX_WHO_AM_I_REGISTER;
         uint8_t who_am_i = 0;
 
         // First message: write register address
@@ -215,7 +218,7 @@ namespace i2c_imu_driver
         }
 
         // Check if it's a valid LSM6DSOX device
-        if (who_am_i != 0x6C)
+        if (who_am_i != LSM6DSOX_WHO_AM_I_VALUE)
         {
             // Debug: Invalid WHO_AM_I value
             return false;
