@@ -7,28 +7,32 @@ The Perseus V2 system includes an I2C IMU (Inertial Measurement Unit) driver tha
 The driver supports multiple IMU devices:
 
 - **LSM6DSOX** (0x6A) - 6-axis accelerometer + gyroscope (default)
-- **MPU6050** (0x68) - 6-axis accelerometer + gyroscope  
+- **MPU6050** (0x68) - 6-axis accelerometer + gyroscope
 - **MPU9250** (0x68) - 9-axis accelerometer + gyroscope + magnetometer
 - **LSM6DS3** (0x6A) - 6-axis accelerometer + gyroscope
 
 ## Building and Running
 
 ### Enter Development Environment
+
 ```bash
 nix develop
 ```
 
 ### Build the Package
+
 ```bash
 colcon build --packages-select perseus_sensors
 ```
 
 ### Source the Environment
+
 ```bash
 source install/setup.bash
 ```
 
 ### Launch the IMU Node
+
 ```bash
 ros2 launch perseus_sensors i2c_imu.launch.py
 ```
@@ -40,6 +44,7 @@ ros2 launch perseus_sensors i2c_imu.launch.py
 To use a different IMU type, modify the config file at `src/perseus_sensors/i2c_imu_driver/config/i2c_imu_config.yaml`
 
 Example configuration for MPU6050:
+
 ```yaml
 i2c_imu:
   ros__parameters:
@@ -62,7 +67,7 @@ i2c_imu_1:
     device_address: 106
     frame_id: "imu_1_link"
 
-# Second IMU  
+# Second IMU
 i2c_imu_2:
   ros__parameters:
     device_type: "lsm6dsox"
@@ -81,6 +86,7 @@ i2c_imu_2:
 ### Verification
 
 To verify the IMU is working correctly:
+
 ```bash
 ros2 topic echo /imu/data
 ```
