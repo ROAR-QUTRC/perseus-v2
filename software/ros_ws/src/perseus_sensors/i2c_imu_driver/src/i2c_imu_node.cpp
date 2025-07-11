@@ -8,7 +8,8 @@ namespace i2c_imu_driver
 {
 
     I2cImuNode::I2cImuNode(const rclcpp::NodeOptions& options)
-        : Node("i2c_imu_node", options), _device_config(nullptr)
+        : Node("i2c_imu_node", options),
+          _device_config(nullptr)
     {
         // Initialize parameters
         _initializeParameters();
@@ -89,7 +90,7 @@ namespace i2c_imu_driver
         _required = get_parameter("required").as_bool();
         _timeout_ms = std::chrono::milliseconds(get_parameter("timeout_ms").as_int());
         _retry_count = get_parameter("retry_count").as_int();
-        
+
         // Get device configuration
         _device_config = ImuDeviceRegistry::getDeviceConfig(_device_type);
         if (!_device_config)
@@ -98,15 +99,16 @@ namespace i2c_imu_driver
             std::string supported_list;
             for (const auto& device : supported_devices)
             {
-                if (!supported_list.empty()) supported_list += ", ";
+                if (!supported_list.empty())
+                    supported_list += ", ";
                 supported_list += device;
             }
-            throw std::runtime_error("Unsupported device type: " + _device_type + 
-                                   ". Supported devices: " + supported_list);
+            throw std::runtime_error("Unsupported device type: " + _device_type +
+                                     ". Supported devices: " + supported_list);
         }
-        
+
         // Use device default address if not explicitly set
-        if (get_parameter("device_address").as_int() == 0x6A) // Default value check
+        if (get_parameter("device_address").as_int() == 0x6A)  // Default value check
         {
             _device_address = _device_config->default_address;
         }
@@ -237,7 +239,7 @@ namespace i2c_imu_driver
         if (_i2c_device->readRegisters(_device_config->accel_data_register, accel_data, 6, _timeout_ms))
         {
             int16_t accel_x_raw, accel_y_raw, accel_z_raw;
-            
+
             if (_device_config->little_endian)
             {
                 // Little-endian format (LSB first)
@@ -263,7 +265,7 @@ namespace i2c_imu_driver
         if (_i2c_device->readRegisters(_device_config->gyro_data_register, gyro_data, 6, _timeout_ms))
         {
             int16_t gyro_x_raw, gyro_y_raw, gyro_z_raw;
-            
+
             if (_device_config->little_endian)
             {
                 // Little-endian format (LSB first)
@@ -289,7 +291,7 @@ namespace i2c_imu_driver
         if (_i2c_device->readRegisters(_device_config->temp_data_register, temp_data, 2, _timeout_ms))
         {
             int16_t temp_raw;
-            
+
             if (_device_config->little_endian)
             {
                 // Little-endian format (LSB first)
@@ -391,7 +393,7 @@ namespace i2c_imu_driver
                 if (who_am_i != _device_config->who_am_i_value)
                 {
                     throw std::runtime_error("Invalid WHO_AM_I value: expected 0x" +
-                                             std::to_string(_device_config->who_am_i_value) + 
+                                             std::to_string(_device_config->who_am_i_value) +
                                              ", got 0x" + std::to_string(who_am_i));
                 }
 

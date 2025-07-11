@@ -115,7 +115,7 @@ namespace i2c_imu_driver
         bool _required;
         std::chrono::milliseconds _timeout_ms;
         int _retry_count;
-        
+
         // Device configuration
         std::string _device_type;
         const ImuDeviceConfig* _device_config;

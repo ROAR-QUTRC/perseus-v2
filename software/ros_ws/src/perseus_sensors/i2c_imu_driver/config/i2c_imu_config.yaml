@@ -2,8 +2,8 @@ i2c_imu_node:
   ros__parameters:
     # I2C Configuration
     i2c_bus: "/dev/i2c-7"
-    device_type: "lsm6dsox"  # Supported devices: lsm6dsox, mpu6050, mpu9250, lsm6ds3
-    device_address: 0x6A     # Will use device default if not specified
+    device_type: "lsm6dsox" # Supported devices: lsm6dsox, mpu6050, mpu9250, lsm6ds3
+    device_address: 0x6A # Will use device default if not specified
     update_rate: 100.0
     frame_id: "imu_link"
     required: false # Optional hardware
