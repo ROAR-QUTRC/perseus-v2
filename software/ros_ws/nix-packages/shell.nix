@@ -75,6 +75,8 @@ pkgs.mkShell {
             slam-toolbox
             teleop-twist-joy
             teleop-twist-keyboard
+            tf2
+            tf2-geometry-msgs
             twist-mux
             urdf
             xacro
