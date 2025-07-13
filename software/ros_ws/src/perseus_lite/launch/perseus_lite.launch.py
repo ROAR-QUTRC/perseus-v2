@@ -116,9 +116,30 @@ def generate_launch_description():
             "cmd_vel_topic": cmd_vel_topic,
         }.items(),
     )
+
+    rplidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("rplidar_ros"),
+                        "launch",
+                        "rplidar_c1_launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "frame_id": "c1_lidar_frame",
+            "serial_port": "/dev/ttyUSB0",
+            "serial_baudrate": "460800",
+        }.items(),
+    )
+
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
+        rplidar_launch,
     ]
 
     return LaunchDescription(arguments + launch_files)
