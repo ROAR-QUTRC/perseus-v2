@@ -136,10 +136,28 @@ def generate_launch_description():
         }.items(),
     )
 
+    i2c_imu_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus_sensors"),
+                        "launch",
+                        "i2c_imu.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
         rplidar_launch,
+        i2c_imu_launch,
     ]
 
     return LaunchDescription(arguments + launch_files)
