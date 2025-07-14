@@ -42,7 +42,7 @@ def generate_launch_description():
 
     # SLAM arguments
     slam_params_file = LaunchConfiguration("slam_params_file")
-    
+
     # Robot localization arguments
     ekf_params_file = LaunchConfiguration("ekf_params_file")
 
@@ -116,7 +116,6 @@ def generate_launch_description():
             ),
             description="Full path to the ROS2 parameters file for SLAM Toolbox",
         ),
-        
         # Robot localization arguments
         DeclareLaunchArgument(
             "ekf_params_file",
@@ -190,10 +189,7 @@ def generate_launch_description():
         executable="ekf_node",
         name="ekf_filter_node",
         output="screen",
-        parameters=[
-            ekf_params_file,
-            {"use_sim_time": use_sim_time}
-        ],
+        parameters=[ekf_params_file, {"use_sim_time": use_sim_time}],
         remappings=[
             ("odometry/filtered", "odometry/filtered"),
         ],
