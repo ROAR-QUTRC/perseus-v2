@@ -1,0 +1,115 @@
+ekf_filter_node:
+  ros__parameters:
+    # The frequency, in Hz, at which the filter will output a position estimate. 
+    # Note that the filter will not begin computation until it receives at least one message from 
+    # one of the inputs. It will then run continuously at the frequency specified here, 
+    # regardless of whether it receives more measurements.
+    frequency: 30.0
+    
+    # The period, in seconds, after which we consider a sensor to have timed out.
+    # In this event, we carry out a predict cycle on the EKF without a correction step.
+    sensor_timeout: 0.1
+    
+    # If this is set to true, no 3D information will be used in your state estimate.
+    # Use this if you are operating in a planar environment and want to ignore the effect of small variations in the ground plane that might otherwise be detected by, for example, an IMU.
+    two_d_mode: false
+    
+    # Whether to publish the acceleration state. Defaults to false if unspecified.
+    publish_acceleration: false
+    
+    # Whether to broadcast the transformation over the /tf topic. Defaults to true if unspecified.
+    publish_tf: true
+    
+    # REP-105 (http://www.ros.org/reps/rep-0105.html) specifies four principal coordinate frames: base_link, odom, map, and earth. 
+    # base_link is the coordinate frame that is affixed to the robot. Both odom and map are world-fixed frames. 
+    # The robot's position in the odom frame will drift over time, but is accurate in the short term and should be continuous. 
+    # The odom frame is therefore the best frame for executing local motion plans.
+    # The map frame, like the odom frame, is a world-fixed coordinate frame, and while it contains the most globally accurate position estimate for your robot, it is subject to discrete jumps, e.g., due to the fusion of GPS data or a correction from a map-based localization node.
+    # The earth frame is used to relate multiple map frames by giving them a common reference frame.
+    # robot_localization adheres to this specification.
+    map_frame: map                # Defaults to "map" if unspecified
+    odom_frame: odom              # Defaults to "odom" if unspecified
+    base_link_frame: base_link    # Defaults to "base_link" if unspecified
+    world_frame: odom             # Defaults to the value of odom_frame if unspecified
+    
+    # The transform from the base_link frame to the imu frame.
+    # This transform is normally read from the URDF, but can be set here if necessary.
+    # The transform is specified as [x, y, z, roll, pitch, yaw]
+    # Default: [0, 0, 0, 0, 0, 0]
+    # imu0_config: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+    
+    # ----- Wheel Odometry -----
+    # Configuration for wheel odometry (odom0)
+    # The order of the values is x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az
+    # [x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az]
+    odom0: /odom
+    odom0_config: [true,  true,  false,
+                   false, false, true,
+                   true,  true,  false,
+                   false, false, true,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_nodelay: false
+    odom0_differential: false
+    odom0_relative: false
+    odom0_pose_rejection_threshold: 5.0
+    odom0_twist_rejection_threshold: 1.0
+    
+    # ----- IMU -----
+    # Configuration for IMU (imu0)
+    # The order of the values is x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az
+    imu0: /imu/data
+    imu0_config: [false, false, false,
+                  true,  true,  true,
+                  false, false, false,
+                  true,  true,  true,
+                  true,  true,  true]
+    imu0_queue_size: 10
+    imu0_nodelay: false
+    imu0_differential: false
+    imu0_relative: true
+    imu0_pose_rejection_threshold: 0.8
+    imu0_twist_rejection_threshold: 0.8
+    imu0_linear_acceleration_rejection_threshold: 0.8
+    
+    # Remove gravitational acceleration from IMU
+    imu0_remove_gravitational_acceleration: true
+    
+    # ----- Advanced Settings -----
+    # The process noise covariance matrix can be difficult to tune, and can vary for each application. 
+    # The matrix is of size 15x15 (for 3D) or 9x9 (for 2D).
+    # This matrix represents the process noise covariance matrix.
+    # The order of the values is x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az
+    # Default: [0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...]
+    process_noise_covariance: [0.05, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0.05, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0.06, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0.03, 0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0.03, 0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0.06, 0,     0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0.025, 0,     0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0.025, 0,    0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0.04, 0,    0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0.01, 0,    0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0.01, 0,    0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0.02, 0,    0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0.01, 0,    0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0.01, 0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0.015]
+                               
+    # The initial value for the state estimate error covariance matrix.
+    initial_estimate_covariance: [1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                  0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                  0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                  0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                  0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                  0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,     0,     0,     0,    0,    0,
+                                  0,    0,    0,    0,    0,    0,    1e-9, 0,    0,    0,     0,     0,     0,    0,    0,
+                                  0,    0,    0,    0,    0,    0,    0,    1e-9, 0,    0,     0,     0,     0,    0,    0,
+                                  0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,     0,     0,     0,    0,    0,
+                                  0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9,  0,     0,     0,    0,    0,
+                                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     1e-9,  0,     0,    0,    0,
+                                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     1e-9,  0,    0,    0,
+                                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     1e-9, 0,    0,
+                                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    1e-9, 0,
+                                  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    1e-9]

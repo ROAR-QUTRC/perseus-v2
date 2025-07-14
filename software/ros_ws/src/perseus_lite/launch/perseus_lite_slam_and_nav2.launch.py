@@ -42,6 +42,9 @@ def generate_launch_description():
 
     # SLAM arguments
     slam_params_file = LaunchConfiguration("slam_params_file")
+    
+    # Robot localization arguments
+    ekf_params_file = LaunchConfiguration("ekf_params_file")
 
     # Nav2 arguments
     namespace = LaunchConfiguration("namespace")
@@ -113,6 +116,15 @@ def generate_launch_description():
             ),
             description="Full path to the ROS2 parameters file for SLAM Toolbox",
         ),
+        
+        # Robot localization arguments
+        DeclareLaunchArgument(
+            "ekf_params_file",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("autonomy"), "config", "ekf_params.yaml"]
+            ),
+            description="Full path to the ROS2 parameters file for robot_localization EKF",
+        ),
         # Nav2 arguments
         DeclareLaunchArgument(
             "namespace", default_value="", description="Top-level namespace"
@@ -170,6 +182,21 @@ def generate_launch_description():
             "baud_rate": baud_rate,
             "cmd_vel_topic": cmd_vel_topic,
         }.items(),
+    )
+
+    # Robot localization EKF node
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[
+            ekf_params_file,
+            {"use_sim_time": use_sim_time}
+        ],
+        remappings=[
+            ("odometry/filtered", "odometry/filtered"),
+        ],
     )
 
     # SLAM Toolbox node (as LifecycleNode)
@@ -467,6 +494,7 @@ def generate_launch_description():
     launch_files = [
         stdout_linebuf_envvar,
         perseus_lite_launch,
+        ekf_node,
         slam_toolbox,
         configure_slam_event,
         activate_slam_event,
