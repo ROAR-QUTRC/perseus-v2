@@ -13,6 +13,7 @@ slam_toolbox:
     map_frame: map
     base_frame: base_link
     scan_topic: /scan
+    imu_topic: /imu/data
     use_map_saver: true
     mode: mapping
     # lifelong params
@@ -44,6 +45,8 @@ slam_toolbox:
     # General Parameters
     use_scan_matching: true
     use_scan_barycenter: true
+    use_imu: true
+    imu_timeout: 1.0
     minimum_travel_distance: 0.0
     minimum_travel_heading: 0.0
     scan_buffer_size: 10
