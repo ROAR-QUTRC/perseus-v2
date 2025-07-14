@@ -24,7 +24,7 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     # Get package directories
     bringup_dir = get_package_share_directory("autonomy")
-    
+
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
@@ -32,10 +32,10 @@ def generate_launch_description():
     serial_port = LaunchConfiguration("serial_port")
     baud_rate = LaunchConfiguration("baud_rate")
     cmd_vel_topic = LaunchConfiguration("cmd_vel_topic")
-    
+
     # SLAM arguments
     slam_params_file = LaunchConfiguration("slam_params_file")
-    
+
     # Nav2 arguments
     namespace = LaunchConfiguration("namespace")
     autostart = LaunchConfiguration("autostart")
@@ -45,11 +45,11 @@ def generate_launch_description():
     container_name_full = (namespace, "/", container_name)
     use_respawn = LaunchConfiguration("use_respawn")
     log_level = LaunchConfiguration("log_level")
-    
+
     # Nav2 lifecycle nodes
     lifecycle_nodes = [
         "controller_server",
-        "smoother_server", 
+        "smoother_server",
         "planner_server",
         "behavior_server",
         "velocity_smoother",
@@ -98,7 +98,6 @@ def generate_launch_description():
             default_value="/cmd_vel",
             description="Topic name for cmd_vel commands (use /joy_vel for xbox controller compatibility)",
         ),
-        
         # SLAM arguments
         DeclareLaunchArgument(
             "slam_params_file",
@@ -107,12 +106,9 @@ def generate_launch_description():
             ),
             description="Full path to the ROS2 parameters file for SLAM Toolbox",
         ),
-        
         # Nav2 arguments
         DeclareLaunchArgument(
-            "namespace", 
-            default_value="", 
-            description="Top-level namespace"
+            "namespace", default_value="", description="Top-level namespace"
         ),
         DeclareLaunchArgument(
             "autostart",
@@ -121,7 +117,9 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "nav_params_file",
-            default_value=os.path.join(bringup_dir, "config", "perseus_nav_params.yaml"),
+            default_value=os.path.join(
+                bringup_dir, "config", "perseus_nav_params.yaml"
+            ),
             description="Full path to the ROS2 parameters file to use for all launched nodes",
         ),
         DeclareLaunchArgument(
@@ -140,9 +138,7 @@ def generate_launch_description():
             description="Whether to respawn if a node crashes. Applied when composition is disabled.",
         ),
         DeclareLaunchArgument(
-            "log_level", 
-            default_value="info", 
-            description="log level"
+            "log_level", default_value="info", description="log level"
         ),
     ]
 
@@ -175,10 +171,7 @@ def generate_launch_description():
         executable="async_slam_toolbox_node",
         name="slam_toolbox",
         output="screen",
-        parameters=[
-            slam_params_file,
-            {"use_sim_time": use_sim_time}
-        ],
+        parameters=[slam_params_file, {"use_sim_time": use_sim_time}],
     )
 
     # Nav2 remappings
