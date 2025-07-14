@@ -17,8 +17,6 @@ from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
     PythonExpression,
-    AndSubstitution,
-    NotSubstitution,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node, LoadComposableNodes, SetParameter, LifecycleNode
@@ -181,10 +179,7 @@ def generate_launch_description():
         name="slam_toolbox",
         output="screen",
         namespace="",
-        parameters=[
-            slam_params_file,
-            {"use_sim_time": use_sim_time}
-        ],
+        parameters=[slam_params_file, {"use_sim_time": use_sim_time}],
     )
 
     # SLAM Toolbox lifecycle management
