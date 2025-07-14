@@ -7,17 +7,26 @@ from launch.actions import (
     IncludeLaunchDescription,
     GroupAction,
     SetEnvironmentVariable,
+    EmitEvent,
+    LogInfo,
+    RegisterEventHandler,
 )
 from launch.conditions import IfCondition
+from launch.events import matches_action
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
     PythonExpression,
+    AndSubstitution,
+    NotSubstitution,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node, LoadComposableNodes, SetParameter
+from launch_ros.actions import Node, LoadComposableNodes, SetParameter, LifecycleNode
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.descriptions import ComposableNode, ParameterFile
+from launch_ros.event_handlers import OnStateTransition
+from launch_ros.events.lifecycle import ChangeState
+from lifecycle_msgs.msg import Transition
 from nav2_common.launch import RewrittenYaml
 
 
@@ -165,13 +174,44 @@ def generate_launch_description():
         }.items(),
     )
 
-    # SLAM Toolbox node
-    slam_toolbox = Node(
+    # SLAM Toolbox node (as LifecycleNode)
+    slam_toolbox = LifecycleNode(
         package="slam_toolbox",
         executable="async_slam_toolbox_node",
         name="slam_toolbox",
         output="screen",
-        parameters=[slam_params_file, {"use_sim_time": use_sim_time}],
+        namespace="",
+        parameters=[
+            slam_params_file,
+            {"use_sim_time": use_sim_time}
+        ],
+    )
+
+    # SLAM Toolbox lifecycle management
+    configure_slam_event = EmitEvent(
+        event=ChangeState(
+            lifecycle_node_matcher=matches_action(slam_toolbox),
+            transition_id=Transition.TRANSITION_CONFIGURE,
+        ),
+        condition=IfCondition(autostart),
+    )
+
+    activate_slam_event = RegisterEventHandler(
+        OnStateTransition(
+            target_lifecycle_node=slam_toolbox,
+            start_state="configuring",
+            goal_state="inactive",
+            entities=[
+                LogInfo(msg="[LifecycleLaunch] Slamtoolbox node is activating."),
+                EmitEvent(
+                    event=ChangeState(
+                        lifecycle_node_matcher=matches_action(slam_toolbox),
+                        transition_id=Transition.TRANSITION_ACTIVATE,
+                    )
+                ),
+            ],
+        ),
+        condition=IfCondition(autostart),
     )
 
     # Nav2 remappings
@@ -433,6 +473,8 @@ def generate_launch_description():
         stdout_linebuf_envvar,
         perseus_lite_launch,
         slam_toolbox,
+        configure_slam_event,
+        activate_slam_event,
         load_nav2_nodes,
         load_composable_nav2_nodes,
     ]
