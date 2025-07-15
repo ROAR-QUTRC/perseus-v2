@@ -15,6 +15,8 @@ slam_toolbox:
     scan_topic: /scan
     use_map_saver: true
     mode: mapping
+    # Sync mapping configuration
+    sync_mapping: true
     # lifelong params
     lifelong_search_use_tree: false
     lifelong_minimum_score: 0.1
@@ -33,6 +35,8 @@ slam_toolbox:
     debug_logging: false
     throttle_scans: 1
     transform_publish_period: 0.0 #if 0 never publishes odometry
+    # Multi-threading parameters
+    enable_interactive_mode: true
     publish_period: 0.1
     map_update_interval: 0.3
     resolution: 0.025
