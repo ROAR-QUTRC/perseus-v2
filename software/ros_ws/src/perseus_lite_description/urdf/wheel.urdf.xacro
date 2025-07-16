@@ -26,14 +26,14 @@
 
     <joint name="${prefix}${end}_${side}_wheel_joint" type="continuous">
       <xacro:if value="${side == 'left'}">
-        <axis xyz="0 -1 0" rpy="0 0 0"/>
+        <axis xyz="0 1 0" rpy="0 0 0"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
         <axis xyz="0 -1 0" rpy="0 0 0"/>
       </xacro:if>
       <parent link="${prefix}${end}_${side}_motor"/>
       <child link="${prefix}${end}_${side}_wheel"/>
-      <origin xyz="-0.0625 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
+      <origin xyz="-0.0625 0.0 0.0" rpy="0.0 0.0 0.0"/>
       <dynamics damping="0.5" friction="0.5"/>
     </joint>
   
