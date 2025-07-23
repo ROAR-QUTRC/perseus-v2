@@ -15,7 +15,7 @@
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-lite";
-  version = "0.0.1";
+  version = "0.1.0";
 
   src = ./../src/perseus_lite;
 

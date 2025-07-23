@@ -20,7 +20,7 @@
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-sensors";
-  version = "1.0.0";
+  version = "0.1.0";
 
   src = ./../src/perseus_sensors;
 
