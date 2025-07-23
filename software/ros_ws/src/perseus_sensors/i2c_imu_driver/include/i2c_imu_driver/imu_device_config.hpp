@@ -54,7 +54,7 @@ namespace i2c_imu_driver
      *          and configuration values for various IMU sensors (e.g., MPU6050, ICM20948).
      *          The registry follows a singleton pattern and lazy initialization to ensure
      *          device configurations are loaded only when needed.
-     * 
+     *
      * Example usage:
      * @code
      * const auto* config = ImuDeviceRegistry::getDeviceConfig("MPU6050");

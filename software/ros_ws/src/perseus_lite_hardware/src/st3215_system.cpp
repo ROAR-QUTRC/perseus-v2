@@ -514,7 +514,7 @@ namespace perseus_lite_hardware
         packet.insert(packet.end(), header.begin(), header.end());
         packet.push_back(id);
         packet.push_back(static_cast<uint8_t>(data.size() + 2));  // Length = data size + command(1) + checksum(1)
-        packet.push_back(static_cast<uint8_t>(command));              // Convert enum class to uint8_t
+        packet.push_back(static_cast<uint8_t>(command));          // Convert enum class to uint8_t
         packet.insert(packet.end(), data.begin(), data.end());
 
         // Calculate checksum - XOR of all bytes from ID to the end of data

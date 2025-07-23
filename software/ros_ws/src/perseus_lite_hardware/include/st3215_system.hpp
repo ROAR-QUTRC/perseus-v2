@@ -183,7 +183,7 @@ namespace perseus_lite_hardware
          *          Reads position, velocity, and temperature data from all configured servos.
          */
         void communicationThread() noexcept;
-        
+
         /**
          * @brief Updates the internal servo state data structures
          * @details Processes received servo data and updates position, velocity, and temperature
@@ -222,19 +222,19 @@ namespace perseus_lite_hardware
          * @details Initiates non-blocking read of servo response data
          */
         void startAsyncRead() noexcept;
-        
+
         /**
          * @brief Starts an asynchronous write operation to the serial port
          * @details Initiates non-blocking write of command data to servos
          */
         void startAsyncWrite() noexcept;
-        
+
         /**
          * @brief Schedules the next read operation using a timer
          * @details Sets up timing for the next servo data read cycle
          */
         void scheduleNextRead() noexcept;
-        
+
         /**
          * @brief Schedules the next write operation using a timer
          * @details Sets up timing for the next command transmission cycle
