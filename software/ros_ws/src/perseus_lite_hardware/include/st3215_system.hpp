@@ -160,11 +160,11 @@ namespace perseus_lite_hardware
         static constexpr size_t TEMPERATURE_BYTE_INDEX = 7;
 
         // Communication thread control
-        std::atomic<bool> _comm_thread_running_{false};
-        std::thread _comm_thread_;
+        std::atomic<bool> comm_thread_running_{false};
+        std::thread comm_thread_;
 
         // Thread-safe queues for commands and responses
-        mutable std::mutex _state_mutex_;  // Protects servo state updates
+        mutable std::mutex state_mutex_;  // Protects servo state updates
 
         // Servo state tracking
         struct ServoState
@@ -174,42 +174,99 @@ namespace perseus_lite_hardware
             double temperature{ROOM_TEMPERATURE_CELSIUS};
             rclcpp::Time last_update{0, 0, RCL_ROS_TIME};
         };
-        std::vector<ServoState> _servo_states_;
+        std::vector<ServoState> servo_states_;
 
         // Thread management methods
+        /**
+         * @brief Main communication thread function that continuously reads servo states
+         * @details Runs in a separate thread to handle asynchronous communication with servos.
+         *          Reads position, velocity, and temperature data from all configured servos.
+         */
         void communicationThread() noexcept;
+        
+        /**
+         * @brief Updates the internal servo state data structures
+         * @details Processes received servo data and updates position, velocity, and temperature
+         *          values for all servos. Thread-safe operation using state mutex.
+         */
         void updateServoStates() noexcept;
 
         // Communication timestamping and timeout
-        std::vector<rclcpp::Time> _last_update_times_;
+        std::vector<rclcpp::Time> last_update_times_;
 
+        /**
+         * @brief Sends a command packet to a specific servo
+         * @param id The servo ID to send the command to
+         * @param cmd The command type (READ or WRITE)
+         * @param data The data payload for the command
+         * @return true if the command was sent successfully, false otherwise
+         * @details Constructs and transmits a properly formatted ST3215 protocol packet
+         */
         bool sendServoCommand(uint8_t id, ServoCommand cmd, std::span<const uint8_t> data) noexcept;
+        /**
+         * @brief Processes a response packet received from a servo
+         * @param response The raw response data received from the servo
+         * @details Parses the response packet and extracts position, velocity, and temperature data
+         */
         void processResponse(std::span<const uint8_t> response) noexcept;
+        /**
+         * @brief Updates servo state data for a specific servo
+         * @param id The servo ID to update
+         * @param index The index in the servo arrays
+         * @return true if the update was successful, false otherwise
+         * @details Updates position, velocity, and temperature for the specified servo
+         */
         [[nodiscard]] bool updateServoStates(uint8_t id, size_t index) noexcept;
+        /**
+         * @brief Starts an asynchronous read operation from the serial port
+         * @details Initiates non-blocking read of servo response data
+         */
         void startAsyncRead() noexcept;
+        
+        /**
+         * @brief Starts an asynchronous write operation to the serial port
+         * @details Initiates non-blocking write of command data to servos
+         */
         void startAsyncWrite() noexcept;
+        
+        /**
+         * @brief Schedules the next read operation using a timer
+         * @details Sets up timing for the next servo data read cycle
+         */
         void scheduleNextRead() noexcept;
+        
+        /**
+         * @brief Schedules the next write operation using a timer
+         * @details Sets up timing for the next command transmission cycle
+         */
         void scheduleNextWrite() noexcept;
+        /**
+         * @brief Verifies that required command interfaces are available for a joint
+         * @param joint_info Information about the joint configuration
+         * @param logger Logger instance for error reporting
+         * @return true if all required interfaces are present, false otherwise
+         * @details Checks that velocity command interface is configured for the joint
+         */
         [[nodiscard]] bool verifyCommandInterfaces(
             const hardware_interface::ComponentInfo& joint_info,
             const rclcpp::Logger& logger) const;
 
         // Hardware state storage
-        std::vector<double> _command_speeds_;      // Only velocity commands
-        std::vector<double> _current_positions_;   // State feedback
-        std::vector<double> _current_velocities_;  // State feedback
-        std::vector<double> _temperatures_;        // State feedback
-        std::vector<uint8_t> _servo_ids_;
+        std::vector<double> command_speeds_;      // Only velocity commands
+        std::vector<double> current_positions_;   // State feedback
+        std::vector<double> current_velocities_;  // State feedback
+        std::vector<double> temperatures_;        // State feedback
+        std::vector<uint8_t> servo_ids_;
 
         // Communication members
-        mutable std::mutex _serial_mutex_;
-        boost::asio::io_context _io_context_;
-        boost::asio::serial_port _serial_port_{_io_context_};
-        boost::asio::steady_timer _read_timer_{_io_context_};
-        boost::asio::steady_timer _write_timer_{_io_context_};
-        std::thread _io_thread_;
-        mutable std::queue<std::vector<uint8_t>> _write_queue_;
-        std::array<uint8_t, BUFFER_SIZE> _read_buffer_;
+        mutable std::mutex serial_mutex_;
+        boost::asio::io_context io_context_;
+        boost::asio::serial_port serial_port_{io_context_};
+        boost::asio::steady_timer read_timer_{io_context_};
+        boost::asio::steady_timer write_timer_{io_context_};
+        std::thread io_thread_;
+        mutable std::queue<std::vector<uint8_t>> write_queue_;
+        std::array<uint8_t, BUFFER_SIZE> read_buffer_;
     };
 
 }  // namespace perseus_lite_hardware

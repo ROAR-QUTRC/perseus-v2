@@ -14,10 +14,12 @@
 
 namespace i2c_imu_driver
 {
-
-    // LSM6DSOX detection constants
-    const uint8_t LSM6DSOX_WHO_AM_I_REGISTER = 0x0F;
-    const uint8_t LSM6DSOX_WHO_AM_I_VALUE = 0x6C;
+    namespace
+    {
+        // LSM6DSOX detection constants
+        const uint8_t LSM6DSOX_WHO_AM_I_REGISTER = 0x0F;
+        const uint8_t LSM6DSOX_WHO_AM_I_VALUE = 0x6C;
+    }  // anonymous namespace
 
     I2cDevice::I2cDevice(const std::string& bus_path, uint8_t device_address)
         : _bus_path(bus_path),

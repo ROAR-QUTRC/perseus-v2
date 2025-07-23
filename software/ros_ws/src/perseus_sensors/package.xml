@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>perseus_sensors</name>
-  <version>1.0.0</version>
+  <version>0.1.0</version>
   <description>ROS 2 package for managing and processing point-cloud data from the Slamtec M2M2 lidar device which is accessed by TCP ethernet. Handles network access, data processing and provides ROS sensor message information.</description>
   <maintainer email="1388693+DingoOz@users.noreply.github.com">DingoOz</maintainer>
   <license>MIT</license>

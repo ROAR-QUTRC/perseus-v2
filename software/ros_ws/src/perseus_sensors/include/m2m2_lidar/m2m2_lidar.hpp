@@ -1,21 +1,16 @@
 #pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <chrono>
-#include <cmath>
-#include <iomanip>
-#include <nlohmann/json.hpp>
-#include <numbers>
+#include <cstdint>
 #include <optional>
-#include <ranges>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
-#include <stdexcept>
-#include <string>
-#include <thread>
-#include <vector>
 
 #include "simple_networking/client.hpp"
 
@@ -69,7 +64,7 @@ private:
     [[nodiscard]] static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
 
     // Network communication methods
-    [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
+    [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nlohmann::json{});
     [[nodiscard]] nlohmann::json _receiveJsonResponse();
     void _sendCommand(const std::vector<uint8_t>& command);
 

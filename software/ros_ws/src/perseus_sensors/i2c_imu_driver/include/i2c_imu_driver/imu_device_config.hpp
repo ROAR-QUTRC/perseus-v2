@@ -49,6 +49,20 @@ namespace i2c_imu_driver
 
     /**
      * @brief Registry of supported IMU devices
+     * @details This class provides a centralized registry for different IMU device configurations.
+     *          It maintains device-specific settings including register addresses, scale factors,
+     *          and configuration values for various IMU sensors (e.g., MPU6050, ICM20948).
+     *          The registry follows a singleton pattern and lazy initialization to ensure
+     *          device configurations are loaded only when needed.
+     * 
+     * Example usage:
+     * @code
+     * const auto* config = ImuDeviceRegistry::getDeviceConfig("MPU6050");
+     * if (config) {
+     *     // Use configuration for device initialization
+     *     uint8_t who_am_i = config->who_am_i_value;
+     * }
+     * @endcode
      */
     class ImuDeviceRegistry
     {

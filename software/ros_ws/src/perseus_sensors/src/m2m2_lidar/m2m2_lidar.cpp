@@ -37,6 +37,16 @@
 
 #include "m2m2_lidar/m2m2_lidar.hpp"
 
+#include <algorithm>
+#include <cassert>
+#include <chrono>
+#include <cmath>
+#include <iomanip>
+#include <numbers>
+#include <ranges>
+#include <stdexcept>
+#include <thread>
+
 #include <arpa/inet.h>
 #include <netdb.h>  // For getaddrinfo, freeaddrinfo, gai_strerror
 #include <netinet/in.h>
