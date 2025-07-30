@@ -16,7 +16,7 @@ This tutorial provides the basic commands needed to run the Perseus rover in Gaz
 nix develop .#simulation
 ```
 
-This command enters the specialized Nix development shell configured for simulation with all necessary dependencies.
+This command enters the specialised Nix development shell configured for simulation with all necessary dependencies.
 
 ### 2. Navigate to the ROS Workspace
 
@@ -30,7 +30,7 @@ cd software/ros_ws
 colcon build
 ```
 
-This builds all ROS packages in the workspace, including the simulation components.
+This builds all ROS2 packages in the workspace, including the simulation components.
 
 ### 4. Source the Workspace
 
@@ -38,7 +38,7 @@ This builds all ROS packages in the workspace, including the simulation componen
 source install/setup.bash
 ```
 
-This sets up the ROS environment variables to use the built packages.
+This sets up the ROS2 environment variables to use the built packages.
 
 ### 5. Launch the Simulation
 
@@ -59,8 +59,10 @@ source install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
 ```
 
-## Notes
+:::
 
 - The first time you run the simulation, Gazebo may download the lunar landscape model, which can take up to 20 minutes
 - Ensure you have an internet connection for the initial setup
 - The simulation requires significant system resources and may perform better with hardware acceleration
+
+:::
