@@ -18,7 +18,7 @@
 	import ROSLIB from 'roslib';
 
 	import { Canvas } from '@threlte/core';
-	import Rover from './imuViz/rover.svelte';
+	// import Rover from './imuViz/rover.svelte';
 	import { onMount, untrack } from 'svelte';
 
 	const smoothRandom = (absRange: number, currentValue: number): number => {
@@ -102,6 +102,6 @@
 		</ul>
 	</div>
 	<Canvas>
-		<Rover {direction} {rotation} position={[0, 0, 0]} />
+		<!-- <Rover {direction} {rotation} position={[0, 0, 0]} /> -->
 	</Canvas>
 </div>
