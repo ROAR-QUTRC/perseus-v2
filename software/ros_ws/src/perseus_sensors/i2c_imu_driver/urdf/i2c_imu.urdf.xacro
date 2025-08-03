@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <!-- I2C IMU Sensor Macro -->
+  <xacro:macro name="i2c_imu" params="parent_link xyz rpy">
+    
+    <!-- IMU Joint -->
+    <joint name="imu_joint" type="fixed">
+      <parent link="${parent_link}"/>
+      <child link="imu_link"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+    
+    <!-- IMU Link -->
+    <link name="imu_link">
+      <visual>
+        <geometry>
+          <box size="0.02 0.02 0.005"/>
+        </geometry>
+        <material name="imu_material">
+          <color rgba="0.0 0.0 1.0 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="0.02 0.02 0.005"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.001"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
+      </inertial>
+    </link>
+    
+    <!-- Gazebo IMU Plugin -->
+    <gazebo reference="imu_link">
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=imu/data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <frame_name>imu_link</frame_name>
+        <update_rate>100.0</update_rate>
+        <gaussianNoise>0.0</gaussianNoise>
+        
+        <!-- Noise parameters -->
+        <angular_velocity_noise_density>0.0003394</angular_velocity_noise_density>
+        <angular_velocity_random_walk>0.000038785</angular_velocity_random_walk>
+        <linear_acceleration_noise_density>0.0033</linear_acceleration_noise_density>
+        <linear_acceleration_random_walk>0.000086</linear_acceleration_random_walk>
+        
+        <!-- Bias parameters -->
+        <angular_velocity_bias_correlation_time>1000.0</angular_velocity_bias_correlation_time>
+        <linear_acceleration_bias_correlation_time>300.0</linear_acceleration_bias_correlation_time>
+        
+        <!-- Output topic -->
+        <topicName>imu/data</topicName>
+        <bodyName>imu_link</bodyName>
+        <frameName>imu_link</frameName>
+        
+        <!-- Sensor configuration -->
+        <xyzOffset>0 0 0</xyzOffset>
+        <rpyOffset>0 0 0</rpyOffset>
+        <alwaysOn>true</alwaysOn>
+        <updateRateHZ>100.0</updateRateHZ>
+      </plugin>
+    </gazebo>
+    
+    <!-- IMU Material for Gazebo -->
+    <gazebo reference="imu_link">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+    
+  </xacro:macro>
+  
+  <!-- Standalone IMU for testing -->
+  <xacro:macro name="standalone_i2c_imu" params="*origin">
+    
+    <!-- Base link for standalone IMU -->
+    <link name="imu_base_link">
+      <visual>
+        <geometry>
+          <box size="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="transparent">
+          <color rgba="0.0 0.0 0.0 0.0"/>
+        </material>
+      </visual>
+      <inertial>
+        <mass value="0.001"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
+      </inertial>
+    </link>
+    
+    <!-- Add IMU to base link -->
+    <xacro:insert_block name="origin"/>
+    <xacro:i2c_imu parent_link="imu_base_link" xyz="0 0 0" rpy="0 0 0"/>
+    
+  </xacro:macro>
+  
+</robot>

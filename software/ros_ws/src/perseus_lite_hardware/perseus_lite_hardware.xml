@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<library path="perseus_lite_hardware">
+    <class name="perseus_lite_hardware/ST3215SystemHardware"
+           type="perseus_lite_hardware::ST3215SystemHardware"
+           base_class_type="hardware_interface::SystemInterface">
+        <description>
+            ROS2 Control hardware interface for Perseus Lite using ST3215 servos.
+        </description>
+    </class>
+</library>
