@@ -79,18 +79,23 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cm
 If the rover doesn't respond to keyboard commands:
 
 1. **Check if the controller is active**:
+
    ```bash
    ros2 control list_controllers
    ```
+
    You should see `diff_drive_base_controller` as `active`. If it shows `inactive`, run:
+
    ```bash
    ros2 control set_controller_state diff_drive_base_controller active
    ```
 
 2. **Verify topic connections**:
+
    ```bash
    ros2 topic info /cmd_vel_out
    ```
+
    This should show both publishers and subscribers.
 
 3. **Test topic communication**:
