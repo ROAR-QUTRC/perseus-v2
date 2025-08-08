@@ -4,14 +4,17 @@ from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
 )
-
+import os
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+from launch.actions import AppendEnvironmentVariable
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     # ARGUMENTS
-    gz_world = LaunchConfiguration("gz_world", default="perseus_world.sdf")
+    gz_world = LaunchConfiguration("gz_world", default="turtlebot3_dqn_stage2.world")
 
     # CONFIG + DATA FILES
     gz_bridge_params = PathJoinSubstitution(
@@ -30,7 +33,13 @@ def generate_launch_description():
             description="The world file from `perseus_simulation` to use",
         ),
     ]
-
+    set_env_vars_resources = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH',
+        os.path.join(
+            get_package_share_directory('perseus_simulation'),
+            'models'
+        )
+    )
     # IMPORTED LAUNCH FILES
     def gz_launch(context):
         # normally this would be handled by including the launch description,
@@ -38,6 +47,11 @@ def generate_launch_description():
         # As such, we need to just run it directly - but we also need to resolve the world substitution,
         # hence wrapping in an OpaqueFunction.
         performed_gz_world_path = gz_world_path.perform(context)
+
+        model_path = os.path.join(
+        get_package_share_directory('perseus_simulation'),
+        'models'
+        )
         gz_launch = ExecuteProcess(
             cmd=[
                 "nix",
@@ -56,6 +70,7 @@ def generate_launch_description():
                 "NIXPKGS_ALLOW_UNFREE": "1",
                 "QT_QPA_PLATFORM": "xcb",
                 "QT_SCREEN_SCALE_FACTORS": "1",
+                "GZ_SIM_RESOURCE_PATH": model_path, 
             },
         )
 
@@ -77,6 +92,7 @@ def generate_launch_description():
     # )
     launch_files = [
         # gz_launch,
+        # set_env_vars_resources,
         OpaqueFunction(function=gz_launch),
     ]
 
@@ -104,6 +120,7 @@ def generate_launch_description():
     )
 
     nodes = [
+        
         gz_bridge,
         gz_spawn_entity,
     ]
