@@ -14,7 +14,7 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     # ARGUMENTS
-    gz_world = LaunchConfiguration("gz_world", default="turtlebot3_dqn_stage2.world")
+    gz_world = LaunchConfiguration("gz_world", default="perseus_arc_world.world")
 
     # CONFIG + DATA FILES
     gz_bridge_params = PathJoinSubstitution(
@@ -70,7 +70,8 @@ def generate_launch_description():
                 "NIXPKGS_ALLOW_UNFREE": "1",
                 "QT_QPA_PLATFORM": "xcb",
                 "QT_SCREEN_SCALE_FACTORS": "1",
-                "GZ_SIM_RESOURCE_PATH": model_path, 
+                "PROJ_IGNORE_CELESTIAL_BODY": "YES",  # Fixed here
+                "GZ_SIM_RESOURCE_PATH": model_path, # Ensure the model path is set correctly
             },
         )
 
