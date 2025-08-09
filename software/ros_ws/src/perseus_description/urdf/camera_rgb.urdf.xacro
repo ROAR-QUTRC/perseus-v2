@@ -30,7 +30,7 @@
 
 
     <gazebo reference="camera_link">
-        <material>Gazebo/Black</material>
+        <material>Gazebo/Red</material>
 
         <sensor name="camera" type="camera">
             <pose> 0 0 0 0 0 0 </pose>
