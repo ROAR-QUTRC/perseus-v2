@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- 0.220 0 0.4 -->
+<!-- <box size="0.020 0.07 0.03"/>  -->
 <robot name="camera_rgb" xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:macro name="camera_rgb" params="prefix:=^">
@@ -16,6 +18,42 @@
             <material name="red"/>
         </visual>
     </link>
+
+    <joint name="camera_optical_joint" type="fixed">
+        <parent link="camera_link"/>
+        <child link="camera_link_optical"/>
+        <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+
+    <link name="camera_link_optical"></link>
+
+
+
+    <gazebo reference="camera_link">
+        <material>Gazebo/Black</material>
+
+        <sensor name="camera" type="camera">
+            <pose> 0 0 0 0 0 0 </pose>
+            <visualize>true</visualize>
+            <update_rate>10</update_rate>
+            <camera>
+                <camera_info_topic>camera/camera_info</camera_info_topic>
+                <horizontal_fov>1.089</horizontal_fov>
+                <image>
+                    <format>R8G8B8</format>
+                    <width>640</width>
+                    <height>480</height>
+                </image>
+                <clip>
+                    <near>0.05</near>
+                    <far>8.0</far>
+                </clip>
+            </camera>
+            <topic>camera/image_raw</topic>
+            <gz_frame_id>camera_link_optical</gz_frame_id>
+        </sensor>
+    </gazebo>
+
   </xacro:macro>
 
 </robot>
