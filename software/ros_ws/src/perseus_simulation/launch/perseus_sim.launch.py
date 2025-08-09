@@ -2,6 +2,7 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
+    ExecuteProcess,
 )
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -74,10 +75,34 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
+
+    # RViz with nixGL support
+    rviz = ExecuteProcess(
+        cmd=[
+            "nix",
+            "run",
+            "--impure",
+            "github:nix-community/nixGL",
+            "--",
+            "rviz2",
+            # "-d", rviz_config,  # If you want to use RViz config, uncomment this and set rviz_config properly
+        ],
+        output="screen",
+        additional_env={
+            "NIXPKGS_ALLOW_UNFREE": "1",
+            "QT_QPA_PLATFORM": "xcb",
+            "QT_SCREEN_SCALE_FACTORS": "1",
+            "ROS_NAMESPACE": "/",
+            "RMW_QOS_POLICY_HISTORY": "keep_last",
+            "RMW_QOS_POLICY_DEPTH": "100",
+        },
+    )
+
     launch_files = [
         gz_launch,
-        rsp_launch,
-        controllers_launch,
+        rviz,  # Start RViz with nixGL support
+        rsp_launch,  # Robot state publisher
+        controllers_launch,  # Controllers
     ]
 
     return LaunchDescription(arguments + launch_files)

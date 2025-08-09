@@ -11,7 +11,10 @@
   <!-- Import ros2_control description -->
   <xacro:include filename="$(find perseus_description)/ros2_control/perseus.ros2_control.xacro" />
 
+  <xacro:include filename="$(find perseus_description)/urdf/camera_rgb.urdf.xacro" />
+
   <!-- Instantiate the description and the ROS2 control information -->
   <xacro:perseus prefix="$(arg prefix)" />
   <xacro:perseus_ros2_control name="Perseus" prefix="$(arg prefix)" can_bus="$(arg can_bus)" hardware_plugin="$(arg hardware_plugin)"/>
+  <xacro:camera_rgb prefix="$(arg prefix)" />
 </robot>
