@@ -48,6 +48,7 @@ The launch file starts three components:
 3. **RViz2** - Displays the robot model and TF tree
 
 In RViz2, you'll see:
+
 - The Perseus-Lite robot model rendered with meshes
 - TF frames shown as axes (0.5m scale) with labels
 - A grid for spatial reference
@@ -56,12 +57,14 @@ In RViz2, you'll see:
 ## Interacting with the Model
 
 Use the Joint State Publisher GUI window to:
+
 - Move individual joints using the sliders
 - Verify joint rotation directions
 - Check joint limits and ranges
 - Test the rocker arm suspension movement
 
 This visualisation is particularly useful for:
+
 - Debugging URDF joint definitions
 - Verifying coordinate frame orientations
 - Understanding the robot's kinematic structure
