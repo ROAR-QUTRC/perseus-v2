@@ -19,11 +19,11 @@
     <!-- ROCKER ARMS -->
     <!-- LEFT -->
     <xacro:rocker side="left">
-      <origin xyz="-0.275 -0.075 0.05" rpy="0.0 0.0 ${-pi/2}"/>
+      <origin xyz="-0.1375 -0.0375 0.025" rpy="0.0 0.0 ${-pi/2}"/>
     </xacro:rocker>
     <!-- RIGHT -->
     <xacro:rocker side="right">
-      <origin xyz="0.275 -0.075 0.05" rpy="0.0 0.0 ${-pi/2}"/>
+      <origin xyz="0.1375 -0.0375 0.025" rpy="0.0 0.0 ${-pi/2}"/>
     </xacro:rocker>
     <xacro:sensors>
     </xacro:sensors>
