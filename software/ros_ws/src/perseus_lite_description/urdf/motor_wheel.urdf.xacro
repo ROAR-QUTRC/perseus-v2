@@ -12,7 +12,7 @@
       </inertial>
 
       <visual>
-        <origin xyz="-0.1325 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
+        <origin xyz="-0.1325 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
         <geometry>
           <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/gearbox.dae"/>
         </geometry>
@@ -20,7 +20,7 @@
       </visual>
 
       <collision>
-        <origin xyz="-0.15 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="-0.15 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
         <geometry>
           <box size="0.05 0.05 0.0375" />
           <!--mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/gearbox.dae"/-->

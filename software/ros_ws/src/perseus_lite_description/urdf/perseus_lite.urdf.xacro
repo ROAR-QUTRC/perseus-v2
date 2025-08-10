@@ -11,7 +11,7 @@
     <!-- CHASSIS -->
     <xacro:chassis />
     <joint name="${prefix}chassis_joint" type="fixed">
-      <origin xyz="0.0 0.0 0.15" rpy="0.0 0.0 ${-pi/2}"/>
+      <origin xyz="0.0 0.0 0.15" rpy="0.0 0.0 0.0"/>
       <parent link="${prefix}base_link"/>
       <child link="${prefix}chassis"/>
     </joint>
@@ -19,11 +19,11 @@
     <!-- ROCKER ARMS -->
     <!-- LEFT -->
     <xacro:rocker side="left">
-      <origin xyz="-0.1375 -0.0375 0.025" rpy="0.0 0.0 ${-pi/2}"/>
+      <origin xyz="-0.0375 0.1375 0.025" rpy="0.0 0.0 0.0"/>
     </xacro:rocker>
     <!-- RIGHT -->
     <xacro:rocker side="right">
-      <origin xyz="0.1375 -0.0375 0.025" rpy="0.0 0.0 ${-pi/2}"/>
+      <origin xyz="-0.0375 -0.1375 0.025" rpy="0.0 0.0 0.0"/>
     </xacro:rocker>
     <xacro:sensors>
     </xacro:sensors>

@@ -10,14 +10,14 @@
       </inertial>
 
       <visual>
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
         <geometry>
           <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_lite_description)/meshes/wheel.dae"/>
         </geometry>
       </visual>
 
       <collision>
-        <origin xyz="0.0 -0.0075 0.0" rpy="1.570796 0.0 0.0"/>
+        <origin xyz="0.0 -0.0075 0.0" rpy="1.570796 0.0 ${-pi/2}"/>
         <geometry>
           <cylinder length="0.0575" radius="0.0725" />
         </geometry>
