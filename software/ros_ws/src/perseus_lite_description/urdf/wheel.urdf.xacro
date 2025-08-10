@@ -12,28 +12,28 @@
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <geometry>
-          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/wheel.dae"/>
+          <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_lite_description)/meshes/wheel.dae"/>
         </geometry>
       </visual>
 
       <collision>
-        <origin xyz="0.0 -0.00375 0.0" rpy="1.570796 0.0 0.0"/>
+        <origin xyz="0.0 -0.0075 0.0" rpy="1.570796 0.0 0.0"/>
         <geometry>
-          <cylinder length="0.02875" radius="0.03625" />
+          <cylinder length="0.0575" radius="0.0725" />
         </geometry>
       </collision>
     </link>
 
     <joint name="${prefix}${end}_${side}_wheel_joint" type="continuous">
       <xacro:if value="${side == 'left'}">
-        <axis xyz="0 1 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
-        <axis xyz="0 -1 0" rpy="0 0 0"/>
+        <axis xyz="0 0 -1"/>
       </xacro:if>
       <parent link="${prefix}${end}_${side}_motor"/>
       <child link="${prefix}${end}_${side}_wheel"/>
-      <origin xyz="-0.03125 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="-0.0625 0.0 0.0" rpy="0.0 ${pi/2} 0.0"/>
       <dynamics damping="0.5" friction="0.5"/>
     </joint>
   
