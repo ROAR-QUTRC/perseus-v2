@@ -2,17 +2,17 @@
 <robot name="motor_wheel" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:include filename="$(find perseus_lite_description)/urdf/wheel.urdf.xacro"/>
 
+  <!-- MOTOR JOINT -->
   <xacro:macro name="motor_wheel" params="prefix:=^ side:=^ end *origin">
     <link name="${prefix}${end}_${side}_motor">
       <inertial>
-        <!-- moving origin has no perceivable impact-->
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.1 0.0" rpy="0.0 0.0 0.0"/>
         <mass value="2.6182895"/>
         <inertia ixx="0.00125" iyy="0.00125" izz="0.00125" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
       </inertial>
 
       <visual>
-        <origin xyz="-0.1325 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+        <origin xyz="-0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
         <geometry>
           <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/gearbox.dae"/>
         </geometry>
@@ -20,7 +20,7 @@
       </visual>
 
       <collision>
-        <origin xyz="-0.15 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
+        <origin xyz="-0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
         <geometry>
           <box size="0.05 0.05 0.0375" />
           <!--mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/gearbox.dae"/-->

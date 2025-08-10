@@ -42,20 +42,20 @@
     <!-- FRONT MOTOR -->
     <xacro:motor_wheel end="front">
       <xacro:if value="${side == 'left'}">
-        <origin xyz="-0.17 -0.1 -0.1" rpy="0.0 0.0 ${-pi/2}"/>
+        <origin xyz="0.17 -0.04 -0.1" rpy="0.0 0.0 ${pi}"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
-        <origin xyz="-0.17 0.1 -0.1" rpy="0.0 0.0 ${pi/2}"/>
+        <origin xyz="0.17 0.04 -0.1" rpy="0.0 0.0 0.0"/>
       </xacro:if>
     </xacro:motor_wheel>
     
     <!-- REAR MOTOR -->
     <xacro:motor_wheel end="rear">
       <xacro:if value="${side == 'left'}">
-        <origin xyz="0.31 -0.1 -0.1" rpy="0.0 0.0 ${-pi/2}"/>
+        <origin xyz="-0.30 -0.04 -0.1" rpy="0.0 0.0 ${pi}"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
-        <origin xyz="0.31 0.1 -0.1" rpy="0.0 0.0 ${pi/2}"/>
+        <origin xyz="-0.30 0.04 -0.1" rpy="0.0 0.0 0.0"/>
       </xacro:if>
     </xacro:motor_wheel>
   </xacro:macro>
