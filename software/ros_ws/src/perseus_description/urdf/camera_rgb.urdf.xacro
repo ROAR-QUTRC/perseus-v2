@@ -46,7 +46,7 @@
                 </image>
                 <clip>
                     <near>0.05</near>
-                    <far>8.0</far>
+                    <far>100</far>
                 </clip>
             </camera>
             <topic>camera/image_raw</topic>

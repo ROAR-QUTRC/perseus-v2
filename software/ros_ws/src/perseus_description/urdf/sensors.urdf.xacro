@@ -7,7 +7,7 @@
             <geometry>
                 <cylinder radius="0.06" length="0.06"/>
             </geometry>
-            <material name="black"/>
+            <material name="red"/>
         </visual>
         <collision>
             <geometry>
@@ -86,7 +86,7 @@
             <pose>0 0 0 0 0 0</pose>
             <visualize>true</visualize>
             <update_rate>10</update_rate>
-            <topic>scan</topic>
+            <topic>scan2</topic>
             <ray>
                 <scan>
                     <horizontal>
@@ -116,7 +116,7 @@
         <material>Gazebo/Grey</material>
         <sensor name="imu_sensor" type="imu">
             <always_on>1</always_on>
-            <update_rate>10</update_rate>
+            <update_rate>10</update_rate> 
             <visualize>true</visualize>
             <topic>imu</topic>
         </sensor>

@@ -2,23 +2,23 @@
 <sdf version='1.8'>
   <model name='ARC_Zone'>
     <pose>0 0 0 0 0 0</pose>
-    <static>true</static>
+    <static>false</static> <!-- Set false to allow physics and falling -->
 
-    <!-- Wall 1 (East-West) -->
-    <link name='Wall_1'>
-      <pose>5.0 0 0.25 0 0 1.5708</pose>
-      <collision name='Wall_1_Collision'>
+    <!-- Wall East -->
+    <link name='Wall_E'>
+      <pose>15 0 0.25 0 0 1.5708</pose> <!-- 15m east, rotated 90 deg -->
+      <collision name='Wall_E_Collision'>
         <geometry>
           <box>
-            <size>10 0.15 0.5</size>
+            <size>30 0.15 0.5</size>
           </box>
         </geometry>
       </collision>
-      <visual name='Wall_1_Visual'>
+      <visual name='Wall_E_Visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>10 0.15 0.5</size>
+            <size>30 0.15 0.5</size>
           </box>
         </geometry>
         <material>
@@ -35,21 +35,21 @@
       </visual>
     </link>
 
-    <!-- Wall 2 (North-South) -->
-    <link name='Wall_2'>
-      <pose>0 5.0 0.25 0 0 0</pose>
-      <collision name='Wall_2_Collision'>
+    <!-- Wall North -->
+    <link name='Wall_N'>
+      <pose>0 15 0.25 0 0 0</pose> <!-- 15m north -->
+      <collision name='Wall_N_Collision'>
         <geometry>
           <box>
-            <size>10 0.15 0.5</size>
+            <size>30 0.15 0.5</size>
           </box>
         </geometry>
       </collision>
-      <visual name='Wall_2_Visual'>
+      <visual name='Wall_N_Visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>10 0.15 0.5</size>
+            <size>30 0.15 0.5</size>
           </box>
         </geometry>
         <material>
@@ -66,21 +66,21 @@
       </visual>
     </link>
 
-    <!-- Wall 3 (Opposite of Wall_1) -->
-    <link name='Wall_3'>
-      <pose>-5.0 0 0.25 0 0 1.5708</pose>
-      <collision name='Wall_3_Collision'>
+    <!-- Wall West -->
+    <link name='Wall_W'>
+      <pose>-15 0 0.25 0 0 1.5708</pose> <!-- 15m west, rotated 90 deg -->
+      <collision name='Wall_W_Collision'>
         <geometry>
           <box>
-            <size>10 0.15 0.5</size>
+            <size>30 0.15 0.5</size>
           </box>
         </geometry>
       </collision>
-      <visual name='Wall_3_Visual'>
+      <visual name='Wall_W_Visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>10 0.15 0.5</size>
+            <size>30 0.15 0.5</size>
           </box>
         </geometry>
         <material>
@@ -97,21 +97,21 @@
       </visual>
     </link>
 
-    <!-- Wall 4 (Opposite of Wall_2) -->
-    <link name='Wall_4'>
-      <pose>0 -5.0 0.25 0 0 0</pose>
-      <collision name='Wall_4_Collision'>
+    <!-- Wall South -->
+    <link name='Wall_S'>
+      <pose>0 -15 0.25 0 0 0</pose> <!-- 15m south -->
+      <collision name='Wall_S_Collision'>
         <geometry>
           <box>
-            <size>10 0.15 0.5</size>
+            <size>30 0.15 0.5</size>
           </box>
         </geometry>
       </collision>
-      <visual name='Wall_4_Visual'>
+      <visual name='Wall_S_Visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>10 0.15 0.5</size>
+            <size>30 0.15 0.5</size>
           </box>
         </geometry>
         <material>
@@ -127,6 +127,31 @@
         </material>
       </visual>
     </link>
+
+    <!-- Fixed joints connecting walls -->
+    <joint name="joint_wall_e_n" type="fixed">
+      <parent>Wall_E</parent>
+      <child>Wall_N</child>
+      <pose>15 15 0 0 0 0</pose>
+    </joint>
+
+    <joint name="joint_wall_n_w" type="fixed">
+      <parent>Wall_N</parent>
+      <child>Wall_W</child>
+      <pose>-15 15 0 0 0 0</pose>
+    </joint>
+
+    <joint name="joint_wall_w_s" type="fixed">
+      <parent>Wall_W</parent>
+      <child>Wall_S</child>
+      <pose>-15 -15 0 0 0 0</pose>
+    </joint>
+
+    <joint name="joint_wall_s_e" type="fixed">
+      <parent>Wall_S</parent>
+      <child>Wall_E</child>
+      <pose>15 -15 0 0 0 0</pose>
+    </joint>
 
   </model>
 </sdf>
