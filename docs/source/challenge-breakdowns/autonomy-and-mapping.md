@@ -2,7 +2,7 @@
 
 ## 2026 Team Members
 
-Nigel
+Nigel Hungerford-Symes
 
 ## Map Generation Using SLAM
 
