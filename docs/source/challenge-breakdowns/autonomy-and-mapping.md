@@ -3,6 +3,7 @@
 ## 2026 Team Members
 
 Nigel
+Luca Lubrano
 
 ## Map Generation Using SLAM
 
