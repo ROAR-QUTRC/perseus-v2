@@ -25,7 +25,7 @@ public:
         dist_coeffs_ = cv::Mat::zeros(5, 1, CV_64F);
 
         // Create ArUco dictionary and detector
-        dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100);
+        dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
         detector_ = cv::aruco::ArucoDetector(dictionary_);
 
         // Create TF broadcaster and listener
@@ -62,7 +62,7 @@ private:
 
         // Detect markers
         std::vector<int> ids;
-        std::vector<std::vector<cv::Point2f>> corners; 
+        std::vector<std::vector<cv::Point2f>> corners; // List of detected marker corners (4 corners per marker)
         detector_.detectMarkers(frame, corners, ids);
 
         if (!ids.empty())
@@ -75,7 +75,7 @@ private:
             {
                 cv::aruco::drawDetectedMarkers(frame, corners, ids);
                 cv::drawFrameAxes(frame, camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], 0.03);
-
+                // tvecs[i][2] = 0; // Use X coordinate for display
                 // Transform ArUco pose to base_link frame
                 transformAndPublishMarker(msg->header, ids[i], rvecs[i], tvecs[i]);
 
@@ -84,14 +84,16 @@ private:
                 for (const auto &pt : corners[i])
                     center += pt;
                 center *= (1.0f / 4.0f);
-                tvecs[i][2] = 0; // Ignore Z for 2D display
-                tvecs[i][1] = 0; // Ignore Y for 2D display
-                tvecs[i][0] = 0; // Use X coordinate for display
+                // tvecs[i][2] = 0; // Ignore Z for 2D display
+                // tvecs[i][1] = 0; // Ignore Y for 2D display
+                
                 double distance = sqrt(tvecs[i][0]*tvecs[i][0] + tvecs[i][1]*tvecs[i][1] + tvecs[i][2]*tvecs[i][2]);
                 // RCLCPP_INFO(this->get_logger(), "Marker ID: %d, Distance: %.2fm, Bearing: %.1f°",
                 //             ids[i], distance, atan2(tvecs[i][0], tvecs[i][2]) * 180.0 / M_PI);
-                RCLCPP_INFO(this->get_logger(), "X: %.2f, Y: %.2fm, Z: %.2fm", tvecs[i][0], tvecs[i][1], tvecs[i][2]);
+                double bearing = tvecs[i][0] != 0 ? atan2(tvecs[i][1], tvecs[i][0]) * 180.0 / M_PI : 0.0;
 
+                RCLCPP_INFO(this->get_logger(), "X: %.2f m, Y: %.2f m, Z: %.2f m", tvecs[i][0], tvecs[i][1], tvecs[i][2]);
+                RCLCPP_INFO(this->get_logger(), "Bearing: %.2f°", bearing);
                 cv::putText(frame, "ID:" + std::to_string(ids[i]) + " D:" + 
                                    std::to_string((int)(distance*100)) + "cm",
                             corners[i][0] + cv::Point2f(0, -30),
@@ -112,7 +114,7 @@ private:
             // Create pose in camera frame
             geometry_msgs::msg::PoseStamped marker_pose_camera;
             marker_pose_camera.header.stamp = header.stamp;
-            marker_pose_camera.header.frame_id = "camera_link";  // Your camera frame
+            marker_pose_camera.header.frame_id = "camera_link";
             
             // Set position (distance and bearing from camera)
             marker_pose_camera.pose.position.x = tvec[0];
@@ -129,32 +131,28 @@ private:
             marker_pose_camera.pose.orientation.z = quat.z();
             marker_pose_camera.pose.orientation.w = quat.w();
             
-            // Transform from camera_link to base_link
-            geometry_msgs::msg::PoseStamped marker_pose_base;
-            tf_buffer_->transform(marker_pose_camera, marker_pose_base, "base_link", 
-                                 tf2::durationFromSec(0.1)); // 
-            
-            // Publish transform in base_link frame
+            // Publish transform directly in camera_link frame (no transformation needed)
             geometry_msgs::msg::TransformStamped transform;
             transform.header.stamp = header.stamp;
-            transform.header.frame_id = "base_link";
+            transform.header.frame_id = "camera_link_optical";  // Changed from "base_link" to "camera_link"
             transform.child_frame_id = "aruco_marker_" + std::to_string(marker_id);
             
-            transform.transform.translation.x = marker_pose_base.pose.position.x;
-            transform.transform.translation.y = marker_pose_base.pose.position.y;
-            transform.transform.translation.z = marker_pose_base.pose.position.z;
-            transform.transform.rotation = marker_pose_base.pose.orientation;
+            // Use camera frame position directly
+            transform.transform.translation.x = tvec[0];
+            transform.transform.translation.y = tvec[1];
+            transform.transform.translation.z = tvec[2];
+            transform.transform.rotation.x = quat.x();
+            transform.transform.rotation.y = quat.y();
+            transform.transform.rotation.z = quat.z();
+            transform.transform.rotation.w = quat.w();
             
-            // Broadcast the transform in base_link frame
+            // Broadcast the transform in camera_link frame
             tf_broadcaster_->sendTransform(transform);
             
-            // Log the transformed position
+            // Log the camera frame position
             RCLCPP_INFO(this->get_logger(), 
-                       "ArUco %d in base_link: x=%.2f, y=%.2f, z=%.2f", 
-                       marker_id, 
-                       marker_pose_base.pose.position.x,
-                       marker_pose_base.pose.position.y, 
-                       marker_pose_base.pose.position.z);
+                       "ArUco %d in camera_link: x=%.2f, y=%.2f, z=%.2f", 
+                       marker_id, tvec[0], tvec[1], tvec[2]);
                        
         }
         catch (tf2::TransformException &ex) 
