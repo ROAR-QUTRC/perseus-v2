@@ -1,6 +1,6 @@
 # Autonomy and Mapping Operations Manual
 
-# 2026 Team Members
+## 2026 Team Members
 
 Nigel
 
