@@ -2,6 +2,7 @@
 
 ## 2026 Team Members
 
+Nigel
 Leila
 
 ## Map Generation Using SLAM
