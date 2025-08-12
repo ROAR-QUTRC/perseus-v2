@@ -87,6 +87,18 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}],
         output='screen'
     )
+    aruco_detector = Node(
+        package='perseus_vision',
+        executable='aruco_detector_node',
+        name='aruco_detector',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
+        remappings=[
+            # Example: remap camera topic if needed
+            # ('/camera/image_raw', '/your_camera/image_raw')
+        ]
+    )
+
 
     # RViz with nixGL support
     rviz = ExecuteProcess(
@@ -99,6 +111,7 @@ def generate_launch_description():
             "rviz2",
             "-d",
             rviz_config,
+            
         ],
         output="screen",
         additional_env={
@@ -115,6 +128,7 @@ def generate_launch_description():
         gz_launch,
         rsp_launch,  # Robot state publisher
         # joint_state_publisher,  # Joint state publisher (ADDED)
+        aruco_detector,  # Aruco detector node
         controllers_launch,  # Controllers
         rviz,  # Start RViz with nixGL support
     ]

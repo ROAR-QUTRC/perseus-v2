@@ -123,7 +123,7 @@ private:
             
             // Convert rotation vector to quaternion
             cv::Mat rotation_matrix;
-            cv::Rodrigues(rvec, rotation_matrix);
+            cv::Rodrigues(rvec, rotation_matrix); // convert rotation vector to rotation matrix
             tf2::Quaternion quat = rotationMatrixToQuaternion(rotation_matrix);
             
             marker_pose_camera.pose.orientation.x = quat.x();
@@ -160,7 +160,7 @@ private:
             RCLCPP_WARN(this->get_logger(), "Could not transform marker pose: %s", ex.what());
         }
     }
-    
+
     tf2::Quaternion rotationMatrixToQuaternion(const cv::Mat& rotation_matrix)
     {
         double r11 = rotation_matrix.at<double>(0,0);
