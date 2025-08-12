@@ -3,6 +3,7 @@
 ## 2026 Team Members
 
 Nigel
+Jasper
 
 ## Map Generation Using SLAM
 
