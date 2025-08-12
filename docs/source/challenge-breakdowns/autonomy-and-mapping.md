@@ -4,6 +4,8 @@
 
 Nigel
 
+Jasper
+
 ## Map Generation Using SLAM
 
 ### Prerequisites
