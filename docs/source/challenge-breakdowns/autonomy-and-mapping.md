@@ -1,5 +1,9 @@
 # Autonomy and Mapping Operations Manual
 
+## 2026 Team Members
+
+Leila
+
 ## Map Generation Using SLAM
 
 ### Prerequisites
