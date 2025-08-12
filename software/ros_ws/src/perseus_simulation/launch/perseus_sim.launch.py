@@ -111,7 +111,7 @@ def generate_launch_description():
     launch_files = [
         gz_launch,
         rsp_launch,  # Robot state publisher
-        joint_state_publisher,  # Joint state publisher (ADDED)
+        # joint_state_publisher,  # Joint state publisher (ADDED)
         controllers_launch,  # Controllers
         rviz,  # Start RViz with nixGL support
     ]

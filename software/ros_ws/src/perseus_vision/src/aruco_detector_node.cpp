@@ -10,7 +10,6 @@ public:
     ArucoDetector()
         : Node("aruco_detector")
     {
-        sdt>>
         // Camera parameters (replace with calibrated values)
         camera_matrix_ = (cv::Mat_<double>(3, 3) << 600, 0, 320,
                                                     0, 600, 240,
@@ -18,18 +17,18 @@ public:
         dist_coeffs_ = cv::Mat::zeros(5, 1, CV_64F);
 
         // Create ArUco dictionary and detector
-        dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_100); 
-        detector_ = cv::aruco::ArucoDetector(dictionary_);
+        dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100);  // Load a predefined dictionary
+        detector_ = cv::aruco::ArucoDetector(dictionary_); // Create the detector with the dictionary
 
         // Subscriber
         sub_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/camera/image_raw", 10,
-            std::bind(&ArucoDetector::imageCallback, this, std::placeholders::_1));
+            std::bind(&ArucoDetector::imageCallback, this, std::placeholders::_1)); // Subscribe to raw camera images
 
         // Publisher
         pub_ = this->create_publisher<sensor_msgs::msg::Image>(
-            "/processed_aruco/image_raw", 10);
-
+            "/processed_aruco/image_raw", 10); // Publish processed images with aruco markers
+ 
         RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
     }
 

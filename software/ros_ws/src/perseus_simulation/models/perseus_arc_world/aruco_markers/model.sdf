@@ -2,7 +2,7 @@
 <sdf version='1.8'>
   <model name='aruco_markers'>
     <static>true</static>
-    <pose>-5 -5 0 0 0 0</pose> <!-- Only need to change this pose to move the entire model -->
+    <pose>0 5 0 0 0 0</pose> <!-- Only need to change this pose to move the entire model -->
     
     <!-- Post/Pole - Main link -->
     <link name='post_link'>
@@ -10,7 +10,7 @@
       <visual name='post_visual'>
         <geometry>
           <cylinder>
-            <radius>0.025</radius>
+            <radius>0.05</radius>
             <length>1</length>
           </cylinder>
         </geometry>

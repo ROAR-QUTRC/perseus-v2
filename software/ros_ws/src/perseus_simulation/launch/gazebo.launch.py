@@ -121,7 +121,6 @@ def generate_launch_description():
     )
 
     nodes = [
-        
         gz_bridge,
         gz_spawn_entity,
     ]
