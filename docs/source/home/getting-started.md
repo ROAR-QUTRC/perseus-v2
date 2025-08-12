@@ -29,6 +29,7 @@ cd perseus-v2
 ```
 
 6. Skip this step if it ran without errors. If the script failed to run and suggests running with `--no-confirm`, try again like this:
+
 ```{code-block} console
 ./software/scripts/nix-setup.sh --no-confirm
 ```
