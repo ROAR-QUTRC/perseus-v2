@@ -19,7 +19,9 @@
   <exec_depend>ros_gz_image</exec_depend>
   <exec_depend>ros_gz_interfaces</exec_depend>
   <exec_depend>gz_ros2_control</exec_depend>
-
+  <depend>tf2_ros</depend>
+  <depend>tf2</depend>
+  <depend>geometry_msgs</depend>
   <export>
     <build_type>ament_cmake</build_type>
   </export>

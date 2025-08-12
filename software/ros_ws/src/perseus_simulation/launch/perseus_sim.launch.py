@@ -9,7 +9,6 @@ from launch.substitutions import (
     LaunchConfiguration,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 
@@ -24,7 +23,9 @@ def generate_launch_description():
             description="If true, use simulated clock",
         ),
     ]
-
+    rviz_config = PathJoinSubstitution(
+        [FindPackageShare("perseus_simulation"), "rviz", "arucoview.rviz"]
+    )
     # IMPORTED LAUNCH FILES
     gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -96,6 +97,8 @@ def generate_launch_description():
             "github:nix-community/nixGL",
             "--",
             "rviz2",
+            "-d",
+            rviz_config,
         ],
         output="screen",
         additional_env={

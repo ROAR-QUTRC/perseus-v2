@@ -63,6 +63,8 @@
       </attenuation>
       <direction>-0.5 0.1 -0.9</direction>
     </light>
+    <ambient>1 1 1 1</ambient>
+    <background>1 1 1 1</background>
 
     <include>
       <uri>model://perseus_arc_world</uri>

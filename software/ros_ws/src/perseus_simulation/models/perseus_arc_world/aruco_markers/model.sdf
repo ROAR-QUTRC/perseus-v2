@@ -2,8 +2,8 @@
 <sdf version='1.8'>
   <model name='aruco_markers'>
     <static>true</static>
-    <pose>0 5 0 0 0 0</pose> <!-- Only need to change this pose to move the entire model -->
-    
+    <pose>3 0 0 0 0 0</pose> <!-- Only need to change this pose to move the entire model -->
+
     <!-- Post/Pole - Main link -->
     <link name='post_link'>
       <pose>0 0 0.2 0 0 0</pose>
@@ -32,10 +32,10 @@
       
       <!-- ArUco plate as part of the same link -->
       <visual name='aruco_plate_visual'>
-        <pose>0.1 0 0.5 0 1.5708 0</pose> <!-- Relative to post center -->
+        <pose>-0.05 0 0.5 0 1.5708 0</pose> <!-- Relative to post center -->
         <geometry>
           <box>
-            <size>0.2 0.2 0.005</size>
+            <size>0.35 0.35 0.005</size>
           </box>
         </geometry>
         <material>
@@ -55,7 +55,7 @@
         <pose>0.1 0 0.5 0 1.5708 0</pose> <!-- Same relative position -->
         <geometry>
           <box>
-            <size>0.2 0.2 0.005</size>
+            <size>0.35 0.35 0.005</size>
           </box>
         </geometry>
       </collision>
