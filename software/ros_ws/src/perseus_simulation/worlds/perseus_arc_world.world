@@ -68,6 +68,9 @@
       <uri>model://perseus_arc_world</uri>
     </include>
     <include>
+      <uri>model://perseus_arc_world/aruco_markers</uri>
+    </include>
+    <include>
       <uri>model://perseus_arc_world/obstacles</uri>
     </include>
     <include>

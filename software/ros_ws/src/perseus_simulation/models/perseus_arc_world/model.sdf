@@ -6,7 +6,7 @@
 
     <!-- Wall East -->
     <link name='Wall_E'>
-      <pose>15 0 0.25 0 0 1.5708</pose> <!-- 15m east, rotated 90 deg -->
+      <pose>15 0 0.35 0 0 1.5708</pose> <!-- 15m east, rotated 90 deg -->
       <collision name='Wall_E_Collision'>
         <geometry>
           <box>
@@ -37,7 +37,7 @@
 
     <!-- Wall North -->
     <link name='Wall_N'>
-      <pose>0 15 0.25 0 0 0</pose> <!-- 15m north -->
+      <pose>0 15 0.35 0 0 0</pose> <!-- 15m north -->
       <collision name='Wall_N_Collision'>
         <geometry>
           <box>
@@ -68,7 +68,7 @@
 
     <!-- Wall West -->
     <link name='Wall_W'>
-      <pose>-15 0 0.25 0 0 1.5708</pose> <!-- 15m west, rotated 90 deg -->
+      <pose>-15 0 0.35 0 0 1.5708</pose> <!-- 15m west, rotated 90 deg -->
       <collision name='Wall_W_Collision'>
         <geometry>
           <box>
@@ -99,7 +99,7 @@
 
     <!-- Wall South -->
     <link name='Wall_S'>
-      <pose>0 -15 0.25 0 0 0</pose> <!-- 15m south -->
+      <pose>0 -15 0.35 0 0 0</pose> <!-- 15m south -->
       <collision name='Wall_S_Collision'>
         <geometry>
           <box>
@@ -128,30 +128,29 @@
       </visual>
     </link>
 
-    <!-- Fixed joints connecting walls -->
+    <!-- Fixed joints connecting walls (remove the last joint to break the loop) -->
     <joint name="joint_wall_e_n" type="fixed">
       <parent>Wall_E</parent>
       <child>Wall_N</child>
-      <pose>15 15 0 0 0 0</pose>
     </joint>
 
     <joint name="joint_wall_n_w" type="fixed">
       <parent>Wall_N</parent>
       <child>Wall_W</child>
-      <pose>-15 15 0 0 0 0</pose>
     </joint>
 
     <joint name="joint_wall_w_s" type="fixed">
       <parent>Wall_W</parent>
       <child>Wall_S</child>
-      <pose>-15 -15 0 0 0 0</pose>
     </joint>
 
+    <!-- Remove this joint to break the closed loop -->
+    <!-- 
     <joint name="joint_wall_s_e" type="fixed">
       <parent>Wall_S</parent>
       <child>Wall_E</child>
       <pose>15 -15 0 0 0 0</pose>
     </joint>
-
+    -->
   </model>
 </sdf>

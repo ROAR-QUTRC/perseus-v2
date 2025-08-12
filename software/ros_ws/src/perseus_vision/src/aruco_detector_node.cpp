@@ -10,6 +10,7 @@ public:
     ArucoDetector()
         : Node("aruco_detector")
     {
+        sdt>>
         // Camera parameters (replace with calibrated values)
         camera_matrix_ = (cv::Mat_<double>(3, 3) << 600, 0, 320,
                                                     0, 600, 240,
@@ -17,7 +18,7 @@ public:
         dist_coeffs_ = cv::Mat::zeros(5, 1, CV_64F);
 
         // Create ArUco dictionary and detector
-        dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_100);
+        dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_100); 
         detector_ = cv::aruco::ArucoDetector(dictionary_);
 
         // Subscriber
@@ -48,9 +49,9 @@ private:
         }
 
         // Detect markers
-        std::vector<int> ids;
-        std::vector<std::vector<cv::Point2f>> corners;
-        detector_.detectMarkers(frame, corners, ids);
+        std::vector<int> ids; // list of detected marker IDs
+        std::vector<std::vector<cv::Point2f>> corners; 
+        detector_.detectMarkers(frame, corners, ids); // detect markers
 
         if (!ids.empty())
         {
@@ -85,8 +86,8 @@ private:
     }
 
     // ROS interfaces
-    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_;
-    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_;
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_; // Subscriber for raw camera images
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_; // Publisher for processed images
 
     // ArUco
     cv::aruco::Dictionary dictionary_;

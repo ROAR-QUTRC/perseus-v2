@@ -11,6 +11,7 @@ from launch.substitutions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -41,6 +42,7 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
         }.items(),
     )
+    
     rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -58,6 +60,7 @@ def generate_launch_description():
             "hardware_plugin": "gz_ros2_control/GazeboSimSystem",
         }.items(),
     )
+    
     controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -76,6 +79,14 @@ def generate_launch_description():
         }.items(),
     )
 
+    # Joint State Publisher (needed for robot visualization)
+    joint_state_publisher = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen'
+    )
+
     # RViz with nixGL support
     rviz = ExecuteProcess(
         cmd=[
@@ -85,7 +96,6 @@ def generate_launch_description():
             "github:nix-community/nixGL",
             "--",
             "rviz2",
-            # "-d", rviz_config,  # If you want to use RViz config, uncomment this and set rviz_config properly
         ],
         output="screen",
         additional_env={
@@ -100,9 +110,10 @@ def generate_launch_description():
 
     launch_files = [
         gz_launch,
-        rviz,  # Start RViz with nixGL support
         rsp_launch,  # Robot state publisher
+        joint_state_publisher,  # Joint state publisher (ADDED)
         controllers_launch,  # Controllers
+        rviz,  # Start RViz with nixGL support
     ]
 
     return LaunchDescription(arguments + launch_files)
