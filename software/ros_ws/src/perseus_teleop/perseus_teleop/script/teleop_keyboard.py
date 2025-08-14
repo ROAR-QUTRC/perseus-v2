@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright (c) 2011, Willow Garage, Inc.
-# Copyright (c) 2017, ROBOTIS CO., LTD.
+# Copyright (c) 2017, ROBOTICS CO., LTD.
 # Copyright (c) 2025, Kelvin Le (Perseus Project)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 # Original Authors: Darby Lim, Ryan Shim
-# 
+#
 # Modified for Perseus robot:
 # - Changed velocity limits for Perseus specifications
 # - Updated topic names and model constants
@@ -34,7 +34,7 @@ import rclpy
 from rclpy.clock import Clock
 from rclpy.qos import QoSProfile
 
-if os.name == 'nt':
+if os.name == "nt":
     import msvcrt
 else:
     import termios
@@ -46,7 +46,7 @@ PERSEUS_MAX_ANG_VEL = 2.84
 LIN_VEL_STEP_SIZE = 0.05
 ANG_VEL_STEP_SIZE = 0.1
 
-PERSEUS_MODEL = 'v2_PERSEUS_MODEL'
+PERSEUS_MODEL = "v2_PERSEUS_MODEL"
 
 msg = """
 Control Your Perseus!
@@ -70,23 +70,25 @@ Communications Failed
 
 
 def get_key(settings):
-    if os.name == 'nt':
-        return msvcrt.getch().decode('utf-8')
+    if os.name == "nt":
+        return msvcrt.getch().decode("utf-8")
     tty.setraw(sys.stdin.fileno())
     rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
     if rlist:
         key = sys.stdin.read(1)
     else:
-        key = ''
+        key = ""
 
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
 
 
 def print_vels(target_linear_velocity, target_angular_velocity):
-    print('currently:\tlinear velocity {0}\t angular velocity {1} '.format(
-        target_linear_velocity,
-        target_angular_velocity))
+    print(
+        "currently:\tlinear velocity {0}\t angular velocity {1} ".format(
+            target_linear_velocity, target_angular_velocity
+        )
+    )
 
 
 def make_simple_profile(output_vel, input_vel, slop):
@@ -112,14 +114,14 @@ def constrain(input_vel, low_bound, high_bound):
 
 
 def check_linear_limit_velocity(velocity):
-    if PERSEUS_MODEL == 'v2_PERSEUS_MODEL':
+    if PERSEUS_MODEL == "v2_PERSEUS_MODEL":
         return constrain(velocity, -PERSEUS_MAX_LIN_VEL, PERSEUS_MAX_LIN_VEL)
     else:
         return constrain(velocity, -PERSEUS_MAX_LIN_VEL, PERSEUS_MAX_LIN_VEL)
 
 
 def check_angular_limit_velocity(velocity):
-    if PERSEUS_MODEL == 'v2_PERSEUS_MODEL':
+    if PERSEUS_MODEL == "v2_PERSEUS_MODEL":
         return constrain(velocity, -PERSEUS_MAX_ANG_VEL, PERSEUS_MAX_ANG_VEL)
     else:
         return constrain(velocity, -PERSEUS_MAX_ANG_VEL, PERSEUS_MAX_ANG_VEL)
@@ -127,17 +129,17 @@ def check_angular_limit_velocity(velocity):
 
 def main():
     settings = None
-    if os.name != 'nt':
+    if os.name != "nt":
         settings = termios.tcgetattr(sys.stdin)
 
     rclpy.init()
-    ROS_DISTRO = os.environ.get('ROS_DISTRO')
+    ROS_DISTRO = os.environ.get("ROS_DISTRO")
     qos = QoSProfile(depth=10)
-    node = rclpy.create_node('teleop_keyboard')
-    if ROS_DISTRO == 'humble':
-        pub = node.create_publisher(Twist, 'cmd_vel', qos)
+    node = rclpy.create_node("teleop_keyboard")
+    if ROS_DISTRO == "humble":
+        pub = node.create_publisher(Twist, "cmd_vel", qos)
     else:
-        pub = node.create_publisher(TwistStamped, 'cmd_vel_out', qos)
+        pub = node.create_publisher(TwistStamped, "cmd_vel_out", qos)
 
     status = 0
     target_linear_velocity = 0.0
@@ -147,36 +149,40 @@ def main():
 
     try:
         print(msg)
-        while (1):
+        while 1:
             key = get_key(settings)
-            if key == 'w':
-                target_linear_velocity =\
-                    check_linear_limit_velocity(target_linear_velocity + LIN_VEL_STEP_SIZE)
+            if key == "w":
+                target_linear_velocity = check_linear_limit_velocity(
+                    target_linear_velocity + LIN_VEL_STEP_SIZE
+                )
                 status = status + 1
                 print_vels(target_linear_velocity, target_angular_velocity)
-            elif key == 'x':
-                target_linear_velocity =\
-                    check_linear_limit_velocity(target_linear_velocity - LIN_VEL_STEP_SIZE)
+            elif key == "x":
+                target_linear_velocity = check_linear_limit_velocity(
+                    target_linear_velocity - LIN_VEL_STEP_SIZE
+                )
                 status = status + 1
                 print_vels(target_linear_velocity, target_angular_velocity)
-            elif key == 'a':
-                target_angular_velocity =\
-                    check_angular_limit_velocity(target_angular_velocity + ANG_VEL_STEP_SIZE)
+            elif key == "a":
+                target_angular_velocity = check_angular_limit_velocity(
+                    target_angular_velocity + ANG_VEL_STEP_SIZE
+                )
                 status = status + 1
                 print_vels(target_linear_velocity, target_angular_velocity)
-            elif key == 'd':
-                target_angular_velocity =\
-                    check_angular_limit_velocity(target_angular_velocity - ANG_VEL_STEP_SIZE)
+            elif key == "d":
+                target_angular_velocity = check_angular_limit_velocity(
+                    target_angular_velocity - ANG_VEL_STEP_SIZE
+                )
                 status = status + 1
                 print_vels(target_linear_velocity, target_angular_velocity)
-            elif key == ' ' or key == 's':
+            elif key == " " or key == "s":
                 target_linear_velocity = 0.0
                 control_linear_velocity = 0.0
                 target_angular_velocity = 0.0
                 control_angular_velocity = 0.0
                 print_vels(target_linear_velocity, target_angular_velocity)
             else:
-                if (key == '\x03'):
+                if key == "\x03":
                     break
 
             if status == 20:
@@ -186,14 +192,16 @@ def main():
             control_linear_velocity = make_simple_profile(
                 control_linear_velocity,
                 target_linear_velocity,
-                (LIN_VEL_STEP_SIZE / 2.0))
+                (LIN_VEL_STEP_SIZE / 2.0),
+            )
 
             control_angular_velocity = make_simple_profile(
                 control_angular_velocity,
                 target_angular_velocity,
-                (ANG_VEL_STEP_SIZE / 2.0))
+                (ANG_VEL_STEP_SIZE / 2.0),
+            )
 
-            if ROS_DISTRO == 'humble':
+            if ROS_DISTRO == "humble":
                 twist = Twist()
                 twist.linear.x = control_linear_velocity
                 twist.linear.y = 0.0
@@ -207,7 +215,7 @@ def main():
             else:
                 twist_stamped = TwistStamped()
                 twist_stamped.header.stamp = Clock().now().to_msg()
-                twist_stamped.header.frame_id = ''
+                twist_stamped.header.frame_id = ""
                 twist_stamped.twist.linear.x = control_linear_velocity
                 twist_stamped.twist.linear.y = 0.0
                 twist_stamped.twist.linear.z = 0.0
@@ -222,7 +230,7 @@ def main():
         print(e)
 
     finally:
-        if ROS_DISTRO == 'humble':
+        if ROS_DISTRO == "humble":
             twist = Twist()
             twist.linear.x = 0.0
             twist.linear.y = 0.0
@@ -234,7 +242,7 @@ def main():
         else:
             twist_stamped = TwistStamped()
             twist_stamped.header.stamp = Clock().now().to_msg()
-            twist_stamped.header.frame_id = ''
+            twist_stamped.header.frame_id = ""
             twist_stamped.twist.linear.x = control_linear_velocity
             twist_stamped.twist.linear.y = 0.0
             twist_stamped.twist.linear.z = 0.0
@@ -243,9 +251,9 @@ def main():
             twist_stamped.twist.angular.z = control_angular_velocity
             pub.publish(twist_stamped)
 
-        if os.name != 'nt':
+        if os.name != "nt":
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -5,12 +5,11 @@ from launch.substitutions import (
     LaunchConfiguration,
 )
 import os
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-from launch.actions import AppendEnvironmentVariable
 from ament_index_python.packages import get_package_share_directory
+
 
 def generate_launch_description():
     # ARGUMENTS
@@ -43,8 +42,7 @@ def generate_launch_description():
         performed_gz_world_path = gz_world_path.perform(context)
 
         model_path = os.path.join(
-        get_package_share_directory('perseus_simulation'),
-        'models'
+            get_package_share_directory("perseus_simulation"), "models"
         )
         gz_launch = ExecuteProcess(
             cmd=[
@@ -65,7 +63,7 @@ def generate_launch_description():
                 "QT_QPA_PLATFORM": "xcb",
                 "QT_SCREEN_SCALE_FACTORS": "1",
                 "PROJ_IGNORE_CELESTIAL_BODY": "YES",  # Fixed here
-                "GZ_SIM_RESOURCE_PATH": model_path, # Ensure the model path is set correctly
+                "GZ_SIM_RESOURCE_PATH": model_path,  # Ensure the model path is set correctly
             },
         )
 

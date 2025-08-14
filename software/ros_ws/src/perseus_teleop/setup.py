@@ -1,39 +1,37 @@
 from setuptools import find_packages
 from setuptools import setup
 
-package_name = 'perseus_teleop'
+package_name = "perseus_teleop"
 
 setup(
     name=package_name,
-    version='2.3.3',
+    version="2.3.3",
     packages=find_packages(exclude=[]),
     data_files=[
-        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
-        ('share/' + package_name, ['package.xml']),
+        ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
+        ("share/" + package_name, ["package.xml"]),
     ],
     install_requires=[
-        'setuptools',
+        "setuptools",
     ],
     zip_safe=True,
-    author='Kelvin Le',
-    author_email='nguyenleminh1002@gmail.com',
-    maintainer='Kelvin Le',
-    maintainer_email='nguyenleminh1002@gmail.com',
-    keywords=['ROS'],
+    author="Kelvin Le",
+    author_email="nguyenleminh1002@gmail.com",
+    maintainer="Kelvin Le",
+    maintainer_email="nguyenleminh1002@gmail.com",
+    keywords=["ROS"],
     classifiers=[
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python',
-        'Topic :: Software Development',
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python",
+        "Topic :: Software Development",
     ],
-    description=(
-        'Teleoperation node using keyboard for Perseus.'
-    ),
-    license='Apache License, Version 2.0',
-    tests_require=['pytest'],
+    description=("Teleoperation node using keyboard for Perseus."),
+    license="Apache License, Version 2.0",
+    tests_require=["pytest"],
     entry_points={
-        'console_scripts': [
-            'teleop_keyboard = perseus_teleop.script.teleop_keyboard:main'
+        "console_scripts": [
+            "teleop_keyboard = perseus_teleop.script.teleop_keyboard:main"
         ],
     },
 )

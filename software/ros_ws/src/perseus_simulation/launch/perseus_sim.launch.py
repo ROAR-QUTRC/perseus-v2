@@ -45,7 +45,7 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
         }.items(),
     )
-    
+
     rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -63,7 +63,7 @@ def generate_launch_description():
             "hardware_plugin": "gz_ros2_control/GazeboSimSystem",
         }.items(),
     )
-    
+
     controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -89,19 +89,18 @@ def generate_launch_description():
     #     parameters=[{'use_sim_time': use_sim_time}],
     #     output='screen'
     # )
-    
+
     aruco_detector = Node(
-        package='perseus_vision',
-        executable='aruco_detector_node',
-        name='aruco_detector',
-        output='screen',
-        parameters=[{'use_sim_time': use_sim_time}],
+        package="perseus_vision",
+        executable="aruco_detector_node",
+        name="aruco_detector",
+        output="screen",
+        parameters=[{"use_sim_time": use_sim_time}],
         remappings=[
             # Example: remap camera topic if needed
             # ('/camera/image_raw', '/your_camera/image_raw')
-        ]
+        ],
     )
-
 
     # RViz with nixGL support
     rviz = ExecuteProcess(
@@ -114,7 +113,6 @@ def generate_launch_description():
             "rviz2",
             "-d",
             rviz_config,
-            
         ],
         output="screen",
         additional_env={
