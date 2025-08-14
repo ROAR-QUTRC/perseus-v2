@@ -23,9 +23,11 @@ def generate_launch_description():
             description="If true, use simulated clock",
         ),
     ]
+    # RViz configuration file
     rviz_config = PathJoinSubstitution(
         [FindPackageShare("perseus_simulation"), "rviz", "arucoview.rviz"]
     )
+
     # IMPORTED LAUNCH FILES
     gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -81,12 +83,13 @@ def generate_launch_description():
     )
 
     # Joint State Publisher (needed for robot visualization)
-    joint_state_publisher = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        parameters=[{'use_sim_time': use_sim_time}],
-        output='screen'
-    )
+    # joint_state_publisher = Node(
+    #     package='joint_state_publisher',
+    #     executable='joint_state_publisher',
+    #     parameters=[{'use_sim_time': use_sim_time}],
+    #     output='screen'
+    # )
+    
     aruco_detector = Node(
         package='perseus_vision',
         executable='aruco_detector_node',
