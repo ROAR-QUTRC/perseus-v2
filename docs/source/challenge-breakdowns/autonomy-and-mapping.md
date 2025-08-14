@@ -5,6 +5,7 @@
 Nigel
 Jasper
 Lachlan Ikeguchi
+Natalia Hoyos Gonzalez
 
 ## Map Generation Using SLAM
 
