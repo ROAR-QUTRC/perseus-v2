@@ -16,7 +16,7 @@ The Perseus-v2 repository contains all the software for the Perseus rover and in
 
 As such it is imperative that the highest levels of professionalism are demonstrated in how this code is updated and the documentation supporting such changes.
 
-All software develop standards are found in the Software Standards page.
+All software develop standards are found in the [Software Standards](project:/standards/software.md) page.
 
 This pages addresses the incidental documentation associated with pushing new code to the common codebase. Therefore this page will describe the standards required for:
 
@@ -55,8 +55,8 @@ Branch names should be descriptive and follow a consistent pattern that clearly 
 ```
 john-feature-branch        // No prefix or description
 feat/stuff                 // Too vague
-bugfix/bug                   // Not descriptive
-random-changes            // No prefix, unclear purpose
+bugfix/bug                 // Not descriptive
+random-changes             // No prefix, unclear purpose
 ```
 
 ## Commit Message Standards
@@ -113,19 +113,21 @@ Examples include
 
 #### The Subject Line
 
-2. **Keep it concise**: Aim for 50 characters or fewer (max 72)
-3. **Capitalize the first letter**
-4. **No full stop at the end**
-5. **Be specific and descriptive**
+1. **Keep it concise**: Aim for 50 characters or fewer (max 72)
+2. **No full stop at the end**
+3. **Be specific and descriptive**
 
-//TODO
-add a visual of git log --oneline
+#### Acceptable Commit Message Example
 
-#### Acceptable Examples
+Please note the use of a line to separate the initial short summary from the body
 
-Add whitespace
+```
+perseus_sensors: Updated M2M2 lidar package
 
-//TODO
+- corrected the number of points published to /scan
+- allowed param to select applkicable USB device
+- updated documentation with correct launch file
+```
 
 #### Examples of Poor Commit Messages to Avoid
 
@@ -143,7 +145,7 @@ quick fix                    // What was fixed?
 
 ### The Commit Body (Optional)
 
-Use the commit body to add relevant detail if someone needed to learn more. Explain:
+Use the commit body to add relevant detail if someone needed to learn more. Best practice is to explain:
 
 - **What** the change does
 - **Why** the change was necessary
@@ -157,12 +159,6 @@ Use the commit body to add relevant detail if someone needed to learn more. Expl
 - Reference issues and pull requests if relevant
 
 #### Example with Body
-
-```
-//TODO
-
-Closes #123
-```
 
 ## Pull Request Standards
 
