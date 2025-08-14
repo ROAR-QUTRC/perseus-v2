@@ -2,40 +2,44 @@
 {
   lib,
   buildRosPackage,
+  OpenCV,
   ament-cmake,
+  ament-lint-auto,
+  ament-lint-common,
+  cv-bridge,
   geometry-msgs,
-  gz-ros2-control,
-  perseus,
-  ros-gz-bridge,
-  ros-gz-image,
-  ros-gz-interfaces,
-  ros-gz-sim,
+  image-transport,
+  rclcpp,
+  sensor-msgs,
   tf2,
   tf2-ros,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-perseus-simulation";
-  version = "0.0.1";
+  pname = "ros-jazzy-perseus-vision";
+  version = "0.0.0";
 
-  src = ./../src/perseus_simulation;
+  src = ./../src/perseus_vision;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
+  checkInputs = [
+    ament-lint-auto
+    ament-lint-common
+  ];
   propagatedBuildInputs = [
+    OpenCV
+    cv-bridge
     geometry-msgs
-    gz-ros2-control
-    perseus
-    ros-gz-bridge
-    ros-gz-image
-    ros-gz-interfaces
-    ros-gz-sim
+    image-transport
+    rclcpp
+    sensor-msgs
     tf2
     tf2-ros
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "Package for simulating the Perseus rover using Gazebo.";
+    description = "A package to do visionary tasks of Perseus";
     license = with lib.licenses; [ mit ];
   };
 }
