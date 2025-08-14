@@ -42,9 +42,13 @@ Branch names should be descriptive and follow a consistent pattern that clearly 
 <prefix>/<brief-description>
 ```
 
-#### Acceptable Examples
+#### Acceptable Examples of Branch names
 
-//TODO update
+```
+- feat/c1_lidar
+- test/simulation-unit-tests
+- docs/update-to-getting-started
+```
 
 #### Incorrect Examples
 
@@ -59,7 +63,27 @@ random-changes            // No prefix, unclear purpose
 
 Professional commit messages are essential for maintaining a clear project history and enabling effective collaboration. Poor commit messages like "added stuff" make it impossible to understand the purpose and scope of changes.
 
-//TODO add visiual of git log --oneline
+It is possible to run 'git log --oneline' at the terminal to see a summary of the latest commits. For example:
+
+```
+0290680 docs: Added a tutorial on how to launch the simulation
+4c6fd68 Merge pull request #217 from ROAR-QUTRC/feat/livox-fixing
+b970635 (origin/feat/livox-fixing, feat/livox-fixing) chore: Format and lint
+ca97a15 Updated Livox driver to run on /tmp
+d2cb256 chore: Format and lint
+5136806 Fixed Livox Launch
+3fad5bd (origin/i2c-node) Merge pull request #216 from ROAR-QUTRC/feat/web-ui
+74913ae fix: typo
+2fe1d6d Merge pull request #215 from ROAR-QUTRC/clean/nuking
+f99acf2 Removed old camera code
+e69a4db chore: Format and lint
+93e47cf Updated power on steps and added note about zellij use
+10c3757 Cleaning ros_ws
+ce2eed4 chore: Format and lint
+670896f Fixed typos and added new docs
+```
+
+By keeping the first line of the commit message under 72 characters it keeps this summary functional and practical to view.
 
 ### Commit Message Structure
 
@@ -74,16 +98,16 @@ Follow the conventional commit format:
 
 ### Commit Packages Description
 
-//TODO explain
+As a convention in this project, each commit message should start with the relevant part of the codebase being amended
 
 Examples include
 
+```
 - perseus_lite: xxxxxxxx
 - docs: xxxxxxxx
 - hardware: xxxxxxxx
 - perseus_sensors: xxxxxxx
-
-//TODO more
+```
 
 ### Writing Effective Commit Messages
 
