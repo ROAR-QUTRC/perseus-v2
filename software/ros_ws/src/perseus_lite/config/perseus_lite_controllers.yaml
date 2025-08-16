@@ -74,7 +74,7 @@ diff_drive_base_controller:
     #use_stamped_vel: false
 
     # Kinematic limits
-    linear.x.max_velocity: 0.25
+    linear.x.max_velocity: 2.0
     linear.x.max_acceleration: 10.0
     linear.x.max_jerk: .NAN
     angular.z.max_velocity: 5.0

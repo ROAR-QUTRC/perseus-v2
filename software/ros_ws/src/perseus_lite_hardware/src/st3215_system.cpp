@@ -418,6 +418,17 @@ namespace perseus_lite_hardware
 
                 // Use command speed directly - URDF axis definitions handle direction
                 double corrected_speed = _command_speeds[i];
+                
+                // Invert direction for motors 2 and 3 (left side motors)
+                // Motor 2 is rear_left_wheel, Motor 3 is front_left_wheel
+                // This is needed because the URDF defines all wheels with the same axis direction
+                // but physically the left motors need to rotate opposite to the right motors
+                if (_servo_ids[i] == 2 || _servo_ids[i] == 3)
+                {
+                    corrected_speed = -corrected_speed;
+                    RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
+                                 "Servo %d - Inverted direction for left side motor", _servo_ids[i]);
+                }
 
                 // Convert velocity command to servo units
                 // ST3215 expects -1000 to 1000 for velocity
@@ -700,12 +711,6 @@ namespace perseus_lite_hardware
                         // Convert to rad/s (protocol units are roughly RPM/1000)
                         const double rpm = raw_vel * (MAX_RPM / MAX_VELOCITY_RPM);
                         double velocity_rad_s = rpm * RPM_TO_RAD_S;
-
-                        // Apply direction correction for left-side servos (IDs 2 and 3)
-                        if (id == 2 || id == 3)
-                        {
-                            velocity_rad_s = -velocity_rad_s;
-                        }
 
                         state.velocity = velocity_rad_s;
                     }

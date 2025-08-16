@@ -27,7 +27,7 @@
     <!-- WHEEL -->
     <joint name="${prefix}${end}_${side}_wheel_joint" type="continuous">
       <xacro:if value="${side == 'left'}">
-        <axis xyz="0 0 1"/>
+        <axis xyz="0 0 -1"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
         <axis xyz="0 0 -1"/>
