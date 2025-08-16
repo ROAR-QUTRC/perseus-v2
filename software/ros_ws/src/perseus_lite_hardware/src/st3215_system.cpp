@@ -418,7 +418,7 @@ namespace perseus_lite_hardware
 
                 // Use command speed directly - URDF axis definitions handle direction
                 double corrected_speed = _command_speeds[i];
-                
+
                 // Invert direction for motors 2 and 3 (left side motors)
                 // Motor 2 is rear_left_wheel, Motor 3 is front_left_wheel
                 // This is needed because the URDF defines all wheels with the same axis direction
