@@ -1,0 +1,81 @@
+slam_toolbox:
+  ros__parameters:
+    # Plugin params
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+    
+    # ROS Parameters
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+    use_map_saver: true
+    mode: mapping
+    
+    # Sync mapping configuration
+    sync_mapping: true
+    
+    # Performance and timing
+    debug_logging: false
+    throttle_scans: 1
+    transform_publish_period: 0.02  # Publish transforms more frequently
+    enable_interactive_mode: true
+    publish_period: 0.05  # Faster map publishing
+    map_update_interval: 0.1  # More frequent map updates
+    resolution: 0.02
+    max_laser_range: 6.0  # Reduced from 8.0 for cleaner indoor maps
+    minimum_time_interval: 0.5  # Increased to reduce noise
+    transform_timeout: 1.0  # Increased from 0.5
+    tf_buffer_duration: 30.0
+    stack_size_to_use: 40000000
+    
+    # General Parameters - Tuned for cleaner maps
+    use_scan_matching: true
+    use_scan_barycenter: true
+    use_imu: true
+    minimum_travel_distance: 0.2  # Increased from 0.1 to reduce drift
+    minimum_travel_heading: 0.3  # Increased from 0.2
+    scan_buffer_size: 30  # Reduced from 50 for better performance
+    scan_buffer_maximum_scan_distance: 8.0  # Reduced from 10.0
+    link_match_minimum_response_fine: 0.4  # Increased from 0.2 for stricter matching
+    link_scan_maximum_distance: 1.5  # Increased from 1.0
+    loop_search_maximum_distance: 3.0  # Increased from 2.0
+    do_loop_closing: true
+    loop_match_minimum_chain_size: 10  # Increased from 5 for more robust loop closure
+    loop_match_maximum_variance_coarse: 1.0  # Reduced from 2.0
+    loop_match_minimum_response_coarse: 0.35  # Increased from 0.25
+    loop_match_minimum_response_fine: 0.45  # Increased from 0.35
+    
+    # Correlation Parameters - Tightened for cleaner maps
+    correlation_search_space_dimension: 0.2  # Reduced from 0.3
+    correlation_search_space_resolution: 0.003  # Reduced from 0.005
+    correlation_search_space_smear_deviation: 0.03  # Reduced from 0.05
+    
+    # Loop Closure Parameters - Tightened
+    loop_search_space_dimension: 3.0  # Reduced from 4.0
+    loop_search_space_resolution: 0.02  # Reduced from 0.03
+    loop_search_space_smear_deviation: 0.01  # Reduced from 0.02
+    
+    # Scan Matcher Parameters - Tuned for accuracy
+    distance_variance_penalty: 0.5  # Increased from 0.3
+    angle_variance_penalty: 1.0  # Increased from 0.7
+    fine_search_angle_offset: 0.00349
+    coarse_search_angle_offset: 0.349  # Increased from 0.262
+    coarse_angle_resolution: 0.0349  # Increased from 0.0262
+    minimum_angle_penalty: 0.9
+    minimum_distance_penalty: 0.5
+    use_response_expansion: true
+    
+    # Additional parameters for noise reduction
+    lifelong_search_use_tree: false
+    lifelong_minimum_score: 0.2  # Increased from 0.1
+    lifelong_iou_match: 0.90  # Increased from 0.85
+    lifelong_node_removal_score: 0.08  # Increased from 0.04
+    lifelong_overlap_score_scale: 0.1  # Increased from 0.06
+    lifelong_constraint_multiplier: 0.1  # Increased from 0.08
+    lifelong_nearby_penalty: 0.002  # Increased from 0.001
+    lifelong_candidates_scale: 0.05  # Increased from 0.03

@@ -133,7 +133,7 @@ def generate_launch_description():
             "frame_id": "c1_lidar_frame",
             "serial_port": "/dev/ttyUSB0",
             "serial_baudrate": "460800",
-            "inverted": "true",
+            "inverted": "false",
         }.items(),
     )
 

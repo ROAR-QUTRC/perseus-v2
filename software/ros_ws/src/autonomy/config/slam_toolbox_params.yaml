@@ -42,8 +42,8 @@ slam_toolbox:
     resolution: 0.02
     max_laser_range: 8.0 #for rastering images - reduced for indoor
     minimum_time_interval: 0.3 #faster updates for indoor mapping
-    transform_timeout: 0.2
-    tf_buffer_duration: 2.
+    transform_timeout: 0.5
+    tf_buffer_duration: 30.
     stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
     # General Parameters
     use_scan_matching: true
@@ -51,8 +51,8 @@ slam_toolbox:
     use_imu: true
     minimum_travel_distance: 0.1
     minimum_travel_heading: 0.2
-    scan_buffer_size: 20
-    scan_buffer_maximum_scan_distance: 5.0
+    scan_buffer_size: 50
+    scan_buffer_maximum_scan_distance: 10.0
     link_match_minimum_response_fine: 0.2
     link_scan_maximum_distance: 1.0
     loop_search_maximum_distance: 2.0
