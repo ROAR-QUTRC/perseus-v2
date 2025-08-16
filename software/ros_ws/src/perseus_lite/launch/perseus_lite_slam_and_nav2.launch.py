@@ -105,7 +105,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "cmd_vel_topic",
-            default_value="/cmd_vel",
+            default_value="/joy_vel",
             description="Topic name for cmd_vel commands (use /joy_vel for xbox controller compatibility)",
         ),
         # SLAM arguments
@@ -203,6 +203,9 @@ def generate_launch_description():
         output="screen",
         namespace="",
         parameters=[slam_params_file, {"use_sim_time": use_sim_time}],
+        remappings=[
+            ("imu", "/imu/data"),
+        ],
     )
 
     # SLAM Toolbox lifecycle management
