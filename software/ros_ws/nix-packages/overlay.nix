@@ -11,10 +11,6 @@ final: prev: {
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };
   perseus-simulation = final.callPackage ./perseus-simulation.nix { };
   perseus-teleop = final.callPackage ./perseus-teleop.nix { };
-<<<<<<< HEAD
-  perseus-vision = final.callPackage ./perseus-vision.nix {
-  };
-=======
   perseus-vision = final.callPackage ./perseus-vision.nix { };
->>>>>>> 349a43874b7cc2752ee3de159da637e11fd7e4aa
+
 }
