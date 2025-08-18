@@ -7,30 +7,24 @@ from launch.actions import (
     IncludeLaunchDescription,
     GroupAction,
     SetEnvironmentVariable,
-    EmitEvent,
-    LogInfo,
-    RegisterEventHandler,
 )
 from launch.conditions import IfCondition
-from launch.events import matches_action
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
     PythonExpression,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node, LoadComposableNodes, SetParameter, LifecycleNode
+from launch_ros.actions import Node, LoadComposableNodes, SetParameter
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.descriptions import ComposableNode, ParameterFile
-from launch_ros.event_handlers import OnStateTransition
-from launch_ros.events.lifecycle import ChangeState
-from lifecycle_msgs.msg import Transition
 from nav2_common.launch import RewrittenYaml
 
 
 def generate_launch_description():
     # Get package directories
     bringup_dir = get_package_share_directory("autonomy")
+    perseus_lite_dir = get_package_share_directory("perseus_lite")
 
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -39,9 +33,6 @@ def generate_launch_description():
     serial_port = LaunchConfiguration("serial_port")
     baud_rate = LaunchConfiguration("baud_rate")
     cmd_vel_topic = LaunchConfiguration("cmd_vel_topic")
-
-    # SLAM arguments
-    slam_params_file = LaunchConfiguration("slam_params_file")
 
     # Robot localization arguments
     ekf_params_file = LaunchConfiguration("ekf_params_file")
@@ -57,7 +48,6 @@ def generate_launch_description():
     log_level = LaunchConfiguration("log_level")
     
     # RViz arguments
-    use_rviz = LaunchConfiguration("use_rviz")
     rviz_config_file = LaunchConfiguration("rviz_config_file")
 
     # Nav2 lifecycle nodes
@@ -112,14 +102,6 @@ def generate_launch_description():
             default_value="/joy_vel",
             description="Topic name for cmd_vel commands (use /joy_vel for xbox controller compatibility)",
         ),
-        # SLAM arguments
-        DeclareLaunchArgument(
-            "slam_params_file",
-            default_value=PathJoinSubstitution(
-                [FindPackageShare("autonomy"), "config", "slam_toolbox_params.yaml"]
-            ),
-            description="Full path to the ROS2 parameters file for SLAM Toolbox",
-        ),
         # Robot localization arguments
         DeclareLaunchArgument(
             "ekf_params_file",
@@ -164,11 +146,6 @@ def generate_launch_description():
         ),
         # RViz arguments
         DeclareLaunchArgument(
-            "use_rviz",
-            default_value="false",
-            description="Whether to start RViz2",
-        ),
-        DeclareLaunchArgument(
             "rviz_config_file",
             default_value=PathJoinSubstitution(
                 [FindPackageShare("perseus_lite"), "rviz", "nav2.rviz"]
@@ -210,46 +187,6 @@ def generate_launch_description():
         remappings=[
             ("odometry/filtered", "odometry/filtered"),
         ],
-    )
-
-    # SLAM Toolbox node (as LifecycleNode)
-    slam_toolbox = LifecycleNode(
-        package="slam_toolbox",
-        executable="async_slam_toolbox_node",
-        name="slam_toolbox",
-        output="screen",
-        namespace="",
-        parameters=[slam_params_file, {"use_sim_time": use_sim_time}],
-        remappings=[
-            ("imu", "/imu/data"),
-        ],
-    )
-
-    # SLAM Toolbox lifecycle management
-    configure_slam_event = EmitEvent(
-        event=ChangeState(
-            lifecycle_node_matcher=matches_action(slam_toolbox),
-            transition_id=Transition.TRANSITION_CONFIGURE,
-        ),
-        condition=IfCondition(autostart),
-    )
-
-    activate_slam_event = RegisterEventHandler(
-        OnStateTransition(
-            target_lifecycle_node=slam_toolbox,
-            start_state="configuring",
-            goal_state="inactive",
-            entities=[
-                LogInfo(msg="[LifecycleLaunch] Slamtoolbox node is activating."),
-                EmitEvent(
-                    event=ChangeState(
-                        lifecycle_node_matcher=matches_action(slam_toolbox),
-                        transition_id=Transition.TRANSITION_ACTIVATE,
-                    )
-                ),
-            ],
-        ),
-        condition=IfCondition(autostart),
     )
 
     # Nav2 remappings
@@ -506,16 +443,24 @@ def generate_launch_description():
             ),
         ],
     )
+    
+    # RViz2 node
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        arguments=["-d", rviz_config_file],
+        parameters=[{"use_sim_time": use_sim_time}],
+        output="screen",
+    )
 
     launch_files = [
         stdout_linebuf_envvar,
         perseus_lite_launch,
         ekf_node,
-        slam_toolbox,
-        configure_slam_event,
-        activate_slam_event,
         load_nav2_nodes,
         load_composable_nav2_nodes,
+        rviz_node,
     ]
 
     return LaunchDescription(arguments + launch_files)
