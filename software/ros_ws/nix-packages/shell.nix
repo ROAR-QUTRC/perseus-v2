@@ -28,7 +28,6 @@ pkgs.mkShell {
           with extraPkgs;
           [
             # Dependencies from package.xml files
-            OpenCV
             actuator-msgs
             ament-cmake
             ament-copyright
@@ -51,6 +50,7 @@ pkgs.mkShell {
             mecanum-drive-controller
             navigation2
             nlohmann_json
+            opencv
             openssl
             pluginlib
             python3Packages.pygame
@@ -83,15 +83,14 @@ pkgs.mkShell {
         ++ builtins.attrValues extraPkgs
         ++ extraPaths
         ++ withPackages (pkgs // pkgs.rosPackages.${rosDistro});
-    })
+      }
+    )
   ];
-  shellHook =
-    ''
-      # Setup ROS 2 shell completion. Doing it in direnv is useless.
-      if [[ ! $DIRENV_IN_ENVRC ]]; then
-          eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete ros2)"
-          eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete colcon)"
-      fi
-    ''
-    + extraShellHook;
+  shellHook = ''
+    # Setup ROS 2 shell completion. Doing it in direnv is useless.
+    if [[ ! $DIRENV_IN_ENVRC ]]; then
+        eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete ros2)"
+        eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete colcon)"
+    fi
+  '' + extraShellHook;
 }
