@@ -28,7 +28,6 @@ pkgs.mkShell {
           with extraPkgs;
           [
             # Dependencies from package.xml files
-            OpenCV
             actuator-msgs
             ament-cmake
             ament-copyright
@@ -51,6 +50,7 @@ pkgs.mkShell {
             mecanum-drive-controller
             navigation2
             nlohmann_json
+            opencv
             openssl
             pluginlib
             python3Packages.pygame
