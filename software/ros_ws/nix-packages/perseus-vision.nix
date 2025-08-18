@@ -12,7 +12,8 @@
   rclcpp,
   sensor-msgs,
   tf2,
-  tf2-ros,
+  tf2-ros,tf2-geometry-msgs,
+
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-vision";
@@ -35,6 +36,7 @@ buildRosPackage rec {
     sensor-msgs
     tf2
     tf2-ros
+    tf2-geometry-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
