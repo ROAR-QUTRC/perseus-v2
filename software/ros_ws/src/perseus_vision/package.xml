@@ -13,7 +13,8 @@
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
-  <depend>OpenCV</depend>
+  <build_depend>opencv</build_depend>
+  <exec_depend>opencv</exec_depend>
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
   <depend>geometry_msgs</depend>

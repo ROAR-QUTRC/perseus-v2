@@ -14,6 +14,7 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+
 add_executable(aruco_detector_node src/aruco_detector_node.cpp)
 
 ament_target_dependencies(
@@ -21,12 +22,16 @@ ament_target_dependencies(
   rclcpp
   sensor_msgs
   cv_bridge
-  OpenCV
   tf2_ros
   tf2
   geometry_msgs
-  tf2_geometry_msgs)
+  tf2_geometry_msgs
+)
 
-install(TARGETS aruco_detector_node DESTINATION lib/${PROJECT_NAME})
+target_include_directories(aruco_detector_node PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(aruco_detector_node ${OpenCV_LIBS})
+
+install(TARGETS aruco_detector_node
+  DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
