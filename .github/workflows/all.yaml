@@ -1,6 +1,8 @@
 name: Nix CI/CD
 on:
   push:
+    branches-ignore:
+      - gh-readonly-queue/** # ignore push actions triggered by merge queue
   pull_request:
   merge_group:
   workflow_dispatch:
