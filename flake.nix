@@ -157,6 +157,12 @@
             rqt-reconfigure
             rqt-common-plugins
             rmw-cyclonedds-cpp
+            nav2-rviz-plugins
+            opennav-docking
+            nav2-msgs
+            nav2-util
+            nav2-lifecycle-manager
+            nav2-common
             ;
         };
         # Packages which should be available only in the dev shell
