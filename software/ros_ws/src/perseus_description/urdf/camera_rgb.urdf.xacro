@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <!-- 0.220 0 0.4 -->
 <!-- <box size="0.020 0.07 0.03"/>  -->
-<robot name="camera_rgb" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="camera_depth" xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:macro name="camera_rgb" params="prefix:=^">
+  <xacro:macro name="camera_depth" params="prefix:=^">
     <joint name="camera_joint" type="fixed">
         <parent link="base_link"/>
         <child link="camera_link"/>
@@ -27,12 +27,10 @@
 
     <link name="camera_link_optical"></link>
 
-
-
     <gazebo reference="camera_link">
         <material>Gazebo/Red</material>
 
-        <sensor name="camera" type="camera">
+        <sensor name="depth_camera" type="depth_camera">
             <pose> 0 0 0 0 0 0 </pose>
             <visualize>true</visualize>
             <update_rate>10</update_rate>
@@ -44,12 +42,19 @@
                     <width>640</width>
                     <height>480</height>
                 </image>
+                <depth_camera>
+                    <output>
+                        <type>depth</type>
+                    </output>
+                </depth_camera>
                 <clip>
                     <near>0.05</near>
                     <far>100</far>
                 </clip>
             </camera>
             <topic>camera/image_raw</topic>
+            <depth_camera_topic>camera/depth/image_raw</depth_camera_topic>
+            <point_cloud_topic>camera/points</point_cloud_topic>
             <gz_frame_id>camera_link_optical</gz_frame_id>
         </sensor>
     </gazebo>
