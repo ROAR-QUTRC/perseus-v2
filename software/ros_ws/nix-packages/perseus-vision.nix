@@ -2,13 +2,13 @@
 {
   lib,
   buildRosPackage,
-  OpenCV,
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
   cv-bridge,
   geometry-msgs,
   image-transport,
+  opencv,
   rclcpp,
   sensor-msgs,
   tf2,
@@ -27,10 +27,10 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
-    OpenCV
     cv-bridge
     geometry-msgs
     image-transport
+    opencv
     rclcpp
     sensor-msgs
     tf2
