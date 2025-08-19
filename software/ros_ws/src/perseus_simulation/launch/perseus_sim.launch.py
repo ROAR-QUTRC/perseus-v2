@@ -82,7 +82,7 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Joint State Publisher (needed for robot visualization)
+    # # Joint State Publisher (needed for robot visualization)
     # joint_state_publisher = Node(
     #     package='joint_state_publisher',
     #     executable='joint_state_publisher',
@@ -128,8 +128,8 @@ def generate_launch_description():
     launch_files = [
         gz_launch,
         rsp_launch,  # Robot state publisher
-        # joint_state_publisher,  # Joint state publisher (ADDED)
-        aruco_detector,  # Aruco detector node
+        # joint_state_publisher,  # Joint state publisher (UNCOMMENTED)
+        # aruco_detector,  # Aruco detector node
         controllers_launch,  # Controllers
         rviz,  # Start RViz with nixGL support
     ]

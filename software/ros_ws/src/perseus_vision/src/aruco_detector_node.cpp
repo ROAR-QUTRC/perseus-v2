@@ -36,7 +36,7 @@ public:
 
         // Subscriber
         sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-            "/camera/image_raw", 10,
+            "/rgbd_camera/image_raw", 10,
             std::bind(&ArucoDetector::imageCallback, this, std::placeholders::_1));
 
         // Publisher
