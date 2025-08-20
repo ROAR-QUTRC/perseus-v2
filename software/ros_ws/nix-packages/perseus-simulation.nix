@@ -5,6 +5,7 @@
   ament-cmake,
   geometry-msgs,
   gz-ros2-control,
+  joint-state-publisher,
   perseus,
   ros-gz-bridge,
   ros-gz-image,
@@ -24,6 +25,7 @@ buildRosPackage rec {
   propagatedBuildInputs = [
     geometry-msgs
     gz-ros2-control
+    joint-state-publisher
     perseus
     ros-gz-bridge
     ros-gz-image
