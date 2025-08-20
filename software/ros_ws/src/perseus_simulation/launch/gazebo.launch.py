@@ -4,14 +4,16 @@ from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
 )
-
+import os
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+
+from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
     # ARGUMENTS
-    gz_world = LaunchConfiguration("gz_world", default="perseus_world.sdf")
+    gz_world = LaunchConfiguration("gz_world", default="perseus_arc_world.world")
 
     # CONFIG + DATA FILES
     gz_bridge_params = PathJoinSubstitution(
@@ -38,6 +40,10 @@ def generate_launch_description():
         # As such, we need to just run it directly - but we also need to resolve the world substitution,
         # hence wrapping in an OpaqueFunction.
         performed_gz_world_path = gz_world_path.perform(context)
+
+        model_path = os.path.join(
+            get_package_share_directory("perseus_simulation"), "models"
+        )
         gz_launch = ExecuteProcess(
             cmd=[
                 "nix",
@@ -56,25 +62,14 @@ def generate_launch_description():
                 "NIXPKGS_ALLOW_UNFREE": "1",
                 "QT_QPA_PLATFORM": "xcb",
                 "QT_SCREEN_SCALE_FACTORS": "1",
+                "PROJ_IGNORE_CELESTIAL_BODY": "YES",  # Fixed here
+                "GZ_SIM_RESOURCE_PATH": model_path,  # Ensure the model path is set correctly
             },
         )
 
         return [gz_launch]
 
-    # gz_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         [
-    #             PathJoinSubstitution(
-    #                 [
-    #                     FindPackageShare("ros_gz_sim"),
-    #                     "launch",
-    #                     "gz_sim.launch.py",
-    #                 ]
-    #             )
-    #         ]
-    #     ),
-    #     launch_arguments=[("gz_args", [" -r -v 4 ", gz_world_path])],
-    # )
+
     launch_files = [
         # gz_launch,
         OpaqueFunction(function=gz_launch),
