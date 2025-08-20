@@ -69,7 +69,6 @@ def generate_launch_description():
 
         return [gz_launch]
 
-
     launch_files = [
         # gz_launch,
         OpaqueFunction(function=gz_launch),

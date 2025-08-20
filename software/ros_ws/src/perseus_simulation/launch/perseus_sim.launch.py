@@ -10,7 +10,7 @@ from launch.substitutions import (
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
-from launch_ros.actions import Node
+
 
 def generate_launch_description():
     # ARGUMENTS
@@ -77,7 +77,7 @@ def generate_launch_description():
         }.items(),
     )
 
-        # RViz with nixGL support
+    # RViz with nixGL support
     rviz = ExecuteProcess(
         cmd=[
             "nix",
