@@ -2,6 +2,7 @@
 
 This project is built using [Nix](https://nixos.org/), which makes getting started quite easy - all you have to do is install Nix and `direnv`, and they take care of the rest.
 Whilst this page will get you started, it is strongly recommended that you read through <project:nix-basics.md> after reading through this document so you understand how to use the tooling.
+It is recommended to use a derivative of Ubuntu 24.04.03 LTS, other distributions may not work.
 
 ## First-time Setup
 
