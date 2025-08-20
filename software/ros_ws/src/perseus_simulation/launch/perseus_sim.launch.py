@@ -129,7 +129,7 @@ def generate_launch_description():
         gz_launch,
         rsp_launch,  # Robot state publisher
         # joint_state_publisher,  # Joint state publisher (UNCOMMENTED)
-        # aruco_detector,  # Aruco detector node
+        aruco_detector,  # Aruco detector node
         controllers_launch,  # Controllers
         rviz,  # Start RViz with nixGL support
     ]

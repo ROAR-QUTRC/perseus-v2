@@ -114,16 +114,16 @@ private:
             // Create pose in camera frame
             geometry_msgs::msg::PoseStamped marker_pose_camera;
             marker_pose_camera.header.stamp = header.stamp;
-            marker_pose_camera.header.frame_id = "camera_link";
+            marker_pose_camera.header.frame_id = "camera_link_optical";
 
-            // Set position (distance and bearing from camera)
-            marker_pose_camera.pose.position.x = tvec[0];
-            marker_pose_camera.pose.position.y = tvec[1];
-            marker_pose_camera.pose.position.z = tvec[2];
+            // Set position in camera frame
+            marker_pose_camera.pose.position.x = tvec[2];  // Distance forward
+            marker_pose_camera.pose.position.y = -tvec[0];  // Left/right
+            marker_pose_camera.pose.position.z = -tvec[1]; // Up/down
 
             // Convert rotation vector to quaternion
             cv::Mat rotation_matrix;
-            cv::Rodrigues(rvec, rotation_matrix);  // convert rotation vector to rotation matrix
+            cv::Rodrigues(rvec, rotation_matrix);
             tf2::Quaternion quat = rotationMatrixToQuaternion(rotation_matrix);
 
             marker_pose_camera.pose.orientation.x = quat.x();
@@ -131,28 +131,29 @@ private:
             marker_pose_camera.pose.orientation.z = quat.z();
             marker_pose_camera.pose.orientation.w = quat.w();
 
-            // Publish transform directly in camera_link frame (no transformation needed)
+            // Transform to odom frame (fixed world frame)
+            geometry_msgs::msg::PoseStamped marker_pose_odom;
+            tf_buffer_->transform(marker_pose_camera, marker_pose_odom, "odom");
+
+            // Publish transform in odom frame (fixed)
             geometry_msgs::msg::TransformStamped transform;
             transform.header.stamp = header.stamp;
-            transform.header.frame_id = "camera_link_optical";  // Changed from "base_link" to "camera_link"
+            transform.header.frame_id = "odom";  // Changed to fixed frame
             transform.child_frame_id = "aruco_marker_" + std::to_string(marker_id);
 
-            // Use camera frame position directly
-            transform.transform.translation.x = tvec[0];
-            transform.transform.translation.y = tvec[1];
-            transform.transform.translation.z = tvec[2];
-            transform.transform.rotation.x = quat.x();
-            transform.transform.rotation.y = quat.y();
-            transform.transform.rotation.z = quat.z();
-            transform.transform.rotation.w = quat.w();
+            transform.transform.translation.x = marker_pose_odom.pose.position.x;
+            transform.transform.translation.y = marker_pose_odom.pose.position.y;
+            transform.transform.translation.z = marker_pose_odom.pose.position.z;
 
-            // Broadcast the transform in camera_link frame
+            transform.transform.rotation = marker_pose_odom.pose.orientation;
+
+            // Broadcast the transform in fixed frame
             tf_broadcaster_->sendTransform(transform);
 
-            // Log the camera frame position
             RCLCPP_INFO(this->get_logger(),
-                        "ArUco %d in camera_link: x=%.2f, y=%.2f, z=%.2f",
-                        marker_id, tvec[0], tvec[1], tvec[2]);
+                        "ArUco %d in odom: x=%.2f, y=%.2f, z=%.2f",
+                        marker_id, marker_pose_odom.pose.position.x, 
+                        marker_pose_odom.pose.position.y, marker_pose_odom.pose.position.z);
         }
         catch (tf2::TransformException& ex)
         {
