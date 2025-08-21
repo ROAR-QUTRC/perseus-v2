@@ -10,6 +10,7 @@ from launch.substitutions import (
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -76,7 +77,17 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
-
+    aruco_detector = Node(
+        package="perseus_vision",
+        executable="aruco_detector_node",
+        name="aruco_detector",
+        output="screen",
+        parameters=[{"use_sim_time": use_sim_time}],
+        remappings=[
+            # Example: remap camera topic if needed
+            # ('/camera/image_raw', '/your_camera/image_raw')
+        ],
+    )
     # RViz with nixGL support
     rviz = ExecuteProcess(
         cmd=[
@@ -105,6 +116,7 @@ def generate_launch_description():
         rsp_launch,
         rviz,
         controllers_launch,
+        aruco_detector,
     ]
 
     return LaunchDescription(arguments + launch_files)
