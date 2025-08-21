@@ -19,7 +19,7 @@
     <joint name="${prefix}laser_joint" type="fixed">
         <parent link="${prefix}base_link"/>
         <child link="${prefix}laser_frame"/>
-        <origin xyz="0.220 0 0.4" rpy="0 0 0"/>
+        <origin xyz="0.220 0 0.6" rpy="0 0 0"/>
     </joint>
 
     <link name="${prefix}m2m2_lidar_frame">
