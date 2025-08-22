@@ -61,8 +61,7 @@ ament_target_dependencies(
   tf2_ros
   tf2
   geometry_msgs
-  tf2_geometry_msgs
-  )
+  tf2_geometry_msgs)
 
 target_include_directories(aruco_detector_node PUBLIC ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(aruco_detector_node ${OpenCV_LIBS})
