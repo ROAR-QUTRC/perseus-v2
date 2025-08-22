@@ -1,6 +1,6 @@
 {
-    "files.associations": {
-        "array": "cpp",
-        "string_view": "cpp"
-    }
+  "files.associations": {
+    "array": "cpp",
+    "string_view": "cpp"
+  }
 }
