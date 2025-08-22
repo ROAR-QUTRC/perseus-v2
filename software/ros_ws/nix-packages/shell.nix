@@ -37,18 +37,21 @@ pkgs.mkShell {
             ament-pep257
             backward-ros
             controller-manager
+            cv-bridge
             diff-drive-controller
             geometry-msgs
             gz-ros2-control
             hardware-interface
             hi-can
             hi-can-raw
+            image-transport
             joint-state-broadcaster
             joint-state-publisher-gui
             joy
             mecanum-drive-controller
             navigation2
             nlohmann_json
+            opencv
             openssl
             pluginlib
             python3Packages.pygame
@@ -72,6 +75,8 @@ pkgs.mkShell {
             slam-toolbox
             teleop-twist-joy
             teleop-twist-keyboard
+            tf2
+            tf2-ros
             twist-mux
             xacro
           ]
