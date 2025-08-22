@@ -92,7 +92,7 @@ def generate_launch_description():
 
     aruco_detector = Node(
         package="perseus_vision",
-        executable="aruco_detector_node",
+        executable="detector_node",
         name="aruco_detector",
         output="screen",
         parameters=[{"use_sim_time": use_sim_time}],
