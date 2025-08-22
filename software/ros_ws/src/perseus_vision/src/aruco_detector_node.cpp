@@ -117,9 +117,9 @@ private:
             marker_pose_camera.header.frame_id = "camera_link_optical";
 
             // Set position in camera frame
-            marker_pose_camera.pose.position.x = tvec[2];  // Distance forward
+            marker_pose_camera.pose.position.x = tvec[2];   // Distance forward
             marker_pose_camera.pose.position.y = -tvec[0];  // Left/right
-            marker_pose_camera.pose.position.z = -tvec[1]; // Up/down
+            marker_pose_camera.pose.position.z = -tvec[1];  // Up/down
 
             // Convert rotation vector to quaternion
             cv::Mat rotation_matrix;
@@ -152,7 +152,7 @@ private:
 
             RCLCPP_INFO(this->get_logger(),
                         "ArUco %d in odom: x=%.2f, y=%.2f, z=%.2f",
-                        marker_id, marker_pose_odom.pose.position.x, 
+                        marker_id, marker_pose_odom.pose.position.x,
                         marker_pose_odom.pose.position.y, marker_pose_odom.pose.position.z);
         }
         catch (tf2::TransformException& ex)
