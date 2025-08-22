@@ -15,6 +15,7 @@
 
   <!-- Instantiate the description and the ROS2 control information -->
   <xacro:perseus prefix="$(arg prefix)" />
+  <xacro:camera_depth prefix="$(arg prefix)" />
   <xacro:perseus_ros2_control name="Perseus" prefix="$(arg prefix)" can_bus="$(arg can_bus)" hardware_plugin="$(arg hardware_plugin)"/>
   
 </robot>
