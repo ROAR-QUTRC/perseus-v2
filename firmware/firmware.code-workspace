@@ -25,6 +25,10 @@
             "path": "./excavation-bucket"
         },
         {
+            "name": "Rover Control Board Firmware",
+            "path": "./rover-control-board"
+        },
+        {
             "name": "Workspace Root",
             "path": ".."
         },

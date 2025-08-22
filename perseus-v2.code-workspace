@@ -20,6 +20,10 @@
             "path": "./firmware/excavation-bucket"
         },
         {
+            "name": "Rover Control Board Firmware",
+            "path": "./firmware/rover-control-board"
+        },
+        {
             "name": "Hardware",
             "path": "./hardware"
         }
