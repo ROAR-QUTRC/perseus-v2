@@ -110,13 +110,25 @@ def generate_launch_description():
             "RMW_QOS_POLICY_DEPTH": "100",
         },
     )
-
+    static_tf_laser = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="base_to_laser",
+        output="screen",
+        arguments=[
+            "0.22", "0", "0.6",  # XYZ offset
+            "0", "0", "0",       # RPY rotation in radians
+            "perseus/base_link",  # parent frame
+            "perseus/base_link/laser_frame"  # child frame
+        ],
+    )
     launch_files = [
         gz_launch,
         rsp_launch,
         rviz,
         controllers_launch,
-        aruco_detector,
+        static_tf_laser,
+        # aruco_detector,
     ]
 
     return LaunchDescription(arguments + launch_files)
