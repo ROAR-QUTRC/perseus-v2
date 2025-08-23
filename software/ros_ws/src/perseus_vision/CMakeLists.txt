@@ -30,6 +30,7 @@ ament_target_dependencies(
   tf2_ros
   tf2
   geometry_msgs
+  onnxruntime
   tf2_geometry_msgs)
 
 target_link_libraries(aruco_detector_lib ${OpenCV_LIBS})
@@ -47,7 +48,9 @@ ament_target_dependencies(
   tf2_ros
   tf2
   geometry_msgs
-  tf2_geometry_msgs)
+  tf2_geometry_msgs
+  onnxruntime
+  )
 
 target_link_libraries(detector_node aruco_detector_lib)
 
