@@ -41,4 +41,4 @@ private:
     cv::Mat camera_matrix_, dist_coeffs_;
 };
 
-#endif // ARUCO_DETECTOR_HPP
+#endif  // ARUCO_DETECTOR_HPP
