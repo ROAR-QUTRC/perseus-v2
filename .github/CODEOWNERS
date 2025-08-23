@@ -1,12 +1,16 @@
-/.github/ @RandomSpaceship
-/firmware/ @RandomSpaceship
-/hardware/ @RandomSpaceship
-/packages/ @RandomSpaceship
-*.nix @RandomSpaceship
+/.github/ @RandomSpaceship @OMEN44 @UltraFishy
+/docs/ @RandomSpaceship @UltraFishy @OMEN44 @TheFriendlyGoat @DingoOz
+/firmware/ @RandomSpaceship @GR3Y-SCALE
+/hardware/ @RandomSpaceship @GR3Y-SCALE
+/packages/ @RandomSpaceship @UltraFishy @DingoOz
+*.nix @RandomSpaceship @UltraFishy @DingoOz
+
+/software/ros_ws/ @RandomSpaceship @UltraFishy @DingoOz @OMEN44
+/software/web_ui/ @OMEN44 @UltraFishy
+/software/shared/ @RandomSpaceship @GR3Y-SCALE @UltraFishy @DingoOz
 
 # no owner for auto-generated packages
 /software/ros_ws/nix-packages 
 
 # package owners
-/software/ros_ws/src/perseus_payloads/**/arm_driver/ @DingoOz
 /software/ros_ws/src/perseus_sensors/**/m2m2_lidar/ @DingoOz
