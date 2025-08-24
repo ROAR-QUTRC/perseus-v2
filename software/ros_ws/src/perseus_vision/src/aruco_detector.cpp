@@ -23,7 +23,7 @@ ArucoDetector::ArucoDetector()
 
     // Publisher
     pub_ = this->create_publisher<sensor_msgs::msg::Image>(
-        "/processed_aruco/image_raw", 10);
+        "/detection/aruco/image", 10);
 
     RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
 }
@@ -59,7 +59,7 @@ void ArucoDetector::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
     }
 
     auto processed_msg = cv_bridge::CvImage(msg->header, "bgr8", frame).toImageMsg();
-    pub_->publish(*processed_msg);
+    pub_->publish(*processed_msg); // Publish processed image to a node
 }
 
 void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
