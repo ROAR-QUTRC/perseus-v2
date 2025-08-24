@@ -15,8 +15,11 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+
+# Set the ONNX Runtime directory
 set(onnxruntime_DIR "/nix/store/nh5125kw87mycaq14vdi02kzmnr49bqn-onnxruntime-1.18.1-dev/lib/cmake/onnxruntime")
 find_package(onnxruntime REQUIRED)
+
 # Add the library for the ArucoDetector class
 add_library(aruco_detector_lib src/aruco_detector.cpp)
 
