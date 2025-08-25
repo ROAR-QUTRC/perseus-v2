@@ -4,6 +4,8 @@
 
 Nigel
 
+Lachlan Ikeguchi
+
 ## Map Generation Using SLAM
 
 ### Prerequisites
