@@ -15,10 +15,7 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(ament_index_cpp REQUIRED)  
-# Set the ONNX Runtime directory
-set(onnxruntime_DIR "/nix/store/adba59jwdazrgsd5ff7y5qjiim3v1hqh-onnxruntime-1.22.0-dev/lib/cmake/onnxruntime")
-find_package(onnxruntime REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 
 # Add the library for the ArucoDetector class
 add_library(aruco_detector_lib src/aruco_detector.cpp)
@@ -34,7 +31,6 @@ ament_target_dependencies(
   tf2_ros
   tf2
   geometry_msgs
-  onnxruntime
   tf2_geometry_msgs)
 
 target_link_libraries(aruco_detector_lib ${OpenCV_LIBS})
@@ -62,7 +58,6 @@ ament_target_dependencies(
   tf2_ros
   tf2
   geometry_msgs
-  onnxruntime
   tf2_geometry_msgs
   ament_index_cpp
 )
