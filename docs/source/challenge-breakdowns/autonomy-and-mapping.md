@@ -3,7 +3,7 @@
 ## 2026 Team Members
 
 Nigel
-
+Jasper
 Lachlan Ikeguchi
 
 ## Map Generation Using SLAM
