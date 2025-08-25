@@ -17,7 +17,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)  
 # Set the ONNX Runtime directory
-set(onnxruntime_DIR "/nix/store/nh5125kw87mycaq14vdi02kzmnr49bqn-onnxruntime-1.18.1-dev/lib/cmake/onnxruntime")
+set(onnxruntime_DIR "/nix/store/adba59jwdazrgsd5ff7y5qjiim3v1hqh-onnxruntime-1.22.0-dev/lib/cmake/onnxruntime")
 find_package(onnxruntime REQUIRED)
 
 # Add the library for the ArucoDetector class
@@ -45,26 +45,14 @@ add_executable(detector_node src/detector_node.cpp)
 # Add the executable for the cube_detector node
 add_executable(cube_detector src/cube_detector.cpp)
 
-target_include_directories(detector_node PUBLIC include)
 target_include_directories(cube_detector PUBLIC
   ${OpenCV_INCLUDE_DIRS}
-  /nix/store/nh5125kw87mycaq14vdi02kzmnr49bqn-onnxruntime-1.18.1-dev/include
+  /nix/store/adba59jwdazrgsd5ff7y5qjiim3v1hqh-onnxruntime-1.22.0-dev/include
 )
 
 target_link_directories(cube_detector PUBLIC
-  /nix/store/nh5125kw87mycaq14vdi02kzmnr49bqn-onnxruntime-1.18.1-dev/lib
+  /nix/store/5a03r2hnp3kpnjmv7ifnfhi38fd81kar-onnxruntime-1.22.0/lib
 )
-
-ament_target_dependencies(
-  detector_node
-  rclcpp
-  sensor_msgs
-  cv_bridge
-  tf2_ros
-  tf2
-  geometry_msgs
-  onnxruntime
-  tf2_geometry_msgs)
 
 ament_target_dependencies(
   cube_detector
@@ -80,7 +68,7 @@ ament_target_dependencies(
 )
 
 target_link_libraries(detector_node aruco_detector_lib)
-target_link_libraries(cube_detector aruco_detector_lib onnxruntime)
+target_link_libraries(cube_detector aruco_detector_lib onnxruntime stdc++)
 
 # Install targets
 install(TARGETS aruco_detector_lib detector_node cube_detector
