@@ -3,12 +3,15 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  geometry-msgs,
   gz-ros2-control,
   perseus,
   ros-gz-bridge,
   ros-gz-image,
   ros-gz-interfaces,
   ros-gz-sim,
+  tf2,
+  tf2-ros,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-simulation";
@@ -19,12 +22,15 @@ buildRosPackage rec {
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
+    geometry-msgs
     gz-ros2-control
     perseus
     ros-gz-bridge
     ros-gz-image
     ros-gz-interfaces
     ros-gz-sim
+    tf2
+    tf2-ros
   ];
   nativeBuildInputs = [ ament-cmake ];
 
