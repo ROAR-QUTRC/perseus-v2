@@ -20,6 +20,10 @@ jobs:
       nix_conf: ${{ steps.export-vars.outputs.nix_conf }}
       format_msg: ${{ steps.export-vars.outputs.format_msg }}
       package_msg: ${{ steps.export-vars.outputs.package_msg }}
+      is-main: ${{ (github.repository == 'ROAR-QUTRC/perseus-v2') && (github.ref == 'refs/heads/main') }}
+      has-cachix-secret: ${{ secrets.CACHIX_AUTH_TOKEN != '' }}
+      has-repo-secret: ${{ secrets.REPO_DEPLOY_KEY != '' }}
+      can-push-commits: ${{ (github.event_name == 'push') || (github.event_name == 'workflow_dispatch') }}
     steps:
       - name: Export Nix config
         id: export-vars
@@ -86,22 +90,26 @@ jobs:
   # only on push, so all commit+push steps are filtered by the event name
   format:
     name: Format and lint
-    # needed to push changes if needed
+    # needed to push changes if needed - will still run if no SSH key available, just won't re-run CI/CD
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    environment: actions-runtime
     if: ${{ needs.changes.outputs.skip-format != 'true' }}
     needs: [changes, global-vars]
     steps:
       - uses: actions/checkout@v4
+        if: ${{ needs.global-vars.outputs.has-repo-secret }}
+        id: checkout-with-ssh
         with:
           ssh-key: ${{ secrets.REPO_DEPLOY_KEY }}
+      - uses: actions/checkout@v4
+        # just checkout with GITHUB_TOKEN and accept that there will be no re-run
+        if: ${{ steps.checkout-with-ssh.outcome != 'success' }}
       - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
       - name: Update `treefmt.toml`
-        if: ${{ (github.event_name != 'pull_request') &&  needs.changes.outputs.formatter-config }}
+        if: ${{ (needs.global-vars.outputs.can-push-commits == 'true') &&  (needs.changes.outputs.formatter-config == 'true') }}
         id: update-config
         run: nix run -L .#tools.treefmt-write-config
       - uses: stefanzweifel/git-auto-commit-action@v5
@@ -111,14 +119,13 @@ jobs:
       - name: Format and lint repository
         run: nix fmt
       - uses: stefanzweifel/git-auto-commit-action@v5
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ needs.global-vars.outputs.can-push-commits == 'true' }}
         id: push-format
         with:
           commit_message: ${{ needs.global-vars.outputs.format_msg }}
   docs-shell:
     name: Build docs dev shell
     runs-on: ubuntu-latest
-    environment: binary-deployment
     if: ${{ !cancelled() && (needs.format.result != 'failure') && ((needs.changes.outputs.docs-shell == 'true') || (needs.changes.outputs.manual == 'true')) }}
     needs: [changes, format, global-vars]
     steps:
@@ -126,14 +133,16 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
+      - name: Build docs dev shell
+        run: nix develop -L .#docs -c echo 'Docs shell test success'
       - name: Upload docs dev shell to Cachix
+        if: ${{ needs.global-vars.outputs.has-cachix-secret }}
         run: nix run -L .#scripts.cachix.docs-shell
     env:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
   docs:
     name: Build docs
     runs-on: ubuntu-latest
-    environment: docs-deployment
     # GitHub applies an implicit `success()` to the `if` condition
     # unless you manually specify another status check function.
     # Therefore, since we want this to run regardless of the docs dev shell,
@@ -150,8 +159,7 @@ jobs:
         run: nix build -L .#docs
       # From here, deploying to the website repo
       - name: Checkout website repo
-        # only run on origin main branch
-        if: ${{ (github.event_name != 'pull_request') && (github.repository == 'ROAR-QUTRC/perseus-v2') && (github.ref == 'refs/heads/main') }}
+        if: ${{ (needs.global-vars.outputs.can-push-commits == 'true') && (needs.global-vars.outputs.is-main == 'true') }}
         id: checkout-website
         uses: actions/checkout@v4
         with:
@@ -172,13 +180,16 @@ jobs:
   package:
     name: Re-generate Nix packaging
     runs-on: ubuntu-latest
-    environment: actions-runtime
-    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.changes.outputs.skip-package != 'true') && (needs.changes.outputs.packages == 'true') && (github.event_name != 'pull_request') }}
+    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.changes.outputs.skip-package != 'true') && (needs.changes.outputs.packages == 'true') && (needs.global-vars.outputs.can-push-commits == 'true') }}
     needs: [changes, format, global-vars]
     steps:
       - uses: actions/checkout@v4
+        if: ${{ needs.global-vars.outputs.has-repo-secret }}
+        id: checkout-with-ssh
         with:
           ssh-key: ${{ secrets.REPO_DEPLOY_KEY }}
+      - uses: actions/checkout@v4
+        if: ${{ steps.checkout-with-ssh.outcome != 'success' }}
       - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
@@ -193,7 +204,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
-    environment: binary-deployment
     # this job should run even if `package` is skipped, but not if `format` fails,
     # hence the unusual conditions
     if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.package.result != 'failure') && ((needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true')) }}
@@ -206,10 +216,12 @@ jobs:
       - name: Build repository
         run: nix build -L
       - name: Upload build to Cachix
+        if: ${{ needs.global-vars.outputs.has-cachix-secret == 'true' }}
         run: nix run -L .#scripts.cachix.build
       - name: Test dev shell
         run: nix develop -L -c echo 'Shell test success'
       - name: Upload dev shell to Cachix
+        if: ${{ needs.global-vars.outputs.has-cachix-secret == 'true' }}
         run: nix run -L .#scripts.cachix.shell
       - name: Run flake checks
         run: nix flake check -L
