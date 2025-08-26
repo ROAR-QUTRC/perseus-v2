@@ -1,0 +1,272 @@
+menu "Power Bus Configuration"
+    config PRECHARGE_VOLTAGE
+        int "Precharge threshold voltage (mV)"
+        default "21000"
+        range "10000" "30000"
+        help
+            Voltage to reach for precharge to be successful
+    config COMPUTE_PRECHARGE_VOLTAGE
+        int "Compute bus precharge threshold voltage (mV)"
+        default "18000"
+        range "10000" "30000"
+        help
+            Voltage to reach for compute bus precharge to be successful
+    config AUX_PRECHARGE_VOLTAGE
+        int "Aux bus precharge threshold voltage (mV)"
+        default "15000"
+        range "10000" "30000"
+        help
+            Voltage to reach for compute bus precharge to be successful
+        
+    config PRECHARGE_TIME
+        int "Precharge time (mS)"
+        default "25"
+        range "5" "30"
+        help
+            Time (in tenths of a millisecond) to precharge for
+
+    config PRECHARGE_RETRY_WAIT_TIME
+        int "Precharge retry wait time (mS)"
+        default "3000"
+        range "500" "10000"
+        help
+            Time to wait between precharge retry attempts
+
+    config PRECHARGE_RETRY_COUNT
+        int "Precharge retry count"
+        default "5"
+        range "1" "10"
+        help
+            Number of precharge retry attempts before determining short circuit
+
+    config PRECHARGE_INRUSH_TIME
+        int "Switch inrush time (mS)"
+        default "100"
+        range "0" "1000"
+        help
+            Disable overload detection for this long after precharging (for inrush current)
+
+            
+    config BUS_CAP_DISCHARGE_TIME
+        int "Capacitor discharge time (mS)"
+        default "500"
+        range "0" "10000"
+        help
+            Disable switch error for this long after bus turns off (capacitors keeping voltage up causes switch error)
+            
+    config SWITCH_ERROR_DEBOUNCE_TIME
+        int "Switch error debounce time (mS)"
+        default "10"
+        range "0" "10000"
+        help
+            Switch error must be active for this long to cause error
+
+    config DEFAULT_SOFTWARE_FUSE_CURRENT
+        int "Soft fuse current (mA)"
+        default "10000"
+        range "500" "100000"
+        help
+            Software fuse current. If bus current goes above this value, the bus enters an overload error state.
+
+endmenu
+menu "CANlib Configuration"
+    config CANLIB_BUS_RECOVERY_ATTEMPTS
+        int "Bus recovery attempts"
+        default "5"
+        range "1" "10"
+        help
+            Number of times to attempt recovery if node enters an error state
+    
+    config CANLIB_BUS_TX_TIME
+        int "TX message queue time"
+        default "50"
+        range "0" "10000"
+        help
+            Time to wait (ms) while attempting to transmit CAN packet
+    
+    config CANLIB_BUS_RX_TIME
+        int "RX message queue time"
+        default "0"
+        range "0" "10000"
+        help
+            Time to wait (ms) to receive CAN packet
+    
+    choice CANLIB_BUS_BAUD_RATE
+        prompt "Baud rate"
+        default CANLIB_BAUD_500K
+        help
+            CAN bus baud rate
+
+        config CANLIB_BAUD_1M
+            bool "1Mbaud"
+        config CANLIB_BAUD_500K
+            bool "500kbaud"
+        config CANLIB_BAUD_250K
+            bool "250kbaud"
+        config CANLIB_BAUD_125K
+            bool "125kbaud"
+    endchoice
+endmenu
+menu "Core Configuration"
+    config TASK_STACK_SIZE
+        int "Task stack size"
+        default "4096"
+        range "256" "16384"
+        help
+            Default stack size for created tasks
+        
+    config UART_RX_BUFFER_SIZE
+        int "UART RX buffer size"
+        default "256"
+        range "8" "2048"
+        help
+            Size of the UART RX buffer
+
+    config UART_TX_BUFFER_SIZE
+        int "UART TX buffer size"
+        default "1024"
+        range "0" "2048"
+        help
+            Size of the UART TX buffer
+
+    config FILESYS_ROOT_PATH
+        string "Filesystem root VFS path"
+        default ""
+        help
+            Root path for filesystem to register in VFS
+    
+    config SERVER_FILE_BUFFER_SIZE
+        int "HTTP file buffer size"
+        default "2048"
+        range "64" "8192"
+        help
+            Buffer size for serving files from VFS using HTTP server
+endmenu
+menu "Logging Configuration"
+    choice LOG_LEVEL
+        prompt "Logging level"
+        default LOG_DEBUG
+        help
+            Log level for main application
+
+        config LOG_DEBUG
+            bool "Debug"
+        config LOG_INFO
+            bool "Info"
+        config LOG_WARN
+            bool "Warnings"
+        config LOG_ERROR
+            bool "Errors"
+        config LOG_NONE
+            bool "None"
+    endchoice
+
+    config LOG_PREFIX_DEBUG
+        string "Debug prefix"
+        default "DBG"
+        help
+            Prefix for debug messages
+    
+    config LOG_PREFIX_INFO
+        string "Info prefix"
+        default "INF"
+        help
+            Prefix for info messages
+    
+    config LOG_PREFIX_WARN
+        string "Warnings prefix"
+        default "WRN"
+        help
+            Prefix for warnings messages
+    
+    config LOG_PREFIX_ERROR
+        string "Errors prefix"
+        default "ERR"
+        help
+            Prefix for errors messages
+
+    config LOG_APP
+        bool "Log app"
+        default "y"
+        help
+            Log user and application code
+
+    config LOG_CORE
+        bool "Log core"
+        default "y"
+        help
+            Log core functionality
+
+    config LOG_WIFI
+        bool "Log WiFi"
+        default "y"
+        help
+            Log WiFi events
+
+    config LOG_SERVER
+        bool "Log server"
+        default "y"
+        help
+            Log server events
+
+    config LOG_BT
+        bool "Log Bluetooth"
+        default "y"
+        help
+            Log Bluetooth events
+    
+    config LOG_IO
+        bool "Log IO"
+        default "y"
+        help
+            Log IO events
+    
+    config LOG_CANLIB
+        bool "Log CAN bus"
+        default "y"
+        help
+            Log CAN bus events
+
+
+    config LOG_TAG_APP
+        string "Application code log tag"
+        default "APP"
+        help
+            Log tag for user-written application code
+
+    config LOG_TAG_CORE
+        string "Core library log tag"
+        default "CORE"
+        help
+            Log tag for ARC core libraries
+
+    config LOG_TAG_WIFI
+        string "Wifi event tag"
+        default "WIFI"
+        help
+            Log tag for wifi events and configuration
+
+    config LOG_TAG_SERVER
+        string "Server event tag"
+        default "SERV"
+        help
+            Log tag for server events and configuration
+
+    config LOG_TAG_BT
+        string "Bluetooth event tag"
+        default "BT"
+        help
+            Log tag for bluetooth events and configuration
+
+    config LOG_TAG_IO
+        string "I/O event tag"
+        default "IO"
+        help
+            Log tag for I/O events and configuration
+
+    config LOG_TAG_CANLIB
+        string "CAN bus event tag"
+        default "CAN"
+        help
+            Log tag for CAN bus events and configuration
+endmenu
