@@ -297,7 +297,7 @@ canlib_error canlibAddParameter(canlib_parameter_description description, const 
             CANLIB_WARN("Data safe state provided, but no interval specified!");
     }
     if (dataSafeState.data_len && description.broadcast)
-        CANLIB_WARN("Data safe state provided, but parameter is marked for boradcast!");
+        CANLIB_WARN("Data safe state provided, but parameter is marked for broadcast!");
 
     if (description.broadcast)
     {

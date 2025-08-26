@@ -12,13 +12,13 @@ void ioInitUart(uart_port_t uart, int baudRate, int pinTx, int pinRx)
     if (uart_is_driver_installed(uart))
         ESP_ERROR_CHECK(uart_driver_delete(uart));
     uart_config_t uart_config = {
-        .baud_rate           = baudRate,
-        .data_bits           = UART_DATA_8_BITS,
-        .parity              = UART_PARITY_DISABLE,
-        .stop_bits           = UART_STOP_BITS_1,
-        .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
+        .baud_rate = baudRate,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
         .rx_flow_ctrl_thresh = 122,
-        .source_clk          = UART_SCLK_APB,
+        .source_clk = UART_SCLK_APB,
     };
     int intr_alloc_flags = 0;
 

@@ -23,9 +23,9 @@ using std::atomic;
 static bool initialised = false;
 
 static adc_continuous_handle_t adcHandle = NULL;
-static adc_cali_handle_t adcCaliHandle   = NULL;
+static adc_cali_handle_t adcCaliHandle = NULL;
 
-uint8_t resultIndexCount                = 0;
+uint8_t resultIndexCount = 0;
 uint8_t resultIndices[ADC_MAX_CHANNELS] = {0};
 
 static atomic<bool> hasNewData[ADC_MAX_CHANNELS];
@@ -56,7 +56,7 @@ int pinToIdx(gpio_num_t gpio)
     return channel;
 }
 
-bool isPinValidAdc(gpio_num_t gpio, const char *errMsg = nullptr, adc_channel_t *outChannel = nullptr)
+bool isPinValidAdc(gpio_num_t gpio, const char* errMsg = nullptr, adc_channel_t* outChannel = nullptr)
 {
     adc_unit_t unit;
     adc_channel_t channel;
@@ -73,14 +73,14 @@ bool isPinValidAdc(gpio_num_t gpio, const char *errMsg = nullptr, adc_channel_t 
     return true;
 }
 
-bool adcConvCompleteCallback(adc_continuous_handle_t handle, const adc_continuous_evt_data_t *edata, void *user_data)
+bool adcConvCompleteCallback(adc_continuous_handle_t handle, const adc_continuous_evt_data_t* edata, void* user_data)
 {
     const uint8_t resultCount = (edata->size / 4);
     for (int i = 0; i < resultCount; i++)
     {
-        const adc_digi_output_data_t result = ((adc_digi_output_data_t *)edata->conv_frame_buffer)[i];
-        const uint16_t vtg                  = adcReadingToVtg(result.type2.data);
-        const int idx                       = resultIndices[i];
+        const adc_digi_output_data_t result = ((adc_digi_output_data_t*)edata->conv_frame_buffer)[i];
+        const uint16_t vtg = adcReadingToVtg(result.type2.data);
+        const int idx = resultIndices[i];
 
         if (vtg > adcErrorLevels[idx])
         {
@@ -102,8 +102,8 @@ bool adcConvCompleteCallback(adc_continuous_handle_t handle, const adc_continuou
             hasNewData[idx].store(true);
 
             adcAccumulatorCounters[idx] = 0;
-            adcAccumulators[idx]        = 0;
-            adcErrorCounters[idx]       = 0;
+            adcAccumulators[idx] = 0;
+            adcErrorCounters[idx] = 0;
         }
     }
     return false;
@@ -153,12 +153,12 @@ void adcSetChannelEnabled(gpio_num_t gpio, bool enable, bool delayedInit)
 
     CORE_DEBUG("%s ADC channel %d, pin %d", enable ? "Enabling" : "Disabling", channel, gpio);
 
-    int idx                     = pinToIdx(gpio);
-    isInitialised[idx]          = enable;
+    int idx = pinToIdx(gpio);
+    isInitialised[idx] = enable;
     adcAccumulatorCounters[idx] = 0;
-    adcAccumulators[idx]        = 0;
-    adcErrorCounters[idx]       = 0;
-    adcErrorLevels[idx]         = ROVER_ADC_DISABLE_ERROR;
+    adcAccumulators[idx] = 0;
+    adcErrorCounters[idx] = 0;
+    adcErrorLevels[idx] = ROVER_ADC_DISABLE_ERROR;
     if (delayedInit)
         return;
 
@@ -169,9 +169,9 @@ void adcSetChannelEnabled(gpio_num_t gpio, bool enable, bool delayedInit)
         if (isInitialised[i])
         {
             adcConversionConfig[resultIndexCount] = {
-                .atten     = ADC_ATTEN_DB_12,
-                .channel   = (uint8_t)i,
-                .unit      = ADC_UNIT_1,
+                .atten = ADC_ATTEN_DB_12,
+                .channel = (uint8_t)i,
+                .unit = ADC_UNIT_1,
                 .bit_width = 12,
             };
             resultIndices[resultIndexCount] = i;
@@ -189,9 +189,9 @@ void adcSetChannelEnabled(gpio_num_t gpio, bool enable, bool delayedInit)
     }
 
     adc_cali_curve_fitting_config_t adcCalibrationConfig = {
-        .unit_id  = ADC_UNIT_1,
-        .chan     = ADC_CHANNEL_0,  // not used! provided for extensibility as of ESP-IDF v5.1.1
-        .atten    = ADC_ATTEN_DB_12,
+        .unit_id = ADC_UNIT_1,
+        .chan = ADC_CHANNEL_0,  // not used! provided for extensibility as of ESP-IDF v5.1.1
+        .atten = ADC_ATTEN_DB_12,
         .bitwidth = ADC_BITWIDTH_12,
     };
     // non-returning err check since we can do a linear estimation even if calibrated conversion fails
@@ -201,25 +201,25 @@ void adcSetChannelEnabled(gpio_num_t gpio, bool enable, bool delayedInit)
     CORE_DEBUG("%d ADC channels enabled - configuring...", resultIndexCount);
     adc_continuous_handle_cfg_t adcConfig = {
         .max_store_buf_size = 4U * resultIndexCount,
-        .conv_frame_size    = 4U * resultIndexCount,
-        .flags              = {
-                         .flush_pool = true,
+        .conv_frame_size = 4U * resultIndexCount,
+        .flags = {
+            .flush_pool = true,
         },
     };
     ROVER_CORE_RET_ERR_CHECK("ADC initialisation failed!", adc_continuous_new_handle(&adcConfig, &adcHandle));
 
     adc_continuous_config_t adcChanConfig = {
-        .pattern_num    = resultIndexCount,
-        .adc_pattern    = adcConversionConfig,
+        .pattern_num = resultIndexCount,
+        .adc_pattern = adcConversionConfig,
         .sample_freq_hz = 1000 * ADC_OVERSAMPLE_COUNT,
-        .conv_mode      = ADC_CONV_SINGLE_UNIT_1,        // we only use unit 1
-        .format         = ADC_DIGI_OUTPUT_FORMAT_TYPE2,  // only type2 is valid
+        .conv_mode = ADC_CONV_SINGLE_UNIT_1,     // we only use unit 1
+        .format = ADC_DIGI_OUTPUT_FORMAT_TYPE2,  // only type2 is valid
     };
     ROVER_CORE_RET_ERR_CHECK("Error configuring ADC!", adc_continuous_config(adcHandle, &adcChanConfig));
 
     adc_continuous_evt_cbs_t adcCallbacks = {
         .on_conv_done = adcConvCompleteCallback,
-        .on_pool_ovf  = NULL,
+        .on_pool_ovf = NULL,
     };
     ROVER_CORE_RET_ERR_CHECK("Error registering ADC callbacks!",
                              adc_continuous_register_event_callbacks(adcHandle, &adcCallbacks, NULL));

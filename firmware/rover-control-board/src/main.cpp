@@ -38,7 +38,7 @@
 #define RCB_AUX_PRE_SWITCH_PIN  GPIO_NUM_48
 #define RCB_AUX_MAIN_SWITCH_PIN GPIO_NUM_47
 
-void loop(void *args);
+void loop(void* args);
 
 CanlibCommonParameterGroup commonParams(CANLIB_NO_HANDLER, coreRestart);
 
@@ -64,7 +64,7 @@ uint64_t startupTime = 0;
 
 canlib_power_contactor_data contactorData = {
     .immediate_shutdown = false,
-    .shutdown_timer     = 0};
+    .shutdown_timer = 0};
 void contactorTimerCb(TimerHandle_t timer);
 extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
 {
@@ -94,10 +94,10 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
         canlib_parameter_description{
             .address =
                 {
-                    .group     = CANLIB_GROUP_POWER_CONTACTOR,
+                    .group = CANLIB_GROUP_POWER_CONTACTOR,
                     .parameter = CANLIB_PARAM_POWER_CONTACTOR,
                 },
-            .writable            = true,
+            .writable = true,
             .data_change_handler = [&](auto addr)
             {
                 xTimerReset(timer, 0);
@@ -116,23 +116,23 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     powerButton.clearHasHold();
     powerButton.clearHasPress();
     INFO("Starting core 1 main loop");
-    threadCreate([](void *args)
+    threadCreate([](void* args)
                  { while(true) loop(args); },
                  CORE_1, PRIORITY_HIGH, "loop", 8096);
 }
 
-void loop(void *args)
+void loop(void* args)
 {
-    static bool blinkState          = true;
+    static bool blinkState = true;
     static uint64_t lastBlinkToggle = 0;
-    static uint64_t lastPress       = 0;
-    static int lastRepeatCount      = 0;
+    static uint64_t lastPress = 0;
+    static int lastRepeatCount = 0;
 
     canlibHandle();
 
     if ((coreGetUptime() - lastBlinkToggle) >= 300)
     {
-        blinkState      = !blinkState;
+        blinkState = !blinkState;
         lastBlinkToggle = coreGetUptime();
     }
 
@@ -165,15 +165,15 @@ void loop(void *args)
     }
     else if (powerButton.hasPress())
     {
-        lastPress       = now;
+        lastPress = now;
         lastRepeatCount = powerButton.getRepeatPressCount();
         gpio_set_level(RCB_CONTACTOR_PIN, 1);
     }
 
     if (lastPress && ((now - lastPress) > 500))
     {
-        lastPress           = 0;
-        RoverPowerBus *bus  = nullptr;
+        lastPress = 0;
+        RoverPowerBus* bus = nullptr;
         std::string busName = "#";
         busName += (lastRepeatCount + 2);
         switch (lastRepeatCount)
@@ -182,21 +182,21 @@ void loop(void *args)
         case 0:
             if (!compBus.isBusOn())
             {
-                bus     = &compBus;
+                bus = &compBus;
                 busName = "Compute";
             }
             else
             {
-                bus     = &driveBus;
+                bus = &driveBus;
                 busName = "Drive";
             }
             break;
         case 1:
-            bus     = &auxBus;
+            bus = &auxBus;
             busName = "Aux";
             break;
         case 2:
-            bus     = &spareBus;
+            bus = &spareBus;
             busName = "Spare";
             break;
         }

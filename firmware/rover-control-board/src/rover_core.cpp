@@ -10,10 +10,10 @@
 
 // arc libraries
 // #include <rover_adc.hpp>
+#include <canlib.hpp>
 #include <rover_io.hpp>
 #include <rover_log.hpp>
 #include <rover_thread.hpp>
-#include <canlib.hpp>
 
 static bool initialised = false;
 

@@ -29,11 +29,11 @@ private:
     const bool _activeLevel;
     const gpio_num_t _pin;
 
-    int _repeatPressCount     = 0;
-    bool _isPressed           = false;
-    bool _isHeld              = false;
-    bool _hasPress            = false;
-    bool _hasHold             = false;
-    uint64_t _lastPressTime   = 0;
+    int _repeatPressCount = 0;
+    bool _isPressed = false;
+    bool _isHeld = false;
+    bool _hasPress = false;
+    bool _hasHold = false;
+    uint64_t _lastPressTime = 0;
     uint64_t _lastReleaseTime = 0;
 };

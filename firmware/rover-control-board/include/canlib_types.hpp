@@ -29,50 +29,50 @@ enum canlib_error
 
 enum canlib_address_filter_level : uint8_t
 {
-    CANLIB_FILTER_PARAM     = 0,
-    CANLIB_FILTER_GROUP     = 4,
-    CANLIB_FILTER_DEVICE    = 12,
+    CANLIB_FILTER_PARAM = 0,
+    CANLIB_FILTER_GROUP = 4,
+    CANLIB_FILTER_DEVICE = 12,
     CANLIB_FILTER_SUBSYSTEM = 20,
-    CANLIB_FILTER_SYSTEM    = 24,
-    CANLIB_FILTER_NONE      = 29,
+    CANLIB_FILTER_SYSTEM = 24,
+    CANLIB_FILTER_NONE = 29,
 };
 
 enum canlib_system : uint8_t
 {
-    CANLIB_SYSTEM_RESERVED   = 0x00,
-    CANLIB_SYSTEM_POWER      = 0x01,
-    CANLIB_SYSTEM_DRIVE      = 0x02,
+    CANLIB_SYSTEM_RESERVED = 0x00,
+    CANLIB_SYSTEM_POWER = 0x01,
+    CANLIB_SYSTEM_DRIVE = 0x02,
     CANLIB_SYSTEM_EXCAVATION = 0x03,
-    CANLIB_SYSTEM_SCIENCE    = 0x04,
-    CANLIB_SYSTEM_DEBUG      = 0x1F,
+    CANLIB_SYSTEM_SCIENCE = 0x04,
+    CANLIB_SYSTEM_DEBUG = 0x1F,
 };
 
 // these parameter groups are reserved for ALL devices
 enum canlib_reserved_param_groups : uint8_t
 {
     CANLIB_GROUP_COMMON = 0x00,  // information and controls for the MCU on each device
-    CANLIB_GROUP_DEBUG  = 0xFF,
+    CANLIB_GROUP_DEBUG = 0xFF,
 };
 
 // --- TYPEDEFS & STRUCTS ---
 struct canlib_address
 {
-    uint8_t system : CANLIB_SYSTEM_ADDRESS_BITS       = 0;
+    uint8_t system : CANLIB_SYSTEM_ADDRESS_BITS = 0;
     uint8_t subsystem : CANLIB_SUBSYSTEM_ADDRESS_BITS = 0;
-    uint8_t device : CANLIB_DEVICE_ADDRESS_BITS       = 0;
-    uint8_t group : CANLIB_GROUP_ADDRESS_BITS         = 0;
-    uint8_t parameter : CANLIB_PARAM_ADDRESS_BITS     = 0;
-    canlib_address_filter_level filter_bits           = CANLIB_FILTER_DEVICE;
+    uint8_t device : CANLIB_DEVICE_ADDRESS_BITS = 0;
+    uint8_t group : CANLIB_GROUP_ADDRESS_BITS = 0;
+    uint8_t parameter : CANLIB_PARAM_ADDRESS_BITS = 0;
+    canlib_address_filter_level filter_bits = CANLIB_FILTER_DEVICE;
 
     static canlib_address fromUint32(uint32_t id)
     {
         canlib_address addr = {};
         // since bitfields are defined for each value, we only have to bitshift the value
         // no binary-and required!
-        addr.system    = (id >> CANLIB_SYSTEM_ADDRESS_POS);
+        addr.system = (id >> CANLIB_SYSTEM_ADDRESS_POS);
         addr.subsystem = (id >> CANLIB_SUBSYSTEM_ADDRESS_POS);
-        addr.device    = (id >> CANLIB_DEVICE_ADDRESS_POS);
-        addr.group     = (id >> CANLIB_GROUP_ADDRESS_POS);
+        addr.device = (id >> CANLIB_DEVICE_ADDRESS_POS);
+        addr.group = (id >> CANLIB_GROUP_ADDRESS_POS);
         addr.parameter = (id >> CANLIB_PARAM_ADDRESS_POS);
 
         return addr;
@@ -100,20 +100,20 @@ typedef std::function<void(canlib_address)> canlib_data_handler_t;
 struct canlib_data
 {
     uint8_t data_arr[CANLIB_MAX_PACKET_LENGTH] = {0};
-    uint8_t data_len                           = 0;
+    uint8_t data_len = 0;
 };
 
 struct canlib_parameter_description
 {
     canlib_address address = {};
 
-    bool writable     = true;
-    bool broadcast    = false;
+    bool writable = true;
+    bool broadcast = false;
     uint32_t interval = 0;
 
-    canlib_data_handler_t timeout_handler          = CANLIB_NO_HANDLER;
+    canlib_data_handler_t timeout_handler = CANLIB_NO_HANDLER;
     canlib_data_handler_t timeout_recovery_handler = CANLIB_NO_HANDLER;
-    canlib_data_handler_t data_change_handler      = CANLIB_NO_HANDLER;
+    canlib_data_handler_t data_change_handler = CANLIB_NO_HANDLER;
 };
 
 struct canlib_packet
@@ -183,7 +183,7 @@ private:
     // https://stackoverflow.com/questions/3106110/what-is-move-semantics
     // https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom
     // disable copy constructor and copy assignments
-    CanlibParameterGroup(const CanlibParameterGroup&)  = delete;
+    CanlibParameterGroup(const CanlibParameterGroup&) = delete;
     CanlibParameterGroup(const CanlibParameterGroup&&) = delete;
 
     std::map<std::string, canlib_address> _savedParams;

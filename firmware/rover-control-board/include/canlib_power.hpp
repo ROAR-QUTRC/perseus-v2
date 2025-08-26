@@ -37,11 +37,11 @@ enum canlib_power_control_devices : uint8_t
 
 enum canlib_power_control_param_groups : uint8_t
 {
-    CANLIB_GROUP_POWER_CONTACTOR   = 0x01,
+    CANLIB_GROUP_POWER_CONTACTOR = 0x01,
     CANLIB_GROUP_POWER_COMPUTE_BUS = 0x02,
-    CANLIB_GROUP_POWER_DRIVE_BUS   = 0x03,
-    CANLIB_GROUP_POWER_AUX_BUS     = 0x04,
-    CANLIB_GROUP_POWER_SPARE_BUS   = 0x05,
+    CANLIB_GROUP_POWER_DRIVE_BUS = 0x03,
+    CANLIB_GROUP_POWER_AUX_BUS = 0x04,
+    CANLIB_GROUP_POWER_SPARE_BUS = 0x05,
 };
 
 enum canlib_power_control_contactor_parameters : uint8_t
@@ -53,39 +53,39 @@ enum canlib_power_control_bus_parameters : uint8_t
 {
     CANLIB_PARAM_POWER_CONTROL_IMMEDIATE = 0x00,
     CANLIB_PARAM_POWER_CONTROL_SCHEDULED = 0x01,
-    CANLIB_PARAM_CURRENT_LIMIT           = 0x02,
-    CANLIB_PARAM_POWER_STATUS            = 0x03,
+    CANLIB_PARAM_CURRENT_LIMIT = 0x02,
+    CANLIB_PARAM_POWER_STATUS = 0x03,
 };
 
 #pragma pack(1)
 struct canlib_power_contactor_data
 {
     bool immediate_shutdown : 1 = false;
-    uint8_t _reserved       : 7 = 0;  // padding to make a full byte
-    uint8_t shutdown_timer      = 0;  // if a non-0 value is received, shutdown in that many seconds
+    uint8_t _reserved : 7 = 0;   // padding to make a full byte
+    uint8_t shutdown_timer = 0;  // if a non-0 value is received, shutdown in that many seconds
 };
 
 #pragma pack(1)
 struct canlib_power_status_data
 {
     canlib_power_status status = CANLIB_POWER_OFF;
-    uint16_t voltage           = 0;  // in mV
-    uint32_t current           = 0;  // in mA
+    uint16_t voltage = 0;  // in mV
+    uint32_t current = 0;  // in mA
 };
 
 #pragma pack(1)
 struct canlib_power_control_immediate_data
 {
     bool bus_target_state : 1 = false;  // bus on/off state
-    bool clear_error      : 1 = false;  // retry if an error has occurred
-    uint8_t _reserved     : 6 = 0;      // padding to make a full byte
+    bool clear_error : 1 = false;       // retry if an error has occurred
+    uint8_t _reserved : 6 = 0;          // padding to make a full byte
 };
 
 #pragma pack(1)
 struct canlib_power_control_scheduled_data
 {
     uint8_t bus_off_time = 0;  // if a non-0 value is received, turn off bus in that many seconds
-    uint8_t bus_on_time  = 0;  // if a non-0 value is received, turn on bus in that many seconds
+    uint8_t bus_on_time = 0;   // if a non-0 value is received, turn on bus in that many seconds
 };
 
 class CanlibPowerBusParameterGroup : public CanlibParameterGroup
@@ -94,8 +94,8 @@ public:
     static bool statusIsError(canlib_power_status status);
 
     CanlibPowerBusParameterGroup(uint8_t paramGroup,
-                                 std::function<void(bool)> busStateHandler         = CANLIB_NO_HANDLER,
-                                 std::function<void(void)> clearErrorHandler       = CANLIB_NO_HANDLER,
+                                 std::function<void(bool)> busStateHandler = CANLIB_NO_HANDLER,
+                                 std::function<void(void)> clearErrorHandler = CANLIB_NO_HANDLER,
                                  std::function<void(uint32_t)> currentLimitHandler = CANLIB_NO_HANDLER);
     virtual ~CanlibPowerBusParameterGroup();
 
@@ -131,7 +131,7 @@ private:
     std::function<void(uint32_t)> _currentLimitHandler;
 
     uint8_t _busOffTimer = 0;
-    uint8_t _busOnTimer  = 0;
+    uint8_t _busOnTimer = 0;
 
     TimerHandle_t _oneSecondTimer;  // handles bus startup + shutdown timing
 };

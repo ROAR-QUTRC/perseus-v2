@@ -9,24 +9,24 @@
 #define ROVER_CORE_WIFI_STATION "QUTRC Perseus"
 #define ROVER_CORE_WIFI_PASSKEY "NASAtookartemis_Perseus-2024-1"
 
-#define ROVER_CORE_RET_ERR_CHECK(_errMsg, _code)               \
+#define ROVER_CORE_RET_ERR_CHECK(_errMsg, _code)             \
     if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK)      \
     {                                                        \
         CORE_ERROR(_errMsg " %s", esp_err_to_name(_tmpErr)); \
         return;                                              \
     }
-#define ROVER_CORE_ERR_CHECK(_errMsg, _code)               \
-    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK) \
-    {                                                   \
+#define ROVER_CORE_ERR_CHECK(_errMsg, _code)                 \
+    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK)      \
+    {                                                        \
         CORE_ERROR(_errMsg " %s", esp_err_to_name(_tmpErr)); \
     }
-#define ROVER_APP_RET_ERR_CHECK(_errMsg, _code)           \
+#define ROVER_APP_RET_ERR_CHECK(_errMsg, _code)         \
     if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK) \
     {                                                   \
         ERROR(_errMsg " %s", esp_err_to_name(_tmpErr)); \
         return;                                         \
     }
-#define ROVER_APP_ERR_CHECK(_errMsg, _code)               \
+#define ROVER_APP_ERR_CHECK(_errMsg, _code)             \
     if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK) \
     {                                                   \
         ERROR(_errMsg " %s", esp_err_to_name(_tmpErr)); \

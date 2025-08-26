@@ -68,7 +68,7 @@ public:
 private:
     const static gptimer_alarm_config_t _prechargeOffConfig;
     const static gptimer_alarm_config_t _prechargeOnConfig;
-    static bool _timerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx);
+    static bool _timerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 
     CanlibPowerBusParameterGroup _canParams;
     const gpio_num_t _prechargePin;
@@ -78,15 +78,15 @@ private:
 
     const uint32_t _prechargeVtg;
 
-    gptimer_handle_t _timer             = NULL;
-    bool _switchHadError                = false;
-    int64_t _switchOnTime               = 0;
+    gptimer_handle_t _timer = NULL;
+    bool _switchHadError = false;
+    int64_t _switchOnTime = 0;
     std::atomic<int64_t> _switchOffTime = 0;
-    int32_t _switchErrorCounter         = 0;
+    int32_t _switchErrorCounter = 0;
 
     std::atomic<bus_state> _state = bus_state::OFF;  // force a state change
     // we can't switch states in an ISR, so queue the change and handle it in the main loop
     std::atomic<bus_state> _nextState = bus_state::OFF;
-    std::atomic<uint8_t> _retryCount  = 0;
+    std::atomic<uint8_t> _retryCount = 0;
     std::atomic<bus_error> _errorCode = bus_error::NONE;
 };

@@ -3,7 +3,8 @@
 #include <rover_log.hpp>
 
 IoDebouncedButton::IoDebouncedButton(gpio_num_t pin, gpio_pull_mode_t pullMode, bool activeLevel)
-    : _activeLevel(activeLevel), _pin(pin)
+    : _activeLevel(activeLevel),
+      _pin(pin)
 {
     _lastPressTime = 0;
     ioConfigInput(pin, pullMode);
@@ -11,7 +12,7 @@ IoDebouncedButton::IoDebouncedButton(gpio_num_t pin, gpio_pull_mode_t pullMode, 
 
 void IoDebouncedButton::handle()
 {
-    bool pressed       = (gpio_get_level(_pin) == _activeLevel);
+    bool pressed = (gpio_get_level(_pin) == _activeLevel);
     const uint64_t now = coreGetUptime();
 
     if (pressed)
@@ -44,7 +45,7 @@ void IoDebouncedButton::handle()
     {
         if (_lastPressTime && ((now - _lastPressTime) >= DEBOUNCE_PRESS_TIME))
         {
-            _lastPressTime   = 0;
+            _lastPressTime = 0;
             _lastReleaseTime = now;
             if (!_isHeld && _isPressed)
             {

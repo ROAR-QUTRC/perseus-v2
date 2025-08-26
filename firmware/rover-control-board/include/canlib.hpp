@@ -36,7 +36,7 @@ canlib_error canlibSetAddress(const canlib_address address);
 
 /// @brief Get a parameter from CANlib's registry
 /// @param address Address of the parameter
-/// @param out Retreived parameter
+/// @param out Retrieved parameter
 /// @return CANLIB_OK or error condition
 canlib_error canlibGetData(const canlib_address address, canlib_data& out);
 /// @brief Set the value of a parameter in CANlib's registry
@@ -84,7 +84,7 @@ canlib_error canlibDecodeData(const canlib_data data, T& out)
 /// @brief Get the value of a parameter CANlib is tracking
 /// @tparam T Type of the data to get
 /// @param address The address of the parameter to get
-/// @param out Retreived data
+/// @param out Retrieved data
 /// @return CANLIB_OK or error condition
 template <typename T>
 canlib_error canlibGetParameter(const canlib_address address, T& out)

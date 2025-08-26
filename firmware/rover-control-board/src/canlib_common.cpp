@@ -1,33 +1,33 @@
 #include "canlib_common.hpp"
 
 // rover libs
+#include <canlib.hpp>
 #include <rover_core.hpp>
 #include <rover_thread.hpp>
-#include <canlib.hpp>
 
 CanlibCommonParameterGroup::CanlibCommonParameterGroup(canlib_handler_t shutdownHandler,
-                                                             canlib_handler_t rebootHandler)
+                                                       canlib_handler_t rebootHandler)
 {
     addParameter("status",
                  canlib_parameter_description{
-                     .address   = {.group = CANLIB_GROUP_COMMON, .parameter = CANLIB_PARAM_COMMON_STATUS},
-                     .writable  = false,
+                     .address = {.group = CANLIB_GROUP_COMMON, .parameter = CANLIB_PARAM_COMMON_STATUS},
+                     .writable = false,
                      .broadcast = true,
-                     .interval  = 1000},
+                     .interval = 1000},
                  canlib_common_status_data{});
     addParameter("power",
                  canlib_parameter_description{
-                     .address             = {.group = CANLIB_GROUP_COMMON, .parameter = CANLIB_PARAM_COMMON_POWER},
-                     .writable            = true,
+                     .address = {.group = CANLIB_GROUP_COMMON, .parameter = CANLIB_PARAM_COMMON_POWER},
+                     .writable = true,
                      .data_change_handler = [&](auto address)
                      { _powerDataCallback(address); }},
                  canlib_common_power_data{});
     addParameter("cpu",
                  canlib_parameter_description{
-                     .address   = {.group = CANLIB_GROUP_COMMON, .parameter = CANLIB_PARAM_COMMON_CPU},
-                     .writable  = false,
+                     .address = {.group = CANLIB_GROUP_COMMON, .parameter = CANLIB_PARAM_COMMON_CPU},
+                     .writable = false,
                      .broadcast = true,
-                     .interval  = 1000},
+                     .interval = 1000},
                  canlib_common_cpu_data{});
 
     setShutdownHandler(shutdownHandler);
@@ -52,7 +52,7 @@ void CanlibCommonParameterGroup::setRebootHandler(canlib_handler_t handler)
 
 void CanlibCommonParameterGroup::setStatus(canlib_common_status state, int16_t error)
 {
-    _status.state      = state;
+    _status.state = state;
     _status.error_code = error;
 }
 
@@ -61,7 +61,7 @@ void CanlibCommonParameterGroup::_oneSecondTimerCallback(TimerHandle_t timer)
     CanlibCommonParameterGroup* source = (CanlibCommonParameterGroup*)pvTimerGetTimerID(timer);
     if (canlib_error err =
             source->setParameter("cpu", canlib_common_cpu_data{
-                                            .uptime    = (uint32_t)coreGetUptime(),
+                                            .uptime = (uint32_t)coreGetUptime(),
                                             .cpu_usage = coreGetUsage()});
         err != CANLIB_OK)
         CANLIB_WARN("Error setting CPU data: %d", (int)err);

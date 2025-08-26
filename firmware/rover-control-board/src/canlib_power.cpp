@@ -29,28 +29,28 @@ CanlibPowerBusParameterGroup::CanlibPowerBusParameterGroup(uint8_t paramGroup,
     addParameter("status",
                  canlib_parameter_description{
                      .address = {
-                         .group     = paramGroup,
+                         .group = paramGroup,
                          .parameter = CANLIB_PARAM_POWER_STATUS,
                      },
-                     .writable  = false,
+                     .writable = false,
                      .broadcast = true,
-                     .interval  = 100},
+                     .interval = 100},
                  canlib_power_status_data{});
     addParameter("immediate_control",
                  canlib_parameter_description{
                      .address = {
-                         .group     = paramGroup,
+                         .group = paramGroup,
                          .parameter = CANLIB_PARAM_POWER_CONTROL_IMMEDIATE},
-                     .writable            = true,
+                     .writable = true,
                      .data_change_handler = [&](auto addr)
                      { _immediateDataCallback(addr); }},
                  canlib_power_control_immediate_data{});
     addParameter("scheduled_control",
                  canlib_parameter_description{
                      .address = {
-                         .group     = paramGroup,
+                         .group = paramGroup,
                          .parameter = CANLIB_PARAM_POWER_CONTROL_SCHEDULED},
-                     .writable            = true,
+                     .writable = true,
                      .data_change_handler = [&](auto addr)
                      { _scheduledDataCallback(addr); }},
                  canlib_power_control_scheduled_data{});
@@ -58,10 +58,10 @@ CanlibPowerBusParameterGroup::CanlibPowerBusParameterGroup(uint8_t paramGroup,
                            canlib_parameter_description{
                                .address =
                                    {
-                                       .group     = paramGroup,
+                                       .group = paramGroup,
                                        .parameter = CANLIB_PARAM_CURRENT_LIMIT,
                                    },
-                               .writable            = true,
+                               .writable = true,
                                .data_change_handler = [&](auto addr)
                                { _limitDataCallback(addr); }},
                            CONFIG_DEFAULT_SOFTWARE_FUSE_CURRENT);

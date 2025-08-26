@@ -7,17 +7,17 @@
 #include <rover_thread.hpp>
 
 const gptimer_alarm_config_t RoverPowerBus::_prechargeOffConfig = {
-    .alarm_count  = CONFIG_PRECHARGE_TIME * 10,
+    .alarm_count = CONFIG_PRECHARGE_TIME * 10,
     .reload_count = 0,
-    .flags        = {
-               .auto_reload_on_alarm = false,
+    .flags = {
+        .auto_reload_on_alarm = false,
     },
 };
 const gptimer_alarm_config_t RoverPowerBus::_prechargeOnConfig = {
-    .alarm_count  = CONFIG_PRECHARGE_RETRY_WAIT_TIME * 10,
+    .alarm_count = CONFIG_PRECHARGE_RETRY_WAIT_TIME * 10,
     .reload_count = 0,
-    .flags        = {
-               .auto_reload_on_alarm = false,
+    .flags = {
+        .auto_reload_on_alarm = false,
     },
 };
 
@@ -44,12 +44,12 @@ RoverPowerBus::RoverPowerBus(uint8_t busId, uint16_t prechargeVoltage,
     adcSetErrorVoltage(currentFeedback, RCB_BUS_CUR_SENSE_ERROR_VTG);
 
     gptimer_config_t timerConfig = {
-        .clk_src       = GPTIMER_CLK_SRC_DEFAULT,
-        .direction     = GPTIMER_COUNT_UP,
+        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
+        .direction = GPTIMER_COUNT_UP,
         .resolution_hz = 10000,
         .intr_priority = 0,
-        .flags         = {
-                    .intr_shared = true,
+        .flags = {
+            .intr_shared = true,
         },
     };
 
@@ -111,19 +111,19 @@ void RoverPowerBus::handle()
     const uint32_t busCurrent = RCB_ADC_TO_BUS_CURRENT(curSenseVtg);
 
     // check software fusing
-    const bool switchErr        = (curSenseVtg == ROVER_ADC_ERR_RETURN_VAL);
+    const bool switchErr = (curSenseVtg == ROVER_ADC_ERR_RETURN_VAL);
     const bool disableSwitchErr = ((busVtg > RCB_SWITCH_ERR_DISABLE_MIN_VTG) && (busVtg < RCB_SWITCH_ERR_DISABLE_MAX_VTG));
     // WARN("%d %d %05ld, %05ld", switchErr, disableSwitchErr, curSenseVtg, RCB_ADC_TO_BUS_VTG(adcGetVoltage(_vtgFeedback)));
 
-    const int64_t now          = coreGetUptime();
-    const int64_t busOnPeriod  = now - _switchOnTime;
+    const int64_t now = coreGetUptime();
+    const int64_t busOnPeriod = now - _switchOnTime;
     const int64_t busOffPeriod = now - _switchOffTime;
 
-    const bool busOverloaded         = (busCurrent > _canParams.getLimitCurrent());
+    const bool busOverloaded = (busCurrent > _canParams.getLimitCurrent());
     const bool capacitorsDischarging = (busOffPeriod < CONFIG_BUS_CAP_DISCHARGE_TIME);
-    const bool inrushDone            = (busOnPeriod > CONFIG_PRECHARGE_INRUSH_TIME);
-    const bool busShouldBeOn         = (_state == bus_state::ON) || (_nextState == bus_state::ON);
-    const bool busIsOn               = (busVtg > RCB_BUS_ON_VOLTAGE);
+    const bool inrushDone = (busOnPeriod > CONFIG_PRECHARGE_INRUSH_TIME);
+    const bool busShouldBeOn = (_state == bus_state::ON) || (_nextState == bus_state::ON);
+    const bool busIsOn = (busVtg > RCB_BUS_ON_VOLTAGE);
     // WARN("%d %d %05ld", busShouldBeOn, busIsOn, busVtg);
     if (switchErr)
     {
@@ -178,7 +178,7 @@ void RoverPowerBus::handle()
         INFO("Bus %d now OFF", _canParams.getId());
         _canParams.setBusStatus(CANLIB_POWER_OFF);
         _switchOffTime = coreGetUptime();
-        _retryCount    = 0;
+        _retryCount = 0;
 
         gptimer_stop(_timer);
         gpio_set_level(_prechargePin, 0);
@@ -233,9 +233,9 @@ void RoverPowerBus::handle()
     }
 }
 
-bool RoverPowerBus::_timerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
+bool RoverPowerBus::_timerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx)
 {
-    RoverPowerBus *source = (RoverPowerBus *)user_ctx;
+    RoverPowerBus* source = (RoverPowerBus*)user_ctx;
     gpio_set_level(source->_prechargePin, 0);
     gptimer_stop(timer);
 

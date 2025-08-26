@@ -15,18 +15,18 @@ Note: This file contains both the `thread` AND `timer` modules!
 
 enum core_enum
 {
-    CORE_0   = 0,
+    CORE_0 = 0,
     CORE_PRO = 0,
-    CORE_1   = 1,
+    CORE_1 = 1,
     CORE_APP = 1,
     CORE_ANY = tskNO_AFFINITY
 };
 
 enum task_priority
 {
-    PRIORITY_LOW     = 0,
-    PRIORITY_MED     = 5,
-    PRIORITY_HIGH    = 10,
+    PRIORITY_LOW = 0,
+    PRIORITY_MED = 5,
+    PRIORITY_HIGH = 10,
     PRIORITY_HIGHEST = 15
 };
 

@@ -19,7 +19,7 @@ canlib_error CanlibParameterGroup::getParameterAddress(const string name, canlib
 }
 
 canlib_error CanlibParameterGroup::addParameter(const string name, const canlib_parameter_description description,
-                                                  const canlib_data initialData, const canlib_data dataSafeState)
+                                                const canlib_data initialData, const canlib_data dataSafeState)
 {
     _savedParams[name] = description.address;
     return canlibAddParameter(description, initialData, dataSafeState);
