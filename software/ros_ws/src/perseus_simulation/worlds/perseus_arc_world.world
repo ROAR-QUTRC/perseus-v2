@@ -73,7 +73,7 @@
       <uri>model://perseus_arc_world/aruco_markers</uri>
     </include>
     <include>
-      <uri>model://perseus_arc_world/obstacles</uri>
+      <uri>model://perseus_arc_world/cubes</uri>
     </include>
     <include>
       <uri>model://Moon_DEM</uri>

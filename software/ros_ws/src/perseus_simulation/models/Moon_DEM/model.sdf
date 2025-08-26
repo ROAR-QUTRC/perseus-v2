@@ -18,7 +18,7 @@
           <heightmap>
             <use_terrain_paging>false</use_terrain_paging>
             <texture>
-              <diffuse>materials/textures/moon_diffuse.png</diffuse>
+              <diffuse>materials/textures/sand.jpg</diffuse>
               <normal>materials/textures/moon_normal.png</normal>
               <size>10</size>
             </texture>

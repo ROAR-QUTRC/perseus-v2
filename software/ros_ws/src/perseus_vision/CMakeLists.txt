@@ -41,6 +41,12 @@ add_executable(detector_node src/detector_node.cpp)
 # Add the executable for the cube_detector node
 add_executable(cube_detector src/cube_detector.cpp)
 
+# Set C++ standard
+set_target_properties(cube_detector PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+)
+
 target_include_directories(cube_detector PUBLIC
   ${OpenCV_INCLUDE_DIRS}
   /nix/store/adba59jwdazrgsd5ff7y5qjiim3v1hqh-onnxruntime-1.22.0-dev/include
@@ -63,7 +69,10 @@ ament_target_dependencies(
 )
 
 target_link_libraries(detector_node aruco_detector_lib)
-target_link_libraries(cube_detector aruco_detector_lib onnxruntime stdc++)
+
+# Link cube_detector with specific linker flags to handle ABI compatibility
+target_link_libraries(cube_detector aruco_detector_lib onnxruntime)
+target_link_options(cube_detector PRIVATE "-Wl,--allow-multiple-definition" "-Wl,--unresolved-symbols=ignore-in-shared-libs")
 
 # Install targets
 install(TARGETS aruco_detector_lib detector_node cube_detector
