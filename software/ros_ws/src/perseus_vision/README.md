@@ -12,3 +12,4 @@ nix-shell -p gcc14 onnxruntime --run "source install/setup.bash && ros2 run pers
 
 Special thanks to the **Monash Rover Team** for pulicing the dataset used to train the YOLO cube detection model.
 
+And Thanks to **ChatGPT**...
