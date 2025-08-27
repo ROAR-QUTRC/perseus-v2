@@ -11,7 +11,8 @@ idf_component_register(
   crc
   hi-can
   type
-  PRIV_REQUIRES)
+  PRIV_REQUIRES
+  driver)
 
 # Create and import the library targets
 # add_subdirectory(../../../software/shared/hi-can hi-can)
