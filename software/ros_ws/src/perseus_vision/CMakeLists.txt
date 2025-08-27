@@ -5,7 +5,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# Find required packages
+# Required ROS2 and system packages
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -16,8 +16,33 @@ find_package(tf2 REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
+find_package(image_transport REQUIRED)
 
-# Add the library for the ArucoDetector class
+# =============================
+# ONNX Runtime (manual since nix)
+# =============================
+# Try to find ONNX Runtime using file(GLOB) to handle nix store paths
+file(GLOB ONNXRUNTIME_PATHS "/nix/store/*onnxruntime*")
+set(ONNXRUNTIME_INCLUDE_DIR "")
+set(ONNXRUNTIME_LIB "")
+
+foreach(ONNX_PATH ${ONNXRUNTIME_PATHS})
+    if(EXISTS "${ONNX_PATH}/include/onnxruntime_cxx_api.h")
+        set(ONNXRUNTIME_INCLUDE_DIR "${ONNX_PATH}/include")
+    endif()
+    if(EXISTS "${ONNX_PATH}/lib/libonnxruntime.so")
+        set(ONNXRUNTIME_LIB "${ONNX_PATH}/lib/libonnxruntime.so")
+    endif()
+endforeach()
+
+if(ONNXRUNTIME_INCLUDE_DIR AND ONNXRUNTIME_LIB)
+    message(STATUS "Found ONNX Runtime: ${ONNXRUNTIME_LIB}")
+    message(STATUS "ONNX Runtime include: ${ONNXRUNTIME_INCLUDE_DIR}")
+else()
+    message(FATAL_ERROR "ONNX Runtime not found, please install or set paths manually")
+endif()
+
+# Add ArucoDetector library
 add_library(aruco_detector_lib src/aruco_detector.cpp)
 
 target_include_directories(aruco_detector_lib PUBLIC include
@@ -31,17 +56,18 @@ ament_target_dependencies(
   tf2_ros
   tf2
   geometry_msgs
-  tf2_geometry_msgs)
+  tf2_geometry_msgs
+)
 
 target_link_libraries(aruco_detector_lib ${OpenCV_LIBS})
 
-# Add the executable for the detector node
+# Detector node (aruco)
 add_executable(detector_node src/detector_node.cpp)
+target_link_libraries(detector_node aruco_detector_lib)
 
-# Add the executable for the cube_detector node
+# Cube detector node (YOLO + ONNX)
 add_executable(cube_detector src/cube_detector.cpp)
 
-# Set C++ standard
 set_target_properties(cube_detector PROPERTIES
   CXX_STANDARD 17
   CXX_STANDARD_REQUIRED ON
@@ -49,11 +75,13 @@ set_target_properties(cube_detector PROPERTIES
 
 target_include_directories(cube_detector PUBLIC
   ${OpenCV_INCLUDE_DIRS}
-  /nix/store/adba59jwdazrgsd5ff7y5qjiim3v1hqh-onnxruntime-1.22.0-dev/include
+  ${ONNXRUNTIME_INCLUDE_DIR}
 )
 
-target_link_directories(cube_detector PUBLIC
-  /nix/store/5a03r2hnp3kpnjmv7ifnfhi38fd81kar-onnxruntime-1.22.0/lib
+target_link_libraries(cube_detector
+  aruco_detector_lib
+  ${ONNXRUNTIME_LIB}
+  ${OpenCV_LIBS}
 )
 
 ament_target_dependencies(
@@ -66,22 +94,20 @@ ament_target_dependencies(
   geometry_msgs
   tf2_geometry_msgs
   ament_index_cpp
+  image_transport
 )
 
-target_link_libraries(detector_node aruco_detector_lib)
-
-# Link cube_detector with specific linker flags to handle ABI compatibility
-target_link_libraries(cube_detector aruco_detector_lib onnxruntime)
+# Linker flags for ABI stuff (if needed)
 target_link_options(cube_detector PRIVATE "-Wl,--allow-multiple-definition" "-Wl,--unresolved-symbols=ignore-in-shared-libs")
 
-# Install targets
+# =============================
+# Install
+# =============================
 install(TARGETS aruco_detector_lib detector_node cube_detector
         DESTINATION lib/${PROJECT_NAME})
 
-# Install include directory
 install(DIRECTORY include/ DESTINATION include/)
 
-# Install additional resources (if any)
 install(DIRECTORY yolo_model DESTINATION share/${PROJECT_NAME})
 
 ament_package()
