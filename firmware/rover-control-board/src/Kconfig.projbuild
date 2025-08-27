@@ -21,9 +21,9 @@ menu "Power Bus Configuration"
     config PRECHARGE_TIME
         int "Precharge time (mS)"
         default "25"
-        range "5" "30"
+        range "5" "500"
         help
-            Time (in tenths of a millisecond) to precharge for
+            Time (in milliseconds) to precharge for
 
     config PRECHARGE_RETRY_WAIT_TIME
         int "Precharge retry wait time (mS)"
