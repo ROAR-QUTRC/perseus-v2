@@ -16,7 +16,7 @@ The Perseus-v2 repository contains all the software for the Perseus rover and in
 
 As such it is imperative that the highest levels of professionalism are demonstrated in how this code is updated and the documentation supporting such changes.
 
-All software develop standards are found in the [Software Standards](project:/standards/software.md) page.
+All software development standards are found in the [Software Standards](project:/standards/software.md) page.
 
 This pages addresses the incidental documentation associated with pushing new code to the common codebase. Therefore this page will describe the standards required for:
 
@@ -35,6 +35,8 @@ Branch names should be descriptive and follow a consistent pattern that clearly 
 - `docs/` - Documentation changes
 - `test/` - Adding or updating tests
 - `chore/` - Maintenance tasks, dependency updates, etc.
+
+These prefixes follow the [Conventional Branch](https://conventional-branch.github.io/) naming convention.
 
 ### Branch Naming Format
 
@@ -87,7 +89,7 @@ By keeping the first line of the commit message under 72 characters it keeps thi
 
 ### Commit Message Structure
 
-Follow the conventional commit format:
+Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format:
 
 ```
 <type>[package]: <description>
@@ -125,7 +127,7 @@ Please note the use of a line to separate the initial short summary from the bod
 perseus_sensors: Updated M2M2 lidar package
 
 - corrected the number of points published to /scan
-- allowed param to select applkicable USB device
+- allowed param to select applicable USB device
 - updated documentation with correct launch file
 ```
 
@@ -134,13 +136,13 @@ perseus_sensors: Updated M2M2 lidar package
 ```
 added stuff                    // Completely uninformative
 late night coding              // Unprofessional and uninformative
-fix                           // What was fixed?
-update                        // What was updated?
-minor changes                 // What changes?
-oops                         // Unprofessional
-WIP                          // Work in progress - should not be in main history
-asdf                         // Random characters
-quick fix                    // What was fixed?
+fix                            // What was fixed?
+update                         // What was updated?
+minor changes                  // What changes?
+oops                           // Unprofessional
+WIP                            // Work in progress - should not be in main history
+asdf                           // Random characters
+quick fix                      // What was fixed?
 ```
 
 ### The Commit Body (Optional)
@@ -159,6 +161,20 @@ Use the commit body to add relevant detail if someone needed to learn more. Best
 - Reference issues and pull requests if relevant
 
 #### Example with Body
+
+```
+feat: add user authentication system
+
+Implemented JWT-based authentication with refresh token support.
+This change enables secure user sessions and API access control.
+
+- Added login/logout endpoints
+- Implemented JWT token generation and validation
+- Added refresh token mechanism for extended sessions
+- Updated middleware to check authentication on protected routes
+
+Relates to #123
+```
 
 ## Pull Request Standards
 
@@ -181,7 +197,51 @@ Include:
 
 #### Example PR Description Template
 
-//TODO
+```markdown
+## Summary
+
+Brief description of what this PR does in 1-2 sentences.
+
+## What Changed
+
+- List of specific changes made
+- Be concise but comprehensive
+- Include any architectural decisions
+
+## Why
+
+Explain the motivation for these changes:
+
+- What problem does it solve?
+- What feature does it add?
+- Why is this improvement needed?
+
+## Testing
+
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] Manual testing completed
+- [ ] Documentation updated
+
+### Test Instructions
+
+1. Step-by-step instructions for testing
+2. Expected behavior
+3. Edge cases considered
+
+## Breaking Changes
+
+- List any breaking changes (or "None" if not applicable)
+- Include migration instructions if needed
+
+## Screenshots/Videos
+
+(If applicable, add screenshots or videos to demonstrate the changes)
+
+## Related Issues
+
+Closes #issue_number
+```
 
 ## Code Review Standards
 
@@ -205,9 +265,9 @@ Include:
 
 ### Before Starting Work
 
-3. Ensure your local `main` is up to date (git checkout main | git pull)
-1. Create a new branch from the latest `main` (git checkout -b feat/example)
-1. Use appropriate branch naming conventions
+1. Ensure your local `main` is up to date (git checkout main | git pull)
+2. Create a new branch from the latest `main` (git checkout -b feat/example)
+3. Use appropriate branch naming conventions
 
 ### During Development
 
@@ -226,7 +286,7 @@ Include:
 
 ### Example Workflow
 
-```bash
+```console
 # Start new feature
 git checkout main
 git pull origin main
@@ -269,7 +329,7 @@ git push origin feat/user-dashboard
 
 - Don't create massive PRs with unrelated changes
 - Don't submit PRs without testing
-- Push commits frequently and review any CI/CD failures
+- Push commits frequently and review any CI/CD failures.
 
 ## Integration with Development Standards
 
