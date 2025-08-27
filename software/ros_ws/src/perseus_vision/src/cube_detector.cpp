@@ -77,7 +77,7 @@ public:
       ament_index_cpp::get_package_share_directory("perseus_vision") + "/yolo_model/best.onnx";
     RCLCPP_INFO(get_logger(), "Model path: %s", model_path.c_str());
 
-    std::ifstream f(model_path);
+    std::ifstream f(model_path); // check if file exists
     if (!f.good()) {
       RCLCPP_ERROR(get_logger(), "Model file not found.");
       return;
@@ -90,21 +90,22 @@ public:
     so.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
     // ===== Enable CUDA Execution Provider =====
-    // Device 0; change if you have multiple GPUs.
-    OrtCUDAProviderOptions cuda_options{};
-    cuda_options.device_id = 0;
-    // optional tuning:
-    cuda_options.arena_extend_strategy = 0; // kNextPowerOfTwo
-    cuda_options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearchExhaustive;
-    cuda_options.do_copy_in_default_stream = 1;
-
-    Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(so, &cuda_options));
+    // Try CUDA first, fallback to CPU if not available
+    // I don't have nvidia GPU to test, so please report if there is any issue.
+    try {
+      OrtCUDAProviderOptions cuda_options{};
+      cuda_options.device_id = 0;
+      so.AppendExecutionProvider_CUDA(cuda_options);
+      RCLCPP_INFO(get_logger(), "Using CUDA execution provider");
+    } catch (const std::exception& e) {
+      RCLCPP_WARN(get_logger(), "CUDA not available, using CPU: %s", e.what());
+    }
 
     session_ = std::make_unique<Ort::Session>(*env_, model_path.c_str(), so);
     memory_info_ = std::make_unique<Ort::MemoryInfo>(
         Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault));
 
-    // Cache I/O names (from your Colab check: input "images", output "output0")
+    // Cache I/O names
     size_t num_in = session_->GetInputCount();
     size_t num_out = session_->GetOutputCount();
     input_names_.resize(num_in);
@@ -112,14 +113,12 @@ public:
 
     Ort::AllocatorWithDefaultOptions allocator;
     for (size_t i = 0; i < num_in; ++i) {
-      char* name = session_->GetInputName(i, allocator);
-      input_names_[i] = name;
-      allocator.Free(name);
+      auto name_ptr = session_->GetInputNameAllocated(i, allocator);
+      input_names_[i] = name_ptr.get();
     }
     for (size_t i = 0; i < num_out; ++i) {
-      char* name = session_->GetOutputName(i, allocator);
-      output_names_[i] = name;
-      allocator.Free(name);
+      auto name_ptr = session_->GetOutputNameAllocated(i, allocator);
+      output_names_[i] = name_ptr.get();
     }
 
     RCLCPP_INFO(get_logger(), "Inputs: %s", input_names_[0].c_str());
@@ -169,11 +168,16 @@ private:
     Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
         *memory_info_, chw.data(), chw.size(), input_shape.data(), input_shape.size());
 
-    // Run
+    // Run inference
+    std::vector<const char*> input_names_cstr;
+    std::vector<const char*> output_names_cstr;
+    for (const auto& name : input_names_) input_names_cstr.push_back(name.c_str());
+    for (const auto& name : output_names_) output_names_cstr.push_back(name.c_str());
+
     auto output_tensors = session_->Run(Ort::RunOptions{nullptr},
-                                        input_names_.data(),
+                                        input_names_cstr.data(),
                                         &input_tensor, 1,
-                                        output_names_.data(), 1);
+                                        output_names_cstr.data(), 1);
 
     // Expect [1, 8, 8400]
     auto& out = output_tensors[0];
@@ -188,10 +192,12 @@ private:
 
     const int num_feats = static_cast<int>(shape[1]);      // 8
     const int num_preds = static_cast<int>(shape[2]);      // 8400
-    const float* p = out.GetTensorData<float>();
+    const float* p = out.GetTensorMutableData<float>();
 
     // decode -> vector<Detection>
-    constexpr float CONF_THR = 0.40f;  // tune as needed
+    // for Simulation only, CONF_THR = 0.30f
+    // for Real world, CONF_THR = 0.50f
+    constexpr float CONF_THR = 0.30f;  // tune as needed
     constexpr float NMS_IOU  = 0.50f;
 
     const float sx = static_cast<float>(orig_w) / 640.f;
