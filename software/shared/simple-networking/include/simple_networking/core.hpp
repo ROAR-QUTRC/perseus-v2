@@ -22,7 +22,9 @@ namespace networking
         TCP,
         UDP
     };
-    std::string getStringFromProtocol(const socket_protocol& protocol)
+
+    // Use inline to prevent multiple definition errors
+    inline std::string getStringFromProtocol(const socket_protocol& protocol)
     {
         return (protocol == socket_protocol::TCP) ? "TCP" : "UDP";
     }
