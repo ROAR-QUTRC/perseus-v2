@@ -1,63 +1,65 @@
-import { io, Socket } from "socket.io-client";
-import config from "./config.json";
-import fs, { read, readdirSync, watch } from "node:fs";
-import { networkInterfaces } from "os";
-import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import { io, Socket } from 'socket.io-client';
+import config from './config.json';
+import fs, { read, readdirSync, watch } from 'node:fs';
+import { networkInterfaces } from 'os';
+import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
 let cameraWatcher: fs.FSWatcher | null = null;
 
 const setupCameraWatcher = () => {
-  if (cameraWatcher === null) {
-    cameraWatcher = watch("/home/huon/test/camera", (eventType, filename) => {
-      console.log("\ncamera watcher called");
-      if (eventType !== "rename" && filename) {
-        let pluggedIn = false;
-        console.log(`Camera watcher: ${filename}`);
-        readdirSync("/home/huon/test/camera").forEach((file) => {
-          console.log(`Checking file: ${file}`);
-          if (file === filename) pluggedIn = true;
-        });
-        if (pluggedIn) {
-          console.log(`Camera ${filename} plugged in!`);
-        } else {
-          console.log(`Camera ${filename} unplugged!`);
-        }
-      }
-    });
-    console.log("\n");
-  } else {
-    // Shouldnt be able to reach here
-    console.log("Camera watcher already exists.");
-  }
+	if (cameraWatcher === null) {
+		cameraWatcher = watch('/dev/v4l/by-id', (eventType, filename) => {
+			console.log('\ncamera watcher called');
+			if (eventType !== 'rename' && filename) {
+				let pluggedIn = false;
+				console.log(`Camera watcher: ${filename}`);
+				readdirSync('/dev/v4l/by-id').forEach((file) => {
+					console.log(`Checking file: ${file}`);
+					if (file === filename) pluggedIn = true;
+				});
+				if (pluggedIn) {
+					console.log(`Camera ${filename} plugged in!`);
+				} else {
+					console.log(`Camera ${filename} unplugged!`);
+				}
+			}
+		});
+		console.log('\n');
+	} else {
+		// Shouldnt be able to reach here
+		console.log('Camera watcher already exists.');
+	}
 
-  // return existing cameras
-  return readdirSync("/home/huon/test/camera");
+	// return existing cameras
+	return readdirSync('/dev/v4l/by-id');
 };
 
-readdirSync("/home/huon/").forEach((file) => {
-  if (file === "test") {
-    console.log(`existing devices: ${setupCameraWatcher()}`);
-  }
+// Check for existing video devices
+readdirSync('/dev/').forEach((file) => {
+	if (file === 'v4l') {
+		console.log(`existing devices: ${setupCameraWatcher()}`);
+	}
 });
 
-const parentWatcher = watch("/home/huon/", (eventType, filename) => {
-  let created = false;
-  if (eventType === "rename" && filename === "test") {
-    readdirSync("/home/huon/").forEach((file) => {
-      if (file === "test") created = true;
-    });
+// setup watcher to handle removal of v4l folder
+const parentWatcher = watch('/dev/', (eventType, filename) => {
+	let created = false;
+	if (eventType === 'rename' && filename === 'v4l') {
+		readdirSync('/dev/').forEach((file) => {
+			if (file === 'v4l') created = true;
+		});
 
-    if (created) {
-      console.log("Test directory created!");
-      console.log(`existing devices: ${setupCameraWatcher()}`);
-    } else {
-      console.log("Test directory removed!");
-      if (cameraWatcher !== null) {
-        (cameraWatcher as fs.FSWatcher).close();
-        cameraWatcher = null;
-      }
-    }
-  }
+		if (created) {
+			console.log('Test directory created!');
+			console.log(`existing devices: ${setupCameraWatcher()}`);
+		} else {
+			console.log('Test directory removed!');
+			if (cameraWatcher !== null) {
+				(cameraWatcher as fs.FSWatcher).close();
+				cameraWatcher = null;
+			}
+		}
+	}
 });
 
 // type videoTransformType =
