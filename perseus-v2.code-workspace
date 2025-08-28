@@ -108,7 +108,10 @@
             "ranges": "cpp",
             "valarray": "cpp",
             "*.tcc": "cpp",
-            "coroutine": "cpp"
+            "coroutine": "cpp",
+            "hash_map": "cpp",
+            "hash_set": "cpp",
+            "netfwd": "cpp"
         },
         "C_Cpp.default.cppStandard": "c++20",
         "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
