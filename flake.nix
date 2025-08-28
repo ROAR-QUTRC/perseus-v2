@@ -134,7 +134,6 @@
             glibcLocales
             yaml-cpp
             libnice
-            glibcLocales
             ;
           inherit (pkgs.gst_all_1)
             gstreamer
