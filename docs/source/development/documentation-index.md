@@ -11,6 +11,16 @@ The second is to enter a _development shell_ using `nix develop` - if you want s
 
 To build the documentation, simply run `nix build .#docs` - the output will be in the `result` symlink in the directory where you ran the command.
 
+:::{note}
+A quick start to view changes locally is to run the following commands from the /perseus-v2 directory
+
+nix build .#docs
+
+nix run nixpkgs#darkhttpd -- ./result/html/
+
+...and then view the '127.0.0.1:8080' or 'localhost:8080' in a browser
+:::
+
 ### Using `nix develop`
 
 #### Building

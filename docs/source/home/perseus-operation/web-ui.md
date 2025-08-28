@@ -29,6 +29,8 @@ yarn start # Runs the built server on port 3000
 
 ## Running Cameras
 
+All devices with a cameras connected must have an instance of the camera server running on them. This can be run with:
+
 ```shell
 yarn camera
 ```
