@@ -11,9 +11,13 @@
 // standard libraries
 #include <cstdio>
 
-// rover libs
+// Old canbus
 #include <canlib.hpp>
 #include <canlib_power.hpp>
+// New canbus
+#include <hi_can_twai.hpp>
+
+// rover libs
 #include <rover_adc.hpp>
 #include <rover_core.hpp>
 #include <rover_io.hpp>
