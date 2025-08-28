@@ -1,5 +1,11 @@
 # Autonomy and Mapping Operations Manual
 
+## 2026 Team Members
+
+Nigel
+Jasper
+Lachlan Ikeguchi
+
 ## Map Generation Using SLAM
 
 ### Prerequisites
