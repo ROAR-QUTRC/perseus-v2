@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<robot name="rocker" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find perseus_lite_description)/urdf/motor_wheel.urdf.xacro"/>
+
+  <xacro:macro name="rocker" params="prefix:=^ side *origin">
+    <!-- ROCKER ARM -->
+    <link name="${prefix}${side}_rocker">
+      <inertial>
+        <origin xyz="0.005909593700425542 -0.04168669827007379 -0.03369548035494997" rpy="0.0 0.0 0.0"/>
+        <!-- RIGHT -->
+        <xacro:if value="${side == 'right'}">
+          <inertia ixx="0.009778" iyy="0.0012455" izz="0.009566" ixy="0.000462625" iyz="-0.00085575" ixz="0.0003725"/>
+        </xacro:if>
+        <!-- LEFT -->
+        <xacro:if value="${side == 'left'}">
+          <inertia ixx="0.009778" iyy="0.0012455" izz="0.009566" ixy="0.000462625" iyz="-0.00085575" ixz="0.0003725"/>
+        </xacro:if>
+        <mass value="0.6273071019756242"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
+        <geometry>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/rocker_${side}.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.1 0.0 -0.025" rpy="0.0 0.3 ${pi}"/>
+        <geometry>
+          <box size="0.2 0.025 0.015" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}${side}_rocker_joint" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="${prefix}chassis"/>
+      <child link="${prefix}${side}_rocker"/>
+    </joint>
+
+    <!-- FRONT MOTOR -->
+    <xacro:motor_wheel end="front">
+      <xacro:if value="${side == 'left'}">
+        <origin xyz="0.17 -0.04 -0.1" rpy="0.0 0.0 ${pi}"/>
+      </xacro:if>
+      <xacro:if value="${side == 'right'}">
+        <origin xyz="0.17 0.04 -0.1" rpy="0.0 0.0 0.0"/>
+      </xacro:if>
+    </xacro:motor_wheel>
+    
+    <!-- REAR MOTOR -->
+    <xacro:motor_wheel end="rear">
+      <xacro:if value="${side == 'left'}">
+        <origin xyz="-0.30 -0.04 -0.1" rpy="0.0 0.0 ${pi}"/>
+      </xacro:if>
+      <xacro:if value="${side == 'right'}">
+        <origin xyz="-0.30 0.04 -0.1" rpy="0.0 0.0 0.0"/>
+      </xacro:if>
+    </xacro:motor_wheel>
+  </xacro:macro>
+</robot>
