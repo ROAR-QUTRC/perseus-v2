@@ -718,17 +718,17 @@ public:
         bool full_reset_occurred : 1;  // POR
         // whether or not the previous reset was due to the watchdog timer
         // NOTE: Independent of Host Watchdog settings
-        bool was_watchdog_reset : 1;        // WD
-        bool checking_cell_open_wire : 1;   // COW_CHK
-        bool pending_otp_write : 1;         // OTPW
-        bool otp_write_blocked : 1;         // OTPB
+        bool was_watchdog_reset : 1;               // WD
+        bool checking_cell_open_wire : 1;          // COW_CHK
+        bool pending_otp_write : 1;                // OTPW
+        bool otp_write_blocked : 1;                // OTPB
         security_state_option security_state : 2;  // SEC[1:0]
-        bool fuse_active : 1;               // FUSE
-        bool safety_fault_active : 1;       // SS
-        bool permanent_fail_active : 1;     // PF
-        bool shutdown_pending : 1;          // SD_CMD
-        bool _rsvd14 : 1 = 0;               // RSVD_0
-        bool in_sleep : 1;                  // SLEEP
+        bool fuse_active : 1;                      // FUSE
+        bool safety_fault_active : 1;              // SS
+        bool permanent_fail_active : 1;            // PF
+        bool shutdown_pending : 1;                 // SD_CMD
+        bool _rsvd14 : 1 = 0;                      // RSVD_0
+        bool in_sleep : 1;                         // SLEEP
     };
     struct alarm_status_t
     {
@@ -1031,9 +1031,9 @@ public:
             } function;
             struct
             {
-                adc_pin_function function : 2;          // PINFXN[1:0]
+                adc_pin_function function : 2;              // PINFXN[1:0]
                 adc_measurement_type measurement_type : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;    // OPT[3:2]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
                 adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
@@ -1061,9 +1061,9 @@ public:
             } function;
             struct
             {
-                adc_pin_function function : 2;          // PINFXN[1:0]
+                adc_pin_function function : 2;              // PINFXN[1:0]
                 adc_measurement_type measurement_type : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;    // OPT[3:2]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
                 adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
@@ -1089,18 +1089,18 @@ public:
             } function;
             struct
             {
-                adc_pin_function function : 2;          // PINFXN[1:0]
+                adc_pin_function function : 2;              // PINFXN[1:0]
                 adc_measurement_type measurement_type : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;    // OPT[3:2]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
                 adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
     };
     struct ts_pin_configuration_t
     {
-        adc_pin_function function : 2;          // PINFXN[1:0]
+        adc_pin_function function : 2;              // PINFXN[1:0]
         adc_measurement_type measurement_type : 2;  // OPT[1:0]
-        polynomial_selection polynomial : 2;    // OPT[3:2]
+        polynomial_selection polynomial : 2;        // OPT[3:2]
         adc_pullup_config pullup_config : 2;        // OPT[5:4]
     };
     struct hdq_pin_configuration_t
@@ -1124,9 +1124,9 @@ public:
             } function;
             struct
             {
-                adc_pin_function function : 2;          // PINFXN[1:0]
+                adc_pin_function function : 2;              // PINFXN[1:0]
                 adc_measurement_type measurement_type : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;    // OPT[3:2]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
                 adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
@@ -1152,9 +1152,9 @@ public:
             } function;
             struct
             {
-                adc_pin_function function : 2;          // PINFXN[1:0]
+                adc_pin_function function : 2;              // PINFXN[1:0]
                 adc_measurement_type measurement_type : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;    // OPT[3:2]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
                 adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
@@ -1180,9 +1180,9 @@ public:
             } function;
             struct
             {
-                adc_pin_function function : 2;          // PINFXN[1:0]
+                adc_pin_function function : 2;              // PINFXN[1:0]
                 adc_measurement_type measurement_type : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;    // OPT[3:2]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
                 adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
