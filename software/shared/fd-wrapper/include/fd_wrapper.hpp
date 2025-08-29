@@ -35,7 +35,7 @@ public:
     inline int get() const { return _fd; }
 
 private:
-    void _handleClose();
+    void _handle_close();
     int _fd = -1;
 
     // non-const to allow swapping

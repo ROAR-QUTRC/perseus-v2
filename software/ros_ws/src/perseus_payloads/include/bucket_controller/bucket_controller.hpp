@@ -11,8 +11,8 @@ public:
     explicit BucketController(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
 private:
-    void _joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg);
+    void _joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg);
 
-    rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _joySubscription;
-    rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr _actuatorPublisher;
+    rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _joy_subscription;
+    rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr _actuator_publisher;
 };
