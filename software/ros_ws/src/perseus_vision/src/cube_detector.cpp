@@ -65,7 +65,7 @@ std::vector<Detection> nms(const std::vector<Detection>& dets, float iou_thr) {
 class CubeDetector : public rclcpp::Node {
 public:
   CubeDetector() : rclcpp::Node("cube_detector") {
-    RCLCPP_INFO(get_logger(), "Cube Detector Node (GPU + ONNX Runtime)");
+    RCLCPP_INFO(get_logger(), "Cube Detector Node (CUDA -> OpenVINO -> CPU fallback)");
 
     pub_ = this->create_publisher<sensor_msgs::msg::Image>("/rgbd_camera/image/cube_detection", 10);
     sub_ = this->create_subscription<sensor_msgs::msg::Image>(
@@ -83,22 +83,56 @@ public:
       return;
     }
 
-    // ONNX Runtime env + session (CUDA EP)
+    // ONNX Runtime env + session with provider fallback
     env_ = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "cube-detector");
     Ort::SessionOptions so;
-    so.SetIntraOpNumThreads(1);
-    so.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+    so.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
 
-    // ===== Enable CUDA Execution Provider =====
-    // Try CUDA first, fallback to CPU if not available
-    // I don't have nvidia GPU to test, so please report if there is any issue.
+    bool gpu_available = false;
+    
+    // ===== Try CUDA first =====
     try {
       OrtCUDAProviderOptions cuda_options{};
       cuda_options.device_id = 0;
       so.AppendExecutionProvider_CUDA(cuda_options);
       RCLCPP_INFO(get_logger(), "Using CUDA execution provider");
+      gpu_available = true;
     } catch (const std::exception& e) {
-      RCLCPP_WARN(get_logger(), "CUDA not available, using CPU: %s", e.what());
+      RCLCPP_WARN(get_logger(), "CUDA not available: %s", e.what());
+    }
+    
+    // ===== Try OpenVINO for Intel GPU if CUDA failed =====
+    if (!gpu_available) {
+      try {
+        // Try OpenVINO execution provider for Intel GPU
+        OrtOpenVINOProviderOptions openvino_options{};
+        openvino_options.device_type = "GPU_FP16"; // Use Intel GPU with FP16
+        so.AppendExecutionProvider_OpenVINO(openvino_options);
+        RCLCPP_INFO(get_logger(), "Using OpenVINO execution provider (Intel GPU)");
+        gpu_available = true;
+      } catch (const std::exception& e) {
+        RCLCPP_WARN(get_logger(), "OpenVINO GPU not available: %s", e.what());
+        
+        // Fallback to OpenVINO CPU
+        try {
+          OrtOpenVINOProviderOptions openvino_cpu_options{};
+          openvino_cpu_options.device_type = "CPU";
+          so.AppendExecutionProvider_OpenVINO(openvino_cpu_options);
+          RCLCPP_INFO(get_logger(), "Using OpenVINO execution provider (CPU)");
+          gpu_available = true;
+        } catch (const std::exception& e2) {
+          RCLCPP_WARN(get_logger(), "OpenVINO CPU not available: %s", e2.what());
+        }
+      }
+    }
+    
+    // ===== Configure CPU optimization =====
+    if (!gpu_available) {
+      so.SetIntraOpNumThreads(0); // Use all available CPU cores
+      so.SetInterOpNumThreads(0); // Use all available CPU cores
+      RCLCPP_INFO(get_logger(), "Using optimized CPU inference with all cores");
+    } else {
+      so.SetIntraOpNumThreads(1); // For GPU, use minimal CPU threads
     }
 
     session_ = std::make_unique<Ort::Session>(*env_, model_path.c_str(), so);
@@ -249,6 +283,18 @@ private:
 
     // NMS
     auto final_dets = nms(dets, NMS_IOU);
+
+    // Log detection results
+    if (!final_dets.empty()) {
+      RCLCPP_INFO(get_logger(), "Detected %zu cubes:", final_dets.size());
+      for (size_t i = 0; i < final_dets.size(); ++i) {
+        const auto& d = final_dets[i];
+        RCLCPP_INFO(get_logger(), "  Cube %zu: Class %d, Score %.3f, Box [%d,%d,%dx%d]", 
+                   i+1, d.cls, d.score, d.box.x, d.box.y, d.box.width, d.box.height);
+      }
+    } else {
+      RCLCPP_DEBUG(get_logger(), "No cubes detected in this frame");
+    }
 
     // Colors (BGR): 0-blue,1-green,2-red,3-white; default yellow
     auto color_for = [](int cls)->cv::Scalar{
