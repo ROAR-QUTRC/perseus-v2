@@ -59,7 +59,7 @@ namespace i2c_imu_driver
      *
      * Example usage:
      * @code
-     * auto config_opt = ImuDeviceRegistry::getDeviceConfig("MPU6050");
+     * auto config_opt = ImuDeviceRegistry::get_device_config("MPU6050");
      * if (config_opt) {
      *     // Use configuration for device initialization
      *     const auto& config = config_opt->get();

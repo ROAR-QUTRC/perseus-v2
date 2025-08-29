@@ -76,30 +76,30 @@ namespace hi_can
             /// @brief The base raw address
             raw_address_t address = 0;
             /// @brief Whether the address is an RTR frame
-            bool isRtr = false;
+            bool is_rtr = false;
             /// @brief Whether the address is an error frame
-            bool isError = false;
+            bool is_error = false;
             /// @brief Whether the address is an extended (29-bit) address
-            bool isExtended = true;
+            bool is_extended = true;
 
             /// @brief Default constructor - zero address, not RTR or error, extended
             constexpr flagged_address_t() = default;
             /// @brief Construct a flagged address from a raw address and flags
-            constexpr flagged_address_t(raw_address_t address, bool isRtr = false, bool isError = false, bool isExtended = true)
-                : address(address & (isExtended ? MAX_ADDRESS : MAX_SHORT_ADDRESS)),
-                  isRtr(isRtr),
-                  isError(isError),
-                  isExtended(isExtended)
+            constexpr flagged_address_t(raw_address_t address, bool is_rtr = false, bool is_error = false, bool is_extended = true)
+                : address(address & (is_extended ? MAX_ADDRESS : MAX_SHORT_ADDRESS)),
+                  is_rtr(is_rtr),
+                  is_error(is_error),
+                  is_extended(is_extended)
             {
             }
 
             /// @brief Convert a flagged address to a raw address
             constexpr explicit operator raw_address_t() const override
             {
-                return address & (isExtended ? MAX_ADDRESS : MAX_SHORT_ADDRESS);
+                return address & (is_extended ? MAX_ADDRESS : MAX_SHORT_ADDRESS);
             }
 
-            /// Sorts first by address, then @ref isRtr flag, then @ref isError flag, then @ref isExtended flag
+            /// Sorts first by address, then @ref is_rtr flag, then @ref is_error flag, then @ref is_extended flag
             /// @brief Compare two flagged addresses (for sorting)
             /// @param other Address to compare against
             /// @return The result of the comparison
@@ -107,18 +107,18 @@ namespace hi_can
             {
                 if (address != other.address)
                     return address <=> other.address;
-                if (isRtr != other.isRtr)
-                    return isRtr <=> other.isRtr;
-                if (isError != other.isError)
-                    return isError <=> other.isError;
-                return isExtended <=> other.isExtended;
+                if (is_rtr != other.is_rtr)
+                    return is_rtr <=> other.is_rtr;
+                if (is_error != other.is_error)
+                    return is_error <=> other.is_error;
+                return is_extended <=> other.is_extended;
             }
             /// @brief Check if two addresses are equal. Checks address and all flags.
             /// @param other Address to compare against
             /// @return Whether the addresses are equal
             constexpr auto operator==(const flagged_address_t& other) const
             {
-                return (address == other.address) && (isRtr == other.isRtr) && (isError == other.isError) && (isExtended == other.isExtended);
+                return (address == other.address) && (is_rtr == other.is_rtr) && (is_error == other.is_error) && (is_extended == other.is_extended);
             }
             /// @brief Check if two addresses are not equal
             /// @param other Address to compare against
@@ -137,16 +137,16 @@ namespace hi_can
             /// @brief The mask of address bits to care about
             mask_t mask = MASK_ALL;
             /// @brief Whether to match the RTR flag as well
-            bool shouldMatchRtr = false;
-            /// @brief Whether to match the isError flag as well
-            bool shouldMatchError = true;
+            bool should_match_rtr = false;
+            /// @brief Whether to match the is_error flag as well
+            bool should_match_error = true;
 
             // need to define the comparison operators for std::set
             /// Compares by, in order:
             /// - mask
             /// - address
-            /// - shouldMatchRtr
-            /// - shouldMatchError
+            /// - should_match_rtr
+            /// - should_match_error
             /// More specific filters (greater masks) should be sorted first, and as such compare as less than, by flipping the comparison.
             /// @brief Compare two filters for sorting
             /// @param other Filter to compare against
@@ -157,9 +157,9 @@ namespace hi_can
                     return other.mask <=> mask;
                 if (address != other.address)
                     return address <=> other.address;
-                if (shouldMatchRtr != other.shouldMatchRtr)
-                    return shouldMatchRtr <=> other.shouldMatchRtr;
-                return shouldMatchError <=> other.shouldMatchError;
+                if (should_match_rtr != other.should_match_rtr)
+                    return should_match_rtr <=> other.should_match_rtr;
+                return should_match_error <=> other.should_match_error;
             }
 
             /// @brief Check if address matches the filter
@@ -168,16 +168,16 @@ namespace hi_can
             constexpr bool matches(const flagged_address_t& address) const
             {
                 return (static_cast<raw_address_t>(address) & mask) == (static_cast<raw_address_t>(this->address) & mask) &&
-                       (this->address.isExtended == address.isExtended) &&
-                       (!shouldMatchRtr || (this->address.isRtr == (address.isRtr))) &&
-                       (!shouldMatchError || (this->address.isError == (address.isError)));
+                       (this->address.is_extended == address.is_extended) &&
+                       (!should_match_rtr || (this->address.is_rtr == (address.is_rtr))) &&
+                       (!should_match_error || (this->address.is_error == (address.is_error)));
             }
 
-            constexpr raw_address_t getMaskedAddress() const
+            constexpr raw_address_t get_masked_address() const
             {
                 return static_cast<raw_address_t>(address) & mask;
             }
-            constexpr raw_address_t getUnmaskedAddress() const
+            constexpr raw_address_t get_unmasked_address() const
             {
                 return static_cast<raw_address_t>(address) & (~mask);
             }
@@ -224,10 +224,10 @@ namespace hi_can
                   parameter(parameter)
             {
             }
-            constexpr standard_address_t(const standard_address_t& deviceAddress, const uint8_t& group, const uint8_t& parameter)
-                : system(deviceAddress.system),
-                  subsystem(deviceAddress.subsystem),
-                  device(deviceAddress.device),
+            constexpr standard_address_t(const standard_address_t& device_address, const uint8_t& group, const uint8_t& parameter)
+                : system(device_address.system),
+                  subsystem(device_address.subsystem),
+                  device(device_address.device),
                   group(group),
                   parameter(parameter)
             {
@@ -475,10 +475,10 @@ namespace hi_can
                       parameter(parameter)
                 {
                 }
-                address_t(address_t deviceAddress, const uint8_t& group, const uint8_t& parameter)
-                    : system(deviceAddress.system),
-                      subsystem(deviceAddress.subsystem),
-                      device(deviceAddress.device),
+                address_t(address_t device_address, const uint8_t& group, const uint8_t& parameter)
+                    : system(device_address.system),
+                      subsystem(device_address.subsystem),
+                      device(device_address.device),
                       group(group),
                       parameter(parameter)
                 {
