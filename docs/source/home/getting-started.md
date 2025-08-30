@@ -14,25 +14,33 @@ sudo apt-get install -y gh git curl direnv
 ```
 
 3. Log into GitHub: `gh auth login -w -p https`
-4. Clone the repo (into `~/perseus-v2`) and `cd` into it:
+4. Clone (means to download a copy from the server to your machine) the repository (often referred to as repo) into `~/perseus-v2` and `cd` (change directory) into it:
 
 ```{code-block} console
 cd ~
-gh repo clone ROAR-QUTRC/perseus-v2 # download the repository
+gh repo clone ROAR-QUTRC/perseus-v2
 cd perseus-v2
 ```
 
 5. Run the setup script (it will prompt you for sudo permissions):
 
 ```{code-block} console
-`./software/scripts/nix-setup.sh`
+./software/scripts/nix-setup.sh
 ```
 
-6. Restart your shell
-7. Run `cd ~/perseus-v2`
-8. Accept all config options when prompted with `y`
-9. Wait for the downloads (and potentially builds)
-10. Run `nix build` - this will attempt to build the workspace. If this succeeds, you're done, and the built workspace is now available under the `./result` folder!
+6. Skip this step if it ran without errors. If the script failed to run and suggests running with `--no-confirm`, try again like this:
+
+```{code-block} console
+./software/scripts/nix-setup.sh --no-confirm
+```
+
+7. Accept all config options when prompted by typing `y`, then press enter
+8. Restart your shell
+9. Run `cd ~/perseus-v2`
+10. Wait for the downloads (and potentially builds)
+11. If asked, accept all config options with `y`
+12. Run `nix build` - this will attempt to build the workspace. If this succeeds, you're done, and the built workspace is now available under the `./result` folder!
+13. If asked, accept all config options with `y`
 
 ### IDE Setup
 
