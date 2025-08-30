@@ -1,7 +1,7 @@
 # Hardware
 
 ```{toctree}
-:glob:
-:hidden:
-hardware/*
+hardware/assembly
+hardware/i2c_imu
+hardware/network
 ```
