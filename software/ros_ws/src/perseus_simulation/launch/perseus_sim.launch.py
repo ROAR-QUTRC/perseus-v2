@@ -3,6 +3,11 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     ExecuteProcess,
+from launch import LaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    ExecuteProcess,
     TimerAction,
 )
 from launch.substitutions import (
@@ -13,11 +18,10 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 
-
 def generate_launch_description():
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
-
+    
     arguments = [
         DeclareLaunchArgument(
             "use_sim_time",
@@ -30,6 +34,9 @@ def generate_launch_description():
         [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
     )
 
+    ekf_config_file = PathJoinSubstitution(
+        [FindPackageShare("perseus_simulation"), "config", "ekf_config.yaml"]
+    )
     # IMPORTED LAUNCH FILES
     gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -83,6 +90,7 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
+
     teleop_keyboard_controller = Node(
         package="perseus_teleop",
         executable="teleop_keyboard",
@@ -120,16 +128,24 @@ def generate_launch_description():
     )
     # Add delay to controllers
     controllers_delayed = TimerAction(
-        period=30.0,  # Wait 30 seconds for Gazebo to fully start
-        actions=[controllers_launch],
+        period=30.0,  # Wait 3 seconds for Gazebo to fully start
+        actions=[controllers_launch]
     )
-
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[ekf_config_file],
+        remappings=[('/odometry/filtered', '/odom')] # Remap output to /odom
+    )
     launch_files = [
         gz_launch,
         rsp_launch,  # Robot state publisher
-        teleop_keyboard_controller,
+        teleop_keyboard_controller,  # Teleop keyboard controller
         controllers_delayed,  # Controllers
         rviz,  # Start RViz with nixGL support
+        ekf_node,  # EKF node
     ]
 
     return LaunchDescription(arguments + launch_files)

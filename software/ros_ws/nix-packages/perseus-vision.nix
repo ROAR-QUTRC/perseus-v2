@@ -13,7 +13,11 @@
   sensor-msgs,
   tf2,
   tf2-ros,
+  tf2-geometry-msgs,  
+  onnxruntime,
+  gccgo14,
 }:
+
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-vision";
   version = "0.0.0";
@@ -21,7 +25,7 @@ buildRosPackage rec {
   src = ./../src/perseus_vision;
 
   buildType = "ament_cmake";
-  buildInputs = [ ament-cmake ];
+  buildInputs = [ ament-cmake gccgo14];
   checkInputs = [
     ament-lint-auto
     ament-lint-common
@@ -35,8 +39,12 @@ buildRosPackage rec {
     sensor-msgs
     tf2
     tf2-ros
+    tf2-geometry-msgs  
+    onnxruntime
+
   ];
   nativeBuildInputs = [ ament-cmake ];
+
 
   meta = {
     description = "A package to do visionary tasks of Perseus";
