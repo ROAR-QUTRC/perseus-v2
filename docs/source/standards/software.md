@@ -630,6 +630,12 @@ struct foo_t {
 
 ```
 
+#### Naming Convention (Arduino-only)
+
+The exception to the above if is you're writing firmware based on the Arduino core.
+If the code you're writing is primarily Arduino and/or FreeRTOS-based, feel free to use either `camelCase` or `snake_case` - just keep whatever you do consistent internally in the project.
+However, if your code significantly interacts with either ESP-IDF or this project's internal libraries, `snake_case` should be preferred as it's the standard in use for both of them.
+
 #### Variable Type Declarations
 
 Use the format `[static] [constexpr/const/volatile] type [&/* [const]]` (in order, compile-time constant/run-time constant/volatile, type name, reference/pointer, constant pointer modifier).
