@@ -9,8 +9,8 @@ RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
 {
     try
     {
-        _canInterface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "can0")));
-        _packetManager.emplace(_canInterface.value());
+        _can_interface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "can0")));
+        _packet_manager.emplace(_can_interface.value());
     }
     catch (const std::exception& e)
     {
@@ -21,7 +21,7 @@ RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
     try
     {
         // change this to reflect the actual number of groups
-        _parameterGroups.reserve(4);
+        _parameter_groups.reserve(4);
     }
     catch (const std::exception& e)
     {
@@ -40,14 +40,14 @@ RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
         try
         {
             // create parameter groups
-            _parameterGroups.emplace_back(std::make_pair(name,
-                                                         PowerBusParameterGroup{
-                                                             address_t(power::SYSTEM_ID,
-                                                                       power::control::SUBSYSTEM_ID,
-                                                                       static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
-                                                             id}));
+            _parameter_groups.emplace_back(std::make_pair(name,
+                                                          PowerBusParameterGroup{
+                                                              address_t(power::SYSTEM_ID,
+                                                                        power::control::SUBSYSTEM_ID,
+                                                                        static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
+                                                              id}));
 
-            _packetManager->addGroup(_parameterGroups.back().second);
+            _packet_manager->add_group(_parameter_groups.back().second);
         }
         catch (const std::exception& e)
         {
@@ -57,19 +57,19 @@ RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
 
     // TODO: This should be moved over to a packet manager callback in future. This is currently not possible.
     // init publisher and subscriber
-    _packetPublisher = this->create_publisher<std_msgs::msg::String>("can_to_ros", 10);
-    _packetTimeoutTimer = this->create_wall_timer(PACKET_TIMEOUT, std::bind(&RcbDriver::_canToRos, this));
-    _packetSubscriber = this->create_subscription<std_msgs::msg::String>(
-        "ros_to_can", 10, std::bind(&RcbDriver::_rosToCan, this, std::placeholders::_1));
+    _packet_publisher = this->create_publisher<std_msgs::msg::String>("can_to_ros", 10);
+    _packet_timeout_timer = this->create_wall_timer(PACKET_TIMEOUT, std::bind(&RcbDriver::_can_to_ros, this));
+    _packet_subscriber = this->create_subscription<std_msgs::msg::String>(
+        "ros_to_can", 10, std::bind(&RcbDriver::_ros_to_can, this, std::placeholders::_1));
 
     RCLCPP_INFO(this->get_logger(), "Rover control board driver node initialized");
 }
 
-void RcbDriver::_canToRos()
+void RcbDriver::_can_to_ros()
 {
     try
     {
-        _packetManager->handleReceive();
+        _packet_manager->handle_receive();
     }
     catch (const std::exception& e)
     {
@@ -77,11 +77,11 @@ void RcbDriver::_canToRos()
     }
 
     auto message = std_msgs::msg::String();
-    nlohmann::json busData = {};
+    nlohmann::json bus_data = {};
 
-    for (auto& [name, group] : _parameterGroups)
+    for (auto& [name, group] : _parameter_groups)
     {
-        const auto& data = group.getStatus();
+        const auto& data = group.get_status();
 
         static int status = -1;
         if (status != static_cast<int>(data.status))
@@ -91,15 +91,15 @@ void RcbDriver::_canToRos()
         }
 
         // RCLCPP_INFO(get_logger(), "Publishing message: current: %d, voltage: %d, status: %d", data.current, data.voltage, data.status == hi_can::parameters::legacy::power::control::power_bus::power_status::OFF);
-        busData[name] = {{"current", data.current}, {"voltage", data.voltage}, {"status", static_cast<int>(data.status)}};
+        bus_data[name] = {{"current", data.current}, {"voltage", data.voltage}, {"status", static_cast<int>(data.status)}};
     }
 
-    message.data = busData.dump();
+    message.data = bus_data.dump();
 
-    this->_packetPublisher->publish(message);
+    this->_packet_publisher->publish(message);
 }
 
-void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
+void RcbDriver::_ros_to_can(std_msgs::msg::String::UniquePtr msg)
 {
     using namespace hi_can;
     using namespace addressing::legacy;
@@ -121,8 +121,8 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
                                 static_cast<uint8_t>(group->second),
                                 static_cast<uint8_t>(power::control::power_bus::parameter::CONTROL_IMMEDIATE));
 
-        _canInterface->transmit(Packet(static_cast<addressing::flagged_address_t>(address),
-                                       immediate_control_t(_immediate_control_t{data["on"].get<std::string>()[0] == '0', false, 0}).serializeData()));
+        _can_interface->transmit(Packet(static_cast<addressing::flagged_address_t>(address),
+                                        immediate_control_t(_immediate_control_t{data["on"].get<std::string>()[0] == '0', false, 0}).serialize_data()));
     }
     catch (const std::exception& e)
     {
@@ -132,9 +132,9 @@ void RcbDriver::_rosToCan(std_msgs::msg::String::UniquePtr msg)
 
 void RcbDriver::cleanup()
 {
-    _packetManager.reset();
-    _canInterface.reset();
-    _parameterGroups.clear();
+    _packet_manager.reset();
+    _can_interface.reset();
+    _parameter_groups.clear();
 }
 
 int main(int argc, char** argv)

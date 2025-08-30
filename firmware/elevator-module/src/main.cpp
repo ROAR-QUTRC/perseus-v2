@@ -17,10 +17,10 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 using namespace hi_can;
 
-std::optional<PacketManager> packetManager;
+std::optional<PacketManager> packet_manager;
 
-void handleMotorSpeedData(const Packet& packet);
-void setMotorSpeed(int16_t speed);
+void handle_motor_speed_data(const Packet& packet);
+void set_motor_speed(int16_t speed);
 
 void setup()
 {
@@ -32,17 +32,17 @@ void setup()
     // pinMode(IN3, OUTPUT);
     // pinMode(ENB, OUTPUT);
 
-    auto& interface = TwaiInterface::getInstance();
-    packetManager.emplace(interface);
+    auto& interface = TwaiInterface::get_instance();
+    packet_manager.emplace(interface);
     using namespace addressing;
     using namespace shared::elevator::elevator;
-    standard_address_t motorAddress{DEVICE_ADDRESS, motor::GROUP_ID, static_cast<uint8_t>(motor::parameter::SPEED)};
-    packetManager->setCallback(filter_t{static_cast<flagged_address_t>(motorAddress)},
-                               {
-                                   .dataCallback = handleMotorSpeedData,
-                                   .timeoutCallback = std::bind(setMotorSpeed, 0),
-                                   .timeout = 200ms,
-                               });
+    standard_address_t motor_address{DEVICE_ADDRESS, motor::GROUP_ID, static_cast<uint8_t>(motor::parameter::SPEED)};
+    packet_manager->set_callback(filter_t{static_cast<flagged_address_t>(motor_address)},
+                                 {
+                                     .data_callback = handle_motor_speed_data,
+                                     .timeout_callback = std::bind(set_motor_speed, 0),
+                                     .timeout = 200ms,
+                                 });
 }
 
 void loop()
@@ -50,8 +50,8 @@ void loop()
     using namespace hi_can;
     try
     {
-        auto& interface = TwaiInterface::getInstance();
-        interface.receiveAll(true);
+        auto& interface = TwaiInterface::get_instance();
+        interface.receive_all(true);
     }
     catch (const std::exception& e)
     {
@@ -59,12 +59,12 @@ void loop()
     }
 }
 
-void handleMotorSpeedData(const Packet& packet)
+void handle_motor_speed_data(const Packet& packet)
 {
     using namespace parameters::shared::elevator::elevator::motor;
     try
     {
-        setMotorSpeed(static_cast<int16_t>(std::round(speed_t{packet.getData()}.value)));
+        set_motor_speed(static_cast<int16_t>(std::round(speed_t{packet.get_data()}.value)));
     }
     catch (const std::exception& e)
     {
@@ -72,7 +72,7 @@ void handleMotorSpeedData(const Packet& packet)
     }
 }
 
-void setMotorSpeed(int16_t speed)
+void set_motor_speed(int16_t speed)
 {
     speed = map(speed, std::numeric_limits<int16_t>::min(), std::numeric_limits<int16_t>::max(), -255, 255);
     digitalWrite(IN1, speed > 0);

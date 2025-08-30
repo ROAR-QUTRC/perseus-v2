@@ -11,23 +11,23 @@ class FifoCanInterface : public CanInterface
 public:
     void transmit(const Packet& packet) override
     {
-        transmitQueue.push(packet);
+        transmit_queue.push(packet);
     }
     std::optional<Packet> receive(bool blocking = false) override
     {
         (void)blocking;  // unused - we can't actually do anything with it
-        if (receiveQueue.empty())
+        if (receive_queue.empty())
             return std::nullopt;
-        Packet packet = receiveQueue.front();
-        receiveQueue.pop();
+        Packet packet = receive_queue.front();
+        receive_queue.pop();
         return packet;
     }
 
-    void queueReceive(const Packet& packet)
+    void queue_receive(const Packet& packet)
     {
-        receiveQueue.push(packet);
+        receive_queue.push(packet);
     }
 
-    std::queue<Packet> receiveQueue;
-    std::queue<Packet> transmitQueue;
+    std::queue<Packet> receive_queue;
+    std::queue<Packet> transmit_queue;
 };
