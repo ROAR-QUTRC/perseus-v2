@@ -15,7 +15,7 @@
   tf2-ros,
   tf2-geometry-msgs,  
   onnxruntime,
-  gccgo14,
+  gcc14,
 }:
 
 buildRosPackage rec {
@@ -25,7 +25,7 @@ buildRosPackage rec {
   src = ./../src/perseus_vision;
 
   buildType = "ament_cmake";
-  buildInputs = [ ament-cmake gccgo14];
+  buildInputs = [ ament-cmake gcc14];
   checkInputs = [
     ament-lint-auto
     ament-lint-common
@@ -41,6 +41,7 @@ buildRosPackage rec {
     tf2-ros
     tf2-geometry-msgs  
     onnxruntime
+    gcc14
 
   ];
   nativeBuildInputs = [ ament-cmake ];
