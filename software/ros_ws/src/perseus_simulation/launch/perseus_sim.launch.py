@@ -3,6 +3,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     ExecuteProcess,
+    TimerAction,
 )
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -16,6 +17,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
+    
     arguments = [
         DeclareLaunchArgument(
             "use_sim_time",
@@ -28,6 +30,9 @@ def generate_launch_description():
         [FindPackageShare("perseus_simulation"), "rviz", "rviz.rviz"]
     )
 
+    ekf_config_file = PathJoinSubstitution(
+        [FindPackageShare("perseus_simulation"), "config", "ekf_config.yaml"]
+    )
     # IMPORTED LAUNCH FILES
     gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -82,14 +87,6 @@ def generate_launch_description():
         }.items(),
     )
 
-    # # Joint State Publisher (needed for robot visualization)
-    # joint_state_publisher = Node(
-    #     package='joint_state_publisher',
-    #     executable='joint_state_publisher',
-    #     parameters=[{'use_sim_time': use_sim_time}],
-    #     output='screen'
-    # )
-
     aruco_detector = Node(
         package="perseus_vision",
         executable="detector_node",
@@ -124,13 +121,26 @@ def generate_launch_description():
             "RMW_QOS_POLICY_DEPTH": "100",
         },
     )
-
+    # Add delay to controllers
+    controllers_delayed = TimerAction(
+        period=30.0,  # Wait 3 seconds for Gazebo to fully start
+        actions=[controllers_launch]
+    )
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[ekf_config_file],
+        remappings=[('/odometry/filtered', '/odom')] # Remap output to /odom
+    )
     launch_files = [
         gz_launch,
         rsp_launch,  # Robot state publisher
         aruco_detector,  # Aruco detector node
-        controllers_launch,  # Controllers
+        controllers_delayed,  # Controllers
         rviz,  # Start RViz with nixGL support
+        ekf_node,  # EKF node
     ]
 
     return LaunchDescription(arguments + launch_files)
