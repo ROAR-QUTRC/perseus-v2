@@ -85,11 +85,11 @@ namespace hi_can
             /// @brief Default constructor - zero address, not RTR or error, extended
             constexpr flagged_address_t() = default;
             /// @brief Construct a flagged address from a raw address and flags
-            constexpr flagged_address_t(raw_address_t address, bool is_rtr = false, bool is_error = false, bool is_extended = true)
-                : address(address & (is_extended ? MAX_ADDRESS : MAX_SHORT_ADDRESS)),
-                  is_rtr(is_rtr),
-                  is_error(is_error),
-                  is_extended(is_extended)
+            constexpr flagged_address_t(raw_address_t _address, bool _is_rtr = false, bool _is_error = false, bool _is_extended = true)
+                : address(_address & (_is_extended ? MAX_ADDRESS : MAX_SHORT_ADDRESS)),
+                  is_rtr(_is_rtr),
+                  is_error(_is_error),
+                  is_extended(_is_extended)
             {
             }
 
@@ -165,12 +165,12 @@ namespace hi_can
             /// @brief Check if address matches the filter
             /// @param address Address to check
             /// @return Whether the address matches the filter
-            constexpr bool matches(const flagged_address_t& address) const
+            constexpr bool matches(const flagged_address_t& _address) const
             {
-                return (static_cast<raw_address_t>(address) & mask) == (static_cast<raw_address_t>(this->address) & mask) &&
-                       (this->address.is_extended == address.is_extended) &&
-                       (!should_match_rtr || (this->address.is_rtr == (address.is_rtr))) &&
-                       (!should_match_error || (this->address.is_error == (address.is_error)));
+                return (static_cast<raw_address_t>(address) & mask) == (static_cast<raw_address_t>(_address) & mask) &&
+                       (address.is_extended == _address.is_extended) &&
+                       (!should_match_rtr || (address.is_rtr == (_address.is_rtr))) &&
+                       (!should_match_error || (address.is_error == (_address.is_error)));
             }
 
             constexpr raw_address_t get_masked_address() const
@@ -212,24 +212,24 @@ namespace hi_can
                   parameter((address >> PARAM_ADDRESS_POS) & ((1UL << PARAM_ADDRESS_BITS) - 1))
             {
             }
-            constexpr standard_address_t(const uint8_t& system = 0x00,
-                                         const uint8_t& subsystem = 0x00,
-                                         const uint8_t& device = 0x00,
-                                         const uint8_t& group = 0x00,
-                                         const uint8_t& parameter = 0x00)
-                : system(system),
-                  subsystem(subsystem),
-                  device(device),
-                  group(group),
-                  parameter(parameter)
+            constexpr standard_address_t(const uint8_t& _system = 0x00,
+                                         const uint8_t& _subsystem = 0x00,
+                                         const uint8_t& _device = 0x00,
+                                         const uint8_t& _group = 0x00,
+                                         const uint8_t& _parameter = 0x00)
+                : system(_system),
+                  subsystem(_subsystem),
+                  device(_device),
+                  group(_group),
+                  parameter(_parameter)
             {
             }
-            constexpr standard_address_t(const standard_address_t& device_address, const uint8_t& group, const uint8_t& parameter)
+            constexpr standard_address_t(const standard_address_t& device_address, const uint8_t& _group, const uint8_t& _parameter)
                 : system(device_address.system),
                   subsystem(device_address.subsystem),
                   device(device_address.device),
-                  group(group),
-                  parameter(parameter)
+                  group(_group),
+                  parameter(_parameter)
             {
             }
 
@@ -288,9 +288,9 @@ namespace hi_can
                 /// @brief VESC command packet address
                 struct address_t : public structured_address_t
                 {
-                    address_t(const uint8_t& vesc, const command_id& command)
-                        : vesc(vesc),
-                          command(command)
+                    address_t(const uint8_t& _vesc, const command_id& _command)
+                        : vesc(_vesc),
+                          command(_command)
                     {
                     }
                     /// @brief The VESC device ID
@@ -463,24 +463,24 @@ namespace hi_can
                 /// @brief Padding to fill out the rest of 32 bits so it's aligned
                 const uint8_t _padding : (32 - 5 - 4 - 8 - 8 - 4) = 0;
 
-                address_t(const uint8_t& system = 0x00,
-                          const uint8_t& subsystem = 0x00,
-                          const uint8_t& device = 0x00,
-                          const uint8_t& group = 0x00,
-                          const uint8_t& parameter = 0x00)
-                    : system(system),
-                      subsystem(subsystem),
-                      device(device),
-                      group(group),
-                      parameter(parameter)
+                address_t(const uint8_t& _system = 0x00,
+                          const uint8_t& _subsystem = 0x00,
+                          const uint8_t& _device = 0x00,
+                          const uint8_t& _group = 0x00,
+                          const uint8_t& _parameter = 0x00)
+                    : system(_system),
+                      subsystem(_subsystem),
+                      device(_device),
+                      group(_group),
+                      parameter(_parameter)
                 {
                 }
-                address_t(address_t device_address, const uint8_t& group, const uint8_t& parameter)
+                address_t(address_t device_address, const uint8_t& _group, const uint8_t& _parameter)
                     : system(device_address.system),
                       subsystem(device_address.subsystem),
                       device(device_address.device),
-                      group(group),
-                      parameter(parameter)
+                      group(_group),
+                      parameter(_parameter)
                 {
                 }
 

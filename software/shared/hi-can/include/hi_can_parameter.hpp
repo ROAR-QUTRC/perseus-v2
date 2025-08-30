@@ -116,8 +116,8 @@ namespace hi_can::parameters
         double value = 0;
 
         scaled_int16_t() = default;
-        scaled_int16_t(double value)
-            : value(value)
+        scaled_int16_t(double _value)
+            : value(_value)
         {
         }
         scaled_int16_t(const std::vector<uint8_t>& serialized_data)
@@ -146,8 +146,8 @@ namespace hi_can::parameters
     struct wrapped_value_t
     {
         wrapped_value_t() = default;
-        wrapped_value_t(T value)
-            : value(value)
+        wrapped_value_t(T _value)
+            : value(_value)
         {
         }
         T value{};
@@ -463,9 +463,9 @@ namespace hi_can::parameters
                 struct _motor_speed_t
                 {
                     _motor_speed_t() = default;
-                    _motor_speed_t(bool enable, int16_t speed)
-                        : enable(enable),
-                          speed(speed)
+                    _motor_speed_t(bool _enable, int16_t _speed)
+                        : enable(_enable),
+                          speed(_speed)
                     {
                     }
                     bool enable = 0;
