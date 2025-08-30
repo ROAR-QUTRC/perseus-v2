@@ -12,7 +12,7 @@ from launch.substitutions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
-
+import os  
 
 def generate_launch_description():
     # ARGUMENTS
@@ -86,16 +86,16 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
-
-    aruco_detector = Node(
-        package="perseus_vision",
-        executable="detector_node",
-        name="aruco_detector",
+    teleop_keyboard_controller = Node(
+        package="perseus_teleop",
+        executable="teleop_keyboard",
+        name="teleop_keyboard",
         output="screen",
         parameters=[{"use_sim_time": use_sim_time}],
+        prefix="gnome-terminal --geometry=60x20 -- ",  # Use gnome-terminal instead of xterm
         remappings=[
-            # Example: remap camera topic if needed
-            # ('/camera/image_raw', '/your_camera/image_raw')
+            # Example: remap cmd_vel topic if needed
+            # ('/cmd_vel_out', '/your_robot/cmd_vel')
         ],
     )
 
@@ -123,9 +123,10 @@ def generate_launch_description():
     )
     # Add delay to controllers
     controllers_delayed = TimerAction(
-        period=30.0,  # Wait 3 seconds for Gazebo to fully start
+        period=30.0,  # Wait 30 seconds for Gazebo to fully start
         actions=[controllers_launch]
     )
+
     ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
@@ -137,7 +138,7 @@ def generate_launch_description():
     launch_files = [
         gz_launch,
         rsp_launch,  # Robot state publisher
-        aruco_detector,  # Aruco detector node
+        teleop_keyboard_controller,
         controllers_delayed,  # Controllers
         rviz,  # Start RViz with nixGL support
         ekf_node,  # EKF node
