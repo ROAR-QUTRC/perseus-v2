@@ -599,7 +599,7 @@ Libraries may need internal, private header files - if necessary, these should b
 
 ### Variable Declarations and Naming Standards
 
-#### Capitalisation
+#### Naming Convention
 
 Variables should be named in `snake_case`.
 
@@ -608,6 +608,27 @@ This has changed.
 Previously, the standard was to use `camelCase` and name local static variables with `snake_case` to differentiate them and indicate that they will have different behaviour.
 However, to comply with de facto ROS standards, this has been changed.
 :::
+
+In addition, C++ code in this project is compiled with `-Wshadow`.
+To allow for situations where you want to have a parameter in a constructor with the same name as a class member (for example, constructor initializer lists), it is acceptable to prefix the _parameter_ name with an underscore as needed.
+
+:::{important}
+This should only be needed for structs!
+If you're mixing public and private member _variables_, you're probably doing something wrong.
+In general, structs should have fully public member variables, and classes fully private or protected (and underscore prefixed).
+With _both_ public and private variables, and the need to prefix parameters with underscores, it becomes highly unclear what variable is associated where, so try to avoid that.
+:::
+
+For example:
+
+```cpp
+struct foo_t {
+    foo_t(int _bar) : bar(_bar) {}
+
+    int bar;
+};
+
+```
 
 #### Variable Type Declarations
 
