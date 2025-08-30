@@ -12,12 +12,12 @@ from launch.substitutions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
-import os  
+
 
 def generate_launch_description():
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
-    
+
     arguments = [
         DeclareLaunchArgument(
             "use_sim_time",
@@ -124,7 +124,7 @@ def generate_launch_description():
     # Add delay to controllers
     controllers_delayed = TimerAction(
         period=30.0,  # Wait 30 seconds for Gazebo to fully start
-        actions=[controllers_launch]
+        actions=[controllers_launch],
     )
 
     ekf_node = Node(
@@ -133,7 +133,7 @@ def generate_launch_description():
         name="ekf_filter_node",
         output="screen",
         parameters=[ekf_config_file],
-        remappings=[('/odometry/filtered', '/odom')] # Remap output to /odom
+        remappings=[("/odometry/filtered", "/odom")],  # Remap output to /odom
     )
     launch_files = [
         gz_launch,
