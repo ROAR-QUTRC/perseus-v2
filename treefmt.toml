@@ -134,6 +134,11 @@ excludes = [
     "*.ico",
     "*.pdf",
     "*sdkconfig*",
+    "software/ros_ws/src/**/meshes/**",
+    "*.dae",
+    "*.stl",
+    "*.step",
+    "*.3mf",
     "hardware/**",
 ]
 on-unmatched = "warn"

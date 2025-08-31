@@ -61,6 +61,12 @@
         "*.ico"
         "*.pdf"
         "*sdkconfig*"
+        # meshes
+        "software/ros_ws/src/**/meshes/**"
+        "*.dae"
+        "*.stl"
+        "*.step"
+        "*.3mf"
         # PCBs (KiCAD)
         "hardware/**"
       ];
