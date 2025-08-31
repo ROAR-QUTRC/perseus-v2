@@ -47,9 +47,9 @@ These prefixes follow the [Conventional Branch](https://conventional-branch.gith
 #### Acceptable Examples of Branch names
 
 ```
-- feat/c1_lidar
-- test/simulation-unit-tests
-- docs/update-to-getting-started
+feat/c1_lidar
+test/simulation-unit-tests
+docs/update-to-getting-started
 ```
 
 #### Incorrect Examples
@@ -68,47 +68,66 @@ Professional commit messages are essential for maintaining a clear project histo
 It is possible to run 'git log --oneline' at the terminal to see a summary of the latest commits. For example:
 
 ```
-0290680 docs: Added a tutorial on how to launch the simulation
+0290680 docs(simulation): add tutorial on launching the simulation
 4c6fd68 Merge pull request #217 from ROAR-QUTRC/feat/livox-fixing
-b970635 (origin/feat/livox-fixing, feat/livox-fixing) chore: Format and lint
-ca97a15 Updated Livox driver to run on /tmp
-d2cb256 chore: Format and lint
-5136806 Fixed Livox Launch
-3fad5bd (origin/i2c-node) Merge pull request #216 from ROAR-QUTRC/feat/web-ui
-74913ae fix: typo
+b970635 chore(perseus_sensors): format and lint
+ca97a15 fix(perseus_sensors): update Livox driver to run on /tmp
+d2cb256 chore(perseus_sensors): format and lint
+5136806 fix(perseus_sensors): resolve Livox launch issues
+3fad5bd Merge pull request #216 from ROAR-QUTRC/feat/web-ui
+74913ae fix(docs): correct typo
 2fe1d6d Merge pull request #215 from ROAR-QUTRC/clean/nuking
-f99acf2 Removed old camera code
-e69a4db chore: Format and lint
-93e47cf Updated power on steps and added note about zellij use
-10c3757 Cleaning ros_ws
-ce2eed4 chore: Format and lint
-670896f Fixed typos and added new docs
+f99acf2 refactor(perseus_sensors): remove old camera code
+e69a4db chore(ros_ws): format and lint
+93e47cf docs(setup): update power on steps and add zellij notes
+10c3757 chore(ros_ws): clean up workspace
+ce2eed4 chore(ros_ws): format and lint
+670896f docs: fix typos and add new documentation
 ```
 
 By keeping the first line of the commit message under 72 characters it keeps this summary functional and practical to view.
 
 ### Commit Message Structure
 
-Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format:
+We follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification, which provides a lightweight convention for creating an explicit commit history. This format makes it easier to write automated tools on top of the commit history and enables automatic version bumping and changelog generation.
 
 ```
-<type>[package]: <description>
+<type>(<scope>): <description>
 
 [optional body]
 
 ```
 
-### Commit Packages Description
+For full details on the specification, please refer to the [Conventional Commits website](https://www.conventionalcommits.org/).
 
-As a convention in this project, each commit message should start with the relevant part of the codebase being amended
+### Commit Types
 
-Examples include
+Use these standard commit types as defined by [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat` - New features or functionality
+- `fix` - Bug fixes
+- `docs` - Documentation changes
+- `style` - Code style changes (formatting, semicolons, etc.)
+- `refactor` - Code refactoring without changing functionality
+- `perf` - Performance improvements
+- `test` - Adding or updating tests
+- `build` - Changes to build system or dependencies
+- `ci` - CI/CD configuration changes
+- `chore` - Maintenance tasks
+
+### Commit Scopes
+
+The scope should indicate the part of the codebase being changed:
 
 ```
-- perseus_lite: xxxxxxxx
-- docs: xxxxxxxx
-- hardware: xxxxxxxx
-- perseus_sensors: xxxxxxx
+- perseus_lite
+- perseus_sensors
+- perseus_nav
+- perseus_control
+- hardware
+- firmware
+- web-ui
+- docs
 ```
 
 ### Writing Effective Commit Messages
@@ -119,16 +138,25 @@ Examples include
 2. **No full stop at the end**
 3. **Be specific and descriptive**
 
-#### Acceptable Commit Message Example
+#### Acceptable Commit Message Examples
 
 Please note the use of a line to separate the initial short summary from the body
 
 ```
-perseus_sensors: Updated M2M2 lidar package
+feat(perseus_sensors): add M2M2 lidar support
 
 - corrected the number of points published to /scan
 - allowed param to select applicable USB device
 - updated documentation with correct launch file
+```
+
+Other examples:
+
+```
+fix(perseus_control): resolve motor timeout issue
+docs(perseus_nav): update obstacle avoidance documentation
+refactor(web-ui): simplify dashboard component structure
+test(perseus_lite): add unit tests for CAN communication
 ```
 
 #### Examples of Poor Commit Messages to Avoid
@@ -136,13 +164,15 @@ perseus_sensors: Updated M2M2 lidar package
 ```
 added stuff                    // Completely uninformative
 late night coding              // Unprofessional and uninformative
-fix                            // What was fixed?
-update                         // What was updated?
-minor changes                  // What changes?
+fix                            // Missing type, scope, and description
+update                         // Missing type, scope, and description
+minor changes                  // Not following format, uninformative
 oops                           // Unprofessional
 WIP                            // Work in progress - should not be in main history
 asdf                           // Random characters
-quick fix                      // What was fixed?
+quick fix                      // Not following format, uninformative
+perseus_sensors: updated       // Missing type, vague description
+Fixed bug                      // Missing type and scope, not descriptive
 ```
 
 ### The Commit Body (Optional)
@@ -163,7 +193,7 @@ Use the commit body to add relevant detail if someone needed to learn more. Best
 #### Example with Body
 
 ```
-feat: add user authentication system
+feat(web-ui): add user authentication system
 
 Implemented JWT-based authentication with refresh token support.
 This change enables secure user sessions and API access control.
@@ -183,7 +213,15 @@ Relates to #123
 Follow the same conventions as commit messages:
 
 ```
-<type>[optional scope]: <description>
+<type>(<scope>): <description>
+```
+
+Examples:
+
+```
+feat(perseus_nav): add autonomous navigation mode
+fix(firmware): resolve CAN bus communication issues
+docs(setup): improve installation instructions
 ```
 
 ### Pull Request Description
@@ -294,11 +332,11 @@ git checkout -b feat/user-dashboard
 
 # Make changes and commit
 git add .
-git commit -m "feat: add basic user dashboard layout"
+git commit -m "feat(web-ui): add basic user dashboard layout"
 
 # Continue development
 git add .
-git commit -m "feat: implement dashboard data fetching"
+git commit -m "feat(web-ui): implement dashboard data fetching"
 
 # Update from main before PR
 git checkout main
@@ -334,3 +372,9 @@ git push origin feat/user-dashboard
 ## Integration with Development Standards
 
 By following these GitHub standards, you ensure that the project maintains a professional, organised and collaborative development environment that supports long-term maintainability and team productivity.
+
+## Additional Resources
+
+- [Conventional Commits Specification](https://www.conventionalcommits.org/) - Full specification and examples
+- [Conventional Branch Naming](https://conventional-branch.github.io/) - Branch naming conventions
+- [GitHub Issue Templates](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository) - Setting up issue templates
