@@ -43,6 +43,29 @@ else()
     FATAL_ERROR "ONNX Runtime not found, please install or set paths manually")
 endif()
 
+# Enable response files to avoid "Argument list too long" errors
+set(CMAKE_C_USE_RESPONSE_FILE_FOR_OBJECTS 1)
+set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_OBJECTS 1)
+set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES 1)
+set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES 1)
+
+# Set the C++ standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Add debug flags for better debugging
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_compile_options(-g -O0)
+  # Temporarily disable AddressSanitizer in Nix environment
+  # add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+  # add_link_options(-fsanitize=address)
+endif()
+
+# For release builds, still include debug info for stack traces
+if(CMAKE_BUILD_TYPE MATCHES "Rel.*")
+  add_compile_options(-g)
+endif()
+
 # Add ArucoDetector library
 add_library(aruco_detector_lib src/aruco_detector.cpp)
 
@@ -79,8 +102,9 @@ ament_target_dependencies(
 # Cube detector node (YOLO + ONNX)
 add_executable(cube_detector src/cube_detector.cpp)
 
-set_target_properties(cube_detector PROPERTIES CXX_STANDARD 17
-                                               CXX_STANDARD_REQUIRED ON)
+# Use the same C++ standard as the rest of the project
+# set_target_properties(cube_detector PROPERTIES CXX_STANDARD 17
+#                                                CXX_STANDARD_REQUIRED ON)
 
 target_include_directories(cube_detector PUBLIC ${OpenCV_INCLUDE_DIRS}
                                                 ${ONNXRUNTIME_INCLUDE_DIR})
@@ -100,9 +124,9 @@ ament_target_dependencies(
   ament_index_cpp
   image_transport)
 
-# Linker flags for ABI stuff (if needed)
-target_link_options(cube_detector PRIVATE "-Wl,--allow-multiple-definition"
-                    "-Wl,--unresolved-symbols=ignore-in-shared-libs")
+# Remove dangerous linker flags
+# target_link_options(cube_detector PRIVATE "-Wl,--allow-multiple-definition"
+#                     "-Wl,--unresolved-symbols=ignore-in-shared-libs")
 
 # =============================
 # Install
