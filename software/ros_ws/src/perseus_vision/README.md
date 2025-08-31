@@ -4,10 +4,10 @@ To build the package:
 nix-shell -p gcc14 onnxruntime --run "colcon build --packages-select perseus_vision"
 ```
 
-To run the node:
+To run the nodes:
 
 ```sh
-nix-shell -p gcc14 onnxruntime --run "source install/setup.bash && ros2 run perseus_vision cube_detector"
+nix-shell -p gcc14 onnxruntime --run "source install/setup.bash && ros2 launch perseus_vision vision.launch.py"
 ```
 
 ## Special Thanks
