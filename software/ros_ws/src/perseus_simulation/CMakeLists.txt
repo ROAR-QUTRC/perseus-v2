@@ -45,6 +45,28 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS)
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS ament_cmake)
 
+# TESTING
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(GTest REQUIRED)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
+
+  enable_testing()
+
+  add_executable(gz_bridge_config_test tests/gz_bridge_config_test.cpp)
+  target_link_libraries(gz_bridge_config_test GTest::gtest_main
+                        ${YAML_CPP_LIBRARIES})
+  target_include_directories(gz_bridge_config_test
+                             PUBLIC ${YAML_CPP_INCLUDE_DIRS})
+  target_compile_options(gz_bridge_config_test PUBLIC ${YAML_CPP_CFLAGS_OTHER})
+
+  include(GoogleTest)
+  gtest_discover_tests(gz_bridge_config_test)
+
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
