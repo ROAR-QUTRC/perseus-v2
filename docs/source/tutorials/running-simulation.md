@@ -69,7 +69,7 @@ Once the simulation is running and the controller is active, you can control the
 nix develop .#simulation
 cd software/ros_ws
 source install/setup.bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cmd_vel_out
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cmd_vel_out -p stamped:=true
 ```
 
 ## Troubleshooting
