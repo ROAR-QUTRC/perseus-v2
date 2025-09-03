@@ -19,7 +19,7 @@
     <!-- CHASSIS -->
     <xacro:chassis />
     <joint name="${prefix}chassis_joint" type="fixed">
-      <origin xyz="0.21 0.0 0.35" rpy="0.0 0.0 -${pi/2}"/>
+      <origin xyz="0.21 0.0 0.35" rpy="0.0 0.0 0.0"/>
       <parent link="${prefix}base_link"/>
       <child link="${prefix}chassis"/>
     </joint>
