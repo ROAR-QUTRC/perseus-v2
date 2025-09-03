@@ -22,7 +22,7 @@
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
         <geometry>
-          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/rocker_${side}.dae"/>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/rocker_${side}.dae"/>
         </geometry>
       </visual>
       <collision>

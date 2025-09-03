@@ -16,7 +16,7 @@
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0 0.0 ${-pi/2}"/>
         <geometry>
-          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/chassis.dae"/>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
         </geometry>
       </visual>
       
@@ -40,14 +40,14 @@
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
         <geometry>
-          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/flange_bearing.dae"/>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
         </geometry>
       </visual>
       
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
         <geometry>
-          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/flange_bearing.dae"/>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
         </geometry>
       </collision>
     </link>
@@ -70,7 +70,7 @@
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <geometry>
-          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/differential_bar.dae"/>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
         </geometry>
       </visual>
       
