@@ -78,6 +78,18 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cm
 
 If the rover doesn't respond to keyboard commands:
 
+0. **Workaround for broken ros controller**:
+
+There is a bug being investigated where the ros2 controller daemon is non-responsive.
+
+Instead of activating the controller with "ros2 control set_controller_state diff_drive_base_controller active" use:
+
+```bash
+ros2 service call /controller_manager/switch_controller controller_manager_msgs/srv/SwitchController "{activate_controllers: ['diff_drive_base_controller'], deactivate_controllers: [], strictness: 1, activate_asap: false, timeout: {sec: 5, nanosec: 0}}"
+```
+
+This sets the state directly.
+
 1. **Check if the controller is active**:
 
    ```bash
