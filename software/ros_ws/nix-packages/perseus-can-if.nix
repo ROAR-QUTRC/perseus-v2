@@ -6,7 +6,6 @@
   backward-ros,
   hi-can-raw,
   nlohmann_json,
-  actuator-msgs,
   rclcpp,
   sensor-msgs,
 }:
@@ -19,13 +18,9 @@ buildRosPackage rec {
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
-
     backward-ros
     hi-can-raw
     nlohmann_json
-    actuator-msgs
-    backward-ros
-    hi-can-raw
     rclcpp
     sensor-msgs
   ];
