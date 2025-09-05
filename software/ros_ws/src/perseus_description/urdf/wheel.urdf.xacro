@@ -1,24 +1,45 @@
 <?xml version="1.0"?>
 <robot name="wheel" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="wheel" params="prefix:=^ side:=^ end:=^">
+    <!-- WHEEL PROPERTIES -->
+      <xacro:property name="track_width" value="0.1" />
+      <xacro:property name="wheel_radius" value="0.05" />
+      <xacro:property name="wheel_mass" value="1.0" />
+      <xacro:property name="wheel_base" value="1.0" />
+      
     <link name="${prefix}${end}_${side}_wheel">
       <inertial>
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <xacro:if value="${side == 'left'}">
+          <origin xyz="0.0 0.125  0.0" rpy="0.0 0.0 0"/>
+        </xacro:if>
+        <xacro:if value="${side == 'right'}">
+          <origin xyz="0.0 -0.125  0.0" rpy="0.0 0.0 0.0"/>
+        </xacro:if>
         <mass value="1.0"/>        
         <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
       </inertial>
 
       <visual>
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <xacro:if value="${side == 'left'}">
+          <origin xyz="0.0 0.125  0.0" rpy="0.0 0.0 ${pi}"/>
+        </xacro:if>
+        <xacro:if value="${side == 'right'}">
+          <origin xyz="0.0 -0.125  0.0" rpy="0.0 0.0 0.0"/>
+        </xacro:if>
         <geometry>
           <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
         </geometry>
       </visual>
 
       <collision>
-        <origin xyz="0.0 -0.015 0.0" rpy="1.570796 0.0 0.0"/>
+        <xacro:if value="${side == 'left'}">
+          <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
+        </xacro:if>
+        <xacro:if value="${side == 'right'}">
+          <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        </xacro:if>
         <geometry>
-          <cylinder length="0.115" radius="0.145" />
+          <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
         </geometry>
       </collision>
     </link>
@@ -59,7 +80,7 @@
       </xacro:if>
       <parent link="${prefix}${end}_${side}_motor"/>
       <child link="${prefix}${end}_${side}_wheel"/>
-      <origin xyz="-0.125 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
+      <origin xyz="0.0 0 0.0" rpy="0.0 0.0 0"/>
       <dynamics damping="0.2" friction="0.3"/>
     </joint>
   </xacro:macro>
