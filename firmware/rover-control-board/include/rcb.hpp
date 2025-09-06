@@ -9,9 +9,13 @@
 #include <atomic>
 #include <cstdint>
 
-// rover libs
+// rover libs - old canbus
+/*
 #include <canlib.hpp>
 #include <canlib_power.hpp>
+*/
+// new canbus
+#include <hi_can_twai.hpp>
 
 // PRECHARGING MATH
 // the timer value is the time to precharge for, in tenths of a ms - 100 = 10ms
