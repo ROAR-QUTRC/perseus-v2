@@ -76,7 +76,7 @@
         <axis xyz="0 1 0" rpy="0 0 0"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
-        <axis xyz="0 -1 0" rpy="0 0 0"/>
+        <axis xyz="0 1 0" rpy="0 0 0"/>
       </xacro:if>
       <parent link="${prefix}${end}_${side}_motor"/>
       <child link="${prefix}${end}_${side}_wheel"/>
