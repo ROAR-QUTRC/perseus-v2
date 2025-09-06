@@ -334,10 +334,37 @@ namespace hi_can
                 /// @brief The power distribution subsystem ID
                 constexpr uint8_t SUBSYSTEM_ID = 0x01;
                 /// @brief List of power distribution device IDs
-                enum class device
+                namespace rover_control_board
                 {
-                    ROVER_CONTROL_BOARD = 0,
-                };
+                    constexpr uint8_t DEVICE_ID = 0x00;
+                    enum class group
+                    {
+                        CONTACTOR = 0x00,
+                        COMPUTE_BUS = 0x01,
+                        DRIVE_BUS = 0x02,
+                        AUX_BUS = 0x03,
+                        SPARE_BUS = 0x04,
+                    };
+                    // PARAMETER GROUPS
+                    namespace contactor
+                    {
+                        enum class parameter
+                        {
+                            SHUTDOWN = 0x00
+                        };
+                    }
+                    namespace power_bus
+                    {
+                        enum class parameter
+                        {
+                            CONTROL_IMMEDIATE = 0x00,
+                            CONTROL_SCHEDULED = 0x01,
+                            CURRENT_LIMIT = 0x02,
+                            POWER_STATUS = 0x03,
+                        };
+                    }
+                }
+
             }
         }
         /// @brief Namespace containing all addresses in the compute system

@@ -183,7 +183,7 @@ void CanlibPowerBusParameterGroup::_scheduledDataCallback(canlib_address address
     if (data.bus_off_time || data.bus_on_time)
         xTimerReset(_oneSecondTimer, 0);
 }
-void CanlibPowerBusParameterGroup::_limitDataCallback(canlib_address address)
+void CanlibPowerBusParameterGroup::_limitDataCallback(standard_address_t address)
 {
     uint32_t data = CONFIG_DEFAULT_SOFTWARE_FUSE_CURRENT;
     if (canlibGetParameter(address, data) != CANLIB_OK)

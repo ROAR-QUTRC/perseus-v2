@@ -5,7 +5,9 @@
 #include <functional>
 
 // rover libs
-#include <canlib.hpp>
+// #include <canlib.hpp>
+
+#include <hi_can.hpp>
 
 // core libs
 #include <driver/gpio.h>
@@ -88,15 +90,15 @@ struct canlib_power_control_scheduled_data
     uint8_t bus_on_time = 0;   // if a non-0 value is received, turn on bus in that many seconds
 };
 
-class CanlibPowerBusParameterGroup : public CanlibParameterGroup
+class CanlibPowerBusParameterGroup : public hi_can::parameters::ParameterGroup
 {
 public:
     static bool statusIsError(canlib_power_status status);
 
     CanlibPowerBusParameterGroup(uint8_t paramGroup,
-                                 std::function<void(bool)> busStateHandler = CANLIB_NO_HANDLER,
-                                 std::function<void(void)> clearErrorHandler = CANLIB_NO_HANDLER,
-                                 std::function<void(uint32_t)> currentLimitHandler = CANLIB_NO_HANDLER);
+                                 std::function<void(bool)> busStateHandler = nullptr,
+                                 std::function<void(void)> clearErrorHandler = nullptr,
+                                 std::function<void(uint32_t)> currentLimitHandler = nullptr);
     virtual ~CanlibPowerBusParameterGroup();
 
     void setBusStateHandler(std::function<void(bool)> busStateHandler);
@@ -114,9 +116,9 @@ public:
 private:
     static void _oneSecondTimerCallback(TimerHandle_t timer);
 
-    void _immediateDataCallback(canlib_address address);
-    void _scheduledDataCallback(canlib_address address);
-    void _limitDataCallback(canlib_address address);
+    void _immediateDataCallback(standard_address_t address);
+    void _scheduledDataCallback(standard_address_t address);
+    void _limitDataCallback(standard_address_t address);
 
     void _busSetOn(bool state);
 
