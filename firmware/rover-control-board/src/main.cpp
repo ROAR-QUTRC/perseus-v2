@@ -73,6 +73,8 @@ const std::vector<std::tuple<std::string, power::distribution::rover_control_boa
     {"spare", power::distribution::rover_control_board::group::SPARE_BUS, spare_bus},
 };
 
+bool btnState = true;
+
 constexpr standard_address_t RCB_DEVICE_ADDRESS{
     power::SYSTEM_ID,
     power::distribution::SUBSYSTEM_ID,
