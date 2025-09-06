@@ -1,6 +1,5 @@
 from launch import LaunchDescription
 from launch.actions import (
-    DeclareLaunchArgument,
     IncludeLaunchDescription,
 )
 from launch.substitutions import (
@@ -11,11 +10,9 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import ExecuteProcess
 from launch_ros.substitutions import FindPackageShare
 
+
 def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
-    hardware_plugin = LaunchConfiguration("hardware_plugin", default="dummy")
-    can_bus = LaunchConfiguration("can_bus", default="")
-
 
     rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -35,8 +32,7 @@ def generate_launch_description():
         }.items(),
     )
 
-
-   # RViz with nixGL support
+    # RViz with nixGL support
     rviz_config = PathJoinSubstitution(
         [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
     )
@@ -62,7 +58,9 @@ def generate_launch_description():
         },
     )
 
-    return LaunchDescription([
-        rsp_launch,
-        rviz,
-    ])
+    return LaunchDescription(
+        [
+            rsp_launch,
+            rviz,
+        ]
+    )
