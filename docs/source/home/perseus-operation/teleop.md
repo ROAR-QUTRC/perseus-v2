@@ -148,22 +148,22 @@ Some example runs:
 
 Default: Xbox controller, wireless
 ```console
-nix run .#xbox_controller
+nix run .#generic_controller
 ```
 
 Xbox controller, wired
 ```console
-nix run .#xbox_controller -- type:=xbox wireless:=false
+nix run .#generic_controller -- type:=xbox wireless:=false
 ```
 
 8BitDo controller, wireless
 ```console
-nix run .#xbox_controller -- type:=8bitdo wireless:=true
+nix run .#generic_controller -- type:=8bitdo wireless:=true
 ```
 
 Use a custom config file
 ```console
-nix run .#xbox_controller -- config:=/absolute/path/to/my_controller.yaml
+nix run .#generic_controller -- config:=/absolute/path/to/my_controller.yaml
 ```
 
 
