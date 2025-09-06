@@ -3,7 +3,7 @@ import config from "./config.json";
 import fs, { read, readdirSync, watch } from "node:fs";
 import { networkInterfaces } from "os";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
-import Watcher from 'watcher';
+import Watcher from "watcher";
 
 type videoTransformType =
   | "none"
@@ -73,24 +73,21 @@ const formatDeviceName = (device: string): string =>
   // @ts-expect-error replace all is not recognised
   device.replace("-video-index0", "").replace("usb-", "").replaceAll("_", " ");
 
-  // Mount file watcher
-const watcher = new Watcher(
-  '/dev/', 
-  {
-    debounce: 100,
-    recursive: true,
-    renameDetection: true,
-    depth: 7,
+// Mount file watcher
+const watcher = new Watcher("/dev/", {
+  debounce: 100,
+  recursive: true,
+  renameDetection: true,
+  depth: 7,
 
-    // ignore all paths except for v4l folder
-  },
-);
+  // ignore all paths except for v4l folder
+});
 
-watcher.on('all', (event, targetPath, targetPathNext) => {
-  if (targetPath.includes('v4l'))
+watcher.on("all", (event, targetPath, targetPathNext) => {
+  if (targetPath.includes("v4l"))
     console.log(event, targetPath, targetPathNext);
-  if (targetPath.includes('v'))
-    console.log('device: ', event, targetPath, targetPathNext);
+  if (targetPath.includes("v"))
+    console.log("device: ", event, targetPath, targetPathNext);
 });
 
 // let cameraWatcher: fs.FSWatcher | null = null;
