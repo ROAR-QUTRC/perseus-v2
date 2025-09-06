@@ -23,17 +23,17 @@ namespace hi_can
 
         /// @brief Receives all packets from the CAN bus buffer
         /// @param block Whether to block until at least one packet is received
-        virtual void receiveAll(bool block = true);
+        virtual void receive_all(bool block = true);
 
         /// @brief Sets a callback to be called when a packet is received
         /// @param callback Callback to use
-        virtual void setReceiveCallback(const packet_callback_t& callback) { _receiveCallback = callback; };
+        virtual void set_receive_callback(const packet_callback_t& callback) { _receive_callback = callback; };
         /// @brief Clears the receive callback
-        void clearReceiveCallback() { setReceiveCallback(nullptr); }
+        void clear_receive_callback() { set_receive_callback(nullptr); }
 
     protected:
         /// @brief The callback to call when a packet is received
-        packet_callback_t _receiveCallback = nullptr;
+        packet_callback_t _receive_callback = nullptr;
     };
 
     /// @brief A variant of @ref CanInterface which contains a whitelist of filters. In the event that there are no filters, all packets are accepted.
@@ -42,23 +42,23 @@ namespace hi_can
     public:
         /// @brief Add a filter to the interface
         /// @return Itself for chaining
-        virtual FilteredCanInterface& addFilter(const addressing::filter_t& filter);
+        virtual FilteredCanInterface& add_filter(const addressing::filter_t& filter);
         /// @brief Remove a filter from the interface
         /// @return Itself for chaining
-        virtual FilteredCanInterface& removeFilter(const addressing::filter_t& filter);
+        virtual FilteredCanInterface& remove_filter(const addressing::filter_t& filter);
 
         /// @brief Get the currently active filters
         /// @return The set of active filters
-        virtual const std::set<addressing::filter_t>& getFilters() const { return _filters; }
+        virtual const std::set<addressing::filter_t>& get_filters() const { return _filters; }
 
         /// @brief Find the first filter which matches the given address
         /// @param address The address to search for
         /// @return The matching filter if found, otherwise std::nullopt
-        virtual std::optional<addressing::filter_t> findMatchingFilter(const addressing::flagged_address_t& address) const;
+        virtual std::optional<addressing::filter_t> find_matching_filter(const addressing::flagged_address_t& address) const;
         /// @brief  Check if an address matches any of the filters
         /// @param address The address to check
         /// @return Whether the address matches a filter
-        virtual bool addressMatchesFilters(const addressing::flagged_address_t& address) const;
+        virtual bool address_matches_filters(const addressing::flagged_address_t& address) const;
 
     protected:
         /// @brief List of currently applied filters
@@ -80,7 +80,7 @@ namespace hi_can
         void transmit(const Packet& packet) override { _interface->transmit(packet); }
         std::optional<Packet> receive(bool blocking = false) override;
 
-        // note: no need to override setReceiveCallback since that's based on the receive method
+        // note: no need to override set_receive_callback since that's based on the receive method
 
     private:
         /// @brief The interface to use for I/O
