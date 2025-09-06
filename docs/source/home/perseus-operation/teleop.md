@@ -138,34 +138,37 @@ To run the controller there are certain things to understand before that happens
 
 The launch file accepts three parameters:
 
-| Argument   | Default   | Description |
-|------------|-----------|-------------|
-| `type`     | `xbox`    | Controller type. Options: `xbox`, `8bitdo`. |
-| `wireless` | `true`    | Connection type. Set `true` for wireless, `false` for wired. |
-| `config`   | *(empty)* | Path to a custom YAML config file. If provided, this overrides both `type` and `wireless`. |
+| Argument   | Default   | Description                                                                                |
+| ---------- | --------- | ------------------------------------------------------------------------------------------ |
+| `type`     | `xbox`    | Controller type. Options: `xbox`, `8bitdo`.                                                |
+| `wireless` | `true`    | Connection type. Set `true` for wireless, `false` for wired.                               |
+| `config`   | _(empty)_ | Path to a custom YAML config file. If provided, this overrides both `type` and `wireless`. |
 
 Some example runs:
 
 Default: Xbox controller, wireless
+
 ```console
 nix run .#generic_controller
 ```
 
 Xbox controller, wired
+
 ```console
 nix run .#generic_controller -- type:=xbox wireless:=false
 ```
 
 8BitDo controller, wireless
+
 ```console
 nix run .#generic_controller -- type:=8bitdo wireless:=true
 ```
 
 Use a custom config file
+
 ```console
 nix run .#generic_controller -- config:=/absolute/path/to/my_controller.yaml
 ```
-
 
 ### Safe Operation
 
