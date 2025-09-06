@@ -6,7 +6,12 @@
     <link name="${prefix}${end}_${side}_motor">
       <inertial>
         <!-- moving origin has no perceivable impact-->
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <xacro:if value="${side == 'left'}">
+          <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
+        </xacro:if>
+        <xacro:if value="${side == 'right'}">
+          <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+        </xacro:if>
         <mass value="5.236579"/>
         <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
       </inertial>
