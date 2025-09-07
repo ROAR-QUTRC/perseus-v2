@@ -1,8 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import (
-    IncludeLaunchDescription,
-    DeclareLaunchArgument
-)
+from launch.actions import IncludeLaunchDescription
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
@@ -10,6 +7,7 @@ from launch.substitutions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import ExecuteProcess
 from launch_ros.substitutions import FindPackageShare
+
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
@@ -72,7 +70,8 @@ def generate_launch_description():
         launch_arguments={
             "use_sim_time": use_sim_time,
             "launch_controller_manager": "false",
-        }.items(),)
+        }.items(),
+    )
 
     return LaunchDescription(
         [
