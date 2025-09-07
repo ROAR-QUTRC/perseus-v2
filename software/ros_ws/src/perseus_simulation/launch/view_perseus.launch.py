@@ -1,6 +1,7 @@
 from launch import LaunchDescription
 from launch.actions import (
     IncludeLaunchDescription,
+    DeclareLaunchArgument
 )
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -9,7 +10,6 @@ from launch.substitutions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import ExecuteProcess
 from launch_ros.substitutions import FindPackageShare
-
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
@@ -57,10 +57,27 @@ def generate_launch_description():
             "RMW_QOS_POLICY_DEPTH": "100",
         },
     )
+    controllers_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus"),
+                        "launch",
+                        "controllers.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "launch_controller_manager": "false",
+        }.items(),)
 
     return LaunchDescription(
         [
             rsp_launch,
             rviz,
+            controllers_launch,
         ]
     )
