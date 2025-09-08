@@ -3,8 +3,11 @@
 
 
 <link name="${prefix}front_left_wheel">
-  <!-- <inertial>
-  </inertial> -->
+  <inertial>
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <mass value="1.0"/>        
+    <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
   <visual>
     <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 ${pi}"/>
     <geometry>
@@ -21,8 +24,11 @@
 
 
 <link name="${prefix}front_right_wheel">
-  <!-- <inertial>
-  </inertial> -->
+  <inertial>
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <mass value="1.0"/>        
+    <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
   <visual>
       <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 0.0"/>
 
@@ -40,8 +46,11 @@
 </link>
 
 <link name="${prefix}rear_left_wheel">
-  <!-- <inertial>
-  </inertial> -->
+  <inertial>
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <mass value="1.0"/>        
+    <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
   <visual>
       <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 ${pi}"/>
 
@@ -59,8 +68,11 @@
 </link>
 
 <link name="${prefix}rear_right_wheel">
-  <!-- <inertial>
-  </inertial> -->
+  <inertial>
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <mass value="1.0"/>        
+    <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
   <visual>
       <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 0.0"/>
 
@@ -78,5 +90,112 @@
 </link>
 
 
+<gazebo reference="${prefix}front_left_wheel">
+  <!-- TODO: Fix the material tag (this isn't the proper way to do it, and spits out warnings) -->
+  <material>Gazebo/Orange</material>
+  <!-- see http://sdformat.org/spec?ver=1.12&elem=collision -->
+  <collision>
+    <surface>
+        <friction>
+            <ode>
+                <!--
+                In this case, the wheels need lower sideways than forwards coefficients of friction
+                so that the rover can turn (skid steer) -->
+                <!-- forward coefficient of friction -->
+                <mu>0.3</mu>
+                <!-- perpendicular coefficient of friction -->
+                <mu2>1</mu2>
+                <!--
+                However, since mu/mu2 are normally relative to world coordinates,
+                the rover would only be able to turn 90 degrees either way before they swapped, making turning impossible.
+                To solve this, we need to specify the direction that mu/mu2 are relative to.
+                -->
+                <fdir1>1 0 0</fdir1>
+            </ode>
+        </friction>
+    </surface>
+  </collision>
+</gazebo>
+
+
+<gazebo reference="${prefix}front_right_wheel">
+  <!-- TODO: Fix the material tag (this isn't the proper way to do it, and spits out warnings) -->
+  <material>Gazebo/Orange</material>
+  <!-- see http://sdformat.org/spec?ver=1.12&elem=collision -->
+  <collision>
+    <surface>
+        <friction>
+            <ode>
+                <!--
+                In this case, the wheels need lower sideways than forwards coefficients of friction
+                so that the rover can turn (skid steer) -->
+                <!-- forward coefficient of friction -->
+                <mu>0.3</mu>
+                <!-- perpendicular coefficient of friction -->
+                <mu2>1</mu2>
+                <!--
+                However, since mu/mu2 are normally relative to world coordinates,
+                the rover would only be able to turn 90 degrees either way before they swapped, making turning impossible.
+                To solve this, we need to specify the direction that mu/mu2 are relative to.
+                -->
+                <fdir1>1 0 0</fdir1>
+            </ode>
+        </friction>
+    </surface>
+  </collision>
+</gazebo>
+
+<gazebo reference="${prefix}rear_right_wheel">
+  <!-- TODO: Fix the material tag (this isn't the proper way to do it, and spits out warnings) -->
+  <material>Gazebo/Orange</material>
+  <!-- see http://sdformat.org/spec?ver=1.12&elem=collision -->
+  <collision>
+    <surface>
+        <friction>
+            <ode>
+                <!--
+                In this case, the wheels need lower sideways than forwards coefficients of friction
+                so that the rover can turn (skid steer) -->
+                <!-- forward coefficient of friction -->
+                <mu>0.3</mu>
+                <!-- perpendicular coefficient of friction -->
+                <mu2>1</mu2>
+                <!--
+                However, since mu/mu2 are normally relative to world coordinates,
+                the rover would only be able to turn 90 degrees either way before they swapped, making turning impossible.
+                To solve this, we need to specify the direction that mu/mu2 are relative to.
+                -->
+                <fdir1>1 0 0</fdir1>
+            </ode>
+        </friction>
+    </surface>
+  </collision>
+</gazebo>
+<gazebo reference="${prefix}rear_left_wheel">
+  <!-- TODO: Fix the material tag (this isn't the proper way to do it, and spits out warnings) -->
+  <material>Gazebo/Orange</material>
+  <!-- see http://sdformat.org/spec?ver=1.12&elem=collision -->
+  <collision>
+    <surface>
+        <friction>
+            <ode>
+                <!--
+                In this case, the wheels need lower sideways than forwards coefficients of friction
+                so that the rover can turn (skid steer) -->
+                <!-- forward coefficient of friction -->
+                <mu>0.3</mu>
+                <!-- perpendicular coefficient of friction -->
+                <mu2>1</mu2>
+                <!--
+                However, since mu/mu2 are normally relative to world coordinates,
+                the rover would only be able to turn 90 degrees either way before they swapped, making turning impossible.
+                To solve this, we need to specify the direction that mu/mu2 are relative to.
+                -->
+                <fdir1>1 0 0</fdir1>
+            </ode>
+        </friction>
+    </surface>
+  </collision>
+</gazebo>
 
 </robot>

@@ -2,8 +2,12 @@
 <robot name="motor_wheel" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <link name="${prefix}front_right_motor">
-    <!-- <inertial>
-    </inertial> -->
+    <inertial>
+      <!-- moving origin has no perceivable impact-->
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="5.236579"/>
+      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
+    </inertial>
     <visual>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
@@ -20,8 +24,12 @@
   </link>
 
   <link name="${prefix}rear_right_motor">
-    <!-- <inertial>
-    </inertial> -->
+    <inertial>
+      <!-- moving origin has no perceivable impact-->
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="5.236579"/>
+      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
+    </inertial>
     <visual>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
@@ -39,8 +47,12 @@
 
 
   <link name="${prefix}front_left_motor">
-    <!-- <inertial>
-    </inertial> -->
+    <inertial>
+      <!-- moving origin has no perceivable impact-->
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="5.236579"/>
+      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
+    </inertial>
     <visual>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
       <geometry>
@@ -58,8 +70,12 @@
 
 
   <link name="${prefix}rear_left_motor">
-    <!-- <inertial>
-    </inertial> -->
+    <inertial>
+      <!-- moving origin has no perceivable impact-->
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="5.236579"/>
+      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
+    </inertial>
     <visual>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
       <geometry>

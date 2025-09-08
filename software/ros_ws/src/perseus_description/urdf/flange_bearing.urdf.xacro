@@ -5,11 +5,11 @@
 
 <!-- Flange Bearing -->
 <link name="${prefix}flange_bearing">
-    <!-- <inertial>
-        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
-        <mass value="1.327488734939265"/>
-        <inertia ixx="0.001313" iyy="0.001699" izz="0.000647" ixy="0.0" iyz="0.0" ixz="-0.0"/>
-    </inertial> -->
+    <inertial>
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <mass value="1.327488734939265"/>
+    <inertia ixx="0.001313" iyy="0.001699" izz="0.000647" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+    </inertial>
 
     <visual>
     <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
@@ -30,11 +30,11 @@
 
 <!-- Balance/differential bar -->
 <link name="${prefix}differential_bar">
-    <!-- <inertial>
+    <inertial>
         <origin xyz="0 0 0.0" rpy="0.0 0.0 0.0"/>
         <mass value="0.9172649518127158"/>
         <inertia ixx="0.00036" iyy="0.018339" izz="0.018134" ixy="3e-06" iyz="-0.0" ixz="0.0"/>
-    </inertial> -->
+    </inertial>
 
     <visual>
     <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${-pi/2}"/>

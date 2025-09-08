@@ -3,11 +3,11 @@
 
 
   <link name="${prefix}chassis">
-    <!-- <inertial>
+    <inertial>
       <origin xyz="0.0 -0.17100473204 0.14732485976" rpy="0 0 0"/>
       <mass value="2.7689940302592726"/>
       <inertia ixx="0.170464" iyy="0.092623" izz="0.224359" ixy="0.0" iyz="0.005411" ixz="-0.0"/>
-    </inertial> -->
+    </inertial>
 
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0 0.0 -${pi/2}"/>
