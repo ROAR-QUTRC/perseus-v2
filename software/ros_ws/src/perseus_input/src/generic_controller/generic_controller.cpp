@@ -10,13 +10,6 @@
 GenericController::GenericController(const rclcpp::NodeOptions& options)
     : Node("generic_controller", options)
 {
-    // // Output config path chosen
-    // this->declare_parameter<std::string>("config", "");
-
-    // // Log the config path
-    // auto config_path = this->get_parameter("config").as_string();
-    // RCLCPP_INFO(this->get_logger(), "Using config path: %s", config_path.c_str());
-
     _axisParsers.emplace(std::make_pair(FORWARD_BASE_NAME, AxisParser(*this, FORWARD_BASE_NAME, true)));
     _axisParsers.emplace(std::make_pair(TURN_BASE_NAME, AxisParser(*this, TURN_BASE_NAME, true)));
     _axisParsers.emplace(std::make_pair(LIFT_BASE_NAME, AxisParser(*this, LIFT_BASE_NAME)));
