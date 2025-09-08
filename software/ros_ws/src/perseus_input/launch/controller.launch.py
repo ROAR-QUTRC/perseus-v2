@@ -15,6 +15,7 @@ def generate_launch_description():
     controller_type = LaunchConfiguration("type")
     is_wireless = LaunchConfiguration("wireless")
     config = LaunchConfiguration("config")
+    debug = LaunchConfiguration("debug")
 
     arguments = [
         DeclareLaunchArgument(
@@ -32,6 +33,11 @@ def generate_launch_description():
             default_value="",
             description="Path to config file, overrides 'wireless' and 'type'",
         ),
+        DeclareLaunchArgument(
+            "debug",
+            default_value="true",
+            description="Boolean value for debugging the controller"
+        )
     ]
 
     # CONFIG + DATA FILES
@@ -49,6 +55,11 @@ def generate_launch_description():
     )
     config_path = IfElseSubstitution(
         EqualsSubstitution(config, ""), preferred_config_path, config
+    )
+    debug_arguments = IfElseSubstitution(
+            EqualsSubstitution(debug, "true"),
+            ["--ros-args", "--log-level", "generic_controller:=debug"],
+            [],
     )
 
     # NODES
