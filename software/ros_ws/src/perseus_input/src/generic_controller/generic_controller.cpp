@@ -10,7 +10,7 @@
 GenericController::GenericController(const rclcpp::NodeOptions& options)
     : Node("generic_controller", options)
 {
-    // // Output config path choosen
+    // // Output config path chosen
     // this->declare_parameter<std::string>("config", "");
 
     // // Log the config path
