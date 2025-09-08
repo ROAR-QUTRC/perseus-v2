@@ -65,7 +65,6 @@ def generate_launch_description():
         name="generic_controller",
         output="both",
         emulate_tty=True,
-        # parameters=[{"config": config_path}],
         parameters=[config_path],
         remappings=[],
     )
