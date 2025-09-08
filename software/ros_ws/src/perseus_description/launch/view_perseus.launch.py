@@ -11,6 +11,8 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
+    hardware_plugin = LaunchConfiguration("hardware_plugin", default="mock_components/GenericSystem")
+    can_bus = LaunchConfiguration("can_bus", default="")
 
     rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -26,13 +28,14 @@ def generate_launch_description():
         ),
         launch_arguments={
             "use_sim_time": use_sim_time,
-            "hardware_plugin": "gz_ros2_control/GazeboSimSystem",
+            "hardware_plugin": hardware_plugin,
+            "can_bus": can_bus,
         }.items(),
     )
 
     # RViz with nixGL support
     rviz_config = PathJoinSubstitution(
-        [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
+        [FindPackageShare("perseus_description"), "rviz", "view_perseus.rviz"]
     )
     rviz = ExecuteProcess(
         cmd=[
@@ -54,6 +57,12 @@ def generate_launch_description():
             "RMW_QOS_POLICY_HISTORY": "keep_last",
             "RMW_QOS_POLICY_DEPTH": "100",
         },
+    )
+
+    # Joint State Publisher GUI
+    joint_state_publisher_gui = ExecuteProcess(
+        cmd=["ros2", "run", "joint_state_publisher_gui", "joint_state_publisher_gui"],
+        output="screen",
     )
     controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -77,6 +86,7 @@ def generate_launch_description():
         [
             rsp_launch,
             rviz,
-            controllers_launch,
+            joint_state_publisher_gui,
+            # controllers_launch,
         ]
     )

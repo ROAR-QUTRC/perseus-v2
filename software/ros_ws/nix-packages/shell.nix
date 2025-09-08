@@ -44,6 +44,7 @@ pkgs.mkShell {
             hi-can
             hi-can-raw
             joint-state-broadcaster
+            joint-state-publisher-gui
             joy
             mecanum-drive-controller
             navigation2
