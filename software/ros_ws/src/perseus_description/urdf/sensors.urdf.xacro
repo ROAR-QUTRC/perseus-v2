@@ -17,6 +17,7 @@
 </link>
 
 
+<!-- Simulating the Livox MID-360 -->
 <gazebo reference="${prefix}laser_frame">
   <material>
     <ambient>0.1 0.1 0.1 1</ambient>
@@ -36,7 +37,8 @@
           <min_angle>-3.14159</min_angle>
           <max_angle>3.14159</max_angle>
         </horizontal>
-        <vertical>
+        <!-- Angle Simulating the Livox MID-360 -->
+        <vertical> 
           <samples>32</samples>
           <min_angle>-0.1222</min_angle>     <!-- –7° in radians -->
           <max_angle>0.9076</max_angle>      <!-- +52° in radians -->

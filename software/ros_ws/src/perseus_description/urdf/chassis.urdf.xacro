@@ -25,4 +25,17 @@
     </collision>
   </link>
 
+
+
+  <gazebo reference="${prefix}chassis">
+      <material>Gazebo/Grey</material>
+      <sensor name="imu_sensor" type="imu">
+          <always_on>1</always_on>
+          <update_rate>10</update_rate>
+          <visualize>true</visualize>
+          <topic>imu</topic>
+      </sensor>
+  </gazebo>
+
+  
 </robot>
