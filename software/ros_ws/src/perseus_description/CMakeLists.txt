@@ -55,11 +55,7 @@ endforeach()
 
 # INSTALL (ROS)
 install(
-  DIRECTORY meshes
-            launch
-            ros2_control
-            rviz
-            urdf
+  DIRECTORY meshes launch ros2_control rviz urdf
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 

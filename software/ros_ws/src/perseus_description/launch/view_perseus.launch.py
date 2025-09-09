@@ -11,7 +11,9 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
-    hardware_plugin = LaunchConfiguration("hardware_plugin", default="mock_components/GenericSystem")
+    hardware_plugin = LaunchConfiguration(
+        "hardware_plugin", default="mock_components/GenericSystem"
+    )
     can_bus = LaunchConfiguration("can_bus", default="")
 
     rsp_launch = IncludeLaunchDescription(
@@ -64,29 +66,11 @@ def generate_launch_description():
         cmd=["ros2", "run", "joint_state_publisher_gui", "joint_state_publisher_gui"],
         output="screen",
     )
-    controllers_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                PathJoinSubstitution(
-                    [
-                        FindPackageShare("perseus"),
-                        "launch",
-                        "controllers.launch.py",
-                    ]
-                )
-            ]
-        ),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-            "launch_controller_manager": "false",
-        }.items(),
-    )
 
     return LaunchDescription(
         [
             rsp_launch,
             rviz,
             joint_state_publisher_gui,
-            # controllers_launch,
         ]
     )
