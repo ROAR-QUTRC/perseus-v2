@@ -5,7 +5,7 @@
     <inertial>
       <!-- moving origin has no perceivable impact-->
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="5.236579"/>
+      <mass value="1"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
     <visual>
@@ -27,7 +27,7 @@
     <inertial>
       <!-- moving origin has no perceivable impact-->
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="5.236579"/>
+      <mass value="1"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
     <visual>
@@ -50,7 +50,7 @@
     <inertial>
       <!-- moving origin has no perceivable impact-->
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="5.236579"/>
+      <mass value="1"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
     <visual>
@@ -73,7 +73,7 @@
     <inertial>
       <!-- moving origin has no perceivable impact-->
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="5.236579"/>
+      <mass value="1"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
     <visual>

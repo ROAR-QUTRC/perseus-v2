@@ -7,7 +7,7 @@
 <link name="${prefix}flange_bearing">
     <inertial>
     <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
-    <mass value="1.327488734939265"/>
+    <mass value="1"/>
     <inertia ixx="0.001313" iyy="0.001699" izz="0.000647" ixy="0.0" iyz="0.0" ixz="-0.0"/>
     </inertial>
 

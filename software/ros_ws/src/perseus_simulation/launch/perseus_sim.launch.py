@@ -27,12 +27,9 @@ def generate_launch_description():
     ]
     # RViz configuration file
     rviz_config = PathJoinSubstitution(
-        [FindPackageShare("perseus_simulation"), "rviz", "rviz.rviz"]
+        [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
     )
 
-    ekf_config_file = PathJoinSubstitution(
-        [FindPackageShare("perseus_simulation"), "config", "ekf_config.yaml"]
-    )
     # IMPORTED LAUNCH FILES
     gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
