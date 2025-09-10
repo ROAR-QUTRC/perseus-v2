@@ -2,19 +2,22 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
+    ExecuteProcess,
+    TimerAction,
 )
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
+
     arguments = [
         DeclareLaunchArgument(
             "use_sim_time",
@@ -22,6 +25,10 @@ def generate_launch_description():
             description="If true, use simulated clock",
         ),
     ]
+    # RViz configuration file
+    rviz_config = PathJoinSubstitution(
+        [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
+    )
 
     # IMPORTED LAUNCH FILES
     gz_launch = IncludeLaunchDescription(
@@ -40,6 +47,7 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
         }.items(),
     )
+
     rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -57,6 +65,7 @@ def generate_launch_description():
             "hardware_plugin": "gz_ros2_control/GazeboSimSystem",
         }.items(),
     )
+
     controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -74,10 +83,53 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
+    teleop_keyboard_controller = Node(
+        package="perseus_teleop",
+        executable="teleop_keyboard",
+        name="teleop_keyboard",
+        output="screen",
+        parameters=[{"use_sim_time": use_sim_time}],
+        prefix="gnome-terminal --geometry=60x20 -- ",  # Use gnome-terminal instead of xterm
+        remappings=[
+            # Example: remap cmd_vel topic if needed
+            # ('/cmd_vel_out', '/your_robot/cmd_vel')
+        ],
+    )
+
+    # RViz with nixGL support
+    rviz = ExecuteProcess(
+        cmd=[
+            "nix",
+            "run",
+            "--impure",
+            "github:nix-community/nixGL",
+            "--",
+            "rviz2",
+            "-d",
+            rviz_config,
+        ],
+        output="screen",
+        additional_env={
+            "NIXPKGS_ALLOW_UNFREE": "1",
+            "QT_QPA_PLATFORM": "xcb",
+            "QT_SCREEN_SCALE_FACTORS": "1",
+            "ROS_NAMESPACE": "/",
+            "RMW_QOS_POLICY_HISTORY": "keep_last",
+            "RMW_QOS_POLICY_DEPTH": "100",
+        },
+    )
+    # Add delay to controllers
+    controllers_delayed = TimerAction(
+        period=30.0,  # Wait 30 seconds for Gazebo to fully start
+        actions=[controllers_launch],
+    )
+
     launch_files = [
         gz_launch,
-        rsp_launch,
-        controllers_launch,
+        rsp_launch,  # Robot state publisher
+        teleop_keyboard_controller,
+        controllers_delayed,  # Controllers
+        rviz,  # Start RViz with nixGL support
     ]
 
     return LaunchDescription(arguments + launch_files)
