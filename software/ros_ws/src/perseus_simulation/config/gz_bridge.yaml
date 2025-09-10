@@ -55,7 +55,6 @@
   ros_type_name: "sensor_msgs/msg/PointCloud2"
   gz_type_name: "gz.msgs.PointCloudPacked"
   direction: GZ_TO_ROS
-  
 # For PointCloud2 (3D)
 - ros_topic_name: /points
   gz_topic_name: /scan/points
