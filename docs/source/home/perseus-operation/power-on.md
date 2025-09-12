@@ -13,12 +13,15 @@ This guide explains the correct process to power on persues.
 ### Pre-Power on Checks
 
 1. Verify that the E-stop is "up". This means it has been rotated clockwise until it is delatched.
-2. Verify that the drive stop is "up". This means that it is level with the top of the panel it is mounted in.
+2. Verify that the drive stop is "up". This means that it is above the top of the panel it is mounted in.
 3. Connect the battery's XT90 connecter to the power meter inside of Perseus.
 
 ### Power on Rover Control Board
 
 The Rover Control Board (RCB) is the large purple PCB. To power the RCB press and hold the power button until the contactor is enabled. This should take about one second and will make an audible click when the contactor is engaged. Once the power button is flashing blue, the rover control board is powered.
+
+1. Press and hold the power button until the contactor is enabled. This should take about one second and will make an audible click when the contactor has been engaged.
+2. Once the power button is flashing blue the rover control board is successfully powered on.
 
 :::{note}
 The power button has three status modes:
@@ -31,23 +34,20 @@ The power button has three status modes:
 
 :::
 
-1. Press and hold the power button until the contactor is enabled. This should take about one second and will make an audible click when the contactor has been engaged.
-2. Once the power button is flashing blue the rover control board is successfully powered on.
-
 ### Power Rover Systems
 
 :::{info}
 
 Each bus has an orange and red LED next to its terminal to display status.
-These are not controlled with software and instead directly display hardware status. The red button indicates the precharge status, and the orange button indicates whether the bus is connected.
+These are not controlled with software and instead directly display hardware status. The red LED indicates the precharge status, and the orange LED indicates whether the bus is connected.
 
-If the orange LED is on, then the bus is powered. The red LED should periodically flash when attempting to precharge. In a worst-case situation, the red LED may be solidly lit, signifying a major fault, and the rover must be e-stopped IMMEDIATELY.
+If the orange LED is on, then the bus is powered. The red LED should periodically flash when attempting to precharge. In a worst-case situation, the red LED may be solidly lit, signifying a major fault, and the rover must be e-stopped IMMEDIATELY. Also if the red LED is flashing, the bus is going through a reboot loop, and the rover must be e-stopped IMMEDIATELY.
 
 :::
 
 #### Compute Power
 
-Once Perseus is powered the first bus that should be powered is compute as this is required for powering on subsequent busses. This is done by pressing the power button once and waiting for the compute bus LED on the RCB to light. Before compute can be powered off the orin MUST be powered off with the command `sudo poweroff`, then to power off this bus you must hold down the power button.
+Once Perseus is powered the first bus that should be powered is compute as this is required for powering on subsequent busses. This is done by pressing the power button once and waiting for the compute bus LED on the RCB to light. Before compute can be powered off the orin MUST be powered off with the command `sudo poweroff -h now`, then to power off this bus you must hold down the power button.
 
 #### Bus Power
 

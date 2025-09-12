@@ -34,21 +34,21 @@ The following conditions must be met before beginning:
 
 ### Network Setup
 
-The Unifi UX is currently housed inside Perseus. Confirm that the power and network cables are connected to the Unifi UX. Once Perseus is powered on, the Unifi UX boot process should start automatically and take approximately 3 minutes. A complete boot is indicated when the screen displays a connected device counter instead of a progress bar and wifi devices can see the SSID "QUTRC-ROAR".
+The Unifi UX is currently housed inside Perseus. Confirm that the power and network cables are connected to the Unifi UX. Once Perseus is powered on, the Unifi UX boot process should start automatically and take approximately 3 minutes. A complete boot is indicated when the screen on the bottom of the Unifi UX displays a connected device counter instead of a progress bar and wifi devices can see the SSID "QUTRC-ROAR".
 
 :::{warning}
 The Unifi UX requires specific power specifications via its USB-C port. Use the onboard DC-DC power adaptor and avoid using externally grounded power sources.
 :::
 
-To enable Internet access, connect the Unifi UX's WAN port (marked with a globe symbol) to an Internet-enabled network via ethernet.
+To enable Internet access, connect the Unifi UX's WAN port (marked with a globe symbol) to an Internet-enabled network via ethernet. If you're connecting to a QUT ethernet plug, you also have to sign in to `ias.qut.edu.au/login` on a device connected to the Unifi UX and keep the pop-up window open until you are done using the internet.
 
 ### Network Connection
 
-Connect the laptop to the "QUTRC-ROAR" WiFi network using the provided credentials (ask in Discord).
+Connect the laptop to the "QUTRC-ROAR" WiFi network using the provided credentials (ask a ROAR Lead - they should have the passwords to everything on the rover).
 
 ### Network Verification
 
-Perseus should automatically connect to the QUTRC-ROAR network. Verify the connection using one of these methods:
+Perseus should automatically connect to the QUTRC-ROAR network. You can verify the connection using one of these methods:
 
 - Check the Unifi console for connected devices
 - Use arp-scan on the laptop to list devices with allocated IP addresses:
@@ -89,7 +89,7 @@ ssh qutrc@big-brain.local
 ```
 
 :::{info}
-You must use [`zellij`](https://zellij.dev/) on rover compute units when running multiple commands to prevent the need for multiple ssh connections.
+You must use [`zellij`](https://zellij.dev/) on rover compute units when running multiple commands to prevent the need for multiple ssh connections. In some cases, Zellij automatically starts up (you can tell by the green outline box in the terminal), however, you may need to run `zellij` after you ssh into the big-brain
 :::
 
 ### Manually confirm the date/time
@@ -103,6 +103,27 @@ sudo chronyd -q
 ```
 
 ### Perseus Software Launch
+
+When you boot up Perseus, you should always run (in the Perseus root directory):
+
+```console
+git checkout main
+git pull main
+```
+
+To ensure that the repo on Perseus is up to date.
+
+:::{note}
+You need internet connection in order to update the repository on Perseus, so if you don't have access to the internet you can skip these steps
+:::
+
+Before running any nix command on Perseus, you need to run:
+
+```console
+nix shell
+```
+
+Or equivalent to enter a nix environment. Make sure that you run this is any new Zellij window you open.
 
 Execute the following command on Perseus:
 
