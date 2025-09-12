@@ -123,13 +123,24 @@ def generate_launch_description():
         period=30.0,  # Wait 30 seconds for Gazebo to fully start
         actions=[controllers_launch],
     )
-
+    ekf_config_file = PathJoinSubstitution(
+        [FindPackageShare("perseus_simulation"), "config", "ekf_config.yaml"]
+    )
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[ekf_config_file],
+        remappings=[('/odometry/filtered', '/odom')] # Remap output to /odom
+    )
     launch_files = [
         gz_launch,
         rsp_launch,  # Robot state publisher
         teleop_keyboard_controller,
         controllers_delayed,  # Controllers
         rviz,  # Start RViz with nixGL support
+        ekf_node,  # EKF node
     ]
 
     return LaunchDescription(arguments + launch_files)
