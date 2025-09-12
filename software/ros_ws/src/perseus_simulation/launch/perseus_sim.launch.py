@@ -3,11 +3,6 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     ExecuteProcess,
-from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    IncludeLaunchDescription,
-    ExecuteProcess,
     TimerAction,
 )
 from launch.substitutions import (
@@ -17,6 +12,7 @@ from launch.substitutions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
+import os  
 
 def generate_launch_description():
     # ARGUMENTS
@@ -90,7 +86,6 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
-
     teleop_keyboard_controller = Node(
         package="perseus_teleop",
         executable="teleop_keyboard",
@@ -128,9 +123,10 @@ def generate_launch_description():
     )
     # Add delay to controllers
     controllers_delayed = TimerAction(
-        period=30.0,  # Wait 3 seconds for Gazebo to fully start
+        period=30.0,  # Wait 30 seconds for Gazebo to fully start
         actions=[controllers_launch]
     )
+
     ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
@@ -142,7 +138,7 @@ def generate_launch_description():
     launch_files = [
         gz_launch,
         rsp_launch,  # Robot state publisher
-        teleop_keyboard_controller,  # Teleop keyboard controller
+        teleop_keyboard_controller,
         controllers_delayed,  # Controllers
         rviz,  # Start RViz with nixGL support
         ekf_node,  # EKF node
