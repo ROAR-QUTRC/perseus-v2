@@ -23,6 +23,7 @@ def generate_launch_description():
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     hardware_plugin = LaunchConfiguration("hardware_plugin")
     can_bus = LaunchConfiguration("can_bus")
+    payload = LaunchConfiguration("payload")
 
     arguments = [
         DeclareLaunchArgument(
@@ -51,6 +52,11 @@ def generate_launch_description():
             default_value="can0",
             description="CAN bus to use for hardware communications",
         ),
+        DeclareLaunchArgument(
+            "payload",
+            default_value="none",
+            description="Which payload to boot up with the rover",
+        ),
     ]
 
     # IMPORTED LAUNCH FILES
@@ -77,6 +83,7 @@ def generate_launch_description():
                 "use_sim_time": use_sim_time,
                 "hardware_plugin": final_hardware_plugin,
                 "can_bus": can_bus,
+                "payload": payload,
             }.items(),
         )
         return [rsp_launch]
@@ -129,11 +136,31 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
         }.items(),
     )
+
+    def load_payload(context):
+        which_payload = IfCondition(payload).evaluate(context)
+        if which_payload == "bucket":
+            payload = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    [
+                        PathJoinSubstitution(
+                            [
+                                FindPackageShare("perseus"),
+                                "launch",
+                                "bucket.launch.py",
+                            ]
+                        )
+                    ]
+                )
+            )
+        return [payload]
+
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
         twist_mux_launch,
         rosbridge_launch,
+        OpaqueFunction(function=load_payload),
     ]
 
     return LaunchDescription(arguments + launch_files)
