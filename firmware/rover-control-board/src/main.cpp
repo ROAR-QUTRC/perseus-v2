@@ -18,9 +18,8 @@
 #include <canlib_power.hpp>
 
 // New canbus
-#include <hi_can_twai.hpp>
-
 #include <chrono>
+#include <hi_can_twai.hpp>
 #include <optional>
 
 // rover libs
@@ -73,14 +72,13 @@ RoverPowerBus compBus(CANLIB_GROUP_POWER_COMPUTE_BUS,
 RoverPowerBus auxBus(CANLIB_GROUP_POWER_AUX_BUS,
                      CONFIG_AUX_PRECHARGE_VOLTAGE, RCB_AUX_PRE_SWITCH_PIN, RCB_AUX_MAIN_SWITCH_PIN,
                      ROVER_A8_PIN, ROVER_A7_PIN);
-                     
+
 // New canbus
 constexpr standard_address_t RCB_DEVICE_ADDRESS{
     power::SYSTEM_ID,
     power::distribution::SUBSYSTEM_ID,
     power::distribution::rover_control_board::DEVICE_ID,
 };
-
 
 IoDebouncedButton powerButton(ROVER_A9_PIN, GPIO_FLOATING, true);
 
@@ -154,7 +152,8 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
                                static_cast<uint8_t>(power::distribution::rover_control_board::group::COMPUTE_BUS),
                                static_cast<uint8_t>(power::distribution::rover_control_board::contactor::parameter::SHUTDOWN)})},
         {
-            .dataCallback = [&](auto addr){
+            .dataCallback = [&](auto addr)
+            {
                 xTimerReset(timer, 0);
                 WARN("Performing immediate shutdown in 100ms!");
                 fflush(stdout);
