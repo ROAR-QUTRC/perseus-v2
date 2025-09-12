@@ -18,6 +18,7 @@ docs:
   - "software/**/*.h"
   - "software/**/*.py"
   - "software/**/*.pyi"
+  - "software/**/*.onnx"
 software:
   - *common
   - "software/**"
