@@ -19,10 +19,9 @@ public:
         : Node("aruco_detector")
     {
         // Camera parameters (replace with calibrated values)
-        camera_matrix_ = (cv::Mat_<double>(3, 3) << 
-            530.4, 0, 320,
-            0, 530.4, 240,
-            0, 0, 1);
+        camera_matrix_ = (cv::Mat_<double>(3, 3) << 530.4, 0, 320,
+                          0, 530.4, 240,
+                          0, 0, 1);
         dist_coeffs_ = cv::Mat::zeros(5, 1, CV_64F);
 
         // Create ArUco dictionary and detector
