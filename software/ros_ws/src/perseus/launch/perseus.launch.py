@@ -140,7 +140,7 @@ def generate_launch_description():
     def load_payload(context):
         which_payload = IfCondition(payload).evaluate(context)
         if which_payload == "bucket":
-            payload = IncludeLaunchDescription(
+            payload_launch = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     [
                         PathJoinSubstitution(
@@ -153,7 +153,7 @@ def generate_launch_description():
                     ]
                 )
             )
-        return [payload]
+        return [payload_launch]
 
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),

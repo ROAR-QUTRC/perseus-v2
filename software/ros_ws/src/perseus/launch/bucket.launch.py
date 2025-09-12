@@ -11,26 +11,7 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     # ARGUMENTS
-    debug = LaunchConfiguration("debug")
-
-    arguments = [
-        DeclareLaunchArgument(
-            "debug",
-            default_value="true",
-            description="Boolean value for debugging the controller",
-        ),
-    ]
-
-    debug_arguments = IfElseSubstitution(
-        EqualsSubstitution(debug, "true"),
-        [
-            "--ros-args",
-            "--log-level",
-            "bucket_driver:=debug",
-            "bucket_controller:=debug",
-        ],
-        [],
-    )
+    arguments = []
 
     # NODES
     bucket_controller_node = Node(
