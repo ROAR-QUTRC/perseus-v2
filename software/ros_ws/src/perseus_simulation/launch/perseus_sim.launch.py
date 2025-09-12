@@ -12,7 +12,6 @@ from launch.substitutions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
-from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -30,7 +29,6 @@ def generate_launch_description():
     rviz_config = PathJoinSubstitution(
         [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
     )
-
 
     # IMPORTED LAUNCH FILES
     gz_launch = IncludeLaunchDescription(
@@ -50,7 +48,6 @@ def generate_launch_description():
         }.items(),
     )
 
-
     rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -68,7 +65,6 @@ def generate_launch_description():
             "hardware_plugin": "gz_ros2_control/GazeboSimSystem",
         }.items(),
     )
-
 
     controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
