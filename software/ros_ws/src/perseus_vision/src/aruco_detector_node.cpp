@@ -19,15 +19,16 @@ public:
         : Node("aruco_detector")
     {
         // Camera parameters (replace with calibrated values)
-        camera_matrix_ = (cv::Mat_<double>(3, 3) <<  // NOTE: THIS IS CALIBRATED CAMERA MATRIX FOR SIMULATION!
-                              530.4,
-                          0, 320, !0, 530.4, 240,
-                          0, 0, 1);
+        camera_matrix_ = (cv::Mat_<double>(3, 3) << 
+            530.4, 0, 320,
+            0, 530.4, 240,
+            0, 0, 1);
         dist_coeffs_ = cv::Mat::zeros(5, 1, CV_64F);
 
         // Create ArUco dictionary and detector
         dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
-        detector_ = cv::aruco::ArucoDetector(dictionary_);
+        detector_params_ = cv::aruco::DetectorParameters();
+        detector_ = cv::aruco::ArucoDetector(dictionary_, detector_params_);
 
         // Create TF broadcaster and listener
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -72,7 +73,8 @@ private:
             std::vector<cv::Vec3d> rvecs, tvecs;
             cv::aruco::estimatePoseSingleMarkers(corners, 0.35, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
-            for (size_t i = 0; i < ids.size(); ++i)
+            size_t n = std::min({ids.size(), corners.size(), rvecs.size(), tvecs.size()});
+            for (size_t i = 0; i < n; ++i)
             {
                 cv::aruco::drawDetectedMarkers(frame, corners, ids);
                 cv::drawFrameAxes(frame, camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], 0.03);
@@ -219,6 +221,7 @@ private:
 
     // ArUco
     cv::aruco::Dictionary dictionary_;
+    cv::aruco::DetectorParameters detector_params_;
     cv::aruco::ArucoDetector detector_;
 
     // Camera intrinsics
