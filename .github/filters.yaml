@@ -30,3 +30,4 @@ formatter-config:
   - treefmt.nix
 packages:
   - "software/**/package.xml"
+  - "software/**/onnx.xml"

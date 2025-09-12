@@ -132,7 +132,7 @@ def generate_launch_description():
         name="ekf_filter_node",
         output="screen",
         parameters=[ekf_config_file],
-        remappings=[('/odometry/filtered', '/odom')] # Remap output to /odom
+        remappings=[("/odometry/filtered", "/odom")],  # Remap output to /odom
     )
     launch_files = [
         gz_launch,
