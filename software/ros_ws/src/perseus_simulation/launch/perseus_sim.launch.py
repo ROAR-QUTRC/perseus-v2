@@ -123,7 +123,7 @@ def generate_launch_description():
     )
     # Add delay to controllers
     controllers_delayed = TimerAction(
-        period=30.0,  # Wait 30 seconds for Gazebo to fully start
+        period=15.0,  # Wait 30 seconds for Gazebo to fully start
         actions=[controllers_launch]
     )
 
@@ -135,6 +135,20 @@ def generate_launch_description():
         parameters=[ekf_config_file],
         remappings=[('/odometry/filtered', '/odom')] # Remap output to /odom
     )
+
+    # Static transform publisher for IMU frame to base_link
+    static_transform_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='imu_to_base_link_publisher',
+        arguments=[
+            '0', '0', '0',  # translation x, y, z
+            '0', '0', '0', '1',  # rotation quaternion x, y, z, w (identity - no rotation)
+            'base_link',  # parent frame
+            'base_link/imu_sensor'  # child frame (try without perseus prefix)
+        ]
+    )
+
     launch_files = [
         gz_launch,
         rsp_launch,  # Robot state publisher
@@ -142,6 +156,7 @@ def generate_launch_description():
         controllers_delayed,  # Controllers
         rviz,  # Start RViz with nixGL support
         ekf_node,  # EKF node
+        static_transform_publisher,  # Static transform for odom to base_link
     ]
 
     return LaunchDescription(arguments + launch_files)

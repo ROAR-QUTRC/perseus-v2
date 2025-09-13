@@ -33,7 +33,7 @@
         <sensor name="rgbd_camera" type="rgbd_camera">
             <pose> 0 0 0 0 0 0 </pose>
             <visualize>true</visualize>
-            <update_rate>10</update_rate>
+            <update_rate>100</update_rate>
             <always_on>true</always_on>
             <camera>
                 <horizontal_fov>1.089</horizontal_fov>
