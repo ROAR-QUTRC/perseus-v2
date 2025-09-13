@@ -1,11 +1,11 @@
 ekf_filter_node:
   ros__parameters:
     frequency: 50.0           # High frequency for better transform continuity
-    sensor_timeout: 0.1       # Longer timeout to reduce processing
+    sensor_timeout: 0.2       # More lenient timeout
     two_d_mode: true          # Enable 2D mode - faster processing for ground robot
     transform_time_offset: 0.0  # No time offset needed in simulation
-    transform_timeout: 0.5     # Extended timeout for better transform reliability
-    print_diagnostics: false   # Disabled to reduce processing overhead
+    transform_timeout: 1.0     # More extended timeout for transform reliability
+    print_diagnostics: true    # Enable for debugging transform issues
     debug: false              # Set to true for detailed debug output
 
     # =========================
@@ -30,17 +30,17 @@ ekf_filter_node:
     # =========================
     imu0: /imu
     imu0_config: [false, false, false,  # IMU does not provide position
-                  false, false, true,     # only yaw orientation
+                  false, false, true,     # only yaw orientation  
                   false, false, false,  # no direct linear velocity
                   false, false, true,     # only yaw rate
-                  true, true, true]     # linear accelerations
+                  false, false, false]  # don't use linear accelerations for now
     imu0_differential: false
     imu0_remove_gravitational_acceleration: true
     imu0_queue_size: 10        # Increased queue size for better timing reliability
     imu0_nodelay: false        # Allow slight buffering for consistent timing
-    imu0_pose_rejection_threshold: 0.8   # Reject orientation jumps
-    imu0_twist_rejection_threshold: 0.8
-    imu0_linear_acceleration_rejection_threshold: 0.8
+    imu0_pose_rejection_threshold: 2.0   # More lenient - reject orientation jumps > 2 rad
+    imu0_twist_rejection_threshold: 2.0  # More lenient - reject twist jumps > 2 rad/s
+    imu0_linear_acceleration_rejection_threshold: 2.0  # More lenient
 
     # =========================
     # Frames

@@ -121,33 +121,65 @@ def generate_launch_description():
             "RMW_QOS_POLICY_DEPTH": "100",
         },
     )
-    # Add delay to controllers
-    controllers_delayed = TimerAction(
-        period=15.0,  # Wait 30 seconds for Gazebo to fully start
-        actions=[controllers_launch]
-    )
-
+    
+    # Define EKF node before it's used in TimerAction
     ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
         name="ekf_filter_node",
         output="screen",
-        parameters=[ekf_config_file],
-        remappings=[('/odometry/filtered', '/odom')] # Remap output to /odom
+        parameters=[ekf_config_file, {"use_sim_time": use_sim_time}],
+        # Explicit remapping to ensure proper topic connections
+        remappings=[
+            ('/odometry/filtered', '/odometry/filtered'),  # EKF output
+        ]
+    )
+    
+    # Add delay to controllers
+    controllers_delayed = TimerAction(
+        period=15.0,  # Wait 15 seconds for Gazebo to fully start
+        actions=[controllers_launch]
     )
 
-    # Static transform publisher for IMU frame to base_link
-    static_transform_publisher = Node(
+    # Add delay to EKF to ensure all other nodes are ready
+    ekf_delayed = TimerAction(
+        period=5.0,  # Wait 5 seconds for robot_state_publisher and basic setup
+        actions=[ekf_node]
+    )
+
+    # Fallback static transform publisher for odom->base_link (in case EKF fails)
+    # This should not be needed if EKF is working properly
+    fallback_odom_transform = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='imu_to_base_link_publisher',
+        name='fallback_odom_publisher',
         arguments=[
             '0', '0', '0',  # translation x, y, z
             '0', '0', '0', '1',  # rotation quaternion x, y, z, w (identity - no rotation)
-            'base_link',  # parent frame
-            'base_link/imu_sensor'  # child frame (try without perseus prefix)
+            'odom',  # parent frame
+            'base_link'  # child frame
         ]
     )
+
+    # Delay the fallback transform - only if EKF doesn't provide it
+    fallback_transform_delayed = TimerAction(
+        period=10.0,  # Wait 10 seconds - if EKF hasn't started by then, use fallback
+        actions=[fallback_odom_transform]
+    )
+
+    # Static transform publisher for IMU frame to base_link - NOT NEEDED
+    # The IMU sensor in Gazebo already publishes directly to base_link frame
+    # static_transform_publisher = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='imu_to_base_link_publisher',
+    #     arguments=[
+    #         '0', '0', '0',  # translation x, y, z
+    #         '0', '0', '0', '1',  # rotation quaternion x, y, z, w (identity - no rotation)
+    #         'base_link',  # parent frame
+    #         'imu_link'  # child frame - simplified name
+    #     ]
+    # )
 
     launch_files = [
         gz_launch,
@@ -155,8 +187,9 @@ def generate_launch_description():
         teleop_keyboard_controller,
         controllers_delayed,  # Controllers
         rviz,  # Start RViz with nixGL support
-        ekf_node,  # EKF node
-        static_transform_publisher,  # Static transform for odom to base_link
+        ekf_delayed,  # EKF node with delay
+        # fallback_transform_delayed,  # Uncomment if EKF fails to provide transform
+        # static_transform_publisher not needed - IMU publishes directly to base_link
     ]
 
     return LaunchDescription(arguments + launch_files)

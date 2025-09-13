@@ -1,0 +1,23 @@
+digraph G {
+"front_left_motor" -> "front_left_wheel"[label=" Broadcaster: default_authority\nAverage rate: 17.593\nBuffer length: 1.08\nMost recent transform: 28.9\nOldest transform: 27.82\n"];
+"left_rocker" -> "front_left_motor"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"front_right_motor" -> "front_right_wheel"[label=" Broadcaster: default_authority\nAverage rate: 17.593\nBuffer length: 1.08\nMost recent transform: 28.9\nOldest transform: 27.82\n"];
+"right_rocker" -> "front_right_motor"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"rear_left_motor" -> "rear_left_wheel"[label=" Broadcaster: default_authority\nAverage rate: 17.593\nBuffer length: 1.08\nMost recent transform: 28.9\nOldest transform: 27.82\n"];
+"left_rocker" -> "rear_left_motor"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"rear_right_motor" -> "rear_right_wheel"[label=" Broadcaster: default_authority\nAverage rate: 17.593\nBuffer length: 1.08\nMost recent transform: 28.9\nOldest transform: 27.82\n"];
+"right_rocker" -> "rear_right_motor"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"base_link" -> "camera_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"odom" -> "base_link"[label=" Broadcaster: default_authority\nAverage rate: 50.199\nBuffer length: 5.04\nMost recent transform: 1757737154.257946\nOldest transform: 1757737149.217972\n"];
+"camera_link" -> "camera_link_optical"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"base_link" -> "chassis"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"flange_bearing" -> "differential_bar"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "flange_bearing"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "left_rocker"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "right_rocker"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "laser_frame"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1757737154.2725472"[ shape=plaintext ] ;
+}->"odom";
+}

@@ -34,6 +34,7 @@
           <update_rate>50</update_rate>
           <visualize>true</visualize>
           <topic>imu</topic>
+          <gz_frame_id>${prefix}base_link</gz_frame_id>
       </sensor>
   </gazebo>
 
