@@ -21,6 +21,7 @@ public:
     ArucoDetector();
 
 private:
+    // ROS callbacks and helpers
     void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
     void transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
                                    const cv::Vec3d& rvec, const cv::Vec3d& tvec);
@@ -35,10 +36,18 @@ private:
 
     // ArUco
     cv::aruco::Dictionary dictionary_;
+    cv::aruco::DetectorParameters detector_params_;
     cv::aruco::ArucoDetector detector_;
 
     // Camera intrinsics
-    cv::Mat camera_matrix_, dist_coeffs_;
+    cv::Mat camera_matrix_;
+    cv::Mat dist_coeffs_;
+
+    // Configurable parameters
+    double marker_length_;          // in meters
+    double axis_length_;            // for drawing axes
+    std::string camera_frame_;      // input frame (e.g. camera_link_optical)
+    std::string tf_output_frame_;   // output TF frame (e.g. odom)
 };
 
 #endif  // ARUCO_DETECTOR_HPP

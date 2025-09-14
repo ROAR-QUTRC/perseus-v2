@@ -108,6 +108,6 @@ install(TARGETS aruco_detector_lib detector_node cube_detector
 
 install(DIRECTORY include/ DESTINATION include/)
 
-install(DIRECTORY yolo_model DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY yolo_model config launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()

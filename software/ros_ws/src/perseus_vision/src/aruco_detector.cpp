@@ -3,25 +3,37 @@
 ArucoDetector::ArucoDetector()
     : Node("aruco_detector")
 {
-    // Camera parameters (replace with calibrated values)
-    camera_matrix_ = (cv::Mat_<double>(3, 3) << 530.4, 0, 320, 0, 530.4, 240, 0, 0, 1);
-    dist_coeffs_ = cv::Mat::zeros(5, 1, CV_64F);
+    // Declare and load parameters
+    marker_length_ = this->declare_parameter<double>("marker_length", 0.35);
+    axis_length_ = this->declare_parameter<double>("axis_length", 0.03);
 
-    // Create ArUco dictionary and detector
+    camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_link_optical");
+    tf_output_frame_ = this->declare_parameter<std::string>("tf_output_frame", "odom");
+
+    std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
+        "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
+    std::vector<double> dist_coeffs_param = this->declare_parameter<std::vector<double>>(
+        "dist_coeffs", {0, 0, 0, 0, 0});
+
+    // Convert parameters to OpenCV matrices
+    camera_matrix_ = cv::Mat(3, 3, CV_64F, camera_matrix_param.data()).clone();
+    dist_coeffs_ = cv::Mat(dist_coeffs_param).clone();
+
+    // ArUco setup
     dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
     detector_ = cv::aruco::ArucoDetector(dictionary_);
 
-    // Create TF broadcaster and listener
+    // TF broadcaster and listener
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
 
-    // Subscriber
+    // Image subscriber
     sub_ = this->create_subscription<sensor_msgs::msg::Image>(
         "/rgbd_camera/image_raw", 10,
         std::bind(&ArucoDetector::imageCallback, this, std::placeholders::_1));
 
-    // Publisher
+    // Processed image publisher
     pub_ = this->create_publisher<sensor_msgs::msg::Image>(
         "/detection/aruco/image", 10);
 
@@ -48,18 +60,19 @@ void ArucoDetector::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
     if (!ids.empty())
     {
         std::vector<cv::Vec3d> rvecs, tvecs;
-        cv::aruco::estimatePoseSingleMarkers(corners, 0.35, camera_matrix_, dist_coeffs_, rvecs, tvecs);
+        cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
+
+        cv::aruco::drawDetectedMarkers(frame, corners, ids);
 
         for (size_t i = 0; i < ids.size(); ++i)
         {
-            cv::aruco::drawDetectedMarkers(frame, corners, ids);
-            cv::drawFrameAxes(frame, camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], 0.03);
+            cv::drawFrameAxes(frame, camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], axis_length_);
             transformAndPublishMarker(msg->header, ids[i], rvecs[i], tvecs[i]);
         }
     }
 
     auto processed_msg = cv_bridge::CvImage(msg->header, "bgr8", frame).toImageMsg();
-    pub_->publish(*processed_msg); // Publish processed image to a node
+    pub_->publish(*processed_msg);
 }
 
 void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
@@ -69,8 +82,9 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
     {
         geometry_msgs::msg::PoseStamped marker_pose_camera;
         marker_pose_camera.header.stamp = header.stamp;
-        marker_pose_camera.header.frame_id = "camera_link_optical";
+        marker_pose_camera.header.frame_id = camera_frame_;
 
+        // OpenCV to ROS coordinate adjustment
         marker_pose_camera.pose.position.x = tvec[2];
         marker_pose_camera.pose.position.y = -tvec[0];
         marker_pose_camera.pose.position.z = -tvec[1];
@@ -84,26 +98,28 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
         marker_pose_camera.pose.orientation.z = quat.z();
         marker_pose_camera.pose.orientation.w = quat.w();
 
-        geometry_msgs::msg::PoseStamped marker_pose_odom;
-        tf_buffer_->transform(marker_pose_camera, marker_pose_odom, "odom");
+        geometry_msgs::msg::PoseStamped marker_pose_out;
+        tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_);
 
         geometry_msgs::msg::TransformStamped transform;
         transform.header.stamp = header.stamp;
-        transform.header.frame_id = "odom";
+        transform.header.frame_id = tf_output_frame_;
         transform.child_frame_id = "aruco_marker_" + std::to_string(marker_id);
 
-        transform.transform.translation.x = marker_pose_odom.pose.position.x;
-        transform.transform.translation.y = marker_pose_odom.pose.position.y;
-        transform.transform.translation.z = marker_pose_odom.pose.position.z;
+        transform.transform.translation.x = marker_pose_out.pose.position.x;
+        transform.transform.translation.y = marker_pose_out.pose.position.y;
+        transform.transform.translation.z = marker_pose_out.pose.position.z;
 
-        transform.transform.rotation = marker_pose_odom.pose.orientation;
+        transform.transform.rotation = marker_pose_out.pose.orientation;
 
         tf_broadcaster_->sendTransform(transform);
 
         RCLCPP_INFO(this->get_logger(),
-                    "ArUco %d in odom: x=%.2f, y=%.2f, z=%.2f",
-                    marker_id, marker_pose_odom.pose.position.x,
-                    marker_pose_odom.pose.position.y, marker_pose_odom.pose.position.z);
+                    "ArUco %d in %s: x=%.2f, y=%.2f, z=%.2f",
+                    marker_id, tf_output_frame_.c_str(),
+                    marker_pose_out.pose.position.x,
+                    marker_pose_out.pose.position.y,
+                    marker_pose_out.pose.position.z);
     }
     catch (tf2::TransformException& ex)
     {
