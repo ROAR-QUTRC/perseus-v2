@@ -78,11 +78,11 @@ std::vector<Detection> nms(const std::vector<Detection>& dets, float iou_thr) {
 class CubeDetector : public rclcpp::Node {
 public:
   CubeDetector() : Node("cube_detector") {
-    // Declare parameters for camera intrinsics
-    this->declare_parameter("camera.fx", 615.0);
-    this->declare_parameter("camera.fy", 615.0);
-    this->declare_parameter("camera.cx", -1.0);  // -1 means use image center
-    this->declare_parameter("camera.cy", -1.0);  // -1 means use image center
+    // Declare parameters for camera intrinsics (matching vision_params.yaml)
+    this->declare_parameter("camera.fx", 530.4);
+    this->declare_parameter("camera.fy", 530.4);
+    this->declare_parameter("camera.cx", 320.0);
+    this->declare_parameter("camera.cy", 240.0);
     this->declare_parameter("confidence_threshold", 0.3);
     this->declare_parameter("nms_threshold", 0.5);
     this->declare_parameter("cube_distance_threshold", 0.5);  // meters
@@ -355,22 +355,21 @@ private:
       float cx = static_cast<float>(this->get_parameter("camera.cx").as_double());
       float cy = static_cast<float>(this->get_parameter("camera.cy").as_double());
       
-      // Use image center if cx/cy not specified
-      if (cx < 0) cx = static_cast<float>(ow) / 2.0f;
-      if (cy < 0) cy = static_cast<float>(oh) / 2.0f;
-      
       // Convert pixel coordinates to 3D coordinates in camera optical frame
-      // Note: In optical frame, X is right, Y is down, Z is forward
-      float X = (center.x - cx) * Z / fx;
-      float Y = (center.y - cy) * Z / fy;
-
+      // Using OpenCV coordinate system first
+      float X_cv = (center.x - cx) * Z / fx;  // Right in image
+      float Y_cv = (center.y - cy) * Z / fy;  // Down in image
+      float Z_cv = Z;                         // Forward from camera
+      
       geometry_msgs::msg::PoseStamped cam_pose;
       cam_pose.header = msg->header;
-      cam_pose.header.frame_id = "camera_link_optical";  // change if your camera frame differs
-      cam_pose.pose.position.x = X;
-      cam_pose.pose.position.y = Y;
-      cam_pose.pose.position.z = Z;
-      cam_pose.pose.orientation.w = 1.0;  // identity quaternion
+      cam_pose.header.frame_id = "camera_link_optical";
+      
+      // Apply same OpenCV to ROS coordinate transformation as ArUco detector
+      cam_pose.pose.position.x = Z_cv;     // Z becomes X (forward becomes right)
+      cam_pose.pose.position.y = -X_cv;    // -X becomes Y (right becomes forward) 
+      cam_pose.pose.position.z = -Y_cv;    // -Y becomes Z (down becomes up)
+      cam_pose.pose.orientation.w = 1.0;   // identity quaternion
 
       try {
         // Transform pose to "odom" frame
@@ -382,8 +381,9 @@ private:
         // Still publish the raw detection for debugging
         pub_pose_->publish(odom_pose);
 
-        RCLCPP_DEBUG(get_logger(), "Detection: pixel[%d,%d] depth=%.3fm cam[%.3f,%.3f,%.3f] odom[%.3f,%.3f,%.3f]",
-                    center.x, center.y, Z, X, Y, Z,
+        RCLCPP_DEBUG(get_logger(), "Detection: pixel[%d,%d] depth=%.3fm cv[%.3f,%.3f,%.3f] ros[%.3f,%.3f,%.3f] odom[%.3f,%.3f,%.3f]",
+                    center.x, center.y, Z, X_cv, Y_cv, Z_cv,
+                    cam_pose.pose.position.x, cam_pose.pose.position.y, cam_pose.pose.position.z,
                     odom_pose.pose.position.x, odom_pose.pose.position.y, odom_pose.pose.position.z);
 
       } catch (const tf2::TransformException& ex) {
