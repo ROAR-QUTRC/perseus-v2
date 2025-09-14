@@ -7,7 +7,12 @@ To run the node:
 ```sh
 nix-shell -p gcc14 onnxruntime --run "source install/setup.bash && ros2 run perseus_vision cube_detector"
 ```
-
+Debugging:
+```sh
+unset NIX_CFLAGS_COMPILE
+unset NIX_LDFLAGS
+colcon build --packages-select perseus_vision
+```
 ## Special Thanks
 
 Special thanks to the **Monash Rover Team** for pulicing the dataset used to train the YOLO cube detection model.
