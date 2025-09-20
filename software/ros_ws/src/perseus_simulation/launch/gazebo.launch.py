@@ -19,10 +19,7 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     # ARGUMENTS
     gz_world = LaunchConfiguration("gz_world", default="perseus_arc_world.world")
-    initial_pose_x = LaunchConfiguration("initial_pose_x", default="2.0")  # X position
-    initial_pose_y = LaunchConfiguration("initial_pose_y", default="3.0")  # Y position
-    initial_pose_z = LaunchConfiguration("initial_pose_z", default="0.5")  # Z position
-    initial_pose_yaw = LaunchConfiguration("initial_pose_yaw", default="0.0")  # Yaw rotation
+
 
     # CONFIG + DATA FILES
     gz_bridge_params = PathJoinSubstitution(
@@ -40,9 +37,9 @@ def generate_launch_description():
             ),
             description="The world file from `perseus_simulation` to use",
         ),
-        DeclareLaunchArgument("initial_pose_x", default_value="2.0", description="Initial X position of the robot"),
-        DeclareLaunchArgument("initial_pose_y", default_value="3.0", description="Initial Y position of the robot"),
-        DeclareLaunchArgument("initial_pose_z", default_value="0.5", description="Initial Z position of the robot"),
+        DeclareLaunchArgument("initial_pose_x", default_value="-3.5", description="Initial X position of the robot"),
+        DeclareLaunchArgument("initial_pose_y", default_value="-3.0", description="Initial Y position of the robot"),
+        DeclareLaunchArgument("initial_pose_z", default_value="0.3", description="Initial Z position of the robot"),
         DeclareLaunchArgument("initial_pose_yaw", default_value="0.0", description="Initial yaw of the robot"),
     ]
 

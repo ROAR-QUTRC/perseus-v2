@@ -1,8 +1,8 @@
 <?xml version='1.0'?>
 <sdf version='1.8'>
-  <model name='aruco_markers'>
+  <model name='aruco_markers3'>
     <static>true</static>
-    <pose>3 0 0 0 0 0</pose> <!-- Only need to change this pose to move the entire model -->
+    <pose>0 0 0.0 0 0 0</pose> <!-- Reset to origin, let world file control position -->
 
     <!-- Post/Pole - Main link -->
     <link name='post_link'>
@@ -26,6 +26,33 @@
           <cylinder>
             <radius>0.025</radius>
             <length>1.0</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      
+      <!-- Small base for stability -->
+      <visual name='base_visual'>
+        <pose>0 0 -0.485 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.09</radius>
+            <length>0.02</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1</ambient>
+          <diffuse>0.2 0.2 0.2 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+      </visual>
+      
+      <collision name='base_collision'>
+        <pose>0 0 -0.485 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.09</radius>
+            <length>0.02</length>
           </cylinder>
         </geometry>
       </collision>
