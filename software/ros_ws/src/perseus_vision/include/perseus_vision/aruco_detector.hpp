@@ -44,10 +44,10 @@ private:
     cv::Mat dist_coeffs_;
 
     // Configurable parameters
-    double marker_length_;          // in meters
-    double axis_length_;            // for drawing axes
-    std::string camera_frame_;      // input frame (e.g. camera_link_optical)
-    std::string tf_output_frame_;   // output TF frame (e.g. odom)
+    double marker_length_;         // in meters
+    double axis_length_;           // for drawing axes
+    std::string camera_frame_;     // input frame (e.g. camera_link_optical)
+    std::string tf_output_frame_;  // output TF frame (e.g. odom)
 };
 
 #endif  // ARUCO_DETECTOR_HPP

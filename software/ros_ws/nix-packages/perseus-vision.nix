@@ -3,21 +3,20 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  ament-index-cpp,
   ament-lint-auto,
   ament-lint-common,
   cv-bridge,
   geometry-msgs,
   image-transport,
+  onnxruntime,
   opencv,
   rclcpp,
   sensor-msgs,
   tf2,
+  tf2-geometry-msgs,
   tf2-ros,
-  tf2-geometry-msgs,  
-  onnxruntime,
-  gcc14,
 }:
-
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-vision";
   version = "0.0.0";
@@ -25,27 +24,25 @@ buildRosPackage rec {
   src = ./../src/perseus_vision;
 
   buildType = "ament_cmake";
-  buildInputs = [ ament-cmake gcc14];
+  buildInputs = [ ament-cmake ];
   checkInputs = [
     ament-lint-auto
     ament-lint-common
   ];
   propagatedBuildInputs = [
+    ament-index-cpp
     cv-bridge
     geometry-msgs
     image-transport
+    onnxruntime
     opencv
     rclcpp
     sensor-msgs
     tf2
+    tf2-geometry-msgs
     tf2-ros
-    tf2-geometry-msgs  
-    onnxruntime
-    gcc14
-
   ];
   nativeBuildInputs = [ ament-cmake ];
-
 
   meta = {
     description = "A package to do visionary tasks of Perseus";

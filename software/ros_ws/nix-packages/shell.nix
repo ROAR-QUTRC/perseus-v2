@@ -51,6 +51,7 @@ pkgs.mkShell {
             mecanum-drive-controller
             navigation2
             nlohmann_json
+            onnxruntime
             opencv
             openssl
             pluginlib
