@@ -2,7 +2,7 @@ ekf_filter_node:
   ros__parameters:
     frequency: 50.0 # High frequency for better transform continuity
     sensor_timeout: 0.2 # More lenient timeout
-    two_d_mode: true # Enable 2D mode - faster processing for ground robot
+    two_d_mode: false # Disable 2D mode for full 3D odometry
     transform_time_offset: 0.0 # No time offset needed in simulation
     transform_timeout: 1.0 # More extended timeout for transform reliability
     print_diagnostics: true # Enable for debugging transform issues
@@ -12,10 +12,10 @@ ekf_filter_node:
     # Use for position, orientation, and velocities
     # =========================
     odom0: /odom
-    odom0_config: [true, true, false, # x, y position (ignore z)
-      false, false, true, # use yaw from wheel odometry
-      true, true, false, # vel_x, vel_y (no vel_z)
-      false, false, true, # use yaw rate from wheel odometry
+    odom0_config: [true, true, true, # x, y, z position (full 3D)
+      true, true, true, # roll, pitch, yaw orientation (full 3D)
+      true, true, true, # vel_x, vel_y, vel_z (full 3D velocities)
+      true, true, true, # roll_rate, pitch_rate, yaw_rate (full 3D angular rates)
       false, false, false] # accelerations not used
     odom0_differential: false
     odom0_relative: false
@@ -28,9 +28,9 @@ ekf_filter_node:
     # =========================
     imu0: /imu
     imu0_config: [false, false, false, # IMU does not provide position
-      false, false, true, # only yaw orientation
+      true, true, true, # roll, pitch, yaw orientation (full 3D from IMU)
       false, false, false, # no direct linear velocity
-      false, false, true, # only yaw rate
+      true, true, true, # roll_rate, pitch_rate, yaw_rate (full 3D angular rates)
       false, false, false] # don't use linear accelerations for now
     imu0_differential: false
     imu0_remove_gravitational_acceleration: true
