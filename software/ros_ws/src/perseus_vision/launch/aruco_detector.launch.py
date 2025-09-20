@@ -8,7 +8,7 @@ def generate_launch_description():
     config_file = os.path.join(
         get_package_share_directory("perseus_vision"),
         "config",
-        "aruco_detector_params.yaml",
+        "vision_params.yaml",
     )
 
     return LaunchDescription(

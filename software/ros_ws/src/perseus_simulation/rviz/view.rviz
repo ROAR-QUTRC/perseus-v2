@@ -241,10 +241,10 @@ Visualization Manager:
       Show Names: false
       Tree:
         base_link:
-          camera_link:
-            camera_link_optical:
-              {}
           chassis:
+            camera_link:
+              camera_link_optical:
+                {}
             flange_bearing:
               differential_bar:
                 {}
@@ -318,7 +318,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -376,10 +376,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4003981947898865
+      Pitch: 0.27539828419685364
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.0304150581359863
+      Yaw: 3.3354146480560303
     Saved: ~
 Window Geometry:
   Displays:

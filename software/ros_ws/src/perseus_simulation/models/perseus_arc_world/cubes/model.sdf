@@ -5,7 +5,7 @@
     <static>false</static>
 
     <link name='cube_1'>
-      <pose>-1.0 -1.0 1.5 0 0 0</pose>
+      <pose>-7.2 4.8 1.5 0 0 0.7</pose>
       <collision name='cube_1_collision'>
         <geometry>
           <box>
@@ -38,7 +38,7 @@
       </inertial>
     </link>
     <link name='cube_2'>
-      <pose>-1.0 1.0 1.5 0 0 0</pose>
+      <pose>4.1 -8.3 1.5 0 0 -0.4</pose>
       <collision name='cube_2_collision'>
         <geometry>
           <box>
@@ -71,7 +71,7 @@
       </inertial>
     </link>
     <link name='cube_3'>
-      <pose>1.0 -1.0 1.5 0 0 0</pose>
+      <pose>-1.8 -10.2 1.5 0 0 1.2</pose>
       <collision name='cube_3_collision'>
         <geometry>
           <box>
@@ -104,7 +104,7 @@
       </inertial>
     </link>
     <link name='cube_4'>
-      <pose>1.0 1.0 1.5 0 0 0</pose>
+      <pose>8.1 7.6 1.5 0 0 -0.9</pose>
       <collision name='cube_4_collision'>
         <geometry>
           <box>

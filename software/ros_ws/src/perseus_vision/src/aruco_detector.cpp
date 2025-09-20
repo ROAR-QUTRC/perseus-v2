@@ -20,7 +20,7 @@ ArucoDetector::ArucoDetector()
     dist_coeffs_ = cv::Mat(dist_coeffs_param).clone();
 
     // ArUco setup
-    dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+    dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100);
     detector_ = cv::aruco::ArucoDetector(dictionary_);
 
     // TF broadcaster and listener
