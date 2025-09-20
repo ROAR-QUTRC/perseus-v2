@@ -33,13 +33,14 @@
     <xacro:include filename="$(find perseus_description)/urdf/motor_wheel.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/wheel.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/sensors.urdf.xacro"/>
-    
+    <xacro:include filename="$(find perseus_description)/urdf/camera_depth.urdf.xacro" />
+    <!-- <xacro:camera_depth prefix="$(prefix)" /> -->
     <!-- An empty base_link to attach everything to -->
     <link name="${prefix}base_link"/> 
 
 
     <joint name="${prefix}chassis_joint" type="fixed"> <!-- Joint Connect base_link and chassis -->
-      <origin xyz="0 0.0 ${chassis_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.3 0.0 ${chassis_z_offset/scale_factor}" rpy="0 0.0 0.0"/>
       <parent link="${prefix}base_link"/>
       <child link="${prefix}chassis"/>
     </joint>
@@ -125,6 +126,10 @@
       <origin xyz="0 0 -0.035" rpy="0 ${PI} 0"/>
     </joint>
 
-
+    <joint name="${prefix}camera_joint" type="fixed">
+        <parent link="${prefix}chassis"/>
+        <child link="${prefix}camera_link"/>
+        <origin xyz="0.01 0 0.2" rpy="0 0 0"/>
+    </joint>
   </xacro:macro>
 </robot>
