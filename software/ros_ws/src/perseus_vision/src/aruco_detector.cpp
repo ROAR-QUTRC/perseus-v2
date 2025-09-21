@@ -6,7 +6,7 @@ ArucoDetector::ArucoDetector()
     // Declare and load parameters
     marker_length_ = this->declare_parameter<double>("marker_length", 0.35);
     axis_length_ = this->declare_parameter<double>("axis_length", 0.03);
-
+    dictionary_id = this->declare_parameter<int>("dictionary_id", 1);
     camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_link_optical");
     tf_output_frame_ = this->declare_parameter<std::string>("tf_output_frame", "odom");
 
@@ -20,8 +20,8 @@ ArucoDetector::ArucoDetector()
     dist_coeffs_ = cv::Mat(dist_coeffs_param).clone();
 
     // ArUco setup
-    dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100);
-    detector_ = cv::aruco::ArucoDetector(dictionary_);
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dictionary_id);
+    detector_ = cv::aruco::ArucoDetector(dictionary);
 
     // TF broadcaster and listener
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);

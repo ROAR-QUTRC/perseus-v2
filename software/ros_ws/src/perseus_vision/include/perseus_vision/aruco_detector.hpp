@@ -44,6 +44,7 @@ private:
     cv::Mat dist_coeffs_;
 
     // Configurable parameters
+    int dictionary_id;
     double marker_length_;         // in meters
     double axis_length_;           // for drawing axes
     std::string camera_frame_;     // input frame (e.g. camera_link_optical)
