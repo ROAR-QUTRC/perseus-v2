@@ -12,10 +12,10 @@ ekf_filter_node:
     # Use for position, orientation, and velocities
     # =========================
     odom0: /odom
-    odom0_config: [true, true, true, # x, y, z position (full 3D)
-      true, true, true, # roll, pitch, yaw orientation (full 3D)
-      true, true, true, # vel_x, vel_y, vel_z (full 3D velocities)
-      true, true, true, # roll_rate, pitch_rate, yaw_rate (full 3D angular rates)
+    odom0_config: [true, true, false, # x, y position from wheels, z from IMU
+      false, false, true, # roll, pitch from IMU, yaw from wheels
+      true, true, false, # vel_x, vel_y from wheels, vel_z from IMU  
+      false, false, true, # angular rates: roll_rate, pitch_rate from IMU, yaw_rate from wheels
       false, false, false] # accelerations not used
     odom0_differential: false
     odom0_relative: false
@@ -31,7 +31,7 @@ ekf_filter_node:
       true, true, true, # roll, pitch, yaw orientation (full 3D from IMU)
       false, false, false, # no direct linear velocity
       true, true, true, # roll_rate, pitch_rate, yaw_rate (full 3D angular rates)
-      false, false, false] # don't use linear accelerations for now
+      true, true, true] # USE linear accelerations for full 3D odometry
     imu0_differential: false
     imu0_remove_gravitational_acceleration: true
     imu0_queue_size: 10 # Increased queue size for better timing reliability
