@@ -31,7 +31,7 @@ ekf_filter_node:
       true, true, true, # roll, pitch, yaw orientation (full 3D from IMU)
       false, false, false, # no direct linear velocity
       true, true, true, # roll_rate, pitch_rate, yaw_rate (full 3D angular rates)
-      false, false, false] # don't use linear accelerations for now
+      false, false, false] # Linear accelerations are disabled due to unreliable IMU data in simulation; re-enable if IMU provides accurate linear acceleration measurements.
     imu0_differential: false
     imu0_remove_gravitational_acceleration: true
     imu0_queue_size: 10 # Increased queue size for better timing reliability
