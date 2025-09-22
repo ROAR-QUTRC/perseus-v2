@@ -126,10 +126,16 @@
       <origin xyz="0 0 -0.035" rpy="0 ${PI} 0"/>
     </joint>
 
+    <joint name="${prefix}laser_2d_joint" type="fixed">
+      <parent link="${prefix}chassis"/>
+      <child link="${prefix}laser_2d_frame"/>
+      <origin xyz="-0.15 0 0.25" rpy="0 0 0"/>
+    </joint>
+
     <joint name="${prefix}camera_joint" type="fixed">
         <parent link="${prefix}chassis"/>
         <child link="${prefix}camera_link"/>
-        <origin xyz="0.01 0 0.2" rpy="0 0 0"/>
+        <origin xyz="0.01 0 0.18" rpy="0 0 0"/>
     </joint>
   </xacro:macro>
 </robot>

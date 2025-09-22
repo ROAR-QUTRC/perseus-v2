@@ -5,6 +5,7 @@
   ament-cmake,
   gz-ros2-control,
   perseus,
+  pointcloud-to-laserscan,
   ros-gz-bridge,
   ros-gz-image,
   ros-gz-interfaces,
@@ -21,6 +22,7 @@ buildRosPackage rec {
   propagatedBuildInputs = [
     gz-ros2-control
     perseus
+    pointcloud-to-laserscan
     ros-gz-bridge
     ros-gz-image
     ros-gz-interfaces

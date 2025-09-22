@@ -172,19 +172,7 @@ def generate_launch_description():
         actions=[fallback_odom_transform],
     )
 
-    # Static transform publisher for IMU frame to base_link - NOT NEEDED
-    # The IMU sensor in Gazebo already publishes directly to base_link frame
-    # static_transform_publisher = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     name='imu_to_base_link_publisher',
-    #     arguments=[
-    #         '0', '0', '0',  # translation x, y, z
-    #         '0', '0', '0', '1',  # rotation quaternion x, y, z, w (identity - no rotation)
-    #         'base_link',  # parent frame
-    #         'imu_link'  # child frame - simplified name
-    #     ]
-    # )
+
 
     launch_files = [
         gz_launch,
