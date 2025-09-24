@@ -4,7 +4,7 @@
   <link name="${prefix}front_right_motor">
     <inertial>
       <!-- moving origin has no perceivable impact-->
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <mass value="1"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
@@ -16,7 +16,7 @@
       <!-- <material name="white"/> -->
     </visual>
     <collision>
-      <origin xyz="-0.3 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
         <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
       </geometry>
@@ -26,7 +26,7 @@
   <link name="${prefix}rear_right_motor">
     <inertial>
       <!-- moving origin has no perceivable impact-->
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <mass value="1"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
@@ -38,7 +38,7 @@
       <!-- <material name="white"/> -->
     </visual>
     <collision>
-      <origin xyz="-0.3 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
         <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
       </geometry>

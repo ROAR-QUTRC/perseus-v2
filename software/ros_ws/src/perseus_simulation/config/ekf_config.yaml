@@ -1,10 +1,10 @@
 ekf_filter_node:
   ros__parameters:
-    frequency: 50.0 # High frequency for better transform continuity
-    sensor_timeout: 0.2 # More lenient timeout
-    two_d_mode: false # Disable 2D mode for full 3D odometry
+    frequency: 100.0 # Increased from 50Hz to 100Hz for better transform continuity
+    sensor_timeout: 0.1 # Reduced timeout for faster response
+    two_d_mode: true # Enable 2D mode for 2D SLAM - constrains z, roll, pitch
     transform_time_offset: 0.0 # No time offset needed in simulation
-    transform_timeout: 1.0 # More extended timeout for transform reliability
+    transform_timeout: 0.5 # Reduced timeout for faster response
     print_diagnostics: true # Enable for debugging transform issues
     debug: false # Set to true for detailed debug output
     # =========================
@@ -12,15 +12,15 @@ ekf_filter_node:
     # Use for position, orientation, and velocities
     # =========================
     odom0: /odom
-    odom0_config: [true, true, true, # x, y, z position (full 3D)
-      true, true, true, # roll, pitch, yaw orientation (full 3D)
-      true, true, true, # vel_x, vel_y, vel_z (full 3D velocities)
-      true, true, true, # roll_rate, pitch_rate, yaw_rate (full 3D angular rates)
+    odom0_config: [true, true, false, # x, y position (2D only, z disabled)
+      false, false, true, # roll, pitch disabled, yaw enabled (2D mode)
+      true, true, false, # vel_x, vel_y enabled, vel_z disabled (2D velocities)
+      false, false, true, # roll_rate, pitch_rate disabled, yaw_rate enabled (2D angular rate)
       false, false, false] # accelerations not used
     odom0_differential: false
     odom0_relative: false
-    odom0_queue_size: 10 # Increased queue size for better timing reliability
-    odom0_nodelay: false # Allow slight buffering for consistent timing
+    odom0_queue_size: 5 # Reduced from 10 for faster response
+    odom0_nodelay: true # Changed to true for immediate processing
     odom0_pose_rejection_threshold: 2.0 # More lenient for simulation - reject if pose jump > 2m
     odom0_twist_rejection_threshold: 2.0 # More lenient for simulation - reject if twist jump > 2 m/s
     # =========================
@@ -28,14 +28,14 @@ ekf_filter_node:
     # =========================
     imu0: /imu
     imu0_config: [false, false, false, # IMU does not provide position
-      true, true, true, # roll, pitch, yaw orientation (full 3D from IMU)
+      false, false, true, # roll, pitch disabled, yaw enabled (2D mode)
       false, false, false, # no direct linear velocity
-      true, true, true, # roll_rate, pitch_rate, yaw_rate (full 3D angular rates)
-      false, false, false] # Linear accelerations are disabled due to unreliable IMU data in simulation; re-enable if IMU provides accurate linear acceleration measurements.
+      false, false, true, # roll_rate, pitch_rate disabled, yaw_rate enabled (2D)
+      false, false, false] # Linear accelerations disabled
     imu0_differential: false
     imu0_remove_gravitational_acceleration: true
-    imu0_queue_size: 10 # Increased queue size for better timing reliability
-    imu0_nodelay: false # Allow slight buffering for consistent timing
+    imu0_queue_size: 5 # Reduced from 10 for faster response
+    imu0_nodelay: true # Changed to true for immediate processing
     imu0_pose_rejection_threshold: 2.0 # More lenient - reject orientation jumps > 2 rad
     imu0_twist_rejection_threshold: 2.0 # More lenient - reject twist jumps > 2 rad/s
     imu0_linear_acceleration_rejection_threshold: 2.0 # More lenient
@@ -47,7 +47,7 @@ ekf_filter_node:
     world_frame: odom # Used for tf publishing
     publish_tf: true # Publish odom -> base_link tf
     predict_to_current_time: true # Predict state forward for better transform timing
-    smooth_lagged_data: true # Smooth delayed sensor data for consistent transforms
+    smooth_lagged_data: false # Disabled for faster response (less delay)
     # =========================
     # Process Noise Covariance (Q)
     # Higher values = more responsive to sensor data, lower values = smoother

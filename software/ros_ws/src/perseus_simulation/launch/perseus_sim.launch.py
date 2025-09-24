@@ -17,6 +17,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
+    rviz_config_name = LaunchConfiguration("rviz_config")
 
     arguments = [
         DeclareLaunchArgument(
@@ -24,10 +25,15 @@ def generate_launch_description():
             default_value="true",
             description="If true, use simulated clock",
         ),
+        DeclareLaunchArgument(
+            "rviz_config",
+            default_value="view.rviz",
+            description="RVIZ config file to use (view.rviz or view_no_image.rviz for shader issue workaround)",
+        ),
     ]
     # RViz configuration file
     rviz_config = PathJoinSubstitution(
-        [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
+        [FindPackageShare("perseus_simulation"), "rviz", rviz_config_name]
     )
 
     ekf_config_file = PathJoinSubstitution(
@@ -99,7 +105,7 @@ def generate_launch_description():
         ],
     )
 
-    # RViz with nixGL support
+    # RViz with nixGL support and OpenGL fixes
     rviz = ExecuteProcess(
         cmd=[
             "nix",
@@ -119,6 +125,13 @@ def generate_launch_description():
             "ROS_NAMESPACE": "/",
             "RMW_QOS_POLICY_HISTORY": "keep_last",
             "RMW_QOS_POLICY_DEPTH": "100",
+            # OpenGL fixes for shader issues
+            "MESA_GL_VERSION_OVERRIDE": "3.3",
+            "MESA_GLSL_VERSION_OVERRIDE": "330",
+            "__GL_SHADER_DISK_CACHE": "0",
+            "__GL_THREADED_OPTIMIZATIONS": "0",
+            # Force software rendering if hardware acceleration is problematic
+            # "LIBGL_ALWAYS_SOFTWARE": "1",  # Uncomment if needed
         },
     )
 
@@ -177,12 +190,10 @@ def generate_launch_description():
     launch_files = [
         gz_launch,
         rsp_launch,  # Robot state publisher
-        teleop_keyboard_controller,
+        # teleop_keyboard_controller,
         controllers_delayed,  # Controllers
         rviz,  # Start RViz with nixGL support
         ekf_delayed,  # EKF node with delay
-        # fallback_transform_delayed,  # Uncomment if EKF fails to provide transform
-        # static_transform_publisher not needed - IMU publishes directly to base_link
     ]
 
     return LaunchDescription(arguments + launch_files)

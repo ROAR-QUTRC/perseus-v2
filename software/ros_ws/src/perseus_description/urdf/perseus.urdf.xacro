@@ -38,6 +38,13 @@
     <!-- An empty base_link to attach everything to -->
     <link name="${prefix}base_link"/> 
 
+    <link name="${prefix}base_footprint"/>  <!-- 2D footprint for SLAM & navigation -->
+  
+    <joint name="${prefix}base_to_footprint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="${prefix}chassis"/>
+      <child link="${prefix}base_footprint"/>
+    </joint>
 
     <joint name="${prefix}chassis_joint" type="fixed"> <!-- Joint Connect base_link and chassis -->
       <origin xyz="0.3 0.0 ${chassis_z_offset/scale_factor}" rpy="0 0.0 0.0"/>

@@ -44,7 +44,7 @@
     <specular>0.1 0.1 0.1 1</specular>
   </material>
   <sensor name="${prefix}lidar_sensor" type="gpu_lidar">
-    <topic>scan</topic>
+    <topic>scan_3d</topic>
     <update_rate>50</update_rate>
     <always_on>false</always_on>
     <visualize>false</visualize>
@@ -81,7 +81,7 @@
     <specular>0.0 0.0 1.0 1</specular>
   </material>
   <sensor name="${prefix}laser_2d_sensor" type="gpu_lidar">
-    <topic>scan_2d</topic>
+    <topic>scan</topic>
     <update_rate>50</update_rate>
     <always_on>true</always_on>
     <visualize>false</visualize>

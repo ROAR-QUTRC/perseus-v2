@@ -29,8 +29,8 @@
   gz_type_name: "gz.msgs.LaserScan"
   direction: GZ_TO_ROS
 # 2D lidar
-- ros_topic_name: "scan_2d"
-  gz_topic_name: "scan_2d"
+- ros_topic_name: "scan_3d"
+  gz_topic_name: "scan_3d"
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
   direction: GZ_TO_ROS
@@ -65,7 +65,7 @@
   direction: GZ_TO_ROS
 # For PointCloud2 (3D)
 - ros_topic_name: /points
-  gz_topic_name: /scan/points
+  gz_topic_name: /scan_3d/points
   ros_type_name: sensor_msgs/msg/PointCloud2
   gz_type_name: gz.msgs.PointCloudPacked
   direction: GZ_TO_ROS
