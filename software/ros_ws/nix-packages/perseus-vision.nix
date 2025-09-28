@@ -3,7 +3,6 @@
   lib,
   buildRosPackage,
   ament-cmake,
-  ament-index-cpp,
   ament-lint-auto,
   ament-lint-common,
   cv-bridge,
@@ -14,8 +13,8 @@
   rclcpp,
   sensor-msgs,
   tf2,
-  tf2-geometry-msgs,
   tf2-ros,
+  tf2-geometry-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-vision";
@@ -30,7 +29,6 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
-    ament-index-cpp
     cv-bridge
     geometry-msgs
     image-transport
@@ -39,8 +37,8 @@ buildRosPackage rec {
     rclcpp
     sensor-msgs
     tf2
-    tf2-geometry-msgs
     tf2-ros
+    tf2-geometry-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 

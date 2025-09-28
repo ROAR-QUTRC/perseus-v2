@@ -92,18 +92,18 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
-    teleop_keyboard_controller = Node(
-        package="perseus_teleop",
-        executable="teleop_keyboard",
-        name="teleop_keyboard",
-        output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
-        prefix="gnome-terminal --geometry=60x20 -- ",  # Use gnome-terminal instead of xterm
-        remappings=[
-            # Example: remap cmd_vel topic if needed
-            # ('/cmd_vel_out', '/your_robot/cmd_vel')
-        ],
-    )
+    # teleop_keyboard_controller = Node(
+    #     package="perseus_teleop",
+    #     executable="teleop_keyboard",
+    #     name="teleop_keyboard",
+    #     output="screen",
+    #     parameters=[{"use_sim_time": use_sim_time}],
+    #     prefix="gnome-terminal --geometry=60x20 -- ",  # Use gnome-terminal instead of xterm
+    #     remappings=[
+    #         # Example: remap cmd_vel topic if needed
+    #         # ('/cmd_vel_out', '/your_robot/cmd_vel')
+    #     ],
+    # )
 
     # RViz with nixGL support and OpenGL fixes
     rviz = ExecuteProcess(
@@ -161,31 +161,29 @@ def generate_launch_description():
     )
 
     # Fallback static transform publisher for odom->base_link (in case EKF fails)
-    # This should not be needed if EKF is working properly
-    fallback_odom_transform = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="fallback_odom_publisher",
-        arguments=[
-            "0",
-            "0",
-            "0",  # translation x, y, z
-            "0",
-            "0",
-            "0",
-            "1",  # rotation quaternion x, y, z, w (identity - no rotation)
-            "odom",  # parent frame
-            "base_link",  # child frame
-        ],
-    )
+    # # This should not be needed if EKF is working properly
+    # fallback_odom_transform = Node(
+    #     package="tf2_ros",
+    #     executable="static_transform_publisher",
+    #     name="fallback_odom_publisher",
+    #     arguments=[
+    #         "0",
+    #         "0",
+    #         "0",  # translation x, y, z
+    #         "0",
+    #         "0",
+    #         "0",
+    #         "1",  # rotation quaternion x, y, z, w (identity - no rotation)
+    #         "odom",  # parent frame
+    #         "base_link",  # child frame
+    #     ],
+    # )
 
-    # Delay the fallback transform - only if EKF doesn't provide it
-    fallback_transform_delayed = TimerAction(
-        period=10.0,  # Wait 10 seconds - if EKF hasn't started by then, use fallback
-        actions=[fallback_odom_transform],
-    )
-
-
+    # # Delay the fallback transform - only if EKF doesn't provide it
+    # fallback_transform_delayed = TimerAction(
+    #     period=10.0,  # Wait 10 seconds - if EKF hasn't started by then, use fallback
+    #     actions=[fallback_odom_transform],
+    # )
 
     launch_files = [
         gz_launch,

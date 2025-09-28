@@ -3,7 +3,6 @@ from launch.actions import (
     DeclareLaunchArgument,
     ExecuteProcess,
     OpaqueFunction,
-    TimerAction,
 )
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -19,7 +18,6 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     # ARGUMENTS
     gz_world = LaunchConfiguration("gz_world", default="perseus_arc_world.world")
-
 
     # CONFIG + DATA FILES
     gz_bridge_params = PathJoinSubstitution(
@@ -37,10 +35,26 @@ def generate_launch_description():
             ),
             description="The world file from `perseus_simulation` to use",
         ),
-        DeclareLaunchArgument("initial_pose_x", default_value="-3.5", description="Initial X position of the robot"),
-        DeclareLaunchArgument("initial_pose_y", default_value="-3.0", description="Initial Y position of the robot"),
-        DeclareLaunchArgument("initial_pose_z", default_value="0.3", description="Initial Z position of the robot"),
-        DeclareLaunchArgument("initial_pose_yaw", default_value="0.0", description="Initial yaw of the robot"),
+        DeclareLaunchArgument(
+            "initial_pose_x",
+            default_value="-3.5",
+            description="Initial X position of the robot",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_y",
+            default_value="-3.0",
+            description="Initial Y position of the robot",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_z",
+            default_value="0.3",
+            description="Initial Z position of the robot",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_yaw",
+            default_value="0.0",
+            description="Initial yaw of the robot",
+        ),
     ]
 
     # IMPORTED LAUNCH FILES
@@ -87,7 +101,7 @@ def generate_launch_description():
         parameters=[{"config_file": gz_bridge_params}],
         output="both",
     )
-    
+
     # Spawn entity with initial pose parameters
     gz_spawn_entity = Node(
         package="ros_gz_sim",
@@ -99,10 +113,14 @@ def generate_launch_description():
             "perseus",
             "-allow_renaming",
             "true",
-            "-x", LaunchConfiguration("initial_pose_x"),  # X position
-            "-y", LaunchConfiguration("initial_pose_y"),  # Y position
-            "-z", LaunchConfiguration("initial_pose_z"),  # Z position
-            "-Y", LaunchConfiguration("initial_pose_yaw"),  # Yaw orientation
+            "-x",
+            LaunchConfiguration("initial_pose_x"),  # X position
+            "-y",
+            LaunchConfiguration("initial_pose_y"),  # Y position
+            "-z",
+            LaunchConfiguration("initial_pose_z"),  # Z position
+            "-Y",
+            LaunchConfiguration("initial_pose_yaw"),  # Yaw orientation
         ],
         output="both",
     )
