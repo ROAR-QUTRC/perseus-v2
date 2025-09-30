@@ -1,7 +1,7 @@
-import fs, { read, readdirSync, watch } from 'node:fs';
+import fs, { read, readdirSync, watch } from "node:fs";
 
 // fs.symlinkSync('/dev', '/tmp/dev');
-fs.mkdirSync('/tmp/dev/v4ltest/by-id/persist', { recursive: true });
+fs.mkdirSync("/tmp/dev/v4ltest/by-id/persist", { recursive: true });
 
 // import { io, Socket } from "socket.io-client";
 // import config from "./config.json";
