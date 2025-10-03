@@ -1,12 +1,12 @@
 ekf_filter_node:
   ros__parameters:
-    frequency: 100.0 # Increased from 50Hz to 100Hz for better transform continuity
-    sensor_timeout: 0.1 # Reduced timeout for faster response
+    frequency: 100.0 # Conservative but smooth frequency that system can handle
+    sensor_timeout: 0.05 # Reasonable timeout for stable performance
     two_d_mode: true # Enable 2D mode for 2D SLAM - constrains z, roll, pitch
     transform_time_offset: 0.0 # No time offset needed in simulation
-    transform_timeout: 0.5 # Reduced timeout for faster response
-    print_diagnostics: true # Enable for debugging transform issues
-    debug: false # Set to true for detailed debug output
+    transform_timeout: 0.2 # Stable timeout for reliable transforms
+    print_diagnostics: false # Disable for maximum performance
+    debug: false # Disable for maximum performance
     # =========================
     # Odometry from wheels (differential drive controller)
     # Use for position, orientation, and velocities
@@ -19,10 +19,10 @@ ekf_filter_node:
       false, false, false] # accelerations not used
     odom0_differential: false
     odom0_relative: false
-    odom0_queue_size: 5 # Reduced from 10 for faster response
-    odom0_nodelay: true # Changed to true for immediate processing
-    odom0_pose_rejection_threshold: 2.0 # More lenient for simulation - reject if pose jump > 2m
-    odom0_twist_rejection_threshold: 2.0 # More lenient for simulation - reject if twist jump > 2 m/s
+    odom0_queue_size: 1 # Minimal queue for zero latency
+    odom0_nodelay: true # Immediate processing
+    odom0_pose_rejection_threshold: 0.5 # Strict for accuracy
+    odom0_twist_rejection_threshold: 1.0 # Strict for accuracy
     # =========================
     # IMU sensor for orientation and angular velocities
     # =========================
@@ -34,11 +34,11 @@ ekf_filter_node:
       false, false, false] # Linear accelerations disabled
     imu0_differential: false
     imu0_remove_gravitational_acceleration: true
-    imu0_queue_size: 5 # Reduced from 10 for faster response
-    imu0_nodelay: true # Changed to true for immediate processing
-    imu0_pose_rejection_threshold: 2.0 # More lenient - reject orientation jumps > 2 rad
-    imu0_twist_rejection_threshold: 2.0 # More lenient - reject twist jumps > 2 rad/s
-    imu0_linear_acceleration_rejection_threshold: 2.0 # More lenient
+    imu0_queue_size: 1 # Minimal queue for zero latency
+    imu0_nodelay: true # Immediate processing
+    imu0_pose_rejection_threshold: 0.1 # Very strict - trust IMU completely
+    imu0_twist_rejection_threshold: 0.5 # Strict - trust IMU angular rates
+    imu0_linear_acceleration_rejection_threshold: 5.0 # Reasonable for acceleration
     # =========================
     # Frames
     # =========================
@@ -46,8 +46,9 @@ ekf_filter_node:
     base_link_frame: base_link # Robot base
     world_frame: odom # Used for tf publishing
     publish_tf: true # Publish odom -> base_link tf
-    predict_to_current_time: true # Predict state forward for better transform timing
-    smooth_lagged_data: false # Disabled for faster response (less delay)
+    predict_to_current_time: true # Predict state forward for ultra-smooth transforms
+    smooth_lagged_data: true # Enable for maximum smoothness
+    history_length: 0.2 # Short history for fast response with smoothing
     # =========================
     # Process Noise Covariance (Q)
     # Higher values = more responsive to sensor data, lower values = smoother

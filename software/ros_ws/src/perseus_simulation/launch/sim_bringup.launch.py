@@ -2,6 +2,7 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
+    TimerAction,
 )
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -63,7 +64,7 @@ def generate_launch_description():
         }.items(),
     )
 
-    # LAUNCH AUTONOMY ONLINE ASYNC (SLAM)
+    # LAUNCH AUTONOMY ONLINE ASYNC (SLAM) - Delayed by 20 seconds after perseus_sim
     autonomy_slam_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -83,9 +84,41 @@ def generate_launch_description():
         }.items(),
     )
 
+    # LAUNCH NAVIGATION STACK - Delayed by 25 seconds to allow SLAM to initialize
+    nav_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("autonomy"),
+                        "launch",
+                        "perseus_nav_bringup.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "autostart": autostart,
+        }.items(),
+    )
+
+    # Delay SLAM launch by 20 seconds to allow perseus_sim to fully initialize
+    slam_delay = TimerAction(
+        period=20.0,  # Wait 20 seconds after perseus_sim launch for full initialization
+        actions=[autonomy_slam_launch],
+    )
+
+    # Delay Navigation launch by 25 seconds to allow SLAM to initialize first
+    nav_delay = TimerAction(
+        period=25.0,  # Wait 25 seconds after perseus_sim launch for SLAM initialization
+        actions=[nav_launch],
+    )
+
     launch_files = [
         perseus_sim_launch,
-        autonomy_slam_launch,
+        slam_delay,
+        nav_delay,
     ]
 
     return LaunchDescription(arguments + launch_files)

@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 50
+    update_rate: 100
     # we're not on a real-time system
     lock_memory: False
     joint_state_broadcaster:
@@ -23,13 +23,12 @@ diff_drive_base_controller:
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     open_loop: false
     # ROS I/O configuration
-    publish_rate: 50.0
+    publish_rate: 100.0
     odom_frame_id: odom
     base_frame_id: base_link
     enable_odom_tf: false # Disabled - using EKF for odometry transforms
     cmd_vel_timeout: 1.0
     #publish_limited_velocity: true
-    #use_stamped_vel: false
 
     # Kinematic limits
     # If min_* is not specified, defaults to -max_*

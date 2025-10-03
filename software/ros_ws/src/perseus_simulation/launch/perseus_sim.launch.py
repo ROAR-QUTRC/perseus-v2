@@ -150,7 +150,7 @@ def generate_launch_description():
 
     # Add delay to controllers
     controllers_delayed = TimerAction(
-        period=15.0,  # Wait 15 seconds for Gazebo to fully start
+        period=10.0,  # Wait 10 seconds for Gazebo to fully start
         actions=[controllers_launch],
     )
 

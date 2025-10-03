@@ -1,11 +1,12 @@
 amcl:
   ros__parameters:
+    use_sim_time: true
     alpha1: 0.2
     alpha2: 0.2
     alpha3: 0.2
     alpha4: 0.2
     alpha5: 0.2
-    base_frame_id: "base_link"
+    base_frame_id: "base_footprint"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
     beam_skip_threshold: 0.3
@@ -29,7 +30,7 @@ amcl:
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
-    transform_tolerance: 1.0
+    transform_tolerance: 10.0
     update_min_a: 0.2
     update_min_d: 0.25
     z_hit: 0.5
@@ -39,9 +40,10 @@ amcl:
     scan_topic: scan
 bt_navigator:
   ros__parameters:
+    use_sim_time: true
     global_frame: map
-    robot_base_frame: base_link
-    odom_topic: odom
+    robot_base_frame: base_footprint
+    odom_topic: odometry/filtered
     bt_loop_duration: 10
     filter_duration: 0.3
     default_server_timeout: 20
@@ -75,13 +77,15 @@ bt_navigator:
       - wait
 controller_server:
   ros__parameters:
+    enable_stamped_cmd_vel: true
+    use_sim_time: true
     controller_frequency: 20.0
-    costmap_update_timeout: 0.30
+    costmap_update_timeout: 5.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
-    progress_checker_plugins: ["progress_checker"]
+    progress_checker_plugin: "progress_checker"
     goal_checker_plugins: ["general_goal_checker"] # "precise_goal_checker"
     controller_plugins: ["FollowPath"]
     use_realtime_priority: false
@@ -106,25 +110,25 @@ controller_server:
       time_steps: 56
       model_dt: 0.05
       batch_size: 2000
-      ax_max: 3.0
-      ax_min: -3.0
-      ay_max: 3.0
-      az_max: 3.5
-      vx_std: 0.2
-      vy_std: 0.2
-      wz_std: 0.4
-      vx_max: 0.5
-      vx_min: -0.35
-      vy_max: 0.5
-      wz_max: 1.9
+      ax_max: 2.0
+      ax_min: -2.0
+      ay_max: 2.0
+      az_max: 2.0
+      vx_std: 0.1
+      vy_std: 0.1
+      wz_std: 0.2
+      vx_max: 0.3
+      vx_min: -0.2
+      vy_max: 0.3
+      wz_max: 1.0
       iteration_count: 1
       prune_distance: 1.7
-      transform_tolerance: 0.1
-      temperature: 0.3
-      gamma: 0.015
+      transform_tolerance: 5.0
+      temperature: 0.15
+      gamma: 0.025
       motion_model: "DiffDrive"
       visualize: true
-      regenerate_noises: true
+      regenerate_noises: false
       TrajectoryVisualizer:
         trajectory_step: 5
         time_step: 3
@@ -162,7 +166,7 @@ controller_server:
       PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 14.0
+        cost_weight: 20.0
         max_path_occupancy_ratio: 0.05
         trajectory_point_step: 4
         threshold_to_consider: 0.5
@@ -171,13 +175,13 @@ controller_server:
       PathFollowCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 5.0
+        cost_weight: 8.0
         offset_from_furthest: 5
         threshold_to_consider: 1.4
       PathAngleCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 2.0
+        cost_weight: 1.0
         offset_from_furthest: 4
         threshold_to_consider: 0.5
         max_angle_to_furthest: 1.0
@@ -189,10 +193,11 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
+      use_sim_time: true
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: odom
-      robot_base_frame: base_link
+      robot_base_frame: base_footprint
       footprint: "[[0.3, 0.3], [0.3, -0.3], [-0.3, -0.3], [-0.3, 0.3]]"
       rolling_window: true
       width: 3
@@ -237,10 +242,11 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
+      use_sim_time: true
       update_frequency: 1.0
       publish_frequency: 1.0
       global_frame: map
-      robot_base_frame: base_link
+      robot_base_frame: base_footprint
       robot_radius: 0.22
       resolution: 0.5
       footprint: "[[0.3, 0.3], [0.3, -0.3], [-0.3, -0.3], [-0.3, 0.3]]"
@@ -288,46 +294,45 @@ map_saver:
     map_subscribe_transient_local: True
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 20.0
+    use_sim_time: true
+    expected_planner_frequency: 10.0
     planner_plugins: ["GridBased"]
-    costmap_update_timeout: 1.0
+    costmap_update_timeout: 5.0
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
-      tolerance: 0.01
-      use_astar: false
+      tolerance: 0.3
+      use_astar: true
       allow_unknown: true
 smoother_server:
   ros__parameters:
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
+      tolerance: 1.0e-8
+      max_its: 2000
+      do_refinement: True
+      refinement_num: 2
       tolerance: 1.0e-10
       max_its: 1000
       do_refinement: True
 behavior_server:
   ros__parameters:
     local_costmap_topic: local_costmap/costmap_raw
-    global_costmap_topic: global_costmap/costmap_raw
     local_footprint_topic: local_costmap/published_footprint
+    global_costmap_topic: global_costmap/costmap_raw
     global_footprint_topic: global_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
     spin:
-      plugin: "nav2_behaviors::Spin"
+      plugin: "nav2_behaviors::Spin" # In Iron and older versions, "/" was used instead of "::"
     backup:
-      plugin: "nav2_behaviors::BackUp"
-      acceleration_limit: 2.5
-      deceleration_limit: -2.5
-      minimum_speed: 0.10
+      plugin: "nav2_behaviors::BackUp" # In Iron and older versions, "/" was used instead of "::"
     drive_on_heading:
-      plugin: "nav2_behaviors::DriveOnHeading"
-      acceleration_limit: 2.5
-      deceleration_limit: -2.5
-      minimum_speed: 0.10
+      plugin: "nav2_behaviors::DriveOnHeading" # In Iron and older versions, "/" was used instead of "::"
     wait:
-      plugin: "nav2_behaviors::Wait"
+      plugin: "nav2_behaviors::Wait" # In Iron and older versions, "/" was used instead of "::"
     assisted_teleop:
-      plugin: "nav2_behaviors::AssistedTeleop"
+      plugin: "nav2_behaviors::AssistedTeleop" # In Iron and older versions, "/" was used instead of "::"
     local_frame: odom
     global_frame: map
     robot_base_frame: base_link
@@ -336,8 +341,10 @@ behavior_server:
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
+    enable_stamped_cmd_vel: true  # default false in Jazzy or older
 waypoint_follower:
   ros__parameters:
+    use_sim_time: true
     loop_rate: 20
     stop_on_failure: false
     action_server_result_timeout: 900.0
@@ -348,28 +355,33 @@ waypoint_follower:
       waypoint_pause_duration: 200
 velocity_smoother:
   ros__parameters:
+    use_sim_time: true
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.5, 0.0, 2.0]
-    min_velocity: [-0.5, 0.0, -2.0]
-    max_accel: [2.5, 0.0, 3.2]
+    max_velocity: [0.3, 0.0, 1.0]
+    min_velocity: [-0.2, 0.0, -1.0]
+    max_accel: [1.5, 0.0, 2.0]
     max_decel: [-2.5, 0.0, -3.2]
-    odom_topic: "odom"
+    odom_topic: "odometry/filtered"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
+    enable_stamped_cmd_vel: true
 collision_monitor:
   ros__parameters:
-    base_frame_id: "base_link"
+    base_frame_id: "base_footprint"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
-    cmd_vel_out_topic: "cmd_vel"
+    cmd_vel_out_topic: "cmd_vel_out"
     state_topic: "collision_monitor_state"
-    transform_tolerance: 0.2
-    source_timeout: 1.0
+    transform_tolerance: 10.0
+    source_timeout: 5.0
     base_shift_correction: True
     stop_pub_timeout: 2.0
+    use_sim_time: true
+    enable_stamped_cmd_vel: true # Added for simulation 
+    # use_sim_time: false --- IGNORE ---
     # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
     # and robot footprint for "approach" action type.
     polygons: ["FootprintApproach"]
@@ -398,7 +410,7 @@ docking_server:
     undock_linear_tolerance: 0.05
     undock_angular_tolerance: 0.1
     max_retries: 3
-    base_frame: "base_link"
+    base_frame: "base_footprint"
     fixed_frame: "odom"
     dock_backwards: false
     dock_prestaging_tolerance: 0.5
@@ -433,13 +445,13 @@ docking_server:
       use_collision_detection: true
       costmap_topic: "/local_costmap/costmap_raw"
       footprint_topic: "/local_costmap/published_footprint"
-      transform_tolerance: 0.1
+      transform_tolerance: 0.5
       projection_time: 5.0
       simulation_step: 0.1
       dock_collision_threshold: 0.3
 loopback_simulator:
   ros__parameters:
-    base_frame_id: "base_link"
+    base_frame_id: "base_footprint"
     odom_frame_id: "odom"
     map_frame_id: "map"
     scan_frame_id: "base_scan" # tb4_loopback_simulator.launch.py remaps to 'rplidar_link'
