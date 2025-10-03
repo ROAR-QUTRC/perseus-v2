@@ -102,7 +102,6 @@ options = []
 
 [global]
 excludes = [
-    "*.onnx",
     "*.lock",
     "*.patch",
     "package-lock.json",
@@ -140,6 +139,7 @@ excludes = [
     "*.stl",
     "*.step",
     "*.3mf",
+    "*.onnx",
     "hardware/**",
 ]
 on-unmatched = "warn"

@@ -39,7 +39,11 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "slam_params_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("autonomy"), "config", "mapper_params_online_async.yaml"]
+                [
+                    FindPackageShare("autonomy"),
+                    "config",
+                    "mapper_params_online_async.yaml",
+                ]
             ),
             description="Full path to the ROS2 parameters file to use for the slam_toolbox node",
         ),
