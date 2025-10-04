@@ -9,6 +9,8 @@
   ros-gz-image,
   ros-gz-interfaces,
   ros-gz-sim,
+  zeromq,
+  cppzmq,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-simulation";
@@ -25,6 +27,8 @@ buildRosPackage rec {
     ros-gz-image
     ros-gz-interfaces
     ros-gz-sim
+    zeromq
+    cppzmq
   ];
   nativeBuildInputs = [ ament-cmake ];
 
