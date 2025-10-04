@@ -308,9 +308,6 @@ smoother_server:
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
-      tolerance: 1.0e-8
-      max_its: 2000
-      do_refinement: True
       refinement_num: 2
       tolerance: 1.0e-10
       max_its: 1000
@@ -341,7 +338,7 @@ behavior_server:
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
-    enable_stamped_cmd_vel: true  # default false in Jazzy or older
+    enable_stamped_cmd_vel: true # default false in Jazzy or older
 waypoint_follower:
   ros__parameters:
     use_sim_time: true
@@ -380,7 +377,7 @@ collision_monitor:
     base_shift_correction: True
     stop_pub_timeout: 2.0
     use_sim_time: true
-    enable_stamped_cmd_vel: true # Added for simulation 
+    enable_stamped_cmd_vel: true # Added for simulation
     # use_sim_time: false --- IGNORE ---
     # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
     # and robot footprint for "approach" action type.

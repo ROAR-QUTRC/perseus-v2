@@ -78,5 +78,6 @@
     "typeinfo": "cpp",
     "valarray": "cpp",
     "variant": "cpp"
-  }
+  },
+  "cmake.sourceDirectory": "/home/bocho0600/perseus-v2/software/ros_ws/src/autonomy"
 }
