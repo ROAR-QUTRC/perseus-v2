@@ -3,6 +3,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     ExecuteProcess,
+    TimerAction,
 )
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -10,6 +11,7 @@ from launch.substitutions import (
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -29,20 +31,16 @@ def generate_launch_description():
             description="RVIZ config file to use (view.rviz or view_no_image.rviz for shader issue workaround)",
         ),
     ]
-    # RViz configuration file
-    rviz_config = PathJoinSubstitution(
-        [FindPackageShare("perseus_simulation"), "rviz", rviz_config_name]
-    )
-
+    
     # IMPORTED LAUNCH FILES
-    slam_bringup = IncludeLaunchDescription(
+    gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
                 PathJoinSubstitution(
                     [
-                        FindPackageShare("autonomy"),
+                        FindPackageShare("perseus_simulation"),
                         "launch",
-                        "online_async_launch.py",
+                        "gazebo.launch.py",
                     ]
                 )
             ]
@@ -52,58 +50,27 @@ def generate_launch_description():
         }.items(),
     )
 
-    # IMPORTED LAUNCH FILES
-    nav_bringup = IncludeLaunchDescription(
+    rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
                 PathJoinSubstitution(
                     [
-                        FindPackageShare("autonomy"),
+                        FindPackageShare("perseus"),
                         "launch",
-                        "perseus_nav_bringup.launch.py",
+                        "robot_state_publisher.launch.py",
                     ]
                 )
             ]
         ),
         launch_arguments={
             "use_sim_time": use_sim_time,
+            "hardware_plugin": "gz_ros2_control/GazeboSimSystem",
         }.items(),
-    )
-
-    # RViz with nixGL support and OpenGL fixes
-    rviz = ExecuteProcess(
-        cmd=[
-            "nix",
-            "run",
-            "--impure",
-            "github:nix-community/nixGL",
-            "--",
-            "rviz2",
-            "-d",
-            rviz_config,
-        ],
-        output="screen",
-        additional_env={
-            "NIXPKGS_ALLOW_UNFREE": "1",
-            "QT_QPA_PLATFORM": "xcb",
-            "QT_SCREEN_SCALE_FACTORS": "1",
-            "ROS_NAMESPACE": "/",
-            "RMW_QOS_POLICY_HISTORY": "keep_last",
-            "RMW_QOS_POLICY_DEPTH": "100",
-            # OpenGL fixes for shader issues
-            "MESA_GL_VERSION_OVERRIDE": "3.3",
-            "MESA_GLSL_VERSION_OVERRIDE": "330",
-            "__GL_SHADER_DISK_CACHE": "0",
-            "__GL_THREADED_OPTIMIZATIONS": "0",
-            # Force software rendering if hardware acceleration is problematic
-            # "LIBGL_ALWAYS_SOFTWARE": "1",  # Uncomment if needed
-        },
     )
 
     launch_files = [
-        slam_bringup,
-        rviz,  # Start RViz with nixGL support
-        nav_bringup,
+        gz_launch,
+        rsp_launch,  # Robot state publisher
     ]
 
     return LaunchDescription(arguments + launch_files)

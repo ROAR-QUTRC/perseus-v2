@@ -4,13 +4,22 @@
   buildRosPackage,
   ament-cmake,
   backward-ros,
+  cv-bridge,
+  geometry-msgs,
+  image-transport,
+  libpcl-dev,
+  librealsense2-dev,
   nlohmann_json,
+  opencv,
   openssl,
+  pcl-conversions,
   rclcpp,
   realsense2-camera,
   realsense2-description,
   sensor-msgs,
   simple-networking,
+  tf2-geometry-msgs,
+  tf2-ros,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-sensors";
@@ -22,13 +31,23 @@ buildRosPackage rec {
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
     backward-ros
+    cv-bridge
+    geometry-msgs
+    image-transport
+    libpcl-dev
+    librealsense2-dev
     nlohmann_json
+    opencv
+    opencv.cxxdev
     openssl
+    pcl-conversions
     rclcpp
     realsense2-camera
     realsense2-description
     sensor-msgs
     simple-networking
+    tf2-geometry-msgs
+    tf2-ros
   ];
   nativeBuildInputs = [ ament-cmake ];
 

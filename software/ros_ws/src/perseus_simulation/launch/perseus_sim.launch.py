@@ -190,8 +190,8 @@ def generate_launch_description():
         rsp_launch,  # Robot state publisher
         # teleop_keyboard_controller,
         controllers_delayed,  # Controllers
-        rviz,  # Start RViz with nixGL support
         ekf_delayed,  # EKF node with delay
+        rviz,
     ]
 
     return LaunchDescription(arguments + launch_files)
