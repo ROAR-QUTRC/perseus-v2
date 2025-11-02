@@ -136,44 +136,55 @@ The ST3215 servo uses a serial communication protocol that allows control and mo
 
 ### Reading Position (ID #3)
 
-```
-TX: 0xFF 0xFF 03 04 02 38 01 B8
-    [Header ][ID][Len][READ][Addr][Size][Checksum]
-```
+**TX Packet:**
 
-- Header: 0xFF 0xFF (Start of packet)
-- ID: 0x03 (Servo #3)
-- Length: 0x04 (4 bytes following)
-- Instruction: 0x02 (READ)
-- Address: 0x38 (Position register 0x38 = 56)
-- Size: 0x01 (2 bytes)
-- Checksum: 0xB8 (~(0x03 + 0x04 + 0x02 + 0x38 + 0x01))
+| Byte | Field       | Hex Value | Description                             |
+|------|-------------|-----------|------------------------------------------|
+| 0-1  | Header      | 0xFF 0xFF | Start of packet                         |
+| 2    | ID          | 0x03      | Servo #3                                |
+| 3    | Length      | 0x04      | 4 bytes following                       |
+| 4    | Instruction | 0x02      | READ command                            |
+| 5    | Address     | 0x38      | Position register (address 56)          |
+| 6    | Size        | 0x01      | Read 2 bytes                            |
+| 7    | Checksum    | 0xB8      | ~(0x03 + 0x04 + 0x02 + 0x38 + 0x01)    |
 
-```
-RX: 0xFF 0xFF 03 04 00 E8 03 0E
-    [Header ][ID][Len][Err][PosL][PosH][Checksum]
-```
+**RX Packet:**
 
-- Response shows position 0x03E8 (1000 in decimal)
+| Byte | Field       | Hex Value | Description                             |
+|------|-------------|-----------|------------------------------------------|
+| 0-1  | Header      | 0xFF 0xFF | Start of packet                         |
+| 2    | ID          | 0x03      | Servo #3                                |
+| 3    | Length      | 0x04      | 4 bytes following                       |
+| 4    | Error       | 0x00      | No error                                |
+| 5    | Position L  | 0xE8      | Low byte of position                    |
+| 6    | Position H  | 0x03      | High byte of position                   |
+| 7    | Checksum    | 0x0E      | Calculated checksum                     |
+
+Response shows position 0x03E8 (1000 in decimal).
 
 ### Writing Speed (ID #4)
 
-```
-TX: 0xFF 0xFF 04 05 03 2E 32 00 8E
-    [Header ][ID][Len][WRITE][Addr][SpeedL][SpeedH][Checksum]
-```
+**TX Packet:**
 
-- Header: 0xFF 0xFF
-- ID: 0x04 (Servo #4)
-- Length: 0x05 (5 bytes following)
-- Instruction: 0x03 (WRITE)
-- Address: 0x2E (Speed register 0x2E = 46)
-- Data: 0x0032 (Speed value 50)
-- Checksum: 0x8E (~(0x04 + 0x05 + 0x03 + 0x2E + 0x32 + 0x00))
+| Byte | Field       | Hex Value | Description                             |
+|------|-------------|-----------|------------------------------------------|
+| 0-1  | Header      | 0xFF 0xFF | Start of packet                         |
+| 2    | ID          | 0x04      | Servo #4                                |
+| 3    | Length      | 0x05      | 5 bytes following                       |
+| 4    | Instruction | 0x03      | WRITE command                           |
+| 5    | Address     | 0x2E      | Speed register (address 46)             |
+| 6    | Speed L     | 0x32      | Low byte of speed (50 decimal)          |
+| 7    | Speed H     | 0x00      | High byte of speed                      |
+| 8    | Checksum    | 0x8E      | ~(0x04 + 0x05 + 0x03 + 0x2E + 0x32 + 0x00) |
 
-```
-RX: 0xFF 0xFF 04 02 00 F9
-    [Header ][ID][Len][Err][Checksum]
-```
+**RX Packet:**
 
-- Success response (Error = 0x00)
+| Byte | Field       | Hex Value | Description                             |
+|------|-------------|-----------|------------------------------------------|
+| 0-1  | Header      | 0xFF 0xFF | Start of packet                         |
+| 2    | ID          | 0x04      | Servo #4                                |
+| 3    | Length      | 0x02      | 2 bytes following                       |
+| 4    | Error       | 0x00      | No error - success                      |
+| 5    | Checksum    | 0xF9      | Calculated checksum                     |
+
+Success response (Error = 0x00).
