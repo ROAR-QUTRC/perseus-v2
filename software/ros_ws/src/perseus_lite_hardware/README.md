@@ -5,7 +5,7 @@ ST3215 System Hardware for Perseus Lite
 ROS2 Jazzy diff_drive_controller requires stamped messages. This code is useful to debug with:
 
 ```
-ros2 topic pub -r 10 --qos-durability volatile --times 20 /cmd_vel geometry_msgs/msg/TwistStamped "{
+ros2 topic pub -r 10 --times 20 /cmd_vel geometry_msgs/msg/TwistStamped "{
   header: {
     stamp: {sec: 0, nanosec: 0},
     frame_id: 'base_link'
@@ -22,7 +22,7 @@ ros2 topic pub -r 10 --qos-durability volatile --times 20 /cmd_vel geometry_msgs
 This ROS 2 hardware interface provides a comprehensive driver for controlling the ST3215 servo motors used in the Perseus Lite robot. The implementation supports precise motor control, state monitoring, and integration with ROS 2 Control framework.
 Features
 
-Full integration with ROS 2 Control hardware interface
+Integration with ROS 2 Control hardware interface
 Support for multiple ST3215 servo motors
 Real-time velocity and position control
 Detailed servo state monitoring including:
@@ -81,5 +81,5 @@ Communication Timeout:
 
 ## Threading Model
 
-Utilizes Boost ASIO for asynchronous I/O.
+Utilises Boost ASIO for asynchronous I/O.
 Dedicated IO thread for non-blocking communication. Thread-safe operations using mutex
