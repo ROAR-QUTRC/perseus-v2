@@ -36,8 +36,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "debug",
             default_value="true",
-            description="Boolean value for debugging the controller"
-        )
+            description="Boolean value for debugging the controller",
+        ),
     ]
 
     # CONFIG + DATA FILES
@@ -56,10 +56,10 @@ def generate_launch_description():
     config_path = IfElseSubstitution(
         EqualsSubstitution(config, ""), preferred_config_path, config
     )
-    debug_arguments = IfElseSubstitution(
-            EqualsSubstitution(debug, "true"),
-            ["--ros-args", "--log-level", "generic_controller:=debug"],
-            [],
+    debug_arg = IfElseSubstitution(
+        EqualsSubstitution(debug, "true"),
+        "generic_controller:=DEBUG",
+        "generic_controller:=INFO",
     )
 
     # NODES
@@ -78,6 +78,7 @@ def generate_launch_description():
         emulate_tty=True,
         parameters=[config_path],
         remappings=[],
+        ros_arguments=["--log-level", debug_arg],
     )
     nodes = [joy_node, controller_node]
 
