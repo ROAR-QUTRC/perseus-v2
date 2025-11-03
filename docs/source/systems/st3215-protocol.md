@@ -21,48 +21,48 @@ The ST3215 servo uses a serial communication protocol that allows control and mo
 
 #### Read/Write Registers
 
-| Address | Name                  | Size (bytes) | Range      | Default | Units/Notes          |
-| ------- | --------------------- | ------------ | ---------- | ------- | -------------------- |
-| 5       | ID                    | 1            | 0-253      | 1       | -                    |
-| 6       | Baud Rate             | 1            | 0-7        | 4       | Index value          |
-| 7       | Return Delay Time     | 1            | 0-254      | 250     | 2μs per unit         |
-| 8       | Status Return Level   | 1            | 0-1        | 1       | -                    |
-| 9-10    | Min Position Limit    | 2            | 0-1023     | 0       | Encoder steps        |
-| 11-12   | Max Position Limit    | 2            | 0-1023     | 1023    | Encoder steps        |
-| 13      | Max Temperature Limit | 1            | 0-100      | 80      | °C                   |
-| 14      | Max Input Voltage     | 1            | 0-254      | 140     | 0.1V units (14.0V)   |
-| 15      | Min Input Voltage     | 1            | 0-254      | 80      | 0.1V units (8.0V)    |
-| 16-17   | Max Torque Limit      | 2            | 0-1000     | 1000    | 0.1% of max torque   |
-| 26      | CW Dead Band          | 1            | 0-32       | 2       | Encoder steps        |
-| 27      | CCW Dead Band         | 1            | 0-32       | 2       | Encoder steps        |
-| 31-32   | Position Offset       | 2            | -2047-2047 | 0       | Encoder steps        |
-| 33      | Operating Mode        | 1            | 0-3        | 0       | Mode index           |
+| Address | Name                  | Size (bytes) | Range      | Default | Units/Notes        |
+| ------- | --------------------- | ------------ | ---------- | ------- | ------------------ |
+| 5       | ID                    | 1            | 0-253      | 1       | -                  |
+| 6       | Baud Rate             | 1            | 0-7        | 4       | Index value        |
+| 7       | Return Delay Time     | 1            | 0-254      | 250     | 2μs per unit       |
+| 8       | Status Return Level   | 1            | 0-1        | 1       | -                  |
+| 9-10    | Min Position Limit    | 2            | 0-1023     | 0       | Encoder steps      |
+| 11-12   | Max Position Limit    | 2            | 0-1023     | 1023    | Encoder steps      |
+| 13      | Max Temperature Limit | 1            | 0-100      | 80      | °C                 |
+| 14      | Max Input Voltage     | 1            | 0-254      | 140     | 0.1V units (14.0V) |
+| 15      | Min Input Voltage     | 1            | 0-254      | 80      | 0.1V units (8.0V)  |
+| 16-17   | Max Torque Limit      | 2            | 0-1000     | 1000    | 0.1% of max torque |
+| 26      | CW Dead Band          | 1            | 0-32       | 2       | Encoder steps      |
+| 27      | CCW Dead Band         | 1            | 0-32       | 2       | Encoder steps      |
+| 31-32   | Position Offset       | 2            | -2047-2047 | 0       | Encoder steps      |
+| 33      | Operating Mode        | 1            | 0-3        | 0       | Mode index         |
 
 ### SRAM Memory Tables
 
 #### Read/Write Registers
 
-| Address | Name          | Size (bytes) | Range        | Default | Units/Notes         |
-| ------- | ------------- | ------------ | ------------ | ------- | ------------------- |
-| 40      | Torque Enable | 1            | 0-2          | 0       | 0=off, 1=on, 2=hold |
-| 41      | Acceleration  | 1            | 0-254        | 0       | Steps/s² (approx)   |
-| 42-43   | Goal Position | 2            | 0-1023       | -       | Encoder steps       |
-| 44-45   | Running Time  | 2            | -32766-32766 | 0       | ms                  |
-| 46-47   | Goal Speed    | 2            | -1000-1000   | 0       | RPM (approx)        |
-| 48-49   | Torque Limit  | 2            | 0-1000       | 1000    | 0.1% of max torque  |
-| 55      | Lock          | 1            | 0-1          | 1       | 0=unlocked, 1=locked|
+| Address | Name          | Size (bytes) | Range        | Default | Units/Notes          |
+| ------- | ------------- | ------------ | ------------ | ------- | -------------------- |
+| 40      | Torque Enable | 1            | 0-2          | 0       | 0=off, 1=on, 2=hold  |
+| 41      | Acceleration  | 1            | 0-254        | 0       | Steps/s² (approx)    |
+| 42-43   | Goal Position | 2            | 0-1023       | -       | Encoder steps        |
+| 44-45   | Running Time  | 2            | -32766-32766 | 0       | ms                   |
+| 46-47   | Goal Speed    | 2            | -1000-1000   | 0       | RPM (approx)         |
+| 48-49   | Torque Limit  | 2            | 0-1000       | 1000    | 0.1% of max torque   |
+| 55      | Lock          | 1            | 0-1          | 1       | 0=unlocked, 1=locked |
 
 #### Read-Only Status Registers
 
-| Address | Name                | Size (bytes) | Range        | Description                       |
-| ------- | ------------------- | ------------ | ------------ | --------------------------------- |
-| 56-57   | Present Position    | 2            | 0-1023       | Current servo position (encoder steps) |
-| 58-59   | Present Speed       | 2            | -32768-32767 | Current speed (RPM, approx)       |
-| 60-61   | Present Load        | 2            | -1000-1000   | Current load (0.1% of max torque) |
-| 62      | Present Voltage     | 1            | -            | Current voltage (0.1V units)      |
-| 63      | Present Temperature | 1            | -            | Current temperature (°C)          |
+| Address | Name                | Size (bytes) | Range        | Description                                |
+| ------- | ------------------- | ------------ | ------------ | ------------------------------------------ |
+| 56-57   | Present Position    | 2            | 0-1023       | Current servo position (encoder steps)     |
+| 58-59   | Present Speed       | 2            | -32768-32767 | Current speed (RPM, approx)                |
+| 60-61   | Present Load        | 2            | -1000-1000   | Current load (0.1% of max torque)          |
+| 62      | Present Voltage     | 1            | -            | Current voltage (0.1V units)               |
+| 63      | Present Temperature | 1            | -            | Current temperature (°C)                   |
 | 66      | Moving Status       | 1            | 0-1          | Movement status flag (0=stopped, 1=moving) |
-| 69-70   | Present Current     | 2            | -            | Current draw (mA)                 |
+| 69-70   | Present Current     | 2            | -            | Current draw (mA)                          |
 
 ## Communication Protocol
 
