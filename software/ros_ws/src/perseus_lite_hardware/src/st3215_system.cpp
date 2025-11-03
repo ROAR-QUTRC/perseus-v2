@@ -787,11 +787,6 @@ namespace perseus_lite_hardware
         return true;
     }
 
-    void ST3215SystemHardware::updateServoStates() noexcept
-    {
-        // Empty implementation - reserved for future use
-    }
-
 }  // namespace perseus_lite_hardware
 
 #include <pluginlib/class_list_macros.hpp>

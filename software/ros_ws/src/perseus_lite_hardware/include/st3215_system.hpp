@@ -184,13 +184,6 @@ namespace perseus_lite_hardware
          */
         void communicationThread() noexcept;
 
-        /**
-         * @brief Updates the internal servo state data structures
-         * @details Processes received servo data and updates position, velocity, and temperature
-         *          values for all servos. Thread-safe operation using state mutex.
-         */
-        void updateServoStates() noexcept;
-
         // Communication timestamping and timeout
         std::vector<rclcpp::Time> _last_update_times;
 
