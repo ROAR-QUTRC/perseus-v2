@@ -749,8 +749,8 @@ namespace perseus_lite_hardware
             // Update the timestamp first
             _last_update_times[index] = rclcpp::Clock(RCL_ROS_TIME).now();
 
-            _current_positions[index] = 0.0;                  // Replace with actual position reading
-            _current_velocities[index] = 0.0;                 // Replace with actual velocity reading
+            _current_positions[index] = 0.0;                   // Replace with actual position reading
+            _current_velocities[index] = 0.0;                  // Replace with actual velocity reading
             _temperatures[index] = _ROOM_TEMPERATURE_CELSIUS;  // Replace with actual temperature reading
 
             return true;
