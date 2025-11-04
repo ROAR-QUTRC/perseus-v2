@@ -11,7 +11,6 @@
 #include <string_view>
 #include <vector>
 
-// Replace #define directives with enum classes
 namespace perseus_lite_hardware
 {
     // EPROM registers
@@ -211,29 +210,6 @@ namespace perseus_lite_hardware
          */
         [[nodiscard]] bool updateServoStates(uint8_t id, size_t index) noexcept;
         /**
-         * @brief Starts an asynchronous read operation from the serial port
-         * @details Initiates non-blocking read of servo response data
-         */
-        void startAsyncRead() noexcept;
-
-        /**
-         * @brief Starts an asynchronous write operation to the serial port
-         * @details Initiates non-blocking write of command data to servos
-         */
-        void startAsyncWrite() noexcept;
-
-        /**
-         * @brief Schedules the next read operation using a timer
-         * @details Sets up timing for the next servo data read cycle
-         */
-        void scheduleNextRead() noexcept;
-
-        /**
-         * @brief Schedules the next write operation using a timer
-         * @details Sets up timing for the next command transmission cycle
-         */
-        void scheduleNextWrite() noexcept;
-        /**
          * @brief Verifies that required command interfaces are available for a joint
          * @param joint_info Information about the joint configuration
          * @param logger Logger instance for error reporting
@@ -255,11 +231,7 @@ namespace perseus_lite_hardware
         mutable std::mutex _serial_mutex;
         boost::asio::io_context _io_context;
         boost::asio::serial_port _serial_port{_io_context};
-        boost::asio::steady_timer _read_timer{_io_context};
-        boost::asio::steady_timer _write_timer{_io_context};
         std::thread _io_thread;
-        mutable std::queue<std::vector<uint8_t>> _write_queue;
-        std::array<uint8_t, BUFFER_SIZE> _read_buffer;
     };
 
 }  // namespace perseus_lite_hardware
