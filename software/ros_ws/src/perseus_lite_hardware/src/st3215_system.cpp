@@ -535,7 +535,7 @@ namespace perseus_lite_hardware
             debug_ss << "0x" << std::setw(2) << std::setfill('0')
                      << static_cast<int>(byte) << " ";
         }
-        RCLCPP_INFO(rclcpp::get_logger("ST3215Hardware"), "%s", debug_ss.str().c_str());
+        RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME), "%s", debug_ss.str().c_str());
 
         try
         {
