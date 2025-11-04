@@ -167,7 +167,11 @@ nix run .#generic_controller -- type:=8bitdo wireless:=true
 Use a custom config file
 
 ```console
+# Absolute path
 nix run .#generic_controller -- config:=/absolute/path/to/my_controller.yaml
+
+# Alternative: Relative path (from current working directory)
+nix run .#generic_controller -- config:=./relative/path/to/my_controller.yaml
 ```
 
 ### Safe Operation
