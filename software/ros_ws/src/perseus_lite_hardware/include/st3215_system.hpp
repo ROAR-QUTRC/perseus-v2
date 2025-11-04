@@ -120,44 +120,44 @@ namespace perseus_lite_hardware
 
     private:
         // Constants for ST3215 servo specifications
-        static constexpr double MAX_RPM = 7.5;                                               // RPM scaling factor (lower value = higher speed output)
-        static constexpr int16_t MAX_VELOCITY_RPM = 1000;                                    // Maximum velocity value in protocol
-        static constexpr int16_t MIN_VELOCITY_RPM = -1000;                                   // Minimum velocity value in protocol
-        static constexpr size_t BUFFER_SIZE = 256;                                           // Buffer size for serial communication
-        static constexpr uint16_t ENCODER_TICKS_PER_REVOLUTION = 4096;                       // Encoder resolution
-        static constexpr double RADIANS_PER_REVOLUTION = 2.0 * M_PI;                         // Radians in one revolution
-        static constexpr double SECONDS_PER_MINUTE = 60.0;                                   // For RPM to rad/s conversion
-        static constexpr double RPM_TO_RAD_S = RADIANS_PER_REVOLUTION / SECONDS_PER_MINUTE;  // Conversion factor
-        static constexpr double RAD_S_TO_RPM = SECONDS_PER_MINUTE / RADIANS_PER_REVOLUTION;  // Inverse conversion
+        static constexpr double _RPM_SCALE_FACTOR = 7.5;                                      // RPM scaling factor (lower value = higher speed output)
+        static constexpr int16_t _MAX_VELOCITY_RPM = 1000;                                    // Maximum velocity value in protocol
+        static constexpr int16_t _MIN_VELOCITY_RPM = -1000;                                   // Minimum velocity value in protocol
+        static constexpr size_t _BUFFER_SIZE = 256;                                           // Buffer size for serial communication
+        static constexpr uint16_t _ENCODER_TICKS_PER_REVOLUTION = 4096;                       // Encoder resolution
+        static constexpr double _RADIANS_PER_REVOLUTION = 2.0 * M_PI;                         // Radians in one revolution
+        static constexpr double _SECONDS_PER_MINUTE = 60.0;                                   // For RPM to rad/s conversion
+        static constexpr double _RPM_TO_RAD_S = _RADIANS_PER_REVOLUTION / _SECONDS_PER_MINUTE;  // Conversion factor
+        static constexpr double _RAD_S_TO_RPM = _SECONDS_PER_MINUTE / _RADIANS_PER_REVOLUTION;  // Inverse conversion
 
         // Protocol constants
-        static constexpr uint8_t PACKET_HEADER_BYTE = 0xFF;     // Packet header byte
-        static constexpr size_t PACKET_HEADER_SIZE = 2;         // Two FF bytes in header
-        static constexpr size_t PACKET_ID_INDEX = 2;            // Position of ID byte in packet
-        static constexpr size_t PACKET_LENGTH_INDEX = 3;        // Position of length byte in packet
-        static constexpr size_t PACKET_MIN_SIZE = 4;            // Minimum valid packet size
-        static constexpr uint8_t WHEEL_MODE_VALUE = 1;          // Value for wheel mode setting
-        static constexpr uint8_t TORQUE_ENABLE_VALUE = 1;       // Value to enable torque
-        static constexpr uint8_t PRESENT_POSITION_REG = 0x38;   // Present position register
-        static constexpr size_t STATUS_PACKET_DATA_SIZE = 8;    // Expected size of status data
-        static constexpr uint16_t SIGN_BIT_MASK = 1 << 15;      // Mask for sign bit in position/velocity
-        static constexpr size_t ROOM_TEMPERATURE_CELSIUS = 25;  // Default room temperature
+        static constexpr uint8_t _PACKET_HEADER_BYTE = 0xFF;     // Packet header byte
+        static constexpr size_t _PACKET_HEADER_SIZE = 2;         // Two FF bytes in header
+        static constexpr size_t _PACKET_ID_INDEX = 2;            // Position of ID byte in packet
+        static constexpr size_t _PACKET_LENGTH_INDEX = 3;        // Position of length byte in packet
+        static constexpr size_t _PACKET_MIN_SIZE = 4;            // Minimum valid packet size
+        static constexpr uint8_t _WHEEL_MODE_VALUE = 1;          // Value for wheel mode setting
+        static constexpr uint8_t _TORQUE_ENABLE_VALUE = 1;       // Value to enable torque
+        static constexpr uint8_t _PRESENT_POSITION_REG = 0x38;   // Present position register
+        static constexpr size_t _STATUS_PACKET_DATA_SIZE = 8;    // Expected size of status data
+        static constexpr uint16_t _SIGN_BIT_MASK = 1 << 15;      // Mask for sign bit in position/velocity
+        static constexpr size_t _ROOM_TEMPERATURE_CELSIUS = 25;  // Default room temperature
 
         // Communication timing constants
-        static constexpr auto READ_TIMEOUT = std::chrono::milliseconds(10);
-        static constexpr auto WRITE_TIMEOUT = std::chrono::milliseconds(1);
-        static constexpr auto SERVO_TIMEOUT = std::chrono::seconds(1);
-        static constexpr auto COMMAND_DELAY = std::chrono::milliseconds(10);
-        static constexpr auto COMMUNICATION_CYCLE_DELAY = std::chrono::milliseconds(20);
-        static constexpr auto RESPONSE_TIMEOUT = std::chrono::milliseconds(50);
+        static constexpr auto _READ_TIMEOUT = std::chrono::milliseconds(10);
+        static constexpr auto _WRITE_TIMEOUT = std::chrono::milliseconds(1);
+        static constexpr auto _SERVO_TIMEOUT = std::chrono::seconds(1);
+        static constexpr auto _COMMAND_DELAY = std::chrono::milliseconds(10);
+        static constexpr auto _COMMUNICATION_CYCLE_DELAY = std::chrono::milliseconds(20);
+        static constexpr auto _RESPONSE_TIMEOUT = std::chrono::milliseconds(50);
 
         // Servo packet indices (relative to data portion)
-        static constexpr size_t ERROR_BYTE_INDEX = 0;
-        static constexpr size_t POSITION_LOW_BYTE_INDEX = 1;
-        static constexpr size_t POSITION_HIGH_BYTE_INDEX = 2;
-        static constexpr size_t VELOCITY_LOW_BYTE_INDEX = 3;
-        static constexpr size_t VELOCITY_HIGH_BYTE_INDEX = 4;
-        static constexpr size_t TEMPERATURE_BYTE_INDEX = 7;
+        static constexpr size_t _ERROR_BYTE_INDEX = 0;
+        static constexpr size_t _POSITION_LOW_BYTE_INDEX = 1;
+        static constexpr size_t _POSITION_HIGH_BYTE_INDEX = 2;
+        static constexpr size_t _VELOCITY_LOW_BYTE_INDEX = 3;
+        static constexpr size_t _VELOCITY_HIGH_BYTE_INDEX = 4;
+        static constexpr size_t _TEMPERATURE_BYTE_INDEX = 7;
 
         // Communication thread control
         std::atomic<bool> _comm_thread_running{false};
