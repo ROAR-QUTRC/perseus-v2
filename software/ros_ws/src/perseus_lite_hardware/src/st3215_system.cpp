@@ -132,7 +132,7 @@ namespace perseus_lite_hardware
                 info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &_current_velocities[i]));
 
             state_interfaces.emplace_back(hardware_interface::StateInterface(
-                info.joints[i].name, "temperature", &_temperatures[i]));
+                info.joints[i].name, hardware_interface::HW_IF_TEMPERATURE, &_temperatures[i]));
         }
 
         RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME), "Exported %zu state interfaces", state_interfaces.size());
