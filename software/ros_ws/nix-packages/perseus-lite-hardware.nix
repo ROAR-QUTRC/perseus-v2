@@ -3,31 +3,37 @@
   lib,
   buildRosPackage,
   ament-cmake,
-  backward-ros,
-  hi-can-raw,
-  nlohmann_json,
+  ament-lint-auto,
+  ament-lint-common,
+  boost,
+  hardware-interface,
+  pluginlib,
   rclcpp,
-  sensor-msgs,
+  rclcpp-lifecycle,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-perseus-can-if";
-  version = "0.0.1";
+  pname = "ros-jazzy-perseus-lite-hardware";
+  version = "0.1.0";
 
-  src = ./../src/perseus_can_if;
+  src = ./../src/perseus_lite_hardware;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
+  checkInputs = [
+    ament-lint-auto
+    ament-lint-common
+  ];
   propagatedBuildInputs = [
-    backward-ros
-    hi-can-raw
-    nlohmann_json
+    boost
+    hardware-interface
+    pluginlib
     rclcpp
-    sensor-msgs
+    rclcpp-lifecycle
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "Payload-specific nodes and launch files for the Perseus Rover.";
+    description = "Hardware interface for Perseus Lite robot";
     license = with lib.licenses; [ mit ];
   };
 }
