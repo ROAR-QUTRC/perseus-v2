@@ -196,7 +196,7 @@ namespace perseus_lite_hardware
                 }
 
                 // Small delay between commands
-                std::this_thread::sleep_for(COMMAND_DELAY);
+                std::this_thread::sleep_for(_COMMAND_DELAY);
 
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                              "Enabling torque for servo %d", servo_id);
@@ -210,7 +210,7 @@ namespace perseus_lite_hardware
                 }
 
                 // Small delay between servos
-                std::this_thread::sleep_for(COMMAND_DELAY);
+                std::this_thread::sleep_for(_COMMAND_DELAY);
             }
 
             RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME), "Successfully configured all servos with wheel mode and torque enabled");
@@ -268,7 +268,7 @@ namespace perseus_lite_hardware
                 try
                 {
                     // Read response with timeout
-                    boost::asio::steady_timer timeout(_io_context, RESPONSE_TIMEOUT);
+                    boost::asio::steady_timer timeout(_io_context, _RESPONSE_TIMEOUT);
 
                     RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME), "Attempting to read response from servo %d", servo_id);
                     boost::system::error_code error;
@@ -296,7 +296,7 @@ namespace perseus_lite_hardware
             }
 
             // Wait before starting next update cycle
-            std::this_thread::sleep_for(COMMUNICATION_CYCLE_DELAY);
+            std::this_thread::sleep_for(_COMMUNICATION_CYCLE_DELAY);
         }
 
         RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME), "Communication thread stopped");
@@ -360,12 +360,12 @@ namespace perseus_lite_hardware
                 // Check for timeout and implement recovery
                 const auto now = get_clock()->now();
                 const double timeout_seconds = (now - state.last_update).seconds();
-                if (timeout_seconds > SERVO_TIMEOUT.count())
+                if (timeout_seconds > _SERVO_TIMEOUT.count())
                 {
                     RCLCPP_WARN_THROTTLE(rclcpp::get_logger(LOGGER_NAME),
                                          *get_clock(), 1000,  // Warn every 1 second
                                          "No response from servo %d for more than %ld seconds - implementing recovery",
-                                         _servo_ids[i], SERVO_TIMEOUT.count());
+                                         _servo_ids[i], _SERVO_TIMEOUT.count());
 
                     // Timeout recovery actions:
                     // 1. Set velocity to zero for safety
@@ -691,7 +691,7 @@ namespace perseus_lite_hardware
                             raw_pos = -(raw_pos & ~_SIGN_BIT_MASK);
                         }
                         // Convert to radians (4096 counts per revolution)
-                        state.position = raw_pos * (RADIANS_PER_REVOLUTION / ENCODER_TICKS_PER_REVOLUTION);
+                        state.position = raw_pos * (_RADIANS_PER_REVOLUTION / _ENCODER_TICKS_PER_REVOLUTION);
                     }
 
                     // Extract velocity (2 bytes, little endian) with safe conversion
