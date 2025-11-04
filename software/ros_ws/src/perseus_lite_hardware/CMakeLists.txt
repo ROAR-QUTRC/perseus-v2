@@ -1,5 +1,5 @@
-# PROJECT SETUP Using CMake 3.20 for better modern CMake features and Boost
-# integration
+# PROJECT SETUP
+# Using CMake 3.20 for better modern CMake features and Boost integration
 cmake_minimum_required(VERSION 3.20)
 project(
   perseus_lite_hardware
@@ -14,8 +14,8 @@ if(CMAKE_VERSION VERSION_LESS "3.20.0")
   )
 endif()
 
-# Build type configuration Default to Debug build if not specified, with
-# RelWithDebInfo for Release builds
+# Build type configuration
+# Default to Debug build if not specified, with RelWithDebInfo for Release builds
 set(default_build_type "Debug")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(
@@ -48,7 +48,8 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Define package dependencies ROS2 package dependencies
+# Define package dependencies
+# ROS2 package dependencies
 set(THIS_PACKAGE_INCLUDE_DEPENDS hardware_interface pluginlib rclcpp
                                  rclcpp_lifecycle)
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
@@ -84,8 +85,8 @@ target_include_directories(
   PRIVATE # Headers only for internal implementation
           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
-# Link against dependencies using explicit targets This ensures proper linking
-# and dependency propagation
+# Link against dependencies using explicit targets
+# This ensures proper linking and dependency propagation
 target_link_libraries(
   ${PROJECT_NAME}
   PUBLIC # Boost libraries
@@ -96,7 +97,8 @@ target_link_libraries(
          rclcpp::rclcpp
          rclcpp_lifecycle::rclcpp_lifecycle)
 
-# Installation configuration Install library binaries
+# Installation configuration
+# Install library binaries
 install(
   TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}

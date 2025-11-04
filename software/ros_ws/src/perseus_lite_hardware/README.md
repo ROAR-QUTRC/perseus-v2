@@ -46,15 +46,17 @@ baud_rate: Communication speed (recommended: 115200)
 
 Servo ID Configuration
 Each joint must have a unique id parameter specifying the servo's address.
-Example YAML Configuration
-yamlCopyhardware:
+
+Example YAML Configuration:
+```yaml
 serial_port: /dev/ttyACM0
 baud_rate: 115200
 joints:
-front_left_wheel:
-id: 1
-front_right_wheel:
-id: 2
+  front_left_wheel:
+    id: 1
+  front_right_wheel:
+    id: 2
+```
 
 ## Communication Protocol
 
