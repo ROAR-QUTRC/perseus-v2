@@ -4,6 +4,7 @@
 #include <hardware_interface/system_interface.hpp>
 #include <iomanip>
 #include <mutex>
+#include <numbers>
 #include <queue>
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <span>
@@ -124,7 +125,7 @@ namespace perseus_lite_hardware
         static constexpr int16_t _MIN_VELOCITY_RPM = -1000;                                     // Minimum velocity value in protocol
         static constexpr size_t _BUFFER_SIZE = 256;                                             // Buffer size for serial communication
         static constexpr uint16_t _ENCODER_TICKS_PER_REVOLUTION = 4096;                         // Encoder resolution
-        static constexpr double _RADIANS_PER_REVOLUTION = 2.0 * M_PI;                           // Radians in one revolution
+        static constexpr double _RADIANS_PER_REVOLUTION = 2.0 * std::numbers::pi;               // Radians in one revolution
         static constexpr double _SECONDS_PER_MINUTE = 60.0;                                     // For RPM to rad/s conversion
         static constexpr double _RPM_TO_RAD_S = _RADIANS_PER_REVOLUTION / _SECONDS_PER_MINUTE;  // Conversion factor
         static constexpr double _RAD_S_TO_RPM = _SECONDS_PER_MINUTE / _RADIANS_PER_REVOLUTION;  // Inverse conversion
