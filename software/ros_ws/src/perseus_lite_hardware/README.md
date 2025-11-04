@@ -48,6 +48,7 @@ Servo ID Configuration
 Each joint must have a unique id parameter specifying the servo's address.
 
 Example YAML Configuration:
+
 ```yaml
 serial_port: /dev/ttyACM0
 baud_rate: 115200
