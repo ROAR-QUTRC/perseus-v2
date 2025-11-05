@@ -35,7 +35,7 @@ public:
      * @return Current position value (0-4095)
      * @throws std::runtime_error if communication fails after retries
      */
-    uint16_t readPosition(uint8_t servo_id);
+    uint16_t read_position(uint8_t servo_id);
 
     /**
      * @brief Writes a position value to a specified servo
@@ -43,7 +43,7 @@ public:
      * @param position Position value to write (0-4095)
      * @throws std::runtime_error if communication fails
      */
-    void writePosition(uint8_t servo_id, uint16_t position);
+    void write_position(uint8_t servo_id, uint16_t position);
 
     /**
      * @brief Writes to a control register of the servo
@@ -52,7 +52,7 @@ public:
      * @param value Value to write
      * @throws std::runtime_error if communication fails
      */
-    void writeControlRegister(uint8_t servo_id, uint8_t address, uint8_t value);
+    void write_control_register(uint8_t servo_id, uint8_t address, uint8_t value);
 
     /**
      * @brief Reads the current load/torque value from a specified servo
@@ -60,13 +60,13 @@ public:
      * @return Current load value (-1000 to +1000)
      * @throws std::runtime_error if communication fails
      */
-    int16_t readLoad(uint8_t servo_id);
+    int16_t read_load(uint8_t servo_id);
 
     /**
      * @brief Gets a reference to the serial port for low-level operations
      * @return Reference to the serial port object
      */
-    boost::asio::serial_port& getSerialPort() { return _serial_port; }
+    boost::asio::serial_port& get_serial_port() { return _serial_port; }
 
 private:
     /**
@@ -76,7 +76,7 @@ private:
      * @param data Data bytes to write
      * @return Vector containing the complete command packet
      */
-    std::vector<uint8_t> _createWriteCommand(uint8_t id, uint8_t address, const std::vector<uint8_t>& data);
+    std::vector<uint8_t> _create_write_command(uint8_t id, uint8_t address, const std::vector<uint8_t>& data);
 
     /**
      * @brief Performs a single attempt to read the position
@@ -85,7 +85,7 @@ private:
      * @return Current position value (0-4095)
      * @throws std::runtime_error if communication fails
      */
-    uint16_t _readPositionOnce(uint8_t servo_id, const std::chrono::milliseconds& timeout);
+    uint16_t _read_position_once(uint8_t servo_id, const std::chrono::milliseconds& timeout);
 
     /**
      * @brief Creates a read command packet according to ST3215 protocol
@@ -94,7 +94,7 @@ private:
      * @param size Number of bytes to read
      * @return Vector containing the complete command packet
      */
-    std::vector<uint8_t> _createReadCommand(uint8_t id, uint8_t address, uint8_t size);
+    std::vector<uint8_t> _create_read_command(uint8_t id, uint8_t address, uint8_t size);
 
     boost::asio::io_service _io_service;
     boost::asio::serial_port _serial_port;

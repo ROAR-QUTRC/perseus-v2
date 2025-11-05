@@ -11,16 +11,16 @@ public:
     explicit BucketDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
 private:
-    void _actuatorCallback(const actuator_msgs::msg::Actuators::SharedPtr msg);
-    void _timeoutCallback();
+    void _actuator_callback(const actuator_msgs::msg::Actuators::SharedPtr msg);
+    void _timeout_callback();
 
-    void _writeActuators(double lift, double tilt, double jaws, double rotate, bool magnet);
+    void _write_actuators(double lift, double tilt, double jaws, double rotate, bool magnet);
 
     constexpr static auto ACTUATOR_TIMEOUT = std::chrono::milliseconds(300);
 
-    bool _timedOut = false;
-    hi_can::RawCanInterface _canInterface;
+    bool _timed_out = false;
+    hi_can::RawCanInterface _can_interface;
 
-    rclcpp::Subscription<actuator_msgs::msg::Actuators>::SharedPtr _actuatorSubscription;
-    rclcpp::TimerBase::SharedPtr _killTimer;
+    rclcpp::Subscription<actuator_msgs::msg::Actuators>::SharedPtr _actuator_subscription;
+    rclcpp::TimerBase::SharedPtr _kill_timer;
 };

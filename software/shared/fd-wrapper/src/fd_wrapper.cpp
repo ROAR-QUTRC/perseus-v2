@@ -6,8 +6,8 @@
 
 using std::function;
 
-FdWrapper::FdWrapper(function<int(void)> open, function<void(int)> configure, function<void(int)> userClose)
-    : _close(userClose)
+FdWrapper::FdWrapper(function<int(void)> open, function<void(int)> configure, function<void(int)> user_close)
+    : _close(user_close)
 {
     if (!open)
         throw std::invalid_argument("open function must be provided");
@@ -22,7 +22,7 @@ FdWrapper::FdWrapper(function<int(void)> open, function<void(int)> configure, fu
     }
     catch (...)
     {
-        _handleClose();
+        _handle_close();
         throw;
     }
 }
@@ -31,7 +31,7 @@ FdWrapper::~FdWrapper()
 {
     try
     {
-        _handleClose();
+        _handle_close();
     }
     catch (...)
     {
@@ -39,7 +39,7 @@ FdWrapper::~FdWrapper()
     }
 }
 
-void FdWrapper::_handleClose()
+void FdWrapper::_handle_close()
 {
     if (_fd != -1)
     {
