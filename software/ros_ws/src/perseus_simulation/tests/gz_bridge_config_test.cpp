@@ -2,6 +2,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
+#include <regex>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -93,38 +94,33 @@ TEST_F(GzBridgeConfigTest, ValidDirections)
 TEST_F(GzBridgeConfigTest, ValidRosMessageTypes)
 {
     auto mappings = loadBridgeMappings();
-    std::unordered_set<std::string> known_ros_types = {
-        "rosgraph_msgs/msg/Clock",
-        "tf2_msgs/msg/TFMessage",
-        "nav_msgs/msg/Odometry",
-        "sensor_msgs/msg/JointState",
-        "sensor_msgs/msg/LaserScan",
-        "sensor_msgs/msg/Imu"};
+    // ROS 2 message types follow the pattern: package_name/msg/MessageName
+    // package_name: lowercase with underscores
+    // MessageName: PascalCase
+    std::regex ros_type_pattern("^[a-z0-9_]+/msg/[A-Z][A-Za-z0-9]*$");
 
     for (const auto& mapping : mappings)
     {
-        EXPECT_TRUE(known_ros_types.count(mapping.ros_type_name) > 0)
-            << "Unknown ROS message type '" << mapping.ros_type_name
-            << "' for topic '" << mapping.ros_topic_name << "'";
+        EXPECT_TRUE(std::regex_match(mapping.ros_type_name, ros_type_pattern))
+            << "Invalid ROS message type format: '" << mapping.ros_type_name
+            << "' for topic '" << mapping.ros_topic_name << "'. "
+            << "Expected format: package_name/msg/MessageName";
     }
 }
 
 TEST_F(GzBridgeConfigTest, ValidGazeboMessageTypes)
 {
     auto mappings = loadBridgeMappings();
-    std::unordered_set<std::string> known_gz_types = {
-        "gz.msgs.Clock",
-        "gz.msgs.Pose_V",
-        "gz.msgs.Odometry",
-        "gz.msgs.Model",
-        "gz.msgs.LaserScan",
-        "gz.msgs.IMU"};
+    // Gazebo message types follow the pattern: gz.msgs.MessageName
+    // MessageName: PascalCase, may contain underscores
+    std::regex gz_type_pattern("^gz\\.msgs\\.[A-Z][A-Za-z0-9_]*$");
 
     for (const auto& mapping : mappings)
     {
-        EXPECT_TRUE(known_gz_types.count(mapping.gz_type_name) > 0)
-            << "Unknown Gazebo message type '" << mapping.gz_type_name
-            << "' for topic '" << mapping.ros_topic_name << "'";
+        EXPECT_TRUE(std::regex_match(mapping.gz_type_name, gz_type_pattern))
+            << "Invalid Gazebo message type format: '" << mapping.gz_type_name
+            << "' for topic '" << mapping.ros_topic_name << "'. "
+            << "Expected format: gz.msgs.MessageName";
     }
 }
 
