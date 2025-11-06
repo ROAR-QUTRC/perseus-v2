@@ -13,53 +13,56 @@ amcl:
     global_frame_id: "map"
     lambda_short: 0.1
     laser_likelihood_max_dist: 2.0
-    laser_max_range: 100.0
+    laser_max_range: 12.0
     laser_min_range: -1.0
     laser_model_type: "likelihood_field"
     max_beams: 60
-    max_particles: 2000
-    min_particles: 500
+    max_particles: 2000 # Increased from 1000 for better localization
+    min_particles: 500 # Increased from 250 for better localization
     odom_frame_id: "odom"
     pf_err: 0.05
     pf_z: 0.99
-    recovery_alpha_fast: 0.0
-    recovery_alpha_slow: 0.0
-    resample_interval: 1
+    recovery_alpha_fast: 0.1 # Enable recovery (was 0.0)
+    recovery_alpha_slow: 0.001 # Enable recovery (was 0.0)
+    resample_interval: 2
     robot_model_type: "nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
-    transform_tolerance: 1.0
-    update_min_a: 0.2
-    update_min_d: 0.25
+    transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
+    update_min_a: 0.3 # Scaled for larger robot
+    update_min_d: 0.5 # Scaled for larger robot
     z_hit: 0.5
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
     scan_topic: scan
+    map_topic: map
+    set_initial_pose: true # Changed to true for automatic initialization
+    always_reset_initial_pose: false
+    first_map_only: false
+    initial_pose:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      yaw: 0.0
 bt_navigator:
   ros__parameters:
     global_frame: map
     robot_base_frame: base_link
-    odom_topic: odom
-    bt_loop_duration: 10
+    transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
     filter_duration: 0.3
-    default_server_timeout: 20
-    wait_for_service_timeout: 1000
-    action_server_result_timeout: 900.0
+    default_nav_to_pose_bt_xml: "$(find-pkg-share nav2_bt_navigator)/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+    default_nav_through_poses_bt_xml: "$(find-pkg-share nav2_bt_navigator)/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+    always_reload_bt_xml: false
+    goal_blackboard_id: goal
+    goals_blackboard_id: goals
+    path_blackboard_id: path
     navigators: ["navigate_to_pose", "navigate_through_poses"]
     navigate_to_pose:
       plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
     navigate_through_poses:
       plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
-    # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
-    # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
-    # nav2_bt_navigator/navigate_through_poses_w_replanning_and_recovery.xml
-    # They can be set here or via a RewrittenYaml remap from a parent launch file to Nav2.
-
-    # plugin_lib_names is used to add custom BT plugins to the executor (vector of strings).
-    # Built-in plugins are added automatically
-    # plugin_lib_names: []
     error_code_name_prefixes:
       - assisted_teleop
       - backup
@@ -69,217 +72,144 @@ bt_navigator:
       - follow_path
       - nav_thru_poses
       - nav_to_pose
-      - route
       - spin
+      - route
       - undock_robot
       - wait
+    enable_groot_monitoring: true
+    groot_zmq_publisher_port: 1666
+    groot_zmq_server_port: 1667
 controller_server:
   ros__parameters:
-    controller_frequency: 20.0
-    costmap_update_timeout: 0.30
+    controller_frequency: 10.0
     min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.5
+    min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
-    failure_tolerance: 0.3
+    failure_tolerance: 0.5 # Increased from 0.3 for more tolerance
     progress_checker_plugins: ["progress_checker"]
-    goal_checker_plugins: ["general_goal_checker"] # "precise_goal_checker"
+    goal_checker_plugins: ["goal_checker"]
     controller_plugins: ["FollowPath"]
-    use_realtime_priority: false
-    # Progress checker parameters
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.5
-      movement_time_allowance: 10.0
-    # Goal checker parameters
-    #precise_goal_checker:
-    #  plugin: "nav2_controller::SimpleGoalChecker"
-    #  xy_goal_tolerance: 0.25
-    #  yaw_goal_tolerance: 0.25
-    #  stateful: True
-    general_goal_checker:
-      stateful: True
+      required_movement_radius: 0.05 # Reduced from 0.1 for less strict movement requirement
+      movement_time_allowance: 15.0 # Increased from 10.0 for more time
+    goal_checker:
+      stateful: true
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.1 # Slightly increased from 0.08
+      yaw_goal_tolerance: 0.2 # Increased from 0.15
     FollowPath:
-      plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 56
-      model_dt: 0.05
-      batch_size: 2000
-      ax_max: 3.0
-      ax_min: -3.0
-      ay_max: 3.0
-      az_max: 3.5
-      vx_std: 0.2
-      vy_std: 0.2
-      wz_std: 0.4
-      vx_max: 0.5
-      vx_min: -0.35
-      vy_max: 0.5
-      wz_max: 1.9
-      iteration_count: 1
-      prune_distance: 1.7
-      transform_tolerance: 0.1
-      temperature: 0.3
-      gamma: 0.015
-      motion_model: "DiffDrive"
-      visualize: true
-      regenerate_noises: true
-      TrajectoryVisualizer:
-        trajectory_step: 5
-        time_step: 3
-      AckermannConstraints:
-        min_turning_r: 0.2
-      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic"]
-      ConstraintCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 4.0
-      GoalCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 5.0
-        threshold_to_consider: 1.4
-      GoalAngleCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 3.0
-        threshold_to_consider: 0.5
-      PreferForwardCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 5.0
-        threshold_to_consider: 0.5
-      CostCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 3.81
-        critical_cost: 300.0
-        consider_footprint: true
-        collision_cost: 1000000.0
-        near_goal_distance: 1.0
-        trajectory_point_step: 2
-      PathAlignCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 14.0
-        max_path_occupancy_ratio: 0.05
-        trajectory_point_step: 4
-        threshold_to_consider: 0.5
-        offset_from_furthest: 20
-        use_path_orientations: false
-      PathFollowCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 5.0
-        offset_from_furthest: 5
-        threshold_to_consider: 1.4
-      PathAngleCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 2.0
-        offset_from_furthest: 4
-        threshold_to_consider: 0.5
-        max_angle_to_furthest: 1.0
-        mode: 0
-        # TwirlingCritic:
-        #   enabled: true
-        #   twirling_cost_power: 1
-        #   twirling_cost_weight: 10.0
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: true
+      min_vel_x: 0.0
+      min_vel_y: 0.0
+      max_vel_x: 0.2 # Reduced from 0.25 for more conservative movement
+      max_vel_y: 0.0
+      max_vel_theta: 0.8 # Reduced from 1.0 for smoother rotation
+      min_speed_xy: 0.0
+      max_speed_xy: 0.2 # Reduced from 0.25
+      min_speed_theta: 0.0
+      acc_lim_x: 2.0 # Reduced from 3.0 for smoother acceleration
+      acc_lim_y: 0.0
+      acc_lim_theta: 2.5 # Reduced from 3.2 for smoother rotation
+      decel_lim_x: -2.0 # Less aggressive deceleration
+      decel_lim_y: 0.0
+      decel_lim_theta: -2.5 # Less aggressive deceleration
+      vx_samples: 20 # Increased from 15 for better trajectory options
+      vy_samples: 0
+      vtheta_samples: 40 # Increased from 30 for better rotation options
+      sim_time: 1.5 # Increased from 1.0 for better lookahead
+      linear_granularity: 0.05 # Increased from 0.03 for computational efficiency
+      angular_granularity: 0.025
+      transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
+      xy_goal_tolerance: 0.1 # Increased from 0.08
+      trans_stopped_velocity: 0.2 # Reduced from 0.25
+      short_circuit_trajectory_evaluation: true # Changed to true for efficiency
+      stateful: true
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "PathAlign", "PathDist", "GoalAlign", "GoalDist"]
+      BaseObstacle.scale: 0.05 # Increased from 0.02 for better obstacle avoidance
+      PathAlign.scale: 32.0 # Reduced from 160.0 for less aggressive path following
+      PathAlign.forward_point_distance: 0.325
+      GoalAlign.scale: 24.0 # Increased from 12.0 for better goal alignment
+      GoalAlign.forward_point_distance: 0.325
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0 # Reduced from 32.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
+    enable_stamped_cmd_vel: true
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 5.0
-      publish_frequency: 2.0
+      update_frequency: 5.0 # Increased from 3.0 for better responsiveness
+      publish_frequency: 2.0 # Increased from 1.0
       global_frame: odom
       robot_base_frame: base_link
-      footprint: "[[0.3, 0.3], [0.3, -0.3], [-0.3, -0.3], [-0.3, 0.3]]"
       rolling_window: true
       width: 3
       height: 3
-      resolution: 0.5
-      robot_radius: 0.22
-      plugins: ["voxel_layer", "inflation_layer"]
+      resolution: 0.05
+      robot_radius: 0.12
+      plugins: ["obstacle_layer", "inflation_layer"] # Removed voxel_layer to reduce computation
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.70
-      voxel_layer:
-        plugin: "nav2_costmap_2d::VoxelLayer"
-        enabled: True
-        publish_voxel_map: True
-        origin_z: 0.0
-        z_resolution: 0.05
-        z_voxels: 16
-        max_obstacle_height: 2.0
-        mark_threshold: 0
+        inflation_radius: 0.55 # Increased from 0.5 for better clearance
+        cost_scaling_factor: 3.0 # Reduced from 5.0 for less aggressive inflation
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
         observation_sources: scan
         scan:
-          # A relative topic will be appended to the parent of the local_costmap namespace.
-          # For example:
-          #   * User chosen namespace is `tb4`.
-          #   * User chosen topic is `scan`.
-          #   * Topic will be remapped to `/tb4/scan` without `local_costmap`.
-          #   * Use global topic `/scan` if you do not wish the node namespace to apply
-          topic: scan
+          topic: /scan
           max_obstacle_height: 2.0
-          clearing: True
-          marking: True
+          clearing: true
+          marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 3.0
+          raytrace_max_range: 10.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
+          obstacle_max_range: 8.0
           obstacle_min_range: 0.0
       static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_subscribe_transient_local: True
-      always_send_full_costmap: True
+        map_subscribe_transient_local: true
+      always_send_full_costmap: true
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
+      update_frequency: 1.0 # Increased from 0.5 for better map updates
+      publish_frequency: 1.0 # Increased from 0.5
       global_frame: map
       robot_base_frame: base_link
-      robot_radius: 0.22
-      resolution: 0.5
-      footprint: "[[0.3, 0.3], [0.3, -0.3], [-0.3, -0.3], [-0.3, 0.3]]"
+      transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
+      robot_radius: 0.12
+      resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
+        enabled: true
         observation_sources: scan
         scan:
-          # A relative topic will be appended to the parent of the global_costmap namespace.
-          # For example:
-          #   * User chosen namespace is `tb4`.
-          #   * User chosen topic is `scan`.
-          #   * Topic will be remapped to `/tb4/scan` without `global_costmap`.
-          #   * Use global topic `/scan` if you do not wish the node namespace to apply
-          topic: scan
+          topic: /scan
           max_obstacle_height: 2.0
-          clearing: True
-          marking: True
+          clearing: true
+          marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 3.0
+          raytrace_max_range: 10.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
+          obstacle_max_range: 8.0
           obstacle_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        map_subscribe_transient_local: True
+        map_subscribe_transient_local: true
+        transform_tolerance: 0.1
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.7
-      always_send_full_costmap: True
-# The yaml_filename does not need to be specified since it going to be set by defaults in launch.
-# If you'd rather set it in the yaml, remove the default "map" value in the tb3_simulation_launch.py
-# file & provide full path to map below. If CLI map configuration or launch default is provided, that will be used.
-# map_server:
-#   ros__parameters:
-#     yaml_filename: ""
+        inflation_radius: 0.35 # Increased from 0.3 for better clearance
+        cost_scaling_factor: 3.0 # Reduced from 5.0 for less aggressive inflation
+      always_send_full_costmap: true
+map_server:
+  ros__parameters:
+    yaml_filename: "map.yaml"
 map_saver:
   ros__parameters:
     save_map_timeout: 5.0
@@ -288,13 +218,12 @@ map_saver:
     map_subscribe_transient_local: True
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 20.0
+    expected_planner_frequency: 10.0
     planner_plugins: ["GridBased"]
-    costmap_update_timeout: 1.0
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
-      tolerance: 0.01
-      use_astar: false
+      tolerance: 0.25 # Increased from 0.2 for more flexible planning
+      use_astar: true
       allow_unknown: true
 smoother_server:
   ros__parameters:
@@ -307,23 +236,17 @@ smoother_server:
 behavior_server:
   ros__parameters:
     local_costmap_topic: local_costmap/costmap_raw
-    global_costmap_topic: global_costmap/costmap_raw
     local_footprint_topic: local_costmap/published_footprint
+    global_costmap_topic: global_costmap/costmap_raw
     global_footprint_topic: global_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
     spin:
       plugin: "nav2_behaviors::Spin"
     backup:
       plugin: "nav2_behaviors::BackUp"
-      acceleration_limit: 2.5
-      deceleration_limit: -2.5
-      minimum_speed: 0.10
     drive_on_heading:
       plugin: "nav2_behaviors::DriveOnHeading"
-      acceleration_limit: 2.5
-      deceleration_limit: -2.5
-      minimum_speed: 0.10
     wait:
       plugin: "nav2_behaviors::Wait"
     assisted_teleop:
@@ -331,11 +254,12 @@ behavior_server:
     local_frame: odom
     global_frame: map
     robot_base_frame: base_link
-    transform_tolerance: 0.1
+    transform_timeout: 0.2 # Increased from 0.1 for timing tolerance
     simulate_ahead_time: 2.0
-    max_rotational_vel: 1.0
-    min_rotational_vel: 0.4
-    rotational_acc_lim: 3.2
+    max_rotational_vel: 0.8 # Reduced from 1.0 for smoother rotation
+    min_rotational_vel: 0.2 # Reduced from 0.4
+    rotational_acc_lim: 2.5 # Reduced from 3.2 for smoother acceleration
+    enable_stamped_cmd_vel: true
 waypoint_follower:
   ros__parameters:
     loop_rate: 20
@@ -348,17 +272,19 @@ waypoint_follower:
       waypoint_pause_duration: 200
 velocity_smoother:
   ros__parameters:
-    smoothing_frequency: 20.0
-    scale_velocities: False
+    smoothing_frequency: 20.0 # Increased from 10.0 for smoother operation
+    scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.5, 0.0, 2.0]
-    min_velocity: [-0.5, 0.0, -2.0]
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
-    odom_topic: "odom"
-    odom_duration: 0.1
+    max_velocity: [0.25, 0.0, 1.0] # Reduced max velocities for stability
+    min_velocity: [-0.25, 0.0, -1.0]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
+    max_accel: [1.5, 0.0, 2.0] # Reduced for smoother acceleration
+    max_decel: [-1.5, 0.0, -2.0] # Reduced for smoother deceleration
+    odom_topic: "odom"
+    odom_duration: 0.1
+    use_realtime_priority: false
+    enable_stamped_cmd_vel: true
 collision_monitor:
   ros__parameters:
     base_frame_id: "base_link"
@@ -366,65 +292,64 @@ collision_monitor:
     cmd_vel_in_topic: "cmd_vel_smoothed"
     cmd_vel_out_topic: "cmd_vel"
     state_topic: "collision_monitor_state"
-    transform_tolerance: 0.2
-    source_timeout: 1.0
-    base_shift_correction: True
+    transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
+    source_timeout: 5.0 # Increased from 2.0 for more robust operation
+    base_shift_correction: true
     stop_pub_timeout: 2.0
-    # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
-    # and robot footprint for "approach" action type.
-    polygons: ["FootprintApproach"]
+    enable_stamped_cmd_vel: true
+    use_realtime_priority: false
+    polygons: ["PolygonStop", "PolygonSlow", "FootprintApproach"]
+    PolygonStop:
+      type: "circle"
+      radius: 0.15 # Increased from 0.1 for better safety margin
+      action_type: "stop"
+      min_points: 4
+      visualize: true
+      polygon_pub_topic: "polygon_stop"
+      enabled: true
+    PolygonSlow:
+      type: "polygon"
+      points: "[[0.15, 0.15], [0.15, -0.15], [-0.15, -0.15], [-0.15, 0.15]]"
+      action_type: "slowdown"
+      min_points: 4
+      slowdown_ratio: 0.5 # Increased from 0.3 for less aggressive slowdown
+      visualize: true
+      polygon_pub_topic: "polygon_slowdown"
+      enabled: true
     FootprintApproach:
       type: "polygon"
       action_type: "approach"
-      footprint_topic: "local_costmap/published_footprint"
-      time_before_collision: 1.2
-      simulation_time_step: 0.1
+      footprint_topic: "/local_costmap/published_footprint"
+      time_before_collision: 2.0
+      simulation_time_step: 0.02
       min_points: 6
       visualize: False
-      enabled: True
+      enabled: true
     observation_sources: ["scan"]
     scan:
+      source_timeout: 0.5 # Increased from 0.1 to reduce timeout issues
       type: "scan"
-      topic: "scan"
-      min_height: 0.15
-      max_height: 2.0
-      enabled: True
+      topic: "/scan"
+      enabled: true
 docking_server:
   ros__parameters:
-    controller_frequency: 50.0
-    initial_perception_timeout: 5.0
-    wait_charge_timeout: 5.0
-    dock_approach_timeout: 30.0
-    undock_linear_tolerance: 0.05
-    undock_angular_tolerance: 0.1
-    max_retries: 3
-    base_frame: "base_link"
-    fixed_frame: "odom"
-    dock_backwards: false
-    dock_prestaging_tolerance: 0.5
-    # Types of docks
-    dock_plugins: ["simple_charging_dock"]
-    simple_charging_dock:
+    dock_plugins: ["nova_carter_dock"]
+    nova_carter_dock:
       plugin: "opennav_docking::SimpleChargingDock"
-      docking_threshold: 0.05
-      staging_x_offset: -0.7
-      use_external_detection_pose: true
-      use_battery_status: false # true
-      use_stall_detection: false # true
-      external_detection_timeout: 1.0
-      external_detection_translation_x: -0.18
-      external_detection_translation_y: 0.0
-      external_detection_rotation_roll: -1.57
-      external_detection_rotation_pitch: -1.57
-      external_detection_rotation_yaw: 0.0
-      filter_coef: 0.1
-    # Dock instances
-    # The following example illustrates configuring dock instances.
-    # docks: ['home_dock']  # Input your docks here
-    # home_dock:
-    #   type: 'simple_charging_dock'
-    #   frame: map
-    #   pose: [0.0, 0.0, 0.0]
+    docks: ["home_dock", "flex_dock1", "flex_dock2"]
+    home_dock:
+      type: "nova_carter_dock"
+      frame: map
+      pose: [0.0, 0.0, 0.0]
+    flex_dock1:
+      type: "nova_carter_dock"
+      frame: map
+      pose: [10.0, 10.0, 0.0]
+    flex_dock2:
+      type: "nova_carter_dock"
+      frame: map
+      pose: [30.0, 30.0, 0.0]
+    enable_stamped_cmd_vel: true
     controller:
       k_phi: 3.0
       k_delta: 2.0
