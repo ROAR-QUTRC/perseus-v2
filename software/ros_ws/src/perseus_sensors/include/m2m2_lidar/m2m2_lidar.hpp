@@ -1,20 +1,14 @@
 #pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <chrono>
-#include <cmath>
-#include <iomanip>
+#include <cstdint>
 #include <nlohmann/json.hpp>
-#include <numbers>
 #include <optional>
-#include <ranges>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
-#include <stdexcept>
 #include <string>
-#include <thread>
+#include <string_view>
+#include <tuple>
 #include <vector>
 
 #include "simple_networking/client.hpp"
@@ -22,11 +16,11 @@
 /**
  * @brief ROS2 driver node for the M2M2 LIDAR sensor
  *
-
  * @details Handles communication with the M2M2 LIDAR sensor over TCP/IP,
  * processes incoming data, and publishes LaserScan and IMU messages.
  * The driver maintains the connection to the sensor and provides configuration
  * capabilities.
+
  */
 class M2M2Lidar : public rclcpp::Node
 {
@@ -34,9 +28,7 @@ public:
     /**
      * @brief Configuration parameters for the M2M2 LIDAR sensor
      */
-    /**
-     * @brief Configuration parameters for the M2M2 LIDAR sensor
-     */
+
     struct sensor_config_t
     {
         double scanFrequency;
@@ -71,7 +63,7 @@ private:
     [[nodiscard]] static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
 
     // Network communication methods
-    [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nullptr);
+    [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nlohmann::json{});
     [[nodiscard]] nlohmann::json _receiveJsonResponse();
     void _sendCommand(const std::vector<uint8_t>& command);
 
