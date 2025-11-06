@@ -1,0 +1,82 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+    lock_memory: False
+    # Define controllers under the "controllers" key
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    diff_drive_base_controller:
+      type: diff_drive_controller/DiffDriveController
+# Hardware interface configuration
+Perseus_Lite:
+  ros__parameters:
+    joints:
+      front_left_wheel_joint:
+        command_interfaces:
+          - position
+          - velocity
+        state_interfaces:
+          - position
+          - velocity
+          - load
+          - temperature
+      front_right_wheel_joint:
+        command_interfaces:
+          - position
+          - velocity
+        state_interfaces:
+          - position
+          - velocity
+          - load
+          - temperature
+      rear_left_wheel_joint:
+        command_interfaces:
+          - position
+          - velocity
+        state_interfaces:
+          - position
+          - velocity
+          - load
+          - temperature
+      rear_right_wheel_joint:
+        command_interfaces:
+          - position
+          - velocity
+        state_interfaces:
+          - position
+          - velocity
+          - load
+          - temperature
+# Parameters for individual controllers
+joint_state_broadcaster:
+  ros__parameters:
+    map_interface_to_joint_state:
+      effort: current
+diff_drive_base_controller:
+  ros__parameters:
+    # Hardware configuration
+    left_wheel_names: ["front_left_wheel_joint", "rear_left_wheel_joint"]
+    right_wheel_names: ["front_right_wheel_joint", "rear_right_wheel_joint"]
+    wheel_separation: 0.40
+    wheels_per_side: 2
+    wheel_radius: 0.075
+    write_op_modes: ["velocity"]
+    pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
+    open_loop: false # Use encoder feedback for accurate odometry
+    # ROS I/O configuration
+    publish_rate: 50.0
+    odom_frame_id: odom
+    base_frame_id: base_link
+    enable_odom_tf: true
+    cmd_vel_timeout: 0.5
+    #publish_limited_velocity: true
+    #use_stamped_vel: false
+
+    # Kinematic limits
+    linear.x.max_velocity: 2.0
+    linear.x.max_acceleration: 10.0
+    linear.x.max_jerk: .NAN
+    angular.z.max_velocity: 5.0
+    angular.z.max_acceleration: 10.0
+    angular.z.max_jerk: .NAN
