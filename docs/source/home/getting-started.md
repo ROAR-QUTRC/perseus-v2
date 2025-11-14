@@ -5,16 +5,15 @@ Whilst this page will get you started, it is strongly recommended that you read 
 
 ## First-time Setup
 
-1. Install the [GitHub CLI](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
-2. Run the following shell commands to install `curl` and `direnv` (this assumes a Debian-based distro like Ubuntu):
+1. Run the following shell commands to install `gh` (the github CLI), `git`, `curl` and `direnv` (this assumes a Debian-based distro like Ubuntu):
 
 ```{code-block} console
 sudo apt-get update
 sudo apt-get install -y gh git curl direnv
 ```
 
-3. Log into GitHub: `gh auth login -w -p https`
-4. Clone the repo (into `~/perseus-v2`) and `cd` into it:
+2. Log into GitHub: `gh auth login -w -p https`
+3. Clone the repo (into `~/perseus-v2`) and `cd` into it:
 
 ```{code-block} console
 cd ~
@@ -22,17 +21,17 @@ gh repo clone ROAR-QUTRC/perseus-v2 # download the repository
 cd perseus-v2
 ```
 
-5. Run the setup script (it will prompt you for sudo permissions):
+4. Run the setup script (it will prompt you for sudo permissions):
 
 ```{code-block} console
-`./software/scripts/nix-setup.sh`
+./software/scripts/nix-setup.sh
 ```
 
-6. Restart your shell
-7. Run `cd ~/perseus-v2`
-8. Accept all config options when prompted with `y`
-9. Wait for the downloads (and potentially builds)
-10. Run `nix build` - this will attempt to build the workspace. If this succeeds, you're done, and the built workspace is now available under the `./result` folder!
+5. Restart your shell
+6. Run `cd ~/perseus-v2`
+7. Accept all config options when prompted with `y`
+8. Wait for the downloads (and potentially builds)
+9. Run `nix build` - this will attempt to build the workspace. If this succeeds, you're done, and the built workspace is now available under the `./result` folder!
 
 ### IDE Setup
 
