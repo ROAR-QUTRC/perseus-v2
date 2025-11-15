@@ -48,16 +48,12 @@ pkgs.mkShell {
             joint-state-broadcaster
             joint-state-publisher-gui
             joy
-            libpcl-dev
-            librealsense2-dev
             mecanum-drive-controller
             navigation2
             nlohmann_json
             onnxruntime
             opencv
-            opencv.cxxdev
             openssl
-            pcl-conversions
             pluginlib
             python3Packages.pygame
             python3Packages.pytest
@@ -81,7 +77,6 @@ pkgs.mkShell {
             teleop-twist-joy
             teleop-twist-keyboard
             tf2
-            tf2-geometry-msgs
             tf2-ros
             twist-mux
             xacro

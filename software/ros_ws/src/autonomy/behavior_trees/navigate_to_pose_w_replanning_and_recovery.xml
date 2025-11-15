@@ -10,6 +10,7 @@
       <PipelineSequence name="NavigateWithReplanning">
         <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
         <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
+        
         <RateController hz="1.0">
           <RecoveryNode number_of_retries="1" name="ComputePathToPose">
             <ComputePathToPose goal="{goal}" path="{path}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}"/>
@@ -19,6 +20,7 @@
             </Sequence>
           </RecoveryNode>
         </RateController>
+        
         <RecoveryNode number_of_retries="1" name="FollowPath">
           <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
           <Sequence>
@@ -27,11 +29,15 @@
           </Sequence>
         </RecoveryNode>
       </PipelineSequence>
+
+      
       <Sequence>
         <Fallback>
           <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
           <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
         </Fallback>
+
+        <!-- When Error Code is not related to Planning or Control, perform General Recovery Actions -->
         <ReactiveFallback name="RecoveryFallback">
           <GoalUpdated/>
           <RoundRobin name="RecoveryActions">
@@ -44,6 +50,7 @@
             <BackUp backup_dist="0.30" backup_speed="0.15" error_code_id="{backup_code_id}"/>
           </RoundRobin>
         </ReactiveFallback>
+
       </Sequence>
     </RecoveryNode>
   </BehaviorTree>

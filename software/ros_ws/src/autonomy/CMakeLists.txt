@@ -56,7 +56,7 @@ endforeach()
 # Install the package's resource files These directories will only be installed
 # if they exist
 install(
-  DIRECTORY config launch maps rviz urdf worlds
+  DIRECTORY config launch maps rviz urdf worlds map
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 

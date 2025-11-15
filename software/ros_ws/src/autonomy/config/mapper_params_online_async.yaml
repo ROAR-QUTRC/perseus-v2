@@ -21,14 +21,14 @@ slam_toolbox:
     # map_start_pose: [0.0, 0.0, 0.0]
     #map_start_at_dock: true
     debug_logging: false
-    throttle_scans: 1
+    throttle_scans: 2  # Increased from 1 - process every 3rd scan to reduce load
     transform_publish_period: 0.1 #if 0 never publishes odometry
-    map_update_interval: 5.0
+    map_update_interval: 2.0  # Reduced from 5.0 - update map more frequently to prevent queue buildup
     resolution: 0.5
-    max_laser_range: 10.0 #for rastering images
-    minimum_time_interval: 0.5
-    transform_timeout: 0.5
-    tf_buffer_duration: 60.0
+    max_laser_range: 100.0 #for rastering images
+    minimum_time_interval: 0.2  # Reduced from 0.5 - allow more frequent processing
+    transform_timeout: 1.0  # Increased from 0.5 - give more time for transforms
+    tf_buffer_duration: 30.0  # Reduced from 60.0 - smaller buffer to reduce memory usage
     stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
     enable_interactive_mode: true
     # General Parameters
@@ -36,10 +36,10 @@ slam_toolbox:
     use_scan_barycenter: true
     minimum_travel_distance: 0.5
     minimum_travel_heading: 0.5
-    scan_buffer_size: 10
+    scan_buffer_size: 20  # Increased from 10 - larger buffer to handle bursts
     scan_buffer_maximum_scan_distance: 10.0
     link_match_minimum_response_fine: 0.1
-    link_scan_maximum_distance: 1.5
+    link_scan_maximum_distance: 20
     loop_search_maximum_distance: 3.0
     do_loop_closing: true
     loop_match_minimum_chain_size: 10
