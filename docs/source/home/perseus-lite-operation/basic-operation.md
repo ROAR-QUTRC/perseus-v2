@@ -9,7 +9,7 @@ nix shell
 ros2 launch perseus_lite perseus_lite.launch.py cmd_vel_topic:=/joy_vel
 ```
 
-Note the use of /jou_vel is only necessary until the mux code and the perseus-lite branches are merged.
+Note the use of /joy_vel is only necessary until the mux code and the perseus-lite branches are merged.
 
 ## Terminal 2
 
@@ -67,7 +67,7 @@ Launch the Perseus-Lite ROS2 system:
 
 ```console
 export LC_ALL=C && export LANG=C
-nix develop --command bash -c "cd software/ros_ws && source install/setup.bash && ros2 launch perseus_lite perseus_lite.launch.py"
+nix develop --command bash -c "cd software/ros_ws && colcon build --packages-up-to perseus_lite && source install/setup.bash && ros2 launch perseus_lite perseus_lite.launch.py"
 ```
 
 :::{note}
