@@ -98,6 +98,41 @@ export LC_ALL=C && export LANG=C
 nix develop --command bash -c "source software/ros_ws/install/setup.bash && ros2 topic echo /joint_states --once"
 ```
 
+You should see output similar to this (values will vary based on wheel positions):
+
+```yaml
+header:
+  stamp:
+    sec: 1234567890
+    nanosec: 123456789
+  frame_id: ''
+name:
+- front_left_wheel_joint
+- front_right_wheel_joint
+- rear_left_wheel_joint
+- rear_right_wheel_joint
+position:
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+velocity:
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+effort:
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+---
+```
+
+:::{note}
+When the robot is stationary, velocities should be near zero. Position values accumulate over time as the wheels rotate. Effort values represent motor load and should be low when not moving.
+:::
+
 ## Control Software Launch
 
 ### Keyboard Control
