@@ -9,7 +9,9 @@ nix shell
 ros2 launch perseus_lite perseus_lite.launch.py cmd_vel_topic:=/joy_vel
 ```
 
-Note the use of /joy_vel is only necessary until the mux code and the perseus-lite branches are merged.
+:::{note}
+The `cmd_vel_topic:=/joy_vel` parameter remaps the velocity command topic for compatibility with the twist_mux topic multiplexer. This ensures the Xbox controller commands (published to `/joy_vel`) are correctly routed to the base controller.
+:::
 
 ## Terminal 2
 
@@ -105,8 +107,12 @@ In a new terminal, launch keyboard teleoperation:
 ```console
 cd perseus-v2
 export LC_ALL=C && export LANG=C
-nix develop --command bash -c "source software/ros_ws/install/setup.bash && ros2 run teleop_twist_keyboard teleop_twist_keyboard"
+nix develop --command bash -c "source software/ros_ws/install/setup.bash && ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=key_vel"
 ```
+
+:::{note}
+The `stamped:=true` parameter publishes TwistStamped messages, and the `cmd_vel:=key_vel` remapping is required for compatibility with the twist_mux topic multiplexer on the main branch.
+:::
 
 #### Keyboard Controls
 
