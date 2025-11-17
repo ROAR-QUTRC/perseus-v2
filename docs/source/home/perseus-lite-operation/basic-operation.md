@@ -105,27 +105,27 @@ header:
   stamp:
     sec: 1234567890
     nanosec: 123456789
-  frame_id: ''
+  frame_id: ""
 name:
-- front_left_wheel_joint
-- front_right_wheel_joint
-- rear_left_wheel_joint
-- rear_right_wheel_joint
+  - front_left_wheel_joint
+  - front_right_wheel_joint
+  - rear_left_wheel_joint
+  - rear_right_wheel_joint
 position:
-- 0.0
-- 0.0
-- 0.0
-- 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
 velocity:
-- 0.0
-- 0.0
-- 0.0
-- 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
 effort:
-- 0.0
-- 0.0
-- 0.0
-- 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
 ---
 ```
 
