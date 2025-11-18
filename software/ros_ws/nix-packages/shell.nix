@@ -45,6 +45,8 @@ pkgs.mkShell {
             hi-can
             hi-can-raw
             joint-state-broadcaster
+            joint-state-publisher
+            joint-state-publisher-gui
             joy
             mecanum-drive-controller
             navigation2
@@ -73,6 +75,7 @@ pkgs.mkShell {
             teleop-twist-joy
             teleop-twist-keyboard
             twist-mux
+            urdf
             xacro
             yaml-cpp-vendor
           ]

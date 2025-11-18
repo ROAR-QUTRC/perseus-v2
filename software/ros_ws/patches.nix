@@ -207,6 +207,16 @@ let
         propagatedBuildInputs = final.lib.remove rosFinal.perseus-input-config propagatedBuildInputs;
       }
     );
+
+    rplidar-ros = rosPrev.rplidar-ros.overrideAttrs ({
+      version = "2.1.5"; # Version based on the ROS2 branch
+      src = final.fetchFromGitHub {
+        owner = "Slamtec";
+        repo = "rplidar_ros";
+        rev = "ros2"; # Using the ros2 branch
+        sha256 = "sha256-oNoDa+IqtQPe8bpfMjHFj2yx7jFUhfbIqaPRQCU/zMQ=";
+      };
+    });
   };
 in
 {
