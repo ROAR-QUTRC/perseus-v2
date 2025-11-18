@@ -30,6 +30,7 @@ pkgs.mkShell {
             # Dependencies from package.xml files
             actuator-msgs
             ament-cmake
+            ament-cmake-gtest
             ament-copyright
             ament-flake8
             ament-lint-auto
@@ -77,6 +78,7 @@ pkgs.mkShell {
             twist-mux
             urdf
             xacro
+            yaml-cpp-vendor
           ]
         )
         ++ builtins.attrValues extraPkgs
