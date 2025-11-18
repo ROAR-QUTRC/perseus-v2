@@ -25,7 +25,7 @@ constexpr size_t LOW_DENSITY_LED_COUNT = LOW_DENSITY_LEDS_PER_RING * LOW_DENSITY
 // constexpr size_t LED_COUNT = HIGH_DENSITY_LED_COUNT + (4 * LOW_DENSITY_LED_COUNT);
 constexpr size_t LED_COUNT = LOW_DENSITY_LED_COUNT;
 
-constexpr fl::u32 AMBER = 0xFFBF00;
+#define COLOUR_AMBER_HEX 0xFFBF00
 
 CRGB leds[LED_COUNT];
 
@@ -35,11 +35,6 @@ using namespace addressing::legacy::power::control;
 using namespace parameters::legacy::power::control::power_bus;
 using namespace std::chrono;
 using namespace std::chrono_literals;
-
-/*
-Reqs:
-Colour at all times Amber (Yellow (G + R))
-*/
 
 void setup()
 {
@@ -57,7 +52,7 @@ void loop()
         lastUpdate = steady_clock::now();
 
         size_t ledIndex = 0;
-        fill_solid(&leds[ledIndex], LOW_DENSITY_LED_COUNT, CRBG(AMBER));  // Unknown if CRBG::Yellow is valid
+        fill_solid(&leds[ledIndex], LOW_DENSITY_LED_COUNT, CRBG(COLOUR_AMBER_HEX));  // Unknown if CRBG::Yellow is valid
     }
 
     // feed WDT
