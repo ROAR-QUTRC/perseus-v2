@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<robot name="chassis" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Contains base rover chassis and balance bar -->
+  <xacro:macro name="chassis" params="prefix:=^">
+    <!-- CHASSIS -->
+    <link name="${prefix}chassis">
+       <inertial>
+        <!-- Scaled inertial properties for Perseus Lite -->
+        <origin xyz="0.0 -0.08550236602 0.07366242988" rpy="0 0 0"/>
+        <mass value="1.38449701513"/> <!-- Scaled by 0.5 -->
+        <!-- Updated inertia values using square scaling factor (0.5^2 = 0.25) -->
+        <inertia ixx="0.005327" iyy="0.002894" izz="0.007011" 
+                 ixy="0.0" iyz="0.000169" ixz="-0.0"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0.0 ${-pi/2}"/>
+        <geometry>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
+        </geometry>
+      </visual>
+      
+      <collision>
+        <origin xyz="0.0 -0.15 0.05" rpy="0 0.0 ${-pi/2}"/>
+        <geometry>
+          <box size="0.2375 0.2625 0.1" />
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- Flange Bearing -->
+    <link name="${prefix}flange_bearing">
+      <inertial>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <mass value="0.6637443674696325"/>
+        <inertia ixx="0.000164" iyy="0.000212" izz="0.000081" 
+                 ixy="0.0" iyz="0.0" ixz="-0.0"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <geometry>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
+        </geometry>
+      </visual>
+      
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <geometry>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}flange_bearing_joint" type="fixed">
+      <origin xyz="-0.3 -0.0 0.05" rpy="0 ${-pi/2} 0.0"/>
+      <parent link="${prefix}chassis"/>
+      <child link="${prefix}flange_bearing"/>
+    </joint>
+
+    <!-- Balance/differential bar -->
+    <link name="${prefix}differential_bar">
+      <inertial>
+        <origin xyz="-0.0006050564992 -0.02287436340 0.0" rpy="0.0 0.0 0.0"/>
+        <mass value="0.4586324759064"/>
+        <inertia ixx="0.000045" iyy="0.002292" izz="0.002267" 
+                 ixy="0.0000004" iyz="-0.0" ixz="0.0"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
+        </geometry>
+      </visual>
+      
+      <collision>
+        <origin xyz="0.0 0.0 -0.005" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <box size="0.25 0.025 0.015" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}differential_bar_joint" type="fixed">
+      <origin xyz="0.0 0.0 0.025" rpy="${pi} 0.0 ${-pi/2}"/>
+      <axis xyz="0.0 0.0 1.0"/>
+      <parent link="${prefix}flange_bearing"/>
+      <child link="${prefix}differential_bar"/>
+    </joint>
+  </xacro:macro>
+</robot>
