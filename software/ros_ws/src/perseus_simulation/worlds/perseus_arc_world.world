@@ -45,9 +45,7 @@
       </ode>
     </physics>
 
-    <!-- <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
-    </include>  -->
+
 
 
     <light type="directional" name="sun">
@@ -93,8 +91,15 @@
     <include>
       <uri>model://perseus_arc_world/cubes</uri>
     </include>
-    <include>
+
+
+    <!-- <include>
       <uri>model://Moon_DEM</uri>
-    </include>
+    </include> -->
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
+    </include> 
+
   </world>
 </sdf>
