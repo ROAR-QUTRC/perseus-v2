@@ -44,6 +44,8 @@ pkgs.mkShell {
             hi-can
             hi-can-raw
             joint-state-broadcaster
+            joint-state-publisher
+            joint-state-publisher-gui
             joy
             mecanum-drive-controller
             navigation2
@@ -75,6 +77,7 @@ pkgs.mkShell {
             tf2
             tf2-geometry-msgs
             twist-mux
+            urdf
             xacro
           ]
         )

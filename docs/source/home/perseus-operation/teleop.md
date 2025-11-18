@@ -127,16 +127,51 @@ nix run .#ros2 -- run teleop_twist_keyboard teleop_twist_keyboard
 
 Note: Control messages are only sent when the terminal has focus and receives keystrokes ({keys}`k` to stop).
 
-#### Xbox Controller
+#### Generic Controller
 
 :::{note}
-Make sure that the Xbox controller connects to your laptop!
+Make sure that the Xbox controller connects to your laptop!  
 Sometimes you may need to re-pair, even if you've paired to it before.
 :::
 
+To run the controller there are certain things to understand before that happens.
+
+The launch file accepts three parameters:
+
+| Argument   | Default   | Description                                                                                |
+| ---------- | --------- | ------------------------------------------------------------------------------------------ |
+| `type`     | `xbox`    | Controller type. Options: `xbox`, `8bitdo`.                                                |
+| `wireless` | `true`    | Connection type. Set `true` for wireless, `false` for wired.                               |
+| `config`   | _(empty)_ | Path to a custom YAML config file. If provided, this overrides both `type` and `wireless`. |
+
+Some example runs:
+
+Default: Xbox controller, wireless
+
 ```console
-cd perseus-v2
-nix run .#xbox_controller
+nix run .#generic_controller
+```
+
+Xbox controller, wired
+
+```console
+nix run .#generic_controller -- type:=xbox wireless:=false
+```
+
+8BitDo controller, wireless
+
+```console
+nix run .#generic_controller -- type:=8bitdo wireless:=true
+```
+
+Use a custom config file
+
+```console
+# Absolute path
+nix run .#generic_controller -- config:=/absolute/path/to/my_controller.yaml
+
+# Alternative: Relative path (from current working directory)
+nix run .#generic_controller -- config:=./relative/path/to/my_controller.yaml
 ```
 
 ### Safe Operation
