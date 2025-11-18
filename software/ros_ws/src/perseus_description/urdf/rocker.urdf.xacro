@@ -7,7 +7,7 @@
     <!-- ROCKER ARM -->
     <link name="${prefix}${side}_rocker">
       <inertial>
-        <origin xyz="0.011819187400851083 -0.08337339654014758 -0.06739096070989994" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 -0.0 -0.0" rpy="0 0 0"/>
         <!-- RIGHT -->
         <xacro:if value="${side == 'right'}">
           <inertia ixx="0.078224" iyy="0.009964" izz="0.076528" ixy="0.003701" iyz="-0.006846" ixz="0.00298"/>
@@ -20,7 +20,7 @@
       </inertial>
 
       <visual>
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
         <geometry>
           <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/rocker_${side}.dae"/>
         </geometry>
@@ -28,7 +28,7 @@
       <collision>
         <origin xyz="0.2 0.0 -0.05" rpy="0.0 0.3 0.0"/>
         <geometry>
-          <box size="0.4 0.05 0.03" />
+          <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/rocker_${side}.dae"/>
         </geometry>
       </collision>
     </link>
@@ -42,20 +42,20 @@
     <!-- FRONT MOTOR -->
     <xacro:motor_wheel end="front">
       <xacro:if value="${side == 'left'}">
-        <origin xyz="-0.3 -0.225 -0.25" rpy="0.0 0.0 ${-pi/2}"/>
+        <origin xyz="0.3 -0.035 -0.25" rpy="0.0 0.0 0"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
-        <origin xyz="-0.3 0.225 -0.25" rpy="0.0 0.0 ${pi/2}"/>
+        <origin xyz="0.3 0.035 -0.25" rpy="0.0 0.0 0"/>
       </xacro:if>
     </xacro:motor_wheel>
     
     <!-- REAR MOTOR -->
     <xacro:motor_wheel end="rear">
       <xacro:if value="${side == 'left'}">
-        <origin xyz="0.55 -0.225 -0.25" rpy="0.0 0.0 ${-pi/2}"/>
+        <origin xyz="-0.55 -0.035 -0.25" rpy="0.0 0.0 0.0"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
-        <origin xyz="0.55 0.225 -0.25" rpy="0.0 0.0 ${pi/2}"/>
+        <origin xyz="-0.55 0.035 -0.25" rpy="0.0 0.0 0.0"/>
       </xacro:if>
     </xacro:motor_wheel>
   </xacro:macro>
