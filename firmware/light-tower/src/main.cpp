@@ -28,12 +28,6 @@ constexpr size_t LED_COUNT = LOW_DENSITY_LED_COUNT;  // = HIGH_DENSITY_LED_COUNT
 
 constexpr uint32_t COLOUR_AMBER_HEX = 0xFFBF00;
 
-constexpr uint8_t OffsetTipPoint_OddCheck = (LOW_DENSITY_LEDS_PER_RING % 2 != 0);
-constexpr uint8_t OffsetTipPoint = (LOW_DENSITY_LEDS_PER_RING >> 1) + OffsetTipPoint_OddCheck;
-
-constexpr uint8_t QUT_MORSE_CODE_bm = 0b1101 001 1;  // QUT --.- ..- -
-constexpr uint8_t QUT_MORSE_CODE_CHAR_END_bm = 0b0001 001 1;
-
 CRGB leds[LED_COUNT];
 
 using namespace hi_can;
@@ -43,18 +37,20 @@ using namespace parameters::legacy::power::control::power_bus;
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-// const address_t rcbAddress{power::SYSTEM_ID,
-//                            power::control::SUBSYSTEM_ID,
-//                            static_cast<uint8_t>(device::ROVER_CONTROL_BOARD)};
+/*
+const address_t rcbAddress{power::SYSTEM_ID,
+                           power::control::SUBSYSTEM_ID,
+                           static_cast<uint8_t>(device::ROVER_CONTROL_BOARD)};
 
-// PowerBusParameterGroup computeBus{rcbAddress, power::control::rcb::groups::COMPUTE_BUS};
-// PowerBusParameterGroup driveBus{rcbAddress, power::control::rcb::groups::DRIVE_BUS};
-// PowerBusParameterGroup auxBus{rcbAddress, power::control::rcb::groups::AUX_BUS};
-// PowerBusParameterGroup spareBus{rcbAddress, power::control::rcb::groups::SPARE_BUS};
+PowerBusParameterGroup computeBus{rcbAddress, power::control::rcb::groups::COMPUTE_BUS};
+PowerBusParameterGroup driveBus{rcbAddress, power::control::rcb::groups::DRIVE_BUS};
+PowerBusParameterGroup auxBus{rcbAddress, power::control::rcb::groups::AUX_BUS};
+PowerBusParameterGroup spareBus{rcbAddress, power::control::rcb::groups::SPARE_BUS};
 
-// std::optional<PacketManager> packetManager;
+std::optional<PacketManager> packetManager;
 
-// void setRingStatus(int mainRing, power_status compute, power_status drive, power_status aux, power_status spare);
+void setRingStatus(int mainRing, power_status compute, power_status drive, power_status aux, power_status spare);
+*/
 
 void setup()
 {
@@ -105,59 +101,6 @@ void loop()
     }
     // feed WDT
     std::this_thread::sleep_for(1ms);
-}
-
-// Note: This will only work if the number of LEDs per ring is 12 and there's only 2 rings
-// Displays the morse code for QUT with the light tower (Shorts on the first LED row and Longs on the second LED row)
-void startupAnimation()
-{
-    if ((LED_COUNT >> 1) == 12)  // Just a double check so it doesnt look silly if the LED configuration is changed
-    {
-        fill_solid(&leds[0], LED_COUNT, CRGB::Black);
-
-        steady_clock::duration animationTime = 6s;
-        int cycles = 5;
-        steady_clock::duration stepTime = animationTime / (cycles * LOW_DENSITY_LEDS_PER_RING);
-
-        size_t ledIndex = 0;
-        uint8_t ledOffset = 0;  // Offset MAX is LOW_DENSITY_RING_COUNT - 1, at Offset MAX set offset to 0
-        steady_clock::time_point startTime = steady_clock::now();
-        while ((steady_clock::now() - startTime < 12s))
-        {
-            for (int i = 0; i < 8; i++)
-            {
-                ledIndex = i - ledOffset - OffsetTipPoint_OddCheck + (i < OffsetTipPoint ? LOW_DENSITY_LEDS_PER_RING : 0);
-
-                if (QUT_MORSE_CODE_bm & (0b1 >> i))
-                {
-                    leds[ledIndex] = CRGB::Black;
-                    leds[ledIndex + LOW_DENSITY_LEDS_PER_RING] = CRGB::White;
-                }
-                else
-                {
-                    leds[ledIndex] = CRGB::White;
-                    leds[ledIndex + LOW_DENSITY_LEDS_PER_RING] = CRGB::Black;
-                }
-
-                if (QUT_MORSE_CODE_CHAR_END_bm & (0b1 >> i))
-                {
-                    leds[ledIndex + 1] = CRGB::Black;
-                    leds[ledIndex + 1 + LOW_DENSITY_LEDS_PER_RING] = CRGB::Black;
-
-                    if (i == 7)
-                    {
-                        leds[ledIndex + 2] = CRGB::Black;
-                        leds[ledIndex + 2 + LOW_DENSITY_LEDS_PER_RING] = CRGB::Black;
-                    }
-                }
-            }
-
-            ledOffset = (ledOffset + 2 < LOW_DENSITY_LEDS_PER_RING - 1) ? ledOffset + 1 : 0;
-
-            std::this_thread::sleep_for(stepTime);
-        }
-        FastLED.show();
-    }
 }
 
 /*
