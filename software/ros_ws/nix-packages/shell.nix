@@ -53,7 +53,6 @@ pkgs.mkShell {
             navigation2
             nlohmann_json
             openssl
-            perseus-lite-hardware
             pluginlib
             python3Packages.pygame
             python3Packages.pytest
