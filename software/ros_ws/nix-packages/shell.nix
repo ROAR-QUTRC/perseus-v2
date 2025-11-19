@@ -37,6 +37,7 @@ pkgs.mkShell {
             ament-lint-common
             ament-pep257
             backward-ros
+            boost
             controller-manager
             diff-drive-controller
             geometry-msgs
