@@ -28,6 +28,24 @@ constexpr size_t LED_COUNT = LOW_DENSITY_LED_COUNT;  // = HIGH_DENSITY_LED_COUNT
 
 constexpr uint32_t COLOUR_AMBER_HEX = 0xFFBF00;
 
+#pragma region Startup Animation Vars
+enum morseCode
+{
+    Short,
+    Long,
+    Whitespace
+};
+
+// QUT --.- ..- -
+constexpr morseCode LED_MORSE_CODE_QUT_LAYOUT[12] = {Long, Long, Short, Long, Whitespace, Short, Short, Long, Whitespace, Long, Whitespace, Whitespace};
+
+constexpr int STARTUP_ANIM_CYCLE_COUNT = 5;
+constexpr steady_clock::duration STARTUP_ANIM_DURATION = 6s;
+constexpr steady_clock::duration STARTUP_ANIM_STEP_DURATION = STARTUP_ANIM_DURATION / (STARTUP_ANIM_CYCLE_COUNT * LOW_DENSITY_LEDS_PER_RING);
+
+constexpr uint8_t ledsInRowOdd = (LOW_DENSITY_LEDS_PER_RING % 2 != 0);
+#pragma endregion
+
 CRGB leds[LED_COUNT];
 
 using namespace hi_can;
@@ -101,6 +119,54 @@ void loop()
     }
     // feed WDT
     std::this_thread::sleep_for(1ms);
+}
+
+// Note: This will only work if the number of LEDs per ring is 12 and there's only 2 rings
+// Displays the morse code for QUT with the light tower (Shorts on the first LED row and Longs on the second LED row)
+void startupAnimation()
+{
+    if ((LED_COUNT >> 1) == 12)  // Just a double check so it doesnt look silly if the LED configuration is changed
+    {
+        fill_solid(&leds[0], LED_COUNT, CRGB::Black);
+
+        // Index from after which the shifted indexes are wrapped
+        uint8_t wrapThreshold = 0;
+
+        size_t ledIndex = 0;
+        uint8_t ledOffset = 0;  // Offset MAX is LOW_DENSITY_RING_COUNT - 1, at Offset MAX set offset to 0
+        steady_clock::time_point startTime = steady_clock::now();
+        while ((steady_clock::now() - startTime < STARTUP_ANIM_DURATION))
+        {
+            wrapThreshold = LOW_DENSITY_LEDS_PER_RING - 1 - ledOffset;
+
+            for (int i = 0; i < 12; i++)
+            {
+                ledIndex = i + ledOffset - ledsInRowOdd - (i <= wrapThreshold ? 0 : LOW_DENSITY_LEDS_PER_RING);
+
+                switch (LED_MORSE_CODE_QUT_LAYOUT[i])
+                {
+                case Short:
+                    leds[ledIndex] = CRGB::Black;
+                    leds[ledIndex + LOW_DENSITY_LEDS_PER_RING] = CRGB::White;
+                    break;
+                case Long:
+                    leds[ledIndex] = CRGB::White;
+                    leds[ledIndex + LOW_DENSITY_LEDS_PER_RING] = CRGB::Black;
+                    break;
+                default:
+                    leds[ledIndex] = CRGB::Black;
+                    leds[ledIndex + LOW_DENSITY_LEDS_PER_RING] = CRGB::Black;
+                    break;
+                }
+            }
+
+            ledOffset = (ledOffset < LOW_DENSITY_LEDS_PER_RING - 1) ? ledOffset + 1 : 0;
+
+            FastLED.show();
+
+            std::this_thread::sleep_for(STARTUP_ANIM_STEP_DURATION);
+        }
+    }
 }
 
 /*
