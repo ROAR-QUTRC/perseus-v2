@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>perseus_lite</name>
+  <version>0.1.0</version>
+  <description>Perseus Lite Rover Bringup</description>
+
+   <maintainer email="1388693+DingoOz@users.noreply.github.com">Nigel_H-S</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- base -->
+  <exec_depend>perseus_lite_hardware</exec_depend>
+ 
+  <!-- ros2 control -->
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>diff_drive_controller</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>ros2controlcli</exec_depend>
+  
+  <!-- launching -->
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <!-- GUI tools -->
+  <exec_depend>rviz2</exec_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
