@@ -154,7 +154,6 @@ The `stamped:=true` parameter publishes TwistStamped messages, and the `cmd_vel:
 The keyboard control interface provides the following commands:
 
 - **Movement Controls:**
-
   - `i` - Move forward
   - `k` - Stop
   - `,` - Move backward
