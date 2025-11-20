@@ -19,7 +19,6 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     hardware_plugin = LaunchConfiguration("hardware_plugin")
-    # can_bus = LaunchConfiguration("can_bus")
     serial_port = LaunchConfiguration("serial_port")
     baud_rate = LaunchConfiguration("baud_rate")
     cmd_vel_topic = LaunchConfiguration("cmd_vel_topic")
@@ -40,8 +39,6 @@ def generate_launch_description():
             default_value="perseus_lite_hardware/ST3215SystemHardware",
             choices=[
                 "mock_components/GenericSystem",
-                # "perseus_hardware/VescSystemHardware",
-                # "perseus_hardware/McbSystemHardware",
                 "gz_ros2_control/GazeboSimSystem",
                 "perseus_lite_hardware/ST3215SystemHardware",
             ],
@@ -62,11 +59,6 @@ def generate_launch_description():
             default_value="/cmd_vel",
             description="Topic name for cmd_vel commands (use /joy_vel for xbox controller compatibility)",
         ),
-        # DeclareLaunchArgument(
-        #    "can_bus",
-        #    default_value="can0",
-        #    description="CAN bus to use for hardware communications",
-        # ),
     ]
 
     # IMPORTED LAUNCH FILES
@@ -92,7 +84,6 @@ def generate_launch_description():
             launch_arguments={
                 "use_sim_time": use_sim_time,
                 "hardware_plugin": final_hardware_plugin,
-                # "can_bus": can_bus,
                 "serial_port": serial_port,
                 "baud_rate": baud_rate,
             }.items(),
