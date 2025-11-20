@@ -73,17 +73,6 @@ def generate_launch_description():
                         "gyro_offset_y": 0.0,
                         "gyro_offset_z": 0.0,
                         # Default covariance matrices
-                        "orientation_covariance": [
-                            0.1,
-                            0.0,
-                            0.0,
-                            0.0,
-                            0.1,
-                            0.0,
-                            0.0,
-                            0.0,
-                            0.1,
-                        ],
                         "angular_velocity_covariance": [
                             0.01,
                             0.0,

@@ -7,7 +7,6 @@ i2c_imu_node:
     update_rate: 100.0
     frame_id: "imu_link"
     required: false # Optional hardware
-    timeout_ms: 1000
     retry_count: 3
     # Calibration parameters
     # Accelerometer calibration
@@ -25,8 +24,6 @@ i2c_imu_node:
     gyro_offset_y: 0.0
     gyro_offset_z: 0.0
     # Covariance matrices
-    # Orientation covariance (unknown orientation, set first element to -1)
-    orientation_covariance: [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     # Angular velocity covariance (adjust based on sensor specs)
     angular_velocity_covariance: [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01]
     # Linear acceleration covariance (adjust based on sensor specs)
