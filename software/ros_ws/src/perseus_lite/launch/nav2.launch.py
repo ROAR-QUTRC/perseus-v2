@@ -24,7 +24,6 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     # Get package directories
     bringup_dir = get_package_share_directory("autonomy")
-    perseus_lite_dir = get_package_share_directory("perseus_lite")
 
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")

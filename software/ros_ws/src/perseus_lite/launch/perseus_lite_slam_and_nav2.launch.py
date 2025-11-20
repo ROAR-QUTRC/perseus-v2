@@ -55,10 +55,6 @@ def generate_launch_description():
     container_name_full = (namespace, "/", container_name)
     use_respawn = LaunchConfiguration("use_respawn")
     log_level = LaunchConfiguration("log_level")
-    
-    # RViz arguments
-    use_rviz = LaunchConfiguration("use_rviz")
-    rviz_config_file = LaunchConfiguration("rviz_config_file")
 
     # Nav2 lifecycle nodes
     lifecycle_nodes = [
@@ -161,19 +157,6 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "log_level", default_value="info", description="log level"
-        ),
-        # RViz arguments
-        DeclareLaunchArgument(
-            "use_rviz",
-            default_value="false",
-            description="Whether to start RViz2",
-        ),
-        DeclareLaunchArgument(
-            "rviz_config_file",
-            default_value=PathJoinSubstitution(
-                [FindPackageShare("perseus_lite"), "rviz", "nav2.rviz"]
-            ),
-            description="Full path to the RViz config file to use",
         ),
     ]
 
