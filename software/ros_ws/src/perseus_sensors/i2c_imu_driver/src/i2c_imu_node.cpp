@@ -86,7 +86,7 @@ namespace i2c_imu_driver
         if (device_address_int < 0 || device_address_int > 127)
         {
             throw std::invalid_argument("I2C device address must be 0-127, got: " +
-                                      std::to_string(device_address_int));
+                                        std::to_string(device_address_int));
         }
         _device_address = static_cast<uint8_t>(device_address_int);
 
