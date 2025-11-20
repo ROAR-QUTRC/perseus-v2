@@ -25,7 +25,8 @@ namespace i2c_imu_driver
         : _bus_path(bus_path),
           _device_address(device_address),
           _i2c_fd(
-              [this]() -> int { return open(_bus_path.c_str(), O_RDWR); },
+              [this]() -> int
+              { return open(_bus_path.c_str(), O_RDWR); },
               [this](int fd)
               {
                   if (ioctl(fd, I2C_SLAVE, _device_address) < 0)
