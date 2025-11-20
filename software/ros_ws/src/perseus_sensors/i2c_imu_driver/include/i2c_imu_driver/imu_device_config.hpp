@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -57,10 +59,11 @@ namespace i2c_imu_driver
      *
      * Example usage:
      * @code
-     * const auto* config = ImuDeviceRegistry::getDeviceConfig("MPU6050");
-     * if (config) {
+     * auto config_opt = ImuDeviceRegistry::getDeviceConfig("MPU6050");
+     * if (config_opt) {
      *     // Use configuration for device initialization
-     *     uint8_t who_am_i = config->who_am_i_value;
+     *     const auto& config = config_opt->get();
+     *     uint8_t who_am_i = config.who_am_i_value;
      * }
      * @endcode
      */
@@ -70,9 +73,9 @@ namespace i2c_imu_driver
         /**
          * @brief Get device configuration by name
          * @param device_name Name of the device
-         * @return Device configuration, or nullptr if not found
+         * @return Device configuration wrapped in std::optional, or std::nullopt if not found
          */
-        static const ImuDeviceConfig* getDeviceConfig(const std::string& device_name);
+        static std::optional<std::reference_wrapper<const ImuDeviceConfig>> getDeviceConfig(const std::string& device_name);
 
         /**
          * @brief Get list of all supported device names

@@ -23,17 +23,14 @@ namespace i2c_imu_driver
         /**
          * @brief Construct a new I2cDevice object
          *
+         * Opens the I2C bus and configures the slave address. The object is fully
+         * initialized upon successful construction following RAII principles.
+         *
          * @param bus_path Path to the I2C bus device file (e.g., "/dev/i2c-7")
          * @param device_address 7-bit I2C device address
+         * @throws std::runtime_error if I2C bus cannot be opened or configured
          */
         I2cDevice(const std::string& bus_path, uint8_t device_address);
-
-        /**
-         * @brief Initialize the I2C device connection
-         *
-         * @return true if initialization succeeded, false otherwise
-         */
-        bool initialize();
 
         /**
          * @brief Check if the device is connected and responsive
@@ -109,17 +106,9 @@ namespace i2c_imu_driver
          */
         bool _performDeviceDetection();
 
-        /**
-         * @brief Set the I2C slave address for communication
-         *
-         * @return true if successful, false otherwise
-         */
-        bool _setSlaveAddress();
-
         std::string _bus_path;
         uint8_t _device_address;
         FdWrapper _i2c_fd;
-        bool _is_initialized{false};
     };
 
 }  // namespace i2c_imu_driver

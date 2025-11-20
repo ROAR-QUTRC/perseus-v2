@@ -35,7 +35,7 @@ namespace i2c_imu_driver
     hardware_interface::CallbackReturn I2cImuHardwareInterface::on_configure(
         const rclcpp_lifecycle::State& /* previous_state */)
     {
-        // Get parameters from hardware info
+        // Get parameters from hardware info (no hardware claiming in on_configure)
         _i2c_bus_path = info_.hardware_parameters.at("i2c_bus");
         _device_address = static_cast<uint8_t>(std::stoi(info_.hardware_parameters.at("device_address"), nullptr, 0));
         _timeout_ms = std::chrono::milliseconds(std::stoi(info_.hardware_parameters.at("timeout_ms")));
@@ -93,24 +93,35 @@ namespace i2c_imu_driver
             _gyro_offset_z = std::stod(info_.hardware_parameters.at("gyro_offset_z"));
         }
 
-        // Create I2C device
-        _i2c_device = std::make_unique<I2cDevice>(_i2c_bus_path, _device_address);
+        RCLCPP_INFO(rclcpp::get_logger("I2cImuHardwareInterface"),
+                    "I2C IMU hardware interface configured with parameters from %s:0x%02X",
+                    _i2c_bus_path.c_str(), _device_address);
 
-        // Initialize the device
-        if (!_i2c_device->initialize())
+        return hardware_interface::CallbackReturn::SUCCESS;
+    }
+
+    hardware_interface::CallbackReturn I2cImuHardwareInterface::on_activate(
+        const rclcpp_lifecycle::State& /* previous_state */)
+    {
+        // Claim hardware: Create and initialize I2C device (RAII pattern)
+        try
+        {
+            _i2c_device = std::make_unique<I2cDevice>(_i2c_bus_path, _device_address);
+        }
+        catch (const std::exception& e)
         {
             if (_required)
             {
                 RCLCPP_ERROR(rclcpp::get_logger("I2cImuHardwareInterface"),
-                             "Failed to initialize required I2C IMU device at %s:0x%02X",
-                             _i2c_bus_path.c_str(), _device_address);
+                             "Failed to initialize required I2C IMU device at %s:0x%02X: %s",
+                             _i2c_bus_path.c_str(), _device_address, e.what());
                 return hardware_interface::CallbackReturn::ERROR;
             }
             else
             {
                 RCLCPP_WARN(rclcpp::get_logger("I2cImuHardwareInterface"),
-                            "Failed to initialize optional I2C IMU device at %s:0x%02X, continuing without IMU",
-                            _i2c_bus_path.c_str(), _device_address);
+                            "Failed to initialize optional I2C IMU device at %s:0x%02X: %s, continuing without IMU",
+                            _i2c_bus_path.c_str(), _device_address, e.what());
                 return hardware_interface::CallbackReturn::SUCCESS;
             }
         }
@@ -118,10 +129,11 @@ namespace i2c_imu_driver
         // Configure the sensor
         if (!_initializeSensor())
         {
+            _i2c_device = nullptr;  // Release hardware on failure
             if (_required)
             {
                 RCLCPP_ERROR(rclcpp::get_logger("I2cImuHardwareInterface"),
-                             "Failed to configure I2C IMU sensor");
+                             "Failed to configure required I2C IMU sensor");
                 return hardware_interface::CallbackReturn::ERROR;
             }
             else
@@ -132,38 +144,13 @@ namespace i2c_imu_driver
             }
         }
 
-        RCLCPP_INFO(rclcpp::get_logger("I2cImuHardwareInterface"),
-                    "Successfully configured I2C IMU device at %s:0x%02X",
-                    _i2c_bus_path.c_str(), _device_address);
-
-        return hardware_interface::CallbackReturn::SUCCESS;
-    }
-
-    hardware_interface::CallbackReturn I2cImuHardwareInterface::on_activate(
-        const rclcpp_lifecycle::State& /* previous_state */)
-    {
-        if (!_i2c_device || !_i2c_device->isConnected())
-        {
-            if (_required)
-            {
-                RCLCPP_ERROR(rclcpp::get_logger("I2cImuHardwareInterface"),
-                             "Cannot activate: I2C IMU device not connected");
-                return hardware_interface::CallbackReturn::ERROR;
-            }
-            else
-            {
-                RCLCPP_WARN(rclcpp::get_logger("I2cImuHardwareInterface"),
-                            "Cannot activate: optional I2C IMU device not connected, continuing without IMU");
-                return hardware_interface::CallbackReturn::SUCCESS;
-            }
-        }
-
         // Start the read thread
         _reading_active.store(true);
         _read_thread = std::thread(&I2cImuHardwareInterface::_readLoop, this);
 
         RCLCPP_INFO(rclcpp::get_logger("I2cImuHardwareInterface"),
-                    "I2C IMU hardware interface activated");
+                    "I2C IMU hardware interface activated at %s:0x%02X",
+                    _i2c_bus_path.c_str(), _device_address);
 
         return hardware_interface::CallbackReturn::SUCCESS;
     }
@@ -177,6 +164,9 @@ namespace i2c_imu_driver
         {
             _read_thread.join();
         }
+
+        // Release hardware: Destroy I2C device (RAII cleanup)
+        _i2c_device = nullptr;
 
         RCLCPP_INFO(rclcpp::get_logger("I2cImuHardwareInterface"),
                     "I2C IMU hardware interface deactivated");

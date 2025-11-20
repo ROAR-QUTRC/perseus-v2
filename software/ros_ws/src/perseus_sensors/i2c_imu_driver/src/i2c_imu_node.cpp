@@ -92,8 +92,8 @@ namespace i2c_imu_driver
         _retry_count = get_parameter("retry_count").as_int();
 
         // Get device configuration
-        _device_config = ImuDeviceRegistry::getDeviceConfig(_device_type);
-        if (!_device_config)
+        auto config_opt = ImuDeviceRegistry::getDeviceConfig(_device_type);
+        if (!config_opt)
         {
             auto supported_devices = ImuDeviceRegistry::getSupportedDevices();
             std::string supported_list;
@@ -106,6 +106,7 @@ namespace i2c_imu_driver
             throw std::runtime_error("Unsupported device type: " + _device_type +
                                      ". Supported devices: " + supported_list);
         }
+        _device_config = &config_opt->get();
 
         // Use device default address if not explicitly set
         if (get_parameter("device_address").as_int() == 0x6A)  // Default value check
@@ -168,14 +169,15 @@ namespace i2c_imu_driver
 
     bool I2cImuNode::_initializeDevice()
     {
-        // Create I2C device
-        _i2c_device = std::make_unique<I2cDevice>(_i2c_bus_path, _device_address);
-
-        // Initialize the device
-        if (!_i2c_device->initialize())
+        // Create and initialize I2C device (RAII - fully initialized in constructor)
+        try
         {
-            RCLCPP_ERROR(get_logger(), "Failed to initialize I2C device at %s:0x%02X",
-                         _i2c_bus_path.c_str(), _device_address);
+            _i2c_device = std::make_unique<I2cDevice>(_i2c_bus_path, _device_address);
+        }
+        catch (const std::exception& e)
+        {
+            RCLCPP_ERROR(get_logger(), "Failed to initialize I2C device at %s:0x%02X: %s",
+                         _i2c_bus_path.c_str(), _device_address, e.what());
             return false;
         }
 

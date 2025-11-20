@@ -23,67 +23,29 @@ namespace i2c_imu_driver
 
     I2cDevice::I2cDevice(const std::string& bus_path, uint8_t device_address)
         : _bus_path(bus_path),
-          _device_address(device_address)
+          _device_address(device_address),
+          _i2c_fd(
+              [this]() -> int { return open(_bus_path.c_str(), O_RDWR); },
+              [this](int fd)
+              {
+                  if (ioctl(fd, I2C_SLAVE, _device_address) < 0)
+                  {
+                      throw std::runtime_error("Failed to set I2C slave address: " +
+                                               std::string(strerror(errno)));
+                  }
+              })
     {
-    }
-
-    bool I2cDevice::initialize()
-    {
-        if (_is_initialized)
-        {
-            return true;
-        }
-
-        // First try to open the file descriptor directly
-        int fd = open(_bus_path.c_str(), O_RDWR);
-        if (fd < 0)
-        {
-            return false;
-        }
-
-        // Set slave address
-        if (ioctl(fd, I2C_SLAVE, _device_address) < 0)
-        {
-            close(fd);
-            return false;
-        }
-
-        // Now create the FdWrapper with the already-opened file descriptor
-        try
-        {
-            _i2c_fd = FdWrapper(
-                [fd]() -> int
-                { return fd; },
-                nullptr,
-                [](int fd)
-                { close(fd); });
-        }
-        catch (const std::exception& e)
-        {
-            close(fd);
-            return false;
-        }
-
-        // Check if the file descriptor is valid
-        if (_i2c_fd.get() < 0)
-        {
-            return false;
-        }
-
-        // Perform device detection
-        if (!_performDeviceDetection())
-        {
-            // Skip device detection for now
-            // return false;
-        }
-
-        _is_initialized = true;
-        return true;
+        // Perform device detection (currently skipped as it's device-specific)
+        // Device detection should be handled by specific IMU implementations if needed
+        // if (!_performDeviceDetection())
+        // {
+        //     throw std::runtime_error("Failed to detect I2C device");
+        // }
     }
 
     bool I2cDevice::isConnected() const
     {
-        return _is_initialized && _i2c_fd.get() >= 0;
+        return _i2c_fd.get() >= 0;
     }
 
     std::optional<uint8_t> I2cDevice::readRegister(uint8_t reg_address,
@@ -223,21 +185,6 @@ namespace i2c_imu_driver
         if (who_am_i != LSM6DSOX_WHO_AM_I_VALUE)
         {
             // Debug: Invalid WHO_AM_I value
-            return false;
-        }
-
-        return true;
-    }
-
-    bool I2cDevice::_setSlaveAddress()
-    {
-        if (_i2c_fd.get() < 0)
-        {
-            return false;
-        }
-
-        if (ioctl(_i2c_fd.get(), I2C_SLAVE, _device_address) < 0)
-        {
             return false;
         }
 

@@ -131,16 +131,16 @@ namespace i2c_imu_driver
         _initialized = true;
     }
 
-    const ImuDeviceConfig* ImuDeviceRegistry::getDeviceConfig(const std::string& device_name)
+    std::optional<std::reference_wrapper<const ImuDeviceConfig>> ImuDeviceRegistry::getDeviceConfig(const std::string& device_name)
     {
         _initializeDeviceConfigs();
 
         auto it = _device_configs.find(device_name);
         if (it != _device_configs.end())
         {
-            return &it->second;
+            return std::cref(it->second);
         }
-        return nullptr;
+        return std::nullopt;
     }
 
     std::vector<std::string> ImuDeviceRegistry::getSupportedDevices()
