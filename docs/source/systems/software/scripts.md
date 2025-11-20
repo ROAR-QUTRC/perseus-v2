@@ -11,6 +11,7 @@ This script will be run from the command `nix run .#clean` and shouldn't need to
 ## machine-setup.sh
 
 This script is designed to be run on the big-brain to setup any config that the nix home manager can't do itself. Currently, the script:
+
 1. Sets the default shell to be z-shell (to give us autocomplete)
 2. Sets up nix files to be accessible only by sudo (for security purposes)
 3. Creates network rule files (can't create these without sudo, but home-manager can edit them without sudo)
@@ -23,9 +24,10 @@ This script should be run whenever the ros2 package dependencies (any package.xm
 ## nix-setup.sh
 
 This script should be run on every device that wants to run the perseus repo (members, big-brain, medium-brain, etc). Currently, the script:
+
 1. Installs Nix package manager (see the Nix Basics page)
 2. Adds binary caches (and keys) to the trusted substituters so your computer can copy them instead of compiling them itself
-3. Disables the dirty git tree warning (which will run *everytime* you have local staged changes and try to build the flake)
+3. Disables the dirty git tree warning (which will run _everytime_ you have local staged changes and try to build the flake)
 4. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
 5. Hides the massive wall of text displaying the environment variables on startup/reload
 
