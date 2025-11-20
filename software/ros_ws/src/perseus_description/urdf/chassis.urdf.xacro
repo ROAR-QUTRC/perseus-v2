@@ -1,14 +1,13 @@
 <?xml version="1.0"?>
 <robot name="chassis" xmlns:xacro="http://ros.org/wiki/xacro">
-
+  <xacro:property name="chassis_mass" value="2.7689940302592726"/>  <!-- Kg -->
 
   <link name="${prefix}chassis">
     <inertial>
       <origin xyz="0.0 -0.17100473204 0.14732485976" rpy="0 0 0"/>
-      <mass value="2.7689940302592726"/>
-      <inertia ixx="0.170464" iyy="0.092623" izz="0.224359" ixy="0.0" iyz="0.005411" ixz="-0.0"/>
+      <mass value="${chassis_mass}"/>
+      <xacro:box_inertia m="${chassis_mass}" x="${chassis_length/scale_factor}" y="${chassis_width/scale_factor}" z="${chassis_height/scale_factor}"/>
     </inertial>
-
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0 0.0 -${pi/2}"/>
       <geometry>
@@ -17,10 +16,10 @@
     </visual>
     
     <collision>
-      <origin xyz="0.0 0.0 0.0" rpy="0 0.0 -${pi/2}"/>
+      <origin xyz="${-chassis_length/scale_factor*0.5} 0.0 ${chassis_height/scale_factor*0.5}" rpy="0 0.0 0"/>
       <!-- Modified to make collision more simple, chassis mesh replaced with box -->
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
+        <box size="${chassis_length/scale_factor} ${chassis_width/scale_factor} ${chassis_height/scale_factor}"/>
       </geometry>
     </collision>
   </link>

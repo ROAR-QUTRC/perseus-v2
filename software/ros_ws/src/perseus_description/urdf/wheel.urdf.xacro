@@ -4,9 +4,9 @@
 
 <link name="${prefix}front_left_wheel">
   <inertial>
-    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-    <mass value="1.0"/>        
-    <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
+    <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 ${pi}"/>
+    <mass value="${wheel_mass}"/>        
+    <xacro:cylinder_inertia m="${wheel_mass}" radius="${wheel_radius}" length="${wheel_length}"/>
   </inertial>
   <visual>
     <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 ${pi}"/>
@@ -15,9 +15,9 @@
     </geometry>
   </visual>
   <collision>
-    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
+    <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 ${pi}"/>
     <geometry>
-      <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
+      <cylinder radius="${wheel_radius/scale_factor}" length="${wheel_length/scale_factor}"/>
     </geometry>
   </collision>
 </link>
@@ -25,44 +25,42 @@
 
 <link name="${prefix}front_right_wheel">
   <inertial>
-    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-    <mass value="1.0"/>        
-    <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
+    <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 0.0"/>
+    <mass value="${wheel_mass}"/>       
+    <xacro:cylinder_inertia m="${wheel_mass}" radius="${wheel_radius}" length="${wheel_length}"/>
   </inertial>
   <visual>
       <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 0.0"/>
-
     <geometry>
       <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
     </geometry>
   </visual>
 
   <collision>
-    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0"/>
     <geometry>
-      <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
+      <cylinder radius="${wheel_radius/scale_factor}" length="${wheel_length/scale_factor}"/>
     </geometry>
   </collision>
 </link>
 
 <link name="${prefix}rear_left_wheel">
   <inertial>
-    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-    <mass value="1.0"/>        
-    <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
+    <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 ${pi}"/>
+    <mass value="${wheel_mass}"/>       
+    <xacro:cylinder_inertia m="${wheel_mass}" radius="${wheel_radius}" length="${wheel_length}"/>
   </inertial>
   <visual>
       <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 ${pi}"/>
-
     <geometry>
       <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
     </geometry>
   </visual>
 
   <collision>
-    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
+    <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 ${pi}"/>
     <geometry>
-      <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
+      <cylinder radius="${wheel_radius/scale_factor}" length="${wheel_length/scale_factor}"/>
     </geometry>
   </collision>
 </link>
@@ -70,21 +68,20 @@
 <link name="${prefix}rear_right_wheel">
   <inertial>
     <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-    <mass value="1.0"/>        
-    <inertia ixx="0.04" iyy="0.02" izz="0.02" ixy="0.0" iyz="0.0" ixz="0.0"/>
+    <mass value="${wheel_mass}"/>      
+    <xacro:cylinder_inertia m="${wheel_mass}" radius="${wheel_radius}" length="${wheel_length}"/>
   </inertial>
   <visual>
       <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 0.0"/>
-
     <geometry>
       <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
     </geometry>
   </visual>
 
   <collision>
-    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0"/>
     <geometry>
-      <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
+      <cylinder radius="${wheel_radius/scale_factor}" length="${wheel_length/scale_factor}"/>
     </geometry>
   </collision>
 </link>

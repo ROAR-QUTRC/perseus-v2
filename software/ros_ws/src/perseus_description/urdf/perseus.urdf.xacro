@@ -6,34 +6,43 @@
     <xacro:property name="scale_factor" value="1"/>  <!-- 1 for Perseus and 2 for Perseu_Lite -->
 
     <xacro:property name="PI" value="3.1415926535897931"/>
+
+    <!-- Chassis Properties -->
     <xacro:property name="base_mass" value="0.3" /> <!-- arbitrary value for base mass -->
-    <xacro:property name="chassis_width" value="0.1" />
+    <xacro:property name="chassis_width" value="0.45" />
     <xacro:property name="chassis_length" value="0.6" />
-    <xacro:property name="chassis_height" value="0.05" />
+    <xacro:property name="chassis_height" value="0.2" />
     <xacro:property name="chassis_z_offset" value="0.35" /> <!-- Space btw top of beam and the each joint -->
 
-    <xacro:property name="flange_bearing_z_offset" value="0.1"/>  <!-- 1 for Perseus and 2 for Perseu_Lite -->
+    <!-- Flange Bearing Properties -->
+    <xacro:property name="flange_bearing_z_offset" value="0.1"/>  
 
+    <!-- Rocker Properties -->
     <xacro:property name="rocker_base_distance" value="0.275" /> 
-    <xacro:property name="rocker_x_offset" value="0.075"/>  <!-- 1 for Perseus and 2 for Perseu_Lite -->
-    <xacro:property name="rocker_y_offset" value="0.05"/>  <!-- 1 for Perseus and 2 for Perseu_Lite -->
+    <xacro:property name="rocker_x_offset" value="0.075"/>  
+    <xacro:property name="rocker_y_offset" value="0.05"/>  
 
-    <xacro:property name="motors_y_offset" value="0.035"/>  <!-- 1 for Perseus and 2 for Perseu_Lite -->
-    <xacro:property name="motors_z_offset" value="-0.25"/>  <!-- 1 for Perseus and 2 for Perseu_Lite -->
-    <xacro:property name="front_motors_x_offset" value="0.3"/>  <!-- 1 for Perseus and 2 for Perseu_Lite -->
-    <xacro:property name="rear_motors_x_offset" value="-0.55"/>  <!-- 1 for Perseus and 2 for Perseu_Lite -->
+    <!-- Motors Properties -->
+    <xacro:property name="motors_y_offset" value="0.035"/>  
+    <xacro:property name="motors_z_offset" value="-0.25"/>  
+    <xacro:property name="front_motors_x_offset" value="0.3"/>  
+    <xacro:property name="rear_motors_x_offset" value="-0.55"/>  
     
+    <!-- Wheels Properties -->
     <xacro:property name="wheels_y_offset" value="0.125"/> 
-
+    <xacro:property name="wheel_mass" value="1.0"/>
+    <xacro:property name="wheel_radius" value="0.13"/>
+    <xacro:property name="wheel_length" value="0.15"/>
 
     <!-- ADD COMPONENTS -->
+    <xacro:include filename="$(find perseus_description)/urdf/inertia_macros.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/chassis.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/flange_bearing.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/rocker.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/motor_wheel.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/wheel.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/sensors.urdf.xacro"/>
-    
+
     <!-- An empty base_link to attach everything to -->
     <link name="${prefix}base_link"/> 
 

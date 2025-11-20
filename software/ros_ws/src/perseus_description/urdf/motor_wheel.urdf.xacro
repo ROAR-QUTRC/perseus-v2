@@ -1,11 +1,15 @@
 <?xml version="1.0"?>
 <robot name="motor_wheel" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:property name="motor_mass" value="5.236579"/>  <!-- Kg -->
+  <xacro:property name="collision_motor_length" value="0.1"/>  <!-- m -->
+  <xacro:property name="collision_motor_width" value="0.1"/>  <!-- m -->
+  <xacro:property name="collision_motor_height" value="0.075"/>  <!-- m -->
 
   <link name="${prefix}front_right_motor">
     <inertial>
       <!-- moving origin has no perceivable impact-->
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="5.236579"/>
+      <mass value="${motor_mass}"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
     <visual>
@@ -16,9 +20,9 @@
       <!-- <material name="white"/> -->
     </visual>
     <collision>
-      <origin xyz="-0.3 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        <box size="${collision_motor_length/scale_factor} ${collision_motor_width/scale_factor} ${collision_motor_height/scale_factor}" />
       </geometry>
     </collision>
   </link>
@@ -27,7 +31,7 @@
     <inertial>
       <!-- moving origin has no perceivable impact-->
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="5.236579"/>
+      <mass value="${motor_mass}"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
     <visual>
@@ -38,9 +42,9 @@
       <!-- <material name="white"/> -->
     </visual>
     <collision>
-      <origin xyz="-0.3 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        <box size="${collision_motor_length/scale_factor} ${collision_motor_width/scale_factor} ${collision_motor_height/scale_factor}" />
       </geometry>
     </collision>
   </link>
@@ -50,7 +54,7 @@
     <inertial>
       <!-- moving origin has no perceivable impact-->
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="5.236579"/>
+      <mass value="${motor_mass}"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
     <visual>
@@ -63,7 +67,7 @@
     <collision>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        <box size="${collision_motor_length/scale_factor} ${collision_motor_width/scale_factor} ${collision_motor_height/scale_factor}" />
       </geometry>
     </collision>
   </link>
@@ -73,7 +77,7 @@
     <inertial>
       <!-- moving origin has no perceivable impact-->
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="5.236579"/>
+      <mass value="${motor_mass}"/>
       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
     </inertial>
     <visual>
@@ -86,7 +90,7 @@
     <collision>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        <box size="${collision_motor_length/scale_factor} ${collision_motor_width/scale_factor} ${collision_motor_height/scale_factor}" />
       </geometry>
     </collision>
   </link>

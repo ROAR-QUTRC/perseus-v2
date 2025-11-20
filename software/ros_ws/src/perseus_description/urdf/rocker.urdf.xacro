@@ -2,8 +2,6 @@
 <robot name="rocker" xmlns:xacro="http://ros.org/wiki/xacro">
 
   <link name="${prefix}left_rocker">
-    <!-- <inertial>
-    </inertial> -->
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
       <geometry>
