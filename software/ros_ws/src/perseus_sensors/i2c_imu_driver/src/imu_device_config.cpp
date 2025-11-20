@@ -48,7 +48,7 @@ namespace i2c_imu_driver
             .reset_value = 0x01,
             .accel_config_value = 0x40,  // ODR = 104 Hz, FS = ±2g
             .gyro_config_value = 0x40,   // ODR = 104 Hz, FS = ±250 dps
-            .ctrl_value = 0x40,          // Enable block data update
+            .ctrl_value = 0x44,          // Enable block data update + address auto-increment
             .accel_scale_factor = LSM6DSOX_ACCEL_SCALE_FACTOR,
             .gyro_scale_factor = LSM6DSOX_GYRO_SCALE_FACTOR,
             .temp_scale_factor = LSM6DSOX_TEMP_SCALE_FACTOR,
@@ -120,7 +120,7 @@ namespace i2c_imu_driver
             .reset_value = 0x01,
             .accel_config_value = 0x40,  // ODR = 104 Hz, FS = ±2g
             .gyro_config_value = 0x40,   // ODR = 104 Hz, FS = ±250 dps
-            .ctrl_value = 0x40,          // Enable block data update
+            .ctrl_value = 0x44,          // Enable block data update + address auto-increment
             .accel_scale_factor = LSM6DS3_ACCEL_SCALE_FACTOR,
             .gyro_scale_factor = LSM6DS3_GYRO_SCALE_FACTOR,
             .temp_scale_factor = LSM6DS3_TEMP_SCALE_FACTOR,
