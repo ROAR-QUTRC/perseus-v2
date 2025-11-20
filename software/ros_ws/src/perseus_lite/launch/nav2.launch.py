@@ -45,7 +45,7 @@ def generate_launch_description():
     container_name_full = (namespace, "/", container_name)
     use_respawn = LaunchConfiguration("use_respawn")
     log_level = LaunchConfiguration("log_level")
-    
+
     # RViz arguments
     rviz_config_file = LaunchConfiguration("rviz_config_file")
 
@@ -442,7 +442,7 @@ def generate_launch_description():
             ),
         ],
     )
-    
+
     # RViz2 node
     rviz_node = Node(
         package="rviz2",
