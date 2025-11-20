@@ -1,16 +1,14 @@
 #pragma once
 
-#include <tf2/LinearMath/Quaternion.h>
-
+#include <atomic>
 #include <chrono>
-#include <geometry_msgs/msg/quaternion.hpp>
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <string>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "i2c_imu_driver/i2c_device.hpp"
+#include "i2c_imu_driver/imu_data_types.hpp"
 #include "i2c_imu_driver/imu_device_config.hpp"
 
 namespace i2c_imu_driver
@@ -41,21 +39,6 @@ namespace i2c_imu_driver
 
     private:
         /**
-         * @brief IMU sensor data structure
-         */
-        struct ImuData
-        {
-            double accel_x{0.0};      // m/s²
-            double accel_y{0.0};      // m/s²
-            double accel_z{0.0};      // m/s²
-            double gyro_x{0.0};       // rad/s
-            double gyro_y{0.0};       // rad/s
-            double gyro_z{0.0};       // rad/s
-            double temperature{0.0};  // °C
-            std::chrono::steady_clock::time_point timestamp;
-        };
-
-        /**
          * @brief Initialize node parameters
          */
         void _initializeParameters();
@@ -85,14 +68,6 @@ namespace i2c_imu_driver
         ImuData _readSensorData();
 
         /**
-         * @brief Apply calibration to raw sensor data
-         *
-         * @param raw_data Raw sensor data
-         * @return ImuData Calibrated sensor data
-         */
-        ImuData _applyCalibration(const ImuData& raw_data);
-
-        /**
          * @brief Convert IMU data to ROS message
          *
          * @param imu_data Calibrated IMU data
@@ -113,7 +88,6 @@ namespace i2c_imu_driver
         double _update_rate;
         std::string _frame_id;
         bool _required;
-        std::chrono::milliseconds _timeout_ms;
         int _retry_count;
 
         // Device configuration
@@ -135,8 +109,7 @@ namespace i2c_imu_driver
         double _gyro_offset_y{0.0};
         double _gyro_offset_z{0.0};
 
-        // Covariance matrices
-        std::array<double, 9> _orientation_covariance;
+        // Covariance matrices (orientation not estimated by IMU)
         std::array<double, 9> _angular_velocity_covariance;
         std::array<double, 9> _linear_acceleration_covariance;
 
@@ -146,7 +119,7 @@ namespace i2c_imu_driver
         rclcpp::TimerBase::SharedPtr _timer;
 
         // Status tracking
-        bool _device_initialized{false};
+        std::atomic<bool> _device_initialized{false};
         size_t _sequence_number{0};
     };
 

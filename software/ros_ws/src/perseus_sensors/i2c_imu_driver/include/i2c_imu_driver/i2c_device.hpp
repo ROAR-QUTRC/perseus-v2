@@ -43,46 +43,61 @@ namespace i2c_imu_driver
          * @brief Read a single byte from a register
          *
          * @param reg_address Register address to read from
-         * @param timeout_ms Timeout in milliseconds for the operation
          * @return Register value if successful, std::nullopt otherwise
+         *
+         * @note Uses hardware I2C timeout (configured at bus level, typically 1-2 seconds)
          */
-        std::optional<uint8_t> readRegister(uint8_t reg_address,
-                                            std::chrono::milliseconds timeout_ms = std::chrono::milliseconds(100));
+        std::optional<uint8_t> readRegister(uint8_t reg_address);
 
         /**
          * @brief Write a single byte to a register
          *
          * @param reg_address Register address to write to
          * @param value Value to write
-         * @param timeout_ms Timeout in milliseconds for the operation
          * @return true if write succeeded, false otherwise
+         *
+         * @note Uses hardware I2C timeout (configured at bus level, typically 1-2 seconds)
          */
-        bool writeRegister(uint8_t reg_address, uint8_t value,
-                           std::chrono::milliseconds timeout_ms = std::chrono::milliseconds(100));
+        bool writeRegister(uint8_t reg_address, uint8_t value);
 
         /**
          * @brief Read multiple bytes from consecutive registers
          *
+         * Performs an I2C combined transaction: write register address, then read data.
+         *
          * @param reg_address Starting register address
-         * @param buffer Buffer to store the read data
-         * @param length Number of bytes to read
-         * @param timeout_ms Timeout in milliseconds for the operation
-         * @return true if read succeeded, false otherwise
+         * @param buffer Output buffer (must be at least @p length bytes)
+         * @param length Number of bytes to read (maximum: 255)
+         * @return true if read succeeded, false if:
+         *         - Device not connected
+         *         - Buffer is null
+         *         - Length is 0 or > 255
+         *         - I2C transaction failed
+         *
+         * @pre buffer != nullptr
+         * @pre length > 0 && length <= 255
+         * @pre buffer has at least @p length bytes allocated
+         *
+         * @note Uses hardware I2C timeout (configured at bus level, typically 1-2 seconds)
+         * @threadsafe NO - Must not be called from multiple threads concurrently
          */
-        bool readRegisters(uint8_t reg_address, uint8_t* buffer, size_t length,
-                           std::chrono::milliseconds timeout_ms = std::chrono::milliseconds(100));
+        bool readRegisters(uint8_t reg_address, uint8_t* buffer, size_t length);
 
         /**
          * @brief Write multiple bytes to consecutive registers
          *
          * @param reg_address Starting register address
-         * @param buffer Buffer containing data to write
-         * @param length Number of bytes to write
-         * @param timeout_ms Timeout in milliseconds for the operation
+         * @param buffer Buffer containing data to write (must be at least @p length bytes)
+         * @param length Number of bytes to write (maximum: 255)
          * @return true if write succeeded, false otherwise
+         *
+         * @pre buffer != nullptr
+         * @pre length > 0 && length <= 255
+         *
+         * @note Uses hardware I2C timeout (configured at bus level, typically 1-2 seconds)
+         * @threadsafe NO - Must not be called from multiple threads concurrently
          */
-        bool writeRegisters(uint8_t reg_address, const uint8_t* buffer, size_t length,
-                            std::chrono::milliseconds timeout_ms = std::chrono::milliseconds(100));
+        bool writeRegisters(uint8_t reg_address, const uint8_t* buffer, size_t length);
 
         /**
          * @brief Get the device address
@@ -99,13 +114,6 @@ namespace i2c_imu_driver
         const std::string& getBusPath() const { return _bus_path; }
 
     private:
-        /**
-         * @brief Perform device detection by attempting to read from device
-         *
-         * @return true if device detected, false otherwise
-         */
-        bool _performDeviceDetection();
-
         std::string _bus_path;
         uint8_t _device_address;
         FdWrapper _i2c_fd;

@@ -93,8 +93,13 @@ ament_target_dependencies(m2m2_lidar PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 target_link_libraries(m2m2_lidar PUBLIC simple_networking OpenSSL::Crypto)
 
 # I2C IMU Driver
-file(GLOB_RECURSE I2C_IMU_CODE_SOURCES i2c_imu_driver/src/*.cpp)
-add_executable(i2c_imu_node ${I2C_IMU_CODE_SOURCES})
+# Explicit source list - build system tracks dependencies correctly
+add_executable(i2c_imu_node
+  i2c_imu_driver/src/main.cpp
+  i2c_imu_driver/src/i2c_device.cpp
+  i2c_imu_driver/src/i2c_imu_node.cpp
+  i2c_imu_driver/src/imu_device_config.cpp
+)
 
 target_include_directories(
   i2c_imu_node PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/i2c_imu_driver/include)

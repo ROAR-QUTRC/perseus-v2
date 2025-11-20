@@ -32,14 +32,9 @@ def generate_launch_description():
                 description="Whether IMU is required for system operation",
             ),
             DeclareLaunchArgument(
-                "timeout_ms",
-                default_value="1000",
-                description="I2C operation timeout in milliseconds",
-            ),
-            DeclareLaunchArgument(
                 "retry_count",
                 default_value="3",
-                description="Number of retries for I2C operations",
+                description="Number of retries for sensor initialization",
             ),
             DeclareLaunchArgument(
                 "use_config_file",
@@ -63,7 +58,6 @@ def generate_launch_description():
                         "update_rate": LaunchConfiguration("update_rate"),
                         "frame_id": LaunchConfiguration("frame_id"),
                         "required": LaunchConfiguration("required"),
-                        "timeout_ms": LaunchConfiguration("timeout_ms"),
                         "retry_count": LaunchConfiguration("retry_count"),
                         # Default calibration parameters
                         "accel_scale_x": 1.0,
