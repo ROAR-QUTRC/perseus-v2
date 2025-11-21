@@ -1,38 +1,63 @@
 <?xml version="1.0"?>
 <robot name="rocker" xmlns:xacro="http://ros.org/wiki/xacro">
-
+  <!-- Rocker properties - Fix negative values -->
+  <xacro:property name="rocker_mass" value="0.5"/>
+  <xacro:property name="rocker_length" value="0.85"/>  <!-- Use positive absolute value -->
+  <xacro:property name="rocker_height" value="0.05"/>  <!-- Use positive value -->
+  <xacro:property name="rocker_width" value="0.03"/>
+  <xacro:property name="rocker_collision_x_offset" value="-0.10"/>
+  <xacro:property name="rocker_collision_z_offset" value="-0.2"/>
+  <!-- LEFT ROCKER LINK -->
   <link name="${prefix}left_rocker">
+    <inertial>
+      <origin xyz="${rocker_collision_x_offset/scale_factor} 0.0 ${rocker_collision_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <mass value="${rocker_mass}"/>
+      <xacro:box_inertia m="${rocker_mass}" 
+                         x="${rocker_length}" 
+                         y="${rocker_width}" 
+                         z="${rocker_height}"/>
+    </inertial>
+    
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/rocker_left.dae"/>
+        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor} ${0.1/scale_factor}" 
+              filename="file://$(find perseus_description)/meshes/rocker_left.dae"/>
       </geometry>
     </visual>
+    
     <collision>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
+      <origin xyz="${rocker_collision_x_offset/scale_factor} 0.0 ${rocker_collision_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/rocker_left.dae"/>
+        <box size="${rocker_length/scale_factor} ${rocker_width/scale_factor} ${rocker_height/scale_factor}"/>
       </geometry>
     </collision>
   </link>
 
-
+  <!-- RIGHT ROCKER LINK -->
   <link name="${prefix}right_rocker">
-    <!-- <inertial>
-    </inertial> -->
+    <inertial>
+      <origin xyz="${rocker_collision_x_offset/scale_factor} 0.0 ${rocker_collision_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <mass value="${rocker_mass}"/>
+      <xacro:box_inertia m="${rocker_mass}" 
+                         x="${rocker_length}" 
+                         y="${rocker_width}" 
+                         z="${rocker_height}"/>
+    </inertial>
+    
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/rocker_right.dae"/>
+        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor} ${0.1/scale_factor}" 
+              filename="file://$(find perseus_description)/meshes/rocker_right.dae"/>
       </geometry>
     </visual>
+    
     <collision>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
+      <origin xyz="${rocker_collision_x_offset/scale_factor} 0.0 ${rocker_collision_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/rocker_right.dae"/>
+        <box size="${rocker_length/scale_factor} ${rocker_width/scale_factor} ${rocker_height/scale_factor}"/>
       </geometry>
     </collision>
   </link>
-
-
 </robot>

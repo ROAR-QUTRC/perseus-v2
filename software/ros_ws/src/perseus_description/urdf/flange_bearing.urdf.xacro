@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <robot name="flange_bearing" xmlns:xacro="http://ros.org/wiki/xacro">
-
+<xacro:property name="bar_length" value="0.22"/>
+<xacro:property name="bar_width" value="0.03"/>
+<xacro:property name="bar_height" value="0.03"/>
 
 
 <!-- Flange Bearing -->
@@ -43,9 +45,9 @@
     </geometry>
     </visual>
     <collision>
-    <origin xyz="0.0 0.0 -0.01" rpy="0.0 0.0 0.0"/>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${-pi/2}"/>
     <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
+        <box size="${bar_length/scale_factor} ${bar_width/scale_factor} ${bar_height/scale_factor}"/>
     </geometry>
     </collision>
 </link>

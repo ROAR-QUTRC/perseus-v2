@@ -31,8 +31,8 @@
     <!-- Wheels Properties -->
     <xacro:property name="wheels_y_offset" value="0.125"/> 
     <xacro:property name="wheel_mass" value="1.0"/>
-    <xacro:property name="wheel_radius" value="0.13"/>
-    <xacro:property name="wheel_length" value="0.15"/>
+    <xacro:property name="wheel_radius" value="0.15"/>
+    <xacro:property name="wheel_length" value="0.14"/>
 
     <!-- ADD COMPONENTS -->
     <xacro:include filename="$(find perseus_description)/urdf/inertia_macros.xacro"/>
