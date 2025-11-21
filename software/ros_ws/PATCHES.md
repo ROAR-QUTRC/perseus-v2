@@ -12,6 +12,7 @@ This document describes the patches and custom package builds maintained in `pat
 ## rplidar-ros
 
 ### Status
+
 **Custom build from source** (not using rosdistro package)
 
 ### Why This Exists
@@ -59,6 +60,7 @@ See `src/perseus_lite/launch/perseus_lite.launch.py` for integration details.
 ### Future Considerations
 
 If rplidar-ros is officially released to Jazzy rosdistro in the future, this custom build should be:
+
 1. Removed from `patches.nix`
 2. Added as a regular dependency in the relevant package.xml files
 3. The package will then be automatically included via nix-ros-overlay
