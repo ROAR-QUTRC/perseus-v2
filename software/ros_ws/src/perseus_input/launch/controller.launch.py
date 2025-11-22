@@ -44,7 +44,10 @@ def generate_launch_description():
     is_xbox = EqualsSubstitution(controller_type, "xbox")
     is_logitech = EqualsSubstitution(controller_type, "logitech")
     controller_configs = {
-        "xbox": ["xbox_controller", IfElseSubstitution(is_wireless, "_wireless.yaml", "_wired.yaml"),],
+        "xbox": [
+            "xbox_controller",
+            IfElseSubstitution(is_wireless, "_wireless.yaml", "_wired.yaml"),
+        ],
         "logitech": ["logitech_controller.yaml"],
         "8bitdo": ["8bitdo_controller.yaml"],
     }
