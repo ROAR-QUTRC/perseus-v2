@@ -11,9 +11,9 @@
 <!-- Flange Bearing -->
 <link name="${prefix}flange_bearing">
     <inertial>
-    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
     <mass value="${bearing_mass}"/>
-    <inertia ixx="0.001313" iyy="0.001699" izz="0.000647" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+    <xacro:box_inertia m="${bearing_mass}" x="${bearing_length/scale_factor}" y="${bearing_width/scale_factor}" z="${bearing_height/scale_factor}"/>
     </inertial>
 
     <visual>
