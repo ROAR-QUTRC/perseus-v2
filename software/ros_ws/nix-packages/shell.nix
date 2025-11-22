@@ -48,6 +48,7 @@ pkgs.mkShell {
           builtin-interfaces
           controller-manager
           cv-bridge
+          diagnostic-msgs
           diff-drive-controller
           geometry-msgs
           gz-ros2-control
