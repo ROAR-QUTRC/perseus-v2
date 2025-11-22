@@ -69,12 +69,15 @@ pkgs.mkShell {
             ros-gz-sim
             ros2controlcli
             ros2launch
+            rplidar-ros
             rviz2
             sensor-msgs
             simple-networking
             slam-toolbox
             teleop-twist-joy
             teleop-twist-keyboard
+            tf2
+            tf2-geometry-msgs
             twist-mux
             urdf
             xacro
