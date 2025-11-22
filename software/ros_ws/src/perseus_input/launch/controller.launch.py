@@ -21,7 +21,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "type",
             default_value="xbox",
-            description="Controller type: Either 'xbox' or '8bitdo'",
+            description="Controller type: Either 'xbox', '8bitdo', or 'logitech'",
         ),
         DeclareLaunchArgument(
             "wireless",
@@ -42,13 +42,21 @@ def generate_launch_description():
 
     # CONFIG + DATA FILES
     is_xbox = EqualsSubstitution(controller_type, "xbox")
-    xbox_controller_config = [
-        "xbox_controller",
-        IfElseSubstitution(is_wireless, "_wireless.yaml", "_wired.yaml"),
-    ]
-    eightbitdo_controller_config = ["8bitdo_controller.yaml"]
+    is_logitech = EqualsSubstitution(controller_type, "logitech")
+    controller_configs = {
+        "xbox": [
+            "xbox_controller",
+            IfElseSubstitution(is_wireless, "_wireless.yaml", "_wired.yaml"),
+        ],
+        "logitech": ["logitech_controller.yaml"],
+        "8bitdo": ["8bitdo_controller.yaml"],
+    }
     controller_config_name = IfElseSubstitution(
-        is_xbox, xbox_controller_config, eightbitdo_controller_config
+        is_xbox,
+        controller_configs["xbox"],
+        IfElseSubstitution(
+            is_logitech, controller_configs["logitech"], controller_configs["8bitdo"]
+        ),
     )
     preferred_config_path = PathJoinSubstitution(
         [FindPackageShare("perseus_input_config"), "config", controller_config_name]
