@@ -39,6 +39,7 @@ pkgs.mkShell {
             backward-ros
             boost
             controller-manager
+            diagnostic-msgs
             diff-drive-controller
             geometry-msgs
             gz-ros2-control

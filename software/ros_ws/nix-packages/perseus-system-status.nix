@@ -2,12 +2,11 @@
 {
   lib,
   buildRosPackage,
-  actuator-msgs,
   ament-cmake,
   backward-ros,
-  geometry-msgs,
+  diagnostic-msgs,
+  hi-can-raw,
   rclcpp,
-  sensor-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-system-status";
@@ -18,11 +17,10 @@ buildRosPackage rec {
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
-    actuator-msgs
     backward-ros
-    geometry-msgs
+    diagnostic-msgs
+    hi-can-raw
     rclcpp
-    sensor-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
