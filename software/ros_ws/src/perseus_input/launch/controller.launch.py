@@ -43,17 +43,16 @@ def generate_launch_description():
     # CONFIG + DATA FILES
     is_xbox = EqualsSubstitution(controller_type, "xbox")
     is_logitech = EqualsSubstitution(controller_type, "logitech")
-    xbox_controller_config = [
-        "xbox_controller",
-        IfElseSubstitution(is_wireless, "_wireless.yaml", "_wired.yaml"),
-    ]
-    eightbitdo_controller_config = ["8bitdo_controller.yaml"]
-    logitech_controller_config = ["logitech_controller.yaml"]
+    controller_configs = {
+        "xbox": ["xbox_controller", IfElseSubstitution(is_wireless, "_wireless.yaml", "_wired.yaml"),],
+        "logitech": ["logitech_controller.yaml"],
+        "8bitdo": ["8bitdo_controller.yaml"],
+    }
     controller_config_name = IfElseSubstitution(
         is_xbox,
-        xbox_controller_config,
+        controller_configs["xbox"],
         IfElseSubstitution(
-            is_logitech, logitech_controller_config, eightbitdo_controller_config
+            is_logitech, controller_configs["logitech"], controller_configs["8bitdo"]
         ),
     )
     preferred_config_path = PathJoinSubstitution(
