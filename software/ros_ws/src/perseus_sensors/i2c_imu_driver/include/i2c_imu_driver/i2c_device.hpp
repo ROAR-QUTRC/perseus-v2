@@ -37,7 +37,7 @@ namespace i2c_imu_driver
          *
          * @return true if device is connected, false otherwise
          */
-        bool isConnected() const;
+        bool is_connected() const;
 
         /**
          * @brief Read a single byte from a register
@@ -47,7 +47,7 @@ namespace i2c_imu_driver
          *
          * @note Uses hardware I2C timeout (configured at bus level, typically 1-2 seconds)
          */
-        std::optional<uint8_t> readRegister(uint8_t reg_address);
+        std::optional<uint8_t> read_register(uint8_t reg_address);
 
         /**
          * @brief Write a single byte to a register
@@ -58,7 +58,7 @@ namespace i2c_imu_driver
          *
          * @note Uses hardware I2C timeout (configured at bus level, typically 1-2 seconds)
          */
-        bool writeRegister(uint8_t reg_address, uint8_t value);
+        bool write_register(uint8_t reg_address, uint8_t value);
 
         /**
          * @brief Read multiple bytes from consecutive registers
@@ -81,7 +81,7 @@ namespace i2c_imu_driver
          * @note Uses hardware I2C timeout (configured at bus level, typically 1-2 seconds)
          * @threadsafe NO - Must not be called from multiple threads concurrently
          */
-        bool readRegisters(uint8_t reg_address, uint8_t* buffer, size_t length);
+        bool read_registers(uint8_t reg_address, uint8_t* buffer, size_t length);
 
         /**
          * @brief Write multiple bytes to consecutive registers
@@ -97,21 +97,21 @@ namespace i2c_imu_driver
          * @note Uses hardware I2C timeout (configured at bus level, typically 1-2 seconds)
          * @threadsafe NO - Must not be called from multiple threads concurrently
          */
-        bool writeRegisters(uint8_t reg_address, const uint8_t* buffer, size_t length);
+        bool write_registers(uint8_t reg_address, const uint8_t* buffer, size_t length);
 
         /**
          * @brief Get the device address
          *
          * @return uint8_t Device address
          */
-        uint8_t getDeviceAddress() const { return _device_address; }
+        uint8_t get_device_address() const { return _device_address; }
 
         /**
          * @brief Get the bus path
          *
          * @return const std::string& Bus path
          */
-        const std::string& getBusPath() const { return _bus_path; }
+        const std::string& get_bus_path() const { return _bus_path; }
 
     private:
         std::string _bus_path;

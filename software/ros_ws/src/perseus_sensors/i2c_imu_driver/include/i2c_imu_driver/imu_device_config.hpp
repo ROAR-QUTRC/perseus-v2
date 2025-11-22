@@ -75,25 +75,25 @@ namespace i2c_imu_driver
          * @param device_name Name of the device
          * @return Device configuration wrapped in std::optional, or std::nullopt if not found
          */
-        static std::optional<std::reference_wrapper<const ImuDeviceConfig>> getDeviceConfig(const std::string& device_name);
+        static std::optional<std::reference_wrapper<const ImuDeviceConfig>> get_device_config(const std::string& device_name);
 
         /**
          * @brief Get list of all supported device names
          * @return Vector of device names
          */
-        static std::vector<std::string> getSupportedDevices();
+        static std::vector<std::string> get_supported_devices();
 
         /**
          * @brief Get default device name
          * @return Default device name
          */
-        static std::string getDefaultDevice();
+        static std::string get_default_device();
 
     private:
         /**
          * @brief Initialize device configurations
          */
-        static void _initializeDeviceConfigs();
+        static void _initialize_device_configs();
 
         static std::unordered_map<std::string, ImuDeviceConfig> _device_configs;
         static bool _initialized;

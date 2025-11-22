@@ -27,7 +27,7 @@ namespace i2c_imu_driver
     std::unordered_map<std::string, ImuDeviceConfig> ImuDeviceRegistry::_device_configs;
     bool ImuDeviceRegistry::_initialized = false;
 
-    void ImuDeviceRegistry::_initializeDeviceConfigs()
+    void ImuDeviceRegistry::_initialize_device_configs()
     {
         if (_initialized)
             return;
@@ -131,9 +131,9 @@ namespace i2c_imu_driver
         _initialized = true;
     }
 
-    std::optional<std::reference_wrapper<const ImuDeviceConfig>> ImuDeviceRegistry::getDeviceConfig(const std::string& device_name)
+    std::optional<std::reference_wrapper<const ImuDeviceConfig>> ImuDeviceRegistry::get_device_config(const std::string& device_name)
     {
-        _initializeDeviceConfigs();
+        _initialize_device_configs();
 
         auto it = _device_configs.find(device_name);
         if (it != _device_configs.end())
@@ -143,9 +143,9 @@ namespace i2c_imu_driver
         return std::nullopt;
     }
 
-    std::vector<std::string> ImuDeviceRegistry::getSupportedDevices()
+    std::vector<std::string> ImuDeviceRegistry::get_supported_devices()
     {
-        _initializeDeviceConfigs();
+        _initialize_device_configs();
 
         std::vector<std::string> devices;
         for (const auto& pair : _device_configs)
@@ -155,7 +155,7 @@ namespace i2c_imu_driver
         return devices;
     }
 
-    std::string ImuDeviceRegistry::getDefaultDevice()
+    std::string ImuDeviceRegistry::get_default_device()
     {
         return "lsm6dsox";
     }

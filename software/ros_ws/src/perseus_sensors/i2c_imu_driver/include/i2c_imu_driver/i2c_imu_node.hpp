@@ -41,31 +41,31 @@ namespace i2c_imu_driver
         /**
          * @brief Initialize node parameters
          */
-        void _initializeParameters();
+        void _initialize_parameters();
 
         /**
          * @brief Initialize ROS2 publishers
          */
-        void _initializePublishers();
+        void _initialize_publishers();
 
         /**
          * @brief Initialize I2C device
          *
          * @return true if initialization succeeded, false otherwise
          */
-        bool _initializeDevice();
+        bool _initialize_device();
 
         /**
          * @brief Timer callback for reading and publishing sensor data
          */
-        void _timerCallback();
+        void _timer_callback();
 
         /**
          * @brief Read raw sensor data from I2C device
          *
          * @return ImuData Raw sensor data
          */
-        ImuData _readSensorData();
+        ImuData _read_sensor_data();
 
         /**
          * @brief Convert IMU data to ROS message
@@ -73,14 +73,14 @@ namespace i2c_imu_driver
          * @param imu_data Calibrated IMU data
          * @return sensor_msgs::msg::Imu ROS IMU message
          */
-        sensor_msgs::msg::Imu _convertToRosMessage(const ImuData& imu_data);
+        sensor_msgs::msg::Imu _convert_to_ros_message(const ImuData& imu_data);
 
         /**
          * @brief Initialize IMU sensor configuration
          *
          * @return true if initialization succeeded, false otherwise
          */
-        bool _initializeSensor();
+        bool _initialize_sensor();
 
         // Node parameters
         std::string _i2c_bus_path;

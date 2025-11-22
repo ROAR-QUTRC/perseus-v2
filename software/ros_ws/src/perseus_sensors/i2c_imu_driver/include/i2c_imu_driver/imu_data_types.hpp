@@ -52,7 +52,7 @@ namespace i2c_imu_driver
      * @param gyro_offset_z Offset correction for Z-axis angular velocity (rad/s)
      * @return Calibrated IMU data
      */
-    inline ImuData applyCalibration(
+    inline ImuData apply_calibration(
         const ImuData& raw_data,
         double accel_scale_x, double accel_scale_y, double accel_scale_z,
         double accel_offset_x, double accel_offset_y, double accel_offset_z,

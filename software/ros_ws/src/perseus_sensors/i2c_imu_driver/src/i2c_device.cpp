@@ -26,7 +26,7 @@ namespace i2c_imu_driver
          * @param path Path to validate
          * @return true if valid I2C device path, false otherwise
          */
-        bool isValidI2cPath(const std::string& path)
+        bool is_valid_i2c_path(const std::string& path)
         {
             // Must start with /dev/i2c-
             const std::string prefix = "/dev/i2c-";
@@ -64,7 +64,7 @@ namespace i2c_imu_driver
               [this]() -> int
               {
                   // Validate I2C bus path before attempting to open
-                  if (!isValidI2cPath(_bus_path))
+                  if (!is_valid_i2c_path(_bus_path))
                   {
                       throw std::invalid_argument("Invalid I2C bus path: " + _bus_path +
                                                   ". Must be /dev/i2c-N where N is 0-255");
@@ -84,20 +84,20 @@ namespace i2c_imu_driver
         // which can check device-specific WHO_AM_I registers
     }
 
-    bool I2cDevice::isConnected() const
+    bool I2cDevice::is_connected() const
     {
         return _i2c_fd.get() >= 0;
     }
 
-    std::optional<uint8_t> I2cDevice::readRegister(uint8_t reg_address)
+    std::optional<uint8_t> I2cDevice::read_register(uint8_t reg_address)
     {
-        if (!isConnected())
+        if (!is_connected())
         {
             return std::nullopt;
         }
 
         uint8_t buffer[1];
-        if (!readRegisters(reg_address, buffer, 1))
+        if (!read_registers(reg_address, buffer, 1))
         {
             return std::nullopt;
         }
@@ -105,22 +105,22 @@ namespace i2c_imu_driver
         return buffer[0];
     }
 
-    bool I2cDevice::writeRegister(uint8_t reg_address, uint8_t value)
+    bool I2cDevice::write_register(uint8_t reg_address, uint8_t value)
     {
-        if (!isConnected())
+        if (!is_connected())
         {
             return false;
         }
 
-        return writeRegisters(reg_address, &value, 1);
+        return write_registers(reg_address, &value, 1);
     }
 
-    bool I2cDevice::readRegisters(uint8_t reg_address, uint8_t* buffer, size_t length)
+    bool I2cDevice::read_registers(uint8_t reg_address, uint8_t* buffer, size_t length)
     {
         // Maximum I2C transaction size (conservative limit for compatibility)
         constexpr size_t MAX_I2C_TRANSACTION_SIZE = 255;
 
-        if (!isConnected() || buffer == nullptr || length == 0 || length > MAX_I2C_TRANSACTION_SIZE)
+        if (!is_connected() || buffer == nullptr || length == 0 || length > MAX_I2C_TRANSACTION_SIZE)
         {
             return false;
         }
@@ -153,12 +153,12 @@ namespace i2c_imu_driver
         return true;
     }
 
-    bool I2cDevice::writeRegisters(uint8_t reg_address, const uint8_t* buffer, size_t length)
+    bool I2cDevice::write_registers(uint8_t reg_address, const uint8_t* buffer, size_t length)
     {
         // Maximum I2C transaction size (conservative limit for compatibility)
         constexpr size_t MAX_I2C_TRANSACTION_SIZE = 255;
 
-        if (!isConnected() || buffer == nullptr || length == 0 || length > MAX_I2C_TRANSACTION_SIZE)
+        if (!is_connected() || buffer == nullptr || length == 0 || length > MAX_I2C_TRANSACTION_SIZE)
         {
             return false;
         }

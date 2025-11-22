@@ -11,13 +11,13 @@ namespace i2c_imu_driver
           _device_config(nullptr)
     {
         // Initialize parameters
-        _initializeParameters();
+        _initialize_parameters();
 
         // Initialize publishers
-        _initializePublishers();
+        _initialize_publishers();
 
         // Initialize I2C device
-        if (!_initializeDevice())
+        if (!_initialize_device())
         {
             if (_required)
             {
@@ -32,7 +32,7 @@ namespace i2c_imu_driver
 
         // Start timer for periodic reading
         auto timer_period = std::chrono::milliseconds(static_cast<int>(1000.0 / _update_rate));
-        _timer = create_wall_timer(timer_period, std::bind(&I2cImuNode::_timerCallback, this));
+        _timer = create_wall_timer(timer_period, std::bind(&I2cImuNode::_timer_callback, this));
 
         RCLCPP_INFO(get_logger(), "I2C IMU node initialized successfully with device: %s", _device_type.c_str());
     }
@@ -45,11 +45,11 @@ namespace i2c_imu_driver
         }
     }
 
-    void I2cImuNode::_initializeParameters()
+    void I2cImuNode::_initialize_parameters()
     {
         // Declare and get parameters
         declare_parameter("i2c_bus", "/dev/i2c-7");
-        declare_parameter("device_type", ImuDeviceRegistry::getDefaultDevice());
+        declare_parameter("device_type", ImuDeviceRegistry::get_default_device());
         declare_parameter("device_address", 0x6A);
         declare_parameter("update_rate", 100.0);
         declare_parameter("frame_id", "imu_link");
@@ -96,10 +96,10 @@ namespace i2c_imu_driver
         _retry_count = get_parameter("retry_count").as_int();
 
         // Get device configuration
-        auto config_opt = ImuDeviceRegistry::getDeviceConfig(_device_type);
+        auto config_opt = ImuDeviceRegistry::get_device_config(_device_type);
         if (!config_opt)
         {
-            auto supported_devices = ImuDeviceRegistry::getSupportedDevices();
+            auto supported_devices = ImuDeviceRegistry::get_supported_devices();
             std::string supported_list;
             for (const auto& device : supported_devices)
             {
@@ -154,12 +154,12 @@ namespace i2c_imu_driver
         }
     }
 
-    void I2cImuNode::_initializePublishers()
+    void I2cImuNode::_initialize_publishers()
     {
         _imu_publisher = create_publisher<sensor_msgs::msg::Imu>("imu/data", 10);
     }
 
-    bool I2cImuNode::_initializeDevice()
+    bool I2cImuNode::_initialize_device()
     {
         // Create and initialize I2C device (RAII - fully initialized in constructor)
         try
@@ -174,7 +174,7 @@ namespace i2c_imu_driver
         }
 
         // Configure the sensor
-        if (!_initializeSensor())
+        if (!_initialize_sensor())
         {
             RCLCPP_ERROR(get_logger(), "Failed to configure I2C IMU sensor");
             return false;
@@ -187,9 +187,9 @@ namespace i2c_imu_driver
         return true;
     }
 
-    void I2cImuNode::_timerCallback()
+    void I2cImuNode::_timer_callback()
     {
-        if (!_device_initialized || !_i2c_device || !_i2c_device->isConnected())
+        if (!_device_initialized || !_i2c_device || !_i2c_device->is_connected())
         {
             return;
         }
@@ -197,10 +197,10 @@ namespace i2c_imu_driver
         try
         {
             // Read sensor data
-            ImuData raw_data = _readSensorData();
+            ImuData raw_data = _read_sensor_data();
 
             // Apply calibration using shared function
-            ImuData calibrated_data = applyCalibration(
+            ImuData calibrated_data = apply_calibration(
                 raw_data,
                 _accel_scale_x, _accel_scale_y, _accel_scale_z,
                 _accel_offset_x, _accel_offset_y, _accel_offset_z,
@@ -208,7 +208,7 @@ namespace i2c_imu_driver
                 _gyro_offset_x, _gyro_offset_y, _gyro_offset_z);
 
             // Convert to ROS message and publish
-            sensor_msgs::msg::Imu imu_msg = _convertToRosMessage(calibrated_data);
+            sensor_msgs::msg::Imu imu_msg = _convert_to_ros_message(calibrated_data);
             _imu_publisher->publish(imu_msg);
 
             _sequence_number++;
@@ -220,12 +220,12 @@ namespace i2c_imu_driver
         }
     }
 
-    ImuData I2cImuNode::_readSensorData()
+    ImuData I2cImuNode::_read_sensor_data()
     {
         ImuData data;
         data.timestamp = std::chrono::steady_clock::now();
 
-        if (!_i2c_device || !_i2c_device->isConnected() || !_device_config)
+        if (!_i2c_device || !_i2c_device->is_connected() || !_device_config)
         {
             return data;
         }
@@ -235,7 +235,7 @@ namespace i2c_imu_driver
         uint8_t temp_data[2];
 
         // Read accelerometer data using device-specific register
-        if (_i2c_device->readRegisters(_device_config->accel_data_register, accel_data, 6))
+        if (_i2c_device->read_registers(_device_config->accel_data_register, accel_data, 6))
         {
             int16_t accel_x_raw, accel_y_raw, accel_z_raw;
 
@@ -261,7 +261,7 @@ namespace i2c_imu_driver
         }
 
         // Read gyroscope data using device-specific register
-        if (_i2c_device->readRegisters(_device_config->gyro_data_register, gyro_data, 6))
+        if (_i2c_device->read_registers(_device_config->gyro_data_register, gyro_data, 6))
         {
             int16_t gyro_x_raw, gyro_y_raw, gyro_z_raw;
 
@@ -287,7 +287,7 @@ namespace i2c_imu_driver
         }
 
         // Read temperature data using device-specific register
-        if (_i2c_device->readRegisters(_device_config->temp_data_register, temp_data, 2))
+        if (_i2c_device->read_registers(_device_config->temp_data_register, temp_data, 2))
         {
             int16_t temp_raw;
 
@@ -309,7 +309,7 @@ namespace i2c_imu_driver
         return data;
     }
 
-    sensor_msgs::msg::Imu I2cImuNode::_convertToRosMessage(const ImuData& imu_data)
+    sensor_msgs::msg::Imu I2cImuNode::_convert_to_ros_message(const ImuData& imu_data)
     {
         sensor_msgs::msg::Imu imu_msg;
 
@@ -346,9 +346,9 @@ namespace i2c_imu_driver
         return imu_msg;
     }
 
-    bool I2cImuNode::_initializeSensor()
+    bool I2cImuNode::_initialize_sensor()
     {
-        if (!_i2c_device || !_i2c_device->isConnected())
+        if (!_i2c_device || !_i2c_device->is_connected())
         {
             return false;
         }
@@ -367,7 +367,7 @@ namespace i2c_imu_driver
             {
                 // Check WHO_AM_I register
                 uint8_t who_am_i;
-                if (!_i2c_device->readRegisters(_device_config->who_am_i_register, &who_am_i, 1))
+                if (!_i2c_device->read_registers(_device_config->who_am_i_register, &who_am_i, 1))
                 {
                     throw std::runtime_error("Failed to read WHO_AM_I register");
                 }
@@ -379,7 +379,7 @@ namespace i2c_imu_driver
                 }
 
                 // Reset device
-                if (!_i2c_device->writeRegister(_device_config->reset_register, _device_config->reset_value))
+                if (!_i2c_device->write_register(_device_config->reset_register, _device_config->reset_value))
                 {
                     throw std::runtime_error("Failed to reset device");
                 }
@@ -388,19 +388,19 @@ namespace i2c_imu_driver
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
                 // Configure accelerometer
-                if (!_i2c_device->writeRegister(_device_config->accel_config_register, _device_config->accel_config_value))
+                if (!_i2c_device->write_register(_device_config->accel_config_register, _device_config->accel_config_value))
                 {
                     throw std::runtime_error("Failed to configure accelerometer");
                 }
 
                 // Configure gyroscope
-                if (!_i2c_device->writeRegister(_device_config->gyro_config_register, _device_config->gyro_config_value))
+                if (!_i2c_device->write_register(_device_config->gyro_config_register, _device_config->gyro_config_value))
                 {
                     throw std::runtime_error("Failed to configure gyroscope");
                 }
 
                 // Configure control register
-                if (!_i2c_device->writeRegister(_device_config->ctrl_register, _device_config->ctrl_value))
+                if (!_i2c_device->write_register(_device_config->ctrl_register, _device_config->ctrl_value))
                 {
                     throw std::runtime_error("Failed to configure control register");
                 }
