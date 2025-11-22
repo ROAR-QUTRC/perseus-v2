@@ -4,22 +4,17 @@ SystemStatus::SystemStatus(const rclcpp::NodeOptions& options = rclcpp::NodeOpti
     : Node("system_status", options)
 {
     // initialise the CAN interface
-    auto& interface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
-                                                 addressing::filter_t{
-                                                     .address = 0x01000000,
-                                                     .mask = hi_can::addressing::DEVICE_MASK,
-                                                 });
-    packetManager.emplace(interface);
-    packetManager->addGroup(computeBus);
-    packetManager->addGroup(driveBus);
-    packetManager->addGroup(auxBus);
-    packetManager->addGroup(spareBus);
+    _canInterface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "can0")));
+    _packetManager.emplace(_canInterface.value());
 
-    _callBackTimer = this->create_wall_timer(
-        std::chrono::milliseconds(callBackPeriod_ms),
-        std::bind(&SystemStatus::_publishSystemStatusCallBack, this));
+    _callBackTimer = this->create_wall_timer(CALLBACK_PERIOD_MS, std::bind(&SystemStatus::_publishSystemStatusCallBack, this));
+    _RcbSubscriber = this->create_subscription<std_msgs::msg::String>("can_to_ros", 10, std::bind(&SystemStatus::_RcbCallback, this, std::placeholders::_1));
 }
 
-void SystemStatus::_publishSystemStatusCallBack(const system_status_msgs::msg::SystemStatus::SharedPtr msg)
+void SystemStatus::_publishSystemStatusCallBack(void)
+{
+}
+
+void SystemStatus::_RcbCallback(std_msgs::msg::String msg)
 {
 }
