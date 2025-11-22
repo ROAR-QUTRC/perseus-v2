@@ -2,15 +2,15 @@
 <sdf version='1.8'>
   <model name='ARC_Zone'>
     <pose>0 0 0 0 0 0</pose>
-    <static>false</static> <!-- Set false to allow physics and falling -->
+    <static>true</static> <!-- Set false to allow physics and falling -->
 
     <!-- Wall East -->
     <link name='Wall_E'>
-      <pose>15 0 0.35 0 0 1.5708</pose> <!-- 15m east, rotated 90 deg -->
+      <pose>12 0 0.45 0 0 1.5708</pose> <!-- 12m east, rotated 90 deg -->
       <collision name='Wall_E_Collision'>
         <geometry>
           <box>
-            <size>30 0.15 0.5</size>
+            <size>28 0.15 0.5</size>
           </box>
         </geometry>
       </collision>
@@ -18,7 +18,7 @@
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>30 0.15 0.5</size>
+            <size>28 0.15 0.5</size>
           </box>
         </geometry>
         <material>
@@ -37,11 +37,11 @@
 
     <!-- Wall North -->
     <link name='Wall_N'>
-      <pose>0 15 0.35 0 0 0</pose> <!-- 15m north -->
+      <pose>0 14 0.45 0 0 0</pose> <!-- 14m north -->
       <collision name='Wall_N_Collision'>
         <geometry>
           <box>
-            <size>30 0.15 0.5</size>
+            <size>24 0.15 0.5</size>
           </box>
         </geometry>
       </collision>
@@ -49,7 +49,7 @@
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>30 0.15 0.5</size>
+            <size>24 0.15 0.5</size>
           </box>
         </geometry>
         <material>
@@ -68,11 +68,11 @@
 
     <!-- Wall West -->
     <link name='Wall_W'>
-      <pose>-15 0 0.35 0 0 1.5708</pose> <!-- 15m west, rotated 90 deg -->
+      <pose>-12 0 0.45 0 0 1.5708</pose> <!-- 12m west, rotated 90 deg -->
       <collision name='Wall_W_Collision'>
         <geometry>
           <box>
-            <size>30 0.15 0.5</size>
+            <size>28 0.15 0.5</size>
           </box>
         </geometry>
       </collision>
@@ -80,7 +80,7 @@
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>30 0.15 0.5</size>
+            <size>28 0.15 0.5</size>
           </box>
         </geometry>
         <material>
@@ -99,11 +99,11 @@
 
     <!-- Wall South -->
     <link name='Wall_S'>
-      <pose>0 -15 0.35 0 0 0</pose> <!-- 15m south -->
+      <pose>0 -14 0.45 0 0 0</pose> <!-- 14m south -->
       <collision name='Wall_S_Collision'>
         <geometry>
           <box>
-            <size>30 0.15 0.5</size>
+            <size>24 0.15 0.5</size>
           </box>
         </geometry>
       </collision>
@@ -111,7 +111,7 @@
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>30 0.15 0.5</size>
+            <size>24 0.15 0.5</size>
           </box>
         </geometry>
         <material>

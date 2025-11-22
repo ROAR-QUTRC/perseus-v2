@@ -45,9 +45,7 @@
       </ode>
     </physics>
 
-    <!-- <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
-    </include> -->
+
 
 
     <light type="directional" name="sun">
@@ -65,18 +63,44 @@
     </light>
     <ambient>1 1 1 1</ambient>
     <background>1 1 1 1</background>
-
-    <!-- Spawning Walls -->
+    
     <include>
       <uri>model://perseus_arc_world</uri>
-    </include>
-    <!-- ArUco Markers -->
+    </include> 
     <include>
-      <uri>model://perseus_arc_world/aruco_markers</uri>
+      <uri>model://perseus_arc_world/aruco_markers1</uri>
+      <pose>6 11.5 0.5 0 0 3.14</pose>
     </include>
+    <include>
+      <uri>model://perseus_arc_world/aruco_markers2</uri>
+      <pose>7 -9.75 0.5 0 0 -2.35</pose>
+    </include>
+    <include>
+      <uri>model://perseus_arc_world/aruco_markers3</uri>
+      <pose>2 1 0.5 0 0 0.78</pose>
+    </include>
+    <include>
+      <uri>model://perseus_arc_world/aruco_markers4</uri>
+      <pose>-2 5.5 0.5 0 0 1.57</pose>
+    </include>
+    <include>
+      <uri>model://perseus_arc_world/aruco_markers5</uri>
+      <pose>-5.5 -9.75 0.5 0 0 3.1412</pose>
+    </include>
+
+    <include>
+      <uri>model://perseus_arc_world/cubes</uri>
+    </include>
+
     <!-- Lunar Ground -->
     <include>
       <uri>model://Moon_DEM</uri>
     </include>
+
+    <!-- Flat Ground -->
+    <!-- <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
+    </include>  -->
+
   </world>
 </sdf>

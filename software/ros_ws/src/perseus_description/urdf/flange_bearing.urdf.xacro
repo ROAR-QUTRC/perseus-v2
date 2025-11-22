@@ -7,12 +7,12 @@
 <xacro:property name="bearing_length" value="0.2"/>
 <xacro:property name="bearing_width" value="0.03"/>
 <xacro:property name="bearing_height" value="0.03"/>
-
+<xacro:property name="bearing_mass" value="2.7689940302592726"/>  <!-- Kg -->
 <!-- Flange Bearing -->
 <link name="${prefix}flange_bearing">
     <inertial>
     <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
-    <mass value="1.327488734939265"/>
+    <mass value="${bearing_mass}"/>
     <inertia ixx="0.001313" iyy="0.001699" izz="0.000647" ixy="0.0" iyz="0.0" ixz="-0.0"/>
     </inertial>
 
@@ -24,7 +24,7 @@
     </visual>
     
     <collision>
-    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
     <geometry>
         <box size="${bar_length/scale_factor} ${bar_width/scale_factor} ${bar_height/scale_factor}"/>
     </geometry>
@@ -38,7 +38,7 @@
     <inertial>
         <origin xyz="0 0 0.0" rpy="0.0 0.0 0.0"/>
         <mass value="0.9172649518127158"/>
-        <inertia ixx="0.00036" iyy="0.018339" izz="0.018134" ixy="3e-06" iyz="-0.0" ixz="0.0"/>
+        <xacro:box_inertia m="${chassis_mass}" x="${chassis_length/scale_factor}" y="${chassis_width/scale_factor}" z="${chassis_height/scale_factor}"/>
     </inertial>
 
     <visual>
