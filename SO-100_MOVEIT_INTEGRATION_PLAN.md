@@ -9,6 +9,7 @@
 ---
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Phase 1: Branch Setup & Dependencies](#phase-1-branch-setup--dependencies)
@@ -39,12 +40,14 @@ This plan integrates the SO-100 6-DOF robotic arm with MoveIt! 2, building on th
 ## Prerequisites
 
 ### Required Information
+
 - [ ] Path to SO-100 URDF/xacro file with 6 joints defined
 - [ ] SO-100 arm mesh files (STL/DAE format) in visual/ and collision/ folders
 - [ ] Physical specifications: link lengths, joint limits, DH parameters
 - [ ] Joint calibration data (min/max servo positions for each joint)
 
 ### Software Dependencies
+
 Check these are installed in your ROS 2 workspace:
 
 ```bash
@@ -65,7 +68,9 @@ sudo apt install ros-${ROS_DISTRO}-rqt-joint-trajectory-controller
 ```
 
 ### Verify Perseus-lite Packages
+
 Ensure these packages are available (should be merged into main):
+
 - [ ] `perseus_lite_hardware` - ST3215 hardware interface
 - [ ] `perseus_lite_description` - Base robot description
 
@@ -137,11 +142,13 @@ ros2 plugin list | grep ST3215
 ### 2.1 Current State Analysis
 
 The existing implementation in `perseus_lite_hardware` provides:
+
 - **Command Interface:** Velocity only (`HW_IF_VELOCITY`)
 - **State Interfaces:** Position, Velocity, Temperature
 - **Control Registers:** Uses GOAL_SPEED (0x2E) for velocity commands
 
 **What we need to add:**
+
 - **Command Interface:** Position (`HW_IF_POSITION`)
 - **Control Register:** GOAL_POSITION (0x2A) for position commands
 - **Calibration:** Load min/max servo positions, map radians ↔ servo raw values (0-4095)
@@ -851,11 +858,13 @@ ros2 launch moveit_setup_assistant setup_assistant.launch.py
 ### 4.2 Setup Assistant Workflow
 
 #### Step 1: Start
+
 - Click "Create New MoveIt Configuration Package"
 - Browse to: `/home/dingo/perseus-v2/software/ros_ws/install/perseus_lite_arm_description/share/perseus_lite_arm_description/urdf/so100_arm.urdf.xacro`
 - Click "Load Files"
 
 #### Step 2: Self-Collisions
+
 - Click "Self-Collisions" tab
 - Click "Generate Collision Matrix"
 - Sampling density: 10000 (default is fine)
@@ -863,6 +872,7 @@ ros2 launch moveit_setup_assistant setup_assistant.launch.py
 - Review collision pairs, disable false positives if needed
 
 #### Step 3: Virtual Joints
+
 - Click "Virtual Joints" tab
 - Add virtual joint:
   - Joint Name: `world_to_base`
@@ -871,6 +881,7 @@ ros2 launch moveit_setup_assistant setup_assistant.launch.py
   - Joint Type: `fixed`
 
 #### Step 4: Planning Groups
+
 - Click "Planning Groups" tab
 - Add Group:
   - Group Name: `arm`
@@ -886,6 +897,7 @@ ros2 launch moveit_setup_assistant setup_assistant.launch.py
   - Click "Save"
 
 #### Step 5: Robot Poses
+
 - Click "Robot Poses" tab
 - Add poses for testing:
   - **Home:**
@@ -899,6 +911,7 @@ ros2 launch moveit_setup_assistant setup_assistant.launch.py
     - Set joints to ready-to-work position
 
 #### Step 6: End Effectors
+
 - Click "End Effectors" tab
 - Add end effector (if you have a gripper):
   - End Effector Name: `gripper`
@@ -909,10 +922,12 @@ ros2 launch moveit_setup_assistant setup_assistant.launch.py
 **If no gripper yet:** Skip this step for now, can add later.
 
 #### Step 7: Passive Joints
+
 - Click "Passive Joints" tab
 - Leave empty (SO-100 has no passive joints)
 
 #### Step 8: ROS 2 Controllers
+
 - Click "ROS 2 Controllers" tab
 - Auto-detect from URDF or add manually:
   - Controller Name: `arm_controller`
@@ -920,9 +935,11 @@ ros2 launch moveit_setup_assistant setup_assistant.launch.py
   - Add all 6 arm joints
 
 #### Step 9: Author Information
+
 - Fill in your name and email
 
 #### Step 10: Configuration Files
+
 - Click "Configuration Files" tab
 - Choose output location:
   - `/home/dingo/perseus-v2/software/ros_ws/src/perseus_lite_arm_moveit_config`
@@ -940,9 +957,9 @@ Add realistic velocity and acceleration limits based on ST3215 capabilities:
 joint_limits:
   shoulder_pan_joint:
     has_velocity_limits: true
-    max_velocity: 2.0  # rad/s (adjust based on your arm specs)
+    max_velocity: 2.0 # rad/s (adjust based on your arm specs)
     has_acceleration_limits: true
-    max_acceleration: 3.0  # rad/s²
+    max_acceleration: 3.0 # rad/s²
     has_jerk_limits: false
 
   shoulder_lift_joint:
@@ -988,6 +1005,7 @@ joint_limits:
 **File:** `config/kinematics.yaml`
 
 Option 1 - KDL (built-in, fast, but basic):
+
 ```yaml
 arm:
   kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
@@ -997,15 +1015,17 @@ arm:
 ```
 
 Option 2 - TRAC-IK (recommended for better performance):
+
 ```yaml
 arm:
   kinematics_solver: trac_ik_kinematics_plugin/TRAC_IKKinematicsPlugin
   kinematics_solver_search_resolution: 0.005
   kinematics_solver_timeout: 0.05
-  solve_type: Speed  # or Distance or Manipulation1/2
+  solve_type: Speed # or Distance or Manipulation1/2
 ```
 
 **To use TRAC-IK:** Install it first:
+
 ```bash
 sudo apt install ros-${ROS_DISTRO}-trac-ik-kinematics-plugin
 ```
@@ -1056,7 +1076,7 @@ start_state_max_bounds_error: 0.1
 planner_configs:
   RRTConnect:
     type: geometric::RRTConnect
-    range: 0.0  # 0.0 = auto-detect
+    range: 0.0 # 0.0 = auto-detect
   RRT:
     type: geometric::RRT
     range: 0.0
@@ -1096,6 +1116,7 @@ ros2 launch perseus_lite_arm_moveit_config demo.launch.py
 ```
 
 **Expected Result:**
+
 - RViz opens with MoveIt Motion Planning plugin
 - You can drag the interactive marker at the end effector
 - Planning and execution works in simulation
@@ -1130,7 +1151,7 @@ mkdir -p config launch
 ```yaml
 controller_manager:
   ros__parameters:
-    update_rate: 50  # Hz - matches ST3215 communication rate
+    update_rate: 50 # Hz - matches ST3215 communication rate
 
     # Controller list
     joint_state_broadcaster:
@@ -1173,13 +1194,13 @@ arm_controller:
     allow_integration_in_goal_trajectories: true
 
     constraints:
-      stopped_velocity_tolerance: 0.02  # rad/s
-      goal_time: 0.0  # No time constraint (0 = disabled)
+      stopped_velocity_tolerance: 0.02 # rad/s
+      goal_time: 0.0 # No time constraint (0 = disabled)
 
       # Per-joint goal tolerances
       shoulder_pan_joint:
-        trajectory: 0.05  # rad
-        goal: 0.02  # rad
+        trajectory: 0.05 # rad
+        goal: 0.02 # rad
       shoulder_lift_joint:
         trajectory: 0.05
         goal: 0.02
@@ -1478,6 +1499,7 @@ ros2 launch perseus_lite_arm_controllers arm_bringup.launch.py use_mock_hardware
 ```
 
 **Expected Output:**
+
 ```
 [INFO] [controller_manager]: Loaded controller 'joint_state_broadcaster'
 [INFO] [controller_manager]: Loaded controller 'arm_controller'
@@ -1486,6 +1508,7 @@ ros2 launch perseus_lite_arm_controllers arm_bringup.launch.py use_mock_hardware
 ```
 
 **Verify controllers:**
+
 ```bash
 # List controllers
 ros2 control list_controllers
@@ -1496,6 +1519,7 @@ ros2 control list_controllers
 ```
 
 **Test trajectory execution:**
+
 ```bash
 # Send a simple trajectory
 ros2 action send_goal /arm_controller/follow_joint_trajectory \
@@ -1907,6 +1931,7 @@ SUBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", SYMLINK+="t
 ```
 
 **Find your vendor/product ID:**
+
 ```bash
 # Plug in USB-serial adapter
 dmesg | tail
@@ -1919,6 +1944,7 @@ udevadm info -a -n /dev/ttyUSB0 | grep -E 'idVendor|idProduct'
 ```
 
 **Reload udev rules:**
+
 ```bash
 sudo udevadm control --reload-rules
 sudo udevadm trigger
@@ -1987,6 +2013,7 @@ ros2 launch perseus_lite_arm_controllers arm_moveit.launch.py \
 ```
 
 **In RViz:**
+
 - Drag interactive marker
 - Click "Plan"
 - Click "Execute"
@@ -2014,13 +2041,14 @@ arm_controller:
   ros__parameters:
     constraints:
       # If arm overshoots, tighten tolerances
-      stopped_velocity_tolerance: 0.01  # Decrease from 0.02
+      stopped_velocity_tolerance: 0.01 # Decrease from 0.02
 
       shoulder_pan_joint:
-        goal: 0.01  # Decrease from 0.02 for tighter control
+        goal: 0.01 # Decrease from 0.02 for tighter control
 ```
 
 Rebuild and retest:
+
 ```bash
 colcon build --packages-select perseus_lite_arm_controllers
 ```
@@ -2031,10 +2059,10 @@ Edit `config/ompl_planning.yaml`:
 
 ```yaml
 # If planning too slow
-default_planner_config: RRTConnect  # Faster than RRT
+default_planner_config: RRTConnect # Faster than RRT
 planner_configs:
   RRTConnect:
-    range: 0.1  # Increase for faster planning (less precision)
+    range: 0.1 # Increase for faster planning (less precision)
 ```
 
 ### 7.4 Safety Testing
@@ -2042,6 +2070,7 @@ planner_configs:
 #### 7.4.1 Joint Limits
 
 **Verify limits are enforced:**
+
 ```bash
 # Try to command beyond limit
 ros2 action send_goal /arm_controller/follow_joint_trajectory \
@@ -2061,10 +2090,12 @@ ros2 action send_goal /arm_controller/follow_joint_trajectory \
 #### 7.4.2 Collision Avoidance
 
 **Test self-collision:**
+
 - In RViz, plan to pose that would cause collision
 - MoveIt should reject plan
 
 **Test scene collisions:**
+
 - Add obstacle to planning scene
 - Plan through obstacle
 - Should find path around it
@@ -2072,6 +2103,7 @@ ros2 action send_goal /arm_controller/follow_joint_trajectory \
 #### 7.4.3 Emergency Stop
 
 **Implement e-stop:**
+
 - Kill ros2_control_node kills all motion
 - Test: `pkill -9 ros2_control_node`
 - Servos should stop immediately (torque off)
@@ -2114,14 +2146,14 @@ ros2 bag record /joint_states
 
 ### 7.6 Common Issues & Solutions
 
-| Issue | Symptom | Solution |
-|-------|---------|----------|
-| Servo timeout | Hardware interface error "timeout reading servo" | Check baud rate, cable quality, servo IDs |
-| Jerky motion | Arm moves in steps not smoothly | Decrease acceleration, increase trajectory points |
-| Position overshoot | Arm oscillates around goal | Tighten controller tolerances, tune servo PID |
-| Planning failures | MoveIt cannot find path | Increase planning time, change planner, check limits |
-| Slow planning | Plans take >5 seconds | Use RRTConnect, increase range parameter |
-| Collisions ignored | Arm hits itself | Regenerate collision matrix, check URDF geometry |
+| Issue              | Symptom                                          | Solution                                             |
+| ------------------ | ------------------------------------------------ | ---------------------------------------------------- |
+| Servo timeout      | Hardware interface error "timeout reading servo" | Check baud rate, cable quality, servo IDs            |
+| Jerky motion       | Arm moves in steps not smoothly                  | Decrease acceleration, increase trajectory points    |
+| Position overshoot | Arm oscillates around goal                       | Tighten controller tolerances, tune servo PID        |
+| Planning failures  | MoveIt cannot find path                          | Increase planning time, change planner, check limits |
+| Slow planning      | Plans take >5 seconds                            | Use RRTConnect, increase range parameter             |
+| Collisions ignored | Arm hits itself                                  | Regenerate collision matrix, check URDF geometry     |
 
 ### 7.7 Calibration Refinement
 
@@ -2148,6 +2180,7 @@ ros2 run perseus_lite_arm_examples calibrate_joints
 7. Verify smooth, accurate motion
 
 **Success criteria:**
+
 - [ ] All 6 joints move independently
 - [ ] Position accuracy < 5mm
 - [ ] Planning time < 2s for typical motions
@@ -2165,38 +2198,40 @@ ros2 run perseus_lite_arm_examples calibrate_joints
 
 ### ST3215 Register Map (Key Registers)
 
-| Register | Address | Type | Range | Description |
-|----------|---------|------|-------|-------------|
-| ID | 0x05 | R/W | 0-253 | Servo ID |
-| BAUD_RATE | 0x06 | R/W | 0-7 | Baud rate setting |
-| TORQUE_ENABLE | 0x28 | R/W | 0-1 | Enable/disable torque |
-| ACCELERATION | 0x29 | R/W | 0-255 | Acceleration value |
-| GOAL_POSITION | 0x2A | R/W | 0-4095 | Target position (12-bit) |
-| RUNNING_TIME | 0x2C | R/W | 0-65535 | Movement duration (ms) |
-| GOAL_SPEED | 0x2E | R/W | -1000 to +1000 | Target speed (RPM) |
-| TORQUE_LIMIT | 0x30 | R/W | 0-1000 | Max torque limit |
-| PRESENT_POSITION | 0x38 | R | 0-4095 | Current position |
-| PRESENT_SPEED | 0x3A | R | -1000 to +1000 | Current speed (RPM) |
-| PRESENT_LOAD | 0x3C | R | -1000 to +1000 | Current load/torque |
-| PRESENT_VOLTAGE | 0x3E | R | 0-255 | Voltage (0.1V units) |
-| PRESENT_TEMPERATURE | 0x3F | R | 0-255 | Temperature (°C) |
+| Register            | Address | Type | Range          | Description              |
+| ------------------- | ------- | ---- | -------------- | ------------------------ |
+| ID                  | 0x05    | R/W  | 0-253          | Servo ID                 |
+| BAUD_RATE           | 0x06    | R/W  | 0-7            | Baud rate setting        |
+| TORQUE_ENABLE       | 0x28    | R/W  | 0-1            | Enable/disable torque    |
+| ACCELERATION        | 0x29    | R/W  | 0-255          | Acceleration value       |
+| GOAL_POSITION       | 0x2A    | R/W  | 0-4095         | Target position (12-bit) |
+| RUNNING_TIME        | 0x2C    | R/W  | 0-65535        | Movement duration (ms)   |
+| GOAL_SPEED          | 0x2E    | R/W  | -1000 to +1000 | Target speed (RPM)       |
+| TORQUE_LIMIT        | 0x30    | R/W  | 0-1000         | Max torque limit         |
+| PRESENT_POSITION    | 0x38    | R    | 0-4095         | Current position         |
+| PRESENT_SPEED       | 0x3A    | R    | -1000 to +1000 | Current speed (RPM)      |
+| PRESENT_LOAD        | 0x3C    | R    | -1000 to +1000 | Current load/torque      |
+| PRESENT_VOLTAGE     | 0x3E    | R    | 0-255          | Voltage (0.1V units)     |
+| PRESENT_TEMPERATURE | 0x3F    | R    | 0-255          | Temperature (°C)         |
 
 ### ROS 2 Topics
 
-| Topic | Type | Description |
-|-------|------|-------------|
-| `/joint_states` | sensor_msgs/JointState | Current joint positions, velocities |
-| `/robot_description` | std_msgs/String | URDF robot model |
-| `/arm_controller/follow_joint_trajectory` | control_msgs/FollowJointTrajectory | Trajectory action server |
-| `/move_group/display_planned_path` | moveit_msgs/DisplayTrajectory | Planned path visualization |
-| `/planning_scene` | moveit_msgs/PlanningScene | Collision environment |
+| Topic                                     | Type                               | Description                         |
+| ----------------------------------------- | ---------------------------------- | ----------------------------------- |
+| `/joint_states`                           | sensor_msgs/JointState             | Current joint positions, velocities |
+| `/robot_description`                      | std_msgs/String                    | URDF robot model                    |
+| `/arm_controller/follow_joint_trajectory` | control_msgs/FollowJointTrajectory | Trajectory action server            |
+| `/move_group/display_planned_path`        | moveit_msgs/DisplayTrajectory      | Planned path visualization          |
+| `/planning_scene`                         | moveit_msgs/PlanningScene          | Collision environment               |
 
 ### ROS 2 Parameters
 
 **Controller Manager:**
+
 - `update_rate`: Control loop frequency (Hz)
 
 **Joint Trajectory Controller:**
+
 - `joints`: List of joint names
 - `command_interfaces`: [position]
 - `state_interfaces`: [position, velocity]
@@ -2204,6 +2239,7 @@ ros2 run perseus_lite_arm_examples calibrate_joints
 - `constraints.<joint>.goal`: Goal position tolerance (rad)
 
 **ST3215 Hardware Interface:**
+
 - `serial_port`: Serial device path
 - `baud_rate`: Communication baud rate
 - `control_mode`: "position" or "velocity"
@@ -2236,24 +2272,26 @@ ros2 run plotjuggler plotjuggler
 
 ### Conversion Factors
 
-| From | To | Factor |
-|------|-----|--------|
-| Servo position (raw) | Radians | `(raw / 4095) * 2π - π` |
-| Radians | Servo position (raw) | `((rad + π) / (2π)) * 4095` |
-| RPM | Rad/s | `RPM * (2π / 60) = RPM * 0.1047` |
-| Rad/s | RPM | `rad_s * (60 / 2π) = rad_s * 9.549` |
+| From                 | To                   | Factor                              |
+| -------------------- | -------------------- | ----------------------------------- |
+| Servo position (raw) | Radians              | `(raw / 4095) * 2π - π`             |
+| Radians              | Servo position (raw) | `((rad + π) / (2π)) * 4095`         |
+| RPM                  | Rad/s                | `RPM * (2π / 60) = RPM * 0.1047`    |
+| Rad/s                | RPM                  | `rad_s * (60 / 2π) = rad_s * 9.549` |
 
 ---
 
 ## Success Criteria
 
 ### Phase 2: Hardware Interface
+
 - [ ] ST3215SystemHardware exports position command interface
 - [ ] Calibration data loads from YAML or parameters
 - [ ] Position mapping (radians ↔ servo raw) works correctly
 - [ ] Builds without errors
 
 ### Phase 3: Robot Description
+
 - [ ] SO-100 URDF loads in RViz
 - [ ] All 6 joints visible and movable
 - [ ] Meshes display correctly
@@ -2261,6 +2299,7 @@ ros2 run plotjuggler plotjuggler
 - [ ] Joint limits defined
 
 ### Phase 4: MoveIt Configuration
+
 - [ ] MoveIt Setup Assistant generates package
 - [ ] Planning group "arm" contains 6 joints
 - [ ] IK solver configured
@@ -2268,6 +2307,7 @@ ros2 run plotjuggler plotjuggler
 - [ ] Can plan and execute in simulation
 
 ### Phase 5: Controllers
+
 - [ ] JointStateBroadcaster publishes to /joint_states
 - [ ] JointTrajectoryController accepts trajectories
 - [ ] Controllers spawn without errors
@@ -2275,12 +2315,14 @@ ros2 run plotjuggler plotjuggler
 - [ ] MoveIt launch file integrates all components
 
 ### Phase 6: Examples
+
 - [ ] test_hardware.py receives joint states
 - [ ] home_arm.py moves to home position
 - [ ] plan_to_pose.py plans and executes
 - [ ] All examples run in simulation
 
 ### Phase 7: Physical Integration
+
 - [ ] Serial communication working (no timeouts)
 - [ ] Joint states update at 50Hz
 - [ ] Physical arm executes trajectories
@@ -2298,6 +2340,7 @@ ros2 run plotjuggler plotjuggler
 ### Serial Communication Issues
 
 **Problem:** `Cannot open serial port /dev/ttyUSB0`
+
 ```bash
 # Check permissions
 ls -l /dev/ttyUSB0
@@ -2311,6 +2354,7 @@ sudo chmod 666 /dev/ttyUSB0
 ```
 
 **Problem:** `Timeout reading servo`
+
 ```bash
 # Check baud rate matches servo configuration
 # Default should be 115200
@@ -2325,6 +2369,7 @@ serial_port:=/dev/ttyUSB0 baud_rate:=9600
 ### Controller Issues
 
 **Problem:** `Controller failed to activate`
+
 ```bash
 # Check if hardware interface loaded
 ros2 control list_hardware_interfaces
@@ -2338,6 +2383,7 @@ ros2 lifecycle set /controller_manager activate
 ```
 
 **Problem:** `Trajectory execution fails`
+
 ```bash
 # Check joint limits
 ros2 param get /arm_controller joints
@@ -2352,6 +2398,7 @@ ros2 topic echo /arm_controller/controller_state
 ### MoveIt Issues
 
 **Problem:** `IK solver fails`
+
 ```bash
 # Try different solver
 # Edit config/kinematics.yaml, change to TRAC-IK
@@ -2364,6 +2411,7 @@ kinematics_solver_timeout: 0.1  # from 0.05
 ```
 
 **Problem:** `Planning takes too long`
+
 ```bash
 # Use faster planner
 # Edit config/ompl_planning.yaml
@@ -2376,6 +2424,7 @@ planner_configs:
 ```
 
 **Problem:** `Collisions detected when there are none`
+
 ```bash
 # Regenerate collision matrix in Setup Assistant
 # Or manually disable collision pair in SRDF
@@ -2387,6 +2436,7 @@ planner_configs:
 ### Hardware Interface Issues
 
 **Problem:** `Joint positions don't match commanded values`
+
 ```bash
 # Check calibration values
 ros2 param get /controller_manager/so100_arm_hardware min_position_rad
@@ -2405,26 +2455,31 @@ ros2 topic echo /joint_states
 Once basic integration is complete, consider:
 
 1. **Gripper Integration**
+
    - Add gripper URDF
    - Create gripper controller
    - Add to MoveIt as end effector
 
 2. **Force/Torque Control**
+
    - Use PRESENT_LOAD register for force sensing
    - Implement compliant control modes
    - Add force limits
 
 3. **Vision Integration**
+
    - Add camera to URDF
    - Configure MoveIt scene perception
    - Implement visual servoing
 
 4. **Advanced Planning**
+
    - Custom constraints (orientation, path)
    - Multi-goal planning
    - Optimal path selection
 
 5. **Teleoperation**
+
    - Joystick control
    - Leader-follower (already in arm-teleop-direct)
    - VR control
