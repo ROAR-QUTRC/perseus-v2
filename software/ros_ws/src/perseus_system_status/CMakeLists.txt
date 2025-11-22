@@ -67,8 +67,7 @@ target_include_directories(system_status
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add dependencies for the executables
-ament_target_dependencies(system_status PUBLIC
-                          ${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_target_dependencies(system_status PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Install ROS Executable
 install(TARGETS system_status DESTINATION lib/${PROJECT_NAME})
