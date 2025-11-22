@@ -13,4 +13,5 @@ final: prev: {
   perseus-payloads = final.callPackage ./perseus-payloads.nix { };
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };
   perseus-simulation = final.callPackage ./perseus-simulation.nix { };
+  perseus-system-status = final.callPackage ./perseus-system-status.nix { };
 }
