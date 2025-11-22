@@ -19,4 +19,5 @@ final: prev: {
   perseus-simulation = final.callPackage ./perseus-simulation.nix { };
   perseus-vision = final.callPackage ./perseus-vision.nix { };
   teleop-diagnostics = final.callPackage ./teleop-diagnostics.nix { };
+  perseus-system-status = final.callPackage ./perseus-system-status.nix { };
 }
