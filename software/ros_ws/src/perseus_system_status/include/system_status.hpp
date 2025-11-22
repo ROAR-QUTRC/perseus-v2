@@ -1,10 +1,9 @@
 #pragma once
 
-#include <string>
 #include <chrono>
-
-#include <rclcpp/rclcpp.hpp>
 #include <hi_can_twai.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <string>
 
 using namespace hi_can;
 using namespace addressing::legacy;
@@ -28,9 +27,9 @@ public:
     explicit SystemStatus(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
 private:
-    void _publishSystemStatusCallBack (const system_status_msgs::msg::SystemStatus::SharedPtr msg)
+    void _publishSystemStatusCallBack(const system_status_msgs::msg::SystemStatus::SharedPtr msg)
 
-    constexpr std::chrono::duration callBackPeriod_ms = 100ms;
+        constexpr std::chrono::duration callBackPeriod_ms = 100ms;
 
     rclcpp::Publisher<system_status_msgs::msg::SystemStatus>::SharedPtr _systemStatusPublisher;
     rclcpp::TimerBase::SharedPtr _callBackTimer;

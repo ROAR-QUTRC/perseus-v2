@@ -1,8 +1,7 @@
 #include "system_status.hpp"
 
-
 SystemStatus::SystemStatus(const rclcpp::NodeOptions& options = rclcpp::NodeOptions())
-    : Node ("system_status", options)
+    : Node("system_status", options)
 {
     // initialise the CAN interface
     auto& interface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
@@ -19,10 +18,8 @@ SystemStatus::SystemStatus(const rclcpp::NodeOptions& options = rclcpp::NodeOpti
     _callBackTimer = this->create_wall_timer(
         std::chrono::milliseconds(callBackPeriod_ms),
         std::bind(&SystemStatus::_publishSystemStatusCallBack, this));
-
-    
 }
 
-void SystemStatus::_publishSystemStatusCallBack (const system_status_msgs::msg::SystemStatus::SharedPtr msg){
-    
+void SystemStatus::_publishSystemStatusCallBack(const system_status_msgs::msg::SystemStatus::SharedPtr msg)
+{
 }
