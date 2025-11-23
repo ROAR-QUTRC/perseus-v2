@@ -17,7 +17,7 @@
   <depend>nlohmann-json-dev</depend>
   <exec_depend>realsense2-camera</exec_depend>
   <exec_depend>realsense2-description</exec_depend>
-  
+  <depend>librealsense2</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

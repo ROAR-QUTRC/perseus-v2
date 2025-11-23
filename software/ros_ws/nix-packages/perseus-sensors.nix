@@ -11,6 +11,8 @@
   realsense2-description,
   sensor-msgs,
   simple-networking,
+  librealsense,
+
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-sensors";
@@ -29,6 +31,7 @@ buildRosPackage rec {
     realsense2-description
     sensor-msgs
     simple-networking
+    librealsense
   ];
   nativeBuildInputs = [ ament-cmake ];
 
