@@ -14,7 +14,6 @@ def generate_launch_description():
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time", default=False)
     hardware_plugin = LaunchConfiguration("hardware_plugin")
-    # can_bus = LaunchConfiguration("can_bus", default="")
     serial_port = LaunchConfiguration("serial_port", default="")
     baud_rate = LaunchConfiguration("baud_rate", default="")
 
@@ -31,8 +30,6 @@ def generate_launch_description():
             use_sim_time,
             " hardware_plugin:=",
             hardware_plugin,
-            # " can_bus:=",
-            # can_bus,
             " serial_port:=",
             serial_port,
             " baud_rate:=",
