@@ -144,13 +144,5 @@
       <child>Wall_S</child>
     </joint>
 
-    <!-- Remove this joint to break the closed loop -->
-    <!-- 
-    <joint name="joint_wall_s_e" type="fixed">
-      <parent>Wall_S</parent>
-      <child>Wall_E</child>
-      <pose>15 -15 0 0 0 0</pose>
-    </joint>
-    -->
   </model>
 </sdf>

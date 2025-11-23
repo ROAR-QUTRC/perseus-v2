@@ -68,7 +68,7 @@
         <material>
           <pbr>
             <metal>
-              <albedo_map>textures/aruco01.png</albedo_map>
+              <albedo_map>textures/aruco02.png</albedo_map>
             </metal>
           </pbr>
         <ambient>1 1 1 1</ambient>
