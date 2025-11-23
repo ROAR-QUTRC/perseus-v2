@@ -1,11 +1,11 @@
+#include "generic_controller/generic_controller.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <limits>
 #include <map>
 #include <stdexcept>
-
-#include "generic_controller/generic_controller.hpp"
 
 GenericController::GenericController(const rclcpp::NodeOptions& options)
     : Node("generic_controller", options)
