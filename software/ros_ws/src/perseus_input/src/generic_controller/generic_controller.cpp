@@ -1,11 +1,11 @@
-#include "generic_controller/generic_controller.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <limits>
 #include <map>
 #include <stdexcept>
+
+#include "generic_controller/generic_controller.hpp"
 
 GenericController::GenericController(const rclcpp::NodeOptions& options)
     : Node("generic_controller", options)
@@ -28,7 +28,7 @@ GenericController::GenericController(const rclcpp::NodeOptions& options)
 
 void GenericController::_joyTimeoutCallback(void)
 {
-    if ((_prevReceivedJoyTime.nanoseconds() - this->now().nanoseconds()) > 150000000)
+    if ((this->now().nanoseconds() - _prevReceivedJoyTime.nanoseconds()) > TIMEOUT_LENGTH)
     {
         geometry_msgs::msg::TwistStamped twistMsg;
         twistMsg.twist.linear.x = 0;
@@ -50,7 +50,9 @@ void GenericController::_joyTimeoutCallback(void)
         actuatorMsg.header.stamp = this->now();
         // Publish actuator message
         _actuatorPublisher->publish(actuatorMsg);
-        _prevReceivedJoyTime = this->now();
+
+        // Warn user if controller is disconnected
+        RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Joy timeout, publishing zero to twist and actuators to stop movement safely");
     }
 }
 

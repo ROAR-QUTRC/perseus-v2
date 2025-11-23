@@ -7,8 +7,6 @@
 #include <sensor_msgs/msg/joy.hpp>
 #include <string>
 
-#include "builtin_interfaces/msg/detail/time__struct.hpp"
-
 class GenericController : public rclcpp::Node
 {
 public:
@@ -84,6 +82,7 @@ private:
     static constexpr std::string MAGNET_BASE_NAME = "bucket.magnet";
 
     static constexpr auto JOY_TIMEOUT = std::chrono::milliseconds(100);
+    static constexpr rcl_time_point_value_t TIMEOUT_LENGTH = 150000000;
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _joySubscription;
     rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr _twistPublisher;
