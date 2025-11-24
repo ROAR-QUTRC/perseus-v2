@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+# If you're changing this file, make sure to read the systems/software/scripts docs
+
 set -euo pipefail
 
 # exit if run as root
