@@ -140,9 +140,13 @@ The launch file accepts three parameters:
 
 | Argument   | Default   | Description                                                                                |
 | ---------- | --------- | ------------------------------------------------------------------------------------------ |
-| `type`     | `xbox`    | Controller type. Options: `xbox`, `8bitdo`.                                                |
+| `type`     | `xbox`    | Controller type. Options: `xbox`, `8bitdo`, `logitech`.                                    |
 | `wireless` | `true`    | Connection type. Set `true` for wireless, `false` for wired.                               |
 | `config`   | _(empty)_ | Path to a custom YAML config file. If provided, this overrides both `type` and `wireless`. |
+
+::: {note}
+The logitech controller config file has been configured for a logitech wired F310, and the 8bitdo controller config file has been configured for an 8BitDo Ultimate 2C controller. These same configuration files might not work for other models.
+:::
 
 Some example runs:
 
@@ -162,6 +166,12 @@ nix run .#generic_controller -- type:=xbox wireless:=false
 
 ```console
 nix run .#generic_controller -- type:=8bitdo wireless:=true
+```
+
+Logitech controller, wired
+
+```console
+nix run .#generic_controller -- type:=logitech wireless:=false
 ```
 
 Use a custom config file
