@@ -25,5 +25,6 @@ Finally, if you're wondering about a specific payload, those get their own [sect
 :glob:
 systems/hardware-index
 systems/software-index
+systems/nix-index
 systems/*
 ```

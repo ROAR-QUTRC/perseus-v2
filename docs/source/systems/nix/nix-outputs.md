@@ -61,11 +61,23 @@ Also available at `pkgs.scripts` (due to being applied as an overlay).
 
 ## Executables
 
-Intended for use with `nix run`.
+Intended for use with `nix run`. Most of these can be found under the `apps` section of the `flake.nix`.
 
 ### `default`
 
-Currently just for testing. Will eventually run the main bringup launch file.
+The default executable is the perseus launch file, so this is equivalent to `nix run .#perseus`. It can also be run using `nix run`, which runs the default executable.
+
+### `perseus`
+
+Default nix executable. Runs the perseus ros2 launch file found at `software/ros_ws/src/perseus/launch/perseus.launch.py`
+
+### `perseus-lite`
+
+Launches the perseus-lite ros2 nodes - runs the launch file found at `software/ros_ws/src/perseus_lite/launch/perseus_lite.launch.py`
+
+### `generic_controller`
+
+Runs the generic_controller launch file found at `software/ros_ws/src/perseus_input/launch/controller.launch.py`. For more info on this executable, see <project:/home/perseus-operation/teleop.md>.
 
 ### `ros2`
 
@@ -95,6 +107,10 @@ Current sub-attributes available:
 This requires a Cachix auth token to succeed.
 Contact James N if you need one.
 :::
+
+### `nixpkgs`
+
+You can access all [`nixpkgs`](https://github.com/NixOS/nixpkgs/tree/master/pkgs) through this. You might not have the newest version of `nixpkgs` depending on our `flake.lock` file, but this means you don't need to install a program that you only need to use once or twice.
 
 ## Development shells
 
