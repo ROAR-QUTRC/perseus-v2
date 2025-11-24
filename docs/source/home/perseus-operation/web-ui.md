@@ -18,6 +18,7 @@ To begin this guide the following conditions must be met:
 - A network connection to connect to Perseus remotely.
 
 ## Running the Web-UI
+
 :::{info}
 All of the command for running the web-ui should be run from inside the web-ui folder: `perseus-v2/software/web-ui`
 :::
@@ -39,7 +40,7 @@ yarn camera
 ```
 
 :::{tip}
-If this is the firts time the camera server has been run on this device the dependency `tsx` will need to be installed. This required an internet connection and can be done with command: `yarn camera-online`. Using the `-online` variant does require internet access.
+If this is the first time the camera server has been run on this device the dependency `tsx` will need to be installed. This required an internet connection and can be done with command: `yarn camera-online`. Using the `-online` variant does require internet access.
 :::
 
 ## Connecting to ROS2

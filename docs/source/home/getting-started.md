@@ -153,7 +153,6 @@ For the curious among you, the `nix-setup.sh` script, in order:
 - Sets up git submodules (should never be necessary, but better to have it and not need it)
 - [Installs Nix](https://github.com/DeterminateSystems/nix-installer)
 - Configures Nix to allow your user to configure _it_ (adds you to `trusted-users`)
-  % TODO: This needs to be changed - the repo Cachix paths should be added to `trusted-substituters` instead, since `trusted-users` apparently has _many_ security issues.
 - Adds `direnv` setup to your `.zshrc` and `.bashrc` files
 - Allows `direnv` to configure based on the `.envrc` file present in this directory
 - Configures `direnv` to silence absurdly long info messages on activation [^direnv-versioning]
