@@ -23,5 +23,6 @@ If you're just looking for a high-level overview, this diagram contains the basi
 :glob:
 systems/hardware-index
 systems/software-index
+systems/nix-index
 systems/*
 ```
