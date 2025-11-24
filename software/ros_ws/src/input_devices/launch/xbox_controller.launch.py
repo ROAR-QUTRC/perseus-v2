@@ -37,6 +37,13 @@ def generate_launch_description():
         name="joy_node",
         output="both",
         emulate_tty=True,
+        parameters=[
+            {
+                "device": "/dev/input/js0",
+                "deadzone": 0.05,
+                "autorepeat_rate": 20.0,
+            }
+        ],
     )
     controller_node = Node(
         package="input_devices",
@@ -49,7 +56,7 @@ def generate_launch_description():
                 "use_stamped_msg": True,
                 "translation_scale": drive_speed,
                 "rotation_scale": turn_speed,
-                "high_high_speed_multiplier": high_speed_multiplier,
+                "high_speed_multiplier": high_speed_multiplier,
             }
         ],
         remappings=[("/input_devices/cmd_vel", "/joy_vel")],
