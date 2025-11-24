@@ -82,4 +82,19 @@ echo "Enabling systemd-networkd..."
 sudo systemctl enable systemd-networkd
 echo "Restarting systemd-networkd..."
 sudo systemctl restart systemd-networkd
+
+TXQUEUELEN_RULE='SUBSYSTEM=="net", ACTION=="add|change", KERNEL=="can*", ATTR{tx_queue_len}="128"'
+TXQUEUELEN_FILENAME="/etc/udev/rules.d/80-can-txqueuelen.rules"
+if grep -Fq "$TXQUEUELEN_RULE" "$TXQUEUELEN_FILENAME" &>/dev/null; then
+  echo "TX queue length rule was already set"
+else
+  sudo touch "$TXQUEUELEN_FILENAME"
+  echo "$TXQUEUELEN_RULE" | sudo tee -a "$TXQUEUELEN_FILENAME" &>/dev/null
+  echo "TX queue length rule set up"
+fi
+
+echo "Reloading udev rules..."
+sudo udevadm control --reload-rules
+echo "Triggering setup for already connected devices..."
+sudo udevadm trigger
 echo "Done!"
