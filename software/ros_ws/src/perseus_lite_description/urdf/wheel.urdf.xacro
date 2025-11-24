@@ -30,7 +30,7 @@
         <axis xyz="0 0 -1"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
-        <axis xyz="0 0 -1"/>
+        <axis xyz="0 0 1"/>
       </xacro:if>
       <parent link="${prefix}${end}_${side}_motor"/>
       <child link="${prefix}${end}_${side}_wheel"/>
