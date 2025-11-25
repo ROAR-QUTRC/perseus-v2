@@ -1,0 +1,66 @@
+i2c_imu_node:
+  ros__parameters:
+    # I2C Configuration
+    i2c_bus: "/dev/i2c-7"
+    device_type: "lsm6dsox" # Supported devices: lsm6dsox, mpu6050, mpu9250, lsm6ds3
+    device_address: 0x6A # Will use device default if not specified
+    update_rate: 100.0
+    frame_id: "imu_link"
+    required: false # Optional hardware
+    retry_count: 3
+    # Calibration parameters
+    # Accelerometer calibration
+    accel_scale_x: 1.0
+    accel_scale_y: 1.0
+    accel_scale_z: 1.0
+    accel_offset_x: 0.0
+    accel_offset_y: 0.0
+    accel_offset_z: 0.0
+    # Gyroscope calibration
+    gyro_scale_x: 1.0
+    gyro_scale_y: 1.0
+    gyro_scale_z: 1.0
+    gyro_offset_x: 0.0
+    gyro_offset_y: 0.0
+    gyro_offset_z: 0.0
+    # Covariance matrices
+    # Angular velocity covariance (adjust based on sensor specs)
+    angular_velocity_covariance: [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01]
+    # Linear acceleration covariance (adjust based on sensor specs)
+    linear_acceleration_covariance: [0.1, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.1]
+# Example configurations for different IMU devices
+# To use a different IMU, simply change the device_type parameter above.
+# The device_address will automatically use the default for the selected device type.
+
+# Examples:
+# For MPU6050:
+# i2c_imu_node:
+#   ros__parameters:
+#     device_type: "mpu6050"
+#     device_address: 0x68  # Default MPU6050 address
+#     i2c_bus: "/dev/i2c-1"
+#     update_rate: 100.0
+
+# For MPU9250:
+# i2c_imu_node:
+#   ros__parameters:
+#     device_type: "mpu9250"
+#     device_address: 0x68  # Default MPU9250 address
+#     i2c_bus: "/dev/i2c-1"
+#     update_rate: 100.0
+
+# For LSM6DS3:
+# i2c_imu_node:
+#   ros__parameters:
+#     device_type: "lsm6ds3"
+#     device_address: 0x6A  # Default LSM6DS3 address
+#     i2c_bus: "/dev/i2c-1"
+#     update_rate: 100.0
+
+# For LSM6DSOX (current default):
+# i2c_imu_node:
+#   ros__parameters:
+#     device_type: "lsm6dsox"
+#     device_address: 0x6A  # Default LSM6DSOX address
+#     i2c_bus: "/dev/i2c-7"
+#     update_rate: 100.0

@@ -318,7 +318,6 @@ qtcreator-*
 CATKIN_IGNORE
 
 .vscode/*
-.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/*.code-snippets
