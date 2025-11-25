@@ -72,7 +72,6 @@ diff_drive_base_controller:
     cmd_vel_timeout: 0.5
     #publish_limited_velocity: true
     use_stamped_vel: true
-
     # Kinematic limits
     linear.x.max_velocity: 2.0
     linear.x.max_acceleration: 10.0
