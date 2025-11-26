@@ -5,7 +5,7 @@
 	export const name = 'Bus Power Manager';
 	export const description = 'Enable and disable different buses on the rover control board';
 	export const group = 'CAN Bus';
-	export const isRosDependent = true;
+	// export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
@@ -19,8 +19,7 @@
 	import { faPowerOff } from '@fortawesome/free-solid-svg-icons';
 	import { onMount } from 'svelte';
 	import { sentenceCase } from 'change-case';
-	import * as Dialog from '$lib/components/ui/dialog/index';
-	import { Button } from '$lib/components/ui/button';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 
 	const busStatus = [
 		'OFF',
@@ -32,10 +31,13 @@
 		'FAULT'
 	];
 
-	let listener: ROSLIB.Topic;
-	let busState = $state<Record<string, { status: number; current: string; voltage: string }>>({});
-
-	$inspect(busState);
+	let listener: ROSLIB.Topic | null = null;
+	let busState = $state<Record<string, { status: number; current: number; voltage: number }>>({
+		aux: { status: 0, current: 0, voltage: 0 },
+		aux2: { status: 0, current: 0, voltage: 0 },
+		aux3: { status: 0, current: 0, voltage: 0 },
+		aux4: { status: 0, current: 0, voltage: 0 }
+	});
 
 	const toggleBusPower = (e: Event, bus: string) => {
 		e.preventDefault();
@@ -62,64 +64,60 @@
 			});
 
 			listener.subscribe((message: any) => {
-				const { name, status, ...busData } = JSON.parse(message.data);
-				busState[name] = { status: Number(status), ...busData };
+				const { name, status, current, voltage } = JSON.parse(message.data);
+				busState[name] = {
+					status: Number(status),
+					current: Number(current),
+					voltage: Number(voltage)
+				};
 			});
 		}
 	});
 
 	onMount(() => {
 		return () => {
-			listener.unsubscribe();
+			listener?.unsubscribe();
 		};
 	});
-
-	// Confirm menu
-	let openConfirm: Record<string, boolean> = {};
-	// $effect(() => {
-	// 	for (const bus of Object.keys(busState)) {
-	// 		if (!(bus in openConfirm)) {
-	// 			openConfirm[bus] = false;
-	// 		}
-	// 	}
-	// });
 </script>
 
-<div class="flex w-full">
-	{#each Object.keys(busState) as bus, i}
-		<div
-			class="mx-[5px] mb-auto flex w-[calc(25%-10px)] min-w-[60px] max-w-[130px] flex-col justify-center rounded-lg border p-2"
-		>
-			<p class="mb-2 text-center">{sentenceCase(bus)}</p>
+<div class="flex w-full flex-wrap">
+	{#each Object.keys(busState) as bus}
+		<div class="m-2 flex min-w-[145px] flex-col justify-center rounded-lg border p-2">
+			<p class="mb-2 text-center">{sentenceCase(bus)}: {busStatus[busState[bus].status]}</p>
 
-			<Dialog.Root bind:open={openConfirm[bus]}>
-				<Dialog.Trigger>
-					<button
-						class="aspect-square cursor-pointer rounded-[50%] border"
-						onclick={() => (openConfirm[bus] = true)}
-					>
+			<AlertDialog.Root>
+				<AlertDialog.Trigger>
+					<button class="aspect-square cursor-pointer rounded-[50%] border">
 						<Fa
 							icon={faPowerOff}
-							class="power-button w-full"
-							color={busState[bus].status == 1 ? '#0f0' : '#f00'}
+							class="power-button h-[50px] w-[50px]"
+							color={busState[bus].status !== 1 ? 'red' : 'green'}
+							scale={3}
 						/>
 					</button>
-				</Dialog.Trigger>
-				<Dialog.Content>
-					<Button>Cancel</Button>
-					<Button>Confirm</Button>
-				</Dialog.Content>
-			</Dialog.Root>
-
-			<p>{busStatus[busState[bus].status]}</p>
-			<p class="mt-2">Current: {busState[bus].current}</p>
-			<p>Voltage: {busState[bus].voltage}</p>
+				</AlertDialog.Trigger>
+				<AlertDialog.Content>
+					<AlertDialog.Header>
+						<AlertDialog.Title
+							>Power {busState[bus].status !== 1 ? 'On' : 'Off'}
+							{sentenceCase(bus)}?</AlertDialog.Title
+						>
+					</AlertDialog.Header>
+					<AlertDialog.Footer>
+						<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+						<AlertDialog.Action onclick={(e) => toggleBusPower(e, bus)}>Confirm</AlertDialog.Action>
+					</AlertDialog.Footer>
+				</AlertDialog.Content>
+			</AlertDialog.Root>
+			<p class="mt-2 text-center">Current: {(Number(busState[bus].current) / 1000).toFixed(3)}A</p>
+			<p class="text-center">Voltage: {(Number(busState[bus].voltage) / 1000).toFixed(3)}V</p>
 		</div>
 	{:else}
-		<p>Looking for buses... Make sure the rosbridge is connected.</p>
+		<p>Waiting for power bus data</p>
 	{/each}
 </div>
-<p>Note: <kbd>FAULT</kbd> on the drive bus likely indicates the drive stop is engaged.</p>
+<p class="ml-2 opacity-35">FAULT on the drive bus likely indicates the drive stop is engaged.</p>
 
 <style>
 	:global(.power-button) {
