@@ -416,10 +416,19 @@ namespace perseus_lite_hardware
                              "Servo %d - Input command speed (rad/s): %f",
                              _servo_ids[i], _command_speeds[i]);
 
-                // Use command speed directly - URDF axis definitions now correctly handle direction
-                // Left and right wheels have opposite axis definitions in the URDF,
-                // so the diff drive controller calculates the correct wheel velocities
+                // Start with command speed
                 double corrected_speed = _command_speeds[i];
+
+                // Invert direction for motors 2 and 3 (left side motors)
+                // Motor 2 is rear_left_wheel, Motor 3 is front_left_wheel
+                // This is needed because the URDF defines all wheels with the same axis direction
+                // but physically the left motors need to rotate opposite to the right motors
+                if (_servo_ids[i] == 2 || _servo_ids[i] == 3)
+                {
+                    corrected_speed = -corrected_speed;
+                    RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
+                                 "Servo %d - Inverted direction for left side motor", _servo_ids[i]);
+                }
 
                 // Convert velocity command to servo units
                 // ST3215 expects -1000 to 1000 for velocity
