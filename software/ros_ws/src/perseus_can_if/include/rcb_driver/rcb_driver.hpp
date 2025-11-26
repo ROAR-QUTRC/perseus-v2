@@ -15,8 +15,9 @@ public:
     void cleanup();
 
 private:
-    void _canToRos();
-    void _rosToCan(std_msgs::msg::String::UniquePtr msg);
+    void _can_to_ros(const hi_can::Packet& packet);
+    void _ros_to_can(std_msgs::msg::String::UniquePtr msg);
+    void _call_receive();
 
     constexpr static auto PACKET_TIMEOUT = std::chrono::milliseconds(100);
     const std::vector<std::pair<std::string, hi_can::addressing::legacy::power::control::rcb::groups>> BUS_GROUPS = {
@@ -26,11 +27,11 @@ private:
         {"spare", hi_can::addressing::legacy::power::control::rcb::groups::SPARE_BUS},
     };
 
-    std::optional<hi_can::RawCanInterface> _canInterface;
-    std::optional<hi_can::PacketManager> _packetManager;
-    std::vector<std::pair<std::string, hi_can::parameters::legacy::power::control::power_bus::PowerBusParameterGroup>> _parameterGroups;
+    std::optional<hi_can::RawCanInterface> _can_interface;
+    std::optional<hi_can::PacketManager> _packet_manager;
+    std::vector<std::pair<std::string, hi_can::parameters::legacy::power::control::power_bus::PowerBusParameterGroup>> _parameter_groups;
 
-    rclcpp::TimerBase::SharedPtr _packetTimeoutTimer;
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _packetPublisher;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _packetSubscriber;
+    rclcpp::TimerBase::SharedPtr _packet_timeout_timer;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _packet_publisher;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _packet_subscriber;
 };
