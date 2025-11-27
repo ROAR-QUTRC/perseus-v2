@@ -11,7 +11,7 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0 0.0 -${pi/2}"/>
       <geometry>
-        <mesh scale="${0.1} ${0.1}  ${0.1}" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
+        <mesh scale="0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
       </geometry>
     </visual>
     

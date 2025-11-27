@@ -21,7 +21,7 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
       <geometry>
-        <mesh scale="${0.1} ${0.1} ${0.1}" 
+        <mesh scale="0.1 0.1 0.1" 
               filename="file://$(find perseus_description)/meshes/rocker_left.dae"/>
       </geometry>
     </visual>
@@ -48,7 +48,7 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
       <geometry>
-        <mesh scale="${0.1} ${0.1} ${0.1}" 
+        <mesh scale="0.1 0.1 0.1" 
               filename="file://$(find perseus_description)/meshes/rocker_right.dae"/>
       </geometry>
     </visual>

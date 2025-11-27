@@ -17,6 +17,11 @@
             </geometry>
             <material name="red"/>
         </visual>
+        <collision>
+            <geometry>
+                <box size="${camera_depth} ${camera_width} ${camera_height}"/> 
+            </geometry>
+        </collision>
     </link>
 
     <joint name="${prefix}camera_optical_joint" type="fixed">

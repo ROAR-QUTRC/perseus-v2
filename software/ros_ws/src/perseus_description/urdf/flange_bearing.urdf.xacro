@@ -20,7 +20,7 @@
     <visual>
     <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
     <geometry>
-        <mesh scale="${0.1} ${0.1}  ${0.1}" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
+        <mesh scale="0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
     </geometry>
     </visual>
     
@@ -43,7 +43,7 @@
     <visual>
     <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${-pi/2}"/>
     <geometry>
-        <mesh scale=  "${0.1} ${0.1}  ${0.1}" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
+        <mesh scale=  "0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
     </geometry>
     </visual>
     <collision>

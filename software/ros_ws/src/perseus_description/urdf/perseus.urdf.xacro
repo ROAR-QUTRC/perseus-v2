@@ -94,37 +94,7 @@
     </joint>
 
 
-    <joint name="${prefix}front_left_wheel_joint" type="continuous">
-      <axis xyz="0 1 0" rpy="0 0 0"/>
-      <parent link="${prefix}front_left_motor"/>
-      <child link="${prefix}front_left_wheel"/>
-      <origin xyz="0 ${wheels_y_offset} 0.0" rpy="0.0 0.0 0"/>
-      <dynamics damping="0.2" friction="0.3"/>
-    </joint>
 
-    <joint name="${prefix}rear_left_wheel_joint" type="continuous">
-      <axis xyz="0 1 0" rpy="0 0 0"/>
-      <parent link="${prefix}rear_left_motor"/>
-      <child link="${prefix}rear_left_wheel"/>
-      <origin xyz="0 ${wheels_y_offset} 0.0" rpy="0.0 0.0 0"/>
-      <dynamics damping="0.2" friction="0.3"/>
-    </joint>
-
-    <joint name="${prefix}front_right_wheel_joint" type="continuous">
-      <axis xyz="0 1 0" rpy="0 0 0"/>
-      <parent link="${prefix}front_right_motor"/>
-      <child link="${prefix}front_right_wheel"/>
-      <origin xyz="0 -${wheels_y_offset} 0.0" rpy="0.0 0.0 0"/>
-      <dynamics damping="0.2" friction="0.3"/>
-    </joint>
-
-    <joint name="${prefix}rear_right_wheel_joint" type="continuous">
-      <axis xyz="0 1 0" rpy="0 0 0"/>
-      <parent link="${prefix}rear_right_motor"/>
-      <child link="${prefix}rear_right_wheel"/>
-      <origin xyz="0 -${wheels_y_offset} 0.0" rpy="0.0 0.0 0"/>
-      <dynamics damping="0.2" friction="0.3"/>
-    </joint>
 
     <joint name="${prefix}laser_joint" type="fixed">
       <parent link="${prefix}chassis"/>
