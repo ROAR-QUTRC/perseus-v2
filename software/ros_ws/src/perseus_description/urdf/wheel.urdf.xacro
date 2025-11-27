@@ -81,10 +81,4 @@
   </gazebo>
 </xacro:macro>
 
-<!-- <xacro:wheel prefix="" side="left"  end="front"/>
-<xacro:wheel prefix="" side="left"  end="rear"/>
-<xacro:wheel prefix="" side="right" end="front"/>
-<xacro:wheel prefix="" side="right" end="rear"/> -->
-
-
 </robot>

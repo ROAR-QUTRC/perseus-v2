@@ -1,9 +1,5 @@
 <?xml version="1.0"?>
 <robot name="camera_depth" xmlns:xacro="http://ros.org/wiki/xacro">
-    <xacro:property name="camera_mass" value="0.1"/>
-    <xacro:property name="camera_width" value="0.07"/>
-    <xacro:property name="camera_height" value="0.03"/>
-    <xacro:property name="camera_depth" value="0.020"/>
     <link name="${prefix}camera_link">
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>

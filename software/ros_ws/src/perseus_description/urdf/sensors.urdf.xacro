@@ -1,12 +1,5 @@
 <?xml version="1.0"?>
 <robot name="lidar" xmlns:xacro="http://ros.org/wiki/xacro">
-<xacro:property name="laser_2d_mass" value="0.1"/>
-<xacro:property name="laser_2d_radius" value="0.04"/>
-<xacro:property name="laser_2d_length" value="0.04"/>
-<xacro:property name="laser_3d_mass" value="0.2"/>
-<xacro:property name="laser_3d_radius" value="0.06"/>
-<xacro:property name="laser_3d_length" value="0.06"/>
-
 
 <!-- 3D LIDAR (Existing - Livox MID-360) -->
 <link name="${prefix}laser_frame">

@@ -1,14 +1,5 @@
 <?xml version="1.0"?>
 <robot name="flange_bearing" xmlns:xacro="http://ros.org/wiki/xacro">
-<xacro:property name="bar_length" value="0.58"/>
-<xacro:property name="bar_width" value="0.03"/>
-<xacro:property name="bar_height" value="0.03"/>
-<xacro:property name="bar_mass" value="0.917264951812715"/>
-
-<xacro:property name="bearing_length" value="0.2"/>
-<xacro:property name="bearing_width" value="0.03"/>
-<xacro:property name="bearing_height" value="0.03"/>
-<xacro:property name="bearing_mass" value="2.7689940302592726"/>  <!-- Kg -->
 <!-- Flange Bearing -->
 <link name="${prefix}flange_bearing">
     <inertial>

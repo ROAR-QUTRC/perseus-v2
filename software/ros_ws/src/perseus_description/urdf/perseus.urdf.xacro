@@ -1,10 +1,15 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="perseus" params="prefix">
-
+    <!-- Motors Properties -->
+    <xacro:property name="motors_y_offset" value="0.035"/>  
+    <xacro:property name="motors_z_offset" value="-0.25"/>  
     <xacro:property name="front_motors_x_offset" value="0.3"/>  
     <xacro:property name="rear_motors_x_offset" value="-0.55"/>  
-
+    <xacro:property name="motor_mass" value="5.236579"/>  <!-- Kg -->
+    <xacro:property name="collision_motor_length" value="0.1"/>  <!-- m -->
+    <xacro:property name="collision_motor_width" value="0.1"/>  <!-- m -->
+    <xacro:property name="collision_motor_height" value="0.075"/>  <!-- m -->
 
     <!-- Rocker properties -->
     <xacro:property name="rocker_mass" value="0.5"/>
@@ -30,17 +35,33 @@
     <xacro:property name="chassis_z_offset" value="${rocker_height + wheel_radius}" /> <!-- Space btw top of beam and the each joint -->
 
     <!-- Flange Bearing Properties -->
+    <xacro:property name="bearing_mass" value="2.7689940302592726"/>  <!-- Kg -->
     <xacro:property name="flange_bearing_z_offset" value="${chassis_height/2}"/> 
+    <xacro:property name="bearing_length" value="0.2"/>
+    <xacro:property name="bearing_width" value="0.03"/>
+    <xacro:property name="bearing_height" value="0.03"/>
 
-    <!-- Motors Properties -->
-    <xacro:property name="motors_y_offset" value="0.035"/>  
-    <xacro:property name="motors_z_offset" value="-0.25"/>  
-
-    <xacro:property name="motor_mass" value="5.236579"/>  <!-- Kg -->
-    <xacro:property name="collision_motor_length" value="0.1"/>  <!-- m -->
-    <xacro:property name="collision_motor_width" value="0.1"/>  <!-- m -->
-    <xacro:property name="collision_motor_height" value="0.075"/>  <!-- m -->
     
+    <!-- Differential Bar Properties -->
+    <xacro:property name="bar_mass" value="0.917264951812715"/>
+    <xacro:property name="bar_length" value="0.58"/>
+    <xacro:property name="bar_width" value="0.03"/>
+    <xacro:property name="bar_height" value="0.03"/>
+
+    <!-- Depth Camera Properties -->
+    <xacro:property name="camera_mass" value="0.1"/>
+    <xacro:property name="camera_width" value="0.07"/>
+    <xacro:property name="camera_height" value="0.03"/>
+    <xacro:property name="camera_depth" value="0.020"/>
+
+    <!-- 2D and 3D LIDAR Properties -->
+    <xacro:property name="laser_2d_mass" value="0.1"/>
+    <xacro:property name="laser_2d_radius" value="0.04"/>
+    <xacro:property name="laser_2d_length" value="0.04"/>
+    <xacro:property name="laser_3d_mass" value="0.2"/>
+    <xacro:property name="laser_3d_radius" value="0.06"/>
+    <xacro:property name="laser_3d_length" value="0.06"/>
+
     <!-- ADD COMPONENTS -->
     <xacro:include filename="$(find perseus_description)/urdf/inertia_macros.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/chassis.urdf.xacro"/>
