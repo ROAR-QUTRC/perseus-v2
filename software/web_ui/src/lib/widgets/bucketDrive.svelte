@@ -157,10 +157,8 @@
 
 		handles[handle].active = true;
 		move(handle, event.clientY);
-		console.log('Start', handle, event.clientY);
 
 		// reset locking timeout
-		console.log('Resetting locking timeout', lockingTimeoutHandle);
 		if (lockingTimeoutHandle) {
 			clearTimeout(lockingTimeoutHandle);
 		}
@@ -180,7 +178,6 @@
 
 		handles[handle].value = 0;
 		handles[handle].active = false;
-		console.log('Stop', handle, event?.clientY);
 
 		// start locking timeout
 		const allInactive = Object.keys(handles).every((h) => !handles[h].active);
@@ -197,8 +194,6 @@
 					handles[handle].parent?.addEventListener('pointermove', (e) => onMove(e, handle));
 					handles[handle].parent?.addEventListener('pointerup', (e) => onStop(handle, e));
 					handles[handle].parent?.addEventListener('pointerleave', (e) => onStop(handle, e));
-					const rect = handles[handle].parent.getBoundingClientRect();
-					console.log('Initialised: ', rect);
 				} else console.warn('Failed to initialise: ', handle);
 			});
 		});
