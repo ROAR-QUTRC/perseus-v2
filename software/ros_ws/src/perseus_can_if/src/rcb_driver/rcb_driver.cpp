@@ -79,7 +79,7 @@ void RcbDriver::_can_to_ros(const hi_can::Packet& packet)
             parameters::legacy::power::control::power_bus::status_t data;
             data.deserializeData(raw_data);
 
-            RCLCPP_INFO(this->get_logger(), "message: %s\t#%s -> current: %05d, voltage: %05d, status: %d", name.c_str(), dataStr.c_str(), data.current, data.voltage, data.status);
+            // RCLCPP_INFO(this->get_logger(), "message: %s\t#%s -> current: %05d, voltage: %05d, status: %d", name.c_str(), dataStr.c_str(), data.current, data.voltage, data.status);
 
             auto message = std_msgs::msg::String();
             nlohmann::json bus_data = {{"name", name}, {"current", data.current}, {"voltage", data.voltage}, {"status", static_cast<int>(data.status)}};
@@ -115,7 +115,7 @@ void RcbDriver::_ros_to_can(std_msgs::msg::String::UniquePtr msg)
                                 static_cast<uint8_t>(power::control::power_bus::parameter::CONTROL_IMMEDIATE));
 
         _can_interface->transmit(Packet(static_cast<addressing::flagged_address_t>(address),
-                                        immediate_control_t(_immediate_control_t{data["on"].get<std::string>()[0] == '1', false, 0}).serializeData()));
+                                        immediate_control_t(_immediate_control_t{data["on"].get<std::string>()[0] == '1', data["clear"].get<std::string>()[0] == '1', 0}).serializeData()));
     }
     catch (const std::exception& e)
     {

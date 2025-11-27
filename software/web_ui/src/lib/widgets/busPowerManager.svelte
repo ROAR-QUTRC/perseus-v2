@@ -5,7 +5,7 @@
 	export const name = 'Bus Power Manager';
 	export const description = 'Enable and disable different buses on the rover control board';
 	export const group = 'CAN Bus';
-	// export const isRosDependent = true;
+	export const isRosDependent = true;
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
@@ -32,15 +32,21 @@
 	];
 
 	let listener: ROSLIB.Topic | null = null;
-	let busState = $state<Record<string, { status: number; current: number; voltage: number }>>({
-		aux: { status: 0, current: 0, voltage: 0 },
-		aux2: { status: 0, current: 0, voltage: 0 },
-		aux3: { status: 0, current: 0, voltage: 0 },
-		aux4: { status: 0, current: 0, voltage: 0 }
+	let busState = $state<
+		Record<string, { status: number; current: number; voltage: number; openAlert: boolean }>
+	>({
+		compute: { status: 0, current: 0, voltage: 0, openAlert: false },
+		drive: { status: 0, current: 0, voltage: 0, openAlert: false },
+		aux: { status: 0, current: 0, voltage: 0, openAlert: false },
+		spare: { status: 0, current: 0, voltage: 0, openAlert: false }
 	});
 
 	const toggleBusPower = (e: Event, bus: string) => {
 		e.preventDefault();
+
+		// close the dialog
+		busState[bus].openAlert = false;
+
 		const publisher = new ROSLIB.Topic({
 			ros: getRosConnection() as ROSLIB.Ros,
 			name: '/ros_to_can',
@@ -48,7 +54,11 @@
 		});
 
 		const message = new ROSLIB.Message({
-			data: JSON.stringify({ bus: bus, on: busState[bus].status !== 1 ? '1' : '0' })
+			data: JSON.stringify({
+				bus: bus,
+				on: busState[bus].status !== 1 ? '1' : '0',
+				clear: busState[bus].status === 6 ? '1' : '0'
+			})
 		});
 
 		publisher.publish(message);
@@ -68,7 +78,8 @@
 				busState[name] = {
 					status: Number(status),
 					current: Number(current),
-					voltage: Number(voltage)
+					voltage: Number(voltage),
+					openAlert: busState[name]?.openAlert ?? false
 				};
 			});
 		}
@@ -86,7 +97,7 @@
 		<div class="m-2 flex min-w-[145px] flex-col justify-center rounded-lg border p-2">
 			<p class="mb-2 text-center">{sentenceCase(bus)}: {busStatus[busState[bus].status]}</p>
 
-			<AlertDialog.Root>
+			<AlertDialog.Root bind:open={busState[bus].openAlert}>
 				<AlertDialog.Trigger>
 					<button class="aspect-square cursor-pointer rounded-[50%] border">
 						<Fa
@@ -99,10 +110,10 @@
 				</AlertDialog.Trigger>
 				<AlertDialog.Content>
 					<AlertDialog.Header>
-						<AlertDialog.Title
-							>Power {busState[bus].status !== 1 ? 'On' : 'Off'}
-							{sentenceCase(bus)}?</AlertDialog.Title
-						>
+						<AlertDialog.Title>
+							Power {busState[bus].status !== 1 ? 'On' : 'Off'}
+							{sentenceCase(bus)}?
+						</AlertDialog.Title>
 					</AlertDialog.Header>
 					<AlertDialog.Footer>
 						<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
