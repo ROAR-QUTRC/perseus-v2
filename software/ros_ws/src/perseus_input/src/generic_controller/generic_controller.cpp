@@ -30,8 +30,8 @@ GenericController::GenericController(const rclcpp::NodeOptions& options)
 
 void GenericController::_joyTimeoutCallback(void)
 {
-    static const auto timeout_length = rcl_time_point_value_t(this->declare_parameter("timeout_ns", 150000000));
-    RCLCPP_DEBUG_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Timeout length is %ld ms", timeout_length);
+    static const auto timeout_length = rcl_time_point_value_t(this->declare_parameter(TIMEOUT_LENGTH, 150000000));
+    RCLCPP_DEBUG_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Timeout length is %ld ns", timeout_length);
     if ((this->now().nanoseconds() - _prevReceivedJoyTime.nanoseconds()) > timeout_length)
     {
         geometry_msgs::msg::TwistStamped twistMsg;
