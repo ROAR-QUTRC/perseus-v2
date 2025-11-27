@@ -10,7 +10,7 @@
   <!-- LEFT ROCKER LINK -->
   <link name="${prefix}left_rocker">
     <inertial>
-      <origin xyz="${rocker_collision_x_offset/scale_factor} 0.0 ${rocker_collision_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${rocker_collision_x_offset} 0.0 ${rocker_collision_z_offset}" rpy="0.0 0.0 0.0"/>
       <mass value="${rocker_mass}"/>
       <xacro:box_inertia m="${rocker_mass}" 
                          x="${rocker_length}" 
@@ -21,15 +21,15 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor} ${0.1/scale_factor}" 
+        <mesh scale="${0.1} ${0.1} ${0.1}" 
               filename="file://$(find perseus_description)/meshes/rocker_left.dae"/>
       </geometry>
     </visual>
     
     <collision>
-      <origin xyz="${rocker_collision_x_offset/scale_factor} 0.0 ${rocker_collision_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${rocker_collision_x_offset} 0.0 ${rocker_collision_z_offset}" rpy="0.0 0.0 0.0"/>
       <geometry>
-        <box size="${rocker_length/scale_factor} ${rocker_width/scale_factor} ${rocker_height/scale_factor}"/>
+        <box size="${rocker_length} ${rocker_width} ${rocker_height}"/>
       </geometry>
     </collision>
   </link>
@@ -37,7 +37,7 @@
   <!-- RIGHT ROCKER LINK -->
   <link name="${prefix}right_rocker">
     <inertial>
-      <origin xyz="${rocker_collision_x_offset/scale_factor} 0.0 ${rocker_collision_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${rocker_collision_x_offset} 0.0 ${rocker_collision_z_offset}" rpy="0.0 0.0 0.0"/>
       <mass value="${rocker_mass}"/>
       <xacro:box_inertia m="${rocker_mass}" 
                          x="${rocker_length}" 
@@ -48,15 +48,15 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor} ${0.1/scale_factor}" 
+        <mesh scale="${0.1} ${0.1} ${0.1}" 
               filename="file://$(find perseus_description)/meshes/rocker_right.dae"/>
       </geometry>
     </visual>
     
     <collision>
-      <origin xyz="${rocker_collision_x_offset/scale_factor} 0.0 ${rocker_collision_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${rocker_collision_x_offset} 0.0 ${rocker_collision_z_offset}" rpy="0.0 0.0 0.0"/>
       <geometry>
-        <box size="${rocker_length/scale_factor} ${rocker_width/scale_factor} ${rocker_height/scale_factor}"/>
+        <box size="${rocker_length} ${rocker_width} ${rocker_height}"/>
       </geometry>
     </collision>
   </link>

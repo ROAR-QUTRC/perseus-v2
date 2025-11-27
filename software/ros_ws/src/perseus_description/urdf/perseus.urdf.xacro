@@ -3,9 +3,6 @@
   <xacro:macro name="perseus" params="prefix">
 
     <!-- Constants for robot dimensions -->
-    <xacro:property name="scale_factor" value="1"/>  <!-- 1 for Perseus and 2 for Perseu_Lite -->
-
-    <xacro:property name="PI" value="3.1415926535897931"/>
 
     <!-- Chassis Properties -->
     <xacro:property name="base_mass" value="0.3" /> <!-- arbitrary value for base mass -->
@@ -49,25 +46,25 @@
 
 
     <joint name="${prefix}chassis_joint" type="fixed"> <!-- Joint Connect base_link and chassis -->
-      <origin xyz="0 0.0 ${chassis_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0 0.0 ${chassis_z_offset}" rpy="0.0 0.0 0.0"/>
       <parent link="${prefix}base_link"/>
       <child link="${prefix}chassis"/>
     </joint>
 
     <joint name="${prefix}flange_bearing_joint" type="fixed">
-      <origin xyz="${-chassis_length/scale_factor} 0.0 ${flange_bearing_z_offset/scale_factor}" rpy="0 0 0"/>
+      <origin xyz="${-chassis_length} 0.0 ${flange_bearing_z_offset}" rpy="0 0 0"/>
       <parent link="${prefix}chassis"/>
       <child link="${prefix}flange_bearing"/>
     </joint>
 
     <joint name="${prefix}left_rocker_joint" type="fixed">
-      <origin xyz="${-rocker_x_offset/scale_factor} ${rocker_base_distance/scale_factor} ${rocker_y_offset/scale_factor} " rpy="0 0 0"/>
+      <origin xyz="${-rocker_x_offset} ${rocker_base_distance} ${rocker_y_offset} " rpy="0 0 0"/>
       <parent link="${prefix}chassis"/>
       <child link="${prefix}left_rocker"/>
     </joint>
 
     <joint name="${prefix}right_rocker_joint" type="fixed">
-      <origin xyz="${-rocker_x_offset/scale_factor} ${-rocker_base_distance/scale_factor} ${rocker_y_offset/scale_factor} " rpy="0 0 0"/>
+      <origin xyz="${-rocker_x_offset} ${-rocker_base_distance} ${rocker_y_offset} " rpy="0 0 0"/>
       <parent link="${prefix}chassis"/>
       <child link="${prefix}right_rocker"/>
     </joint>
@@ -75,25 +72,25 @@
     <joint name="${prefix}front_left_motor_joint" type="fixed">
       <parent link="${prefix}left_rocker"/>
       <child link="${prefix}front_left_motor"/>
-      <origin xyz="${front_motors_x_offset/scale_factor} -${motors_y_offset/scale_factor} ${motors_z_offset/scale_factor}" rpy="0.0 0.0 0"/>
+      <origin xyz="${front_motors_x_offset} -${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0"/>
     </joint>
 
     <joint name="${prefix}rear_left_motor_joint" type="fixed">
       <parent link="${prefix}left_rocker"/>
       <child link="${prefix}rear_left_motor"/>
-      <origin xyz="${rear_motors_x_offset/scale_factor} -${motors_y_offset/scale_factor} ${motors_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${rear_motors_x_offset} -${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0.0"/>
     </joint>
 
     <joint name="${prefix}front_right_motor_joint" type="fixed">
       <parent link="${prefix}right_rocker"/>
       <child link="${prefix}front_right_motor"/>
-      <origin xyz="${front_motors_x_offset/scale_factor} ${motors_y_offset/scale_factor} ${motors_z_offset/scale_factor}" rpy="0.0 0.0 0"/>
+      <origin xyz="${front_motors_x_offset} ${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0"/>
     </joint>
 
     <joint name="${prefix}rear_right_motor_joint" type="fixed">
       <parent link="${prefix}right_rocker"/>
       <child link="${prefix}rear_right_motor"/>
-      <origin xyz="${rear_motors_x_offset/scale_factor} ${motors_y_offset/scale_factor} ${motors_z_offset/scale_factor}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${rear_motors_x_offset} ${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0.0"/>
     </joint>
 
 
@@ -101,7 +98,7 @@
       <axis xyz="0 1 0" rpy="0 0 0"/>
       <parent link="${prefix}front_left_motor"/>
       <child link="${prefix}front_left_wheel"/>
-      <origin xyz="0 ${wheels_y_offset/scale_factor} 0.0" rpy="0.0 0.0 0"/>
+      <origin xyz="0 ${wheels_y_offset} 0.0" rpy="0.0 0.0 0"/>
       <dynamics damping="0.2" friction="0.3"/>
     </joint>
 
@@ -109,7 +106,7 @@
       <axis xyz="0 1 0" rpy="0 0 0"/>
       <parent link="${prefix}rear_left_motor"/>
       <child link="${prefix}rear_left_wheel"/>
-      <origin xyz="0 ${wheels_y_offset/scale_factor} 0.0" rpy="0.0 0.0 0"/>
+      <origin xyz="0 ${wheels_y_offset} 0.0" rpy="0.0 0.0 0"/>
       <dynamics damping="0.2" friction="0.3"/>
     </joint>
 
@@ -117,7 +114,7 @@
       <axis xyz="0 1 0" rpy="0 0 0"/>
       <parent link="${prefix}front_right_motor"/>
       <child link="${prefix}front_right_wheel"/>
-      <origin xyz="0 -${wheels_y_offset/scale_factor} 0.0" rpy="0.0 0.0 0"/>
+      <origin xyz="0 -${wheels_y_offset} 0.0" rpy="0.0 0.0 0"/>
       <dynamics damping="0.2" friction="0.3"/>
     </joint>
 
@@ -125,14 +122,14 @@
       <axis xyz="0 1 0" rpy="0 0 0"/>
       <parent link="${prefix}rear_right_motor"/>
       <child link="${prefix}rear_right_wheel"/>
-      <origin xyz="0 -${wheels_y_offset/scale_factor} 0.0" rpy="0.0 0.0 0"/>
+      <origin xyz="0 -${wheels_y_offset} 0.0" rpy="0.0 0.0 0"/>
       <dynamics damping="0.2" friction="0.3"/>
     </joint>
 
     <joint name="${prefix}laser_joint" type="fixed">
       <parent link="${prefix}chassis"/>
       <child link="${prefix}laser_frame"/>
-      <origin xyz="0 0 -0.04" rpy="0 ${PI} 0"/>
+      <origin xyz="0 0 -0.04" rpy="0 ${pi} 0"/>
     </joint>
 
     <joint name="${prefix}laser_2d_joint" type="fixed">

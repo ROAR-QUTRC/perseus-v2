@@ -4,22 +4,22 @@
 
   <link name="${prefix}chassis">
     <inertial>
-      <origin xyz="${-chassis_length/scale_factor*0.5} 0.0 ${chassis_height/scale_factor*0.5}" rpy="0 0.0 0.0"/>
+      <origin xyz="${-chassis_length*0.5} 0.0 ${chassis_height*0.5}" rpy="0 0.0 0.0"/>
       <mass value="${chassis_mass}"/>
-      <xacro:box_inertia m="${chassis_mass}" x="${chassis_length/scale_factor}" y="${chassis_width/scale_factor}" z="${chassis_height/scale_factor}"/>
+      <xacro:box_inertia m="${chassis_mass}" x="${chassis_length}" y="${chassis_width}" z="${chassis_height}"/>
     </inertial>
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0 0.0 -${pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
+        <mesh scale="${0.1} ${0.1}  ${0.1}" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
       </geometry>
     </visual>
     
     <collision>
-      <origin xyz="${-chassis_length/scale_factor*0.5} 0.0 ${chassis_height/scale_factor*0.5}" rpy="0 0.0 0"/>
+      <origin xyz="${-chassis_length*0.5} 0.0 ${chassis_height*0.5}" rpy="0 0.0 0"/>
       <!-- Modified to make collision more simple, chassis mesh replaced with box -->
       <geometry>
-        <box size="${chassis_length/scale_factor} ${chassis_width/scale_factor} ${chassis_height/scale_factor}"/>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
       </geometry>
     </collision>
   </link>

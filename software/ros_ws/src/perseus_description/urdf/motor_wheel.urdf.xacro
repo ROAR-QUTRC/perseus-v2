@@ -15,14 +15,14 @@
     <visual>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        <mesh scale="${0.1} ${0.1}  ${0.1}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
       </geometry>
       <!-- <material name="white"/> -->
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
-        <box size="${collision_motor_length/scale_factor} ${collision_motor_width/scale_factor} ${collision_motor_height/scale_factor}" />
+        <box size="${collision_motor_length} ${collision_motor_width} ${collision_motor_height}" />
       </geometry>
     </collision>
   </link>
@@ -37,14 +37,14 @@
     <visual>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        <mesh scale="${0.1} ${0.1}  ${0.1}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
       </geometry>
       <!-- <material name="white"/> -->
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
       <geometry>
-        <box size="${collision_motor_length/scale_factor} ${collision_motor_width/scale_factor} ${collision_motor_height/scale_factor}" />
+        <box size="${collision_motor_length} ${collision_motor_width} ${collision_motor_height}" />
       </geometry>
     </collision>
   </link>
@@ -60,14 +60,14 @@
     <visual>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        <mesh scale="${0.1} ${0.1}  ${0.1}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
       </geometry>
       <!-- <material name="white"/> -->
     </visual>
     <collision>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
       <geometry>
-        <box size="${collision_motor_length/scale_factor} ${collision_motor_width/scale_factor} ${collision_motor_height/scale_factor}" />
+        <box size="${collision_motor_length} ${collision_motor_width} ${collision_motor_height}" />
       </geometry>
     </collision>
   </link>
@@ -83,14 +83,14 @@
     <visual>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        <mesh scale="${0.1} ${0.1}  ${0.1}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
       </geometry>
       <!-- <material name="white"/> -->
     </visual>
     <collision>
       <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
       <geometry>
-        <box size="${collision_motor_length/scale_factor} ${collision_motor_width/scale_factor} ${collision_motor_height/scale_factor}" />
+        <box size="${collision_motor_length} ${collision_motor_width} ${collision_motor_height}" />
       </geometry>
     </collision>
   </link>
