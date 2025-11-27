@@ -2,48 +2,65 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="perseus" params="prefix">
 
-    <!-- Constants for robot dimensions -->
+    <xacro:property name="front_motors_x_offset" value="0.3"/>  
+    <xacro:property name="rear_motors_x_offset" value="-0.55"/>  
+
+
+    <!-- Rocker properties -->
+    <xacro:property name="rocker_mass" value="0.5"/>
+    <xacro:property name="rocker_length" value="${(front_motors_x_offset-rear_motors_x_offset)*1/2}"/>  <!-- Use positive absolute value -->
+    <xacro:property name="rocker_width" value="0.03"/>
+    <xacro:property name="rocker_collision_x_offset" value="-0.10"/>
+    <xacro:property name="rocker_height" value="0.2"/>
+    <xacro:property name="rocker_base_distance" value="0.275" /> 
+    <xacro:property name="rocker_x_offset" value="0.075"/>  
+    <xacro:property name="rocker_y_offset" value="0.05"/>  
+
+    <!-- Wheels Properties -->
+    <xacro:property name="wheel_mass" value="1.0"/>
+    <xacro:property name="wheels_y_offset" value="0.125"/> 
+    <xacro:property name="wheel_radius" value="0.15"/>
+    <xacro:property name="wheel_length" value="0.14"/>
 
     <!-- Chassis Properties -->
     <xacro:property name="base_mass" value="0.3" /> <!-- arbitrary value for base mass -->
     <xacro:property name="chassis_width" value="0.45" />
     <xacro:property name="chassis_length" value="0.6" />
     <xacro:property name="chassis_height" value="0.2" />
-    <xacro:property name="chassis_z_offset" value="0.35" /> <!-- Space btw top of beam and the each joint -->
+    <xacro:property name="chassis_z_offset" value="${rocker_height + wheel_radius}" /> <!-- Space btw top of beam and the each joint -->
 
     <!-- Flange Bearing Properties -->
-    <xacro:property name="flange_bearing_z_offset" value="0.1"/>  
-
-    <!-- Rocker Properties -->
-    <xacro:property name="rocker_base_distance" value="0.275" /> 
-    <xacro:property name="rocker_x_offset" value="0.075"/>  
-    <xacro:property name="rocker_y_offset" value="0.05"/>  
+    <xacro:property name="flange_bearing_z_offset" value="${chassis_height/2}"/> 
 
     <!-- Motors Properties -->
     <xacro:property name="motors_y_offset" value="0.035"/>  
     <xacro:property name="motors_z_offset" value="-0.25"/>  
-    <xacro:property name="front_motors_x_offset" value="0.3"/>  
-    <xacro:property name="rear_motors_x_offset" value="-0.55"/>  
-    
-    <!-- Wheels Properties -->
-    <xacro:property name="wheels_y_offset" value="0.125"/> 
-    <xacro:property name="wheel_mass" value="1.0"/>
-    <xacro:property name="wheel_radius" value="0.15"/>
-    <xacro:property name="wheel_length" value="0.14"/>
 
+    <xacro:property name="motor_mass" value="5.236579"/>  <!-- Kg -->
+    <xacro:property name="collision_motor_length" value="0.1"/>  <!-- m -->
+    <xacro:property name="collision_motor_width" value="0.1"/>  <!-- m -->
+    <xacro:property name="collision_motor_height" value="0.075"/>  <!-- m -->
+    
     <!-- ADD COMPONENTS -->
     <xacro:include filename="$(find perseus_description)/urdf/inertia_macros.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/chassis.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/flange_bearing.urdf.xacro"/>
-    <xacro:include filename="$(find perseus_description)/urdf/rocker.urdf.xacro"/>
-    <xacro:include filename="$(find perseus_description)/urdf/motor_wheel.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/wheel.urdf.xacro"/>
+    <xacro:include filename="$(find perseus_description)/urdf/motor_wheel.urdf.xacro"/>
+    <xacro:include filename="$(find perseus_description)/urdf/rocker.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/sensors.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/camera_depth.urdf.xacro" />
 
     <!-- An empty base_link to attach everything to -->
     <link name="${prefix}base_link"/> 
+    
+    <joint name="base_footprint_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="base_footprint"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
 
+    <link name="${prefix}base_footprint"/>
 
     <joint name="${prefix}chassis_joint" type="fixed"> <!-- Joint Connect base_link and chassis -->
       <origin xyz="0 0.0 ${chassis_z_offset}" rpy="0.0 0.0 0.0"/>
@@ -51,50 +68,17 @@
       <child link="${prefix}chassis"/>
     </joint>
 
+
+    <!-- ADD 2 ROCKERS (INCLUDING 4 MOTORS + 4 WHEELS) -->
+    <xacro:rocker prefix="" side="left"/>
+    <xacro:rocker prefix="" side="right"/>
+
+
     <joint name="${prefix}flange_bearing_joint" type="fixed">
       <origin xyz="${-chassis_length} 0.0 ${flange_bearing_z_offset}" rpy="0 0 0"/>
       <parent link="${prefix}chassis"/>
       <child link="${prefix}flange_bearing"/>
     </joint>
-
-    <joint name="${prefix}left_rocker_joint" type="fixed">
-      <origin xyz="${-rocker_x_offset} ${rocker_base_distance} ${rocker_y_offset} " rpy="0 0 0"/>
-      <parent link="${prefix}chassis"/>
-      <child link="${prefix}left_rocker"/>
-    </joint>
-
-    <joint name="${prefix}right_rocker_joint" type="fixed">
-      <origin xyz="${-rocker_x_offset} ${-rocker_base_distance} ${rocker_y_offset} " rpy="0 0 0"/>
-      <parent link="${prefix}chassis"/>
-      <child link="${prefix}right_rocker"/>
-    </joint>
-
-    <joint name="${prefix}front_left_motor_joint" type="fixed">
-      <parent link="${prefix}left_rocker"/>
-      <child link="${prefix}front_left_motor"/>
-      <origin xyz="${front_motors_x_offset} -${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0"/>
-    </joint>
-
-    <joint name="${prefix}rear_left_motor_joint" type="fixed">
-      <parent link="${prefix}left_rocker"/>
-      <child link="${prefix}rear_left_motor"/>
-      <origin xyz="${rear_motors_x_offset} -${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0.0"/>
-    </joint>
-
-    <joint name="${prefix}front_right_motor_joint" type="fixed">
-      <parent link="${prefix}right_rocker"/>
-      <child link="${prefix}front_right_motor"/>
-      <origin xyz="${front_motors_x_offset} ${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0"/>
-    </joint>
-
-    <joint name="${prefix}rear_right_motor_joint" type="fixed">
-      <parent link="${prefix}right_rocker"/>
-      <child link="${prefix}rear_right_motor"/>
-      <origin xyz="${rear_motors_x_offset} ${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0.0"/>
-    </joint>
-
-
-
 
     <joint name="${prefix}laser_joint" type="fixed">
       <parent link="${prefix}chassis"/>

@@ -1,63 +1,48 @@
 <?xml version="1.0"?>
 <robot name="rocker" xmlns:xacro="http://ros.org/wiki/xacro">
-  <!-- Rocker properties - Fix negative values -->
-  <xacro:property name="rocker_mass" value="0.5"/>
-  <xacro:property name="rocker_length" value="0.85"/>  <!-- Use positive absolute value -->
-  <xacro:property name="rocker_height" value="0.05"/>  <!-- Use positive value -->
-  <xacro:property name="rocker_width" value="0.03"/>
-  <xacro:property name="rocker_collision_x_offset" value="-0.10"/>
-  <xacro:property name="rocker_collision_z_offset" value="-0.2"/>
-  <!-- LEFT ROCKER LINK -->
-  <link name="${prefix}left_rocker">
+  <!-- ROCKER LINK -->
+  <xacro:macro name="rocker" params="prefix:=^ side:=^">
+  <link name="${prefix}${side}_rocker">
     <inertial>
-      <origin xyz="${rocker_collision_x_offset} 0.0 ${rocker_collision_z_offset}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${rocker_collision_x_offset} 0.0 -${rocker_height}" rpy="0.0 0.0 0.0"/>
       <mass value="${rocker_mass}"/>
       <xacro:box_inertia m="${rocker_mass}" 
                          x="${rocker_length}" 
                          y="${rocker_width}" 
                          z="${rocker_height}"/>
     </inertial>
-    
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
       <geometry>
-        <mesh scale="0.1 0.1 0.1" 
-              filename="file://$(find perseus_description)/meshes/rocker_left.dae"/>
+      <xacro:if value="${side == 'left'}">
+        <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/rocker_left.dae"/>
+      </xacro:if>
+      <xacro:if value="${side == 'right'}">
+        <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/rocker_right.dae"/>
+      </xacro:if>
       </geometry>
     </visual>
     
     <collision>
-      <origin xyz="${rocker_collision_x_offset} 0.0 ${rocker_collision_z_offset}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${rocker_collision_x_offset} 0.0 -${rocker_height}" rpy="0.0 0.0 0.0"/>
       <geometry>
         <box size="${rocker_length} ${rocker_width} ${rocker_height}"/>
       </geometry>
     </collision>
   </link>
+  <joint name="${prefix}${side}_rocker_joint" type="fixed">
+    <xacro:if value="${side == 'left'}">
+      <origin xyz="${-rocker_x_offset} ${rocker_base_distance} ${rocker_y_offset} " rpy="0 0 0"/>
+    </xacro:if>
+    <xacro:if value="${side == 'right'}">
+      <origin xyz="${-rocker_x_offset} -${rocker_base_distance} ${rocker_y_offset} " rpy="0 0 0"/>
+    </xacro:if>
+    <parent link="${prefix}chassis"/>
+    <child link="${prefix}${side}_rocker"/>
+  </joint>
+  <!-- ADD 2 MOTORS FOR EACH SIDE -->
+  <xacro:motor prefix="" side="${side}"  end="front"/>
+  <xacro:motor prefix="" side="${side}"  end="rear"/>
+  </xacro:macro>
 
-  <!-- RIGHT ROCKER LINK -->
-  <link name="${prefix}right_rocker">
-    <inertial>
-      <origin xyz="${rocker_collision_x_offset} 0.0 ${rocker_collision_z_offset}" rpy="0.0 0.0 0.0"/>
-      <mass value="${rocker_mass}"/>
-      <xacro:box_inertia m="${rocker_mass}" 
-                         x="${rocker_length}" 
-                         y="${rocker_width}" 
-                         z="${rocker_height}"/>
-    </inertial>
-    
-    <visual>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
-      <geometry>
-        <mesh scale="0.1 0.1 0.1" 
-              filename="file://$(find perseus_description)/meshes/rocker_right.dae"/>
-      </geometry>
-    </visual>
-    
-    <collision>
-      <origin xyz="${rocker_collision_x_offset} 0.0 ${rocker_collision_z_offset}" rpy="0.0 0.0 0.0"/>
-      <geometry>
-        <box size="${rocker_length} ${rocker_width} ${rocker_height}"/>
-      </geometry>
-    </collision>
-  </link>
 </robot>
