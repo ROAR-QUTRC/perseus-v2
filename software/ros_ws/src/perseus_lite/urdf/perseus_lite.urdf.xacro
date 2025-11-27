@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="perseus_lite">
+  <xacro:arg name="prefix" default="" />
+  <xacro:arg name="hardware_plugin" default="perseus_lite_hardware/ST3215SystemHardware" />
+  <xacro:arg name="serial_port" default="/dev/ttyACM0" />
+  <xacro:arg name="baud_rate" default="1000000" />
+
+  <!-- Import URDF description -->
+  <xacro:include filename="$(find perseus_lite_description)/urdf/perseus_lite.urdf.xacro" />
+  <!-- Import colours for rviz -->
+  <xacro:include filename="$(find perseus_lite_description)/urdf/perseus_lite.materials.xacro" />
+  <!-- Import ros2_control description -->
+  <xacro:include filename="$(find perseus_lite_description)/ros2_control/perseus_lite.ros2_control.xacro" />
+
+  <!-- Instantiate the description and the ROS2 control information -->
+  <xacro:perseus_lite prefix="$(arg prefix)" />
+  <xacro:perseus_lite_ros2_control 
+    name="Perseus_Lite" 
+    prefix="$(arg prefix)" 
+    hardware_plugin="$(arg hardware_plugin)"
+    serial_port="$(arg serial_port)"
+    baud_rate="$(arg baud_rate)"/>
+</robot>

@@ -130,6 +130,9 @@
             nodejs_22
             yarn
             nixgl-script
+            ncurses
+            glibcLocales
+            yaml-cpp
             libnice
             ;
           inherit (pkgs.gst_all_1)
@@ -156,6 +159,12 @@
             rqt-reconfigure
             rqt-common-plugins
             rmw-cyclonedds-cpp
+            nav2-rviz-plugins
+            opennav-docking
+            nav2-msgs
+            nav2-util
+            nav2-lifecycle-manager
+            nav2-common
             ;
         };
         # Packages which should be available only in the dev shell
@@ -190,6 +199,8 @@
               export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
               # enable coloured ros2 launch output
               export RCUTILS_COLORIZED_OUTPUT=1
+              # fix locale issues
+              export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
             '';
           };
 
@@ -299,8 +310,9 @@
           in
           {
             perseus = mkRosLaunchApp "perseus" "perseus" "perseus.launch.py";
+            perseus-lite = mkRosLaunchApp "perseus-lite" "perseus_lite" "perseus_lite.launch.py";
             default = self.apps.${system}.perseus;
-            xbox_controller = mkRosLaunchApp "xbox_controller" "input_devices" "xbox_controller.launch.py";
+            generic_controller = mkRosLaunchApp "generic_controller" "perseus_input" "controller.launch.py";
             ros2 = {
               type = "app";
               program = "${default}/bin/ros2";
