@@ -80,9 +80,9 @@ private:
     static constexpr std::string JAWS_BASE_NAME = "bucket.jaws";
     static constexpr std::string ROTATE_BASE_NAME = "bucket.rotate";
     static constexpr std::string MAGNET_BASE_NAME = "bucket.magnet";
+    static constexpr std::string TIMEOUT_LENGTH = "timeout_ms";
 
     static constexpr auto JOY_TIMEOUT = std::chrono::milliseconds(100);
-    static constexpr rcl_time_point_value_t TIMEOUT_LENGTH = 150000000;
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _joySubscription;
     rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr _twistPublisher;

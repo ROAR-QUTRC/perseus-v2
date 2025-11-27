@@ -15,6 +15,7 @@ def generate_launch_description():
     controller_type = LaunchConfiguration("type")
     is_wireless = LaunchConfiguration("wireless")
     config = LaunchConfiguration("config")
+    timeout_enable = LaunchConfiguration("timeout_enable")
     debug = LaunchConfiguration("debug")
 
     arguments = [
@@ -32,6 +33,11 @@ def generate_launch_description():
             "config",
             default_value="",
             description="Path to config file, overrides 'wireless' and 'type'",
+        ),
+        DeclareLaunchArgument(
+            "timeout_enable",
+            default_value="true",
+            description="Should the controller timeout run (disable this during autonomy testing)",
         ),
         DeclareLaunchArgument(
             "debug",
@@ -84,7 +90,7 @@ def generate_launch_description():
         name="generic_controller",
         output="both",
         emulate_tty=True,
-        parameters=[config_path],
+        parameters=[config_path, timeout_enable],
         remappings=[],
         ros_arguments=["--log-level", debug_arg],
     )
