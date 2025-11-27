@@ -57,7 +57,7 @@
 			data: JSON.stringify({
 				bus: bus,
 				on: busState[bus].status !== 1 ? '1' : '0',
-				clear: busState[bus].status === 6 ? '1' : '0'
+				clear: busState[bus].status === 6 || busState[bus].status === 4 ? '1' : '0' // Clear FAULT or SWITCH_FAILED
 			})
 		});
 
