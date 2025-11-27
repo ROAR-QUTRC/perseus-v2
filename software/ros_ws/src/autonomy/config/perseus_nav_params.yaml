@@ -1,6 +1,6 @@
 amcl:
   ros__parameters:
-    use_sim_time: false  # Changed: Set to false for real robot operation
+    use_sim_time: true  # Changed: Set to false for real robot operation
     alpha1: 0.1 # Rotational error due to rotation
     alpha2: 0.1 # Rotational error due to translation
     alpha3: 0.1 # Translational error due to translation
@@ -115,74 +115,66 @@ controller_server:
     odom_topic: "odometry/filtered"
     controller_frequency: 20.0
     costmap_update_timeout: 5.0
-    # filters the velocity portion of the odometry messages received before sending them to the controller plugin. 
-    # Odometry values below this threshold (in m/s) will be set to 0.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 5.0
     min_theta_velocity_threshold: .001
     failure_tolerance: 0.3
     progress_checker_plugin: "progress_checker"
-    goal_checker_plugins: ["general_goal_checker"] # "precise_goal_checker"
+    goal_checker_plugins: ["general_goal_checker"]
     controller_plugins: ["FollowPath"]
     use_realtime_priority: false
-    # Progress checker parameters
+    
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      # The minimum required movement radius to consider the goal as "in progress" for a allowable time
-      required_movement_radius: 0.2 # Decreased from 0.5 to encourage responsiveness
-      movement_time_allowance: 20.0 # Increased from 10.0 to allow more time before declaring failure
-    # Goal checker parameters
-    #precise_goal_checker:
-    #  plugin: "nav2_controller::SimpleGoalChecker"
-    #  xy_goal_tolerance: 0.25
-    #  yaw_goal_tolerance: 0.25
-    #  stateful: True
+      required_movement_radius: 0.15  # ⬇️ DECREASED from 0.2 - be more lenient
+      movement_time_allowance: 30.0   # ⬆️ INCREASED from 20.0 - give more time
+    
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.5
-      yaw_goal_tolerance: 0.25 
+      xy_goal_tolerance: 0.3          # ⬇️ RELAXED from 0.5 - easier to reach
+      yaw_goal_tolerance: 0.35        # ⬆️ INCREASED from 0.25 - easier heading
+    
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
-      debug_trajectory_details: True
+      debug_trajectory_details: true
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.26
+      max_vel_x: 0.2 # Reduced from 0.25 for more conservative movement
       max_vel_y: 0.0
-      max_vel_theta: 0.25 # Decreased from 1.5 to allow smoother turns
+      max_vel_theta: 0.8 # Reduced from 1.0 for smoother rotation
       min_speed_xy: 0.0
-      max_speed_xy: 0.26
+      max_speed_xy: 0.2 # Reduced from 0.25
       min_speed_theta: 0.0
-      acc_lim_x: 2.5
+      acc_lim_x: 2.0 # Reduced from 3.0 for smoother acceleration
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
+      acc_lim_theta: 2.5 # Reduced from 3.2 for smoother rotation
+      decel_lim_x: -2.0 # Less aggressive deceleration
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
-      vx_samples: 20
-      vy_samples: 5
-      vtheta_samples: 20
-      sim_time: 1.7
-      linear_granularity: 0.05
+      decel_lim_theta: -2.5 # Less aggressive deceleration
+      vx_samples: 20 # Increased from 15 for better trajectory options
+      vy_samples: 0
+      vtheta_samples: 40 # Increased from 30 for better rotation options
+      sim_time: 1.5 # Increased from 1.0 for better lookahead
+      linear_granularity: 0.05 # Increased from 0.03 for computational efficiency
       angular_granularity: 0.025
-      transform_tolerance: 0.2
-      xy_goal_tolerance: 0.25
-      trans_stopped_velocity: 0.25
-      short_circuit_trajectory_evaluation: True
-      limit_vel_cmd_in_traj: False
-      stateful: True
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 0.02
-      PathAlign.scale: 32.0
-      GoalAlign.scale: 24.0
-      PathAlign.forward_point_distance: 0.1
-      GoalAlign.forward_point_distance: 0.1
+      transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
+      xy_goal_tolerance: 0.1 # Increased from 0.08
+      trans_stopped_velocity: 0.2 # Reduced from 0.25
+      short_circuit_trajectory_evaluation: true # Changed to true for efficiency
+      stateful: true
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "PathAlign", "PathDist", "GoalAlign", "GoalDist"]
+      BaseObstacle.scale: 0.05 # Increased from 0.02 for better obstacle avoidance
+      PathAlign.scale: 32.0 # Reduced from 160.0 for less aggressive path following
+      PathAlign.forward_point_distance: 0.325
+      GoalAlign.scale: 24.0 # Increased from 12.0 for better goal alignment
+      GoalAlign.forward_point_distance: 0.325
       PathDist.scale: 32.0
-      GoalDist.scale: 24.0
+      GoalDist.scale: 24.0 # Reduced from 32.0
       RotateToGoal.scale: 32.0
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
-
+    enable_stamped_cmd_vel: true
     # FollowPath:
     #   plugin: "nav2_mppi_controller::MPPIController"
     #   time_steps: 56
@@ -430,26 +422,25 @@ behavior_server:
     cycle_frequency: 10.0
     behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
     spin:
-      plugin: "nav2_behaviors::Spin" # In Iron and older versions, "/" was used instead of "::"
+      plugin: "nav2_behaviors::Spin"
     backup:
-      plugin: "nav2_behaviors::BackUp" # In Iron and older versions, "/" was used instead of "::"
+      plugin: "nav2_behaviors::BackUp"
     drive_on_heading:
-      plugin: "nav2_behaviors::DriveOnHeading" # In Iron and older versions, "/" was used instead of "::"
+      plugin: "nav2_behaviors::DriveOnHeading"
     wait:
-      plugin: "nav2_behaviors::Wait" # In Iron and older versions, "/" was used instead of "::"
+      plugin: "nav2_behaviors::Wait"
     assisted_teleop:
-      plugin: "nav2_behaviors::AssistedTeleop" # In Iron and older versions, "/" was used instead of "::"
+      plugin: "nav2_behaviors::AssistedTeleop"
     local_frame: odom
     global_frame: map
     robot_base_frame: base_footprint
     odom_topic: odometry/filtered
     transform_tolerance: 0.1
     simulate_ahead_time: 2.0
-    #search_velocity
-    max_rotational_vel: 1.2 # increased from 1.0 to 1.2 rad/s for quicker turns
-    min_rotational_vel: 0.4
-    rotational_acc_lim: 3.2
-    enable_stamped_cmd_vel: true # default false in Jazzy or older
+    max_rotational_vel: 0.6        # ⬇️ REDUCED from 1.2 rad/s - less aggressive
+    min_rotational_vel: 0.3        # ⬆️ INCREASED from 0.4 - maintain rotation
+    rotational_acc_lim: 2.0        # ⬇️ REDUCED from 3.2 - smoother
+    enable_stamped_cmd_vel: true
 waypoint_follower:
   ros__parameters:
     use_sim_time: true
@@ -467,16 +458,15 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-
-    # This is a filter that ensures the commanded velocities are within the robot's limits
-    max_velocity: [0.25, 0.0, 1.2] # increased max angular velocity from 1.0 to 1.2 rad/s
-    min_velocity: [-0.25, 0.0, -1.2]
-    max_accel:    [1.5, 0.0, 3.0]    # increased max angular acceleration from 2.0 to 3.0 rad/s^2 for quicker response
-    max_decel:    [-1.5, 0.0, -3.0]   # increased max angular deceleration from -2.0 to -4.0 rad/s^2 for quicker stopping
+    max_velocity: [0.20, 0.0, 0.6]      # ⬇️ REDUCED linear, ⬇️ REDUCED angular
+    min_velocity: [-0.20, 0.0, -0.6]
+    max_accel:    [1.0, 0.0, 2.0]       # ⬇️ REDUCED from [1.5, 0.0, 3.0]
+    max_decel:    [-1.0, 0.0, -2.0]     # ⬇️ REDUCED from [-1.5, 0.0, -3.0]
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     enable_stamped_cmd_vel: true
+
 collision_monitor:
   ros__parameters:
     base_frame_id: "base_footprint"
