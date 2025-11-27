@@ -319,6 +319,10 @@ namespace hi_can::parameters
             }
         }
     }
+    namespace post_landing
+    {
+
+    }
     namespace shared
     {
         namespace elevator
