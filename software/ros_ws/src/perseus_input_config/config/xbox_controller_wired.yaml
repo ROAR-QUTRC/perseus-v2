@@ -40,3 +40,4 @@ generic_controller:
       magnet:
         hold: true
         axis: 7
+    timeout_ns: 150000000

@@ -42,3 +42,4 @@ generic_controller:
         hold: true
         button_positive: 11
         button_negative: 12
+    timeout_ns: 150000000
