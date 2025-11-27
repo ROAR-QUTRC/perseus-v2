@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <iostream>
 #include <nlohmann/json.hpp>
 
 RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
@@ -70,16 +69,9 @@ void RcbDriver::_can_to_ros(const hi_can::Packet& packet)
         if (packet.getAddress() == static_cast<int>(target_address))
         {
             const auto& raw_data = packet.getData();
-            std::string dataStr;
-            for (std::size_t i = 0; i < raw_data.size(); i++)
-            {
-                dataStr += std::format(" {:02X}", static_cast<unsigned int>(raw_data.at(i)));
-            }
 
             parameters::legacy::power::control::power_bus::status_t data;
             data.deserializeData(raw_data);
-
-            // RCLCPP_INFO(this->get_logger(), "message: %s\t#%s -> current: %05d, voltage: %05d, status: %d", name.c_str(), dataStr.c_str(), data.current, data.voltage, data.status);
 
             auto message = std_msgs::msg::String();
             nlohmann::json bus_data = {{"name", name}, {"current", data.current}, {"voltage", data.voltage}, {"status", static_cast<int>(data.status)}};
