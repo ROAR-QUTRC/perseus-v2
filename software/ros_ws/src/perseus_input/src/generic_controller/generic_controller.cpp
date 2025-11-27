@@ -21,13 +21,50 @@ GenericController::GenericController(const rclcpp::NodeOptions& options)
         this->create_subscription<sensor_msgs::msg::Joy>("joy", 10, std::bind(&GenericController::_joyCallback, this, std::placeholders::_1));
     _twistPublisher = this->create_publisher<geometry_msgs::msg::TwistStamped>("joy_vel", 10);
     _actuatorPublisher = this->create_publisher<actuator_msgs::msg::Actuators>("bucket_actuators", 10);
-
+    if (this->declare_parameter("timeout_enable", "true") == "true")
+    {
+        _joyTimeoutTimer = this->create_wall_timer(JOY_TIMEOUT, std::bind(&GenericController::_joyTimeoutCallback, this));
+    }
+    _prevReceivedJoyTime = this->now();
     RCLCPP_INFO(this->get_logger(), "Generic controller initialized");
+}
+
+void GenericController::_joyTimeoutCallback(void)
+{
+    static const auto timeout_length = rcl_time_point_value_t(this->declare_parameter(TIMEOUT_LENGTH, 150000000));
+    RCLCPP_DEBUG_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Timeout length is %ld ns", timeout_length);
+    if ((this->now().nanoseconds() - _prevReceivedJoyTime.nanoseconds()) > timeout_length)
+    {
+        geometry_msgs::msg::TwistStamped twistMsg;
+        twistMsg.twist.linear.x = 0;
+        twistMsg.twist.angular.z = 0;
+
+        twistMsg.header.stamp = this->now();
+        // Publish twist message
+        _twistPublisher->publish(twistMsg);
+
+        actuator_msgs::msg::Actuators actuatorMsg;
+        actuatorMsg.velocity.push_back(0);
+        actuatorMsg.velocity.push_back(0);
+        actuatorMsg.velocity.push_back(0);
+        actuatorMsg.velocity.push_back(0);
+
+        // note: inverted, so magnet is released when the button's pressed
+        actuatorMsg.normalized.push_back(0);
+
+        actuatorMsg.header.stamp = this->now();
+        // Publish actuator message
+        _actuatorPublisher->publish(actuatorMsg);
+
+        // Warn user if controller is disconnected
+        RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Joy timeout, publishing zero to twist and actuators to stop movement safely");
+    }
 }
 
 void GenericController::_joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg)
 {
     _lastReceivedJoy = msg;
+    _prevReceivedJoyTime = this->now();
     double forward = _axisParsers.at(FORWARD_BASE_NAME).getValue();
     double turn = _axisParsers.at(TURN_BASE_NAME).getValue();
     double lift = _axisParsers.at(LIFT_BASE_NAME).getValue();

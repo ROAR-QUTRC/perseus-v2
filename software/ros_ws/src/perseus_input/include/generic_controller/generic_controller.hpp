@@ -70,6 +70,7 @@ private:
         GenericController& _parent;
         const std::string _paramBaseName;
     };
+    void _joyTimeoutCallback(void);
     void _joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg);
 
     static constexpr std::string FORWARD_BASE_NAME = "drive.forward";
@@ -79,13 +80,18 @@ private:
     static constexpr std::string JAWS_BASE_NAME = "bucket.jaws";
     static constexpr std::string ROTATE_BASE_NAME = "bucket.rotate";
     static constexpr std::string MAGNET_BASE_NAME = "bucket.magnet";
+    static constexpr std::string TIMEOUT_LENGTH = "timeout_ns";
+
+    static constexpr auto JOY_TIMEOUT = std::chrono::milliseconds(100);
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _joySubscription;
     rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr _twistPublisher;
     rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr _actuatorPublisher;
+    rclcpp::TimerBase::SharedPtr _joyTimeoutTimer;
 
 protected:
     sensor_msgs::msg::Joy::SharedPtr _lastReceivedJoy;
+    rclcpp::Time _prevReceivedJoyTime;
     std::map<std::string, AxisParser> _axisParsers;
     std::map<std::string, EnableParser> _enableParsers;
 };
