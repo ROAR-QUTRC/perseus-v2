@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <robot name="motor_wheel" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:property name="motor_mass" value="5.236579"/>  <!-- Kg -->
-  <xacro:property name="collision_motor_length" value="0.1"/>  <!-- m -->
-  <xacro:property name="collision_motor_width" value="0.1"/>  <!-- m -->
-  <xacro:property name="collision_motor_height" value="0.075"/>  <!-- m -->
+
 
   <xacro:macro name="motor" params="prefix:=^ side:=^ end:=^">
     <link name="${prefix}${end}_${side}_motor">
