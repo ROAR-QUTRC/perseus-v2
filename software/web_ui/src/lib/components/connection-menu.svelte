@@ -100,7 +100,6 @@
 			{changeAddress}
 			{address}
 			{disableServerIP}
-			{openAddressMenu}
 			{customAddress}
 			{domainId}
 		/>

@@ -9,15 +9,10 @@
 	import { OpenInNewWindow } from 'svelte-radix';
 	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte';
 
-	let {
-		toggleConnection,
-		changeAddress,
-		address,
-		disableServerIP,
-		openAddressMenu,
-		customAddress,
-		domainId
-	} = $props();
+	let { toggleConnection, changeAddress, address, disableServerIP, customAddress, domainId } =
+		$props();
+
+	let openAddressMenu = $state(false);
 </script>
 
 <!-- Connection -->

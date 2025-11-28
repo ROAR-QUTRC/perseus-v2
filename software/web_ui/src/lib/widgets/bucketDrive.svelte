@@ -24,12 +24,12 @@
 				tilt: {
 					type: 'number',
 					description: 'Multiplier for tilt speed',
-					value: '0.1'
+					value: '-0.1'
 				},
 				jaws: {
 					type: 'number',
 					description: 'Multiplier for jaws speed',
-					value: '0.1'
+					value: '-0.1'
 				},
 				rotate: {
 					type: 'number',
