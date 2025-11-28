@@ -1,6 +1,8 @@
-#include <hi_can_twai.hpp>
-#include "rover_core.hpp"
 #include "power_param_group.hpp"
+
+#include <hi_can_twai.hpp>
+
+#include "rover_core.hpp"
 
 using namespace hi_can;
 using namespace hi_can::addressing;

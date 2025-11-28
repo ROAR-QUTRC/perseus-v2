@@ -19,8 +19,8 @@ namespace hi_can::parameters::power::distribution
             filter_t{
                 .address = flagged_address_t(
                     standard_address_t(deviceAddress,
-                              static_cast<uint8_t>(bus),
-                              static_cast<uint8_t>(addressing::legacy::power::control::power_bus::parameter::POWER_STATUS)))},
+                                       static_cast<uint8_t>(bus),
+                                       static_cast<uint8_t>(addressing::legacy::power::control::power_bus::parameter::POWER_STATUS)))},
             PacketManager::callback_config_t{
                 .dataCallback = [this](const Packet& packet)
                 {
