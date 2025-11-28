@@ -67,14 +67,13 @@ public:
     void clearError();
     void handle();
 
-    bool isBusOn() { return ((_state != bus_state::OFF) && (_state != bus_state::ERROR)); }
+    bool isBusOn() { return ((_state != bus_state::OFF) || (_state != bus_state::ERROR)); }
 
 private:
     const static gptimer_alarm_config_t _prechargeOffConfig;
     const static gptimer_alarm_config_t _prechargeOnConfig;
     static bool _timerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 
-    CanlibPowerBusParameterGroup _canParams;
     const gpio_num_t _prechargePin;
     const gpio_num_t _switchPin;
     const gpio_num_t _vtgFeedback;

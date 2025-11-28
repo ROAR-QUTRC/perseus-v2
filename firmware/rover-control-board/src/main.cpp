@@ -14,9 +14,8 @@
 // Old canbus
 /*
 #include <canlib.hpp>
-*/
 #include <canlib_power.hpp>
-
+*/
 // New canbus
 #include <chrono>
 #include <hi_can_twai.hpp>
@@ -29,6 +28,7 @@
 #include <rover_log.hpp>
 #include <rover_thread.hpp>
 
+#include "power_param_group.hpp"
 #include "rcb.hpp"
 #include "rover_debounce.hpp"
 
@@ -58,8 +58,17 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 
 std::optional<PacketManager> packetManager;
+std::vector<std::pair<std::string, hi_can::parameters::legacy::power::control::power_bus::PowerBusParameterGroup>> parameterGroups;
 
-bool btnState = true;
+bool buttonState = true;
+const std::vector<std::pair<std::string, power::distribution::rover_control_board::group>> BUS_GROUPS = {
+    {"contactor", power::distribution::rover_control_board::group::CONTACTOR},
+    {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS},
+    {"drive", power::distribution::rover_control_board::group::DRIVE_BUS},
+    {"aux", power::distribution::rover_control_board::group::AUX_BUS},
+    {"spare", power::distribution::rover_control_board::group::SPARE_BUS},
+};
+
 RoverPowerBus spareBus(CANLIB_GROUP_POWER_SPARE_BUS, CONFIG_PRECHARGE_VOLTAGE,
                        RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN,
                        ROVER_A2_PIN, ROVER_A1_PIN);
@@ -89,6 +98,7 @@ uint64_t startupTime = 0;
 canlib_power_contactor_data contactorData = {
     .immediate_shutdown = false,
     .shutdown_timer = 0};
+
 void contactorTimerCb(TimerHandle_t timer);
 extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
 {
@@ -115,12 +125,40 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     commonParams.setStatus(CANLIB_STATE_NORMAL);
     */
     // New canbus
-    auto& interface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
-                                                 filter_t{
-                                                     .address = static_cast<flagged_address_t>(RCB_DEVICE_ADDRESS),
-                                                     .mask = DEVICE_MASK,
-                                                 });
-    packetManager.emplace(interface);
+    try
+    {
+        auto& canInterface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
+                                                        filter_t{
+                                                            .address = static_cast<flagged_address_t>(RCB_DEVICE_ADDRESS),
+                                                            .mask = DEVICE_MASK,
+                                                        });
+        packetManager.emplace(canInterface);
+    }
+    catch (const std::exception& e)
+    {
+        printf("Error \"%s\" while initialising CAN", e.what());
+        return;
+    }
+    for (const auto& [name, id] : BUS_GROUPS)
+    {
+        try
+        {
+            // create parameter groups
+            parameterGroups.emplace_back(std::make_pair(name,
+                                                        parameters::power::distribution::PowerBusParameterGroup{
+                                                            standard_address_t(power::SYSTEM_ID,
+                                                                               power::distribution::SUBSYSTEM_ID,
+                                                                               static_cast<uint8_t>(power::distribution::rover_control_board::DEVICE_ID)),
+                                                            id}));
+
+            packetManager->addGroup(parameterGroups.back().second);
+        }
+        catch (const std::exception& e)
+        {
+            printf("Error \"%s\" while setting parameter groups for %s", e.what(), name.c_str());
+            return;
+        }
+    }
 
     timer = timerCreate(contactorTimerCb, 1000);
     /*
@@ -149,7 +187,7 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     packetManager->setCallback(
         filter_t{static_cast<flagged_address_t>(
             standard_address_t{power::distribution::rover_control_board::DEVICE_ID,
-                               static_cast<uint8_t>(power::distribution::rover_control_board::group::COMPUTE_BUS),
+                               static_cast<uint8_t>(power::distribution::rover_control_board::group::CONTACTOR),
                                static_cast<uint8_t>(power::distribution::rover_control_board::contactor::parameter::SHUTDOWN)})},
         {
             .dataCallback = [&](auto addr)
@@ -178,7 +216,7 @@ void loop(void* args)
     static uint64_t lastPress = 0;
     static int lastRepeatCount = 0;
 
-    canlibHandle();
+    packetManager->handle();
 
     if ((coreGetUptime() - lastBlinkToggle) >= 300)
     {
@@ -191,8 +229,9 @@ void loop(void* args)
         gpio_set_level(RCB_POWER_LED_PIN, blinkState);
     }
     else
+    {
         gpio_set_level(RCB_POWER_LED_PIN, true);
-
+    }
     powerButton.handle();
     const uint64_t now = coreGetUptime();
     if (powerButton.hasHold())

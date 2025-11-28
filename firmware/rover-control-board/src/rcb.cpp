@@ -1,10 +1,10 @@
-#include "rcb.hpp"
-
 #include <rover_adc.hpp>
 #include <rover_core.hpp>
 #include <rover_io.hpp>
 #include <rover_log.hpp>
 #include <rover_thread.hpp>
+
+#include "rcb.hpp"
 
 const gptimer_alarm_config_t RoverPowerBus::_prechargeOffConfig = {
     .alarm_count = CONFIG_PRECHARGE_TIME * 10,
@@ -105,14 +105,14 @@ void RoverPowerBus::clearError()
 
 void RoverPowerBus::handle()
 {
-    const int32_t busVtg = RCB_ADC_TO_BUS_VTG(adcGetVoltage(_vtgFeedback));
-    _canParams.setVoltage(busVtg);
+    const int32_t bus_voltage = RCB_ADC_TO_BUS_VTG(adcGetVoltage(_vtgFeedback));
+    _canParams.setVoltage(bus_voltage);
     const int32_t curSenseVtg = adcGetVoltage(_currentFeedback);
     const uint32_t busCurrent = RCB_ADC_TO_BUS_CURRENT(curSenseVtg);
 
     // check software fusing
     const bool switchErr = (curSenseVtg == ROVER_ADC_ERR_RETURN_VAL);
-    const bool disableSwitchErr = ((busVtg > RCB_SWITCH_ERR_DISABLE_MIN_VTG) && (busVtg < RCB_SWITCH_ERR_DISABLE_MAX_VTG));
+    const bool disableSwitchErr = ((bus_voltage > RCB_SWITCH_ERR_DISABLE_MIN_VTG) && (bus_voltage < RCB_SWITCH_ERR_DISABLE_MAX_VTG));
     // WARN("%d %d %05ld, %05ld", switchErr, disableSwitchErr, curSenseVtg, RCB_ADC_TO_BUS_VTG(adcGetVoltage(_vtgFeedback)));
 
     const int64_t now = coreGetUptime();
@@ -123,8 +123,8 @@ void RoverPowerBus::handle()
     const bool capacitorsDischarging = (busOffPeriod < CONFIG_BUS_CAP_DISCHARGE_TIME);
     const bool inrushDone = (busOnPeriod > CONFIG_PRECHARGE_INRUSH_TIME);
     const bool busShouldBeOn = (_state == bus_state::ON) || (_nextState == bus_state::ON);
-    const bool busIsOn = (busVtg > RCB_BUS_ON_VOLTAGE);
-    // WARN("%d %d %05ld", busShouldBeOn, busIsOn, busVtg);
+    const bool busIsOn = (bus_voltage > RCB_BUS_ON_VOLTAGE);
+    // WARN("%d %d %05ld", busShouldBeOn, busIsOn, bus_voltage);
     if (switchErr)
     {
         _switchHadError = true;
@@ -161,7 +161,7 @@ void RoverPowerBus::handle()
     {
         if (_state != bus_state::ERROR)
         {
-            ERROR("Bus %d switch fail: Bus voltage %ldmV/%ldmV", _canParams.getId(), busVtg, RCB_BUS_ON_VOLTAGE);
+            ERROR("Bus %d switch fail: Bus voltage %ldmV/%ldmV", _canParams.getId(), bus_voltage, RCB_BUS_ON_VOLTAGE);
             _nextState = bus_state::ERROR;
             _errorCode = bus_error::SWITCH_FAIL;
         }
@@ -203,7 +203,7 @@ void RoverPowerBus::handle()
         break;
     case bus_state::PRECHARGE_COOLDOWN:
         WARN("Bus %d precharge failed (%05ldmV/%05lumV) - waiting %ldms, retry #%d", _canParams.getId(),
-             busVtg, _prechargeVtg, CONFIG_PRECHARGE_RETRY_WAIT_TIME, _retryCount.load());
+             bus_voltage, _prechargeVtg, CONFIG_PRECHARGE_RETRY_WAIT_TIME, _retryCount.load());
         _canParams.setBusStatus(CANLIB_POWER_PRECHARGING);
 
         // set gptimer timeout

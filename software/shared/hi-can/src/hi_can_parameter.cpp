@@ -7,6 +7,29 @@ using namespace addressing;
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
+namespace hi_can::parameters::power::distribution
+{
+    PowerBusParameterGroup::PowerBusParameterGroup(const addressing::standard_address_t& deviceAddress,
+                                                   addressing::power::distribution::rover_control_board::group bus)
+        : _deviceAddress(deviceAddress)
+    {
+        using namespace hi_can::addressing;
+
+        _callbacks.emplace_back(
+            filter_t{
+                .address = flagged_address_t(
+                    standard_address_t(deviceAddress,
+                              static_cast<uint8_t>(bus),
+                              static_cast<uint8_t>(addressing::legacy::power::control::power_bus::parameter::POWER_STATUS)))},
+            PacketManager::callback_config_t{
+                .dataCallback = [this](const Packet& packet)
+                {
+                    _status.deserializeData(packet.getData());
+                },
+            });
+    }
+}
+
 namespace hi_can::parameters::drive::vesc
 {
 #pragma pack(push, 1)
