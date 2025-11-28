@@ -289,21 +289,46 @@ namespace hi_can::parameters
         }
         namespace distribution
         {
-            struct bus_status_t
+            enum class power_status : uint8_t
             {
-                enum class status_t : uint8_t
-                {
-                    OFF = 0,
-                    ON,
-                    PRECHARGING,
-                    PRECHARGE_FAIL,
-                    SWITCH_FAILED,
-                    OVERLOAD,
-                    FAULT,
-                };
-                status_t status_t;
-                uint16_t voltage;  // in mV
-                uint32_t current;  // in mA
+                OFF = 0,        // bus off
+                ON,             // bus on
+                PRECHARGING,    // bus is precharging
+                SHORT_CIRCUIT,  // precharging failed - short circuit
+                SWITCH_FAILED,  // main switch not turning on - estop?
+                OVERLOAD,       // software fuse triggered
+                FAULT,          // switch reporting fault
+            };
+            struct _status_t
+            {
+                power_status status = power_status::OFF;
+                uint16_t voltage = 0;  // in mV
+                uint32_t current = 0;  // in mA
+            };
+            struct _immediate_control_t
+            {
+                bool bus_target_state : 1 = false;  // bus on/off state
+                bool clear_error : 1 = false;       // retry if an error has occurred
+                uint8_t _reserved : 6 = 0;          // padding to make a full byte
+            };
+            struct _scheduled_control_t
+            {
+                uint8_t bus_off_time = 0;  // if a non-0 value is received, turn off bus in that many seconds
+                uint8_t bus_on_time = 0;   // if a non-0 value is received, turn on bus in that many seconds
+            };
+            typedef SimpleSerializable<_status_t> status_t;
+            typedef SimpleSerializable<_immediate_control_t> immediate_control_t;
+            typedef SimpleSerializable<_scheduled_control_t> scheduled_control_t;
+            class PowerBusParameterGroup : public ParameterGroup
+            {
+            public:
+                PowerBusParameterGroup(const addressing::standard_address_t& deviceAddress, addressing::power::distribution::rover_control_board::group bus);
+
+                auto& getStatus() { return _status; }
+
+            private:
+                addressing::raw_address_t _deviceAddress;
+                status_t _status{};
             };
         }
     }
