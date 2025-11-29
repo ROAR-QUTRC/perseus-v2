@@ -52,19 +52,21 @@ std::vector<TwaiPowerBusParameterGroup> parameterGroups;
 
 bool buttonState = true;
 
-RoverPowerBus spareBus(hi_can::addressing::power::distribution::rover_control_board::group::SPARE_BUS, CONFIG_PRECHARGE_VOLTAGE, RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN, ROVER_A2_PIN, ROVER_A1_PIN);
+RoverPowerBus spareBus(hi_can::addressing::power::distribution::rover_control_board::group::SPARE_BUS,
+                       CONFIG_PRECHARGE_VOLTAGE, RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN,
+                       ROVER_A2_PIN, ROVER_A1_PIN);
 RoverPowerBus driveBus(hi_can::addressing::power::distribution::rover_control_board::group::DRIVE_BUS,
                        CONFIG_PRECHARGE_VOLTAGE, RCB_DRIVE_PRE_SWITCH_PIN, RCB_DRIVE_MAIN_SWITCH_PIN,
                        ROVER_A4_PIN, ROVER_A3_PIN);
-RoverPowerBus compBus(hi_can::addressing::power::distribution::rover_control_board::group::COMPUTE_BUS,
-                      CONFIG_COMPUTE_PRECHARGE_VOLTAGE, RCB_COMP_PRE_SWITCH_PIN, RCB_COMP_MAIN_SWITCH_PIN,
-                      ROVER_A6_PIN, ROVER_A5_PIN);
+RoverPowerBus computeBus(hi_can::addressing::power::distribution::rover_control_board::group::COMPUTE_BUS,
+                         CONFIG_COMPUTE_PRECHARGE_VOLTAGE, RCB_COMP_PRE_SWITCH_PIN, RCB_COMP_MAIN_SWITCH_PIN,
+                         ROVER_A6_PIN, ROVER_A5_PIN);
 RoverPowerBus auxBus(hi_can::addressing::power::distribution::rover_control_board::group::AUX_BUS,
                      CONFIG_AUX_PRECHARGE_VOLTAGE, RCB_AUX_PRE_SWITCH_PIN, RCB_AUX_MAIN_SWITCH_PIN,
                      ROVER_A8_PIN, ROVER_A7_PIN);
 
 const std::vector<std::tuple<std::string, power::distribution::rover_control_board::group, RoverPowerBus&>> BUS_GROUPS = {
-    {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS, compBus},
+    {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS, computeBus},
     {"drive", power::distribution::rover_control_board::group::DRIVE_BUS, driveBus},
     {"aux", power::distribution::rover_control_board::group::AUX_BUS, auxBus},
     {"spare", power::distribution::rover_control_board::group::SPARE_BUS, spareBus},
@@ -130,7 +132,8 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     {
         try
         {
-            packetManager->addGroup(power_bus.GetParameterGroup());
+            parameterGroups.emplace_back(power_bus.GetParameterGroup());
+            packetManager->addGroup(parameterGroups.back());
             packetManager->setTransmissionConfig(
                 flagged_address_t(standard_address_t(RCB_DEVICE_ADDRESS, static_cast<uint8_t>(id), static_cast<uint8_t>(hi_can::addressing::power::distribution::rover_control_board::power_bus::parameter::POWER_STATUS))),
                 power_bus.GetTransmissionConfig());
@@ -194,7 +197,7 @@ void loop(void* args)
         lastBlinkToggle = coreGetUptime();
     }
 
-    if (!compBus.isBusOn())
+    if (!computeBus.isBusOn())
     {
         gpio_set_level(RCB_POWER_LED_PIN, blinkState);
     }
@@ -206,13 +209,13 @@ void loop(void* args)
     const uint64_t now = coreGetUptime();
     if (powerButton.hasHold())
     {
-        if (compBus.isBusOn())
+        if (computeBus.isBusOn())
         {
             INFO("Turning off buses");
             driveBus.setBusOn(false);
             auxBus.setBusOn(false);
             spareBus.setBusOn(false);
-            compBus.setBusOn(false);
+            computeBus.setBusOn(false);
         }
         else
         {
@@ -239,9 +242,9 @@ void loop(void* args)
         {
         default:
         case 0:
-            if (!compBus.isBusOn())
+            if (!computeBus.isBusOn())
             {
-                bus = &compBus;
+                bus = &computeBus;
                 busName = "Compute";
             }
             else
@@ -275,7 +278,7 @@ void loop(void* args)
 
     spareBus.handle();
     driveBus.handle();
-    compBus.handle();
+    computeBus.handle();
     auxBus.handle();
 
     // let idle task run

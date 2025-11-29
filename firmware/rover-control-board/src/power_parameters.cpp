@@ -107,7 +107,7 @@ uint16_t TwaiPowerBusParameterGroup::getBusVoltage(void)
 
 uint32_t TwaiPowerBusParameterGroup::getLimitCurrent(void)
 {
-    return static_cast<uint32_t>(_currentLimit);
+    return _currentLimit;
 }
 
 void TwaiPowerBusParameterGroup::_busSetOn(bool state)

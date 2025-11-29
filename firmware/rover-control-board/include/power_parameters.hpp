@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rover_thread.hpp"
+#include "sdkconfig.h"
 
 class TwaiPowerBusParameterGroup : public hi_can::parameters::ParameterGroup
 {
@@ -21,7 +22,7 @@ public:
 private:
     hi_can::parameters::power::distribution::immediate_control_t _immediateStatus;
     hi_can::parameters::power::distribution::scheduled_control_t _scheduledStatus;
-    uint32_t _currentLimit;
+    uint32_t _currentLimit = CONFIG_DEFAULT_SOFTWARE_FUSE_CURRENT;
 
     uint8_t _busOffTimer = 0;
     uint8_t _busOnTimer = 0;
