@@ -16,7 +16,7 @@ The `cmd_vel_topic:=/joy_vel` parameter remaps the velocity command topic for co
 ## Terminal 2
 
 ```console
-nix run .#xbox_controller
+nix run .#generic_controller
 ```
 
 # Basic Operation
