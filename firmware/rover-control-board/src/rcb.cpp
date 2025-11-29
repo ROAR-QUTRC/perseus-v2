@@ -1,10 +1,10 @@
+#include "rcb.hpp"
+
 #include <rover_adc.hpp>
 #include <rover_core.hpp>
 #include <rover_io.hpp>
 #include <rover_log.hpp>
 #include <rover_thread.hpp>
-
-#include "rcb.hpp"
 using namespace hi_can::parameters::power::distribution;
 
 const gptimer_alarm_config_t RoverPowerBus::_prechargeOffConfig = {
