@@ -10,7 +10,7 @@
 
 // arc libraries
 // #include <rover_adc.hpp>
-#include <canlib.hpp>
+// #include <canlib.hpp>
 #include <rover_io.hpp>
 #include <rover_log.hpp>
 #include <rover_thread.hpp>
@@ -44,21 +44,6 @@ void coreInit()
 
     initialised = true;
     CORE_DEBUG("End core initialisation");
-}
-
-void coreRestart()
-{
-    CORE_WARN("Shutting down services");
-
-    ioStopFiles();
-
-    canlibStop();
-
-    CORE_WARN("Restarting");
-    fflush(stdout);
-
-    DELAY_MS(10);  // allow time for UART buffer to flush
-    esp_restart();
 }
 
 int64_t coreGetUptime()
