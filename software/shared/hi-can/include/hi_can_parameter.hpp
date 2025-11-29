@@ -287,6 +287,16 @@ namespace hi_can::parameters
             {
             };
         }
+        namespace contactor
+        {
+            struct _control_t
+            {
+                bool immediate_shutdown : 1 = false;
+                uint8_t _reserved : 7 = 0;   // padding to make a full byte
+                uint8_t shutdown_timer = 0;  // if a non-0 value is received, shutdown in that many seconds
+            };
+            typedef SimpleSerializable<_control_t> control_t;
+        }
         namespace distribution
         {
             enum class power_status : uint8_t
