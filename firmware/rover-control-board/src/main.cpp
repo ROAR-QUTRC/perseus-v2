@@ -1,5 +1,3 @@
-#include "main.hpp"
-
 // core
 #include <driver/gpio.h>
 #include <driver/gptimer.h>
@@ -11,24 +9,19 @@
 // standard libraries
 #include <cstdio>
 
-// Old canbus
-/*
-#include <canlib.hpp>
-#include <canlib_power.hpp>
-*/
 // New canbus
 #include <chrono>
 #include <hi_can_twai.hpp>
 #include <optional>
 
-// rover libs
+// rover libs - leftover from Artemis
 #include <rover_adc.hpp>
 #include <rover_core.hpp>
 #include <rover_io.hpp>
 #include <rover_log.hpp>
 #include <rover_thread.hpp>
 
-#include "power_param_group.hpp"
+#include "power_parameters.hpp"
 #include "rcb.hpp"
 #include "rover_debounce.hpp"
 
@@ -48,39 +41,34 @@
 #define RCB_AUX_MAIN_SWITCH_PIN GPIO_NUM_47
 
 void loop(void* args);
-/* Old canbus
-CanlibCommonParameterGroup commonParams(CANLIB_NO_HANDLER, coreRestart);
-*/
-// New canbus
+
 using namespace hi_can;
 using namespace hi_can::addressing;
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
 std::optional<PacketManager> packetManager;
-std::vector<std::pair<std::string, hi_can::parameters::legacy::power::control::power_bus::PowerBusParameterGroup>> parameterGroups;
+std::vector<TwaiPowerBusParameterGroup> parameterGroups;
 
 bool buttonState = true;
-const std::vector<std::pair<std::string, power::distribution::rover_control_board::group>> BUS_GROUPS = {
-    {"contactor", power::distribution::rover_control_board::group::CONTACTOR},
-    {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS},
-    {"drive", power::distribution::rover_control_board::group::DRIVE_BUS},
-    {"aux", power::distribution::rover_control_board::group::AUX_BUS},
-    {"spare", power::distribution::rover_control_board::group::SPARE_BUS},
-};
 
-RoverPowerBus spareBus(CANLIB_GROUP_POWER_SPARE_BUS, CONFIG_PRECHARGE_VOLTAGE,
-                       RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN,
-                       ROVER_A2_PIN, ROVER_A1_PIN);
-RoverPowerBus driveBus(CANLIB_GROUP_POWER_DRIVE_BUS,
+RoverPowerBus spareBus(hi_can::addressing::power::distribution::rover_control_board::group::SPARE_BUS, CONFIG_PRECHARGE_VOLTAGE, RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN, ROVER_A2_PIN, ROVER_A1_PIN);
+RoverPowerBus driveBus(hi_can::addressing::power::distribution::rover_control_board::group::DRIVE_BUS,
                        CONFIG_PRECHARGE_VOLTAGE, RCB_DRIVE_PRE_SWITCH_PIN, RCB_DRIVE_MAIN_SWITCH_PIN,
                        ROVER_A4_PIN, ROVER_A3_PIN);
-RoverPowerBus compBus(CANLIB_GROUP_POWER_COMPUTE_BUS,
+RoverPowerBus compBus(hi_can::addressing::power::distribution::rover_control_board::group::COMPUTE_BUS,
                       CONFIG_COMPUTE_PRECHARGE_VOLTAGE, RCB_COMP_PRE_SWITCH_PIN, RCB_COMP_MAIN_SWITCH_PIN,
                       ROVER_A6_PIN, ROVER_A5_PIN);
-RoverPowerBus auxBus(CANLIB_GROUP_POWER_AUX_BUS,
+RoverPowerBus auxBus(hi_can::addressing::power::distribution::rover_control_board::group::AUX_BUS,
                      CONFIG_AUX_PRECHARGE_VOLTAGE, RCB_AUX_PRE_SWITCH_PIN, RCB_AUX_MAIN_SWITCH_PIN,
                      ROVER_A8_PIN, ROVER_A7_PIN);
+
+const std::vector<std::tuple<std::string, power::distribution::rover_control_board::group, RoverPowerBus&>> BUS_GROUPS = {
+    {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS, compBus},
+    {"drive", power::distribution::rover_control_board::group::DRIVE_BUS, driveBus},
+    {"aux", power::distribution::rover_control_board::group::AUX_BUS, auxBus},
+    {"spare", power::distribution::rover_control_board::group::SPARE_BUS, spareBus},
+};
 
 // New canbus
 constexpr standard_address_t RCB_DEVICE_ADDRESS{
@@ -95,9 +83,7 @@ TimerHandle_t timer = nullptr;
 
 uint64_t startupTime = 0;
 
-canlib_power_contactor_data contactorData = {
-    .immediate_shutdown = false,
-    .shutdown_timer = 0};
+hi_can::parameters::power::contactor::control_t contactorData;
 
 void contactorTimerCb(TimerHandle_t timer);
 extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
@@ -117,14 +103,6 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
 
     coreInit();
 
-    /*Old canbus
-    canlibInit({CANLIB_SYSTEM_POWER,
-                CANLIB_SUBSYSTEM_POWER_CTRL,
-                CANLIB_DEVICE_ROVER_CONTROL_BOARD});
-
-    commonParams.setStatus(CANLIB_STATE_NORMAL);
-    */
-    // New canbus
     try
     {
         auto& canInterface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
@@ -136,67 +114,59 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     }
     catch (const std::exception& e)
     {
-        printf("Error \"%s\" while initialising CAN", e.what());
+        ERROR("Error \"%s\" while initialising CAN", e.what());
         return;
     }
-    for (const auto& [name, id] : BUS_GROUPS)
+    try
+    {
+        parameterGroups.reserve(4);
+    }
+    catch (const std::exception& e)
+    {
+        ERROR("Error \"%s\" while reserving space for parameter groups", e.what());
+        return;
+    }
+    for (const auto& [name, id, power_bus] : BUS_GROUPS)
     {
         try
         {
-            // create parameter groups
-            parameterGroups.emplace_back(std::make_pair(name,
-                                                        parameters::power::distribution::PowerBusParameterGroup{
-                                                            standard_address_t(power::SYSTEM_ID,
-                                                                               power::distribution::SUBSYSTEM_ID,
-                                                                               static_cast<uint8_t>(power::distribution::rover_control_board::DEVICE_ID)),
-                                                            id}));
-
-            packetManager->addGroup(parameterGroups.back().second);
+            packetManager->addGroup(power_bus.GetParameterGroup());
+            packetManager->setTransmissionConfig(
+                flagged_address_t(standard_address_t(RCB_DEVICE_ADDRESS, static_cast<uint8_t>(id), static_cast<uint8_t>(hi_can::addressing::power::distribution::rover_control_board::power_bus::parameter::POWER_STATUS))),
+                power_bus.GetTransmissionConfig());
         }
         catch (const std::exception& e)
         {
-            printf("Error \"%s\" while setting parameter groups for %s", e.what(), name.c_str());
+            ERROR("Error \"%s\" while setting parameter groups for %s", e.what(), name.c_str());
             return;
         }
     }
 
     timer = timerCreate(contactorTimerCb, 1000);
-    /*
-    canlibAddParameter(
-        canlib_parameter_description{
-            .address =
-                {
-                    .group = CANLIB_GROUP_POWER_CONTACTOR,
-                    .parameter = CANLIB_PARAM_POWER_CONTACTOR,
-                },
-            .writable = true,
-            .data_change_handler = [&](auto addr)
-            {
-                xTimerReset(timer, 0);
-                canlibGetParameter(addr, contactorData);
-                if (contactorData.immediate_shutdown)
-                {
-                    WARN("Performing immediate shutdown in 100ms!");
-                    fflush(stdout);
-                    DELAY_MS(100);
-                    gpio_set_level(RCB_CONTACTOR_PIN, 0);
-                }
-            }},
-        contactorData);
-    */
+
     packetManager->setCallback(
         filter_t{static_cast<flagged_address_t>(
             standard_address_t{power::distribution::rover_control_board::DEVICE_ID,
                                static_cast<uint8_t>(power::distribution::rover_control_board::group::CONTACTOR),
                                static_cast<uint8_t>(power::distribution::rover_control_board::contactor::parameter::SHUTDOWN)})},
         {
-            .dataCallback = [&](auto addr)
+            .dataCallback = [&](hi_can::Packet packet)
             {
-                xTimerReset(timer, 0);
-                WARN("Performing immediate shutdown in 100ms!");
-                fflush(stdout);
-                DELAY_MS(100);
-                gpio_set_level(RCB_CONTACTOR_PIN, 0);
+                hi_can::parameters::power::contactor::control_t data;
+                data.deserializeData(packet.getData());
+                if (data.immediate_shutdown)
+                {
+                    xTimerReset(timer, 0);
+                    WARN("Performing immediate shutdown in 100ms!");
+                    fflush(stdout);
+                    DELAY_MS(100);
+                    gpio_set_level(RCB_CONTACTOR_PIN, 0);
+                }
+                else
+                {
+                    contactorData.immediate_shutdown = data.immediate_shutdown;
+                    contactorData.shutdown_timer = data.shutdown_timer;
+                }
             },
         });
 
@@ -322,7 +292,7 @@ void contactorTimerCb(TimerHandle_t timer)
             WARN("Performing scheduled shutdown in 100ms!");
             fflush(stdout);
             DELAY_MS(100);
-            gpio_set_level(RCB_CONTACTOR_PIN, 0);  // shut down whole rover}
+            gpio_set_level(RCB_CONTACTOR_PIN, 0);  // shut down whole rover
         }
     }
 }

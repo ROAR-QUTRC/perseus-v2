@@ -9,13 +9,10 @@
 #include <atomic>
 #include <cstdint>
 
-// rover libs - old canbus
-/*
-#include <canlib.hpp>
-#include <canlib_power.hpp>
-*/
 // new canbus
 #include <hi_can_twai.hpp>
+
+#include "power_parameters.hpp"
 
 // PRECHARGING MATH
 // the timer value is the time to precharge for, in tenths of a ms - 100 = 10ms
@@ -23,22 +20,22 @@
 // which, for 25mS is 1.69J
 
 // if measuring above this voltage, switch is *definitely* outputting an error level
-#define RCB_BUS_CUR_SENSE_ERROR_VTG 3000
+#define RCB_BUS_CURRENT_SENSE_ERROR_VOLTAGE 3000
 // see dkILIS in switch datasheet - outputs 1mA on sense pin for 50000mA flowing through
-#define RCB_BUS_CUR_SENSE_FACTOR 50000UL
+#define RCB_BUS_CURRENT_SENSE_FACTOR 50000UL
 // 1k resistor to gnd from switch sense pin
-#define RCB_BUS_CUR_SENSE_RESISTOR 1000
+#define RCB_BUS_CURRENT_SENSE_RESISTOR 1000
 
 // disable switch error between these voltages (capacitors discharge slowly below 5V, and switch error turns off below 2V)
-#define RCB_SWITCH_ERR_DISABLE_MIN_VTG 2000
-#define RCB_SWITCH_ERR_DISABLE_MAX_VTG 5000
-#define RCB_BUS_ON_VOLTAGE             16000
-#define RCB_MAX_CURRENT                100000UL  // max 100A per channel
+#define RCB_SWITCH_ERROR_DISABLE_MIN_VOLTAGE 2000
+#define RCB_SWITCH_ERROR_DISABLE_MAX_VOLTAGE 5000
+#define RCB_BUS_ON_VOLTAGE                   16000
+#define RCB_MAX_CURRENT                      100000UL  // max 100A per channel
 
 // 100k-10k voltage divider to measure bus vtg
-#define RCB_ADC_TO_BUS_VTG(_vtg) ROVER_ADC_DIVIDER_TO_SOURCE_VTG(_vtg, 100, 10)
+#define RCB_ADC_TO_BUS_VOLTAGE(_voltage) ROVER_ADC_DIVIDER_TO_SOURCE_VOLTAGE(_voltage, 100, 10)
 // convert current feedback voltage to bus current
-#define RCB_ADC_TO_BUS_CURRENT(_vtg) (((_vtg) * RCB_BUS_CUR_SENSE_FACTOR) / RCB_BUS_CUR_SENSE_RESISTOR)
+#define RCB_ADC_TO_BUS_CURRENT(_voltage) (((_voltage) * RCB_BUS_CURRENT_SENSE_FACTOR) / RCB_BUS_CURRENT_SENSE_RESISTOR)
 
 class RoverPowerBus
 {
@@ -59,13 +56,15 @@ public:
         SWITCH_ERROR,
         OVERLOAD,
     };
-    RoverPowerBus(uint8_t busId, uint16_t prechargeVoltage,
+    RoverPowerBus(hi_can::addressing::power::distribution::rover_control_board::group busId, uint16_t prechargeVoltage,
                   gpio_num_t precharge, gpio_num_t mainSwitch,
-                  gpio_num_t vtgFeedback, gpio_num_t currentFeedback);
+                  gpio_num_t voltageFeedback, gpio_num_t currentFeedback);
     ~RoverPowerBus();
     void setBusOn(bool on);
     void clearError();
     void handle();
+    hi_can::PacketManager::transmission_config_t GetTransmissionConfig(void);
+    TwaiPowerBusParameterGroup GetParameterGroup(void);
 
     bool isBusOn() { return ((_state != bus_state::OFF) || (_state != bus_state::ERROR)); }
 
@@ -74,12 +73,15 @@ private:
     const static gptimer_alarm_config_t _prechargeOnConfig;
     static bool _timerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 
+    TwaiPowerBusParameterGroup _canParameters;
+    hi_can::PacketManager::transmission_config_t _statusTransmissionConfig;
+
     const gpio_num_t _prechargePin;
     const gpio_num_t _switchPin;
-    const gpio_num_t _vtgFeedback;
+    const gpio_num_t _voltageFeedback;
     const gpio_num_t _currentFeedback;
 
-    const uint32_t _prechargeVtg;
+    const uint32_t _prechargeVoltage;
 
     gptimer_handle_t _timer = NULL;
     bool _switchHadError = false;
