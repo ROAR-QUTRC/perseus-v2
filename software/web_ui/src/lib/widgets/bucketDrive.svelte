@@ -49,6 +49,7 @@
 
 	const CALLBACK_INTERVAL = 100; // 10Hz
 	const INACTIVE_TIMEOUT = 10000; // 10 seconds
+	const DEADBAND_PERCENT = 0.05; // 5%
 
 	let intervalHandle: NodeJS.Timeout | null = null;
 	let lockingTimeoutHandle: NodeJS.Timeout | null = null;
@@ -87,16 +88,16 @@
 		if (!topic) return;
 
 		const velocities = [
-			deadBand(handles.lift.value, 0.05) *
+			deadBand(handles.lift.value, DEADBAND_PERCENT) *
 				Number(settings.groups.general.lift.value) *
 				Number(settings.groups.general.masterSpeedMultiplier.value),
-			deadBand(handles.tilt.value, 0.05) *
+			deadBand(handles.tilt.value, DEADBAND_PERCENT) *
 				Number(settings.groups.general.tilt.value) *
 				Number(settings.groups.general.masterSpeedMultiplier.value),
-			deadBand(handles.jaws.value, 0.05) *
+			deadBand(handles.jaws.value, DEADBAND_PERCENT) *
 				Number(settings.groups.general.jaws.value) *
 				Number(settings.groups.general.masterSpeedMultiplier.value),
-			deadBand(handles.rotate.value, 0.05) *
+			deadBand(handles.rotate.value, DEADBAND_PERCENT) *
 				Number(settings.groups.general.rotate.value) *
 				Number(settings.groups.general.masterSpeedMultiplier.value)
 		];
@@ -113,6 +114,7 @@
 	// Unlock logic
 	let unlocked = $state(false);
 	let unlocking = false;
+	let unlockingTimeoutHandle: NodeJS.Timeout | null = null;
 
 	const startLockingTimer = () => {
 		return setTimeout(() => {
@@ -127,7 +129,7 @@
 
 	const startUnlockTimer = () => {
 		unlocking = true;
-		setTimeout(() => {
+		unlockingTimeoutHandle = setTimeout(() => {
 			if (unlocking) {
 				unlocked = true;
 				unlocking = false;
@@ -206,9 +208,25 @@
 	onMount(() => {
 		unlocked = false;
 
-		// Cleanup ros connection on unmount
+		// Cleanup
 		return () => {
 			if (intervalHandle) clearInterval(intervalHandle);
+			if (lockingTimeoutHandle) clearTimeout(lockingTimeoutHandle);
+			if (unlockingTimeoutHandle) clearTimeout(unlockingTimeoutHandle);
+
+			// Ensure all actuators are stopped
+			Object.keys(handles).forEach((handle) => {
+				onStop(handle);
+			});
+			publishActuatorValues();
+
+			// Remove event listeners
+			Object.keys(handles).forEach((handle) => {
+				handles[handle].parent?.removeEventListener('pointerdown', (e) => onStart(e, handle));
+				handles[handle].parent?.removeEventListener('pointermove', (e) => onMove(e, handle));
+				handles[handle].parent?.removeEventListener('pointerup', (e) => onStop(handle, e));
+				handles[handle].parent?.removeEventListener('pointerleave', (e) => onStop(handle, e));
+			});
 		};
 	});
 </script>
