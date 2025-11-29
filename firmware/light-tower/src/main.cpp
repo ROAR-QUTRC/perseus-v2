@@ -43,7 +43,7 @@ constexpr int STARTUP_ANIM_CYCLE_COUNT = 5;
 // constexpr steady_clock::duration STARTUP_ANIM_DURATION = 6s;
 // constexpr steady_clock::duration STARTUP_ANIM_STEP_DURATION = STARTUP_ANIM_DURATION / (STARTUP_ANIM_CYCLE_COUNT * LOW_DENSITY_LEDS_PER_RING);
 
-constexpr uint8_t LED_ROW_LENGTH_ODD = (LOW_DENSITY_LEDS_PER_RING % 2 != 0);
+constexpr uint8_t ledsInRowOdd = (LOW_DENSITY_LEDS_PER_RING % 2 != 0);
 #pragma endregion
 
 CRGB leds[LED_COUNT];
@@ -139,17 +139,15 @@ void loop()
 //         {
 //             wrapThreshold = LOW_DENSITY_LEDS_PER_RING - 1 - ledOffset;
 
+<<<<<<< HEAD
 //             for (int i = 0; i < 12; i++)
 //             {
 //                 ledIndex = i + ledOffset - LED_ROW_LENGTH_ODD - (i <= wrapThreshold ? 0 : LOW_DENSITY_LEDS_PER_RING);
-<<<<<<< HEAD
 =======
 for (int i = 0; i < 12; i++)
 {
     ledIndex = i + ledOffset - ledsInRowOdd - (i <= wrapThreshold ? 0 : LOW_DENSITY_LEDS_PER_RING);
 >>>>>>> parent of 5f95b1b (Updated var to match naming convention)
-=======
->>>>>>> 29865b5 (Reapply "Updated var to match naming convention")
 
 //                 switch (LED_MORSE_CODE_QUT_LAYOUT[i])
 //                 {
