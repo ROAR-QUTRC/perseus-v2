@@ -9,7 +9,7 @@
 	import { OpenInNewWindow } from 'svelte-radix';
 	import { localStore } from '$lib/scripts/localStore.svelte';
 	import { connectRos, disconnectRos, getRosConnection } from '$lib/scripts/ros-bridge.svelte';
-	import ConnectionMenuItems from './connection-menu-items.svelte';
+	import ConnectionMenuMobile from './connection-menu-mobile.svelte';
 
 	let props: { isMobile: boolean } = $props();
 
@@ -95,7 +95,7 @@
 	</Dialog.Root>
 {:else}
 	<div class="mx-auto flex">
-		<ConnectionMenuItems
+		<ConnectionMenuMobile
 			{toggleConnection}
 			{changeAddress}
 			{address}
