@@ -6,6 +6,9 @@ result
 log/
 install/
 
+# Test results
+test-results/
+
 # Documentation
 generated/
 build/
