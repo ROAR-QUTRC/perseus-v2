@@ -1,4 +1,2 @@
 dependencies:
-  espressif/arduino-esp32:
-    version: "3.3.4"
-    git: https://github.com/espressif/arduino-esp32.git
+  espressif/arduino-esp32: ^3.1.3
