@@ -10,7 +10,9 @@ For changes to the perseus repo, you should create a new branch - there are a co
 git branch NEW_BRANCH_NAME
 git checkout NEW_BRANCH_NAME
 ```
+
 Or (combined version):
+
 ```
 git checkout -b NEW_BRANCH_NAME
 ```
@@ -21,7 +23,9 @@ These commands create a new branch and switch to it. The new branch will be a co
 git branch NEW_BRANCH_NAME OLD_BRANCH_NAME
 git checkout NEW_BRANCH_NAME
 ```
+
 Or (combined version):
+
 ```
 git checkout -b NEW_BRANCH_NAME OLD_BRANCH_NAME
 ```
@@ -46,11 +50,11 @@ Checkout <project:/systems/ci-cd.md> for more details on our CI/CD.
 
 ## Pull Requests
 
-Once you've finished developing on your branch, you can open a Pull Request (PR) to merge your branch into the main branch. To do this, go to the [Perseus GitHub repo](https://github.com/ROAR-QUTRC/perseus-v2) and go to "Pull requests" then click "New pull request". Select your branch and click "View pull request". This will take you to the pull request page, where you can write a title and a description of your changes. 
+Once you've finished developing on your branch, you can open a Pull Request (PR) to merge your branch into the main branch. To do this, go to the [Perseus GitHub repo](https://github.com/ROAR-QUTRC/perseus-v2) and go to "Pull requests" then click "New pull request". Select your branch and click "View pull request". This will take you to the pull request page, where you can write a title and a description of your changes.
 
-For changes to the docs, please ensure you include a screenshot of the  built changes to ensure they are formatted properly (see <project:/development/documentation-index.md>). 
+For changes to the docs, please ensure you include a screenshot of the built changes to ensure they are formatted properly (see <project:/development/documentation-index.md>).
 
-Once you're finished writing the description of your PR, you can select reviewers. For most files, the reviewers will be autoselected from the `.github/CODEOWNERS` file, which specifies who can approve changes to which files. 
+Once you're finished writing the description of your PR, you can select reviewers. For most files, the reviewers will be autoselected from the `.github/CODEOWNERS` file, which specifies who can approve changes to which files.
 For example, this line:
 
 ```
