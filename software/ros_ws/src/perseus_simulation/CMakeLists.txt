@@ -54,7 +54,10 @@ if(BUILD_TESTING)
 
   enable_testing()
 
-  add_executable(gz_bridge_config_test tests/gz_bridge_config_test.cpp)
+  # Test files are located in /software/tests/
+  set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/perseus_simulation")
+
+  add_executable(gz_bridge_config_test ${TESTS_DIR}/gz_bridge_config_test.cpp)
   target_link_libraries(gz_bridge_config_test GTest::gtest_main
                         ${YAML_CPP_LIBRARIES})
   target_include_directories(gz_bridge_config_test
