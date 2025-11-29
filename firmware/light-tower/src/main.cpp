@@ -142,14 +142,6 @@ void loop()
 //             for (int i = 0; i < 12; i++)
 //             {
 //                 ledIndex = i + ledOffset - LED_ROW_LENGTH_ODD - (i <= wrapThreshold ? 0 : LOW_DENSITY_LEDS_PER_RING);
-<<<<<<< HEAD
-=======
-for (int i = 0; i < 12; i++)
-{
-    ledIndex = i + ledOffset - ledsInRowOdd - (i <= wrapThreshold ? 0 : LOW_DENSITY_LEDS_PER_RING);
->>>>>>> parent of 5f95b1b (Updated var to match naming convention)
-=======
->>>>>>> 29865b5 (Reapply "Updated var to match naming convention")
 
 //                 switch (LED_MORSE_CODE_QUT_LAYOUT[i])
 //                 {
