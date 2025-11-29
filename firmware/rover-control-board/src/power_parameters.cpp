@@ -1,6 +1,7 @@
+#include "power_parameters.hpp"
+
 #include <hi_can_twai.hpp>
 
-#include "power_parameters.hpp"
 #include "rover_core.hpp"
 
 using namespace hi_can;
@@ -107,7 +108,7 @@ uint16_t TwaiPowerBusParameterGroup::getBusVoltage(void)
 
 uint32_t TwaiPowerBusParameterGroup::getLimitCurrent(void)
 {
-    return static_cast<uint32_t>(_currentLimit);
+    return _currentLimit;
 }
 
 void TwaiPowerBusParameterGroup::_busSetOn(bool state)
