@@ -37,7 +37,7 @@ static uint8_t adcAccumulatorCounters[ADC_MAX_CHANNELS];
 static uint16_t adcErrorLevels[ADC_MAX_CHANNELS];
 static uint8_t adcErrorCounters[ADC_MAX_CHANNELS];
 
-int adcReadingToVtg(int raw)
+int adcReadingToVoltage(int raw)
 {
     int voltage = 0;
     if (adc_cali_raw_to_voltage(adcCaliHandle, raw, &voltage) != ESP_OK)
@@ -79,7 +79,7 @@ bool adcConvCompleteCallback(adc_continuous_handle_t handle, const adc_continuou
     for (int i = 0; i < resultCount; i++)
     {
         const adc_digi_output_data_t result = ((adc_digi_output_data_t*)edata->conv_frame_buffer)[i];
-        const uint16_t vtg = adcReadingToVtg(result.type2.data);
+        const uint16_t vtg = adcReadingToVoltage(result.type2.data);
         const int idx = resultIndices[i];
 
         if (vtg > adcErrorLevels[idx])
