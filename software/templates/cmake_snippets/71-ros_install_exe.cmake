@@ -1,2 +1,5 @@
-# INSTALL (ROS Executables)
-install(TARGETS ${PROJECT_NAME} DESTINATION lib/${PROJECT_NAME})
+# INSTALL(ROS Executables)
+foreach(node IN ITEMS ${NODE_NAMES})
+  # Install ROS Executable
+  install(TARGETS ${node} DESTINATION lib/${PROJECT_NAME})
+endforeach()

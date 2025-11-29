@@ -5,6 +5,7 @@ project(
   project_name_here
   VERSION 0.0.1
   LANGUAGES CXX)
+set(NODE_NAMES node_name_here)
 
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
 set(default_build_type "Debug")
