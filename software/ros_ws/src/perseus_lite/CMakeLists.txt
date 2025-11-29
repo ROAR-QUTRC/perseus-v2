@@ -59,5 +59,31 @@ install(
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
+# TESTING
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(GTest REQUIRED)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
+
+  enable_testing()
+
+  # Test files are located in /software/tests/
+  set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/perseus_lite")
+
+  # Controller config validation tests
+  add_executable(controller_config_test ${TESTS_DIR}/controller_config_test.cpp)
+  target_link_libraries(controller_config_test GTest::gtest_main
+                        ${YAML_CPP_LIBRARIES})
+  target_include_directories(controller_config_test
+                             PUBLIC ${YAML_CPP_INCLUDE_DIRS})
+  target_compile_options(controller_config_test PUBLIC ${YAML_CPP_CFLAGS_OTHER})
+
+  include(GoogleTest)
+  gtest_discover_tests(controller_config_test)
+
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 # ROS FINALISATION
 ament_package()
