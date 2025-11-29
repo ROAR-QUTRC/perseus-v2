@@ -1,6 +1,7 @@
+#include "power_parameters.hpp"
+
 #include <hi_can_twai.hpp>
 
-#include "power_parameters.hpp"
 #include "rover_core.hpp"
 
 using namespace hi_can;
