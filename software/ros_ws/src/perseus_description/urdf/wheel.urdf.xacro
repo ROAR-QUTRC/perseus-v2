@@ -4,33 +4,26 @@
 <xacro:macro name="wheel" params="prefix:=^ side:=^ end:=^">
   <link name="${prefix}${end}_${side}_wheel">
     <inertial>
-      <xacro:if value="${side == 'left'}">
-        <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 ${pi}"/>
-      </xacro:if>
-      <xacro:if value="${side == 'right'}">
-        <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 -${pi}"/>
-      </xacro:if>
-      <mass value="${wheel_mass}"/>        
-      <xacro:cylinder_inertia m="${wheel_mass}" radius="${wheel_radius}" length="${wheel_length}"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="${wheel_mass}"/>
+      <!-- Use Y-axis aligned cylinder inertia since wheels rotate around Y axis -->
+      <xacro:cylinder_inertia_y m="${wheel_mass}" radius="${wheel_radius}" length="${wheel_length}"/>
     </inertial>
     <visual>
+      <!-- Rotate mesh so tread pattern faces outward -->
       <xacro:if value="${side == 'left'}">
-        <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 ${pi}"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi}"/>
       </xacro:if>
       <xacro:if value="${side == 'right'}">
-        <origin xyz="0.0 0.0  0.0" rpy="0.0 0.0 -${pi}"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
       </xacro:if>
       <geometry>
-        <mesh scale="0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
+        <mesh scale="0.1 0.1 0.1" filename="file://$(find perseus_description)/meshes/wheel.dae"/>
       </geometry>
     </visual>
     <collision>
-      <xacro:if value="${side == 'left'}">
-        <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 ${pi}"/>
-      </xacro:if>
-        <xacro:if value="${side == 'right'}">
-      <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 -${pi}"/>
-      </xacro:if>
+      <!-- Rotate cylinder 90° around X to align with Y axis (wheel axle) -->
+      <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0"/>
       <geometry>
         <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
       </geometry>
@@ -38,17 +31,17 @@
   </link>
 
   <joint name="${prefix}${end}_${side}_wheel_joint" type="continuous">
-    <xacro:if value="${side == 'left'}">
-      <origin xyz="0 ${wheels_y_offset} 0.0" rpy="0.0 0.0 0"/>
-      <axis xyz="0 1 0" rpy="0 0 0"/>
-    </xacro:if>
-    <xacro:if value="${side == 'right'}">
-      <origin xyz="0 ${-wheels_y_offset} 0.0" rpy="0.0 0.0 ${pi}"/>
-      <axis xyz="0 -1 0" rpy="0 0 0"/>
-    </xacro:if>
-    <dynamics damping="0.2" friction="0.3"/>
     <parent link="${prefix}${end}_${side}_motor"/>
     <child link="${prefix}${end}_${side}_wheel"/>
+    <xacro:if value="${side == 'left'}">
+      <origin xyz="0.0 ${wheels_y_offset} 0.0" rpy="0.0 0.0 0.0"/>
+    </xacro:if>
+    <xacro:if value="${side == 'right'}">
+      <origin xyz="0.0 ${-wheels_y_offset} 0.0" rpy="0.0 0.0 0.0"/>
+    </xacro:if>
+    <!-- Axis -Y: positive velocity = forward motion (standard ROS/diff_drive convention) -->
+    <axis xyz="0 -1 0"/>
+    <dynamics damping="0.2" friction="0.3"/>
   </joint>
 
 
@@ -62,17 +55,16 @@
           <friction>
               <ode>
                   <!--
-                  In this case, the wheels need lower sideways than forwards coefficients of friction
-                  so that the rover can turn (skid steer) -->
-                  <!-- forward coefficient of friction -->
-                  <mu>100</mu>
-                  <!-- perpendicular coefficient of friction -->
-                  <mu2>1</mu2>
-                  <!--
-                  However, since mu/mu2 are normally relative to world coordinates,
-                  the rover would only be able to turn 90 degrees either way before they swapped, making turning impossible.
-                  To solve this, we need to specify the direction that mu/mu2 are relative to.
+                  Skid-steer friction setup:
+                  - mu: friction in fdir1 direction (forward/backward rolling)
+                  - mu2: friction perpendicular to fdir1 (sideways sliding for turning)
+                  - fdir1: primary friction direction in link frame
                   -->
+                  <!-- Forward/backward friction - high to grip and drive -->
+                  <mu>1.5</mu>
+                  <!-- Sideways friction - low to allow skid steering -->
+                  <mu2>0.2</mu2>
+                  <!-- fdir1 points forward (X) in link frame -->
                   <fdir1>1 0 0</fdir1>
               </ode>
           </friction>
