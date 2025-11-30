@@ -10,12 +10,21 @@
       ixy="0" iyz="0" ixz="0"/>
   </xacro:macro>
 
-  <!-- Cylinder inertia macro -->
+  <!-- Cylinder inertia macro (axis along Z) -->
   <xacro:macro name="cylinder_inertia" params="m radius length">
-    <inertia 
-      ixx="${m*(3*radius*radius+length*length)/12}" 
-      iyy="${m*(3*radius*radius+length*length)/12}" 
+    <inertia
+      ixx="${m*(3*radius*radius+length*length)/12}"
+      iyy="${m*(3*radius*radius+length*length)/12}"
       izz="${m*radius*radius/2}"
+      ixy="0" iyz="0" ixz="0"/>
+  </xacro:macro>
+
+  <!-- Cylinder inertia macro (axis along Y) - use for wheels -->
+  <xacro:macro name="cylinder_inertia_y" params="m radius length">
+    <inertia
+      ixx="${m*(3*radius*radius+length*length)/12}"
+      iyy="${m*radius*radius/2}"
+      izz="${m*(3*radius*radius+length*length)/12}"
       ixy="0" iyz="0" ixz="0"/>
   </xacro:macro>
 
