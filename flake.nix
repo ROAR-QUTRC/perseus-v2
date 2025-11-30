@@ -146,7 +146,6 @@
             twist-stamper
             rosbridge-suite
             livox-ros-driver2
-            rplidar-ros
             rviz2-fixed
             rosbag2
             teleop-twist-keyboard
