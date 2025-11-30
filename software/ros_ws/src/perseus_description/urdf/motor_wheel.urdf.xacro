@@ -10,10 +10,10 @@
       </inertial>
       <visual>
         <xacro:if value="${side == 'left'}">
-          <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+          <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
         </xacro:if>
         <xacro:if value="${side == 'right'}">
-          <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
+          <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
         </xacro:if>
         <geometry>
           <mesh scale="0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
