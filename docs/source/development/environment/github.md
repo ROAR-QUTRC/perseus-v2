@@ -37,6 +37,20 @@ git add path_to_file
 git commit -m "COMMIT MESSAGE"
 ```
 
+You can also add everything in a folder:
+
+```console
+git add path_to_folder
+```
+
+Or (to add the current folder):
+
+```console
+git add .
+```
+
+If you do this while in the base folder (`~/perseus-v2`), it will add all files in the repo.
+
 Then you can push your commits to GitHub. The first time you do this, you'll need to run `git push --set-upstream origin NEW_BRANCH_NAME` to get your local branch on the GitHub.
 Then after that, you can just run `git push` whenever you want to update the GitHub branch from your local branch (after staging changes).
 
