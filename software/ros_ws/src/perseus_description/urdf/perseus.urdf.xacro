@@ -74,7 +74,7 @@
 
     <!-- An empty base_link to attach everything to -->
     <link name="${prefix}base_link"/>
-    
+
     <joint name="${prefix}chassis_joint" type="fixed"> <!-- Joint Connect base_link and chassis -->
       <origin xyz="0 0.0 ${chassis_z_offset}" rpy="0.0 0.0 0.0"/>
       <parent link="${prefix}base_link"/>
@@ -84,10 +84,10 @@
     <link name="${prefix}base_footprint"/>
 
     <joint name="base_footprint_joint" type="fixed">
-        <parent link="${prefix}chassis"/>
+        <parent link="${prefix}base_link"/>
         <child link="${prefix}base_footprint"/>
         <origin xyz="0 0 0" rpy="0 0 0"/>
-    </joint> 
+    </joint>
 
     <!-- ADD 2 ROCKERS (INCLUDING 4 MOTORS + 4 WHEELS) -->
     <xacro:rocker prefix="" side="left"/>
