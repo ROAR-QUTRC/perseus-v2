@@ -36,10 +36,10 @@ generic_controller:
         button_negative: 5
       rotate:
         scaling: 0.5
-        button_positive: 14
-        button_negative: 13
+        button_positive: 3
+        button_negative: 0
       magnet:
         hold: true
-        button_positive: 11
-        button_negative: 12
+        button_positive: 2
+        button_negative: 1
     timeout_ns: 150000000
