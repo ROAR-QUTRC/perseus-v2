@@ -2,6 +2,8 @@
 """
 Teleop Diagnostics TUI - A comprehensive diagnostic tool for teleoperation debugging.
 
+Uses curses (standard library) for the terminal interface - no external dependencies.
+
 This tool provides a real-time view of:
 - Joystick raw input (axes and buttons)
 - Generic controller configuration and scaling
@@ -11,6 +13,7 @@ This tool provides a real-time view of:
 - Wheel axis configuration
 """
 
+import curses
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
@@ -20,26 +23,11 @@ import time
 import signal
 import sys
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List
 from collections import deque
 
 from sensor_msgs.msg import Joy, JointState
 from geometry_msgs.msg import Twist, TwistStamped
-from std_msgs.msg import String
-
-try:
-    from rich.console import Console
-    from rich.live import Live
-    from rich.table import Table
-    from rich.panel import Panel
-    from rich.layout import Layout
-    from rich.text import Text
-    from rich import box
-    RICH_AVAILABLE = True
-except ImportError:
-    RICH_AVAILABLE = False
-    print("Warning: 'rich' library not installed. Install with: pip install rich")
-    print("Falling back to simple text output.")
 
 
 @dataclass
@@ -74,14 +62,14 @@ class WheelData:
 @dataclass
 class ControllerConfig:
     """Holds generic controller configuration."""
-    forward_axis: int = -1
-    forward_scaling: float = 0.0
-    turn_axis: int = -1
-    turn_scaling: float = 0.0
-    forward_enable_axis: int = -1
-    forward_enable_threshold: float = 0.0
-    turbo_enable_axis: int = -1
-    turbo_scaling: float = 0.0
+    forward_axis: int = 1
+    forward_scaling: float = -0.7
+    turn_axis: int = 0
+    turn_scaling: float = -0.5
+    forward_enable_axis: int = 2
+    forward_enable_threshold: float = -0.5
+    turbo_enable_axis: int = 5
+    turbo_scaling: float = 2.5
     deadband: float = 0.08
 
 
@@ -142,7 +130,7 @@ class TeleopDiagnosticsNode(Node):
         self.joy_sub = self.create_subscription(
             Joy, '/joy', self.joy_callback, sensor_qos)
 
-        # Subscribe to velocity topics (all potential mux inputs)
+        # Subscribe to velocity topics
         self.joy_vel_sub = self.create_subscription(
             TwistStamped, '/joy_vel', self.joy_vel_callback, 10)
         self.cmd_vel_out_sub = self.create_subscription(
@@ -153,32 +141,14 @@ class TeleopDiagnosticsNode(Node):
             TwistStamped, '/web_vel', self.web_vel_callback, 10)
         self.key_vel_sub = self.create_subscription(
             TwistStamped, '/key_vel', self.key_vel_callback, 10)
-
-        # Also try unstamped versions
         self.cmd_vel_unstamped_sub = self.create_subscription(
             Twist, '/cmd_vel', self.cmd_vel_unstamped_callback, 10)
 
-        # Subscribe to joint states for wheel data
+        # Subscribe to joint states
         self.joint_state_sub = self.create_subscription(
             JointState, '/joint_states', self.joint_state_callback, sensor_qos)
 
-        # Try to get controller parameters
-        self._fetch_controller_params()
-
         self.get_logger().info('Teleop diagnostics node started')
-
-    def _fetch_controller_params(self):
-        """Attempt to fetch generic_controller parameters."""
-        # This would typically use a service call to get parameters
-        # For now, we'll use default values from the config
-        self.controller_config.forward_axis = 1
-        self.controller_config.forward_scaling = -0.7
-        self.controller_config.turn_axis = 0
-        self.controller_config.turn_scaling = -0.5
-        self.controller_config.forward_enable_axis = 2
-        self.controller_config.forward_enable_threshold = -0.5
-        self.controller_config.turbo_enable_axis = 5
-        self.controller_config.turbo_scaling = 2.5
 
     def joy_callback(self, msg: Joy):
         now = time.time()
@@ -245,30 +215,20 @@ class TeleopDiagnosticsNode(Node):
         self.wheel_data.rate_hz = self.wheel_rate.add_timestamp(now)
 
     def _update_active_source(self):
-        """Determine which mux source is currently active (most recent with non-zero velocity)."""
+        """Determine which mux source is currently active."""
         now = time.time()
-        timeout = 0.5  # Match mux timeout
-
-        # Priority order (highest first): joystick(100), keyboard(90), web_ui(80), navigation(10)
+        timeout = 0.5
         priority_order = ["joystick", "keyboard", "web_ui", "navigation"]
-
         for source in priority_order:
-            last_time = self.mux_sources.get(source, 0.0)
-            if now - last_time < timeout:
+            if now - self.mux_sources.get(source, 0.0) < timeout:
                 self.active_mux_source = source
                 return
-
         self.active_mux_source = "none"
 
 
 class TeleopTUI:
-    """Text User Interface for teleop diagnostics."""
+    """Curses-based TUI for teleop diagnostics."""
 
-    # Wheel axis configuration (from URDF)
-    WHEEL_AXIS = "Y-axis: xyz=\"0 -1 0\""
-    WHEEL_AXIS_COMMENT = "Positive velocity = Forward (REP-103)"
-
-    # Mux priorities (from twist_mux.yaml)
     MUX_PRIORITIES = {
         "joystick": 100,
         "keyboard": 90,
@@ -278,437 +238,317 @@ class TeleopTUI:
 
     def __init__(self, node: TeleopDiagnosticsNode):
         self.node = node
-        self.console = Console()
         self.running = True
+        self.stdscr = None
 
-    def create_joy_panel(self) -> Panel:
-        """Create panel showing raw joystick input."""
-        table = Table(box=box.SIMPLE, show_header=True, header_style="bold cyan")
-        table.add_column("Axis", justify="right", width=6)
-        table.add_column("Value", justify="center", width=8)
-        table.add_column("Bar", justify="left", width=20)
+    def make_bar(self, value: float, width: int = 20) -> str:
+        """Create a text bar for value in range [-1, 1]."""
+        normalized = (value + 1) / 2  # Convert to 0-1
+        normalized = max(0, min(1, normalized))
+        mid = width // 2
+        pos = int(normalized * width)
+        bar = ['-'] * width
+        bar[mid] = '|'
+        if pos < width:
+            bar[pos] = '*'
+        return '[' + ''.join(bar) + ']'
 
-        axes = self.node.joy_data.axes or []
-        for i, val in enumerate(axes[:8]):  # Show first 8 axes
-            bar = self._make_bar(val, -1.0, 1.0, 20)
-            style = "green" if abs(val) > 0.1 else "dim"
-            table.add_row(f"[{i}]", f"{val:+.2f}", bar, style=style)
+    def draw_box(self, y: int, x: int, h: int, w: int, title: str = ""):
+        """Draw a box with optional title."""
+        # Top border
+        self.stdscr.addstr(y, x, '+' + '-' * (w - 2) + '+')
+        # Title
+        if title:
+            title_str = f" {title} "
+            self.stdscr.addstr(y, x + 2, title_str, curses.A_BOLD)
+        # Sides
+        for i in range(1, h - 1):
+            self.stdscr.addstr(y + i, x, '|')
+            self.stdscr.addstr(y + i, x + w - 1, '|')
+        # Bottom border
+        self.stdscr.addstr(y + h - 1, x, '+' + '-' * (w - 2) + '+')
 
-        # Buttons row
-        buttons = self.node.joy_data.buttons or []
-        btn_str = " ".join([f"[{'green' if b else 'dim'}]{i}[/]" for i, b in enumerate(buttons[:12])])
+    def safe_addstr(self, y: int, x: int, text: str, attr=0):
+        """Safely add string, handling screen boundaries."""
+        max_y, max_x = self.stdscr.getmaxyx()
+        if y < 0 or y >= max_y or x < 0:
+            return
+        # Truncate if needed
+        available = max_x - x - 1
+        if available <= 0:
+            return
+        self.stdscr.addstr(y, x, text[:available], attr)
 
-        rate = self.node.joy_data.rate_hz
-        stale = time.time() - self.node.joy_data.timestamp > 1.0
-        status = f"[red]STALE[/]" if stale else f"[green]{rate:.1f} Hz[/]"
+    def draw_joy_panel(self, y: int, x: int, w: int):
+        """Draw joystick input panel."""
+        h = 14
+        self.draw_box(y, x, h, w, "Joy Input (/joy)")
 
-        content = Text()
-        content.append_text(Text.from_markup(f"Rate: {status}\n"))
-        content.append_text(Text.from_markup(f"Buttons: {btn_str}\n\n"))
+        joy = self.node.joy_data
+        now = time.time()
+        stale = now - joy.timestamp > 1.0
 
-        return Panel(
-            table,
-            title="[bold]Joy Input (/joy)[/]",
-            subtitle=f"Rate: {status}",
-            border_style="blue"
-        )
+        # Rate display
+        rate_str = f"Rate: {joy.rate_hz:.1f} Hz"
+        if stale:
+            rate_str += " [STALE]"
+        self.safe_addstr(y + 1, x + 2, rate_str)
 
-    def create_controller_config_panel(self) -> Panel:
-        """Create panel showing controller configuration."""
+        # Axes
+        self.safe_addstr(y + 2, x + 2, "Axes:", curses.A_BOLD)
+        for i, val in enumerate(joy.axes[:8]):
+            bar = self.make_bar(val, 16)
+            line = f"[{i}] {val:+.2f} {bar}"
+            attr = curses.A_BOLD if abs(val) > 0.1 else curses.A_DIM
+            self.safe_addstr(y + 3 + i, x + 2, line, attr)
+
+        # Buttons
+        self.safe_addstr(y + 11, x + 2, "Buttons:", curses.A_BOLD)
+        btn_str = ' '.join([str(i) if b else '.' for i, b in enumerate(joy.buttons[:12])])
+        self.safe_addstr(y + 12, x + 2, btn_str)
+
+    def draw_config_panel(self, y: int, x: int, w: int):
+        """Draw controller config panel."""
+        h = 12
+        self.draw_box(y, x, h, w, "Controller Config")
+
         cfg = self.node.controller_config
+        lines = [
+            f"Forward Axis:   {cfg.forward_axis}  (Left stick Y)",
+            f"Forward Scale:  {cfg.forward_scaling:+.2f}",
+            f"Turn Axis:      {cfg.turn_axis}  (Left stick X)",
+            f"Turn Scale:     {cfg.turn_scaling:+.2f}",
+            "",
+            f"Enable Axis:    {cfg.forward_enable_axis}  (RT)",
+            f"Enable Thresh:  {cfg.forward_enable_threshold:+.2f}",
+            f"Turbo Axis:     {cfg.turbo_enable_axis}  (LT)",
+            f"Turbo Scale:    {cfg.turbo_scaling:.1f}x",
+        ]
+        for i, line in enumerate(lines):
+            self.safe_addstr(y + 1 + i, x + 2, line)
 
-        table = Table(box=box.SIMPLE, show_header=False)
-        table.add_column("Parameter", style="cyan", width=20)
-        table.add_column("Value", width=15)
-        table.add_column("Note", style="dim", width=25)
+    def draw_velocity_panel(self, y: int, x: int, w: int):
+        """Draw velocity command chain panel."""
+        h = 14
+        self.draw_box(y, x, h, w, "Velocity Command Chain")
 
-        # Forward/Turn config
-        table.add_row("Forward Axis", f"{cfg.forward_axis}", "Left stick Y")
-        table.add_row("Forward Scale", f"{cfg.forward_scaling:+.2f}",
-                     "[yellow]Negative[/] = invert" if cfg.forward_scaling < 0 else "")
-        table.add_row("Turn Axis", f"{cfg.turn_axis}", "Left stick X")
-        table.add_row("Turn Scale", f"{cfg.turn_scaling:+.2f}",
-                     "[yellow]Negative[/] = invert" if cfg.turn_scaling < 0 else "")
-        table.add_row("", "", "")
-        table.add_row("Enable Axis", f"{cfg.forward_enable_axis}", "Right trigger")
-        table.add_row("Enable Thresh", f"{cfg.forward_enable_threshold:+.2f}", "< threshold = enabled")
-        table.add_row("Turbo Axis", f"{cfg.turbo_enable_axis}", "Left trigger")
-        table.add_row("Turbo Scale", f"{cfg.turbo_scaling:.2f}x", "")
-        table.add_row("Deadband", f"{cfg.deadband:.2f}", "")
-
-        return Panel(
-            table,
-            title="[bold]Controller Config[/]",
-            subtitle="generic_controller params",
-            border_style="magenta"
-        )
-
-    def create_velocity_chain_panel(self) -> Panel:
-        """Create panel showing velocity command chain."""
+        now = time.time()
         joy = self.node.joy_vel_data
         out = self.node.cmd_vel_out_data
-
-        # Calculate if commands are being processed
-        now = time.time()
-        joy_active = now - joy.timestamp < 0.5
-        out_active = now - out.timestamp < 0.5
-
-        # Direction indicators
-        def dir_indicator(val: float) -> str:
-            if val > 0.05:
-                return "[green]FWD >>>[/]"
-            elif val < -0.05:
-                return "[red]<<< REV[/]"
-            else:
-                return "[dim]STOP[/]"
-
-        def rot_indicator(val: float) -> str:
-            if val > 0.05:
-                return "[cyan]<<< LEFT[/]"
-            elif val < -0.05:
-                return "[yellow]RIGHT >>>[/]"
-            else:
-                return "[dim]STRAIGHT[/]"
-
-        table = Table(box=box.ROUNDED, show_header=True, header_style="bold")
-        table.add_column("Stage", width=18)
-        table.add_column("Linear X", justify="center", width=10)
-        table.add_column("Angular Z", justify="center", width=10)
-        table.add_column("Direction", justify="center", width=14)
-        table.add_column("Status", justify="center", width=10)
-
-        # Joy velocity (from generic_controller)
-        joy_status = "[green]OK[/]" if joy_active else "[red]STALE[/]"
-        table.add_row(
-            "[bold cyan]joy_vel[/]",
-            f"{joy.linear_x:+.3f}",
-            f"{joy.angular_z:+.3f}",
-            dir_indicator(joy.linear_x),
-            joy_status
-        )
-
-        # Nav velocity
         nav = self.node.nav_vel_data
+
+        def dir_str(val: float) -> str:
+            if val > 0.05:
+                return "FWD >>>"
+            elif val < -0.05:
+                return "<<< REV"
+            return "STOPPED"
+
+        def rot_str(val: float) -> str:
+            if val > 0.05:
+                return "<<< LEFT"
+            elif val < -0.05:
+                return "RIGHT >>>"
+            return "STRAIGHT"
+
+        # Header
+        self.safe_addstr(y + 1, x + 2, f"{'Source':<12} {'Lin.X':>8} {'Ang.Z':>8} {'Direction':<12} {'Status':<8}", curses.A_BOLD)
+
+        # Joy vel
+        joy_stale = now - joy.timestamp > 0.5
+        joy_status = "STALE" if joy_stale else "OK"
+        self.safe_addstr(y + 3, x + 2, f"{'joy_vel':<12} {joy.linear_x:+7.3f} {joy.angular_z:+7.3f}  {dir_str(joy.linear_x):<12} {joy_status}")
+
+        # Nav vel (if active)
         nav_active = now - nav.timestamp < 0.5
         if nav_active:
-            table.add_row(
-                "[bold blue]nav_vel[/]",
-                f"{nav.linear_x:+.3f}",
-                f"{nav.angular_z:+.3f}",
-                dir_indicator(nav.linear_x),
-                "[green]OK[/]"
-            )
+            self.safe_addstr(y + 4, x + 2, f"{'nav_vel':<12} {nav.linear_x:+7.3f} {nav.angular_z:+7.3f}  {dir_str(nav.linear_x):<12} OK")
 
         # Separator
-        table.add_row("[dim]--- TWIST MUX ---[/]", "", "", "", "")
+        self.safe_addstr(y + 5, x + 2, "-" * (w - 4) + " TWIST MUX")
 
-        # Output velocity
-        out_status = "[green]OK[/]" if out_active else "[red]STALE[/]"
-        table.add_row(
-            "[bold green]cmd_vel_out[/]",
-            f"{out.linear_x:+.3f}",
-            f"{out.angular_z:+.3f}",
-            dir_indicator(out.linear_x),
-            out_status
-        )
+        # Output
+        out_stale = now - out.timestamp > 0.5
+        out_status = "STALE" if out_stale else "OK"
+        self.safe_addstr(y + 7, x + 2, f"{'cmd_vel_out':<12} {out.linear_x:+7.3f} {out.angular_z:+7.3f}  {dir_str(out.linear_x):<12} {out_status}",
+                        curses.A_BOLD)
 
-        # Compute expected wheel velocities (simplified diff drive kinematics)
-        wheel_sep = 0.714  # meters
-        wheel_rad = 0.147  # meters
+        # Expected wheel velocities
+        wheel_sep = 0.714
+        wheel_rad = 0.147
         left_vel = (out.linear_x - out.angular_z * wheel_sep / 2) / wheel_rad
         right_vel = (out.linear_x + out.angular_z * wheel_sep / 2) / wheel_rad
 
-        table.add_row("[dim]--- DIFF DRIVE ---[/]", "", "", "", "")
-        table.add_row(
-            "[yellow]Expected L/R[/]",
-            f"L:{left_vel:+.2f}",
-            f"R:{right_vel:+.2f}",
-            "[dim]rad/s[/]",
-            ""
-        )
+        self.safe_addstr(y + 9, x + 2, "-" * (w - 4) + " DIFF DRIVE")
+        self.safe_addstr(y + 10, x + 2, f"Expected wheels:  L: {left_vel:+.2f} rad/s   R: {right_vel:+.2f} rad/s")
 
-        return Panel(
-            table,
-            title="[bold]Velocity Command Chain[/]",
-            border_style="green"
-        )
+        # Direction summary
+        self.safe_addstr(y + 12, x + 2, f"Motion: {dir_str(out.linear_x)}  |  Turn: {rot_str(out.angular_z)}", curses.A_BOLD)
 
-    def create_wheel_state_panel(self) -> Panel:
-        """Create panel showing wheel states."""
+    def draw_wheel_panel(self, y: int, x: int, w: int):
+        """Draw wheel state panel."""
+        h = 10
+        self.draw_box(y, x, h, w, "Wheel States")
+
         wheels = self.node.wheel_data
+        now = time.time()
+        stale = now - wheels.timestamp > 1.0
 
-        table = Table(box=box.SIMPLE, show_header=True, header_style="bold")
-        table.add_column("Joint", width=25)
-        table.add_column("Position", justify="center", width=10)
-        table.add_column("Velocity", justify="center", width=10)
-        table.add_column("Dir", justify="center", width=8)
+        rate_str = f"Rate: {wheels.rate_hz:.1f} Hz"
+        if stale:
+            rate_str += " [STALE]"
+        self.safe_addstr(y + 1, x + 2, rate_str)
 
-        # Filter for wheel joints
-        wheel_keywords = ["wheel", "front", "rear"]
+        self.safe_addstr(y + 2, x + 2, f"{'Joint':<28} {'Vel':>8} {'Dir':<6}", curses.A_BOLD)
+
+        row = 3
         for i, name in enumerate(wheels.names):
-            if any(kw in name.lower() for kw in wheel_keywords):
-                pos = wheels.positions[i] if i < len(wheels.positions) else 0.0
+            if 'wheel' in name.lower():
                 vel = wheels.velocities[i] if i < len(wheels.velocities) else 0.0
-
-                # Direction indicator
                 if vel > 0.01:
-                    direction = "[green]FWD[/]"
+                    direction = "FWD"
                 elif vel < -0.01:
-                    direction = "[red]REV[/]"
+                    direction = "REV"
                 else:
-                    direction = "[dim]---[/]"
+                    direction = "---"
+                self.safe_addstr(y + row, x + 2, f"{name:<28} {vel:+7.3f}  {direction}")
+                row += 1
+                if row >= h - 2:
+                    break
 
-                table.add_row(name, f"{pos:.3f}", f"{vel:+.3f}", direction)
+        # Axis config
+        self.safe_addstr(y + h - 2, x + 2, "Axis: xyz=\"0 -1 0\" (+vel=FWD)", curses.A_DIM)
 
-        if not wheels.names:
-            table.add_row("[dim]No wheel data[/]", "", "", "")
-
-        rate = wheels.rate_hz
-        stale = time.time() - wheels.timestamp > 1.0
-        status = f"[red]STALE[/]" if stale else f"[green]{rate:.1f} Hz[/]"
-
-        # Add axis configuration info
-        axis_info = Text()
-        axis_info.append(f"\nWheel Axis Config: ", style="bold")
-        axis_info.append(self.WHEEL_AXIS, style="yellow")
-        axis_info.append(f"\n{self.WHEEL_AXIS_COMMENT}", style="dim")
-
-        return Panel(
-            Text.assemble(table, axis_info),
-            title="[bold]Wheel Joint States[/]",
-            subtitle=f"Rate: {status}",
-            border_style="yellow"
-        )
-
-    def create_mux_panel(self) -> Panel:
-        """Create panel showing twist mux status."""
-        table = Table(box=box.SIMPLE, show_header=True, header_style="bold")
-        table.add_column("Source", width=12)
-        table.add_column("Priority", justify="center", width=8)
-        table.add_column("Topic", width=20)
-        table.add_column("Status", justify="center", width=10)
+    def draw_mux_panel(self, y: int, x: int, w: int):
+        """Draw twist mux status panel."""
+        h = 8
+        self.draw_box(y, x, h, w, "Twist Mux")
 
         now = time.time()
-        source_topics = {
+        topics = {
             "joystick": "joy_vel",
             "keyboard": "key_vel",
             "web_ui": "web_vel",
             "navigation": "cmd_vel_nav_stamped",
         }
 
+        self.safe_addstr(y + 1, x + 2, f"{'Source':<12} {'Pri':>4} {'Topic':<20} {'Status':<8}", curses.A_BOLD)
+
+        row = 2
         for source in ["joystick", "keyboard", "web_ui", "navigation"]:
             priority = self.MUX_PRIORITIES[source]
-            topic = source_topics[source]
+            topic = topics[source]
             last_time = self.node.mux_sources.get(source, 0.0)
             active = now - last_time < 0.5
-
             is_current = source == self.node.active_mux_source
 
             if is_current and active:
-                status = "[bold green]ACTIVE[/]"
-                style = "bold green"
+                status = "ACTIVE"
+                attr = curses.A_BOLD | curses.A_REVERSE
             elif active:
-                status = "[yellow]ready[/]"
-                style = "yellow"
+                status = "ready"
+                attr = curses.A_BOLD
             else:
-                status = "[dim]inactive[/]"
-                style = "dim"
+                status = "---"
+                attr = curses.A_DIM
 
-            name = f"[{style}]{source}[/]"
-            table.add_row(name, str(priority), topic, status)
+            self.safe_addstr(y + row, x + 2, f"{source:<12} {priority:>4} {topic:<20} {status:<8}", attr)
+            row += 1
 
-        return Panel(
-            table,
-            title="[bold]Twist Mux Status[/]",
-            subtitle=f"Active: {self.node.active_mux_source}",
-            border_style="cyan"
-        )
+    def draw_direction_panel(self, y: int, x: int, w: int):
+        """Draw direction indicator panel."""
+        h = 10
+        self.draw_box(y, x, h, w, "Direction")
 
-    def create_direction_summary(self) -> Panel:
-        """Create a visual direction summary."""
         out = self.node.cmd_vel_out_data
-
-        # Create ASCII art robot direction indicator
         lin = out.linear_x
         ang = out.angular_z
 
-        lines = []
-
-        # Forward/backward arrow
+        # ASCII robot
         if lin > 0.05:
-            lines.append("       [bold green]^[/]")
-            lines.append("       [bold green]|[/]")
-            lines.append("       [bold green]|[/]")
+            self.safe_addstr(y + 2, x + w//2 - 1, "^", curses.A_BOLD)
+            self.safe_addstr(y + 3, x + w//2 - 1, "|", curses.A_BOLD)
+            self.safe_addstr(y + 4, x + w//2 - 1, "|", curses.A_BOLD)
         elif lin < -0.05:
-            lines.append("       [bold red]|[/]")
-            lines.append("       [bold red]|[/]")
-            lines.append("       [bold red]v[/]")
+            self.safe_addstr(y + 2, x + w//2 - 1, "|", curses.A_BOLD)
+            self.safe_addstr(y + 3, x + w//2 - 1, "|", curses.A_BOLD)
+            self.safe_addstr(y + 4, x + w//2 - 1, "v", curses.A_BOLD)
         else:
-            lines.append("        ")
-            lines.append("       [dim]o[/]")
-            lines.append("        ")
+            self.safe_addstr(y + 3, x + w//2 - 1, "o", curses.A_DIM)
 
-        # Add rotation indicator
+        # Rotation
         if ang > 0.05:
-            rot = "[cyan]<<< TURNING LEFT[/]"
+            rot = "<-- LEFT"
         elif ang < -0.05:
-            rot = "[yellow]TURNING RIGHT >>>[/]"
+            rot = "RIGHT -->"
         else:
-            rot = "[dim]STRAIGHT[/]"
+            rot = "STRAIGHT"
+        self.safe_addstr(y + 6, x + 2, rot, curses.A_BOLD)
 
-        # Speed magnitude
+        # Speed
         speed = abs(lin)
         if speed > 1.0:
-            speed_txt = "[bold red]FAST[/]"
+            speed_txt = "FAST"
         elif speed > 0.3:
-            speed_txt = "[yellow]MEDIUM[/]"
+            speed_txt = "MEDIUM"
         elif speed > 0.05:
-            speed_txt = "[green]SLOW[/]"
+            speed_txt = "SLOW"
         else:
-            speed_txt = "[dim]STOPPED[/]"
+            speed_txt = "STOPPED"
+        self.safe_addstr(y + 8, x + 2, f"Speed: {speed_txt} ({speed:.2f} m/s)")
 
-        content = Text()
-        for line in lines:
-            content.append_text(Text.from_markup(line + "\n"))
-        content.append("\n")
-        content.append_text(Text.from_markup(f"   {rot}\n"))
-        content.append_text(Text.from_markup(f"   Speed: {speed_txt} ({speed:.2f} m/s)\n"))
+    def run_curses(self, stdscr):
+        """Main curses loop."""
+        self.stdscr = stdscr
+        curses.curs_set(0)  # Hide cursor
+        stdscr.nodelay(True)  # Non-blocking input
+        stdscr.timeout(100)  # 100ms refresh
 
-        return Panel(
-            content,
-            title="[bold]Robot Direction[/]",
-            border_style="white"
-        )
+        while self.running:
+            try:
+                stdscr.clear()
+                max_y, max_x = stdscr.getmaxyx()
 
-    def _make_bar(self, value: float, min_val: float, max_val: float, width: int) -> str:
-        """Create a text-based bar visualization."""
-        normalized = (value - min_val) / (max_val - min_val)
-        normalized = max(0, min(1, normalized))
+                # Title bar
+                title = " TELEOP DIAGNOSTICS TUI - Press 'q' to quit "
+                self.safe_addstr(0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD)
 
-        mid = width // 2
-        pos = int(normalized * width)
+                # Calculate column widths
+                col1_w = 40
+                col2_w = max(50, max_x - col1_w - 30)
+                col3_w = 28
 
-        bar = [" "] * width
-        bar[mid] = "|"
+                # Left column: Joy + Config
+                self.draw_joy_panel(2, 0, col1_w)
+                self.draw_config_panel(16, 0, col1_w)
 
-        if pos < mid:
-            for i in range(pos, mid):
-                bar[i] = "="
-        elif pos > mid:
-            for i in range(mid + 1, pos + 1):
-                bar[i] = "="
+                # Center column: Velocity + Wheels
+                self.draw_velocity_panel(2, col1_w + 1, col2_w)
+                self.draw_wheel_panel(17, col1_w + 1, col2_w)
 
-        bar[pos] = "*"
+                # Right column: Mux + Direction
+                self.draw_mux_panel(2, col1_w + col2_w + 2, col3_w)
+                self.draw_direction_panel(11, col1_w + col2_w + 2, col3_w)
 
-        return "[" + "".join(bar) + "]"
+                # Status bar
+                status = f" Time: {time.strftime('%H:%M:%S')} | Joy: {self.node.joy_data.rate_hz:.1f}Hz | Cmd: {self.node.cmd_vel_out_data.rate_hz:.1f}Hz | Wheels: {self.node.wheel_data.rate_hz:.1f}Hz "
+                self.safe_addstr(max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE)
 
-    def create_layout(self) -> Layout:
-        """Create the main layout."""
-        layout = Layout()
+                stdscr.refresh()
 
-        layout.split_column(
-            Layout(name="top", size=3),
-            Layout(name="main"),
-            Layout(name="bottom", size=3)
-        )
+                # Check for quit
+                key = stdscr.getch()
+                if key == ord('q') or key == ord('Q'):
+                    self.running = False
 
-        layout["top"].update(Panel(
-            "[bold]Teleop Diagnostics TUI[/] - Press Ctrl+C to exit",
-            style="bold white on blue"
-        ))
-
-        layout["main"].split_row(
-            Layout(name="left", ratio=1),
-            Layout(name="center", ratio=2),
-            Layout(name="right", ratio=1)
-        )
-
-        layout["left"].split_column(
-            Layout(name="joy", ratio=2),
-            Layout(name="config", ratio=1)
-        )
-
-        layout["center"].split_column(
-            Layout(name="velocity", ratio=2),
-            Layout(name="wheels", ratio=1)
-        )
-
-        layout["right"].split_column(
-            Layout(name="mux", ratio=1),
-            Layout(name="direction", ratio=1)
-        )
-
-        layout["bottom"].update(Panel(
-            f"[dim]Time: {time.strftime('%H:%M:%S')} | "
-            f"Joy: {self.node.joy_data.rate_hz:.1f}Hz | "
-            f"Wheels: {self.node.wheel_data.rate_hz:.1f}Hz[/]",
-            style="dim"
-        ))
-
-        return layout
-
-    def update_layout(self, layout: Layout):
-        """Update all panels in the layout."""
-        layout["joy"].update(self.create_joy_panel())
-        layout["config"].update(self.create_controller_config_panel())
-        layout["velocity"].update(self.create_velocity_chain_panel())
-        layout["wheels"].update(self.create_wheel_state_panel())
-        layout["mux"].update(self.create_mux_panel())
-        layout["direction"].update(self.create_direction_summary())
-
-        layout["bottom"].update(Panel(
-            f"[dim]Time: {time.strftime('%H:%M:%S')} | "
-            f"Joy: {self.node.joy_data.rate_hz:.1f}Hz | "
-            f"Cmd: {self.node.cmd_vel_out_data.rate_hz:.1f}Hz | "
-            f"Wheels: {self.node.wheel_data.rate_hz:.1f}Hz[/]",
-            style="dim"
-        ))
+            except curses.error:
+                pass
+            except KeyboardInterrupt:
+                self.running = False
 
     def run(self):
         """Run the TUI."""
-        if not RICH_AVAILABLE:
-            self.run_simple()
-            return
-
-        layout = self.create_layout()
-
-        with Live(layout, console=self.console, refresh_per_second=10, screen=True) as live:
-            while self.running:
-                try:
-                    self.update_layout(layout)
-                    time.sleep(0.1)
-                except KeyboardInterrupt:
-                    self.running = False
-                    break
-
-    def run_simple(self):
-        """Run simple text output mode (fallback when rich is not available)."""
-        while self.running:
-            try:
-                print("\033[2J\033[H")  # Clear screen
-                print("=" * 60)
-                print("TELEOP DIAGNOSTICS (simple mode)")
-                print("=" * 60)
-
-                joy = self.node.joy_data
-                print(f"\nJoy Axes: {[f'{a:.2f}' for a in joy.axes[:6]]}")
-                print(f"Joy Buttons: {joy.buttons[:8]}")
-                print(f"Joy Rate: {joy.rate_hz:.1f} Hz")
-
-                vel = self.node.cmd_vel_out_data
-                print(f"\nCmd Vel Out: linear={vel.linear_x:.3f}, angular={vel.angular_z:.3f}")
-
-                wheels = self.node.wheel_data
-                print(f"\nWheel Names: {wheels.names}")
-                print(f"Velocities: {[f'{v:.3f}' for v in wheels.velocities]}")
-
-                print(f"\nActive Mux Source: {self.node.active_mux_source}")
-                print("\nPress Ctrl+C to exit")
-
-                time.sleep(0.5)
-            except KeyboardInterrupt:
-                self.running = False
-                break
+        curses.wrapper(self.run_curses)
 
     def stop(self):
         """Stop the TUI."""
@@ -722,16 +562,13 @@ def main(args=None):
     node = TeleopDiagnosticsNode()
     tui = TeleopTUI(node)
 
-    # Handle SIGINT gracefully
+    # Handle SIGINT
     def signal_handler(sig, frame):
         tui.stop()
-        node.destroy_node()
-        rclpy.shutdown()
-        sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    # Run ROS spinner in background thread
+    # Run ROS spinner in background
     executor = MultiThreadedExecutor()
     executor.add_node(node)
     spin_thread = threading.Thread(target=executor.spin, daemon=True)

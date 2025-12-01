@@ -14,7 +14,7 @@ setup(
         (os.path.join("share", package_name, "launch"), glob("launch/*.launch.py")),
         (os.path.join("share", package_name, "config"), glob("config/*.yaml")),
     ],
-    install_requires=["setuptools", "rich"],
+    install_requires=["setuptools"],
     zip_safe=True,
     maintainer="ROAR Team",
     maintainer_email="roar@qut.edu.au",
