@@ -3,6 +3,7 @@
 Teleop Diagnostics TUI - A comprehensive diagnostic tool for teleoperation debugging.
 
 Uses curses (standard library) for the terminal interface - no external dependencies.
+Falls back to simple text mode when no TTY is available.
 
 This tool provides a real-time view of:
 - Joystick raw input (axes and buttons)
@@ -14,6 +15,7 @@ This tool provides a real-time view of:
 """
 
 import curses
+import os
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
@@ -602,9 +604,89 @@ class TeleopTUI:
             except KeyboardInterrupt:
                 self.running = False
 
+    def run_simple(self):
+        """Simple text output mode for non-TTY environments."""
+        print("TELEOP DIAGNOSTICS - Simple Mode (no TTY detected)")
+        print("=" * 60)
+
+        while self.running:
+            try:
+                # Clear screen (ANSI escape)
+                print("\033[2J\033[H", end="")
+                print("=" * 70)
+                print(" TELEOP DIAGNOSTICS - Simple Mode | Press Ctrl+C to exit")
+                print("=" * 70)
+
+                now = time.time()
+                joy = self.node.joy_data
+                vel = self.node.cmd_vel_out_data
+                joy_vel = self.node.joy_vel_data
+                wheels = self.node.wheel_data
+
+                # Joy input
+                print(f"\n[Joy Input] Rate: {joy.rate_hz:.1f} Hz")
+                if joy.axes:
+                    axes_str = " ".join([f"{i}:{v:+.2f}" for i, v in enumerate(joy.axes[:6])])
+                    print(f"  Axes: {axes_str}")
+                    btns = "".join([str(i) if b else "." for i, b in enumerate(joy.buttons[:12])])
+                    print(f"  Btns: {btns}")
+                else:
+                    print("  (no data)")
+
+                # Controller config
+                cfg = self.node.controller_config
+                print(f"\n[Controller Config]")
+                print(f"  Forward: axis={cfg.forward_axis} scale={cfg.forward_scaling:+.2f}")
+                print(f"  Turn:    axis={cfg.turn_axis} scale={cfg.turn_scaling:+.2f}")
+
+                # Velocity chain
+                print(f"\n[Velocity Chain]")
+                joy_stale = "STALE" if now - joy_vel.timestamp > 0.5 else "OK"
+                out_stale = "STALE" if now - vel.timestamp > 0.5 else "OK"
+                print(f"  joy_vel:     lin={joy_vel.linear_x:+.3f} ang={joy_vel.angular_z:+.3f} [{joy_stale}]")
+                print(f"  cmd_vel_out: lin={vel.linear_x:+.3f} ang={vel.angular_z:+.3f} [{out_stale}]")
+
+                # Direction
+                if vel.linear_x > 0.05:
+                    direction = "FORWARD >>>"
+                elif vel.linear_x < -0.05:
+                    direction = "<<< REVERSE"
+                else:
+                    direction = "STOPPED"
+                print(f"  Direction: {direction}")
+
+                # Wheel states
+                print(f"\n[Wheel States] Rate: {wheels.rate_hz:.1f} Hz")
+                for i, name in enumerate(wheels.names):
+                    if 'wheel' in name.lower():
+                        v = wheels.velocities[i] if i < len(wheels.velocities) else 0.0
+                        d = "FWD" if v > 0.01 else ("REV" if v < -0.01 else "---")
+                        print(f"  {name}: {v:+.3f} [{d}]")
+
+                # Mux status
+                print(f"\n[Twist Mux] Active: {self.node.active_mux_source}")
+                for src in ["joystick", "keyboard", "web_ui", "navigation"]:
+                    active = now - self.node.mux_sources.get(src, 0.0) < 0.5
+                    status = "ACTIVE" if src == self.node.active_mux_source and active else ("ready" if active else "---")
+                    print(f"  {src:12} pri={self.MUX_PRIORITIES[src]:3} [{status}]")
+
+                print("\n" + "=" * 70)
+                time.sleep(0.5)
+
+            except KeyboardInterrupt:
+                self.running = False
+                break
+
     def run(self):
-        """Run the TUI."""
-        curses.wrapper(self.run_curses)
+        """Run the TUI - uses curses if TTY available, otherwise simple text."""
+        if os.isatty(sys.stdout.fileno()):
+            try:
+                curses.wrapper(self.run_curses)
+            except curses.error as e:
+                print(f"Curses error: {e}, falling back to simple mode")
+                self.run_simple()
+        else:
+            self.run_simple()
 
     def stop(self):
         """Stop the TUI."""
