@@ -21,9 +21,8 @@ from rclpy.executors import MultiThreadedExecutor
 import threading
 import time
 import signal
-import sys
 from dataclasses import dataclass, field
-from typing import Optional, Dict, List
+from typing import Dict, List
 from collections import deque
 
 from sensor_msgs.msg import Joy, JointState
@@ -33,6 +32,7 @@ from geometry_msgs.msg import Twist, TwistStamped
 @dataclass
 class JoyData:
     """Holds joystick data."""
+
     axes: List[float] = field(default_factory=list)
     buttons: List[int] = field(default_factory=list)
     timestamp: float = 0.0
@@ -42,6 +42,7 @@ class JoyData:
 @dataclass
 class VelocityData:
     """Holds velocity command data."""
+
     linear_x: float = 0.0
     angular_z: float = 0.0
     timestamp: float = 0.0
@@ -52,6 +53,7 @@ class VelocityData:
 @dataclass
 class WheelData:
     """Holds wheel joint state data."""
+
     names: List[str] = field(default_factory=list)
     positions: List[float] = field(default_factory=list)
     velocities: List[float] = field(default_factory=list)
@@ -62,6 +64,7 @@ class WheelData:
 @dataclass
 class ControllerConfig:
     """Holds generic controller configuration."""
+
     forward_axis: int = 1
     forward_scaling: float = -0.7
     turn_axis: int = 0
@@ -75,6 +78,7 @@ class ControllerConfig:
 
 class RateCalculator:
     """Calculate message rate from timestamps."""
+
     def __init__(self, window_size: int = 10):
         self.timestamps: deque = deque(maxlen=window_size)
 
@@ -92,7 +96,7 @@ class TeleopDiagnosticsNode(Node):
     """ROS2 node that collects teleoperation diagnostic data."""
 
     def __init__(self):
-        super().__init__('teleop_diagnostics')
+        super().__init__("teleop_diagnostics")
 
         # Data storage
         self.joy_data = JoyData()
@@ -123,32 +127,40 @@ class TeleopDiagnosticsNode(Node):
         sensor_qos = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
             durability=DurabilityPolicy.VOLATILE,
-            depth=10
+            depth=10,
         )
 
         # Subscribe to joy input
         self.joy_sub = self.create_subscription(
-            Joy, '/joy', self.joy_callback, sensor_qos)
+            Joy, "/joy", self.joy_callback, sensor_qos
+        )
 
         # Subscribe to velocity topics
         self.joy_vel_sub = self.create_subscription(
-            TwistStamped, '/joy_vel', self.joy_vel_callback, 10)
+            TwistStamped, "/joy_vel", self.joy_vel_callback, 10
+        )
         self.cmd_vel_out_sub = self.create_subscription(
-            TwistStamped, '/cmd_vel_out', self.cmd_vel_out_callback, 10)
+            TwistStamped, "/cmd_vel_out", self.cmd_vel_out_callback, 10
+        )
         self.nav_vel_sub = self.create_subscription(
-            TwistStamped, '/cmd_vel_nav_stamped', self.nav_vel_callback, 10)
+            TwistStamped, "/cmd_vel_nav_stamped", self.nav_vel_callback, 10
+        )
         self.web_vel_sub = self.create_subscription(
-            TwistStamped, '/web_vel', self.web_vel_callback, 10)
+            TwistStamped, "/web_vel", self.web_vel_callback, 10
+        )
         self.key_vel_sub = self.create_subscription(
-            TwistStamped, '/key_vel', self.key_vel_callback, 10)
+            TwistStamped, "/key_vel", self.key_vel_callback, 10
+        )
         self.cmd_vel_unstamped_sub = self.create_subscription(
-            Twist, '/cmd_vel', self.cmd_vel_unstamped_callback, 10)
+            Twist, "/cmd_vel", self.cmd_vel_unstamped_callback, 10
+        )
 
         # Subscribe to joint states
         self.joint_state_sub = self.create_subscription(
-            JointState, '/joint_states', self.joint_state_callback, sensor_qos)
+            JointState, "/joint_states", self.joint_state_callback, sensor_qos
+        )
 
-        self.get_logger().info('Teleop diagnostics node started')
+        self.get_logger().info("Teleop diagnostics node started")
 
     def joy_callback(self, msg: Joy):
         now = time.time()
@@ -247,26 +259,26 @@ class TeleopTUI:
         normalized = max(0, min(1, normalized))
         mid = width // 2
         pos = int(normalized * width)
-        bar = ['-'] * width
-        bar[mid] = '|'
+        bar = ["-"] * width
+        bar[mid] = "|"
         if pos < width:
-            bar[pos] = '*'
-        return '[' + ''.join(bar) + ']'
+            bar[pos] = "*"
+        return "[" + "".join(bar) + "]"
 
     def draw_box(self, y: int, x: int, h: int, w: int, title: str = ""):
         """Draw a box with optional title."""
         # Top border
-        self.stdscr.addstr(y, x, '+' + '-' * (w - 2) + '+')
+        self.stdscr.addstr(y, x, "+" + "-" * (w - 2) + "+")
         # Title
         if title:
             title_str = f" {title} "
             self.stdscr.addstr(y, x + 2, title_str, curses.A_BOLD)
         # Sides
         for i in range(1, h - 1):
-            self.stdscr.addstr(y + i, x, '|')
-            self.stdscr.addstr(y + i, x + w - 1, '|')
+            self.stdscr.addstr(y + i, x, "|")
+            self.stdscr.addstr(y + i, x + w - 1, "|")
         # Bottom border
-        self.stdscr.addstr(y + h - 1, x, '+' + '-' * (w - 2) + '+')
+        self.stdscr.addstr(y + h - 1, x, "+" + "-" * (w - 2) + "+")
 
     def safe_addstr(self, y: int, x: int, text: str, attr=0):
         """Safely add string, handling screen boundaries."""
@@ -304,7 +316,9 @@ class TeleopTUI:
 
         # Buttons
         self.safe_addstr(y + 11, x + 2, "Buttons:", curses.A_BOLD)
-        btn_str = ' '.join([str(i) if b else '.' for i, b in enumerate(joy.buttons[:12])])
+        btn_str = " ".join(
+            [str(i) if b else "." for i, b in enumerate(joy.buttons[:12])]
+        )
         self.safe_addstr(y + 12, x + 2, btn_str)
 
     def draw_config_panel(self, y: int, x: int, w: int):
@@ -352,17 +366,30 @@ class TeleopTUI:
             return "STRAIGHT"
 
         # Header
-        self.safe_addstr(y + 1, x + 2, f"{'Source':<12} {'Lin.X':>8} {'Ang.Z':>8} {'Direction':<12} {'Status':<8}", curses.A_BOLD)
+        self.safe_addstr(
+            y + 1,
+            x + 2,
+            f"{'Source':<12} {'Lin.X':>8} {'Ang.Z':>8} {'Direction':<12} {'Status':<8}",
+            curses.A_BOLD,
+        )
 
         # Joy vel
         joy_stale = now - joy.timestamp > 0.5
         joy_status = "STALE" if joy_stale else "OK"
-        self.safe_addstr(y + 3, x + 2, f"{'joy_vel':<12} {joy.linear_x:+7.3f} {joy.angular_z:+7.3f}  {dir_str(joy.linear_x):<12} {joy_status}")
+        self.safe_addstr(
+            y + 3,
+            x + 2,
+            f"{'joy_vel':<12} {joy.linear_x:+7.3f} {joy.angular_z:+7.3f}  {dir_str(joy.linear_x):<12} {joy_status}",
+        )
 
         # Nav vel (if active)
         nav_active = now - nav.timestamp < 0.5
         if nav_active:
-            self.safe_addstr(y + 4, x + 2, f"{'nav_vel':<12} {nav.linear_x:+7.3f} {nav.angular_z:+7.3f}  {dir_str(nav.linear_x):<12} OK")
+            self.safe_addstr(
+                y + 4,
+                x + 2,
+                f"{'nav_vel':<12} {nav.linear_x:+7.3f} {nav.angular_z:+7.3f}  {dir_str(nav.linear_x):<12} OK",
+            )
 
         # Separator
         self.safe_addstr(y + 5, x + 2, "-" * (w - 4) + " TWIST MUX")
@@ -370,8 +397,12 @@ class TeleopTUI:
         # Output
         out_stale = now - out.timestamp > 0.5
         out_status = "STALE" if out_stale else "OK"
-        self.safe_addstr(y + 7, x + 2, f"{'cmd_vel_out':<12} {out.linear_x:+7.3f} {out.angular_z:+7.3f}  {dir_str(out.linear_x):<12} {out_status}",
-                        curses.A_BOLD)
+        self.safe_addstr(
+            y + 7,
+            x + 2,
+            f"{'cmd_vel_out':<12} {out.linear_x:+7.3f} {out.angular_z:+7.3f}  {dir_str(out.linear_x):<12} {out_status}",
+            curses.A_BOLD,
+        )
 
         # Expected wheel velocities
         wheel_sep = 0.714
@@ -380,10 +411,19 @@ class TeleopTUI:
         right_vel = (out.linear_x + out.angular_z * wheel_sep / 2) / wheel_rad
 
         self.safe_addstr(y + 9, x + 2, "-" * (w - 4) + " DIFF DRIVE")
-        self.safe_addstr(y + 10, x + 2, f"Expected wheels:  L: {left_vel:+.2f} rad/s   R: {right_vel:+.2f} rad/s")
+        self.safe_addstr(
+            y + 10,
+            x + 2,
+            f"Expected wheels:  L: {left_vel:+.2f} rad/s   R: {right_vel:+.2f} rad/s",
+        )
 
         # Direction summary
-        self.safe_addstr(y + 12, x + 2, f"Motion: {dir_str(out.linear_x)}  |  Turn: {rot_str(out.angular_z)}", curses.A_BOLD)
+        self.safe_addstr(
+            y + 12,
+            x + 2,
+            f"Motion: {dir_str(out.linear_x)}  |  Turn: {rot_str(out.angular_z)}",
+            curses.A_BOLD,
+        )
 
     def draw_wheel_panel(self, y: int, x: int, w: int):
         """Draw wheel state panel."""
@@ -399,11 +439,13 @@ class TeleopTUI:
             rate_str += " [STALE]"
         self.safe_addstr(y + 1, x + 2, rate_str)
 
-        self.safe_addstr(y + 2, x + 2, f"{'Joint':<28} {'Vel':>8} {'Dir':<6}", curses.A_BOLD)
+        self.safe_addstr(
+            y + 2, x + 2, f"{'Joint':<28} {'Vel':>8} {'Dir':<6}", curses.A_BOLD
+        )
 
         row = 3
         for i, name in enumerate(wheels.names):
-            if 'wheel' in name.lower():
+            if "wheel" in name.lower():
                 vel = wheels.velocities[i] if i < len(wheels.velocities) else 0.0
                 if vel > 0.01:
                     direction = "FWD"
@@ -417,7 +459,9 @@ class TeleopTUI:
                     break
 
         # Axis config
-        self.safe_addstr(y + h - 2, x + 2, "Axis: xyz=\"0 -1 0\" (+vel=FWD)", curses.A_DIM)
+        self.safe_addstr(
+            y + h - 2, x + 2, 'Axis: xyz="0 -1 0" (+vel=FWD)', curses.A_DIM
+        )
 
     def draw_mux_panel(self, y: int, x: int, w: int):
         """Draw twist mux status panel."""
@@ -432,7 +476,12 @@ class TeleopTUI:
             "navigation": "cmd_vel_nav_stamped",
         }
 
-        self.safe_addstr(y + 1, x + 2, f"{'Source':<12} {'Pri':>4} {'Topic':<20} {'Status':<8}", curses.A_BOLD)
+        self.safe_addstr(
+            y + 1,
+            x + 2,
+            f"{'Source':<12} {'Pri':>4} {'Topic':<20} {'Status':<8}",
+            curses.A_BOLD,
+        )
 
         row = 2
         for source in ["joystick", "keyboard", "web_ui", "navigation"]:
@@ -452,7 +501,12 @@ class TeleopTUI:
                 status = "---"
                 attr = curses.A_DIM
 
-            self.safe_addstr(y + row, x + 2, f"{source:<12} {priority:>4} {topic:<20} {status:<8}", attr)
+            self.safe_addstr(
+                y + row,
+                x + 2,
+                f"{source:<12} {priority:>4} {topic:<20} {status:<8}",
+                attr,
+            )
             row += 1
 
     def draw_direction_panel(self, y: int, x: int, w: int):
@@ -466,15 +520,15 @@ class TeleopTUI:
 
         # ASCII robot
         if lin > 0.05:
-            self.safe_addstr(y + 2, x + w//2 - 1, "^", curses.A_BOLD)
-            self.safe_addstr(y + 3, x + w//2 - 1, "|", curses.A_BOLD)
-            self.safe_addstr(y + 4, x + w//2 - 1, "|", curses.A_BOLD)
+            self.safe_addstr(y + 2, x + w // 2 - 1, "^", curses.A_BOLD)
+            self.safe_addstr(y + 3, x + w // 2 - 1, "|", curses.A_BOLD)
+            self.safe_addstr(y + 4, x + w // 2 - 1, "|", curses.A_BOLD)
         elif lin < -0.05:
-            self.safe_addstr(y + 2, x + w//2 - 1, "|", curses.A_BOLD)
-            self.safe_addstr(y + 3, x + w//2 - 1, "|", curses.A_BOLD)
-            self.safe_addstr(y + 4, x + w//2 - 1, "v", curses.A_BOLD)
+            self.safe_addstr(y + 2, x + w // 2 - 1, "|", curses.A_BOLD)
+            self.safe_addstr(y + 3, x + w // 2 - 1, "|", curses.A_BOLD)
+            self.safe_addstr(y + 4, x + w // 2 - 1, "v", curses.A_BOLD)
         else:
-            self.safe_addstr(y + 3, x + w//2 - 1, "o", curses.A_DIM)
+            self.safe_addstr(y + 3, x + w // 2 - 1, "o", curses.A_DIM)
 
         # Rotation
         if ang > 0.05:
@@ -511,7 +565,9 @@ class TeleopTUI:
 
                 # Title bar
                 title = " TELEOP DIAGNOSTICS TUI - Press 'q' to quit "
-                self.safe_addstr(0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD)
+                self.safe_addstr(
+                    0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
+                )
 
                 # Calculate column widths
                 col1_w = 40
@@ -538,7 +594,7 @@ class TeleopTUI:
 
                 # Check for quit
                 key = stdscr.getch()
-                if key == ord('q') or key == ord('Q'):
+                if key == ord("q") or key == ord("Q"):
                     self.running = False
 
             except curses.error:

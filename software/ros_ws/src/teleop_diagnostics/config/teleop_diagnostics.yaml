@@ -2,38 +2,34 @@
 #
 # This file documents the expected teleoperation chain configuration
 # for reference by the diagnostic TUI.
-
 teleop_diagnostics:
   ros__parameters:
     # Wheel configuration (from perseus_description/urdf/wheel.urdf.xacro)
     wheel:
-      axis: "xyz=\"0 -1 0\""  # Negative Y axis
+      axis: 'xyz="0 -1 0"' # Negative Y axis
       axis_comment: "Positive velocity = forward motion (REP-103 convention)"
-      separation: 0.714  # meters
-      radius: 0.147  # meters
-
+      separation: 0.714 # meters
+      radius: 0.147 # meters
     # Twist mux priorities (from perseus/config/twist_mux.yaml)
     mux_priorities:
-      joystick: 100  # joy_vel - highest priority
-      keyboard: 90   # key_vel
-      web_ui: 80     # web_vel
+      joystick: 100 # joy_vel - highest priority
+      keyboard: 90 # key_vel
+      web_ui: 80 # web_vel
       navigation: 10 # cmd_vel_nav_stamped - lowest priority
-
     # Generic controller config (from perseus_input_config/config/xbox_controller_wired.yaml)
     controller:
       forward:
         axis: 1
-        scaling: -0.7  # Negative: joystick forward = negative axis value
+        scaling: -0.7 # Negative: joystick forward = negative axis value
         enable_axis: 2
         enable_threshold: -0.5
       turn:
         axis: 0
-        scaling: -0.5  # Negative: joystick right = positive axis value
+        scaling: -0.5 # Negative: joystick right = positive axis value
       turbo:
         enable_axis: 5
         enable_threshold: -0.5
         scaling: 2.5
-
     # Topic chain
     topics:
       joy_input: "/joy"
