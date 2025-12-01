@@ -16,6 +16,7 @@ This tool provides a real-time view of:
 
 import curses
 import os
+import sys
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
