@@ -6,7 +6,8 @@
     <inertial>
         <origin xyz="0 0 0"/>
         <mass value="${laser_3d_mass}"/>
-        <xacro:box_inertia m="${laser_3d_mass}" x="${laser_3d_length}" y="${laser_3d_radius}" z="${laser_3d_radius}"/>
+        <!-- Cylinder aligned along Z-axis -->
+        <xacro:cylinder_inertia m="${laser_3d_mass}" radius="${laser_3d_radius}" length="${laser_3d_length}"/>
     </inertial>
     <visual>
         <origin xyz="0 0 0"/>
@@ -27,7 +28,8 @@
     <inertial>
         <origin xyz="0 0 0"/>
         <mass value="${laser_2d_mass}"/>
-        <xacro:box_inertia m="${laser_2d_mass}" x="${laser_2d_length}" y="${laser_2d_radius}" z="${laser_2d_radius}"/>
+        <!-- Cylinder aligned along Z-axis -->
+        <xacro:cylinder_inertia m="${laser_2d_mass}" radius="${laser_2d_radius}" length="${laser_2d_length}"/>
     </inertial>
 
     <visual>

@@ -10,7 +10,9 @@
   ros_type_name: "tf2_msgs/msg/TFMessage"
   gz_type_name: "gz.msgs.Pose_V"
   direction: GZ_TO_ROS
-- ros_topic_name: "gazebo_odom"
+# Ground truth odometry from Gazebo (use /ground_truth namespace to avoid
+# conflicting with wheel odometry from diff_drive_controller on /odom)
+- ros_topic_name: "ground_truth/odom"
   gz_topic_name: "odom"
   ros_type_name: "nav_msgs/msg/Odometry"
   gz_type_name: "gz.msgs.Odometry"
@@ -26,7 +28,7 @@
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
   direction: GZ_TO_ROS
-# 2D lidar
+# 3D lidar (Livox MID-360 simulation)
 - ros_topic_name: "scan_3d"
   gz_topic_name: "scan_3d"
   ros_type_name: "sensor_msgs/msg/LaserScan"
