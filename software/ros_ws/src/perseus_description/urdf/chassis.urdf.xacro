@@ -31,6 +31,8 @@
           <update_rate>10</update_rate>
           <visualize>true</visualize>
           <topic>imu</topic>
+          <!-- Add frame id to imu sensor (achieving correct frame association)-->
+          <gz_frame_id>${prefix}base_link</gz_frame_id>
       </sensor>
   </gazebo>
 
