@@ -1,94 +1,62 @@
 <?xml version="1.0"?>
 <robot name="motor_wheel" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="motor" params="prefix:=^ side:=^ end:=^">
+    <link name="${prefix}${end}_${side}_motor">
+      <inertial>
+        <!-- moving origin has no perceivable impact-->
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <mass value="${motor_mass}"/>
+        <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
+      </inertial>
+      <visual>
+        <xacro:if value="${side == 'left'}">
+          <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
+        </xacro:if>
+        <xacro:if value="${side == 'right'}">
+          <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+        </xacro:if>
+        <geometry>
+          <mesh scale="0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
+        </geometry>
+        <!-- <material name="white"/> -->
+      </visual>
+      <collision>
+        <xacro:if value="${side == 'left'}">
+          <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+        </xacro:if>
+        <xacro:if value="${side == 'right'}">
+          <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
+        </xacro:if>
+        <geometry>
+          <box size="${collision_motor_length} ${collision_motor_width} ${collision_motor_height}" />
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${prefix}${end}_${side}_motor_joint" type="fixed">
+      <parent link="${prefix}${side}_rocker"/>
+      <child link="${prefix}${end}_${side}_motor"/>
+      <xacro:if value="${end == 'front'}">
+        <xacro:if value="${side == 'left'}">
+          <origin xyz="${front_motors_x_offset} -${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0.0"/>
+        </xacro:if>
+        <xacro:if value="${side == 'right'}">
+          <origin xyz="${front_motors_x_offset} ${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0.0"/>
+        </xacro:if>
+      </xacro:if>
+      <xacro:if value="${end == 'rear'}"> 
+        <xacro:if value="${side == 'left'}">
+          <origin xyz="${rear_motors_x_offset} -${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0.0"/>
+        </xacro:if>
+        <xacro:if value="${side == 'right'}">
+          <origin xyz="${rear_motors_x_offset} ${motors_y_offset} ${motors_z_offset}" rpy="0.0 0.0 0.0"/>
+        </xacro:if>
+      </xacro:if>
+    </joint>
 
-  <link name="${prefix}front_right_motor">
-    <inertial>
-      <!-- moving origin has no perceivable impact-->
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
-      <mass value="1"/>
-      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
-    </inertial>
-    <visual>
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
-      <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
-      </geometry>
-      <!-- <material name="white"/> -->
-    </visual>
-    <collision>
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
-      <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
-      </geometry>
-    </collision>
-  </link>
+  <!-- ADD 1 WHEEL FOR EACH MOTOR -->
+  <xacro:wheel prefix="" side="${side}"  end="${end}"/>
+  </xacro:macro>
 
-  <link name="${prefix}rear_right_motor">
-    <inertial>
-      <!-- moving origin has no perceivable impact-->
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
-      <mass value="1"/>
-      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
-    </inertial>
-    <visual>
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
-      <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
-      </geometry>
-      <!-- <material name="white"/> -->
-    </visual>
-    <collision>
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
-      <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
-      </geometry>
-    </collision>
-  </link>
-
-
-  <link name="${prefix}front_left_motor">
-    <inertial>
-      <!-- moving origin has no perceivable impact-->
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="1"/>
-      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
-    </inertial>
-    <visual>
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
-      <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
-      </geometry>
-      <!-- <material name="white"/> -->
-    </visual>
-    <collision>
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
-      <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
-      </geometry>
-    </collision>
-  </link>
-
-
-  <link name="${prefix}rear_left_motor">
-    <inertial>
-      <!-- moving origin has no perceivable impact-->
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-      <mass value="1"/>
-      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0.0" iyz="0.0" ixz="0.0"/> <!-- TEMP -->
-    </inertial>
-    <visual>
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
-      <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
-      </geometry>
-      <!-- <material name="white"/> -->
-    </visual>
-    <collision>
-      <origin xyz="0 0.0 0.0" rpy="0.0 0.0 ${-pi/2}"/>
-      <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
-      </geometry>
-    </collision>
-  </link>
+  
 
 </robot>

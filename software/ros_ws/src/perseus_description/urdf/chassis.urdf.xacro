@@ -1,26 +1,23 @@
 <?xml version="1.0"?>
 <robot name="chassis" xmlns:xacro="http://ros.org/wiki/xacro">
-
-
   <link name="${prefix}chassis">
-  <inertial>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <mass value="0.2"/>
-    <inertia ixx="0.00014" iyy="0.00014" izz="0.00025" ixy="0.0" iyz="0.0" ixz="0.0"/>
-  </inertial>
-
+    <inertial>
+      <origin xyz="${-chassis_length*0.5} 0.0 ${chassis_height*0.5}" rpy="0 0.0 0.0"/>
+      <mass value="${chassis_mass}"/>
+      <xacro:box_inertia m="${chassis_mass}" x="${chassis_length}" y="${chassis_width}" z="${chassis_height}"/>
+    </inertial>
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0 0.0 -${pi/2}"/>
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
+        <mesh scale="0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
       </geometry>
     </visual>
     
     <collision>
-      <origin xyz="0.0 0.0 0.0" rpy="0 0.0 -${pi/2}"/>
+      <origin xyz="${-chassis_length*0.5} 0.0 ${chassis_height*0.5}" rpy="0 0.0 0"/>
       <!-- Modified to make collision more simple, chassis mesh replaced with box -->
       <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/chassis.dae"/>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
       </geometry>
     </collision>
   </link>
@@ -34,6 +31,7 @@
           <update_rate>10</update_rate>
           <visualize>true</visualize>
           <topic>imu</topic>
+          <!-- Add frame id to imu sensor (achieving correct frame association)-->
           <gz_frame_id>${prefix}base_link</gz_frame_id>
       </sensor>
   </gazebo>

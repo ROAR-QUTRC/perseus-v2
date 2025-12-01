@@ -1,57 +1,52 @@
 <?xml version="1.0"?>
 <robot name="flange_bearing" xmlns:xacro="http://ros.org/wiki/xacro">
-
-
-
 <!-- Flange Bearing -->
 <link name="${prefix}flange_bearing">
     <inertial>
-    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
-    <mass value="1"/>
-    <inertia ixx="0.001313" iyy="0.001699" izz="0.000647" ixy="0.0" iyz="0.0" ixz="-0.0"/>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
+    <mass value="${bearing_mass}"/>
+    <xacro:box_inertia m="${bearing_mass}" x="${bearing_length}" y="${bearing_width}" z="${bearing_height}"/>
     </inertial>
 
     <visual>
     <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
     <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
+        <mesh scale="0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
     </geometry>
     </visual>
     
     <collision>
-    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
     <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
+        <box size="${bar_length} ${bar_width} ${bar_height}"/>
     </geometry>
     </collision>
 </link>
-
-
 
 <!-- Balance/differential bar -->
 <link name="${prefix}differential_bar">
     <inertial>
         <origin xyz="0 0 0.0" rpy="0.0 0.0 0.0"/>
-        <mass value="0.9172649518127158"/>
-        <inertia ixx="0.00036" iyy="0.018339" izz="0.018134" ixy="3e-06" iyz="-0.0" ixz="0.0"/>
+        <mass value="${bar_mass}"/>
+        <xacro:box_inertia m="${bar_mass}" x="${bar_length}" y="${bar_width}" z="${bar_height}"/>
     </inertial>
 
     <visual>
     <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${-pi/2}"/>
     <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
+        <mesh scale=  "0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
     </geometry>
     </visual>
     <collision>
     <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${-pi/2}"/>
     <geometry>
-        <mesh scale="${0.1/scale_factor} ${0.1/scale_factor}  ${0.1/scale_factor}" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
+        <box size="${bar_length} ${bar_width} ${bar_height}"/>
     </geometry>
     </collision>
 </link>
 
 <joint name="${prefix}differential_bar_joint" type="fixed">
-    <origin xyz="${-0.05/scale_factor} 0.0 0.0" rpy="0 0.0 0"/>
+    <origin xyz="${-0.05} 0.0 0.0" rpy="0 0.0 0"/>
     <axis xyz="0.0 0.0 1.0"/>
     <parent link="${prefix}flange_bearing"/>
     <child link="${prefix}differential_bar"/>

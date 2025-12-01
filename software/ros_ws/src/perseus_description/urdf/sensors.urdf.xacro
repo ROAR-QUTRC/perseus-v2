@@ -3,26 +3,37 @@
 
 <!-- 3D LIDAR (Existing - Livox MID-360) -->
 <link name="${prefix}laser_frame">
+    <inertial>
+        <origin xyz="0 0 0"/>
+        <mass value="${laser_3d_mass}"/>
+        <xacro:box_inertia m="${laser_3d_mass}" x="${laser_3d_length}" y="${laser_3d_radius}" z="${laser_3d_radius}"/>
+    </inertial>
     <visual>
         <origin xyz="0 0 0"/>
         <geometry>
-            <cylinder radius="0.06" length="0.06"/>
+            <cylinder radius="${laser_3d_radius}" length="${laser_3d_length}"/>
         </geometry>
         <material name="black"/>
     </visual>
     <collision>
         <geometry>
-            <cylinder radius="0.06" length="0.06"/>
+            <cylinder radius="${laser_3d_radius}" length="${laser_3d_length}"/>
         </geometry>
     </collision>
 </link>
 
 <!-- 2D LIDAR -->
 <link name="${prefix}laser_2d_frame">
+    <inertial>
+        <origin xyz="0 0 0"/>
+        <mass value="${laser_2d_mass}"/>
+        <xacro:box_inertia m="${laser_2d_mass}" x="${laser_2d_length}" y="${laser_2d_radius}" z="${laser_2d_radius}"/>
+    </inertial>
+
     <visual>
         <origin xyz="0 0 0"/>
         <geometry>
-            <cylinder radius="0.04" length="0.04"/>
+            <cylinder radius="${laser_2d_radius}" length="${laser_2d_length}"/>
         </geometry>
         <material name="blue">
             <color rgba="0.0 0.0 1.0 1.0"/>
