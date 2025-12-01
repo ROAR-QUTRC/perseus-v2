@@ -627,25 +627,35 @@ class TeleopTUI:
                 # Joy input
                 print(f"\n[Joy Input] Rate: {joy.rate_hz:.1f} Hz")
                 if joy.axes:
-                    axes_str = " ".join([f"{i}:{v:+.2f}" for i, v in enumerate(joy.axes[:6])])
+                    axes_str = " ".join(
+                        [f"{i}:{v:+.2f}" for i, v in enumerate(joy.axes[:6])]
+                    )
                     print(f"  Axes: {axes_str}")
-                    btns = "".join([str(i) if b else "." for i, b in enumerate(joy.buttons[:12])])
+                    btns = "".join(
+                        [str(i) if b else "." for i, b in enumerate(joy.buttons[:12])]
+                    )
                     print(f"  Btns: {btns}")
                 else:
                     print("  (no data)")
 
                 # Controller config
                 cfg = self.node.controller_config
-                print(f"\n[Controller Config]")
-                print(f"  Forward: axis={cfg.forward_axis} scale={cfg.forward_scaling:+.2f}")
+                print("\n[Controller Config]")
+                print(
+                    f"  Forward: axis={cfg.forward_axis} scale={cfg.forward_scaling:+.2f}"
+                )
                 print(f"  Turn:    axis={cfg.turn_axis} scale={cfg.turn_scaling:+.2f}")
 
                 # Velocity chain
-                print(f"\n[Velocity Chain]")
+                print("\n[Velocity Chain]")
                 joy_stale = "STALE" if now - joy_vel.timestamp > 0.5 else "OK"
                 out_stale = "STALE" if now - vel.timestamp > 0.5 else "OK"
-                print(f"  joy_vel:     lin={joy_vel.linear_x:+.3f} ang={joy_vel.angular_z:+.3f} [{joy_stale}]")
-                print(f"  cmd_vel_out: lin={vel.linear_x:+.3f} ang={vel.angular_z:+.3f} [{out_stale}]")
+                print(
+                    f"  joy_vel:     lin={joy_vel.linear_x:+.3f} ang={joy_vel.angular_z:+.3f} [{joy_stale}]"
+                )
+                print(
+                    f"  cmd_vel_out: lin={vel.linear_x:+.3f} ang={vel.angular_z:+.3f} [{out_stale}]"
+                )
 
                 # Direction
                 if vel.linear_x > 0.05:
@@ -659,7 +669,7 @@ class TeleopTUI:
                 # Wheel states
                 print(f"\n[Wheel States] Rate: {wheels.rate_hz:.1f} Hz")
                 for i, name in enumerate(wheels.names):
-                    if 'wheel' in name.lower():
+                    if "wheel" in name.lower():
                         v = wheels.velocities[i] if i < len(wheels.velocities) else 0.0
                         d = "FWD" if v > 0.01 else ("REV" if v < -0.01 else "---")
                         print(f"  {name}: {v:+.3f} [{d}]")
@@ -668,7 +678,11 @@ class TeleopTUI:
                 print(f"\n[Twist Mux] Active: {self.node.active_mux_source}")
                 for src in ["joystick", "keyboard", "web_ui", "navigation"]:
                     active = now - self.node.mux_sources.get(src, 0.0) < 0.5
-                    status = "ACTIVE" if src == self.node.active_mux_source and active else ("ready" if active else "---")
+                    status = (
+                        "ACTIVE"
+                        if src == self.node.active_mux_source and active
+                        else ("ready" if active else "---")
+                    )
                     print(f"  {src:12} pri={self.MUX_PRIORITIES[src]:3} [{status}]")
 
                 print("\n" + "=" * 70)
