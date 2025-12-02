@@ -26979,13 +26979,13 @@
 	(footprint "THT:A-DF_09_A_KG-T2S"
 		(layer "F.Cu")
 		(uuid "f84f49cc-96bd-413a-ad9f-949830ffed84")
-		(at 180.44 122.389669)
+		(at 180.44 128.48)
 		(descr "9-pin D-Sub connector, horizontal/angled (90 deg), THT-mount, socket (female), pitch 2.77x2.84mm, pin-PCB-offset 7.7mm, distance of mounting holes 25mm, distance of mounting holes to PCB edge 9.12mm, see https://disti-assets.s3.amazonaws.com/tonar/files/datasheets/16730.pdf")
 		(tags "9-pin D-Sub connector horizontal angled 90deg THT socket pitch 2.77x2.84mm pin-PCB-offset 7.7mm mounting-holes-distance 25mm mounting-hole-offset 9.12mm")
 		(property "Reference" "J1"
 			(at -5.54 -2.8 0)
 			(layer "F.SilkS")
-			(uuid "b838f520-ed8f-4ad3-8ab1-24e7ea6cc08f")
+			(uuid "3cf12d78-af8e-44b0-ae2f-8e8ff5dd9db5")
 			(effects
 				(font
 					(size 0.7 0.7)
@@ -26996,7 +26996,7 @@
 		(property "Value" "DE9"
 			(at -5.54 18.61 0)
 			(layer "F.Fab")
-			(uuid "37354700-2d6c-4cbe-a070-79c57c8b44ef")
+			(uuid "1be229e6-250f-4918-91d2-0c3a00843614")
 			(effects
 				(font
 					(size 1 1)
@@ -27008,7 +27008,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "ac87281f-635d-4a4f-bc3c-2569ddb48a57")
+			(uuid "e5d3fce1-7151-4615-8dea-e6c250ecd7bd")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27020,7 +27020,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "3693919a-4b4b-48c4-8b34-1a32bb6cec7d")
+			(uuid "e41fbaa5-435c-438d-9f77-df00fb48671c")
 			(effects
 				(font
 					(size 1.27 1.27)
