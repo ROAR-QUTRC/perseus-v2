@@ -17,28 +17,28 @@ amcl:
     laser_min_range: -1.0
     laser_model_type: "likelihood_field"
     max_beams: 60
-    max_particles: 2000 # Increased from 1000 for better localization
-    min_particles: 500 # Increased from 250 for better localization
+    max_particles: 2000
+    min_particles: 500
     odom_frame_id: "odom"
-    pf_err: 0.05
+    pf_err: 10000.0  # Set to a very high value to stop the system from resampling
     pf_z: 0.99
-    recovery_alpha_fast: 0.1 # Enable recovery (was 0.0)
-    recovery_alpha_slow: 0.001 # Enable recovery (was 0.0)
-    resample_interval: 2
+    recovery_alpha_fast: 0.1
+    recovery_alpha_slow: 0.001
+    resample_interval: 0  # Disable resampling
     robot_model_type: "nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
-    transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
-    update_min_a: 0.3 # Scaled for larger robot
-    update_min_d: 0.5 # Scaled for larger robot
+    transform_tolerance: 1.0
+    update_min_a: 0.3
+    update_min_d: 0.5
     z_hit: 0.5
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
     scan_topic: scan
     map_topic: map
-    set_initial_pose: true # Changed to true for automatic initialization
+    set_initial_pose: true
     always_reset_initial_pose: false
     first_map_only: false
     initial_pose:
@@ -46,9 +46,10 @@ amcl:
       y: 0.0
       z: 0.0
       yaw: 0.0
-    initial_cov_xx: 100.0      # ⬆️ INCREASE (was probably 0.5)
-    initial_cov_yy: 100.0      # ⬆️ INCREASE
-    initial_cov_aa: 10.0    
+    initial_cov_xx: 100.0
+    initial_cov_yy: 100.0
+    initial_cov_aa: 10.0
+
 bt_navigator:
   ros__parameters:
     use_sim_time: true
@@ -115,7 +116,7 @@ controller_server:
     controller_plugins: ["FollowPath"]
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.1
+      required_movement_radius: 0.2 # increased from 0.1 for larger robot (for better responsiveness)
       movement_time_allowance: 10.0
     goal_checker:
       stateful: true
@@ -129,13 +130,11 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.15
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 0.2
       min_speed_xy: 0.0                                                         
       max_speed_xy: 0.3
       min_speed_theta: 0.0
-      # Add high threshold velocity for turtlebot 3 issue.
-      # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
-      acc_lim_x: 3.0
+      acc_lim_x: 2.0
       acc_lim_y: 0.0
       acc_lim_theta: 3.2
       decel_lim_x: -2.5
