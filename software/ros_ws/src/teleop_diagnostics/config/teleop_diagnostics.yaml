@@ -6,8 +6,8 @@ teleop_diagnostics:
   ros__parameters:
     # Wheel configuration (from perseus_description/urdf/wheel.urdf.xacro)
     wheel:
-      axis: 'xyz="0 -1 0"' # Negative Y axis
-      axis_comment: "Positive velocity = forward motion (REP-103 convention)"
+      axis: 'xyz="0 1 0"' # Positive Y axis
+      axis_comment: "Positive velocity = forward motion (ROS REP-103 convention)"
       separation: 0.714 # meters
       radius: 0.147 # meters
     # Twist mux priorities (from perseus/config/twist_mux.yaml)
@@ -20,12 +20,12 @@ teleop_diagnostics:
     controller:
       forward:
         axis: 1
-        scaling: -0.7 # Negative: joystick forward = negative axis value
+        scaling: 0.7 # Positive: joystick forward = positive cmd_vel (ROS convention)
         enable_axis: 2
         enable_threshold: -0.5
       turn:
         axis: 0
-        scaling: -0.5 # Negative: joystick right = positive axis value
+        scaling: 0.5 # Positive: joystick left = positive angular.z (ROS convention)
       turbo:
         enable_axis: 5
         enable_threshold: -0.5

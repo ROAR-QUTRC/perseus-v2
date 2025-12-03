@@ -39,8 +39,8 @@
     <xacro:if value="${side == 'right'}">
       <origin xyz="0.0 ${-wheels_y_offset} 0.0" rpy="0.0 0.0 0.0"/>
     </xacro:if>
-    <!-- Axis -Y: positive velocity = forward motion (standard ROS/diff_drive convention) -->
-    <axis xyz="0 -1 0"/>
+    <!-- Axis +Y: positive velocity = forward motion (ROS REP-103 convention) -->
+    <axis xyz="0 1 0"/>
     <dynamics damping="0.2" friction="0.3"/>
   </joint>
 

@@ -69,9 +69,9 @@ class ControllerConfig:
     """Holds generic controller configuration."""
 
     forward_axis: int = 1
-    forward_scaling: float = -0.7
+    forward_scaling: float = 0.7
     turn_axis: int = 0
-    turn_scaling: float = -0.5
+    turn_scaling: float = 0.5
     forward_enable_axis: int = 2
     forward_enable_threshold: float = -0.5
     turbo_enable_axis: int = 5
@@ -463,7 +463,7 @@ class TeleopTUI:
 
         # Axis config
         self.safe_addstr(
-            y + h - 2, x + 2, 'Axis: xyz="0 -1 0" (+vel=FWD)', curses.A_DIM
+            y + h - 2, x + 2, 'Axis: xyz="0 1 0" (+vel=FWD)', curses.A_DIM
         )
 
     def draw_mux_panel(self, y: int, x: int, w: int):
