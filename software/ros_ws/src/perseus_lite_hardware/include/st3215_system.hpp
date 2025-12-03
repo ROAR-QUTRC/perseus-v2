@@ -138,6 +138,7 @@ namespace perseus_lite_hardware
         static constexpr size_t _PACKET_MIN_SIZE = 4;            // Minimum valid packet size
         static constexpr uint8_t _WHEEL_MODE_VALUE = 1;          // Value for wheel mode setting
         static constexpr uint8_t _TORQUE_ENABLE_VALUE = 1;       // Value to enable torque
+        static constexpr uint16_t _MAX_TORQUE_LIMIT = 1000;      // Maximum torque limit value (0-1000)
         static constexpr uint8_t _PRESENT_POSITION_REG = 0x38;   // Present position register
         static constexpr size_t _STATUS_PACKET_DATA_SIZE = 8;    // Expected size of status data
         static constexpr uint16_t _SIGN_BIT_MASK = 1 << 15;      // Mask for sign bit in position/velocity

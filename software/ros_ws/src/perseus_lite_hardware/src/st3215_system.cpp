@@ -209,11 +209,31 @@ namespace perseus_lite_hardware
                     return hardware_interface::CallbackReturn::ERROR;
                 }
 
+                // Small delay between commands
+                std::this_thread::sleep_for(_COMMAND_DELAY);
+
+                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
+                             "Setting torque limit to maximum for servo %d", servo_id);
+
+                // Set torque limit to maximum (register 48-49, value 0-1000)
+                const uint8_t torqueLimitRegister = static_cast<uint8_t>(ServoSramRegister::TORQUE_LIMIT_L);
+                const std::array<uint8_t, 3> torqueLimitData{
+                    torqueLimitRegister,
+                    static_cast<uint8_t>(_MAX_TORQUE_LIMIT & 0xFF),        // Low byte
+                    static_cast<uint8_t>((_MAX_TORQUE_LIMIT >> 8) & 0xFF)  // High byte
+                };
+                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::span{torqueLimitData}))
+                {
+                    RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
+                                 "Failed to set torque limit for servo %d", servo_id);
+                    return hardware_interface::CallbackReturn::ERROR;
+                }
+
                 // Small delay between servos
                 std::this_thread::sleep_for(_COMMAND_DELAY);
             }
 
-            RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME), "Successfully configured all servos with wheel mode and torque enabled");
+            RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME), "Successfully configured all servos with wheel mode, torque enabled, and max torque limit");
 
             // Start communication thread
             _comm_thread_running = true;
