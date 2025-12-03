@@ -2,6 +2,7 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
+    ExecuteProcess,
 )
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -74,10 +75,35 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
+    rviz_config = PathJoinSubstitution(
+        [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
+    )
+    rviz = ExecuteProcess(
+        cmd=[
+            "nix",
+            "run",
+            "--impure",
+            "github:nix-community/nixGL",
+            "--",
+            "rviz2",
+            "-d",
+            rviz_config,
+        ],
+        output="screen",
+        additional_env={
+            "NIXPKGS_ALLOW_UNFREE": "1",
+            "QT_QPA_PLATFORM": "xcb",
+            "QT_SCREEN_SCALE_FACTORS": "1",
+            "ROS_NAMESPACE": "/",
+            "RMW_QOS_POLICY_HISTORY": "keep_last",
+            "RMW_QOS_POLICY_DEPTH": "100",
+        },
+    )
     launch_files = [
         gz_launch,
         rsp_launch,
         controllers_launch,
+        rviz,
     ]
 
     return LaunchDescription(arguments + launch_files)
