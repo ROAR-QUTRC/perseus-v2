@@ -462,9 +462,7 @@ class TeleopTUI:
                     break
 
         # Axis config
-        self.safe_addstr(
-            y + h - 2, x + 2, 'Axis: xyz="0 1 0" (+vel=FWD)', curses.A_DIM
-        )
+        self.safe_addstr(y + h - 2, x + 2, 'Axis: xyz="0 1 0" (+vel=FWD)', curses.A_DIM)
 
     def draw_mux_panel(self, y: int, x: int, w: int):
         """Draw twist mux status panel."""
