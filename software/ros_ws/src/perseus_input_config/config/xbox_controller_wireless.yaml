@@ -6,8 +6,14 @@ generic_controller:
       forward:
         turbo: 2.5
         axis: 1
+<<<<<<< HEAD
         # Positive scaling: joystick forward = positive linear.x = forward (ROS convention)
         scaling: 0.7
+=======
+        # Negative scaling: joystick forward (away from user) gives negative values,
+        # but ROS convention is positive linear.x = forward
+        scaling: -0.7
+>>>>>>> 3acdc20c (packages and attempts at URDF alignment)
         enable:
           axis: 5
           is_less_than: true
