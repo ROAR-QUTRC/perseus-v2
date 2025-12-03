@@ -9,6 +9,9 @@
 	import { OpenInNewWindow } from 'svelte-radix';
 	import { localStore } from '$lib/scripts/localStore.svelte';
 	import { connectRos, disconnectRos, getRosConnection } from '$lib/scripts/ros-bridge.svelte';
+	import ConnectionMenuMobile from './connection-menu-mobile.svelte';
+
+	let props: { isMobile: boolean } = $props();
 
 	let domainId = $state<number>(51);
 	let customAddress = $state<string>('');
@@ -39,38 +42,48 @@
 	};
 </script>
 
-<div class="mx-auto flex">
-	<!-- Connection -->
-	<Button size="sm" variant="ghost" onclick={toggleConnection}>
-		<div
-			class={cn('h-[20px] w-[20px] rounded-[50%] bg-red-600', {
-				'bg-green-600': getRosConnection()
-			})}
-		></div>
-		<p>{getRosConnection() ? 'Connected' : 'Disconnected'}</p>
-	</Button>
-
-	<!-- Address -->
-	<p class="my-[5px]">/</p>
+{#if props.isMobile}
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class="mb-auto">
-			<Button size="sm" variant="ghost">{address.value}</Button>
+		<DropdownMenu.Trigger class="ml-auto mr-2">
+			<div
+				class={cn('my-auto h-[20px] w-[20px] rounded-[50%] bg-red-600', {
+					'bg-green-600': getRosConnection()
+				})}
+			></div>
 		</DropdownMenu.Trigger>
-		<DropdownMenu.Content>
-			<DropdownMenu.Item
-				disabled={address.value === 'localhost'}
-				onclick={() => changeAddress('localhost')}
-			>
-				localhost
-			</DropdownMenu.Item>
-			<DropdownMenu.Item onclick={() => changeAddress('server')} disabled={disableServerIP}
-				>Same as host</DropdownMenu.Item
-			>
-			<DropdownMenu.Item onclick={() => (openAddressMenu = true)}>
-				Custom IP <OpenInNewWindow class="ml-auto h-4 w-4" />
-			</DropdownMenu.Item>
+		<DropdownMenu.Content align="end">
+			<DropdownMenu.Label>ROS Connection</DropdownMenu.Label>
+			<DropdownMenu.Group>
+				<DropdownMenu.Item onclick={toggleConnection}>
+					<p>{getRosConnection() ? 'Disconnect' : 'Connect'}</p>
+				</DropdownMenu.Item>
+			</DropdownMenu.Group>
+			<DropdownMenu.Separator />
+			<DropdownMenu.Label>ROS Host: {address.value}</DropdownMenu.Label>
+			<DropdownMenu.Group>
+				<DropdownMenu.Item
+					disabled={address.value === 'localhost'}
+					onclick={() => changeAddress('localhost')}
+				>
+					localhost
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => changeAddress('server')} disabled={disableServerIP}
+					>Same as host</DropdownMenu.Item
+				>
+				<DropdownMenu.Item onclick={() => (openAddressMenu = true)}>
+					Custom IP <OpenInNewWindow class="ml-auto h-4 w-4" />
+				</DropdownMenu.Item>
+			</DropdownMenu.Group>
+			<DropdownMenu.Separator />
+			<DropdownMenu.Label>ROS Domain: {domainId}</DropdownMenu.Label>
+			<DropdownMenu.Group>
+				<DropdownMenu.Item>
+					Domain ID: {domainId}{domainId === 42 ? ` (prod)` : ''}{domainId === 51 ? ` (dev)` : ''}
+				</DropdownMenu.Item>
+			</DropdownMenu.Group>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
+
 	<Dialog.Root bind:open={openAddressMenu}>
 		<Dialog.Content>
 			<Label for="customAddress">New Ros Domain ID:</Label>
@@ -80,10 +93,15 @@
 			</form>
 		</Dialog.Content>
 	</Dialog.Root>
-
-	<!-- ROS domain -->
-	<p class="my-[5px]">/</p>
-	<Button size="sm" variant="ghost" class="cursor-default">
-		Domain ID: {domainId}{domainId === 42 ? ` (prod)` : ''}{domainId === 51 ? ` (dev)` : ''}
-	</Button>
-</div>
+{:else}
+	<div class="mx-auto flex">
+		<ConnectionMenuMobile
+			{toggleConnection}
+			{changeAddress}
+			{address}
+			{disableServerIP}
+			{customAddress}
+			{domainId}
+		/>
+	</div>
+{/if}

@@ -1,0 +1,140 @@
+<?xml version='1.0'?>
+<sdf version='1.8'>
+  <model name='cubes'>
+    <pose>0 0 0 0 0 0</pose>
+    <static>false</static>
+
+    <link name='cube_1'>
+      <pose>-7.2 4.8 1.5 0 0 0.7</pose>
+      <collision name='cube_1_collision'>
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='cube_1_visual'>
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.5 0 0 1</ambient>
+          <diffuse>0.7 0 0 1</diffuse>
+          <specular>0.2 0 0 1</specular>
+        </material>
+      </visual>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.000167</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000167</iyy>
+          <iyz>0</iyz>
+          <izz>0.000167</izz>
+        </inertia>
+      </inertial>
+    </link>
+    <link name='cube_2'>
+      <pose>4.1 -8.3 1.5 0 0 -0.4</pose>
+      <collision name='cube_2_collision'>
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='cube_2_visual'>
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0 0.4 0 1</ambient>
+          <diffuse>0 0.6 0 1</diffuse>
+          <specular>0 0.2 0 1</specular>
+        </material>
+      </visual>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.000167</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000167</iyy>
+          <iyz>0</iyz>
+          <izz>0.000167</izz>
+        </inertia>
+      </inertial>
+    </link>
+    <link name='cube_3'>
+      <pose>-1.8 -10.2 1.5 0 0 1.2</pose>
+      <collision name='cube_3_collision'>
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='cube_3_visual'>
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0 0 0.5 1</ambient>
+          <diffuse>0 0 0.7 1</diffuse>
+          <specular>0 0 0.2 1</specular>
+        </material>
+      </visual>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.000167</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000167</iyy>
+          <iyz>0</iyz>
+          <izz>0.000167</izz>
+        </inertia>
+      </inertial>
+    </link>
+    <link name='cube_4'>
+      <pose>8.1 7.6 1.5 0 0 -0.9</pose>
+      <collision name='cube_4_collision'>
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='cube_4_visual'>
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.3 0.3 0.3 1</ambient>
+          <diffuse>0.5 0.5 0.5 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+        </material>
+      </visual>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.000167</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000167</iyy>
+          <iyz>0</iyz>
+          <izz>0.000167</izz>
+        </inertia>
+      </inertial>
+    </link>
+  </model>
+</sdf>
