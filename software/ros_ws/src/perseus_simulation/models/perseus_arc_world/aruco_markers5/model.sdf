@@ -1,0 +1,91 @@
+<?xml version='1.0'?>
+<sdf version='1.8'>
+  <model name='aruco_markers5'>
+    <static>true</static>
+    <pose>0 0 0.0 0 0 0</pose> <!-- Reset to origin, let world file control position -->
+
+    <!-- Post/Pole - Main link -->
+    <link name='post_link'>
+      <pose>0 0 0.2 0 0 0</pose>
+      <visual name='post_visual'>
+        <geometry>
+          <cylinder>
+            <radius>0.05</radius>
+            <length>1</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.5 0.5 0.5 1</ambient>
+          <diffuse>0.5 0.5 0.5 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+      </visual>
+      <collision name='post_collision'>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>1.0</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      
+      <!-- Small base for stability -->
+      <visual name='base_visual'>
+        <pose>0 0 -0.485 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.09</radius>
+            <length>0.02</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1</ambient>
+          <diffuse>0.2 0.2 0.2 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+      </visual>
+      
+      <collision name='base_collision'>
+        <pose>0 0 -0.485 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.09</radius>
+            <length>0.02</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      
+      <!-- ArUco plate as part of the same link -->
+      <visual name='aruco_plate_visual'>
+        <pose>-0.05 0 0.5 0 1.5708 0</pose> <!-- Relative to post center -->
+        <geometry>
+          <box>
+            <size>0.35 0.35 0.005</size>
+          </box>
+        </geometry>
+        <material>
+          <pbr>
+            <metal>
+              <albedo_map>textures/aruco05.png</albedo_map>
+            </metal>
+          </pbr>
+        <ambient>1 1 1 1</ambient>
+        <diffuse>1 1 1 1</diffuse>
+        <specular>0.1 0.1 0.1 1</specular>
+        <emissive>0 0 0 1</emissive>
+        </material>
+      </visual>
+      
+      <collision name='aruco_plate_collision'>
+        <pose>0.1 0 0.5 0 1.5708 0</pose> <!-- Same relative position -->
+        <geometry>
+          <box>
+            <size>0.35 0.35 0.005</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
