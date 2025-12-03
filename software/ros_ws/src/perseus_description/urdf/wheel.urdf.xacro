@@ -39,11 +39,7 @@
     <xacro:if value="${side == 'right'}">
       <origin xyz="0.0 ${-wheels_y_offset} 0.0" rpy="0.0 0.0 0.0"/>
     </xacro:if>
-<<<<<<< HEAD
-    <!-- Axis +Y: positive velocity = forward motion (ROS REP-103 convention) -->
-=======
     <!-- Axis +Y: positive velocity = forward motion -->
->>>>>>> 3acdc20c (packages and attempts at URDF alignment)
     <axis xyz="0 1 0"/>
     <dynamics damping="0.2" friction="0.3"/>
   </joint>
