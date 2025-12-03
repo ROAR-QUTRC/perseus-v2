@@ -6,9 +6,8 @@ generic_controller:
       forward:
         turbo: 2.5
         axis: 1
-        # Negative scaling: joystick forward gives negative values,
-        # but ROS convention is positive linear.x = forward
-        scaling: -0.7
+        # Positive scaling: joystick forward = positive linear.x = forward (ROS convention)
+        scaling: 0.7
         enable:
           axis: 4
           is_less_than: true
@@ -20,9 +19,8 @@ generic_controller:
       turn:
         turbo: 2.5
         axis: 0
-        # Negative scaling: joystick right gives positive values,
-        # but ROS convention is positive angular.z = turn left
-        scaling: -1.0
+        # Positive scaling: joystick left = positive angular.z = turn left (ROS convention)
+        scaling: 1.0
         enable:
           follows: drive.forward.enable
         turbo_enable:
