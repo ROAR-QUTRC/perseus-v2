@@ -319,6 +319,31 @@ namespace hi_can::parameters
             }
         }
     }
+    namespace space_resources
+    {
+        namespace controller
+        {
+            namespace centrifuge
+            {
+
+            }
+            namespace sensing
+            {
+                struct _magnet_t
+                {
+                    int16_t x = 0;
+                    int16_t y = 0;
+                    int16_t z = 0;
+                };
+                struct _spectrum_t
+                {
+                    uint16_t channel[18];
+                };
+                typedef SimpleSerializable<_magnet_t> magnet_t;
+                typedef SimpleSerializable<_spectrum_t> spectrum_t;
+            }
+        }
+    }
     namespace shared
     {
         namespace elevator

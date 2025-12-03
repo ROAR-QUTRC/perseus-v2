@@ -421,6 +421,45 @@ namespace hi_can
         {
             /// @brief The space resources system ID
             constexpr uint8_t SYSTEM_ID = 0x05;
+            namespace controller
+            {
+                constexpr uint8_t SUBSYSTEM_ID = 0x00;
+
+                namespace centrifuge
+                {
+                    constexpr uint8_t DEVICE_ID = 0x00;
+                    enum class group
+                    {
+                        MOTOR = 0x01,
+                    };
+                    enum class motor_parameter
+                    {
+                        ON = 0x01,
+                        OFF = 0x02,
+                        STATUS = 0x03,
+                    };
+                }
+                namespace sensing
+                {
+                    constexpr uint8_t DEVICE_ID = 0x01;
+                    enum class group
+                    {
+                        MAGNETOMETER = 0x01,
+                        SPECTRAL_SENSOR = 0x02,
+                        ACTUATOR = 0x03,
+                    };
+                    enum class sensor_parameter
+                    {
+                        START = 0x01,
+                        DATA = 0x02,
+                    };
+                    enum class actuator_parameter
+                    {
+                        START = 0x01,
+                        DATA = 0x02,
+                    };
+                }
+            }
         }
         namespace shared
         {
