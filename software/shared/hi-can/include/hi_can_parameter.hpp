@@ -325,7 +325,7 @@ namespace hi_can::parameters
         {
             namespace centrifuge
             {
-
+                typedef SimpleSerializable<wrapped_value_t<int16_t>> speed_t;
             }
             namespace sensing
             {
@@ -337,7 +337,7 @@ namespace hi_can::parameters
                 };
                 struct _spectrum_t
                 {
-                    uint16_t channel[18];
+                    uint16_t channel[18];  // TODO: Split this into channel names/wavelengths
                 };
                 typedef SimpleSerializable<_magnet_t> magnet_t;
                 typedef SimpleSerializable<_spectrum_t> spectrum_t;
