@@ -4,6 +4,4 @@ idf_component_register(
   INCLUDE_DIRS
   ./include
   REQUIRES
-  driver
-  PRIV_REQUIRES
-  arduino-esp32)
+  driver)
