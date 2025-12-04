@@ -1,4 +1,4 @@
-#include "template_node.hpp"
+#include "template_node/template_node.hpp"
 
 // Called on startup of node
 TemplateNode::TemplateNode(const rclcpp::NodeOptions& options)
