@@ -5,7 +5,6 @@ from launch.actions import (
     ExecuteProcess,
     TimerAction,
 )
-from launch.conditions import UnlessCondition 
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
@@ -18,8 +17,9 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
-    wheel_odom_only = LaunchConfiguration("wheel_odom_only", default="false") # Disabled - using EKF for odometry transforms
-
+    wheel_odom_only = LaunchConfiguration(
+        "wheel_odom_only", default="false"
+    )  # Disabled - using EKF for odometry transforms
 
     arguments = [
         DeclareLaunchArgument(
@@ -129,7 +129,7 @@ def generate_launch_description():
     ekf_delayed = TimerAction(
         period=10.0,
         actions=[ekf_node],
-        #condition=UnlessCondition(wheel_odom_only),  # Only run if wheel_odom_only is false
+        # condition=UnlessCondition(wheel_odom_only),  # Only run if wheel_odom_only is false
     )
     launch_files = [
         gz_launch,
