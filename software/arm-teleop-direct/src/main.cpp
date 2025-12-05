@@ -33,7 +33,7 @@ static std::atomic<bool> running(true);
 static std::atomic<bool> torque_protection(false);  // Global flag for torque protection
 
 // Find available serial ports
-std::vector<std::string> findSerialPorts()
+std::vector<std::string> find_serial_ports()
 {
     std::vector<std::string> ports;
     const std::filesystem::path dev_path("/dev");
@@ -61,7 +61,7 @@ std::vector<std::string> findSerialPorts()
     return ports;
 }
 // Let user select ports for both arms
-std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::string>& ports)
+std::pair<std::string, std::string> select_serial_ports(const std::vector<std::string>& ports)
 {
     if (ports.empty())
     {
@@ -94,7 +94,7 @@ std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::str
 
         if (selection1 == 0)
         {
-            return selectSerialPorts(findSerialPorts());  // Rescan and restart
+            return select_serial_ports(find_serial_ports());  // Rescan and restart
         }
 
         if (selection1 > 0 && selection1 <= ports.size())
@@ -123,7 +123,7 @@ std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::str
 
         if (selection2 == 0)
         {
-            return selectSerialPorts(findSerialPorts());  // Rescan and restart
+            return select_serial_ports(find_serial_ports());  // Rescan and restart
         }
 
         if (selection2 > 0 && selection2 <= ports.size() && selection2 != selection1)
@@ -151,44 +151,44 @@ std::pair<std::string, std::string> selectSerialPorts(const std::vector<std::str
 }
 
 // Create a colored progress bar string
-void displayProgressBar(WINDOW* ncurses_win, int y, int x, uint16_t current, uint16_t min, uint16_t max)
+void display_progress_bar(WINDOW* ncurses_win, int y, int x, uint16_t current, uint16_t min, uint16_t max)
 {
     // Clamp values to 0-4095
     current = std::min(current, static_cast<uint16_t>(limits::MAX_POSITION));
     min = std::min(min, static_cast<uint16_t>(limits::MAX_POSITION));
     max = std::min(max, static_cast<uint16_t>(limits::MAX_POSITION));
 
-    const size_t barLength = ui::POSITION_BAR_LENGTH;
+    const size_t bar_length = ui::POSITION_BAR_LENGTH;
 
     // Calculate positions
-    size_t currentPos = static_cast<size_t>((static_cast<double>(current) / limits::MAX_POSITION) * barLength);
-    size_t minPos = static_cast<size_t>((static_cast<double>(min) / limits::MAX_POSITION) * barLength);
-    size_t maxPos = static_cast<size_t>((static_cast<double>(max) / limits::MAX_POSITION) * barLength);
+    size_t current_pos = static_cast<size_t>((static_cast<double>(current) / limits::MAX_POSITION) * bar_length);
+    size_t min_pos = static_cast<size_t>((static_cast<double>(min) / limits::MAX_POSITION) * bar_length);
+    size_t max_pos = static_cast<size_t>((static_cast<double>(max) / limits::MAX_POSITION) * bar_length);
 
     // Print opening bracket
     mvwaddch(ncurses_win, y, x, '[');
     x++;
 
     // Print bar with colors
-    for (size_t i = 0; i < barLength; i++)
+    for (size_t i = 0; i < bar_length; i++)
     {
         if (has_colors())
         {
-            if (i == minPos)
+            if (i == min_pos)
             {
                 wattron(ncurses_win, COLOR_PAIR(1));  // Blue for min
                 waddch(ncurses_win, '#');
                 wattroff(ncurses_win, COLOR_PAIR(1));
             }
-            else if (i == maxPos)
+            else if (i == max_pos)
             {
                 wattron(ncurses_win, COLOR_PAIR(2));  // Green for max
                 waddch(ncurses_win, '#');
                 wattroff(ncurses_win, COLOR_PAIR(2));
             }
-            else if (i < currentPos)
+            else if (i < current_pos)
             {
-                if (i < minPos)
+                if (i < min_pos)
                 {
                     wattron(ncurses_win, COLOR_PAIR(3) | A_DIM);  // Dimmed white for positions before min
                     waddch(ncurses_win, '#');
@@ -209,9 +209,9 @@ void displayProgressBar(WINDOW* ncurses_win, int y, int x, uint16_t current, uin
         else
         {
             // For non-color displays, still show all positions but with different characters
-            if (i < currentPos)
+            if (i < current_pos)
             {
-                waddch(ncurses_win, (i < minPos) ? '.' : '#');
+                waddch(ncurses_win, (i < min_pos) ? '.' : '#');
             }
             else
             {
@@ -236,7 +236,7 @@ struct ServoData
 };
 
 // Create a colored torque bar string
-void displayTorqueBar(WINDOW* win, int y, int x, int16_t torque)
+void display_torque_bar(WINDOW* win, int y, int x, int16_t torque)
 {
     const int width = ui::TORQUE_BAR_WIDTH;
     const int16_t max_display = ui::MAX_DISPLAY_TORQUE;  // Scale display to ±100
@@ -297,27 +297,27 @@ void displayTorqueBar(WINDOW* win, int y, int x, int16_t torque)
 }
 
 // Scale a position value from one range to another
-uint16_t scalePosition(uint16_t pos, uint16_t srcMin, uint16_t srcMax, uint16_t destMin, uint16_t destMax)
+uint16_t scale_position(uint16_t pos, uint16_t src_min, uint16_t src_max, uint16_t dest_min, uint16_t dest_max)
 {
     // Ensure we don't divide by zero
-    if (srcMax == srcMin)
-        return destMin;
+    if (src_max == src_min)
+        return dest_min;
 
     // Calculate the scaling factor and apply it
-    double scale = static_cast<double>(destMax - destMin) / static_cast<double>(srcMax - srcMin);
-    return static_cast<uint16_t>(destMin + (pos - srcMin) * scale);
+    double scale = static_cast<double>(dest_max - dest_min) / static_cast<double>(src_max - src_min);
+    return static_cast<uint16_t>(dest_min + (pos - src_min) * scale);
 }
 
-std::string getWorkingDirectory()
+std::string get_working_directory()
 {
     return std::filesystem::current_path().string();
 }
 
 // Display servo values in ncurses window for both arms
 // Display servo values in ncurses window for both arms
-void displayServoValues([[maybe_unused]] WINDOW* win,
-                        const std::vector<ServoData>& arm1_data,
-                        const std::vector<ServoData>& arm2_data)
+void display_servo_values([[maybe_unused]] WINDOW* win,
+                          const std::vector<ServoData>& arm1_data,
+                          const std::vector<ServoData>& arm2_data)
 {
     werase(win);
 
@@ -346,10 +346,10 @@ void displayServoValues([[maybe_unused]] WINDOW* win,
                       servo.torque);
 
             // Display torque bar
-            displayTorqueBar(win, row, 42, servo.torque);
+            display_torque_bar(win, row, 42, servo.torque);
 
             // Display position bar
-            displayProgressBar(win, row, 49, servo.current, servo.min, servo.max);
+            display_progress_bar(win, row, 49, servo.current, servo.min, servo.max);
         }
         else
         {
@@ -383,10 +383,10 @@ void displayServoValues([[maybe_unused]] WINDOW* win,
                       servo.torque);
 
             // Display torque bar
-            displayTorqueBar(ncurses_win, row, 42, servo.torque);
+            display_torque_bar(ncurses_win, row, 42, servo.torque);
 
             // Display position bar with adjusted x position to make room for torque
-            displayProgressBar(ncurses_win, row, 49, servo.current, servo.min, servo.max);
+            display_progress_bar(ncurses_win, row, 49, servo.current, servo.min, servo.max);
 
             if (servo.mirroring && has_colors())
             {
@@ -421,15 +421,15 @@ void displayServoValues([[maybe_unused]] WINDOW* win,
         wprintw(ncurses_win, "Yellow rows = Mirrored servos");
         wattroff(ncurses_win, COLOR_PAIR(4) | A_BOLD);
     }
-    mvwprintw(ncurses_win, 28, 0, "Save directory: %s", getWorkingDirectory().c_str());
+    mvwprintw(ncurses_win, 28, 0, "Save directory: %s", get_working_directory().c_str());
 
     wrefresh(ncurses_win);
 }
 
-void exportCalibrationData(const std::vector<ServoData>& arm1_data,
-                           const std::vector<ServoData>& arm2_data,
-                           const std::string& port1,
-                           const std::string& port2)
+void export_calibration_data(const std::vector<ServoData>& arm1_data,
+                             const std::vector<ServoData>& arm2_data,
+                             const std::string& port1,
+                             const std::string& port2)
 {
     try
     {
@@ -517,9 +517,9 @@ void exportCalibrationData(const std::vector<ServoData>& arm1_data,
     }
 }
 
-void loadCalibrationData(std::vector<ServoData>& arm1_data,
-                         std::vector<ServoData>& arm2_data,
-                         const std::string& filename = "arm_calibration.yaml")
+void load_calibration_data(std::vector<ServoData>& arm1_data,
+                           std::vector<ServoData>& arm2_data,
+                           const std::string& filename = "arm_calibration.yaml")
 {
     try
     {
@@ -577,7 +577,7 @@ void loadCalibrationData(std::vector<ServoData>& arm1_data,
     }
 }
 
-void disableTorqueAndCleanup()
+void disable_torque_and_cleanup()
 {
     // First disable ncurses if it's active
     if (ncurses_win != nullptr)
@@ -593,7 +593,7 @@ void disableTorqueAndCleanup()
         {
             try
             {
-                reader1_ptr->writeControlRegister(i, register_addr::TORQUE_ENABLE, 0);
+                reader1_ptr->write_control_register(i, register_addr::TORQUE_ENABLE, 0);
             }
             catch (...)
             {
@@ -608,7 +608,7 @@ void disableTorqueAndCleanup()
         {
             try
             {
-                reader2_ptr->writeControlRegister(i, register_addr::TORQUE_ENABLE, 0);
+                reader2_ptr->write_control_register(i, register_addr::TORQUE_ENABLE, 0);
             }
             catch (...)
             {
@@ -625,10 +625,10 @@ void disableTorqueAndCleanup()
     }
 }
 
-void signalHandler([[maybe_unused]] int signum)
+void signal_handler([[maybe_unused]] int signum)
 {
     running = false;
-    disableTorqueAndCleanup();
+    disable_torque_and_cleanup();
 }
 
 int main(int argc, char* argv[])
@@ -638,7 +638,7 @@ int main(int argc, char* argv[])
     try
     {
         // Set up signal handling
-        signal(SIGINT, signalHandler);
+        signal(SIGINT, signal_handler);
 
         // Get port paths
         std::string port_path1, port_path2;
@@ -649,8 +649,8 @@ int main(int argc, char* argv[])
         }
         else
         {
-            auto available_ports = findSerialPorts();
-            auto [p1, p2] = selectSerialPorts(available_ports);
+            auto available_ports = find_serial_ports();
+            auto [p1, p2] = select_serial_ports(available_ports);
             port_path1 = p1;
             port_path2 = p2;
         }
@@ -704,19 +704,19 @@ int main(int argc, char* argv[])
                 try
                 {
                     auto& servo = arm1_data[i];
-                    servo.current = reader1.readPosition(i + 1);
+                    servo.current = reader1.read_position(i + 1);
                     servo.min = std::min(servo.min, servo.current);
                     servo.max = std::max(servo.max, servo.current);
 
                     // Read torque value
-                    int16_t torque = reader1.readLoad(i + 1);
+                    int16_t torque = reader1.read_load(i + 1);
                     servo.torque = torque;
 
                     // Check if torque exceeds safety threshold
                     if (torque_protection.load() && std::abs(torque) > limits::TORQUE_SAFETY_THRESHOLD)
                     {
                         // Disable torque
-                        reader1.writeControlRegister(i + 1, register_addr::TORQUE_ENABLE, 0);
+                        reader1.write_control_register(i + 1, register_addr::TORQUE_ENABLE, 0);
                         servo.error = "Torque limit exceeded - disabled";
                     }
                     else if (!servo.error.empty())
@@ -737,21 +737,21 @@ int main(int argc, char* argv[])
                 try
                 {
                     auto& servo = arm2_data[i];
-                    servo.current = reader2.readPosition(i + 1);
+                    servo.current = reader2.read_position(i + 1);
                     servo.min = std::min(servo.min, servo.current);
                     servo.max = std::max(servo.max, servo.current);
 
                     // Read torque value if servo is enabled (mirroring)
                     if (servo.mirroring)
                     {
-                        int16_t torque = reader2.readLoad(i + 1);
+                        int16_t torque = reader2.read_load(i + 1);
                         servo.torque = torque;
 
                         // Only apply software torque protection if enabled
                         if (torque_protection.load() && std::abs(torque) > limits::TORQUE_SAFETY_THRESHOLD)
                         {
                             // Disable torque
-                            reader2.writeControlRegister(i + 1, register_addr::TORQUE_ENABLE, 0);
+                            reader2.write_control_register(i + 1, register_addr::TORQUE_ENABLE, 0);
                             servo.error = "Torque limit exceeded - disabled";
                             servo.mirroring = false;  // Disable mirroring when torque limit is exceeded
                         }
@@ -760,7 +760,7 @@ int main(int argc, char* argv[])
                             // If we have an overload error but torque protection is off, try to re-enable
                             try
                             {
-                                reader2.writeControlRegister(i + 1, register_addr::TORQUE_ENABLE, 1);  // Re-enable torque
+                                reader2.write_control_register(i + 1, register_addr::TORQUE_ENABLE, 1);  // Re-enable torque
                                 servo.error.clear();
                             }
                             catch (const std::exception& e)
@@ -803,7 +803,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        disableTorqueAndCleanup();
+        disable_torque_and_cleanup();
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }

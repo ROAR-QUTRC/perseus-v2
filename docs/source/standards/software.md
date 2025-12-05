@@ -18,6 +18,8 @@ Almost everything in [Naming Things in Code](https://www.youtube.com/watch?v=-J3
 
 The one exception to this video is abbreviations, as documented below.
 
+Use `snake_case` for variable and function names, unless otherwise stated by either a language standard or this document in its language-specific sections.
+
 #### Spelling
 
 Use American spelling for names - color instead of colour, serialize instead of serialise, etc. This is because most pre-existing code uses American spelling, and this will keep consistency with it.
@@ -29,14 +31,14 @@ Use minimal abbreviations. Some things are either extremely common, such as the 
 ##### Acceptable
 
 ```cpp
-speed_settings_t currentSpeeds;
+speed_settings_t current_speeds;
 ```
 
 ##### Incorrect
 
 ```cpp
-speed_settings_t curSpeeds;
-speed_settings_t curSpds;
+speed_settings_t cur_speeds;
+speed_settings_t cur_spds;
 ```
 
 ##### Exceptions
@@ -66,7 +68,7 @@ Variable names should be descriptive and describe what they do/are.
 ##### Acceptable
 
 ```cpp
-speed_settings_t targetSpeeds;
+speed_settings_t target_speeds;
 ```
 
 ##### Incorrect
@@ -85,9 +87,9 @@ In most cases, this means that they should have a verb prefix indicating that th
 ##### Acceptable
 
 ```cpp
-bool isValid;
-bool shouldExit;
-bool hasSettings;
+bool is_valid;
+bool should_exit;
+bool has_settings;
 ```
 
 ##### Incorrect
@@ -104,19 +106,27 @@ For example, the following code is acceptable as they are part of a status flag 
 ```cpp
 struct fet_status_t
 {
-    bool alertAsserted;
-    bool ddsgAsserted;
-    bool dchtAsserted;
-    bool preDischargeFetOn;
-    bool dischargeFetOn;
-    bool preChargeFetOn;
-    bool chargeFetOn;
+    bool alert_asserted;
+    bool ddsg_asserted;
+    bool dcht_asserted;
+    bool pre_discharge_fet_on;
+    bool discharge_fet_on;
+    bool pre_charge_fet_on;
+    bool charge_fet_on;
 };
 ```
 
 #### Constants
 
-Regardless of the language, constants should be named with `SCREAMING_SNAKE_CASE` and marked `const` if applicable. The constants should not be prefixed with types or any information other than their name.
+Regardless of the language, constants should be named with `SCREAMING_SNAKE_CASE` and, if possible, marked as constant/immutable.
+
+:::{important}
+In, C++, this means using `constexpr`, or `const` if you can't use `constexpr`.
+Python has no way of doing this.
+Nix, being a functional programming language, does not allow "variable" modification to start with.
+:::
+
+Constants should not be prefixed with types or any information other than their name.
 
 ### Class Methods and Variables
 
@@ -130,11 +140,11 @@ Method names should describe the _action_ that they perform, concisely and unamb
 class Settings
 {
 public:
-    int getMaxSpeed();
-    void setMaxSpeed(int maxSpeed);
+    int get_max_speed();
+    void set_max_speed(int max_speed);
 
     // note that write() may also be acceptable here depending on the context
-    void writeToDisk();
+    void write_to_disk();
 };
 ```
 
@@ -148,13 +158,13 @@ All member variables inside a class should be private. If code outside the class
 class Settings
 {
 public:
-    int getMaxSpeed();
-    void setMaxSpeed(int maxSpeed);
+    int get_max_speed();
+    void set_max_speed(int max_speed);
 
     // note that write() may also be acceptable here depending on the context
-    void writeToDisk();
+    void write_to_disk();
 private:
-    int _maxSpeed;
+    int _max_speed;
 };
 ```
 
@@ -188,14 +198,14 @@ public:
 
     Settings();
 
-    int getMaxSpeed();
-    void setMaxSpeed(int maxSpeed);
+    int get_max_speed();
+    void set_max_speed(int max_speed);
 
     void write();
 private:
-    rpm_t _calculateMaxRpm();
+    rpm_t _calculate_max_rpm();
 
-    int _maxSpeed;
+    int _max_speed;
 };
 ```
 
@@ -210,9 +220,9 @@ class Settings
 {
     // ...
 private:
-    void _loadDefaults();
+    void _load_defaults();
 
-    int _maxSpeed = 0;
+    int _max_speed = 0;
 };
 ```
 
@@ -220,7 +230,7 @@ private:
 
 If a getter or setter for a variable is written, they must be prefixed with `get` or `set`, and the name of the function should be the same as that of the internal variable it accesses.
 
-When accessing aggregate classes (lists, maps, etc.), the function should be prefixed with `add`, `get`, `remove`, or `set` (depending on the type of the aggregate, other prefixes may be appropriate), and the plurality of the variable modified as needed (such as `getConfiguration` accessing `_configurations`).
+When accessing aggregate classes (lists, maps, etc.), the function should be prefixed with `add`, `get`, `remove`, or `set` (depending on the type of the aggregate, other prefixes may be appropriate), and the plurality of the variable modified as needed (such as `get_configuration` accessing `_configurations`).
 
 Note that for some classes, it may not make sense for them to be mutable, and in these cases, providing only getters is perfectly acceptable.
 
@@ -230,15 +240,15 @@ Note that for some classes, it may not make sense for them to be mutable, and in
 class Settings
 {
 public:
-    // both referencing _maxSpeed
-    int getMaxSpeed();
-    void setMaxSpeed(int maxSpeed);
+    // both referencing _max_speed
+    int get_max_speed();
+    void set_max_speed(int max_speed);
 
-    // adds a member to the _speedConfigurations member
-    void addSpeedConfiguration(speed_settings_t configuration);
+    // adds a member to the _speed_configurations member
+    void add_speed_configuration(speed_settings_t configuration);
 
-    // gets a member from the _speedConfigurations member
-    void getSpeedConfiguration(size_t idx);
+    // gets a member from the _speed_configurations member
+    void get_speed_configuration(size_t idx);
 };
 ```
 
@@ -246,7 +256,7 @@ public:
 
 #### Globals
 
-There should be no project-wide global variables (constants are not _variable_ so use them as needed). Use functions to interact between modules.
+There should be no project-wide global variables (constants are not _variable_ so use them as needed, though namespaces are highly recommended). Use functions to interact between modules.
 
 #### Class data members
 
@@ -347,7 +357,10 @@ In short, prefer short and focused functions with a single responsibility.
 
 #### Make everything `const`
 
-If it can be made `const` (or equivalent if not in C++), do so - both variables and methods. If a method doesn't modify internal data, make it const. This prevents a whole class of bugs where variables are modified which were not expected to be modified.
+If it can be made `constexpr` or `const` (or equivalent, if not in C++), do so - both for variables and methods.
+If a method doesn't modify internal data, make it `const`.
+However, if it can be evaluated at compile time (such as for things like hardware-dependent constants), use `constexpr` (C++ specific).
+This prevents a whole class of bugs where variables are modified which were not expected to be modified.
 
 #### Prefer composition to inheritance
 
@@ -418,7 +431,7 @@ There should be no "bare" magic numbers in your code. They should be one of the 
 
 - Commented - easiest but also worst solution
 - Converted to a _named_ constant
-- Explained by the variable names, such as `outputRevolutionsPerSecond = inputRpm*60;`
+- Explained by the variable names, such as `output_revolutions_per_second = input_rpm*60;`
 
 ### Documentation
 
@@ -492,12 +505,12 @@ You should never use a `using` directive in a header. This goes for both `using 
 class Settings
 {
 public:
-    void addSetting(uint8_t id, uint8_t value)
+    void add_setting(uint8_t id, uint8_t value)
     {
         _ids.push_back(id);
         _values.push_back(value);
     }
-    std::pair<uint8_t, uint8_t> getSetting(uint8_t index)
+    std::pair<uint8_t, uint8_t> get_setting(uint8_t index)
     {
         return std::make_pair(_ids[index], _values[index]);
     }
@@ -522,12 +535,12 @@ using namespace std;
 class Settings
 {
 public:
-    void addSetting(uint8_t id, uint8_t value)
+    void add_setting(uint8_t id, uint8_t value)
     {
         _ids.push_back(id);
         _values.push_back(value);
     }
-    pair<uint8_t, uint8_t> getSetting(uint8_t index)
+    pair<uint8_t, uint8_t> get_setting(uint8_t index)
     {
         return make_pair(_ids[index], _values[index]);
     }
@@ -586,13 +599,47 @@ Libraries may need internal, private header files - if necessary, these should b
 
 ### Variable Declarations and Naming Standards
 
-#### Capitalisation
+#### Naming Convention
 
-Variables should be named in `camelCase`. The only exception to this rule is local static variables (that is, static within a function or class). These variables should be named in `snake_case` - this is to immediately signify to a programmer (who may not have seen the declaration) that they may behave differently to how they expect.
+Variables should be named in `snake_case`.
+
+:::{warning}
+This has changed.
+Previously, the standard was to use `camelCase` and name local static variables with `snake_case` to differentiate them and indicate that they will have different behaviour.
+However, to comply with de facto ROS standards, this has been changed.
+:::
+
+In addition, C++ code in this project is compiled with `-Wshadow`.
+To allow for situations where you want to have a parameter in a constructor with the same name as a class member (for example, constructor initializer lists), it is acceptable to prefix the _parameter_ name with an underscore as needed.
+
+:::{important}
+This should only be needed for structs!
+If you're mixing public and private member _variables_, you're probably doing something wrong.
+In general, structs should have fully public member variables, and classes fully private or protected (and underscore prefixed).
+With _both_ public and private variables, and the need to prefix parameters with underscores, it becomes highly unclear what variable is associated where, so try to avoid that.
+:::
+
+For example:
+
+```cpp
+struct foo_t {
+    foo_t(int _bar) : bar(_bar) {}
+
+    int bar;
+};
+
+```
+
+#### Naming Convention (Arduino-only)
+
+The exception to the above if is you're writing firmware based on the Arduino core.
+If the code you're writing is primarily Arduino and/or FreeRTOS-based, feel free to use either `camelCase` or `snake_case` - just keep whatever you do consistent internally in the project.
+However, if your code significantly interacts with either ESP-IDF or this project's internal libraries, `snake_case` should be preferred as it's the standard in use for both of them.
 
 #### Variable Type Declarations
 
-Use the format `[static] [const/volatile] type [*/&] [const]` (in order, constant/volatile, type name, pointer/reference, constant pointer modifier). Whilst OpenStack recommends putting the type first, writing it this way reads and writes the same way that you would speak the type.
+Use the format `[static] [constexpr/const/volatile] type [&/* [const]]` (in order, compile-time constant/run-time constant/volatile, type name, reference/pointer, constant pointer modifier).
+Whilst OpenStack recommends putting the type first, writing it this way reads and writes the same way that you would speak the type.
 
 #### Scoping
 
@@ -609,7 +656,7 @@ This is because the C++ (and C) compiler has _global_ (project-wide) linkage by 
 
 static settings_t settings;
 
-static void loadSettingsFromFile(void) { };
+static void load_settings_from_file(void) { };
 ```
 
 ##### Incorrect
@@ -622,8 +669,8 @@ static void loadSettingsFromFile(void) { };
 // other code can modify settings now!
 settings_t settings;
 
-// and other code can also call loadSettingsFromFile, which could cause *really* bad side effects since you can call an un-declared function as long as it's defined somewhere
-void loadSettingsFromFile(void) { };
+// and other code can also call load_settings_from_file, which could cause *really* bad side effects since you can call an un-declared function as long as it's defined somewhere
+void load_settings_from_file(void) { };
 ```
 
 #### Namespaces
@@ -754,7 +801,7 @@ inline void foo::bar() { }
 References don't always behave the way you'd expect. The following code will break:
 
 ```cpp
-const Point& normalize(const Point& startPoint)
+const Point& normalize(const Point& start_point)
 {
     Point normalized();
     // ... logic here
@@ -765,7 +812,7 @@ const Point& normalize(const Point& startPoint)
 This happens because the `normalized` variable goes out of scope at the end of the function and gets destroyed, making the returned reference invalid. A solution to this problem is to use smart pointers and dynamically allocate the return value - this may be a valid solution, but it is often better simply to return an object and let the compiler use the copy constructor:
 
 ```cpp
-Point normalize(const Point& startPoint)
+Point normalize(const Point& start_point)
 {
     Point normalized();
     // ... logic here
@@ -851,16 +898,16 @@ private:
 In most cases, this code will work as expected:
 
 ```cpp
-Rational oneEighth(1,8);
+Rational one_eighth(1,8);
 Rational two(2);
-Rational result = oneEighth * two;
-result = oneEighth * 2; // this works because 2 gets implicitly converted to a Rational
+Rational result = one_eighth * two;
+result = one_eighth * 2; // this works because 2 gets implicitly converted to a Rational
 ```
 
 However, it doesn't always:
 
 ```cpp
-result = 3 * oneEighth; // this one breaks!
+result = 3 * one_eighth; // this one breaks!
 ```
 
 This is because the literal `3` would need to be _explicitly_ converted to a `Rational` before the `operator*` can be applied, since the operator is defined _inside_ the `Rational` class (thus specifying the LHS type). Moving the operator definition out to be a non-member function fixes this behaviour, as now operands on _both_ sides of the operator can be implicitly converted:
@@ -950,13 +997,13 @@ If this is not done, it means that values can get _copied_ around, which can hav
 ##### Acceptable
 
 ```cpp
-int processClass(const ExampleClass& inputData);
+int process_class(const ExampleClass& input_data);
 ```
 
 ##### Incorrect
 
 ```cpp
-int processClass(ExampleClass inputData);
+int process_class(ExampleClass input_data);
 ```
 
 #### Memory Management

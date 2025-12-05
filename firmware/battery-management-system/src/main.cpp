@@ -11,13 +11,13 @@
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-steady_clock::time_point lastPowerFlow;
-bool hasHadLoad = false;
+steady_clock::time_point last_power_flow;
+bool has_had_load = false;
 
 constexpr float ACTIVITY_CURRENT = 100;
 
-void setupBms(bq76942& bq);
-void printBmsStatus(bq76942& bq);
+void setup_bms(bq76942& bq);
+void print_bms_status(bq76942& bq);
 
 void setup()
 {
@@ -25,18 +25,18 @@ void setup()
     std::this_thread::sleep_for(1s);
 
     bq76942 bq;
-    setupBms(bq);
+    setup_bms(bq);
 
     Serial.begin(115200);
-    auto& interface = hi_can::TwaiInterface::getInstance();
-    lastPowerFlow = steady_clock::now();
+    auto& interface = hi_can::TwaiInterface::get_instance();
+    last_power_flow = steady_clock::now();
 }
 
 void loop()
 {
     using namespace hi_can;
 
-    auto& interface = TwaiInterface::getInstance();
+    auto& interface = TwaiInterface::get_instance();
     try
     {
         // handle CAN bus I/O
@@ -49,27 +49,27 @@ void loop()
     try
     {
         bq76942 bq;
-        printBmsStatus(bq);
+        print_bms_status(bq);
 
-        bq.toggleFuse();  // blinky light
-        if (!bq.getManufacturingStatus().autonomousFets)
+        bq.toggle_fuse();  // blinky light
+        if (!bq.get_manufacturing_status().autonomous_fets)
         {
             printf("Reconfiguring BMS (was it reset?)...\n");
             std::this_thread::sleep_for(1s);
-            setupBms(bq);
+            setup_bms(bq);
         }
 
-        float cc2Current = bq.getCC2Current();
-        printf(std::format("CC2 current: {:07.1f} mA\n", cc2Current).c_str());
-        if (abs(cc2Current) > ACTIVITY_CURRENT)
+        float cc2_current = bq.get_CC2_current();
+        printf(std::format("CC2 current: {:07.1f} mA\n", cc2_current).c_str());
+        if (abs(cc2_current) > ACTIVITY_CURRENT)
         {
-            lastPowerFlow = steady_clock::now();
-            hasHadLoad = true;
+            last_power_flow = steady_clock::now();
+            has_had_load = true;
         }
 
-        const bool unloadedTimeout = steady_clock::now() - lastPowerFlow > 30s;
-        const bool loadDropped = (steady_clock::now() - lastPowerFlow) > 1s && hasHadLoad;
-        if (unloadedTimeout || loadDropped)
+        const bool unloaded_timeout = steady_clock::now() - last_power_flow > 30s;
+        const bool load_dropped = (steady_clock::now() - last_power_flow) > 1s && has_had_load;
+        if (unloaded_timeout || load_dropped)
         {
             printf("Shutting down\n");
             bq.shutdown();
@@ -82,73 +82,73 @@ void loop()
     {
         printf(std::format("BMS Error: {}\n", e.what()).c_str());
         std::this_thread::sleep_for(500ms);
-        lastPowerFlow = steady_clock::now();  // delay shutdown
+        last_power_flow = steady_clock::now();  // delay shutdown
     }
     vTaskDelay(50);
 }
 
-void printBmsStatus(bq76942& bq)
+void print_bms_status(bq76942& bq)
 {
-    auto fetStatus = bq.getFetStatus();
-    bool pchg = fetStatus.prechargeFetOn;
-    bool chg = fetStatus.chargeFetOn;
-    bool dsg = fetStatus.dischargeFetOn;
-    bool pdsg = fetStatus.predischargeFetOn;
+    auto fet_status = bq.get_fet_status();
+    bool pchg = fet_status.precharge_fet_on;
+    bool chg = fet_status.charge_fet_on;
+    bool dsg = fet_status.discharge_fet_on;
+    bool pdsg = fet_status.predischarge_fet_on;
 
-    auto status6 = bq.getDAStatus6();
+    auto status6 = bq.get_DA_status_6();
     printf(std::format("PCHG {:d}  CHG {:d}  DSG {:d}  PDSG {:d} stack vtg {:04} pack {:04d} charge {:.1f}\n",
                        pchg, chg, dsg, pdsg,
-                       bq.getStackVoltage(), bq.getPackVoltage(),
-                       status6.accumulatedCharge)
+                       bq.get_stack_voltage(), bq.get_pack_voltage(),
+                       status6.accumulated_charge)
                .c_str());
 
-    auto status = bq.getBatteryStatus();
-    bool configUpdate = status.inConfigUpdateMode;
-    bool inPrechargeMode = status.inPrechargeMode;
-    bool sleepAllowed = status.sleepAllowed;
-    bool fullResetOccurred = status.fullResetOccurred;
-    bool wasWatchdogReset = status.wasWatchdogReset;
-    bool checkingCellOpenWire = status.checkingCellOpenWire;
-    bool pendingOtpWrite = status.pendingOtpWrite;
-    bool otpWriteBlocked = status.otpWriteBlocked;
-    bq76942::security_state securityState = status.securityState;
-    bool fuseActive = status.fuseActive;
-    bool safetyFaultActive = status.safetyFaultActive;
-    bool permanentFailActive = status.permanentFailActive;
-    bool shutdownPending = status.shutdownPending;
-    bool inSleep = status.inSleep;
+    auto status = bq.get_battery_status();
+    bool config_update = status.in_config_update_mode;
+    bool in_precharge_mode = status.in_precharge_mode;
+    bool sleep_allowed = status.sleep_allowed;
+    bool full_reset_occurred = status.full_reset_occurred;
+    bool was_watchdog_reset = status.was_watchdog_reset;
+    bool checking_cell_open_wire = status.checking_cell_open_wire;
+    bool pending_otp_write = status.pending_otp_write;
+    bool otp_write_blocked = status.otp_write_blocked;
+    bq76942::security_state_option security_state = status.security_state;
+    bool fuse_active = status.fuse_active;
+    bool safety_fault_active = status.safety_fault_active;
+    bool permanent_fail_active = status.permanent_fail_active;
+    bool shutdown_pending = status.shutdown_pending;
+    bool in_sleep = status.in_sleep;
 
-    printf(std::format("Config update: {} Precharge: {}, Sleep allowed: {}, Full reset: {}, Watchdog reset: {}, Cell open wire: {}, Pending OTP write: {}, OTP write blocked: {}\n", configUpdate, inPrechargeMode, sleepAllowed, fullResetOccurred, wasWatchdogReset, checkingCellOpenWire, pendingOtpWrite, otpWriteBlocked).c_str());
-    printf(std::format("Security state: {}, Fuse active: {}, Safety fault active: {}, Permanent fail active: {}, Shutdown pending: {}, In sleep: {}\n", static_cast<uint8_t>(securityState), fuseActive, safetyFaultActive, permanentFailActive, shutdownPending, inSleep).c_str());
+    printf(std::format("Config update: {} Precharge: {}, Sleep allowed: {}, Full reset: {}, Watchdog reset: {}, Cell open wire: {}, Pending OTP write: {}, OTP write blocked: {}\n", config_update, in_precharge_mode, sleep_allowed, full_reset_occurred, was_watchdog_reset, checking_cell_open_wire, pending_otp_write, otp_write_blocked).c_str());
+    printf(std::format("Security state: {}, Fuse active: {}, Safety fault active: {}, Permanent fail active: {}, Shutdown pending: {}, In sleep: {}\n", static_cast<uint8_t>(security_state), fuse_active, safety_fault_active, permanent_fail_active, shutdown_pending, in_sleep).c_str());
 
     // print alarm regs
-    auto alarmAStatus = bq.getSafetyStatusA();
-    auto alarmBStatus = bq.getSafetyStatusB();
-    auto alarmCStatus = bq.getSafetyStatusC();
+    auto alarm_A_status = bq.get_safety_status_a();
+    auto alarm_B_status = bq.get_safety_status_b();
+    auto alarm_C_status = bq.get_safety_status_c();
     printf(std::format("A: {:08b} B: {:08b} C: {:08b}\n",
-                       *reinterpret_cast<uint8_t*>(&alarmAStatus),
-                       *reinterpret_cast<uint8_t*>(&alarmBStatus),
-                       *reinterpret_cast<uint8_t*>(&alarmCStatus))
+                       *reinterpret_cast<uint8_t*>(&alarm_A_status),
+                       *reinterpret_cast<uint8_t*>(&alarm_B_status),
+                       *reinterpret_cast<uint8_t*>(&alarm_C_status))
                .c_str());
 
-    auto pfAStatus = bq.getPermanentFailStatusA();
-    auto pfBStatus = bq.getPermanentFailStatusB();
-    auto pfCStatus = bq.getPermanentFailStatusC();
-    auto pfDStatus = bq.getPermanentFailStatusD();
+    auto pf_A_status = bq.get_permanent_fail_status_a();
+    auto pf_B_status = bq.get_permanent_fail_status_b();
+    auto pf_C_status = bq.get_permanent_fail_status_c();
+    auto pf_D_status = bq.get_permanent_fail_status_d();
     printf(std::format("PF A: {:08b} B: {:08b} C: {:08b} D: {:08b}\n",
-                       *reinterpret_cast<uint8_t*>(&pfAStatus),
-                       *reinterpret_cast<uint8_t*>(&pfBStatus),
-                       *reinterpret_cast<uint8_t*>(&pfCStatus),
-                       *reinterpret_cast<uint8_t*>(&pfDStatus))
+                       *reinterpret_cast<uint8_t*>(&pf_A_status),
+                       *reinterpret_cast<uint8_t*>(&pf_B_status),
+                       *reinterpret_cast<uint8_t*>(&pf_C_status),
+                       *reinterpret_cast<uint8_t*>(&pf_D_status))
                .c_str());
 
     for (int i = 0; i < 10; i++)
     {
-        printf(std::format("Cell {}: {}\n", i, bq.getCellVoltage(i)).c_str());
+        printf(std::format("Cell {}: {}\n", i, bq.get_cell_voltage(i)).c_str());
     }
 }
 
-void setupBms(bq76942& bq)
+void setup_bms(bq76942& bq)
 {
     try
     {
@@ -156,7 +156,7 @@ void setupBms(bq76942& bq)
         // bq.reset();
         // std::this_thread::sleep_for(100ms);
 
-        bq.enterConfigUpdateMode();
+        bq.enter_config_update_mode();
 
         /*
         NOTE ON CELL CONNECTION:
@@ -165,22 +165,22 @@ void setupBms(bq76942& bq)
         using 0.4V per pack max difference.
         */
 
-        bq76942::selected_cells_t connectedCells = {.raw = 0x021F};
-        auto manufacturingStatus = bq.getManufacturingStatus();
+        bq76942::selected_cells_t connected_cells = {.raw = 0x021F};
+        auto manufacturing_status = bq.get_manufacturing_status();
 
         // NOTE: If not programmed, the default is probably good.
 
         // Subcommand config
-        if (!manufacturingStatus.autonomousFets)
-            bq.toggleFetTestMode();
-        if (!manufacturingStatus.isPermanentFailEnabled)
-            bq.togglePermanentFailEnabled();
+        if (!manufacturing_status.autonomous_fets)
+            bq.toggle_fet_test_mode();
+        if (!manufacturing_status.is_permanent_fail_enabled)
+            bq.toggle_permanent_fail_enabled();
         // TODO: is write to CB_SET_LVL needed?
-        bq.setRegulatorControl(bq76942::regulator_control_t{
-            .reg1Enable = true,
-            .reg1Voltage = bq76942::regulator_voltage::VOLTAGE_5_0,
-            .reg2Enable = true,
-            .reg2Voltage = bq76942::regulator_voltage::VOLTAGE_5_0,
+        bq.set_regulator_control(bq76942::regulator_control_t{
+            .reg_1_enable = true,
+            .reg_1_voltage = bq76942::regulator_voltage::VOLTAGE_5_0,
+            .reg_2_enable = true,
+            .reg_2_voltage = bq76942::regulator_voltage::VOLTAGE_5_0,
         });
 
         // Data register config
@@ -190,7 +190,7 @@ void setupBms(bq76942& bq)
 
         // Calibration:Current
         // Default is for 1mOhm resistor, like we have
-        // bq.calibration.current.setSenseResistorValue(1);
+        // bq.calibration.current.set_sense_resistor_value(1);
 
         // Calibration:Vcell Offset
         // Calibration:V Divider Offset
@@ -216,175 +216,175 @@ void setupBms(bq76942& bq)
         // Using factory calibration, no need for custom thresholds
 
         // Settings:Fuse
-        bq.settings.fuse.setBlowTimeout(255s);
+        bq.settings.fuse.set_blow_timeout(255s);
 
         // Settings:Configuration
-        bq.settings.configuration.setPowerConfig(bq76942::power_config_t{
-            .cellBalanceLoopSpeed = bq76942::measurement_loop_speed::HALF_SPEED,
+        bq.settings.configuration.set_power_config(bq76942::power_config_t{
+            .cell_balance_loop_speed = bq76942::measurement_loop_speed::HALF_SPEED,
         });
-        bq.settings.configuration.setReg0Config({.reg0Enable = true});
-        bq.settings.configuration.setHwdRegulatorOptions(bq76942::hwd_regulator_options_t{
-            .toggleTime = 2,
-            .hwdAction = bq76942::hwd_toggle_option::REGULATORS_OFF_THEN_ON,
+        bq.settings.configuration.set_reg_0_config({.reg_0_enable = true});
+        bq.settings.configuration.set_hwd_regulator_options(bq76942::hwd_regulator_options_t{
+            .toggle_time = 2,
+            .hwd_action = bq76942::hwd_toggle_option::REGULATORS_OFF_THEN_ON,
         });
 
         // TODO: Correct this when thermistors installed
-        bq.settings.configuration.setTs1PinConfig(bq76942::ts_pin_configuration_t{
+        bq.settings.configuration.set_ts1_pin_config(bq76942::ts_pin_configuration_t{
             .function = bq76942::adc_pin_function::UNUSED,
         });
-        bq.settings.configuration.setCfetoffPinConfig(bq76942::cfetoff_pin_configuration_t{
+        bq.settings.configuration.set_cfetoff_pin_config(bq76942::cfetoff_pin_configuration_t{
             .function = bq76942::cfetoff_pin_function::SPI_CS_OR_UNUSED,
         });
-        bq.settings.configuration.setDfetoffPinConfig(bq76942::dfetoff_pin_configuration_t{
+        bq.settings.configuration.set_dfetoff_pin_config(bq76942::dfetoff_pin_configuration_t{
             .function = bq76942::dfetoff_pin_function::UNUSED,
         });
-        bq.settings.configuration.setDdsgPinConfig(bq76942::ddsg_pin_configuration_t{
+        bq.settings.configuration.set_ddsg_pin_config(bq76942::ddsg_pin_configuration_t{
             .function = bq76942::ddsg_pin_function::UNUSED,
         });
-        bq.settings.configuration.setDchgPinConfig(bq76942::dchg_pin_configuration_t{
+        bq.settings.configuration.set_dchg_pin_config(bq76942::dchg_pin_configuration_t{
             .function = bq76942::dchg_pin_function::UNUSED,
         });
 
-        bq.settings.configuration.setDAConfiguration(bq76942::da_configuration_t{
-            .userAmps = bq76942::user_amps::CENTIAMP,
+        bq.settings.configuration.set_DA_configuration(bq76942::da_configuration_t{
+            .user_amps = bq76942::user_amps_unit::CENTIAMP,
             // TODO: CHANGE WHEN THERMISTORS INSTALLED
-            .useInternalAsCellTemperature = true,
-            .useInternalAsFetTemperature = true,
+            .use_internal_as_cell_temperature = true,
+            .use_internal_as_fet_temperature = true,
         });
-        bq.settings.configuration.setVcellMode(connectedCells);
+        bq.settings.configuration.set_vcell_mode(connected_cells);
         // CC3 samples default is good
 
         // Settings:Protection
-        bq.settings.protection.setConfig({
-            .permanentFailStopsFets = true,
-            .permanentFailStopsRegulators = false,
-            .permanentFailCausesDeepSleep = true,
-            .permanentFailBlowsFuse = true,
-            .fetFaultIgnoresFuseVoltage = true,
-            .useOvercurrentChargeRecovery = true,
-            .useShortCircuitChargeRecovery = true,
+        bq.settings.protection.set_config({
+            .permanent_fail_stops_fets = true,
+            .permanent_fail_stops_regulators = false,
+            .permanent_fail_causes_deep_sleep = true,
+            .permanent_fail_blows_fuse = true,
+            .fet_fault_ignores_fuse_voltage = true,
+            .use_overcurrent_charge_recovery = true,
+            .use_short_circuit_charge_recovery = true,
         });
-        bq.settings.protection.setEnabledA({
-            .cellUndervoltage = true,
-            .cellOvervoltage = true,
-            .overcurrentCharge = true,
-            .overcurrentDischarge1 = true,
-            .overcurrentDischarge2 = true,
-            .shortCircuitDischarge = true,
+        bq.settings.protection.set_enabled_A({
+            .cell_undervoltage = true,
+            .cell_overvoltage = true,
+            .overcurrent_charge = true,
+            .overcurrent_discharge_1 = true,
+            .overcurrent_discharge_2 = true,
+            .short_circuit_discharge = true,
         });
-        bq.settings.protection.setEnabledB({
-            .undertempCharge = true,
-            .undertempDischarge = true,
-            .internalUndertemp = true,
-            .overtempCharge = true,
-            .overtempDischarge = true,
-            .internalOvertemp = true,
-            .fetOvertemp = true,
+        bq.settings.protection.set_enabled_B({
+            .undertemp_charge = true,
+            .undertemp_discharge = true,
+            .internal_undertemp = true,
+            .overtemp_charge = true,
+            .overtemp_discharge = true,
+            .internal_overtemp = true,
+            .fet_overtemp = true,
         });
-        bq.settings.protection.setEnabledC({
-            .hostWatchdogFault = true,
-            .prechargeTimeout = true,
-            .cellOvervoltageLatch = true,
-            .overcurrentDischargeLatch = true,
-            .shortCircuitDischargeLatch = true,
-            .overcurrentDischarge3 = true,
+        bq.settings.protection.set_enabled_C({
+            .host_watchdog_fault = true,
+            .precharge_timeout = true,
+            .cell_overvoltage_latch = true,
+            .overcurrent_discharge_latch = true,
+            .short_circuit_discharge_latch = true,
+            .overcurrent_discharge_3 = true,
         });
-        bq.settings.protection.setChgFetA({
-            .cellOvervoltage = true,
-            .overcurrentCharge = true,
-            .shortCircuitDischarge = true,
+        bq.settings.protection.set_chg_fet_A({
+            .cell_overvoltage = true,
+            .overcurrent_charge = true,
+            .short_circuit_discharge = true,
         });
-        bq.settings.protection.setChgFetB({
-            .undertempCharge = true,
-            .internalUndertemp = true,
-            .overtempCharge = true,
-            .internalOvertemp = true,
-            .fetOvertemp = true,
+        bq.settings.protection.set_chg_fet_B({
+            .undertemp_charge = true,
+            .internal_undertemp = true,
+            .overtemp_charge = true,
+            .internal_overtemp = true,
+            .fet_overtemp = true,
         });
-        bq.settings.protection.setChgFetC({
-            .hostWatchdogFault = true,
-            .prechargeTimeout = true,
-            .cellOvervoltageLatch = true,
-            .shortCircuitDischargeLatch = true,
+        bq.settings.protection.set_chg_fet_C({
+            .host_watchdog_fault = true,
+            .precharge_timeout = true,
+            .cell_overvoltage_latch = true,
+            .short_circuit_discharge_latch = true,
         });
-        bq.settings.protection.setDsgFetA({
-            .cellUndervoltage = true,
-            .overcurrentDischarge2 = true,
-            .shortCircuitDischarge = true,
+        bq.settings.protection.set_dsg_fet_A({
+            .cell_undervoltage = true,
+            .overcurrent_discharge_2 = true,
+            .short_circuit_discharge = true,
         });
-        bq.settings.protection.setDsgFetB({
-            .undertempDischarge = true,
-            .internalUndertemp = true,
-            .overtempDischarge = true,
-            .internalOvertemp = true,
-            .fetOvertemp = true,
+        bq.settings.protection.set_dsg_fet_B({
+            .undertemp_discharge = true,
+            .internal_undertemp = true,
+            .overtemp_discharge = true,
+            .internal_overtemp = true,
+            .fet_overtemp = true,
         });
-        bq.settings.protection.setDsgFetC({
-            .hostWatchdogFault = true,
-            .shortCircuitDischargeLatch = true,
-            .overcurrentDischarge3 = true,
+        bq.settings.protection.set_dsg_fet_C({
+            .host_watchdog_fault = true,
+            .short_circuit_discharge_latch = true,
+            .overcurrent_discharge_3 = true,
         });
         // default body diode setting is fine
 
         // Settings:Alarm
-        bq.settings.alarm.setDefaultMask({
-            .stackReachedShutdownVoltage = true,
+        bq.settings.alarm.set_default_mask({
+            .stack_reached_shutdown_voltage = true,
         });
         // default alarm masks enable all safety alarms
 
         // enable all permanent fail alarm masks
-        uint8_t alarmMask = 0xEF;
-        bq.settings.alarm.setPermanentFailMaskA(*reinterpret_cast<const bq76942::permanent_fail_a_t*>(&alarmMask));
-        alarmMask = 0x9F;
-        bq.settings.alarm.setPermanentFailMaskB(*reinterpret_cast<const bq76942::permanent_fail_b_t*>(&alarmMask));
-        alarmMask = 0x78;
-        bq.settings.alarm.setPermanentFailMaskC(*reinterpret_cast<const bq76942::permanent_fail_c_t*>(&alarmMask));
-        alarmMask = 0x01;
-        bq.settings.alarm.setPermanentFailMaskD({.topStackVsCell = true});
+        uint8_t alarm_mask = 0xEF;
+        bq.settings.alarm.set_permanent_fail_mask_A(*reinterpret_cast<const bq76942::permanent_fail_a_t*>(&alarm_mask));
+        alarm_mask = 0x9F;
+        bq.settings.alarm.set_permanent_fail_mask_B(*reinterpret_cast<const bq76942::permanent_fail_b_t*>(&alarm_mask));
+        alarm_mask = 0x78;
+        bq.settings.alarm.set_permanent_fail_mask_C(*reinterpret_cast<const bq76942::permanent_fail_c_t*>(&alarm_mask));
+        alarm_mask = 0x01;
+        bq.settings.alarm.set_permanent_fail_mask_D({.top_stack_vs_cell = true});
 
         // Settings:Permanent Failure
-        bq.settings.permanentFailure.setEnabledA({
-            .safetyCellUndervoltage = true,
-            .safetyCellOvervoltage = true,
-            .safetyOvercurrentCharge = true,
-            .safetyOvercurrentDischarge = true,
-            .safetyOvertemp = true,
-            .safetyOvertempFet = true,
-            .copperDeposition = true,
+        bq.settings.permanent_failure.set_enabled_A({
+            .safety_cell_undervoltage = true,
+            .safety_cell_overvoltage = true,
+            .safety_overcurrent_charge = true,
+            .safety_overcurrent_discharge = true,
+            .safety_overtemp = true,
+            .safety_overtemp_fet = true,
+            .copper_deposition = true,
         });
-        bq.settings.permanentFailure.setEnabledB({
-            .chargeFet = true,
-            .dischargeFet = true,
-            .secondLevelProtector = true,
-            .voltageImbalanceRelax = true,
-            .voltageImbalanceActive = true,
-            .shortCircuitDischargeLatch = true,
+        bq.settings.permanent_failure.set_enabled_B({
+            .charge_fet = true,
+            .discharge_fet = true,
+            .second_level_protector = true,
+            .voltage_imbalance_relax = true,
+            .voltage_imbalance_active = true,
+            .short_circuit_discharge_latch = true,
         });
-        bq.settings.permanentFailure.setEnabledC({
-            .otpMemory = true,
-            .dataROM = true,
-            .instructionROM = true,
-            .internalLFO = true,
-            .internalVoltageReference = true,
-            .internalVssMeasurement = true,
-            .hardwareMux = true,
+        bq.settings.permanent_failure.set_enabled_C({
+            .otp_memory = true,
+            .data_ROM = true,
+            .instruction_ROM = true,
+            .internal_LFO = true,
+            .internal_voltage_reference = true,
+            .internal_vss_measurement = true,
+            .hardware_mux = true,
             .commanded = false,
         });
-        bq.settings.permanentFailure.setEnabledD({
-            .topStackVsCell = true,
+        bq.settings.permanent_failure.set_enabled_D({
+            .top_stack_vs_cell = true,
         });
-        bq.settings.fet.setOptions({
-            .enablePredischarge = true,
+        bq.settings.fet.set_options({
+            .enable_predischarge = true,
         });
         // charge pump defaults are good (11V overdrive)
         // precharge disabled by default
         // predischarge is voltage delta based only, no timeout
-        bq.settings.fet.setPredischargeTimeout(0ms);
-        bq.settings.fet.setPredischargeStopDelta(5000);
+        bq.settings.fet.set_predischarge_timeout(0ms);
+        bq.settings.fet.set_predischarge_stop_delta(5000);
 
         // Settings:Current Thresholds
-        bq.settings.setDsgCurrentThreshold(100);
-        bq.settings.setChgCurrentThreshold(50);
+        bq.settings.set_dsg_current_threshold(100);
+        bq.settings.set_chg_current_threshold(50);
 
         // Settings:Cell Open-Wire
 
@@ -392,19 +392,19 @@ void setupBms(bq76942& bq)
         // we don't care, not measurable (integrated battery pack)
 
         // Settings:Manufacturing
-        bq.settings.setManufacturingStatusInit({
-            .autonomousFets = true,
-            .isPermanentFailEnabled = true,
-            .isOtpWriteEnabled = false,
+        bq.settings.set_manufacturing_status_init({
+            .autonomous_fets = true,
+            .is_permanent_fail_enabled = true,
+            .is_otp_write_enabled = false,
         });
 
         // Settings:Cell Balancing Config
-        bq.settings.cellBalancing.setConfig({
-            .allowChargingCellBalancing = true,
-            .allowRelaxedCellBalancing = true,
-            .allowBalancingInSleep = false,
-            .balancingExitsSleep = true,
-            .ignoreHostControlledBalancing = true,
+        bq.settings.cell_balancing.set_config({
+            .allow_charging_cell_balancing = true,
+            .allow_relaxed_cell_balancing = true,
+            .allow_balancing_in_sleep = false,
+            .balancing_exits_sleep = true,
+            .ignore_host_controlled_balancing = true,
         });
         // default temp thresholds are sensible
         /*
@@ -425,68 +425,68 @@ void setupBms(bq76942& bq)
         temperatures can be verified
         TODO: Verify heat dissipation capabilities
         */
-        bq.settings.cellBalancing.setMaxCells(1);
+        bq.settings.cell_balancing.set_max_cells(1);
         // default balance voltages are good for Li-Po cells
 
         // Power:Shutdown
         // all the not set values are good defaults
-        bq.power.shutdown.setCellVoltage(3000);
-        bq.power.shutdown.setStackVoltage(3000 * 6);
-        bq.power.shutdown.setLowVDelay(10s);
-        bq.power.shutdown.setCommandDelay(1s);
-        bq.power.shutdown.setAutoShutdownTime(5min);
+        bq.power.shutdown.set_cell_voltage(3000);
+        bq.power.shutdown.set_stack_voltage(3000 * 6);
+        bq.power.shutdown.set_low_v_delay(10s);
+        bq.power.shutdown.set_command_delay(1s);
+        bq.power.shutdown.set_auto_shutdown_time(5min);
 
         // Power:Sleep
-        bq.power.sleep.setChargerVoltageThreshold(4200 * 6);
+        bq.power.sleep.set_charger_voltage_threshold(4200 * 6);
 
         // System Data:Integrity
 
         // Protections:CUV
         // technically 3.2V would be recommended, but safety margin is nice
-        bq.protections.underVoltage.setThreshold(3300);
+        bq.protections.under_voltage.set_threshold(3300);
 
         // Protections:COV
-        bq.protections.overVoltage.setThreshold(4250);
+        bq.protections.over_voltage.set_threshold(4250);
 
         // Protections:COVL
-        bq.protections.overVoltage.setLatchLimit(3);
+        bq.protections.over_voltage.set_latch_limit(3);
 
         // Protections:OCC
         // Threshold voltage is voltage across sense resistor.
         // Batteries are (nominally... not actually) 4500mAh,
         // so just under 2C is good to trip
-        bq.protections.overCurrentCharge.setThresholdVoltage(8);
-        bq.protections.overCurrentCharge.setRecoveryPackStackDelta(1000);
+        bq.protections.over_current_charge.set_threshold_voltage(8);
+        bq.protections.over_current_charge.set_recovery_pack_stack_delta(1000);
 
         // OCD1 and 2 thresholds are in sense resistor mV,
         // so for 1mOhm resistor it's 1:1 with mA
         // Protections:OCD1
-        bq.protections.overCurrentDischarge.setTier1Threshold(140);
-        bq.protections.overCurrentDischarge.setTier1Delay(10000us);
+        bq.protections.over_current_discharge.set_tier_1_threshold(140);
+        bq.protections.over_current_discharge.set_tier_1_delay(10000us);
 
         // Protections:OCD2
-        bq.protections.overCurrentDischarge.setTier2Threshold(100);
-        bq.protections.overCurrentDischarge.setTier1Delay(20000us);
+        bq.protections.over_current_discharge.set_tier_2_threshold(100);
+        bq.protections.over_current_discharge.set_tier_1_delay(20000us);
 
         // Protections:SCD
-        bq.protections.shortCircuit.setThreshold(bq76942::short_circuit_discharge_threshold::THRESHOLD_150MV);
-        bq.protections.shortCircuit.setActivationDelay(30us);
-        bq.protections.shortCircuit.setRecoveryTime(20s);
+        bq.protections.short_circuit.set_threshold(bq76942::short_circuit_discharge_threshold::THRESHOLD_150MV);
+        bq.protections.short_circuit.set_activation_delay(30us);
+        bq.protections.short_circuit.set_recovery_time(20s);
 
         // Protections:OCD3
         // in mA
-        bq.protections.overCurrentDischarge.setTier3Threshold(-90000.0f);
-        bq.protections.overCurrentDischarge.setTier3Delay(5s);
+        bq.protections.over_current_discharge.set_tier_3_threshold(-90000.0f);
+        bq.protections.over_current_discharge.set_tier_3_delay(5s);
 
         // Protections:OCD
 
         // Protections:OCDL
-        bq.protections.overCurrentDischarge.setLatchLimit(3);
+        bq.protections.over_current_discharge.set_latch_limit(3);
 
         // Protections:SCDL
-        bq.protections.shortCircuit.setLatchLimit(3);
-        bq.protections.shortCircuit.setLatchCounterDecDelay(20s);
-        bq.protections.shortCircuit.setLatchRecoveryTime(15s);
+        bq.protections.short_circuit.set_latch_limit(3);
+        bq.protections.short_circuit.set_latch_counter_dec_delay(20s);
+        bq.protections.short_circuit.set_latch_recovery_time(15s);
 
         // Protections:OTC
 
@@ -505,31 +505,31 @@ void setupBms(bq76942& bq)
         // Protections:Recovery
 
         // Protections:HWD
-        bq.protections.setHwdTimeout(10s);
+        bq.protections.set_hwd_timeout(10s);
 
         // Protections:Load Detect
         // disabled by default
-        bq.protections.setLoadDetectTime(10s);
-        bq.protections.setLoadDetectRetryDelay(30s);
+        bq.protections.set_load_detect_time(10s);
+        bq.protections.set_load_detect_retry_delay(30s);
 
         // Protections:PTO
 
         // Permanent Fail:CUDEP
-        bq.permanentFail.setCopperDepositionThreshold(2000);
+        bq.permanent_fail.set_copper_deposition_threshold(2000);
 
         // Permanent Fail:SUV
-        bq.permanentFail.setUnderVoltageThreshold(2700);
+        bq.permanent_fail.set_under_voltage_threshold(2700);
 
         // Permanent Fail:SOV
-        bq.permanentFail.setOverVoltageThreshold(4400);
+        bq.permanent_fail.set_over_voltage_threshold(4400);
 
         // Permanent Fail:TOS
 
         // Permanent Fail:SOCC
-        bq.permanentFail.setChargeCurrentThreshold(10000);
+        bq.permanent_fail.set_charge_current_threshold(10000);
 
         // Permanent Fail:SOCD
-        bq.permanentFail.setDischargeCurrentThreshold(-200000);
+        bq.permanent_fail.set_discharge_current_threshold(-200000);
 
         // Permanent Fail:SOT
 
@@ -555,12 +555,12 @@ void setupBms(bq76942& bq)
 
         // Security:Keys
 
-        bq.enableAllFets();
-        bq.disableChargeFets();
-        bq.exitConfigUpdateMode();
-        // bq.toggleFetTestMode();
-        // bq.chargeTest();
-        // bq.dischargeTest();
+        bq.enable_all_fets();
+        bq.disable_charge_fets();
+        bq.exit_config_update_mode();
+        // bq.toggle_fet_test_mode();
+        // bq.charge_test();
+        // bq.discharge_test();
     }
     catch (std::exception& e)
     {

@@ -11,29 +11,29 @@ using namespace hi_can::parameters;
 
 using namespace std::chrono;
 
-Packet::Packet(const flagged_address_t& address, const uint8_t data[], size_t dataLen)
+Packet::Packet(const flagged_address_t& address, const uint8_t data[], size_t data_len)
 {
-    setAddress(address);
-    setData(data, dataLen);
+    set_address(address);
+    set_data(data, data_len);
 }
 Packet::Packet(const flagged_address_t& address, const std::vector<uint8_t>& data)
 {
-    setAddress(address);
-    setData(data);
+    set_address(address);
+    set_data(data);
 }
 
-void Packet::setData(const uint8_t data[], size_t dataLen)
+void Packet::set_data(const uint8_t data[], size_t data_len)
 {
-    if (dataLen > MAX_PACKET_LEN)
+    if (data_len > MAX_PACKET_LEN)
         throw std::invalid_argument("Data is longer than the maximum packet length");
 
-    if ((data == nullptr) && (dataLen > 0))
+    if ((data == nullptr) && (data_len > 0))
         throw std::invalid_argument("Data is nullptr but length is non-zero");
 
-    _data.resize(dataLen);
-    _data.assign(data, data + dataLen);
+    _data.resize(data_len);
+    _data.assign(data, data + data_len);
 }
-void Packet::setData(const std::vector<uint8_t>& data)
+void Packet::set_data(const std::vector<uint8_t>& data)
 {
     if (data.size() > MAX_PACKET_LEN)
         throw std::invalid_argument("Data is longer than the maximum packet length");
@@ -41,7 +41,7 @@ void Packet::setData(const std::vector<uint8_t>& data)
     _data = data;
 }
 
-void Packet::setAddress(const flagged_address_t& address)
+void Packet::set_address(const flagged_address_t& address)
 {
     if (address > MAX_ADDRESS)
         throw std::invalid_argument("Address is invalid");
@@ -51,139 +51,139 @@ void Packet::setAddress(const flagged_address_t& address)
 PacketManager::PacketManager(FilteredCanInterface& interface)
     : _interface(interface)
 {
-    interface.setReceiveCallback([this](const Packet& packet)
-                                 { this->_handleReceivedPacket(packet); });
+    interface.set_receive_callback([this](const Packet& packet)
+                                   { this->_handle_received_packet(packet); });
 }
 
-void PacketManager::handleReceive(bool shouldBlock)
+void PacketManager::handle_receive(bool should_block)
 {
-    _interface.receiveAll(shouldBlock);
+    _interface.receive_all(should_block);
 
     const auto now = steady_clock::now();
     for (auto& [filter, config] : _callbacks)
     {
-        if (!config.hasTimedOut && (now - config.lastReceived > (config.config.timeout * MISSED_PACKET_TIMEOUT_COUNT)))
+        if (!config.has_timed_out && (now - config.last_received > (config.config.timeout * MISSED_PACKET_TIMEOUT_COUNT)))
         {
-            config.hasTimedOut = true;
-            if (config.config.timeoutCallback)
-                config.config.timeoutCallback();
+            config.has_timed_out = true;
+            if (config.config.timeout_callback)
+                config.config.timeout_callback();
         }
     }
 }
 
-void PacketManager::handleTransmit(bool shouldForceTransmission)
+void PacketManager::handle_transmit(bool should_force_transmission)
 {
     const auto now = steady_clock::now();
     for (auto& [address, config] : _transmissions)
     {
-        const auto elapsed = now - config.lastTransmitted;
-        if ((elapsed > config.config.interval) || shouldForceTransmission)
+        const auto elapsed = now - config.last_transmitted;
+        if ((elapsed > config.config.interval) || should_force_transmission)
         {
-            config.lastTransmitted = now;
+            config.last_transmitted = now;
             if (config.config.generator)
-                getInterface().transmit(Packet(address, config.config.generator()));
+                get_interface().transmit(Packet(address, config.config.generator()));
             else
-                getInterface().transmit(Packet(address));
+                get_interface().transmit(Packet(address));
         }
     }
 }
 
-void PacketManager::addGroup(const ParameterGroup& group)
+void PacketManager::add_group(const ParameterGroup& group)
 {
-    for (const auto& [filter, config] : group.getCallbacks())
-        setCallback(filter, config);
-    for (const auto& [address, config] : group.getTransmissions())
-        setTransmissionConfig(address, config);
-    for (const auto& transmission : group.getStartupTransmissions())
-        getInterface().transmit(transmission);
+    for (const auto& [filter, config] : group.get_callbacks())
+        set_callback(filter, config);
+    for (const auto& [address, config] : group.get_transmissions())
+        set_transmission_config(address, config);
+    for (const auto& transmission : group.get_startup_transmissions())
+        get_interface().transmit(transmission);
 }
-void PacketManager::removeGroup(const ParameterGroup& group)
+void PacketManager::remove_group(const ParameterGroup& group)
 {
-    for (const auto& [filter, config] : group.getCallbacks())
-        removeCallback(filter);
-    for (const auto& [address, config] : group.getTransmissions())
-        removeTransmission(address);
+    for (const auto& [filter, config] : group.get_callbacks())
+        remove_callback(filter);
+    for (const auto& [address, config] : group.get_transmissions())
+        remove_transmission(address);
 }
 
-void PacketManager::setCallback(const filter_t& filter, const callback_config_t& config)
+void PacketManager::set_callback(const filter_t& filter, const callback_config_t& config)
 {
     _callbacks[filter] = {
         .config = config,
-        .hasTimedOut = false,
-        .lastReceived = steady_clock::now(),
+        .has_timed_out = false,
+        .last_received = steady_clock::now(),
     };
-    getInterface().addFilter(filter);
+    get_interface().add_filter(filter);
 }
 
-std::optional<PacketManager::callback_config_t> PacketManager::getCallback(const filter_t& filter)
+std::optional<PacketManager::callback_config_t> PacketManager::get_callback(const filter_t& filter)
 {
     if (const auto it = _callbacks.find(filter); it != _callbacks.end())
         return it->second.config;
     return std::nullopt;
 }
 
-void PacketManager::removeCallback(const filter_t& filter)
+void PacketManager::remove_callback(const filter_t& filter)
 {
     _callbacks.erase(filter);
 }
 
-void PacketManager::setTransmissionConfig(const flagged_address_t& address, const transmission_config_t& config)
+void PacketManager::set_transmission_config(const flagged_address_t& address, const transmission_config_t& config)
 {
     _transmissions[address] = {
         .config = config,
-        .lastTransmitted = steady_clock::now(),
+        .last_transmitted = steady_clock::now(),
     };
 
-    if (config.shouldTransmitImmediately)
+    if (config.should_transmit_immediately)
     {
         if (config.generator)
-            getInterface().transmit(Packet(address, config.generator()));
+            get_interface().transmit(Packet(address, config.generator()));
         else
-            getInterface().transmit(Packet(address));
+            get_interface().transmit(Packet(address));
     }
 }
 
-void PacketManager::setTransmissionGenerator(const flagged_address_t& address, const data_generator_t& generator)
+void PacketManager::set_transmission_generator(const flagged_address_t& address, const data_generator_t& generator)
 {
     if (const auto it = _transmissions.find(address); it != _transmissions.end())
         it->second.config.generator = generator;
 }
 
-void PacketManager::setTransmissionInterval(const flagged_address_t& address, const std::chrono::steady_clock::duration& interval)
+void PacketManager::set_transmission_interval(const flagged_address_t& address, const std::chrono::steady_clock::duration& interval)
 {
     if (const auto it = _transmissions.find(address); it != _transmissions.end())
         it->second.config.interval = interval;
 }
 
-std::optional<PacketManager::transmission_config_t> PacketManager::getTransmissionConfig(const flagged_address_t& address)
+std::optional<PacketManager::transmission_config_t> PacketManager::get_transmission_config(const flagged_address_t& address)
 {
     if (const auto it = _transmissions.find(address); it != _transmissions.end())
         return it->second.config;
     return std::nullopt;
 }
 
-void PacketManager::removeTransmission(const flagged_address_t& address)
+void PacketManager::remove_transmission(const flagged_address_t& address)
 {
     _transmissions.erase(address);
 }
 
-void PacketManager::_handleReceivedPacket(const Packet& packet)
+void PacketManager::_handle_received_packet(const Packet& packet)
 {
     // it should never happen that the packet address is not in the map since we're using a filtered interface,
     // but check anyway to not crash
-    if (const std::optional<filter_t> filter = _interface.findMatchingFilter(packet.getAddress()); filter)
+    if (const std::optional<filter_t> filter = _interface.find_matching_filter(packet.get_address()); filter)
     {
         auto& callback = _callbacks[filter.value()];
-        callback.lastPacket = packet;
-        if (callback.config.dataCallback)
-            callback.config.dataCallback(packet);
+        callback.last_packet = packet;
+        if (callback.config.data_callback)
+            callback.config.data_callback(packet);
 
-        if (callback.hasTimedOut)
+        if (callback.has_timed_out)
         {
-            callback.hasTimedOut = false;
-            if (callback.config.timeoutRecoveryCallback)
-                callback.config.timeoutRecoveryCallback(packet);
+            callback.has_timed_out = false;
+            if (callback.config.timeout_recovery_callback)
+                callback.config.timeout_recovery_callback(packet);
         }
-        callback.lastReceived = steady_clock::now();
+        callback.last_received = steady_clock::now();
     }
 }
