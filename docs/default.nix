@@ -127,9 +127,6 @@ let
 
       # finally build the docs
       make html
-
-      # failsafe to *ensure* that program listings are removed - we REALLY don't want to leak source code
-      find -type f -name '*program_listing*' -delete
     '';
     # install the docs to $out/html
     installPhase = ''
