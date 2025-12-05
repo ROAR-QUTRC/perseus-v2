@@ -704,16 +704,6 @@ CONFIG_HI_CAN_NO_ACK=y
 # end of Hi-CAN Configuration
 
 #
-# Arduino Configuration
-#
-
-#
-# Debug Log Configuration
-#
-# end of Debug Log Configuration
-# end of Arduino Configuration
-
-#
 # ESP Speech Recognition
 #
 CONFIG_MODEL_IN_FLASH=y
