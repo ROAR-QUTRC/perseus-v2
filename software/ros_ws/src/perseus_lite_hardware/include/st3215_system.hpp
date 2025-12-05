@@ -182,7 +182,7 @@ namespace perseus_lite_hardware
          * @details Runs in a separate thread to handle asynchronous communication with servos.
          *          Reads position, velocity, and temperature data from all configured servos.
          */
-        void communicationThread() noexcept;
+        void communication_thread() noexcept;
 
         // Communication timestamping and timeout
         std::vector<rclcpp::Time> _last_update_times;
@@ -195,13 +195,13 @@ namespace perseus_lite_hardware
          * @return true if the command was sent successfully, false otherwise
          * @details Constructs and transmits a properly formatted ST3215 protocol packet
          */
-        bool sendServoCommand(uint8_t id, ServoCommand cmd, std::span<const uint8_t> data) noexcept;
+        bool send_servo_command(uint8_t id, ServoCommand cmd, std::span<const uint8_t> data) noexcept;
         /**
          * @brief Processes a response packet received from a servo
          * @param response The raw response data received from the servo
          * @details Parses the response packet and extracts position, velocity, and temperature data
          */
-        void processResponse(std::span<const uint8_t> response) noexcept;
+        void process_response(std::span<const uint8_t> response) noexcept;
         /**
          * @brief Updates servo state data for a specific servo
          * @param id The servo ID to update
@@ -209,7 +209,7 @@ namespace perseus_lite_hardware
          * @return true if the update was successful, false otherwise
          * @details Updates position, velocity, and temperature for the specified servo
          */
-        [[nodiscard]] bool updateServoStates(uint8_t id, size_t index) noexcept;
+        [[nodiscard]] bool update_servo_states(uint8_t id, size_t index) noexcept;
         /**
          * @brief Verifies that required command interfaces are available for a joint
          * @param joint_info Information about the joint configuration
@@ -217,7 +217,7 @@ namespace perseus_lite_hardware
          * @return true if all required interfaces are present, false otherwise
          * @details Checks that velocity command interface is configured for the joint
          */
-        [[nodiscard]] bool verifyCommandInterfaces(
+        [[nodiscard]] bool verify_command_interfaces(
             const hardware_interface::ComponentInfo& joint_info,
             const rclcpp::Logger& logger) const;
 
