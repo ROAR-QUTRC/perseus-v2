@@ -325,7 +325,7 @@ namespace hi_can::parameters
         {
             namespace centrifuge
             {
-                typedef SimpleSerializable<wrapped_value_t<int16_t>> speed_t;
+                typedef SimpleSerializable<wrapped_value_t<uint8_t>> speed_t;
             }
             namespace sensing
             {

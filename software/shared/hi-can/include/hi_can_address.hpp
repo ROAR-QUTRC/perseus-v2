@@ -434,9 +434,8 @@ namespace hi_can
                     };
                     enum class motor_parameter
                     {
-                        ON = 0x01,
-                        OFF = 0x02,
-                        STATUS = 0x03,
+                        SPEED = 0x01,
+                        STATUS = 0x02,
                     };
                 }
                 namespace sensing
@@ -456,7 +455,7 @@ namespace hi_can
                     enum class actuator_parameter
                     {
                         START = 0x01,
-                        DATA = 0x02,
+                        STATUS = 0x02,
                     };
                 }
             }

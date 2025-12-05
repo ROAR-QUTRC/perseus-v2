@@ -1,3 +1,4 @@
+#include <board_support.hpp>
 #include <hi_can.hpp>
 
 class CentrifugeParameterGroup : public hi_can::parameters::ParameterGroup
@@ -9,6 +10,7 @@ private:
     const hi_can::addressing::standard_address_t _deviceAddress;
     const hi_can::addressing::space_resources::controller::centrifuge::group _motorGroup;
     const gpio_num_t _motorPin;
+    hi_can::parameters::space_resources::controller::centrifuge::speed_t _motorSpeed = 0;
 };
 class MagnetometerParameterGroup : public hi_can::parameters::ParameterGroup
 {
