@@ -32,12 +32,12 @@
 #define CHECK_INTERFACE_NAME(_logger, _joint, _interface_type, _interface_name, _interface_index, _expected_name) \
     do                                                                                                            \
     {                                                                                                             \
-        if (const auto& interfaceName = (_joint)._interface_type[(_interface_index)].name;                        \
-            interfaceName != (_expected_name))                                                                    \
+        if (const auto& interface_name = (_joint)._interface_type[(_interface_index)].name;                       \
+            interface_name != (_expected_name))                                                                   \
         {                                                                                                         \
             RCLCPP_FATAL((_logger),                                                                               \
                          "Found '%s' %s interface on joint '%s', expected '%s'",                                  \
-                         interfaceName.c_str(),                                                                   \
+                         interface_name.c_str(),                                                                  \
                          _interface_name,                                                                         \
                          (_joint).name.c_str(),                                                                   \
                          _expected_name);                                                                         \

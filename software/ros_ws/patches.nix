@@ -208,15 +208,35 @@ let
       }
     );
 
-    rplidar-ros = rosPrev.rplidar-ros.overrideAttrs ({
-      version = "2.1.5"; # Version based on the ROS2 branch
+    # rplidar-ros is not officially released for ROS 2 Jazzy in rosdistro.
+    # It was available in Humble, but has not been ported to Jazzy yet.
+    # We build it from scratch using the upstream ros2 branch which supports the C1 sensor.
+    # See: https://github.com/ros/rosdistro/blob/master/jazzy/distribution.yaml (package not present)
+    rplidar-ros = rosFinal.buildRosPackage rec {
+      pname = "ros-jazzy-rplidar-ros";
+      version = "2.1.5";
+
       src = final.fetchFromGitHub {
         owner = "Slamtec";
         repo = "rplidar_ros";
         rev = "ros2"; # Using the ros2 branch
         sha256 = "sha256-oNoDa+IqtQPe8bpfMjHFj2yx7jFUhfbIqaPRQCU/zMQ=";
       };
-    });
+
+      buildType = "ament_cmake";
+      buildInputs = [ rosFinal.ament-cmake-ros ];
+      propagatedBuildInputs = [
+        rosFinal.rclcpp
+        rosFinal.sensor-msgs
+        rosFinal.std-srvs
+      ];
+      nativeBuildInputs = [ rosFinal.ament-cmake-ros ];
+
+      meta = {
+        description = "The ROS 2 driver for RPLIDAR series laser scanners. Version 2.1.5 supports the C1 sensor.";
+        license = with final.lib.licenses; [ bsd2 ];
+      };
+    };
   };
 in
 {
