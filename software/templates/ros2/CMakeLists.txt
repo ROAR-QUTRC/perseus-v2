@@ -39,7 +39,6 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
@@ -56,7 +55,6 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-
 # COMPILE (Executables)
 foreach(node IN ITEMS ${NODE_NAMES})
   # Find all source files for the executables
@@ -66,20 +64,14 @@ foreach(node IN ITEMS ${NODE_NAMES})
   add_executable(${node} ${CODE_SOURCES})
 
   # Add include dirs
-  target_include_directories(
-    ${node}
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_include_directories(${node} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 endforeach()
-
 
 # DEPENDENCIES (executables)
 foreach(node IN ITEMS ${NODE_NAMES})
   # Add dependencies for the executables
-    ament_target_dependencies(
-      ${node} PUBLIC
-      ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  ament_target_dependencies(${node} PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 endforeach()
-
 
 # INSTALL(ROS Executables)
 foreach(node IN ITEMS ${NODE_NAMES})
@@ -87,14 +79,11 @@ foreach(node IN ITEMS ${NODE_NAMES})
   install(TARGETS ${node} DESTINATION lib/${PROJECT_NAME})
 endforeach()
 
-
 # INSTALL (ROS)
 install(
   DIRECTORY config launch maps rviz urdf worlds
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
-  
 # ROS FINALISATION
-ament_package() 
-
+ament_package()
