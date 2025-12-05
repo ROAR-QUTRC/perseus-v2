@@ -127,9 +127,9 @@ def generate_launch_description():
     )
     # Add delay to EKF to ensure all other nodes are ready
     ekf_delayed = TimerAction(
-        period=10.0,
+        period=5.0,
         actions=[ekf_node],
-        #condition=UnlessCondition(wheel_odom_only),  # Only run if wheel_odom_only is false
+        condition=UnlessCondition(wheel_odom_only),  # Only run if wheel_odom_only is false
     )
     launch_files = [
         gz_launch,
