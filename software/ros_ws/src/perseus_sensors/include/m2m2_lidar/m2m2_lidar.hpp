@@ -31,10 +31,10 @@ public:
 
     struct sensor_config_t
     {
-        double scanFrequency;
-        double angularResolution;
-        double minRange;
-        double maxRange;
+        double scan_frequency;
+        double angular_resolution;
+        double min_range;
+        double max_range;
     };
 
     /**
@@ -60,34 +60,34 @@ private:
     /**
      * @brief Check if two floating point values are equal within epsilon
      */
-    [[nodiscard]] static bool isWithinEpsilon(float a, float b, float epsilon = EPSILON);
+    [[nodiscard]] static bool is_within_epsilon(float a, float b, float epsilon = EPSILON);
 
     // Network communication methods
-    [[nodiscard]] bool _sendJsonRequest(const std::string& command, const nlohmann::json& args = nlohmann::json{});
-    [[nodiscard]] nlohmann::json _receiveJsonResponse();
-    void _sendCommand(const std::vector<uint8_t>& command);
+    [[nodiscard]] bool _send_json_request(const std::string& command, const nlohmann::json& args = nlohmann::json{});
+    [[nodiscard]] nlohmann::json _receive_json_response();
+    void _send_command(const std::vector<uint8_t>& command);
 
     // Data processing methods
-    [[nodiscard]] std::vector<uint8_t> _decodeBase64(const std::string& encoded);
-    [[nodiscard]] std::vector<std::tuple<float, float, bool>> _decodeLaserPoints(const std::string& base64Encoded);
-    [[nodiscard]] std::vector<std::tuple<float, float, bool>> _interpolatePoints(const std::vector<std::tuple<float, float, bool>>& points);
-    [[nodiscard]] std::vector<uint8_t> _createConfigCommand(const sensor_config_t& config);
+    [[nodiscard]] std::vector<uint8_t> _decode_base64(const std::string& encoded);
+    [[nodiscard]] std::vector<std::tuple<float, float, bool>> _decode_laser_points(const std::string& base_64_encoded);
+    [[nodiscard]] std::vector<std::tuple<float, float, bool>> _interpolate_points(const std::vector<std::tuple<float, float, bool>>& points);
+    [[nodiscard]] std::vector<uint8_t> _create_config_command(const sensor_config_t& config);
 
     // ROS setup and operation methods
-    void _initializePublishers();
-    void _readSensorData();
-    void _readImuData();
+    void _initialize_publishers();
+    void _read_sensor_data();
+    void _read_imu_data();
 
     // Member variables
-    std::int32_t _requestId{0};
+    std::int32_t _request_id{0};
     std::optional<networking::Client> _client;
     sensor_config_t _config{};
 
-    bool _readImu{true};  // Default to true (on)
+    bool _read_imu{true};  // Default to true (on)
 
     // ROS2 publishers
-    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr _scanPublisher;
-    rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr _imuPublisher;
-    rclcpp::TimerBase::SharedPtr _readTimer;
-    rclcpp::TimerBase::SharedPtr _imuTimer;
+    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr _scan_publisher;
+    rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr _imu_publisher;
+    rclcpp::TimerBase::SharedPtr _read_timer;
+    rclcpp::TimerBase::SharedPtr _imu_timer;
 };

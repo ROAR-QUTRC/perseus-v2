@@ -18,12 +18,12 @@ using std::string;
 
 using namespace networking;
 
-Client::Client(const address_t& address, const socket_protocol protocol, const address_t& bindAddress, const socket_config_handlers_t& configHandlers)
+Client::Client(const address_t& address, const socket_protocol protocol, const address_t& bind_address, const socket_config_handlers_t& config_handlers)
     : _address(address),
-      _bindAddress(bindAddress),
+      _bind_address(bind_address),
       _protocol(protocol)
 {
-    _socket = FdWrapper(std::bind(&Client::_createSocket, this, configHandlers));
+    _socket = FdWrapper(std::bind(&Client::_create_socket, this, config_handlers));
 }
 
 ssize_t Client::transmit(const string& message)
@@ -32,93 +32,93 @@ ssize_t Client::transmit(const string& message)
 }
 ssize_t Client::transmit(const std::vector<uint8_t>& buffer)
 {
-    const ssize_t bytesWritten = send(static_cast<int>(_socket), buffer.data(), buffer.size(), 0);
-    if (bytesWritten < 0)
+    const ssize_t bytes_written = send(static_cast<int>(_socket), buffer.data(), buffer.size(), 0);
+    if (bytes_written < 0)
     {
         string err = std::strerror(errno);
         throw std::runtime_error("Failed to transmit data: " + err);
     }
-    if (bytesWritten == 0 && buffer.size() > 0)
+    if (bytes_written == 0 && buffer.size() > 0)
     {
         throw std::runtime_error("Connection closed: 0 bytes transmitted");
     }
-    return bytesWritten;
+    return bytes_written;
 }
 
 std::optional<std::vector<uint8_t>> Client::receive(size_t len, bool blocking)
 {
     std::vector<uint8_t> buffer(len);
-    const ssize_t bytesRead = recv(static_cast<int>(_socket), buffer.data(), len, blocking ? 0 : MSG_DONTWAIT);
-    if (bytesRead < 0)
+    const ssize_t bytes_read = recv(static_cast<int>(_socket), buffer.data(), len, blocking ? 0 : MSG_DONTWAIT);
+    if (bytes_read < 0)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
             return std::nullopt;
         throw std::runtime_error(std::format("Failed to receive packet from {}: {}",
-                                             _getFullAddressString(), std::strerror(errno)));
+                                             _get_full_address_string(), std::strerror(errno)));
     }
-    if (bytesRead == 0)
+    if (bytes_read == 0)
     {
         if (len > 0)
             throw std::runtime_error(std::format("Connection closed: 0 bytes received from {}",
-                                                 _getFullAddressString()));
+                                                 _get_full_address_string()));
         return std::nullopt;
     }
 
-    buffer.resize(bytesRead);
+    buffer.resize(bytes_read);
 
     return buffer;
 }
 
-int Client::_createBoundSocket(struct addrinfo*& currentAddr, struct addrinfo* currentBindAddr, const socket_config_handlers_t& configHandlers)
+int Client::_create_bound_socket(struct addrinfo*& current_addr, struct addrinfo* current_bind_addr, const socket_config_handlers_t& config_handlers)
 {
-    bool shouldSkipBind = currentBindAddr == nullptr;
-    while (currentAddr && (shouldSkipBind || currentBindAddr))
+    bool should_skip_bind = current_bind_addr == nullptr;
+    while (current_addr && (should_skip_bind || current_bind_addr))
     {
-        int socketFd = socket(currentAddr->ai_family, currentAddr->ai_socktype, currentAddr->ai_protocol);
-        if (socketFd == -1)
+        int socket_fd = socket(current_addr->ai_family, current_addr->ai_socktype, current_addr->ai_protocol);
+        if (socket_fd == -1)
         {
-            currentAddr = currentAddr->ai_next;
+            current_addr = current_addr->ai_next;
             continue;
         }
-        if (currentBindAddr)
+        if (current_bind_addr)
         {
             const int yes = 1;
             // enable address reuse (prevents "address already in use" errors)
-            if (setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0)
+            if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0)
             {
-                close(socketFd);
-                currentBindAddr = currentBindAddr->ai_next;
+                close(socket_fd);
+                current_bind_addr = current_bind_addr->ai_next;
                 continue;
             }
-            if (configHandlers.preBind)
+            if (config_handlers.pre_bind)
             {
-                if (!configHandlers.preBind(socketFd))
+                if (!config_handlers.pre_bind(socket_fd))
                 {
-                    close(socketFd);
-                    currentBindAddr = currentBindAddr->ai_next;
+                    close(socket_fd);
+                    current_bind_addr = current_bind_addr->ai_next;
                     continue;
                 }
             }
-            if (bind(socketFd, currentBindAddr->ai_addr, currentBindAddr->ai_addrlen) < 0)
+            if (bind(socket_fd, current_bind_addr->ai_addr, current_bind_addr->ai_addrlen) < 0)
             {
-                close(socketFd);
-                currentBindAddr = currentBindAddr->ai_next;
+                close(socket_fd);
+                current_bind_addr = current_bind_addr->ai_next;
                 continue;
             }
         }
-        return socketFd;
+        return socket_fd;
     }
     // if we hit this, socket creation for all addresses failed
-    if (!currentAddr)
+    if (!current_addr)
     {
         throw std::runtime_error(std::format("Failed to create socket for {}: {}",
-                                             _getFullAddressString(), std::strerror(errno)));
+                                             _get_full_address_string(), std::strerror(errno)));
     }
     // and if we hit this, binding failed
-    if (!shouldSkipBind && !currentBindAddr)
+    if (!should_skip_bind && !current_bind_addr)
     {
         throw std::runtime_error(std::format("Failed to bind address {}: {}",
-                                             static_cast<string>(_bindAddress), std::strerror(errno)));
+                                             static_cast<string>(_bind_address), std::strerror(errno)));
     }
     // we should never hit this
     assert(false);
@@ -127,7 +127,7 @@ int Client::_createBoundSocket(struct addrinfo*& currentAddr, struct addrinfo* c
 }
 
 #include <iostream>
-int Client::_createSocket(const socket_config_handlers_t& configHandlers)
+int Client::_create_socket(const socket_config_handlers_t& config_handlers)
 {
     // perform address resolution
     struct addrinfo hints{};
@@ -136,82 +136,82 @@ int Client::_createSocket(const socket_config_handlers_t& configHandlers)
     hints.ai_socktype = (_protocol == socket_protocol::TCP) ? SOCK_STREAM : SOCK_DGRAM;
 
     if (const int status =
-            getaddrinfo(_address.hostname.c_str(), _address.service.c_str(), &hints, &_destinationAddrinfo);
+            getaddrinfo(_address.hostname.c_str(), _address.service.c_str(), &hints, &_destination_addrinfo);
         status != 0)
     {
         throw std::runtime_error(std::format("Failed to resolve address {}: {}",
-                                             _getFullAddressString(),
+                                             _get_full_address_string(),
                                              gai_strerror(status)));
     }
 
-    if (!_bindAddress.service.empty())
+    if (!_bind_address.service.empty())
     {
         hints.ai_flags = AI_PASSIVE;  // wildcard IP address - will be ignored if hostname is provided
-        const char* const bindHostname = _bindAddress.hostname.empty() ? nullptr : _bindAddress.hostname.c_str();
+        const char* const bind_hostname = _bind_address.hostname.empty() ? nullptr : _bind_address.hostname.c_str();
         if (const int status =
-                getaddrinfo(bindHostname, _bindAddress.service.c_str(), &hints, &_bindAddrinfo);
+                getaddrinfo(bind_hostname, _bind_address.service.c_str(), &hints, &_bind_addrinfo);
             status != 0)
         {
             throw std::runtime_error(std::format("Failed to resolve bind address {}: {}",
-                                                 static_cast<string>(_bindAddress),
+                                                 static_cast<string>(_bind_address),
                                                  gai_strerror(status)));
         }
     }
 
-    for (auto currentAddr = _destinationAddrinfo.get(); currentAddr; currentAddr = currentAddr->ai_next)
+    for (auto current_addr = _destination_addrinfo.get(); current_addr; current_addr = current_addr->ai_next)
     {
-        int socketFd = _createBoundSocket(currentAddr, _bindAddrinfo.get(), configHandlers);
-        if (configHandlers.preConnect)
+        int socket_fd = _create_bound_socket(current_addr, _bind_addrinfo.get(), config_handlers);
+        if (config_handlers.pre_connect)
         {
-            if (!configHandlers.preConnect(socketFd))
+            if (!config_handlers.pre_connect(socket_fd))
             {
-                close(socketFd);
+                close(socket_fd);
                 // same thing here
-                if (!currentAddr->ai_next)
+                if (!current_addr->ai_next)
                 {
                     throw std::runtime_error(std::format("Failed to configure socket pre-connection for {}: {}",
-                                                         _getFullAddressString(), std::strerror(errno)));
+                                                         _get_full_address_string(), std::strerror(errno)));
                 }
                 continue;
             }
         }
-        if (connect(socketFd, _destinationAddrinfo->ai_addr, _destinationAddrinfo->ai_addrlen) < 0)
+        if (connect(socket_fd, _destination_addrinfo->ai_addr, _destination_addrinfo->ai_addrlen) < 0)
         {
-            close(socketFd);
+            close(socket_fd);
             // if we've run out of addresses to try, it's failed
-            if (!currentAddr->ai_next)
+            if (!current_addr->ai_next)
             {
                 throw std::runtime_error(std::format("Failed to connect to {}: {}",
-                                                     _getFullAddressString(), std::strerror(errno)));
+                                                     _get_full_address_string(), std::strerror(errno)));
             }
             continue;
         }
-        if (configHandlers.postConnect)
+        if (config_handlers.post_connect)
         {
-            if (!configHandlers.postConnect(socketFd))
+            if (!config_handlers.post_connect(socket_fd))
             {
-                close(socketFd);
+                close(socket_fd);
                 // same thing here
-                if (!currentAddr->ai_next)
+                if (!current_addr->ai_next)
                 {
                     throw std::runtime_error(std::format("Failed to configure socket post-connection for {}: {}",
-                                                         _getFullAddressString(), std::strerror(errno)));
+                                                         _get_full_address_string(), std::strerror(errno)));
                 }
                 continue;
             }
         }
         // free the lists, we don't need them any more
-        _destinationAddrinfo = nullptr;
-        _bindAddrinfo = nullptr;
+        _destination_addrinfo = nullptr;
+        _bind_addrinfo = nullptr;
 
-        return socketFd;
+        return socket_fd;
     }
     // we should never hit this - any failure by this point should have thrown an exception
     assert(false);
     // make the compiler happy
     return -1;
 }
-string Client::_getFullAddressString() const
+string Client::_get_full_address_string() const
 {
-    return std::format("{} ({})", static_cast<string>(_address), getStringFromProtocol(_protocol));
+    return std::format("{} ({})", static_cast<string>(_address), get_string_from_protocol(_protocol));
 }

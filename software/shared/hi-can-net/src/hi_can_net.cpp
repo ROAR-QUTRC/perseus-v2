@@ -6,7 +6,7 @@ namespace hi_can
     {
     public:
     private:
-        bool _isOpen = false;
+        bool _is_open = false;
     };
 
     class NetworkClient
