@@ -226,10 +226,16 @@ class TeleopDiagnosticsNode(Node):
             TwistStamped, "/joy_vel", self.joy_vel_callback, SUBSCRIPTION_QUEUE_DEPTH
         )
         self.cmd_vel_out_sub = self.create_subscription(
-            TwistStamped, "/cmd_vel_out", self.cmd_vel_out_callback, SUBSCRIPTION_QUEUE_DEPTH
+            TwistStamped,
+            "/cmd_vel_out",
+            self.cmd_vel_out_callback,
+            SUBSCRIPTION_QUEUE_DEPTH,
         )
         self.nav_vel_sub = self.create_subscription(
-            TwistStamped, "/cmd_vel_nav_stamped", self.nav_vel_callback, SUBSCRIPTION_QUEUE_DEPTH
+            TwistStamped,
+            "/cmd_vel_nav_stamped",
+            self.nav_vel_callback,
+            SUBSCRIPTION_QUEUE_DEPTH,
         )
         self.web_vel_sub = self.create_subscription(
             TwistStamped, "/web_vel", self.web_vel_callback, SUBSCRIPTION_QUEUE_DEPTH
@@ -337,7 +343,9 @@ class TeleopDiagnosticsNode(Node):
 
         try:
             future = client.call_async(GetParameters.Request(names=param_names))
-            rclpy.spin_until_future_complete(self, future, timeout_sec=SERVICE_DISCOVERY_TIMEOUT)
+            rclpy.spin_until_future_complete(
+                self, future, timeout_sec=SERVICE_DISCOVERY_TIMEOUT
+            )
 
             if future.result() is not None:
                 response = future.result()
@@ -372,7 +380,9 @@ class TeleopDiagnosticsNode(Node):
 
         try:
             future = client.call_async(GetParameters.Request(names=param_names))
-            rclpy.spin_until_future_complete(self, future, timeout_sec=SERVICE_DISCOVERY_TIMEOUT)
+            rclpy.spin_until_future_complete(
+                self, future, timeout_sec=SERVICE_DISCOVERY_TIMEOUT
+            )
 
             if future.result() is not None:
                 response = future.result()
@@ -381,21 +391,35 @@ class TeleopDiagnosticsNode(Node):
                 # Map response values to controller config
                 if len(values) >= 8:
                     if values[0].type != 0:
-                        self.controller_config.forward_axis = int(values[0].integer_value)
+                        self.controller_config.forward_axis = int(
+                            values[0].integer_value
+                        )
                     if values[1].type != 0:
-                        self.controller_config.forward_scaling = float(values[1].double_value)
+                        self.controller_config.forward_scaling = float(
+                            values[1].double_value
+                        )
                     if values[2].type != 0:
                         self.controller_config.turn_axis = int(values[2].integer_value)
                     if values[3].type != 0:
-                        self.controller_config.turn_scaling = float(values[3].double_value)
+                        self.controller_config.turn_scaling = float(
+                            values[3].double_value
+                        )
                     if values[4].type != 0:
-                        self.controller_config.forward_enable_axis = int(values[4].integer_value)
+                        self.controller_config.forward_enable_axis = int(
+                            values[4].integer_value
+                        )
                     if values[5].type != 0:
-                        self.controller_config.forward_enable_threshold = float(values[5].double_value)
+                        self.controller_config.forward_enable_threshold = float(
+                            values[5].double_value
+                        )
                     if values[6].type != 0:
-                        self.controller_config.turbo_enable_axis = int(values[6].integer_value)
+                        self.controller_config.turbo_enable_axis = int(
+                            values[6].integer_value
+                        )
                     if values[7].type != 0:
-                        self.controller_config.turbo_scaling = float(values[7].double_value)
+                        self.controller_config.turbo_scaling = float(
+                            values[7].double_value
+                        )
 
                 self.get_logger().info(
                     f"Discovered controller config: forward_axis={self.controller_config.forward_axis}, "
@@ -482,7 +506,10 @@ class TeleopTUI:
         # Buttons
         self.safe_addstr(y + 11, x + 2, "Buttons:", curses.A_BOLD)
         btn_str = " ".join(
-            [str(i) if b else "." for i, b in enumerate(joy.buttons[:MAX_BUTTONS_DISPLAY])]
+            [
+                str(i) if b else "."
+                for i, b in enumerate(joy.buttons[:MAX_BUTTONS_DISPLAY])
+            ]
         )
         self.safe_addstr(y + 12, x + 2, btn_str)
 
@@ -747,7 +774,9 @@ class TeleopTUI:
 
                 # Right column: Mux + Direction
                 self.draw_mux_panel(2, col1_w + col2_w + 2, col3_w)
-                self.draw_direction_panel(MUX_PANEL_HEIGHT + 3, col1_w + col2_w + 2, col3_w)
+                self.draw_direction_panel(
+                    MUX_PANEL_HEIGHT + 3, col1_w + col2_w + 2, col3_w
+                )
 
                 # Status bar
                 status = f" Time: {time.strftime('%H:%M:%S')} | Joy: {self.node.joy_data.rate_hz:.1f}Hz | Cmd: {self.node.cmd_vel_out_data.rate_hz:.1f}Hz | Wheels: {self.node.wheel_data.rate_hz:.1f}Hz "
@@ -788,11 +817,17 @@ class TeleopTUI:
                 print(f"\n[Joy Input] Rate: {joy.rate_hz:.1f} Hz")
                 if joy.axes:
                     axes_str = " ".join(
-                        [f"{i}:{v:+.2f}" for i, v in enumerate(joy.axes[:MAX_AXES_DISPLAY])]
+                        [
+                            f"{i}:{v:+.2f}"
+                            for i, v in enumerate(joy.axes[:MAX_AXES_DISPLAY])
+                        ]
                     )
                     print(f"  Axes: {axes_str}")
                     btns = "".join(
-                        [str(i) if b else "." for i, b in enumerate(joy.buttons[:MAX_BUTTONS_DISPLAY])]
+                        [
+                            str(i) if b else "."
+                            for i, b in enumerate(joy.buttons[:MAX_BUTTONS_DISPLAY])
+                        ]
                     )
                     print(f"  Btns: {btns}")
                 else:
@@ -808,8 +843,12 @@ class TeleopTUI:
 
                 # Velocity chain
                 print("\n[Velocity Chain]")
-                joy_stale = "STALE" if now - joy_vel.timestamp > DATA_ACTIVE_TIMEOUT else "OK"
-                out_stale = "STALE" if now - vel.timestamp > DATA_ACTIVE_TIMEOUT else "OK"
+                joy_stale = (
+                    "STALE" if now - joy_vel.timestamp > DATA_ACTIVE_TIMEOUT else "OK"
+                )
+                out_stale = (
+                    "STALE" if now - vel.timestamp > DATA_ACTIVE_TIMEOUT else "OK"
+                )
                 print(
                     f"  joy_vel:     lin={joy_vel.linear_x:+.3f} ang={joy_vel.angular_z:+.3f} [{joy_stale}]"
                 )
@@ -831,13 +870,19 @@ class TeleopTUI:
                 for i, name in enumerate(wheels.names):
                     if "wheel" in name.lower():
                         v = wheels.velocities[i] if i < len(wheels.velocities) else 0.0
-                        d = "FWD" if v > WHEEL_MOTION_THRESHOLD else ("REV" if v < -WHEEL_MOTION_THRESHOLD else "---")
+                        d = (
+                            "FWD"
+                            if v > WHEEL_MOTION_THRESHOLD
+                            else ("REV" if v < -WHEEL_MOTION_THRESHOLD else "---")
+                        )
                         print(f"  {name}: {v:+.3f} [{d}]")
 
                 # Mux status
                 print(f"\n[Twist Mux] Active: {self.node.active_mux_source}")
                 for src in ["joystick", "keyboard", "web_ui", "navigation"]:
-                    active = now - self.node.mux_sources.get(src, 0.0) < DATA_ACTIVE_TIMEOUT
+                    active = (
+                        now - self.node.mux_sources.get(src, 0.0) < DATA_ACTIVE_TIMEOUT
+                    )
                     status = (
                         "ACTIVE"
                         if src == self.node.active_mux_source and active
