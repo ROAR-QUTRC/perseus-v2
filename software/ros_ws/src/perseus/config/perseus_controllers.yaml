@@ -26,7 +26,7 @@ diff_drive_base_controller:
     publish_rate: 50.0
     odom_frame_id: odom
     base_frame_id: base_link
-    enable_odom_tf: true
+    enable_odom_tf: false # disable if using EKF for odometry transforms
     cmd_vel_timeout: 1.0
     #publish_limited_velocity: true
     #use_stamped_vel: false
