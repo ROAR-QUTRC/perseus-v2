@@ -13,7 +13,7 @@ It provides a central source of truth for the robot’s physical structure, and 
 
 Below is the structure:
 ```
-pperseus_description/
+perseus_description/
  ├── launch/
  │    └── view_perseus.launch.py               # Launch file to visualise the URDF in RViz
  │
@@ -51,33 +51,37 @@ pperseus_description/
 ```
 ## Robot Architecture
 The following diagram illustrates the TF architecture of the Perseus Rover when operating with odometry (`/odom`) estimation enabled. This representation shows how major physical components, drivetrain assemblies, and sensors attach to the `base_link`, which serves as the primary reference frame for state estimation, navigation, and perception.
-```mermaid
-graph TD
-  odom --> base_link
-  base_link --> base_footprint
-  base_link --> chassis
-  chassis --> camera_link
-  chassis --> ﬂange_bearing
-  chassis --> left_rocker
-  chassis --> right_rocker
-  chassis --> laser_2d_frame
-  chassis --> laser_frame
-  
-  camera_link --> camera_link_optical
+```dot
+digraph tf_tree {
+    rankdir=TB;
 
-  ﬂange_bearing --> differiential_bar
+    odom -> base_link;
+    base_link -> base_footprint;
+    base_link -> chassis;
 
-  left_rocker --> front_left_motor
-  front_left_motor --> front_left_wheel
+    chassis -> camera_link;
+    chassis -> flange_bearing;
+    chassis -> left_rocker;
+    chassis -> right_rocker;
+    chassis -> laser_2d_frame;
+    chassis -> laser_frame;
 
-  left_rocker --> rear_left_motor
-  rear_left_motor --> rear_left_wheel
+    camera_link -> camera_link_optical;
 
-  right_rocker --> front_right_motor
-  front_right_motor --> front_right_wheel
+    flange_bearing -> differential_bar;
 
-  right_rocker --> rear_right_motor
-  rear_right_motor --> rear_right_wheel
+    left_rocker -> front_left_motor;
+    front_left_motor -> front_left_wheel;
+
+    left_rocker -> rear_left_motor;
+    rear_left_motor -> rear_left_wheel;
+
+    right_rocker -> front_right_motor;
+    front_right_motor -> front_right_wheel;
+
+    right_rocker -> rear_right_motor;
+    rear_right_motor -> rear_right_wheel;
+}
 ```
 
 ## Coordinate Frames (REP-103 Compliance)
