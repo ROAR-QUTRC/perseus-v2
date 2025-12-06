@@ -1,17 +1,20 @@
 # Robot Description
+
 :::{note}
 URDF (Unified Robot Description Format) is an XML-based file format, central to the Robot Operating System (ROS) and other robotics tools, used to describe a robot's physical structure, including its rigid bodies (links) and how they connect and move (joints), defining its kinematics, visuals, and physical properties for simulation and control. It acts as a digital blueprint, detailing each part's geometry, mass, and relationship, making robots understandable and usable in software like Gazebo and RViz [^1].
 :::
 
 ## Overview
+
 The Perseus Rover URDF (Unified Robot Description Format) is rebuilt to provide a complete, modular, and simulation-ready description of the rover’s physical structure, joints, sensors, and coordinate frames. It is designed to support RViz visualisation, Gazebo Sim simulation, and Nav2-based navigation, following **[REP-103](https://www.ros.org/reps/rep-0103.html)[^2]** conventions and ROS2 best practices. The URDF is built using Xacro macros to improve maintainability and allow rapid redesign of components such as sensors, drivetrain, and chassis geometry.
 
-
 ## Repository Structure
-The [``perseus_description``](https://github.com/ROAR-QUTRC/perseus-v2/tree/main/software/ros_ws/src/perseus_description) package contains the full URDF/Xacro model of the Perseus Rover.
+
+The [`perseus_description`](https://github.com/ROAR-QUTRC/perseus-v2/tree/main/software/ros_ws/src/perseus_description) package contains the full URDF/Xacro model of the Perseus Rover.
 It provides a central source of truth for the robot’s physical structure, and is shared across other packages such as simulation, control, perception, and navigation.
 
 Below is the structure:
+
 ```
 pperseus_description/
  ├── launch/
@@ -49,8 +52,11 @@ pperseus_description/
  ├── CMakeLists.txt                            # Package build configuration
  └── package.xml                               # ROS2 package manifest
 ```
+
 ## Robot Architecture
+
 The following diagram illustrates the TF architecture of the Perseus Rover when operating with odometry (`/odom`) estimation enabled. This representation shows how major physical components, drivetrain assemblies, and sensors attach to the `base_link`, which serves as the primary reference frame for state estimation, navigation, and perception.
+
 ```mermaid
 graph TD
   odom --> base_link
@@ -62,7 +68,7 @@ graph TD
   chassis --> right_rocker
   chassis --> laser_2d_frame
   chassis --> laser_frame
-  
+
   camera_link --> camera_link_optical
 
   ﬂange_bearing --> differiential_bar
@@ -85,36 +91,41 @@ graph TD
 The Perseus Rover URDF follows **REP-103** conventions [^2] to ensure consistent coordinate alignment across ROS2 tools such as RViz, Nav2, AMCL, EKF, and perception pipelines. These conventions guarantee that all sensors, wheels, and robot links behave predictably in both simulation and real-world deployments.
 
 ### **Base Frame (`base_link`)**
+
 The `base_link` frame defines the central reference for the robot’s body:
 
-* **+X → forward**
-* **+Y → left**
-* **+Z → upward**
+- **+X → forward**
+- **+Y → left**
+- **+Z → upward**
 
 This frame serves as the anchor for most transforms and is used by Nav2, AMCL, and state-estimation frameworks (e.g., `robot_localization`) to interpret the robot’s pose and motion.
 
 ### **Wheel Joint Frames**
+
 Each wheel joint follows standard differential-drive and rocker-based rover conventions:
-* **Rotation axis:** +Y
-* **Forward motion:** +X
+
+- **Rotation axis:** +Y
+- **Forward motion:** +X
 
 This ensures proper behaviour when executing velocity commands through `/cmd_vel_out` and when using `ros2_control` interfaces to apply wheel velocities.
 
 ### **IMU Frame**
+
 The IMU link is aligned using the standard aircraft convention:
 
-* **+X → forward**
-* **+Y → left**
-* **+Z → upward**
+- **+X → forward**
+- **+Y → left**
+- **+Z → upward**
 
 Aligning the IMU with the base frame (`/chassis`) simplifies sensor fusion, maintains compatibility with IMU drivers, and prevents orientation mismatches in EKF pipelines.
 
 ### **Depth Camera Optical Frame**
+
 The optical frame is defined according to REP-103's camera convention:
 
-* **+Z → forward** (optical axis)
-* **+X → right**
-* **+Y → down**
+- **+Z → forward** (optical axis)
+- **+X → right**
+- **+Y → down**
 
 This is required for correct handling of projection matrices, point cloud orientation, and depth image interpretation in RViz and perception stacks such as vision-based SLAM or obstacle detection modules.
 
@@ -125,7 +136,6 @@ The Perseus Rover URDF defines a complete kinematic chain composed of multiple r
 ### **Chassis Link (`chassis`)**
 
 The chassis acts as the central structural body of the rover and serves as the parent link for most major components. It is attached to the `base_link` and provides mounting frames for sensors, drivetrain assemblies, rocker mechanisms, and auxiliary payloads. The chassis mesh accurately reflects the rover’s physical geometry, while its collision model and inertial properties are simplified for stable simulation.
-
 
 ### **Rocker Mechanism (`left_rocker`, `right_rocker`)**
 
@@ -150,32 +160,30 @@ Each wheel is mounted through a motor assembly that consists of two primary link
 
 Together, these links and joints form the drivetrain assembly responsible for locomotion.
 
-
 ### **Sensor Links**
 
 Several links in the URDF represent the mounting frames for perception hardware:
 
-* **Depth Camera (`camera_link`, `camera_link_optical`)**
+- **Depth Camera (`camera_link`, `camera_link_optical`)**
   `camera_link` defines the physical mounting point on the chassis, while `camera_link_optical` follows the REP-103 optical frame convention.
   This ensures correct orientation of projected depth images and point clouds.
 
-* **Laser Scanner Frames (`laser_2d_frame`, `laser_frame`)**
+- **Laser Scanner Frames (`laser_2d_frame`, `laser_frame`)**
   These links define the exact positioning of LIDAR sensors. Their orientations are aligned so that scans align correctly with the world frame.
 
-* **IMU Link (`imu_link`)**
+- **IMU Link (`imu_link`)**
   The IMU frame is aligned according to aircraft conventions (+X forward, +Y left, +Z up), enabling seamless integration with state estimation frameworks such as `robot_localization`.
 
 Each sensor link is defined with its own inertial and collision properties only where needed, but in many cases sensors are treated as lightweight attachments with simplified inertias.
-
 
 ### **Joint Types and Their Roles**
 
 The URDF uses several joint types, each selected for a specific physical behaviour:
 
-* **Fixed Joints**
+- **Fixed Joints**
   Used where components are rigidly connected, such as sensors mounted to the chassis or motors affixed to rocker arms. These joints introduce no movement.
 
-* **Revolute/Continuous Joints**
+- **Revolute/Continuous Joints**
   Used for the wheels and suspension elements. Wheel joints are continuous, enabling unrestricted rotation, while rocker joints may be limited or passive based on design.
 
 These joints define not only kinematic relationships but also how transforms propagate through the TF tree, directly influencing how navigation, perception, and simulation interpret the robot’s geometry.
@@ -203,7 +211,7 @@ To maintain high simulation performance and avoid unnecessary computational load
 
 Inertia is also simplified by using analytical inertia models for boxes and cylinders. These formulas provide stable, physically plausible approximations and prevent numerical instability in simulation. The inertia matrices are computed using the following standard rigid-body equations:
 
-### Box Inertia (dimensions: width = *w*, height = *h*, depth = *d*)
+### Box Inertia (dimensions: width = _w_, height = _h_, depth = _d_)
 
 For a solid rectangular box of mass \( m \):
 
@@ -219,7 +227,7 @@ $$
 I_{zz} = \frac{1}{12} m (w^2 + h^2)
 $$
 
-### Cylinder Inertia (radius = *r*, length = *h*)
+### Cylinder Inertia (radius = _r_, length = _h_)
 
 For a solid cylinder aligned along the Z-axis:
 
@@ -233,13 +241,8 @@ $$
 
 These simplified inertia equations are used throughout the URDF (via `inertia_macros.xacro`) to maintain consistency, reduce computational overhead, and ensure that the rover behaves predictably when simulated in Gazebo Sim or other physics engines.
 
-
-
-
-
 ## References
 
-[^1]: Foxglove Robotics — *What is URDF (Unified Robot Description Format)?* https://foxglove.dev/robotics/urdf.
+[^1]: Foxglove Robotics — _What is URDF (Unified Robot Description Format)?_ https://foxglove.dev/robotics/urdf.
 
 [^2]: REP 103 — Standard Units of Measure and Coordinate Conventions. https://www.ros.org/reps/rep-0103.html
-
