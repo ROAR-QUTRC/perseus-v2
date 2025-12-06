@@ -9,486 +9,6 @@
 		(rev "=rev")
 	)
 	(lib_symbols
-		(symbol "Altium Content Vault:root_0_11868f565c42a9108669ba33697ecf6_Altium Content Vault"
-			(pin_names
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Chip Multilayer Ceramic Capacitors for General Purpose, 0603, 10uF, X5R, 15%, 20%, 35V"
-				(at 0 0 0)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "*FP-GRM188-0_2-IPC_A*"
-				(at 0 0 0)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "root_0_11868f565c42a9108669ba33697ecf6_Altium Content Vault_1_0"
-				(polyline
-					(pts
-						(xy 0 -1.778) (xy 0 -1.016)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 -3.556) (xy 0 -3.81)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 -1.778) (xy -2.54 -1.778)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 -3.302) (xy -2.54 -3.302)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at 0 0 270)
-					(length 1.778)
-					(name "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 90)
-					(length 1.524)
-					(name "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "Altium Content Vault:root_3_852f986ac35c0497f1e372686d5e728_Altium Content Vault"
-			(pin_names
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "TVS DIODE 3V SOT23-3"
-				(at 0 0 0)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "*FP-SOT23-3L-0053390-MFG*"
-				(at 0 0 0)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "root_3_852f986ac35c0497f1e372686d5e728_Altium Content Vault_1_0"
-				(polyline
-					(pts
-						(xy -12.7 -7.62) (xy -13.716 -6.096)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -12.7 -12.7) (xy -10.16 -7.62)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -10.16 -7.62) (xy -10.16 -5.08)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -10.16 -7.62) (xy -7.62 -12.7)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -10.16 -15.24) (xy -10.16 -12.7)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -7.62 -7.62) (xy -12.7 -7.62)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -7.62 -7.62) (xy -6.604 -8.89)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -7.62 -12.7) (xy -12.7 -12.7)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -5.08 -15.24) (xy -5.08 -17.78)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -2.54 -7.62) (xy -3.556 -6.35)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -2.54 -12.7) (xy 0 -7.62)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 -7.62) (xy 0 -5.08)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 -7.62) (xy 2.54 -12.7)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 -12.7) (xy 0 -15.24)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 -15.24) (xy -10.16 -15.24)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 -7.62) (xy -2.54 -7.62)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 -7.62) (xy 3.302 -8.89)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 -12.7) (xy -2.54 -12.7)
-					)
-					(stroke
-						(width 0)
-						(type solid)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -10.16 0 270)
-					(length 5.08)
-					(name "2_CATHODE"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -22.86 90)
-					(length 5.08)
-					(name "COMMON_ANODE"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 0 270)
-					(length 5.08)
-					(name "1_CATHODE"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "Connector:TestPoint"
 			(pin_numbers
 				(hide yes)
@@ -3946,6 +3466,241 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Power_Protection:RCLAMP0502B"
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "RCLAMP0502B"
+				(at 0 -5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-416"
+				(at 0 -7.62 0)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" "https://www.semtech.com/products/circuit-protection/low-capacitance/rclamp0502b"
+				(at 1.27 2.54 0)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Low capacitance unidirectional dual ESD protection diode, SC-75"
+				(at 0 0 0)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "tvs unidirectional"
+				(at 0 0 0)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "SOT?416*"
+				(at 0 0 0)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "RCLAMP0502B_0_1"
+				(polyline
+					(pts
+						(xy -2.54 0) (xy -1.27 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 2.54) (xy -1.27 -2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy -1.27 2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 1.27) (xy 0 3.81) (xy 2.54 2.54) (xy 0 1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 3.81) (xy 2.54 1.27) (xy 2.032 1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(symbol "RCLAMP0502B_1_1"
+				(circle
+					(center -1.27 0)
+					(radius 0.254)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 -2.54) (xy -1.27 -2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 -3.81) (xy 0 -1.27) (xy 2.54 -2.54) (xy 0 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 -1.27) (xy 2.54 -3.81) (xy 2.032 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at 5.08 2.54 180)
+					(length 2.54)
+					(name "K1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -2.54 180)
+					(length 2.54)
+					(name "K2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "QUTRC ARC:root_0_Smol_Brain_Board_QUTRC ARC"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -6645,8 +6400,8 @@
 		)
 	)
 	(rectangle
-		(start 233.68 92.5322)
-		(end 157.48 173.8122)
+		(start 157.48 92.5322)
+		(end 233.68 173.8122)
 		(stroke
 			(width 0.508)
 			(type solid)
@@ -8393,16 +8148,6 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 63.5) (xy 74.93 68.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "75277748-b584-4cde-9c15-2c4c25fa58ab")
-	)
-	(wire
-		(pts
 			(xy 99.06 170.18) (xy 99.06 171.45)
 		)
 		(stroke
@@ -8633,7 +8378,7 @@
 	)
 	(wire
 		(pts
-			(xy 36.83 63.5) (xy 74.93 63.5)
+			(xy 36.83 63.5) (xy 69.85 63.5)
 		)
 		(stroke
 			(width 0)
@@ -8913,6 +8658,16 @@
 	)
 	(wire
 		(pts
+			(xy 69.85 63.5) (xy 69.85 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ae514efc-9394-4f22-968d-eb7a251b0db3")
+	)
+	(wire
+		(pts
 			(xy 332.74 139.7) (xy 330.2 139.7)
 		)
 		(stroke
@@ -9010,16 +8765,6 @@
 			(type default)
 		)
 		(uuid "b5b2fd35-a329-4faa-b564-c94839706994")
-	)
-	(wire
-		(pts
-			(xy 142.24 49.53) (xy 142.24 53.34)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b5f4abe5-de32-4fb2-a5ea-166b97233cf2")
 	)
 	(wire
 		(pts
@@ -9270,6 +9015,16 @@
 			(type default)
 		)
 		(uuid "cf61a268-41c5-4b6c-9d79-ad0934b15ada")
+	)
+	(wire
+		(pts
+			(xy 142.24 49.53) (xy 142.24 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d1058ea6-00d4-43bc-8879-a2db72daa590")
 	)
 	(wire
 		(pts
@@ -10717,8 +10472,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Altium Content Vault:root_0_11868f565c42a9108669ba33697ecf6_Altium Content Vault")
-		(at 142.24 53.34 0)
+		(lib_id "Device:C")
+		(at 142.24 54.61 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10726,7 +10481,7 @@
 		(dnp no)
 		(uuid "03d0d080-b9db-4fc4-b1c8-29e744094c27")
 		(property "Reference" "C4"
-			(at 145.034 56.642 0)
+			(at 145.034 57.912 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10735,7 +10490,7 @@
 			)
 		)
 		(property "Value" "10uF"
-			(at 145.034 59.182 0)
+			(at 145.034 60.452 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10743,8 +10498,8 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-GRM188-0_2-IPC_A"
-			(at 142.24 53.34 0)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 143.2052 58.42 0)
 			(hide yes)
 			(effects
 				(font
@@ -10752,8 +10507,8 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
-			(at 142.24 53.34 0)
+		(property "Datasheet" "~"
+			(at 142.24 54.61 0)
 			(hide yes)
 			(effects
 				(font
@@ -10761,8 +10516,8 @@
 				)
 			)
 		)
-		(property "Description" "Chip Multilayer Ceramic Capacitors for General Purpose, 0603, 10uF, X5R, 15%, 20%, 35V"
-			(at 142.24 53.34 0)
+		(property "Description" "Unpolarized capacitor"
+			(at 142.24 54.61 0)
 			(hide yes)
 			(effects
 				(font
@@ -10771,7 +10526,7 @@
 			)
 		)
 		(property "PACKAGING" "Tape and Reel"
-			(at 139.446 52.832 0)
+			(at 139.446 54.102 0)
 			(hide yes)
 			(effects
 				(font
@@ -10781,7 +10536,7 @@
 			)
 		)
 		(property "TOLERANCE" "20%"
-			(at 139.446 52.832 0)
+			(at 139.446 54.102 0)
 			(hide yes)
 			(effects
 				(font
@@ -10791,7 +10546,7 @@
 			)
 		)
 		(property "MIN OPERATING TEMPERATURE" "-55°C"
-			(at 139.446 52.832 0)
+			(at 139.446 54.102 0)
 			(hide yes)
 			(effects
 				(font
@@ -10801,7 +10556,7 @@
 			)
 		)
 		(property "MAX OPERATING TEMPERATURE" "85°C"
-			(at 139.446 52.832 0)
+			(at 139.446 54.102 0)
 			(hide yes)
 			(effects
 				(font
@@ -10811,7 +10566,7 @@
 			)
 		)
 		(property "VOLTAGE RATING" "35V"
-			(at 139.446 52.832 0)
+			(at 139.446 54.102 0)
 			(hide yes)
 			(effects
 				(font
@@ -10821,7 +10576,7 @@
 			)
 		)
 		(property "MOUNT" "Surface Mount"
-			(at 139.446 52.832 0)
+			(at 139.446 54.102 0)
 			(hide yes)
 			(effects
 				(font
@@ -10831,7 +10586,7 @@
 			)
 		)
 		(property "CASE/PACKAGE" "0603"
-			(at 139.446 52.832 0)
+			(at 139.446 54.102 0)
 			(hide yes)
 			(effects
 				(font
@@ -10841,7 +10596,7 @@
 			)
 		)
 		(property "CAPACITANCE" "10uF"
-			(at 139.446 52.832 0)
+			(at 139.446 54.102 0)
 			(hide yes)
 			(effects
 				(font
@@ -10893,7 +10648,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-NR4018-MFG"
+		(property "Footprint" "Inductor_SMD:L_Taiyo-Yuden_MD-4040"
 			(at 195.58 55.88 0)
 			(hide yes)
 			(effects
@@ -16423,7 +16178,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL10-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 338.7852 146.05 0)
 			(hide yes)
 			(effects
@@ -17300,7 +17055,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "Smol_Brain_Board_Male"
+		(property "Footprint" ""
 			(at 172.72 105.41 0)
 			(hide yes)
 			(effects
@@ -18240,7 +17995,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL10-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 274.0152 157.48 0)
 			(hide yes)
 			(effects
@@ -18953,7 +18708,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL10-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 186.3852 58.42 0)
 			(hide yes)
 			(effects
@@ -19726,7 +19481,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL21-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 254.9652 40.64 0)
 			(hide yes)
 			(effects
@@ -20268,7 +20023,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL21-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 206.7052 72.39 0)
 			(hide yes)
 			(effects
@@ -20548,7 +20303,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "Button_Switch_SMD:SW_MEC_5GSH9"
+		(property "Footprint" "Button_Switch_SMD:SW_SPST_CK_RS282G05A3"
 			(at 114.3 156.21 0)
 			(hide yes)
 			(effects
@@ -21056,7 +20811,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "8b8da445-87a7-4c31-b060-3205994e9d91")
-		(property "Reference" "AP63203WU-7"
+		(property "Reference" "VR1"
 			(at 160.02 45.974 0)
 			(effects
 				(font
@@ -21442,7 +21197,7 @@
 		(instances
 			(project ""
 				(path "/d947cca5-df2f-4130-8179-c021102beaa2"
-					(reference "AP63203WU-7")
+					(reference "VR1")
 					(unit 1)
 				)
 			)
@@ -22340,7 +22095,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL21-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 216.8652 72.39 0)
 			(hide yes)
 			(effects
@@ -22743,7 +22498,7 @@
 	)
 	(symbol
 		(lib_id "Smol Brain Board-altium-import:GND_SIGNAL_GROUND")
-		(at 69.85 91.44 0)
+		(at 67.31 78.74 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -22751,7 +22506,7 @@
 		(dnp no)
 		(uuid "a40e7495-3ca7-40e4-8762-9264d6ee1e2a")
 		(property "Reference" "#PWR07"
-			(at 69.85 91.44 0)
+			(at 67.31 78.74 0)
 			(hide yes)
 			(effects
 				(font
@@ -22760,7 +22515,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 69.85 97.79 0)
+			(at 67.31 85.09 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22768,7 +22523,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 69.85 91.44 0)
+			(at 67.31 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22776,7 +22531,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 69.85 91.44 0)
+			(at 67.31 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22784,7 +22539,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 69.85 91.44 0)
+			(at 67.31 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23632,7 +23387,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "RESC4632X12N"
+		(property "Footprint" "Fuse:Fuse_1812_4532Metric"
 			(at 121.92 32.512 90)
 			(hide yes)
 			(effects
@@ -24430,7 +24185,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL10-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 267.6652 40.64 0)
 			(hide yes)
 			(effects
@@ -26133,7 +25888,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL10-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 348.9452 146.05 0)
 			(hide yes)
 			(effects
@@ -26322,7 +26077,7 @@
 			)
 		)
 		(property "Value" "500mA fast-blow fuse"
-			(at 133.35 42.926 90)
+			(at 132.842 42.926 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26330,7 +26085,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-SF-0603S-MFG"
+		(property "Footprint" "Fuse:Fuse_0603_1608Metric"
 			(at 121.92 41.148 90)
 			(hide yes)
 			(effects
@@ -26348,7 +26103,7 @@
 				)
 			)
 		)
-		(property "Description" "Fuse"
+		(property "Description" "Fuse, ERB-RE0R50V"
 			(at 121.92 39.37 0)
 			(hide yes)
 			(effects
@@ -27774,7 +27529,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL10-IPC_B"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 278.13 94.2848 0)
 			(hide yes)
 			(effects
@@ -28066,7 +27821,7 @@
 		(dnp no)
 		(uuid "e48e3da3-6c84-4db4-9690-49315985a847")
 		(property "Reference" "D7"
-			(at 262.636 103.886 0)
+			(at 269.748 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -28244,7 +27999,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL10-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 100.0252 170.18 0)
 			(hide yes)
 			(effects
@@ -28974,7 +28729,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-CL10-IPC_A"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 356.5652 111.76 0)
 			(hide yes)
 			(effects
@@ -30326,8 +30081,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Altium Content Vault:root_3_852f986ac35c0497f1e372686d5e728_Altium Content Vault")
-		(at 74.93 68.58 0)
+		(lib_id "Power_Protection:RCLAMP0502B")
+		(at 67.31 73.66 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -30335,7 +30090,7 @@
 		(dnp no)
 		(uuid "fb85a60d-5710-4690-b04b-f8494fd13d7b")
 		(property "Reference" "D6"
-			(at 78.486 75.946 0)
+			(at 59.436 74.676 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -30344,7 +30099,7 @@
 			)
 		)
 		(property "Value" "ESDA5V3L"
-			(at 78.486 78.486 0)
+			(at 61.468 72.39 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -30352,8 +30107,8 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "FP-SOT23-3L-0053390-MFG"
-			(at 74.93 68.58 0)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-416"
+			(at 74.93 73.66 0)
 			(hide yes)
 			(effects
 				(font
@@ -30361,8 +30116,8 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
-			(at 74.93 68.58 0)
+		(property "Datasheet" "https://www.semtech.com/products/circuit-protection/low-capacitance/rclamp0502b"
+			(at 64.77 72.39 0)
 			(hide yes)
 			(effects
 				(font
@@ -30370,8 +30125,8 @@
 				)
 			)
 		)
-		(property "Description" "TVS DIODE 3V SOT23-3"
-			(at 74.93 68.58 0)
+		(property "Description" "Low capacitance unidirectional dual ESD protection diode, SC-75"
+			(at 67.31 73.66 0)
 			(hide yes)
 			(effects
 				(font
@@ -30380,7 +30135,7 @@
 			)
 		)
 		(property "CAPACITANCE" "220pF"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30390,7 +30145,7 @@
 			)
 		)
 		(property "MOUSER DESCRIPTION" "ESDA Series 2 Channel 5.3 V 220 pF SMT Uni-Directional Transil? Array - SOT-23"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30400,7 +30155,7 @@
 			)
 		)
 		(property "DEVICE CLASS L2" "TVS Diodes"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30410,7 +30165,7 @@
 			)
 		)
 		(property "PEAK PULSE POWER" "300W"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30420,7 +30175,7 @@
 			)
 		)
 		(property "IPC LAND PATTERN NAME" "SOT95P255X115-3"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30430,7 +30185,7 @@
 			)
 		)
 		(property "MANUFACTURER PART NUMBER" "ESDA5V3L"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30440,7 +30195,7 @@
 			)
 		)
 		(property "ALTIUM_VALUE" "220pF"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30450,7 +30205,7 @@
 			)
 		)
 		(property "TEMPERATURE RANGE LOW" "-40°C"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30460,7 +30215,7 @@
 			)
 		)
 		(property "DEVICE CLASS L3" "unset"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30470,7 +30225,7 @@
 			)
 		)
 		(property "MAX JUNCTION TEMP" "+150°C"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30480,7 +30235,7 @@
 			)
 		)
 		(property "HEIGHT" "1.4mm"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30490,7 +30245,7 @@
 			)
 		)
 		(property "LEAD FREE" "Yes"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30500,7 +30255,7 @@
 			)
 		)
 		(property "COMPONENTLINK2URL" "https://www.st.com/content/ccc/resource/technical/document/datasheet/eb/9f/a7/ac/7b/b6/46/7f/CD00002057.pdf/files/CD00002057.pdf/jcr:content/translations/en.CD00002057.pdf"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30510,7 +30265,7 @@
 			)
 		)
 		(property "CATEGORY" "Diode"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30520,7 +30275,7 @@
 			)
 		)
 		(property "TEMPERATURE" "-40°C to +150°C"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30530,7 +30285,7 @@
 			)
 		)
 		(property "AUTOMOTIVE" "No"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30540,7 +30295,7 @@
 			)
 		)
 		(property "STANDOFF HEIGHT" "0mm"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30550,7 +30305,7 @@
 			)
 		)
 		(property "PEAK PULSE CURRENT" "25A"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30560,7 +30315,7 @@
 			)
 		)
 		(property "DIRECTION" "Unidirectional"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30570,7 +30325,7 @@
 			)
 		)
 		(property "PACKAGE" "SOT23-3L-0053390"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30580,7 +30335,7 @@
 			)
 		)
 		(property "DIGIKEY DESCRIPTION" "TVS DIODE 3V SOT23-3"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30590,7 +30345,7 @@
 			)
 		)
 		(property "REVERSE STANDOFF VOLTAGE" "3V"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30600,7 +30355,7 @@
 			)
 		)
 		(property "NUMBER OF CHANNELS" "2"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30610,7 +30365,7 @@
 			)
 		)
 		(property "OCTOPART" "https://octopart.com/esda5v3l-stmicroelectronics-347708"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30620,7 +30375,7 @@
 			)
 		)
 		(property "DEVICE CLASS L1" "Circuit Protection"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30630,7 +30385,7 @@
 			)
 		)
 		(property "MANUFACTURER" "STMicroelectronics"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30640,7 +30395,7 @@
 			)
 		)
 		(property "BREAKDOWN VOLTAGE" "5.3V"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30650,7 +30405,7 @@
 			)
 		)
 		(property "TEMPERATURE RANGE HIGH" "+150°C"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30660,7 +30415,7 @@
 			)
 		)
 		(property "ROHS" "TRUE"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30670,7 +30425,7 @@
 			)
 		)
 		(property "COMPONENTLINK2DESCRIPTION" "Datasheet"
-			(at 60.96 68.072 0)
+			(at 66.802 87.63 0)
 			(hide yes)
 			(effects
 				(font
@@ -30877,7 +30632,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "Button_Switch_SMD:SW_MEC_5GSH9"
+		(property "Footprint" "Button_Switch_SMD:SW_SPST_CK_RS282G05A3"
 			(at 119.38 118.11 0)
 			(hide yes)
 			(effects
