@@ -37,7 +37,7 @@ The first line only needs to be run once for every console window. If you get th
 
 After running these commands the node within the specified package should start running and outputting the results to console. For more details on this command see [the ROS2 Jazzy Docs](https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html).
 
-# Example Template
+## Example Template
 
 To test the above methods, you can use the template package located in `software/templates/ros2`. Start by creating a new branch to test this code (or you alternatively implement in your current branch).
 
@@ -48,7 +48,7 @@ git checkout feat/new_branch_name
 
 Create a new folder in the directory `/software/ros_ws/src` called `template_package`. This will be the name of the ros2 package. Copy all the files located in `/software/templates/ros2` into the folder you just created. If you named your folder `template_package` you should be able to run and test the node by following the instructions above.
 
-## Renaming the package
+### Renaming the package
 
 To rename the package you must make several changes.
 
@@ -59,7 +59,7 @@ To rename the package you must make several changes.
   - If using a custom file (from the CMake snippets) the line to change should be in the first few lines of your CMakeLists.txt file. It is the project name value in the `project()` line from the `01-project_setup.cmake` file.
 - Lastly, open `package.xml` and update the name field from `template_package` to `my_new_package`. Also update the description and email to the relevant details if you have not done so already.
 
-## Renaming the node
+### Renaming the node
 
 To rename the node requires a similar process to the package. In this case, the instructions are for a node called `my_node_name`. If using a different name, replace `my_node_name` with your own value.
 
