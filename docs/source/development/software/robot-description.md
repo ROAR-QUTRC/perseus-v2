@@ -56,6 +56,7 @@ perseus_description/
 ## Robot Architecture
 
 The following diagram illustrates the TF architecture of the Perseus Rover when operating with odometry (`/odom`) estimation enabled. This representation shows how major physical components, drivetrain assemblies, and sensors attach to the `base_link`, which serves as the primary reference frame for state estimation, navigation, and perception.
+
 ```dot
 digraph tf_tree {
     rankdir=TB;
