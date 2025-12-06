@@ -48,38 +48,11 @@
         "silk_text_thickness": 0.1,
         "silk_text_upright": false,
         "zones": {
-          "min_clearance": 0.2
+          "min_clearance": 0.5
         }
       },
-      "diff_pair_dimensions": [
-        {
-          "gap": 0.0,
-          "via_gap": 0.0,
-          "width": 0.0
-        }
-      ],
-      "drc_exclusions": [
-        [
-          "annular_width|130050000|129550000|96633711-3f44-4799-bbe9-10672d92c105|00000000-0000-0000-0000-000000000000",
-          ""
-        ],
-        [
-          "annular_width|143550000|129550000|7ec68104-f866-4fbe-a98c-6528ee04c453|00000000-0000-0000-0000-000000000000",
-          ""
-        ],
-        [
-          "silk_edge_clearance|128940000|140000000|42eb697d-db2f-43fb-96ec-3e89bbcf6ade|b778dfbb-2fa0-4b5c-bef4-7e6558c490f7",
-          ""
-        ],
-        [
-          "silk_edge_clearance|144660000|140000000|42eb697d-db2f-43fb-96ec-3e89bbcf6ade|fc79000a-adc4-45a9-97f0-9a1b5b47869b",
-          ""
-        ],
-        [
-          "silk_edge_clearance|144660000|140010000|42eb697d-db2f-43fb-96ec-3e89bbcf6ade|af1d7f99-5dfe-4d2e-bcc6-eb46ba62db5d",
-          ""
-        ]
-      ],
+      "diff_pair_dimensions": [],
+      "drc_exclusions": [],
       "meta": {
         "version": 2
       },
@@ -144,23 +117,23 @@
       },
       "rules": {
         "max_error": 0.005,
-        "min_clearance": 0.1524,
+        "min_clearance": 0.0,
         "min_connection": 0.0,
         "min_copper_edge_clearance": 0.5,
         "min_groove_width": 0.0,
         "min_hole_clearance": 0.25,
-        "min_hole_to_hole": 0.2,
+        "min_hole_to_hole": 0.25,
         "min_microvia_diameter": 0.2,
         "min_microvia_drill": 0.1,
-        "min_resolved_spokes": 1,
-        "min_silk_clearance": 0.1,
-        "min_text_height": 0.7,
-        "min_text_thickness": 0.14,
+        "min_resolved_spokes": 2,
+        "min_silk_clearance": 0.0,
+        "min_text_height": 0.8,
+        "min_text_thickness": 0.08,
         "min_through_hole_diameter": 0.3,
-        "min_track_width": 0.1524,
-        "min_via_annular_width": 0.15,
+        "min_track_width": 0.0,
+        "min_via_annular_width": 0.1,
         "min_via_diameter": 0.5,
-        "solder_mask_to_copper_clearance": 0.005,
+        "solder_mask_to_copper_clearance": 0.0,
         "use_height_for_length_calcs": true
       },
       "teardrop_options": [
@@ -207,27 +180,7 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [
-        0.0,
-        0.1,
-        0.15,
-        0.2,
-        0.25,
-        0.3,
-        0.35,
-        0.4,
-        0.5,
-        0.75,
-        1.0,
-        1.5,
-        2.0,
-        2.5,
-        3.0,
-        4.0,
-        5.0,
-        7.5,
-        10.0
-      ],
+      "track_widths": [],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -254,29 +207,8 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [
-        {
-          "diameter": 0.0,
-          "drill": 0.0
-        },
-        {
-          "diameter": 0.5,
-          "drill": 0.2
-        },
-        {
-          "diameter": 0.6,
-          "drill": 0.3
-        },
-        {
-          "diameter": 1.0,
-          "drill": 0.6
-        },
-        {
-          "diameter": 2.0,
-          "drill": 1.6
-        }
-      ],
-      "zones_allow_external_fillets": true
+      "via_dimensions": [],
+      "zones_allow_external_fillets": false
     },
     "ipc2581": {
       "dist": "",
@@ -477,7 +409,7 @@
       "different_unit_net": "error",
       "duplicate_reference": "error",
       "duplicate_sheet_names": "error",
-      "endpoint_off_grid": "ignore",
+      "endpoint_off_grid": "warning",
       "extra_units": "error",
       "footprint_filter": "ignore",
       "footprint_link_issues": "warning",
@@ -498,7 +430,7 @@
       "no_connect_dangling": "warning",
       "pin_not_connected": "error",
       "pin_not_driven": "error",
-      "pin_to_pin": "error",
+      "pin_to_pin": "warning",
       "power_pin_not_driven": "error",
       "same_local_global_label": "warning",
       "similar_label_and_power": "warning",
@@ -515,26 +447,11 @@
     }
   },
   "libraries": {
-    "pinned_footprint_libs": [
-      "THT",
-      "Project PCB",
-      "SMD"
-    ],
-    "pinned_symbol_libs": [
-      "Manufacturer_Connectors",
-      "Resistor",
-      "Capacitor",
-      "PMIC_MotorDriver",
-      "PMIC_SwitchesDrivers",
-      "PMIC, Load Switches & Drivers",
-      "PMIC, Motor Drivers",
-      "Manufacturer Connectors",
-      "Project_PCB",
-      "Semiconductor_Diodes"
-    ]
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "dc-motor-driver.kicad_pro",
+    "filename": "Smol Brain Board.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -550,7 +467,43 @@
         "microvia_drill": 0.1,
         "name": "Default",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 2147483647,
+        "priority": -1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.2,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "All Nets",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": -1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.2,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "Power",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": -1,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.2,
         "via_diameter": 0.6,
@@ -563,14 +516,27 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": []
+    "netclass_patterns": [
+      {
+        "netclass": "Power",
+        "pattern": "VIN"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "NetD1_C"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "NetC4_1"
+      }
+    ]
   },
   "pcbnew": {
     "last_paths": {
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "../../../university/QUTRC/2025/excavation and construction/3122025-order/",
+      "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",
@@ -587,9 +553,9 @@
       "field_delimiter": ",",
       "keep_line_breaks": false,
       "keep_tabs": false,
-      "name": "---",
+      "name": "CSV",
       "ref_delimiter": ",",
-      "ref_range_delimiter": "-",
+      "ref_range_delimiter": "",
       "string_delimiter": "\""
     },
     "bom_presets": [],
@@ -603,9 +569,33 @@
           "show": true
         },
         {
+          "group_by": false,
+          "label": "Qty",
+          "name": "${QUANTITY}",
+          "show": true
+        },
+        {
           "group_by": true,
           "label": "Value",
           "name": "Value",
+          "show": true
+        },
+        {
+          "group_by": true,
+          "label": "DNP",
+          "name": "${DNP}",
+          "show": true
+        },
+        {
+          "group_by": true,
+          "label": "Exclude from BOM",
+          "name": "${EXCLUDE_FROM_BOM}",
+          "show": true
+        },
+        {
+          "group_by": true,
+          "label": "Exclude from Board",
+          "name": "${EXCLUDE_FROM_BOARD}",
           "show": true
         },
         {
@@ -619,90 +609,12 @@
           "label": "Datasheet",
           "name": "Datasheet",
           "show": true
-        },
-        {
-          "group_by": false,
-          "label": "Description",
-          "name": "Description",
-          "show": false
-        },
-        {
-          "group_by": false,
-          "label": "Qty",
-          "name": "${QUANTITY}",
-          "show": true
-        },
-        {
-          "group_by": false,
-          "label": "#",
-          "name": "${ITEM_NUMBER}",
-          "show": false
-        },
-        {
-          "group_by": false,
-          "label": "Supplier",
-          "name": "Supplier",
-          "show": true
-        },
-        {
-          "group_by": false,
-          "label": "Supplier Link",
-          "name": "Supplier Link",
-          "show": true
-        },
-        {
-          "group_by": false,
-          "label": "Supplier Part No",
-          "name": "Supplier Part No",
-          "show": true
-        },
-        {
-          "group_by": false,
-          "label": "Supplier_link",
-          "name": "Supplier_link",
-          "show": false
-        },
-        {
-          "group_by": false,
-          "label": "Supplier_part_number",
-          "name": "Supplier_part_number",
-          "show": false
-        },
-        {
-          "group_by": false,
-          "label": "Value 2",
-          "name": "Value 2",
-          "show": false
-        },
-        {
-          "group_by": false,
-          "label": "Value 3",
-          "name": "Value 3",
-          "show": false
-        },
-        {
-          "group_by": true,
-          "label": "DNP",
-          "name": "${DNP}",
-          "show": true
-        },
-        {
-          "group_by": true,
-          "label": "Exclude from BOM",
-          "name": "${EXCLUDE_FROM_BOM}",
-          "show": false
-        },
-        {
-          "group_by": true,
-          "label": "Exclude from Board",
-          "name": "${EXCLUDE_FROM_BOARD}",
-          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
-      "include_excluded_from_bom": false,
-      "name": "",
+      "include_excluded_from_bom": true,
+      "name": "Default Editing",
       "sort_asc": true,
       "sort_field": "Reference"
     },
@@ -719,14 +631,14 @@
       "intersheets_ref_show": false,
       "intersheets_ref_suffix": "",
       "junction_size_choice": 3,
-      "label_size_ratio": 0.25,
+      "label_size_ratio": 0.375,
       "operating_point_overlay_i_precision": 3,
       "operating_point_overlay_i_range": "~A",
       "operating_point_overlay_v_precision": 3,
       "operating_point_overlay_v_range": "~V",
       "overbar_offset_ratio": 1.23,
-      "pin_symbol_size": 0.0,
-      "text_offset_ratio": 0.08
+      "pin_symbol_size": 25.0,
+      "text_offset_ratio": 0.15
     },
     "legacy_lib_dir": "",
     "legacy_lib_list": [],
@@ -734,7 +646,7 @@
       "version": 1
     },
     "net_format_name": "",
-    "page_layout_descr_file": "../templates/sheet.kicad_wks",
+    "page_layout_descr_file": "empty.kicad_wks",
     "plot_directory": "",
     "space_save_all_events": true,
     "spice_current_sheet_as_root": false,
@@ -748,13 +660,25 @@
   },
   "sheets": [
     [
-      "73c2d227-b909-48af-abb1-8443937e28d6",
+      "d947cca5-df2f-4130-8179-c021102beaa2",
       "Root"
     ]
   ],
   "text_variables": {
-    "DRAWN_BY": "James Nichol, Maurice Blake",
-    "PROJECT": "Perseus Rover",
-    "SUBSYSTEM": "Excavation & Construction"
+    "CONFIGURATIONPARAMETERS": "",
+    "CONFIGURATORNAME": "",
+    "DOCUMENTNUMBER": "1",
+    "ENGINEER": "James Nichol",
+    "ISUSERCONFIGURABLE": "",
+    "PROJECT": "Perseus",
+    "RULE": "UNIONINDEX=0¦RULEKIND=Width¦NETSCOPE=AnyNet¦LAYERKIND=SameLayer¦NAME=Schematic Width Constraint¦MAXLIMIT=800mil¦MINLIMIT=6mil¦PREFEREDWIDTH=10mil¦MIDLAYER1_MINWIDTH=10mil¦MIDLAYER1_MAXWIDTH=10mil¦MIDLAYER2_MINWIDTH=10mil¦MIDLAYER2_MAXWIDTH=10mil¦MIDLAYER3_MINWIDTH=10mil¦MIDLAYER3_MAXWIDTH=10mil¦MIDLAYER4_MINWIDTH=10mil¦MIDLAYER4_MAXWIDTH=10mil¦MIDLAYER5_MINWIDTH=10mil¦MIDLAYER5_MAXWIDTH=10mil¦MIDLAYER6_MINWIDTH=10mil¦MIDLAYER6_MAXWIDTH=10mil¦MIDLAYER7_MINWIDTH=10mil¦MIDLAYER7_MAXWIDTH=10mil¦MIDLAYER8_MINWIDTH=10mil¦MIDLAYER8_MAXWIDTH=10mil¦MIDLAYER9_MINWIDTH=10mil¦MIDLAYER9_MAXWIDTH=10mil¦MIDLAYER10_MINWIDTH=10mil¦MIDLAYER10_MAXWIDTH=10mil¦MIDLAYER11_MINWIDTH=10mil¦MIDLAYER11_MAXWIDTH=10mil¦MIDLAYER12_MINWIDTH=10mil¦MIDLAYER12_MAXWIDTH=10mil¦MIDLAYER13_MINWIDTH=10mil¦MIDLAYER13_MAXWIDTH=10mil¦MIDLAYER14_MINWIDTH=10mil¦MIDLAYER14_MAXWIDTH=10mil¦MIDLAYER15_MINWIDTH=10mil¦MIDLAYER15_MAXWIDTH=10mil¦MIDLAYER16_MINWIDTH=10mil¦MIDLAYER16_MAXWIDTH=10mil¦MIDLAYER17_MINWIDTH=10mil¦MIDLAYER17_MAXWIDTH=10mil¦MIDLAYER18_MINWIDTH=10mil¦MIDLAYER18_MAXWIDTH=10mil¦MIDLAYER19_MINWIDTH=10mil¦MIDLAYER19_MAXWIDTH=10mil¦MIDLAYER20_MINWIDTH=10mil¦MIDLAYER20_MAXWIDTH=10mil¦MIDLAYER21_MINWIDTH=10mil¦MIDLAYER21_MAXWIDTH=10mil¦MIDLAYER22_MINWIDTH=10mil¦MIDLAYER22_MAXWIDTH=10mil¦MIDLAYER23_MINWIDTH=10mil¦MIDLAYER23_MAXWIDTH=10mil¦MIDLAYER24_MINWIDTH=10mil¦MIDLAYER24_MAXWIDTH=10mil¦MIDLAYER25_MINWIDTH=10mil¦MIDLAYER25_MAXWIDTH=10mil¦MIDLAYER26_MINWIDTH=10mil¦MIDLAYER26_MAXWIDTH=10mil¦MIDLAYER27_MINWIDTH=10mil¦MIDLAYER27_MAXWIDTH=10mil¦MIDLAYER28_MINWIDTH=10mil¦MIDLAYER28_MAXWIDTH=10mil¦MIDLAYER29_MINWIDTH=10mil¦MIDLAYER29_MAXWIDTH=10mil¦MIDLAYER30_MINWIDTH=10mil¦MIDLAYER30_MAXWIDTH=10mil¦MINIMP=50.000000¦MAXIMP=50.000000¦FAVIMP=50.000000¦UNIT=Imperial",
+    "SHEETSYMBOLDESIGNATOR": "",
+    "SHEETTOTAL": "1",
+    "SPICEMODELCACHE": "",
+    "SUBSYSTEM": "Embedded",
+    "VERSIONCONTROL_PROJFOLDERREVNUMBER": "",
+    "VERSIONCONTROL_PROJFOLDERREVNUMBERSHORT": "",
+    "VERSIONCONTROL_REVNUMBER": "",
+    "VERSIONCONTROL_REVNUMBERSHORT": ""
   }
 }

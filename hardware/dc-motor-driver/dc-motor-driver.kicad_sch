@@ -6,212 +6,11 @@
 	(paper "A4")
 	(title_block
 		(title "DC Motor Driver")
-		(date "2025-04-15")
-		(rev "V0R1")
+		(date "2025-12-02")
+		(rev "V0R1.1")
 		(company "QUTRC")
 	)
 	(lib_symbols
-		(symbol "Capacitor:C_100u_35V"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0.254)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "C"
-				(at 0.635 2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "100u"
-				(at 0.635 -2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x7.7"
-				(at 0.762 -11.43 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "https://www.we-online.com/components/products/datasheet/865080545012.pdf"
-				(at 5.08 -17.78 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-					(hide yes)
-				)
-			)
-			(property "Description" "Polarized 100u 35V capacitor"
-				(at 0 10.16 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Value 2" "35V"
-				(at 0.762 -4.572 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Supplier" "DigiKey"
-				(at 5.08 -22.86 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-					(hide yes)
-				)
-			)
-			(property "Supplier Part No" "732-8511-1-ND"
-				(at 15.24 -22.86 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-					(hide yes)
-				)
-			)
-			(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/w%C3%BCrth-elektronik/865080545012/5728106"
-				(at 5.08 -20.32 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "cap capacitor"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "CP_Elec_6.3x7.7"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "C_100u_35V_0_1"
-				(rectangle
-					(start -2.286 0.508)
-					(end 2.286 1.016)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.778 2.286) (xy -0.762 2.286)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 2.794) (xy -1.27 1.778)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start 2.286 -0.508)
-					(end -2.286 -1.016)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-			)
-			(symbol "C_100u_35V_1_1"
-				(pin passive line
-					(at 0 3.81 270)
-					(length 2.794)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -3.81 90)
-					(length 2.794)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "Connector:Screw_Terminal_01x02"
 			(pin_names
 				(offset 1.016)
@@ -2885,12 +2684,6 @@
 		(uuid "df4baed7-9ffd-4c21-8f1b-fe9b3cf975ef")
 	)
 	(junction
-		(at 262.89 78.994)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "e3d532e9-8794-4c65-8d28-6cae47a22868")
-	)
-	(junction
 		(at 158.75 38.1)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2923,6 +2716,10 @@
 	(no_connect
 		(at 129.54 96.52)
 		(uuid "06ff6da6-3449-46db-868b-3467e341a4e2")
+	)
+	(no_connect
+		(at 129.54 127)
+		(uuid "09875c44-60d0-483d-b44a-8a921146b729")
 	)
 	(no_connect
 		(at 175.26 93.98)
@@ -2959,6 +2756,10 @@
 	(no_connect
 		(at 129.54 93.98)
 		(uuid "c81fa452-2202-422e-beb2-3f77e48d483c")
+	)
+	(no_connect
+		(at 129.54 124.46)
+		(uuid "d2d914a1-4be1-4a65-9c81-0010c7e326b1")
 	)
 	(no_connect
 		(at 129.54 99.06)
@@ -3085,16 +2886,6 @@
 			(type default)
 		)
 		(uuid "214f3d3c-2ee8-4470-a07c-cd00ae72d7df")
-	)
-	(wire
-		(pts
-			(xy 27.94 27.94) (xy 25.4 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "240da8c5-dee2-4ec2-8120-8d3d164d3e0e")
 	)
 	(wire
 		(pts
@@ -3225,16 +3016,6 @@
 			(type default)
 		)
 		(uuid "47f5b052-d116-4355-a245-25b8fe0fc9de")
-	)
-	(wire
-		(pts
-			(xy 262.89 77.978) (xy 262.89 78.994)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4839f9e6-c394-42da-90c3-d3e7a7f34d0d")
 	)
 	(wire
 		(pts
@@ -3378,13 +3159,13 @@
 	)
 	(wire
 		(pts
-			(xy 243.332 78.994) (xy 243.332 80.264)
+			(xy 30.226 25.4) (xy 25.4 25.4)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "60c555f5-724c-42e1-8bdc-8d63065d40b7")
+		(uuid "5f4b4d5e-a239-47ae-aece-87c34e044080")
 	)
 	(wire
 		(pts
@@ -3395,6 +3176,16 @@
 			(type default)
 		)
 		(uuid "62e5e9a2-4436-415b-8e22-571ad4b63f9f")
+	)
+	(wire
+		(pts
+			(xy 243.332 79.502) (xy 243.332 80.264)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "63ada588-0af2-4f58-8af8-085c06c49153")
 	)
 	(wire
 		(pts
@@ -3578,16 +3369,6 @@
 	)
 	(wire
 		(pts
-			(xy 243.332 78.994) (xy 262.89 78.994)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8716ff04-4f0e-4569-8faa-9d0a336ca2d0")
-	)
-	(wire
-		(pts
 			(xy 107.95 73.66) (xy 161.29 73.66)
 		)
 		(stroke
@@ -3648,6 +3429,16 @@
 	)
 	(wire
 		(pts
+			(xy 247.142 95.758) (xy 249.174 95.758)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9e92a7bc-967f-4580-bb64-41f17272fba8")
+	)
+	(wire
+		(pts
 			(xy 54.61 38.1) (xy 54.61 63.5)
 		)
 		(stroke
@@ -3675,16 +3466,6 @@
 			(type default)
 		)
 		(uuid "a6c6b48b-248c-48ac-a031-1458a114e0e0")
-	)
-	(wire
-		(pts
-			(xy 27.94 25.4) (xy 25.4 25.4)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a8f04b43-6f32-42a1-a1b5-0c11c3593c39")
 	)
 	(wire
 		(pts
@@ -3748,16 +3529,6 @@
 	)
 	(wire
 		(pts
-			(xy 243.332 90.424) (xy 243.332 95.25)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b80fc049-323f-4ff9-95f8-36b3acacceea")
-	)
-	(wire
-		(pts
 			(xy 44.45 58.42) (xy 59.69 58.42)
 		)
 		(stroke
@@ -3765,6 +3536,16 @@
 			(type default)
 		)
 		(uuid "b974de13-ee72-4bef-8de5-5109cbe11c7a")
+	)
+	(wire
+		(pts
+			(xy 243.332 90.424) (xy 243.332 98.298)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ba2068d7-7224-41df-adc8-a01316a0595c")
 	)
 	(wire
 		(pts
@@ -3785,6 +3566,16 @@
 			(type default)
 		)
 		(uuid "bfa10ff9-02fe-498e-b0f7-782fa1a67555")
+	)
+	(wire
+		(pts
+			(xy 30.226 27.94) (xy 25.4 27.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c1931cb3-7211-4193-b513-261619b42d16")
 	)
 	(wire
 		(pts
@@ -3855,6 +3646,16 @@
 			(type default)
 		)
 		(uuid "cdd4d174-cee9-44d0-b38c-1738e969d97c")
+	)
+	(wire
+		(pts
+			(xy 243.332 98.298) (xy 249.174 98.298)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cf88d365-c8bc-4a72-b65d-5bfd44316b22")
 	)
 	(wire
 		(pts
@@ -3965,16 +3766,6 @@
 			(type default)
 		)
 		(uuid "dda765bf-198d-4bec-b928-19a72663a59c")
-	)
-	(wire
-		(pts
-			(xy 262.89 78.994) (xy 262.89 80.518)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e855a19a-2ff4-4aea-8fda-1fa5cff828e1")
 	)
 	(wire
 		(pts
@@ -4597,8 +4388,73 @@
 		(uuid "fd0cd421-b86f-4e27-81d5-df7d65848d12")
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 247.142 95.758 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "02c37302-82b4-45c8-9470-c5dc9a0db4e8")
+		(property "Reference" "#PWR061"
+			(at 247.142 89.408 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 247.142 91.694 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 247.142 95.758 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 247.142 95.758 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 247.142 95.758 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "1819ee0c-9377-4da8-97f8-b0909836fbff")
+		)
+		(instances
+			(project "dc-motor-driver"
+				(path "/fc286157-4263-4a46-ad05-98b3354aa28a"
+					(reference "#PWR061")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Connector:Screw_Terminal_01x02")
-		(at 248.412 97.79 0)
+		(at 254.254 98.298 0)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
@@ -4607,7 +4463,7 @@
 		(dnp no)
 		(uuid "035f61b6-d106-44b9-97fd-1eb24e6ef82f")
 		(property "Reference" "J5"
-			(at 251.587 97.7901 0)
+			(at 257.429 98.2981 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4616,7 +4472,7 @@
 			)
 		)
 		(property "Value" "MAG"
-			(at 251.587 95.2501 0)
+			(at 257.429 95.7581 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4625,7 +4481,7 @@
 			)
 		)
 		(property "Footprint" "TerminalBlock_4Ucon:TerminalBlock_4Ucon_1x02_P3.50mm_Horizontal"
-			(at 248.412 97.79 0)
+			(at 254.254 98.298 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4634,7 +4490,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 248.412 97.79 0)
+			(at 254.254 98.298 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4643,7 +4499,7 @@
 			)
 		)
 		(property "Description" "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 248.412 97.79 0)
+			(at 254.254 98.298 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4652,7 +4508,7 @@
 			)
 		)
 		(property "Supplier" ""
-			(at 248.412 97.79 0)
+			(at 254.254 98.298 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4660,7 +4516,7 @@
 			)
 		)
 		(property "Supplier_link" ""
-			(at 248.412 97.79 0)
+			(at 254.254 98.298 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4668,7 +4524,7 @@
 			)
 		)
 		(property "Supplier_part_number" ""
-			(at 248.412 97.79 0)
+			(at 254.254 98.298 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4854,7 +4710,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 27.94 27.94 90)
+		(at 30.226 25.4 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4863,7 +4719,7 @@
 		(fields_autoplaced yes)
 		(uuid "14c1f40d-a5f1-4c8d-885c-12b652da660c")
 		(property "Reference" "#PWR05"
-			(at 34.29 27.94 0)
+			(at 36.576 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4872,7 +4728,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 31.115 27.9401 90)
+			(at 33.401 25.4001 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4881,7 +4737,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 27.94 27.94 0)
+			(at 30.226 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4890,7 +4746,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 27.94 27.94 0)
+			(at 30.226 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4899,7 +4755,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 27.94 27.94 0)
+			(at 30.226 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4987,7 +4843,7 @@
 	)
 	(symbol
 		(lib_id "power:VCC")
-		(at 262.89 77.978 0)
+		(at 243.332 79.502 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4996,7 +4852,7 @@
 		(fields_autoplaced yes)
 		(uuid "1aac58d2-9c93-4578-b11a-612aa7f74dd1")
 		(property "Reference" "#PWR060"
-			(at 262.89 81.788 0)
+			(at 243.332 83.312 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5005,7 +4861,7 @@
 			)
 		)
 		(property "Value" "VCC"
-			(at 262.89 72.898 0)
+			(at 243.332 74.93 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5013,7 +4869,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 262.89 77.978 0)
+			(at 243.332 79.502 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5022,7 +4878,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 262.89 77.978 0)
+			(at 243.332 79.502 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5031,7 +4887,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 262.89 77.978 0)
+			(at 243.332 79.502 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5053,7 +4909,7 @@
 	)
 	(symbol
 		(lib_id "power:VCC")
-		(at 27.94 25.4 270)
+		(at 30.226 27.94 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5062,7 +4918,7 @@
 		(fields_autoplaced yes)
 		(uuid "1c44c56c-3af4-4e48-9d6d-33293cb669be")
 		(property "Reference" "#PWR06"
-			(at 24.13 25.4 0)
+			(at 26.416 27.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5071,7 +4927,7 @@
 			)
 		)
 		(property "Value" "VCC"
-			(at 31.115 25.4001 90)
+			(at 33.401 27.9401 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5080,7 +4936,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 27.94 25.4 0)
+			(at 30.226 27.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5089,7 +4945,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 27.94 25.4 0)
+			(at 30.226 27.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5098,7 +4954,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 27.94 25.4 0)
+			(at 30.226 27.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5658,71 +5514,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 243.332 97.79 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "627b1c6f-079d-4761-89a3-350df4697eca")
-		(property "Reference" "#PWR062"
-			(at 243.332 104.14 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 243.332 101.854 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 243.332 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 243.332 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 243.332 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "9e5d98b4-c0b7-4008-a8ca-8899f019faad")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a"
-					(reference "#PWR062")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Transistor_FET:CSD16301Q2")
 		(at 240.792 85.344 0)
 		(unit 1)
@@ -6269,71 +6060,6 @@
 			(project "dc-motor-driver"
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a"
 					(reference "#PWR056")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 262.89 88.138 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "821bbe8d-232e-4aac-be78-b16aa74b68d8")
-		(property "Reference" "#PWR061"
-			(at 262.89 94.488 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 262.89 92.202 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 262.89 88.138 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 262.89 88.138 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 262.89 88.138 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "1399bf05-9466-4861-93b2-72c4dfbe3ba5")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a"
-					(reference "#PWR061")
 					(unit 1)
 				)
 			)
@@ -6992,115 +6718,6 @@
 			(project ""
 				(path "/fc286157-4263-4a46-ad05-98b3354aa28a"
 					(reference "R13")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Capacitor:C_100u_35V")
-		(at 262.89 84.328 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "ff0bacbe-cb0b-4e3b-ae51-19a9dbd12938")
-		(property "Reference" "C19"
-			(at 266.192 81.788 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "100u"
-			(at 266.192 84.328 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x7.7"
-			(at 263.652 95.758 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.we-online.com/components/products/datasheet/865080545012.pdf"
-			(at 267.97 102.108 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Description" "Polarized 100u 35V capacitor"
-			(at 262.89 74.168 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value 2" "35V"
-			(at 266.192 86.868 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 267.97 107.188 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Supplier Part No" "732-8511-1-ND"
-			(at 278.13 107.188 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/w%C3%BCrth-elektronik/865080545012/5728106"
-			(at 267.97 104.648 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "7f9069b2-24a4-4959-8d60-33c6b8848468")
-		)
-		(pin "2"
-			(uuid "9558adda-ce5d-4e51-86d9-12b68dad9e54")
-		)
-		(instances
-			(project "dc-motor-driver"
-				(path "/fc286157-4263-4a46-ad05-98b3354aa28a"
-					(reference "C19")
 					(unit 1)
 				)
 			)

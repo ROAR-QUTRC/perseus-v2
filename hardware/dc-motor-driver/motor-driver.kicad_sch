@@ -5,8 +5,10 @@
 	(uuid "088e7184-8f29-4d97-bbf4-3a0dfb16c037")
 	(paper "A4")
 	(title_block
-		(title "Motor Driver")
+		(title "DC Motor Driver")
+		(date "2025-12-02")
 		(rev "V0R1")
+		(company "QUTRC")
 	)
 	(lib_symbols
 		(symbol "Capacitor:C_100n_50V_0603"
