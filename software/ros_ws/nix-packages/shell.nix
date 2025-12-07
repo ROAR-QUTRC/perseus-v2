@@ -50,6 +50,7 @@ pkgs.mkShell {
             joint-state-publisher-gui
             joy
             mecanum-drive-controller
+            nav2-common
             navigation2
             nlohmann_json
             openssl
