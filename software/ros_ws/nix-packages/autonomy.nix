@@ -9,6 +9,7 @@
   rclcpp,
   robot-localization,
   slam-toolbox,
+  twist-mux,
   xacro,
 }:
 buildRosPackage rec {
@@ -28,6 +29,7 @@ buildRosPackage rec {
     rclcpp
     robot-localization
     slam-toolbox
+    twist-mux
     xacro
   ];
   nativeBuildInputs = [ ament-cmake ];

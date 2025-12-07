@@ -34,7 +34,7 @@ slam_toolbox:
     #map_start_at_dock: true
     debug_logging: false
     throttle_scans: 1
-    transform_publish_period: 0.0 #if 0 never publishes odometry
+    transform_publish_period: 0.02 # Publish map->odom transform at 50Hz
     # Multi-threading parameters
     enable_interactive_mode: true
     publish_period: 0.1
