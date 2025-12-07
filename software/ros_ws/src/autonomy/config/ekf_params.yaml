@@ -10,7 +10,7 @@ ekf_filter_node:
     sensor_timeout: 0.1
     # If this is set to true, no 3D information will be used in your state estimate.
     # Use this if you are operating in a planar environment and want to ignore the effect of small variations in the ground plane that might otherwise be detected by, for example, an IMU.
-    two_d_mode: true  # Keep planar for ground robot on flat terrain
+    two_d_mode: true # Keep planar for ground robot on flat terrain
     # Whether to publish the acceleration state. Defaults to false if unspecified.
     publish_acceleration: false
     # Whether to broadcast the transformation over the /tf topic. Defaults to true if unspecified.
