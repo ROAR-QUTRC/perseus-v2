@@ -61,7 +61,7 @@ When checking if a value is truthy or falsy, always prefer the boolean evaluatio
 ```js
 let foo?: string | null = ""
 
-If (foo) {
+if (foo) {
     // Truthy value
 } else if (foo === "") {
     // Falsy but specifically ""
@@ -70,7 +70,7 @@ If (foo) {
 
 ## Spreading
 
-To avoid unexpected overrides while spreading, the spread value should appear as the first in the comma sperated list.
+To avoid unexpected overrides while spreading, the spread value should appear as the first in the comma separated list.
 
 ```js
 let draft = {
@@ -106,7 +106,7 @@ Built in shorthands and functions should be used where possible instead of c sty
 
 ## Always Use Semicolons
 
-Semicolons should he used primarily to improve code readability and avoid strange syntax like:
+Semicolons should be used primarily to improve code readability and avoid strange syntax like:
 
 ```js
 foo = bar;
