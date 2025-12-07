@@ -4,7 +4,7 @@ tocdepth: 4
 
 # Framework Specific Standards
 
-Most frameworks will have their own documentation and development frameworks wish should be read in conjunction with this document.
+Most frameworks will have their own documentation and development frameworks which should be read in conjunction with this document.
 This page fills any gaps in each frameworks own documentation and also includes any other amendments necessary for our use case.
 
 ## ROS Standards
@@ -45,5 +45,3 @@ Topics should be named hierarchically, typically with the first level of the nam
 #### General
 
 If there's an appropriate pre-existing ROS message type, use it. This simplifies development and also allows for greater interoperability with other pre-existing ROS software.
-
-## Svelte Standards
