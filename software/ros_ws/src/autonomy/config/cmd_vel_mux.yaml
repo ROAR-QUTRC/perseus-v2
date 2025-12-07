@@ -5,10 +5,10 @@ cmd_vel_mux:
       - name: "Joystick"
         topic: "/joy_vel"
         timeout: 0.5
-        priority: 10  # Higher priority - joystick overrides nav
+        priority: 10 # Higher priority - joystick overrides nav
         short_desc: "Joystick velocity commands"
       - name: "Navigation"
         topic: "/cmd_vel_nav"
         timeout: 0.5
-        priority: 1   # Lower priority - nav runs when joystick inactive
+        priority: 1 # Lower priority - nav runs when joystick inactive
         short_desc: "Navigation stack velocity commands"
