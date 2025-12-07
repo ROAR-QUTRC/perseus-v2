@@ -56,7 +56,7 @@ def generate_launch_description():
     use_respawn = LaunchConfiguration("use_respawn")
     log_level = LaunchConfiguration("log_level")
 
-    # Nav2 lifecycle nodes
+    # Nav2 lifecycle nodes (no map_server or amcl needed for SLAM mode - SLAM Toolbox provides the map)
     lifecycle_nodes = [
         "controller_server",
         "smoother_server",
@@ -67,8 +67,6 @@ def generate_launch_description():
         "bt_navigator",
         "waypoint_follower",
         "docking_server",
-        "map_server",
-        "amcl",
     ]
 
     arguments = [
@@ -105,8 +103,8 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "cmd_vel_topic",
-            default_value="/joy_vel",
-            description="Topic name for cmd_vel commands (use /joy_vel for xbox controller compatibility)",
+            default_value="/cmd_vel",
+            description="Topic name for cmd_vel commands (mux output)",
         ),
         # SLAM arguments
         DeclareLaunchArgument(
@@ -257,32 +255,11 @@ def generate_launch_description():
     )
 
     # Nav2 nodes (non-composable)
+    # Note: map_server and amcl are NOT included here because SLAM Toolbox provides the map
     load_nav2_nodes = GroupAction(
         condition=IfCondition(PythonExpression(["not ", use_composition])),
         actions=[
             SetParameter("use_sim_time", use_sim_time),
-            Node(
-                package="nav2_map_server",
-                executable="map_server",
-                name="map_server",
-                output="screen",
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
-            ),
-            Node(
-                package="nav2_amcl",
-                executable="amcl",
-                name="amcl",
-                output="screen",
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
-            ),
             Node(
                 package="nav2_controller",
                 executable="controller_server",
@@ -393,6 +370,7 @@ def generate_launch_description():
     )
 
     # Nav2 composable nodes
+    # Note: map_server and amcl are NOT included here because SLAM Toolbox provides the map
     load_composable_nav2_nodes = GroupAction(
         condition=IfCondition(use_composition),
         actions=[
@@ -400,20 +378,6 @@ def generate_launch_description():
             LoadComposableNodes(
                 target_container=container_name_full,
                 composable_node_descriptions=[
-                    ComposableNode(
-                        package="nav2_map_server",
-                        plugin="nav2_map_server::MapServer",
-                        name="map_server",
-                        parameters=[configured_params],
-                        remappings=remappings,
-                    ),
-                    ComposableNode(
-                        package="nav2_amcl",
-                        plugin="nav2_amcl::AmclNode",
-                        name="amcl",
-                        parameters=[configured_params],
-                        remappings=remappings,
-                    ),
                     ComposableNode(
                         package="nav2_controller",
                         plugin="nav2_controller::ControllerServer",
@@ -490,9 +454,28 @@ def generate_launch_description():
         ],
     )
 
+    # cmd_vel mux to combine joystick and navigation commands
+    cmd_vel_mux_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("autonomy"),
+                        "launch",
+                        "cmd_vel_mux.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
     launch_files = [
         stdout_linebuf_envvar,
         perseus_lite_launch,
+        cmd_vel_mux_launch,
         ekf_node,
         slam_toolbox,
         configure_slam_event,
