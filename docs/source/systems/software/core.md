@@ -2,7 +2,7 @@
 
 This is mostly ROS code, and is located in `software/ros_ws/src/`.
 Since it's a ROS2 project, it's comprised of code in two languages - C++ and Python.
-Although, as detailed in the [standards](project:/standards/software.md), we try to keep all the software to C++, there are some cases for which Python just makes more sense (such as input handling - see the `input_devices` package).
+Although, as detailed in the [standards](project:/standards/software/general.md), we try to keep all the software to C++, there are some cases for which Python just makes more sense (such as input handling - see the `input_devices` package).
 The C++ code is all built using [CMake](https://cmake.org/) since that's what ROS2 uses by default, and extending that to non-ROS code allows easy interoperability, as you'll see shortly.
 
 Internally, the code is split into several sections:
