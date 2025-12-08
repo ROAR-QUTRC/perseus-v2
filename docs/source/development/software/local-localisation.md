@@ -56,14 +56,12 @@ Without sensor fusion, the rover would either:
 **4. Fusion is Required to Achieve Stable Localisation**
 By combining IMU and encoder data through an EKF, the system:
 
-- Compensates for the drift of the IMU
-- Corrects encoder errors during slip
-- Produces a **consistent and bounded** pose estimate
-- Supports higher-level navigation algorithms (Nav2, mapping, hazard avoidance, etc.)
-  the rest of your documentation.
-  :::
-
-*
+* Compensates for the drift of the IMU
+* Corrects encoder errors during slip
+* Produces a **consistent and bounded** pose estimate
+* Supports higher-level navigation algorithms (Nav2, mapping, hazard avoidance, etc.)
+ the rest of your documentation.
+:::
 
 ## Tuning Parameters
 
@@ -199,81 +197,91 @@ Each Boolean corresponds to a state variable in the filter’s 15-element state 
 
 Nice, this is shaping up really well. Here’s a **compact state-space section** you can drop under **“State Variables”** (and/or after the tuning part).
 
-- **15 Element State Space Matrices:**
+#### **15 Element State Space Matrices:**
 
 The EKF in `robot_localization` uses a 15-dimensional state vector:
-
-$$
-{
+$ {
 \mathbf{x} =
 \begin{bmatrix}
 x & y & z & \phi & \theta & \psi & v_x & v_y & v_z & \omega_x & \omega_y & \omega_z & a_x & a_y & a_z
 \end{bmatrix}^\top
-}
-$$
-
+} $
 where:
 
 | Index | Symbol                             | Meaning                          |
 | ----- | ---------------------------------- | -------------------------------- |
-| 0–2   | $$(x, y, z)$$                      | Position in `odom` frame         |
-| 3–5   | $$(\phi, \theta, \psi)$$           | Roll, pitch, yaw (RPY)           |
-| 6–8   | $$(v_x, v_y, v_z)$$                | Linear velocities in `odom`      |
-| 9–11  | $$(\omega_x, \omega_y, \omega_z)$$ | Angular velocities (body / odom) |
-| 12–14 | $$(a_x, a_y, a_z)$$                | Linear accelerations             |
+| 0–2   | $(x, y, z)$                      | Position in `odom` frame         |
+| 3–5   | $(\phi, \theta, \psi)$         | Roll, pitch, yaw                 |
+| 6–8   | $(v_x, v_y, v_z)$                | Linear velocities in `odom`      |
+| 9–11  | $(\omega_x, \omega_y, \omega_z)$ | Angular velocities (body / odom) |
+| 12–14 | $(a_x, a_y, a_z)$               | Linear accelerations             |
 
----
 
-### Process Model (Continuous Time)
+In our case, we let the **IMU provide orientation, angular velocity, and linear acceleration**, while the **wheel encoders provide linear velocity and yaw-rate information**. By selectively enabling these elements in the `*_config` arrays, each sensor contributes only the components it can measure reliably. The EKF then fuses these complementary measurements into a single, drift-bounded state estimate:
 
-We assume a constant-acceleration / constant-angular-velocity model:
+* **Encoders** stabilise the rover’s short-term linear motion and yaw.
+* **IMU** stabilises orientation, angular motion, and short-term accelerations.
+* **Process and measurement covariances** determine how heavily the EKF trusts each source.
 
-[
-\begin{aligned}
-\dot{\mathbf{p}} &= \mathbf{v} \
-\dot{\boldsymbol{\Theta}} &= \boldsymbol{\omega} \
-\dot{\mathbf{v}} &= \mathbf{a} \
-\dot{\boldsymbol{\omega}} &= \mathbf{0} \
-\dot{\mathbf{a}} &= \mathbf{0}
-\end{aligned}
-]
+This selective fusion ensures that each state variable in the 15-element vector is updated by the best available sensor, while the EKF model propagates the full state over time. The result is a smooth, consistent, and reliable odometry estimate suitable for local navigation, control, and downstream modules such as Nav2, mapping, or hazard detection.
 
-with
-(\mathbf{p} = [x, y, z]^\top),
-(\boldsymbol{\Theta} = [\phi, \theta, \psi]^\top),
-(\mathbf{v} = [v_x, v_y, v_z]^\top),
-(\boldsymbol{\omega} = [\omega_x, \omega_y, \omega_z]^\top),
-(\mathbf{a} = [a_x, a_y, a_z]^\top).
 
----
+#### **Tuning `process_noise_covariance` and `initial_estimate_covariance`**
 
-### Discrete-Time State Transition
+In `robot_localization`, these two matrices control **how the EKF behaves over time**:
 
-For a time step (\Delta t), a simple Euler discretisation gives:
+* `process_noise_covariance` → how much the filter believes the state can change *between* measurements.
+* `initial_estimate_covariance` → how uncertain the filter is about the **starting pose and state**.
 
-[
-\mathbf{x}*k = \mathbf{F}(\Delta t),\mathbf{x}*{k-1} + \mathbf{w}_k
-]
+```yaml
+# Process noise model for the EKF
+process_noise_covariance: [ ... ]
 
-with block structure:
+# Initial uncertainty in the state estimate
+initial_estimate_covariance: [1e-9, 0, 0, ...]
+```
 
-[
-\mathbf{F} =
-\begin{bmatrix}
-\mathbf{I}_3 & \mathbf{0}_3 & \Delta t,\mathbf{I}_3 & \mathbf{0}_3 & \tfrac{1}{2}\Delta t^2,\mathbf{I}_3 \
-\mathbf{0}_3 & \mathbf{I}_3 & \mathbf{0}_3 & \Delta t,\mathbf{I}_3 & \mathbf{0}_3 \
-\mathbf{0}_3 & \mathbf{0}_3 & \mathbf{I}_3 & \mathbf{0}_3 & \Delta t,\mathbf{I}_3 \
-\mathbf{0}_3 & \mathbf{0}_3 & \mathbf{0}_3 & \mathbf{I}_3 & \mathbf{0}_3 \
-\mathbf{0}_3 & \mathbf{0}_3 & \mathbf{0}_3 & \mathbf{0}_3 & \mathbf{I}_3
-\end{bmatrix}
-]
+**`process_noise_covariance` (Q)**
+Each diagonal element corresponds to one state variable in the 15-element vector ($[x, y, z, \phi, \theta, \psi, v_x, \dots, a_z]$).
 
-where each (\mathbf{I}\_3) is a (3\times 3) identity and (\mathbf{0}\_3) is a (3\times 3) zero matrix, arranged over the blocks ([\mathbf{p}, \boldsymbol{\Theta}, \mathbf{v}, \boldsymbol{\omega}, \mathbf{a}]).
+* Larger values → EKF assumes the **model is less accurate**, so it trusts **sensor measurements more** and adapts faster.
+* Smaller values → EKF assumes the **model is reliable**, so it smooths aggressively and reacts more slowly.
 
-The process noise (\mathbf{w}\_k) has covariance:
+Typical practice:
 
-[
-\mathbf{Q} = \mathrm{cov}(\mathbf{w}_k)
-]
+* Use **higher Q** for velocities and accelerations (they change quickly, are hard to model).
+* Use **lower Q** for orientation and position in simulation, where the motion model is clean.
+* If `/odometry/filtered` looks **sluggish** → slightly *increase* the relevant Q terms.
+* If it looks **noisy or jittery** → slightly *decrease* the relevant Q terms.
 
-which in `robot_localization` corresponds to the flattened `process_noise_covariance` parameter.
+**`initial_estimate_covariance` (P₀)**
+This matrix defines the EKF’s **initial confidence** in each state variable.
+
+* Very small values (e.g. `1e-9`) mean the filter assumes the starting state is **almost exact** (typical for simulation, where `odom` and `base_link` are known).
+* Larger values tell the filter it is **uncertain** about the initial pose, so early measurements can shift the estimate more aggressively.
+
+For a Lunar Rover simulation, it is reasonable to:
+
+* Keep **very low covariance** on the initial pose if the robot always spawns at a known location.
+* Increase initial covariance only if you deliberately introduce uncertainty (e.g., randomised spawn poses or noisy initial alignment).
+
+In practice, you tune these two matrices together:
+`process_noise_covariance` shapes how the state evolves over time, while `initial_estimate_covariance` controls how quickly the EKF “locks in” to the correct pose at startup.
+
+:::{note}
+#### **Practical Tuning Workflow Summary**
+
+* Start with **moderate process noise (Q)** for velocities and accelerations.
+* Tune **IMU covariances first** to stabilise orientation and angular velocity.
+* Tune **encoder covariances next** to achieve smooth linear velocity and yaw estimates.
+* Adjust based on behaviour:
+
+  * **Jittering / jumping** → increase measurement covariance.
+  * **Lagging / slow response** → decrease measurement covariance.
+  * **Oscillation / divergence** → increase process noise.
+* Validate tuning by driving the rover and monitoring:
+
+  * `/odometry/filtered`
+  * raw `/odom`
+  * raw `/imu`
+:::
