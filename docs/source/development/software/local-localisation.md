@@ -59,7 +59,154 @@ By combining IMU and encoder data through an EKF, the system:
 * Produces a **consistent and bounded** pose estimate
 * Supports higher-level navigation algorithms (Nav2, mapping, hazard avoidance, etc.)
  the rest of your documentation.
-:::s
+:::
+-
 
-## Tunning parameters
-To ensure you have got fundamentals knowledge of autonomous control, read more about State Space matrices
+## Tuning Parameters
+
+To learn more about configuration options and recommended practices, refer to the official **[`robot_localization` documentation](https://docs.nav2.org/setup_guides/odom/setup_robot_localization.html)**.
+
+A typical configuration for the `ekf_filter_node` is shown below. This setup fuses wheel encoder odometry (from the differential drive controller) and IMU measurements, each with appropriate covariance values, to produce a stable and drift-bounded estimate of the rover’s local odometry.
+
+```yaml
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    sensor_timeout: 0.1
+    two_d_mode: false
+    publish_acceleration: false
+    publish_tf: true
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+
+    # Wheel encoder (odometry) input
+    odom0: /odom
+    odom0_config: [true, true, false,
+                   false, false, true,
+                   true, true, false,
+                   false, false, true,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_nodelay: false
+    odom0_differential: false
+    odom0_relative: false
+    odom0_pose_rejection_threshold: 5.0
+    odom0_twist_rejection_threshold: 1.0
+
+    # IMU input
+    imu0: /imu/data
+    imu0_config: [false, false, false,
+                  true,  true,  true,
+                  false, false, false,
+                  true,  true,  true,
+                  true,  true,  true]
+    imu0_queue_size: 10
+    imu0_nodelay: false
+    imu0_differential: false
+    imu0_relative: true
+    imu0_pose_rejection_threshold: 0.8
+    imu0_twist_rejection_threshold: 0.8
+    imu0_linear_acceleration_rejection_threshold: 0.8
+    imu0_remove_gravitational_acceleration: true
+
+    # Process noise model for the EKF
+    process_noise_covariance: [ ... trimmed for readability ... ]
+
+    # Initial uncertainty in the state estimate
+    initial_estimate_covariance: [1e-9, 0, 0, ...]
+```
+
+This configuration ensures that the EKF receives encoder-derived linear velocity and yaw information, along with IMU-derived angular velocity and orientation, weighted appropriately by their covariance values. Together, these inputs produce a fused odometry estimate that is more reliable than either sensor alone.
+
+---
+
+### State Variables
+
+The `*_config` arrays specify which elements of the EKF state vector each sensor contributes to. For example:
+
+```yaml
+odom0_config: [true, true, false, false, false, true, true, true, false, false, false, true, false, false, false]
+imu0_config:  [false, false, false, true, true, true, false, false, false, true, true, true, true, true, true]
+```
+
+Each Boolean corresponds to a state variable in the filter’s 15-element state vector.
+
+Nice, this is shaping up really well. Here’s a **compact state-space section** you can drop under **“State Variables”** (and/or after the tuning part).
+
+- **15 Element State Space Matrices:**
+
+The EKF in `robot_localization` uses a 15-dimensional state vector:
+$$ {
+\mathbf{x} =
+\begin{bmatrix}
+x & y & z & \phi & \theta & \psi & v_x & v_y & v_z & \omega_x & \omega_y & \omega_z & a_x & a_y & a_z
+\end{bmatrix}^\top
+} $$
+where:
+
+| Index | Symbol                             | Meaning                          |
+| ----- | ---------------------------------- | -------------------------------- |
+| 0–2   | $$(x, y, z)$$                      | Position in `odom` frame         |
+| 3–5   | $$(\phi, \theta, \psi)$$           | Roll, pitch, yaw (RPY)           |
+| 6–8   | $$(v_x, v_y, v_z)$$                | Linear velocities in `odom`      |
+| 9–11  | $$(\omega_x, \omega_y, \omega_z)$$ | Angular velocities (body / odom) |
+| 12–14 | $$(a_x, a_y, a_z)$$                | Linear accelerations             |
+
+---
+
+### Process Model (Continuous Time)
+
+We assume a constant-acceleration / constant-angular-velocity model:
+
+[
+\begin{aligned}
+\dot{\mathbf{p}} &= \mathbf{v} \
+\dot{\boldsymbol{\Theta}} &= \boldsymbol{\omega} \
+\dot{\mathbf{v}} &= \mathbf{a} \
+\dot{\boldsymbol{\omega}} &= \mathbf{0} \
+\dot{\mathbf{a}} &= \mathbf{0}
+\end{aligned}
+]
+
+with
+(\mathbf{p} = [x, y, z]^\top),
+(\boldsymbol{\Theta} = [\phi, \theta, \psi]^\top),
+(\mathbf{v} = [v_x, v_y, v_z]^\top),
+(\boldsymbol{\omega} = [\omega_x, \omega_y, \omega_z]^\top),
+(\mathbf{a} = [a_x, a_y, a_z]^\top).
+
+---
+
+### Discrete-Time State Transition
+
+For a time step (\Delta t), a simple Euler discretisation gives:
+
+[
+\mathbf{x}*k = \mathbf{F}(\Delta t),\mathbf{x}*{k-1} + \mathbf{w}_k
+]
+
+with block structure:
+
+[
+\mathbf{F} =
+\begin{bmatrix}
+\mathbf{I}_3 & \mathbf{0}_3 & \Delta t,\mathbf{I}_3 & \mathbf{0}_3 & \tfrac{1}{2}\Delta t^2,\mathbf{I}_3 \
+\mathbf{0}_3 & \mathbf{I}_3 & \mathbf{0}_3          & \Delta t,\mathbf{I}_3 & \mathbf{0}_3 \
+\mathbf{0}_3 & \mathbf{0}_3 & \mathbf{I}_3          & \mathbf{0}_3           & \Delta t,\mathbf{I}_3 \
+\mathbf{0}_3 & \mathbf{0}_3 & \mathbf{0}_3          & \mathbf{I}_3           & \mathbf{0}_3 \
+\mathbf{0}_3 & \mathbf{0}_3 & \mathbf{0}_3          & \mathbf{0}_3           & \mathbf{I}_3
+\end{bmatrix}
+]
+
+where each (\mathbf{I}_3) is a (3\times 3) identity and (\mathbf{0}_3) is a (3\times 3) zero matrix, arranged over the blocks ([\mathbf{p}, \boldsymbol{\Theta}, \mathbf{v}, \boldsymbol{\omega}, \mathbf{a}]).
+
+The process noise (\mathbf{w}_k) has covariance:
+
+[
+\mathbf{Q} = \mathrm{cov}(\mathbf{w}_k)
+]
+
+which in `robot_localization` corresponds to the flattened `process_noise_covariance` parameter.
