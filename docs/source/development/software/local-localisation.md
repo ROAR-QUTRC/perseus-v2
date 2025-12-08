@@ -1,7 +1,6 @@
 # Local Localisation
 
 ## Introduction
-
 Local robot localisation refers to estimating a robot’s position and orientation **relative to its initial reference frame**, rather than to a global map. In our system, the frame **`/odom`** acts as the origin of the robot’s local coordinate system and is initialised when the ROS2 controller starts. All subsequent motion updates are expressed relative to this frame.
 
 A variety of sensing modalities can be used to estimate odometry, including **wheel encoders**, **IMUs**, **cameras**, **GPS**, and **indoor motion-capture systems** (e.g., OptiTrack). Each of these sensors introduces uncertainties—such as drift, noise, or environmental disturbances—making *perfect* localisation impossible. Instead, an appropriate odometry method is selected based on the available hardware, mission constraints, and operating environment to achieve a localisation estimate that is sufficiently accurate, stable, and computationally feasible for navigation tasks.
