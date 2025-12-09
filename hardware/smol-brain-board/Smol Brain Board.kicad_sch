@@ -6413,8 +6413,8 @@
 		(uuid 06b498b1-8545-48ca-a04b-fe7e85026af6)
 	)
 	(rectangle
-		(start 396.24 21.4122)
-		(end 236.22 120.4722)
+		(start 236.22 21.4122)
+		(end 396.24 120.4722)
 		(stroke
 			(width 0.508)
 			(type solid)
@@ -7488,7 +7488,7 @@
 	)
 	(wire
 		(pts
-			(xy 340.36 34.29) (xy 356.87 34.29)
+			(xy 340.36 34.29) (xy 354.33 34.29)
 		)
 		(stroke
 			(width 0)
@@ -7828,7 +7828,7 @@
 	)
 	(wire
 		(pts
-			(xy 340.36 36.83) (xy 356.87 36.83)
+			(xy 340.36 36.83) (xy 354.33 36.83)
 		)
 		(stroke
 			(width 0)
@@ -8128,7 +8128,7 @@
 	)
 	(wire
 		(pts
-			(xy 340.36 31.75) (xy 356.87 31.75)
+			(xy 340.36 31.75) (xy 354.33 31.75)
 		)
 		(stroke
 			(width 0)
@@ -8248,7 +8248,7 @@
 	)
 	(wire
 		(pts
-			(xy 340.36 29.21) (xy 356.87 29.21)
+			(xy 340.36 29.21) (xy 354.33 29.21)
 		)
 		(stroke
 			(width 0)
@@ -9867,7 +9867,7 @@
 		(uuid "5bfdf24e-034c-49d5-9c4b-7626d962901e")
 	)
 	(label "UART1_TX"
-		(at 356.87 36.83 180)
+		(at 354.33 36.83 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9907,7 +9907,7 @@
 		(uuid "61fa8331-a715-44db-a0f1-ec2dc13a2da7")
 	)
 	(label "UART1_RX"
-		(at 356.87 34.29 180)
+		(at 354.33 34.29 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -10076,8 +10076,18 @@
 		)
 		(uuid "9a8609a8-b963-40ee-9216-04d6508428a6")
 	)
+	(label "UART1_TX"
+		(at 165.1 115.57 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9f1d74da-b228-46aa-9030-4c08a2a6b684")
+	)
 	(label "UART0_TX"
-		(at 356.87 29.21 180)
+		(at 354.33 29.21 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -10206,18 +10216,8 @@
 		)
 		(uuid "d22dbb54-315f-4e96-b117-a44172a7113e")
 	)
-	(label "UART1_TX"
-		(at 165.1 115.57 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "d7442404-877c-40e8-98c4-9d40816fb1d6")
-	)
 	(label "UART0_RX"
-		(at 356.87 31.75 180)
+		(at 354.33 31.75 180)
 		(effects
 			(font
 				(size 1.27 1.27)
