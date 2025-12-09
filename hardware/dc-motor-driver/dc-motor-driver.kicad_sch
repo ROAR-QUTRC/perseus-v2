@@ -4463,7 +4463,7 @@
 		(dnp no)
 		(uuid "035f61b6-d106-44b9-97fd-1eb24e6ef82f")
 		(property "Reference" "J5"
-			(at 257.429 98.2981 0)
+			(at 256.286 98.298 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4472,7 +4472,7 @@
 			)
 		)
 		(property "Value" "MAG"
-			(at 257.429 95.7581 0)
+			(at 256.032 95.758 0)
 			(effects
 				(font
 					(size 1.27 1.27)
