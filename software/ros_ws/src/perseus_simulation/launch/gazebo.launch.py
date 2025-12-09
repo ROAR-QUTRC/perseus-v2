@@ -65,13 +65,11 @@ def generate_launch_description():
         model_path = os.path.join(
             get_package_share_directory("perseus_simulation"), "models"
         )
+
+        # 🔧 Important change: call nixGL directly, just like in your working shell command
         gz_launch = ExecuteProcess(
             cmd=[
-                "nix",
-                "run",
-                "--impure",
-                "github:nix-community/nixGL",
-                "--",
+                "nixGL",
                 "ros2",
                 "launch",
                 "ros_gz_sim",
@@ -80,11 +78,10 @@ def generate_launch_description():
             ],
             output="both",
             additional_env={
-                "NIXPKGS_ALLOW_UNFREE": "1",
                 "QT_QPA_PLATFORM": "xcb",
                 "QT_SCREEN_SCALE_FACTORS": "1",
-                "PROJ_IGNORE_CELESTIAL_BODY": "YES",  # Fixed here
-                "GZ_SIM_RESOURCE_PATH": model_path,  # Ensure the model path is set correctly
+                "PROJ_IGNORE_CELESTIAL_BODY": "YES",
+                "GZ_SIM_RESOURCE_PATH": model_path,
             },
         )
 
@@ -114,13 +111,13 @@ def generate_launch_description():
             "-allow_renaming",
             "true",
             "-x",
-            LaunchConfiguration("initial_pose_x"),  # X position
+            LaunchConfiguration("initial_pose_x"),
             "-y",
-            LaunchConfiguration("initial_pose_y"),  # Y position
+            LaunchConfiguration("initial_pose_y"),
             "-z",
-            LaunchConfiguration("initial_pose_z"),  # Z position
+            LaunchConfiguration("initial_pose_z"),
             "-Y",
-            LaunchConfiguration("initial_pose_yaw"),  # Yaw orientation
+            LaunchConfiguration("initial_pose_yaw"),
         ],
         output="both",
     )

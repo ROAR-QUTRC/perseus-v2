@@ -9,6 +9,11 @@ ArucoDetector::ArucoDetector()
     dictionary_id = this->declare_parameter<int>("dictionary_id", 1);
     camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_link_optical");
     tf_output_frame_ = this->declare_parameter<std::string>("tf_output_frame", "odom");
+    input_topic_ = this->declare_parameter<std::string>("input_topic", "/rgbd_camera/image_raw");
+    output_topic_ = this->declare_parameter<std::string>("output_topic", "/detection/aruco/image");
+    publish_tf_ = this->declare_parameter<bool>("publish_tf", true);
+    publish_img_ = this->declare_parameter<bool>("publish_img", true);
+    compressed_io_ = this->declare_parameter<bool>("compressed_io", false);
 
     std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
         "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
@@ -28,14 +33,23 @@ ArucoDetector::ArucoDetector()
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
 
-    // Image subscriber
-    sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-        "/rgbd_camera/image_raw", 10,
-        std::bind(&ArucoDetector::imageCallback, this, std::placeholders::_1));
-
-    // Processed image publisher
-    pub_ = this->create_publisher<sensor_msgs::msg::Image>(
-        "/detection/aruco/image", 10);
+    // Image subscriber and publisher
+    if (compressed_io_)
+    {
+        compressed_sub_ = this->create_subscription<sensor_msgs::msg::CompressedImage>(
+            input_topic_ + "/compressed", 10,
+            std::bind(&ArucoDetector::compressedImageCallback, this, std::placeholders::_1));
+        compressed_pub_ = this->create_publisher<sensor_msgs::msg::CompressedImage>(
+            output_topic_ + "/compressed", 10);
+    }
+    else
+    {
+        sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+            input_topic_, 10,
+            std::bind(&ArucoDetector::imageCallback, this, std::placeholders::_1));
+        pub_ = this->create_publisher<sensor_msgs::msg::Image>(
+            output_topic_, 10);
+    }
 
     RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
 }
@@ -53,6 +67,52 @@ void ArucoDetector::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
         return;
     }
 
+    processImage(frame, msg->header);
+
+    if (publish_img_)
+    {
+        auto processed_msg = cv_bridge::CvImage(msg->header, "bgr8", frame).toImageMsg();
+        pub_->publish(*processed_msg);
+    }
+}
+
+void ArucoDetector::compressedImageCallback(const sensor_msgs::msg::CompressedImage::SharedPtr msg)
+{
+    cv::Mat frame;
+    try
+    {
+        frame = cv::imdecode(cv::Mat(msg->data), cv::IMREAD_COLOR);
+        if (frame.empty())
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to decode compressed image");
+            return;
+        }
+    }
+    catch (cv::Exception& e)
+    {
+        RCLCPP_ERROR(this->get_logger(), "OpenCV exception: %s", e.what());
+        return;
+    }
+
+    processImage(frame, msg->header);
+
+    if (publish_img_)
+    {
+        sensor_msgs::msg::CompressedImage compressed_msg;
+        compressed_msg.header = msg->header;
+        compressed_msg.format = "jpeg";
+        
+        std::vector<uchar> buffer;
+        std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 90};
+        cv::imencode(".jpg", frame, buffer, params);
+        compressed_msg.data = buffer;
+        
+        compressed_pub_->publish(compressed_msg);
+    }
+}
+
+void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Header& header)
+{
     std::vector<int> ids;
     std::vector<std::vector<cv::Point2f>> corners;
     detector_.detectMarkers(frame, corners, ids);
@@ -62,17 +122,14 @@ void ArucoDetector::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
         std::vector<cv::Vec3d> rvecs, tvecs;
         cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
-        cv::aruco::drawDetectedMarkers(frame, corners, ids);
+        cv::aruco::drawDetectedMarkers(const_cast<cv::Mat&>(frame), corners, ids);
 
         for (size_t i = 0; i < ids.size(); ++i)
         {
-            cv::drawFrameAxes(frame, camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], axis_length_);
-            transformAndPublishMarker(msg->header, ids[i], rvecs[i], tvecs[i]);
+            cv::drawFrameAxes(const_cast<cv::Mat&>(frame), camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], axis_length_);
+            transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
         }
     }
-
-    auto processed_msg = cv_bridge::CvImage(msg->header, "bgr8", frame).toImageMsg();
-    pub_->publish(*processed_msg);
 }
 
 void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
@@ -112,7 +169,9 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
 
         transform.transform.rotation = marker_pose_out.pose.orientation;
 
-        tf_broadcaster_->sendTransform(transform);
+        if (publish_tf_) {
+            tf_broadcaster_->sendTransform(transform);
+        }
 
         RCLCPP_INFO(this->get_logger(),
                     "ArUco %d in %s: x=%.2f, y=%.2f, z=%.2f",

@@ -13,6 +13,7 @@
 #include <opencv2/opencv.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 class ArucoDetector : public rclcpp::Node
@@ -23,13 +24,17 @@ public:
 private:
     // ROS callbacks and helpers
     void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
+    void compressedImageCallback(const sensor_msgs::msg::CompressedImage::SharedPtr msg);
+    void processImage(const cv::Mat& frame, const std_msgs::msg::Header& header);
     void transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
                                    const cv::Vec3d& rvec, const cv::Vec3d& tvec);
     tf2::Quaternion rotationMatrixToQuaternion(const cv::Mat& rotation_matrix);
 
     // ROS interfaces
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_;
+    rclcpp::Subscription<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_sub_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_;
+    rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_pub_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
     std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -49,6 +54,11 @@ private:
     double axis_length_;           // for drawing axes
     std::string camera_frame_;     // input frame (e.g. camera_link_optical)
     std::string tf_output_frame_;  // output TF frame (e.g. odom)
+    std::string input_topic_;      // input image topic
+    std::string output_topic_;     // output image topic
+    bool publish_tf_;      // whether to transform to output frame
+    bool publish_img_;     // whether to publish processed image
+    bool compressed_io_;  // whether input/output images are compressed
 };
 
 #endif  // ARUCO_DETECTOR_HPP
