@@ -21,8 +21,8 @@ Some direct-to-board applications (like connecting a USB-CAN adapter) use a 2-pi
 CAN Bus networks must have terminating resistors at both ends of the circuit, connecting CANH to CANL through a 120 Ohm resistor (we usually use two 60Ohm and a capacitor in between connecting to GND for reducing noise).
 These terminations are both on the Rover Control Board (RCB - large purple PCB in the middle of Perseus). This means that the CAN Bus circuit must start at the RCB, loop around the rover, and end at the RCB.
 
-Any devices connecting to the CAN Bus must have their CANH and CANL wires connected into the DE-9 cable running through Perseus through a __branch__. However, once these branches reach around 30cm, the signal breaks down.
-This means that for longer connections like payloads, we must run a __loop__ through the subsystem, with each device making a small branch off this loop. The loop starts with the [CAN Bus Daisy Chain PCB](../_static/CAN_Bus_Daisy_Chain.pdf), feeding the main CAN network (CAN_A_L and CAN_A_H) from 'Multi 1 connector' into the 'Main Connector' which goes out to the device.
+Any devices connecting to the CAN Bus must have their CANH and CANL wires connected into the DE-9 cable running through Perseus through a **branch**. However, once these branches reach around 30cm, the signal breaks down.
+This means that for longer connections like payloads, we must run a **loop** through the subsystem, with each device making a small branch off this loop. The loop starts with the [CAN Bus Daisy Chain PCB](../_static/CAN_Bus_Daisy_Chain.pdf), feeding the main CAN network (CAN_A_L and CAN_A_H) from 'Multi 1 connector' into the 'Main Connector' which goes out to the device.
 The device has a branch to these CAN wires, using them to communicate over the CAN network. Then the CAN_A Low and High are connected directly into CAN_B Low and High.
 These wires are returned through the same cable to the CAN Bus Daisy Chain, which connects CAN_B_L and CAN_B_H of the 'Main Connector' into CAN_A_L and CAN_A_H of the 'Multi 2 Connector', which connects into the main CAN Bus system, thus completing the loop.
 
@@ -82,11 +82,10 @@ This means that any time you need to provide a raw address, you can build it wit
 
 The addresses of each system, subsystem, device, group, and parameter can be found in `software/shared/hi-can/include/hi_can_address.hpp`.
 
-
 #### Data
 
-Data must be transmitted as bytes. This means that before any data is transmitted, it must be __serialised__ - split into a vector of {type}`uint8_t`.
-It also needs to be __deserialised__ once the data is received - changed back from a vector to the original type (defined in the `software/shared/hi-can/include/hi_can_parameter.hpp` file).
+Data must be transmitted as bytes. This means that before any data is transmitted, it must be **serialised** - split into a vector of {type}`uint8_t`.
+It also needs to be **deserialised** once the data is received - changed back from a vector to the original type (defined in the `software/shared/hi-can/include/hi_can_parameter.hpp` file).
 
 To serialise data, use the {any}`parameters::BidirectionalSerializable::serialize_data()` method of the {class}`parameters::BidirectionalSerializable` class.
 This returns the serialised data which can then be assigned to a packet using the {any}`Packet::set_data()` method.
@@ -121,7 +120,7 @@ A CAN Interface is what allows programs to interface with the CAN network. There
 
 The {class}`PacketManager` is initialised using a {class}`FilteredCanInterface` (any kind).
 
-The CAN Interface can be set to only receive from specific addresses using __filters__.
+The CAN Interface can be set to only receive from specific addresses using **filters**.
 Filters can be added or removed using the {any}`FilteredCanInterface::add_filter()` and {any}`FilteredCanInterface::remove_filter()` methods.
 When filter/s are applied to the CAN Interface, only a {class}`Packet` with an address matching the filter/s will be allowed through.
 
@@ -130,6 +129,7 @@ The CAN Interface can be used directly to receive or transmit a {class}`Packet` 
 #### Packet Manager
 
 The {class}`PacketManager` class manages scheduled transmission of packets as well as packet reception and timeouts. The {class}`PacketManager` class contains:
+
 1. Callbacks - functions called when a packet is received
 2. Transmissions - functions called periodically to transmit data
 3. CAN Interface - the interface used by the {class}`PacketManager` to access the CAN network.
