@@ -59,6 +59,7 @@ private:
     bool publish_tf_;      // whether to transform to output frame
     bool publish_img_;     // whether to publish processed image
     bool compressed_io_;  // whether input/output images are compressed
+    bool use_sim_time_;   // whether to use simulation time
 };
 
 #endif  // ARUCO_DETECTOR_HPP

@@ -264,11 +264,11 @@ private:
         try
         {
             cv::Mat depth;
-            if (msg->encoding == "16UC1")
+            if (msg->encoding == "16UC1") // Depth in millimeters
             {
                 depth = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::TYPE_16UC1)->image.clone();
             }
-            else if (msg->encoding == "32FC1")
+            else if (msg->encoding == "32FC1") // Depth in meters
             {
                 depth = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::TYPE_32FC1)->image.clone();
             }
@@ -295,7 +295,7 @@ private:
         cv::Mat bgr;
         try
         {
-            bgr = cv_bridge::toCvShare(msg, "bgr8")->image.clone();
+            bgr = cv_bridge::toCvShare(msg, "bgr8")->image.clone(); // Clone to ensure we have our own copy
         }
         catch (...)
         {

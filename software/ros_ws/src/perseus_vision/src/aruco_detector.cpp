@@ -14,6 +14,14 @@ ArucoDetector::ArucoDetector()
     publish_tf_ = this->declare_parameter<bool>("publish_tf", true);
     publish_img_ = this->declare_parameter<bool>("publish_img", true);
     compressed_io_ = this->declare_parameter<bool>("compressed_io", false);
+    use_sim_time_ = this->declare_parameter<bool>("use_sim_time", false);
+
+    // Set simulation time if enabled
+    if (use_sim_time_)
+    {
+        rclcpp::Parameter param("use_sim_time", use_sim_time_);
+        this->set_parameter(param);
+    }
 
     std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
         "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
@@ -137,7 +145,7 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
 {
     try
     {
-        geometry_msgs::msg::PoseStamped marker_pose_camera;
+        geometry_msgs::msg::PoseStamped  marker_pose_camera;
         marker_pose_camera.header.stamp = header.stamp;
         marker_pose_camera.header.frame_id = camera_frame_;
 
@@ -188,6 +196,7 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
 
 tf2::Quaternion ArucoDetector::rotationMatrixToQuaternion(const cv::Mat& rotation_matrix)
 {
+    // Extract rotation matrix elements
     double r11 = rotation_matrix.at<double>(0, 0);
     double r12 = rotation_matrix.at<double>(0, 1);
     double r13 = rotation_matrix.at<double>(0, 2);
