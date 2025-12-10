@@ -9,24 +9,23 @@ ArucoDetector::ArucoDetector()
     dictionary_id = this->declare_parameter<int>("dictionary_id", 1);
     camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_link_optical");
     tf_output_frame_ = this->declare_parameter<std::string>("tf_output_frame", "odom");
-    input_topic_ = this->declare_parameter<std::string>("input_topic", "/rgbd_camera/image_raw");
-    output_topic_ = this->declare_parameter<std::string>("output_topic", "/detection/aruco/image");
+    input_img_ = this->declare_parameter<std::string>("input_img", "/rgbd_camera/image_raw");
+    output_img_ = this->declare_parameter<std::string>("output_img", "/detection/aruco/image");
     publish_tf_ = this->declare_parameter<bool>("publish_tf", true);
     publish_img_ = this->declare_parameter<bool>("publish_img", true);
     compressed_io_ = this->declare_parameter<bool>("compressed_io", false);
-    use_sim_time_ = this->declare_parameter<bool>("use_sim_time", false);
-
-    // Set simulation time if enabled
-    if (use_sim_time_)
-    {
-        rclcpp::Parameter param("use_sim_time", use_sim_time_);
-        this->set_parameter(param);
+    
+    // Don't declare use_sim_time - it's handled by ROS2 automatically
+    try {
+        use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
+    } catch (...) {
+        use_sim_time_ = false;
     }
 
     std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
         "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
     std::vector<double> dist_coeffs_param = this->declare_parameter<std::vector<double>>(
-        "dist_coeffs", {0, 0, 0, 0, 0});
+        "distortion_coefficients", {0, 0, 0, 0, 0});
 
     // Convert parameters to OpenCV matrices
     camera_matrix_ = cv::Mat(3, 3, CV_64F, camera_matrix_param.data()).clone();
@@ -45,20 +44,25 @@ ArucoDetector::ArucoDetector()
     if (compressed_io_)
     {
         compressed_sub_ = this->create_subscription<sensor_msgs::msg::CompressedImage>(
-            input_topic_ + "/compressed", 10,
+            input_img_ + "/compressed", 10,
             std::bind(&ArucoDetector::compressedImageCallback, this, std::placeholders::_1));
         compressed_pub_ = this->create_publisher<sensor_msgs::msg::CompressedImage>(
-            output_topic_ + "/compressed", 10);
+            output_img_ + "/compressed", 10);
     }
     else
     {
         sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-            input_topic_, 10,
+            input_img_, 10,
             std::bind(&ArucoDetector::imageCallback, this, std::placeholders::_1));
         pub_ = this->create_publisher<sensor_msgs::msg::Image>(
-            output_topic_, 10);
+            output_img_, 10);
     }
-
+    //
+    service_ = this->create_service<DetectArucoMarkers>(
+      "detect_aruco_marker",
+      std::bind(&ArucoDetector::handle_request, this,
+                std::placeholders::_1,
+                std::placeholders::_2));
     RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
 }
 
@@ -125,6 +129,15 @@ void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Head
     std::vector<std::vector<cv::Point2f>> corners;
     detector_.detectMarkers(frame, corners, ids);
 
+    // Clear previous detections and update timestamp for service requests
+    {
+        std::lock_guard<std::mutex> lock(detections_mutex_);
+        latest_ids_.clear();
+        latest_poses_.clear();
+        latest_timestamp_ = header.stamp;
+        has_detections_ = true;
+    }
+
     if (!ids.empty())
     {
         std::vector<cv::Vec3d> rvecs, tvecs;
@@ -165,6 +178,13 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
 
         geometry_msgs::msg::PoseStamped marker_pose_out;
         tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_);
+
+        // Cache this detection for service requests
+        {
+            std::lock_guard<std::mutex> lock(detections_mutex_);
+            latest_ids_.push_back(marker_id);
+            latest_poses_.push_back(marker_pose_out.pose);
+        }
 
         geometry_msgs::msg::TransformStamped transform;
         transform.header.stamp = header.stamp;
@@ -242,4 +262,26 @@ tf2::Quaternion ArucoDetector::rotationMatrixToQuaternion(const cv::Mat& rotatio
         quat.setZ(0.25 * s);
     }
     return quat;
+}
+
+void ArucoDetector::handle_request(const std::shared_ptr<DetectArucoMarkers::Request> request,
+                                    std::shared_ptr<DetectArucoMarkers::Response> response)
+{
+    (void)request;  // Suppress unused parameter warning
+    
+    std::lock_guard<std::mutex> lock(detections_mutex_);
+    
+    if (!has_detections_)
+    {
+        response->success = false;
+        response->frame_id = tf_output_frame_;
+        RCLCPP_WARN(this->get_logger(), "Service request: no detections available");
+        return;
+    }
+    
+    response->success = !latest_ids_.empty();
+    response->stamp = latest_timestamp_;
+    response->frame_id = tf_output_frame_;
+    response->ids = latest_ids_;
+    response->poses = latest_poses_;
 }

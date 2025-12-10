@@ -17,7 +17,7 @@ def generate_launch_description():
                 package="perseus_vision",
                 executable="detector_node",  # Update this to match your CMake target name
                 name="aruco_detector",
-                output="screen",
+                output="screen", 
                 parameters=[config_file],
             )
         ]

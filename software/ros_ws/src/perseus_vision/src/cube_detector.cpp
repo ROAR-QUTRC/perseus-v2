@@ -122,7 +122,7 @@ public:
 
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
-        std::string model_path = ament_index_cpp::get_package_share_directory("perseus_vision") + "/yolo_model/best.onnx";
+        std::string model_path = ament_index_cpp::get_package_share_directory("perseus_vision") + "/model/best.onnx";
         RCLCPP_INFO(get_logger(), "Loading model: %s", model_path.c_str());
 
         env_ = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "yolo");

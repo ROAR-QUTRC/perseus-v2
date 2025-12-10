@@ -1,6 +1,7 @@
 #ifndef ARUCO_DETECTOR_HPP
 #define ARUCO_DETECTOR_HPP
 
+#include <mutex>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -15,6 +16,10 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include "builtin_interfaces/msg/time.hpp"
+#include "perseus_vision/srv/detect_aruco_markers.hpp"
+
+using DetectArucoMarkers = perseus_vision::srv::DetectArucoMarkers;
 
 class ArucoDetector : public rclcpp::Node
 {
@@ -29,12 +34,15 @@ private:
     void transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
                                    const cv::Vec3d& rvec, const cv::Vec3d& tvec);
     tf2::Quaternion rotationMatrixToQuaternion(const cv::Mat& rotation_matrix);
+    void handle_request(const std::shared_ptr<DetectArucoMarkers::Request> request,
+                       std::shared_ptr<DetectArucoMarkers::Response> response);
 
     // ROS interfaces
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_;
     rclcpp::Subscription<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_sub_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_;
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_pub_;
+    rclcpp::Service<DetectArucoMarkers>::SharedPtr service_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
     std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -54,12 +62,19 @@ private:
     double axis_length_;           // for drawing axes
     std::string camera_frame_;     // input frame (e.g. camera_link_optical)
     std::string tf_output_frame_;  // output TF frame (e.g. odom)
-    std::string input_topic_;      // input image topic
-    std::string output_topic_;     // output image topic
+    std::string input_img_;      // input image topic
+    std::string output_img_;     // output image topic
     bool publish_tf_;      // whether to transform to output frame
     bool publish_img_;     // whether to publish processed image
     bool compressed_io_;  // whether input/output images are compressed
-    bool use_sim_time_;   // whether to use simulation time
+    bool use_sim_time_;   // whether to use simulation time 
+
+    // Latest detections cache for service requests
+    mutable std::mutex detections_mutex_;
+    std::vector<int> latest_ids_;
+    std::vector<geometry_msgs::msg::Pose> latest_poses_;
+    builtin_interfaces::msg::Time latest_timestamp_;
+    bool has_detections_ = false;
 };
 
 #endif  // ARUCO_DETECTOR_HPP

@@ -19,6 +19,3 @@ geometry_msgs/Pose[] poses
 
 # Was the detection successful? (true if at least one marker found)
 bool success
-
-# Optional human-readable message (e.g. error or debug info)
-string message

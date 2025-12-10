@@ -3,6 +3,7 @@ aruco_detector:
     use_sim_time: true
     camera_matrix: [530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0] # fx, 0, cx, 0, fy, cy, 0, 0, 1
     distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
+  
     dictionary_id: 1 # 4x4: 50=0, 100=1, 250=2, 1000=3 | 5x5: 50=4, 100=5, 250=6, 1000=7 | 6x6: 50=8, 100=9, 250=10, 1000=11
     marker_length: 0.35 # in meters
     axis_length: 0.03 # in meters
@@ -11,6 +12,6 @@ aruco_detector:
     tf_output_frame: "odom" # reference frame for published TFs
     compressed_io: false # Enable if input/output images are compressed
     # If compressed_input_output is true, the system assumes that the input image is a compressed image.
-    input_topic: "/rgbd_camera/image_raw"
+    input_img: "/rgbd_camera/image_raw"
     publish_img: true
-    output_topic: "/detection/aruco/image_raw"
+    output_img: "/detection/aruco/image_raw"
