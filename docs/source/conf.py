@@ -83,7 +83,7 @@ exhale_args = {
     # dedent so we can provide multiline string
     "exhaleDoxygenStdin": dedent(
         """
-        INPUT=./../../software
+        INPUT= ./../../software ./../../firmware/components
         RECURSIVE = YES
         EXCLUDE_PATTERNS = *.md setup.py __init__.py __pycache__* */tests/* */test/* */launch/*
         EXCLUDE_SYMLINKS = YES
