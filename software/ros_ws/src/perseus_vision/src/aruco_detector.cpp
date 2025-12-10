@@ -14,13 +14,7 @@ ArucoDetector::ArucoDetector()
     publish_tf_ = this->declare_parameter<bool>("publish_tf", true);
     publish_img_ = this->declare_parameter<bool>("publish_img", true);
     compressed_io_ = this->declare_parameter<bool>("compressed_io", false);
-    
-    // Don't declare use_sim_time - it's handled by ROS2 automatically
-    try {
-        use_sim_time_ = this->get_parameter("use_sim_time").as_bool();
-    } catch (...) {
-        use_sim_time_ = false;
-    }
+
 
     std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
         "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
@@ -109,7 +103,7 @@ void ArucoDetector::compressedImageCallback(const sensor_msgs::msg::CompressedIm
     processImage(frame, msg->header);
 
     if (publish_img_)
-    {
+    { 
         sensor_msgs::msg::CompressedImage compressed_msg;
         compressed_msg.header = msg->header;
         compressed_msg.format = "jpeg";
@@ -273,13 +267,11 @@ void ArucoDetector::handle_request(const std::shared_ptr<DetectArucoMarkers::Req
     
     if (!has_detections_)
     {
-        response->success = false;
         response->frame_id = tf_output_frame_;
         RCLCPP_WARN(this->get_logger(), "Service request: no detections available");
         return;
     }
     
-    response->success = !latest_ids_.empty();
     response->stamp = latest_timestamp_;
     response->frame_id = tf_output_frame_;
     response->ids = latest_ids_;

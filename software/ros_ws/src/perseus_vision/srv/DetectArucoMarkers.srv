@@ -17,5 +17,3 @@ int32[] ids
 # (ids[i] corresponds to poses[i])
 geometry_msgs/Pose[] poses
 
-# Was the detection successful? (true if at least one marker found)
-bool success
