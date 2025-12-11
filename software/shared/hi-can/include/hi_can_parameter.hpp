@@ -337,7 +337,7 @@ namespace hi_can::parameters
                 };
 
                 // Each following nanometer rvalue epresents peak wavelength value
-                struct _spectrum_1_t 
+                struct _spectrum_1_t
                 {
                     // Cycle 1 from here
                     uint16_t blue_450nm;
@@ -347,8 +347,8 @@ namespace hi_can::parameters
                 };
                 struct _spectrum_2_t
                 {
-                    uint16_t vis_1; // Cycle 1
-                    uint16_t flicker_detection_1; // Cycle 1
+                    uint16_t vis_1;                // Cycle 1
+                    uint16_t flicker_detection_1;  // Cycle 1
 
                     // Cycle 2 from here
                     uint16_t dark_blue_425nm;
@@ -358,8 +358,8 @@ namespace hi_can::parameters
                 {
                     uint16_t blue_515nm;
                     uint16_t brown_640nm;
-                    uint16_t vis_2; // Cycle 2
-                    uint16_t flicker_detection_2; // Cycle 2
+                    uint16_t vis_2;                // Cycle 2
+                    uint16_t flicker_detection_2;  // Cycle 2
                 };
                 struct _spectrum_4_t
                 {
@@ -371,8 +371,8 @@ namespace hi_can::parameters
                 };
                 struct _spectrum_5_t
                 {
-                    uint16_t vis_3; // Cycle 3
-                    uint16_t flicker_detection_3; // Cycle 3
+                    uint16_t vis_3;                // Cycle 3
+                    uint16_t flicker_detection_3;  // Cycle 3
                 };
                 typedef SimpleSerializable<_magnet_t> magnet_t;
                 typedef SimpleSerializable<_spectrum_1_t> spectrum_1_t;
