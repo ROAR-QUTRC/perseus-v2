@@ -335,12 +335,51 @@ namespace hi_can::parameters
                     int16_t y = 0;
                     int16_t z = 0;
                 };
-                struct _spectrum_t
+
+                // Each following nanometer rvalue epresents peak wavelength value
+                struct _spectrum_1_t 
                 {
-                    uint16_t channel[18];  // TODO: Split this into channel names/wavelengths
+                    // Cycle 1 from here
+                    uint16_t blue_450nm;
+                    uint16_t green_555nm;
+                    uint16_t orange_600nm;
+                    uint16_t nir_855nm;
+                };
+                struct _spectrum_2_t
+                {
+                    uint16_t vis_1; // Cycle 1
+                    uint16_t flicker_detection_1; // Cycle 1
+
+                    // Cycle 2 from here
+                    uint16_t dark_blue_425nm;
+                    uint16_t light_blue_475nm;
+                };
+                struct _spectrum_3_t
+                {
+                    uint16_t blue_515nm;
+                    uint16_t brown_640nm;
+                    uint16_t vis_2; // Cycle 2
+                    uint16_t flicker_detection_2; // Cycle 2
+                };
+                struct _spectrum_4_t
+                {
+                    // Cycle 3 from here
+                    uint16_t purple_405nm;
+                    uint16_t red_690nm;
+                    uint16_t dark_red_745nm;
+                    uint16_t green_550nm;
+                };
+                struct _spectrum_5_t
+                {
+                    uint16_t vis_3; // Cycle 3
+                    uint16_t flicker_detection_3; // Cycle 3
                 };
                 typedef SimpleSerializable<_magnet_t> magnet_t;
-                typedef SimpleSerializable<_spectrum_t> spectrum_t;
+                typedef SimpleSerializable<_spectrum_1_t> spectrum_1_t;
+                typedef SimpleSerializable<_spectrum_2_t> spectrum_2_t;
+                typedef SimpleSerializable<_spectrum_3_t> spectrum_3_t;
+                typedef SimpleSerializable<_spectrum_4_t> spectrum_4_t;
+                typedef SimpleSerializable<_spectrum_5_t> spectrum_5_t;
             }
         }
     }

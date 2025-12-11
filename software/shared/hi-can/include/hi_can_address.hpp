@@ -450,7 +450,11 @@ namespace hi_can
                     enum class sensor_parameter
                     {
                         START = 0x01,
-                        DATA = 0x02,
+                        DATA1 = 0x02,
+                        DATA2 = 0x03,
+                        DATA3 = 0x04,
+                        DATA4 = 0x05,
+                        DATA5 = 0x06,
                     };
                     enum class actuator_parameter
                     {
