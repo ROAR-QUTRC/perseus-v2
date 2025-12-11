@@ -21,7 +21,7 @@ aruco_detector:
 cube_detector:
   ros__parameters:
     use_sim_time: true
-    confidence_threshold: 0.3
+    confidence_threshold: 0.29
     nms_threshold: 0.5
     cube_distance_threshold: 0.5  # meters
     min_detections_for_stable: 5
