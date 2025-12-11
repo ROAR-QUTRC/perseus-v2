@@ -21,6 +21,7 @@ aruco_detector:
 cube_detector:
   ros__parameters:
     use_sim_time: true
+    model_path: /model/best.onnx
     confidence_threshold: 0.29
     nms_threshold: 0.5
     cube_distance_threshold: 0.5  # meters

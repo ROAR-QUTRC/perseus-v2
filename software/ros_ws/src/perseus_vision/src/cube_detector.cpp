@@ -24,7 +24,7 @@ CubeDetector::CubeDetector()
     this->declare_parameter("output_img", "/detection/cube/image_raw");
     this->declare_parameter("publish_output", true);
     this->declare_parameter("output_topic", "/detection/cube");
-
+    this->declare_parameter("model_path", "/model/best.onnx");
     // Get parameters
     auto camera_matrix = this->get_parameter("camera_matrix").as_double_array();
     camera_fx_ = camera_matrix[0];
@@ -35,13 +35,13 @@ CubeDetector::CubeDetector()
     publish_tf_ = this->get_parameter("publish_tf").as_bool();
     tf_output_frame_ = this->get_parameter("tf_output_frame").as_string();
     compressed_io_ = this->get_parameter("compressed_io").as_bool();
-    std::string input_img = this->get_parameter("input_img").as_string();
-    bool publish_img = this->get_parameter("publish_img").as_bool();
-    std::string output_img = this->get_parameter("output_img").as_string();
-    bool publish_output = this->get_parameter("publish_output").as_bool();
-    std::string output_topic = this->get_parameter("output_topic").as_string();
-
-    (void)publish_output;  // currently unused, but kept for future use
+    input_img_ = this->get_parameter("input_img").as_string();
+    publish_img_ = this->get_parameter("publish_img").as_bool();
+    output_img_ = this->get_parameter("output_img").as_string();
+    publish_output_ = this->get_parameter("publish_output").as_bool();
+    output_topic_ = this->get_parameter("output_topic").as_string();
+    model_ = this->get_parameter("model_path").as_string();
+    (void)publish_output_;  // currently unused, but kept for future use
 
     // Initialize cube tracking
     next_cube_id_ = 0;
@@ -51,15 +51,15 @@ CubeDetector::CubeDetector()
         static_cast<int>(this->get_parameter("min_detections_for_stable").as_int());
 
     // Create publishers
-    if (publish_img)
+    if (publish_img_)
     {
-        pub_image_ = this->create_publisher<sensor_msgs::msg::Image>(output_img, 10);
+        pub_image_ = this->create_publisher<sensor_msgs::msg::Image>(output_img_, 10);
     }
-    pub_pose_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(output_topic, 10);
+    pub_pose_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(output_topic_, 10);
 
     // Create subscriptions
     sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-        input_img, 10,
+        input_img_, 10,
         std::bind(&CubeDetector::imageCb, this, std::placeholders::_1));
 
     depth_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
@@ -73,7 +73,7 @@ CubeDetector::CubeDetector()
 
     std::string model_path =
         ament_index_cpp::get_package_share_directory("perseus_vision") +
-        "/model/best.onnx";
+        model_;
     RCLCPP_INFO(get_logger(), "Loading model: %s", model_path.c_str());
 
     env_ = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "yolo");

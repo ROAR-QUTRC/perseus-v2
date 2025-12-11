@@ -127,6 +127,12 @@ private:
     bool publish_tf_;
     std::string tf_output_frame_;
     bool compressed_io_;
+    std::string model_;
+    std::string input_img_;
+    bool publish_img_;
+    std::string output_img_;
+    bool publish_output_;
+    std::string output_topic_;
 
     // Cube tracking
     std::unordered_map<int, TrackedCube> tracked_cubes_;
