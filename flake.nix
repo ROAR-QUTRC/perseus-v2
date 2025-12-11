@@ -242,13 +242,12 @@
         treefmtEval = treefmt-nix.lib.evalModule pkgs-unstable ./treefmt.nix;
 
         # formatters package set for use in ROS workspaces
-        formatters =
-          {
-            # include treefmt wrapped with the config from ./treefmt.nix
-            treefmt = treefmtEval.config.build.wrapper;
-          }
-          # plus all of the individual formatter programs from said config
-          // treefmtEval.config.build.programs;
+        formatters = {
+          # include treefmt wrapped with the config from ./treefmt.nix
+          treefmt = treefmtEval.config.build.wrapper;
+        }
+        # plus all of the individual formatter programs from said config
+        // treefmtEval.config.build.programs;
       in
       {
         # rover development environment

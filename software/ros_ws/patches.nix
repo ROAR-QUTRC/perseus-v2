@@ -11,11 +11,9 @@ let
       {
         dontWrapQtApps = false;
         nativeBuildInputs = nativeBuildInputs ++ [ prev.qt5.wrapQtAppsHook ];
-        postFixup =
-          postFixup
-          + ''
-            wrapQtApp "$out/lib/joint_state_publisher_gui/joint_state_publisher_gui"
-          '';
+        postFixup = postFixup + ''
+          wrapQtApp "$out/lib/joint_state_publisher_gui/joint_state_publisher_gui"
+        '';
       }
     );
     # rosbridge incorrectly depends on the bson package instead of pymongo which is what it actually needs
