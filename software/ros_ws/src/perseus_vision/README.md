@@ -23,3 +23,7 @@ colcon build --packages-select perseus_vision
 Special thanks to the **Monash Rover Team** for pulicing the dataset used to train the YOLO cube detection model.
 
 And Thanks to **ChatGPT, GitHub Colpilot**...
+
+# Perseus Vision
+## Aruco Detector Node
+This node detects the existed Aruco Marker in the current frame

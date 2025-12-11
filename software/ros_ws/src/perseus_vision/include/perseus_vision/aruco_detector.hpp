@@ -18,6 +18,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "builtin_interfaces/msg/time.hpp"
 #include "perseus_vision/srv/detect_aruco_markers.hpp"
+#include "perseus_vision/msg/aruco_detections.hpp"
 
 using DetectArucoMarkers = perseus_vision::srv::DetectArucoMarkers;
 
@@ -42,6 +43,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_sub_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_;
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_pub_;
+    rclcpp::Publisher<perseus_vision::msg::ArucoDetections>::SharedPtr detection_pub_;
     rclcpp::Service<DetectArucoMarkers>::SharedPtr service_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
@@ -68,6 +70,8 @@ private:
     bool publish_img_;     // whether to publish processed image
     bool compressed_io_;  // whether input/output images are compressed
     bool use_sim_time_;   // whether to use simulation time 
+    bool publish_output_;
+    std::string output_topic_;
 
     // Latest detections cache for service requests
     mutable std::mutex detections_mutex_;

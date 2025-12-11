@@ -19,10 +19,13 @@ find_package(ament_index_cpp REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(builtin_interfaces REQUIRED)
-
+find_package(std_msgs REQUIRED)
+# ============================
+# ROS2 Interface generation
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/DetectArucoMarkers.srv"
-  DEPENDENCIES builtin_interfaces geometry_msgs
+  "msg/ArucoDetections.msg"
+  DEPENDENCIES builtin_interfaces geometry_msgs std_msgs
 )
 
 rosidl_get_typesupport_target(cpp_typesupport_target

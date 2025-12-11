@@ -1,8 +1,3 @@
-# Request
-# Empty request: calling this service asks the node to return
-# the latest detected ArUco marker poses in the target frame.
----
-# Response
 # Time at which the detections are valid (e.g. camera header.stamp)
 builtin_interfaces/Time stamp
 
@@ -15,4 +10,3 @@ int32[] ids
 # Pose of each detected marker, in the same order as `ids`
 # (ids[i] corresponds to poses[i])
 geometry_msgs/Pose[] poses
-

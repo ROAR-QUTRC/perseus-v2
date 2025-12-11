@@ -14,7 +14,8 @@ ArucoDetector::ArucoDetector()
     publish_tf_ = this->declare_parameter<bool>("publish_tf", true);
     publish_img_ = this->declare_parameter<bool>("publish_img", true);
     compressed_io_ = this->declare_parameter<bool>("compressed_io", false);
-
+    publish_output_ = this->declare_parameter<bool>("publish_output", false);
+    output_topic_ = this->declare_parameter<std::string>("output_topic", "/detection/aruco/detections");
 
     std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
         "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
@@ -57,6 +58,10 @@ ArucoDetector::ArucoDetector()
       std::bind(&ArucoDetector::handle_request, this,
                 std::placeholders::_1,
                 std::placeholders::_2));
+    if (publish_output_) {
+        detection_pub_ = this->create_publisher<perseus_vision::msg::ArucoDetections>(
+            output_topic_, 10);
+    } 
     RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
 }
 
@@ -144,6 +149,20 @@ void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Head
             cv::drawFrameAxes(const_cast<cv::Mat&>(frame), camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], axis_length_);
             transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
         }
+    }
+
+    // Publish detections message if enabled
+    if (publish_output_ && detection_pub_)
+    {
+        perseus_vision::msg::ArucoDetections detection_msg;
+        {
+            std::lock_guard<std::mutex> lock(detections_mutex_);
+            detection_msg.stamp = latest_timestamp_;
+            detection_msg.frame_id = tf_output_frame_;
+            detection_msg.ids = latest_ids_;
+            detection_msg.poses = latest_poses_;
+        }
+        detection_pub_->publish(detection_msg);
     }
 }
 
@@ -265,15 +284,14 @@ void ArucoDetector::handle_request(const std::shared_ptr<DetectArucoMarkers::Req
     
     std::lock_guard<std::mutex> lock(detections_mutex_);
     
-    if (!has_detections_)
-    {
-        response->frame_id = tf_output_frame_;
-        RCLCPP_WARN(this->get_logger(), "Service request: no detections available");
-        return;
-    }
-    
     response->stamp = latest_timestamp_;
     response->frame_id = tf_output_frame_;
     response->ids = latest_ids_;
     response->poses = latest_poses_;
+    
+    if (!latest_ids_.empty()) {
+        RCLCPP_INFO(this->get_logger(), "Service request: returning %zu detections", latest_ids_.size());
+    } else {
+        RCLCPP_INFO(this->get_logger(), "Service request: no detections available");
+    }
 }
