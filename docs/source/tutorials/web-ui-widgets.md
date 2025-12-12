@@ -2,6 +2,7 @@
 
 This tutorial will show you how to make a basic ROS2 widget that interfaces with the [talker and listener](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html) tutorial nodes.
 Before beginning this tutorial you must:
+
 - Have read the R.O.A.R. software standards (General and Typescript sections)
 - Have an understanding of [Svelte](https://svelte.dev) and [ROS2](https://docs.ros.org/en/jazzy/index.html)
 - Complete the [getting started](project:/home/getting-started.md) guide
@@ -36,7 +37,7 @@ Let's add some HTML so we can see and send messages with ROS2 later on. To keep 
         <Input id="message" class="mb-2" />
         <Button >Send</Button>
     </form>
-    <ScrollArea class="flex-1" orientation="verticle">
+    <ScrollArea class="flex-1" orientation="vertical">
         {#each [1, 2, 3] as message}
             <p>{message}</p>
         {/each}
@@ -83,7 +84,7 @@ If you don't see something like this then go back and double check you've done e
 
 Before we start writing code for connecting to the ROS2 bridge we need to run some ROS2 nodes!
 
-Development of ROS2 nodes is beyond the scope of this tutorial and for guidance you should consult the official documentation. We will still need something to test our widget with, my recommendation is to create new talker and listener nodes by following the tutorial linked above. 
+Development of ROS2 nodes is beyond the scope of this tutorial and for guidance you should consult the official documentation. We will still need something to test our widget with, my recommendation is to create new talker and listener nodes by following the tutorial linked above.
 
 :::{warning}
 Ensure you make the talker and listener inside `perseus-v2/software/ros_ws` and run all the following commands from inside the perseus-v2 repo aswell so you get access to the ROS2 Jazzy install we use for the rover.
@@ -94,6 +95,7 @@ I would strongly recommend using a terminal multiplexer so each node can be run 
 :::
 
 Now that we have all the ROS2 nodes ready you can follow these steps to run them:
+
 1. Navigate to `perseus-v2/software/ros_ws` in two terminal windows.
 2. Build and source the new talker and listener nodes in both terminal windows: `colcon build && source install/setup.bash` (the suffix `.bash` may be different depending on your shell).
 3. Run the talker in one window and the listener in another using `ros2 run cpp_pubsub talker` and `ros2 run cpp_pubsub listener` respectively.
@@ -104,11 +106,12 @@ IMG GO HERE
 
 ### Using the JS Interface
 
-The main challenge when using [roslibjs](https://robotwebtools.github.io/roslibjs/) with a component based framework is ensuring connections are managed correctly. So that you don't have to worry about this a single connection is managed by the web ui that can be accessed using the `getRosConnection()` function. 
+The main challenge when using [roslibjs](https://robotwebtools.github.io/roslibjs/) with a component based framework is ensuring connections are managed correctly. So that you don't have to worry about this a single connection is managed by the web ui that can be accessed using the `getRosConnection()` function.
 
 Before we write any code there are a few rules for the design patterns used when writing ROS2 code in a widget:
+
 - Avoid making ROS2 related variables reactive as they will be assigned inside an `$effect`.
-- Do NOT initialise anything related to ROS2 in the `onMount` hook, even if you really want to. 
+- Do NOT initialise anything related to ROS2 in the `onMount` hook, even if you really want to.
 - Always set `isRosDependant` to `true` and `group` to `'ROS'` if using the `getRosConnection()` function.
 - Dispose of all ROS2 resources you created in the function returned by the `onMount` hook (the return value is run on unmount).
 
@@ -117,57 +120,57 @@ As per the third rule mentioned above, you should now uncomment and set the `gro
 Then it's finally TypeScript time! Add the following to the client script tag in your widget. For more information on the pattern used here check out the [web ui development](project:/development/software/web-ui.md) docs.
 
 ```ts
-import { onMount } from 'svelte';
+import { onMount } from "svelte";
 
 let topic: ROSLIB.Topic | null = null;
 let messages = $state<Array<string>>([]); // List of past messages
-let input = $state<string>(''); // Text input model
+let input = $state<string>(""); // Text input model
 
 const callback = (message: ROSLIB.Message) => {
-    // Save message
-    messages.unshift(message.value);
+  // Save message
+  messages.unshift(message.value);
 };
 
 // Using effect to reactively reinitialise after re/gaining connection
 $effect(() => {
-    const ros = getRosConnection();
+  const ros = getRosConnection();
 
-    if (ros) {
-        topic = new ROSLIB.Topic({
-            ros: ros,
-            name: '/topic',
-            messageType: 'std_msgs/String'
-        });
-        // Advertise for publishing
-        topic.advertise();
-        // Add a subscription callback
-        topic.subscribe(callback);
-    } else {
-        topic = null;
-    }
+  if (ros) {
+    topic = new ROSLIB.Topic({
+      ros: ros,
+      name: "/topic",
+      messageType: "std_msgs/String",
+    });
+    // Advertise for publishing
+    topic.advertise();
+    // Add a subscription callback
+    topic.subscribe(callback);
+  } else {
+    topic = null;
+  }
 });
 
 const sendMessage = (e: Event) => {
-    e.preventDefualt();
+  e.preventDefault();
 
-    if (!input) return;
+  if (!input) return;
 
-    // Create and send string message
-    const message = new ROSLIB.Message({ data: input });
-    topic.publish(message);
+  // Create and send string message
+  const message = new ROSLIB.Message({ data: input });
+  topic.publish(message);
 };
 
 onMount(() => {
-    return () => {
-        // Clean-up on unmount 
-        topic.unsubscribe();
-    };
+  return () => {
+    // Clean-up on unmount
+    topic.unsubscribe();
+  };
 });
 ```
- 
+
 ## Putting it all Together
 
-Now that we've got some code to send an recive topic messages we can give our markdown some functionality.
+Now that we've got some code to send an receive topic messages we can give our markdown some functionality.
 
 Let's first replace `[1, 2, 3]` in out `each ... as` template with `messages`. Then add `bind:value={input}` to the `Input` element and `onsubmit={sendMessage}` to the `form` element to register our event handler.
 
@@ -180,6 +183,7 @@ While the widget we've made works fine it doesn't let you customise anything. Le
 ### Send Enable/Disable Switch
 
 Inside the `groups` property of the settings object add:
+
 ```ts
 general: {
     disableSendForm: {
@@ -188,9 +192,11 @@ general: {
     },
 }
 ```
+
 This defines a settings group called "general" with one option labelled "Disable send form" with a switch as it's input.
 
 To apply this setting we can simply wrap the input form in a `{#if}` template:
+
 ```svelte
 {#if Boolean(settings.groups.general.disableSendForm.value)}
     <form class="flex flex-row">
@@ -215,32 +221,32 @@ Since the settings object is a state rune and our ROS2 topic is initialised in a
 
 ```ts
 // Use a default value if custom topic is falsy
-const topicName = settings.groups.general.topic.value || '/topic';
+const topicName = settings.groups.general.topic.value || "/topic";
 
 ros.getTopicType(topicName, (type) => {
-    topic = new ROSLIB.Topic({
-        ros: ros,
-        name: topicName,
-        messageType: type
-    });
-    // Disable the sending function if the topic type isn't a string
-    if (type !== 'std_msgs/String') {
-        settings.groups.general.disableSendForm.value === 'false';
-        settings.groups.general.disableSendForm.disabled = true;
-    } else {
-        settings.groups.general.disableSendForm.disabled = false;
-    }
+  topic = new ROSLIB.Topic({
+    ros: ros,
+    name: topicName,
+    messageType: type,
+  });
+  // Disable the sending function if the topic type isn't a string
+  if (type !== "std_msgs/String") {
+    settings.groups.general.disableSendForm.value === "false";
+    settings.groups.general.disableSendForm.disabled = true;
+  } else {
+    settings.groups.general.disableSendForm.disabled = false;
+  }
 
-    // Advertise for publishing
-    topic.advertise();
-    // Add a subscription callback
-    topic.subscribe(callback);
+  // Advertise for publishing
+  topic.advertise();
+  // Add a subscription callback
+  topic.subscribe(callback);
 });
 ```
 
 Now when you type a new topic name our widget will automatically try listening and publishing to that topic. The key word being "try" as we are currently not handling the event that the topic does not exist which would silently break the widget without an error. As an extension to this tutorial you should try and add some error handling (hint: check the other arguments of the ros.getTopicType function)
 
-## Congratulations 
+## Congratulations
 
 You have now created your first widget for the web UI! For more examples and help checkout the other widgets that have already been made or send a message on discord.
 
@@ -251,7 +257,7 @@ You have now created your first widget for the web UI! For more examples and hel
     import type { WidgetGroupType, WidgetSettingsType } from '$lib/scripts/state.svelte';
 
     export const name = 'New Widget';
-    export const description = 'Simple send and recive ros topic data widget. ';
+    export const description = 'Simple send and receive ros topic data widget. ';
     export const group: WidgetGroupType = 'ROS';
     export const isRosDependent = true;
 
@@ -322,7 +328,7 @@ You have now created your first widget for the web UI! For more examples and hel
     });
 
     const sendMessage = (e: Event) => {
-         e.preventDefualt();
+         e.preventDefault();
 
         if (!input) return;
 
@@ -333,7 +339,7 @@ You have now created your first widget for the web UI! For more examples and hel
 
     onMount(() => {
         return () => {
-            // Clean-up on unmount 
+            // Clean-up on unmount
             topic.unsubscribe();
         };
     });
@@ -346,7 +352,7 @@ You have now created your first widget for the web UI! For more examples and hel
             <Button >Send</Button>
         </form>
     {/if}
-    <ScrollArea class="flex-1" orientation="verticle">
+    <ScrollArea class="flex-1" orientation="vertical">
         {#each messages as message}
             <p>{message}</p>
         {/each}
