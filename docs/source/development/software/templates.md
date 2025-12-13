@@ -26,17 +26,13 @@ This will create a file structure slightly different from the template, however,
 Make sure you are in the root directory before completing the below steps
 :::
 
-Before building the node, you need to enter the nix develop shell, as per [the core software sepcifications](https://roar-qutrc.github.io/systems/software/core.html). 
+Before building the node, you need to enter the nix develop shell, as per [the core software specifications](https://roar-qutrc.github.io/systems/software/core.html).
 
 ```
 nix develop
 ```
 
-After entering the develop shell, stage your commits to git (locally) before attempting to build with nix.if you don't stage your changes nix will not be able to see the new Ros2 package and the build will fail. After staging your commits run the below command to configure any shared libraries or dependencies for the package (specified in `package.xml`).
-
-```
-./software/scripts/nix-package.sh
-```
+After entering the develop shell, stage your commits to git (locally) before attempting to build with nix.if you don't stage your changes nix will not be able to see the new Ros2 package and the build will fail.
 
 After completing the above steps, you can build the ROS2 node using colcon. Colcon is used as part of the ROS framework to build the packages and allow them to be run directly within ROS. To build the packages, navigate to the `software/ros_ws/` folder and run the following commands:
 
