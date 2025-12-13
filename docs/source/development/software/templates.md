@@ -6,6 +6,8 @@ Before starting to develop any code, make sure to run `nix develop` to enter the
 
 When first starting to write code in Ros2, it can be difficult to know where to start. To provide guidance there is a template ROS2 package which can be found at `software/templates/ros2`. This package includes a pair of C++ header and source files with basic functionality, as well as a python launch file. There are also some CMake snippets in `software/templates` that can be used to set up additional functionality within the code.
 
+The Ros node is programmed using C++ and is the language that should be used when developing a package. You can also develop a package using python, however, it should be ported over to C++ where possible. There are some instances where python does make sense (such as the perseus_input package), however, in most cases C++ is the appropriate language to use.
+
 :::{note}
 A Package in Ros is a collection of relevant functionalities (nodes) that achieves a specific purpose. For example, the perseus_input library provides an interface to use local device inputs to control perseus. For more information on packages and nodes alongside Ros development structure, see the [Ros2 Jazzy Docs](https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html).
 :::
