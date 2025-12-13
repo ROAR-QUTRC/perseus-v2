@@ -357,24 +357,19 @@ namespace hi_can::parameters
                 };
                 namespace send_message  // The servo takes one of these messages (with the send address), then sends the corresponding receive message with the same command and the receive address
                 {
-                    struct _torque_message_t
+                    struct torque_message_t : Serializable
                     {
-                        _rmd_command _command = _rmd_command::SET_TORQUE_CLOSED_LOOP;
-                        uint8_t _reserved1[3] = {};
-                        uint16_t torque = 0;
-                        uint16_t _reserved2 = 0;
+                        double torque = 0;
+                        std::vector<uint8_t> serialize_data() override;
                     };
-                    typedef SimpleSerializable<_torque_message_t> torque_message_t;
 
-                    struct _speed_message_t
+                    struct speed_message_t : Serializable
                     {
-                        _rmd_command _command = _rmd_command::SET_SPEED_CLOSED_LOOP;
-                        uint8_t _reserved[3] = {};
-                        uint32_t speed = 0;
+                        double speed = 0;
+                        std::vector<uint8_t> serialize_data() override;
                     };
-                    typedef SimpleSerializable<_speed_message_t> speed_message_t;
 
-                    struct _position_message_t
+                    struct position_message_t : Serializable
                     {
                         enum class position_command_t : uint8_t
                         {
@@ -382,13 +377,12 @@ namespace hi_can::parameters
                             INCREMENTAL = uint8_t(_rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP),
                         };
                         position_command_t position_command;
-                        uint8_t _reserved = 0;
                         uint16_t speed_limit = 0;
-                        uint32_t position_control = 0;
+                        double position_control = 0;
+                        std::vector<uint8_t> serialize_data() override;
                     };
-                    typedef SimpleSerializable<_position_message_t> position_message_t;
 
-                    struct _single_turn_position_message_t
+                    struct single_turn_position_message_t : Serializable
                     {
                         _rmd_command _command = _rmd_command::SET_SINGLE_TURN_POSITION;
                         enum class rotation_direction_t : uint8_t
@@ -398,14 +392,13 @@ namespace hi_can::parameters
                         };
                         rotation_direction_t rotation_direction = {};
                         uint16_t speed_limit = 0;
-                        uint16_t position_control = 0;
-                        uint16_t _reserved = 0;
+                        double position_control = 0;
+                        std::vector<uint8_t> serialize_data() override;
                     };
-                    typedef SimpleSerializable<_single_turn_position_message_t> single_turn_position_message_t;
 
-                    struct _empty_command_message_t
+                    struct command_message_t : Serializable
                     {
-                        enum class empty_command_t : uint8_t
+                        enum class command_t : uint8_t
                         {
                             SHUTDOWN = uint8_t(_rmd_command::MOTOR_SHUTDOWN),
                             STOP = uint8_t(_rmd_command::MOTOR_STOP),
@@ -415,10 +408,9 @@ namespace hi_can::parameters
                             STATUS_2 = uint8_t(_rmd_command::READ_MOTOR_STATUS_2),
                             STATUS_3 = uint8_t(_rmd_command::READ_MOTOR_STATUS_3),
                         };
-                        empty_command_t command = {};
-                        uint8_t _reserved[7] = {};
+                        command_t command = {};
+                        std::vector<uint8_t> serialize_data() override;
                     };
-                    typedef SimpleSerializable<_empty_command_message_t> empty_command_message_t;
 
                     struct _function_control_t
                     {
@@ -441,23 +433,33 @@ namespace hi_can::parameters
                 }
                 namespace receive_message
                 {
-                    struct _motor_status_1_message_t
+                    struct motor_status_1_message_t : Deserializable
                     {
-                        _rmd_command _command = _rmd_command::READ_MOTOR_STATUS_1;
-                        uint8_t motor_temperature = 0;
-                        uint8_t _reserved = 0;
-                        enum class brake_control_t
+                        int8_t motor_temperature = 0;
+                        enum class brake_control_t : uint8_t
                         {
                             BRAKE_LOCK = 0x00,
                             BRAKE_RELEASE = 0x01,
                         };
                         brake_control_t brake_control = {};
-                        uint16_t voltage = 0;
-                        uint16_t error_status = 0;
+                        double voltage = 0;
+                        enum class error_t : uint16_t
+                        {
+                            STALL = 0x0002,
+                            LOW_VOLTAGE = 0x0004,
+                            OVER_VOLTAGE = 0x0008,
+                            OVER_CURRENT = 0x0010,
+                            POWER_OVERRUN = 0x0040,
+                            CALIBRATION_PARAMETER_WRITE = 0x0080,
+                            SPEEDING = 0x0100,
+                            OVER_TEMPERATURE = 0x1000,
+                            ENCODER_CALIBRATION = 0x2000,
+                        };
+                        error_t error_status = {};
+                        void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
                     };
-                    typedef SimpleSerializable<_motor_status_1_message_t> motor_status_1_message_t;
 
-                    struct _motor_status_2_message_t
+                    struct motor_status_2_message_t : Deserializable
                     {
                         enum class motor_status_2_command_t
                         {
@@ -468,34 +470,33 @@ namespace hi_can::parameters
                             INCREMENTAL_POSITION = uint8_t(_rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP),
                         };
                         motor_status_2_command_t command = {};
-                        uint8_t motor_temperature = 0;
-                        uint16_t torque_current = 0;
-                        uint16_t motor_speed = 0;
-                        uint16_t motor_angle = 0;
+                        int8_t motor_temperature = 0;
+                        double torque_current = 0;
+                        int16_t motor_speed = 0;
+                        int16_t motor_angle = 0;
+                        void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
                     };
-                    typedef SimpleSerializable<_motor_status_2_message_t> motor_status_2_message_t;
 
-                    struct _motor_status_3_message_t
+                    struct motor_status_3_message_t : Deserializable
                     {
-                        _rmd_command _command = _rmd_command::READ_MOTOR_STATUS_3;
-                        uint8_t motor_temperature = 0;
-                        uint16_t phase_a_current = 0;
-                        uint16_t phase_b_current = 0;
-                        uint16_t phase_c_current = 0;
+                        int8_t motor_temperature = 0;
+                        double phase_a_current = 0;
+                        double phase_b_current = 0;
+                        double phase_c_current = 0;
+                        void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
                     };
-                    typedef SimpleSerializable<_motor_status_3_message_t> motor_status_3_message_t;
 
-                    struct _single_turn_motor_status_message_t
+                    struct single_turn_motor_status_message_t : Deserializable
                     {
                         _rmd_command command = _rmd_command::SET_SINGLE_TURN_POSITION;
-                        uint8_t motor_temperature = 0;
-                        uint16_t torque_current = 0;
-                        uint16_t motor_speed = 0;
+                        int8_t motor_temperature = 0;
+                        double torque_current = 0;
+                        int16_t motor_speed = 0;
                         uint16_t motor_encoder = 0;
+                        void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
                     };
-                    typedef SimpleSerializable<_single_turn_motor_status_message_t> single_turn_motor_status_message_t;
 
-                    struct _empty_message_t
+                    struct empty_message_t : Deserializable
                     {
                         enum class empty_command_t
                         {
@@ -505,9 +506,8 @@ namespace hi_can::parameters
                             BRAKE_LOCK = uint8_t(_rmd_command::SYSTEM_BRAKE_LOCK),
                         };
                         empty_command_t command = {};
-                        uint8_t _reserved[7] = {};
+                        void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
                     };
-                    typedef SimpleSerializable<_empty_message_t> empty_message_t;
 
                     struct _function_message_t
                     {

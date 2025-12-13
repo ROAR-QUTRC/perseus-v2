@@ -221,6 +221,168 @@ namespace hi_can::parameters::drive::vesc
     }
 }
 
+namespace hi_can::parameters::post_landing::arm::servo
+{
+    namespace send_message
+    {
+
+#pragma pack(push, 1)
+        struct raw_torque_message_t
+        {
+            _rmd_command _command = _rmd_command::SET_TORQUE_CLOSED_LOOP;
+            uint8_t _reserved1[3] = {};
+            int16_t torque;
+            uint16_t _reserved2 = 0;
+        };
+        struct raw_speed_message_t
+        {
+            _rmd_command _command = _rmd_command::SET_SPEED_CLOSED_LOOP;
+            uint8_t _reserved[3] = {};
+            int32_t speed = 0;
+        };
+        struct raw_position_message_t
+        {
+            position_message_t::position_command_t position_command;
+            uint8_t _reserved = 0;
+            uint16_t speed_limit;
+            int32_t position_control;
+        };
+        struct raw_single_turn_position_message_t
+        {
+            _rmd_command _command = _rmd_command::SET_SINGLE_TURN_POSITION;
+            single_turn_position_message_t::rotation_direction_t rotation_direction;
+            uint16_t speed_limit;
+            uint16_t position_control;
+            uint16_t _reserved = 0;
+        };
+        struct raw_command_message_t
+        {
+            command_message_t::command_t command;
+            uint8_t _reserved[7] = {};
+        };
+        ;
+#pragma pack(pop)
+
+        std::vector<uint8_t> torque_message_t::serialize_data()
+        {
+            SimpleSerializable<raw_torque_message_t> raw_data;
+            raw_data.torque = torque * 100 / 0.12;  // 0.01 A/LSB, 0.12 Nm/A
+            return raw_data.serialize_data();
+        }
+        std::vector<uint8_t> speed_message_t::serialize_data()
+        {
+            SimpleSerializable<raw_speed_message_t> raw_data;
+            raw_data.speed = speed * 100;  // 0.01 dps/LSB
+            return raw_data.serialize_data();
+        }
+        std::vector<uint8_t> position_message_t::serialize_data()
+        {
+            SimpleSerializable<raw_position_message_t> raw_data;
+            raw_data.position_command = position_command;
+            raw_data.speed_limit = speed_limit;
+            raw_data.position_control = position_control * 100;  // 0.01 degrees/LSB
+            return raw_data.serialize_data();
+        }
+        std::vector<uint8_t> single_turn_position_message_t::serialize_data()
+        {
+            SimpleSerializable<raw_single_turn_position_message_t> raw_data;
+            raw_data.rotation_direction = rotation_direction;
+            raw_data.speed_limit = speed_limit;                  // 1 dps/LSB
+            raw_data.position_control = position_control * 100;  // 0.01 degrees/LSB
+            return raw_data.serialize_data();
+        }
+        std::vector<uint8_t> command_message_t::serialize_data()
+        {
+            SimpleSerializable<raw_command_message_t> raw_data;
+            raw_data.command = command;  // Empty message other than the command
+            return raw_data.serialize_data();
+        }
+
+    }
+    namespace receive_message
+    {
+
+#pragma pack(push, 1)
+        struct raw_motor_status_1_message_t
+        {
+            _rmd_command _command;  // Should always be 0x9A (status 1)
+            int8_t motor_temperature;
+            uint8_t _reserved;
+            motor_status_1_message_t::brake_control_t brake_control;
+            uint16_t voltage;
+            motor_status_1_message_t::error_t error_status;
+        };
+        struct raw_motor_status_2_message_t
+        {
+            motor_status_2_message_t::motor_status_2_command_t command;
+            int8_t motor_temperature;
+            int16_t torque_current;
+            int16_t motor_speed;
+            int16_t motor_angle;
+        };
+        struct raw_motor_status_3_message_t
+        {
+            _rmd_command _command;  // Should always be 0x9D (status 3)
+            uint8_t motor_temperature;
+            uint16_t phase_a_current;
+            uint16_t phase_b_current;
+            uint16_t phase_c_current;
+        };
+        struct raw_single_turn_motor_status_message_t
+        {
+            _rmd_command _command;  // Should always be 0xA6 (single turn position)
+            uint8_t motor_temperature = 0;
+            uint16_t torque_current = 0;
+            uint16_t motor_speed = 0;
+            uint16_t motor_encoder = 0;
+        };
+        struct raw_empty_message_t
+        {
+            empty_message_t::empty_command_t command = {};
+            uint8_t _reserved[7] = {};
+        };
+#pragma pack(pop)
+
+        void motor_status_1_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        {
+            SimpleSerializable<raw_motor_status_1_message_t> raw_data(serialized_data);
+            motor_temperature = raw_data.motor_temperature;  // 1 degree Celsius/LSB
+            brake_control = raw_data.brake_control;
+            voltage = raw_data.voltage / 10.0;  // 0.1V/LSB
+        }
+        void motor_status_2_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        {
+            SimpleSerializable<raw_motor_status_2_message_t> raw_data(serialized_data);
+            command = raw_data.command;
+            motor_temperature = raw_data.motor_temperature;  // 1 degree Celsius/LSB
+            torque_current = raw_data.torque_current / 100;  // 0.01 A/LSB
+            motor_speed = raw_data.motor_speed;              // 1 dps/LSB
+            motor_angle = raw_data.motor_angle;              // 1 degree/LSB
+        }
+        void motor_status_3_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        {
+            SimpleSerializable<raw_motor_status_3_message_t> raw_data(serialized_data);
+            motor_temperature = raw_data.motor_temperature;    // 1 degree Celsius/LSB
+            phase_a_current = raw_data.phase_a_current / 100;  // 0.01 A/LSB
+            phase_b_current = raw_data.phase_b_current / 100;  // 0.01 A/LSB
+            phase_c_current = raw_data.phase_c_current / 100;  // 0.01 A/LSB
+        }
+        void single_turn_motor_status_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        {
+            SimpleSerializable<raw_single_turn_motor_status_message_t> raw_data(serialized_data);
+            motor_temperature = raw_data.motor_temperature;  // 1 degree Celsius/LSB
+            torque_current = raw_data.torque_current / 100;  // 0.01 A/LSB
+            motor_speed = raw_data.motor_speed;              // 1 dps/LSB
+            motor_encoder = raw_data.motor_encoder;          // TODO: Check the value range of this - determined by the number of bits of the encoder
+        }
+        void empty_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        {
+            SimpleSerializable<raw_empty_message_t> raw_data(serialized_data);
+            command = raw_data.command;
+        }
+    }
+}
+
 namespace hi_can::parameters::legacy::drive::motors
 {
     EscParameterGroup::EscParameterGroup(const addressing::legacy::address_t& device_address)
