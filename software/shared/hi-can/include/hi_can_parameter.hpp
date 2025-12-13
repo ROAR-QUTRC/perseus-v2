@@ -307,6 +307,231 @@ namespace hi_can::parameters
             };
         }
     }
+    namespace post_landing
+    {
+        namespace arm
+        {
+            namespace servo
+            {
+                enum class _rmd_command : uint8_t  // The first byte of every RMD servo message (send or receive) should be of these commands
+                {
+                    FUNCTION_CONTROL = 0x20,
+                    READ_PID = 0x30,
+                    WRITE_PID_RAM = 0x31,
+                    WRITE_PID_ROM = 0x32,
+                    WRITE_ACCELERATION = 0x43,
+                    READ_MULTI_TURN_POSITION = 0x60,
+                    READ_MULTI_TURN_ORIGINAL_POSITION = 0x61,
+                    READ_MULTI_TURN_ZERO_OFFSET = 0x62,
+                    WRITE_MULTI_TURN_ROM_AS_ZERO = 0x63,
+                    WRITE_CURRENT_MULTI_TURN_ROM_AS_ZERO = 0x64,
+                    READ_SYSTEM_OPERATING_MODE = 0x70,
+                    SYSTEM_RESET = 0x76,
+                    SYSTEM_BRAKE_RELEASE = 0x77,
+                    SYSTEM_BRAKE_LOCK = 0x78,
+                    SET_CAN_ID = 0x79,
+                    MOTOR_SHUTDOWN = 0x80,
+                    MOTOR_STOP = 0x81,
+                    READ_SINGLE_TURN_ENCODER = 0x90,
+                    READ_MULTI_TURN_ANGLE = 0x92,
+                    READ_SINGLE_TURN_ANGLE = 0x94,
+
+                    // Statuses
+                    READ_MOTOR_STATUS_1 = 0x9A,
+                    READ_MOTOR_STATUS_2 = 0x9C,
+                    READ_MOTOR_STATUS_3 = 0x9D,
+
+                    // CONTROL COMMANDS
+                    SET_TORQUE_CLOSED_LOOP = 0xA1,
+                    SET_SPEED_CLOSED_LOOP = 0xA2,
+                    SET_ABSOLUTE_POSITION_CLOSED_LOOP = 0xA4,
+                    SET_SINGLE_TURN_POSITION = 0xA6,
+                    SET_INCREMENTAL_POSITION_CLOSED_LOOP = 0xA8,
+
+                    READ_SYSTEM_RUNTIME = 0xB1,
+                    READ_SYSTEM_SOFTWARE_DATE = 0xB2,
+                    SET_COMMUNICATION_INTERRUPTION_PROTECTION_TIME = 0xB3,
+                    SET_COMMUNICATION_BAUD_RATE = 0xB4,
+                    READ_MOTOR_MODEL = 0xB5,
+                    ACTIVE_REPLY_FUNCTION = 0xB6,
+                };
+                namespace send_message  // The servo takes one of these messages (with the send address), then sends the corresponding receive message with the same command and the receive address
+                {
+                    struct _torque_message_t
+                    {
+                        _rmd_command _command = _rmd_command::SET_TORQUE_CLOSED_LOOP;
+                        uint8_t _reserved1[3] = {};
+                        uint16_t torque = 0;
+                        uint16_t _reserved2 = 0;
+                    };
+                    typedef SimpleSerializable<_torque_message_t> torque_message_t;
+
+                    struct _speed_message_t
+                    {
+                        _rmd_command _command = _rmd_command::SET_SPEED_CLOSED_LOOP;
+                        uint8_t _reserved[3] = {};
+                        uint32_t speed = 0;
+                    };
+                    typedef SimpleSerializable<_speed_message_t> speed_message_t;
+
+                    struct _position_message_t
+                    {
+                        enum class position_command_t : uint8_t
+                        {
+                            ABSOLUTE = uint8_t(_rmd_command::SET_ABSOLUTE_POSITION_CLOSED_LOOP),
+                            INCREMENTAL = uint8_t(_rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP),
+                        };
+                        position_command_t position_command;
+                        uint8_t _reserved = 0;
+                        uint16_t speed_limit = 0;
+                        uint32_t position_control = 0;
+                    };
+                    typedef SimpleSerializable<_position_message_t> position_message_t;
+
+                    struct _single_turn_position_message_t
+                    {
+                        _rmd_command _command = _rmd_command::SET_SINGLE_TURN_POSITION;
+                        enum class rotation_direction_t : uint8_t
+                        {
+                            CLOCKWISE = 0x00,
+                            ANTICLOCKWISE = 0x01,
+                        };
+                        rotation_direction_t rotation_direction = {};
+                        uint16_t speed_limit = 0;
+                        uint16_t position_control = 0;
+                        uint16_t _reserved = 0;
+                    };
+                    typedef SimpleSerializable<_single_turn_position_message_t> single_turn_position_message_t;
+
+                    struct _empty_command_message_t
+                    {
+                        enum class empty_command_t : uint8_t
+                        {
+                            SHUTDOWN = uint8_t(_rmd_command::MOTOR_SHUTDOWN),
+                            STOP = uint8_t(_rmd_command::MOTOR_STOP),
+                            BRAKE_RELEASE = uint8_t(_rmd_command::SYSTEM_BRAKE_RELEASE),
+                            BRAKE_LOCK = uint8_t(_rmd_command::SYSTEM_BRAKE_LOCK),
+                            STATUS_1 = uint8_t(_rmd_command::READ_MOTOR_STATUS_1),
+                            STATUS_2 = uint8_t(_rmd_command::READ_MOTOR_STATUS_2),
+                            STATUS_3 = uint8_t(_rmd_command::READ_MOTOR_STATUS_3),
+                        };
+                        empty_command_t command = {};
+                        uint8_t _reserved[7] = {};
+                    };
+                    typedef SimpleSerializable<_empty_command_message_t> empty_command_message_t;
+
+                    struct _function_control_t
+                    {
+                        _rmd_command _command = _rmd_command::FUNCTION_CONTROL;
+                        enum class function_index_t : uint8_t
+                        {
+                            CLEAR_MULTI_TURN = 0x01,
+                            CANID_FILTER_ENABLE = 0x02,
+                            ERROR_TRANSMISSION_ENABLE = 0x03,
+                            MULTI_TURN_SAVE_ENABLE = 0x04,
+                            SET_CANID = 0x05,
+                            SET_MAXIMUM_POSITIVE_ANGLE = 0x06,
+                            SET_MAXIMUM_NEGATIVE_ANGLE = 0x07,
+                        };
+                        function_index_t function_index = {};
+                        uint16_t _reserved = 0;
+                        uint32_t input_value = 0;
+                    };
+                    typedef SimpleSerializable<_function_control_t> function_control_t;
+                }
+                namespace receive_message
+                {
+                    struct _motor_status_1_message_t
+                    {
+                        _rmd_command _command = _rmd_command::READ_MOTOR_STATUS_1;
+                        uint8_t motor_temperature = 0;
+                        uint8_t _reserved = 0;
+                        enum class brake_control_t
+                        {
+                            BRAKE_LOCK = 0x00,
+                            BRAKE_RELEASE = 0x01,
+                        };
+                        brake_control_t brake_control = {};
+                        uint16_t voltage = 0;
+                        uint16_t error_status = 0;
+                    };
+                    typedef SimpleSerializable<_motor_status_1_message_t> motor_status_1_message_t;
+
+                    struct _motor_status_2_message_t
+                    {
+                        enum class motor_status_2_command_t
+                        {
+                            STATUS_2 = uint8_t(_rmd_command::READ_MOTOR_STATUS_2),
+                            TORQUE = uint8_t(_rmd_command::SET_TORQUE_CLOSED_LOOP),
+                            SPEED = uint8_t(_rmd_command::SET_SPEED_CLOSED_LOOP),
+                            ABSOLUTE_POSITION = uint8_t(_rmd_command::SET_ABSOLUTE_POSITION_CLOSED_LOOP),
+                            INCREMENTAL_POSITION = uint8_t(_rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP),
+                        };
+                        motor_status_2_command_t command = {};
+                        uint8_t motor_temperature = 0;
+                        uint16_t torque_current = 0;
+                        uint16_t motor_speed = 0;
+                        uint16_t motor_angle = 0;
+                    };
+                    typedef SimpleSerializable<_motor_status_2_message_t> motor_status_2_message_t;
+
+                    struct _motor_status_3_message_t
+                    {
+                        _rmd_command _command = _rmd_command::READ_MOTOR_STATUS_3;
+                        uint8_t motor_temperature = 0;
+                        uint16_t phase_a_current = 0;
+                        uint16_t phase_b_current = 0;
+                        uint16_t phase_c_current = 0;
+                    };
+                    typedef SimpleSerializable<_motor_status_3_message_t> motor_status_3_message_t;
+
+                    struct _single_turn_motor_status_message_t
+                    {
+                        _rmd_command command = _rmd_command::SET_SINGLE_TURN_POSITION;
+                        uint8_t motor_temperature = 0;
+                        uint16_t torque_current = 0;
+                        uint16_t motor_speed = 0;
+                        uint16_t motor_encoder = 0;
+                    };
+                    typedef SimpleSerializable<_single_turn_motor_status_message_t> single_turn_motor_status_message_t;
+
+                    struct _empty_message_t
+                    {
+                        enum class empty_command_t
+                        {
+                            STOP = uint8_t(_rmd_command::MOTOR_STOP),
+                            SHUTDOWN = uint8_t(_rmd_command::MOTOR_SHUTDOWN),
+                            BRAKE_RELEASE = uint8_t(_rmd_command::SYSTEM_BRAKE_RELEASE),
+                            BRAKE_LOCK = uint8_t(_rmd_command::SYSTEM_BRAKE_LOCK),
+                        };
+                        empty_command_t command = {};
+                        uint8_t _reserved[7] = {};
+                    };
+                    typedef SimpleSerializable<_empty_message_t> empty_message_t;
+
+                    struct _function_message_t
+                    {
+                        _rmd_command _command = _rmd_command::FUNCTION_CONTROL;
+                        enum class function_index_t : uint8_t
+                        {
+                            CLEAR_MULTI_TURN = 0x01,
+                            CANID_FILTER_ENABLE = 0x02,
+                            ERROR_TRANSMISSION_ENABLE = 0x03,
+                            MULTI_TURN_SAVE_ENABLE = 0x04,
+                            SET_CANID = 0x05,
+                            SET_MAXIMUM_POSITIVE_ANGLE = 0x06,
+                            SET_MAXIMUM_NEGATIVE_ANGLE = 0x07,
+                        };
+                        function_index_t function_index = {};
+                        uint16_t _reserved = 0;
+                        uint32_t input_value = 0;
+                    };
+                    typedef SimpleSerializable<_function_message_t> function_message_t;
+                }
+            }
+
+        }
+    }
     namespace excavation
     {
         namespace bucket
