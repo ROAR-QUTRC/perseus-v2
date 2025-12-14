@@ -80,7 +80,8 @@ target_include_directories(rmd_servo_driver
 
 # Add dependencies for the executables
 ament_target_dependencies(rcb_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-ament_target_dependencies(rmd_servo_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_target_dependencies(rmd_servo_driver PUBLIC
+                          ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 target_link_libraries(rcb_driver PUBLIC hi_can_raw)
 target_link_libraries(rmd_servo_driver PUBLIC hi_can_raw)

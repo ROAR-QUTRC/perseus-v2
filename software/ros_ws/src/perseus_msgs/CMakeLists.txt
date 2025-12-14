@@ -41,7 +41,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(THIS_PACKAGE_INCLUDE_DEPENDS )
 
 # packages which must be present but aren't linked against
-set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake rosidl_default_generators)
+set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake
+                               rosidl_default_generators)
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -51,9 +52,7 @@ endforeach()
 #   find_package(${Dependency} REQUIRED)
 # endforeach()
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/RmdServoStatus.msg"
- )
+rosidl_generate_interfaces(${PROJECT_NAME} "msg/RmdServoStatus.msg")
 
 ament_export_dependencies(rosidl_default_runtime)
 
