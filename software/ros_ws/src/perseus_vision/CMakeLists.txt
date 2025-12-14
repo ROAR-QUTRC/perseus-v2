@@ -23,8 +23,8 @@ find_package(std_msgs REQUIRED)
 # ============================
 # ROS2 Interface generation
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/DetectArucoMarkers.srv"
-  "msg/ArucoDetections.msg"
+  "srv/DetectObjects.srv"
+  "msg/ObjectDetections.msg"
   DEPENDENCIES builtin_interfaces geometry_msgs std_msgs
 )
 

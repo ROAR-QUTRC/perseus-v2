@@ -23,55 +23,52 @@
 #include <unordered_map>
 #include <vector>
 
-namespace
+struct Detection
 {
-    struct Detection
+    cv::Rect box;
+    int cls;
+    float score;
+};
+
+inline float sigmoid(float x) { return 1.f / (1.f + std::exp(-x)); }
+
+inline float IoU(const cv::Rect& a, const cv::Rect& b)
+{
+    int x1 = std::max(a.x, b.x);
+    int y1 = std::max(a.y, b.y);
+    int x2 = std::min(a.x + a.width, b.x + b.width);
+    int y2 = std::min(a.y + a.height, b.y + b.height);
+    int inter = std::max(0, x2 - x1) * std::max(0, y2 - y1);
+    int areaA = a.width * a.height;
+    int areaB = b.width * b.height;
+    int uni = areaA + areaB - inter;
+    return uni > 0 ? static_cast<float>(inter) / static_cast<float>(uni) : 0.f;
+}
+
+inline std::vector<Detection> nms(const std::vector<Detection>& dets, float iou_the)
+{
+    std::vector<Detection> result;
+    std::map<int, std::vector<Detection>> buckets;
+    for (auto& d : dets) buckets[d.cls].push_back(d);
+
+    for (auto& [cls, vec] : buckets)
     {
-        cv::Rect box;
-        int cls;
-        float score;
-    };
-
-    float sigmoid(float x) { return 1.f / (1.f + std::exp(-x)); }
-
-    float IoU(const cv::Rect& a, const cv::Rect& b)
-    {
-        int x1 = std::max(a.x, b.x);
-        int y1 = std::max(a.y, b.y);
-        int x2 = std::min(a.x + a.width, b.x + b.width);
-        int y2 = std::min(a.y + a.height, b.y + b.height);
-        int inter = std::max(0, x2 - x1) * std::max(0, y2 - y1);
-        int areaA = a.width * a.height;
-        int areaB = b.width * b.height;
-        int uni = areaA + areaB - inter;
-        return uni > 0 ? static_cast<float>(inter) / static_cast<float>(uni) : 0.f;
-    }
-
-    std::vector<Detection> nms(const std::vector<Detection>& dets, float iou_the)
-    {
-        std::vector<Detection> result;
-        std::map<int, std::vector<Detection>> buckets;
-        for (auto& d : dets) buckets[d.cls].push_back(d);
-
-        for (auto& [cls, vec] : buckets)
+        std::sort(vec.begin(), vec.end(), [](const Detection& a, const Detection& b)
+                  { return a.score > b.score; });
+        std::vector<bool> removed(vec.size(), false);
+        for (size_t i = 0; i < vec.size(); ++i)
         {
-            std::sort(vec.begin(), vec.end(), [](const Detection& a, const Detection& b)
-                      { return a.score > b.score; });
-            std::vector<bool> removed(vec.size(), false);
-            for (size_t i = 0; i < vec.size(); ++i)
+            if (removed[i])
+                continue;
+            result.push_back(vec[i]);
+            for (size_t j = i + 1; j < vec.size(); ++j)
             {
-                if (removed[i])
-                    continue;
-                result.push_back(vec[i]);
-                for (size_t j = i + 1; j < vec.size(); ++j)
-                {
-                    if (!removed[j] && IoU(vec[i].box, vec[j].box) > iou_the)
-                        removed[j] = true;
-                }
+                if (!removed[j] && IoU(vec[i].box, vec[j].box) > iou_the)
+                    removed[j] = true;
             }
         }
-        return result;
     }
+    return result;
 }
 
 struct TrackedCube
@@ -111,6 +108,8 @@ private:
 
     const char** output_names_cstr();
 
+    std::string getClassName(int class_id);
+
     // Publishers and Subscribers
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_image_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_pose_;
@@ -133,6 +132,7 @@ private:
     std::string output_img_;
     bool publish_output_;
     std::string output_topic_;
+    bool use_cuda_;
 
     // Cube tracking
     std::unordered_map<int, TrackedCube> tracked_cubes_;
@@ -153,6 +153,12 @@ private:
     std::vector<std::string> input_names_, output_names_;
     std::vector<const char*> input_cstr_, output_cstr_;
     bool model_loaded_ = false;
+
+    // Cached detection parameters (optimization)
+    float confidence_threshold_;
+    float nms_threshold_;
+    std::vector<Detection> detections_cache_;  // Pre-allocated for reuse
+    std::vector<float> chw_cache_;  // Pre-allocated CHW buffer
 };
 
 #endif  // CUBE_DETECTOR_HPP

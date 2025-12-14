@@ -53,13 +53,13 @@ ArucoDetector::ArucoDetector()
             output_img_, 10);
     }
     //
-    service_ = this->create_service<DetectArucoMarkers>(
-      "detect_aruco_marker",
+    service_ = this->create_service<DetectObjects>(
+      "detect_objects",
       std::bind(&ArucoDetector::handle_request, this,
                 std::placeholders::_1,
                 std::placeholders::_2));
     if (publish_output_) {
-        detection_pub_ = this->create_publisher<perseus_vision::msg::ArucoDetections>(
+        detection_pub_ = this->create_publisher<perseus_vision::msg::ObjectDetections>(
             output_topic_, 10);
     } 
     RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
@@ -154,7 +154,7 @@ void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Head
     // Publish detections message if enabled
     if (publish_output_ && detection_pub_)
     {
-        perseus_vision::msg::ArucoDetections detection_msg;
+        perseus_vision::msg::ObjectDetections detection_msg;
         {
             std::lock_guard<std::mutex> lock(detections_mutex_);
             detection_msg.stamp = latest_timestamp_;
@@ -277,8 +277,8 @@ tf2::Quaternion ArucoDetector::rotationMatrixToQuaternion(const cv::Mat& rotatio
     return quat;
 }
 
-void ArucoDetector::handle_request(const std::shared_ptr<DetectArucoMarkers::Request> request,
-                                    std::shared_ptr<DetectArucoMarkers::Response> response)
+void ArucoDetector::handle_request(const std::shared_ptr<DetectObjects::Request> request,
+                                    std::shared_ptr<DetectObjects::Response> response)
 {
     (void)request;  // Suppress unused parameter warning
     

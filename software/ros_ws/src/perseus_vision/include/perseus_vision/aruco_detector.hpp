@@ -17,10 +17,10 @@
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "builtin_interfaces/msg/time.hpp"
-#include "perseus_vision/srv/detect_aruco_markers.hpp"
-#include "perseus_vision/msg/aruco_detections.hpp"
+#include "perseus_vision/srv/detect_objects.hpp"
+#include "perseus_vision/msg/object_detections.hpp"
 
-using DetectArucoMarkers = perseus_vision::srv::DetectArucoMarkers;
+using DetectObjects = perseus_vision::srv::DetectObjects;
 
 class ArucoDetector : public rclcpp::Node
 {
@@ -35,22 +35,22 @@ private:
     void transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
                                    const cv::Vec3d& rvec, const cv::Vec3d& tvec);
     tf2::Quaternion rotationMatrixToQuaternion(const cv::Mat& rotation_matrix);
-    void handle_request(const std::shared_ptr<DetectArucoMarkers::Request> request,
-                       std::shared_ptr<DetectArucoMarkers::Response> response);
+    void handle_request(const std::shared_ptr<DetectObjects::Request> request,
+                       std::shared_ptr<DetectObjects::Response> response);
 
     // ROS interfaces
-    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_;
-    rclcpp::Subscription<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_sub_;
-    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_;
-    rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_pub_;
-    rclcpp::Publisher<perseus_vision::msg::ArucoDetections>::SharedPtr detection_pub_;
-    rclcpp::Service<DetectArucoMarkers>::SharedPtr service_;
-    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-    std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_; // for uncompressed images 
+    rclcpp::Subscription<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_sub_; // for compressed images
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_; // for uncompressed images 
+    rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_pub_;// for compressed images 
+    rclcpp::Publisher<perseus_vision::msg::ObjectDetections>::SharedPtr detection_pub_;// for publishing detections 
+    rclcpp::Service<DetectObjects>::SharedPtr service_; // service for detection requests 
+    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_; // for publishing TFs
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_; // for TF buffer
+    std::unique_ptr<tf2_ros::TransformListener> tf_listener_; // for TF listener
 
     // ArUco
-    cv::aruco::Dictionary dictionary_;
+    cv::aruco::Dictionary dictionary_; 
     cv::aruco::DetectorParameters detector_params_;
     cv::aruco::ArucoDetector detector_;
 
