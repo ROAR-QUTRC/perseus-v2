@@ -11,9 +11,11 @@
   onnxruntime,
   opencv,
   rclcpp,
+  rosidl-default-generators,
   sensor-msgs,
   tf2,
   tf2-ros,
+  tf2-geometry-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-vision";
@@ -22,7 +24,7 @@ buildRosPackage rec {
   src = ./../src/perseus_vision;
 
   buildType = "ament_cmake";
-  buildInputs = [ ament-cmake ];
+  buildInputs = [ ament-cmake rosidl-default-generators ];
   checkInputs = [
     ament-lint-auto
     ament-lint-common
@@ -37,6 +39,7 @@ buildRosPackage rec {
     sensor-msgs
     tf2
     tf2-ros
+    tf2-geometry-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
