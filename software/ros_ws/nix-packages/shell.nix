@@ -69,6 +69,8 @@ pkgs.mkShell {
             ros-gz-sim
             ros2controlcli
             ros2launch
+            rosidl-default-generators
+            rosidl-default-runtime
             rplidar-ros
             rviz2
             sensor-msgs

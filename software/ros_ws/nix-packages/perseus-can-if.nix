@@ -6,6 +6,7 @@
   backward-ros,
   hi-can-raw,
   nlohmann_json,
+  perseus-msgs,
   rclcpp,
   sensor-msgs,
 }:
@@ -21,6 +22,7 @@ buildRosPackage rec {
     backward-ros
     hi-can-raw
     nlohmann_json
+    perseus-msgs
     rclcpp
     sensor-msgs
   ];
