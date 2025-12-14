@@ -1,0 +1,148 @@
+<?xml version='1.0'?>
+<sdf version='1.8'>
+  <model name='ARC_Zone'>
+    <pose>0 0 0 0 0 0</pose>
+    <static>true</static> <!-- Set false to allow physics and falling -->
+
+    <!-- Wall East -->
+    <link name='Wall_E'>
+      <pose>12 0 0.45 0 0 1.5708</pose> <!-- 12m east, rotated 90 deg -->
+      <collision name='Wall_E_Collision'>
+        <geometry>
+          <box>
+            <size>28 0.15 0.5</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='Wall_E_Visual'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>28 0.15 0.5</size>
+          </box>
+        </geometry>
+        <material>
+          <pbr>
+            <metal>
+              <albedo_map>textures/arc_logo.png</albedo_map>
+            </metal>
+          </pbr>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Wall North -->
+    <link name='Wall_N'>
+      <pose>0 14 0.45 0 0 0</pose> <!-- 14m north -->
+      <collision name='Wall_N_Collision'>
+        <geometry>
+          <box>
+            <size>24 0.15 0.5</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='Wall_N_Visual'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>24 0.15 0.5</size>
+          </box>
+        </geometry>
+        <material>
+          <pbr>
+            <metal>
+              <albedo_map>textures/arc_logo.png</albedo_map>
+            </metal>
+          </pbr>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Wall West -->
+    <link name='Wall_W'>
+      <pose>-12 0 0.45 0 0 1.5708</pose> <!-- 12m west, rotated 90 deg -->
+      <collision name='Wall_W_Collision'>
+        <geometry>
+          <box>
+            <size>28 0.15 0.5</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='Wall_W_Visual'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>28 0.15 0.5</size>
+          </box>
+        </geometry>
+        <material>
+          <pbr>
+            <metal>
+              <albedo_map>textures/arc_logo.png</albedo_map>
+            </metal>
+          </pbr>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Wall South -->
+    <link name='Wall_S'>
+      <pose>0 -14 0.45 0 0 0</pose> <!-- 14m south -->
+      <collision name='Wall_S_Collision'>
+        <geometry>
+          <box>
+            <size>24 0.15 0.5</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='Wall_S_Visual'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>24 0.15 0.5</size>
+          </box>
+        </geometry>
+        <material>
+          <pbr>
+            <metal>
+              <albedo_map>textures/arc_logo.png</albedo_map>
+            </metal>
+          </pbr>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Fixed joints connecting walls (remove the last joint to break the loop) -->
+    <joint name="joint_wall_e_n" type="fixed">
+      <parent>Wall_E</parent>
+      <child>Wall_N</child>
+    </joint>
+
+    <joint name="joint_wall_n_w" type="fixed">
+      <parent>Wall_N</parent>
+      <child>Wall_W</child>
+    </joint>
+
+    <joint name="joint_wall_w_s" type="fixed">
+      <parent>Wall_W</parent>
+      <child>Wall_S</child>
+    </joint>
+
+  </model>
+</sdf>
