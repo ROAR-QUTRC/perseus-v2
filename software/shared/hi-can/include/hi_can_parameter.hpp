@@ -309,9 +309,9 @@ namespace hi_can::parameters
     }
     namespace post_landing
     {
-        namespace arm
+        namespace servo
         {
-            namespace servo
+            namespace rmd
             {
                 enum class _rmd_command : uint8_t  // The first byte of every RMD servo message (send or receive) should be of these commands
                 {
@@ -410,6 +410,7 @@ namespace hi_can::parameters
                         };
                         command_t command = {};
                         std::vector<uint8_t> serialize_data() override;
+                        constexpr command_message_t(command_t command) : command(command) {}
                     };
 
                     struct _function_control_t

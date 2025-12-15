@@ -221,7 +221,7 @@ namespace hi_can::parameters::drive::vesc
     }
 }
 
-namespace hi_can::parameters::post_landing::arm::servo
+namespace hi_can::parameters::post_landing::servo::rmd
 {
     namespace send_message
     {

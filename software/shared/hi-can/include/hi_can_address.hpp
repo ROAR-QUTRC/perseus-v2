@@ -366,45 +366,42 @@ namespace hi_can
             /// @brief The post-landing system ID
             constexpr uint8_t SYSTEM_ID = 0x03;
             /// @brief Namespace containing all addresses in the arm subsystem
-            namespace arm
+            namespace servo
             {
                 /// @brief The arm subsystem ID
                 constexpr uint8_t SUBSYSTEM_ID = 0x00;
                 /// @brief Namespace containing all the servos in the arm subsystem
-                namespace servo
+                namespace rmd
                 {
+                    struct servo_address_t : public flagged_address_t
+                    {
+                        constexpr servo_address_t() = default;
+                        constexpr servo_address_t(const rmd_command function, const motor_id motor_id = {})
+                            : flagged_address_t(address = (static_cast<uint16_t>(function) + static_cast<uint8_t>(motor_id)), is_extended = false)
+                        {
+                        }
+                    };
                     /// @brief The device ID of the arm servos
                     constexpr uint8_t DEVICE_ID = 0x00;
-                    /// @brief The group IDs of each type of servo
-                    enum class group
-                    {
-                        RMD = 0x00,  // These take SFF IDs - the least significant 11 bits must only contain the rmd_parameter ID
-                        RSBL = 0x01,
-                    };
-
-                    /// @brief The RMD-L-4015-100-C parameter addresses
-                    enum class rmd_parameter
+                    /// @brief The RMD-L-4015-100-C Motor ID commands
+                    enum class rmd_command : uint16_t
                     {
                         // SEND ADDRESS - 0x140 + ID
-                        ELBOW_SEND = 0x140,
-                        WRIST_YAW_SEND = 0x141,
-                        WRIST_ROLL_SEND = 0x142,
-
+                        SEND = 0x140,
                         // RECEIVE ADDRESS - 0x240 + ID
-                        ELBOW_RECEIVE = 0x240,
-                        WRIST_YAW_RECEIVE = 0x241,
-                        WRIST_ROLL_RECEIVE = 0x242,
-
+                        RECEIVE = 0x240,
                         // MOTION MODE CONTROL ADDRESS - 0x400 + ID
-                        ELBOW_MOTION_MODE = 0x400,
-                        WRIST_YAW_MOTION_MODE = 0x401,
-                        WRIST_ROLL_MOTION_MODE = 0x402,
-
+                        MOTION_MODE = 0x400,
                         // MULTI-MOTOR COMMAND
                         MULTI_MOTOR_SEND = 0x280,
-
                         // CANID SETTING - CAUTION: sets all motors on the CANBUS to the same address! To change one motor's ID, use the function control command
                         SET_CANID = 0x300,
+                    };
+                    enum class motor_id : uint8_t
+                    {
+                        ELBOW = 0x01,
+                        WRIST_YAW = 0x02,
+                        WRIST_ROLL = 0x03,
                     };
                 }
             }

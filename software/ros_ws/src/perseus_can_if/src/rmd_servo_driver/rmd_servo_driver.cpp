@@ -16,7 +16,14 @@ RmdServoDriver::RmdServoDriver(const rclcpp::NodeOptions& options)
     }
 
     _status_publisher = this->create_publisher<perseus_msgs::msg::RmdServoStatus>("rmd_servo_status", 10);
+    _can_interface->add_filter(_rmd_receive_filter);
+    _can_interface->transmit(Packet{
+        addressing::post_landing::servo::rmd::servo_address_t{addressing::post_landing::servo::rmd::rmd_command::MULTI_MOTOR_SEND},
+        parameters::post_landing::servo::rmd::send_message::command_message_t(parameters::post_landing::servo::rmd::send_message::command_message_t::command_t(
+                                                                                  parameters::post_landing::servo::rmd::send_message::command_message_t::command_t::STOP))
+            .serialize_data()});
 }
+
 int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
