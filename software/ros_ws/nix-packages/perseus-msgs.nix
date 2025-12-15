@@ -5,6 +5,7 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
+  backward-ros,
   rosidl-default-generators,
   rosidl-default-runtime,
 }:
@@ -23,7 +24,10 @@ buildRosPackage rec {
     ament-lint-auto
     ament-lint-common
   ];
-  propagatedBuildInputs = [ rosidl-default-runtime ];
+  propagatedBuildInputs = [
+    backward-ros
+    rosidl-default-runtime
+  ];
   nativeBuildInputs = [
     ament-cmake
     rosidl-default-generators
