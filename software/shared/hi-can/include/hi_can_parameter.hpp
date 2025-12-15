@@ -410,7 +410,10 @@ namespace hi_can::parameters
                         };
                         command_t command = {};
                         std::vector<uint8_t> serialize_data() override;
-                        constexpr command_message_t(command_t command) : command(command) {}
+                        constexpr command_message_t(command_t command)
+                            : command(command)
+                        {
+                        }
                     };
 
                     struct _function_control_t
