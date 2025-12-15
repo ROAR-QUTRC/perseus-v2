@@ -6,6 +6,7 @@
   backward-ros,
   diagnostic-msgs,
   hi-can-raw,
+  nlohmann_json,
   rclcpp,
 }:
 buildRosPackage rec {
@@ -20,6 +21,7 @@ buildRosPackage rec {
     backward-ros
     diagnostic-msgs
     hi-can-raw
+    nlohmann_json
     rclcpp
   ];
   nativeBuildInputs = [ ament-cmake ];
