@@ -553,6 +553,7 @@ namespace hi_can::parameters
                 {
                 public:
                     RmdParameterGroup(uint8_t servo_id);
+                    std::vector<std::string> CheckErrors();
 
                 private:
                     uint8_t _servo_id;

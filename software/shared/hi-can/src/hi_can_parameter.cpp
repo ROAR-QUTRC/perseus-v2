@@ -469,6 +469,47 @@ namespace hi_can::parameters::post_landing::servo::rmd
                 },
             });
     }
+    std::vector<std::string> RmdParameterGroup::CheckErrors()
+    {
+        std::vector<std::string> errors = {};
+        if (uint16_t(_error_status) & uint16_t(shared::error_t::ENCODER_CALIBRATION))
+        {
+            errors.emplace_back("Encoder calibration");
+        }
+        if (uint16_t(_error_status) & uint16_t(shared::error_t::OVER_TEMPERATURE))
+        {
+            errors.emplace_back("Over temperature");
+        }
+        if (uint16_t(_error_status) & uint16_t(shared::error_t::SPEEDING))
+        {
+            errors.emplace_back("Speeding");
+        }
+        if (uint16_t(_error_status) & uint16_t(shared::error_t::CALIBRATION_PARAMETER_WRITE))
+        {
+            errors.emplace_back("Calibration parameter write");
+        }
+        if (uint16_t(_error_status) & uint16_t(shared::error_t::POWER_OVERRUN))
+        {
+            errors.emplace_back("Power overrun");
+        }
+        if (uint16_t(_error_status) & uint16_t(shared::error_t::OVER_CURRENT))
+        {
+            errors.emplace_back("Over current");
+        }
+        if (uint16_t(_error_status) & uint16_t(shared::error_t::OVER_VOLTAGE))
+        {
+            errors.emplace_back("Over voltage");
+        }
+        if (uint16_t(_error_status) & uint16_t(shared::error_t::LOW_VOLTAGE))
+        {
+            errors.emplace_back("Low voltage");
+        }
+        if (uint16_t(_error_status) & uint16_t(shared::error_t::STALL))
+        {
+            errors.emplace_back("Stall");
+        }
+        return errors;
+    }
 }
 
 namespace hi_can::parameters::legacy::drive::motors
