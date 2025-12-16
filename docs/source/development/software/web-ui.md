@@ -5,6 +5,7 @@ tocdepth: 4
 # Web UI
 
 External libraries will not be documented here. View their official docs:
+
 - Web framework is [Svelte](https://svelte.dev)
 - The UI library used is [shadcn-svelte](https://next.shadcn-svelte.com)
 - ROS2 bridge interfaced with [roslibjs](https://robotwebtools.github.io/roslibjs/index.html)
@@ -107,6 +108,7 @@ The first `Record` represents the collapsible setting groups and the nested `Rec
 ##### Text
 
 Creates a text input field.
+
 ```ts
 {
     type: "text",
@@ -116,13 +118,13 @@ Creates a text input field.
 }
 ```
 
-#####  Number
+##### Number
 
 Creates a number input field with increment and decrement buttons (Options are the same as Text except with `type: number`).
 
 ##### Select
 
-Drop down menu which should allways have the `options` value set.
+Drop down menu which should always have the `options` value set.
 
 ```ts
 {
@@ -176,8 +178,11 @@ The second script tag is where all your TypeScript code should go. The commented
 If the setting is referenced multiple times or needs a type conversion, to improve readability, use a `$derived` rune to alias it:
 
 ```ts
-let mySetting = $derived<number>(Number(settings.groups.general.numberInput.value));
+let mySetting = $derived<number>(
+  Number(settings.groups.general.numberInput.value),
+);
 ```
+
 :::
 
 #### Markdown
@@ -224,6 +229,7 @@ src/lib/widgets
 │       └── myScript.ts
 └── myWidget.svelte
 ```
+
 :::
 
 #### Widget State
@@ -269,9 +275,11 @@ The `signaller::uri="ws://hostname:8443"` property sets the signalling server to
 
 :::{tip}
 To fix a permission denied error when trying to connect to a camera use:
+
 ```console
 sudo chmod 777 /dev/video*
 ```
+
 This gives read/write/execute permissions to all video devices.
 :::
 
@@ -302,9 +310,9 @@ interface CameraEventType {
 
 ### Connection Handling
 
-The WebSocket connection is managed inside the file: `src/lib/scripts/ros-bridge.svelte.ts`. The exports of this file are the functions: `getRosConnection`, `connectRos` and `disconnectRos`. 
+The WebSocket connection is managed inside the file: `src/lib/scripts/ros-bridge.svelte.ts`. The exports of this file are the functions: `getRosConnection`, `connectRos` and `disconnectRos`.
 
-The connect and disconnect functions are used by the connection manager at the top middle of the Web UI layout and should only be used internally. 
+The connect and disconnect functions are used by the connection manager at the top middle of the Web UI layout and should only be used internally.
 
 `getRosConnection` should be used to access the current ROS2 connection instance. This function returns a `$state` rune that is either `false` or the handle for the ros connection. This allows for very clear boolean evaluation in if statements and integration with the Svelte reactivity suite.
 
@@ -314,22 +322,23 @@ All ROS2 dependent widgets should have either an `$effect` or `$derived.by` rune
 
 ```ts
 $effect(() => {
-    const ros = getRosConnection();
+  const ros = getRosConnection();
 
-    if (ros) {
-        // initialise ROS2 variables
-    }
+  if (ros) {
+    // initialise ROS2 variables
+  }
 });
 ```
 
 As a result of this effect pattern the following rules should be followed while developing:
+
 - Avoid making ROS2 related variables reactive as they will be assigned inside an `$effect` and that will cause a render loop.
-- Do **not** initialise anything related to ROS2 in the `onMount` hook as there is no guarantee that a ROS2 connection is available and will require duplicate code. 
+- Do **not** initialise anything related to ROS2 in the `onMount` hook as there is no guarantee that a ROS2 connection is available and will require duplicate code.
 - Always set `isRosDependant` to `true` and `group` to `'ROS'` if using the `getRosConnection()` function (When using ROS2 purely to access CAN data the `group` export should be `"CAN Bus"`).
 - Dispose of all ROS2 resources you created in the function returned by the `onMount` hook (the return value is run on unmount).
 
 ## CAN Bus Interface
 
-No direct interface between the Web UI and CAN exists. Instead the work arround is to read CAN Bus data with a ROS2 node and publish on a ROS2 topic. 
+No direct interface between the Web UI and CAN exists. Instead the work around is to read CAN Bus data with a ROS2 node and publish on a ROS2 topic.
 
 Topics used for relaying CAN Bus data should favour lower frequencies to reduce network load. If a node already consumes the required CAN Bus data then the topic should be created in there otherwise a new node inside `software/ros_ws/src/perseus_can_if` should be created. Additionally, these topics should be prefixed with `web_` to avoid confusion.
