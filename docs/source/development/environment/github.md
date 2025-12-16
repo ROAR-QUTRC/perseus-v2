@@ -23,6 +23,10 @@ For a full interactive tutorial on git, head to [this website](https://learngitb
 
 For more details and further terminology see [the official docs](https://git-scm.com/docs/gitglossary).
 
+:::{tip}
+When using git it can be useful to run the command `git status` to see an overview of your current branch and changes. This is especially important when working with the CLI only, without a UI (ie. outside VSCode).
+:::
+
 ## Branches
 
 For changes to the perseus repo, you should create a new branch - there are a couple different ways to do this, but the main one is:
@@ -108,4 +112,6 @@ Once a PR is approved and is passing all CI/CD checks, that branch can be added 
 
 ## Updating your local repo
 
-The repo on your computer won't update automatically. To do this, you need to periodically run `git pull`, which updates all the branches from their counterparts on the GitHub. This won't get rid of branches that have been merged though. To do this, you can run `git remote prune origin`, which removes any branches on your local repo that have been deleted or merged on the GitHub. You can also combine these two using `git pull --prune`.
+The repo on your computer won't update automatically. To do this, you need to periodically run `git pull`, which updates your current branch with the latest changes from it's corresponding counterpart on the GitHub. To update all branches you should instead run `git fetch --all`.
+
+Updating with the latest changes from remote won't get rid of local branches that have been deleted or merged on the GitHub. To do this, you can run `git remote prune origin`, which removes any branches on your local repo that no longer exist on the GitHub. You can also combine these two methods using `git pull --prune` or `git fetch --all --prune`.
