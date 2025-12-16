@@ -23,7 +23,7 @@ cube_detector:
     use_sim_time: true
     model_path: /model/best.onnx
     map_ID: ["green", "red", "blue", "white"]  # List of cube colors to detect and map with the model's class IDs
-    use_cuda: false # set to true to use GPU acceleration
+    use_cuda: true # set to false - CPU inference is well-optimized with multi-threading
     confidence_threshold: 0.29
     nms_threshold: 0.5 # IoU threshold for Non-Max Suppression
     cube_distance_threshold: 1.0  # meters
