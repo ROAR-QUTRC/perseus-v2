@@ -410,7 +410,8 @@ namespace hi_can::parameters::post_landing::servo::rmd
             command = raw_data.command;
         }
     }
-    RmdParameterGroup::RmdParameterGroup(uint8_t servo_id) : _servo_id(servo_id)
+    RmdParameterGroup::RmdParameterGroup(uint8_t servo_id)
+        : _servo_id(servo_id)
     {
         _callbacks.emplace_back(
             filter_t{
