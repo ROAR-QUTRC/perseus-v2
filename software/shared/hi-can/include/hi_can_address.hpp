@@ -373,18 +373,10 @@ namespace hi_can
                 /// @brief Namespace containing all the servos in the arm subsystem
                 namespace rmd
                 {
-                    struct servo_address_t : public flagged_address_t
-                    {
-                        constexpr servo_address_t() = default;
-                        constexpr servo_address_t(const rmd_command function, const motor_id motor_id = {})
-                            : flagged_address_t(address = (static_cast<uint16_t>(function) + static_cast<uint8_t>(motor_id)), is_extended = false)
-                        {
-                        }
-                    };
                     /// @brief The device ID of the arm servos
                     constexpr uint8_t DEVICE_ID = 0x00;
                     /// @brief The RMD-L-4015-100-C Motor ID commands
-                    enum class rmd_command : uint16_t
+                    enum class rmd_id : uint16_t
                     {
                         // SEND ADDRESS - 0x140 + ID
                         SEND = 0x140,
@@ -399,9 +391,22 @@ namespace hi_can
                     };
                     enum class motor_id : uint8_t
                     {
+                        ALL = 0x00,
                         ELBOW = 0x01,
                         WRIST_YAW = 0x02,
                         WRIST_ROLL = 0x03,
+                    };
+                    struct servo_address_t : public flagged_address_t
+                    {
+                        constexpr servo_address_t() = default;
+                        constexpr servo_address_t(const rmd_id function, const motor_id motor_id = motor_id::ALL)
+                            : flagged_address_t(address = (static_cast<uint16_t>(function) + static_cast<uint8_t>(motor_id)), is_extended = false)
+                        {
+                        }
+                        constexpr uint8_t get_motor_id()
+                        {
+                            return (address && 0x000F);
+                        }
                     };
                 }
             }

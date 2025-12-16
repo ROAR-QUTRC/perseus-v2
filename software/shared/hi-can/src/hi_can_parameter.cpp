@@ -229,14 +229,14 @@ namespace hi_can::parameters::post_landing::servo::rmd
 #pragma pack(push, 1)
         struct raw_torque_message_t
         {
-            _rmd_command _command = _rmd_command::SET_TORQUE_CLOSED_LOOP;
+            rmd_command _command = rmd_command::SET_TORQUE_CLOSED_LOOP;
             uint8_t _reserved1[3] = {};
             int16_t torque;
             uint16_t _reserved2 = 0;
         };
         struct raw_speed_message_t
         {
-            _rmd_command _command = _rmd_command::SET_SPEED_CLOSED_LOOP;
+            rmd_command _command = rmd_command::SET_SPEED_CLOSED_LOOP;
             uint8_t _reserved[3] = {};
             int32_t speed = 0;
         };
@@ -249,7 +249,7 @@ namespace hi_can::parameters::post_landing::servo::rmd
         };
         struct raw_single_turn_position_message_t
         {
-            _rmd_command _command = _rmd_command::SET_SINGLE_TURN_POSITION;
+            rmd_command _command = rmd_command::SET_SINGLE_TURN_POSITION;
             single_turn_position_message_t::rotation_direction_t rotation_direction;
             uint16_t speed_limit;
             uint16_t position_control;
@@ -260,7 +260,21 @@ namespace hi_can::parameters::post_landing::servo::rmd
             command_message_t::command_t command;
             uint8_t _reserved[7] = {};
         };
-        ;
+        struct raw_function_control_message_t
+        {
+            rmd_command _command = rmd_command::FUNCTION_CONTROL;
+            function_control_message_t::function_index_t function_index;
+            uint16_t _reserved = 0;
+            uint32_t input_value;
+        };
+        struct raw_active_reply_message_t
+        {
+            rmd_command _command = rmd_command::ACTIVE_REPLY_FUNCTION;
+            active_reply_message_t::reply_t reply_command;
+            uint8_t enable;
+            uint16_t reply_interval;
+            uint8_t _reserved[3] = {};
+        };
 #pragma pack(pop)
 
         std::vector<uint8_t> torque_message_t::serialize_data()
@@ -297,6 +311,21 @@ namespace hi_can::parameters::post_landing::servo::rmd
             raw_data.command = command;  // Empty message other than the command
             return raw_data.serialize_data();
         }
+        std::vector<uint8_t> function_control_message_t::serialize_data()
+        {
+            SimpleSerializable<raw_function_control_message_t> raw_data;
+            raw_data.function_index = function_index;
+            raw_data.input_value = input_value;
+            return raw_data.serialize_data();
+        }
+        std::vector<uint8_t> active_reply_message_t::serialize_data()
+        {
+            SimpleSerializable<raw_active_reply_message_t> raw_data;
+            raw_data.reply_command = reply_command;
+            raw_data.enable = uint8_t(enable);
+            raw_data.reply_interval = reply_interval_ms / 10;  // 10ms/LSB
+            return raw_data.serialize_data();
+        }
 
     }
     namespace receive_message
@@ -305,12 +334,12 @@ namespace hi_can::parameters::post_landing::servo::rmd
 #pragma pack(push, 1)
         struct raw_motor_status_1_message_t
         {
-            _rmd_command _command;  // Should always be 0x9A (status 1)
+            rmd_command _command;  // Should always be 0x9A (status 1)
             int8_t motor_temperature;
             uint8_t _reserved;
-            motor_status_1_message_t::brake_control_t brake_control;
+            shared::brake_control_t brake_status;
             uint16_t voltage;
-            motor_status_1_message_t::error_t error_status;
+            shared::error_t error_status;
         };
         struct raw_motor_status_2_message_t
         {
@@ -322,7 +351,7 @@ namespace hi_can::parameters::post_landing::servo::rmd
         };
         struct raw_motor_status_3_message_t
         {
-            _rmd_command _command;  // Should always be 0x9D (status 3)
+            rmd_command _command;  // Should always be 0x9D (status 3)
             uint8_t motor_temperature;
             uint16_t phase_a_current;
             uint16_t phase_b_current;
@@ -330,7 +359,7 @@ namespace hi_can::parameters::post_landing::servo::rmd
         };
         struct raw_single_turn_motor_status_message_t
         {
-            _rmd_command _command;  // Should always be 0xA6 (single turn position)
+            rmd_command _command;  // Should always be 0xA6 (single turn position)
             uint8_t motor_temperature = 0;
             uint16_t torque_current = 0;
             uint16_t motor_speed = 0;
@@ -347,7 +376,7 @@ namespace hi_can::parameters::post_landing::servo::rmd
         {
             SimpleSerializable<raw_motor_status_1_message_t> raw_data(serialized_data);
             motor_temperature = raw_data.motor_temperature;  // 1 degree Celsius/LSB
-            brake_control = raw_data.brake_control;
+            brake_status = raw_data.brake_status;
             voltage = raw_data.voltage / 10.0;  // 0.1V/LSB
         }
         void motor_status_2_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
@@ -380,6 +409,65 @@ namespace hi_can::parameters::post_landing::servo::rmd
             SimpleSerializable<raw_empty_message_t> raw_data(serialized_data);
             command = raw_data.command;
         }
+    }
+    RmdParameterGroup::RmdParameterGroup(uint8_t servo_id) : _servo_id(servo_id)
+    {
+        _callbacks.emplace_back(
+            filter_t{
+                .address = addressing::post_landing::servo::rmd::servo_address_t{addressing::post_landing::servo::rmd::rmd_id::RECEIVE, addressing::post_landing::servo::rmd::motor_id(servo_id)},
+            },
+            PacketManager::callback_config_t{
+                .data_callback = [this](const Packet& packet)
+                {
+                    std::vector<uint8_t> raw_data = packet.get_data();
+                    rmd_command command = rmd_command(raw_data.front());
+                    switch (command)
+                    {
+                    case rmd_command::READ_MOTOR_STATUS_1:
+                    {
+                        receive_message::motor_status_1_message_t status_1 = {};
+                        status_1.deserialize_data(raw_data);
+                        _motor_temperature = status_1.motor_temperature;
+                        _brake_status = status_1.brake_status;
+                        _voltage = status_1.voltage;
+                        _error_status = status_1.error_status;
+                        break;
+                    }
+                    case rmd_command::SET_TORQUE_CLOSED_LOOP:
+                    case rmd_command::SET_SPEED_CLOSED_LOOP:
+                    case rmd_command::SET_ABSOLUTE_POSITION_CLOSED_LOOP:
+                    case rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP:
+                    case rmd_command::READ_MOTOR_STATUS_2:
+                    {
+                        receive_message::motor_status_2_message_t status_2 = {};
+                        status_2.deserialize_data(raw_data);
+                        _motor_temperature = status_2.motor_temperature;
+                        _torque_current = status_2.torque_current;
+                        _motor_speed = status_2.motor_speed;
+                        _motor_angle = status_2.motor_angle;
+                        break;
+                    }
+                    case rmd_command::READ_MOTOR_STATUS_3:
+                    {
+                        receive_message::motor_status_3_message_t status_3 = {};
+                        status_3.deserialize_data(raw_data);
+                        _motor_temperature = status_3.motor_temperature;
+                        _phase_a_current = status_3.phase_a_current;
+                        _phase_b_current = status_3.phase_b_current;
+                        _phase_c_current = status_3.phase_c_current;
+                        break;
+                    }
+                    case rmd_command::MOTOR_STOP:
+                    case rmd_command::MOTOR_SHUTDOWN:
+                    case rmd_command::SYSTEM_BRAKE_RELEASE:
+                    case rmd_command::SYSTEM_BRAKE_LOCK:
+                        // These don't have any data sent back from the servos, so do nothing
+                        break;
+                    default:
+                        break;
+                    }
+                },
+            });
     }
 }
 

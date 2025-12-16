@@ -313,7 +313,7 @@ namespace hi_can::parameters
         {
             namespace rmd
             {
-                enum class _rmd_command : uint8_t  // The first byte of every RMD servo message (send or receive) should be of these commands
+                enum class rmd_command : uint8_t  // The first byte of every RMD servo message (send or receive) should be of these commands
                 {
                     FUNCTION_CONTROL = 0x20,
                     READ_PID = 0x30,
@@ -355,6 +355,26 @@ namespace hi_can::parameters
                     READ_MOTOR_MODEL = 0xB5,
                     ACTIVE_REPLY_FUNCTION = 0xB6,
                 };
+                namespace shared
+                {
+                    enum class error_t : uint16_t
+                    {
+                        STALL = 0x0002,
+                        LOW_VOLTAGE = 0x0004,
+                        OVER_VOLTAGE = 0x0008,
+                        OVER_CURRENT = 0x0010,
+                        POWER_OVERRUN = 0x0040,
+                        CALIBRATION_PARAMETER_WRITE = 0x0080,
+                        SPEEDING = 0x0100,
+                        OVER_TEMPERATURE = 0x1000,
+                        ENCODER_CALIBRATION = 0x2000,
+                    };
+                    enum class brake_control_t : bool
+                    {
+                        BRAKE_LOCK = 0,
+                        BRAKE_RELEASE = 1,
+                    };
+                }
                 namespace send_message  // The servo takes one of these messages (with the send address), then sends the corresponding receive message with the same command and the receive address
                 {
                     struct torque_message_t : Serializable
@@ -373,8 +393,8 @@ namespace hi_can::parameters
                     {
                         enum class position_command_t : uint8_t
                         {
-                            ABSOLUTE = uint8_t(_rmd_command::SET_ABSOLUTE_POSITION_CLOSED_LOOP),
-                            INCREMENTAL = uint8_t(_rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP),
+                            ABSOLUTE = uint8_t(rmd_command::SET_ABSOLUTE_POSITION_CLOSED_LOOP),
+                            INCREMENTAL = uint8_t(rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP),
                         };
                         position_command_t position_command;
                         uint16_t speed_limit = 0;
@@ -384,7 +404,7 @@ namespace hi_can::parameters
 
                     struct single_turn_position_message_t : Serializable
                     {
-                        _rmd_command _command = _rmd_command::SET_SINGLE_TURN_POSITION;
+                        rmd_command _command = rmd_command::SET_SINGLE_TURN_POSITION;
                         enum class rotation_direction_t : uint8_t
                         {
                             CLOCKWISE = 0x00,
@@ -400,25 +420,24 @@ namespace hi_can::parameters
                     {
                         enum class command_t : uint8_t
                         {
-                            SHUTDOWN = uint8_t(_rmd_command::MOTOR_SHUTDOWN),
-                            STOP = uint8_t(_rmd_command::MOTOR_STOP),
-                            BRAKE_RELEASE = uint8_t(_rmd_command::SYSTEM_BRAKE_RELEASE),
-                            BRAKE_LOCK = uint8_t(_rmd_command::SYSTEM_BRAKE_LOCK),
-                            STATUS_1 = uint8_t(_rmd_command::READ_MOTOR_STATUS_1),
-                            STATUS_2 = uint8_t(_rmd_command::READ_MOTOR_STATUS_2),
-                            STATUS_3 = uint8_t(_rmd_command::READ_MOTOR_STATUS_3),
+                            SHUTDOWN = uint8_t(rmd_command::MOTOR_SHUTDOWN),
+                            STOP = uint8_t(rmd_command::MOTOR_STOP),
+                            BRAKE_RELEASE = uint8_t(rmd_command::SYSTEM_BRAKE_RELEASE),
+                            BRAKE_LOCK = uint8_t(rmd_command::SYSTEM_BRAKE_LOCK),
+                            STATUS_1 = uint8_t(rmd_command::READ_MOTOR_STATUS_1),
+                            STATUS_2 = uint8_t(rmd_command::READ_MOTOR_STATUS_2),
+                            STATUS_3 = uint8_t(rmd_command::READ_MOTOR_STATUS_3),
                         };
                         command_t command = {};
                         std::vector<uint8_t> serialize_data() override;
-                        constexpr command_message_t(command_t command)
-                            : command(command)
+                        constexpr command_message_t(command_t _command)
+                            : command(_command)
                         {
                         }
                     };
 
-                    struct _function_control_t
+                    struct function_control_message_t : Serializable
                     {
-                        _rmd_command _command = _rmd_command::FUNCTION_CONTROL;
                         enum class function_index_t : uint8_t
                         {
                             CLEAR_MULTI_TURN = 0x01,
@@ -430,36 +449,35 @@ namespace hi_can::parameters
                             SET_MAXIMUM_NEGATIVE_ANGLE = 0x07,
                         };
                         function_index_t function_index = {};
-                        uint16_t _reserved = 0;
                         uint32_t input_value = 0;
+                        std::vector<uint8_t> serialize_data() override;
                     };
-                    typedef SimpleSerializable<_function_control_t> function_control_t;
+                    struct active_reply_message_t : Serializable
+                    {
+                        enum class reply_t : uint8_t
+                        {
+                            MULTI_TURN_POSITION = uint8_t(rmd_command::READ_MULTI_TURN_ANGLE),
+                            MULTI_TURN_ORIGINAL_POSITION = uint8_t(rmd_command::READ_MULTI_TURN_ORIGINAL_POSITION),
+                            MULTI_TURN_ZERO_OFFSET = uint8_t(rmd_command::READ_MULTI_TURN_ZERO_OFFSET),
+                            MULTI_TURN_ANGLE = uint8_t(rmd_command::READ_MULTI_TURN_ANGLE),
+                            STATUS_1 = uint8_t(rmd_command::READ_MOTOR_STATUS_1),
+                            STATUS_2 = uint8_t(rmd_command::READ_MOTOR_STATUS_2),
+                            STATUS_3 = uint8_t(rmd_command::READ_MOTOR_STATUS_3),
+                        };
+                        reply_t reply_command = {};
+                        bool enable = 0;
+                        uint16_t reply_interval_ms;
+                        std::vector<uint8_t> serialize_data() override;
+                    };
                 }
                 namespace receive_message
                 {
                     struct motor_status_1_message_t : Deserializable
                     {
                         int8_t motor_temperature = 0;
-                        enum class brake_control_t : uint8_t
-                        {
-                            BRAKE_LOCK = 0x00,
-                            BRAKE_RELEASE = 0x01,
-                        };
-                        brake_control_t brake_control = {};
+                        shared::brake_control_t brake_status = {};
                         double voltage = 0;
-                        enum class error_t : uint16_t
-                        {
-                            STALL = 0x0002,
-                            LOW_VOLTAGE = 0x0004,
-                            OVER_VOLTAGE = 0x0008,
-                            OVER_CURRENT = 0x0010,
-                            POWER_OVERRUN = 0x0040,
-                            CALIBRATION_PARAMETER_WRITE = 0x0080,
-                            SPEEDING = 0x0100,
-                            OVER_TEMPERATURE = 0x1000,
-                            ENCODER_CALIBRATION = 0x2000,
-                        };
-                        error_t error_status = {};
+                        shared::error_t error_status = {};
                         void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
                     };
 
@@ -467,11 +485,11 @@ namespace hi_can::parameters
                     {
                         enum class motor_status_2_command_t
                         {
-                            STATUS_2 = uint8_t(_rmd_command::READ_MOTOR_STATUS_2),
-                            TORQUE = uint8_t(_rmd_command::SET_TORQUE_CLOSED_LOOP),
-                            SPEED = uint8_t(_rmd_command::SET_SPEED_CLOSED_LOOP),
-                            ABSOLUTE_POSITION = uint8_t(_rmd_command::SET_ABSOLUTE_POSITION_CLOSED_LOOP),
-                            INCREMENTAL_POSITION = uint8_t(_rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP),
+                            STATUS_2 = uint8_t(rmd_command::READ_MOTOR_STATUS_2),
+                            TORQUE = uint8_t(rmd_command::SET_TORQUE_CLOSED_LOOP),
+                            SPEED = uint8_t(rmd_command::SET_SPEED_CLOSED_LOOP),
+                            ABSOLUTE_POSITION = uint8_t(rmd_command::SET_ABSOLUTE_POSITION_CLOSED_LOOP),
+                            INCREMENTAL_POSITION = uint8_t(rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP),
                         };
                         motor_status_2_command_t command = {};
                         int8_t motor_temperature = 0;
@@ -492,7 +510,6 @@ namespace hi_can::parameters
 
                     struct single_turn_motor_status_message_t : Deserializable
                     {
-                        _rmd_command command = _rmd_command::SET_SINGLE_TURN_POSITION;
                         int8_t motor_temperature = 0;
                         double torque_current = 0;
                         int16_t motor_speed = 0;
@@ -504,10 +521,10 @@ namespace hi_can::parameters
                     {
                         enum class empty_command_t
                         {
-                            STOP = uint8_t(_rmd_command::MOTOR_STOP),
-                            SHUTDOWN = uint8_t(_rmd_command::MOTOR_SHUTDOWN),
-                            BRAKE_RELEASE = uint8_t(_rmd_command::SYSTEM_BRAKE_RELEASE),
-                            BRAKE_LOCK = uint8_t(_rmd_command::SYSTEM_BRAKE_LOCK),
+                            STOP = uint8_t(rmd_command::MOTOR_STOP),
+                            SHUTDOWN = uint8_t(rmd_command::MOTOR_SHUTDOWN),
+                            BRAKE_RELEASE = uint8_t(rmd_command::SYSTEM_BRAKE_RELEASE),
+                            BRAKE_LOCK = uint8_t(rmd_command::SYSTEM_BRAKE_LOCK),
                         };
                         empty_command_t command = {};
                         void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
@@ -515,7 +532,7 @@ namespace hi_can::parameters
 
                     struct _function_message_t
                     {
-                        _rmd_command _command = _rmd_command::FUNCTION_CONTROL;
+                        rmd_command _command = rmd_command::FUNCTION_CONTROL;
                         enum class function_index_t : uint8_t
                         {
                             CLEAR_MULTI_TURN = 0x01,
@@ -532,6 +549,24 @@ namespace hi_can::parameters
                     };
                     typedef SimpleSerializable<_function_message_t> function_message_t;
                 }
+                class RmdParameterGroup : public ParameterGroup
+                {
+                public:
+                    RmdParameterGroup(uint8_t servo_id);
+
+                private:
+                    uint8_t _servo_id;
+                    int8_t _motor_temperature = 0;
+                    shared::brake_control_t _brake_status = {};
+                    double _voltage = 0;
+                    shared::error_t _error_status = {};
+                    double _torque_current = 0;
+                    int16_t _motor_speed = 0;
+                    int16_t _motor_angle = 0;
+                    double _phase_a_current = 0;
+                    double _phase_b_current = 0;
+                    double _phase_c_current = 0;
+                };
             }
 
         }

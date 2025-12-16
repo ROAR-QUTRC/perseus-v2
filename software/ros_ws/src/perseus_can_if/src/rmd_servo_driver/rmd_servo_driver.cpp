@@ -1,5 +1,9 @@
 #include "rmd_servo_driver/rmd_servo_driver.hpp"
 
+using namespace hi_can;
+using namespace hi_can::addressing::post_landing::servo::rmd;
+using namespace hi_can::parameters::post_landing::servo::rmd;
+
 RmdServoDriver::RmdServoDriver(const rclcpp::NodeOptions& options)
     : Node("rmd_servo_driver", options)
 {
@@ -15,13 +19,31 @@ RmdServoDriver::RmdServoDriver(const rclcpp::NodeOptions& options)
         return;
     }
 
-    _status_publisher = this->create_publisher<perseus_msgs::msg::RmdServoStatus>("rmd_servo_status", 10);
+    _packet_manager->add_group(_ElbowParameterGroup);
+    _packet_manager->add_group(_WristRollParameterGroup);
+    _packet_manager->add_group(_WristYawParameterGroup);
+
     _can_interface->add_filter(_rmd_receive_filter);
+
+    // Initialise all motors on startup with desired functions
+    // Stop all motors - motors will lock up and won't flop around
     _can_interface->transmit(Packet{
-        addressing::post_landing::servo::rmd::servo_address_t{addressing::post_landing::servo::rmd::rmd_command::MULTI_MOTOR_SEND},
-        parameters::post_landing::servo::rmd::send_message::command_message_t(parameters::post_landing::servo::rmd::send_message::command_message_t::command_t(
-                                                                                  parameters::post_landing::servo::rmd::send_message::command_message_t::command_t::STOP))
-            .serialize_data()});
+        servo_address_t{rmd_id::MULTI_MOTOR_SEND},
+        send_message::command_message_t(send_message::command_message_t::command_t::STOP).serialize_data()});
+    // Set motors to transmit error messages when there is an error
+    _can_interface->transmit(Packet{
+        servo_address_t{rmd_id::MULTI_MOTOR_SEND},
+        send_message::function_control_message_t(send_message::function_control_message_t::function_index_t::ERROR_TRANSMISSION_ENABLE, 1).serialize_data()});
+    // Set motors to transmit all three status messages every second
+    _can_interface->transmit(Packet{
+        servo_address_t{rmd_id::MULTI_MOTOR_SEND},
+        send_message::active_reply_message_t(send_message::active_reply_message_t::reply_t::STATUS_1, true, 1000).serialize_data()});
+    _can_interface->transmit(Packet{
+        servo_address_t{rmd_id::MULTI_MOTOR_SEND},
+        send_message::active_reply_message_t(send_message::active_reply_message_t::reply_t::STATUS_2, true, 1000).serialize_data()});
+    _can_interface->transmit(Packet{
+        servo_address_t{rmd_id::MULTI_MOTOR_SEND},
+        send_message::active_reply_message_t(send_message::active_reply_message_t::reply_t::STATUS_3, true, 1000).serialize_data()});
 }
 
 int main(int argc, char** argv)
