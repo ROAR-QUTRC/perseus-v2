@@ -342,3 +342,19 @@ As a result of this effect pattern the following rules should be followed while 
 No direct interface between the Web UI and CAN exists. Instead the work around is to read CAN Bus data with a ROS2 node and publish on a ROS2 topic.
 
 Topics used for relaying CAN Bus data should favour lower frequencies to reduce network load. If a node already consumes the required CAN Bus data then the topic should be created in there otherwise a new node inside `software/ros_ws/src/perseus_can_if` should be created. Additionally, these topics should be prefixed with `web_` to avoid confusion.
+
+## Yarn
+
+This web app is managed with the package manager [Yarn](https://yarnpkg.com/). This package manager uses the same `package.json`.
+
+:::{tip}
+Some module not found errors can be resolved by deleting `node_modules` and running `yarn` again.
+:::
+
+### Yarn Scripts
+
+- `dev`: Runs the Vite development server on the local network. 
+- `build`: Builds the Web UI using vite.
+- `preview`: Preview the built web app without injected node server.
+- `start`: Runs the built web app with the injected node server.
+- `camera`: Runs the camera server (variant with `-online` downloads required dependencies)
