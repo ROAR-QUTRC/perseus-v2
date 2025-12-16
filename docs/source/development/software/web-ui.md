@@ -353,7 +353,7 @@ Some module not found errors can be resolved by deleting `node_modules` and runn
 
 ### Yarn Scripts
 
-- `dev`: Runs the Vite development server on the local network. 
+- `dev`: Runs the Vite development server on the local network.
 - `build`: Builds the Web UI using vite.
 - `preview`: Preview the built web app without injected node server.
 - `start`: Runs the built web app with the injected node server.
