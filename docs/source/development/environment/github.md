@@ -1,6 +1,27 @@
 # GitHub
 
-For info on what to name branches, or general GitHub standards, see <project:/standards/github.md>
+This page provides a quick reference of commonly used git commands within the repository, alongside some basic terminology and concepts. It is an overview of _how_ to use git.
+
+:::{note}
+For info on what to name branches, or general GitHub standards, see <project:/standards/github.md>. It provides on overview of _what_ specifics to use within the git commands.
+:::
+
+:::{tip}
+For a full interactive tutorial on git, head to [this website](https://learngitbranching.js.org/). The main ones to work through in the levels are the Main tab Introduction Sequence, and the Remote tab Push & Pull.
+:::
+
+## Terminology
+
+- **Git** is a version control system (VCS) that is used for tracking changes in files. It is a local system that can interface with external systems (repositories)
+- **GitHub** is a remote repository manager, which provides a central location for changes to be tracked between devices. It also provides additional functionality in regards to continuous integration/development (CI/CD) and the docs.
+- **Repository** This is a collection of files and folders that git is tracking. For example, `perseus-v2` is the repository that contains all the files for the perseus rover.
+- **Main** The main branch or _main_ is the production branch for all the perseus code and files. Files on the main branch are shared with everyone, and are protected by certain CI/CD commands to prevent any broken changes from entering production (for more details see <project:/standards/github.md>)
+- **Branches** Each branch is an independent collection of commits, that tracks changes from a certain point in time. Think of branches like a tree, the main branch is the trunk (where everything stems from) and each branch is, well, a branch. Each branch can develop code independently from everything else, allowing changes, testing, and development to happen without breaking production.
+- **Commits** A commit in it's simplest form is a set of changes. It consists of files that have been added, modified, or deleted. Each commit also includes a message describing what it has changed. The repository is made up of commits, which git tracks.
+- **Push** When you make a commit following [The Standards](project:/standards/github.md), it is a local commit (only on your device). The same applies to any new branches created. A push is when you upload those commits and any new branch to the remote repository on GitHub.
+- **Pull** When changes are made to the remote repository you can _pull_ changes to update your local repository and ensure you are up to date with the latest version of the `perseus-v2` repository.
+
+For more details and further terminology see [the official docs](https://git-scm.com/docs/gitglossary).
 
 ## Branches
 
@@ -60,7 +81,7 @@ CI/CD (Continuous Integration, Continuous Deployment) is how we ensure that any 
 
 ![CI/CD_GitHub](../../_static/github-ci-cd.png)
 
-Checkout <project:/systems/ci-cd.md> for more details on our CI/CD.
+Have a look at <project:/systems/ci-cd.md> for more details on our CI/CD.
 
 ## Pull Requests
 
