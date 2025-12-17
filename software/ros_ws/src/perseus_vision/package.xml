@@ -19,6 +19,7 @@
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
   <depend>geometry_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
   <build_depend>opencv</build_depend>
   <exec_depend>opencv</exec_depend>
   <build_depend>onnxruntime</build_depend>
