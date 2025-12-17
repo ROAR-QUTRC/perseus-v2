@@ -108,6 +108,29 @@
             pkg:
             builtins.elem (pkgs.lib.getName pkg) [
               "drawio"
+              "cuda_cccl"
+              "cuda_cudart"
+              "cuda_cuobjdump"
+              "cuda_cupti"
+              "cuda_cuxxfilt"
+              "cuda_gdb"
+              "cuda_nsight_compute"
+              "cuda_nsight_systems"
+              "cuda_nvcc"
+              "cuda_nvdisasm"
+              "cuda_nvml_dev"
+              "cuda_nvprune"
+              "cuda_nvrtc"
+              "cuda_nvtx"
+              "libcublas"
+              "libcusparse"
+              "libcusolver"
+              "libcurand"
+              "libnvjpeg"
+              "cudnn"
+              "tensorrt"
+              "libnvjitlink"
+              "libcufft"
             ];
         };
         # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
