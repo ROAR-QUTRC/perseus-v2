@@ -23,7 +23,6 @@ def generate_launch_description():
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     hardware_plugin = LaunchConfiguration("hardware_plugin")
     can_bus = LaunchConfiguration("can_bus")
-    # payload = LaunchConfiguration("payload")
 
     arguments = [
         DeclareLaunchArgument(
