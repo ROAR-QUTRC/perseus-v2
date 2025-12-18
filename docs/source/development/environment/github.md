@@ -6,9 +6,11 @@ This page provides a quick reference of commonly used git commands within the re
 For info on what to name branches, or general GitHub standards, see <project:/standards/github.md>. It provides on overview of _what_ specifics to use within the git commands.
 :::
 
-:::{tip}
-For a full interactive tutorial on git, head to [this website](https://learngitbranching.js.org/). The main ones to work through in the levels are the Main tab Introduction Sequence, and the Remote tab Push & Pull.
-:::
+## Interactive Tutorial
+
+For a full interactive tutorial on git, head to [this website](https://learngitbranching.js.org/). It contains a fully interactive tutorial going through all the commands of git, and providing a safe workspace to try them out in.
+
+The main sections to work through within the levels menu are the 'Introduction Sequence' in the 'Main' tab, and the 'Push & Pull' tutorials in the 'Remote' tab. To access the levels menu, head to the bottom-right corner of the screen and click the question mark, then hit 'levels' to open the menu.
 
 ## Terminology
 
