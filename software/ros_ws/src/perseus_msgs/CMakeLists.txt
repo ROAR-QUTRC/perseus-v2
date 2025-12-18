@@ -52,7 +52,8 @@ endforeach()
 #   find_package(${Dependency} REQUIRED)
 # endforeach()
 
-rosidl_generate_interfaces(${PROJECT_NAME} "srv/RmdServoStatus.srv" "msg/ArmServoControl.msg")
+rosidl_generate_interfaces(${PROJECT_NAME} "srv/RmdServoStatus.srv"
+                           "msg/ArmServoControl.msg")
 
 ament_export_dependencies(rosidl_default_runtime)
 

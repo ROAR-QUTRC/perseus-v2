@@ -402,7 +402,9 @@ namespace hi_can::parameters
                         std::vector<uint8_t> serialize_data() override;
                         position_message_t() = default;
                         position_message_t(position_command_t _position_command, uint16_t _speed_limit, double _position_control)
-                            : position_command(_position_command), speed_limit(_speed_limit), position_control(_position_control)
+                            : position_command(_position_command),
+                              speed_limit(_speed_limit),
+                              position_control(_position_control)
                         {
                         }
                     };
@@ -459,7 +461,8 @@ namespace hi_can::parameters
 
                         function_control_message_t() = default;
                         function_control_message_t(function_index_t _function_index, uint32_t _input_value)
-                            : function_index(_function_index), input_value(_input_value)
+                            : function_index(_function_index),
+                              input_value(_input_value)
                         {
                         }
                     };
@@ -482,7 +485,9 @@ namespace hi_can::parameters
 
                         active_reply_message_t() = default;
                         active_reply_message_t(reply_t _reply_command, bool _enable, uint16_t _reply_interval_ms)
-                            : reply_command(_reply_command), enable(_enable), reply_interval_ms(_reply_interval_ms)
+                            : reply_command(_reply_command),
+                              enable(_enable),
+                              reply_interval_ms(_reply_interval_ms)
                         {
                         }
                     };
