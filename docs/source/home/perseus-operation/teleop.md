@@ -110,6 +110,12 @@ Execute the following command on Perseus:
 nix run .#perseus
 ```
 
+You can run the bucket nodes at the same time using:
+
+```console
+nix run .#perseus -- payload:=bucket
+```
+
 :::{warning}
 Requires Internet access to complete this command, unless all necessary files have been previously downloaded to this specific device.
 :::
