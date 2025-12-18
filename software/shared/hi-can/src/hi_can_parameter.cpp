@@ -415,7 +415,7 @@ namespace hi_can::parameters::post_landing::servo::rmd
     {
         _callbacks.emplace_back(
             filter_t{
-                .address = addressing::post_landing::servo::rmd::servo_address_t{addressing::post_landing::servo::rmd::rmd_id::RECEIVE, addressing::post_landing::servo::rmd::motor_id(servo_id)},
+                .address = addressing::post_landing::servo::rmd::servo_address_t{addressing::post_landing::servo::rmd::rmd_id::RECEIVE, addressing::post_landing::servo::rmd::motor_id_t(servo_id)},
             },
             PacketManager::callback_config_t{
                 .data_callback = [this](const Packet& packet)
@@ -470,7 +470,7 @@ namespace hi_can::parameters::post_landing::servo::rmd
                 },
             });
     }
-    std::vector<std::string> RmdParameterGroup::CheckErrors()
+    std::vector<std::string> RmdParameterGroup::check_errors()
     {
         std::vector<std::string> errors = {};
         if (uint16_t(_error_status) & uint16_t(shared::error_t::ENCODER_CALIBRATION))
@@ -510,6 +510,46 @@ namespace hi_can::parameters::post_landing::servo::rmd
             errors.emplace_back("Stall");
         }
         return errors;
+    }
+    int8_t RmdParameterGroup::get_temp()
+    {
+        return _motor_temperature;
+    }
+    shared::brake_control_t RmdParameterGroup::get_brake_status()
+    {
+        return _brake_status;
+    }
+    double RmdParameterGroup::get_voltage()
+    {
+        return _voltage;
+    }
+    shared::error_t RmdParameterGroup::get_error_status()
+    {
+        return _error_status;
+    }
+    double RmdParameterGroup::get_torque_current()
+    {
+        return _torque_current;
+    }
+    int16_t RmdParameterGroup::get_speed()
+    {
+        return _motor_speed;
+    }
+    int16_t RmdParameterGroup::get_angle()
+    {
+        return _motor_angle;
+    }
+    double RmdParameterGroup::get_phase_a_current()
+    {
+        return _phase_a_current;
+    }
+    double RmdParameterGroup::get_phase_b_current()
+    {
+        return _phase_b_current;
+    }
+    double RmdParameterGroup::get_phase_c_current()
+    {
+        return _phase_c_current;
     }
 }
 

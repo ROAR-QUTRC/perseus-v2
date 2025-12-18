@@ -389,7 +389,7 @@ namespace hi_can
                         // CANID SETTING - CAUTION: sets all motors on the CANBUS to the same address! To change one motor's ID, use the function control command
                         SET_CANID = 0x300,
                     };
-                    enum class motor_id : uint8_t
+                    enum class motor_id_t : uint8_t
                     {
                         ALL = 0x00,
                         ELBOW = 0x01,
@@ -399,7 +399,7 @@ namespace hi_can
                     struct servo_address_t : public flagged_address_t
                     {
                         constexpr servo_address_t() = default;
-                        constexpr servo_address_t(const rmd_id function, const motor_id motor_id = motor_id::ALL)
+                        constexpr servo_address_t(const rmd_id function, const motor_id_t motor_id = motor_id_t::ALL)
                             : flagged_address_t(address = (static_cast<uint16_t>(function) + static_cast<uint8_t>(motor_id)), is_extended = false)
                         {
                         }

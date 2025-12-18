@@ -1,0 +1,2 @@
+uint8 motor_id
+float64 absolute_position

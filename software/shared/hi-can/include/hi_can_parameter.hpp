@@ -400,6 +400,11 @@ namespace hi_can::parameters
                         uint16_t speed_limit = 0;
                         double position_control = 0;
                         std::vector<uint8_t> serialize_data() override;
+                        position_message_t() = default;
+                        position_message_t(position_command_t _position_command, uint16_t _speed_limit, double _position_control)
+                            : position_command(_position_command), speed_limit(_speed_limit), position_control(_position_control)
+                        {
+                        }
                     };
 
                     struct single_turn_position_message_t : Serializable
@@ -451,6 +456,12 @@ namespace hi_can::parameters
                         function_index_t function_index = {};
                         uint32_t input_value = 0;
                         std::vector<uint8_t> serialize_data() override;
+
+                        function_control_message_t() = default;
+                        function_control_message_t(function_index_t _function_index, uint32_t _input_value)
+                            : function_index(_function_index), input_value(_input_value)
+                        {
+                        }
                     };
                     struct active_reply_message_t : Serializable
                     {
@@ -468,6 +479,12 @@ namespace hi_can::parameters
                         bool enable = 0;
                         uint16_t reply_interval_ms;
                         std::vector<uint8_t> serialize_data() override;
+
+                        active_reply_message_t() = default;
+                        active_reply_message_t(reply_t _reply_command, bool _enable, uint16_t _reply_interval_ms)
+                            : reply_command(_reply_command), enable(_enable), reply_interval_ms(_reply_interval_ms)
+                        {
+                        }
                     };
                 }
                 namespace receive_message
@@ -553,7 +570,17 @@ namespace hi_can::parameters
                 {
                 public:
                     RmdParameterGroup(uint8_t servo_id);
-                    std::vector<std::string> CheckErrors();
+                    std::vector<std::string> check_errors();
+                    int8_t get_temp();
+                    shared::brake_control_t get_brake_status();
+                    double get_voltage();
+                    shared::error_t get_error_status();
+                    double get_torque_current();
+                    int16_t get_speed();
+                    int16_t get_angle();
+                    double get_phase_a_current();
+                    double get_phase_b_current();
+                    double get_phase_c_current();
 
                 private:
                     uint8_t _servo_id;

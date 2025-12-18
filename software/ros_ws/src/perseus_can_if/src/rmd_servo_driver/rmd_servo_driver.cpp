@@ -51,21 +51,21 @@ RmdServoDriver::RmdServoDriver(const rclcpp::NodeOptions& options)
 
     // ROS
     _packet_timer = this->create_wall_timer(PACKET_HANDLE, std::bind(&RmdServoDriver::_can_handle, this));
-    _command_subscriber = this->create_subscription<perseus_msgs::msg::rmd_control>("/arm/rmd_control", 10, std::bind(&RmdParameterGroup::_position_control, this, std::placeholders::_1));
-    _timeout_timer = this->create_wall_timer()
+    _command_subscriber = this->create_subscription<perseus_msgs::msg::ArmServoControl>("/arm/rmd_control", 10, std::bind(&RmdServoDriver::_position_control, this, std::placeholders::_1));
+    _status_service = this->create_service<perseus_msgs::srv::RmdServoStatus>("/arm/rmd_status", std::bind(&RmdServoDriver::_get_status, this, std::placeholders::_1, std::placeholders::_2));
 
-                         RCLCPP_INFO(this->get_logger(), "RMD servo driver node initialised");
+    RCLCPP_INFO(this->get_logger(), "RMD servo driver node initialised");
 }
 
-void RmdServoDriver::_position_control(perseus_msgs::msg::rmd_control rmd_control)
+void RmdServoDriver::_position_control(perseus_msgs::msg::ArmServoControl rmd_control)
 {
-    _can_interface->transmit(Packet{
-        servo_address_t{rmd_id::SEND, rmd_control.motor_id},
+    _can_interface->transmit(Packet(
+        servo_address_t(rmd_id::SEND, motor_id_t(rmd_control.motor_id)),
         send_message::position_message_t(
-                .position_command = send_message::position_message_t::position_command_t::ABSOLUTE,
-                .speed_limit = rmd_control.speed_limit,
-                .position_control = rmd_control.position)
-            .serialize_data()})
+            send_message::position_message_t::position_command_t::ABSOLUTE,
+            RMD_SPEED_LIMIT,
+            rmd_control.absolute_position)
+            .serialize_data()));
 }
 
 void RmdServoDriver::_can_handle()
@@ -78,9 +78,9 @@ void RmdServoDriver::_can_handle()
     {
         RCLCPP_WARN_THROTTLE(this->get_logger(), *get_clock(), 1000, "CAN Handle failed: %s", e.what());
     }
-    std::vector<std::string> elbow_errors = _ElbowParameterGroup.CheckErrors();
-    std::vector<std::string> wrist_yaw_errors = _WristYawParameterGroup.CheckErrors();
-    std::vector<std::string> wrist_roll_errors = _WristRollParameterGroup.CheckErrors();
+    std::vector<std::string> elbow_errors = _ElbowParameterGroup.check_errors();
+    std::vector<std::string> wrist_yaw_errors = _WristYawParameterGroup.check_errors();
+    std::vector<std::string> wrist_roll_errors = _WristRollParameterGroup.check_errors();
     if (elbow_errors.size())
     {
         for (std::string error : elbow_errors)
@@ -104,6 +104,44 @@ void RmdServoDriver::_can_handle()
     }
 }
 
+void RmdServoDriver::_get_status(const std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Request> request, std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Response> response)
+{
+    RmdParameterGroup* servo_parameter_group;
+    switch (static_cast<motor_id_t>(request->motor_id & 0x00F))
+    {
+    case motor_id_t::ELBOW:
+        servo_parameter_group = &_ElbowParameterGroup;
+        break;
+    case motor_id_t::WRIST_ROLL:
+        servo_parameter_group = &_WristRollParameterGroup;
+        break;
+    case motor_id_t::WRIST_YAW:
+        servo_parameter_group = &_WristYawParameterGroup;
+        break;
+    default:
+        return;
+    }
+    if (servo_parameter_group != nullptr)
+    {
+        response->temperature = servo_parameter_group->get_temp();
+        response->brake_control = static_cast<bool>(servo_parameter_group->get_brake_status());
+        response->voltage = servo_parameter_group->get_voltage();
+        response->error = static_cast<uint16_t>(servo_parameter_group->get_error_status());
+        response->torque_current = servo_parameter_group->get_torque_current();
+        response->speed = servo_parameter_group->get_speed();
+        response->angle = servo_parameter_group->get_angle();
+        response->phase_a_current = servo_parameter_group->get_phase_a_current();
+        response->phase_b_current = servo_parameter_group->get_phase_b_current();
+        response->phase_c_current = servo_parameter_group->get_phase_c_current();
+    }
+}
+
+void RmdServoDriver::cleanup()
+{
+    _packet_manager.reset();
+    _can_interface.reset();
+}
+
 int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
@@ -112,6 +150,7 @@ int main(int argc, char** argv)
         auto node = std::make_shared<RmdServoDriver>();
         RCLCPP_INFO(rclcpp::get_logger("main"), "Starting RMD Servo driver node");
         rclcpp::spin(node);
+        node->cleanup();
     }
     catch (const std::exception& e)
     {
