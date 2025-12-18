@@ -16,19 +16,40 @@ When the connectors are used with a return conductor pair (more on that later), 
 
 Some direct-to-board applications (like connecting a USB-CAN adapter) use a 2-pin JST-XH connector (CANH: Pin 1, CANL: Pin 2), although this is only possible for short branches.
 
+Most microprocessors and computers don't have builtin hardware to interface with a CAN system (including the Esp32, Raspberry pi, and Jetson).
+This means that when these are connected into a CAN network, they need to have a CAN transceiver between their signal lines (CAN_TX and CAN_RX) and the CAN_H and CAN_L lines.
+The Smol Brain boards have this CAN chip built in, and the Jetson has a CAN transceiver module connected from its own CAN_TX and CAN_RX lines into the Rover Control Board (RCB - large purple PCB in the middle of Perseus).
+
 ### Loops and Branches
 
-CAN Bus networks must have terminating resistors at both ends of the circuit, connecting CANH to CANL through a 120 Ohm resistor (we usually use two 60Ohm and a capacitor in between connecting to GND for reducing noise).
-These terminations are both on the Rover Control Board (RCB - large purple PCB in the middle of Perseus). This means that the CAN Bus circuit must start at the RCB, loop around the rover, and end at the RCB.
+CAN Bus networks must have terminating resistors at both ends of the circuit, connecting CANH to CANL through a 120 Ohm resistor (we usually use two 60 Ohm and a capacitor in between connecting to GND for reducing noise).
+These terminations are both on the RCB, which means that the CAN Bus circuit must start at the RCB, loop around the rover, and end at the RCB.
 
 Any devices connecting to the CAN Bus must have their CANH and CANL wires connected into the DE-9 cable running through Perseus through a **branch**. However, once these branches reach around 30cm, the signal breaks down.
 This means that for longer connections like payloads, we must run a **loop** through the subsystem, with each device making a small branch off this loop. The loop starts with the [CAN Bus Daisy Chain PCB](../_static/CAN_Bus_Daisy_Chain.pdf), feeding the main CAN network (CAN_A_L and CAN_A_H) from 'Multi 1 connector' into the 'Main Connector' which goes out to the device.
-The device has a branch to these CAN wires, using them to communicate over the CAN network. Then the CAN_A Low and High are connected directly into CAN_B Low and High.
-These wires are returned through the same cable to the CAN Bus Daisy Chain, which connects CAN_B_L and CAN_B_H of the 'Main Connector' into CAN_A_L and CAN_A_H of the 'Multi 2 Connector', which connects into the main CAN Bus system, thus completing the loop.
+
+The device has a branch to these CAN wires, using them to communicate over the CAN network.
+Then the CAN_A_L and CAN_A_H are connected directly into CAN_B_L and CAN_B_H respectively.
+These wires are returned through the same cable to the CAN Bus Daisy Chain, which connects CAN_B_L and CAN_B_H of the 'Main Connector' into CAN_A_L and CAN_A_H (respectively) of the 'Multi 2 Connector', which connects into the main CAN Bus system, thus completing the loop.
+The CAN Bus Daisy Chain PCBs have solder jumpers so they can be configured to run through most connection configurations.
 
 ### Packet Construction
 
-Each Packet is made of an address and a data section.
+Each Packet is made of an address and a data section, with some other bits for error correction and format types.
+
+Base frame format
+
+| Start of frame | Identifier | Remote Transmission Request (RTR) | Identifier extension | Reserved | Data length | Data field | CRC | CRC Delimiter | ACK slot | ACK delimiter | End of frame | Inter-frame spacing |
+| -------------- | ---------- | --------------------------------- | -------------------- | -------- | ----------- | ---------- | --- | ------------- | -------- | ------------- | ------------ | ------------------- |
+| 1              | 11         | 1                                 | 1                    | 1        | 4           | 0-64       | 15  | 1             | 1        | 1             | 7            | 3                   |
+
+Extended frame format
+
+| Start of frame | Identifier A | Substitute RTR | Identifier extension | Identifier B | RTR | Reserved | Data length | Data field | CRC | CRC Delimiter | ACK slot | ACK delimiter | End of frame | Inter-frame spacing |
+| -------------- | ------------ | -------------- | -------------------- | ------------ | --- | -------- | ----------- | ---------- | --- | ------------- | -------- | ------------- | ------------ | ------------------- |
+| 1              | 11           | 1              | 1                    | 18           | 1   | 2        | 4           | 0-64       | 15  | 1             | 1        | 1             | 7            | 3                   |
+
+Most of these are handled for us by the system libraries (e.g. `linux/can.h` for big and medium brains). However, some can be set manually - Identifiers A and B are set using the address, data field is set to the data, and the RTR and Identifier extension fields can also be set manually (see <project:#addresses>).
 
 #### Addressing
 
@@ -38,7 +59,7 @@ This way we can have meaningful addresses split up into their purposes (e.g. all
 
 The System, Subsystem, and Device IDs should specify which device the address points to (e.g. different Smol Brains).
 The Group ID should specify which part of the device the address points to (e.g. different sensors/outputs on the same Smol Brain).
-The Parameter ID should specify the function the group should perform or the data it is sending (e.g. turn on/off, status).
+The Parameter ID should specify the function the group should perform or the data it is sending (e.g. turn on/off, status data).
 
 #### Data
 
@@ -93,7 +114,7 @@ This returns the serialised data which can then be assigned to a packet using th
 To deserialise data, use the {any}`parameters::BidirectionalSerializable::deserialize_data()` method on the serialisable that you want to store the data.
 
 :::{note}
-As described in <project:standards/software.md>, software uses American spelling, so any functions/methods called in software will use the spelling _serialize_ instead of _serialise_.
+As described in <project:standards/software/general.md>, software uses American spelling, so any functions/methods called in software will use the spelling _serialize_ instead of _serialise_.
 :::
 
 ##### Serialisables
@@ -115,8 +136,8 @@ typedef SimpleSerializable<wrapped_value_t<int32_t>> serializable_int32_t;
 
 A CAN Interface is what allows programs to interface with the CAN network. There are different kinds of CAN Interfaces, all of which inherit from the {class}`FilteredCanInterface` class:
 
-1. The {class}`TwaiInterface` class is used on firmware - it's defined in the hi-can library in the firmware/components directory.
-2. The {class}`RawCanInterface` class is used on all Linux machines - it's defined in the `hi-can-raw` library in the software/shared directory.
+1. The {class}`TwaiInterface` class is used on firmware - it's defined in the hi-can library in the firmware/components directory. It is based on the ESP32's [TWAI](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/twai.html) (Two-Wire Automotive Interface) library.
+2. The {class}`RawCanInterface` class is used on all Linux machines - it's defined in the `hi-can-raw` library in the software/shared directory. It is based on the [SocketCAN](https://docs.kernel.org/networking/can.html) library.
 
 The {class}`PacketManager` is initialised using a {class}`FilteredCanInterface` (any kind).
 
