@@ -40,14 +40,14 @@ Each Packet is made of an address and a data section, with some other bits for e
 Base frame format
 
 | Start of frame | Identifier | Remote Transmission Request (RTR) | Identifier extension | Reserved | Data length | Data field | CRC | CRC Delimiter | ACK slot | ACK delimiter | End of frame | Inter-frame spacing |
-| - | - | - | - | - | - | - | - | - | - | - | - | - |
-| 1 | 11 | 1 | 1 | 1 | 4 | 0-64 | 15 | 1 | 1 | 1 | 7 | 3 |
+| -------------- | ---------- | --------------------------------- | -------------------- | -------- | ----------- | ---------- | --- | ------------- | -------- | ------------- | ------------ | ------------------- |
+| 1              | 11         | 1                                 | 1                    | 1        | 4           | 0-64       | 15  | 1             | 1        | 1             | 7            | 3                   |
 
 Extended frame format
 
 | Start of frame | Identifier A | Substitute RTR | Identifier extension | Identifier B | RTR | Reserved | Data length | Data field | CRC | CRC Delimiter | ACK slot | ACK delimiter | End of frame | Inter-frame spacing |
-| - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
-| 1 | 11 | 1 | 1 | 18 | 1 | 2 | 4 | 0-64 | 15 | 1 | 1 | 1 | 7 | 3 |
+| -------------- | ------------ | -------------- | -------------------- | ------------ | --- | -------- | ----------- | ---------- | --- | ------------- | -------- | ------------- | ------------ | ------------------- |
+| 1              | 11           | 1              | 1                    | 18           | 1   | 2        | 4           | 0-64       | 15  | 1             | 1        | 1             | 7            | 3                   |
 
 Most of these are handled for us by the system libraries (e.g. `linux/can.h` for big and medium brains). However, some can be set manually - Identifiers A and B are set using the address, data field is set to the data, and the RTR and Identifier extension fields can also be set manually (see <project:#addresses>).
 
