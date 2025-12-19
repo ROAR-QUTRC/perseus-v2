@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.8,
-          "height": 1.27,
-          "width": 2.54
+          "drill": 0.95,
+          "height": 1.95,
+          "width": 1.7
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -189,10 +189,8 @@
       "track_widths": [
         0.0,
         0.2,
-        0.3,
-        0.4,
-        0.6,
-        0.8
+        2.0,
+        5.0
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -469,7 +467,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Smol Brain Board.kicad_pro",
+    "filename": "post-landing-servo.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -485,43 +483,7 @@
         "microvia_drill": 0.1,
         "name": "Default",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": -1,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2,
-        "via_diameter": 0.6,
-        "via_drill": 0.3,
-        "wire_width": 6
-      },
-      {
-        "bus_width": 12,
-        "clearance": 0.2,
-        "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "line_style": 0,
-        "microvia_diameter": 0.3,
-        "microvia_drill": 0.1,
-        "name": "All Nets",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": -1,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2,
-        "via_diameter": 0.6,
-        "via_drill": 0.3,
-        "wire_width": 6
-      },
-      {
-        "bus_width": 12,
-        "clearance": 0.2,
-        "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "line_style": 0,
-        "microvia_diameter": 0.3,
-        "microvia_drill": 0.1,
-        "name": "Power",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": -1,
+        "priority": 2147483647,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.2,
         "via_diameter": 0.6,
@@ -534,20 +496,7 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": [
-      {
-        "netclass": "Power",
-        "pattern": "VIN"
-      },
-      {
-        "netclass": "Power",
-        "pattern": "NetD1_C"
-      },
-      {
-        "netclass": "Power",
-        "pattern": "NetC4_1"
-      }
-    ]
+    "netclass_patterns": []
   },
   "pcbnew": {
     "last_paths": {
@@ -664,7 +613,7 @@
       "version": 1
     },
     "net_format_name": "",
-    "page_layout_descr_file": "empty.kicad_wks",
+    "page_layout_descr_file": "",
     "plot_directory": "",
     "space_save_all_events": true,
     "spice_current_sheet_as_root": false,
@@ -678,25 +627,9 @@
   },
   "sheets": [
     [
-      "d947cca5-df2f-4130-8179-c021102beaa2",
+      "27b9b8c2-577d-47b7-89a1-ebeb4244826d",
       "Root"
     ]
   ],
-  "text_variables": {
-    "CONFIGURATIONPARAMETERS": "",
-    "CONFIGURATORNAME": "",
-    "DOCUMENTNUMBER": "1",
-    "ENGINEER": "James Nichol",
-    "ISUSERCONFIGURABLE": "",
-    "PROJECT": "Perseus",
-    "RULE": "UNIONINDEX=0¦RULEKIND=Width¦NETSCOPE=AnyNet¦LAYERKIND=SameLayer¦NAME=Schematic Width Constraint¦MAXLIMIT=800mil¦MINLIMIT=6mil¦PREFEREDWIDTH=10mil¦MIDLAYER1_MINWIDTH=10mil¦MIDLAYER1_MAXWIDTH=10mil¦MIDLAYER2_MINWIDTH=10mil¦MIDLAYER2_MAXWIDTH=10mil¦MIDLAYER3_MINWIDTH=10mil¦MIDLAYER3_MAXWIDTH=10mil¦MIDLAYER4_MINWIDTH=10mil¦MIDLAYER4_MAXWIDTH=10mil¦MIDLAYER5_MINWIDTH=10mil¦MIDLAYER5_MAXWIDTH=10mil¦MIDLAYER6_MINWIDTH=10mil¦MIDLAYER6_MAXWIDTH=10mil¦MIDLAYER7_MINWIDTH=10mil¦MIDLAYER7_MAXWIDTH=10mil¦MIDLAYER8_MINWIDTH=10mil¦MIDLAYER8_MAXWIDTH=10mil¦MIDLAYER9_MINWIDTH=10mil¦MIDLAYER9_MAXWIDTH=10mil¦MIDLAYER10_MINWIDTH=10mil¦MIDLAYER10_MAXWIDTH=10mil¦MIDLAYER11_MINWIDTH=10mil¦MIDLAYER11_MAXWIDTH=10mil¦MIDLAYER12_MINWIDTH=10mil¦MIDLAYER12_MAXWIDTH=10mil¦MIDLAYER13_MINWIDTH=10mil¦MIDLAYER13_MAXWIDTH=10mil¦MIDLAYER14_MINWIDTH=10mil¦MIDLAYER14_MAXWIDTH=10mil¦MIDLAYER15_MINWIDTH=10mil¦MIDLAYER15_MAXWIDTH=10mil¦MIDLAYER16_MINWIDTH=10mil¦MIDLAYER16_MAXWIDTH=10mil¦MIDLAYER17_MINWIDTH=10mil¦MIDLAYER17_MAXWIDTH=10mil¦MIDLAYER18_MINWIDTH=10mil¦MIDLAYER18_MAXWIDTH=10mil¦MIDLAYER19_MINWIDTH=10mil¦MIDLAYER19_MAXWIDTH=10mil¦MIDLAYER20_MINWIDTH=10mil¦MIDLAYER20_MAXWIDTH=10mil¦MIDLAYER21_MINWIDTH=10mil¦MIDLAYER21_MAXWIDTH=10mil¦MIDLAYER22_MINWIDTH=10mil¦MIDLAYER22_MAXWIDTH=10mil¦MIDLAYER23_MINWIDTH=10mil¦MIDLAYER23_MAXWIDTH=10mil¦MIDLAYER24_MINWIDTH=10mil¦MIDLAYER24_MAXWIDTH=10mil¦MIDLAYER25_MINWIDTH=10mil¦MIDLAYER25_MAXWIDTH=10mil¦MIDLAYER26_MINWIDTH=10mil¦MIDLAYER26_MAXWIDTH=10mil¦MIDLAYER27_MINWIDTH=10mil¦MIDLAYER27_MAXWIDTH=10mil¦MIDLAYER28_MINWIDTH=10mil¦MIDLAYER28_MAXWIDTH=10mil¦MIDLAYER29_MINWIDTH=10mil¦MIDLAYER29_MAXWIDTH=10mil¦MIDLAYER30_MINWIDTH=10mil¦MIDLAYER30_MAXWIDTH=10mil¦MINIMP=50.000000¦MAXIMP=50.000000¦FAVIMP=50.000000¦UNIT=Imperial",
-    "SHEETSYMBOLDESIGNATOR": "",
-    "SHEETTOTAL": "1",
-    "SPICEMODELCACHE": "",
-    "SUBSYSTEM": "Embedded",
-    "VERSIONCONTROL_PROJFOLDERREVNUMBER": "",
-    "VERSIONCONTROL_PROJFOLDERREVNUMBERSHORT": "",
-    "VERSIONCONTROL_REVNUMBER": "",
-    "VERSIONCONTROL_REVNUMBERSHORT": ""
-  }
+  "text_variables": {}
 }
