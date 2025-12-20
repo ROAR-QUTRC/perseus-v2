@@ -21,3 +21,28 @@ This ROS2 package is intended to cover functionality to:
 
 SLAM toolbox
 Nav2
+
+
+### Navigate through multiple waypoints
+```bash
+ros2 action send_goal /navigate_through_poses nav2_msgs/action/NavigateThroughPoses \
+"{poses: [
+  {header: {frame_id: map}, pose: {position: {x: 11.5616, y: 14.1272, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.9959, w: 0.0913}}},
+  {header: {frame_id: map}, pose: {position: {x: 0.7224,  y: 6.4172,  z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.5697, w: 0.8218}}},
+  {header: {frame_id: map}, pose: {position: {x: 2.7241,  y: 2.5618,  z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.3337, w: 0.9427}}},
+  {header: {frame_id: map}, pose: {position: {x: -0.8341, y: -7.2169, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.9812, w: 0.1931}}},
+  {header: {frame_id: map}, pose: {position: {x: 11.7310, y: -5.7317, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.9419, w: 0.3358}}}
+]}"
+```
+
+
+```bash
+ros2 action send_goal /navigate_through_poses nav2_msgs/action/NavigateThroughPoses \
+"{poses: [
+  {header: {frame_id: map}, pose: {position: {x: 11.5616, y: 14.1272, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.9959, w: 0.0913}}},
+  {header: {frame_id: map}, pose: {position: {x: 0.7224,  y: 6.4172,  z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.5697, w: 0.8218}}},
+  {header: {frame_id: map}, pose: {position: {x: 2.7241,  y: 2.5618,  z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.3337, w: 0.9427}}},
+  {header: {frame_id: map}, pose: {position: {x: -0.8341, y: -7.2169, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.9812, w: 0.1931}}},
+  {header: {frame_id: map}, pose: {position: {x: 11.7310, y: -5.7317, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.9419, w: 0.3358}}}
+]}"
+```
