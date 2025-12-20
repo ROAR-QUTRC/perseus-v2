@@ -40,9 +40,9 @@ def generate_launch_description():
     declare_slam_params_file_cmd = DeclareLaunchArgument(
         "slam_params_file",
         default_value=os.path.join(
-            get_package_share_directory("slam_toolbox"),
+            get_package_share_directory("autonomy"),
             "config",
-            "mapper_params_online_async.yaml",
+            "slam_toolbox_params.yaml",
         ),
         description="Full path to the ROS2 parameters file to use for the slam_toolbox node",
     )
