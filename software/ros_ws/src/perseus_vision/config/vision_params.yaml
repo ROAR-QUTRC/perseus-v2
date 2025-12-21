@@ -31,10 +31,11 @@ cube_detector:
     camera_matrix: [530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0] # fx, 0, cx, 0, fy, cy, 0, 0, 1
     camera_frame: "camera_link_optical" # input frame of the camera
     publish_tf: true # whether to transform to output frame
-    tf_output_frame: "odom" # reference frame for published TFs
+    tf_output_frame: "chassis" # reference frame for published TFs
     compressed_io: false # Enable if input/output images are compressed
     # If compressed_input_output is true, the system assumes that the input image is a compressed image.
-    input_img: "/rgbd_camera/image_raw"
+    input_img: "/camera/camera/color/image_raw"
+    input_depth: "/camera/camera/depth/image_raw"
     publish_img: true
     output_img: "/detection/cube/image_raw"
     publish_output: true

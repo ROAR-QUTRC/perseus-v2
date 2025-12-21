@@ -26,6 +26,7 @@ CubeDetector::CubeDetector()
     this->declare_parameter("output_topic", "/detection/cube");
     this->declare_parameter("model_path", "/model/best.onnx");
     this->declare_parameter("use_cuda", false);
+    this->declare_parameter("input_depth", "/camera/camera/depth/image_raw");
     // Get parameters
     auto camera_matrix = this->get_parameter("camera_matrix").as_double_array();
     camera_fx_ = camera_matrix[0];
@@ -37,6 +38,7 @@ CubeDetector::CubeDetector()
     tf_output_frame_ = this->get_parameter("tf_output_frame").as_string();
     compressed_io_ = this->get_parameter("compressed_io").as_bool();
     input_img_ = this->get_parameter("input_img").as_string();
+    input_depth_ = this->get_parameter("input_depth").as_string();
     publish_img_ = this->get_parameter("publish_img").as_bool();
     output_img_ = this->get_parameter("output_img").as_string();
     publish_output_ = this->get_parameter("publish_output").as_bool();
@@ -75,7 +77,7 @@ CubeDetector::CubeDetector()
         std::bind(&CubeDetector::imageCb, this, std::placeholders::_1));
 
     depth_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-        "/rgbd_camera/depth/image_raw", 10,
+        input_depth_, 10,
         std::bind(&CubeDetector::depthCb, this, std::placeholders::_1));
 
     tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
