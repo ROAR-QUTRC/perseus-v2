@@ -46,3 +46,15 @@ ros2 action send_goal /navigate_through_poses nav2_msgs/action/NavigateThroughPo
   {header: {frame_id: map}, pose: {position: {x: 11.7310, y: -5.7317, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.9419, w: 0.3358}}}
 ]}"
 ```
+
+
+```bash
+ros2 action send_goal /navigate_through_poses nav2_msgs/action/NavigateThroughPoses \
+"{poses: [
+  {header: {frame_id: map}, pose: {position: {x: 0.0,  y: 0.0,  z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 0.0}}},
+  {header: {frame_id: map}, pose: {position: {x: 0.7224,  y: 6.4172,  z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}},
+  {header: {frame_id: map}, pose: {position: {x: 2.7241,  y: 2.5618,  z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}},
+  {header: {frame_id: map}, pose: {position: {x: -0.8341, y: -7.2169, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}},
+  {header: {frame_id: map}, pose: {position: {x: 11.7310, y: -5.7317, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}}
+]}"
+```
