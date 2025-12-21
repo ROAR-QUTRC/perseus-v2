@@ -128,6 +128,7 @@ private:
     bool compressed_io_;
     std::string model_;
     std::string input_img_;
+    std::string input_depth_;
     bool publish_img_;
     std::string output_img_;
     bool publish_output_;
