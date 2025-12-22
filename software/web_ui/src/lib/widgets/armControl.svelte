@@ -11,17 +11,14 @@
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
 			general: {
-				disableSendForm: {
-					type: 'switch',
-					value: 'false',
-				},
-				topic: {
-					type: 'text',
-					value: '',
-				},
 				incrementValue: {
 					type: 'number',
 					value: '5',
+				},
+				messageFrequency: {
+					description: 'Frequency (Hz) to send control messages at',
+					type: 'number',
+					value: '10',
 				}
 			}
 		}
@@ -29,91 +26,72 @@
 </script>
 
 <script lang="ts">
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
-	import ROSLIB from 'roslib';
+	import { getRosConnection } from '$lib/scripts/rosBridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import * as ROSLIB from 'roslib';
 	import { onMount } from 'svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Slider } from '$lib/components/ui/slider/index.js';
+	import { Minus, Plus } from 'svelte-radix';
+	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
+	import * as changeCase from 'change-case';
 
 	let topic: ROSLIB.Topic | null = null;
-	let elbowPosition = $state(0);
-	let wristYawPosition = $state(0);
-	let wristRollPosition = $state(0);
-	let shoulderPitchPosition = $state(0);
-	let shoulderYawPosition = $state(0);
+
+	// String number record type for indexing in markdown
+	let positions = $state<Record<string, number>>({
+		shoulderPan: 0,
+		shoulderTilt: 0,
+		elbow: 0,
+		wristPan: 0,
+		wristTilt: 0,
+	});
+
+	let increment = $derived(Number(settings.groups.general.incrementValue.value));
 
 	$effect(() => {
 		const ros = getRosConnection();
-		if(ros){
-			const topicName = settings.groups.general.topic.value || '/arm/rmd_control';
-			ros.getTopicType(topicName, (type) => {
-				topic = new ROSLIB.Topic({
-					ros: ros,
-					name: topicName,
-					messageType: type,
-				});
-				if(type !== "perseus_msgs/ArmServoControl"){
-					settings.groups.general.disableSendForm.value === 'false';
-					settings.groups.general.disableSendForm.disabled = true;
-				} else{
-					settings.groups.general.disableSendForm.disabled = false;
-				}
-				topic.advertise();
-			})
-		}else{
+		if (ros) {
+			topic = new ROSLIB.Topic({
+				ros: ros,
+				name: '/arm/rmd_control',
+				messageType: "perseus_msgs/ArmServoControl",
+			});
+		} else {
 			topic = null;
 		}
 	})
-	const sendMessage = (e: Event) => {
-		e.preventDefault();
-		console.log("Hello");
-	};
 
+	onMount(() => {
+		const frequency = Number(settings.groups.general.messageFrequency.value);
+		const interval = setInterval(() => {
+			if (topic) {
+				const message = new ROSLIB.Message({
+					shoulder_pan: positions.shoulderPan,
+					shoulder_tilt: positions.shoulderTilt,
+					elbow: positions.elbow,
+					wrist_pan: positions.wristPan,
+					wrist_tilt: positions.wristTilt,
+				});
+				topic.publish(message);
+				console.log(JSON.stringify(message, null, 2));
+			}
+		}, 1000 / frequency);
+
+		return () => {
+			clearInterval(interval);
+		};
+	})
 </script>
 
-<div class="w-full h-full flex flex-col">
-	<div style="text-align:center">
-		Shoulder Pitch Position: {shoulderPitchPosition}
-	</div>
-	<div class="flex flex-row">
-		<Button onclick={() => {shoulderPitchPosition = shoulderPitchPosition - Number(settings.groups.general.incrementValue.value); if(shoulderPitchPosition < 0){shoulderPitchPosition = 0;}}}>Decrement</Button>
-		<Slider type="single" bind:value={shoulderPitchPosition} max={100} step={1}/>
-		<Button onclick={() => {shoulderPitchPosition = shoulderPitchPosition + Number(settings.groups.general.incrementValue.value); if(shoulderPitchPosition > 100){shoulderPitchPosition = 100;}}}>Increment</Button>
-	</div>
-	<br>
-	<div style="text-align:center">
-		Shoulder Yaw Position: {shoulderYawPosition}
-	</div>
-	<div class="flex flex-row">
-		<Button onclick={() => {shoulderYawPosition = shoulderYawPosition - Number(settings.groups.general.incrementValue.value); if(shoulderYawPosition < 0){shoulderYawPosition = 0;}}}>Decrement</Button>
-		<Slider type="single" bind:value={shoulderYawPosition} max={100} step={1}/>
-		<Button onclick={() => {shoulderYawPosition = shoulderYawPosition + Number(settings.groups.general.incrementValue.value); if(shoulderYawPosition > 100){shoulderYawPosition = 100;}}}>Increment</Button>
-	</div>
-	<br>
-	<div style="text-align:center">
-		Elbow Position: {elbowPosition}
-	</div>
-	<div class="flex flex-row">
-		<Button onclick={() => {elbowPosition = elbowPosition - Number(settings.groups.general.incrementValue.value); if(elbowPosition < 0){elbowPosition = 0;}}}>Decrement</Button>
-		<Slider type="single" bind:value={elbowPosition} max={100} step={1}/>
-		<Button onclick={() => {elbowPosition = elbowPosition + Number(settings.groups.general.incrementValue.value); if(elbowPosition > 100){elbowPosition = 100;}}}>Increment</Button>
-	</div>
-	<br>
-	<div style="text-align:center">
-		Wrist Yaw Position: {wristYawPosition}
-	</div>
-	<div class="flex flex-row">
-		<Button onclick={() => {wristYawPosition = wristYawPosition - Number(settings.groups.general.incrementValue.value); if(wristYawPosition < 0){wristYawPosition = 0;}}}>Decrement</Button>
-		<Slider type="single" bind:value={wristYawPosition} max={100} step={1}/>
-		<Button onclick={() => {wristYawPosition = wristYawPosition + Number(settings.groups.general.incrementValue.value); if(wristYawPosition > 100){wristYawPosition = 100;}}}>Increment</Button>
-	</div>
-	<br>
-	<div style="text-align:center">
-		Wrist Roll Position: {wristRollPosition}
-	</div>
-	<div class="flex flex-row">
-		<Button onclick={() => {wristRollPosition = wristRollPosition - Number(settings.groups.general.incrementValue.value); if(wristRollPosition < 0){wristRollPosition = 0;}}}>Decrement</Button>
-		<Slider type="single" bind:value={wristRollPosition} max={100} step={1}/>
-		<Button onclick={() => {wristRollPosition = wristRollPosition + Number(settings.groups.general.incrementValue.value); if(wristRollPosition > 100){wristRollPosition = 100;}}}>Increment</Button>
-	</div>
-</div>
+<ScrollArea class="w-full h-full flex flex-col pr-2">
+	{#each Object.keys(positions) as joint}
+		<div class="">
+			<p class="text-center">{changeCase.sentenceCase(joint)}: {positions[joint]}</p>
+			<div class="flex flex-row items-center gap-2">
+				<Button onclick={() => positions[joint] -= increment} size='icon' variant='ghost'><Minus /></Button>
+				<Slider type="single" bind:value={positions[joint]}/>
+				<Button onclick={() => positions[joint] += increment} size='icon' variant='ghost'><Plus /></Button>
+			</div>
+		</div>
+	{/each}
+</ScrollArea>
