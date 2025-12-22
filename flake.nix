@@ -127,7 +127,7 @@
             groot2
             bashInteractive
             can-utils
-            nodejs_22
+            nodejs_23
             yarn
             nixgl-script
             ncurses

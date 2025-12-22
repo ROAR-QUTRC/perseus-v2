@@ -14,8 +14,8 @@
 </script>
 
 <script lang="ts">
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte';
-	import ROSLIB from 'roslib';
+	import { getRosConnection } from '$lib/scripts/rosBridge.svelte';
+	import * as ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
 
 	let message = $state<string>('');

@@ -13,8 +13,8 @@
 </script>
 
 <script lang="ts">
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
-	import ROSLIB from 'roslib';
+	import { getRosConnection } from '$lib/scripts/rosBridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import * as ROSLIB from 'roslib';
 	import Fa from 'svelte-fa';
 	import { faPowerOff } from '@fortawesome/free-solid-svg-icons';
 	import { onMount } from 'svelte';
