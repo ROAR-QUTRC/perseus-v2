@@ -1,6 +1,5 @@
-import ROSLIB from "roslib";
+import * as ROSLIB from "roslib";
 
-let rosConnection: ROSLIB.Ros;
 let rosConnectionWrap = $state<ROSLIB.Ros | false>(false);
 let retryCounter: number = 0;
 let retryTimeoutHandle: NodeJS.Timeout | null = null;
@@ -8,7 +7,7 @@ let retryTimeoutHandle: NodeJS.Timeout | null = null;
 export const getRosConnection = () => rosConnectionWrap;
 
 export const connectRos = (address: string) => {
-  rosConnection = new ROSLIB.Ros({
+  const rosConnection = new ROSLIB.Ros({
     url: `ws://${address}:9090`,
   });
 
@@ -23,7 +22,7 @@ export const connectRos = (address: string) => {
     rosConnectionWrap = rosConnection;
   });
   rosConnection.on("error", (error) => {
-    // console.log('Error connecting to websocket server: ', error);
+    console.log("Error connecting to websocket server: ", error);
   });
   rosConnection.on("close", () => {
     console.log("rosbridge disconnected");
@@ -51,8 +50,8 @@ export const connectRos = (address: string) => {
 };
 
 export const disconnectRos = () => {
-  if (rosConnection) {
-    rosConnection.close();
+  if (rosConnectionWrap) {
+    rosConnectionWrap.close();
   }
   retryCounter = -1; // This is used a signal that disconnection was manual
 };
