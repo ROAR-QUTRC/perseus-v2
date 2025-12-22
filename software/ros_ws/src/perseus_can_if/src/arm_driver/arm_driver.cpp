@@ -1,4 +1,4 @@
-#include "rmd_servo_driver/rmd_servo_driver.hpp"
+#include "arm_driver/arm_driver.hpp"
 
 #include <string>
 
@@ -8,7 +8,7 @@ using namespace hi_can;
 using namespace hi_can::addressing::post_landing::servo::rmd;
 using namespace hi_can::parameters::post_landing::servo::rmd;
 
-RmdServoDriver::RmdServoDriver(const rclcpp::NodeOptions& options)
+ArmDriver::ArmDriver(const rclcpp::NodeOptions& options)
     : Node("rmd_servo_driver", options)
 {
     using namespace hi_can;
@@ -50,25 +50,58 @@ RmdServoDriver::RmdServoDriver(const rclcpp::NodeOptions& options)
         send_message::active_reply_message_t(send_message::active_reply_message_t::reply_t::STATUS_3, true, 1000).serialize_data()});
 
     // ROS
-    _packet_timer = this->create_wall_timer(PACKET_HANDLE, std::bind(&RmdServoDriver::_can_handle, this));
-    _command_subscriber = this->create_subscription<perseus_msgs::msg::ArmServoControl>("/arm/rmd_control", 10, std::bind(&RmdServoDriver::_position_control, this, std::placeholders::_1));
-    _status_service = this->create_service<perseus_msgs::srv::RmdServoStatus>("/arm/rmd_status", std::bind(&RmdServoDriver::_get_status, this, std::placeholders::_1, std::placeholders::_2));
+    _packet_timer = this->create_wall_timer(PACKET_HANDLE, std::bind(&ArmDriver::_can_handle, this));
+    _command_subscriber = this->create_subscription<perseus_msgs::msg::ArmServoControl>("/arm/rmd_control", 10, std::bind(&ArmDriver::_position_control, this, std::placeholders::_1));
+    _status_service = this->create_service<perseus_msgs::srv::RmdServoStatus>("/arm/rmd_status", std::bind(&ArmDriver::_get_rmd_status, this, std::placeholders::_1, std::placeholders::_2));
 
     RCLCPP_INFO(this->get_logger(), "RMD servo driver node initialised");
 }
 
-void RmdServoDriver::_position_control(perseus_msgs::msg::ArmServoControl rmd_control)
+void ArmDriver::_position_control(perseus_msgs::msg::ArmServoControl servo_control)
 {
-    _can_interface->transmit(Packet(
-        servo_address_t(rmd_id::SEND, motor_id_t(rmd_control.motor_id)),
-        send_message::position_message_t(
-            send_message::position_message_t::position_command_t::ABSOLUTE,
-            RMD_SPEED_LIMIT,
-            rmd_control.absolute_position)
-            .serialize_data()));
+    switch (servo_control.motor_id)
+    {
+    case perseus_msgs::msg::ArmServoControl::ELBOW:
+        _can_interface->transmit(Packet(
+            servo_address_t(rmd_id::SEND, motor_id_t::ELBOW),
+            send_message::position_message_t(
+                send_message::position_message_t::position_command_t::ABSOLUTE,
+                RMD_SPEED_LIMIT,
+                servo_control.absolute_position)
+                .serialize_data()));
+        break;
+    case perseus_msgs::msg::ArmServoControl::WRIST_YAW:
+        _can_interface->transmit(Packet(
+            servo_address_t(rmd_id::SEND, motor_id_t::WRIST_YAW),
+            send_message::position_message_t(
+                send_message::position_message_t::position_command_t::ABSOLUTE,
+                RMD_SPEED_LIMIT,
+                servo_control.absolute_position)
+                .serialize_data()));
+        break;
+    case perseus_msgs::msg::ArmServoControl::WRIST_ROLL:
+        _can_interface->transmit(Packet(
+            servo_address_t(rmd_id::SEND, motor_id_t::WRIST_ROLL),
+            send_message::position_message_t(
+                send_message::position_message_t::position_command_t::ABSOLUTE,
+                RMD_SPEED_LIMIT,
+                servo_control.absolute_position)
+                .serialize_data()));
+        break;
+    case perseus_msgs::msg::ArmServoControl::SHOULDER_TILT:
+        _can_interface->transmit(Packet(addressing::raw_address_t(addressing::standard_address_t(addressing::post_landing::SYSTEM_ID, addressing::post_landing::servo::SUBSYSTEM_ID, addressing::post_landing::servo::rsbl::DEVICE_ID, addressing::post_landing::servo::rsbl::rsbl_group::SHOULDER_TILT, addressing::post_landing::servo::rsbl::rsbl_function::SET_POSITION)),
+                                        servo_control.absolute_position));
+        break;
+    case perseus_msgs::msg::ArmServoControl::SHOULDER_PAN:
+        _can_interface->transmit(Packet(addressing::raw_address_t(addressing::standard_address_t(addressing::post_landing::SYSTEM_ID, addressing::post_landing::servo::SUBSYSTEM_ID, addressing::post_landing::servo::rsbl::DEVICE_ID, addressing::post_landing::servo::rsbl::rsbl_group::SHOULDER_PAN, addressing::post_landing::servo::rsbl::rsbl_function::SET_POSITION)),
+                                        servo_control.absolute_position));
+        break;
+    default:
+        break;
+    }
 }
 
-void RmdServoDriver::_can_handle()
+void ArmDriver::_can_handle()
 {
     try
     {
@@ -104,7 +137,7 @@ void RmdServoDriver::_can_handle()
     }
 }
 
-void RmdServoDriver::_get_status(const std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Request> request, std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Response> response)
+void ArmDriver::_get_rmd_status(const std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Request> request, std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Response> response)
 {
     RmdParameterGroup* servo_parameter_group;
     switch (static_cast<motor_id_t>(request->motor_id & 0x00F))
@@ -136,7 +169,7 @@ void RmdServoDriver::_get_status(const std::shared_ptr<perseus_msgs::srv::RmdSer
     }
 }
 
-void RmdServoDriver::cleanup()
+void ArmDriver::cleanup()
 {
     _packet_manager.reset();
     _can_interface.reset();
@@ -147,7 +180,7 @@ int main(int argc, char** argv)
     rclcpp::init(argc, argv);
     try
     {
-        auto node = std::make_shared<RmdServoDriver>();
+        auto node = std::make_shared<ArmDriver>();
         RCLCPP_INFO(rclcpp::get_logger("main"), "Starting RMD Servo driver node");
         rclcpp::spin(node);
         node->cleanup();

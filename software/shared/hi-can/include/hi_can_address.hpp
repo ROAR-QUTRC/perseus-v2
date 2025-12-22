@@ -409,6 +409,24 @@ namespace hi_can
                         }
                     };
                 }
+                namespace rsbl
+                {
+                    constexpr uint8_t DEVICE_ID = 0x01;
+                    enum class rsbl_group
+                    {
+                        SHOULDER_TILT = 0x00,
+                        SHOULDER_PAN = 0x01,
+                    };
+                    enum class rsbl_function : uint8_t
+                    {
+                        SET_ACCELERATION = 0x01,
+                        SET_POSITION = 0x02,
+                        SET_TORQUE = 0x03,
+                        SET_SPEED = 0x04,
+                        SET_TORQUE_LIMIT = 0x05,
+                        SERVO_STATUS = 0x06,
+                    };
+                }
             }
         }
         /// @brief Namespace containing all addresses in the excavation system

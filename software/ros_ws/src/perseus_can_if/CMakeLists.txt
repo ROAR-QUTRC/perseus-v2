@@ -66,28 +66,27 @@ endif()
 
 # Find all source files for the executables
 file(GLOB_RECURSE RCB_DRIVER_CODE_SOURCES src/rcb_driver/*.cpp)
-file(GLOB_RECURSE RMD_SERVO_DRIVER_CODE_SOURCES src/rmd_servo_driver/*.cpp)
+file(GLOB_RECURSE ARM_DRIVER_CODE_SOURCES src/arm_driver/*.cpp)
 
 # Add exec targets
 add_executable(rcb_driver ${RCB_DRIVER_CODE_SOURCES})
-add_executable(rmd_servo_driver ${RMD_SERVO_DRIVER_CODE_SOURCES})
+add_executable(arm_driver ${ARM_DRIVER_CODE_SOURCES})
 
 # Add include dirs
 target_include_directories(rcb_driver
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(rmd_servo_driver
+target_include_directories(arm_driver
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add dependencies for the executables
 ament_target_dependencies(rcb_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-ament_target_dependencies(rmd_servo_driver PUBLIC
-                          ${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_target_dependencies(arm_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 target_link_libraries(rcb_driver PUBLIC hi_can_raw)
-target_link_libraries(rmd_servo_driver PUBLIC hi_can_raw)
+target_link_libraries(arm_driver PUBLIC hi_can_raw)
 
 # Install ROS Executable
 install(TARGETS rcb_driver DESTINATION lib/${PROJECT_NAME})
-install(TARGETS rmd_servo_driver DESTINATION lib/${PROJECT_NAME})
+install(TARGETS arm_driver DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

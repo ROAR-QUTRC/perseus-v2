@@ -5,17 +5,17 @@
 #include "perseus_msgs/msg/arm_servo_control.hpp"
 #include "perseus_msgs/srv/rmd_servo_status.hpp"
 
-class RmdServoDriver : public rclcpp::Node
+class ArmDriver : public rclcpp::Node
 {
 public:
-    explicit RmdServoDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+    explicit ArmDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
     void cleanup();
 
 private:
     void _can_handle();
-    void _position_control(perseus_msgs::msg::ArmServoControl rmd_control);
-    void _get_status(const std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Request> request, std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Response> response);
+    void _position_control(perseus_msgs::msg::ArmServoControl servo_control);
+    void _get_rmd_status(const std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Request> request, std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Response> response);
 
     std::optional<hi_can::RawCanInterface> _can_interface;
     std::optional<hi_can::PacketManager> _packet_manager;
