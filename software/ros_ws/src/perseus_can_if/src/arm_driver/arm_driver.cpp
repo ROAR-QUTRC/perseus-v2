@@ -28,6 +28,7 @@ ArmDriver::ArmDriver(const rclcpp::NodeOptions& options)
     _packet_manager->add_group(_WristYawParameterGroup);
 
     _can_interface->add_filter(_rmd_receive_filter);
+    _can_interface->add_filter(_rsbl_receive_filter);
 
     // Initialise all motors on startup with desired functions
     // Stop all motors - motors will lock up and won't flop around
@@ -89,11 +90,11 @@ void ArmDriver::_position_control(perseus_msgs::msg::ArmServoControl servo_contr
                 .serialize_data()));
         break;
     case perseus_msgs::msg::ArmServoControl::SHOULDER_TILT:
-        _can_interface->transmit(Packet(addressing::raw_address_t(addressing::standard_address_t(addressing::post_landing::SYSTEM_ID, addressing::post_landing::servo::SUBSYSTEM_ID, addressing::post_landing::servo::rsbl::DEVICE_ID, addressing::post_landing::servo::rsbl::rsbl_group::SHOULDER_TILT, addressing::post_landing::servo::rsbl::rsbl_function::SET_POSITION)),
+        _can_interface->transmit(Packet(hi_can::addressing::raw_address_t(hi_can::addressing::standard_address_t(hi_can::addressing::post_landing::SYSTEM_ID, hi_can::addressing::post_landing::servo::SUBSYSTEM_ID, hi_can::addressing::post_landing::servo::rsbl::DEVICE_ID, static_cast<uint8_t>(hi_can::addressing::post_landing::servo::rsbl::rsbl_group::SHOULDER_TILT), static_cast<uint8_t>(hi_can::addressing::post_landing::servo::rsbl::rsbl_function::SET_POSITION))),
                                         servo_control.absolute_position));
         break;
     case perseus_msgs::msg::ArmServoControl::SHOULDER_PAN:
-        _can_interface->transmit(Packet(addressing::raw_address_t(addressing::standard_address_t(addressing::post_landing::SYSTEM_ID, addressing::post_landing::servo::SUBSYSTEM_ID, addressing::post_landing::servo::rsbl::DEVICE_ID, addressing::post_landing::servo::rsbl::rsbl_group::SHOULDER_PAN, addressing::post_landing::servo::rsbl::rsbl_function::SET_POSITION)),
+        _can_interface->transmit(Packet(hi_can::addressing::raw_address_t(hi_can::addressing::standard_address_t(hi_can::addressing::post_landing::SYSTEM_ID, hi_can::addressing::post_landing::servo::SUBSYSTEM_ID, hi_can::addressing::post_landing::servo::rsbl::DEVICE_ID, static_cast<uint8_t>(hi_can::addressing::post_landing::servo::rsbl::rsbl_group::SHOULDER_PAN), static_cast<uint8_t>(hi_can::addressing::post_landing::servo::rsbl::rsbl_function::SET_POSITION))),
                                         servo_control.absolute_position));
         break;
     default:
