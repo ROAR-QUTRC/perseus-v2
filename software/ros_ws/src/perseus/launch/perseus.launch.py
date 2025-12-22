@@ -138,19 +138,21 @@ def generate_launch_description():
     def launch_payload(context):
         payload = context.perform_substitution(LaunchConfiguration("payload"))
         if payload == "bucket":
-            return [IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    [
-                        PathJoinSubstitution(
-                            [
-                                FindPackageShare("perseus_payloads"),
-                                "launch",
-                                "bucket.launch.py",
-                            ]
-                        )
-                    ]
-                ),
-            )]
+            return [
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource(
+                        [
+                            PathJoinSubstitution(
+                                [
+                                    FindPackageShare("perseus_payloads"),
+                                    "launch",
+                                    "bucket.launch.py",
+                                ]
+                            )
+                        ]
+                    ),
+                )
+            ]
 
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
