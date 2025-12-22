@@ -12,7 +12,7 @@
 	import { cn } from '$lib/utils';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import SettingsForm from './settings-form.svelte';
+	import SettingsForm from './settingsForm.svelte';
 	import { repo } from 'remult';
 	import { Layout } from '../../shared/Layout';
 	import { localStore } from '$lib/scripts/localStore.svelte';
