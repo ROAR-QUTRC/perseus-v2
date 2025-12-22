@@ -31,6 +31,10 @@ private:
         .address = hi_can::addressing::post_landing::servo::rmd::servo_address_t(hi_can::addressing::post_landing::servo::rmd::rmd_id::RECEIVE),
         .mask = 0xFF0,
     };
+    hi_can::addressing::filter_t _rsbl_receive_filter = {
+        .address = hi_can::addressing::raw_address_t(hi_can::addressing::standard_address_t(hi_can::addressing::post_landing::SYSTEM_ID, hi_can::addressing::post_landing::servo::SUBSYSTEM_ID, hi_can::addressing::post_landing::servo::rsbl::DEVICE_ID, 0x00, 0x00)),
+        .mask = hi_can::addressing::DEVICE_MASK,
+    };
 
     rclcpp::TimerBase::SharedPtr _packet_timer;
     rclcpp::Subscription<perseus_msgs::msg::ArmServoControl>::SharedPtr _command_subscriber;
