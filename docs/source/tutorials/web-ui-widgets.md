@@ -3,9 +3,9 @@
 This tutorial will show you how to make a basic ROS2 widget that interfaces with the [talker and listener](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html) tutorial nodes.
 Before beginning this tutorial you must:
 
--   Have read the R.O.A.R. software standards (General and Typescript sections)
--   Have an understanding of [Svelte](https://svelte.dev) and [ROS2](https://docs.ros.org/en/jazzy/index.html)
--   Complete the [getting started](project:/home/getting-started.md) guide
+- Have read the R.O.A.R. software standards (General and Typescript sections)
+- Have an understanding of [Svelte](https://svelte.dev) and [ROS2](https://docs.ros.org/en/jazzy/index.html)
+- Complete the [getting started](project:/home/getting-started.md) guide
 
 :::{note}
 All file paths mentioned in this tutorial are relative to the root of the Web-UI (`perseus-v2/software/web-ui`)
@@ -33,15 +33,15 @@ Let's add some HTML so we can see and send messages with ROS2 later on. To keep 
 
 ```html
 <div class="flex h-full w-full flex-col">
-    <form class="flex flex-row">
-        <input id="message" class="mb-2 mr-2" />
-        <button>Send</button>
-    </form>
-    <ScrollArea class="flex-1" orientation="vertical">
-        {#each [1, 2, 3] as message}
-        <p>{message}</p>
-        {/each}
-    </ScrollArea>
+  <form class="flex flex-row">
+    <input id="message" class="mb-2 mr-2" />
+    <button>Send</button>
+  </form>
+  <ScrollArea class="flex-1" orientation="vertical">
+    {#each [1, 2, 3] as message}
+    <p>{message}</p>
+    {/each}
+  </ScrollArea>
 </div>
 ```
 
@@ -111,10 +111,10 @@ The main challenge when using [roslibjs](https://robotwebtools.github.io/roslibj
 
 Before we write any code there are a few rules for the design patterns used when writing ROS2 code in a widget:
 
--   Avoid making ROS2 related variables reactive as they will be assigned inside an `$effect`.
--   Do NOT initialise anything related to ROS2 in the `onMount` hook, even if you really want to.
--   Always set `isRosDependant` to `true` and `group` to `'ROS'` if using the `getRosConnection()` function.
--   Dispose of all ROS2 resources you created in the function returned by the `onMount` hook (the return value is run on unmount).
+- Avoid making ROS2 related variables reactive as they will be assigned inside an `$effect`.
+- Do NOT initialise anything related to ROS2 in the `onMount` hook, even if you really want to.
+- Always set `isRosDependant` to `true` and `group` to `'ROS'` if using the `getRosConnection()` function.
+- Dispose of all ROS2 resources you created in the function returned by the `onMount` hook (the return value is run on unmount).
 
 As per the third rule mentioned above, you should now uncomment and set the `group` and `isRosDependant` exports.
 
@@ -132,41 +132,41 @@ let input = $state<string>(""); // Text input model
 
 // Using effect to reactively reinitialise after re/gaining connection
 $effect(() => {
-    const ros = getRosConnection();
+  const ros = getRosConnection();
 
-    if (ros) {
-        // Unsubscribe from previous topic if any
-        topic?.unsubscribe();
+  if (ros) {
+    // Unsubscribe from previous topic if any
+    topic?.unsubscribe();
 
-        topic = new ROSLIB.Topic({
-            ros: ros,
-            name: "/topic",
-            messageType: "std_msgs/msg/String",
-        });
+    topic = new ROSLIB.Topic({
+      ros: ros,
+      name: "/topic",
+      messageType: "std_msgs/msg/String",
+    });
 
-        // Add a subscription callback
-        topic.subscribe((message) => messages.unshift(message.data));
-    } else {
-        topic = null;
-    }
+    // Add a subscription callback
+    topic.subscribe((message) => messages.unshift(message.data));
+  } else {
+    topic = null;
+  }
 });
 
 const sendMessage = (e: Event) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!input) return;
+  if (!input) return;
 
-    // Create and send string message
-    const message = { data: input };
-    topic?.publish(message);
-    input = "";
+  // Create and send string message
+  const message = { data: input };
+  topic?.publish(message);
+  input = "";
 };
 
 onMount(() => {
-    return () => {
-        // Clean-up on unmount
-        topic?.unsubscribe();
-    };
+  return () => {
+    // Clean-up on unmount
+    topic?.unsubscribe();
+  };
 });
 ```
 
@@ -202,8 +202,8 @@ To apply this setting we can simply wrap the input form in a `{#if}` template:
 ```html
 {#if settings.groups.general.disableSendForm.value === 'false'}
 <form class="flex flex-row" onsubmit="{sendMessage}">
-    <input id="message" class="mb-2 mr-2" bind:value="{input}" />
-    <button onclick="{sendMessage}">Send</button>
+  <input id="message" class="mb-2 mr-2" bind:value="{input}" />
+  <button onclick="{sendMessage}">Send</button>
 </form>
 {/if}
 ```
@@ -224,29 +224,29 @@ Since the settings object is a state rune and our ROS2 topic is initialised in a
 ```ts
 // Using effect to reactively reinitialise after re/gaining connection
 $effect(() => {
-    const ros = getRosConnection();
+  const ros = getRosConnection();
 
-    if (ros) {
-        // Use a default value if custom topic is falsy
-        const topicName = settings.groups.general.topic.value || "/topic";
+  if (ros) {
+    // Use a default value if custom topic is falsy
+    const topicName = settings.groups.general.topic.value || "/topic";
 
-        ros.getTopicType(topicName, (type) => {
-            const topicType = type || "std_msgs/msg/String";
+    ros.getTopicType(topicName, (type) => {
+      const topicType = type || "std_msgs/msg/String";
 
-            topic?.unsubscribe(); // Unsubscribe from previous topic if any
+      topic?.unsubscribe(); // Unsubscribe from previous topic if any
 
-            topic = new ROSLIB.Topic({
-                ros: ros,
-                name: topicName,
-                messageType: topicType,
-            });
+      topic = new ROSLIB.Topic({
+        ros: ros,
+        name: topicName,
+        messageType: topicType,
+      });
 
-            // Add a subscription callback
-            topic.subscribe((message) => messages.unshift(message.data));
-        });
-    } else {
-        topic = null;
-    }
+      // Add a subscription callback
+      topic.subscribe((message) => messages.unshift(message.data));
+    });
+  } else {
+    topic = null;
+  }
 });
 ```
 
@@ -260,102 +260,105 @@ You have now created your first widget for the web UI! For more examples and hel
 
 ```html
 <script lang="ts" module>
-    import type { WidgetGroupType, WidgetSettingsType } from "$lib/scripts/state.svelte";
+  import type {
+    WidgetGroupType,
+    WidgetSettingsType,
+  } from "$lib/scripts/state.svelte";
 
-    export const name = "New Widget";
-    export const description = "Simple send and receive ros topic data widget. ";
-    export const group: WidgetGroupType = "ROS";
-    export const isRosDependent = true;
+  export const name = "New Widget";
+  export const description = "Simple send and receive ros topic data widget. ";
+  export const group: WidgetGroupType = "ROS";
+  export const isRosDependent = true;
 
-    export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-        groups: {
-            general: {
-                disableSendForm: {
-                    type: "switch",
-                    value: "false",
-                },
-                topic: {
-                    type: "text",
-                    value: "",
-                },
-            },
+  export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
+    groups: {
+      general: {
+        disableSendForm: {
+          type: "switch",
+          value: "false",
         },
-    });
+        topic: {
+          type: "text",
+          value: "",
+        },
+      },
+    },
+  });
 </script>
 
 <script lang="ts">
-    import { getRosConnection } from "$lib/scripts/rosBridge.svelte";
-    import * as ROSLIB from "roslib";
-    import { Input } from "$lib/components/ui/input/index.js";
-    import { Button } from "$lib/components/ui/button/index.js";
-    import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
+  import { getRosConnection } from "$lib/scripts/rosBridge.svelte";
+  import * as ROSLIB from "roslib";
+  import { Input } from "$lib/components/ui/input/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
+  import { ScrollArea } from "$lib/components/ui/scroll-area/index.js";
 
-    import { onMount } from "svelte";
+  import { onMount } from "svelte";
 
-    // Type definition for ROS string message
-    type StringMessage = { data: string };
+  // Type definition for ROS string message
+  type StringMessage = { data: string };
 
-    let topic: ROSLIB.Topic<StringMessage> | null = null;
-    let messages = $state<Array<string>>([]); // List of past messages
-    let input = $state<string>(""); // Text input model
+  let topic: ROSLIB.Topic<StringMessage> | null = null;
+  let messages = $state<Array<string>>([]); // List of past messages
+  let input = $state<string>(""); // Text input model
 
-    // Using effect to reactively reinitialise after re/gaining connection
-    $effect(() => {
-        const ros = getRosConnection();
+  // Using effect to reactively reinitialise after re/gaining connection
+  $effect(() => {
+    const ros = getRosConnection();
 
-        if (ros) {
-            // Use a default value if custom topic is falsy
-            const topicName = settings.groups.general.topic.value || "/topic";
+    if (ros) {
+      // Use a default value if custom topic is falsy
+      const topicName = settings.groups.general.topic.value || "/topic";
 
-            ros.getTopicType(topicName, (type) => {
-                const topicType = type || "std_msgs/msg/String";
+      ros.getTopicType(topicName, (type) => {
+        const topicType = type || "std_msgs/msg/String";
 
-                topic?.unsubscribe(); // Unsubscribe from previous topic if any
+        topic?.unsubscribe(); // Unsubscribe from previous topic if any
 
-                topic = new ROSLIB.Topic({
-                    ros: ros,
-                    name: topicName,
-                    messageType: topicType,
-                });
+        topic = new ROSLIB.Topic({
+          ros: ros,
+          name: topicName,
+          messageType: topicType,
+        });
 
-                // Add a subscription callback
-                topic.subscribe((message) => messages.unshift(message.data));
-            });
-        } else {
-            topic = null;
-        }
-    });
+        // Add a subscription callback
+        topic.subscribe((message) => messages.unshift(message.data));
+      });
+    } else {
+      topic = null;
+    }
+  });
 
-    const sendMessage = (e: Event) => {
-        e.preventDefault();
+  const sendMessage = (e: Event) => {
+    e.preventDefault();
 
-        if (!input) return;
+    if (!input) return;
 
-        // Create and send string message
-        const message = { data: input };
-        topic?.publish(message);
-        input = "";
+    // Create and send string message
+    const message = { data: input };
+    topic?.publish(message);
+    input = "";
+  };
+
+  onMount(() => {
+    return () => {
+      // Clean-up on unmount
+      topic?.unsubscribe();
     };
-
-    onMount(() => {
-        return () => {
-            // Clean-up on unmount
-            topic?.unsubscribe();
-        };
-    });
+  });
 </script>
 
 <div class="flex h-full w-full flex-col">
-    {#if settings.groups.general.disableSendForm.value === 'false'}
-    <form class="flex flex-row" onsubmit="{sendMessage}">
-        <input id="message" class="mb-2 mr-2" bind:value="{input}" />
-        <button onclick="{sendMessage}">Send</button>
-    </form>
-    {/if}
-    <ScrollArea class="flex-1" orientation="vertical">
-        {#each messages as message}
-        <p>{message}</p>
-        {/each}
-    </ScrollArea>
+  {#if settings.groups.general.disableSendForm.value === 'false'}
+  <form class="flex flex-row" onsubmit="{sendMessage}">
+    <input id="message" class="mb-2 mr-2" bind:value="{input}" />
+    <button onclick="{sendMessage}">Send</button>
+  </form>
+  {/if}
+  <ScrollArea class="flex-1" orientation="vertical">
+    {#each messages as message}
+    <p>{message}</p>
+    {/each}
+  </ScrollArea>
 </div>
 ```

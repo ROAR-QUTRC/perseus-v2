@@ -6,10 +6,10 @@ tocdepth: 4
 
 External libraries will not be documented here. View their official docs:
 
--   Web framework is [Svelte](https://svelte.dev)
--   The UI library used is [shadcn-svelte](https://next.shadcn-svelte.com)
--   ROS2 bridge interfaced with [roslibjs](https://robotwebtools.github.io/roslibjs/index.html)
--   The database ORM used is [remult](https://remult.dev)
+- Web framework is [Svelte](https://svelte.dev)
+- The UI library used is [shadcn-svelte](https://next.shadcn-svelte.com)
+- ROS2 bridge interfaced with [roslibjs](https://robotwebtools.github.io/roslibjs/index.html)
+- The database ORM used is [remult](https://remult.dev)
 
 :::{note}
 All file paths in this page are relative to the root of the Web UI project (`perseus-v2/software/web-ui`).
@@ -86,20 +86,20 @@ The type used is defined as:
 
 ```ts
 export interface WidgetSettingsType {
-    groups: Record<
-        string,
-        Record<
-            string,
-            {
-                type: "text" | "number" | "select" | "switch" | "button" | "readonly";
-                description?: string;
-                value?: string;
-                options?: { value: string; label: string }[]; // these are not saved as options are typically session dependent
-                disabled?: boolean;
-                action?: () => string | null;
-            }
-        >
-    >;
+  groups: Record<
+    string,
+    Record<
+      string,
+      {
+        type: "text" | "number" | "select" | "switch" | "button" | "readonly";
+        description?: string;
+        value?: string;
+        options?: { value: string; label: string }[]; // these are not saved as options are typically session dependent
+        disabled?: boolean;
+        action?: () => string | null;
+      }
+    >
+  >;
 }
 ```
 
@@ -178,7 +178,9 @@ The second script tag is where all your TypeScript code should go. The commented
 If the setting is referenced multiple times or needs a type conversion, to improve readability, use a `$derived` rune to alias it:
 
 ```ts
-let mySetting = $derived<number>(Number(settings.groups.general.numberInput.value));
+let mySetting = $derived<number>(
+  Number(settings.groups.general.numberInput.value),
+);
 ```
 
 :::
@@ -191,10 +193,10 @@ The remainder of the file is where mark down goes. Tailwind classes can be used 
 
 Internally the widget manager is made up of the following components:
 
--   The custom widgets: `/src/lib/widgets/`
--   Widget state script: `/src/lib/scripts/state.svelte.ts`
--   Widget canvas: `/src/lib/components/widget-canvas.svelte`
--   Widget wrapper: `/src/lib/components/widget.svelte`
+- The custom widgets: `/src/lib/widgets/`
+- Widget state script: `/src/lib/scripts/state.svelte.ts`
+- Widget canvas: `/src/lib/components/widget-canvas.svelte`
+- Widget wrapper: `/src/lib/components/widget.svelte`
 
 #### Custom Widget Components
 
@@ -202,18 +204,18 @@ All the files in the top level of the `/src/lib/widgets/` directory are loaded a
 
 ```ts
 export interface WidgetType {
-    name: string;
-    description?: string;
-    group?: WidgetGroupType;
-    isRosDependent?: boolean;
-    component: Component;
-    settings: WidgetSettingsType;
-    layoutProps?: {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-    };
+  name: string;
+  description?: string;
+  group?: WidgetGroupType;
+  isRosDependent?: boolean;
+  component: Component;
+  settings: WidgetSettingsType;
+  layoutProps?: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  };
 }
 ```
 
@@ -249,9 +251,9 @@ This component does two things, create an instance of the custom widget componen
 
 The function of the camera server is to:
 
--   Provide an interface to connected linux video devices
--   Generate Gstreamer pipelines and manage instances
--   Communicate with the main web server
+- Provide an interface to connected linux video devices
+- Generate Gstreamer pipelines and manage instances
+- Communicate with the main web server
 
 **Linux device interface:**
 In the folder: `/dev/v4l/by-id/` each camera has its ID listed. A node file watcher is used to get a live list of devices in this folder allowing for connect and disconnect handling.
@@ -287,20 +289,20 @@ The communication with the web server is conducted via a WebSocket with the goal
 
 ```ts
 interface CameraEventType {
-    type: "camera";
-    action:
-        | "group-description"
-        | "kill"
-        | "request-groups"
-        | "request-stream"
-        | "group-terminated"
-        | "device-disconnect";
-    data: {
-        devices?: string[];
-        resolution?: { width: number; height: number };
-        transform?: videoTransformType;
-        forceRestart?: boolean;
-    };
+  type: "camera";
+  action:
+    | "group-description"
+    | "kill"
+    | "request-groups"
+    | "request-stream"
+    | "group-terminated"
+    | "device-disconnect";
+  data: {
+    devices?: string[];
+    resolution?: { width: number; height: number };
+    transform?: videoTransformType;
+    forceRestart?: boolean;
+  };
 }
 ```
 
@@ -320,20 +322,20 @@ All ROS2 dependent widgets should have either an `$effect` or `$derived.by` rune
 
 ```ts
 $effect(() => {
-    const ros = getRosConnection();
+  const ros = getRosConnection();
 
-    if (ros) {
-        // initialise ROS2 variables
-    }
+  if (ros) {
+    // initialise ROS2 variables
+  }
 });
 ```
 
 As a result of this effect pattern the following rules should be followed while developing:
 
--   Avoid making ROS2 related variables reactive as they will be assigned inside an `$effect` and that will cause a render loop.
--   Do **not** initialise anything related to ROS2 in the `onMount` hook as there is no guarantee that a ROS2 connection is available and will require duplicate code.
--   Always set `isRosDependant` to `true` and `group` to `'ROS'` if using the `getRosConnection()` function (When using ROS2 purely to access CAN data the `group` export should be `"CAN Bus"`).
--   Dispose of all ROS2 resources you created in the function returned by the `onMount` hook (the return value is run on unmount).
+- Avoid making ROS2 related variables reactive as they will be assigned inside an `$effect` and that will cause a render loop.
+- Do **not** initialise anything related to ROS2 in the `onMount` hook as there is no guarantee that a ROS2 connection is available and will require duplicate code.
+- Always set `isRosDependant` to `true` and `group` to `'ROS'` if using the `getRosConnection()` function (When using ROS2 purely to access CAN data the `group` export should be `"CAN Bus"`).
+- Dispose of all ROS2 resources you created in the function returned by the `onMount` hook (the return value is run on unmount).
 
 ## CAN Bus Interface
 
@@ -351,8 +353,8 @@ Some module not found errors can be resolved by deleting `node_modules` and runn
 
 ### Yarn Scripts
 
--   `dev`: Runs the Vite development server on the local network.
--   `build`: Builds the Web UI using vite.
--   `preview`: Preview the built web app without injected node server.
--   `start`: Runs the built web app with the injected node server.
--   `camera`: Runs the camera server (variant with `-online` downloads required dependencies)
+- `dev`: Runs the Vite development server on the local network.
+- `build`: Builds the Web UI using vite.
+- `preview`: Preview the built web app without injected node server.
+- `start`: Runs the built web app with the injected node server.
+- `camera`: Runs the camera server (variant with `-online` downloads required dependencies)
