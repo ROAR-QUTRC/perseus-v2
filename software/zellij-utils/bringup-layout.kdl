@@ -1,0 +1,29 @@
+layout "perseus" {
+    pane size=1 borderless=true {
+        plugin location="tab-bar"
+    }
+    pane split_direction="vertical" {
+	    pane {
+		    command "zsh"
+		    args "-lc" "cd ~/perseus-v2 && nix run"
+		    name "Perseus Bringup"
+            }
+	    pane {
+		    pane {
+			    command "zsh"
+			    args "-lc" "cd ~/perseus-v2/software/web_ui && yarn start"
+			    name "Web Server"
+	            }
+		    pane {
+			    command "zsh"
+			    args "-lc" "cd ~/perseus-v2/software/web_ui && yarn camera"
+			    name "Camera Server (Jetson)"
+	            }
+            }
+    }
+    pane size=1 borderless=true {
+        plugin location="status-bar"
+    }
+}
+
+simplified_ui true

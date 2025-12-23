@@ -12,5 +12,6 @@
     ./nix.nix
     ./term-multiplexing.nix
     ./zoxide.nix
+    ./starship.nix
   ];
 }
