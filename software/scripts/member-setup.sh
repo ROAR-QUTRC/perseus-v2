@@ -32,9 +32,9 @@ else
 fi
 
 # Run the nix-setup script
-cd ./perseus-v2
 echo "Running nix-setup.sh script. If asked, accept all config options by typing 'y', then press enter."
 
+cd ~/perseus-v2
 ./software/scripts/nix-setup.sh
 
 # Check the script ran correctly and didn't fail
@@ -47,13 +47,9 @@ else
   echo "nix-setup.sh script ran successfully. Continuing"
 fi
 
-# Enter perseus-v2 repo - should automatically load the .envrc file in the repo
-echo "Entering perseus-v2 direnv environment. If asked, accept all config options with 'y'"
-cd ./perseus-v2
-
 # Build nix packages
 echo "Building nix packages. If asked, accept all config options with 'y'"
-nix build
+/nix/var/nix/profiles/default/bin/nix build --accept-flake-config
 
 echo "Setup script ran successfully!"
 echo "Restarting shell"
