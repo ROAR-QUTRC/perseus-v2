@@ -35,19 +35,6 @@
         source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
       fi
     '';
-    plugins = [
-      # configure p10k
-      {
-        name = "p10k-config";
-        src = ./p10k;
-        file = "icons-concise.zsh";
-      }
-      # enable p10k
-      {
-        name = "powerlevel10k";
-        src = pkgs.zsh-powerlevel10k;
-        file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
-      }
-    ];
+
   };
 }
