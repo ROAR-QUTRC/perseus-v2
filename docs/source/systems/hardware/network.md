@@ -44,7 +44,7 @@ The devices currently used (as of 23/12/2025) are:
 
 1. Unifi Cloud Gateway Max (UCG Max)
 2. Unifi Switch 8 Port PoE 150W (US 8 PoE)
-3. Unifi 7 Long Range Access Point (U7 Long Range) 
+3. Unifi 7 Long Range Access Point (U7 Long Range)
 4. Unifi 7 Outdoor Antenna Access Point (U7 Outdoor)
 
 Both the U7 Long Range and U7 Outdoor require Power over Ethernet.
