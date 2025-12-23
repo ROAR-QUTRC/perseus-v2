@@ -32,20 +32,20 @@ extern "C"
 #endif  // __cplusplus
 
     uint8_t crc8(const uint8_t* data, const size_t len);
-    uint8_t crc8Maxim(const uint8_t* data, const size_t len);
-    uint8_t crc8Sht75(const uint8_t* data, const size_t len);
+    uint8_t crc8_maxim(const uint8_t* data, const size_t len);
+    uint8_t crc8_sht75(const uint8_t* data, const size_t len);
 
     uint16_t crc16(const uint8_t* data, const size_t len);
-    uint16_t crc16Ccitt(const uint8_t* data, const size_t len);
-    uint16_t crc16Modbus(const uint8_t* data, const size_t len);
-    uint16_t crc16Usb(const uint8_t* data, const size_t len);
-    uint16_t crc16Xmodem(const uint8_t* data, const size_t len);
+    uint16_t crc16_ccitt(const uint8_t* data, const size_t len);
+    uint16_t crc16_modbus(const uint8_t* data, const size_t len);
+    uint16_t crc16_usb(const uint8_t* data, const size_t len);
+    uint16_t crc16_xmodem(const uint8_t* data, const size_t len);
 
     uint32_t crc32(const uint8_t* data, const size_t len);
-    uint32_t crc32Bzip2(const uint8_t* data, const size_t len);
-    uint32_t crc32Mpeg2(const uint8_t* data, const size_t len);
-    uint32_t crc32Sata(const uint8_t* data, const size_t len);
-    uint32_t crc32C(const uint8_t* data, const size_t len);
+    uint32_t crc32_bzip2(const uint8_t* data, const size_t len);
+    uint32_t crc32_mpeg2(const uint8_t* data, const size_t len);
+    uint32_t crc32_sata(const uint8_t* data, const size_t len);
+    uint32_t crc32_C(const uint8_t* data, const size_t len);
 
 #ifdef __cplusplus
 }

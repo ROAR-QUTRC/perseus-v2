@@ -32,5 +32,7 @@ namespace bsp
     constexpr gpio_num_t A9 = GPIO_NUM_9;
     constexpr gpio_num_t A10 = GPIO_NUM_10;
 
+#if __has_include(<Wire.h>)
     void initI2C();
+#endif
 }

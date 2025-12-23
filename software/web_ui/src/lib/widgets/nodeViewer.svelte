@@ -13,7 +13,7 @@
 </script>
 
 <script lang="ts">
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte';
+	import { getRosConnection } from '$lib/scripts/rosBridge.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import * as Select from '$lib/components/ui/select/index';

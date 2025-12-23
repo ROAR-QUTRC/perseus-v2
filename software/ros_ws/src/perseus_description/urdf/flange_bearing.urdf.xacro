@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<robot name="flange_bearing" xmlns:xacro="http://ros.org/wiki/xacro">
+<!-- Flange Bearing -->
+<link name="${prefix}flange_bearing">
+    <inertial>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
+    <mass value="${bearing_mass}"/>
+    <xacro:box_inertia m="${bearing_mass}" x="${bearing_length}" y="${bearing_width}" z="${bearing_height}"/>
+    </inertial>
+
+    <visual>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
+    <geometry>
+        <mesh scale="0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/flange_bearing.dae"/>
+    </geometry>
+    </visual>
+    
+    <collision>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${pi/2}"/>
+    <geometry>
+        <box size="${bar_length} ${bar_width} ${bar_height}"/>
+    </geometry>
+    </collision>
+</link>
+
+<!-- Balance/differential bar -->
+<link name="${prefix}differential_bar">
+    <inertial>
+        <origin xyz="0 0 0.0" rpy="0.0 0.0 0.0"/>
+        <mass value="${bar_mass}"/>
+        <xacro:box_inertia m="${bar_mass}" x="${bar_length}" y="${bar_width}" z="${bar_height}"/>
+    </inertial>
+
+    <visual>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    <geometry>
+        <mesh scale=  "0.1 0.1  0.1" filename="file://$(find perseus_description)/meshes/differential_bar.dae"/>
+    </geometry>
+    </visual>
+    <collision>
+    <origin xyz="0.0 0.0 0.0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    <geometry>
+        <box size="${bar_length} ${bar_width} ${bar_height}"/>
+    </geometry>
+    </collision>
+</link>
+
+<joint name="${prefix}differential_bar_joint" type="fixed">
+    <origin xyz="${-0.05} 0.0 0.0" rpy="0 0.0 0"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="${prefix}flange_bearing"/>
+    <child link="${prefix}differential_bar"/>
+</joint>
+
+
+</robot>

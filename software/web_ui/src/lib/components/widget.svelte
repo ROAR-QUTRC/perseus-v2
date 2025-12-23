@@ -15,7 +15,7 @@
 	import { toast } from 'svelte-sonner';
 	import * as changeCase from 'change-case';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte';
+	import { getRosConnection } from '$lib/scripts/rosBridge.svelte';
 
 	// this is an element property
 	let { widgetData, dragHandle }: { widgetData: WidgetType; dragHandle: any } = $props();
