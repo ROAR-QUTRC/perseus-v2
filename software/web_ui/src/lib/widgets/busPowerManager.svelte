@@ -31,7 +31,7 @@
 		'FAULT'
 	];
 
-	let listener: ROSLIB.Topic | null = null;
+	let listener: ROSLIB.Topic<{ data: string }> | null = null;
 	let busState = $state<
 		Record<string, { status: number; current: number; voltage: number; openAlert: boolean }>
 	>({
@@ -53,13 +53,13 @@
 			messageType: 'std_msgs/String'
 		});
 
-		const message = new ROSLIB.Message({
+		const message = {
 			data: JSON.stringify({
 				bus: bus,
 				on: busState[bus].status !== 1 ? '1' : '0',
 				clear: busState[bus].status === 6 || busState[bus].status === 4 ? '1' : '0' // Clear FAULT or SWITCH_FAILED
 			})
-		});
+		};
 
 		publisher.publish(message);
 		publisher.unsubscribe();
