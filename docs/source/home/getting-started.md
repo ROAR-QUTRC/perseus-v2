@@ -22,7 +22,7 @@ Then, you can run this command (it will prompt you for sudo permissions):
 curl https://raw.githubusercontent.com/ROAR-QUTRC/perseus-v2/refs/heads/main/software/scripts/member-setup.sh | bash
 ```
 
-Which automates the manual process described below.
+Which automates the manual process described below. After you run this command, you may need to restart your shell to ensure `direnv` loads properly.
 
 ### Manual
 
