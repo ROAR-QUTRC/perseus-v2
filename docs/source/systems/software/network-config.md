@@ -21,4 +21,4 @@ No configuration necessary.
 
 ## Network
 
-The network name (ssid) should be "QUTRC-ROAR-LOCAL" and the password should be shared with all the leads.
+The network name (SSID) should be "QUTRC-ROAR-LOCAL" and the password should be shared with all the leads.
