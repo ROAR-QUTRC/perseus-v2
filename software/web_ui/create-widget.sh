@@ -43,7 +43,7 @@ cat >"$WIDGET_PATH" <<EOF
 
 <script lang="ts">
 	// import { getRosConnection } from '\$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
-	// import ROSLIB from 'roslib';
+	// import * as ROSLIB from 'roslib';
 
 	// Widget logic goes here
 </script>
