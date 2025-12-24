@@ -43,13 +43,13 @@ This is because the user interface is very comprehensive and easy to customise i
 The devices currently used (as of 23/12/2025) are:
 
 1. Unifi Cloud Gateway Max ([UCG Max](https://techspecs.ui.com/unifi/cloud-gateways/ucg-max?s=us))
-    ![UCG Max](https://cdn.ecomm.ui.com/products/8cca3680-14a6-496a-af7d-beba49cea3f2/7c6f4e54-1f20-485a-a0f0-22e968b66a66.png)
+   ![UCG Max](https://cdn.ecomm.ui.com/products/8cca3680-14a6-496a-af7d-beba49cea3f2/7c6f4e54-1f20-485a-a0f0-22e968b66a66.png)
 2. Unifi Switch 8 Port PoE 150W ([US 8 PoE](https://techspecs.ui.com/unifi/switching/us-8-150w?subcategory=all-switching))
-    ![US 8 PoE](https://cdn.ecomm.ui.com/products/fdec2ee9-f41c-477c-8459-bc738780dd27/a74b1c79-80c4-492b-9c13-a11ca78bb4bd.png)
-3. Unifi 7 Long Range Access Point ([U7 Long Range](https://techspecs.ui.com/unifi/wifi/u7-lr?subcategory=all-wifi)) 
-    ![U7 Long Range](https://cdn.ecomm.ui.com/products/7455fa2b-3074-47a0-b82f-a2cd701d4a8f/06752627-8180-42ea-afe3-4cfac57c10eb.png)
+   ![US 8 PoE](https://cdn.ecomm.ui.com/products/fdec2ee9-f41c-477c-8459-bc738780dd27/a74b1c79-80c4-492b-9c13-a11ca78bb4bd.png)
+3. Unifi 7 Long Range Access Point ([U7 Long Range](https://techspecs.ui.com/unifi/wifi/u7-lr?subcategory=all-wifi))
+   ![U7 Long Range](https://cdn.ecomm.ui.com/products/7455fa2b-3074-47a0-b82f-a2cd701d4a8f/06752627-8180-42ea-afe3-4cfac57c10eb.png)
 4. Unifi 7 Outdoor Antenna Access Point ([U7 Outdoor](https://techspecs.ui.com/unifi/wifi/u7-outdoor))
-    ![U7 Outdoor](https://cdn.ecomm.ui.com/products/62cc30b7-9559-480f-9668-b9edf40c0772/f2010c22-ff34-48e5-81f4-e7dad275d3c0.png)
+   ![U7 Outdoor](https://cdn.ecomm.ui.com/products/62cc30b7-9559-480f-9668-b9edf40c0772/f2010c22-ff34-48e5-81f4-e7dad275d3c0.png)
 
 Both the U7 Long Range and U7 Outdoor require Power over Ethernet.
 On-board Perseus, there is a small PoE switch that is used to power the U7 Long Range as well as connect Perseus' devices together.
