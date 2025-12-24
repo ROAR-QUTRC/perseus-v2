@@ -23,6 +23,7 @@ curl https://raw.githubusercontent.com/ROAR-QUTRC/perseus-v2/refs/heads/main/sof
 ```
 
 Which automates the manual process described below. After you run this command, you may need to restart your shell to ensure `direnv` loads properly.
+The script clones the repo into your home directory (~), so if you want it installed elsewhere, you should do it manually.
 
 ### Manual
 
