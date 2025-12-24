@@ -37,19 +37,19 @@ The CAN Bus Daisy Chain PCBs have solder jumpers so they can be configured to ru
 
 Each Packet is made of an address and a data section, with some other bits for error correction and format types.
 
-Base frame format
+Base frame format (Identifier extension = 0)
 
 | Start of frame | Identifier | Remote Transmission Request (RTR) | Identifier extension | Reserved | Data length | Data field | CRC | CRC Delimiter | ACK slot | ACK delimiter | End of frame | Inter-frame spacing |
 | -------------- | ---------- | --------------------------------- | -------------------- | -------- | ----------- | ---------- | --- | ------------- | -------- | ------------- | ------------ | ------------------- |
 | 1              | 11         | 1                                 | 1                    | 1        | 4           | 0-64       | 15  | 1             | 1        | 1             | 7            | 3                   |
 
-Extended frame format
+Extended frame format (Identifier extension = 1)
 
 | Start of frame | Identifier A | Substitute RTR | Identifier extension | Identifier B | RTR | Reserved | Data length | Data field | CRC | CRC Delimiter | ACK slot | ACK delimiter | End of frame | Inter-frame spacing |
 | -------------- | ------------ | -------------- | -------------------- | ------------ | --- | -------- | ----------- | ---------- | --- | ------------- | -------- | ------------- | ------------ | ------------------- |
 | 1              | 11           | 1              | 1                    | 18           | 1   | 2        | 4           | 0-64       | 15  | 1             | 1        | 1             | 7            | 3                   |
 
-Most of these are handled for us by the system libraries (e.g. `linux/can.h` for big and medium brains). However, some can be set manually - Identifiers A and B are set using the address, data field is set to the data, and the RTR and Identifier extension fields can also be set manually (see <project:#addresses>).
+Most of these are handled for us by the system libraries (e.g. SocketCAN for big and medium brains). However, some can be set manually - Identifiers A and B are set using the address, data field is set to the data, and the RTR and Identifier extension fields can also be set manually (see <project:#addresses>).
 
 #### Addressing
 
@@ -79,8 +79,8 @@ First is the `hi-can` core - this is pure C++, and defines the API for interacti
 Note that to allow it to run both on microcontrollers and on Linux systems (thus eliminating code duplication), the core has to be system-agnostic, with target-specific code split into separate libraries.
 Next is the raw SocketCAN implementation for Linux systems - `hi-can-raw`.
 This is what almost all Linux code needing CAN bus access will be interacting with.
-Finally, there's the specialisation for microcontrollers - in this case, the library is also named `hi-can`, but is located in the firmware/components directory.
-The header file that firmware should use is `hi-can-twai` in the firmware directory's `hi-can` library.
+Finally, there's the specialisation for microcontrollers - in this case, the library is also named `hi-can`, but is located in the `firmware/components` directory.
+The header file that firmware should use is `hi-can-twai` in the `firmware/components` directory's `hi-can` library.
 
 ### Architecture
 
@@ -102,6 +102,14 @@ Both the {struct}`addressing::flagged_address_t` and {struct}`addressing::standa
 This means that any time you need to provide a raw address, you can build it with an easier to use struct and then convert it when needed.
 
 The addresses of each system, subsystem, device, group, and parameter can be found in `software/shared/hi-can/include/hi_can_address.hpp`.
+All of our addresses should be extended format, with the correct amount of bits for each part of the address:
+
+| System | Subsystem | Device | Group | Parameter |
+| ------ | --------- | ------ | ----- | --------- |
+| 6      | 3         | 4      | 8     | 8         |
+
+However, some devices are pre-loaded with what addresses they should use.
+For these, the `is_rtr`, `is_error`, and `is_extended` members of the {struct}`flagged_address_t` can be set.
 
 #### Data
 
@@ -146,6 +154,13 @@ Filters can be added or removed using the {any}`FilteredCanInterface::add_filter
 When filter/s are applied to the CAN Interface, only a {class}`Packet` with an address matching the filter/s will be allowed through.
 
 The CAN Interface can be used directly to receive or transmit a {class}`Packet` using the {any}`CanInterface::transmit()` and {any}`CanInterface::receive()` methods.
+
+#### Filters
+
+A {struct}`addressing::filter_t` can be applied to a CAN Interface to allow it to only receive from a specific address.
+The address to match is set by using the `address` member of the filter.
+It can be set to match specific bits of the address by using the `mask` member of the filter.
+It can also be set to match the RTR and error flags using the `should_match_rtr` and `should_match_error` members of the filter.
 
 #### Packet Manager
 
