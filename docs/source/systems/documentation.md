@@ -98,7 +98,7 @@ Finally, the aforementioned script does one thing - it takes in a source file pa
 
 ### Deployment
 
-As detailed in the [CI/CD Architecture](project:ci-cd.md) document, this entire project uses Nix for everything - and that extends to building in the CI/CD pipeline.
+As detailed in the [CI/CD Systems](project:ci-cd.md) document, this entire project uses Nix for everything - and that extends to building in the CI/CD pipeline.
 However, that only covers the CI part of CI/CD - deployment needs its own handling.
 
 The built documentation is currently hosted using [GitHub Pages](https://pages.github.com/), and as such requires a backing repository containing the contents which is located [here](https://github.com/ROAR-QUTRC/roar-qutrc.github.io).
@@ -163,7 +163,7 @@ The equivalent _inline_ code (standard markdown image insertion, with extension 
 :::{note}
 References in Sphinx without a leading slash are relative to the current directory!
 To reference relative to the project root (in the repo, `docs/source`), you need to make it an _absolute_ path and start it with a slash.
-Not doing so makes it relative to the current directory of _this document_ (`docs/source/architecture/`).
+Not doing so makes it relative to the current directory of _this document_ (`docs/source/systems/`).
 :::
 
 #### `docs.compressed`

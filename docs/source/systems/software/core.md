@@ -63,7 +63,7 @@ Shared libraries can be made available to your ROS2 package and nodes by includi
 
 ### Hi-CAN
 
-Abbreviated from "hierarchical CAN", Hi-CAN is the library implementing the standards laid out [here](project:/architecture/can-bus.md), and is shared across ROS and native code, as well as firmware.
+Abbreviated from "hierarchical CAN", Hi-CAN is the library implementing the standards laid out [here](project:/systems/can-bus.md), and is shared across ROS and native code, as well as firmware.
 The main library contains the code defining the main interfaces with which code will interact with the library, as well as all of the devices on the bus and their parameters.
 :::{warning}
 Since this particular library is shared between both the ROS code _and_ the firmware, it needs to be written in pure C++ (no external dependencies).
