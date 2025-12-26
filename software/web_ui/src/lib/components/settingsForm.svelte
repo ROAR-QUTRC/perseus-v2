@@ -9,11 +9,13 @@
 
 	let { layout } = $props();
 
+
+
 	const toggleLock = () => {
 		repo(Layout).update(layout.id, { isLocked: !layout.isLocked });
 	};
 
-	let settingsForm = $state<{ title: string; description: string }>({
+	let settingsForm = $derived<{ title: string; description: string }>({
 		title: layout.title,
 		description: layout.description
 	});

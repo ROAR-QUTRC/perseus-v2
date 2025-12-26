@@ -127,8 +127,7 @@
             groot2
             bashInteractive
             can-utils
-            nodejs_23
-            yarn
+            corepack_23
             nixgl-script
             ncurses
             glibcLocales
