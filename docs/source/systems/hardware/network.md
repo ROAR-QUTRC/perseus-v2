@@ -3,11 +3,11 @@
 ## TLDR
 
 Perseus assumes that it will connect to a wifi network with SSID: "QUTRC-ROAR-LOCAL".
-All processes and nodes running should be able to operate via a network connection sharing a single 2.4GHz wifi connection with a 20MHz channel width.
-Whilst the rules allow for 40Mhz bonding interference is possible.
-Assuming 20MHz means 802.11g which is 54Mbps.
+All processes and nodes running should be able to operate via a network connection sharing a single 2.4 GHz wifi connection with a 20 MHz channel width.
+Whilst the rules allow for 40 Mhz bonding interference is possible.
+Assuming 20MHz means 802.11g which is 54 Mbps.
 This equates to a maximum usage network connection of 6.75 MBps.
-If bonding is used then 802.11n allows for up to 600 Mbps (this would require 4xMIMO) being 75MBps.
+If bonding is used then 802.11n allows for up to 600 Mbps (this would require 4xMIMO) being 75 MBps.
 
 ## Purpose
 
@@ -25,13 +25,13 @@ Hard-wired ethernet operation also needs to be accommodated.
 During competition, either of:
 
 - 20 Mhz band on nominated Channel 1 or Channel 11
-- 40Mhz band on either 1-5 or 9-13
+- 40 Mhz band on either 1-5 or 9-13
 
 During Practice:
 
 - 20 or 40 Mhz band centred on channel 6
 
-Assumption: All systems need to be able to concurrently operate on 20Mhz (Max ~97 Mbps)
+Assumption: All systems need to be able to concurrently operate on 20 Mhz (Max ~97 Mbps)
 
 ## Devices
 
@@ -53,7 +53,7 @@ On-board Perseus, there is a small PoE switch that is used to power the U7 Long 
 At base station, the U7 Outdoor is connected into the US 8 PoE switch, which is able to deliver PoE+ to the U7 Outdoor.
 The US 8 PoE switch is connected directly into the UCG Max, which is the controller of the network.
 Laptops are connected into the UCG Max or the US 8 PoE switch via ethernet, or via WiFi into a separate access point ([AC Mesh](https://techspecs.ui.com/unifi/wifi/uap-ac-mesh?subcategory=all-wifi) - optional).
-A phone is connected via ethernet into the WAN port of the UCG Max, and set to give the network internet from the phone's data (the team/club doesn't have an ethernet to USB-C adapter, so we usually use a personal one).
+A phone is connected via ethernet (through a USB-C to ethernet adapter) into the WAN port of the UCG Max, and set to give the network internet from the phone's data.
 
 The U7 Outdoor is highly directional, so it is pointed directly into the arena to get the best signal to the U7 Long Range.
 The omnidirectional antennae can be attached for a wider signal, but this reduces the range.
