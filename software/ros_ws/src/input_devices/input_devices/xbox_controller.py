@@ -213,7 +213,9 @@ class XboxController(Node):
 
         if is_regular_speed or is_high_speed:
             # Calculate base movement
+            # Joystick forward = positive axis value = positive linear.x = forward (ROS convention)
             linear_input = joy_msg.axes[self.LEFT_STICK_Y_AXIS]
+            # Joystick left = positive angular.z = turn left (ROS convention)
             rotation_input = joy_msg.axes[self.RIGHT_STICK_X_AXIS]
 
             # Apply appropriate scaling based on which deadman switch is engaged
@@ -221,12 +223,7 @@ class XboxController(Node):
 
             twist.linear.x = linear_input * self.translation_scale * speed_multiplier
 
-            rotation_value = rotation_input * self.rotation_scale * speed_multiplier
-
-            # Invert rotation direction when moving backwards
-            twist.angular.z = (
-                -1.0 * rotation_value if twist.linear.x < 0 else rotation_value
-            )
+            twist.angular.z = rotation_input * self.rotation_scale * speed_multiplier
 
         # Create and publish appropriate message type
         if self.use_stamped_msg:

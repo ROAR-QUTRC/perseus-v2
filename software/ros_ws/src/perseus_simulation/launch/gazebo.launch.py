@@ -1,17 +1,23 @@
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, OpaqueFunction, DeclareLaunchArgument
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    OpaqueFunction,
+)
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
 )
-
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+import os
+
+from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
     # ARGUMENTS
-    gz_world = LaunchConfiguration("gz_world", default="perseus_world.sdf")
+    gz_world = LaunchConfiguration("gz_world", default="perseus_arc_world.world")
 
     # CONFIG + DATA FILES
     gz_bridge_params = PathJoinSubstitution(
@@ -29,15 +35,36 @@ def generate_launch_description():
             ),
             description="The world file from `perseus_simulation` to use",
         ),
+        DeclareLaunchArgument(
+            "initial_pose_x",
+            default_value="-3.5",
+            description="Initial X position of the robot",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_y",
+            default_value="-3.0",
+            description="Initial Y position of the robot",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_z",
+            default_value="0.3",
+            description="Initial Z position of the robot",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_yaw",
+            default_value="0.0",
+            description="Initial yaw of the robot",
+        ),
     ]
 
     # IMPORTED LAUNCH FILES
     def gz_launch(context):
-        # normally this would be handled by including the launch description,
-        # but it needs to be wrapped with nixGL, which makes things difficult.
-        # As such, we need to just run it directly - but we also need to resolve the world substitution,
-        # hence wrapping in an OpaqueFunction.
+        # Perform the world path substitution
         performed_gz_world_path = gz_world_path.perform(context)
+
+        model_path = os.path.join(
+            get_package_share_directory("perseus_simulation"), "models"
+        )
         gz_launch = ExecuteProcess(
             cmd=[
                 "nix",
@@ -56,27 +83,14 @@ def generate_launch_description():
                 "NIXPKGS_ALLOW_UNFREE": "1",
                 "QT_QPA_PLATFORM": "xcb",
                 "QT_SCREEN_SCALE_FACTORS": "1",
+                "PROJ_IGNORE_CELESTIAL_BODY": "YES",  # Fixed here
+                "GZ_SIM_RESOURCE_PATH": model_path,  # Ensure the model path is set correctly
             },
         )
 
         return [gz_launch]
 
-    # gz_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         [
-    #             PathJoinSubstitution(
-    #                 [
-    #                     FindPackageShare("ros_gz_sim"),
-    #                     "launch",
-    #                     "gz_sim.launch.py",
-    #                 ]
-    #             )
-    #         ]
-    #     ),
-    #     launch_arguments=[("gz_args", [" -r -v 4 ", gz_world_path])],
-    # )
     launch_files = [
-        # gz_launch,
         OpaqueFunction(function=gz_launch),
     ]
 
@@ -87,6 +101,8 @@ def generate_launch_description():
         parameters=[{"config_file": gz_bridge_params}],
         output="both",
     )
+
+    # Spawn entity with initial pose parameters
     gz_spawn_entity = Node(
         package="ros_gz_sim",
         executable="create",
@@ -97,8 +113,14 @@ def generate_launch_description():
             "perseus",
             "-allow_renaming",
             "true",
+            "-x",
+            LaunchConfiguration("initial_pose_x"),  # X position
+            "-y",
+            LaunchConfiguration("initial_pose_y"),  # Y position
             "-z",
-            "0.5",
+            LaunchConfiguration("initial_pose_z"),  # Z position
+            "-Y",
+            LaunchConfiguration("initial_pose_yaw"),  # Yaw orientation
         ],
         output="both",
     )

@@ -10,148 +10,185 @@
 GenericController::GenericController(const rclcpp::NodeOptions& options)
     : Node("generic_controller", options)
 {
-    _axisParsers.emplace(std::make_pair(FORWARD_BASE_NAME, AxisParser(*this, FORWARD_BASE_NAME, true)));
-    _axisParsers.emplace(std::make_pair(TURN_BASE_NAME, AxisParser(*this, TURN_BASE_NAME, true)));
-    _axisParsers.emplace(std::make_pair(LIFT_BASE_NAME, AxisParser(*this, LIFT_BASE_NAME)));
-    _axisParsers.emplace(std::make_pair(TILT_BASE_NAME, AxisParser(*this, TILT_BASE_NAME)));
-    _axisParsers.emplace(std::make_pair(JAWS_BASE_NAME, AxisParser(*this, JAWS_BASE_NAME)));
-    _axisParsers.emplace(std::make_pair(ROTATE_BASE_NAME, AxisParser(*this, ROTATE_BASE_NAME)));
-    _axisParsers.emplace(std::make_pair(MAGNET_BASE_NAME, AxisParser(*this, "bucket.magnet")));
-    _joySubscription =
-        this->create_subscription<sensor_msgs::msg::Joy>("joy", 10, std::bind(&GenericController::_joyCallback, this, std::placeholders::_1));
-    _twistPublisher = this->create_publisher<geometry_msgs::msg::TwistStamped>("joy_vel", 10);
-    _actuatorPublisher = this->create_publisher<actuator_msgs::msg::Actuators>("bucket_actuators", 10);
-
+    _axis_parsers.emplace(std::make_pair(FORWARD_BASE_NAME, AxisParser(*this, FORWARD_BASE_NAME, true)));
+    _axis_parsers.emplace(std::make_pair(TURN_BASE_NAME, AxisParser(*this, TURN_BASE_NAME, true)));
+    _axis_parsers.emplace(std::make_pair(LIFT_BASE_NAME, AxisParser(*this, LIFT_BASE_NAME)));
+    _axis_parsers.emplace(std::make_pair(TILT_BASE_NAME, AxisParser(*this, TILT_BASE_NAME)));
+    _axis_parsers.emplace(std::make_pair(JAWS_BASE_NAME, AxisParser(*this, JAWS_BASE_NAME)));
+    _axis_parsers.emplace(std::make_pair(ROTATE_BASE_NAME, AxisParser(*this, ROTATE_BASE_NAME)));
+    _axis_parsers.emplace(std::make_pair(MAGNET_BASE_NAME, AxisParser(*this, "bucket.magnet")));
+    _joy_subscription =
+        this->create_subscription<sensor_msgs::msg::Joy>("joy", 10, std::bind(&GenericController::_joy_callback, this, std::placeholders::_1));
+    _twist_publisher = this->create_publisher<geometry_msgs::msg::TwistStamped>("joy_vel", 10);
+    _actuator_publisher = this->create_publisher<actuator_msgs::msg::Actuators>("bucket_actuators", 10);
+    if (this->declare_parameter("timeout_enable", "true") == "true")
+    {
+        _joy_timeout_timer = this->create_wall_timer(JOY_TIMEOUT, std::bind(&GenericController::_joy_timeout_callback, this));
+    }
+    _prev_received_joy_time = this->now();
     RCLCPP_INFO(this->get_logger(), "Generic controller initialized");
 }
 
-void GenericController::_joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg)
+void GenericController::_joy_timeout_callback(void)
 {
-    _lastReceivedJoy = msg;
-    double forward = _axisParsers.at(FORWARD_BASE_NAME).getValue();
-    double turn = _axisParsers.at(TURN_BASE_NAME).getValue();
-    double lift = _axisParsers.at(LIFT_BASE_NAME).getValue();
-    double tilt = _axisParsers.at(TILT_BASE_NAME).getValue();
-    double jaws = _axisParsers.at(JAWS_BASE_NAME).getValue();
-    double rotate = _axisParsers.at(ROTATE_BASE_NAME).getValue();
-    bool magnet = _axisParsers.at(MAGNET_BASE_NAME).getValue() > 0.5;
+    static const auto timeout_length = rcl_time_point_value_t(this->declare_parameter(TIMEOUT_LENGTH, 150000000));
+    RCLCPP_DEBUG_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Timeout length is %ld ns", timeout_length);
+    if ((this->now().nanoseconds() - _prev_received_joy_time.nanoseconds()) > timeout_length)
+    {
+        geometry_msgs::msg::TwistStamped twist_msg;
+        twist_msg.twist.linear.x = 0;
+        twist_msg.twist.angular.z = 0;
+
+        twist_msg.header.stamp = this->now();
+        // Publish twist message
+        _twist_publisher->publish(twist_msg);
+
+        actuator_msgs::msg::Actuators actuator_msg;
+        actuator_msg.velocity.push_back(0);
+        actuator_msg.velocity.push_back(0);
+        actuator_msg.velocity.push_back(0);
+        actuator_msg.velocity.push_back(0);
+
+        // note: inverted, so magnet is released when the button's pressed
+        actuator_msg.normalized.push_back(0);
+
+        actuator_msg.header.stamp = this->now();
+        // Publish actuator message
+        _actuator_publisher->publish(actuator_msg);
+
+        // Warn user if controller is disconnected
+        RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Joy timeout, publishing zero to twist and actuators to stop movement safely");
+    }
+}
+
+void GenericController::_joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg)
+{
+    _last_received_joy = msg;
+    _prev_received_joy_time = this->now();
+    double forward = _axis_parsers.at(FORWARD_BASE_NAME).get_value();
+    double turn = _axis_parsers.at(TURN_BASE_NAME).get_value();
+    double lift = _axis_parsers.at(LIFT_BASE_NAME).get_value();
+    double tilt = _axis_parsers.at(TILT_BASE_NAME).get_value();
+    double jaws = _axis_parsers.at(JAWS_BASE_NAME).get_value();
+    double rotate = _axis_parsers.at(ROTATE_BASE_NAME).get_value();
+    bool magnet = _axis_parsers.at(MAGNET_BASE_NAME).get_value() > 0.5;
 
     RCLCPP_DEBUG_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Forward: %+2.2f, Turn: %+2.2f, Lift: %+2.2f, Tilt: %+2.2f, Jaws: %+2.2f, Rotate: %+2.2f, Magnet: %d",
                           forward, turn, lift, tilt, jaws, rotate, magnet);
 
-    geometry_msgs::msg::TwistStamped twistMsg;
-    twistMsg.twist.linear.x = forward;
-    twistMsg.twist.angular.z = turn;
+    geometry_msgs::msg::TwistStamped twist_msg;
+    twist_msg.twist.linear.x = forward;
+    twist_msg.twist.angular.z = turn;
 
-    twistMsg.header.stamp = this->now();
+    twist_msg.header.stamp = this->now();
     // Publish twist message
-    _twistPublisher->publish(twistMsg);
+    _twist_publisher->publish(twist_msg);
 
-    actuator_msgs::msg::Actuators actuatorMsg;
-    actuatorMsg.velocity.push_back(lift);
-    actuatorMsg.velocity.push_back(tilt);
-    actuatorMsg.velocity.push_back(jaws);
-    actuatorMsg.velocity.push_back(rotate);
+    actuator_msgs::msg::Actuators actuator_msg;
+    actuator_msg.velocity.push_back(lift);
+    actuator_msg.velocity.push_back(tilt);
+    actuator_msg.velocity.push_back(jaws);
+    actuator_msg.velocity.push_back(rotate);
 
     // note: inverted, so magnet is released when the button's pressed
-    actuatorMsg.normalized.push_back(magnet);
+    actuator_msg.normalized.push_back(magnet);
 
-    actuatorMsg.header.stamp = this->now();
+    actuator_msg.header.stamp = this->now();
     // Publish actuator message
-    _actuatorPublisher->publish(actuatorMsg);
+    _actuator_publisher->publish(actuator_msg);
 }
 
-GenericController::AxisParser::AxisParser(GenericController& parent, const std::string& paramBaseName, bool hasEnable)
+GenericController::AxisParser::AxisParser(GenericController& parent, const std::string& param_base_name, bool has_enable)
     : _parent(parent),
-      _paramBaseName(paramBaseName),
-      _hasEnable(hasEnable)
+      _param_base_name(param_base_name),
+      _has_enable(has_enable)
 {
     using namespace rcl_interfaces::msg;
 
-    ParameterDescriptor axisDescriptor{};
-    axisDescriptor.type = ParameterType::PARAMETER_INTEGER;
-    axisDescriptor.description = "The analog axis to use for parsing";
+    ParameterDescriptor axis_descriptor{};
+    axis_descriptor.type = ParameterType::PARAMETER_INTEGER;
+    axis_descriptor.description = "The analog axis to use for parsing";
 
-    ParameterDescriptor buttonPositiveDescriptor{};
-    buttonPositiveDescriptor.type = ParameterType::PARAMETER_INTEGER;
-    buttonPositiveDescriptor.description = "The button to use which will set the axis to its maximum";
+    ParameterDescriptor button_positive_descriptor{};
+    button_positive_descriptor.type = ParameterType::PARAMETER_INTEGER;
+    button_positive_descriptor.description = "The button to use which will set the axis to its maximum";
 
-    ParameterDescriptor buttonNegativeDescriptor{};
-    buttonNegativeDescriptor.type = ParameterType::PARAMETER_INTEGER;
-    buttonNegativeDescriptor.description = "The button to use which will set the axis to its minimum";
+    ParameterDescriptor button_negative_descriptor{};
+    button_negative_descriptor.type = ParameterType::PARAMETER_INTEGER;
+    button_negative_descriptor.description = "The button to use which will set the axis to its minimum";
 
-    _intParamMap = {
+    _int_param_map = {
         {"axis",
-         {-1, axisDescriptor}},
+         {-1, axis_descriptor}},
         {"button_positive",
-         {-1, buttonPositiveDescriptor}},
+         {-1, button_positive_descriptor}},
         {"button_negative",
-         {-1, buttonNegativeDescriptor}},
+         {-1, button_negative_descriptor}},
     };
 
-    ParameterDescriptor scalingDescriptor{};
-    scalingDescriptor.type = ParameterType::PARAMETER_DOUBLE;
-    scalingDescriptor.description = "The axis output scale";
+    ParameterDescriptor scaling_descriptor{};
+    scaling_descriptor.type = ParameterType::PARAMETER_DOUBLE;
+    scaling_descriptor.description = "The axis output scale";
 
-    ParameterDescriptor deadbandDescriptor{};
-    deadbandDescriptor.type = ParameterType::PARAMETER_DOUBLE;
-    deadbandDescriptor.description = "The deadband range for the axis. If positive is NaN, no deadband is applied, and if negative is NaN, it default to negative positive deadband";
+    ParameterDescriptor deadband_descriptor{};
+    deadband_descriptor.type = ParameterType::PARAMETER_DOUBLE;
+    deadband_descriptor.description = "The deadband range for the axis. If positive is NaN, no deadband is applied, and if negative is NaN, it default to negative positive deadband";
 
-    ParameterDescriptor turboDescriptor{};
-    turboDescriptor.type = ParameterType::PARAMETER_DOUBLE;
-    turboDescriptor.description = "Turbo scaling value";
+    ParameterDescriptor turbo_descriptor{};
+    turbo_descriptor.type = ParameterType::PARAMETER_DOUBLE;
+    turbo_descriptor.description = "Turbo scaling value";
 
-    _doubleParamMap = {{"scaling",
-                        {std::numeric_limits<double>::quiet_NaN(), scalingDescriptor}},
-                       {"turbo",
-                        {std::numeric_limits<double>::quiet_NaN(), turboDescriptor}},
-                       {"deadband_positive",
-                        {0.08, deadbandDescriptor}},
-                       {"deadband_negative",
-                        {std::numeric_limits<double>::quiet_NaN(), deadbandDescriptor}}};
+    _double_param_map = {{"scaling",
+                          {std::numeric_limits<double>::quiet_NaN(), scaling_descriptor}},
+                         {"turbo",
+                          {std::numeric_limits<double>::quiet_NaN(), turbo_descriptor}},
+                         {"deadband_positive",
+                          {0.08, deadband_descriptor}},
+                         {"deadband_negative",
+                          {std::numeric_limits<double>::quiet_NaN(), deadband_descriptor}}};
 
-    ParameterDescriptor followsDescriptor{};
-    followsDescriptor.type = ParameterType::PARAMETER_STRING;
-    followsDescriptor.description = "The enable configuration to base initial parameters off of";
-    _stringParamMap = {{"follows",
-                        {"", followsDescriptor}}};
+    ParameterDescriptor follows_descriptor{};
+    follows_descriptor.type = ParameterType::PARAMETER_STRING;
+    follows_descriptor.description = "The enable configuration to base initial parameters off of";
+    _string_param_map = {{"follows",
+                          {"", follows_descriptor}}};
 
-    _parent.declare_parameters(paramBaseName, _intParamMap);
-    _parent.declare_parameters(paramBaseName, _doubleParamMap);
-    _parent.declare_parameters(paramBaseName, _stringParamMap);
+    _parent.declare_parameters(param_base_name, _int_param_map);
+    _parent.declare_parameters(param_base_name, _double_param_map);
+    _parent.declare_parameters(param_base_name, _string_param_map);
 
-    ParameterDescriptor holdDescriptor{};
-    holdDescriptor.type = ParameterType::PARAMETER_BOOL;
-    holdDescriptor.description = "Whether or not to hold the previous value if no input received";
-    _parent.declare_parameter(paramBaseName + ".hold", false, holdDescriptor);
+    ParameterDescriptor hold_descriptor{};
+    hold_descriptor.type = ParameterType::PARAMETER_BOOL;
+    hold_descriptor.description = "Whether or not to hold the previous value if no input received";
+    _parent.declare_parameter(param_base_name + ".hold", false, hold_descriptor);
 
-    if (hasEnable)
+    if (has_enable)
     {
-        std::string enableName = paramBaseName + ".enable";
-        std::string turboName = paramBaseName + ".turbo_enable";
-        _parent._enableParsers.emplace(std::make_pair(enableName, EnableParser(_parent, enableName)));
-        _parent._enableParsers.emplace(std::make_pair(turboName, EnableParser(_parent, turboName)));
+        std::string enable_name = param_base_name + ".enable";
+        std::string turbo_name = param_base_name + ".turbo_enable";
+        _parent._enable_parsers.emplace(std::make_pair(enable_name, EnableParser(_parent, enable_name)));
+        _parent._enable_parsers.emplace(std::make_pair(turbo_name, EnableParser(_parent, turbo_name)));
     }
 }
 
-double GenericController::AxisParser::getValue()
+double GenericController::AxisParser::get_value()
 {
-    if (_hasEnable &&
-        !_parent._enableParsers.at(_paramBaseName + ".enable").getValue() &&
-        !_parent._enableParsers.at(_paramBaseName + ".turbo_enable").getValue())
+    if (_has_enable &&
+        !_parent._enable_parsers.at(_param_base_name + ".enable").get_value() &&
+        !_parent._enable_parsers.at(_param_base_name + ".turbo_enable").get_value())
         return 0.0;
 
-    auto params = _resolveParams();
+    auto params = _resolve_params();
 
-    double axisValue = 0.0;
-    int axisIdx = params[AXIS_IDX].as_int();
-    bool hasAnalogAxis = axisIdx >= 0;
-    bool hold = _parent.get_parameter(_paramBaseName + ".hold").as_bool();
-    if (hasAnalogAxis)
-        axisValue = _parent._lastReceivedJoy->axes[axisIdx];
+    double axis_value = 0.0;
+    int axis_idx = params[AXIS_IDX].as_int();
+    bool has_analog_axis = axis_idx >= 0;
+    bool hold = _parent.get_parameter(_param_base_name + ".hold").as_bool();
+    if (has_analog_axis)
+        axis_value = _parent._last_received_joy->axes[axis_idx];
 
     double scaling = params[SCALING_IDX].as_double();
-    if (_hasEnable && _parent._enableParsers.at(_paramBaseName + ".turbo_enable").getValue())
+    if (_has_enable && _parent._enable_parsers.at(_param_base_name + ".turbo_enable").get_value())
     {
         scaling = params[TURBO_IDX].as_double();
         if (!std::isfinite(scaling))
@@ -160,112 +197,112 @@ double GenericController::AxisParser::getValue()
     if (!std::isfinite(scaling))
         scaling = 1.0;
 
-    double deadbandPositive = params[DEADBAND_POSITIVE_IDX].as_double();
-    double deadbandNegative = params[DEADBAND_NEGATIVE_IDX].as_double();
-    if (!std::isfinite(deadbandNegative))
-        deadbandNegative = -deadbandPositive;
+    double deadband_positive = params[DEADBAND_POSITIVE_IDX].as_double();
+    double deadband_negative = params[DEADBAND_NEGATIVE_IDX].as_double();
+    if (!std::isfinite(deadband_negative))
+        deadband_negative = -deadband_positive;
 
-    if (std::isfinite(deadbandPositive))
+    if (std::isfinite(deadband_positive))
     {
-        bool clamped = axisValue < deadbandPositive && axisValue > deadbandNegative;
+        bool clamped = axis_value < deadband_positive && axis_value > deadband_negative;
         if (clamped)
-            axisValue = 0.0;
-        else if (axisValue > deadbandPositive)
-            axisValue -= deadbandPositive;
-        else if (axisValue < deadbandNegative)
-            axisValue -= deadbandNegative;
+            axis_value = 0.0;
+        else if (axis_value > deadband_positive)
+            axis_value -= deadband_positive;
+        else if (axis_value < deadband_negative)
+            axis_value -= deadband_negative;
 
         // re-normalize the axis value
         if (!clamped)
         {
-            if (axisValue > 0.0)
-                axisValue /= (1.0 - std::abs(deadbandPositive));
+            if (axis_value > 0.0)
+                axis_value /= (1.0 - std::abs(deadband_positive));
             else
-                axisValue /= (1.0 - std::abs(deadbandNegative));
+                axis_value /= (1.0 - std::abs(deadband_negative));
         }
     }
 
-    bool buttonPositive = false;
+    bool button_positive = false;
     if (int button = params[BUTTON_POSITIVE_IDX].as_int(); button >= 0)
-        buttonPositive = _parent._lastReceivedJoy->buttons[button];
+        button_positive = _parent._last_received_joy->buttons[button];
 
-    bool buttonNegative = false;
+    bool button_negative = false;
     if (int button = params[BUTTON_NEGATIVE_IDX].as_int(); button >= 0)
-        buttonNegative = _parent._lastReceivedJoy->buttons[button];
+        button_negative = _parent._last_received_joy->buttons[button];
 
-    bool bothButtons = buttonPositive && buttonNegative;
-    if (!bothButtons)
+    bool both_buttons = button_positive && button_negative;
+    if (!both_buttons)
     {
-        if (buttonPositive)
-            axisValue = 1.0;
-        if (buttonNegative)
-            axisValue = -1.0;
+        if (button_positive)
+            axis_value = 1.0;
+        if (button_negative)
+            axis_value = -1.0;
     }
     else
-        axisValue = 0.0;
+        axis_value = 0.0;
 
-    axisValue *= scaling;
-    bool shouldUpdateAnalogAxis = hasAnalogAxis && (!hold || (abs(axisValue) > 0));
-    if (buttonPositive || buttonNegative || shouldUpdateAnalogAxis)
-        _lastValue = axisValue;
+    axis_value *= scaling;
+    bool should_update_analog_axis = has_analog_axis && (!hold || (abs(axis_value) > 0));
+    if (button_positive || button_negative || should_update_analog_axis)
+        _last_value = axis_value;
     else if (hold)
-        return _lastValue;
+        return _last_value;
 
-    return axisValue;
+    return axis_value;
 }
 
-std::vector<rclcpp::Parameter> GenericController::AxisParser::_resolveParams()
+std::vector<rclcpp::Parameter> GenericController::AxisParser::_resolve_params()
 {
     // TODO: Memoize this with invalidation on parameter changes
-    auto params = _parent.get_parameters(_getParamNames(_paramBaseName));
+    auto params = _parent.get_parameters(_get_param_names(_param_base_name));
     // has an axis parser with that key
-    if (auto followed = _parent._axisParsers.find(params[FOLLOWS_IDX].as_string());
-        followed != _parent._axisParsers.end())
+    if (auto followed = _parent._axis_parsers.find(params[FOLLOWS_IDX].as_string());
+        followed != _parent._axis_parsers.end())
     {
-        auto followedParams = followed->second._resolveParams();
-        if (auto axis = followedParams[AXIS_IDX]; axis.as_int() >= 0)
+        auto followed_params = followed->second._resolve_params();
+        if (auto axis = followed_params[AXIS_IDX]; axis.as_int() >= 0)
             params[AXIS_IDX] = axis;
-        if (auto buttonPositive = followedParams[BUTTON_POSITIVE_IDX]; buttonPositive.as_int() >= 0)
-            params[BUTTON_POSITIVE_IDX] = buttonPositive;
-        if (auto buttonNegative = followedParams[BUTTON_NEGATIVE_IDX]; buttonNegative.as_int() >= 0)
-            params[BUTTON_NEGATIVE_IDX] = buttonNegative;
-        if (auto scaling = followedParams[SCALING_IDX]; std::isfinite(scaling.as_double()))
+        if (auto button_positive = followed_params[BUTTON_POSITIVE_IDX]; button_positive.as_int() >= 0)
+            params[BUTTON_POSITIVE_IDX] = button_positive;
+        if (auto button_negative = followed_params[BUTTON_NEGATIVE_IDX]; button_negative.as_int() >= 0)
+            params[BUTTON_NEGATIVE_IDX] = button_negative;
+        if (auto scaling = followed_params[SCALING_IDX]; std::isfinite(scaling.as_double()))
             params[SCALING_IDX] = scaling;
-        if (auto deadbandPositive = followedParams[DEADBAND_POSITIVE_IDX]; std::isfinite(deadbandPositive.as_double()))
-            params[DEADBAND_POSITIVE_IDX] = deadbandPositive;
-        if (auto deadbandNegative = followedParams[DEADBAND_NEGATIVE_IDX]; std::isfinite(deadbandNegative.as_double()))
-            params[DEADBAND_NEGATIVE_IDX] = deadbandNegative;
-        if (auto turbo = followedParams[TURBO_IDX]; std::isfinite(turbo.as_double()))
+        if (auto deadband_positive = followed_params[DEADBAND_POSITIVE_IDX]; std::isfinite(deadband_positive.as_double()))
+            params[DEADBAND_POSITIVE_IDX] = deadband_positive;
+        if (auto deadband_negative = followed_params[DEADBAND_NEGATIVE_IDX]; std::isfinite(deadband_negative.as_double()))
+            params[DEADBAND_NEGATIVE_IDX] = deadband_negative;
+        if (auto turbo = followed_params[TURBO_IDX]; std::isfinite(turbo.as_double()))
             params[TURBO_IDX] = turbo;
     }
 
     return params;
 }
 
-std::vector<std::string> GenericController::AxisParser::_getParamNames(const std::string& baseName)
+std::vector<std::string> GenericController::AxisParser::_get_param_names(const std::string& base_name)
 {
-    return {baseName + ".axis",
-            baseName + ".button_positive",
-            baseName + ".button_negative",
-            baseName + ".scaling",
-            baseName + ".follows",
-            baseName + ".deadband_positive",
-            baseName + ".deadband_negative",
-            baseName + ".turbo"};
+    return {base_name + ".axis",
+            base_name + ".button_positive",
+            base_name + ".button_negative",
+            base_name + ".scaling",
+            base_name + ".follows",
+            base_name + ".deadband_positive",
+            base_name + ".deadband_negative",
+            base_name + ".turbo"};
 }
 
-bool GenericController::AxisParser::_parentHasAllParams(const std::string& followsName)
+bool GenericController::AxisParser::_parent_has_all_params(const std::string& follows_name)
 {
-    for (const auto& param : _getParamNames(followsName))
+    for (const auto& param : _get_param_names(follows_name))
         if (!_parent.has_parameter(param))
             return false;
 
     return true;
 }
 
-bool GenericController::AxisParser::_parentHasAnyParams(const std::string& followsName)
+bool GenericController::AxisParser::_parent_has_any_params(const std::string& follows_name)
 {
-    for (const auto& param : _getParamNames(followsName))
+    for (const auto& param : _get_param_names(follows_name))
     {
         if (_parent.has_parameter(param))
             return true;
@@ -275,91 +312,91 @@ bool GenericController::AxisParser::_parentHasAnyParams(const std::string& follo
 }
 
 GenericController::EnableParser::EnableParser(GenericController& parent,
-                                              const std::string& paramBaseName,
-                                              bool isTurbo)
+                                              const std::string& param_base_name,
+                                              bool is_turbo)
     : _parent(parent),
-      _paramBaseName(paramBaseName)
+      _param_base_name(param_base_name)
 {
-    (void)isTurbo;
+    (void)is_turbo;
     using namespace rcl_interfaces::msg;
 
-    auto [vals, wasInserted] = _parent._axisParsers.emplace(
-        std::make_pair(paramBaseName, AxisParser(parent, paramBaseName)));
-    if (!wasInserted)
+    auto [vals, was_inserted] = _parent._axis_parsers.emplace(
+        std::make_pair(param_base_name, AxisParser(parent, param_base_name)));
+    if (!was_inserted)
     {
         throw std::runtime_error("Failed to insert axis parser");
     }
 
-    ParameterDescriptor thresholdDescriptor{};
-    thresholdDescriptor.type = ParameterType::PARAMETER_DOUBLE;
-    thresholdDescriptor.description = "The threshold to compare against";
-    _parent.declare_parameter(paramBaseName + ".threshold", std::numeric_limits<double>::quiet_NaN(), thresholdDescriptor);
+    ParameterDescriptor threshold_descriptor{};
+    threshold_descriptor.type = ParameterType::PARAMETER_DOUBLE;
+    threshold_descriptor.description = "The threshold to compare against";
+    _parent.declare_parameter(param_base_name + ".threshold", std::numeric_limits<double>::quiet_NaN(), threshold_descriptor);
 
-    ParameterDescriptor isLessThanDescriptor{};
-    isLessThanDescriptor.type = ParameterType::PARAMETER_BOOL;
-    isLessThanDescriptor.description = "Whether or not to enable when the axis value is less than the threshold";
-    _parent.declare_parameter(paramBaseName + ".is_less_than", false, thresholdDescriptor);
+    ParameterDescriptor is_less_than_descriptor{};
+    is_less_than_descriptor.type = ParameterType::PARAMETER_BOOL;
+    is_less_than_descriptor.description = "Whether or not to enable when the axis value is less than the threshold";
+    _parent.declare_parameter(param_base_name + ".is_less_than", false, threshold_descriptor);
 
-    // if (isTurbo)
+    // if (is_turbo)
     // {
-    //     ParameterDescriptor turboDescriptor{};
-    //     turboDescriptor.type = ParameterType::PARAMETER_DOUBLE;
-    //     turboDescriptor.description = "";
-    //     _parent.declare_parameter(paramBaseName + ".turbo_speed", 2.0, turboDescriptor);
+    //     ParameterDescriptor turbo_descriptor{};
+    //     turbo_descriptor.type = ParameterType::PARAMETER_DOUBLE;
+    //     turbo_descriptor.description = "";
+    //     _parent.declare_parameter(param_base_name + ".turbo_speed", 2.0, turbo_descriptor);
     // }
 }
 
-std::vector<rclcpp::Parameter> GenericController::EnableParser::_resolveParams()
+std::vector<rclcpp::Parameter> GenericController::EnableParser::_resolve_params()
 {
     // TODO: Memoize this with invalidation on parameter changes
-    auto params = _parent.get_parameters(_getParamNames(_paramBaseName));
+    auto params = _parent.get_parameters(_get_param_names(_param_base_name));
     // has an axis parser with that key
-    if (auto followed = _parent._enableParsers.find(params[FOLLOWS_IDX].as_string());
-        followed != _parent._enableParsers.end())
+    if (auto followed = _parent._enable_parsers.find(params[FOLLOWS_IDX].as_string());
+        followed != _parent._enable_parsers.end())
     {
-        auto followedParams = followed->second._resolveParams();
-        if (auto threshold = followedParams[THRESHOLD_IDX]; std::isfinite(threshold.as_double()))
+        auto followed_params = followed->second._resolve_params();
+        if (auto threshold = followed_params[THRESHOLD_IDX]; std::isfinite(threshold.as_double()))
         {
             params[THRESHOLD_IDX] = threshold;
-            params[IS_LT_IDX] = followedParams[IS_LT_IDX];
+            params[IS_LT_IDX] = followed_params[IS_LT_IDX];
         }
     }
 
     return params;
 }
 
-std::vector<std::string> GenericController::EnableParser::_getParamNames(const std::string& baseName)
+std::vector<std::string> GenericController::EnableParser::_get_param_names(const std::string& base_name)
 {
-    return {baseName + ".follows",
-            baseName + ".threshold",
-            baseName + ".is_less_than"};
+    return {base_name + ".follows",
+            base_name + ".threshold",
+            base_name + ".is_less_than"};
 }
 
-bool GenericController::EnableParser::getValue()
+bool GenericController::EnableParser::get_value()
 {
-    auto params = _resolveParams();
+    auto params = _resolve_params();
 
     double threshold = params[THRESHOLD_IDX].as_double();
     if (!std::isfinite(threshold))
         threshold = 0.5;
 
-    bool isLessThan = params[IS_LT_IDX].as_bool();
-    double axisValue = _parent._axisParsers.at(_paramBaseName).getValue();
-    if (isLessThan)
-        return axisValue < threshold;
-    return axisValue > threshold;
+    bool is_less_than = params[IS_LT_IDX].as_bool();
+    double axis_value = _parent._axis_parsers.at(_param_base_name).get_value();
+    if (is_less_than)
+        return axis_value < threshold;
+    return axis_value > threshold;
 }
 
 int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
 
-    rclcpp::NodeOptions nodeOptions{};
+    rclcpp::NodeOptions node_options{};
     try
     {
-        nodeOptions.allow_undeclared_parameters(true);
+        node_options.allow_undeclared_parameters(true);
         RCLCPP_INFO(rclcpp::get_logger("main"), "Starting generic controller node");
-        auto node = std::make_shared<GenericController>(nodeOptions);
+        auto node = std::make_shared<GenericController>(node_options);
         rclcpp::spin(node);
     }
     catch (const std::exception& e)

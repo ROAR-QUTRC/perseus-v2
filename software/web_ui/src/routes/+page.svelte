@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { toggleMode, mode } from 'mode-watcher';
-	import { CardStackPlus, Check, Moon, Sun } from 'svelte-radix';
+	import { CardStackPlus, Check, Moon, Sun, DotsHorizontal, OpenInNewWindow } from 'svelte-radix';
 	import {
 		activeWidgets,
 		availableWidgets,
@@ -10,16 +10,17 @@
 		type WidgetType
 	} from '$lib/scripts/state.svelte';
 	import { repo } from 'remult';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
 	import { Layout } from '../shared/Layout';
-	import { onDestroy } from 'svelte';
-	import LayoutMenu from '$lib/components/layout-menu.svelte';
+	import { onDestroy, onMount } from 'svelte';
+	import LayoutMenu from '$lib/components/layoutMenu.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index';
 	import { Gear } from 'svelte-radix';
-	import SettingsForm from '$lib/components/settings-form.svelte';
+	import SettingsForm from '$lib/components/settingsForm.svelte';
 	import * as Command from '$lib/components/ui/command/index';
 	import * as Popover from '$lib/components/ui/popover/index';
-	import WidgetCanvas from '$lib/components/widget-canvas.svelte';
-	import ConnectionMenu from '$lib/components/connection-menu.svelte';
+	import WidgetCanvas from '$lib/components/widgetCanvas.svelte';
+	import ConnectionMenu from '$lib/components/connectionMenu.svelte';
 
 	let unSub: (() => void) | null = null;
 	let widgetGroups = $state<Array<Array<WidgetType>>>([]);
@@ -128,6 +129,19 @@
 			widgets: layouts.value[layouts.active].widgets.filter((widget) => widget.name !== name)
 		});
 	};
+
+	let isMobile = $state<boolean>(false);
+
+	onMount(() => {
+		// check if the device is mobile
+		if (/Mobi|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent)) {
+			isMobile = true;
+		}
+		console.log('isMobile:', navigator);
+	});
+
+	let openSettings = $state(false);
+	let openWidgetAddMenu = $state(false);
 </script>
 
 <div class="h-full flex-col">
@@ -135,17 +149,31 @@
 	<div class="flex border-b p-2">
 		<LayoutMenu />
 
-		<ConnectionMenu />
+		<ConnectionMenu {isMobile} />
 
-		<div class="flex space-x-2">
-			<!-- Add widget -->
-			<Popover.Root>
-				<Popover.Trigger>
-					<Button variant="outline" size="icon">
-						<CardStackPlus />
-					</Button>
-				</Popover.Trigger>
-				<Popover.Content class="mx-2 max-h-[600px] w-[200px] p-0">
+		{#if isMobile}
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					<Button variant="outline" size="icon"><DotsHorizontal /></Button>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end">
+					<DropdownMenu.Item onclick={() => (openWidgetAddMenu = true)}>
+						Add Widget <OpenInNewWindow class="ml-auto h-4 w-4" />
+					</DropdownMenu.Item>
+					<DropdownMenu.Item onclick={() => (openSettings = true)}>
+						Settings <OpenInNewWindow class="ml-auto h-4 w-4" />
+					</DropdownMenu.Item>
+					<DropdownMenu.Item onclick={toggleMode}>
+						{#if $mode === 'light'}
+							Dark Mode<Moon class="ml-auto h-4 w-4" />
+						{:else}
+							Light Mode<Sun class="ml-auto h-4 w-4" />
+						{/if}
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+			<Dialog.Root bind:open={openWidgetAddMenu}>
+				<Dialog.Content class="w-[80vw]">
 					<Command.Root>
 						<Command.Input placeholder="Search widgets..." />
 						<Command.List>
@@ -170,33 +198,69 @@
 							{/each}
 						</Command.List>
 					</Command.Root>
-				</Popover.Content>
-			</Popover.Root>
-			<!-- Settings form -->
-			<Dialog.Root>
-				<Dialog.Trigger>
-					<Button variant="outline" size="icon">
-						<Gear />
-					</Button>
-				</Dialog.Trigger>
-				<Dialog.Content class="w-[80vw]">
-					<Dialog.Header>
-						<Dialog.Title>Layout Settings</Dialog.Title>
-					</Dialog.Header>
-					<SettingsForm layout={activeLayout} />
 				</Dialog.Content>
 			</Dialog.Root>
-			<!-- Toggle light and dark mode -->
-			<Button onclick={toggleMode} variant="outline" size="icon">
-				{#if $mode === 'dark'}
-					<Moon />
-				{:else}
-					<Sun />
-				{/if}
-			</Button>
-		</div>
+		{:else}
+			<div class="flex space-x-2">
+				<!-- Add widget -->
+				<Popover.Root>
+					<Popover.Trigger>
+						<Button variant="outline" size="icon">
+							<CardStackPlus />
+						</Button>
+					</Popover.Trigger>
+					<Popover.Content class="mx-2 max-h-[600px] w-[200px] p-0">
+						<Command.Root>
+							<Command.Input placeholder="Search widgets..." />
+							<Command.List>
+								<Command.Empty>No widgets found.</Command.Empty>
+								{#each widgetGroups as group}
+									<Command.Group heading={group[0].group}>
+										{#each group as widget}
+											<Command.Item
+												onclick={() => {
+													widgetList.includes(widget.name)
+														? removeWidget(widget.name)
+														: addWidget(widget.name);
+												}}
+											>
+												{widget.name}
+												{#if widgetList.includes(widget.name)}
+													<Check class="ml-auto h-4 w-4" />
+												{/if}
+											</Command.Item>
+										{/each}
+									</Command.Group>
+								{/each}
+							</Command.List>
+						</Command.Root>
+					</Popover.Content>
+				</Popover.Root>
+				<!-- Settings form -->
+				<Button variant="outline" size="icon" onclick={() => (openSettings = true)}>
+					<Gear />
+				</Button>
+
+				<!-- Toggle light and dark mode -->
+				<Button onclick={toggleMode} variant="outline" size="icon">
+					{#if $mode === 'light'}
+						<Moon />
+					{:else}
+						<Sun />
+					{/if}
+				</Button>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Widget canvas -->
 	<WidgetCanvas />
 </div>
+<Dialog.Root bind:open={openSettings}>
+	<Dialog.Content class="w-[80vw]">
+		<Dialog.Header>
+			<Dialog.Title>Layout Settings</Dialog.Title>
+		</Dialog.Header>
+		<SettingsForm layout={activeLayout} />
+	</Dialog.Content>
+</Dialog.Root>

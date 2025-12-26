@@ -97,7 +97,7 @@ For example, if you ran `nix shell .#rosCore .#pkgs.net-can-server`, you would h
 
 All the `nix` commands documented above take what Nix calls "[installables](https://nix.dev/manual/nix/latest/command-ref/new-cli/nix#installables)" as their "targets".
 In most cases, this is a flake output from the local directory, but it can also be something selected from any location which contains a [`flake.nix`](#nix-flakes) file.
-You can use a filesystem path (like `.` or `~/perseus-v2`), `nixpkgs` (or a branch), or even fetch a repository from GitHub (like `github:github:wentasah/ros2nix`).
+You can use a filesystem path (like `.` or `~/perseus-v2`), `nixpkgs` (or a branch), or even fetch a repository from GitHub (like `github:wentasah/ros2nix`).
 
 :::{note}
 The `nixpkgs` input is special syntax, since normally you'd have to enter the full path `github:NixOS/nixpkgs`.

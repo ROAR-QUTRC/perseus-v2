@@ -19,31 +19,31 @@ bq76942::bq76942(uint8_t address)
     }
     // maximum data ever in CRC buffer is 4 bytes:
     // One for the address, one for the register, one for the re-started address, and one for the data byte
-    _dataBuf.reserve(4);
+    _data_buf.reserve(4);
 }
 
-void bq76942::enterDeepSleep()
+void bq76942::enter_deep_sleep()
 {
-    writeSubcommand(cmd_only_subcommand::DEEPSLEEP);
+    write_subcommand(cmd_only_subcommand::DEEPSLEEP);
     // see comment in shutdown() - must be written twice within 4s
     std::this_thread::sleep_for(100ms);
-    writeSubcommand(cmd_only_subcommand::DEEPSLEEP);
+    write_subcommand(cmd_only_subcommand::DEEPSLEEP);
 }
 
 void bq76942::shutdown()
 {
-    writeSubcommand(bq76942::cmd_only_subcommand::ALL_FETS_OFF);
-    writeSubcommand(cmd_only_subcommand::SHUTDOWN);
+    write_subcommand(bq76942::cmd_only_subcommand::ALL_FETS_OFF);
+    write_subcommand(cmd_only_subcommand::SHUTDOWN);
     // needs to be written twice within 4s to apply
     // NOTE: This doesn't apply in UNSEALED or FULLACCESS modes,
     // and the IC will shut down immediately in these modes.
     std::this_thread::sleep_for(100ms);
-    writeSubcommand(cmd_only_subcommand::SHUTDOWN);
+    write_subcommand(cmd_only_subcommand::SHUTDOWN);
 }
 
-void bq76942::enterConfigUpdateMode()
+void bq76942::enter_config_update_mode()
 {
-    writeSubcommand(cmd_only_subcommand::SET_CFGUPDATE);
+    write_subcommand(cmd_only_subcommand::SET_CFGUPDATE);
     // wait for IC to enter config update mode
     // TRM says 2ms approximate delay,
     // so may as well wait out the guaranteed time before checking
@@ -52,21 +52,21 @@ void bq76942::enterConfigUpdateMode()
     // exact timeout doesn't matter, it shouldn't ever take long
     while ((steady_clock::now() - start) < 10ms)
     {
-        if (getBatteryStatus().inConfigUpdateMode)
+        if (get_battery_status().in_config_update_mode)
             return;
         std::this_thread::sleep_for(1ms);
     }
     throw std::runtime_error("Failed to enter config update mode - timed out!");
 }
 
-void bq76942::exitConfigUpdateMode()
+void bq76942::exit_config_update_mode()
 {
-    writeSubcommand(cmd_only_subcommand::EXIT_CFGUPDATE);
+    write_subcommand(cmd_only_subcommand::EXIT_CFGUPDATE);
     // wait for command to finish
     std::this_thread::sleep_for(2ms);
 }
 
-void bq76942::setGPO(const gpo& pin, const bool state)
+void bq76942::set_GPO(const gpo& pin, const bool state)
 {
     switch (pin)
     {
@@ -74,144 +74,144 @@ void bq76942::setGPO(const gpo& pin, const bool state)
         throw std::invalid_argument("Invalid GPO pin");
         break;
     case gpo::CFETOFF:
-        writeSubcommand(state ? cmd_only_subcommand::CFETOFF_HI : cmd_only_subcommand::CFETOFF_LO);
+        write_subcommand(state ? cmd_only_subcommand::CFETOFF_HI : cmd_only_subcommand::CFETOFF_LO);
         break;
     case gpo::DFETOFF:
-        writeSubcommand(state ? cmd_only_subcommand::DFETOFF_HI : cmd_only_subcommand::DFETOFF_LO);
+        write_subcommand(state ? cmd_only_subcommand::DFETOFF_HI : cmd_only_subcommand::DFETOFF_LO);
         break;
     case gpo::ALERT:
-        writeSubcommand(state ? cmd_only_subcommand::ALERT_HI : cmd_only_subcommand::ALERT_LO);
+        write_subcommand(state ? cmd_only_subcommand::ALERT_HI : cmd_only_subcommand::ALERT_LO);
         break;
     case gpo::HDQ:
-        writeSubcommand(state ? cmd_only_subcommand::HDQ_HI : cmd_only_subcommand::HDQ_LO);
+        write_subcommand(state ? cmd_only_subcommand::HDQ_HI : cmd_only_subcommand::HDQ_LO);
         break;
     case gpo::DCHG:
-        writeSubcommand(state ? cmd_only_subcommand::DCHG_HI : cmd_only_subcommand::DCHG_LO);
+        write_subcommand(state ? cmd_only_subcommand::DCHG_HI : cmd_only_subcommand::DCHG_LO);
         break;
     case gpo::DDSG:
-        writeSubcommand(state ? cmd_only_subcommand::DDSG_HI : cmd_only_subcommand::DDSG_LO);
+        write_subcommand(state ? cmd_only_subcommand::DDSG_HI : cmd_only_subcommand::DDSG_LO);
         break;
     };
 }
 
-void bq76942::forcePermanentFail()
+void bq76942::force_permanent_fail()
 {
     // to force permanent fail, word A and B must be written in order within 4s
-    writeSubcommand(cmd_only_subcommand::PF_FORCE_A);
+    write_subcommand(cmd_only_subcommand::PF_FORCE_A);
     std::this_thread::sleep_for(100ms);
-    writeSubcommand(cmd_only_subcommand::PF_FORCE_B);
+    write_subcommand(cmd_only_subcommand::PF_FORCE_B);
 }
 
-bq76942::firmware_version_t bq76942::getFirmwareVersion()
+bq76942::firmware_version_t bq76942::get_firmware_version()
 {
-    firmware_version_t rawVersion = readSubcommand<firmware_version_t>(subcommand::FW_VERSION);
-    uint16_t deviceNumber = (rawVersion.deviceNumberBytes[0] << 8) | rawVersion.deviceNumberBytes[1];
+    firmware_version_t raw_version = read_subcommand<firmware_version_t>(subcommand::FW_VERSION);
+    uint16_t device_number = (raw_version.device_number_bytes[0] << 8) | raw_version.device_number_bytes[1];
     // note: version number may be BCD too? not entirely clear in the TRM. Not a big deal though.
-    uint16_t versionNumber = (rawVersion.firmwareVersionBytes[0] << 8) | rawVersion.firmwareVersionBytes[1];
-    uint16_t firmwareVersion = (rawVersion.bcdHighOfHighByte * 1000) +
-                               (rawVersion.bcdHighOfLowByte * 100) +
-                               (rawVersion.bcdLowOfHighByte * 10) +
-                               rawVersion.bcdLowOfLowByte;
-    return {deviceNumber, versionNumber, firmwareVersion};
+    uint16_t version_number = (raw_version.firmware_version_bytes[0] << 8) | raw_version.firmware_version_bytes[1];
+    uint16_t firmware_version = (raw_version.bcd_high_of_high_byte * 1000) +
+                                (raw_version.bcd_high_of_low_byte * 100) +
+                                (raw_version.bcd_low_of_high_byte * 10) +
+                                raw_version.bcd_low_of_low_byte;
+    return {device_number, version_number, firmware_version};
 }
 
-bq76942::security_keys_t bq76942::getSecurityKeys()
+bq76942::security_keys_t bq76942::get_security_keys()
 {
-    security_keys_t rawKeys = readSubcommand<security_keys_t>(subcommand::SECURITY_KEYS);
+    security_keys_t raw_keys = read_subcommand<security_keys_t>(subcommand::SECURITY_KEYS);
     // keys are stored in big-endian format so we need to re-construct them manually
     return security_keys_t{
         .unseal = {
-            .step1 = static_cast<uint16_t>((rawKeys.unseal.step1Bytes[0] << 8) | rawKeys.unseal.step1Bytes[1]),
-            .step2 = static_cast<uint16_t>((rawKeys.unseal.step2Bytes[0] << 8) | rawKeys.unseal.step2Bytes[1]),
+            .step_1 = static_cast<uint16_t>((raw_keys.unseal.step_1_bytes[0] << 8) | raw_keys.unseal.step_1_bytes[1]),
+            .step_2 = static_cast<uint16_t>((raw_keys.unseal.step_2_bytes[0] << 8) | raw_keys.unseal.step_2_bytes[1]),
         },
-        .fullAccess = {
-            .step1 = static_cast<uint16_t>((rawKeys.fullAccess.step1Bytes[0] << 8) | rawKeys.fullAccess.step1Bytes[1]),
-            .step2 = static_cast<uint16_t>((rawKeys.fullAccess.step2Bytes[0] << 8) | rawKeys.fullAccess.step2Bytes[1]),
+        .full_access = {
+            .step_1 = static_cast<uint16_t>((raw_keys.full_access.step_1_bytes[0] << 8) | raw_keys.full_access.step_1_bytes[1]),
+            .step_2 = static_cast<uint16_t>((raw_keys.full_access.step_2_bytes[0] << 8) | raw_keys.full_access.step_2_bytes[1]),
         },
     };
 }
 
-void bq76942::setSecurityKeys(const security_keys_t& keys)
+void bq76942::set_security_keys(const security_keys_t& keys)
 {
-    const security_keys_t bigEndianKeys{
+    const security_keys_t big_endian_keys{
         .unseal = {
-            .step1Bytes = {static_cast<uint8_t>((keys.unseal.step1 >> 8) & 0xFF), static_cast<uint8_t>(keys.unseal.step1 & 0xFF)},
-            .step2Bytes = {static_cast<uint8_t>((keys.unseal.step2 >> 8) & 0xFF), static_cast<uint8_t>(keys.unseal.step2 & 0xFF)},
+            .step_1_bytes = {static_cast<uint8_t>((keys.unseal.step_1 >> 8) & 0xFF), static_cast<uint8_t>(keys.unseal.step_1 & 0xFF)},
+            .step_2_bytes = {static_cast<uint8_t>((keys.unseal.step_2 >> 8) & 0xFF), static_cast<uint8_t>(keys.unseal.step_2 & 0xFF)},
         },
-        .fullAccess = {
-            .step1Bytes = {static_cast<uint8_t>((keys.fullAccess.step1 >> 8) & 0xFF), static_cast<uint8_t>(keys.fullAccess.step1 & 0xFF)},
-            .step2Bytes = {static_cast<uint8_t>((keys.fullAccess.step2 >> 8) & 0xFF), static_cast<uint8_t>(keys.fullAccess.step2 & 0xFF)},
+        .full_access = {
+            .step_1_bytes = {static_cast<uint8_t>((keys.full_access.step_1 >> 8) & 0xFF), static_cast<uint8_t>(keys.full_access.step_1 & 0xFF)},
+            .step_2_bytes = {static_cast<uint8_t>((keys.full_access.step_2 >> 8) & 0xFF), static_cast<uint8_t>(keys.full_access.step_2 & 0xFF)},
         },
     };
-    writeSubcommand(subcommand::SECURITY_KEYS, bigEndianKeys);
+    write_subcommand(subcommand::SECURITY_KEYS, big_endian_keys);
 }
 
-bq76942::manufacturer_data_t bq76942::getManufacturerData()
+bq76942::manufacturer_data_t bq76942::get_manufacturer_data()
 {
-    const auto dataVec = readSubcommand(subcommand::MANU_DATA);
-    manufacturer_data_t dataArr;
-    if (dataVec.size() != dataArr.size())
+    const auto data_vec = read_subcommand(subcommand::MANU_DATA);
+    manufacturer_data_t data_arr;
+    if (data_vec.size() != data_arr.size())
         throw std::runtime_error("Manufacturer data size mismatch");
-    std::copy(dataVec.begin(), dataVec.end(), dataArr.begin());
-    return dataArr;
+    std::copy(data_vec.begin(), data_vec.end(), data_arr.begin());
+    return data_arr;
 }
 
-void bq76942::setManufacturerData(const manufacturer_data_t& dataArr)
+void bq76942::set_manufacturer_data(const manufacturer_data_t& data_arr)
 {
-    std::vector<uint8_t> dataVec(dataArr.size(), 0);
-    std::copy(dataArr.begin(), dataArr.end(), dataVec.begin());
-    writeSubcommand(subcommand::MANU_DATA, dataVec);
+    std::vector<uint8_t> data_vec(data_arr.size(), 0);
+    std::copy(data_arr.begin(), data_arr.end(), data_vec.begin());
+    write_subcommand(subcommand::MANU_DATA, data_vec);
 }
 
-bq76942::da_status_5_t bq76942::getDAStatus5()
+bq76942::da_status_5_t bq76942::get_DA_status_5()
 {
-    const raw_da_status_5_t rawStatus = getRawDAStatus5();
-    const da_configuration_t daConfig = settings.configuration.getDAConfiguration();
+    const raw_da_status_5_t raw_status = get_raw_DA_status_5();
+    const da_configuration_t da_config = settings.configuration.get_DA_configuration();
     return da_status_5_t{
-        .vreg18AdcCounts = rawStatus.vreg18AdcCounts,
-        .vssAdcCounts = rawStatus.vssAdcCounts,
-        .maxCellVoltage = rawStatus.maxCellVoltage,
-        .minCellVoltage = rawStatus.minCellVoltage,
-        .batteryVoltageSum = rawStatus.batteryVoltageSum * getUserVoltsMultiplier(daConfig),
-        .cellTemperature = rawTempToCelsius(rawStatus.cellTemperature),
-        .fetTemperature = rawTempToCelsius(rawStatus.fetTemperature),
-        .maxCellTemperature = rawTempToCelsius(rawStatus.maxCellTemperature),
-        .minCellTemperature = rawTempToCelsius(rawStatus.minCellTemperature),
-        .avgCellTemperature = rawTempToCelsius(rawStatus.avgCellTemperature),
-        .cc3Current = static_cast<float>(rawStatus.cc3Current) * getUserAmpsMultiplier(daConfig),
-        .cc1Current = static_cast<float>(rawStatus.cc1Current) * getUserAmpsMultiplier(daConfig),
-        .cc2Counts = rawStatus.cc2Counts,
-        .cc3Counts = rawStatus.cc3Counts,
+        .vreg_18_adc_counts = raw_status.vreg_18_adc_counts,
+        .vss_adc_counts = raw_status.vss_adc_counts,
+        .max_cell_voltage = raw_status.max_cell_voltage,
+        .min_cell_voltage = raw_status.min_cell_voltage,
+        .battery_voltage_sum = raw_status.battery_voltage_sum * get_user_volts_multiplier(da_config),
+        .cell_temperature = raw_temp_to_celsius(raw_status.cell_temperature),
+        .fet_temperature = raw_temp_to_celsius(raw_status.fet_temperature),
+        .max_cell_temperature = raw_temp_to_celsius(raw_status.max_cell_temperature),
+        .min_cell_temperature = raw_temp_to_celsius(raw_status.min_cell_temperature),
+        .avg_cell_temperature = raw_temp_to_celsius(raw_status.avg_cell_temperature),
+        .cc_3_current = static_cast<float>(raw_status.cc_3_current) * get_user_amps_multiplier(da_config),
+        .cc_1_current = static_cast<float>(raw_status.cc_1_current) * get_user_amps_multiplier(da_config),
+        .cc_2_counts = raw_status.cc_2_counts,
+        .cc_3_counts = raw_status.cc_3_counts,
     };
 }
 
-bq76942::da_status_6_t bq76942::getDAStatus6()
+bq76942::da_status_6_t bq76942::get_DA_status_6()
 {
-    const raw_da_status_6_t rawStatus = getRawDAStatus6();
-    const da_configuration_t daConfig = settings.configuration.getDAConfiguration();
+    const raw_da_status_6_t raw_status = get_raw_DA_status_6();
+    const da_configuration_t da_config = settings.configuration.get_DA_configuration();
 
-    const float accChargeInteger = static_cast<float>(rawStatus.accumulatedCharge);
-    float accChargeFractional = static_cast<float>(rawStatus.accumulatedChargeFraction) / (1ULL << 32);
-    accChargeFractional -= 0.5;  // starts initialised to +0.5 userAh, zero that out
+    const float acc_charge_integer = static_cast<float>(raw_status.accumulated_charge);
+    float acc_charge_fractional = static_cast<float>(raw_status.accumulated_charge_fraction) / (1ULL << 32);
+    acc_charge_fractional -= 0.5;  // starts initialised to +0.5 user_ah, zero that out
 
     return da_status_6_t{
-        .accumulatedCharge = (accChargeInteger + accChargeFractional) * getUserAmpsMultiplier(daConfig),
-        .accumulatedChargeTime = std::chrono::seconds(rawStatus.accumulatedChargeTime),
-        .cfetoffCounts = rawStatus.cfetoffCounts,
-        .dfetoffCounts = rawStatus.dfetoffCounts,
-        .alertCounts = rawStatus.alertCounts,
-        .ts1Counts = rawStatus.ts1Counts,
-        .ts2Counts = rawStatus.ts2Counts,
+        .accumulated_charge = (acc_charge_integer + acc_charge_fractional) * get_user_amps_multiplier(da_config),
+        .accumulated_charge_time = std::chrono::seconds(raw_status.accumulated_charge_time),
+        .cfetoff_counts = raw_status.cfetoff_counts,
+        .dfetoff_counts = raw_status.dfetoff_counts,
+        .alert_counts = raw_status.alert_counts,
+        .ts1_counts = raw_status.ts1_counts,
+        .ts2_counts = raw_status.ts2_counts,
     };
 }
 
-std::vector<uint8_t> bq76942::readDirect(const uint8_t registerAddr, const size_t bytes)
+std::vector<uint8_t> bq76942::read_direct(const uint8_t register_addr, const size_t bytes)
 {
     for (int i = 0; i <= MAX_RETRIES; i++)
     {
         try
         {
-            return _readDirect(registerAddr, bytes);
+            return _read_direct(register_addr, bytes);
         }
         catch (...)
         {
@@ -225,13 +225,13 @@ std::vector<uint8_t> bq76942::readDirect(const uint8_t registerAddr, const size_
     return {};
 }
 
-void bq76942::writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>& data)
+void bq76942::write_direct(const uint8_t register_addr, const std::vector<uint8_t>& data)
 {
     for (int i = 0; i <= MAX_RETRIES; i++)
     {
         try
         {
-            _writeDirect(registerAddr, data);
+            _write_direct(register_addr, data);
             return;
         }
         catch (...)
@@ -244,13 +244,13 @@ void bq76942::writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>
     }
 }
 
-std::vector<uint8_t> bq76942::readSubcommand(const uint16_t registerAddr)
+std::vector<uint8_t> bq76942::read_subcommand(const uint16_t register_addr)
 {
     for (int i = 0; i <= MAX_RETRIES; i++)
     {
         try
         {
-            return _readSubcommand(registerAddr);
+            return _read_subcommand(register_addr);
         }
         catch (...)
         {
@@ -264,249 +264,249 @@ std::vector<uint8_t> bq76942::readSubcommand(const uint16_t registerAddr)
     return {};
 }
 
-void bq76942::writeSubcommand(const uint16_t registerAddr, const std::vector<uint8_t>& data)
+void bq76942::write_subcommand(const uint16_t register_addr, const std::vector<uint8_t>& data)
 {
-    // no need for retries here since it should be handled by the underlying directWrite calls
-    _writeSubcommand(registerAddr, data);
+    // no need for retries here since it should be handled by the underlying direct_write calls
+    _write_subcommand(register_addr, data);
 }
 
-float bq76942::getUserAmpsMultiplier(const da_configuration_t& config)
+float bq76942::get_user_amps_multiplier(const da_configuration_t& config)
 {
-    switch (config.userAmps)
+    switch (config.user_amps)
     {
     default:
         return 1.0f;
         break;
-    case user_amps::DECIMILLIAMP:
+    case user_amps_unit::DECIMILLIAMP:
         return 0.1f;
         break;
-    case user_amps::MILLIAMP:
+    case user_amps_unit::MILLIAMP:
         return 1.0f;
         break;
-    case user_amps::CENTIAMP:
+    case user_amps_unit::CENTIAMP:
         return 10.0f;
         break;
-    case user_amps::DECIAMP:
+    case user_amps_unit::DECIAMP:
         return 100.0f;
         break;
     }
 }
 
-int32_t bq76942::getStackVoltage()
+int32_t bq76942::get_stack_voltage()
 {
-    return readDirect<int16_t>(direct_command::STACK_VOLTAGE) * getUserVoltsMultiplier(settings.configuration.getDAConfiguration());
+    return read_direct<int16_t>(direct_command::STACK_VOLTAGE) * get_user_volts_multiplier(settings.configuration.get_DA_configuration());
 }
 
-int32_t bq76942::getPackVoltage()
+int32_t bq76942::get_pack_voltage()
 {
-    return readDirect<int16_t>(direct_command::PACK_PIN_VOLTAGE) * getUserVoltsMultiplier(settings.configuration.getDAConfiguration());
+    return read_direct<int16_t>(direct_command::PACK_PIN_VOLTAGE) * get_user_volts_multiplier(settings.configuration.get_DA_configuration());
 }
 
-int32_t bq76942::getLdVoltage()
+int32_t bq76942::get_ld_voltage()
 {
-    return readDirect<int16_t>(direct_command::LD_PIN_VOLTAGE) * getUserVoltsMultiplier(settings.configuration.getDAConfiguration());
+    return read_direct<int16_t>(direct_command::LD_PIN_VOLTAGE) * get_user_volts_multiplier(settings.configuration.get_DA_configuration());
 }
 
-float bq76942::getCC2Current()
+float bq76942::get_CC2_current()
 {
-    return readDirect<int16_t>(direct_command::CC2_CURRENT) * getUserAmpsMultiplier(settings.configuration.getDAConfiguration());
+    return read_direct<int16_t>(direct_command::CC2_CURRENT) * get_user_amps_multiplier(settings.configuration.get_DA_configuration());
 }
 
-int16_t bq76942::Calibration::Voltage::getCellGain(const uint8_t& cell) const
+int16_t bq76942::Calibration::Voltage::get_cell_gain(const uint8_t& cell) const
 {
     if (cell >= 16)
     {
         throw std::invalid_argument("Invalid cell number");
     }
-    const int16_t registerAddr = static_cast<uint16_t>(bq76942::data_register::CELL_1_GAIN) + (2 * cell);
-    return _parent.readSubcommand<int16_t>(registerAddr);
+    const int16_t register_addr = static_cast<uint16_t>(bq76942::data_register::CELL_1_GAIN) + (2 * cell);
+    return _parent.read_subcommand<int16_t>(register_addr);
 }
 
-void bq76942::Calibration::Voltage::setCellGain(const uint8_t& cell, const int16_t& gain) const
+void bq76942::Calibration::Voltage::set_cell_gain(const uint8_t& cell, const int16_t& gain) const
 {
     if (cell >= 16)
     {
         throw std::invalid_argument("Invalid cell number");
     }
-    const int16_t registerAddr = static_cast<uint16_t>(bq76942::data_register::CELL_1_GAIN) + (2 * cell);
-    _parent.writeDirect(registerAddr, gain);
+    const int16_t register_addr = static_cast<uint16_t>(bq76942::data_register::CELL_1_GAIN) + (2 * cell);
+    _parent.write_direct(register_addr, gain);
 }
 
-uint32_t bq76942::Settings::getDsgCurrentThreshold() const
+uint32_t bq76942::Settings::get_dsg_current_threshold() const
 {
-    return _parent.readSubcommand<int16_t>(data_register::DSG_CURRENT_THRESHOLD) * getUserAmpsMultiplier(configuration.getDAConfiguration());
+    return _parent.read_subcommand<int16_t>(data_register::DSG_CURRENT_THRESHOLD) * get_user_amps_multiplier(configuration.get_DA_configuration());
 }
 
-void bq76942::Settings::setDsgCurrentThreshold(const uint32_t& threshold) const
+void bq76942::Settings::set_dsg_current_threshold(const uint32_t& threshold) const
 {
-    const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / _parent.getUserAmpsMultiplier(_parent.settings.configuration.getDAConfiguration())));
-    _parent.writeSubcommandClamped<int16_t>(data_register::DSG_CURRENT_THRESHOLD, roundedThreshold, 0, std::numeric_limits<int16_t>::max());
+    const int16_t rounded_threshold = static_cast<int16_t>(std::round(threshold / _parent.get_user_amps_multiplier(_parent.settings.configuration.get_DA_configuration())));
+    _parent.write_subcommand_clamped<int16_t>(data_register::DSG_CURRENT_THRESHOLD, rounded_threshold, 0, std::numeric_limits<int16_t>::max());
 }
 
-uint32_t bq76942::Settings::getChgCurrentThreshold() const
+uint32_t bq76942::Settings::get_chg_current_threshold() const
 {
-    return _parent.readSubcommand<int16_t>(data_register::CHG_CURRENT_THRESHOLD) * getUserAmpsMultiplier(configuration.getDAConfiguration());
+    return _parent.read_subcommand<int16_t>(data_register::CHG_CURRENT_THRESHOLD) * get_user_amps_multiplier(configuration.get_DA_configuration());
 }
 
-void bq76942::Settings::setChgCurrentThreshold(const uint32_t& threshold) const
+void bq76942::Settings::set_chg_current_threshold(const uint32_t& threshold) const
 {
-    const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / _parent.getUserAmpsMultiplier(_parent.settings.configuration.getDAConfiguration())));
-    _parent.writeSubcommandClamped<int16_t>(data_register::CHG_CURRENT_THRESHOLD, roundedThreshold, 0, std::numeric_limits<int16_t>::max());
+    const int16_t rounded_threshold = static_cast<int16_t>(std::round(threshold / _parent.get_user_amps_multiplier(_parent.settings.configuration.get_DA_configuration())));
+    _parent.write_subcommand_clamped<int16_t>(data_register::CHG_CURRENT_THRESHOLD, rounded_threshold, 0, std::numeric_limits<int16_t>::max());
 }
 
-int16_t bq76942::Settings::getCellInterconnectResistance(const uint8_t& cell)
-{
-    if (cell >= 16)
-    {
-        throw std::invalid_argument("Invalid cell number");
-    }
-    const int16_t registerAddr = static_cast<uint16_t>(bq76942::data_register::CELL_1_INTERCONNECT) + (2 * cell);
-    return _parent.readDirect<int16_t>(registerAddr);
-}
-
-void bq76942::Settings::setCellInterconnectResistance(const uint8_t& cell, const int16_t& resistance)
+int16_t bq76942::Settings::get_cell_interconnect_resistance(const uint8_t& cell)
 {
     if (cell >= 16)
     {
         throw std::invalid_argument("Invalid cell number");
     }
-    const int16_t registerAddr = static_cast<uint16_t>(bq76942::data_register::CELL_1_INTERCONNECT) + (2 * cell);
-    _parent.writeDirect(registerAddr, resistance);
+    const int16_t register_addr = static_cast<uint16_t>(bq76942::data_register::CELL_1_INTERCONNECT) + (2 * cell);
+    return _parent.read_direct<int16_t>(register_addr);
 }
 
-float bq76942::Protections::OverCurrentDischarge::getTier3Threshold() const
+void bq76942::Settings::set_cell_interconnect_resistance(const uint8_t& cell, const int16_t& resistance)
 {
-    return _parent.readSubcommand<int16_t>(data_register::OCD3_THRESHOLD) * getUserAmpsMultiplier(_parent.settings.configuration.getDAConfiguration());
+    if (cell >= 16)
+    {
+        throw std::invalid_argument("Invalid cell number");
+    }
+    const int16_t register_addr = static_cast<uint16_t>(bq76942::data_register::CELL_1_INTERCONNECT) + (2 * cell);
+    _parent.write_direct(register_addr, resistance);
 }
 
-void bq76942::Protections::OverCurrentDischarge::setTier3Threshold(const float& threshold) const
+float bq76942::Protections::OverCurrentDischarge::get_tier_3_threshold() const
 {
-    const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / _parent.getUserAmpsMultiplier(_parent.settings.configuration.getDAConfiguration())));
-    _parent.writeSubcommandClamped<int16_t>(data_register::OCD3_THRESHOLD, roundedThreshold, std::numeric_limits<int16_t>::min(), 0);
+    return _parent.read_subcommand<int16_t>(data_register::OCD3_THRESHOLD) * get_user_amps_multiplier(_parent.settings.configuration.get_DA_configuration());
 }
 
-float bq76942::Protections::getPrechargeResetCharge() const
+void bq76942::Protections::OverCurrentDischarge::set_tier_3_threshold(const float& threshold) const
 {
-    return _parent.readSubcommand<int16_t>(data_register::PTO_RESET) * getUserAmpsMultiplier(_parent.settings.configuration.getDAConfiguration());
+    const int16_t rounded_threshold = static_cast<int16_t>(std::round(threshold / _parent.get_user_amps_multiplier(_parent.settings.configuration.get_DA_configuration())));
+    _parent.write_subcommand_clamped<int16_t>(data_register::OCD3_THRESHOLD, rounded_threshold, std::numeric_limits<int16_t>::min(), 0);
 }
 
-void bq76942::Protections::setPrechargeResetCharge(const float& charge) const
+float bq76942::Protections::get_precharge_reset_charge() const
 {
-    const int16_t roundedCharge = static_cast<int16_t>(std::round(charge / _parent.getUserAmpsMultiplier(_parent.settings.configuration.getDAConfiguration())));
-    _parent.writeSubcommandClamped<int16_t>(data_register::PTO_RESET, roundedCharge, 0, 10000);
+    return _parent.read_subcommand<int16_t>(data_register::PTO_RESET) * get_user_amps_multiplier(_parent.settings.configuration.get_DA_configuration());
 }
 
-float bq76942::PermanentFail::getChargeCurrentThreshold() const
+void bq76942::Protections::set_precharge_reset_charge(const float& charge) const
 {
-    const da_configuration_t daConfig = _parent.settings.configuration.getDAConfiguration();
-    return _parent.readSubcommand<int16_t>(data_register::SOCC_THRESHOLD) * getUserAmpsMultiplier(daConfig);
+    const int16_t rounded_charge = static_cast<int16_t>(std::round(charge / _parent.get_user_amps_multiplier(_parent.settings.configuration.get_DA_configuration())));
+    _parent.write_subcommand_clamped<int16_t>(data_register::PTO_RESET, rounded_charge, 0, 10000);
 }
 
-void bq76942::PermanentFail::setChargeCurrentThreshold(const float& threshold) const
+float bq76942::PermanentFail::get_charge_current_threshold() const
 {
-    const da_configuration_t daConfig = _parent.settings.configuration.getDAConfiguration();
-    const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / getUserAmpsMultiplier(daConfig)));
-    _parent.writeSubcommand(data_register::SOCC_THRESHOLD, roundedThreshold);
+    const da_configuration_t da_config = _parent.settings.configuration.get_DA_configuration();
+    return _parent.read_subcommand<int16_t>(data_register::SOCC_THRESHOLD) * get_user_amps_multiplier(da_config);
 }
 
-float bq76942::PermanentFail::getDischargeCurrentThreshold() const
+void bq76942::PermanentFail::set_charge_current_threshold(const float& threshold) const
 {
-    const da_configuration_t daConfig = _parent.settings.configuration.getDAConfiguration();
-    return _parent.readSubcommand<int16_t>(data_register::SOCD_THRESHOLD) * getUserAmpsMultiplier(daConfig);
+    const da_configuration_t da_config = _parent.settings.configuration.get_DA_configuration();
+    const int16_t rounded_threshold = static_cast<int16_t>(std::round(threshold / get_user_amps_multiplier(da_config)));
+    _parent.write_subcommand(data_register::SOCC_THRESHOLD, rounded_threshold);
 }
 
-void bq76942::PermanentFail::setDischargeCurrentThreshold(const float& threshold) const
+float bq76942::PermanentFail::get_discharge_current_threshold() const
 {
-    const da_configuration_t daConfig = _parent.settings.configuration.getDAConfiguration();
-    const int16_t roundedThreshold = static_cast<int16_t>(std::round(threshold / getUserAmpsMultiplier(daConfig)));
-    _parent.writeSubcommand(data_register::SOCD_THRESHOLD, roundedThreshold);
+    const da_configuration_t da_config = _parent.settings.configuration.get_DA_configuration();
+    return _parent.read_subcommand<int16_t>(data_register::SOCD_THRESHOLD) * get_user_amps_multiplier(da_config);
 }
 
-int16_t bq76942::getUserVoltsMultiplier(const da_configuration_t& config)
+void bq76942::PermanentFail::set_discharge_current_threshold(const float& threshold) const
 {
-    if (config.userVoltsIsCentivolts)
+    const da_configuration_t da_config = _parent.settings.configuration.get_DA_configuration();
+    const int16_t rounded_threshold = static_cast<int16_t>(std::round(threshold / get_user_amps_multiplier(da_config)));
+    _parent.write_subcommand(data_register::SOCD_THRESHOLD, rounded_threshold);
+}
+
+int16_t bq76942::get_user_volts_multiplier(const da_configuration_t& config)
+{
+    if (config.user_volts_is_centivolts)
         return 10;
     return 1;
 }
 
-int16_t bq76942::getCellVoltage(const uint8_t cell)
+int16_t bq76942::get_cell_voltage(const uint8_t cell)
 {
     if (cell >= 16)
     {
         throw std::invalid_argument("Invalid cell number");
     }
     const int8_t address = static_cast<uint8_t>(direct_command::CELL_1_VOLTAGE) + (2 * cell);
-    return readDirect<int16_t>(address);
+    return read_direct<int16_t>(address);
 }
 
-std::vector<uint8_t> bq76942::_readDirect(const uint8_t registerAddr, const size_t bytes)
+std::vector<uint8_t> bq76942::_read_direct(const uint8_t register_addr, const size_t bytes)
 {
     if (bytes == 0)
     {
         throw std::invalid_argument("Cannot read 0 bytes");
     }
     Wire.beginTransmission(_address);
-    Wire.write(registerAddr);
+    Wire.write(register_addr);
     if (Wire.endTransmission(false))
     {
         throw std::runtime_error("Failed to select register");
     }
 
     // each data byte has a CRC
-    const size_t realByteCount = bytes * 2;
-    const size_t bytesRead = Wire.requestFrom(_address, realByteCount);
+    const size_t real_byte_count = bytes * 2;
+    const size_t bytes_read = Wire.requestFrom(_address, real_byte_count);
 
-    _dataBuf.clear();
+    _data_buf.clear();
     // preload data buffer with address and register
     // for first CRC calculation
-    _dataBuf.push_back(_address << 1);
-    _dataBuf.push_back(registerAddr);
+    _data_buf.push_back(_address << 1);
+    _data_buf.push_back(register_addr);
     // OR 1 because I2C read is LSB set
-    _dataBuf.push_back((_address << 1) | 0x01);
+    _data_buf.push_back((_address << 1) | 0x01);
 
-    // printf(std::format("Read {} bytes\n", bytesRead).c_str());
-    if (bytesRead != realByteCount)
+    // printf(std::format("Read {} bytes\n", bytes_read).c_str());
+    if (bytes_read != real_byte_count)
     {
-        throw std::runtime_error(std::format("Read failed: Expected {} bytes, got {}", realByteCount, bytesRead));
+        throw std::runtime_error(std::format("Read failed: Expected {} bytes, got {}", real_byte_count, bytes_read));
     }
 
-    std::vector<uint8_t> realDataBuf;
-    realDataBuf.reserve(bytes);
+    std::vector<uint8_t> real_data_buf;
+    real_data_buf.reserve(bytes);
     while (Wire.available())
     {
         uint8_t data = static_cast<uint8_t>(Wire.read());
         uint8_t crc = static_cast<uint8_t>(Wire.read());
-        _dataBuf.push_back(data);
-        realDataBuf.push_back(data);
-        if (crc != crc8(_dataBuf.data(), _dataBuf.size()))
+        _data_buf.push_back(data);
+        real_data_buf.push_back(data);
+        if (crc != crc8(_data_buf.data(), _data_buf.size()))
         {
-            throw std::runtime_error(std::format("CRC mismatch at data byte {:#04x}", realDataBuf.size()));
+            throw std::runtime_error(std::format("CRC mismatch at data byte {:#04x}", real_data_buf.size()));
         }
         // print data in hex
         // printf(std::format("{:#04x} ", data).c_str());
-        _dataBuf.clear();
+        _data_buf.clear();
     }
     // printf("\n");
-    return realDataBuf;
+    return real_data_buf;
 }
 
-void bq76942::_writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>& data)
+void bq76942::_write_direct(const uint8_t register_addr, const std::vector<uint8_t>& data)
 {
     Wire.beginTransmission(_address);
-    Wire.write(registerAddr);
+    Wire.write(register_addr);
 
-    // same CRC calculation as in readRegister
-    _dataBuf.clear();
-    _dataBuf.push_back(_address << 1);
-    _dataBuf.push_back(registerAddr);
+    // same CRC calculation as in read_register
+    _data_buf.clear();
+    _data_buf.push_back(_address << 1);
+    _data_buf.push_back(register_addr);
 
     for (const uint8_t byte : data)
     {
-        _dataBuf.push_back(byte);
-        uint8_t crc = crc8(_dataBuf.data(), _dataBuf.size());
+        _data_buf.push_back(byte);
+        uint8_t crc = crc8(_data_buf.data(), _data_buf.size());
         Wire.write(byte);
         Wire.write(crc);
-        _dataBuf.clear();
+        _data_buf.clear();
     }
     if (uint8_t err = Wire.endTransmission(); err)
     {
@@ -514,11 +514,11 @@ void bq76942::_writeDirect(const uint8_t registerAddr, const std::vector<uint8_t
     }
 }
 
-void bq76942::_selectSubcommand(const uint16_t registerAddr, bool waitForCompletion)
+void bq76942::_select_subcommand(const uint16_t register_addr, bool wait_for_completion)
 {
-    writeDirect(direct_command::SUBCOMMAND, registerAddr);
+    write_direct(direct_command::SUBCOMMAND, register_addr);
 
-    if (!waitForCompletion)
+    if (!wait_for_completion)
         return;
     // most subcommands take between 400-660us to complete,
     // so if we wait 1ms now we won't have to poll more than once
@@ -526,84 +526,84 @@ void bq76942::_selectSubcommand(const uint16_t registerAddr, bool waitForComplet
     std::this_thread::sleep_for(660us);
 
     steady_clock::time_point start = steady_clock::now();
-    bool commandSuccess = false;
+    bool command_success = false;
     while ((steady_clock::now() - start) < SUBCOMMAND_TIMEOUT)
     {
-        uint16_t commandReadback = readDirect<uint16_t>(direct_command::SUBCOMMAND);
-        if (commandReadback == registerAddr)
+        uint16_t command_readback = read_direct<uint16_t>(direct_command::SUBCOMMAND);
+        if (command_readback == register_addr)
         {
-            commandSuccess = true;
+            command_success = true;
             break;
         }
         std::this_thread::sleep_for(1ms);
     }
-    if (!commandSuccess)
+    if (!command_success)
     {
-        throw std::runtime_error(std::format("Subcommand {:#06x} timeout", registerAddr));
+        throw std::runtime_error(std::format("Subcommand {:#06x} timeout", register_addr));
     }
 }
 
-std::vector<uint8_t> bq76942::_readSubcommand(const uint16_t registerAddr)
+std::vector<uint8_t> bq76942::_read_subcommand(const uint16_t register_addr)
 {
-    _selectSubcommand(registerAddr);
+    _select_subcommand(register_addr);
 
     // read data length, the data, and the checksum (in that order - reading the checksum before data causes issues)
     // data len includes itself, the checksum, and the subcommand,
     // so subtract 4 for the transfer buffer data len
-    const auto dataLen = readDirect<uint8_t>(direct_command::TRANSFER_LEN) - 4;
-    const auto data = readDirect(direct_command::TRANSFER_BUF, dataLen);
-    const auto expectedChecksum = readDirect<uint8_t>(direct_command::TRANSFER_CHECKSUM);
-    if (data.size() != dataLen)
+    const auto data_len = read_direct<uint8_t>(direct_command::TRANSFER_LEN) - 4;
+    const auto data = read_direct(direct_command::TRANSFER_BUF, data_len);
+    const auto expected_checksum = read_direct<uint8_t>(direct_command::TRANSFER_CHECKSUM);
+    if (data.size() != data_len)
     {
         throw std::runtime_error(std::format("Data size mismatch - got {} bytes, expected {}",
-                                             data.size(), dataLen));
+                                             data.size(), data_len));
     }
 
     // calculate checksum
-    const uint8_t realChecksum = _calculateChecksum(registerAddr, data);
-    if (realChecksum != expectedChecksum)
+    const uint8_t real_checksum = _calculate_checksum(register_addr, data);
+    if (real_checksum != expected_checksum)
     {
         throw std::runtime_error(std::format("Checksum mismatch - got {:#04x}, expected {:#04x}",
-                                             realChecksum, expectedChecksum));
+                                             real_checksum, expected_checksum));
     }
     return data;
 }
 
-void bq76942::_writeSubcommand(const uint16_t registerAddr, const std::vector<uint8_t>& data)
+void bq76942::_write_subcommand(const uint16_t register_addr, const std::vector<uint8_t>& data)
 {
     if (data.size() > 32)
     {
         throw std::runtime_error("Data size too large");
     }
-    _selectSubcommand(registerAddr, false);
+    _select_subcommand(register_addr, false);
     // command only subcommand
     if (data.size() == 0)
         return;
 
     // write data
-    writeDirect(direct_command::TRANSFER_BUF, data);
-    const uint8_t checksum = _calculateChecksum(registerAddr, data);
+    write_direct(direct_command::TRANSFER_BUF, data);
+    const uint8_t checksum = _calculate_checksum(register_addr, data);
     // plus 4 for the subcommand address (2 bytes), data length, and checksum
-    const uint8_t dataLen = static_cast<uint8_t>(data.size() + 4);
-    std::vector<uint8_t> dataLenChecksum = {checksum, dataLen};
-    writeDirect(direct_command::TRANSFER_CHECKSUM, dataLenChecksum);
+    const uint8_t data_len = static_cast<uint8_t>(data.size() + 4);
+    std::vector<uint8_t> data_len_checksum = {checksum, data_len};
+    write_direct(direct_command::TRANSFER_CHECKSUM, data_len_checksum);
 }
 
-uint8_t bq76942::_calculateChecksum(uint16_t registerAddr, const std::vector<uint8_t>& data)
+uint8_t bq76942::_calculate_checksum(uint16_t register_addr, const std::vector<uint8_t>& data)
 {
     uint8_t checksum = 0;
     // checksum includes the subcommand as well as the data
-    checksum += static_cast<uint8_t>(registerAddr & 0xFF);
-    checksum += static_cast<uint8_t>((registerAddr >> 8) & 0xFF);
+    checksum += static_cast<uint8_t>(register_addr & 0xFF);
+    checksum += static_cast<uint8_t>((register_addr >> 8) & 0xFF);
     for (const uint8_t byte : data)
         checksum += byte;
     return ~checksum;
 }
 
-void bq76942::Calibration::Current::setSenseResistorValue(const float& value) const
+void bq76942::Calibration::Current::set_sense_resistor_value(const float& value) const
 {
-    const float ccGain = 7.4768 / value;
-    const float capacityGain = ccGain * 298261.6178;
-    setCCGain(ccGain);
-    setCapacityGain(capacityGain);
+    const float cc_gain = 7.4768 / value;
+    const float capacity_gain = cc_gain * 298261.6178;
+    set_CC_gain(cc_gain);
+    set_capacity_gain(capacity_gain);
 }

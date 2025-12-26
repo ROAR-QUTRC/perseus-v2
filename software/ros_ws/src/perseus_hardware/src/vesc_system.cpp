@@ -19,7 +19,7 @@ using namespace hardware_interface;
 VescSystemHardware::~VescSystemHardware()
 {
     // Workaround for ros2_control#472 because they STILL haven't fixed it after over 3 years!
-    if (_packetManager)
+    if (_packet_manager)
         on_deactivate(rclcpp_lifecycle::State());
     on_cleanup(rclcpp_lifecycle::State());
 }
@@ -46,8 +46,8 @@ CallbackReturn VescSystemHardware::on_init(const HardwareInfo& info)
         CHECK_PARAMETER_EXISTS(get_logger(), joint, "id");
         try
         {
-            unsigned long vescId = std::stoul(joint.parameters.at("id"));
-            _vescIds.emplace_back(vescId);
+            unsigned long vesc_id = std::stoul(joint.parameters.at("id"));
+            _vesc_ids.emplace_back(vesc_id);
         }
         catch (const std::exception& e)
         {
@@ -55,49 +55,49 @@ CallbackReturn VescSystemHardware::on_init(const HardwareInfo& info)
             return CallbackReturn::ERROR;
         }
 
-        _commandSpeeds.emplace_back(0);
-        _realPositions.emplace_back(0);
-        _realSpeeds.emplace_back(0);
-        _realCurrents.emplace_back(0);
+        _command_speeds.emplace_back(0);
+        _real_positions.emplace_back(0);
+        _real_speeds.emplace_back(0);
+        _real_currents.emplace_back(0);
         // note: this is in degrees C
-        _realTemperatures.emplace_back(25);
+        _real_temperatures.emplace_back(25);
     }
 
-    _lastTransmitError = get_clock()->now();
+    _last_transmit_error = get_clock()->now();
 
     return CallbackReturn::SUCCESS;
 }
 
 std::vector<StateInterface> VescSystemHardware::export_state_interfaces()
 {
-    std::vector<StateInterface> stateInterfaces;
+    std::vector<StateInterface> state_interfaces;
     const auto& info = get_hardware_info();
     for (size_t i = 0; i < info.joints.size(); i++)
     {
-        stateInterfaces.emplace_back(StateInterface(
-            info.joints[i].name, HW_IF_POSITION, &_realPositions[i]));
-        stateInterfaces.emplace_back(StateInterface(
-            info.joints[i].name, HW_IF_VELOCITY, &_realSpeeds[i]));
-        stateInterfaces.emplace_back(StateInterface(
-            info.joints[i].name, HW_IF_CURRENT, &_realCurrents[i]));
-        stateInterfaces.emplace_back(StateInterface(
-            info.joints[i].name, HW_IF_TEMPERATURE, &_realTemperatures[i]));
+        state_interfaces.emplace_back(StateInterface(
+            info.joints[i].name, HW_IF_POSITION, &_real_positions[i]));
+        state_interfaces.emplace_back(StateInterface(
+            info.joints[i].name, HW_IF_VELOCITY, &_real_speeds[i]));
+        state_interfaces.emplace_back(StateInterface(
+            info.joints[i].name, HW_IF_CURRENT, &_real_currents[i]));
+        state_interfaces.emplace_back(StateInterface(
+            info.joints[i].name, HW_IF_TEMPERATURE, &_real_temperatures[i]));
     }
 
-    return stateInterfaces;
+    return state_interfaces;
 }
 
 std::vector<CommandInterface> VescSystemHardware::export_command_interfaces()
 {
-    std::vector<CommandInterface> commandInterfaces;
+    std::vector<CommandInterface> command_interfaces;
     const auto& info = get_hardware_info();
     for (size_t i = 0; i < info.joints.size(); i++)
     {
-        commandInterfaces.emplace_back(CommandInterface(
-            info.joints[i].name, HW_IF_VELOCITY, &_commandSpeeds[i]));
+        command_interfaces.emplace_back(CommandInterface(
+            info.joints[i].name, HW_IF_VELOCITY, &_command_speeds[i]));
     }
 
-    return commandInterfaces;
+    return command_interfaces;
 }
 
 CallbackReturn VescSystemHardware::on_configure(
@@ -107,14 +107,14 @@ CallbackReturn VescSystemHardware::on_configure(
 
     try
     {
-        _canInterface.emplace(info.hardware_parameters.at("can_bus"));
-        _packetManager.emplace(*_canInterface);
+        _can_interface.emplace(info.hardware_parameters.at("can_bus"));
+        _packet_manager.emplace(*_can_interface);
     }
     catch (const std::exception& e)
     {
         RCLCPP_FATAL(get_logger(), "Failed to initialise CAN bus '%s': %s",
                      info.hardware_parameters.at("can_bus").c_str(), e.what());
-        _packetManager.reset();
+        _packet_manager.reset();
         return CallbackReturn::ERROR;
     }
 
@@ -122,7 +122,7 @@ CallbackReturn VescSystemHardware::on_configure(
     {
         // We have to reserve the memory to prevent reallocations,
         // otherwise the references to the parameter groups will be invalidated
-        _parameterGroups.reserve(_vescIds.size());
+        _parameter_groups.reserve(_vesc_ids.size());
     }
     catch (std::exception& e)
     {
@@ -130,15 +130,15 @@ CallbackReturn VescSystemHardware::on_configure(
         return CallbackReturn::ERROR;
     }
 
-    for (const auto id : _vescIds)
+    for (const auto id : _vesc_ids)
     {
         try
         {
             using namespace hi_can;
             using namespace addressing::drive::vesc;
 
-            _parameterGroups.emplace_back(id);
-            _packetManager->addGroup(_parameterGroups.back());
+            _parameter_groups.emplace_back(id);
+            _packet_manager->add_group(_parameter_groups.back());
         }
         catch (const std::exception& e)
         {
@@ -154,19 +154,19 @@ CallbackReturn VescSystemHardware::on_configure(
 CallbackReturn VescSystemHardware::on_cleanup(
     const rclcpp_lifecycle::State&)
 {
-    _packetManager.reset();
-    _canInterface.reset();
-    _parameterGroups.clear();
+    _packet_manager.reset();
+    _can_interface.reset();
+    _parameter_groups.clear();
 
-    for (auto& speed : _commandSpeeds)
+    for (auto& speed : _command_speeds)
         speed = 0;
-    for (auto& speed : _realSpeeds)
+    for (auto& speed : _real_speeds)
         speed = 0;
-    for (auto& position : _realPositions)
+    for (auto& position : _real_positions)
         position = 0;
-    for (auto& current : _realCurrents)
+    for (auto& current : _real_currents)
         current = 0;
-    for (auto& temperature : _realTemperatures)
+    for (auto& temperature : _real_temperatures)
         temperature = 25;
 
     RCLCPP_INFO(get_logger(), "Successfully cleaned up!");
@@ -184,12 +184,12 @@ CallbackReturn VescSystemHardware::on_activate(
 CallbackReturn VescSystemHardware::on_deactivate(
     const rclcpp_lifecycle::State&)
 {
-    for (auto& group : _parameterGroups)
-        group.getSetRpm().value = 0;
+    for (auto& group : _parameter_groups)
+        group.get_set_rpm().value = 0;
 
     try
     {
-        _packetManager->handleTransmit(true);
+        _packet_manager->handle_transmit(true);
     }
     catch (const std::exception& e)
     {
@@ -206,40 +206,40 @@ return_type VescSystemHardware::read(
 {
     try
     {
-        _packetManager->handleReceive();
+        _packet_manager->handle_receive();
     }
     catch (const std::exception& e)
     {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Receive failed: %s", e.what());
     }
 
-    for (size_t i = 0; i < _commandSpeeds.size(); i++)
+    for (size_t i = 0; i < _command_speeds.size(); i++)
     {
-        auto& paramGroup = _parameterGroups[i];
-        const auto status = paramGroup.getStatus1();
-        const auto motorRPM = status.rpm / ERPM_DIVISOR;
+        auto& param_group = _parameter_groups[i];
+        const auto status = param_group.get_status1();
+        const auto motor_RPM = status.rpm / ERPM_DIVISOR;
 
         // note (and same for write() but in reverse):
         // We need to convert from motor RPM to wheel radians per second,
         // accounting for the ~1:40 gearbox in between.
         // This should probably be handled with a transmission,
         // but they're a pain in ros2_control right now.
-        double wheelRPM = motorRPM / GEARBOX_RATIO;
-        double revsPerSecond = wheelRPM / 60.0;
-        double radiansPerSecond = revsPerSecond * (2 * std::numbers::pi);
+        double wheel_RPM = motor_RPM / GEARBOX_RATIO;
+        double revs_per_second = wheel_RPM / 60.0;
+        double radians_per_second = revs_per_second * (2 * std::numbers::pi);
 
-        _realSpeeds[i] = radiansPerSecond;
-        _realCurrents[i] = status.current;
+        _real_speeds[i] = radians_per_second;
+        _real_currents[i] = status.current;
 
-        const auto status4 = paramGroup.getStatus4();
+        const auto status4 = param_group.get_status4();
         // TODO: Test to see which would be more appropriate to use
         // (probably motor temp)
-        _realTemperatures[i] = std::max(status4.tempFet, status4.tempMotor);
+        _real_temperatures[i] = std::max(status4.temp_fet, status4.temp_motor);
 
-        const auto status5 = paramGroup.getStatus5();
-        double wheelTachometer = status5.tachometer / GEARBOX_RATIO;
-        double wheelRevolutions = wheelTachometer / ERPM_DIVISOR;
-        _realPositions[i] = wheelRevolutions * (2 * std::numbers::pi);
+        const auto status5 = param_group.get_status5();
+        double wheel_tachometer = status5.tachometer / GEARBOX_RATIO;
+        double wheel_revolutions = wheel_tachometer / ERPM_DIVISOR;
+        _real_positions[i] = wheel_revolutions * (2 * std::numbers::pi);
     }
 
     return return_type::OK;
@@ -248,27 +248,27 @@ return_type VescSystemHardware::read(
 return_type VescSystemHardware::write(
     const rclcpp::Time&, const rclcpp::Duration&)
 {
-    for (size_t i = 0; i < _commandSpeeds.size(); i++)
+    for (size_t i = 0; i < _command_speeds.size(); i++)
     {
         // see comment in read() on the math
-        const auto& radiansPerSecond = _commandSpeeds[i];
-        double revsPerSecond = radiansPerSecond / (2 * std::numbers::pi);
-        double wheelRPM = revsPerSecond * 60.0;
-        double motorRPM = wheelRPM * GEARBOX_RATIO;
+        const auto& radians_per_second = _command_speeds[i];
+        double revs_per_second = radians_per_second / (2 * std::numbers::pi);
+        double wheel_RPM = revs_per_second * 60.0;
+        double motor_RPM = wheel_RPM * GEARBOX_RATIO;
 
-        motorRPM = std::clamp(motorRPM * ERPM_DIVISOR, static_cast<double>(INT32_MIN), static_cast<double>(INT32_MAX));
-        _parameterGroups[i].getSetRpm().value = static_cast<int32_t>(std::round(motorRPM));
+        motor_RPM = std::clamp(motor_RPM * ERPM_DIVISOR, static_cast<double>(INT32_MIN), static_cast<double>(INT32_MAX));
+        _parameter_groups[i].get_set_rpm().value = static_cast<int32_t>(std::round(motor_RPM));
     }
 
     try
     {
-        if (get_clock()->now() - _lastTransmitError > std::chrono::milliseconds(1000))
-            _packetManager->handleTransmit();
+        if (get_clock()->now() - _last_transmit_error > std::chrono::milliseconds(1000))
+            _packet_manager->handle_transmit();
     }
     catch (std::exception& e)
     {
         RCLCPP_WARN(get_logger(), "Transmit failed: %s", e.what());
-        _lastTransmitError = get_clock()->now();
+        _last_transmit_error = get_clock()->now();
     }
 
     return return_type::OK;
