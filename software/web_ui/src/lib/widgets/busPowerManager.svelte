@@ -99,14 +99,12 @@
 
 			<AlertDialog.Root bind:open={busState[bus].openAlert}>
 				<AlertDialog.Trigger>
-					<button class="aspect-square cursor-pointer rounded-[50%] border">
-						<Fa
-							icon={faPowerOff}
-							class="power-button h-[50px] w-[50px]"
-							color={busState[bus].status !== 1 ? 'red' : 'green'}
-							scale={3}
-						/>
-					</button>
+					<Fa
+						icon={faPowerOff}
+						class="cursor-pointer mx-auto my-4"
+						color={busState[bus].status !== 1 ? 'red' : 'green'}
+						scale={3}
+					/>
 				</AlertDialog.Trigger>
 				<AlertDialog.Content>
 					<AlertDialog.Header>
@@ -128,7 +126,7 @@
 		<p>Waiting for power bus data</p>
 	{/each}
 </div>
-<p class="ml-2 opacity-35">FAULT on the drive bus likely indicates the drive stop is engaged.</p>
+<p class="ml-2 opacity-35">Note: FAULT on the drive bus likely indicates the drive stop is engaged.</p>
 
 <style>
 	:global(.power-button) {
