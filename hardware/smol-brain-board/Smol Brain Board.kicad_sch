@@ -2705,7 +2705,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Jumper:SolderJumper_2_Open"
+		(symbol "Jumper:SolderJumper_2_Bridged"
 			(pin_numbers
 				(hide yes)
 			)
@@ -2724,7 +2724,7 @@
 					)
 				)
 			)
-			(property "Value" "SolderJumper_2_Open"
+			(property "Value" "SolderJumper_2_Bridged"
 				(at 0 -2.54 0)
 				(effects
 					(font
@@ -2750,7 +2750,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "Solder Jumper, 2-pole, open"
+			(property "Description" "Solder Jumper, 2-pole, closed/bridged"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2768,7 +2768,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "SolderJumper*Open*"
+			(property "ki_fp_filters" "SolderJumper*Bridged*"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2777,7 +2777,18 @@
 					(hide yes)
 				)
 			)
-			(symbol "SolderJumper_2_Open_0_1"
+			(symbol "SolderJumper_2_Bridged_0_1"
+				(rectangle
+					(start -0.508 0.508)
+					(end 0.508 -0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
 				(polyline
 					(pts
 						(xy -0.254 1.016) (xy -0.254 -1.016)
@@ -2851,7 +2862,7 @@
 					)
 				)
 			)
-			(symbol "SolderJumper_2_Open_1_1"
+			(symbol "SolderJumper_2_Bridged_1_1"
 				(pin passive line
 					(at -3.81 0 0)
 					(length 2.54)
@@ -8926,6 +8937,7 @@
 	)
 	(label "USB_D_N"
 		(at 359.41 48.26 180)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8933,6 +8945,17 @@
 			(justify right bottom)
 		)
 		(uuid "064b6c4f-16cd-4976-b086-f56b99895cfc")
+		(property "Netclass" "USB_DIFF"
+			(at 359.41 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
 	)
 	(label "CAN_TX"
 		(at 90.17 36.83 180)
@@ -9063,6 +9086,17 @@
 			(justify right bottom)
 		)
 		(uuid "22a64946-6282-48da-9815-a7f83de3a456")
+		(property "Netclass" "USB_DIFF"
+			(at 337.058 42.672 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
 	)
 	(label "IO40"
 		(at 90.17 52.07 180)
@@ -9186,6 +9220,7 @@
 	)
 	(label "USB_D_N"
 		(at 168.91 74.93 0)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9193,6 +9228,16 @@
 			(justify left bottom)
 		)
 		(uuid "38fffb50-6b57-4c54-b1c9-c80758f7a389")
+		(property "Netclass" "USB_DIFF"
+			(at 168.91 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+			)
+		)
 	)
 	(label "A4"
 		(at 29.21 59.69 0)
@@ -9286,6 +9331,7 @@
 	)
 	(label "USB_D_P"
 		(at 359.41 45.72 180)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9293,6 +9339,17 @@
 			(justify right bottom)
 		)
 		(uuid "5a9353ed-0228-44b4-86a9-ff18bb8d9e1d")
+		(property "Netclass" "USB_DIFF"
+			(at 359.41 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
 	)
 	(label "RST"
 		(at 26.67 243.84 0)
@@ -9376,6 +9433,7 @@
 	)
 	(label "uC_USB_D_N"
 		(at 336.55 48.26 180)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9383,6 +9441,17 @@
 			(justify right bottom)
 		)
 		(uuid "6eb90f40-9abc-439f-88f8-7d9d3019f101")
+		(property "Netclass" "USB_DIFF"
+			(at 336.55 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
 	)
 	(label "CAN_H"
 		(at 29.21 46.99 0)
@@ -9716,6 +9785,7 @@
 	)
 	(label "USB_D_P"
 		(at 168.91 80.01 0)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9723,6 +9793,16 @@
 			(justify left bottom)
 		)
 		(uuid "e12538e8-22f8-420f-9bdc-52c8d7c0900b")
+		(property "Netclass" "USB_DIFF"
+			(at 168.91 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+			)
+		)
 	)
 	(label "IO15"
 		(at 90.17 41.91 180)
@@ -12941,96 +13021,6 @@
 			(project ""
 				(path "/d947cca5-df2f-4130-8179-c021102beaa2"
 					(reference "J3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Jumper:SolderJumper_2_Open")
-		(at 341.63 45.72 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(dnp no)
-		(uuid "2623ba6d-f4d1-4eeb-89a0-52e7e1f49a9a")
-		(property "Reference" "J9"
-			(at 345.186 43.688 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-			)
-		)
-		(property "Value" "Jumper 2Way Vert Solderable"
-			(at 349.758 46.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm"
-			(at 341.63 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 341.63 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Solder Jumper, 2-pole, open"
-			(at 341.63 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "SOURCE" "QUTMS_JumperLibrary.SchLib"
-			(at 349.758 46.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-				(hide yes)
-			)
-		)
-		(property "DESIGN ITEM ID" "Jumper 2Way Vert Solderable"
-			(at 349.758 46.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "23136e3a-e8df-4860-806a-f9eb9bc2ca2c")
-		)
-		(pin "2"
-			(uuid "43acb4f7-4be3-4828-8527-9cdbd477ba41")
-		)
-		(instances
-			(project ""
-				(path "/d947cca5-df2f-4130-8179-c021102beaa2"
-					(reference "J9")
 					(unit 1)
 				)
 			)
@@ -16588,34 +16578,32 @@
 		)
 	)
 	(symbol
-		(lib_id "Jumper:SolderJumper_2_Open")
-		(at 341.63 48.26 180)
+		(lib_id "Jumper:SolderJumper_2_Bridged")
+		(at 341.63 48.26 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board yes)
 		(dnp no)
-		(uuid "5987ee38-49c5-462c-a7d0-c3cc7d83cbab")
-		(property "Reference" "J8"
-			(at 344.932 49.784 0)
+		(uuid "6141143d-a591-4402-9d54-9bb267812ebd")
+		(property "Reference" "JP2"
+			(at 344.424 47.244 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left bottom)
 			)
 		)
-		(property "Value" "Jumper 2Way Vert Solderable"
-			(at 349.758 49.53 0)
+		(property "Value" "SolderJumper_2_Bridged"
+			(at 341.63 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left bottom)
 				(hide yes)
 			)
 		)
-		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm"
+		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm"
 			(at 341.63 48.26 0)
 			(effects
 				(font
@@ -16633,7 +16621,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Solder Jumper, 2-pole, open"
+		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
 			(at 341.63 48.26 0)
 			(effects
 				(font
@@ -16642,36 +16630,16 @@
 				(hide yes)
 			)
 		)
-		(property "SOURCE" "QUTMS_JumperLibrary.SchLib"
-			(at 349.758 49.53 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-				(hide yes)
-			)
-		)
-		(property "DESIGN ITEM ID" "Jumper 2Way Vert Solderable"
-			(at 349.758 49.53 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-				(hide yes)
-			)
+		(pin "2"
+			(uuid "fd3053b4-9f03-4cbb-8c25-2be4c7fcb9f2")
 		)
 		(pin "1"
-			(uuid "b034dd0b-d2d0-4a5f-a644-276e71237695")
-		)
-		(pin "2"
-			(uuid "ba64cfc3-2b2a-421d-a9a3-38fd48e82dcf")
+			(uuid "be78a652-be31-4c20-97a1-916ba7aed220")
 		)
 		(instances
-			(project ""
+			(project "Smol Brain Board"
 				(path "/d947cca5-df2f-4130-8179-c021102beaa2"
-					(reference "J8")
+					(reference "JP2")
 					(unit 1)
 				)
 			)
@@ -21506,6 +21474,74 @@
 			(project ""
 				(path "/d947cca5-df2f-4130-8179-c021102beaa2"
 					(reference "C6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Jumper:SolderJumper_2_Bridged")
+		(at 341.63 45.72 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(uuid "9937dccf-0479-4129-8838-717985a9645e")
+		(property "Reference" "JP1"
+			(at 344.424 43.942 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "SolderJumper_2_Bridged"
+			(at 341.63 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm"
+			(at 341.63 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 341.63 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
+			(at 341.63 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "c7e7a224-b685-4182-8e1d-9a1334377b91")
+		)
+		(pin "1"
+			(uuid "3ce6f322-cae1-4f91-aa5e-e4b1c749ac6e")
+		)
+		(instances
+			(project ""
+				(path "/d947cca5-df2f-4130-8179-c021102beaa2"
+					(reference "JP1")
 					(unit 1)
 				)
 			)
