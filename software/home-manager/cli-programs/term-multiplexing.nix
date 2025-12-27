@@ -28,16 +28,13 @@
           "tmux"
         ];
       };
-      initExtra = lib.mkIf config.programs.zellij.enable ''
-        eval "$(zellij setup --generate-auto-start=zsh)"
-      '';
     };
 
     programs.zellij = {
       enable = true;
       package = pkgs.unstable.zellij;
       enableBashIntegration = false;
-      enableZshIntegration = config.programs.zsh.enable;
+      enableZshIntegration = false;
       settings = { };
     };
   };
