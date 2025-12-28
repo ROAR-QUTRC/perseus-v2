@@ -221,109 +221,270 @@ namespace hi_can::parameters::drive::vesc
     }
 }
 
+// namespace hi_can::parameters::post_landing::control::servo::rmd
+// {
+//     namespace send
+//     {
+//
+// #pragma pack(push, 1)
+//         struct torque_raw_t
+//         {
+//             command_t _command = command_t::TORQUE_CLOSED_LOOP;
+//             uint8_t _reserved1[3] = {};
+//             int16_t torque;
+//             uint16_t _reserved2 = 0;
+//         };
+//         struct speed_raw_t
+//         {
+//             command_t _command = command_t::SPEED_CLOSED_LOOP;
+//             uint8_t _reserved[3] = {};
+//             int32_t speed = 0;
+//         };
+//         struct position_raw_t
+//         {
+//             position_t::position_command_t position_command;
+//             uint8_t _reserved = 0;
+//             uint16_t speed_limit;
+//             int32_t position_control;
+//         };
+//         struct single_turn_position_raw_t
+//         {
+//             command_t _command = command_t::SINGLE_TURN_POSITION;
+//             single_turn_position_t::rotation_direction_t rotation_direction;
+//             uint16_t speed_limit;
+//             uint16_t position_control;
+//             uint16_t _reserved = 0;
+//         };
+//         struct action_command_raw_t
+//         {
+//             action_command_t::command_id_t command;
+//             uint8_t _reserved[7] = {};
+//         };
+//         struct function_control_raw_t
+//         {
+//             command_t _command = command_t::FUNCTION_CONTROL;
+//             function_control_t::function_index_t function_index;
+//             uint16_t _reserved = 0;
+//             uint32_t input_value;
+//         };
+//         struct active_reply_raw_t
+//         {
+//             command_t _command = command_t::ACTIVE_REPLY_FUNCTION;
+//             active_reply_t::reply_t reply_command;
+//             uint8_t enable;
+//             uint16_t reply_interval;
+//             uint8_t _reserved[3] = {};
+//         };
+// #pragma pack(pop)
+//
+//         std::vector<uint8_t> torque_t::serialize_data()
+//         {
+//             SimpleSerializable<torque_raw_t> raw_data;
+//             raw_data.torque = torque * 100 / 0.12;  // 0.01 A/LSB, 0.12 Nm/A
+//             return raw_data.serialize_data();
+//         }
+//         std::vector<uint8_t> speed_t::serialize_data()
+//         {
+//             SimpleSerializable<speed_raw_t> raw_data;
+//             raw_data.speed = speed * 100;  // 0.01 dps/LSB
+//             return raw_data.serialize_data();
+//         }
+//         std::vector<uint8_t> position_t::serialize_data()
+//         {
+//             SimpleSerializable<position_raw_t> raw_data;
+//             raw_data.position_command = position_command;
+//             raw_data.speed_limit = speed_limit;
+//             raw_data.position_control = position_control * 100;  // 0.01 degrees/LSB
+//             return raw_data.serialize_data();
+//         }
+//         std::vector<uint8_t> single_turn_position_t::serialize_data()
+//         {
+//             SimpleSerializable<single_turn_position_raw_t> raw_data;
+//             raw_data.rotation_direction = rotation_direction;
+//             raw_data.speed_limit = speed_limit;                  // 1 dps/LSB
+//             raw_data.position_control = position_control * 100;  // 0.01 degrees/LSB
+//             return raw_data.serialize_data();
+//         }
+//         std::vector<uint8_t> action_command_t::serialize_data()
+//         {
+//             SimpleSerializable<action_command_raw_t> raw_data;
+//             raw_data.command = command;  // Empty message other than the command
+//             return raw_data.serialize_data();
+//         }
+//         std::vector<uint8_t> function_control_t::serialize_data()
+//         {
+//             SimpleSerializable<function_control_raw_t> raw_data;
+//             raw_data.function_index = function_index;
+//             raw_data.input_value = input_value;
+//             return raw_data.serialize_data();
+//         }
+//         std::vector<uint8_t> active_reply_t::serialize_data()
+//         {
+//             SimpleSerializable<active_reply_raw_t> raw_data;
+//             raw_data.reply_command = reply_command;
+//             raw_data.enable = uint8_t(enable);
+//             raw_data.reply_interval = reply_interval_ms / 10;  // 10ms/LSB
+//             return raw_data.serialize_data();
+//         }
+//     }
+//
+//     namespace receive
+//     {
+//
+//     }
+//
+//     RmdParameterGroup::RmdParameterGroup(uint8_t motor_id)
+//         : _motor_id(motor_id)
+//     {
+//         using namespace addressing::post_landing::servo::rmd;
+//         _callbacks.emplace_back(
+//             filter_t{
+//                 .address = servo_address_t{message_type::RECEIVE, static_cast<motor_id_t>(motor_id)}},
+//             PacketManager::callback_config_t{
+//                 .data_callback = [this](const Packet& packet)
+//                 {
+//                     std::vector<uint8_t> raw_data = packet.get_data();
+//                     command_t command = command_t(raw_data.front());
+//
+//                     switch (command)
+//                     {
+//                     case command_t::STATUS_1:
+//                         _status1.deserialize_data(raw_data);
+//                         break;
+//                     }
+//                 },
+//             });
+//         // _callbacks.emplace_back(
+//         //     filter_t{
+//         //         .address = static_cast<flagged_address_t>(servo_address_t(rmd_id::SEND, static_cast<motor_id_t>(motor_id))),
+//         //     },
+//         //     PacketManager::callback_config_t{
+//         //         .data_callback = [this](const Packet& packet)
+//         //         {
+//         //             _status.deserialize_data(packet.get_data());
+//         //         },
+//         //     });
+//     }
+// }
+
 namespace hi_can::parameters::post_landing::servo::rmd
 {
     namespace send_message
     {
 
 #pragma pack(push, 1)
-        struct raw_torque_message_t
+        struct torque_raw_t
         {
-            rmd_command _command = rmd_command::SET_TORQUE_CLOSED_LOOP;
+            command_t _command = command_t::SET_TORQUE_CLOSED_LOOP;
             uint8_t _reserved1[3] = {};
             int16_t torque;
             uint16_t _reserved2 = 0;
         };
-        struct raw_speed_message_t
+        struct speed_raw_t
         {
-            rmd_command _command = rmd_command::SET_SPEED_CLOSED_LOOP;
+            command_t _command = command_t::SET_SPEED_CLOSED_LOOP;
             uint8_t _reserved[3] = {};
             int32_t speed = 0;
         };
-        struct raw_position_message_t
+        struct position_raw_t
         {
-            position_message_t::position_command_t position_command;
+            position_t::position_command_t position_command;
             uint8_t _reserved = 0;
             uint16_t speed_limit;
             int32_t position_control;
         };
-        struct raw_single_turn_position_message_t
+        struct single_turn_position_raw_t
         {
-            rmd_command _command = rmd_command::SET_SINGLE_TURN_POSITION;
-            single_turn_position_message_t::rotation_direction_t rotation_direction;
+            command_t _command = command_t::SET_SINGLE_TURN_POSITION;
+            single_turn_position_t::rotation_direction_t rotation_direction;
             uint16_t speed_limit;
             uint16_t position_control;
             uint16_t _reserved = 0;
         };
-        struct raw_command_message_t
+        struct action_command_raw_t
         {
-            command_message_t::command_t command;
+            action_command_t::command_id_t command;
             uint8_t _reserved[7] = {};
         };
-        struct raw_function_control_message_t
+        struct function_control_raw_t
         {
-            rmd_command _command = rmd_command::FUNCTION_CONTROL;
-            function_control_message_t::function_index_t function_index;
+            command_t _command = command_t::FUNCTION_CONTROL;
+            function_control_t::function_index_t function_index;
             uint16_t _reserved = 0;
             uint32_t input_value;
         };
-        struct raw_active_reply_message_t
+        struct active_reply_raw_t
         {
-            rmd_command _command = rmd_command::ACTIVE_REPLY_FUNCTION;
-            active_reply_message_t::reply_t reply_command;
+            command_t _command = command_t::ACTIVE_REPLY_FUNCTION;
+            active_reply_t::reply_t reply_command;
             uint8_t enable;
             uint16_t reply_interval;
             uint8_t _reserved[3] = {};
         };
+        struct can_id_raw_t
+        {
+            command_t _command = command_t::SET_CAN_ID;
+            uint8_t _reserved = 0;
+            uint8_t read = 0;
+            uint8_t _reserved2[3] = {};
+            uint16_t can_id = 0;
+        };
 #pragma pack(pop)
 
-        std::vector<uint8_t> torque_message_t::serialize_data()
+        std::vector<uint8_t> torque_t::serialize_data()
         {
-            SimpleSerializable<raw_torque_message_t> raw_data;
+            SimpleSerializable<torque_raw_t> raw_data;
             raw_data.torque = torque * 100 / 0.12;  // 0.01 A/LSB, 0.12 Nm/A
             return raw_data.serialize_data();
         }
-        std::vector<uint8_t> speed_message_t::serialize_data()
+        std::vector<uint8_t> speed_t::serialize_data()
         {
-            SimpleSerializable<raw_speed_message_t> raw_data;
+            SimpleSerializable<speed_raw_t> raw_data;
             raw_data.speed = speed * 100;  // 0.01 dps/LSB
             return raw_data.serialize_data();
         }
-        std::vector<uint8_t> position_message_t::serialize_data()
+        std::vector<uint8_t> position_t::serialize_data()
         {
-            SimpleSerializable<raw_position_message_t> raw_data;
+            SimpleSerializable<position_raw_t> raw_data;
             raw_data.position_command = position_command;
             raw_data.speed_limit = speed_limit;
             raw_data.position_control = position_control * 100;  // 0.01 degrees/LSB
             return raw_data.serialize_data();
         }
-        std::vector<uint8_t> single_turn_position_message_t::serialize_data()
+        std::vector<uint8_t> single_turn_position_t::serialize_data()
         {
-            SimpleSerializable<raw_single_turn_position_message_t> raw_data;
+            SimpleSerializable<single_turn_position_raw_t> raw_data;
             raw_data.rotation_direction = rotation_direction;
             raw_data.speed_limit = speed_limit;                  // 1 dps/LSB
             raw_data.position_control = position_control * 100;  // 0.01 degrees/LSB
             return raw_data.serialize_data();
         }
-        std::vector<uint8_t> command_message_t::serialize_data()
+        std::vector<uint8_t> action_command_t::serialize_data()
         {
-            SimpleSerializable<raw_command_message_t> raw_data;
+            SimpleSerializable<action_command_raw_t> raw_data;
             raw_data.command = command;  // Empty message other than the command
             return raw_data.serialize_data();
         }
-        std::vector<uint8_t> function_control_message_t::serialize_data()
+        std::vector<uint8_t> function_control_t::serialize_data()
         {
-            SimpleSerializable<raw_function_control_message_t> raw_data;
+            SimpleSerializable<function_control_raw_t> raw_data;
             raw_data.function_index = function_index;
             raw_data.input_value = input_value;
             return raw_data.serialize_data();
         }
-        std::vector<uint8_t> active_reply_message_t::serialize_data()
+        std::vector<uint8_t> active_reply_t::serialize_data()
         {
-            SimpleSerializable<raw_active_reply_message_t> raw_data;
+            SimpleSerializable<active_reply_raw_t> raw_data;
             raw_data.reply_command = reply_command;
             raw_data.enable = uint8_t(enable);
             raw_data.reply_interval = reply_interval_ms / 10;  // 10ms/LSB
+            return raw_data.serialize_data();
+        }
+        std::vector<uint8_t> can_id_t::serialize_data()
+        {
+            SimpleSerializable<can_id_raw_t> raw_data;
+            raw_data.read = read ? 1 : 0;
+            raw_data.can_id = can_id;
             return raw_data.serialize_data();
         }
 
@@ -332,180 +493,231 @@ namespace hi_can::parameters::post_landing::servo::rmd
     {
 
 #pragma pack(push, 1)
-        struct raw_motor_status_1_message_t
+        struct status_1_raw_t
         {
-            rmd_command _command;  // Should always be 0x9A (status 1)
+            command_t _command;  // Should always be 0x9A (status 1)
             int8_t motor_temperature;
             uint8_t _reserved;
-            shared::brake_control_t brake_status;
+            brake_control_t brake_status;
             uint16_t voltage;
-            shared::error_t error_status;
+            error_t error_status;
         };
-        struct raw_motor_status_2_message_t
+        struct status_2_raw_t
         {
-            motor_status_2_message_t::motor_status_2_command_t command;
+            status_2_t::status_2_command_t command;
+            // command_t command;
             int8_t motor_temperature;
             int16_t torque_current;
             int16_t motor_speed;
             int16_t motor_angle;
         };
-        struct raw_motor_status_3_message_t
+        struct status_3_raw_t
         {
-            rmd_command _command;  // Should always be 0x9D (status 3)
+            command_t _command;  // Should always be 0x9D (status 3)
             uint8_t motor_temperature;
             uint16_t phase_a_current;
             uint16_t phase_b_current;
             uint16_t phase_c_current;
         };
-        struct raw_single_turn_motor_status_message_t
+        struct single_turn_motor_status_raw_t
         {
-            rmd_command _command;  // Should always be 0xA6 (single turn position)
+            command_t _command;  // Should always be 0xA6 (single turn position)
             uint8_t motor_temperature = 0;
             uint16_t torque_current = 0;
             uint16_t motor_speed = 0;
             uint16_t motor_encoder = 0;
         };
-        struct raw_empty_message_t
+        struct empty_raw_t
         {
-            empty_message_t::empty_command_t command = {};
+            empty_t::empty_command_t command = {};
             uint8_t _reserved[7] = {};
+        };
+        struct can_id_raw_t
+        {
+            command_t _command = command_t::SET_CAN_ID;
+            uint8_t _reserved = 0;
+            uint8_t read = 0;
+            uint8_t _reserved2[3] = {};
+            uint16_t can_id = 0;
         };
 #pragma pack(pop)
 
-        void motor_status_1_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        void status_1_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
         {
-            SimpleSerializable<raw_motor_status_1_message_t> raw_data(serialized_data);
+            SimpleSerializable<status_1_raw_t> raw_data(serialized_data);
             motor_temperature = raw_data.motor_temperature;  // 1 degree Celsius/LSB
             brake_status = raw_data.brake_status;
             voltage = raw_data.voltage / 10.0;  // 0.1V/LSB
         }
-        void motor_status_2_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        void status_2_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
         {
-            SimpleSerializable<raw_motor_status_2_message_t> raw_data(serialized_data);
+            SimpleSerializable<status_2_raw_t> raw_data(serialized_data);
             command = raw_data.command;
             motor_temperature = raw_data.motor_temperature;  // 1 degree Celsius/LSB
             torque_current = raw_data.torque_current / 100;  // 0.01 A/LSB
             motor_speed = raw_data.motor_speed;              // 1 dps/LSB
             motor_angle = raw_data.motor_angle;              // 1 degree/LSB
         }
-        void motor_status_3_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        void status_3_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
         {
-            SimpleSerializable<raw_motor_status_3_message_t> raw_data(serialized_data);
+            SimpleSerializable<status_3_raw_t> raw_data(serialized_data);
             motor_temperature = raw_data.motor_temperature;    // 1 degree Celsius/LSB
             phase_a_current = raw_data.phase_a_current / 100;  // 0.01 A/LSB
             phase_b_current = raw_data.phase_b_current / 100;  // 0.01 A/LSB
             phase_c_current = raw_data.phase_c_current / 100;  // 0.01 A/LSB
         }
-        void single_turn_motor_status_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        void single_turn_motor_status_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
         {
-            SimpleSerializable<raw_single_turn_motor_status_message_t> raw_data(serialized_data);
+            SimpleSerializable<single_turn_motor_status_raw_t> raw_data(serialized_data);
             motor_temperature = raw_data.motor_temperature;  // 1 degree Celsius/LSB
             torque_current = raw_data.torque_current / 100;  // 0.01 A/LSB
             motor_speed = raw_data.motor_speed;              // 1 dps/LSB
             motor_encoder = raw_data.motor_encoder;          // TODO: Check the value range of this - determined by the number of bits of the encoder
         }
-        void empty_message_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        void empty_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
         {
-            SimpleSerializable<raw_empty_message_t> raw_data(serialized_data);
+            SimpleSerializable<empty_raw_t> raw_data(serialized_data);
             command = raw_data.command;
+        }
+        void can_id_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        {
+            SimpleSerializable<can_id_raw_t> raw_data(serialized_data);
+            read = raw_data.read != 0;
+            can_id = raw_data.can_id - static_cast<uint16_t>(addressing::post_landing::servo::rmd::message_type::RECEIVE);
         }
     }
     RmdParameterGroup::RmdParameterGroup(uint8_t servo_id)
         : _servo_id(servo_id)
     {
+        using namespace addressing::post_landing::servo::rmd;
+
         _callbacks.emplace_back(
             filter_t{
-                .address = addressing::post_landing::servo::rmd::servo_address_t{addressing::post_landing::servo::rmd::rmd_id::RECEIVE, addressing::post_landing::servo::rmd::motor_id_t(servo_id)},
+                .address = servo_address_t{message_type::RECEIVE, motor_id_t(servo_id)},
             },
             PacketManager::callback_config_t{
                 .data_callback = [this](const Packet& packet)
                 {
                     std::vector<uint8_t> raw_data = packet.get_data();
-                    rmd_command command = rmd_command(raw_data.front());
+                    command_t command = command_t(raw_data.front());
+
                     switch (command)
                     {
-                    case rmd_command::READ_MOTOR_STATUS_1:
+                    case command_t::READ_MOTOR_STATUS_1:
                     {
-                        receive_message::motor_status_1_message_t status_1 = {};
+                        receive_message::status_1_t status_1 = {};
                         status_1.deserialize_data(raw_data);
-                        _motor_temperature = status_1.motor_temperature;
-                        _brake_status = status_1.brake_status;
-                        _voltage = status_1.voltage;
-                        _error_status = status_1.error_status;
+                        this->_motor_temperature = status_1.motor_temperature;
+                        this->_brake_status = status_1.brake_status;
+                        this->_voltage = status_1.voltage;
+                        this->_error_status = status_1.error_status;
                         break;
                     }
-                    case rmd_command::SET_TORQUE_CLOSED_LOOP:
-                    case rmd_command::SET_SPEED_CLOSED_LOOP:
-                    case rmd_command::SET_ABSOLUTE_POSITION_CLOSED_LOOP:
-                    case rmd_command::SET_INCREMENTAL_POSITION_CLOSED_LOOP:
-                    case rmd_command::READ_MOTOR_STATUS_2:
+                    case command_t::READ_MOTOR_STATUS_2:
                     {
-                        receive_message::motor_status_2_message_t status_2 = {};
+                        receive_message::status_2_t status_2 = {};
                         status_2.deserialize_data(raw_data);
-                        _motor_temperature = status_2.motor_temperature;
-                        _torque_current = status_2.torque_current;
-                        _motor_speed = status_2.motor_speed;
-                        _motor_angle = status_2.motor_angle;
+                        this->_motor_temperature = status_2.motor_temperature;
+                        this->_torque_current = status_2.torque_current;
+                        this->_motor_speed = status_2.motor_speed;
+                        this->_motor_angle = status_2.motor_angle;
                         break;
                     }
-                    case rmd_command::READ_MOTOR_STATUS_3:
+                    case command_t::READ_MOTOR_STATUS_3:
                     {
-                        receive_message::motor_status_3_message_t status_3 = {};
+                        receive_message::status_3_t status_3 = {};
                         status_3.deserialize_data(raw_data);
-                        _motor_temperature = status_3.motor_temperature;
-                        _phase_a_current = status_3.phase_a_current;
-                        _phase_b_current = status_3.phase_b_current;
-                        _phase_c_current = status_3.phase_c_current;
+                        this->_motor_temperature = status_3.motor_temperature;
+                        this->_phase_a_current = status_3.phase_a_current;
+                        this->_phase_b_current = status_3.phase_b_current;
+                        this->_phase_c_current = status_3.phase_c_current;
                         break;
                     }
-                    case rmd_command::MOTOR_STOP:
-                    case rmd_command::MOTOR_SHUTDOWN:
-                    case rmd_command::SYSTEM_BRAKE_RELEASE:
-                    case rmd_command::SYSTEM_BRAKE_LOCK:
-                        // These don't have any data sent back from the servos, so do nothing
-                        break;
-                    default:
-                        break;
                     }
+                    // switch (command)
+                    // {
+                    // case command_t::READ_MOTOR_STATUS_1:
+                    // {
+                    //     receive_message::status_1_t status_1 = {};
+                    //     status_1.deserialize_data(raw_data);
+                    //     this->_motor_temperature = status_1.motor_temperature;
+                    //     this->_brake_status = status_1.brake_status;
+                    //     this->_voltage = status_1.voltage;
+                    //     this->_error_status = status_1.error_status;
+                    //     break;
+                    // }
+                    // case command_t::SET_TORQUE_CLOSED_LOOP:
+                    // case command_t::SET_SPEED_CLOSED_LOOP:
+                    // case command_t::SET_ABSOLUTE_POSITION_CLOSED_LOOP:
+                    // case command_t::SET_INCREMENTAL_POSITION_CLOSED_LOOP:
+                    // case command_t::READ_MOTOR_STATUS_2:
+                    // {
+                    //     receive_message::status_2_t status_2 = {};
+                    //     status_2.deserialize_data(raw_data);
+                    //     this->_motor_temperature = status_2.motor_temperature;
+                    //     this->_torque_current = status_2.torque_current;
+                    //     this->_motor_speed = status_2.motor_speed;
+                    //     this->_motor_angle = status_2.motor_angle;
+                    //     break;
+                    // }
+                    // case command_t::READ_MOTOR_STATUS_3:
+                    // {
+                    //     receive_message::status_3_t status_3 = {};
+                    //     status_3.deserialize_data(raw_data);
+                    //     this->_motor_temperature = status_3.motor_temperature;
+                    //     this->_phase_a_current = status_3.phase_a_current;
+                    //     this->_phase_b_current = status_3.phase_b_current;
+                    //     this->_phase_c_current = status_3.phase_c_current;
+                    //     break;
+                    // }
+                    // case command_t::MOTOR_STOP:
+                    // case command_t::MOTOR_SHUTDOWN:
+                    // case command_t::SYSTEM_BRAKE_RELEASE:
+                    // case command_t::SYSTEM_BRAKE_LOCK:
+                    //     // These don't have any data sent back from the servos, so do nothing
+                    //     break;
+                    // default:
+                    //     break;
+                    // }
                 },
             });
     }
     std::vector<std::string> RmdParameterGroup::check_errors()
     {
         std::vector<std::string> errors = {};
-        if (uint16_t(_error_status) & uint16_t(shared::error_t::ENCODER_CALIBRATION))
+        if (uint16_t(_error_status) & uint16_t(error_t::ENCODER_CALIBRATION))
         {
             errors.emplace_back("Encoder calibration");
         }
-        if (uint16_t(_error_status) & uint16_t(shared::error_t::OVER_TEMPERATURE))
+        if (uint16_t(_error_status) & uint16_t(error_t::OVER_TEMPERATURE))
         {
             errors.emplace_back("Over temperature");
         }
-        if (uint16_t(_error_status) & uint16_t(shared::error_t::SPEEDING))
+        if (uint16_t(_error_status) & uint16_t(error_t::SPEEDING))
         {
             errors.emplace_back("Speeding");
         }
-        if (uint16_t(_error_status) & uint16_t(shared::error_t::CALIBRATION_PARAMETER_WRITE))
+        if (uint16_t(_error_status) & uint16_t(error_t::CALIBRATION_PARAMETER_WRITE))
         {
             errors.emplace_back("Calibration parameter write");
         }
-        if (uint16_t(_error_status) & uint16_t(shared::error_t::POWER_OVERRUN))
+        if (uint16_t(_error_status) & uint16_t(error_t::POWER_OVERRUN))
         {
             errors.emplace_back("Power overrun");
         }
-        if (uint16_t(_error_status) & uint16_t(shared::error_t::OVER_CURRENT))
+        if (uint16_t(_error_status) & uint16_t(error_t::OVER_CURRENT))
         {
             errors.emplace_back("Over current");
         }
-        if (uint16_t(_error_status) & uint16_t(shared::error_t::OVER_VOLTAGE))
+        if (uint16_t(_error_status) & uint16_t(error_t::OVER_VOLTAGE))
         {
             errors.emplace_back("Over voltage");
         }
-        if (uint16_t(_error_status) & uint16_t(shared::error_t::LOW_VOLTAGE))
+        if (uint16_t(_error_status) & uint16_t(error_t::LOW_VOLTAGE))
         {
             errors.emplace_back("Low voltage");
         }
-        if (uint16_t(_error_status) & uint16_t(shared::error_t::STALL))
+        if (uint16_t(_error_status) & uint16_t(error_t::STALL))
         {
             errors.emplace_back("Stall");
         }
@@ -515,7 +727,7 @@ namespace hi_can::parameters::post_landing::servo::rmd
     {
         return _motor_temperature;
     }
-    shared::brake_control_t RmdParameterGroup::get_brake_status()
+    brake_control_t RmdParameterGroup::get_brake_status()
     {
         return _brake_status;
     }
@@ -523,7 +735,7 @@ namespace hi_can::parameters::post_landing::servo::rmd
     {
         return _voltage;
     }
-    shared::error_t RmdParameterGroup::get_error_status()
+    error_t RmdParameterGroup::get_error_status()
     {
         return _error_status;
     }
@@ -550,6 +762,10 @@ namespace hi_can::parameters::post_landing::servo::rmd
     double RmdParameterGroup::get_phase_c_current()
     {
         return _phase_c_current;
+    }
+    std::vector<addressing::post_landing::servo::rmd::motor_id_t> RmdParameterGroup::get_available_servos()
+    {
+        return _available_servos;
     }
 }
 

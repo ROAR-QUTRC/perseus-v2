@@ -1,11 +1,7 @@
 uint8 motor_id
 ---
-uint8 motor_id
-int8 temperature
-bool brake_control
-float64 voltage
-
 # Error constants
+uint16 CLEAR=0x0000
 uint16 STALL=0x0002
 uint16 LOW_VOLTAGE=0x0004
 uint16 OVER_VOLTAGE=0x0008
@@ -16,10 +12,14 @@ uint16 SPEEDING=0x0100
 uint16 OVER_TEMPERATURE=0x1000
 uint16 ENCODER_CALIBRATION=0x2000
 
-uint16 error
+uint8 motor_id
+int8 temperature
+bool brake_control
+float64 voltage
 float64 torque_current
 int16 speed
-int16 angle
+float64 angle
 float64 phase_a_current
 float64 phase_b_current
 float64 phase_c_current
+uint16 error

@@ -376,7 +376,7 @@ namespace hi_can
                     /// @brief The device ID of the arm servos
                     constexpr uint8_t DEVICE_ID = 0x00;
                     /// @brief The RMD-L-4015-100-C Motor ID commands
-                    enum class rmd_id : uint16_t
+                    enum class message_type : uint16_t
                     {
                         // SEND ADDRESS - 0x140 + ID
                         SEND = 0x140,
@@ -387,7 +387,7 @@ namespace hi_can
                         // MULTI-MOTOR COMMAND
                         MULTI_MOTOR_SEND = 0x280,
                         // CANID SETTING - CAUTION: sets all motors on the CANBUS to the same address! To change one motor's ID, use the function control command
-                        SET_CANID = 0x300,
+                        CANID = 0x300,
                     };
                     enum class motor_id_t : uint8_t
                     {
@@ -399,8 +399,8 @@ namespace hi_can
                     struct servo_address_t : public flagged_address_t
                     {
                         constexpr servo_address_t() = default;
-                        constexpr servo_address_t(const rmd_id function, const motor_id_t motor_id = motor_id_t::ALL)
-                            : flagged_address_t(address = (static_cast<uint16_t>(function) + static_cast<uint8_t>(motor_id)), is_extended = false)
+                        constexpr servo_address_t(const message_type function, const motor_id_t motor_id = motor_id_t::ALL)
+                            : flagged_address_t(static_cast<uint16_t>(function) + static_cast<uint8_t>(motor_id), false, false, false)
                         {
                         }
                         constexpr uint8_t get_motor_id()

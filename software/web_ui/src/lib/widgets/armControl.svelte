@@ -13,12 +13,12 @@
 			general: {
 				incrementValue: {
 					type: 'number',
-					value: '5',
+					value: '5'
 				},
 				messageFrequency: {
 					description: 'Frequency (Hz) to send control messages at',
 					type: 'number',
-					value: '10',
+					value: '10'
 				}
 			}
 		}
@@ -35,7 +35,7 @@
 	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
 	import * as changeCase from 'change-case';
 
-	let topic: ROSLIB.Topic | null = null;
+	let topic: ROSLIB.Topic<{ data: Array<number> }> | null = null;
 
 	// String number record type for indexing in markdown
 	let positions = $state<Record<string, number>>({
@@ -43,7 +43,7 @@
 		shoulderTilt: 0,
 		elbow: 0,
 		wristPan: 0,
-		wristTilt: 0,
+		wristTilt: 0
 	});
 
 	let increment = $derived(Number(settings.groups.general.incrementValue.value));
@@ -54,43 +54,48 @@
 			topic = new ROSLIB.Topic({
 				ros: ros,
 				name: '/arm/rmd_control',
-				messageType: "perseus_msgs/ArmServoControl",
+				messageType: 'std_msgs/msg/Float64MultiArray'
 			});
 		} else {
 			topic = null;
 		}
-	})
+	});
 
 	onMount(() => {
 		const frequency = Number(settings.groups.general.messageFrequency.value);
 		const interval = setInterval(() => {
 			if (topic) {
-				const message = new ROSLIB.Message({
-					shoulder_pan: positions.shoulderPan,
-					shoulder_tilt: positions.shoulderTilt,
-					elbow: positions.elbow,
-					wrist_pan: positions.wristPan,
-					wrist_tilt: positions.wristTilt,
-				});
+				const message = {
+					data: [
+						positions.shoulderPan,
+						positions.shoulderTilt,
+						positions.elbow,
+						positions.wristPan,
+						positions.wristTilt
+					]
+				};
 				topic.publish(message);
-				console.log(JSON.stringify(message, null, 2));
 			}
 		}, 1000 / frequency);
 
 		return () => {
 			clearInterval(interval);
 		};
-	})
+	});
 </script>
 
-<ScrollArea class="w-full h-full flex flex-col pr-2">
+<ScrollArea class="flex h-full w-full flex-col pr-2">
 	{#each Object.keys(positions) as joint}
 		<div class="">
 			<p class="text-center">{changeCase.sentenceCase(joint)}: {positions[joint]}</p>
 			<div class="flex flex-row items-center gap-2">
-				<Button onclick={() => positions[joint] -= increment} size='icon' variant='ghost'><Minus /></Button>
-				<Slider type="single" bind:value={positions[joint]}/>
-				<Button onclick={() => positions[joint] += increment} size='icon' variant='ghost'><Plus /></Button>
+				<Button onclick={() => (positions[joint] -= increment)} size="icon" variant="ghost"
+					><Minus /></Button
+				>
+				<Slider type="single" bind:value={positions[joint]} max={360} min={0} />
+				<Button onclick={() => (positions[joint] += increment)} size="icon" variant="ghost"
+					><Plus /></Button
+				>
 			</div>
 		</div>
 	{/each}
