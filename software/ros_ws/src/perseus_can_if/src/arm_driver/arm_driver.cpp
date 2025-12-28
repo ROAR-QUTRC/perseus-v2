@@ -121,7 +121,7 @@ void ArmDriver::_position_control(std_msgs::msg::Float64MultiArray servo_control
 {
     // RCLCPP_INFO(this->get_logger(), "Received servo control command with first element: %f", servo_control.data[0]);
 
-    // RCLCPP_INFO(this->get_logger(), "Sending position command to all motors, addres is: %X",
+    // RCLCPP_INFO(this->get_logger(), "Sending position command to all motors, address is: %X",
     //             hi_can::addressing::flagged_address_t(
     //                 static_cast<uint16_t>(rmd_id::MULTI_MOTOR_SEND) + static_cast<uint8_t>(motor_id_t::ALL),
     //                 false, false, false)
