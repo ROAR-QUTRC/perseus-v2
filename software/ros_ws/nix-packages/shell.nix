@@ -77,6 +77,7 @@ pkgs.mkShell {
             simple-networking
             slam-toolbox
             std-msgs
+            std-srvs
             teleop-twist-joy
             teleop-twist-keyboard
             tf2

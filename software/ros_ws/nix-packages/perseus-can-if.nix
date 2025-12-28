@@ -9,6 +9,8 @@
   perseus-msgs,
   rclcpp,
   sensor-msgs,
+  std-msgs,
+  std-srvs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-can-if";
@@ -25,6 +27,8 @@ buildRosPackage rec {
     perseus-msgs
     rclcpp
     sensor-msgs
+    std-msgs
+    std-srvs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
