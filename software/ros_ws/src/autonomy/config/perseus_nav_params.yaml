@@ -117,29 +117,29 @@ controller_server:
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
       required_movement_radius: 0.2 # increased from 0.1 for larger robot (for better responsiveness)
-      movement_time_allowance: 10.0
+      movement_time_allowance: 20.0
     goal_checker:
       stateful: true
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.4
       yaw_goal_tolerance: 0.25
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: true
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.15
+      max_vel_x: 0.5 # significantly large to ensure robot can rotate, limited by accels and vel_smoother
       max_vel_y: 0.0
-      max_vel_theta: 0.2
-      min_speed_xy: 0.0                                                         
+      max_vel_theta: 2.0 # significantly large to ensure robot can rotate, limited by accels and vel_smoother
+      min_speed_xy: 0.0 
       max_speed_xy: 0.3
-      min_speed_theta: 0.05
+      min_speed_theta: 0.0
       acc_lim_x: 2.0
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
+      acc_lim_theta: 0.3
       decel_lim_x: -2.5
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
+      decel_lim_theta: -0.3
       vx_samples: 20
       vy_samples: 0
       vtheta_samples: 40
@@ -147,20 +147,20 @@ controller_server:
       linear_granularity: 0.05
       angular_granularity: 0.025
       transform_tolerance: 0.5
-      xy_goal_tolerance: 0.05
-      trans_stopped_velocity: 0.25
+      xy_goal_tolerance: 0.25
+      trans_stopped_velocity: 0.03 # decreased from 0.05 for better stopping accuracy
       short_circuit_trajectory_evaluation: true
       stateful: true
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      critics: [ "RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
       BaseObstacle.scale: 0.02
-      PathAlign.scale: 32.0
+      PathAlign.scale: 2.0
       PathAlign.forward_point_distance: 0.1
-      GoalAlign.scale: 24.0
+      GoalAlign.scale: 1.0
       GoalAlign.forward_point_distance: 0.1
-      PathDist.scale: 32.0
-      GoalDist.scale: 24.0
-      RotateToGoal.scale: 32.0
-      RotateToGoal.slowing_factor: 5.0
+      PathDist.scale: 0.2
+      GoalDist.scale: 1.0
+      RotateToGoal.scale: 1.0
+      RotateToGoal.slowing_factor: 20.0
       RotateToGoal.lookahead_time: -1.0
     enable_stamped_cmd_vel: true
 
@@ -299,7 +299,7 @@ planner_server:
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
       tolerance: 0.5
-      use_astar: false
+      use_astar: True
       allow_unknown: true
 
 behavior_server:
@@ -439,8 +439,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.5, 0.0, 2.5]
-    min_velocity: [-0.5, 0.0, -2.5]
+    max_velocity: [0.15, 0.0, 0.2] # [x, y, theta]
+    min_velocity: [-0.15, 0.0, -0.2]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]
