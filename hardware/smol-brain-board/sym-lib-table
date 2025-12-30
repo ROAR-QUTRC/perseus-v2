@@ -1,5 +1,4 @@
 (sym_lib_table
   (version 7)
-  (lib (name "Smol Brain Board-altium-import")(type "KiCad")(uri "${KIPRJMOD}/Smol Brain Board-altium-import.kicad_sym")(options "")(descr ""))
   (lib (name "smol_brain_board")(type "KiCad")(uri "${KIPRJMOD}/smol_brain_board.kicad_sym")(options "")(descr ""))
 )
