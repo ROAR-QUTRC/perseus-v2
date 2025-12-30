@@ -1,0 +1,89 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+
+    <RecoveryNode number_of_retries="3" name="NavigateRecovery">
+      <PipelineSequence name="NavigateSequentialGoals">
+
+        <ControllerSelector selected_controller="{selected_controller}"
+                            default_controller="FollowPath"
+                            topic_name="controller_selector"/>
+
+        <PlannerSelector selected_planner="{selected_planner}"
+                         default_planner="GridBased"
+                         topic_name="planner_selector"/>
+
+        <!-- Custom control node: loops child while goals list is not empty -->
+        <WhileGoalsNotEmpty input_goals="{goals}">
+
+          <Sequence name="GoToOneGoal">
+
+            <!-- Set current goal = first waypoint -->
+            <GetFirstGoal input_goals="{goals}" output_goal="{goal}"/>
+
+            <!-- Replan to CURRENT goal only -->
+            <RateController hz="1.0">
+              <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+                <ComputePathToPose goal="{goal}"
+                                   path="{path}"
+                                   planner_id="{selected_planner}"
+                                   error_code_id="{compute_path_error_code}"/>
+                <Sequence>
+                  <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
+                  <ClearEntireCostmap name="ClearGlobalCostmap-Context"
+                                      service_name="global_costmap/clear_entirely_global_costmap"/>
+                </Sequence>
+              </RecoveryNode>
+            </RateController>
+
+            <!-- Follow until CURRENT goal reached -->
+            <RecoveryNode number_of_retries="1" name="FollowPath">
+              <FollowPath path="{path}"
+                          controller_id="{selected_controller}"
+                          error_code_id="{follow_path_error_code}"/>
+              <Sequence>
+                <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
+                <ClearEntireCostmap name="ClearLocalCostmap-Context"
+                                    service_name="local_costmap/clear_entirely_local_costmap"/>
+              </Sequence>
+            </RecoveryNode>
+
+            <!-- OPTIONAL: stop/do work at each waypoint -->
+            <Wait name="WaitAtWaypoint" wait_duration="0.0"/>
+
+            <!-- Pop the goal we just reached so next tick targets next waypoint -->
+            <PopFirstGoal input_goals="{goals}" output_goals="{goals}"/>
+
+          </Sequence>
+
+        </WhileGoalsNotEmpty>
+
+      </PipelineSequence>
+
+      <!-- Recovery subtree -->
+      <Sequence>
+        <Fallback>
+          <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
+          <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
+        </Fallback>
+
+        <ReactiveFallback name="RecoveryFallback">
+          <GoalUpdated/>
+          <RoundRobin name="RecoveryActions">
+            <Sequence name="ClearingActions">
+              <ClearEntireCostmap name="ClearLocalCostmap-Subtree"
+                                  service_name="local_costmap/clear_entirely_local_costmap"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Subtree"
+                                  service_name="global_costmap/clear_entirely_global_costmap"/>
+            </Sequence>
+            <Spin spin_dist="1.57" error_code_id="{spin_error_code}"/>
+            <Wait wait_duration="2.0"/>
+            <BackUp backup_dist="0.30" backup_speed="0.15"
+                    error_code_id="{backup_error_code}"/>
+          </RoundRobin>
+        </ReactiveFallback>
+      </Sequence>
+
+    </RecoveryNode>
+
+  </BehaviorTree>
+</root>

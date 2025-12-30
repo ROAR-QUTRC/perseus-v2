@@ -130,7 +130,7 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.5 # significantly large to ensure robot can rotate, limited by accels and vel_smoother
       max_vel_y: 0.0
-      max_vel_theta: 2.0 # significantly large to ensure robot can rotate, limited by accels and vel_smoother
+      max_vel_theta: 0.5 # significantly large to ensure robot can rotate, limited by accels and vel_smoother
       min_speed_xy: 0.0 
       max_speed_xy: 0.3
       min_speed_theta: 0.0
@@ -439,7 +439,7 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.15, 0.0, 0.2] # [x, y, theta]
+    max_velocity: [0.15, 0.0, 0.5] # [x, y, theta]
     min_velocity: [-0.15, 0.0, -0.2]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
