@@ -1,4 +1,5 @@
 uint8 motor_id
 int32 data 0
+bool trigger false
 ---
 bool success

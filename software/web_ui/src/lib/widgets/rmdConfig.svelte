@@ -49,19 +49,18 @@
 		return errors;
 	};
 
-	let topic: ROSLIB.Topic<{ field1: number; field2: number }> | null = null;
 	let enableStatusService: ROSLIB.Service<{ data: boolean }, { success: boolean }> | null = null;
 	let statusService: ROSLIB.Service<RMDStatusRequest, RMDStatusResponse> | null = null;
 	let canIdService: ROSLIB.Service<{}, RmdCanIdResponse> | null = null;
 	let brakeEnableService: ROSLIB.Service<RmdBrakeRequest, SuccessResponse> | null = null;
 	let restartMotorService: ROSLIB.Service<RmdDataRequest, SuccessResponse> | null = null;
 	let setIdService: ROSLIB.Service<RmdDataRequest, SuccessResponse> | null = null;
+	let zeroMotorService: ROSLIB.Service<RmdDataRequest, SuccessResponse> | null = null;
 
 	let motorStatus = $state<RMDStatusResponse | null>(null);
 	let ids = $state<Array<number>>([]);
 	let selectedIdInput = $state<string>('0');
 	let selectedId = $derived(Number(selectedIdInput));
-	let angle = $state<number>(0);
 	let debugEnabled = $state<boolean>(false);
 
 	// Widget logic goes here
@@ -69,12 +68,6 @@
 		const ros = getRosConnection();
 
 		if (ros) {
-			topic = new ROSLIB.Topic({
-				ros: ros,
-				name: '/arm/rmd_config',
-				messageType: 'perseus_msgs/msg/ArmConfig'
-			});
-
 			statusService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd_status',
@@ -111,9 +104,21 @@
 				serviceType: 'perseus_msgs/srv/RmdData'
 			});
 
+			zeroMotorService = new ROSLIB.Service({
+				ros: ros,
+				name: '/arm/rmd_set_zero_position',
+				serviceType: 'perseus_msgs/srv/RmdData'
+			});
+
 			callGetIds();
 		} else {
-			topic = null;
+			statusService = null;
+			canIdService = null;
+			brakeEnableService = null;
+			restartMotorService = null;
+			enableStatusService = null;
+			setIdService = null;
+			zeroMotorService = null;
 		}
 	});
 
@@ -170,6 +175,23 @@
 
 			restartMotorService.callService(request, (response: { success: boolean }) => {
 				console.log(`Restart command sent for motor ID ${selectedId}: ${response.success}`);
+			});
+		}
+	};
+
+	let zeroBias = $state<number>(0);
+	const setMotorZero = (bias?: number) => {
+		if (zeroMotorService) {
+			const request: RmdDataRequest = {
+				motor_id: selectedId,
+				trigger: !bias, // true is settings zero to current position
+				data: bias ?? 0 // Data field is unused for this service
+			};
+
+			if (bias) zeroBias = 0;
+
+			zeroMotorService.callService(request, (response: { success: boolean }) => {
+				console.log(`Zero position command sent for motor ID ${selectedId}: ${response.success}`);
 			});
 		}
 	};
@@ -257,14 +279,15 @@
 			<!-- <Button disabled={selectedId === 0} variant="outline" onclick={() => callBrakeEnable(true)}>Brake</Button>
 			<Button disabled={selectedId === 0} variant="outline" onclick={() => callBrakeEnable(false)}>Release</Button> -->
 			<Button disabled={selectedId === 0} variant="outline" onclick={restartMotor}>Restart</Button>
+			<!-- <Button disabled={selectedId === 0} variant="outline" onclick={() => setMotorZero()}>Zero</Button> -->
 		</div>
 	</div>
 	<div class="w-1/2 min-w-[200px]">
 		<div style:aspect-ratio="2 / 1" class="w-full border rounded-2xl p-2 flex flex-col ">
 			{#if selectedId !== 0}
-				<p class="">Change motor ID:</p>
+				<p class="">Change Motor ID:</p>
 				<div class="flex gap-2">
-					<Input bind:value={newMotorId} size={2} type="number" />
+					<Input bind:value={newMotorId} type="number" />
 					<AlertDialog.Root bind:open={setIdConfirm}>
 						<AlertDialog.Trigger>
 							<Button disabled={!isMotorIdValid}>Set</Button>
@@ -284,6 +307,12 @@
 							</AlertDialog.Footer>
 						</AlertDialog.Content>
 					</AlertDialog.Root>
+				</div>
+				<p class="">Set Zero Bias:</p>
+				<div class="flex gap-2">
+					<Input bind:value={zeroBias} type="number" />
+					<Button onclick={() => setMotorZero(zeroBias)}>Set</Button>
+					<Button onclick={() => setMotorZero()}>Set Current as Zero</Button>
 				</div>
 			{:else}
 				<div class="text-center content-center absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-1/2 aspect-square">

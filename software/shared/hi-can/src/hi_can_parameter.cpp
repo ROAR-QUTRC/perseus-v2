@@ -421,6 +421,12 @@ namespace hi_can::parameters::post_landing::servo::rmd
             uint16_t reply_interval;
             uint8_t _reserved[3] = {};
         };
+        struct zero_offset_raw_t
+        {
+            command_t _command;
+            uint8_t _reserved[3] = {};
+            uint32_t zero_bias = 0;
+        };
         struct can_id_raw_t
         {
             command_t _command = command_t::SET_CAN_ID;
@@ -480,6 +486,13 @@ namespace hi_can::parameters::post_landing::servo::rmd
             raw_data.reply_interval = reply_interval_ms / 10;  // 10ms/LSB
             return raw_data.serialize_data();
         }
+        std::vector<uint8_t> zero_offset_t::serialize_data()
+        {
+            SimpleSerializable<zero_offset_raw_t> raw_data;
+            raw_data._command = command;
+            raw_data.zero_bias = zero_bias;
+            return raw_data.serialize_data();
+        }
         std::vector<uint8_t> can_id_t::serialize_data()
         {
             SimpleSerializable<can_id_raw_t> raw_data;
@@ -505,7 +518,6 @@ namespace hi_can::parameters::post_landing::servo::rmd
         struct status_2_raw_t
         {
             status_2_t::status_2_command_t command;
-            // command_t command;
             int8_t motor_temperature;
             int16_t torque_current;
             int16_t motor_speed;
@@ -531,6 +543,12 @@ namespace hi_can::parameters::post_landing::servo::rmd
         {
             empty_t::empty_command_t command = {};
             uint8_t _reserved[7] = {};
+        };
+        struct zero_offset_raw_t
+        {
+            command_t _command;
+            uint8_t _reserved[3] = {};
+            uint32_t zero_bias = 0;
         };
         struct can_id_raw_t
         {
@@ -578,6 +596,12 @@ namespace hi_can::parameters::post_landing::servo::rmd
         {
             SimpleSerializable<empty_raw_t> raw_data(serialized_data);
             command = raw_data.command;
+        }
+        void zero_offset_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        {
+            SimpleSerializable<zero_offset_raw_t> raw_data(serialized_data);
+            command = raw_data._command;
+            zero_bias = raw_data.zero_bias;
         }
         void can_id_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
         {

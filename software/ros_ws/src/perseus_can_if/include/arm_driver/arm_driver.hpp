@@ -31,6 +31,7 @@ private:
     void _set_brake_enabled(const std::shared_ptr<perseus_msgs::srv::RmdBrake::Request> request, std::shared_ptr<perseus_msgs::srv::RmdBrake::Response> response);
     void _restart_motor(const std::shared_ptr<perseus_msgs::srv::RmdData::Request> request, std::shared_ptr<perseus_msgs::srv::RmdData::Response> response);
     void _set_motor_id(const std::shared_ptr<perseus_msgs::srv::RmdData::Request> request, std::shared_ptr<perseus_msgs::srv::RmdData::Response> response);
+    void _set_zero_position(const std::shared_ptr<perseus_msgs::srv::RmdData::Request> request, std::shared_ptr<perseus_msgs::srv::RmdData::Response> response);
 
     // std::map<hi_can::addressing::post_landing::servo::rmd::motor_id_t, rmd_status_t> _rmd_status_map;
     std::vector<hi_can::addressing::post_landing::servo::rmd::motor_id_t> _available_servos;
@@ -60,10 +61,13 @@ private:
     rclcpp::TimerBase::SharedPtr _packet_timer;
     rclcpp::TimerBase::SharedPtr _check_available_servos_timer;
     rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr _command_subscriber;
-    rclcpp::Service<perseus_msgs::srv::RmdServoStatus>::SharedPtr _status_service;
-    rclcpp::Service<perseus_msgs::srv::RmdCanId>::SharedPtr _can_id_service;
     rclcpp::Service<perseus_msgs::srv::RmdBrake>::SharedPtr _enable_brake_service;
     rclcpp::Service<perseus_msgs::srv::RmdData>::SharedPtr _restart_motor_service;
+
+    // Config related services
+    rclcpp::Service<perseus_msgs::srv::RmdServoStatus>::SharedPtr _status_service;
+    rclcpp::Service<perseus_msgs::srv::RmdCanId>::SharedPtr _can_id_service;
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr _enable_debug_service;
     rclcpp::Service<perseus_msgs::srv::RmdData>::SharedPtr _set_motor_id_service;
+    rclcpp::Service<perseus_msgs::srv::RmdData>::SharedPtr _set_zero_position_service;
 };

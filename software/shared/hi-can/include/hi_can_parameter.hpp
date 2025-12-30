@@ -646,6 +646,19 @@ namespace hi_can::parameters
                         {
                         }
                     };
+                    struct zero_offset_t : Serializable
+                    {
+                        command_t command;
+                        uint32_t zero_bias = 0;
+                        std::vector<uint8_t> serialize_data() override;
+
+                        zero_offset_t() = default;
+                        zero_offset_t(bool _use_current_as_zero, uint32_t _zero_bias = 0)
+                            : command(_use_current_as_zero ? command_t::WRITE_CURRENT_MULTI_TURN_ROM_AS_ZERO : command_t::WRITE_MULTI_TURN_ROM_AS_ZERO),
+                              zero_bias(_zero_bias)
+                        {
+                        }
+                    };
                     struct can_id_t : Serializable
                     {
                         bool read = true;     // 0 = write, 1 = read
@@ -724,6 +737,12 @@ namespace hi_can::parameters
                     {
                         bool read = true;     // 0 = write, 1 = read
                         uint16_t can_id = 0;  // can_id - 0x240 = motor_id
+                        void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
+                    };
+                    struct zero_offset_t : Deserializable
+                    {
+                        command_t command;
+                        uint32_t zero_bias = 0;
                         void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
                     };
                     struct _function_t

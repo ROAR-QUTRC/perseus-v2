@@ -82,6 +82,7 @@ ArmDriver::ArmDriver(const rclcpp::NodeOptions& options)
     _enable_brake_service = this->create_service<perseus_msgs::srv::RmdBrake>("/arm/rmd_set_brake", std::bind(&ArmDriver::_set_brake_enabled, this, std::placeholders::_1, std::placeholders::_2));
     _restart_motor_service = this->create_service<perseus_msgs::srv::RmdData>("/arm/rmd_restart_motor", std::bind(&ArmDriver::_restart_motor, this, std::placeholders::_1, std::placeholders::_2));
     _set_motor_id_service = this->create_service<perseus_msgs::srv::RmdData>("/arm/rmd_set_motor_id", std::bind(&ArmDriver::_set_motor_id, this, std::placeholders::_1, std::placeholders::_2));
+    _set_zero_position_service = this->create_service<perseus_msgs::srv::RmdData>("/arm/rmd_set_zero_position", std::bind(&ArmDriver::_set_zero_position, this, std::placeholders::_1, std::placeholders::_2));
     _enable_debug_service = this->create_service<std_srvs::srv::SetBool>(
         "/arm/rmd_enable_status_messages",
         [this](const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response)
@@ -127,7 +128,7 @@ void ArmDriver::_position_control(std_msgs::msg::Float64MultiArray servo_control
     //                 false, false, false)
     //                 .address);
     _can_interface->transmit(Packet(
-        servo_address_t(message_type::SEND, motor_id_t::WRIST_ROLL),
+        servo_address_t(message_type::SEND, motor_id_t::ELBOW),
         send_message::position_t(
             send_message::position_t::position_command_t::ABSOLUTE,
             32768,
@@ -352,6 +353,23 @@ void ArmDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::RmdData::
 
     this->_available_servos.erase(std::remove(this->_available_servos.begin(), this->_available_servos.end(), new_id), this->_available_servos.end());
 
+    response->success = true;
+}
+
+void ArmDriver::_set_zero_position(const std::shared_ptr<perseus_msgs::srv::RmdData::Request> request, std::shared_ptr<perseus_msgs::srv::RmdData::Response> response)
+{
+    using function = hi_can::parameters::post_landing::servo::rmd::command_t;
+
+    const motor_id_t motor_id = static_cast<motor_id_t>(request->motor_id);
+
+    _can_interface->transmit(Packet{
+        servo_address_t(message_type::SEND, motor_id),
+        send_message::zero_offset_t(request->trigger, static_cast<uint32_t>(request->data)).serialize_data()});
+    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
+    _can_interface->transmit(Packet{
+        servo_address_t(message_type::SEND, static_cast<motor_id_t>(request->motor_id)),
+        send_message::action_command_t(send_message::action_command_t::command_id_t::RESET).serialize_data()});
+    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
     response->success = true;
 }
 
