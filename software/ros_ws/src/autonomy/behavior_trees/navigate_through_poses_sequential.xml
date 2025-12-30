@@ -2,15 +2,13 @@
   <BehaviorTree ID="MainTree">
     <Sequence name="SequentialWaypointNav">
 
-      <!-- Initialize index counter -->
-      <SetBlackboard output_key="wp_index" value="0"/>
-
-      <!-- Loop through waypoints until GetGoalFromGoals FAILS (index out of range) -->
-      <KeepRunningUntilFailure name="LoopWaypoints">
+      <!-- Loop through waypoints until goals array is empty -->
+      <!-- Use Fallback to catch GetGoalFromGoals failure (empty array = success) -->
+      <Fallback name="LoopWaypoints">
         <Sequence name="ProcessWaypoint">
 
-          <!-- Extract goal at current index -->
-          <GetGoalFromGoals goals="{goals}" index="{wp_index}" goal="{current_goal}"/>
+          <!-- Extract first goal from remaining goals (fails when array is empty, which triggers fallback) -->
+          <GetGoalFromGoals goals="{goals}" index="0" goal="{current_goal}"/>
 
           <!-- Navigate to single goal -->
           <PipelineSequence name="NavigateToPose">
@@ -38,19 +36,16 @@
             </RecoveryNode>
           </PipelineSequence>
 
-          <!-- Wait at waypoint (do this AFTER navigation completes) -->
+          <!-- Wait at waypoint after reaching it -->
           <Wait name="WaitAtWaypoint" wait_duration="2.0"/>
 
-          <!-- TODO: Call your ArucoMarker detection service here -->
-
-          <!-- Move to next waypoint -->
-          <IncrementIndex index="{wp_index}"/>
+          <!-- Remove the first goal from the array and shift remaining goals forward -->
+          <PopFirstGoal input_goals="{goals}" output_goals="{goals}"/>
 
         </Sequence>
-      </KeepRunningUntilFailure>
-
-      <!-- When loop ends (out of waypoints), treat as mission complete -->
-      <AlwaysSuccess/>
+        <!-- When ProcessWaypoint fails (no more goals), return SUCCESS to complete navigation -->
+        <Sequence name="AllGoalsCompleted"/>
+      </Fallback>
 
     </Sequence>
   </BehaviorTree>

@@ -4,9 +4,11 @@
 #include "behaviortree_cpp/utils/shared_library.h"
 #include "perseus_bt_nodes/get_goal_from_goals.hpp"
 #include "perseus_bt_nodes/increment_index.hpp"
+#include "perseus_bt_nodes/pop_first_goal.hpp"
 
 extern "C" void BT_RegisterNodesFromPlugin(BT::BehaviorTreeFactory& factory)
 {
   factory.registerNodeType<perseus_bt_nodes::GetGoalFromGoals>("GetGoalFromGoals");
   factory.registerNodeType<perseus_bt_nodes::IncrementIndex>("IncrementIndex");
+  factory.registerNodeType<perseus_bt_nodes::PopFirstGoal>("PopFirstGoal");
 }

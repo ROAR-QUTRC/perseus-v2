@@ -109,3 +109,14 @@ ros2 action send_goal -f /navigate_to_pose nav2_msgs/action/NavigateToPose \
 ```
 
 
+
+```sh
+ros2 action send_goal /navigate_through_poses nav2_msgs/action/NavigateThroughPoses \
+"{poses: [
+  {header: {frame_id: map}, pose: {position: {x: 12.5817, y: 12.9668, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.973, w: 0.231}}},
+  {header: {frame_id: map}, pose: {position: {x: 2.9887, y: 5.2331, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.841, w: 0.541}}},
+  {header: {frame_id: map}, pose: {position: {x: 1.8431, y: 1.0241, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.408, w: 0.913}}},
+  {header: {frame_id: map}, pose: {position: {x: 1.6436, y: -7.1337, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.998, w: 0.054}}},
+  {header: {frame_id: map}, pose: {position: {x: 12.1729, y: -3.1052, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.841, w: 0.541}}}
+]}"
+```
