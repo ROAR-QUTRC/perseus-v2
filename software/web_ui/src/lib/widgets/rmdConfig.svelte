@@ -123,7 +123,7 @@
 	});
 
 	const getMotorStatus = () => {
-		if (statusService) {
+		if (statusService && selectedId > 0) {
 			const request: RMDStatusRequest = {
 				motor_id: selectedId
 			};

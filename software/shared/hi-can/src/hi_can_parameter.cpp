@@ -657,6 +657,8 @@ namespace hi_can::parameters::post_landing::servo::rmd
                         this->_phase_c_current = status_3.phase_c_current;
                         break;
                     }
+                    default:
+                        break;
                     }
                     // switch (command)
                     // {
