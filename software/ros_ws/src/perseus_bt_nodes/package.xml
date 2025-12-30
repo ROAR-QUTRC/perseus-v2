@@ -1,21 +1,17 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>autonomy</name>
-  <version>0.0.1</version>
-  <description>ROAR Autonomy software control stack</description>
-  <maintainer email="1388693+DingoOz@users.noreply.github.com">Nigel H-S</maintainer>
-  
-  <license>MIT</license>
+  <name>perseus_bt_nodes</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="nguyenleminh1002@gmail.com">bocho0600</maintainer>
+  <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
-  <depend>slam_toolbox</depend>
-  <depend>navigation2</depend>
-  <depend>xacro</depend>
-  <depend>robot_localization</depend>
-  <depend>perseus_bt_nodes</depend>
+  <depend>behaviortree_cpp</depend>
+  <depend>geometry_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

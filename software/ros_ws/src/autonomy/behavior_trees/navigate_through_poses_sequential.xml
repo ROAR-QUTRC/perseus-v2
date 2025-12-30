@@ -1,20 +1,22 @@
 <root BTCPP_format="4" main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
     <Sequence name="SequentialWaypointNav">
+
       <!-- Initialize index counter -->
       <SetBlackboard output_key="wp_index" value="0"/>
-      
-      <!-- Loop through waypoints until all are visited -->
-      <Fallback name="WaypointLoop">
+
+      <!-- Loop through waypoints until GetGoalFromGoals FAILS (index out of range) -->
+      <KeepRunningUntilFailure name="LoopWaypoints">
         <Sequence name="ProcessWaypoint">
+
           <!-- Extract goal at current index -->
           <GetGoalFromGoals goals="{goals}" index="{wp_index}" goal="{current_goal}"/>
-          
+
           <!-- Navigate to single goal -->
           <PipelineSequence name="NavigateToPose">
             <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
             <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
-            
+
             <!-- Plan to this single goal -->
             <RateController hz="1.0">
               <RecoveryNode number_of_retries="1" name="ComputePathToPose">
@@ -25,7 +27,7 @@
                 </Sequence>
               </RecoveryNode>
             </RateController>
-            
+
             <!-- Follow path to goal -->
             <RecoveryNode number_of_retries="1" name="FollowPath">
               <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
@@ -34,19 +36,22 @@
                 <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
               </Sequence>
             </RecoveryNode>
-            
-            <!-- TODO: Implement ArucoMarker detection service here. -->
-            <!-- Wait at waypoint -->
-            <Wait name="WaitAtWaypoint" wait_duration="2.0"/>
-            
-            <!-- Move to next waypoint and loop back -->
-            <IncrementIndex index="{wp_index}"/>
           </PipelineSequence>
+
+          <!-- Wait at waypoint (do this AFTER navigation completes) -->
+          <Wait name="WaitAtWaypoint" wait_duration="2.0"/>
+
+          <!-- TODO: Call your ArucoMarker detection service here -->
+
+          <!-- Move to next waypoint -->
+          <IncrementIndex index="{wp_index}"/>
+
         </Sequence>
-        
-        <!-- Loop back to process next waypoint (success means all waypoints done) -->
-        <AlwaysSuccess/>
-      </Fallback>
+      </KeepRunningUntilFailure>
+
+      <!-- When loop ends (out of waypoints), treat as mission complete -->
+      <AlwaysSuccess/>
+
     </Sequence>
   </BehaviorTree>
 </root>

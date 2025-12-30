@@ -58,7 +58,7 @@ bt_navigator:
     transform_tolerance: 0.5
     filter_duration: 0.3
     default_nav_to_pose_bt_xml: "$(find-pkg-share autonomy)/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml" # behavior trees location.
-    default_nav_through_poses_bt_xml: "$(find-pkg-share autonomy)/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
+    default_nav_through_poses_bt_xml: "$(find-pkg-share autonomy)/behavior_trees/navigate_through_poses_sequential.xml"
     always_reload_bt_xml: false
     goal_blackboard_id: goal
     goals_blackboard_id: goals
@@ -81,7 +81,9 @@ bt_navigator:
       - route
       - undock_robot
       - wait
-
+    plugin_lib_names:
+      # - nav2_behavior_tree::nav2_tree_node_library
+      - perseus_bt_nodes
 docking_server:
   ros__parameters:
     use_sim_time: true
