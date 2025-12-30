@@ -37,9 +37,9 @@ private:
     std::optional<hi_can::PacketManager> _packet_manager;
 
     constexpr static auto PACKET_HANDLE = std::chrono::milliseconds(100);
-    constexpr static uint16_t RMD_SPEED_LIMIT = 1000;
-    // constexpr static uint16_t STATUS_MESSAGE_MS = 200;
-    constexpr static uint16_t STATUS_MESSAGE_MS = 20;
+    constexpr static uint16_t RMD_SPEED_LIMIT = UINT16_MAX;  // max speed
+    constexpr static uint16_t STATUS_MESSAGE_MS = 200;
+    // constexpr static uint16_t STATUS_MESSAGE_MS = 20;
     constexpr static uint8_t PACKET_DELAY_MS = 20;
 
     bool _status_messages_enabled = false;

@@ -122,7 +122,6 @@ void ArmDriver::_position_control(std_msgs::msg::Float64MultiArray servo_control
 {
     for (size_t i = 0; i < servo_control.data.size(); i++)
     {
-        RCLCPP_INFO(this->get_logger(), "Setting motor ID %zu to position %.2f", i + 1, servo_control.data[i]);
         motor_id_t motor_id = static_cast<motor_id_t>(i + 1);
 
         _can_interface->transmit(Packet(
@@ -197,7 +196,6 @@ void ArmDriver::_get_rmd_can_ids(const std::shared_ptr<perseus_msgs::srv::RmdCan
     {
         response->servo_ids.emplace_back(static_cast<uint8_t>(motor_id));
     }
-    RCLCPP_INFO(this->get_logger(), "Returning %zu available RMD servos", response->servo_ids.size());
 }
 
 void ArmDriver::_restart_motor(const std::shared_ptr<perseus_msgs::srv::RmdData::Request> request, std::shared_ptr<perseus_msgs::srv::RmdData::Response> response)

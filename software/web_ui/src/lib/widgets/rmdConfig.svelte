@@ -275,18 +275,12 @@
 				</div>
 			{/if}
 		</div>
-		<div class="mt-2 flex gap-2 justify-center flex-wrap">
-			<!-- <Button disabled={selectedId === 0} variant="outline" onclick={() => callBrakeEnable(true)}>Brake</Button>
-			<Button disabled={selectedId === 0} variant="outline" onclick={() => callBrakeEnable(false)}>Release</Button> -->
-			<Button disabled={selectedId === 0} variant="outline" onclick={restartMotor}>Restart</Button>
-			<!-- <Button disabled={selectedId === 0} variant="outline" onclick={() => setMotorZero()}>Zero</Button> -->
-		</div>
 	</div>
-	<div class="w-1/2 min-w-[200px]">
-		<div style:aspect-ratio="2 / 1" class="w-full border rounded-2xl p-2 flex flex-col ">
+	<div class="w-1/2 min-w-[400px]">
+		<div style:aspect-ratio="2 / 1" class="w-full border rounded-2xl p-2 flex flex-col relative">
 			{#if selectedId !== 0}
 				<p class="">Change Motor ID:</p>
-				<div class="flex gap-2">
+				<div class="flex gap-2 mb-2">
 					<Input bind:value={newMotorId} type="number" />
 					<AlertDialog.Root bind:open={setIdConfirm}>
 						<AlertDialog.Trigger>
@@ -309,11 +303,12 @@
 					</AlertDialog.Root>
 				</div>
 				<p class="">Set Zero Bias:</p>
-				<div class="flex gap-2">
+				<div class="flex gap-2 mb-2">
 					<Input bind:value={zeroBias} type="number" />
 					<Button onclick={() => setMotorZero(zeroBias)}>Set</Button>
 					<Button onclick={() => setMotorZero()}>Set Current as Zero</Button>
 				</div>
+				<Button disabled={selectedId === 0} variant="outline" onclick={restartMotor}>Restart</Button>
 			{:else}
 				<div class="text-center content-center absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-1/2 aspect-square">
 					<p>Select a single motor ID to view status</p>
