@@ -36,7 +36,7 @@ amcl:
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
-    scan_topic: scan
+    scan_topic: lidar_scan
     map_topic: map
     set_initial_pose: true
     always_reset_initial_pose: false
@@ -187,7 +187,7 @@ local_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /lidar_scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -201,13 +201,14 @@ local_costmap:
         z_voxels: 16
         max_obstacle_height: 2.0
         mark_threshold: 0
-        observation_sources: scan
-        scan:
-          topic: /scan
+        observation_sources: livox_lidar
+        livox_lidar:
+          topic: /points
+          max_obstacle_height: 0.2
           max_obstacle_height: 2.0
           clearing: true
           marking: true
-          data_type: "LaserScan"
+          data_type: "PointCloud2"
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
           obstacle_max_range: 2.5
@@ -234,7 +235,7 @@ global_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /lidar_scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -254,19 +255,19 @@ global_costmap:
         z_voxels: 16
         unknown_threshold: 15
         mark_threshold: 0
-        observation_sources: pointcloud
+        observation_sources: livox_lidar
         combination_method: 1
-        # pointcloud:  # no frame set, uses frame from message
-        #   topic: /rgbd_camera/points
-        #   max_obstacle_height: 2.0
-        #   min_obstacle_height: 0.0
-        #   obstacle_max_range: 2.5
-        #   obstacle_min_range: 0.0
-        #   raytrace_max_range: 3.0
-        #   raytrace_min_range: 0.0
-        #   clearing: True
-        #   marking: True
-        #   data_type: "PointCloud2"
+        livox_lidar:  # no frame set, uses frame from message
+          topic: /points
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.0
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: true
@@ -430,7 +431,7 @@ collision_monitor:
     scan:
       source_timeout: 2.0
       type: "scan"
-      topic: "/scan"
+      topic: "/lidar_scan"
       enabled: true
 
 velocity_smoother:
