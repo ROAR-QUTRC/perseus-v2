@@ -68,11 +68,13 @@ endif()
 file(GLOB_RECURSE ARM_DRIVER_CODE_SOURCES src/arm_driver/*.cpp)
 file(GLOB_RECURSE BUCKET_CONTROLLER_CODE_SOURCES src/bucket_controller/*.cpp)
 file(GLOB_RECURSE BUCKET_DRIVER_CODE_SOURCES src/bucket_driver/*.cpp)
+file(GLOB_RECURSE PROCESSING_PLANT_CODE_SOURCES src/processing_plant/*.cpp)
 
 # Add exec targets
 add_executable(arm_driver ${ARM_DRIVER_CODE_SOURCES})
 add_executable(bucket_controller ${BUCKET_CONTROLLER_CODE_SOURCES})
 add_executable(bucket_driver ${BUCKET_DRIVER_CODE_SOURCES})
+add_executable(processing_plant ${PROCESSING_PLANT_CODE_SOURCES})
 
 # Add include dirs
 target_include_directories(arm_driver
@@ -80,6 +82,8 @@ target_include_directories(arm_driver
 target_include_directories(bucket_controller
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(bucket_driver
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(processing_plant
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add dependencies for the executables
@@ -90,6 +94,8 @@ ament_target_dependencies(
   sensor_msgs)
 ament_target_dependencies(bucket_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           actuator_msgs)
+ament_target_dependencies(processing_plant PUBLIC
+                          ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # target_link_libraries(arm_driver PUBLIC st3215_lib)
 target_link_libraries(bucket_driver PUBLIC hi_can_raw)
@@ -98,6 +104,7 @@ target_link_libraries(bucket_driver PUBLIC hi_can_raw)
 install(TARGETS arm_driver DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_controller DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_driver DESTINATION lib/${PROJECT_NAME})
+install(TARGETS processing_plant DESTINATION lib/${PROJECT_NAME})
 
 install(
   DIRECTORY launch
