@@ -22,8 +22,8 @@ void setup()
     Serial.println("Initialising sensors...");
     writeRegister(spectral_address, spectral_enable_register_address, 0x01);
     delay(100);
-    writeRegister(spectral_address, spectral_enable_register_address, spectral_enable_data)
-        Serial.println("Spectral Sensor Initialised.");
+    writeRegister(spectral_address, spectral_enable_register_address, spectral_enable_data);
+    Serial.println("Spectral Sensor Initialised.");
 
     writeToMagnetometer(magnetometer_address, 0b11110000);
     delay(100);
@@ -112,8 +112,8 @@ void writeToMagnetometer(byte device, byte val)
 void readSpectral()
 {
     Wire.beginTransmission(spectral_address);
-    Wire.write(spectral_data_N_L_register)
-        Wire.endTransmission();
+    Wire.write(spectral_data_N_L_register);
+    Wire.endTransmission();
 
     int bytesToRead = 36;
     Wire.requestFrom(spectral_address, bytesToRead);
@@ -136,7 +136,7 @@ void readSpectral()
     }
     else
     {
-        Serial.println("Error reading spectral sensor")
+        Serial.println("Error reading spectral sensor");
     }
 }
 
