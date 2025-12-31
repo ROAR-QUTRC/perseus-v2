@@ -1,6 +1,7 @@
 #include "processing_plant/processing_plant.hpp"
 
-ProcessingPlant::ProcessingPlant(const rclcpp::NodeOptions& options) : Node("processing_plant", options)
+ProcessingPlant::ProcessingPlant(const rclcpp::NodeOptions& options)
+    : Node("processing_plant", options)
 {
     RCLCPP_INFO(this->get_logger(), "Processing plant node initialised");
 }
