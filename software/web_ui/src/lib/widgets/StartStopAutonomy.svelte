@@ -3,7 +3,7 @@
 
 	export const name = 'Start/Stop';
 	export const description =
-		'Start/Stop autonomy by publishing a Bool to a ROS2 topic + show waypoint table.';
+		'Start/Stop autonomy by calling ROS2 services + show waypoint table.';
 	export const group: WidgetGroupType = 'ROS';
 	export const isRosDependent = true;
 
@@ -32,12 +32,16 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { onMount } from 'svelte';
 
-	// ---------------- ROS ----------------
-	type BoolMessage = { data: boolean };
-	let enableTopic = $state<ROSLIB.Topic<BoolMessage> | null>(null);
+	// ---------------- ROS (Services) ----------------
+	let runSrv = $state<ROSLIB.Service | null>(null);
+	let cancelSrv = $state<ROSLIB.Service | null>(null);
 
 	// ---------------- UI state ----------------
 	let isStarted = $state(false);
+
+	// Service status / busy
+	let svcStatus = $state<string>('ROS disconnected');
+	let svcBusy = $state(false);
 
 	// ---------------- Hold-to-stop ----------------
 	const HOLD_MS = 3000;
@@ -54,23 +58,6 @@
 		if (progressTimer) clearInterval(progressTimer);
 		holdTimer = null;
 		progressTimer = null;
-	};
-
-	const startHoldStop = () => {
-		if (!isStarted || isHoldingStop) return;
-
-		isHoldingStop = true;
-		holdStartTs = Date.now();
-
-		holdTimer = window.setTimeout(() => {
-			enableTopic?.publish({ data: false });
-			isStarted = false;
-			clearHold();
-		}, HOLD_MS);
-
-		progressTimer = window.setInterval(() => {
-			holdProgress = Math.min(1, (Date.now() - holdStartTs) / HOLD_MS);
-		}, 16);
 	};
 
 	// ---------------- Waypoints ----------------
@@ -125,7 +112,7 @@
 				}))
 				.filter((w) => Number.isFinite(w.x) && Number.isFinite(w.y));
 		} catch (e: any) {
-			yamlError = e.message;
+			yamlError = e?.message ?? 'Failed to load YAML';
 			waypoints = [];
 		} finally {
 			isLoadingYaml = false;
@@ -139,33 +126,104 @@
 		loadWaypointsYaml();
 	});
 
-	// ---------------- ROS connection ----------------
+	// ---------------- ROS connection (services) ----------------
 	$effect(() => {
 		const ros = getRosConnection();
 		if (!ros) {
-			enableTopic = null;
+			runSrv = null;
+			cancelSrv = null;
+			svcStatus = 'ROS disconnected';
+			svcBusy = false;
+
 			isStarted = false;
 			clearHold();
 			return;
 		}
 
-		enableTopic?.unsubscribe();
-		enableTopic = new ROSLIB.Topic({
+		runSrv = new ROSLIB.Service({
 			ros,
-			name: '/autonomy/enable',
-			messageType: 'std_msgs/msg/Bool'
+			name: '/autonomy/run_waypoints',
+			serviceType: 'perseus_autonomy_interfaces/srv/RunWaypoints'
 		});
+
+		cancelSrv = new ROSLIB.Service({
+			ros,
+			name: '/autonomy/cancel_waypoints',
+			serviceType: 'perseus_autonomy_interfaces/srv/CancelWaypoints'
+		});
+
+		svcStatus = 'ROS connected';
 	});
 
 	const sendStart = () => {
-		enableTopic?.publish({ data: true });
-		isStarted = true;
+		if (!runSrv) {
+			svcStatus = 'Run service not ready';
+			return;
+		}
+
+		svcBusy = true;
+		svcStatus = 'Sending run request...';
+
+		const yaml_path = getSelectedYaml(); // HTTP path (e.g. "/waypoints.yaml")
+
+		runSrv.callService(
+			new ROSLIB.ServiceRequest({ yaml_path }),
+			(resp: any) => {
+				svcBusy = false;
+				svcStatus = resp?.message ?? 'Run response received';
+				if (resp?.success) {
+					isStarted = true;
+				}
+			},
+			(err: any) => {
+				svcBusy = false;
+				svcStatus = `Run failed: ${err?.toString?.() ?? err}`;
+			}
+		);
+	};
+
+	const startHoldStop = () => {
+		if (!isStarted || isHoldingStop || svcBusy) return;
+
+		isHoldingStop = true;
+		holdStartTs = Date.now();
+
+		holdTimer = window.setTimeout(() => {
+			// After holding long enough: call cancel service
+			if (!cancelSrv) {
+				svcStatus = 'Cancel service not ready';
+				isStarted = false;
+				clearHold();
+				return;
+			}
+
+			svcBusy = true;
+			svcStatus = 'Cancelling...';
+
+			cancelSrv.callService(
+				new ROSLIB.ServiceRequest({}),
+				(resp: any) => {
+					svcBusy = false;
+					svcStatus = resp?.message ?? 'Cancel response received';
+					isStarted = false;
+					clearHold();
+				},
+				(err: any) => {
+					svcBusy = false;
+					svcStatus = `Cancel failed: ${err?.toString?.() ?? err}`;
+					clearHold();
+				}
+			);
+		}, HOLD_MS);
+
+		progressTimer = window.setInterval(() => {
+			holdProgress = Math.min(1, (Date.now() - holdStartTs) / HOLD_MS);
+		}, 16);
 	};
 
 	onMount(() => {
 		loadWaypointsYaml();
 		return () => {
-			enableTopic?.unsubscribe();
 			clearHold();
 		};
 	});
@@ -175,10 +233,10 @@
 	<!-- Waypoints Table -->
 	<div class="rounded-xl border bg-background shadow-sm">
 		<div class="flex items-center justify-between border-b px-3 py-2">
-			<div>
+			<div class="w-full">
 				<p class="text-sm font-semibold">Waypoints</p>
 
-				<div class="mt-0.5 flex items-center gap-2">
+				<div class="mt-0.5 flex flex-wrap items-center gap-2">
 					<p class="text-xs opacity-60">{getSelectedYaml()}</p>
 
 					<!-- Dropdown to choose YAML file -->
@@ -202,6 +260,10 @@
 						<span class="text-xs animate-pulse opacity-70">Loading…</span>
 					{/if}
 				</div>
+
+				<p class="mt-1 text-xs opacity-70">
+					Status: <span class="font-mono">{svcStatus}</span>
+				</p>
 			</div>
 		</div>
 
@@ -240,7 +302,7 @@
 		class={isStarted
 			? 'relative w-full font-bold bg-green-700 ring-2 ring-green-300 text-white'
 			: 'w-full font-bold bg-green-600 text-white hover:bg-green-700'}
-		disabled={isStarted || !enableTopic}
+		disabled={isStarted || !runSrv || svcBusy}
 		onclick={sendStart}
 	>
 		{isStarted ? 'AUTONOMY IN PROGRESS' : 'START'}
@@ -249,7 +311,7 @@
 	<!-- STOP -->
 	<Button
 		class="relative w-full font-bold bg-red-600 text-white overflow-hidden"
-		disabled={!isStarted || !enableTopic}
+		disabled={!isStarted || !cancelSrv || svcBusy}
 		onpointerdown={(e) => e.button === 0 && startHoldStop()}
 		onpointerup={clearHold}
 		onpointerleave={clearHold}
