@@ -13,12 +13,11 @@
 			waypoints: {
 				yamlFile: {
 					type: 'select',
-					value: '/waypoints.yaml',
+					value: '/waypoints_simulation.yaml',
 					options: [
 						{ label: 'waypoints.yaml', value: '/waypoints.yaml' },
 						{ label: 'waypoints_simulation.yaml', value: '/waypoints_simulation.yaml' },
 						{ label: 'waypoints_test.yaml', value: '/waypoints_test.yaml' },
-						{ label: 'waypoints_arc.yaml', value: '/waypoints_arc.yaml' }
 					]
 				}
 			}
@@ -42,6 +41,9 @@
 	// Service status / busy
 	let svcStatus = $state<string>('ROS disconnected');
 	let svcBusy = $state(false);
+
+	// Start-button label state
+	let isSendingStart = $state(false);
 
 	// ---------------- Hold-to-stop ----------------
 	const HOLD_MS = 3000;
@@ -121,7 +123,6 @@
 
 	// Auto-reload when dropdown changes
 	$effect(() => {
-		// Touch the reactive value so this reruns on change
 		void settings.groups.waypoints.yamlFile.value;
 		loadWaypointsYaml();
 	});
@@ -134,6 +135,7 @@
 			cancelSrv = null;
 			svcStatus = 'ROS disconnected';
 			svcBusy = false;
+			isSendingStart = false;
 
 			isStarted = false;
 			clearHold();
@@ -162,21 +164,23 @@
 		}
 
 		svcBusy = true;
+		isSendingStart = true;
 		svcStatus = 'Sending run request...';
 
-		const yaml_path = getSelectedYaml(); // HTTP path (e.g. "/waypoints.yaml")
+		const yaml_path = getSelectedYaml();
 
 		runSrv.callService(
 			new ROSLIB.ServiceRequest({ yaml_path }),
 			(resp: any) => {
 				svcBusy = false;
+				isSendingStart = false;
+
 				svcStatus = resp?.message ?? 'Run response received';
-				if (resp?.success) {
-					isStarted = true;
-				}
+				if (resp?.success) isStarted = true;
 			},
 			(err: any) => {
 				svcBusy = false;
+				isSendingStart = false;
 				svcStatus = `Run failed: ${err?.toString?.() ?? err}`;
 			}
 		);
@@ -189,7 +193,6 @@
 		holdStartTs = Date.now();
 
 		holdTimer = window.setTimeout(() => {
-			// After holding long enough: call cancel service
 			if (!cancelSrv) {
 				svcStatus = 'Cancel service not ready';
 				isStarted = false;
@@ -229,100 +232,120 @@
 	});
 </script>
 
-<div class="flex h-full w-full flex-col gap-3">
-	<!-- Waypoints Table -->
-	<div class="rounded-xl border bg-background shadow-sm">
-		<div class="flex items-center justify-between border-b px-3 py-2">
-			<div class="w-full">
-				<p class="text-sm font-semibold">Waypoints</p>
+<div class="flex h-full w-full flex-col">
+	<!-- CONTENT (this is the part that shrinks) -->
+	<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+		<!-- Waypoints Table -->
+		<div class="rounded-xl border bg-background shadow-sm overflow-hidden flex min-h-0 flex-1 flex-col">
+			<div class="flex items-center justify-between border-b px-3 py-2 shrink-0">
+				<div class="w-full">
+					<p class="text-sm font-semibold">Remaining Waypoints</p>
 
-				<div class="mt-0.5 flex flex-wrap items-center gap-2">
-					<p class="text-xs opacity-60">{getSelectedYaml()}</p>
+					<div class="mt-0.5 flex flex-wrap items-center gap-2">
+						<p class="text-xs opacity-60">{getSelectedYaml()}</p>
 
-					<!-- Dropdown to choose YAML file -->
-					<select
-						class="h-7 rounded-md border bg-background px-2 text-xs hover:bg-accent"
-						bind:value={settings.groups.waypoints.yamlFile.value}
-					>
-						{#each settings.groups.waypoints.yamlFile.options as opt}
-							<option value={opt.value}>{opt.label}</option>
-						{/each}
-					</select>
+						<select
+							class="h-7 rounded-md border bg-background px-2 text-xs hover:bg-accent"
+							bind:value={settings.groups.waypoints.yamlFile.value}
+						>
+							{#each settings.groups.waypoints.yamlFile.options as opt}
+								<option value={opt.value}>{opt.label}</option>
+							{/each}
+						</select>
 
-					<button
-						class="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-						onclick={loadWaypointsYaml}
-					>
-						Refresh
-					</button>
+						<button
+							class="rounded-md border px-2 py-1 text-xs hover:bg-accent"
+							onclick={loadWaypointsYaml}
+						>
+							Refresh
+						</button>
 
-					{#if isLoadingYaml}
-						<span class="text-xs animate-pulse opacity-70">Loading…</span>
-					{/if}
+						{#if isLoadingYaml}
+							<span class="text-xs animate-pulse opacity-70">Loading…</span>
+						{/if}
+					</div>
 				</div>
-
-				<p class="mt-1 text-xs opacity-70">
-					Status: <span class="font-mono">{svcStatus}</span>
-				</p>
 			</div>
-		</div>
 
-		{#if yamlError}
-			<div class="px-3 py-2">
-				<p class="text-xs font-semibold text-red-500">{yamlError}</p>
-			</div>
-		{:else}
-			<div class="max-h-52 overflow-auto">
-				<table class="w-full text-sm">
-					<thead class="sticky top-0 bg-muted/70">
-						<tr class="border-b">
-							<th class="px-3 py-2 text-left">Name</th>
-							<th class="px-3 py-2 text-right">X</th>
-							<th class="px-3 py-2 text-right">Y</th>
-							<th class="px-3 py-2 text-right">Yaw</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each waypoints as wp, i}
-							<tr class={`border-b hover:bg-accent/50 ${i % 2 === 1 ? 'bg-muted/30' : ''}`}>
-								<td class="px-3 py-2 font-medium">{wp.name}</td>
-								<td class="px-3 py-2 text-right font-mono">{wp.x.toFixed(3)}</td>
-								<td class="px-3 py-2 text-right font-mono">{wp.y.toFixed(3)}</td>
-								<td class="px-3 py-2 text-right font-mono">{wp.yaw ?? '—'}</td>
+			{#if yamlError}
+				<div class="px-3 py-2">
+					<p class="text-xs font-semibold text-red-500">{yamlError}</p>
+				</div>
+			{:else}
+				<!-- This area will shrink + scroll -->
+				<div class="min-h-0 flex-1 overflow-auto">
+					<table class="w-full text-sm">
+						<thead class="sticky top-0 bg-muted/70">
+							<tr class="border-b">
+								<th class="px-3 py-2 text-left">Name</th>
+								<th class="px-3 py-2 text-right">X</th>
+								<th class="px-3 py-2 text-right">Y</th>
+								<th class="px-3 py-2 text-right">Yaw</th>
 							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+						</thead>
+						<tbody>
+							{#each waypoints as wp, i}
+								<tr class={`border-b hover:bg-accent/50 ${i % 2 === 1 ? 'bg-muted/30' : ''}`}>
+									<td class="px-3 py-2 font-medium">{wp.name}</td>
+									<td class="px-3 py-2 text-right font-mono">{wp.x.toFixed(1)}</td>
+									<td class="px-3 py-2 text-right font-mono">{wp.y.toFixed(1)}</td>
+									<td class="px-3 py-2 text-right font-mono">{wp.yaw ?? '—'}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
+		</div>
 	</div>
 
-	<!-- START -->
-	<Button
-		class={isStarted
-			? 'relative w-full font-bold bg-green-700 ring-2 ring-green-300 text-white'
-			: 'w-full font-bold bg-green-600 text-white hover:bg-green-700'}
-		disabled={isStarted || !runSrv || svcBusy}
-		onclick={sendStart}
-	>
-		{isStarted ? 'AUTONOMY IN PROGRESS' : 'START'}
-	</Button>
+	<!-- FOOTER (always pinned to bottom) -->
+	<div class="mt-auto flex shrink-0 flex-col gap-3 pt-3">
+		<!-- START (fixed height) -->
+		<Button
+			class={
+				(isStarted
+					? 'relative w-full font-bold bg-green-700 ring-2 ring-green-300 text-white'
+					: 'w-full font-bold bg-green-600 text-white hover:bg-green-700') +
+				' h-12 shrink-0'
+			}
+			disabled={isStarted || !runSrv || svcBusy}
+			onclick={sendStart}
+		>
+			{#if isSendingStart}
+				SENDING RUN REQUEST…
+			{:else if isStarted}
+				AUTONOMY IN PROGRESS
+			{:else}
+				START
+			{/if}
+		</Button>
 
-	<!-- STOP -->
-	<Button
-		class="relative w-full font-bold bg-red-600 text-white overflow-hidden"
-		disabled={!isStarted || !cancelSrv || svcBusy}
-		onpointerdown={(e) => e.button === 0 && startHoldStop()}
-		onpointerup={clearHold}
-		onpointerleave={clearHold}
-		onpointercancel={clearHold}
-	>
-		<span
-			class="absolute inset-y-0 left-0 bg-white/25"
-			style={`width:${holdProgress * 100}%`}
-		></span>
-		<span class="relative z-10">
-			{isHoldingStop ? 'STOPPING AUTONOMY...' : 'HOLD TO STOP'}
-		</span>
-	</Button>
+		<!-- STOP (fixed height) -->
+		<Button
+			class="relative w-full font-bold bg-red-600 text-white overflow-hidden h-12 shrink-0"
+			disabled={!isStarted || !cancelSrv || svcBusy}
+			onpointerdown={(e) => e.button === 0 && startHoldStop()}
+			onpointerup={clearHold}
+			onpointerleave={clearHold}
+			onpointercancel={clearHold}
+		>
+			<span
+				class="absolute inset-y-0 left-0 bg-white/25"
+				style={`width:${holdProgress * 100}%`}
+			></span>
+			<span class="relative z-10">
+				{#if isHoldingStop}
+					STOPPING AUTONOMY...
+				{:else}
+					HOLD TO STOP
+				{/if}
+			</span>
+		</Button>
+
+		<!-- STATUS (single line) -->
+		<p class="text-xs opacity-70">
+			Status: <span class="font-mono">{svcStatus}</span>
+		</p>
+	</div>
 </div>
