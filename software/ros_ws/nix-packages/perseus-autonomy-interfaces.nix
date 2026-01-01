@@ -5,31 +5,25 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
-  geometry-msgs,
-  nav2-msgs,
-  perseus-autonomy-interfaces,
-  rclcpp,
-  rclcpp-action,
+  rosidl-default-generators,
+  rosidl-default-runtime,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-perseus-autonomy-bridge";
+  pname = "ros-jazzy-perseus-autonomy-interfaces";
   version = "0.0.0";
 
-  src = ./../src/perseus_autonomy_bridge;
+  src = ./../src/perseus_autonomy_interfaces;
 
   buildType = "ament_cmake";
-  buildInputs = [ ament-cmake ];
+  buildInputs = [
+    ament-cmake
+    rosidl-default-generators
+  ];
   checkInputs = [
     ament-lint-auto
     ament-lint-common
   ];
-  propagatedBuildInputs = [
-    geometry-msgs
-    nav2-msgs
-    perseus-autonomy-interfaces
-    rclcpp
-    rclcpp-action
-  ];
+  propagatedBuildInputs = [ rosidl-default-runtime ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
