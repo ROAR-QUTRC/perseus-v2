@@ -17,6 +17,7 @@ ProcessingPlant::ProcessingPlant(const rclcpp::NodeOptions& options)
     }
     _init_spectral();
     _init_magnetometer();
+    _sensor_timer = this->create_timer(SENSOR_READ_TIMEOUT, std::bind(&ProcessingPlant::_sensor_callback, this));
     RCLCPP_INFO(this->get_logger(), "Processing plant node initialised");
 }
 
@@ -106,6 +107,35 @@ std::vector<uint8_t> ProcessingPlant::_read_write_i2c(const uint16_t address, st
     return_data.assign(received_data, (received_data + (read_bytes * sizeof(uint8_t))));
     free(received_data);
     return return_data;
+}
+
+void ProcessingPlant::_read_spectral()
+{
+    std::vector<uint8_t> send_data = {};
+    std::vector<uint8_t> receive_data = _read_write_i2c(_spectral_address, &send_data, 36);
+}
+
+void ProcessingPlant::_read_magnetometer()
+{
+    std::vector<uint8_t> send_data = {_magnetometer_start};
+    std::vector<uint8_t> receive_data = _read_write_i2c(_magnetometer_address, &send_data, 9);
+    uint8_t status = receive_data.at(0);
+    int16_t x = (receive_data.at(1) << 8) | receive_data.at(2);
+    int16_t y = (receive_data.at(3) << 8) | receive_data.at(4);
+    int16_t z = (receive_data.at(5) << 8) | receive_data.at(6);
+    int16_t t = (receive_data.at(7) << 8) | receive_data.at(8);
+    RCLCPP_INFO(this->get_logger(), "Magnetometer");
+    RCLCPP_INFO(this->get_logger(), "Status: %d", status);
+    RCLCPP_INFO(this->get_logger(), "X: %d", x);
+    RCLCPP_INFO(this->get_logger(), "Y: %d", y);
+    RCLCPP_INFO(this->get_logger(), "Z: %d", z);
+    RCLCPP_INFO(this->get_logger(), "T: %d", t);
+}
+
+void ProcessingPlant::_sensor_callback()
+{
+    _read_magnetometer();
+    _read_spectral();
 }
 
 ProcessingPlant::~ProcessingPlant()
