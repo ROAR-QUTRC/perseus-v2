@@ -1,23 +1,22 @@
+#include <cctype>
 #include <chrono>
+#include <cmath>
+#include <fstream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <optional>
-#include <cmath>
-#include <cctype>
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp_action/rclcpp_action.hpp"
-#include "rclcpp/serialization.hpp"
-
-#include "nav2_msgs/action/navigate_through_poses.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "nav2_msgs/action/navigate_through_poses.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/serialization.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
 
 // bt services and messages
-#include "perseus_autonomy_interfaces/srv/run_waypoints.hpp"
-#include "perseus_autonomy_interfaces/srv/cancel_waypoints.hpp"
 #include "perseus_autonomy_interfaces/msg/navigation_info.hpp"
+#include "perseus_autonomy_interfaces/srv/cancel_waypoints.hpp"
+#include "perseus_autonomy_interfaces/srv/run_waypoints.hpp"
 using NavigateThroughPoses = nav2_msgs::action::NavigateThroughPoses;
 using GoalHandleNav = rclcpp_action::ClientGoalHandle<NavigateThroughPoses>;
 
@@ -55,7 +54,8 @@ static std::vector<Waypoint> load_waypoints_yaml(const std::string& path)
 
     auto trim = [](std::string s)
     {
-        auto is_space = [](unsigned char c) { return std::isspace(c); };
+        auto is_space = [](unsigned char c)
+        { return std::isspace(c); };
         while (!s.empty() && is_space(static_cast<unsigned char>(s.front()))) s.erase(s.begin());
         while (!s.empty() && is_space(static_cast<unsigned char>(s.back()))) s.pop_back();
         return s;
@@ -160,13 +160,14 @@ public:
 
         // Subscribe to the feedback topic using a generic subscription with a lambda
         // The feedback message contains the navigation data we need
-        auto generic_callback = [this](std::shared_ptr<rclcpp::SerializedMessage> msg) {
+        auto generic_callback = [this](std::shared_ptr<rclcpp::SerializedMessage> msg)
+        {
             // Store the serialized message for later deserialization
             this->last_serialized_feedback_ = msg;
             // Update the timestamp to track when we last received feedback
             this->last_feedback_time_ = this->now();
         };
-        
+
         feedback_sub_ = this->create_generic_subscription(
             "/navigate_through_poses/_action/feedback",
             "nav2_msgs/action/NavigateThroughPoses_FeedbackMessage",
@@ -359,7 +360,7 @@ private:
             catch (const std::exception& e)
             {
                 RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
-                    "Failed to deserialize feedback: %s", e.what());
+                                     "Failed to deserialize feedback: %s", e.what());
             }
         }
 
@@ -371,13 +372,13 @@ private:
         nav_info->number_of_recoveries = current_feedback_.number_of_recoveries;
         nav_info->distance_remaining = current_feedback_.distance_remaining;
         nav_info->number_of_poses_remaining = current_feedback_.number_of_poses_remaining;
-        
+
         // Check if navigation is active: we need both an active goal AND recent feedback
         auto now = this->now();
         auto time_since_feedback = (now - last_feedback_time_).seconds();
         // Active only if we have an active goal AND received feedback within last 2 seconds
         nav_info->navigation_active = (active_goal_ != nullptr) || (time_since_feedback < 0.2);
-        RCLCPP_INFO(this->get_logger(), "Time since last feedback: %.2f seconds, active_goal: %s", 
+        RCLCPP_INFO(this->get_logger(), "Time since last feedback: %.2f seconds, active_goal: %s",
                     time_since_feedback, (active_goal_ != nullptr) ? "yes" : "no");
         nav_info_pub_->publish(std::move(nav_info));
     }
