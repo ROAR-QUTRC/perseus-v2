@@ -15,6 +15,11 @@ private:
     void _init_magnetometer();
     void _write_i2c(const uint16_t address, std::vector<uint8_t>* data);
     std::vector<uint8_t> _read_write_i2c(const uint16_t address, std::vector<uint8_t>* send_data, uint16_t read_bytes);
+    void _read_spectral();
+    void _read_magnetometer();
+    void _sensor_callback();
+    constexpr static auto SENSOR_READ_TIMEOUT = std::chrono::milliseconds(300);
+    rclcpp::TimerBase::SharedPtr _sensor_timer;
     const uint8_t _spectral_address = 0x00;  // TODO: Change this to the proper address
     const uint8_t _spectral_enable_register = 0x80;
     const uint8_t _spectral_enable_data = 0b00001011;
@@ -22,6 +27,8 @@ private:
     const uint8_t _magnetometer_address = 0x01;  // TODO: Change this to the proper address
     const uint8_t _magnetometer_enable_data = 0b11110000;
     const uint8_t _magnetometer_enable_xyz = 0b00000111;
+    const uint8_t _magnetometer_start = 0x3E;
+    const uint8_t _magnetometer_read = 0x4E;
     const std::string _i2c_filename = "/dev/i2c-0";  // TODO: Make this a ROS2 input option
     int _i2c_file = -1;
 };
