@@ -13,10 +13,10 @@
 #include "perseus_msgs/srv/rmd_data.hpp"
 #include "perseus_msgs/srv/rmd_servo_status.hpp"
 
-class ArmDriver : public rclcpp::Node
+class RmdDriver : public rclcpp::Node
 {
 public:
-    explicit ArmDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+    explicit RmdDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
     void cleanup();
 

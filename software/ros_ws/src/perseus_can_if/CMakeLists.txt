@@ -41,8 +41,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs nlohmann_json perseus_msgs
-                                 std_msgs std_srvs)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs nlohmann_json
+                                 std_msgs)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
@@ -67,27 +67,20 @@ endif()
 
 # Find all source files for the executables
 file(GLOB_RECURSE RCB_DRIVER_CODE_SOURCES src/rcb_driver/*.cpp)
-file(GLOB_RECURSE ARM_DRIVER_CODE_SOURCES src/arm_driver/*.cpp)
 
 # Add exec targets
 add_executable(rcb_driver ${RCB_DRIVER_CODE_SOURCES})
-add_executable(arm_driver ${ARM_DRIVER_CODE_SOURCES})
 
 # Add include dirs
 target_include_directories(rcb_driver
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(arm_driver
-                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add dependencies for the executables
 ament_target_dependencies(rcb_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-ament_target_dependencies(arm_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 target_link_libraries(rcb_driver PUBLIC hi_can_raw)
-target_link_libraries(arm_driver PUBLIC hi_can_raw)
 
 # Install ROS Executable
 install(TARGETS rcb_driver DESTINATION lib/${PROJECT_NAME})
-install(TARGETS arm_driver DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
