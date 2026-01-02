@@ -4,6 +4,18 @@
             "path": "."
         },
         {
+            "name": "ROS2 Workspace",
+            "path": "./software/ros_ws"
+        },
+        {
+            "name": "Web UI",
+            "path": "./software/web_ui"
+        },
+        {
+            "name": "RSBL85 Driver",
+            "path": "firmware/RSBL85-driver"
+        },
+        {
             "name": "BMS Firmware",
             "path": "./firmware/battery-management-system"
         },

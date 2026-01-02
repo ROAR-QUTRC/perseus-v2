@@ -25,6 +25,10 @@
             "path": "./excavation-bucket"
         },
         {
+            "name": "RSBL Firmware",
+            "path": "./RSBL85-driver"
+        },
+        {
             "name": "Workspace Root",
             "path": ".."
         },
