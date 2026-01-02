@@ -5,7 +5,7 @@
 	import * as Select from '$lib/components/ui/select/index';
 	import * as Collapsible from '$lib/components/ui/collapsible/index';
 	import { CaretSort, DotsHorizontal, QuestionMarkCircled } from 'svelte-radix';
-	import { layouts, type WidgetType } from '$lib/scripts/state.svelte';
+	import { getWidgetsByLayoutId, layouts, type WidgetType } from '$lib/scripts/state.svelte';
 	import Button from './ui/button/button.svelte';
 	import Label from './ui/label/label.svelte';
 	import Input from './ui/input/input.svelte';
@@ -37,19 +37,21 @@
 	};
 
 	const saveState = () => {
-		repo(Layout)
-			.update(layouts.value[layouts.active].id, {
-				widgets: layouts.value[layouts.active].widgets.map((widget) => {
-					// if the widget name matches update its state
-					if (widget.name === widgetData.name) {
-						widget.state = JSON.stringify(widgetData.settings);
-					}
-					return widget;
-				})
-			})
-			.then(() => {
-				toast.success('State saved');
-			});
+		console.log(getWidgetsByLayoutId(layouts.value[layouts.active].id)[0].settings, JSON.stringify(getWidgetsByLayoutId(layouts.value[layouts.active].id)[0].settings));
+
+		// repo(Layout)
+		// 	.update(layouts.value[layouts.active].id, {
+		// 		widgets: layouts.value[layouts.active].widgets.map((widget) => {
+		// 			// if the widget name matches update its state
+		// 			if (widget.name === widgetData.name) {
+		// 				widget.state = JSON.stringify(widgetData.settings);
+		// 			}
+		// 			return widget;
+		// 		})
+		// 	})
+		// 	.then(() => {
+		// 		toast.success('State saved');
+		// 	});
 	};
 
 	const getSelectValue = (field: {
@@ -116,7 +118,7 @@
 												<Switch
 													class="my-2"
 													disabled={widgetData.settings.groups[group][field].disabled}
-													checked={widgetData.settings.groups[group][field].value === 'true'
+													checked={widgetData.settings.groups[group][field].value
 														? true
 														: false}
 													onCheckedChange={(checked) =>
@@ -149,7 +151,7 @@
 													disabled={widgetData.settings.groups[group][field].action === undefined ||
 														widgetData.settings.groups[group][field].disabled}
 													onclick={() =>
-														handleClick(widgetData.settings.groups[group][field].action!)}
+														handleClick(() => widgetData.settings.callAction(group, field as never) ?? '')}
 												>
 													{changeCase.sentenceCase(field)}
 												</Button>

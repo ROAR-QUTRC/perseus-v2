@@ -1,41 +1,42 @@
 <script lang="ts" module>
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
-	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
+	import type { WidgetGroupType } from '$lib/scripts/state.svelte';
+	import { WidgetSettings } from '$lib/scripts/settings.svelte';
 
 	export const name = 'Topic monitor';
 	export const description = 'Monitor the content and vitals of ROS topics';
 	export const group = 'ROS';
 	export const isRosDependent = true;
 
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-		groups: {
-			general: {
-				maxFrequencyError: {
-					type: 'number',
-					value: '10',
-					description:
-						'This is used to calculate the colours used in the table. The for larger numbers values with greater error will be closer to green.'
-				}
+	export const settings = $state(new WidgetSettings({
+		general: {
+			maxFrequencyError: {
+				type: 'number',
+				value: 10,
+				description:
+					'This is used to calculate the colours used in the table. The for larger numbers values with greater error will be closer to green.'
+			}
+		},
+		newMonitor: {
+			topic: {
+				type: 'select',
+				options: []
 			},
-			newMonitor: {
-				topic: {
-					type: 'select',
-					options: []
-				},
-				createMonitor: {
-					type: 'button'
-				},
-				refreshTopics: {
-					type: 'button'
-				},
-				config: {
-					type: 'text',
-					value: '',
-					disabled: true
-				}
+			createMonitor: {
+				type: 'button',
+				action: () => null
+			},
+			refreshTopics: {
+				type: 'button',
+				action: () => null
+			},
+			config: {
+				type: 'text',
+				value: '',
+				disabled: true
 			}
 		}
-	});
+	}));
 </script>
 
 <script lang="ts">
@@ -62,7 +63,7 @@
 		if (!getRosConnection()) {
 			untrack(() => {
 				rosConnected = false;
-				settings.groups.newMonitor.topic.options = [];
+				settings.clearSelectOptions('newMonitor', 'topic');
 				monitors.forEach((monitor) => {
 					monitor.listener.unsubscribe();
 				});
@@ -91,7 +92,7 @@
 						label: topic
 					};
 				});
-				settings.groups.newMonitor.topic.options = topicOptions;
+				settings.setSelectOptions('newMonitor', 'topic', topicOptions);
 			},
 			(error) => {
 				console.error('Error getting topics', error);
@@ -99,7 +100,7 @@
 		);
 
 		// load monitors from config
-		let config: string | string[] | undefined = settings.groups.newMonitor.config.value;
+		let config: string | string[] | undefined = settings.getValue('newMonitor', 'config');
 		if (config !== '' && config !== undefined) {
 			config = config.split(',');
 			for (const monitor of config) {
@@ -168,7 +169,7 @@
 				settings.groups[topic] = {
 					expectedFrequency: {
 						type: 'number',
-						value: String(frequency)
+						value: frequency
 					},
 					updateMonitor: {
 						type: 'button',
@@ -183,12 +184,11 @@
 							monitors[index].targetFrequency = Number(frequency);
 
 							// update readonly config
-							const config = settings.groups.newMonitor.config.value!.split(',');
+							const config = settings.getValue('newMonitor', 'config')!.split(',');
 							const topicIndex = config.findIndex((config) => config.split('@')[0] === topic);
 							if (topicIndex === -1) return 'Monitor not found in config';
 							config[topicIndex] = topic + '@' + frequency;
-							settings.groups.newMonitor.config.value = config.join(',');
-
+							settings.setValue('newMonitor', 'config', config.join(','));
 							return 'Monitor updated';
 						}
 					}
@@ -212,19 +212,19 @@
 	}
 
 	onMount(() => {
-		// add action for buttons
-		settings.groups.newMonitor.createMonitor.action = (): string => {
-			return addMonitor(settings.groups.newMonitor.topic.value, 10, false);
-		};
+		// add action for buttons since they will not be loaded after the state is saved
+		settings.setActionCallback('newMonitor', 'createMonitor', (): string => {
+			return addMonitor(settings.getValue('newMonitor', 'topic'), 10, false);
+		});
 
-		settings.groups.newMonitor.refreshTopics.action = (): string => {
+		settings.setActionCallback('newMonitor', 'refreshTopics', (): string => {
 			innit();
 			return 'Topics refreshed';
-		};
+		});
 
 		return () => {
 			// Cleanup
-			settings.groups.newMonitor.topic.options = [];
+			settings.setSelectOptions('newMonitor', 'topic', []);
 
 			for (const monitor of monitors) {
 				monitor.listener.unsubscribe();

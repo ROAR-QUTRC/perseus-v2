@@ -1,50 +1,48 @@
 <script lang="ts" module>
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
-	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
+	import { WidgetSettings } from '$lib/scripts/settings.svelte';
 
 	export const name = 'Twistometer';
 	export const description = 'Vector based gauge to display raw ros twist messages';
 	export const group = 'ROS';
 	export const isRosDependent = true;
 
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-		groups: {
-			General: {
-				topic: {
-					type: 'select',
-					description: 'ROS topic to subscribe to',
-					options: [],
-					value: ''
-				},
-				gaugeSize: {
-					type: 'number',
-					description: 'Size of the gauge in pixels',
-					value: '300'
-				},
-				MaxXValue: {
-					type: 'number',
-					description: 'Maximum value for the x axis',
-					value: '2'
-				},
-				MaxYValue: {
-					type: 'number',
-					description: 'Maximum value for the y axis',
-					value: '2'
-				},
-				MaxZValue: {
-					type: 'number',
-					description: 'Maximum value for the z axis',
-					value: '2'
-				}
+	export const settings = $state(new WidgetSettings({
+		General: {
+			topic: {
+				type: 'select',
+				description: 'ROS topic to subscribe to',
+				options: []
+			},
+			gaugeSize: {
+				type: 'number',
+				description: 'Size of the gauge in pixels',
+				value: 300
+			},
+			MaxXValue: {
+				type: 'number',
+				description: 'Maximum value for the x axis',
+				value: 2
+			},
+			MaxYValue: {
+				type: 'number',
+				description: 'Maximum value for the y axis',
+				value: 2
+			},
+			MaxZValue: {
+				type: 'number',
+				description: 'Maximum value for the z axis',
+				value: 2
 			}
 		}
-	});
+	}));
 </script>
 
 <script lang="ts">
 	import { getRosConnection } from '$lib/scripts/rosBridge.svelte';
 	import * as ROSLIB from 'roslib';
 	import { onMount } from 'svelte';
+	import type { TwistStampedMessage } from '$lib/scripts/rosTypes';
 
 	let canvas = $state<HTMLCanvasElement | null>(null);
 	let context = $state<CanvasRenderingContext2D | null>(null);
@@ -86,19 +84,19 @@
 		canvas_arrow(context!, canvasSize / 2, canvasSize / 2, canvasSize / 2 + y, canvasSize / 2 + x);
 	};
 
-	let twistTopic: ROSLIB.Topic | null = null;
+	let twistTopic: ROSLIB.Topic<TwistStampedMessage> | null = null;
 
 	$effect(() => {
 		if (getRosConnection()) {
 			const ros = getRosConnection() as ROSLIB.Ros;
-			if (settings.groups.General.topic.value !== '') {
+			if (settings.getValue('General', 'topic') !== '') {
 				twistTopic = new ROSLIB.Topic({
 					ros: ros,
-					name: settings.groups.General.topic.value!,
+					name: settings.getValue('General', 'topic')!,
 					messageType: 'geometry_msgs/msg/TwistStamped'
 				});
 
-				twistTopic.subscribe((message: any) => {
+				twistTopic.subscribe((message) => {
 					// Switch data so that controls are correct directions
 					twist.y = message.twist.linear.x;
 					twist.x = message.twist.linear.y;
@@ -116,13 +114,14 @@
 
 			// only add twist topics to the dropdown
 			ros.getTopics((topics) => {
-				settings.groups.General.topic.options = [];
+				settings.clearSelectOptions('General', 'topic');
 				for (let i = 0; i < topics.types.length; i++) {
 					if (topics.types[i].includes('Twist')) {
-						settings.groups.General.topic.options.push({
-							value: topics.topics[i],
-							label: topics.topics[i]
-						});
+						settings.addSelectOption(
+							'General',
+							'topic',
+							{ value: topics.topics[i], label: topics.topics[i] }
+						)
 					}
 				}
 			});

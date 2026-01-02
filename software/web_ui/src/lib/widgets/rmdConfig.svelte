@@ -1,6 +1,8 @@
 <script lang="ts" module>
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
-	import type { WidgetGroupType, WidgetSettingsType } from '$lib/scripts/state.svelte';
+	import type { WidgetGroupType } from '$lib/scripts/state.svelte';
+	import { WidgetSettings } from '$lib/scripts/settings.svelte';
+
 
 	export const name = 'RMD Config Widget';
 	// These properties are optional
@@ -8,9 +10,7 @@
 	export const group: WidgetGroupType = 'CAN Bus';
 	export const isRosDependent = true; // Set to true if the widget requires a ROS connection
 
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-		groups: {}
-	});
+	export const settings = $state(new WidgetSettings({}));
 </script>
 
 <script lang="ts">
@@ -25,6 +25,7 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import type { RmdBrakeRequest, RmdCanIdResponse, RmdDataRequest, RMDStatusRequest, RMDStatusResponse, SuccessServiceResponse as SuccessResponse } from './rmdConfig/serviceTypes';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import Widget from '$lib/components/widget.svelte';
 
 	const errorConstants: Record<number, string> = {
 		0x0000: 'NO_ERROR',

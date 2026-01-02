@@ -1,15 +1,14 @@
 <script lang="ts" module>
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
-	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
+	import type { WidgetGroupType } from '$lib/scripts/state.svelte';
+	import { WidgetSettings } from '$lib/scripts/settings.svelte';
 
 	export const name = 'Bus Power Manager';
 	export const description = 'Enable and disable different buses on the rover control board';
-	export const group = 'CAN Bus';
+	export const group: WidgetGroupType = 'CAN Bus';
 	export const isRosDependent = true;
 
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-		groups: {}
-	});
+	export const settings = $state(new WidgetSettings({}));
 </script>
 
 <script lang="ts">

@@ -1,50 +1,48 @@
 <script lang="ts" module>
-	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
+	import { WidgetSettings } from '$lib/scripts/settings.svelte';
 
 	export const name = 'Resource Monitor';
 	export const description =
 		'Shows the CPU, memory, and network usage of the device that Perseus-UI is currently running on';
 
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-		groups: {
-			general: {
-				dataPointsToStore: {
-					type: 'number',
-					description: 'The number of data points to store in each chart',
-					value: '25'
-				}
+	export const settings = $state(new WidgetSettings({
+		general: {
+			dataPointsToStore: {
+				type: 'number',
+				description: 'The number of data points to store in each chart',
+				value: 25
+			}
+		},
+		memory: {
+			sizeFormat: {
+				type: 'select',
+				description: 'Format to display memory size',
+				options: [
+					{ value: 'bytes', label: 'bytes' },
+					{ value: 'KB', label: 'KB' },
+					{ value: 'MB', label: 'MB' },
+					{ value: 'GB', label: 'GB' }
+				],
+				value: 'GB'
 			},
-			memory: {
-				sizeFormat: {
-					type: 'select',
-					description: 'Format to display memory size',
-					options: [
-						{ value: 'bytes', label: 'bytes' },
-						{ value: 'KB', label: 'KB' },
-						{ value: 'MB', label: 'MB' },
-						{ value: 'GB', label: 'GB' }
-					],
-					value: 'GB'
-				},
-				divideBy1024: {
-					type: 'switch',
-					description: 'Calculate memory using 1024 not 1000'
-				}
+			divideBy1024: {
+				type: 'switch',
+				description: 'Calculate memory using 1024 not 1000'
+			}
+		},
+		network: {
+			networkInterface: {
+				type: 'select',
+				description: 'Network interface to monitor',
+				options: []
 			},
-			network: {
-				networkInterface: {
-					type: 'select',
-					description: 'Network interface to monitor',
-					options: []
-				},
-				setUsageScale: {
-					type: 'number',
-					description: 'Set the maximum value on the y axis in KB/s',
-					value: '5000'
-				}
+			setUsageScale: {
+				type: 'number',
+				description: 'Set the maximum value on the y axis in KB/s',
+				value: 5000
 			}
 		}
-	});
+	}));
 </script>
 
 <script lang="ts">
@@ -86,36 +84,35 @@
 
 		memoryChart.options.scales!.y!.max = convertBytes(
 			data.memory.total.total,
-			settings.groups.memory.sizeFormat.value!
+			settings.getValue('memory', 'sizeFormat')!
 		);
 		pushChartData(
 			memoryChart,
 			['Total', 'Memory', 'Swap'],
 			[
-				convertBytes(data.memory.total.used, settings.groups.memory.sizeFormat.value!),
-				convertBytes(data.memory.normal.used, settings.groups.memory.sizeFormat.value!),
-				convertBytes(data.memory.swap.used, settings.groups.memory.sizeFormat.value!)
+				convertBytes(data.memory.total.used, settings.getValue('memory', 'sizeFormat')!),
+				convertBytes(data.memory.normal.used, settings.getValue('memory', 'sizeFormat')!),
+				convertBytes(data.memory.swap.used, settings.getValue('memory', 'sizeFormat')!)
 			]
 		);
 		memoryChart.update();
 
-		const maxValue = Number(settings.groups.network.setUsageScale.value);
+		const maxValue = settings.getValue('network', 'setUsageScale')!;
 		networkChart.options.scales!.y!.max = maxValue;
 		// make sure an interface is selected
-		if (settings.groups.network.networkInterface.value === undefined) {
-			settings.groups.network.networkInterface.options = Object.keys(data.network).map((key) => ({
+		if (!settings.getValue('network', 'networkInterface')) {
+			settings.setSelectOptions('network', 'networkInterface', Object.keys(data.network).map((key) => ({
 				value: key,
 				label: key
-			}));
-			settings.groups.network.networkInterface.value =
-				settings.groups.network.networkInterface.options[0].value;
+			})));
+			settings.setValue('network', 'networkInterface', Object.keys(data.network)[0]);
 		}
 		pushChartData(
 			networkChart,
 			['Upload', 'Download', '80% marker'],
 			[
-				convertBytes(data.network[settings.groups.network.networkInterface.value].txBytes, 'KB'),
-				convertBytes(data.network[settings.groups.network.networkInterface.value].rxBytes, 'KB'),
+				convertBytes(data.network[settings.getValue('network', 'networkInterface')!].txBytes, 'KB'),
+				convertBytes(data.network[settings.getValue('network', 'networkInterface')!].rxBytes, 'KB'),
 				maxValue * 0.8
 			]
 		);
