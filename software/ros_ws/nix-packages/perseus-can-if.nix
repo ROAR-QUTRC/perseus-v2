@@ -6,11 +6,9 @@
   backward-ros,
   hi-can-raw,
   nlohmann_json,
-  perseus-msgs,
   rclcpp,
   sensor-msgs,
   std-msgs,
-  std-srvs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-can-if";
@@ -24,11 +22,9 @@ buildRosPackage rec {
     backward-ros
     hi-can-raw
     nlohmann_json
-    perseus-msgs
     rclcpp
     sensor-msgs
     std-msgs
-    std-srvs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
