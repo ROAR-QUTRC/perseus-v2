@@ -5,7 +5,9 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /2D Lidar Point Cloud1
         - /Fused Odometry1/Covariance1/Position1
+        - /Path1
       Splitter Ratio: 0.5
     Tree Height: 689
   - Class: rviz_common/Selection
@@ -215,6 +217,8 @@ Visualization Manager:
           Value: true
         chassis:
           Value: true
+        cloud:
+          Value: true
         differential_bar:
           Value: true
         flange_bearing:
@@ -253,36 +257,35 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        map:
-          odom:
-            base_link:
-              chassis:
-                base_footprint:
+        odom:
+          base_link:
+            base_footprint:
+              {}
+            chassis:
+              camera_link:
+                camera_link_optical:
                   {}
-                camera_link:
-                  camera_link_optical:
+              flange_bearing:
+                differential_bar:
+                  {}
+              laser_2d_frame:
+                {}
+              laser_frame:
+                {}
+              left_rocker:
+                front_left_motor:
+                  front_left_wheel:
                     {}
-                flange_bearing:
-                  differential_bar:
+                rear_left_motor:
+                  rear_left_wheel:
                     {}
-                laser_2d_frame:
-                  {}
-                laser_frame:
-                  {}
-                left_rocker:
-                  front_left_motor:
-                    front_left_wheel:
-                      {}
-                  rear_left_motor:
-                    rear_left_wheel:
-                      {}
-                right_rocker:
-                  front_right_motor:
-                    front_right_wheel:
-                      {}
-                  rear_right_motor:
-                    rear_right_wheel:
-                      {}
+              right_rocker:
+                front_right_motor:
+                  front_right_wheel:
+                    {}
+                rear_right_motor:
+                  rear_right_wheel:
+                    {}
       Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/Image
@@ -501,7 +504,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: map
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -544,25 +547,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 32.9783821105957
+      Distance: 23.735244750976562
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.0401341915130615
-        Y: 0.14675314724445343
-        Z: -2.8273706436157227
+        X: 2.977447748184204
+        Y: 1.4492652416229248
+        Z: -1.572446584701538
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9747962951660156
+      Pitch: 0.5497968196868896
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.279421091079712
+      Yaw: 3.6744234561920166
     Saved: ~
 Window Geometry:
   Displays:
