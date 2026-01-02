@@ -7,7 +7,7 @@
 	export const group: WidgetGroupType = 'ROS';
 	export const isRosDependent = true;
 
-	// Add a setting to choose which YAML file to load from /static
+	// YAMLs are served by the Svelte app (HTTP paths)
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
 			waypoints: {
@@ -17,7 +17,7 @@
 					options: [
 						{ label: 'waypoints.yaml', value: '/waypoints.yaml' },
 						{ label: 'waypoints_simulation.yaml', value: '/waypoints_simulation.yaml' },
-						{ label: 'waypoints_test.yaml', value: '/waypoints_test.yaml' },
+						{ label: 'waypoints_test.yaml', value: '/waypoints_test.yaml' }
 					]
 				}
 			}
@@ -42,8 +42,8 @@
 	let svcStatus = $state<string>('ROS disconnected');
 	let svcBusy = $state(false);
 
-	// Start-button label state
-	let isSendingStart = $state(false);
+	// Navigation info subscription (internal, not exposed as state)
+	let navInfoSub: ROSLIB.Topic | null = null;
 
 	// ---------------- Hold-to-stop ----------------
 	const HOLD_MS = 3000;
@@ -69,15 +69,22 @@
 	let yamlError = $state<string | null>(null);
 	let isLoadingYaml = $state(false);
 
-	// Selected YAML path (from widget settings)
+	// Selected YAML HTTP path (used for preview table fetch)
 	const getSelectedYaml = () => settings.groups.waypoints.yamlFile.value || '/waypoints.yaml';
+
+	// ✅ Convert "/waypoints_simulation.yaml" -> "waypoints_simulation.yaml"
+	const getSelectedYamlBasename = () => {
+		const p = getSelectedYaml();
+		const last = p.split('/').pop();
+		return last ?? 'waypoints.yaml';
+	};
 
 	const loadWaypointsYaml = async () => {
 		try {
 			isLoadingYaml = true;
 			yamlError = null;
 
-			const url = getSelectedYaml();
+			const url = getSelectedYaml(); // HTTP path
 			const res = await fetch(url, { cache: 'no-store' });
 			if (!res.ok) throw new Error(`Failed to fetch ${url}`);
 
@@ -131,13 +138,10 @@
 	$effect(() => {
 		const ros = getRosConnection();
 		if (!ros) {
-			runSrv = null;
-			cancelSrv = null;
-			svcStatus = 'ROS disconnected';
-			svcBusy = false;
-			isSendingStart = false;
-
-			isStarted = false;
+		runSrv = null;
+		cancelSrv = null;
+		svcStatus = 'ROS disconnected';
+		svcBusy = false;			isStarted = false;
 			clearHold();
 			return;
 		}
@@ -164,23 +168,20 @@
 		}
 
 		svcBusy = true;
-		isSendingStart = true;
 		svcStatus = 'Sending run request...';
 
-		const yaml_path = getSelectedYaml();
+		// ✅ IMPORTANT: send basename so backend can resolve filesystem path
+		const yaml_path = getSelectedYamlBasename();
 
 		runSrv.callService(
 			new ROSLIB.ServiceRequest({ yaml_path }),
 			(resp: any) => {
 				svcBusy = false;
-				isSendingStart = false;
-
 				svcStatus = resp?.message ?? 'Run response received';
 				if (resp?.success) isStarted = true;
 			},
 			(err: any) => {
 				svcBusy = false;
-				isSendingStart = false;
 				svcStatus = `Run failed: ${err?.toString?.() ?? err}`;
 			}
 		);
@@ -226,8 +227,38 @@
 
 	onMount(() => {
 		loadWaypointsYaml();
+
+		// Set up persistent subscription to navigation_info
+		const setupNavInfoSub = () => {
+			const ros = getRosConnection();
+			if (!ros) {
+				// Try again later if ROS isn't ready yet
+				setTimeout(setupNavInfoSub, 1000);
+				return;
+			}
+
+			navInfoSub = new ROSLIB.Topic({
+				ros,
+				name: '/autonomy/navigation_info',
+				messageType: 'perseus_autonomy_interfaces/msg/NavigationInfo'
+			});
+
+		navInfoSub.subscribe((msg: any) => {
+			// Sync button state with actual navigation state
+			const navActive = msg.navigation_active ?? false;
+			if (navActive !== isStarted) {
+				isStarted = navActive;
+				}
+			});
+		};
+
+		setupNavInfoSub();
+
 		return () => {
 			clearHold();
+			if (navInfoSub) {
+				navInfoSub.unsubscribe();
+			}
 		};
 	});
 </script>
@@ -309,10 +340,10 @@
 					: 'w-full font-bold bg-green-600 text-white hover:bg-green-700') +
 				' h-12 shrink-0'
 			}
-			disabled={isStarted || !runSrv || svcBusy}
+			disabled={isStarted || !runSrv}
 			onclick={sendStart}
 		>
-			{#if isSendingStart}
+			{#if svcBusy && !isStarted}
 				SENDING RUN REQUEST…
 			{:else if isStarted}
 				AUTONOMY IN PROGRESS

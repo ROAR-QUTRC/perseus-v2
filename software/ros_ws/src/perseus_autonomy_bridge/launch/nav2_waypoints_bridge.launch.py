@@ -10,6 +10,10 @@ def generate_launch_description():
                 executable="nav2_waypoints_bridge",
                 name="nav2_waypoints_bridge",
                 output="screen",
+                parameters=[{
+                    "waypoints_dir": "/home/bocho0600/perseus-v2/software/web_ui/static"
+                }]
+
             )
         ]
     )
