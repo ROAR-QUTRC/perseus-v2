@@ -1,0 +1,20 @@
+frontier_server:
+  ros__parameters:
+    map_topic: /map
+    global_frame: map
+    base_frame: base_footprint
+    min_frontier_cluster_size: 30
+    standoff_distance_m: 0.40
+    max_frontier_distance_m: 25.0
+    w_distance: 1.0
+    w_cluster_size: 0.3
+    w_goal_alignment: 0.7
+    publish_markers: true
+    markers_topic: /horizon_bridge/frontiers
+
+horizon_bridge_bt:
+  ros__parameters:
+    frontier_service: /horizon_bridge/get_frontier_goal
+    reachability_tolerance_m: 0.75
+    plan_check_timeout_s: 0.5
+    blacklist_radius_m: 0.75

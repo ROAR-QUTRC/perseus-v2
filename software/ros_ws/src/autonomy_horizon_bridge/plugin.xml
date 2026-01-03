@@ -1,0 +1,8 @@
+<library path="horizon_bridge_bt">
+  <class
+    type="autonomy_horizon_bridge::HorizonBridge"
+    base_class_type="BT::ActionNodeBase"
+    plugin_name="HorizonBridge">
+    <description>Replace unreachable goals with frontier subgoals toward the mission goal</description>
+  </class>
+</library>

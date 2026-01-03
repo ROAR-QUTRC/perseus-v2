@@ -42,7 +42,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake
-                               rosidl_default_generators)
+                               rosidl_default_generators geometry_msgs)
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -57,7 +57,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
                            "srv/RmdCanId.srv"
                            "msg/ArmServoControl.msg"
                            "msg/ArmConfig.msg"
-                           "srv/RmdBrake.srv")
+                           "srv/RmdBrake.srv"
+                           "srv/GetFrontierGoal.srv"
+                           DEPENDENCIES geometry_msgs)
 
 ament_export_dependencies(rosidl_default_runtime)
 
