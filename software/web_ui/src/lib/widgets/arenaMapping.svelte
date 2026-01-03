@@ -222,6 +222,44 @@
 					pendingYawWaypointId = null;
 				}
 			}
+		];
+	}
+
+	function delete_waypoint(id: string) {
+		waypoints = waypoints.filter((waypoint) => waypoint.id !== id);
+	}
+
+	function clear_waypoints() {
+		waypoints = [];
+	}
+
+	function update_name(id: string, name: string) {
+		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
+	}
+
+	function build_yaml(): string {
+		const lines: string[] = [];
+		lines.push('waypoints:');
+
+		for (const waypoint of waypoints) {
+			lines.push(`  - name: ${waypoint.name}`);
+			lines.push(`    color: "${waypoint.hexadecimal_color}"`);
+			lines.push(`    click_px: { x: ${waypoint.click_x}, y: ${waypoint.click_y} }`);
+			lines.push(`    centroid_px: { x: ${waypoint.centroid_x}, y: ${waypoint.centroid_y} }`);
+			lines.push(`    x: ${waypoint.centroid_x}`);
+			lines.push(`    y: ${waypoint.centroid_y}`);
+		}
+
+		return lines.join('\n');
+	}
+
+	async function copy_yaml() {
+		const yaml_text = build_yaml();
+		try {
+			await navigator.clipboard.writeText(yaml_text);
+			status_message = 'YAML copied to clipboard';
+		} catch {
+			status_message = 'Copy failed (clipboard permission). Select and copy manually.';
 		}
 		 else if (mode === 'origin') {
 			addOriginFromResponse(response);
@@ -1048,7 +1086,6 @@
 		top: 0;
 		background: #0b0b0b;
 	}
-
 
 	.nameInput {
 		width: 140px;
