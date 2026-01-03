@@ -27,7 +27,7 @@ endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow)
 endif()
 # Add -Werror flag for release builds
 if(CMAKE_BUILD_TYPE MATCHES "Rel.*")
@@ -77,7 +77,13 @@ endforeach()
 
 # INSTALL (ROS)
 install(
-  DIRECTORY config launch maps rviz urdf worlds
+  DIRECTORY config
+            launch
+            maps
+            rviz
+            urdf
+            worlds
+            models
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 

@@ -3,6 +3,9 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  joint-state-publisher-gui,
+  robot-state-publisher,
+  rviz2,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-description";
@@ -12,6 +15,11 @@ buildRosPackage rec {
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
+  propagatedBuildInputs = [
+    joint-state-publisher-gui
+    robot-state-publisher
+    rviz2
+  ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {

@@ -49,8 +49,6 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Gauge from './motorStats/gauge.svelte';
 	import { onMount } from 'svelte';
-	// import { ros } from '$lib/scripts/ros.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
-	// import ROSLIB from 'roslib';
 
 	// Widget logic goes here
 
