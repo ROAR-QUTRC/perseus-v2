@@ -1,394 +1,554 @@
 <script lang="ts" module>
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
-	import { isNullOrUndef } from 'chart.js/helpers';
 
-	export const name = 'Arena Map Editor';
-	export const description = 'Create the YAML file that Perseus will use to navigate';
-	export const group = 'Mapping';
-	export const isRosDependent = true;
+	// Internal identifiers follow: American spelling + snake_case + minimal abbreviations.
+	const widget_name = 'Arena Map Editor';
+	const widget_description = 'Create the YAML file that Perseus will use to navigate';
+	const widget_group = 'ROS';
+	const is_ros_dependent = true;
 
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
+	const widget_settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
 	});
+
+	// Keep the widget framework’s expected export names via aliasing.
+	export {
+		widget_name as name,
+		widget_description as description,
+		widget_group as group,
+		is_ros_dependent as isRosDependant,
+		widget_settings as settings
+	};
 </script>
 
 <script lang="ts">
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import ROSLIB from 'roslib';
-	type Point = { x: number; y: number };
+	import { getRosConnection as get_ros_connection } from '$lib/scripts/ros-bridge.svelte';
 
-	let points = $state([] as Point[]);
-	let originIndex = $state<number | null>(null);
+	type Mode = 'waypoint' | 'border';
 
-	let background_image = $state<string | null>(null);
-	let naturalWidth = $state(1);
-	let naturalHeight = $state(1);
-	let displayWidth = $state(300);
-	let displayHeight = $state(300);
-	let scale = $state(1);
-	let val_X = $state(1);
-	let val_Y = $state(1);
-	let eyeDropperSupported = typeof window !== 'undefined' && 'EyeDropper' in window;
-	const colourArea = ['Point', 'Border', 'Grid'];
-	let pickedColor = $state<(string | null)[]>(colourArea.map(() => null));
+	type WaypointRow = {
+		id: string;
+		name: string;
+		hexadecimal_color: string;
+		click_x: number;
+		click_y: number;
+		centroid_x: number;
+		centroid_y: number;
+	};
 
-	async function pickColour(index: number) {
-		if (!eyeDropperSupported) {
-			console.warn('EyeDropper API not supported in this browser');
+	let image_element: HTMLImageElement | null = null;
+
+	const map_image_id = 'Cropped_ARCh_2025_Autonomous_map.png';
+	const map_image_url = `http://localhost:8000/${map_image_id}`;
+
+	const request_topic_name = '/map_editor/request';
+	const response_topic_name = '/map_editor/response';
+
+	const default_request_timeout_milliseconds = 6000;
+
+	// NOTE: These are protocol field names expected by your backend; keeping as-is avoids breaking integration.
+	const default_hue_tolerance = 10;
+	const default_saturation_tolerance = 60;
+	const default_value_tolerance = 60;
+
+	let status_message = $state('Ready');
+	let mode = $state<Mode>('waypoint');
+
+	// last response visuals
+	let contour = $state<number[][]>([]);
+	let current_click_position = $state<{ x: number; y: number } | null>(null);
+	let centroid = $state<[number, number] | null>(null);
+	let sample_image_hexadecimal_color = $state<string>('');
+	let svg_view_box = $state('0 0 1 1');
+
+	// stored waypoints
+	let waypoints = $state<WaypointRow[]>([]);
+	let border_contour = $state<number[][]>([]);
+
+	// ROS request/response plumbing
+	let request_topic: ROSLIB.Topic | null = null;
+	let response_topic: ROSLIB.Topic | null = null;
+	const pending_requests = new Map<
+		string,
+		{ resolve: (response: any) => void; timeout_handle: any }
+	>();
+
+	function generate_id() {
+		return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+			? crypto.randomUUID()
+			: `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+	}
+
+	function clamp(value: number, min_value: number, max_value: number) {
+		return Math.max(min_value, Math.min(max_value, value));
+	}
+
+	function click_to_natural_position(event: MouseEvent) {
+		if (!image_element) return null;
+
+		const image_rectangle = image_element.getBoundingClientRect();
+		const display_x = event.clientX - image_rectangle.left;
+		const display_y = event.clientY - image_rectangle.top;
+
+		const natural_x = Math.round(display_x * (image_element.naturalWidth / image_rectangle.width));
+		const natural_y = Math.round(display_y * (image_element.naturalHeight / image_rectangle.height));
+
+		return {
+			x: clamp(natural_x, 0, image_element.naturalWidth - 1),
+			y: clamp(natural_y, 0, image_element.naturalHeight - 1)
+		};
+	}
+
+	function send_request(payload: any, timeout_milliseconds = default_request_timeout_milliseconds): Promise<any> {
+		if (!request_topic) return Promise.reject(new Error('ROS not connected'));
+
+		const id = generate_id();
+		return new Promise((resolve, reject) => {
+			const timeout_handle = setTimeout(() => {
+				pending_requests.delete(id);
+				reject(new Error(`Timeout waiting for response (${id})`));
+			}, timeout_milliseconds);
+
+			pending_requests.set(id, { resolve, timeout_handle });
+
+			request_topic.publish(
+				new ROSLIB.Message({
+					data: JSON.stringify({ id, ...payload })
+				})
+			);
+		});
+	}
+
+	function next_waypoint_name() {
+		const waypoint_number = waypoints.length + 1;
+		return `wp_${String(waypoint_number).padStart(3, '0')}`;
+	}
+
+	function add_waypoint_from_response(response: any) {
+		if (!response?.ok) return;
+		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
+
+		const centroid_x = Number(response.centroid[0]);
+		const centroid_y = Number(response.centroid[1]);
+
+		// Prefer server echo; fall back to local current_click_position.
+		const click_x = Number(response.sample_x ?? current_click_position?.x);
+		const click_y = Number(response.sample_y ?? current_click_position?.y);
+
+		if (
+			!Number.isFinite(click_x) ||
+			!Number.isFinite(click_y) ||
+			!Number.isFinite(centroid_x) ||
+			!Number.isFinite(centroid_y)
+		) {
 			return;
 		}
-		try {
-			const ed = new (window as any).EyeDropper();
-			const { sRGBHex } = await ed.open(); // e.g. "#a1b2c3"
-			pickedColor[index] = sRGBHex;
-			// here you can also store it on a point, etc.
-		} catch (err) {
-			// user pressed Esc or cancelled
-			console.warn('EyeDropper cancelled or failed', err);
-		}
-	}
-	// uploads the image to the graph
-	function handle_upload(event: Event) {
-		const input = event.target as HTMLInputElement;
-		const file = input.files?.[0];
-		if (!file) return;
 
-		const url = URL.createObjectURL(file);
-		const img = new Image();
-		//gets the height and width of the uploaded image
-		img.onload = () => {
-			naturalWidth = img.width;
-			naturalHeight = img.height;
+		const hexadecimal_color = String(response.sample_image_hex ?? '');
 
-			// scale so height <= 500px,
-			scale = 500 / naturalHeight;
-			if (scale > 1) scale = 1;
-
-			displayWidth = naturalWidth * scale;
-			displayHeight = naturalHeight * scale;
-			background_image = url;
-		};
-
-		img.src = url;
-	}
-	//clears the background image
-	function clear_image() {
-		background_image = null;
-		points = [];
-		originIndex = null;
-		naturalWidth = 1;
-		naturalHeight = 1;
-		displayWidth = 500;
-		displayHeight = 500;
-		scale = 1;
-	}
-
-	//add the point to the uploaded image
-	function add_point(event: MouseEvent) {
-		// Require an image first so scaling is valid
-		if (!background_image) return;
-
-		const target = event.currentTarget as HTMLElement | null;
-		if (!target) return;
-
-		const rect = target.getBoundingClientRect();
-		const xDisplay = event.clientX - rect.left;
-		const yDisplay = event.clientY - rect.top;
-
-		const x = xDisplay / scale;
-		const y = yDisplay / scale;
-
-		points = [...points, { x, y }];
-	}
-
-	// handle keyboard
-	function handle_graph_keydown(event: KeyboardEvent) {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-		}
-	}
-	//sets the origin the other points will go off
-	function set_origin(index: number) {
-		originIndex = index;
-	}
-
-	//deletes a point
-	function delete_point(index: number) {
-		points = points.filter((_, i) => i !== index);
-
-		if (originIndex !== null) {
-			if (index === originIndex) {
-				originIndex = null;
-			} else if (index < originIndex) {
-				originIndex = originIndex - 1;
+		waypoints = [
+			...waypoints,
+			{
+				id: generate_id(),
+				name: next_waypoint_name(),
+				hexadecimal_color,
+				click_x,
+				click_y,
+				centroid_x,
+				centroid_y
 			}
+		];
+	}
+
+	function delete_waypoint(id: string) {
+		waypoints = waypoints.filter((waypoint) => waypoint.id !== id);
+	}
+
+	function clear_waypoints() {
+		waypoints = [];
+	}
+
+	function update_name(id: string, name: string) {
+		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
+	}
+
+	function build_yaml(): string {
+		const lines: string[] = [];
+		lines.push('waypoints:');
+
+		for (const waypoint of waypoints) {
+			lines.push(`  - name: ${waypoint.name}`);
+			lines.push(`    color: "${waypoint.hexadecimal_color}"`);
+			lines.push(`    click_px: { x: ${waypoint.click_x}, y: ${waypoint.click_y} }`);
+			lines.push(`    centroid_px: { x: ${waypoint.centroid_x}, y: ${waypoint.centroid_y} }`);
+			lines.push(`    x: ${waypoint.centroid_x}`);
+			lines.push(`    y: ${waypoint.centroid_y}`);
+		}
+
+		return lines.join('\n');
+	}
+
+	async function copy_yaml() {
+		const yaml_text = build_yaml();
+		try {
+			await navigator.clipboard.writeText(yaml_text);
+			status_message = 'YAML copied to clipboard';
+		} catch {
+			status_message = 'Copy failed (clipboard permission). Select and copy manually.';
 		}
 	}
-	//finds if there is a specific origin point or the origin is the default
-	function get_origin_point(): Point | null {
-		if (originIndex === null) return null;
-		return points[originIndex] ?? null;
+
+	async function on_map_click(event: MouseEvent) {
+		const click_position = click_to_natural_position(event);
+
+		current_click_position = click_position;
+		contour = [];
+		centroid = null;
+		sample_image_hexadecimal_color = '';
+
+		if (!click_position) return;
+
+		status_message = `${mode === 'waypoint' ? 'Waypoint' : 'Border'} @ (${click_position.x}, ${click_position.y})…`;
+
+		try {
+			const response = await send_request({
+				op: 'extract_feature',
+				mode, // 'waypoint' | 'border' (protocol value)
+				image_id: map_image_id,
+				sample_x: click_position.x,
+				sample_y: click_position.y,
+				tol_h: default_hue_tolerance,
+				tol_s: default_saturation_tolerance,
+				tol_v: default_value_tolerance
+			});
+
+			if (!response?.ok) {
+				status_message = response?.message ?? 'Failed';
+				return;
+			}
+
+			if (mode === 'border') {
+				border_contour = Array.isArray(response.contour) ? response.contour : [];
+			}
+
+			sample_image_hexadecimal_color = String(response.sample_image_hex ?? '');
+			centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
+			contour = Array.isArray(response.contour) ? response.contour : [];
+
+			if (mode === 'waypoint') {
+				add_waypoint_from_response(response);
+				status_message = centroid
+					? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sample_image_hexadecimal_color}`
+					: `Waypoint added ${sample_image_hexadecimal_color}`;
+			} else {
+				status_message = `Border OK ${sample_image_hexadecimal_color}`;
+			}
+		} catch (error: any) {
+			status_message = `Error: ${error?.message ?? String(error)}`;
+		}
 	}
-	//creates the custom origin point based off a point on the graph
-	function custom_origin(p: Point): Point {
-		const origin = get_origin_point();
-		if (!origin) return { x: p.x, y: p.y };
-		return {
-			x: (p.x - origin.x) * -val_X, //* all this by -ve to swap axis, create direction vairables
-			y: (p.y - origin.y) * -val_Y
+
+	$effect(() => {
+		const ros_connection = get_ros_connection();
+
+		if (!ros_connection) {
+			response_topic?.unsubscribe();
+			request_topic = null;
+			response_topic = null;
+
+			pending_requests.forEach((pending_entry) => clearTimeout(pending_entry.timeout_handle));
+			pending_requests.clear();
+			return;
+		}
+
+		request_topic = new ROSLIB.Topic({
+			ros: ros_connection,
+			name: request_topic_name,
+			messageType: 'std_msgs/msg/String'
+		});
+
+		response_topic = new ROSLIB.Topic({
+			ros: ros_connection,
+			name: response_topic_name,
+			messageType: 'std_msgs/msg/String'
+		});
+
+		response_topic.subscribe((message: any) => {
+			let response: any;
+
+			try {
+				response = JSON.parse(message.data);
+			} catch {
+				return;
+			}
+
+			const id = response?.id;
+			const pending_entry = id ? pending_requests.get(id) : null;
+			if (!pending_entry) return;
+
+			clearTimeout(pending_entry.timeout_handle);
+			pending_requests.delete(id);
+			pending_entry.resolve(response);
+		});
+
+		return () => {
+			response_topic?.unsubscribe();
+			request_topic = null;
+			response_topic = null;
 		};
-	}
-	let listener: ROSLIB.Topic | null = null;
-	listener = new ROSLIB.Topic({
-				ros: getRosConnection() as ROSLIB.Ros,
-				name: '/test_publisher',
-				messageType: 'std_msgs/String'
-			});
-			//
-// yarn dev, yarn start
-			listener.subscribe((message: any) => {
-				//const { name, status, current, voltage } = JSON.parse(message.data);
-				// busState[name] = {
-				// 	status: Number(status),
-				// 	current: Number(current),
-				// 	voltage: Number(voltage),
-				// 	openAlert: busState[name]?.openAlert ?? false
-			//	};
-			});
-	const publisher = new ROSLIB.Topic({
-		ros: getRosConnection() as ROSLIB.Ros,
-		name: '/test_subscriber', // change this
-		messageType: 'std_msgs/Int16MultiArray'
 	});
-	// const message = new ROSLIB.Message({
-	// 	data: JSON.stringify({
-	// 		bus: bus,
-	// 		on: busState[bus].status !== 1 ? '1' : '0',
-	// 		clear: busState[bus].status === 6 || busState[bus].status === 4 ? '1' : '0' // Clear FAULT or SWITCH_FAILED
-	// 	})
-	// });
 </script>
 
-<div class="widget-shell">
-	<div class="widget-scroll">
-		<h1>Arena Map</h1>
-		<h4>Upload image of arena</h4>
+<div class="wrap">
+	<div class="topbar">
+		<div class="status">Status: {status_message}</div>
 
-		<input type="file" accept="image/*" onchange={handle_upload} />
+		<div class="controls">
+			<button class:active={mode === 'waypoint'} type="button" on:click={() => (mode = 'waypoint')}>
+				Waypoint mode
+			</button>
+			<button class:active={mode === 'border'} type="button" on:click={() => (mode = 'border')}>
+				Border mode
+			</button>
 
-		<button type="button" class="btn" onclick={clear_image} disabled={!background_image}
-			>Clear image
-		</button>
-		<div class="layout">
-			<div class="graph-column">
-				<div
-					class="graph"
-					role="button"
-					aria-label="Arena map editor; click to add points"
-					tabindex="0"
-					onclick={add_point}
-					onkeydown={handle_graph_keydown}
-					style="
-        width: {displayWidth}px;
-        height: {displayHeight}px;
-        background-image: url({background_image});
-      "
-				>
-					{#each points as p, i}
-						<div
-							class="point {originIndex === i ? 'origin-point' : ''}"
-							style="
-            left: {p.x * scale}px;
-            top: {p.y * scale}px;
-          "
-							title={originIndex === i ? 'Origin' : `Point ${i + 1}`}
-						></div>
-					{/each}
-				</div>
-			</div>
+			<button type="button" class="danger" on:click={clear_waypoints} disabled={waypoints.length === 0}>
+				Clear table
+			</button>
 
-			<aside class="side-column">
-				<h4>Eyedropper</h4>
-				{#each colourArea as label, i}
-					<div class="mb-2 flex items-center gap-2">
-						<button
-							type="button"
-							class="btn"
-							onclick={() => pickColour(i)}
-							disabled={!eyeDropperSupported}
-						>
-							{eyeDropperSupported ? `Pick colour for ${label}` : 'Not supported'}
-						</button>
+			<button type="button" on:click={copy_yaml} disabled={waypoints.length === 0}>
+				Copy YAML
+			</button>
+		</div>
+	</div>
 
-						{#if pickedColor[i]}
-							<div
-								class="h-4 w-4 rounded border border-slate-400"
-								style={`background-color: ${pickedColor[i]};`}
-							></div>
-							<span class="font-mono text-[10px]">{pickedColor[i]}</span>
-						{/if}
-					</div>
-				{/each}
-				{#if pickedColor}
-					<div class="eyedropper-result">
-						<div class="color-swatch" style={'background-color: ' + pickedColor}></div>
-						<span>{pickedColor}</span>
-					</div>
-				{/if}
-			</aside>
+	<div class="row">
+		<div class="frame">
+			<img
+				bind:this={image_element}
+				src={map_image_url}
+				width="700"
+				alt="map"
+				class="map"
+				on:click={on_map_click}
+				on:load={() => {
+					if (!image_element) return;
+					svg_view_box = `0 0 ${image_element.naturalWidth} ${image_element.naturalHeight}`;
+				}}
+			/>
 		</div>
 
-		<div class="table-container">
-			<table>
-				<thead>
+		<!-- Preview -->
+		<svg class="preview" viewBox={svg_view_box} preserveAspectRatio="none" aria-hidden="true">
+			{#if border_contour.length > 0}
+				<polygon
+					points={border_contour.map(([x, y]) => `${x},${y}`).join(' ')}
+					fill="none"
+					stroke="lime"
+					stroke-width="2"
+					opacity="0.9"
+				/>
+			{/if}
+
+			{#each waypoints as waypoint (waypoint.id)}
+				<circle cx={waypoint.centroid_x} cy={waypoint.centroid_y} r="6" fill="red" />
+			{/each}
+
+			{#each waypoints as waypoint (waypoint.id)}
+				<circle cx={waypoint.click_x} cy={waypoint.click_y} r="3.5" fill="yellow" opacity="0.9" />
+			{/each}
+		</svg>
+	</div>
+
+	<!-- Big table -->
+	<div class="tableWrap">
+		<table class="tbl">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Name</th>
+					<th>Hex</th>
+					<th>Click X</th>
+					<th>Click Y</th>
+					<th>Centroid X</th>
+					<th>Centroid Y</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				{#if waypoints.length === 0}
 					<tr>
-						<th>#</th>
-						<th>Rel Y</th>
-						<th>Rel X</th>
-						<th>Abs X</th>
-						<th>Abs Y</th>
-						<th>Origin</th>
-						<th>Delete</th>
+						<td colspan="8" class="empty">No waypoints yet — switch to Waypoint mode and click markers.</td>
 					</tr>
-				</thead>
-				<tbody>
-					{#each points as row, i}
-						{@const c = custom_origin(row)}
+				{:else}
+					{#each waypoints as waypoint, i (waypoint.id)}
 						<tr>
 							<td>{i + 1}</td>
-
-							<!-- Relative (read-only) -->
 							<td>
-								<input class="coord-input" value={c.x.toFixed(1)} readonly />
+								<input
+									class="nameInput"
+									value={waypoint.name}
+									on:input={(event) =>
+										update_name(waypoint.id, (event.target as HTMLInputElement).value)}
+								/>
 							</td>
 							<td>
-								<input class="coord-input" value={c.y.toFixed(1)} readonly />
+								<span class="chip" style={`background:${waypoint.hexadecimal_color || '#eee'}`}>
+									{waypoint.hexadecimal_color}
+								</span>
 							</td>
-
-							<!-- Absolute (editable) -->
-							<td>
-								<input class="coord-input" type="number" step="0.1" bind:value={row.x} />
-							</td>
-							<td>
-								<input class="coord-input" type="number" step="0.1" bind:value={row.y} />
-							</td>
-							<td>
-								<button type="button" class="btn" onclick={() => set_origin(i)}>
-									{originIndex === i ? 'Origin' : 'Use as origin'}
+							<td>{waypoint.click_x}</td>
+							<td>{waypoint.click_y}</td>
+							<td>{waypoint.centroid_x}</td>
+							<td>{waypoint.centroid_y}</td>
+							<td class="right">
+								<button type="button" class="danger" on:click={() => delete_waypoint(waypoint.id)}>
+									Delete
 								</button>
-							</td>
-
-							<td>
-								<button type="button" class="btn" onclick={() => delete_point(i)}> Delete </button>
 							</td>
 						</tr>
 					{/each}
-				</tbody>
-			</table>
-		</div>
+				{/if}
+			</tbody>
+		</table>
+	</div>
+
+	<!-- YAML preview -->
+	<div class="yamlWrap">
+		<div class="yamlTitle">YAML preview</div>
+		<textarea class="yamlBox" readonly value={build_yaml()}></textarea>
 	</div>
 </div>
 
 <style>
-	.graph {
-		border: 2px solid #333;
-		position: relative;
-		background-size: contain;
-		background-repeat: no-repeat;
-		background-position: center;
-	}
-
-	.point {
-		width: 8px;
-		height: 8px;
-		background-color: red;
-		border-radius: 50%;
-		position: absolute;
-		transform: translate(-50%, -50%);
-	}
-
-	.origin-point {
-		background-color: #00c853;
-	}
-
-	.table-container {
-		/* max-height: 260px;  <-- removed */
-		margin-top: 20px;
-	}
-
-	table {
-		width: 100%;
-		border-collapse: collapse;
-	}
-
-	th,
-	td {
-		border: 1px solid #ccc;
-		padding: 4px 6px;
-		font-size: 0.85rem;
-	}
-
-	.coord-input {
-		width: 70px;
-		padding: 2px 4px;
-		font-size: 0.8rem;
-	}
-
-	.btn {
-		padding: 2px 6px;
-		font-size: 0.75rem;
-		cursor: pointer;
-	}
-
-	.layout {
-		display: flex;
-		gap: 6px;
-		margin-top: 12px;
-		align-items: flex-start;
-		min-width: 0;
-	}
-
-	.graph-column {
-		flex: 1 1 auto;
-		min-width: 0;
-	}
-
-	.side-column {
-		flex: 0 0 220px;
-		max-height: 100%;
-		overflow-y: auto;
-		border: 1px solid #ccc;
-		border-radius: 4px;
+	.wrap {
 		padding: 8px;
-		background: #000000;
-		font-size: 0.85rem;
 	}
 
-	.eyedropper-result {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin-top: 8px;
-	}
-
-	.color-swatch {
-		width: 20px;
-		height: 20px;
-		border: 1px solid #999;
-		border-radius: 2px;
-	}
-
-	/* Widget wrapper + scroll behaviour */
-	.widget-shell {
-		height: 100%; /* or 100vh if needed */
+	.topbar {
 		display: flex;
 		flex-direction: column;
+		gap: 8px;
+		margin-bottom: 12px;
+	}
+	.status {
+		font-size: 14px;
+	}
+	.controls {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+		flex-wrap: wrap;
 	}
 
-	.widget-scroll {
-		flex: 1 1 auto;
-		min-height: 0;
-		overflow-y: auto;
-		padding: 8px;
+	button {
+		border: 1px solid #444;
+		padding: 6px 10px;
+		border-radius: 8px;
+		background: #111;
+		color: #eee;
+		cursor: pointer;
+	}
+	button.active {
+		border-color: #7dd3fc;
+		box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.2);
+	}
+	button.danger {
+		border-color: #ef4444;
+	}
+	button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.row {
+		display: flex;
+		gap: 16px;
+		align-items: flex-start;
+	}
+	.frame {
+		width: 700px;
+	}
+	.map {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	.preview {
+		width: 700px;
+		height: auto;
+		border: 1px solid #333;
+	}
+
+	.tableWrap {
+		margin-top: 16px;
+		border: 1px solid #333;
+		max-height: 340px; /* big + scrollable */
+		overflow: auto;
+	}
+
+	.tbl {
+		width: 100%;
+		border-collapse: collapse;
+		min-width: 900px;
+	}
+	.tbl th,
+	.tbl td {
+		border: 1px solid #333;
+		padding: 6px 8px;
+		font-size: 13px;
+		white-space: nowrap;
+	}
+	.tbl th {
+		text-align: left;
+		opacity: 0.9;
+		position: sticky;
+		top: 0;
+		background: #0b0b0b;
+	}
+	.right {
+		text-align: right;
+	}
+	.empty {
+		opacity: 0.8;
+	}
+
+	.nameInput {
+		width: 140px;
+		border: 1px solid #333;
+		border-radius: 6px;
+		background: #0b0b0b;
+		color: #eee;
+		padding: 4px 6px;
+	}
+
+	.chip {
+		display: inline-block;
+		padding: 2px 6px;
+		border-radius: 6px;
+		color: #111;
+		border: 1px solid #333;
+		min-width: 84px;
+		text-align: center;
+	}
+
+	.yamlWrap {
+		margin-top: 14px;
+	}
+	.yamlTitle {
+		font-weight: 600;
+		margin-bottom: 6px;
+	}
+	.yamlBox {
+		width: 100%;
+		min-height: 180px;
+		border: 1px solid #333;
+		border-radius: 8px;
+		background: #0b0b0b;
+		color: #eee;
+		padding: 10px;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+			'Courier New', monospace;
+		font-size: 12px;
 	}
 </style>

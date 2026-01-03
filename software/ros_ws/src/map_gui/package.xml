@@ -4,7 +4,7 @@
   <name>map_gui</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="">Delicia</maintainer>
+  <maintainer email="igdixon1709@gmail.com">Issy</maintainer>
   <license>Apache-2.0</license>
 
   <exec_depend>rclpy</exec_depend>
