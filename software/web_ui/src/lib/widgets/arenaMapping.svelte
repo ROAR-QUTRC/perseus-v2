@@ -112,7 +112,7 @@
 
 			pending_requests.set(id, { resolve, timeout_handle });
 
-			request_topic.publish(
+			request_topic!.publish(
 				new ROSLIB.Message({
 					data: JSON.stringify({ id, ...payload })
 				})
@@ -180,8 +180,6 @@
 		for (const waypoint of waypoints) {
 			lines.push(`  - name: ${waypoint.name}`);
 			lines.push(`    color: "${waypoint.hexadecimal_color}"`);
-			lines.push(`    click_px: { x: ${waypoint.click_x}, y: ${waypoint.click_y} }`);
-			lines.push(`    centroid_px: { x: ${waypoint.centroid_x}, y: ${waypoint.centroid_y} }`);
 			lines.push(`    x: ${waypoint.centroid_x}`);
 			lines.push(`    y: ${waypoint.centroid_y}`);
 		}
