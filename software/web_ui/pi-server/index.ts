@@ -162,10 +162,26 @@ const startStream = (
   if (transform !== "none")
     gstArgs.push("!", `videoflip`, `method=${transform}`);
   // If the video should be saved:
-  if(file) gstArgs.push("!", "tee", "name=t",                           // Split the pipeline (to every spot with 't.')
-    "t.", "!", "queue", "leaky=2",                                      // If the queue fills up, start dropping frames from the oldest first
-    "!", "jpegenc", "!", "avimux", "!", "filesink", `location=${file}`, // Save frames as an avi file to ${file}
-    "t.", "!", "queue");                                                // If the webrtcsink fills up the queue (it can't display the video as fast as it's coming in), it will slow down the video
+  if (file)
+    gstArgs.push(
+      "!",
+      "tee",
+      "name=t", // Split the pipeline (to every spot with 't.')
+      "t.",
+      "!",
+      "queue",
+      "leaky=2", // If the queue fills up, start dropping frames from the oldest first
+      "!",
+      "jpegenc",
+      "!",
+      "avimux",
+      "!",
+      "filesink",
+      `location=${file}`, // Save frames as an avi file to ${file}
+      "t.",
+      "!",
+      "queue",
+    ); // If the webrtcsink fills up the queue (it can't display the video as fast as it's coming in), it will slow down the video
   gstArgs.push("!", "ws.");
 
   gstInstances.push({
