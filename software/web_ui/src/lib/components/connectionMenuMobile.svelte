@@ -7,7 +7,7 @@
 	import Label from './ui/label/label.svelte';
 	import Input from './ui/input/input.svelte';
 	import { OpenInNewWindow } from 'svelte-radix';
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte';
+	import { getRosConnection } from '$lib/scripts/rosBridge.svelte';
 
 	let { toggleConnection, changeAddress, address, disableServerIP, customAddress, domainId } =
 		$props();

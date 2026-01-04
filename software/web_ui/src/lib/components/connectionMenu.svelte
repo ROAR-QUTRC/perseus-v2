@@ -8,8 +8,8 @@
 	import Input from './ui/input/input.svelte';
 	import { OpenInNewWindow } from 'svelte-radix';
 	import { localStore } from '$lib/scripts/localStore.svelte';
-	import { connectRos, disconnectRos, getRosConnection } from '$lib/scripts/ros-bridge.svelte';
-	import ConnectionMenuMobile from './connection-menu-mobile.svelte';
+	import { connectRos, disconnectRos, getRosConnection } from '$lib/scripts/rosBridge.svelte';
+	import ConnectionMenuMobile from './connectionMenuMobile.svelte';
 
 	let props: { isMobile: boolean } = $props();
 
