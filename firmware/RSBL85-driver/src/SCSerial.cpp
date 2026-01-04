@@ -2,7 +2,7 @@
 
 SCSerial::SCSerial()
 {
-    IOTimeOut = 10; // 10ms timeout
+    IOTimeOut = 10;  // 10ms timeout
     pSerial = nullptr;
     directionPin = -1;
     txBufLen = 0;
@@ -10,9 +10,10 @@ SCSerial::SCSerial()
     Err = 0;
 }
 
-SCSerial::SCSerial(uint8_t End) : SCS(End)
+SCSerial::SCSerial(uint8_t End)
+    : SCS(End)
 {
-    IOTimeOut = 10; // 10ms timeout
+    IOTimeOut = 10;  // 10ms timeout
     pSerial = nullptr;
     directionPin = -1;
     txBufLen = 0;
@@ -20,9 +21,10 @@ SCSerial::SCSerial(uint8_t End) : SCS(End)
     Err = 0;
 }
 
-SCSerial::SCSerial(uint8_t End, uint8_t Level) : SCS(End, Level)
+SCSerial::SCSerial(uint8_t End, uint8_t Level)
+    : SCS(End, Level)
 {
-    IOTimeOut = 10; // 10ms timeout
+    IOTimeOut = 10;  // 10ms timeout
     pSerial = nullptr;
     directionPin = -1;
     txBufLen = 0;
@@ -34,8 +36,8 @@ void SCSerial::setTxMode()
 {
     if (directionPin >= 0)
     {
-        digitalWrite(directionPin, HIGH); // HIGH = Transmit mode
-        delayMicroseconds(2);             // 2μs
+        digitalWrite(directionPin, HIGH);  // HIGH = Transmit mode
+        delayMicroseconds(2);              // 2μs
     }
 }
 
@@ -43,8 +45,8 @@ void SCSerial::setRxMode()
 {
     if (directionPin >= 0)
     {
-        digitalWrite(directionPin, LOW); // LOW = Receive mode
-        delayMicroseconds(2);            // 2μs
+        digitalWrite(directionPin, LOW);  // LOW = Receive mode
+        delayMicroseconds(2);             // 2μs
     }
 }
 
@@ -56,7 +58,7 @@ bool SCSerial::begin(int baudRate, int8_t rxPin, int8_t txPin, int8_t dirPin)
     return begin(pSerial, baudRate, rxPin, txPin, dirPin);
 }
 
-bool SCSerial::begin(HardwareSerial *serial, int baudRate, int8_t rxPin, int8_t txPin, int8_t dirPin)
+bool SCSerial::begin(HardwareSerial* serial, int baudRate, int8_t rxPin, int8_t txPin, int8_t dirPin)
 {
     if (serial == nullptr)
     {
@@ -71,7 +73,7 @@ bool SCSerial::begin(HardwareSerial *serial, int baudRate, int8_t rxPin, int8_t 
     if (directionPin >= 0)
     {
         pinMode(directionPin, OUTPUT);
-        setRxMode(); // Start in receive mode
+        setRxMode();  // Start in receive mode
     }
 
     // Configure serial port
@@ -108,7 +110,7 @@ int SCSerial::setBaudRate(int baudRate)
     return 1;
 }
 
-int SCSerial::readSCS(unsigned char *nDat, int nLen)
+int SCSerial::readSCS(unsigned char* nDat, int nLen)
 {
     if (pSerial == nullptr)
     {
@@ -134,14 +136,14 @@ int SCSerial::readSCS(unsigned char *nDat, int nLen)
         // Small yield to prevent watchdog issues on ESP32
         if (rvLen < nLen && !pSerial->available())
         {
-            delayMicroseconds(50); // 50μs yield
+            delayMicroseconds(50);  // 50μs yield
         }
     }
 
     return rvLen;
 }
 
-int SCSerial::writeSCS(unsigned char *nDat, int nLen)
+int SCSerial::writeSCS(unsigned char* nDat, int nLen)
 {
     while (nLen--)
     {
@@ -172,12 +174,12 @@ void SCSerial::wFlushSCS()
 {
     if (txBufLen && pSerial != nullptr)
     {
-        setTxMode(); // Switch to transmit mode
+        setTxMode();  // Switch to transmit mode
 
         pSerial->write(txBuf, txBufLen);
-        pSerial->flush(); // Wait for transmission to complete
+        pSerial->flush();  // Wait for transmission to complete
 
-        setRxMode(); // Switch back to receive mode
+        setRxMode();  // Switch back to receive mode
         txBufLen = 0;
     }
 }
