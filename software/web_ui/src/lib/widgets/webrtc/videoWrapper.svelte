@@ -5,6 +5,7 @@
 	import { peerConnections } from './signalHandler.svelte';
 	import type { ConfigType, videoTransformType } from '../rtcVideo.svelte';
 	import * as Select from '$lib/components/ui/select/index';
+	import Input from '$lib/components/ui/input/input.svelte';
 
 	let {
 		device,
@@ -22,6 +23,8 @@
 	let video = $state<HTMLVideoElement | null>(null);
 
 	let isSettingsOpen = $state<boolean>(false);
+	let fileName = $state<string | undefined | null>();
+	let recording = $state(false);
 
 	$effect(() => {
 		if (video) {
@@ -46,7 +49,8 @@
 		const newConfig: ConfigType = {
 			name: config.name,
 			resolution: { width, height },
-			transform: transform as videoTransformType
+			transform: transform as videoTransformType,
+			file: fileName ?? null 
 		};
 		onVideoSettingsChange(device, newConfig);
 	};
@@ -55,6 +59,17 @@
 		onVideoClose(device);
 		isSettingsOpen = false;
 	};
+
+	const saveToFile = () => {
+		recording = true;
+		onValueChange();
+	}
+	
+	const stopRecording = () => {
+		recording = false;
+		fileName = undefined;
+		onValueChange();
+	}
 </script>
 
 <div class="relative grid h-full place-content-center">
@@ -95,6 +110,18 @@
 					<Select.Item value="automatic">automatic</Select.Item>
 				</Select.Content>
 			</Select.Root>
+			<form class="flex gap-2 mb-2">
+				{#if !recording}
+					
+				<Input id="File name" bind:value={fileName} onsubmit={saveToFile}/>
+				<Button class="w-[60px]" placeholder="File name" variant="default" size="icon" type="button" onclick={saveToFile}>
+					Save
+				</Button>
+				{:else}
+					<Button onclick={stopRecording}>Stop Recording</Button>
+				{/if}
+			</form>
+
 			<div>
 				<Button size="sm" variant="outline" class="mr-2" onclick={() => onVideoRestart(device)}
 					>Restart</Button
