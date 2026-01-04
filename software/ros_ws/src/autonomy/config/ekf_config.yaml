@@ -1,51 +1,39 @@
-### ekf_config.yaml ###
-# The frequency (in Hz) at which the filter will output a position estimate
-frequency: 30.0
-# Whether to publish the acceleration state
-publish_acceleration: false
-# Whether to broadcast the transformation between the frames
-publish_tf: true
-# REP-105 compliant frame names
-map_frame: map # The frame_id of the map
-odom_frame: odom # The frame_id of the odometry
-base_link_frame: base_link # The frame_id of the robot base
-world_frame: odom # The frame to which the robot's pose will be published
-# Initial state covariance matrix
-initial_estimate_covariance: [1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9]
-# IMU sensor configuration
-imu0: /imu
-imu0_config: [false, false, false, # X, Y, Z position
-  false, false, false, # roll, pitch, yaw position
-  true, true, true, # X, Y, Z velocity
-  true, true, true, # roll, pitch, yaw velocity
-  true, true, true] # X, Y, Z acceleration
-imu0_differential: false # Integration of pose from IMU
-imu0_relative: true # IMU provides relative measurements
-imu0_queue_size: 50
-imu0_remove_gravitational_acceleration: true
-# Process noise covariance (Q) - Tune these for your robot's dynamics
-process_noise_covariance: [0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.025, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.025, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-                            0.015]
-# Laser scan matcher odometry configuration
-odom0: /scan_matcher/odom
-odom0_config: [true, true, false, # X, Y, Z position
-  false, false, true, # roll, pitch, yaw position
-  true, true, false, # X, Y, Z velocity
-  false, false, true, # roll, pitch, yaw velocity
-  false, false, false] # X, Y, Z acceleration
-odom0_differential: true # Integration of pose from odometry
-odom0_relative: false # Odometry provides absolute measurements
-odom0_queue_size: 10
+ekf_filter_node:
+  ros__parameters:
+    ### ekf_config.yaml ###
+    # The frequency (in Hz) at which the filter will output a position estimate
+    frequency: 30.0
+    # Whether to publish the acceleration state
+    publish_acceleration: false
+    # Whether to broadcast the transformation between the frames
+    publish_tf: true
+    # REP-105 compliant frame names
+    map_frame: map # The frame_id of the map
+    odom_frame: odom # The frame_id of the odometry
+    base_link_frame: base_link # The frame_id of the robot base
+    world_frame: odom # The frame to which the robot's pose will be published
+    # Initial state covariance matrix
+    initial_estimate_covariance: [1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-9]
+    # IMU sensor configuration
+    imu0: /imu
+    imu0_config: [false, false, false, # X, Y, Z position
+      false, false, false, # roll, pitch, yaw position
+      true, true, true, # X, Y, Z velocity
+      true, true, true, # roll, pitch, yaw velocity
+      true, true, true] # X, Y, Z acceleration
+    imu0_differential: false # Integration of pose from IMU
+    imu0_relative: true # IMU provides relative measurements
+    imu0_queue_size: 50
+    imu0_remove_gravitational_acceleration: true
+    # Process noise covariance (Q) - Tune these for your robot's dynamics
+    process_noise_covariance: [0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.025, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.025, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.015]
+    # Laser scan matcher odometry configuration
+    odom0: /scan_matcher/odom
+    odom0_config: [true, true, false, # X, Y, Z position
+      false, false, true, # roll, pitch, yaw position
+      true, true, false, # X, Y, Z velocity
+      false, false, true, # roll, pitch, yaw velocity
+      false, false, false] # X, Y, Z acceleration
+    odom0_differential: true # Integration of pose from odometry
+    odom0_relative: false # Odometry provides absolute measurements
+    odom0_queue_size: 10
