@@ -72,7 +72,6 @@
 	// Selected YAML HTTP path (used for preview table fetch)
 	const getSelectedYaml = () => settings.groups.waypoints.yamlFile.value || '/waypoints.yaml';
 
-	// ✅ Convert "/waypoints_simulation.yaml" -> "waypoints_simulation.yaml"
 	const getSelectedYamlBasename = () => {
 		const p = getSelectedYaml();
 		const last = p.split('/').pop();
@@ -170,7 +169,6 @@
 		svcBusy = true;
 		svcStatus = 'Sending run request...';
 
-		// ✅ IMPORTANT: send basename so backend can resolve filesystem path
 		const yaml_path = getSelectedYamlBasename();
 
 		runSrv.callService(
