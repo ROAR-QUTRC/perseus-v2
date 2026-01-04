@@ -5,6 +5,8 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
+  builtin-interfaces,
+  geometry-msgs,
   rosidl-default-generators,
   rosidl-default-runtime,
 }:
@@ -23,7 +25,11 @@ buildRosPackage rec {
     ament-lint-auto
     ament-lint-common
   ];
-  propagatedBuildInputs = [ rosidl-default-runtime ];
+  propagatedBuildInputs = [
+    builtin-interfaces
+    geometry-msgs
+    rosidl-default-runtime
+  ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
