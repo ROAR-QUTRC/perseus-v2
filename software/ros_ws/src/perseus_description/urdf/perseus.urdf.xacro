@@ -76,7 +76,7 @@
     <link name="${prefix}base_link"/>
 
     <joint name="${prefix}chassis_joint" type="fixed"> <!-- Joint Connect base_link and chassis -->
-      <origin xyz="0 0.0 ${chassis_z_offset}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${chassis_length} 0.0 ${chassis_z_offset}" rpy="0.0 0.0 0.0"/>
       <parent link="${prefix}base_link"/>
       <child link="${prefix}chassis"/>
     </joint>
