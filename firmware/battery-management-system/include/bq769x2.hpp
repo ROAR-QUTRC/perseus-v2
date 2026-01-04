@@ -431,7 +431,7 @@ public:
         FULL_ACCESS_KEY_STEP2 = 0x925D,            // Security:Keys:Full Access Key Step 2
     };
 
-    enum class security_state : uint8_t
+    enum class security_state_option : uint8_t
     {
         NOT_INITIALIZED = 0x00,
         FULLACCESS = 0x01,
@@ -523,7 +523,7 @@ public:
         I2C_FAST_WITH_CRC = 0x12,
         I2C_WITH_TIMEOUTS = 0x1E,
     };
-    enum class pullup_config : uint8_t
+    enum class adc_pullup_config : uint8_t
     {
         PULLUP_18K = 0,
         PULLUP_180K = 1,
@@ -536,7 +536,7 @@ public:
         POLYNOMIAL_CUSTOM = 2,
         POLYNOMIAL_NONE = 3,
     };
-    enum class measurement_type : uint8_t
+    enum class adc_measurement_type : uint8_t
     {
         ADC = 0,
         CELL_THERMISTOR = 1,
@@ -584,7 +584,7 @@ public:
         GPO = 1,
         DDSG = 2,
     };
-    enum class user_amps : uint8_t
+    enum class user_amps_unit : uint8_t
     {
         DECIMILLIAMP = 0,
         MILLIAMP = 1,
@@ -614,219 +614,219 @@ public:
     struct control_status_t
     {
         // was pullup active during previous measurement?
-        bool wasLoadDetectOn : 1 = 0;        // LD_ON
-        bool hasLoadDetectTimedOut : 1 = 0;  // LD_TIMEOUT
-        bool inDeepsleep : 1 = 0;            // DEEPSLEEP
-        uint16_t _rsvd4 : 13 = 0;            // RSVD_0
+        bool was_load_detect_on : 1 = 0;         // LD_ON
+        bool has_load_detect_timed_out : 1 = 0;  // LD_TIMEOUT
+        bool in_deepsleep : 1 = 0;               // DEEPSLEEP
+        uint16_t _rsvd4 : 13 = 0;                // RSVD_0
     };
     struct protections_a_t
     {
-        uint8_t _rsvd0 : 2 = 0;              // RSVD_0
-        bool cellUndervoltage : 1 = 0;       // CUV
-        bool cellOvervoltage : 1 = 1;        // COV
-        bool overcurrentCharge : 1 = 0;      // OCC
-        bool overcurrentDischarge1 : 1 = 0;  // OCD1
-        bool overcurrentDischarge2 : 1 = 0;  // OCD2
-        bool shortCircuitDischarge : 1 = 1;  // SCD
+        uint8_t _rsvd0 : 2 = 0;                // RSVD_0
+        bool cell_undervoltage : 1 = 0;        // CUV
+        bool cell_overvoltage : 1 = 1;         // COV
+        bool overcurrent_charge : 1 = 0;       // OCC
+        bool overcurrent_discharge_1 : 1 = 0;  // OCD1
+        bool overcurrent_discharge_2 : 1 = 0;  // OCD2
+        bool short_circuit_discharge : 1 = 1;  // SCD
     };
     struct protections_b_t
     {
-        bool undertempCharge : 1 = 0;     // UTC
-        bool undertempDischarge : 1 = 0;  // UTD
-        bool internalUndertemp : 1 = 0;   // UTINT
-        bool _rsvd3 : 1 = 0;              // RSVD_0
-        bool overtempCharge : 1 = 0;      // OTC
-        bool overtempDischarge : 1 = 0;   // OTD
-        bool internalOvertemp : 1 = 0;    // OTINT
-        bool fetOvertemp : 1 = 0;         // OTF
+        bool undertemp_charge : 1 = 0;     // UTC
+        bool undertemp_discharge : 1 = 0;  // UTD
+        bool internal_undertemp : 1 = 0;   // UTINT
+        bool _rsvd3 : 1 = 0;               // RSVD_0
+        bool overtemp_charge : 1 = 0;      // OTC
+        bool overtemp_discharge : 1 = 0;   // OTD
+        bool internal_overtemp : 1 = 0;    // OTINT
+        bool fet_overtemp : 1 = 0;         // OTF
     };
     struct safety_alert_c_t
     {
-        uint8_t _rsvd0 : 3 = 0;               // RSVD_0
-        bool prechargeTimeoutSuspend : 1;     // PTOS
-        bool cellOvervoltageLatch : 1;        // COVL
-        bool overcurrentDischarge3 : 1;       // OCD3
-        bool shortCircuitDischargeLatch : 1;  // SCDL
+        uint8_t _rsvd0 : 3 = 0;                  // RSVD_0
+        bool precharge_timeout_suspend : 1;      // PTOS
+        bool cell_overvoltage_latch : 1;         // COVL
+        bool overcurrent_discharge_3 : 1;        // OCD3
+        bool short_circuit_discharge_latch : 1;  // SCDL
     };
     struct protections_c_t
     {
-        bool _rsvd0 : 1 = 0;             // RSVD_0
-        bool hostWatchdogFault : 1 = 0;  // HWDF
-        bool prechargeTimeout : 1 = 0;   // PTO
+        bool _rsvd0 : 1 = 0;               // RSVD_0
+        bool host_watchdog_fault : 1 = 0;  // HWDF
+        bool precharge_timeout : 1 = 0;    // PTO
         // NOTE: When used in Settings:Protection:Enabled Protections C,
         // this bit is only RSVD not RSVD_0
-        bool _rsvd3 : 1 = 0;                      // RSVD_0
-        bool cellOvervoltageLatch : 1 = 0;        // COVL
-        bool overcurrentDischargeLatch : 1 = 0;   // OCDL
-        bool shortCircuitDischargeLatch : 1 = 0;  // SCDL
-        bool overcurrentDischarge3 : 1 = 0;       // OCD3
+        bool _rsvd3 : 1 = 0;                         // RSVD_0
+        bool cell_overvoltage_latch : 1 = 0;         // COVL
+        bool overcurrent_discharge_latch : 1 = 0;    // OCDL
+        bool short_circuit_discharge_latch : 1 = 0;  // SCDL
+        bool overcurrent_discharge_3 : 1 = 0;        // OCD3
     };
     struct permanent_fail_a_t
     {
-        bool safetyCellUndervoltage : 1;      // SUV
-        bool safetyCellOvervoltage : 1;       // SOV
-        bool safetyOvercurrentCharge : 1;     // SOCC
-        bool safetyOvercurrentDischarge : 1;  // SOCD
-        bool safetyOvertemp : 1;              // SOT
-        bool _rsvd5 : 1 = 0;                  // RSVD_0
-        bool safetyOvertempFet : 1;           // SOTF
-        bool copperDeposition : 1;            // CUDEP
+        bool safety_cell_undervoltage : 1;      // SUV
+        bool safety_cell_overvoltage : 1;       // SOV
+        bool safety_overcurrent_charge : 1;     // SOCC
+        bool safety_overcurrent_discharge : 1;  // SOCD
+        bool safety_overtemp : 1;               // SOT
+        bool _rsvd5 : 1 = 0;                    // RSVD_0
+        bool safety_overtemp_fet : 1;           // SOTF
+        bool copper_deposition : 1;             // CUDEP
     };
     struct permanent_fail_b_t
     {
-        bool chargeFet : 1;                   // CFETF
-        bool dischargeFet : 1;                // DFETF
-        bool secondLevelProtector : 1;        // 2LVL
-        bool voltageImbalanceRelax : 1;       // VIMR
-        bool voltageImbalanceActive : 1;      // VIMA
-        uint8_t _rsvd5 : 2 = 0;               // RSVD_0
-        bool shortCircuitDischargeLatch : 1;  // SCDL
+        bool charge_fet : 1;                     // CFETF
+        bool discharge_fet : 1;                  // DFETF
+        bool second_level_protector : 1;         // 2LVL
+        bool voltage_imbalance_relax : 1;        // VIMR
+        bool voltage_imbalance_active : 1;       // VIMA
+        uint8_t _rsvd5 : 2 = 0;                  // RSVD_0
+        bool short_circuit_discharge_latch : 1;  // SCDL
     };
     struct permanent_fail_alert_c_t
     {
-        uint8_t _rsvd0 : 3 = 0;             // RSVD_0
-        bool internalLFO : 1;               // LFOF
-        bool internalVoltageReference : 1;  // VREF
-        bool internalVssMeasurement : 1;    // VSSF
-        bool hardwareMux : 1;               // HWMX
-        bool _rsvd7 : 1 = 0;                // RSVD_0
+        uint8_t _rsvd0 : 3 = 0;               // RSVD_0
+        bool internal_LFO : 1;                // LFOF
+        bool internal_voltage_reference : 1;  // VREF
+        bool internal_vss_measurement : 1;    // VSSF
+        bool hardware_mux : 1;                // HWMX
+        bool _rsvd7 : 1 = 0;                  // RSVD_0
     };
     struct permanent_fail_c_t
     {
-        bool otpMemory : 1;                 // OTPF
-        bool dataROM : 1;                   // DRMF
-        bool instructionROM : 1;            // IRMF
-        bool internalLFO : 1;               // LFOF
-        bool internalVoltageReference : 1;  // VREF
-        bool internalVssMeasurement : 1;    // VSSF
-        bool hardwareMux : 1;               // HWMX
-        bool commanded : 1;                 // CMDF
+        bool otp_memory : 1;                  // OTPF
+        bool data_ROM : 1;                    // DRMF
+        bool instruction_ROM : 1;             // IRMF
+        bool internal_LFO : 1;                // LFOF
+        bool internal_voltage_reference : 1;  // VREF
+        bool internal_vss_measurement : 1;    // VSSF
+        bool hardware_mux : 1;                // HWMX
+        bool commanded : 1;                   // CMDF
     };
     struct permanent_fail_d_t
     {
         // top of stack vs cell sum
-        bool topStackVsCell : 1;  // TOSF
-        uint8_t _rsvd1 : 7 = 0;   // RSVD_0
+        bool top_stack_vs_cell : 1;  // TOSF
+        uint8_t _rsvd1 : 7 = 0;      // RSVD_0
     };
     struct battery_status_t
     {
-        bool inConfigUpdateMode : 1;  // CFGUPDATE
-        bool inPrechargeMode : 1;     // PCHG_MODE
-        bool sleepAllowed : 1;        // SLEEP_EN
+        bool in_config_update_mode : 1;  // CFGUPDATE
+        bool in_precharge_mode : 1;      // PCHG_MODE
+        bool sleep_allowed : 1;          // SLEEP_EN
         // AKA: Power-On Reset
         // Whether or not a full reset has occurred since last CONFIG_UPDATE exit
-        bool fullResetOccurred : 1;  // POR
+        bool full_reset_occurred : 1;  // POR
         // whether or not the previous reset was due to the watchdog timer
         // NOTE: Independent of Host Watchdog settings
-        bool wasWatchdogReset : 1;         // WD
-        bool checkingCellOpenWire : 1;     // COW_CHK
-        bool pendingOtpWrite : 1;          // OTPW
-        bool otpWriteBlocked : 1;          // OTPB
-        security_state securityState : 2;  // SEC[1:0]
-        bool fuseActive : 1;               // FUSE
-        bool safetyFaultActive : 1;        // SS
-        bool permanentFailActive : 1;      // PF
-        bool shutdownPending : 1;          // SD_CMD
-        bool _rsvd14 : 1 = 0;              // RSVD_0
-        bool inSleep : 1;                  // SLEEP
+        bool was_watchdog_reset : 1;               // WD
+        bool checking_cell_open_wire : 1;          // COW_CHK
+        bool pending_otp_write : 1;                // OTPW
+        bool otp_write_blocked : 1;                // OTPB
+        security_state_option security_state : 2;  // SEC[1:0]
+        bool fuse_active : 1;                      // FUSE
+        bool safety_fault_active : 1;              // SS
+        bool permanent_fail_active : 1;            // PF
+        bool shutdown_pending : 1;                 // SD_CMD
+        bool _rsvd14 : 1 = 0;                      // RSVD_0
+        bool in_sleep : 1;                         // SLEEP
     };
     struct alarm_status_t
     {
-        bool hasWokenFromSleep : 1 = 0;            // WAKE
-        bool adcScanComplete : 1 = 0;              // ADSCAN
-        bool isBalancingCells : 1 = 0;             // CB
-        bool isFuseDriven : 1 = 0;                 // FUSE
-        bool stackReachedShutdownVoltage : 1 = 0;  // SHUTV
-        bool dischargeFetOff : 1 = 0;              // XDSG
-        bool chargeFetOff : 1 = 0;                 // XCHG
-        bool fullVoltageScanComplete : 1 = 0;      // FULLSCAN
-        bool _rsvd8 : 1 = 0;                       // RSVD_0
-        bool initializationComplete : 1 = 0;       // INITCOMP
-        bool initializationStarted : 1 = 0;        // INITSTART
+        bool has_woken_from_sleep : 1 = 0;            // WAKE
+        bool adc_scan_complete : 1 = 0;               // ADSCAN
+        bool is_balancing_cells : 1 = 0;              // CB
+        bool is_fuse_driven : 1 = 0;                  // FUSE
+        bool stack_reached_shutdown_voltage : 1 = 0;  // SHUTV
+        bool discharge_fet_off : 1 = 0;               // XDSG
+        bool charge_fet_off : 1 = 0;                  // XCHG
+        bool full_voltage_scan_complete : 1 = 0;      // FULLSCAN
+        bool _rsvd8 : 1 = 0;                          // RSVD_0
+        bool initialization_complete : 1 = 0;         // INITCOMP
+        bool initialization_started : 1 = 0;          // INITSTART
         // anything in the alarm PF A, B, C, or D masks triggered
-        bool alarmPFAlert : 1 = 1;  // MSK_PFALERT
+        bool alarm_PF_alert : 1 = 1;  // MSK_PFALERT
         // anything in the alarm SF A, B, or C masks triggered
-        bool alarmSFAlert : 1 = 1;      // MSK_SFALERT
-        bool permanentFail : 1 = 1;     // PF
-        bool safetyStatusA : 1 = 1;     // SSA
-        bool safetyStatusBOrC : 1 = 1;  // SSBC
+        bool alarm_SF_alert : 1 = 1;        // MSK_SFALERT
+        bool permanent_fail : 1 = 1;        // PF
+        bool safety_status_a : 1 = 1;       // SSA
+        bool safety_status_b_or_c : 1 = 1;  // SSBC
     };
     struct fet_status_t
     {
-        bool chargeFetOn : 1;        // CHG_FET
-        bool prechargeFetOn : 1;     // PCHG_FET
-        bool dischargeFetOn : 1;     // DSG_FET
-        bool predischargeFetOn : 1;  // PDSG_FET
-        bool dchgAsserted : 1;       // DCHG_PIN
-        bool ddsgAsserted : 1;       // DDSG_PIN
-        bool alertAsserted : 1;      // ALRT_PIN
-        bool _rsvd7 : 1 = 0;         // RSVD_0
+        bool charge_fet_on : 1;        // CHG_FET
+        bool precharge_fet_on : 1;     // PCHG_FET
+        bool discharge_fet_on : 1;     // DSG_FET
+        bool predischarge_fet_on : 1;  // PDSG_FET
+        bool dchg_asserted : 1;        // DCHG_PIN
+        bool ddsg_asserted : 1;        // DDSG_PIN
+        bool alert_asserted : 1;       // ALRT_PIN
+        bool _rsvd7 : 1 = 0;           // RSVD_0
     };
     struct manufacturing_status_t
     {
-        bool prechargeTesting : 1;        // PCHG_TEST
-        bool chargeTesting : 1;           // CHG_TEST
-        bool dischargeTesting : 1;        // DSG_TEST
-        bool _rsvd3 : 1 = 0;              // RSVD_0
-        bool autonomousFets : 1;          // FET_EN
-        bool predischargeTesting : 1;     // PDSG_TEST
-        bool isPermanentFailEnabled : 1;  // PF_EN
-        bool isOtpWriteEnabled : 1;       // OTPW_EN
-        uint8_t _rsvd8 : 8 = 0;           // RSVD_0
+        bool precharge_testing : 1;          // PCHG_TEST
+        bool charge_testing : 1;             // CHG_TEST
+        bool discharge_testing : 1;          // DSG_TEST
+        bool _rsvd3 : 1 = 0;                 // RSVD_0
+        bool autonomous_fets : 1;            // FET_EN
+        bool predischarge_testing : 1;       // PDSG_TEST
+        bool is_permanent_fail_enabled : 1;  // PF_EN
+        bool is_otp_write_enabled : 1;       // OTPW_EN
+        uint8_t _rsvd8 : 8 = 0;              // RSVD_0
     };
     struct fet_control_t
     {
-        bool forceDischargeOff : 1;     // DSG_OFF
-        bool forcePredischargeOff : 1;  // PDSG_OFF
-        bool forceChargeOff : 1;        // CHG_OFF
-        bool forcePrechargeOff : 1;     // PCHG_OFF
-        uint8_t _rsvd4 : 4 = 0;         // RSVD_0
+        bool force_discharge_off : 1;     // DSG_OFF
+        bool force_predischarge_off : 1;  // PDSG_OFF
+        bool force_charge_off : 1;        // CHG_OFF
+        bool force_precharge_off : 1;     // PCHG_OFF
+        uint8_t _rsvd4 : 4 = 0;           // RSVD_0
     };
     struct regulator_control_t
     {
-        bool reg1Enable : 1;                // REG1_EN
-        regulator_voltage reg1Voltage : 3;  // REG1V_[2:0]
-        bool reg2Enable : 1;                // REG2_EN
-        regulator_voltage reg2Voltage : 3;  // REG2V_[2:0]
+        bool reg_1_enable : 1;                // REG1_EN
+        regulator_voltage reg_1_voltage : 3;  // REG1V_[2:0]
+        bool reg_2_enable : 1;                // REG2_EN
+        regulator_voltage reg_2_voltage : 3;  // REG2V_[2:0]
     };
     struct otp_write_result_t
     {
-        struct resultRegister
+        struct result_register
         {
             // note: The following are NOT errors for the whole chip,
             // OTP programming just has stricter requirements
-            bool overVoltage : 1;         // HV
-            bool underVoltage : 1;        // LV
-            bool overTemp : 1;            // HT
-            bool dataWriteFail : 1;       // NODATA
-            bool signatureWriteFail : 1;  // NOSIG
-            bool otpLocked : 1;           // LOCK
-            bool _rsvd6 : 1 = 0;          // RSVD_0
-            bool otpProgrammingOk : 1;    // OK
+            bool over_voltage : 1;          // HV
+            bool under_voltage : 1;         // LV
+            bool over_temp : 1;             // HT
+            bool data_write_fail : 1;       // NODATA
+            bool signature_write_fail : 1;  // NOSIG
+            bool otp_locked : 1;            // LOCK
+            bool _rsvd6 : 1 = 0;            // RSVD_0
+            bool otp_programming_ok : 1;    // OK
         };
-        uint16_t failAddress;
+        uint16_t fail_address;
     };
     struct firmware_version_t
     {
         union
         {
-            uint16_t deviceNumber;
-            uint8_t deviceNumberBytes[2];
+            uint16_t device_number;
+            uint8_t device_number_bytes[2];
         };
         union
         {
-            uint16_t firmwareVersion;
-            uint8_t firmwareVersionBytes[2];
+            uint16_t firmware_version;
+            uint8_t firmware_version_bytes[2];
         };
         union
         {
-            uint16_t buildNumber;
+            uint16_t build_number;
             struct
             {
-                uint8_t bcdHighOfHighByte : 4;
-                uint8_t bcdLowOfHighByte : 4;
-                uint8_t bcdHighOfLowByte : 4;
-                uint8_t bcdLowOfLowByte : 4;
+                uint8_t bcd_high_of_high_byte : 4;
+                uint8_t bcd_low_of_high_byte : 4;
+                uint8_t bcd_high_of_low_byte : 4;
+                uint8_t bcd_low_of_low_byte : 4;
             };
         };
     };
@@ -836,13 +836,13 @@ public:
     {
         union
         {
-            uint16_t step1;
-            uint8_t step1Bytes[2];
+            uint16_t step_1;
+            uint8_t step_1_bytes[2];
         };
         union
         {
-            uint16_t step2;
-            uint8_t step2Bytes[2];
+            uint16_t step_2;
+            uint8_t step_2_bytes[2];
         };
     };
     union security_keys_t
@@ -850,165 +850,165 @@ public:
         struct
         {
             security_key_pair_t unseal;
-            security_key_pair_t fullAccess;
+            security_key_pair_t full_access;
         };
         uint64_t raw = 0x0000000000000000;
     };
     struct saved_pf_status_t
     {
-        permanent_fail_a_t pfStatusA;
-        permanent_fail_b_t pfStatusB;
-        permanent_fail_c_t pfStatusC;
-        permanent_fail_d_t pfStatusD;
+        permanent_fail_a_t pf_status_a;
+        permanent_fail_b_t pf_status_b;
+        permanent_fail_c_t pf_status_c;
+        permanent_fail_d_t pf_status_d;
     };
     struct da_status_1_t
     {
-        int32_t cell1VoltageCounts;
-        int32_t cell1CurrentCounts;
-        int32_t cell2VoltageCounts;
-        int32_t cell2CurrentCounts;
-        int32_t cell3VoltageCounts;
-        int32_t cell3CurrentCounts;
-        int32_t cell4VoltageCounts;
-        int32_t cell4CurrentCounts;
+        int32_t cell_1_voltage_counts;
+        int32_t cell_1_current_counts;
+        int32_t cell_2_voltage_counts;
+        int32_t cell_2_current_counts;
+        int32_t cell_3_voltage_counts;
+        int32_t cell_3_current_counts;
+        int32_t cell_4_voltage_counts;
+        int32_t cell_4_current_counts;
     };
     struct da_status_2_t
     {
-        int32_t cell5VoltageCounts;
-        int32_t cell5CurrentCounts;
-        int32_t cell6VoltageCounts;
-        int32_t cell6CurrentCounts;
-        int32_t cell7VoltageCounts;
-        int32_t cell7CurrentCounts;
-        int32_t cell8VoltageCounts;
-        int32_t cell8CurrentCounts;
+        int32_t cell_5_voltage_counts;
+        int32_t cell_5_current_counts;
+        int32_t cell_6_voltage_counts;
+        int32_t cell_6_current_counts;
+        int32_t cell_7_voltage_counts;
+        int32_t cell_7_current_counts;
+        int32_t cell_8_voltage_counts;
+        int32_t cell_8_current_counts;
     };
     struct da_status_3_t
     {
-        int32_t cell9VoltageCounts;
-        int32_t cell9CurrentCounts;
-        int32_t cell10VoltageCounts;
-        int32_t cell10CurrentCounts;
+        int32_t cell_9_voltage_counts;
+        int32_t cell_9_current_counts;
+        int32_t cell_10_voltage_counts;
+        int32_t cell_10_current_counts;
     };
     struct raw_da_status_5_t
     {
-        int16_t vreg18AdcCounts;
-        int16_t vssAdcCounts;
-        int16_t maxCellVoltage;
-        int16_t minCellVoltage;
-        int16_t batteryVoltageSum;
-        int16_t cellTemperature;
-        int16_t fetTemperature;
-        int16_t maxCellTemperature;
-        int16_t minCellTemperature;
-        int16_t avgCellTemperature;
-        int16_t cc3Current;
-        int16_t cc1Current;
-        int32_t cc2Counts;
-        int32_t cc3Counts;
+        int16_t vreg_18_adc_counts;
+        int16_t vss_adc_counts;
+        int16_t max_cell_voltage;
+        int16_t min_cell_voltage;
+        int16_t battery_voltage_sum;
+        int16_t cell_temperature;
+        int16_t fet_temperature;
+        int16_t max_cell_temperature;
+        int16_t min_cell_temperature;
+        int16_t avg_cell_temperature;
+        int16_t cc_3_current;
+        int16_t cc_1_current;
+        int32_t cc_2_counts;
+        int32_t cc_3_counts;
     };
     struct raw_da_status_6_t
     {
-        int32_t accumulatedCharge;
-        uint32_t accumulatedChargeFraction;
-        uint32_t accumulatedChargeTime;
-        int32_t cfetoffCounts;
-        int32_t dfetoffCounts;
-        int32_t alertCounts;
-        int32_t ts1Counts;
-        int32_t ts2Counts;
+        int32_t accumulated_charge;
+        uint32_t accumulated_charge_fraction;
+        uint32_t accumulated_charge_time;
+        int32_t cfetoff_counts;
+        int32_t dfetoff_counts;
+        int32_t alert_counts;
+        int32_t ts1_counts;
+        int32_t ts2_counts;
     };
     struct da_status_7_t
     {
-        int32_t ts3Counts;
-        int32_t hdqCounts;
-        int32_t dchgCounts;
-        int32_t ddsgCounts;
+        int32_t ts3_counts;
+        int32_t hdq_counts;
+        int32_t dchg_counts;
+        int32_t ddsg_counts;
     };
     union voltage_snapshot_t
     {
         struct
         {
-            int16_t cell1Voltage;
-            int16_t cell2Voltage;
-            int16_t cell3Voltage;
-            int16_t cell4Voltage;
-            int16_t cell5Voltage;
-            int16_t cell6Voltage;
-            int16_t cell7Voltage;
-            int16_t cell8Voltage;
-            int16_t cell9Voltage;
-            int16_t cell10Voltage;
+            int16_t cell_1_voltage;
+            int16_t cell_2_voltage;
+            int16_t cell_3_voltage;
+            int16_t cell_4_voltage;
+            int16_t cell_5_voltage;
+            int16_t cell_6_voltage;
+            int16_t cell_7_voltage;
+            int16_t cell_8_voltage;
+            int16_t cell_9_voltage;
+            int16_t cell_10_voltage;
         };
         int16_t voltages[10];
     };
     struct cb_status_2_t
     {
-        uint32_t cell1BalancingTime;
-        uint32_t cell2BalancingTime;
-        uint32_t cell3BalancingTime;
-        uint32_t cell4BalancingTime;
-        uint32_t cell5BalancingTime;
-        uint32_t cell6BalancingTime;
-        uint32_t cell7BalancingTime;
-        uint32_t cell8BalancingTime;
+        uint32_t cell_1_balancing_time;
+        uint32_t cell_2_balancing_time;
+        uint32_t cell_3_balancing_time;
+        uint32_t cell_4_balancing_time;
+        uint32_t cell_5_balancing_time;
+        uint32_t cell_6_balancing_time;
+        uint32_t cell_7_balancing_time;
+        uint32_t cell_8_balancing_time;
     };
     struct cb_status_3_t
     {
-        uint32_t cell9BalancingTime;
-        uint32_t cell10BalancingTime;
+        uint32_t cell_9_balancing_time;
+        uint32_t cell_10_balancing_time;
     };
     struct cal1_t
     {
-        int16_t calibrationDataCounter;
-        int32_t cc2Counts;
-        int16_t packCounts;
-        int16_t topOfStackCounts;
-        int16_t ldCounts;
+        int16_t calibration_data_counter;
+        int32_t cc_2_counts;
+        int16_t pack_counts;
+        int16_t top_of_stack_counts;
+        int16_t ld_counts;
     };
 
     // --- DATA REGISTERS ---
     struct power_config_t
     {
-        coulomb_conversion_speed wakeSpeed : 2 = coulomb_conversion_speed::T_24MS;  // WK_SPD_[1:0]
+        coulomb_conversion_speed wake_speed : 2 = coulomb_conversion_speed::T_24MS;  // WK_SPD_[1:0]
         // measurement loop speed during normal operation
-        measurement_loop_speed loopSpeed : 2 = measurement_loop_speed::FULL_SPEED;  // LOOP_SLOW_[1:0]
+        measurement_loop_speed loop_speed : 2 = measurement_loop_speed::FULL_SPEED;  // LOOP_SLOW_[1:0]
         // measurement loop speed during cell balancing
-        measurement_loop_speed cellBalanceLoopSpeed : 2 = measurement_loop_speed::FULL_SPEED;  // CB_LOOP_SLOW_[1:0]
+        measurement_loop_speed cell_balance_loop_speed : 2 = measurement_loop_speed::FULL_SPEED;  // CB_LOOP_SLOW_[1:0]
         // cleared: 3ms per conversion
         // set: 1.5ms per conversion (but lower accuracy)
-        bool useFastAdc : 1 = false;                      // FASTADC
-        bool enableOvertempShutdown : 1 = true;           // OTSD
-        bool enableSleep : 1 = true;                      // SLEEP
-        bool enableDeepSleepLFO : 1 = false;              // DPSLP_LFO
-        bool enableDeepSleepLDO : 1 = false;              // DPSLP_LDO
-        bool enableDeepSleepChargerWake : 1 = true;       // DPSLP_PD
-        bool disableShutdownTS2Wake : 1 = false;          // SHUT_TS2
-        bool enableDeepSleepOvertempShutdown : 1 = true;  // DPSLP_OT spellchecker:disable-line
-        uint8_t _rsvd14 : 2 = 0;                          // RSVD_0
+        bool use_fast_adc : 1 = false;                        // FASTADC
+        bool enable_overtemp_shutdown : 1 = true;             // OTSD
+        bool enable_sleep : 1 = true;                         // SLEEP
+        bool enable_deep_sleep_LFO : 1 = false;               // DPSLP_LFO
+        bool enable_deep_sleep_LDO : 1 = false;               // DPSLP_LDO
+        bool enable_deep_sleep_charger_wake : 1 = true;       // DPSLP_PD
+        bool disable_shutdown_ts2_wake : 1 = false;           // SHUT_TS2
+        bool enable_deep_sleep_overtemp_shutdown : 1 = true;  // DPSLP_OT spellchecker:disable-line
+        uint8_t _rsvd14 : 2 = 0;                              // RSVD_0
     };
     struct reg0_config_t
     {
-        bool reg0Enable : 1 = true;  // REG0_EN
-        bool _rsvd1 : 1;             // RSVD
-        uint8_t _rsvd2 : 6 = 0;      // RSVD_0
+        bool reg_0_enable : 1 = true;  // REG0_EN
+        bool _rsvd1 : 1;               // RSVD
+        uint8_t _rsvd2 : 6 = 0;        // RSVD_0
     };
     struct hwd_regulator_options_t
     {
         // Regulator off time in seconds before turning back on
-        uint8_t toggleTime : 4;           // TOGGLE_TIME_[3:0]
-        hwd_toggle_option hwdAction : 2;  // TOGGLE_OPT_[1:0]
-        uint8_t _rsvd5 : 2 = 0;           // RSVD_0
+        uint8_t toggle_time : 4;           // TOGGLE_TIME_[3:0]
+        hwd_toggle_option hwd_action : 2;  // TOGGLE_OPT_[1:0]
+        uint8_t _rsvd5 : 2 = 0;            // RSVD_0
     };
     struct spi_configuration_t
     {
         uint8_t _rsvd0 : 5 = 0;  // RSVD_0
         // use digital filters (recommend for high-freq operation)
-        bool enableFilters : 1;  // FILT
+        bool enable_filters : 1;  // FILT
         // clear: MISO uses REG18 voltage
         // set: MISO uses REG1 voltage
-        bool misoUsesReg1 : 1;  // MISO_REG1
-        bool _rsvd7 : 1 = 0;    // RSVD_0
+        bool miso_uses_reg_1 : 1;  // MISO_REG1
+        bool _rsvd7 : 1 = 0;       // RSVD_0
     };
     struct cfetoff_pin_configuration_t
     {
@@ -1017,24 +1017,24 @@ public:
             struct
             {
                 cfetoff_pin_function function : 2;  // PINFXN[1:0]
-                bool enablePulldown : 1;            // OPT[0]
-                // clear: Driving high drives to HI-Z (unavailable with isActiveLow)
+                bool enable_pulldown : 1;           // OPT[0]
+                // clear: Driving high drives to HI-Z (unavailable with is_active_low)
                 // set: Driving high drives to selected regulator
-                bool disableHighZDrive : 1;  // OPT[1]
-                // NOTE: Should be cleared when isActiveLow is set
-                bool pullupToReg1 : 1;  // OPT[2]
+                bool disable_high_Z_drive : 1;  // OPT[1]
+                // NOTE: Should be cleared when is_active_low is set
+                bool pullup_to_reg1 : 1;  // OPT[2]
                 // clear: High uses REG18
                 // set: High uses REG1
-                bool driveHighUsesReg1 : 1;  // OPT[3]
-                bool _rsvd6 : 1;             // OPT[4]
-                bool isActiveLow : 1;        // OPT[5]
+                bool drive_high_uses_reg1 : 1;  // OPT[3]
+                bool _rsvd6 : 1;                // OPT[4]
+                bool is_active_low : 1;         // OPT[5]
             } function;
             struct
             {
-                adc_pin_function function : 2;         // PINFXN[1:0]
-                measurement_type measurementType : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;   // OPT[3:2]
-                pullup_config pullupConfig : 2;        // OPT[5:4]
+                adc_pin_function function : 2;              // PINFXN[1:0]
+                adc_measurement_type measurement_type : 2;  // OPT[1:0]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
+                adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
     };
@@ -1045,26 +1045,26 @@ public:
             struct
             {
                 dfetoff_pin_function function : 2;  // PINFXN[1:0]
-                bool enablePulldown : 1;            // OPT[0]
-                // clear: Driving high drives to HI-Z (unavailable with isActiveLow)
+                bool enable_pulldown : 1;           // OPT[0]
+                // clear: Driving high drives to HI-Z (unavailable with is_active_low)
                 // set: Driving high drives to selected regulator
-                bool disableHighZDrive : 1;  // OPT[1]
-                // NOTE: Should be cleared when isActiveLow is set
-                bool pullupToReg1 : 1;  // OPT[2]
+                bool disable_high_Z_drive : 1;  // OPT[1]
+                // NOTE: Should be cleared when is_active_low is set
+                bool pullup_to_reg1 : 1;  // OPT[2]
                 // clear: High uses REG18
                 // set: High uses REG1
-                bool driveHighUsesReg1 : 1;  // OPT[3]
+                bool drive_high_uses_reg1 : 1;  // OPT[3]
                 // set: acts as BOTHOFF
-                bool isBothOff : 1;  // OPT[4]
+                bool is_both_off : 1;  // OPT[4]
                 // _rsvd6 clear: acts as DFETOFF
-                bool isActiveLow : 1;  // OPT[5]
+                bool is_active_low : 1;  // OPT[5]
             } function;
             struct
             {
-                adc_pin_function function : 2;         // PINFXN[1:0]
-                measurement_type measurementType : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;   // OPT[3:2]
-                pullup_config pullupConfig : 2;        // OPT[5:4]
+                adc_pin_function function : 2;              // PINFXN[1:0]
+                adc_measurement_type measurement_type : 2;  // OPT[1:0]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
+                adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
     };
@@ -1075,33 +1075,33 @@ public:
             struct
             {
                 alert_pin_function function : 2;  // PINFXN[1:0]
-                bool enablePulldown : 1;          // OPT[0]
-                // clear: Driving high drives to HI-Z (unavailable with isActiveLow)
+                bool enable_pulldown : 1;         // OPT[0]
+                // clear: Driving high drives to HI-Z (unavailable with is_active_low)
                 // set: Driving high drives to selected regulator
-                bool disableHighZDrive : 1;  // OPT[1]
-                // NOTE: Should be cleared when isActiveLow is set
-                bool pullupToReg1 : 1;  // OPT[2]
+                bool disable_high_Z_drive : 1;  // OPT[1]
+                // NOTE: Should be cleared when is_active_low is set
+                bool pullup_to_reg1 : 1;  // OPT[2]
                 // clear: High uses REG18
                 // set: High uses REG1
-                bool driveHighUsesReg1 : 1;  // OPT[3]
-                bool _rsvd6 : 1;             // OPT[4]
-                bool isActiveLow : 1;        // OPT[5]
+                bool drive_high_uses_reg1 : 1;  // OPT[3]
+                bool _rsvd6 : 1;                // OPT[4]
+                bool is_active_low : 1;         // OPT[5]
             } function;
             struct
             {
-                adc_pin_function function : 2;         // PINFXN[1:0]
-                measurement_type measurementType : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;   // OPT[3:2]
-                pullup_config pullupConfig : 2;        // OPT[5:4]
+                adc_pin_function function : 2;              // PINFXN[1:0]
+                adc_measurement_type measurement_type : 2;  // OPT[1:0]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
+                adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
     };
     struct ts_pin_configuration_t
     {
-        adc_pin_function function : 2;         // PINFXN[1:0]
-        measurement_type measurementType : 2;  // OPT[1:0]
-        polynomial_selection polynomial : 2;   // OPT[3:2]
-        pullup_config pullupConfig : 2;        // OPT[5:4]
+        adc_pin_function function : 2;              // PINFXN[1:0]
+        adc_measurement_type measurement_type : 2;  // OPT[1:0]
+        polynomial_selection polynomial : 2;        // OPT[3:2]
+        adc_pullup_config pullup_config : 2;        // OPT[5:4]
     };
     struct hdq_pin_configuration_t
     {
@@ -1110,24 +1110,24 @@ public:
             struct
             {
                 hdq_pin_function function : 2;  // PINFXN[1:0]
-                bool enablePulldown : 1;        // OPT[0]
-                // clear: Driving high drives to HI-Z (unavailable with isActiveLow)
+                bool enable_pulldown : 1;       // OPT[0]
+                // clear: Driving high drives to HI-Z (unavailable with is_active_low)
                 // set: Driving high drives to selected regulator
-                bool disableHighZDrive : 1;  // OPT[1]
-                // NOTE: Should be cleared when isActiveLow is set
-                bool pullupToReg1 : 1;  // OPT[2]
+                bool disable_high_Z_drive : 1;  // OPT[1]
+                // NOTE: Should be cleared when is_active_low is set
+                bool pullup_to_reg1 : 1;  // OPT[2]
                 // clear: High uses REG18
                 // set: High uses REG1
-                bool driveHighUsesReg1 : 1;  // OPT[3]
-                bool _rsvd6 : 1;             // OPT[4]
-                bool isActiveLow : 1;        // OPT[5]
+                bool drive_high_uses_reg1 : 1;  // OPT[3]
+                bool _rsvd6 : 1;                // OPT[4]
+                bool is_active_low : 1;         // OPT[5]
             } function;
             struct
             {
-                adc_pin_function function : 2;         // PINFXN[1:0]
-                measurement_type measurementType : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;   // OPT[3:2]
-                pullup_config pullupConfig : 2;        // OPT[5:4]
+                adc_pin_function function : 2;              // PINFXN[1:0]
+                adc_measurement_type measurement_type : 2;  // OPT[1:0]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
+                adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
     };
@@ -1138,24 +1138,24 @@ public:
             struct
             {
                 dchg_pin_function function : 2;  // PINFXN[1:0]
-                bool enablePulldown : 1;         // OPT[0]
-                // clear: Driving high drives to HI-Z (unavailable with isActiveLow)
+                bool enable_pulldown : 1;        // OPT[0]
+                // clear: Driving high drives to HI-Z (unavailable with is_active_low)
                 // set: Driving high drives to selected regulator
-                bool disableHighZDrive : 1;  // OPT[1]
-                // NOTE: Should be cleared when isActiveLow is set
-                bool pullupToReg1 : 1;  // OPT[2]
+                bool disable_high_Z_drive : 1;  // OPT[1]
+                // NOTE: Should be cleared when is_active_low is set
+                bool pullup_to_reg1 : 1;  // OPT[2]
                 // clear: High uses REG18
                 // set: High uses REG1
-                bool driveHighUsesReg1 : 1;  // OPT[3]
-                bool _rsvd6 : 1;             // OPT[4]
-                bool isActiveLow : 1;        // OPT[5]
+                bool drive_high_uses_reg1 : 1;  // OPT[3]
+                bool _rsvd6 : 1;                // OPT[4]
+                bool is_active_low : 1;         // OPT[5]
             } function;
             struct
             {
-                adc_pin_function function : 2;         // PINFXN[1:0]
-                measurement_type measurementType : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;   // OPT[3:2]
-                pullup_config pullupConfig : 2;        // OPT[5:4]
+                adc_pin_function function : 2;              // PINFXN[1:0]
+                adc_measurement_type measurement_type : 2;  // OPT[1:0]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
+                adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
     };
@@ -1166,36 +1166,36 @@ public:
             struct
             {
                 ddsg_pin_function function : 2;  // PINFXN[1:0]
-                bool enablePulldown : 1;         // OPT[0]
-                // clear: Driving high drives to HI-Z (unavailable with isActiveLow)
+                bool enable_pulldown : 1;        // OPT[0]
+                // clear: Driving high drives to HI-Z (unavailable with is_active_low)
                 // set: Driving high drives to selected regulator
-                bool disableHighZDrive : 1;  // OPT[1]
-                // NOTE: Should be cleared when isActiveLow is set
-                bool pullupToReg1 : 1;  // OPT[2]
+                bool disable_high_Z_drive : 1;  // OPT[1]
+                // NOTE: Should be cleared when is_active_low is set
+                bool pullup_to_reg1 : 1;  // OPT[2]
                 // clear: High uses REG18
                 // set: High uses REG1
-                bool driveHighUsesReg1 : 1;  // OPT[3]
-                bool _rsvd6 : 1 = 0;         // OPT[4]
-                bool isActiveLow : 1;        // OPT[5]
+                bool drive_high_uses_reg1 : 1;  // OPT[3]
+                bool _rsvd6 : 1 = 0;            // OPT[4]
+                bool is_active_low : 1;         // OPT[5]
             } function;
             struct
             {
-                adc_pin_function function : 2;         // PINFXN[1:0]
-                measurement_type measurementType : 2;  // OPT[1:0]
-                polynomial_selection polynomial : 2;   // OPT[3:2]
-                pullup_config pullupConfig : 2;        // OPT[5:4]
+                adc_pin_function function : 2;              // PINFXN[1:0]
+                adc_measurement_type measurement_type : 2;  // OPT[1:0]
+                polynomial_selection polynomial : 2;        // OPT[3:2]
+                adc_pullup_config pullup_config : 2;        // OPT[5:4]
             } adc;
         };
     };
     struct da_configuration_t
     {
-        user_amps userAmps : 2 = user_amps::MILLIAMP;  // USER_AMPS_[1:0]
+        user_amps_unit user_amps : 2 = user_amps_unit::MILLIAMP;  // USER_AMPS_[1:0]
         // clear: User volts is mV
         // set: User volts is cV (10mV)
-        bool userVoltsIsCentivolts : 1 = 0;         // USER_VOLTS_CV
-        bool useInternalAsCellTemperature : 1 = 0;  // TINT_EN
-        bool useInternalAsFetTemperature : 1 = 0;   // TINT_FETT
-        uint8_t _rsvd5 : 3 = 0;                     // RSVD_0
+        bool user_volts_is_centivolts : 1 = 0;          // USER_VOLTS_CV
+        bool use_internal_as_cell_temperature : 1 = 0;  // TINT_EN
+        bool use_internal_as_fet_temperature : 1 = 0;   // TINT_FETT
+        uint8_t _rsvd5 : 3 = 0;                         // RSVD_0
     };
     union selected_cells_t
     {
@@ -1219,138 +1219,138 @@ public:
     {
         bool _rsvd0 : 1 = 0;  // RSVD_0
         // if set, a PF will turn off the FETs
-        bool permanentFailStopsFets : 1 = 1;  // PF_FETS
+        bool permanent_fail_stops_fets : 1 = 1;  // PF_FETS
         // if set, a PF will turn off the regulators
-        bool permanentFailStopsRegulators : 1 = 0;  // PF_REGS
+        bool permanent_fail_stops_regulators : 1 = 0;  // PF_REGS
         // if set, will enter deepsleep after writing OTP (if applicable) in a PF event
-        bool permanentFailCausesDeepSleep : 1 = 0;  // PF_DPSLP
+        bool permanent_fail_causes_deep_sleep : 1 = 0;  // PF_DPSLP
         // if set, will blow the fuse after a PF event
-        bool permanentFailBlowsFuse : 1 = 0;  // PF_FUSE
+        bool permanent_fail_blows_fuse : 1 = 0;  // PF_FUSE
         // if set, will write PF status to the OTP
-        bool permanentFailWritesOtp : 1 = 0;  // PF_OTP
-        bool _rsvd6 : 1 = 0;                  // RSVD_0
+        bool permanent_fail_writes_otp : 1 = 0;  // PF_OTP
+        bool _rsvd6 : 1 = 0;                     // RSVD_0
         // if set, will use PACK voltage instead of TOS (Top Of Stack)
-        bool fuseVoltageUsesPackVoltage : 1 = 0;  // PACK_FUSE
+        bool fuse_voltage_uses_pack_voltage : 1 = 0;  // PACK_FUSE
         // a FET Permanent Failure will ignore the min blow fuse voltage if this is set
-        bool fetFaultIgnoresFuseVoltage : 1 = 0;     // FETF_FUSE
-        bool useOvercurrentChargeRecovery : 1 = 0;   // OCDL_CURR_RECOVERY
-        bool useShortCircuitChargeRecovery : 1 = 0;  // SCDL_CURR_RECOVERY
-        uint8_t _rsvd11 : 5 = 0;                     // RSVD_0
+        bool fet_fault_ignores_fuse_voltage : 1 = 0;     // FETF_FUSE
+        bool use_overcurrent_charge_recovery : 1 = 0;    // OCDL_CURR_RECOVERY
+        bool use_short_circuit_charge_recovery : 1 = 0;  // SCDL_CURR_RECOVERY
+        uint8_t _rsvd11 : 5 = 0;                         // RSVD_0
     };
     struct chg_fet_protections_a_t
     {
-        uint8_t _rsvd0 : 3 = 0;          // RSVD_0
-        bool cellOvervoltage : 1;        // COV
-        bool overcurrentCharge : 1;      // OCC
-        uint8_t _rsvd5 : 2 = 0;          // RSVD_0
-        bool shortCircuitDischarge : 1;  // SCD
+        uint8_t _rsvd0 : 3 = 0;            // RSVD_0
+        bool cell_overvoltage : 1;         // COV
+        bool overcurrent_charge : 1;       // OCC
+        uint8_t _rsvd5 : 2 = 0;            // RSVD_0
+        bool short_circuit_discharge : 1;  // SCD
     };
     struct chg_fet_protections_b_t
     {
-        bool undertempCharge : 1;    // UTC
-        bool _rsvd1 : 1 = 0;         // RSVD_0
-        bool internalUndertemp : 1;  // UTINT
-        bool _rsvd3 : 1 = 0;         // RSVD_0
-        bool overtempCharge : 1;     // OTC
-        bool _rsvd5 : 1 = 0;         // RSVD_0
-        bool internalOvertemp : 1;   // OTINT
-        bool fetOvertemp : 1;        // OTF
+        bool undertemp_charge : 1;    // UTC
+        bool _rsvd1 : 1 = 0;          // RSVD_0
+        bool internal_undertemp : 1;  // UTINT
+        bool _rsvd3 : 1 = 0;          // RSVD_0
+        bool overtemp_charge : 1;     // OTC
+        bool _rsvd5 : 1 = 0;          // RSVD_0
+        bool internal_overtemp : 1;   // OTINT
+        bool fet_overtemp : 1;        // OTF
     };
     struct chg_fet_protections_c_t
     {
-        bool _rsvd0 : 1 = 0;                  // RSVD_0
-        bool hostWatchdogFault : 1;           // HWDF
-        bool prechargeTimeout : 1;            // PTO
-        bool _rsvd3 : 1 = 0;                  // RSVD_0
-        bool cellOvervoltageLatch : 1;        // COVL
-        bool _rsvd5 : 1 = 0;                  // RSVD_0
-        bool shortCircuitDischargeLatch : 1;  // SCDL
-        bool _rsvd7 : 1 = 0;                  // RSVD_0
+        bool _rsvd0 : 1 = 0;                     // RSVD_0
+        bool host_watchdog_fault : 1;            // HWDF
+        bool precharge_timeout : 1;              // PTO
+        bool _rsvd3 : 1 = 0;                     // RSVD_0
+        bool cell_overvoltage_latch : 1;         // COVL
+        bool _rsvd5 : 1 = 0;                     // RSVD_0
+        bool short_circuit_discharge_latch : 1;  // SCDL
+        bool _rsvd7 : 1 = 0;                     // RSVD_0
     };
     struct dsg_fet_protections_a_t
     {
-        uint8_t _rsvd0 : 2 = 0;          // RSVD_0
-        bool cellUndervoltage : 1;       // CUV
-        uint8_t _rsvd3 : 2 = 0;          // RSVD_0
-        bool overcurrentDischarge1 : 1;  // OCD1
-        bool overcurrentDischarge2 : 1;  // OCD2
-        bool shortCircuitDischarge : 1;  // SCD
+        uint8_t _rsvd0 : 2 = 0;            // RSVD_0
+        bool cell_undervoltage : 1;        // CUV
+        uint8_t _rsvd3 : 2 = 0;            // RSVD_0
+        bool overcurrent_discharge_1 : 1;  // OCD1
+        bool overcurrent_discharge_2 : 1;  // OCD2
+        bool short_circuit_discharge : 1;  // SCD
     };
     struct dsg_fet_protections_b_t
     {
-        bool _rsvd0 : 1 = 0;          // RSVD_0
-        bool undertempDischarge : 1;  // UTD
-        bool internalUndertemp : 1;   // UTINT
-        uint8_t _rsvd3 : 2 = 0;       // RSVD_0
-        bool overtempDischarge : 1;   // OTD
-        bool internalOvertemp : 1;    // OTINT
-        bool fetOvertemp : 1;         // OTF
+        bool _rsvd0 : 1 = 0;           // RSVD_0
+        bool undertemp_discharge : 1;  // UTD
+        bool internal_undertemp : 1;   // UTINT
+        uint8_t _rsvd3 : 2 = 0;        // RSVD_0
+        bool overtemp_discharge : 1;   // OTD
+        bool internal_overtemp : 1;    // OTINT
+        bool fet_overtemp : 1;         // OTF
     };
     struct dsg_fet_protections_c_t
     {
-        bool _rsvd0 : 1 = 0;                  // RSVD_0
-        bool hostWatchdogFault : 1;           // HWDF
-        uint8_t _rsvd2 : 3 = 0;               // RSVD_0
-        bool overcurrentDischargeLatch : 1;   // OCDL
-        bool shortCircuitDischargeLatch : 1;  // SCDL
-        bool overcurrentDischarge3 : 1;       // OCD3
+        bool _rsvd0 : 1 = 0;                     // RSVD_0
+        bool host_watchdog_fault : 1;            // HWDF
+        uint8_t _rsvd2 : 3 = 0;                  // RSVD_0
+        bool overcurrent_discharge_latch : 1;    // OCDL
+        bool short_circuit_discharge_latch : 1;  // SCDL
+        bool overcurrent_discharge_3 : 1;        // OCD3
     };
     struct alarm_sf_alert_mask_c_t
     {
-        bool _rsvd0 : 1 = 0;                  // RSVD_0
-        bool _rsvd1Set : 1 = 1;               // RSVD_1
-        bool prechargeTimeout : 1;            // PTO
-        bool _rsvd3 : 1 = 0;                  // RSVD_0
-        bool cellOvervoltageLatch : 1;        // COVL
-        bool overcurrentDischargeLatch : 1;   // OCDL
-        bool shortCircuitDischargeLatch : 1;  // SCDL
-        bool overcurrentDischarge3 : 1;       // OCD3
+        bool _rsvd0 : 1 = 0;                     // RSVD_0
+        bool _rsvd1_set : 1 = 1;                 // RSVD_1
+        bool precharge_timeout : 1;              // PTO
+        bool _rsvd3 : 1 = 0;                     // RSVD_0
+        bool cell_overvoltage_latch : 1;         // COVL
+        bool overcurrent_discharge_latch : 1;    // OCDL
+        bool short_circuit_discharge_latch : 1;  // SCDL
+        bool overcurrent_discharge_3 : 1;        // OCD3
     };
     struct fet_options_t
     {
-        bool enableBodyDiodeProtection : 1 = 1;   // SFET (Series FET)
-        bool allowChargeInSleep : 1 = 0;          // SLEEPCHG
-        bool allowHostFetControl : 1 = 1;         // HOST_FET_EN
-        bool enableFetControl : 1 = 1;            // FET_CTRL_EN
-        bool enablePredischarge : 1 = 0;          // PDSG_EN
-        bool hostControlDefaultsFetsOff : 1 = 0;  // FET_INIT_OFF
-        uint8_t _rsvd6 : 2 = 0;                   // RSVD_0
+        bool enable_body_diode_protection : 1 = 1;    // SFET (Series FET)
+        bool allow_charge_in_sleep : 1 = 0;           // SLEEPCHG
+        bool allow_host_fet_control : 1 = 1;          // HOST_FET_EN
+        bool enable_fet_control : 1 = 1;              // FET_CTRL_EN
+        bool enable_predischarge : 1 = 0;             // PDSG_EN
+        bool host_control_defaults_fets_off : 1 = 0;  // FET_INIT_OFF
+        uint8_t _rsvd6 : 2 = 0;                       // RSVD_0
     };
     struct fet_charge_pump_control_t
     {
-        // NOTE: If cleared, enableFetControl should likely also be cleared
-        bool enableChargePump : 1;  // CP_EN
+        // NOTE: If cleared, enable_fet_control should likely also be cleared
+        bool enable_charge_pump : 1;  // CP_EN
         // clear: Charge pump uses 11V overdrive
         // set: Charge pump uses 5.5V overdrive
-        bool useLowOverdrive : 1;  // LVEN
-        // NOTE: Normally only used when allowChargeInSleep is cleared
-        bool enableSleepDsgSourceFollower : 1;  // SFMODE_SLEEP
-        uint8_t : 5;                            // RSVD_0
+        bool use_low_overdrive : 1;  // LVEN
+        // NOTE: Normally only used when allow_charge_in_sleep is cleared
+        bool enable_sleep_dsg_source_follower : 1;  // SFMODE_SLEEP
+        uint8_t : 5;                                // RSVD_0
     };
     struct manufacturing_status_init_t
     {
-        uint8_t _rsvd0 : 4 = 0;           // RSVD_0
-        bool autonomousFets : 1;          // FET_EN
-        bool _rsvd6 : 1 = 0;              // RSVD_0
-        bool isPermanentFailEnabled : 1;  // PF_EN
-        bool isOtpWriteEnabled : 1;       // OTPW_EN
-        uint8_t _rsvd8 : 8 = 0;           // RSVD_0
+        uint8_t _rsvd0 : 4 = 0;              // RSVD_0
+        bool autonomous_fets : 1;            // FET_EN
+        bool _rsvd6 : 1 = 0;                 // RSVD_0
+        bool is_permanent_fail_enabled : 1;  // PF_EN
+        bool is_otp_write_enabled : 1;       // OTPW_EN
+        uint8_t _rsvd8 : 8 = 0;              // RSVD_0
     };
     struct balancing_configuration_t
     {
-        bool allowChargingCellBalancing : 1 = 0;     // CB_CHG
-        bool allowRelaxedCellBalancing : 1 = 0;      // CB_RELAX
-        bool allowBalancingInSleep : 1 = 0;          // CB_SLEEP
-        bool balancingExitsSleep : 1 = 0;            // CB_NOSLEEP
-        bool ignoreHostControlledBalancing : 1 = 0;  // CB_NO_CMD
-        uint8_t _rsvd5 : 3 = 0;                      // RSVD_0
+        bool allow_charging_cell_balancing : 1 = 0;     // CB_CHG
+        bool allow_relaxed_cell_balancing : 1 = 0;      // CB_RELAX
+        bool allow_balancing_in_sleep : 1 = 0;          // CB_SLEEP
+        bool balancing_exits_sleep : 1 = 0;             // CB_NOSLEEP
+        bool ignore_host_controlled_balancing : 1 = 0;  // CB_NO_CMD
+        uint8_t _rsvd5 : 3 = 0;                         // RSVD_0
     };
     struct security_settings_t
     {
-        bool defaultToSealed : 1;  // SEAL
-        bool lockConfig : 1;       // LOCK_CFG
-        bool permanentSeal : 1;    // PERM_SEAL
-        uint8_t _rsvd3 : 5 = 0;    // RSVD_0
+        bool default_to_sealed : 1;  // SEAL
+        bool lock_config : 1;        // LOCK_CFG
+        bool permanent_seal : 1;     // PERM_SEAL
+        uint8_t _rsvd3 : 5 = 0;      // RSVD_0
     };
 #pragma pack(pop)
 
@@ -1358,30 +1358,30 @@ public:
 
     struct da_status_5_t
     {
-        int16_t vreg18AdcCounts;
-        int16_t vssAdcCounts;
-        int16_t maxCellVoltage;
-        int16_t minCellVoltage;
-        int32_t batteryVoltageSum;
-        float cellTemperature;
-        float fetTemperature;
-        float maxCellTemperature;
-        float minCellTemperature;
-        float avgCellTemperature;
-        float cc3Current;
-        float cc1Current;
-        int32_t cc2Counts;
-        int32_t cc3Counts;
+        int16_t vreg_18_adc_counts;
+        int16_t vss_adc_counts;
+        int16_t max_cell_voltage;
+        int16_t min_cell_voltage;
+        int32_t battery_voltage_sum;
+        float cell_temperature;
+        float fet_temperature;
+        float max_cell_temperature;
+        float min_cell_temperature;
+        float avg_cell_temperature;
+        float cc_3_current;
+        float cc_1_current;
+        int32_t cc_2_counts;
+        int32_t cc_3_counts;
     };
     struct da_status_6_t
     {
-        float accumulatedCharge;
-        std::chrono::seconds accumulatedChargeTime;
-        int32_t cfetoffCounts;
-        int32_t dfetoffCounts;
-        int32_t alertCounts;
-        int32_t ts1Counts;
-        int32_t ts2Counts;
+        float accumulated_charge;
+        std::chrono::seconds accumulated_charge_time;
+        int32_t cfetoff_counts;
+        int32_t dfetoff_counts;
+        int32_t alert_counts;
+        int32_t ts1_counts;
+        int32_t ts2_counts;
     };
 
     constexpr static auto SUBCOMMAND_TIMEOUT = std::chrono::milliseconds(20);
@@ -1390,120 +1390,120 @@ public:
     bq76942(uint8_t address = 0x08);
 
     // --- DIRECT COMMANDS ---
-    control_status_t getControlStatus() { return readDirect<control_status_t>(direct_command::CONTROL_STATUS); }
-    protections_a_t getSafetyAlertA() { return readDirect<protections_a_t>(direct_command::SAFETY_ALERT_A); }
-    protections_a_t getSafetyStatusA() { return readDirect<protections_a_t>(direct_command::SAFETY_STATUS_A); }
-    protections_b_t getSafetyAlertB() { return readDirect<protections_b_t>(direct_command::SAFETY_ALERT_B); }
-    protections_b_t getSafetyStatusB() { return readDirect<protections_b_t>(direct_command::SAFETY_STATUS_B); }
-    safety_alert_c_t getSafetyAlertC() { return readDirect<safety_alert_c_t>(direct_command::SAFETY_ALERT_C); }
-    protections_c_t getSafetyStatusC() { return readDirect<protections_c_t>(direct_command::SAFETY_STATUS_C); }
-    permanent_fail_a_t getPermanentFailAlertA() { return readDirect<permanent_fail_a_t>(direct_command::PF_ALERT_A); }
-    permanent_fail_a_t getPermanentFailStatusA() { return readDirect<permanent_fail_a_t>(direct_command::PF_STATUS_A); }
-    permanent_fail_b_t getPermanentFailAlertB() { return readDirect<permanent_fail_b_t>(direct_command::PF_ALERT_B); }
-    permanent_fail_b_t getPermanentFailStatusB() { return readDirect<permanent_fail_b_t>(direct_command::PF_STATUS_B); }
-    permanent_fail_alert_c_t getPermanentFailAlertC() { return readDirect<permanent_fail_alert_c_t>(direct_command::PF_ALERT_C); }
-    permanent_fail_c_t getPermanentFailStatusC() { return readDirect<permanent_fail_c_t>(direct_command::PF_STATUS_C); }
-    permanent_fail_d_t getPermanentFailAlertD() { return readDirect<permanent_fail_d_t>(direct_command::PF_ALERT_D); }
-    permanent_fail_d_t getPermanentFailStatusD() { return readDirect<permanent_fail_d_t>(direct_command::PF_STATUS_D); }
-    battery_status_t getBatteryStatus() { return readDirect<battery_status_t>(direct_command::BATTERY_STATUS); }
+    control_status_t get_control_status() { return read_direct<control_status_t>(direct_command::CONTROL_STATUS); }
+    protections_a_t get_safety_alert_a() { return read_direct<protections_a_t>(direct_command::SAFETY_ALERT_A); }
+    protections_a_t get_safety_status_a() { return read_direct<protections_a_t>(direct_command::SAFETY_STATUS_A); }
+    protections_b_t get_safety_alert_b() { return read_direct<protections_b_t>(direct_command::SAFETY_ALERT_B); }
+    protections_b_t get_safety_status_b() { return read_direct<protections_b_t>(direct_command::SAFETY_STATUS_B); }
+    safety_alert_c_t get_safety_alert_c() { return read_direct<safety_alert_c_t>(direct_command::SAFETY_ALERT_C); }
+    protections_c_t get_safety_status_c() { return read_direct<protections_c_t>(direct_command::SAFETY_STATUS_C); }
+    permanent_fail_a_t get_permanent_fail_alert_a() { return read_direct<permanent_fail_a_t>(direct_command::PF_ALERT_A); }
+    permanent_fail_a_t get_permanent_fail_status_a() { return read_direct<permanent_fail_a_t>(direct_command::PF_STATUS_A); }
+    permanent_fail_b_t get_permanent_fail_alert_b() { return read_direct<permanent_fail_b_t>(direct_command::PF_ALERT_B); }
+    permanent_fail_b_t get_permanent_fail_status_b() { return read_direct<permanent_fail_b_t>(direct_command::PF_STATUS_B); }
+    permanent_fail_alert_c_t get_permanent_fail_alert_c() { return read_direct<permanent_fail_alert_c_t>(direct_command::PF_ALERT_C); }
+    permanent_fail_c_t get_permanent_fail_status_c() { return read_direct<permanent_fail_c_t>(direct_command::PF_STATUS_C); }
+    permanent_fail_d_t get_permanent_fail_alert_d() { return read_direct<permanent_fail_d_t>(direct_command::PF_ALERT_D); }
+    permanent_fail_d_t get_permanent_fail_status_d() { return read_direct<permanent_fail_d_t>(direct_command::PF_STATUS_D); }
+    battery_status_t get_battery_status() { return read_direct<battery_status_t>(direct_command::BATTERY_STATUS); }
     /// @brief Read the voltage of one of the cells
     /// @return The voltage of the cell in mV
-    int16_t getCellVoltage(const uint8_t cell);
+    int16_t get_cell_voltage(const uint8_t cell);
     /// @brief Read the voltage at the top of the battery stack
     /// @return The voltage of the stack in mV
-    int32_t getStackVoltage();
-    int32_t getPackVoltage();
-    int32_t getLdVoltage();
-    float getCC2Current();
-    alarm_status_t getAlarmStatus() { return readDirect<alarm_status_t>(direct_command::ALARM_STATUS); }
-    void clearAlarmStatus(const alarm_status_t& alarmStatus) { writeDirect(direct_command::ALARM_STATUS, alarmStatus); }
-    alarm_status_t getAlarmRawStatus() { return readDirect<alarm_status_t>(direct_command::ALARM_RAW_STATUS); }
-    alarm_status_t getAlarmEnable() { return readDirect<alarm_status_t>(direct_command::ALARM_ENABLE); }
-    void setAlarmEnable(const alarm_status_t& alarmEnable) { writeDirect(direct_command::ALARM_ENABLE, alarmEnable); }
-    float getTemperature(const temperature_sensor& sensor) { return rawTempToCelsius(readDirect<int16_t>(static_cast<direct_command>(sensor))); }
-    fet_status_t getFetStatus() { return readDirect<fet_status_t>(direct_command::FET_STATUS); }
+    int32_t get_stack_voltage();
+    int32_t get_pack_voltage();
+    int32_t get_ld_voltage();
+    float get_CC2_current();
+    alarm_status_t get_alarm_status() { return read_direct<alarm_status_t>(direct_command::ALARM_STATUS); }
+    void clear_alarm_status(const alarm_status_t& alarm_status) { write_direct(direct_command::ALARM_STATUS, alarm_status); }
+    alarm_status_t get_alarm_raw_status() { return read_direct<alarm_status_t>(direct_command::ALARM_RAW_STATUS); }
+    alarm_status_t get_alarm_enable() { return read_direct<alarm_status_t>(direct_command::ALARM_ENABLE); }
+    void set_alarm_enable(const alarm_status_t& alarm_enable) { write_direct(direct_command::ALARM_ENABLE, alarm_enable); }
+    float get_temperature(const temperature_sensor& sensor) { return raw_temp_to_celsius(read_direct<int16_t>(static_cast<direct_command>(sensor))); }
+    fet_status_t get_fet_status() { return read_direct<fet_status_t>(direct_command::FET_STATUS); }
 
     // --- COMMAND ONLY SUBCOMMANDS ---
-    void enterDeepSleep();
-    void exitDeepSleep() { writeSubcommand(cmd_only_subcommand::EXIT_DEEPSLEEP); }
+    void enter_deep_sleep();
+    void exit_deep_sleep() { write_subcommand(cmd_only_subcommand::EXIT_DEEPSLEEP); }
     // WARNING: THIS WILL POWER DOWN THE BMS COMPLETELY!
     // It can only be woken up by either power cycling or pulling down the TS2 pin!
     /// @brief Put the BMS into SHUTDOWN mode
     void shutdown();
-    void reset() { writeSubcommand(cmd_only_subcommand::RESET); }
-    void predischargeTest() { writeSubcommand(cmd_only_subcommand::PDSG_TEST); }
-    void toggleFuse() { writeSubcommand(cmd_only_subcommand::FUSE_TOGGLE); }
-    void prechargeTest() { writeSubcommand(cmd_only_subcommand::PCHG_TEST); }
-    void chargeTest() { writeSubcommand(cmd_only_subcommand::CHG_TEST); }
-    void dischargeTest() { writeSubcommand(cmd_only_subcommand::DSG_TEST); }
-    void toggleFetTestMode() { writeSubcommand(cmd_only_subcommand::FET_ENABLE); }
-    void togglePermanentFailEnabled() { writeSubcommand(cmd_only_subcommand::PF_ENABLE); }
-    void seal() { writeSubcommand(cmd_only_subcommand::SEAL); }
-    void resetChargeCounter() { writeSubcommand(cmd_only_subcommand::RESET_PASSQ); }
-    void resetPassQ() { resetChargeCounter(); }
-    void recoverPrechargeTimeout() { writeSubcommand(cmd_only_subcommand::PTO_RECOVER); }
-    void enterConfigUpdateMode();
-    void exitConfigUpdateMode();
-    void disableDischargeFets() { writeSubcommand(cmd_only_subcommand::DSG_PDSG_OFF); }
-    void disableChargeFets() { writeSubcommand(cmd_only_subcommand::CHG_PCHG_OFF); }
-    void disableAllFets() { writeSubcommand(cmd_only_subcommand::ALL_FETS_OFF); }
-    void enableAllFets() { writeSubcommand(cmd_only_subcommand::ALL_FETS_ON); }
-    void enableSleep() { writeSubcommand(cmd_only_subcommand::SLEEP_ENABLE); }
-    void disableSleep() { writeSubcommand(cmd_only_subcommand::SLEEP_DISABLE); }
-    void setSleepEnabled(const bool enabled) { enabled ? enableSleep() : disableSleep(); }
-    void recoverDischargeOvercurrentLatch() { writeSubcommand(cmd_only_subcommand::OCDL_RECOVER); }
-    void recoverShortCircuitDischargeLatch() { writeSubcommand(cmd_only_subcommand::SCDL_RECOVER); }
-    void restartLoadDetect() { writeSubcommand(cmd_only_subcommand::LOAD_DETECT_RESTART); }
-    void forceLoadDetectOn() { writeSubcommand(cmd_only_subcommand::LOAD_DETECT_ON); }
-    void forceLoadDetectOff() { writeSubcommand(cmd_only_subcommand::LOAD_DETECT_OFF); }
-    void setGPO(const gpo_state& state) { writeSubcommand(static_cast<cmd_only_subcommand>(state)); }
-    void setGPO(const gpo& pin, const bool state);
-    void forcePermanentFail();
+    void reset() { write_subcommand(cmd_only_subcommand::RESET); }
+    void predischarge_test() { write_subcommand(cmd_only_subcommand::PDSG_TEST); }
+    void toggle_fuse() { write_subcommand(cmd_only_subcommand::FUSE_TOGGLE); }
+    void precharge_test() { write_subcommand(cmd_only_subcommand::PCHG_TEST); }
+    void charge_test() { write_subcommand(cmd_only_subcommand::CHG_TEST); }
+    void discharge_test() { write_subcommand(cmd_only_subcommand::DSG_TEST); }
+    void toggle_fet_test_mode() { write_subcommand(cmd_only_subcommand::FET_ENABLE); }
+    void toggle_permanent_fail_enabled() { write_subcommand(cmd_only_subcommand::PF_ENABLE); }
+    void seal() { write_subcommand(cmd_only_subcommand::SEAL); }
+    void reset_charge_counter() { write_subcommand(cmd_only_subcommand::RESET_PASSQ); }
+    void reset_passQ() { reset_charge_counter(); }
+    void recover_precharge_timeout() { write_subcommand(cmd_only_subcommand::PTO_RECOVER); }
+    void enter_config_update_mode();
+    void exit_config_update_mode();
+    void disable_discharge_fets() { write_subcommand(cmd_only_subcommand::DSG_PDSG_OFF); }
+    void disable_charge_fets() { write_subcommand(cmd_only_subcommand::CHG_PCHG_OFF); }
+    void disable_all_fets() { write_subcommand(cmd_only_subcommand::ALL_FETS_OFF); }
+    void enable_all_fets() { write_subcommand(cmd_only_subcommand::ALL_FETS_ON); }
+    void enable_sleep() { write_subcommand(cmd_only_subcommand::SLEEP_ENABLE); }
+    void disable_sleep() { write_subcommand(cmd_only_subcommand::SLEEP_DISABLE); }
+    void set_sleep_enabled(const bool enabled) { enabled ? enable_sleep() : disable_sleep(); }
+    void recover_discharge_overcurrent_latch() { write_subcommand(cmd_only_subcommand::OCDL_RECOVER); }
+    void recover_short_circuit_discharge_latch() { write_subcommand(cmd_only_subcommand::SCDL_RECOVER); }
+    void restart_load_detect() { write_subcommand(cmd_only_subcommand::LOAD_DETECT_RESTART); }
+    void force_load_detect_on() { write_subcommand(cmd_only_subcommand::LOAD_DETECT_ON); }
+    void force_load_detect_off() { write_subcommand(cmd_only_subcommand::LOAD_DETECT_OFF); }
+    void set_GPO(const gpo_state& state) { write_subcommand(static_cast<cmd_only_subcommand>(state)); }
+    void set_GPO(const gpo& pin, const bool state);
+    void force_permanent_fail();
     // Comm mode commands NOT IMPLEMENTED as this driver only supports I2C with CRC.
-    // However, to support new modes would only require implementing the read/writeDirect functions for the new mode,
+    // However, to support new modes would only require implementing the read/write_direct functions for the new mode,
     // since subcommands use those under the hood.
-    // void swapCommMode();
-    // void swapToI2C();
-    // void swapToSPI();
-    // void swapToHDQ();
+    // void swap_comm_mode();
+    // void swap_to_I2C();
+    // void swap_to_SPI();
+    // void swap_to_HDQ();
 
     // --- SUBCOMMANDS ---
-    uint16_t getDeviceNumber() { return readSubcommand<uint16_t>(subcommand::DEVICE_NUMBER); };
-    firmware_version_t getFirmwareVersion();
-    uint16_t getHardwareVersion() { return readSubcommand<uint16_t>(subcommand::HW_VERSION); };
-    uint16_t getIROMSignature() { return readSubcommand<uint16_t>(subcommand::IROM_SIG); };
-    uint16_t getStaticConfigSignature() { return readSubcommand<uint16_t>(subcommand::STATIC_CFG_SIG); };
+    uint16_t get_device_number() { return read_subcommand<uint16_t>(subcommand::DEVICE_NUMBER); };
+    firmware_version_t get_firmware_version();
+    uint16_t get_hardware_version() { return read_subcommand<uint16_t>(subcommand::HW_VERSION); };
+    uint16_t get_IROM_signature() { return read_subcommand<uint16_t>(subcommand::IROM_SIG); };
+    uint16_t get_static_config_signature() { return read_subcommand<uint16_t>(subcommand::STATIC_CFG_SIG); };
     // Intended for TI internal use
-    // uint16_t getPrevMacWrite() { return readSubcommand<uint16_t>(subcommand::PREV_MAC_WRITE); };
-    uint16_t getDROMSignature() { return readSubcommand<uint16_t>(subcommand::DROM_SIG); };
-    security_keys_t getSecurityKeys();
-    void setSecurityKeys(const security_keys_t& keys);
-    saved_pf_status_t getSavedPFStatus() { return readSubcommand<saved_pf_status_t>(subcommand::SAVED_PF_STATUS); };
-    manufacturing_status_t getManufacturingStatus() { return readSubcommand<manufacturing_status_t>(subcommand::MANUFACTURING_STATUS); };
-    manufacturer_data_t getManufacturerData();
-    void setManufacturerData(const manufacturer_data_t& data);
-    da_status_1_t getDAStatus1() { return readSubcommand<da_status_1_t>(subcommand::DA_STATUS_1); };
-    da_status_2_t getDAStatus2() { return readSubcommand<da_status_2_t>(subcommand::DA_STATUS_2); };
-    da_status_3_t getDAStatus3() { return readSubcommand<da_status_3_t>(subcommand::DA_STATUS_3); };
-    raw_da_status_5_t getRawDAStatus5() { return readSubcommand<raw_da_status_5_t>(subcommand::DA_STATUS_5); };
-    da_status_5_t getDAStatus5();
-    raw_da_status_6_t getRawDAStatus6() { return readSubcommand<raw_da_status_6_t>(subcommand::DA_STATUS_6); };
-    da_status_6_t getDAStatus6();
-    da_status_7_t getDAStatus7() { return readSubcommand<da_status_7_t>(subcommand::DA_STATUS_7); };
-    voltage_snapshot_t getCellUnderVoltSnapshot() { return readSubcommand<voltage_snapshot_t>(subcommand::CUV_SNAPSHOT); };
-    voltage_snapshot_t getCellOverVoltSnapshot() { return readSubcommand<voltage_snapshot_t>(subcommand::COV_SNAPSHOT); };
-    selected_cells_t getCBActiveCells() { return readSubcommand<selected_cells_t>(subcommand::CB_ACTIVE_CELLS); };
-    void setCBActiveCells(const selected_cells_t& cells) { writeSubcommand(subcommand::CB_ACTIVE_CELLS, cells); }
-    std::chrono::seconds readCellBalancingTime() { return std::chrono::seconds(readSubcommand<uint16_t>(subcommand::CB_STATUS_1)); };
-    cb_status_2_t getCBStatus2() { return readSubcommand<cb_status_2_t>(subcommand::CB_STATUS_2); };
-    cb_status_3_t getCBStatus3() { return readSubcommand<cb_status_3_t>(subcommand::CB_STATUS_3); };
-    void setFetControl(const fet_control_t& control) { writeSubcommand(subcommand::FET_CONTROL, control); }
-    void setRegulatorControl(const regulator_control_t& control) { writeSubcommand(subcommand::REG12_CONTROL, control); }
-    otp_write_result_t getOtpWriteCheckResult() { return readSubcommand<otp_write_result_t>(subcommand::OTP_WR_CHECK); }
-    otp_write_result_t getOtpWriteResult() { return readSubcommand<otp_write_result_t>(subcommand::OTP_WRITE); }
-    cal1_t getCal1() { return readSubcommand<cal1_t>(subcommand::READ_CAL1); }
-    uint16_t calibrateCellUnderVoltThreshold() { return readSubcommand<uint16_t>(subcommand::CAL_CUV); }
-    uint16_t calibrateCellOverVoltThreshold() { return readSubcommand<uint16_t>(subcommand::CAL_COV); }
+    // uint16_t get_prev_mac_write() { return read_subcommand<uint16_t>(subcommand::PREV_MAC_WRITE); };
+    uint16_t get_DROM_signature() { return read_subcommand<uint16_t>(subcommand::DROM_SIG); };
+    security_keys_t get_security_keys();
+    void set_security_keys(const security_keys_t& keys);
+    saved_pf_status_t get_saved_PF_status() { return read_subcommand<saved_pf_status_t>(subcommand::SAVED_PF_STATUS); };
+    manufacturing_status_t get_manufacturing_status() { return read_subcommand<manufacturing_status_t>(subcommand::MANUFACTURING_STATUS); };
+    manufacturer_data_t get_manufacturer_data();
+    void set_manufacturer_data(const manufacturer_data_t& data);
+    da_status_1_t get_DA_status_1() { return read_subcommand<da_status_1_t>(subcommand::DA_STATUS_1); };
+    da_status_2_t get_DA_status_2() { return read_subcommand<da_status_2_t>(subcommand::DA_STATUS_2); };
+    da_status_3_t get_DA_status_3() { return read_subcommand<da_status_3_t>(subcommand::DA_STATUS_3); };
+    raw_da_status_5_t get_raw_DA_status_5() { return read_subcommand<raw_da_status_5_t>(subcommand::DA_STATUS_5); };
+    da_status_5_t get_DA_status_5();
+    raw_da_status_6_t get_raw_DA_status_6() { return read_subcommand<raw_da_status_6_t>(subcommand::DA_STATUS_6); };
+    da_status_6_t get_DA_status_6();
+    da_status_7_t get_DA_status_7() { return read_subcommand<da_status_7_t>(subcommand::DA_STATUS_7); };
+    voltage_snapshot_t get_cell_under_volt_snapshot() { return read_subcommand<voltage_snapshot_t>(subcommand::CUV_SNAPSHOT); };
+    voltage_snapshot_t get_cell_over_volt_snapshot() { return read_subcommand<voltage_snapshot_t>(subcommand::COV_SNAPSHOT); };
+    selected_cells_t get_CB_active_cells() { return read_subcommand<selected_cells_t>(subcommand::CB_ACTIVE_CELLS); };
+    void set_CB_active_cells(const selected_cells_t& cells) { write_subcommand(subcommand::CB_ACTIVE_CELLS, cells); }
+    std::chrono::seconds read_cell_balancing_time() { return std::chrono::seconds(read_subcommand<uint16_t>(subcommand::CB_STATUS_1)); };
+    cb_status_2_t get_CB_status_2() { return read_subcommand<cb_status_2_t>(subcommand::CB_STATUS_2); };
+    cb_status_3_t get_CB_status_3() { return read_subcommand<cb_status_3_t>(subcommand::CB_STATUS_3); };
+    void set_fet_control(const fet_control_t& control) { write_subcommand(subcommand::FET_CONTROL, control); }
+    void set_regulator_control(const regulator_control_t& control) { write_subcommand(subcommand::REG12_CONTROL, control); }
+    otp_write_result_t get_otp_write_check_result() { return read_subcommand<otp_write_result_t>(subcommand::OTP_WR_CHECK); }
+    otp_write_result_t get_otp_write_result() { return read_subcommand<otp_write_result_t>(subcommand::OTP_WRITE); }
+    cal1_t get_cal_1() { return read_subcommand<cal1_t>(subcommand::READ_CAL1); }
+    uint16_t calibrate_cell_under_volt_threshold() { return read_subcommand<uint16_t>(subcommand::CAL_CUV); }
+    uint16_t calibrate_cell_over_volt_threshold() { return read_subcommand<uint16_t>(subcommand::CAL_COV); }
 
     // --- DATA REGISTERS ---
     class Calibration final
@@ -1513,16 +1513,16 @@ public:
         class Voltage final
         {
         public:
-            int16_t getCellGain(const uint8_t& cell) const;
-            void setCellGain(const uint8_t& cell, const int16_t& gain) const;
-            uint16_t getPackGain() const { return _parent.readSubcommand<uint16_t>(data_register::PACK_GAIN); }
-            void setPackGain(const uint16_t& gain) const { _parent.writeSubcommand(data_register::PACK_GAIN, gain); }
-            uint16_t getStackGain() const { return _parent.readSubcommand<uint16_t>(data_register::TOS_GAIN); }
-            void setStackGain(const uint16_t& gain) const { _parent.writeSubcommand(data_register::TOS_GAIN, gain); }
-            uint16_t getLdGain() const { return _parent.readSubcommand<uint16_t>(data_register::LD_GAIN); }
-            void setLdGain(const uint16_t& gain) const { _parent.writeSubcommand(data_register::LD_GAIN, gain); }
-            int16_t getAdcGain() const { return _parent.readSubcommand<int16_t>(data_register::ADC_GAIN); }
-            void setAdcGain(const int16_t& gain) const { _parent.writeSubcommand(data_register::ADC_GAIN, gain); }
+            int16_t get_cell_gain(const uint8_t& cell) const;
+            void set_cell_gain(const uint8_t& cell, const int16_t& gain) const;
+            uint16_t get_pack_gain() const { return _parent.read_subcommand<uint16_t>(data_register::PACK_GAIN); }
+            void set_pack_gain(const uint16_t& gain) const { _parent.write_subcommand(data_register::PACK_GAIN, gain); }
+            uint16_t get_stack_gain() const { return _parent.read_subcommand<uint16_t>(data_register::TOS_GAIN); }
+            void set_stack_gain(const uint16_t& gain) const { _parent.write_subcommand(data_register::TOS_GAIN, gain); }
+            uint16_t get_ld_gain() const { return _parent.read_subcommand<uint16_t>(data_register::LD_GAIN); }
+            void set_ld_gain(const uint16_t& gain) const { _parent.write_subcommand(data_register::LD_GAIN, gain); }
+            int16_t get_adc_gain() const { return _parent.read_subcommand<int16_t>(data_register::ADC_GAIN); }
+            void set_adc_gain(const int16_t& gain) const { _parent.write_subcommand(data_register::ADC_GAIN, gain); }
 
         protected:
             Voltage(bq76942& parent)
@@ -1544,11 +1544,11 @@ public:
         public:
             /// @brief Sets CC gain and capacity gain based on the sense resistor value
             /// @param value Resistance in milliohms of the sense resistor
-            void setSenseResistorValue(const float& value) const;
-            float getCCGain() const { return _parent.readSubcommand<float>(data_register::CC_GAIN); }
-            void setCCGain(const float& gain) const { _parent.writeSubcommand(data_register::CC_GAIN, gain); }
-            float getCapacityGain() const { return _parent.readSubcommand<float>(data_register::CAPACITY_GAIN); }
-            void setCapacityGain(const float& gain) const { _parent.writeSubcommand(data_register::CAPACITY_GAIN, gain); }
+            void set_sense_resistor_value(const float& value) const;
+            float get_CC_gain() const { return _parent.read_subcommand<float>(data_register::CC_GAIN); }
+            void set_CC_gain(const float& gain) const { _parent.write_subcommand(data_register::CC_GAIN, gain); }
+            float get_capacity_gain() const { return _parent.read_subcommand<float>(data_register::CAPACITY_GAIN); }
+            void set_capacity_gain(const float& gain) const { _parent.write_subcommand(data_register::CAPACITY_GAIN, gain); }
 
         protected:
             Current(bq76942& parent)
@@ -1565,21 +1565,21 @@ public:
         };
 
         // Calibration:Vcell Offset
-        int16_t getVcellOffset() const { return _parent.readSubcommand<int16_t>(data_register::VCELL_OFFSET); }
-        void setVcellOffset(const int16_t& offset) const { _parent.writeSubcommand(data_register::VCELL_OFFSET, offset); }
+        int16_t get_vcell_offset() const { return _parent.read_subcommand<int16_t>(data_register::VCELL_OFFSET); }
+        void set_vcell_offset(const int16_t& offset) const { _parent.write_subcommand(data_register::VCELL_OFFSET, offset); }
 
         // Calibration:V Divider Offset
-        int16_t getVDividerOffset() const { return _parent.readSubcommand<int16_t>(data_register::VDIV_OFFSET); }
-        void setVDividerOffset(const int16_t& offset) const { _parent.writeSubcommand(data_register::VDIV_OFFSET, offset); }
+        int16_t get_V_divider_offset() const { return _parent.read_subcommand<int16_t>(data_register::VDIV_OFFSET); }
+        void set_V_divider_offset(const int16_t& offset) const { _parent.write_subcommand(data_register::VDIV_OFFSET, offset); }
 
         // Calibration:Current Offset
         class CurrentOffset final
         {
         public:
-            uint16_t getCoulombCounterOffsetSamples() const { return _parent.readSubcommand<uint16_t>(data_register::COULOMB_COUNTER_OFFSET_SAMPLES); }
-            void setCoulombCounterOffsetSamples(const uint16_t& samples) const { _parent.writeSubcommand(data_register::COULOMB_COUNTER_OFFSET_SAMPLES, samples); }
-            int16_t getBoardOffsetCurrent() const { return _parent.readSubcommand<int16_t>(data_register::BOARD_OFFSET); }
-            void setBoardOffsetCurrent(const int16_t& offset) const { _parent.writeSubcommand(data_register::BOARD_OFFSET, offset); }
+            uint16_t get_coulomb_counter_offset_samples() const { return _parent.read_subcommand<uint16_t>(data_register::COULOMB_COUNTER_OFFSET_SAMPLES); }
+            void set_coulomb_counter_offset_samples(const uint16_t& samples) const { _parent.write_subcommand(data_register::COULOMB_COUNTER_OFFSET_SAMPLES, samples); }
+            int16_t get_board_offset_current() const { return _parent.read_subcommand<int16_t>(data_register::BOARD_OFFSET); }
+            void set_board_offset_current(const int16_t& offset) const { _parent.write_subcommand(data_register::BOARD_OFFSET, offset); }
 
         protected:
             CurrentOffset(bq76942& parent)
@@ -1598,26 +1598,26 @@ public:
         // Calibration:Temperature
         class Temperature final
         {
-            int8_t getInternalOffset() const { return _parent.readSubcommand<int8_t>(data_register::INTERNAL_TEMP_OFFSET); }
-            void setInternalOffset(const int8_t& offset) const { _parent.writeSubcommand(data_register::INTERNAL_TEMP_OFFSET, offset); }
-            int8_t getCfetoffOffset() const { return _parent.readSubcommand<int8_t>(data_register::CFETOFF_TEMP_OFFSET); }
-            void setCfetoffOffset(const int8_t& offset) const { _parent.writeSubcommand(data_register::CFETOFF_TEMP_OFFSET, offset); }
-            int8_t getDfetoffOffset() const { return _parent.readSubcommand<int8_t>(data_register::DFETOFF_TEMP_OFFSET); }
-            void setDfetoffOffset(const int8_t& offset) const { _parent.writeSubcommand(data_register::DFETOFF_TEMP_OFFSET, offset); }
-            int8_t getAlertOffset() const { return _parent.readSubcommand<int8_t>(data_register::ALERT_TEMP_OFFSET); }
-            void setAlertOffset(const int8_t& offset) const { _parent.writeSubcommand(data_register::ALERT_TEMP_OFFSET, offset); }
-            int8_t getTs1Offset() const { return _parent.readSubcommand<int8_t>(data_register::TS1_TEMP_OFFSET); }
-            void setTs1Offset(const int8_t& offset) const { _parent.writeSubcommand(data_register::TS1_TEMP_OFFSET, offset); }
-            int8_t getTs2Offset() const { return _parent.readSubcommand<int8_t>(data_register::TS2_TEMP_OFFSET); }
-            void setTs2Offset(const int8_t& offset) const { _parent.writeSubcommand(data_register::TS2_TEMP_OFFSET, offset); }
-            int8_t getTs3Offset() const { return _parent.readSubcommand<int8_t>(data_register::TS3_TEMP_OFFSET); }
-            void setTs3Offset(const int8_t& offset) const { _parent.writeSubcommand(data_register::TS3_TEMP_OFFSET, offset); }
-            int8_t getHdqOffset() const { return _parent.readSubcommand<int8_t>(data_register::HDQ_TEMP_OFFSET); }
-            void setHdqOffset(const int8_t& offset) const { _parent.writeSubcommand(data_register::HDQ_TEMP_OFFSET, offset); }
-            int8_t getDchgOffset() const { return _parent.readSubcommand<int8_t>(data_register::DCHG_TEMP_OFFSET); }
-            void setDchgOffset(const int8_t& offset) const { _parent.writeSubcommand(data_register::DCHG_TEMP_OFFSET, offset); }
-            int8_t getDdsgOffset() const { return _parent.readSubcommand<int8_t>(data_register::DDSG_TEMP_OFFSET); }
-            void setDdsgOffset(const int8_t& offset) const { _parent.writeSubcommand(data_register::DDSG_TEMP_OFFSET, offset); }
+            int8_t get_internal_offset() const { return _parent.read_subcommand<int8_t>(data_register::INTERNAL_TEMP_OFFSET); }
+            void set_internal_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::INTERNAL_TEMP_OFFSET, offset); }
+            int8_t get_cfetoff_offset() const { return _parent.read_subcommand<int8_t>(data_register::CFETOFF_TEMP_OFFSET); }
+            void set_cfetoff_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::CFETOFF_TEMP_OFFSET, offset); }
+            int8_t get_dfetoff_offset() const { return _parent.read_subcommand<int8_t>(data_register::DFETOFF_TEMP_OFFSET); }
+            void set_dfetoff_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::DFETOFF_TEMP_OFFSET, offset); }
+            int8_t get_alert_offset() const { return _parent.read_subcommand<int8_t>(data_register::ALERT_TEMP_OFFSET); }
+            void set_alert_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::ALERT_TEMP_OFFSET, offset); }
+            int8_t get_ts1_offset() const { return _parent.read_subcommand<int8_t>(data_register::TS1_TEMP_OFFSET); }
+            void set_ts1_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::TS1_TEMP_OFFSET, offset); }
+            int8_t get_ts2_offset() const { return _parent.read_subcommand<int8_t>(data_register::TS2_TEMP_OFFSET); }
+            void set_ts2_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::TS2_TEMP_OFFSET, offset); }
+            int8_t get_ts3_offset() const { return _parent.read_subcommand<int8_t>(data_register::TS3_TEMP_OFFSET); }
+            void set_ts3_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::TS3_TEMP_OFFSET, offset); }
+            int8_t get_hdq_offset() const { return _parent.read_subcommand<int8_t>(data_register::HDQ_TEMP_OFFSET); }
+            void set_hdq_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::HDQ_TEMP_OFFSET, offset); }
+            int8_t get_dchg_offset() const { return _parent.read_subcommand<int8_t>(data_register::DCHG_TEMP_OFFSET); }
+            void set_dchg_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::DCHG_TEMP_OFFSET, offset); }
+            int8_t get_ddsg_offset() const { return _parent.read_subcommand<int8_t>(data_register::DDSG_TEMP_OFFSET); }
+            void set_ddsg_offset(const int8_t& offset) const { _parent.write_subcommand(data_register::DDSG_TEMP_OFFSET, offset); }
 
         protected:
             Temperature(bq76942& parent)
@@ -1637,14 +1637,14 @@ public:
         class InternalTempModel final
         {
         public:
-            int16_t getGain() const { return _parent.readSubcommand<int16_t>(data_register::INT_GAIN); }
-            void setGain(const int16_t& gain) const { _parent.writeSubcommand(data_register::INT_GAIN, gain); }
-            int16_t getBaseOffset() const { return _parent.readSubcommand<int16_t>(data_register::INT_BASE_OFFSET); }
-            void setBaseOffset(const int16_t& offset) const { _parent.writeSubcommand(data_register::INT_BASE_OFFSET, offset); }
-            int16_t getMaximumAD() const { return _parent.readSubcommand<int16_t>(data_register::INT_MAXIMUM_AD); }
-            void setMaximumAD(const int16_t& ad) const { _parent.writeSubcommand(data_register::INT_MAXIMUM_AD, ad); }
-            int16_t getMaximumTemp() const { return _parent.readSubcommand<int16_t>(data_register::INT_MAXIMUM_TEMP); }
-            void setMaximumTemp(const int16_t& temp) const { _parent.writeSubcommand(data_register::INT_MAXIMUM_TEMP, temp); }
+            int16_t get_gain() const { return _parent.read_subcommand<int16_t>(data_register::INT_GAIN); }
+            void set_gain(const int16_t& gain) const { _parent.write_subcommand(data_register::INT_GAIN, gain); }
+            int16_t get_base_offset() const { return _parent.read_subcommand<int16_t>(data_register::INT_BASE_OFFSET); }
+            void set_base_offset(const int16_t& offset) const { _parent.write_subcommand(data_register::INT_BASE_OFFSET, offset); }
+            int16_t get_maximum_AD() const { return _parent.read_subcommand<int16_t>(data_register::INT_MAXIMUM_AD); }
+            void set_maximum_AD(const int16_t& ad) const { _parent.write_subcommand(data_register::INT_MAXIMUM_AD, ad); }
+            int16_t get_maximum_temp() const { return _parent.read_subcommand<int16_t>(data_register::INT_MAXIMUM_TEMP); }
+            void set_maximum_temp(const int16_t& temp) const { _parent.write_subcommand(data_register::INT_MAXIMUM_TEMP, temp); }
 
         protected:
             InternalTempModel(bq76942& parent)
@@ -1664,26 +1664,26 @@ public:
         class T18KModel final
         {
         public:
-            int16_t getCoeffA1() const { return _parent.readSubcommand<int16_t>(data_register::T18K_COEFF_A1); }
-            void setCoeffA1(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T18K_COEFF_A1, coeff); }
-            int16_t getCoeffA2() const { return _parent.readSubcommand<int16_t>(data_register::T18K_COEFF_A2); }
-            void setCoeffA2(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T18K_COEFF_A2, coeff); }
-            int16_t getCoeffA3() const { return _parent.readSubcommand<int16_t>(data_register::T18K_COEFF_A3); }
-            void setCoeffA3(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T18K_COEFF_A3, coeff); }
-            int16_t getCoeffA4() const { return _parent.readSubcommand<int16_t>(data_register::T18K_COEFF_A4); }
-            void setCoeffA4(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T18K_COEFF_A4, coeff); }
-            int16_t getCoeffA5() const { return _parent.readSubcommand<int16_t>(data_register::T18K_COEFF_A5); }
-            void setCoeffA5(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T18K_COEFF_A5, coeff); }
-            int16_t getCoeffB1() const { return _parent.readSubcommand<int16_t>(data_register::T18K_COEFF_B1); }
-            void setCoeffB1(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T18K_COEFF_B1, coeff); }
-            int16_t getCoeffB2() const { return _parent.readSubcommand<int16_t>(data_register::T18K_COEFF_B2); }
-            void setCoeffB2(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T18K_COEFF_B2, coeff); }
-            int16_t getCoeffB3() const { return _parent.readSubcommand<int16_t>(data_register::T18K_COEFF_B3); }
-            void setCoeffB3(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T18K_COEFF_B3, coeff); }
-            int16_t getCoeffB4() const { return _parent.readSubcommand<int16_t>(data_register::T18K_COEFF_B4); }
-            void setCoeffB4(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T18K_COEFF_B4, coeff); }
-            int16_t getAdc0() const { return _parent.readSubcommand<int16_t>(data_register::T18K_ADC0); }
-            void setAdc0(const int16_t& adc) const { _parent.writeSubcommand(data_register::T18K_ADC0, adc); }
+            int16_t get_coeff_A1() const { return _parent.read_subcommand<int16_t>(data_register::T18K_COEFF_A1); }
+            void set_coeff_A1(const int16_t& coeff) const { _parent.write_subcommand(data_register::T18K_COEFF_A1, coeff); }
+            int16_t get_coeff_A2() const { return _parent.read_subcommand<int16_t>(data_register::T18K_COEFF_A2); }
+            void set_coeff_A2(const int16_t& coeff) const { _parent.write_subcommand(data_register::T18K_COEFF_A2, coeff); }
+            int16_t get_coeff_A3() const { return _parent.read_subcommand<int16_t>(data_register::T18K_COEFF_A3); }
+            void set_coeff_A3(const int16_t& coeff) const { _parent.write_subcommand(data_register::T18K_COEFF_A3, coeff); }
+            int16_t get_coeff_A4() const { return _parent.read_subcommand<int16_t>(data_register::T18K_COEFF_A4); }
+            void set_coeff_A4(const int16_t& coeff) const { _parent.write_subcommand(data_register::T18K_COEFF_A4, coeff); }
+            int16_t get_coeff_A5() const { return _parent.read_subcommand<int16_t>(data_register::T18K_COEFF_A5); }
+            void set_coeff_A5(const int16_t& coeff) const { _parent.write_subcommand(data_register::T18K_COEFF_A5, coeff); }
+            int16_t get_coeff_B1() const { return _parent.read_subcommand<int16_t>(data_register::T18K_COEFF_B1); }
+            void set_coeff_B1(const int16_t& coeff) const { _parent.write_subcommand(data_register::T18K_COEFF_B1, coeff); }
+            int16_t get_coeff_B2() const { return _parent.read_subcommand<int16_t>(data_register::T18K_COEFF_B2); }
+            void set_coeff_B2(const int16_t& coeff) const { _parent.write_subcommand(data_register::T18K_COEFF_B2, coeff); }
+            int16_t get_coeff_B3() const { return _parent.read_subcommand<int16_t>(data_register::T18K_COEFF_B3); }
+            void set_coeff_B3(const int16_t& coeff) const { _parent.write_subcommand(data_register::T18K_COEFF_B3, coeff); }
+            int16_t get_coeff_B4() const { return _parent.read_subcommand<int16_t>(data_register::T18K_COEFF_B4); }
+            void set_coeff_B4(const int16_t& coeff) const { _parent.write_subcommand(data_register::T18K_COEFF_B4, coeff); }
+            int16_t get_adc0() const { return _parent.read_subcommand<int16_t>(data_register::T18K_ADC0); }
+            void set_adc0(const int16_t& adc) const { _parent.write_subcommand(data_register::T18K_ADC0, adc); }
 
         protected:
             T18KModel(bq76942& parent)
@@ -1703,26 +1703,26 @@ public:
         class T180KModel final
         {
         public:
-            int16_t getCoeffA1() const { return _parent.readSubcommand<int16_t>(data_register::T180K_COEFF_A1); }
-            void setCoeffA1(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T180K_COEFF_A1, coeff); }
-            int16_t getCoeffA2() const { return _parent.readSubcommand<int16_t>(data_register::T180K_COEFF_A2); }
-            void setCoeffA2(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T180K_COEFF_A2, coeff); }
-            int16_t getCoeffA3() const { return _parent.readSubcommand<int16_t>(data_register::T180K_COEFF_A3); }
-            void setCoeffA3(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T180K_COEFF_A3, coeff); }
-            int16_t getCoeffA4() const { return _parent.readSubcommand<int16_t>(data_register::T180K_COEFF_A4); }
-            void setCoeffA4(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T180K_COEFF_A4, coeff); }
-            int16_t getCoeffA5() const { return _parent.readSubcommand<int16_t>(data_register::T180K_COEFF_A5); }
-            void setCoeffA5(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T180K_COEFF_A5, coeff); }
-            int16_t getCoeffB1() const { return _parent.readSubcommand<int16_t>(data_register::T180K_COEFF_B1); }
-            void setCoeffB1(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T180K_COEFF_B1, coeff); }
-            int16_t getCoeffB2() const { return _parent.readSubcommand<int16_t>(data_register::T180K_COEFF_B2); }
-            void setCoeffB2(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T180K_COEFF_B2, coeff); }
-            int16_t getCoeffB3() const { return _parent.readSubcommand<int16_t>(data_register::T180K_COEFF_B3); }
-            void setCoeffB3(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T180K_COEFF_B3, coeff); }
-            int16_t getCoeffB4() const { return _parent.readSubcommand<int16_t>(data_register::T180K_COEFF_B4); }
-            void setCoeffB4(const int16_t& coeff) const { _parent.writeSubcommand(data_register::T180K_COEFF_B4, coeff); }
-            int16_t getAdc0() const { return _parent.readSubcommand<int16_t>(data_register::T180K_ADC0); }
-            void setAdc0(const int16_t& adc) const { _parent.writeSubcommand(data_register::T180K_ADC0, adc); }
+            int16_t get_coeff_A1() const { return _parent.read_subcommand<int16_t>(data_register::T180K_COEFF_A1); }
+            void set_coeff_A1(const int16_t& coeff) const { _parent.write_subcommand(data_register::T180K_COEFF_A1, coeff); }
+            int16_t get_coeff_A2() const { return _parent.read_subcommand<int16_t>(data_register::T180K_COEFF_A2); }
+            void set_coeff_A2(const int16_t& coeff) const { _parent.write_subcommand(data_register::T180K_COEFF_A2, coeff); }
+            int16_t get_coeff_A3() const { return _parent.read_subcommand<int16_t>(data_register::T180K_COEFF_A3); }
+            void set_coeff_A3(const int16_t& coeff) const { _parent.write_subcommand(data_register::T180K_COEFF_A3, coeff); }
+            int16_t get_coeff_A4() const { return _parent.read_subcommand<int16_t>(data_register::T180K_COEFF_A4); }
+            void set_coeff_A4(const int16_t& coeff) const { _parent.write_subcommand(data_register::T180K_COEFF_A4, coeff); }
+            int16_t get_coeff_A5() const { return _parent.read_subcommand<int16_t>(data_register::T180K_COEFF_A5); }
+            void set_coeff_A5(const int16_t& coeff) const { _parent.write_subcommand(data_register::T180K_COEFF_A5, coeff); }
+            int16_t get_coeff_B1() const { return _parent.read_subcommand<int16_t>(data_register::T180K_COEFF_B1); }
+            void set_coeff_B1(const int16_t& coeff) const { _parent.write_subcommand(data_register::T180K_COEFF_B1, coeff); }
+            int16_t get_coeff_B2() const { return _parent.read_subcommand<int16_t>(data_register::T180K_COEFF_B2); }
+            void set_coeff_B2(const int16_t& coeff) const { _parent.write_subcommand(data_register::T180K_COEFF_B2, coeff); }
+            int16_t get_coeff_B3() const { return _parent.read_subcommand<int16_t>(data_register::T180K_COEFF_B3); }
+            void set_coeff_B3(const int16_t& coeff) const { _parent.write_subcommand(data_register::T180K_COEFF_B3, coeff); }
+            int16_t get_coeff_B4() const { return _parent.read_subcommand<int16_t>(data_register::T180K_COEFF_B4); }
+            void set_coeff_B4(const int16_t& coeff) const { _parent.write_subcommand(data_register::T180K_COEFF_B4, coeff); }
+            int16_t get_adc0() const { return _parent.read_subcommand<int16_t>(data_register::T180K_ADC0); }
+            void set_adc0(const int16_t& adc) const { _parent.write_subcommand(data_register::T180K_ADC0, adc); }
 
         protected:
             T180KModel(bq76942& parent)
@@ -1742,28 +1742,28 @@ public:
         class CustomTemperatureModel final
         {
         public:
-            int16_t getCoeffA1() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_COEFF_A1); }
-            void setCoeffA1(const int16_t& coeff) const { _parent.writeSubcommand(data_register::CUSTOM_COEFF_A1, coeff); }
-            int16_t getCoeffA2() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_COEFF_A2); }
-            void setCoeffA2(const int16_t& coeff) const { _parent.writeSubcommand(data_register::CUSTOM_COEFF_A2, coeff); }
-            int16_t getCoeffA3() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_COEFF_A3); }
-            void setCoeffA3(const int16_t& coeff) const { _parent.writeSubcommand(data_register::CUSTOM_COEFF_A3, coeff); }
-            int16_t getCoeffA4() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_COEFF_A4); }
-            void setCoeffA4(const int16_t& coeff) const { _parent.writeSubcommand(data_register::CUSTOM_COEFF_A4, coeff); }
-            int16_t getCoeffA5() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_COEFF_A5); }
-            void setCoeffA5(const int16_t& coeff) const { _parent.writeSubcommand(data_register::CUSTOM_COEFF_A5, coeff); }
-            int16_t getCoeffB1() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_COEFF_B1); }
-            void setCoeffB1(const int16_t& coeff) const { _parent.writeSubcommand(data_register::CUSTOM_COEFF_B1, coeff); }
-            int16_t getCoeffB2() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_COEFF_B2); }
-            void setCoeffB2(const int16_t& coeff) const { _parent.writeSubcommand(data_register::CUSTOM_COEFF_B2, coeff); }
-            int16_t getCoeffB3() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_COEFF_B3); }
-            void setCoeffB3(const int16_t& coeff) const { _parent.writeSubcommand(data_register::CUSTOM_COEFF_B3, coeff); }
-            int16_t getCoeffB4() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_COEFF_B4); }
-            void setCoeffB4(const int16_t& coeff) const { _parent.writeSubcommand(data_register::CUSTOM_COEFF_B4, coeff); }
-            int16_t getRc0() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_RC0); }
-            void setRc0(const int16_t& rc) const { _parent.writeSubcommand(data_register::CUSTOM_RC0, rc); }
-            int16_t getAdc0() const { return _parent.readSubcommand<int16_t>(data_register::CUSTOM_ADC0); }
-            void setAdc0(const int16_t& adc) const { _parent.writeSubcommand(data_register::CUSTOM_ADC0, adc); }
+            int16_t get_coeff_A1() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_COEFF_A1); }
+            void set_coeff_A1(const int16_t& coeff) const { _parent.write_subcommand(data_register::CUSTOM_COEFF_A1, coeff); }
+            int16_t get_coeff_A2() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_COEFF_A2); }
+            void set_coeff_A2(const int16_t& coeff) const { _parent.write_subcommand(data_register::CUSTOM_COEFF_A2, coeff); }
+            int16_t get_coeff_A3() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_COEFF_A3); }
+            void set_coeff_A3(const int16_t& coeff) const { _parent.write_subcommand(data_register::CUSTOM_COEFF_A3, coeff); }
+            int16_t get_coeff_A4() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_COEFF_A4); }
+            void set_coeff_A4(const int16_t& coeff) const { _parent.write_subcommand(data_register::CUSTOM_COEFF_A4, coeff); }
+            int16_t get_coeff_A5() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_COEFF_A5); }
+            void set_coeff_A5(const int16_t& coeff) const { _parent.write_subcommand(data_register::CUSTOM_COEFF_A5, coeff); }
+            int16_t get_coeff_B1() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_COEFF_B1); }
+            void set_coeff_B1(const int16_t& coeff) const { _parent.write_subcommand(data_register::CUSTOM_COEFF_B1, coeff); }
+            int16_t get_coeff_B2() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_COEFF_B2); }
+            void set_coeff_B2(const int16_t& coeff) const { _parent.write_subcommand(data_register::CUSTOM_COEFF_B2, coeff); }
+            int16_t get_coeff_B3() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_COEFF_B3); }
+            void set_coeff_B3(const int16_t& coeff) const { _parent.write_subcommand(data_register::CUSTOM_COEFF_B3, coeff); }
+            int16_t get_coeff_B4() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_COEFF_B4); }
+            void set_coeff_B4(const int16_t& coeff) const { _parent.write_subcommand(data_register::CUSTOM_COEFF_B4, coeff); }
+            int16_t get_rc0() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_RC0); }
+            void set_rc0(const int16_t& rc) const { _parent.write_subcommand(data_register::CUSTOM_RC0, rc); }
+            int16_t get_adc0() const { return _parent.read_subcommand<int16_t>(data_register::CUSTOM_ADC0); }
+            void set_adc0(const int16_t& adc) const { _parent.write_subcommand(data_register::CUSTOM_ADC0, adc); }
 
         protected:
             CustomTemperatureModel(bq76942& parent)
@@ -1780,36 +1780,36 @@ public:
         };
 
         // Calibration:Current Deadband
-        int16_t getCoulombCounterDeadband() const { return _parent.readSubcommand<int16_t>(data_register::COULOMB_COUNTER_DEADBAND); }
-        void setCoulombCounterDeadband(const int16_t& deadband) const { _parent.writeSubcommand(data_register::COULOMB_COUNTER_DEADBAND, deadband); }
+        int16_t get_coulomb_counter_deadband() const { return _parent.read_subcommand<int16_t>(data_register::COULOMB_COUNTER_DEADBAND); }
+        void set_coulomb_counter_deadband(const int16_t& deadband) const { _parent.write_subcommand(data_register::COULOMB_COUNTER_DEADBAND, deadband); }
 
         // Calibration:CUV
-        uint16_t getCellUnderVoltThresholdOverride() const { return _parent.readSubcommand<uint16_t>(data_register::CUV_THRESHOLD_OVERRIDE); }
-        void setCellUnderVoltThresholdOverride(const uint16_t& threshold) const { _parent.writeSubcommand(data_register::CUV_THRESHOLD_OVERRIDE, threshold); }
+        uint16_t get_cell_under_volt_threshold_override() const { return _parent.read_subcommand<uint16_t>(data_register::CUV_THRESHOLD_OVERRIDE); }
+        void set_cell_under_volt_threshold_override(const uint16_t& threshold) const { _parent.write_subcommand(data_register::CUV_THRESHOLD_OVERRIDE, threshold); }
 
         // Calibration:COV
-        uint16_t getCellOverVoltThresholdOverride() const { return _parent.readSubcommand<uint16_t>(data_register::COV_THRESHOLD_OVERRIDE); }
-        void setCellOverVoltThresholdOverride(const uint16_t& threshold) const { _parent.writeSubcommand(data_register::COV_THRESHOLD_OVERRIDE, threshold); }
+        uint16_t get_cell_over_volt_threshold_override() const { return _parent.read_subcommand<uint16_t>(data_register::COV_THRESHOLD_OVERRIDE); }
+        void set_cell_over_volt_threshold_override(const uint16_t& threshold) const { _parent.write_subcommand(data_register::COV_THRESHOLD_OVERRIDE, threshold); }
 
         const Voltage voltage;
         const Current current;
-        const CurrentOffset currentOffset;
+        const CurrentOffset current_offset;
         const Temperature temperature;
-        const InternalTempModel internalTempModel;
-        const T18KModel t18KModel;
-        const T180KModel t180KModel;
-        const CustomTemperatureModel customTemperatureModel;
+        const InternalTempModel internal_temp_model;
+        const T18KModel t_18K_model;
+        const T180KModel t_180K_model;
+        const CustomTemperatureModel custom_temperature_model;
 
     protected:
         Calibration(bq76942& parent)
             : voltage(parent),
               current(parent),
-              currentOffset(parent),
+              current_offset(parent),
               temperature(parent),
-              internalTempModel(parent),
-              t18KModel(parent),
-              t180KModel(parent),
-              customTemperatureModel(parent),
+              internal_temp_model(parent),
+              t_18K_model(parent),
+              t_180K_model(parent),
+              custom_temperature_model(parent),
               _parent(parent)
         {
         }
@@ -1829,10 +1829,10 @@ public:
         class Fuse final
         {
         public:
-            int16_t getMinBlowVoltage() const { return _parent.readSubcommand<int16_t>(data_register::MIN_BLOW_FUSE_VOLTAGE); }
-            void setMinBlowVoltage(const int16_t& voltage) const { _parent.writeSubcommand(data_register::MIN_BLOW_FUSE_VOLTAGE, voltage); }
-            std::chrono::seconds readBlowTimeout() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::FUSE_BLOW_TIMEOUT)); }
-            void setBlowTimeout(const std::chrono::seconds& timeout) const { _parent.writeSubcommand<uint8_t>(data_register::FUSE_BLOW_TIMEOUT, timeout.count()); }
+            int16_t get_min_blow_voltage() const { return _parent.read_subcommand<int16_t>(data_register::MIN_BLOW_FUSE_VOLTAGE); }
+            void set_min_blow_voltage(const int16_t& voltage) const { _parent.write_subcommand(data_register::MIN_BLOW_FUSE_VOLTAGE, voltage); }
+            std::chrono::seconds read_blow_timeout() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::FUSE_BLOW_TIMEOUT)); }
+            void set_blow_timeout(const std::chrono::seconds& timeout) const { _parent.write_subcommand<uint8_t>(data_register::FUSE_BLOW_TIMEOUT, timeout.count()); }
 
         protected:
             Fuse(bq76942& parent)
@@ -1852,48 +1852,48 @@ public:
         class Configuration final
         {
         public:
-            power_config_t getPowerConfig() const { return _parent.readSubcommand<power_config_t>(data_register::POWER_CONFIG); }
-            void setPowerConfig(const power_config_t& config) const { _parent.writeSubcommand(data_register::POWER_CONFIG, config); }
-            regulator_control_t getReg12Config() const { return _parent.readSubcommand<regulator_control_t>(data_register::REG12_CONFIG); }
-            void setReg12Config(const regulator_control_t& config) const { _parent.writeSubcommand(data_register::REG12_CONFIG, config); }
-            reg0_config_t getReg0Config() const { return _parent.readSubcommand<reg0_config_t>(data_register::REG0_CONFIG); }
-            void setReg0Config(const reg0_config_t& config) const { _parent.writeSubcommand(data_register::REG0_CONFIG, config); }
-            hwd_regulator_options_t getHwdRegulatorOptions() const { return _parent.readSubcommand<hwd_regulator_options_t>(data_register::HWD_REGULATOR_OPTIONS); }
-            void setHwdRegulatorOptions(const hwd_regulator_options_t& options) const { _parent.writeSubcommand(data_register::HWD_REGULATOR_OPTIONS, options); }
-            comm_type getCommType() const { return static_cast<comm_type>(_parent.readSubcommand<uint8_t>(data_register::COMM_TYPE)); }
+            power_config_t get_power_config() const { return _parent.read_subcommand<power_config_t>(data_register::POWER_CONFIG); }
+            void set_power_config(const power_config_t& config) const { _parent.write_subcommand(data_register::POWER_CONFIG, config); }
+            regulator_control_t get_reg_12_config() const { return _parent.read_subcommand<regulator_control_t>(data_register::REG12_CONFIG); }
+            void set_reg_12_config(const regulator_control_t& config) const { _parent.write_subcommand(data_register::REG12_CONFIG, config); }
+            reg0_config_t get_reg0_config() const { return _parent.read_subcommand<reg0_config_t>(data_register::REG0_CONFIG); }
+            void set_reg_0_config(const reg0_config_t& config) const { _parent.write_subcommand(data_register::REG0_CONFIG, config); }
+            hwd_regulator_options_t get_hwd_regulator_options() const { return _parent.read_subcommand<hwd_regulator_options_t>(data_register::HWD_REGULATOR_OPTIONS); }
+            void set_hwd_regulator_options(const hwd_regulator_options_t& options) const { _parent.write_subcommand(data_register::HWD_REGULATOR_OPTIONS, options); }
+            comm_type get_comm_type() const { return static_cast<comm_type>(_parent.read_subcommand<uint8_t>(data_register::COMM_TYPE)); }
             // note: This will only apply on reset OR SWAP_COMM_MODE
-            void setCommType(const comm_type& type) const { _parent.writeSubcommand(data_register::COMM_TYPE, static_cast<uint8_t>(type)); }
-            uint8_t getI2CAddress() const { return _parent.readSubcommand<uint8_t>(data_register::I2C_ADDRESS); }
+            void set_comm_type(const comm_type& type) const { _parent.write_subcommand(data_register::COMM_TYPE, static_cast<uint8_t>(type)); }
+            uint8_t get_i2c_address() const { return _parent.read_subcommand<uint8_t>(data_register::I2C_ADDRESS); }
             // note: This will only apply on reset OR SWAP_COMM_MODE
-            void setI2CAddress(const uint8_t& address) const { _parent.writeSubcommand(data_register::I2C_ADDRESS, address); }
-            spi_configuration_t getSpiConfiguration() const { return _parent.readSubcommand<spi_configuration_t>(data_register::SPI_CONFIGURATION); }
-            void setSpiConfiguration(const spi_configuration_t& config) const { _parent.writeSubcommand(data_register::SPI_CONFIGURATION, config); }
-            std::chrono::seconds readCommIdleTime() const { return std::chrono::seconds(_parent.readSubcommand<uint16_t>(data_register::COMM_IDLE_TIME)); }
-            void setCommIdleTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::COMM_IDLE_TIME, time.count()); }
-            cfetoff_pin_configuration_t getCfetoffPinConfig() const { return _parent.readSubcommand<cfetoff_pin_configuration_t>(data_register::CFETOFF_PIN_CONFIG); }
-            void setCfetoffPinConfig(const cfetoff_pin_configuration_t& config) const { _parent.writeSubcommand(data_register::CFETOFF_PIN_CONFIG, config); }
-            dfetoff_pin_configuration_t getDfetoffPinConfig() const { return _parent.readSubcommand<dfetoff_pin_configuration_t>(data_register::DFETOFF_PIN_CONFIG); }
-            void setDfetoffPinConfig(const dfetoff_pin_configuration_t& config) const { _parent.writeSubcommand(data_register::DFETOFF_PIN_CONFIG, config); }
-            alert_pin_configuration_t getAlertPinConfig() const { return _parent.readSubcommand<alert_pin_configuration_t>(data_register::ALERT_PIN_CONFIG); }
-            void setAlertPinConfig(const alert_pin_configuration_t& config) const { _parent.writeSubcommand(data_register::ALERT_PIN_CONFIG, config); }
-            ts_pin_configuration_t getTs1PinConfig() const { return _parent.readSubcommand<ts_pin_configuration_t>(data_register::TS1_CONFIG); }
-            void setTs1PinConfig(const ts_pin_configuration_t& config) const { _parent.writeSubcommand(data_register::TS1_CONFIG, config); }
-            ts_pin_configuration_t getTs2PinConfig() const { return _parent.readSubcommand<ts_pin_configuration_t>(data_register::TS2_CONFIG); }
-            void setTs2PinConfig(const ts_pin_configuration_t& config) const { _parent.writeSubcommand(data_register::TS2_CONFIG, config); }
-            ts_pin_configuration_t getTs3PinConfig() const { return _parent.readSubcommand<ts_pin_configuration_t>(data_register::TS3_CONFIG); }
-            void setTs3PinConfig(const ts_pin_configuration_t& config) const { _parent.writeSubcommand(data_register::TS3_CONFIG, config); }
-            hdq_pin_configuration_t getHdqPinConfig() const { return _parent.readSubcommand<hdq_pin_configuration_t>(data_register::HDQ_PIN_CONFIG); }
-            void setHdqPinConfig(const hdq_pin_configuration_t& config) const { _parent.writeSubcommand(data_register::HDQ_PIN_CONFIG, config); }
-            dchg_pin_configuration_t getDchgPinConfig() const { return _parent.readSubcommand<dchg_pin_configuration_t>(data_register::DCHG_PIN_CONFIG); }
-            void setDchgPinConfig(const dchg_pin_configuration_t& config) const { _parent.writeSubcommand(data_register::DCHG_PIN_CONFIG, config); }
-            ddsg_pin_configuration_t getDdsgPinConfig() const { return _parent.readSubcommand<ddsg_pin_configuration_t>(data_register::DDSG_PIN_CONFIG); }
-            void setDdsgPinConfig(const ddsg_pin_configuration_t& config) const { _parent.writeSubcommand(data_register::DDSG_PIN_CONFIG, config); }
-            da_configuration_t getDAConfiguration() const { return _parent.readSubcommand<da_configuration_t>(data_register::DA_CONFIGURATION); }
-            void setDAConfiguration(const da_configuration_t& config) const { _parent.writeSubcommand(data_register::DA_CONFIGURATION, config); }
-            selected_cells_t getVcellMode() const { return _parent.readSubcommand<selected_cells_t>(data_register::VCELL_MODE); }
-            void setVcellMode(const selected_cells_t& mode) const { _parent.writeSubcommand(data_register::VCELL_MODE, mode); }
-            uint8_t getCC3Samples() const { return _parent.readSubcommand<uint8_t>(data_register::CC3_SAMPLES); }
-            void setCC3Samples(const uint8_t& samples) const { _parent.writeSubcommand(data_register::CC3_SAMPLES, samples); }
+            void set_i2c_address(const uint8_t& address) const { _parent.write_subcommand(data_register::I2C_ADDRESS, address); }
+            spi_configuration_t get_spi_configuration() const { return _parent.read_subcommand<spi_configuration_t>(data_register::SPI_CONFIGURATION); }
+            void set_spi_configuration(const spi_configuration_t& config) const { _parent.write_subcommand(data_register::SPI_CONFIGURATION, config); }
+            std::chrono::seconds read_comm_idle_time() const { return std::chrono::seconds(_parent.read_subcommand<uint16_t>(data_register::COMM_IDLE_TIME)); }
+            void set_comm_idle_time(const std::chrono::seconds& time) const { _parent.write_subcommand(data_register::COMM_IDLE_TIME, time.count()); }
+            cfetoff_pin_configuration_t get_cfetoff_pin_config() const { return _parent.read_subcommand<cfetoff_pin_configuration_t>(data_register::CFETOFF_PIN_CONFIG); }
+            void set_cfetoff_pin_config(const cfetoff_pin_configuration_t& config) const { _parent.write_subcommand(data_register::CFETOFF_PIN_CONFIG, config); }
+            dfetoff_pin_configuration_t get_dfetoff_pin_config() const { return _parent.read_subcommand<dfetoff_pin_configuration_t>(data_register::DFETOFF_PIN_CONFIG); }
+            void set_dfetoff_pin_config(const dfetoff_pin_configuration_t& config) const { _parent.write_subcommand(data_register::DFETOFF_PIN_CONFIG, config); }
+            alert_pin_configuration_t get_alert_pin_config() const { return _parent.read_subcommand<alert_pin_configuration_t>(data_register::ALERT_PIN_CONFIG); }
+            void set_alert_pin_config(const alert_pin_configuration_t& config) const { _parent.write_subcommand(data_register::ALERT_PIN_CONFIG, config); }
+            ts_pin_configuration_t get_ts1_pin_config() const { return _parent.read_subcommand<ts_pin_configuration_t>(data_register::TS1_CONFIG); }
+            void set_ts1_pin_config(const ts_pin_configuration_t& config) const { _parent.write_subcommand(data_register::TS1_CONFIG, config); }
+            ts_pin_configuration_t get_ts2_pin_config() const { return _parent.read_subcommand<ts_pin_configuration_t>(data_register::TS2_CONFIG); }
+            void set_ts2_pin_config(const ts_pin_configuration_t& config) const { _parent.write_subcommand(data_register::TS2_CONFIG, config); }
+            ts_pin_configuration_t get_ts3_pin_config() const { return _parent.read_subcommand<ts_pin_configuration_t>(data_register::TS3_CONFIG); }
+            void set_ts3_pin_config(const ts_pin_configuration_t& config) const { _parent.write_subcommand(data_register::TS3_CONFIG, config); }
+            hdq_pin_configuration_t get_hdq_pin_config() const { return _parent.read_subcommand<hdq_pin_configuration_t>(data_register::HDQ_PIN_CONFIG); }
+            void set_hdq_pin_config(const hdq_pin_configuration_t& config) const { _parent.write_subcommand(data_register::HDQ_PIN_CONFIG, config); }
+            dchg_pin_configuration_t get_dchg_pin_config() const { return _parent.read_subcommand<dchg_pin_configuration_t>(data_register::DCHG_PIN_CONFIG); }
+            void set_dchg_pin_config(const dchg_pin_configuration_t& config) const { _parent.write_subcommand(data_register::DCHG_PIN_CONFIG, config); }
+            ddsg_pin_configuration_t get_ddsg_pin_config() const { return _parent.read_subcommand<ddsg_pin_configuration_t>(data_register::DDSG_PIN_CONFIG); }
+            void set_ddsg_pin_config(const ddsg_pin_configuration_t& config) const { _parent.write_subcommand(data_register::DDSG_PIN_CONFIG, config); }
+            da_configuration_t get_DA_configuration() const { return _parent.read_subcommand<da_configuration_t>(data_register::DA_CONFIGURATION); }
+            void set_DA_configuration(const da_configuration_t& config) const { _parent.write_subcommand(data_register::DA_CONFIGURATION, config); }
+            selected_cells_t get_vcell_mode() const { return _parent.read_subcommand<selected_cells_t>(data_register::VCELL_MODE); }
+            void set_vcell_mode(const selected_cells_t& mode) const { _parent.write_subcommand(data_register::VCELL_MODE, mode); }
+            uint8_t get_CC3_samples() const { return _parent.read_subcommand<uint8_t>(data_register::CC3_SAMPLES); }
+            void set_CC3_samples(const uint8_t& samples) const { _parent.write_subcommand(data_register::CC3_SAMPLES, samples); }
 
         protected:
             Configuration(bq76942& parent)
@@ -1912,28 +1912,28 @@ public:
         class Protection final
         {
         public:
-            protection_configuration_t getConfig() const { return _parent.readSubcommand<protection_configuration_t>(data_register::PROTECTION_CONFIGURATION); }
-            void setConfig(const protection_configuration_t& config) const { _parent.writeSubcommand(data_register::PROTECTION_CONFIGURATION, config); }
-            protections_a_t getEnabledA() const { return _parent.readSubcommand<protections_a_t>(data_register::ENABLED_PROTECTIONS_A); }
-            void setEnabledA(const protections_a_t& protections) const { _parent.writeSubcommand(data_register::ENABLED_PROTECTIONS_A, protections); }
-            protections_b_t getEnabledB() const { return _parent.readSubcommand<protections_b_t>(data_register::ENABLED_PROTECTIONS_B); }
-            void setEnabledB(const protections_b_t& protections) const { _parent.writeSubcommand(data_register::ENABLED_PROTECTIONS_B, protections); }
-            protections_c_t getEnabledC() const { return _parent.readSubcommand<protections_c_t>(data_register::ENABLED_PROTECTIONS_C); }
-            void setEnabledC(const protections_c_t& protections) const { _parent.writeSubcommand(data_register::ENABLED_PROTECTIONS_C, protections); }
-            chg_fet_protections_a_t getChgFetA() const { return _parent.readSubcommand<chg_fet_protections_a_t>(data_register::CHG_FET_PROTECTIONS_A); }
-            void setChgFetA(const chg_fet_protections_a_t& protections) const { _parent.writeSubcommand(data_register::CHG_FET_PROTECTIONS_A, protections); }
-            chg_fet_protections_b_t getChgFetB() const { return _parent.readSubcommand<chg_fet_protections_b_t>(data_register::CHG_FET_PROTECTIONS_B); }
-            void setChgFetB(const chg_fet_protections_b_t& protections) const { _parent.writeSubcommand(data_register::CHG_FET_PROTECTIONS_B, protections); }
-            chg_fet_protections_c_t getChgFetC() const { return _parent.readSubcommand<chg_fet_protections_c_t>(data_register::CHG_FET_PROTECTIONS_C); }
-            void setChgFetC(const chg_fet_protections_c_t& protections) const { _parent.writeSubcommand(data_register::CHG_FET_PROTECTIONS_C, protections); }
-            dsg_fet_protections_a_t getDsgFetA() const { return _parent.readSubcommand<dsg_fet_protections_a_t>(data_register::DSG_FET_PROTECTIONS_A); }
-            void setDsgFetA(const dsg_fet_protections_a_t& protections) const { _parent.writeSubcommand(data_register::DSG_FET_PROTECTIONS_A, protections); }
-            dsg_fet_protections_b_t getDsgFetB() const { return _parent.readSubcommand<dsg_fet_protections_b_t>(data_register::DSG_FET_PROTECTIONS_B); }
-            void setDsgFetB(const dsg_fet_protections_b_t& protections) const { _parent.writeSubcommand(data_register::DSG_FET_PROTECTIONS_B, protections); }
-            dsg_fet_protections_c_t getDsgFetC() const { return _parent.readSubcommand<dsg_fet_protections_c_t>(data_register::DSG_FET_PROTECTIONS_C); }
-            void setDsgFetC(const dsg_fet_protections_c_t& protections) const { _parent.writeSubcommand(data_register::DSG_FET_PROTECTIONS_C, protections); }
-            int16_t getBodyDiodeThreshold() const { return _parent.readSubcommand<int16_t>(data_register::BODY_DIODE_THRESHOLD); }
-            void setBodyDiodeThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::BODY_DIODE_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
+            protection_configuration_t get_config() const { return _parent.read_subcommand<protection_configuration_t>(data_register::PROTECTION_CONFIGURATION); }
+            void set_config(const protection_configuration_t& config) const { _parent.write_subcommand(data_register::PROTECTION_CONFIGURATION, config); }
+            protections_a_t get_enabled_A() const { return _parent.read_subcommand<protections_a_t>(data_register::ENABLED_PROTECTIONS_A); }
+            void set_enabled_A(const protections_a_t& protections) const { _parent.write_subcommand(data_register::ENABLED_PROTECTIONS_A, protections); }
+            protections_b_t get_enabled_B() const { return _parent.read_subcommand<protections_b_t>(data_register::ENABLED_PROTECTIONS_B); }
+            void set_enabled_B(const protections_b_t& protections) const { _parent.write_subcommand(data_register::ENABLED_PROTECTIONS_B, protections); }
+            protections_c_t get_enabled_C() const { return _parent.read_subcommand<protections_c_t>(data_register::ENABLED_PROTECTIONS_C); }
+            void set_enabled_C(const protections_c_t& protections) const { _parent.write_subcommand(data_register::ENABLED_PROTECTIONS_C, protections); }
+            chg_fet_protections_a_t get_chg_fet_A() const { return _parent.read_subcommand<chg_fet_protections_a_t>(data_register::CHG_FET_PROTECTIONS_A); }
+            void set_chg_fet_A(const chg_fet_protections_a_t& protections) const { _parent.write_subcommand(data_register::CHG_FET_PROTECTIONS_A, protections); }
+            chg_fet_protections_b_t get_chg_fet_B() const { return _parent.read_subcommand<chg_fet_protections_b_t>(data_register::CHG_FET_PROTECTIONS_B); }
+            void set_chg_fet_B(const chg_fet_protections_b_t& protections) const { _parent.write_subcommand(data_register::CHG_FET_PROTECTIONS_B, protections); }
+            chg_fet_protections_c_t get_chg_fet_C() const { return _parent.read_subcommand<chg_fet_protections_c_t>(data_register::CHG_FET_PROTECTIONS_C); }
+            void set_chg_fet_C(const chg_fet_protections_c_t& protections) const { _parent.write_subcommand(data_register::CHG_FET_PROTECTIONS_C, protections); }
+            dsg_fet_protections_a_t get_dsg_fet_A() const { return _parent.read_subcommand<dsg_fet_protections_a_t>(data_register::DSG_FET_PROTECTIONS_A); }
+            void set_dsg_fet_A(const dsg_fet_protections_a_t& protections) const { _parent.write_subcommand(data_register::DSG_FET_PROTECTIONS_A, protections); }
+            dsg_fet_protections_b_t get_dsg_fet_B() const { return _parent.read_subcommand<dsg_fet_protections_b_t>(data_register::DSG_FET_PROTECTIONS_B); }
+            void set_dsg_fet_B(const dsg_fet_protections_b_t& protections) const { _parent.write_subcommand(data_register::DSG_FET_PROTECTIONS_B, protections); }
+            dsg_fet_protections_c_t get_dsg_fet_C() const { return _parent.read_subcommand<dsg_fet_protections_c_t>(data_register::DSG_FET_PROTECTIONS_C); }
+            void set_dsg_fet_C(const dsg_fet_protections_c_t& protections) const { _parent.write_subcommand(data_register::DSG_FET_PROTECTIONS_C, protections); }
+            int16_t get_body_diode_threshold() const { return _parent.read_subcommand<int16_t>(data_register::BODY_DIODE_THRESHOLD); }
+            void set_body_diode_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::BODY_DIODE_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
 
         protected:
             Protection(bq76942& parent)
@@ -1952,23 +1952,23 @@ public:
         class Alarm final
         {
         public:
-            alarm_status_t getDefaultMask() const { return _parent.readSubcommand<alarm_status_t>(data_register::DEFAULT_ALARM_MASK); }
-            void setDefaultMask(const alarm_status_t& mask) const { _parent.writeSubcommand(data_register::DEFAULT_ALARM_MASK, mask); }
-            protections_a_t getSafetyAlertMaskA() const { return _parent.readSubcommand<protections_a_t>(data_register::SF_ALERT_MASK_A); }
-            void setSafetyAlertMaskA(const protections_a_t& protections) const { _parent.writeSubcommand(data_register::SF_ALERT_MASK_A, protections); }
-            protections_b_t getSafetyAlertMaskB() const { return _parent.readSubcommand<protections_b_t>(data_register::SF_ALERT_MASK_B); }
-            void setSafetyAlertMaskB(const protections_b_t& protections) const { _parent.writeSubcommand(data_register::SF_ALERT_MASK_B, protections); }
-            alarm_sf_alert_mask_c_t getSafetyAlertMaskC() const { return _parent.readSubcommand<alarm_sf_alert_mask_c_t>(data_register::SF_ALERT_MASK_C); }
-            void setSafetyAlertMaskC(alarm_sf_alert_mask_c_t protections) const { _parent.writeSubcommand(data_register::SF_ALERT_MASK_C, protections); }
+            alarm_status_t get_default_mask() const { return _parent.read_subcommand<alarm_status_t>(data_register::DEFAULT_ALARM_MASK); }
+            void set_default_mask(const alarm_status_t& mask) const { _parent.write_subcommand(data_register::DEFAULT_ALARM_MASK, mask); }
+            protections_a_t get_safety_alert_mask_A() const { return _parent.read_subcommand<protections_a_t>(data_register::SF_ALERT_MASK_A); }
+            void set_safety_alert_mask_A(const protections_a_t& protections) const { _parent.write_subcommand(data_register::SF_ALERT_MASK_A, protections); }
+            protections_b_t get_safety_alert_mask_B() const { return _parent.read_subcommand<protections_b_t>(data_register::SF_ALERT_MASK_B); }
+            void set_safety_alert_mask_B(const protections_b_t& protections) const { _parent.write_subcommand(data_register::SF_ALERT_MASK_B, protections); }
+            alarm_sf_alert_mask_c_t get_safety_alert_mask_C() const { return _parent.read_subcommand<alarm_sf_alert_mask_c_t>(data_register::SF_ALERT_MASK_C); }
+            void set_safety_alert_mask_C(alarm_sf_alert_mask_c_t protections) const { _parent.write_subcommand(data_register::SF_ALERT_MASK_C, protections); }
 
-            permanent_fail_a_t getPermanentFailMaskA() const { return _parent.readSubcommand<permanent_fail_a_t>(data_register::PF_ALERT_MASK_A); }
-            void setPermanentFailMaskA(const permanent_fail_a_t& failures) const { _parent.writeSubcommand(data_register::PF_ALERT_MASK_A, failures); }
-            permanent_fail_b_t getPermanentFailMaskB() const { return _parent.readSubcommand<permanent_fail_b_t>(data_register::PF_ALERT_MASK_B); }
-            void setPermanentFailMaskB(const permanent_fail_b_t& failures) const { _parent.writeSubcommand(data_register::PF_ALERT_MASK_B, failures); }
-            permanent_fail_c_t getPermanentFailMaskC() const { return _parent.readSubcommand<permanent_fail_c_t>(data_register::PF_ALERT_MASK_C); }
-            void setPermanentFailMaskC(const permanent_fail_c_t& failures) const { _parent.writeSubcommand(data_register::PF_ALERT_MASK_C, failures); }
-            permanent_fail_d_t getPermanentFailMaskD() const { return _parent.readSubcommand<permanent_fail_d_t>(data_register::PF_ALERT_MASK_D); }
-            void setPermanentFailMaskD(const permanent_fail_d_t& failures) const { _parent.writeSubcommand(data_register::PF_ALERT_MASK_D, failures); }
+            permanent_fail_a_t get_permanent_fail_mask_A() const { return _parent.read_subcommand<permanent_fail_a_t>(data_register::PF_ALERT_MASK_A); }
+            void set_permanent_fail_mask_A(const permanent_fail_a_t& failures) const { _parent.write_subcommand(data_register::PF_ALERT_MASK_A, failures); }
+            permanent_fail_b_t get_permanent_fail_mask_B() const { return _parent.read_subcommand<permanent_fail_b_t>(data_register::PF_ALERT_MASK_B); }
+            void set_permanent_fail_mask_B(const permanent_fail_b_t& failures) const { _parent.write_subcommand(data_register::PF_ALERT_MASK_B, failures); }
+            permanent_fail_c_t get_permanent_fail_mask_C() const { return _parent.read_subcommand<permanent_fail_c_t>(data_register::PF_ALERT_MASK_C); }
+            void set_permanent_fail_mask_C(const permanent_fail_c_t& failures) const { _parent.write_subcommand(data_register::PF_ALERT_MASK_C, failures); }
+            permanent_fail_d_t get_permanent_fail_mask_D() const { return _parent.read_subcommand<permanent_fail_d_t>(data_register::PF_ALERT_MASK_D); }
+            void set_permanent_fail_mask_D(const permanent_fail_d_t& failures) const { _parent.write_subcommand(data_register::PF_ALERT_MASK_D, failures); }
 
         protected:
             Alarm(bq76942& parent)
@@ -1987,14 +1987,14 @@ public:
         class PermanentFailure final
         {
         public:
-            permanent_fail_a_t getEnabledA() const { return _parent.readSubcommand<permanent_fail_a_t>(data_register::ENABLED_PF_A); }
-            void setEnabledA(const permanent_fail_a_t& failures) const { _parent.writeSubcommand(data_register::ENABLED_PF_A, failures); }
-            permanent_fail_b_t getEnabledB() const { return _parent.readSubcommand<permanent_fail_b_t>(data_register::ENABLED_PF_B); }
-            void setEnabledB(const permanent_fail_b_t& failures) const { _parent.writeSubcommand(data_register::ENABLED_PF_B, failures); }
-            permanent_fail_c_t getEnabledC() const { return _parent.readSubcommand<permanent_fail_c_t>(data_register::ENABLED_PF_C); }
-            void setEnabledC(const permanent_fail_c_t& failures) const { _parent.writeSubcommand(data_register::ENABLED_PF_C, failures); }
-            permanent_fail_d_t getEnabledD() const { return _parent.readSubcommand<permanent_fail_d_t>(data_register::ENABLED_PF_D); }
-            void setEnabledD(const permanent_fail_d_t& failures) const { _parent.writeSubcommand(data_register::ENABLED_PF_D, failures); }
+            permanent_fail_a_t get_enabled_A() const { return _parent.read_subcommand<permanent_fail_a_t>(data_register::ENABLED_PF_A); }
+            void set_enabled_A(const permanent_fail_a_t& failures) const { _parent.write_subcommand(data_register::ENABLED_PF_A, failures); }
+            permanent_fail_b_t get_enabled_B() const { return _parent.read_subcommand<permanent_fail_b_t>(data_register::ENABLED_PF_B); }
+            void set_enabled_B(const permanent_fail_b_t& failures) const { _parent.write_subcommand(data_register::ENABLED_PF_B, failures); }
+            permanent_fail_c_t get_enabled_C() const { return _parent.read_subcommand<permanent_fail_c_t>(data_register::ENABLED_PF_C); }
+            void set_enabled_C(const permanent_fail_c_t& failures) const { _parent.write_subcommand(data_register::ENABLED_PF_C, failures); }
+            permanent_fail_d_t get_enabled_D() const { return _parent.read_subcommand<permanent_fail_d_t>(data_register::ENABLED_PF_D); }
+            void set_enabled_D(const permanent_fail_d_t& failures) const { _parent.write_subcommand(data_register::ENABLED_PF_D, failures); }
 
         protected:
             PermanentFailure(bq76942& parent)
@@ -2013,22 +2013,22 @@ public:
         class Fet final
         {
         public:
-            fet_options_t getOptions() const { return _parent.readSubcommand<fet_options_t>(data_register::FET_OPTIONS); }
-            void setOptions(const fet_options_t& options) const { _parent.writeSubcommand(data_register::FET_OPTIONS, options); }
-            fet_charge_pump_control_t getChargePumpControl() const { return _parent.readSubcommand<fet_charge_pump_control_t>(data_register::CHG_PUMP_CONTROL); }
-            void setChargePumpControl(const fet_charge_pump_control_t& control) const { _parent.writeSubcommand(data_register::CHG_PUMP_CONTROL, control); }
-            int16_t getPrechargeStartVoltage() const { return _parent.readSubcommand<int16_t>(data_register::PRECHARGE_START_VOLTAGE); }
-            void setPrechargeStartVoltage(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::PRECHARGE_START_VOLTAGE, voltage, 0, std::numeric_limits<int16_t>::max()); }
-            int16_t getPrechargeStopVoltage() const { return _parent.readSubcommand<int16_t>(data_register::PRECHARGE_STOP_VOLTAGE); }
-            void setPrechargeStopVoltage(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::PRECHARGE_STOP_VOLTAGE, voltage, 0, std::numeric_limits<int16_t>::max()); }
-            std::chrono::milliseconds readPredischargeTimeout() const { return std::chrono::milliseconds(_parent.readSubcommand<uint16_t>(data_register::PREDISCHARGE_TIMEOUT) * 10); }
-            void setPredischargeTimeout(const std::chrono::milliseconds& timeout) const
+            fet_options_t get_options() const { return _parent.read_subcommand<fet_options_t>(data_register::FET_OPTIONS); }
+            void set_options(const fet_options_t& options) const { _parent.write_subcommand(data_register::FET_OPTIONS, options); }
+            fet_charge_pump_control_t get_charge_pump_control() const { return _parent.read_subcommand<fet_charge_pump_control_t>(data_register::CHG_PUMP_CONTROL); }
+            void set_charge_pump_control(const fet_charge_pump_control_t& control) const { _parent.write_subcommand(data_register::CHG_PUMP_CONTROL, control); }
+            int16_t get_precharge_start_voltage() const { return _parent.read_subcommand<int16_t>(data_register::PRECHARGE_START_VOLTAGE); }
+            void set_precharge_start_voltage(const int16_t& voltage) const { _parent.write_subcommand_clamped<int16_t>(data_register::PRECHARGE_START_VOLTAGE, voltage, 0, std::numeric_limits<int16_t>::max()); }
+            int16_t get_precharge_stop_voltage() const { return _parent.read_subcommand<int16_t>(data_register::PRECHARGE_STOP_VOLTAGE); }
+            void set_precharge_stop_voltage(const int16_t& voltage) const { _parent.write_subcommand_clamped<int16_t>(data_register::PRECHARGE_STOP_VOLTAGE, voltage, 0, std::numeric_limits<int16_t>::max()); }
+            std::chrono::milliseconds read_predischarge_timeout() const { return std::chrono::milliseconds(_parent.read_subcommand<uint16_t>(data_register::PREDISCHARGE_TIMEOUT) * 10); }
+            void set_predischarge_timeout(const std::chrono::milliseconds& timeout) const
             {
-                uint8_t roundedTimeout = static_cast<uint8_t>(std::round(timeout.count() / 10.0));
-                _parent.writeSubcommand(data_register::PREDISCHARGE_TIMEOUT, roundedTimeout);
+                uint8_t rounded_timeout = static_cast<uint8_t>(std::round(timeout.count() / 10.0));
+                _parent.write_subcommand(data_register::PREDISCHARGE_TIMEOUT, rounded_timeout);
             }
-            uint16_t getPredischargeStopDelta() const { return static_cast<uint16_t>(_parent.readSubcommand<uint8_t>(data_register::PREDISCHARGE_STOP_DELTA)) * 10; }
-            void setPredischargeStopDelta(uint16_t voltage) const { _parent.writeSubcommand(data_register::PREDISCHARGE_STOP_DELTA, static_cast<uint8_t>(voltage / 10)); }
+            uint16_t get_predischarge_stop_delta() const { return static_cast<uint16_t>(_parent.read_subcommand<uint8_t>(data_register::PREDISCHARGE_STOP_DELTA)) * 10; }
+            void set_predischarge_stop_delta(uint16_t voltage) const { _parent.write_subcommand(data_register::PREDISCHARGE_STOP_DELTA, static_cast<uint8_t>(voltage / 10)); }
 
         protected:
             Fet(bq76942& parent)
@@ -2044,49 +2044,49 @@ public:
         };
 
         // Settings:Current Thresholds
-        uint32_t getDsgCurrentThreshold() const;
-        void setDsgCurrentThreshold(const uint32_t& threshold) const;
-        uint32_t getChgCurrentThreshold() const;
-        void setChgCurrentThreshold(const uint32_t& threshold) const;
+        uint32_t get_dsg_current_threshold() const;
+        void set_dsg_current_threshold(const uint32_t& threshold) const;
+        uint32_t get_chg_current_threshold() const;
+        void set_chg_current_threshold(const uint32_t& threshold) const;
 
         // Settings:Cell Open-Wire
-        std::chrono::seconds readCellOpenWireCheckTime() const { return std::chrono::seconds(_parent.readSubcommand<uint16_t>(data_register::CHECK_TIME)); }
-        void setCellOpenWireCheckTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::CHECK_TIME, static_cast<uint8_t>(time.count())); }
+        std::chrono::seconds read_cell_open_wire_check_time() const { return std::chrono::seconds(_parent.read_subcommand<uint16_t>(data_register::CHECK_TIME)); }
+        void set_cell_open_wire_check_time(const std::chrono::seconds& time) const { _parent.write_subcommand(data_register::CHECK_TIME, static_cast<uint8_t>(time.count())); }
 
         // Settings:Interconnect Resistances
-        int16_t getCellInterconnectResistance(const uint8_t& cell);
-        void setCellInterconnectResistance(const uint8_t& cell, const int16_t& resistance);
+        int16_t get_cell_interconnect_resistance(const uint8_t& cell);
+        void set_cell_interconnect_resistance(const uint8_t& cell, const int16_t& resistance);
 
         // Settings:Manufacturing
-        manufacturing_status_init_t getManufacturingStatusInit() const { return _parent.readSubcommand<manufacturing_status_init_t>(data_register::MFG_STATUS_INIT); }
-        void setManufacturingStatusInit(const manufacturing_status_init_t& status) const { _parent.writeSubcommand(data_register::MFG_STATUS_INIT, status); }
+        manufacturing_status_init_t get_manufacturing_status_init() const { return _parent.read_subcommand<manufacturing_status_init_t>(data_register::MFG_STATUS_INIT); }
+        void set_manufacturing_status_init(const manufacturing_status_init_t& status) const { _parent.write_subcommand(data_register::MFG_STATUS_INIT, status); }
 
         // Settings:Cell Balancing Config
         class CellBalancing final
         {
         public:
-            balancing_configuration_t getConfig() const { return _parent.readSubcommand<balancing_configuration_t>(data_register::BALANCING_CONFIGURATION); }
-            void setConfig(const balancing_configuration_t& config) const { _parent.writeSubcommand(data_register::BALANCING_CONFIGURATION, config); }
-            int8_t getMinCellTemp() const { return _parent.readSubcommand<int8_t>(data_register::MIN_CELL_TEMP); }
-            void setMinCellTemp(const int8_t& temp) const { _parent.writeSubcommand(data_register::MIN_CELL_TEMP, temp); }
-            int8_t getMaxInternalTemp() const { return _parent.readSubcommand<int8_t>(data_register::MAX_INTERNAL_TEMP); }
-            void setMaxInternalTemp(const int8_t& temp) const { _parent.writeSubcommand(data_register::MAX_INTERNAL_TEMP, temp); }
-            std::chrono::seconds readInterval() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::CELL_BALANCE_INTERVAL)); }
-            void setInterval(const std::chrono::seconds& interval) const { _parent.writeSubcommandClamped<uint8_t>(data_register::CELL_BALANCE_INTERVAL, static_cast<uint8_t>(interval.count()), 1, 255); }
-            uint8_t getMaxCells() const { return _parent.readSubcommand<uint8_t>(data_register::CELL_BALANCE_MAX_CELLS); }
-            void setMaxCells(const uint8_t& cells) const { _parent.writeSubcommandClamped<uint8_t>(data_register::CELL_BALANCE_MAX_CELLS, cells, 0, 16); }
-            int16_t getMinCellVCharge() const { return _parent.readSubcommand<int16_t>(data_register::CELL_BALANCE_MIN_CELL_V_CHARGE); }
-            void setMinCellVCharge(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::CELL_BALANCE_MIN_CELL_V_CHARGE, voltage, 0, 5000); }
-            uint8_t getMinCellDeltaCharge() const { return _parent.readSubcommand<uint8_t>(data_register::CELL_BALANCE_MIN_DELTA_CHARGE); }
-            void setMinCellDeltaCharge(const uint8_t& voltage) const { _parent.writeSubcommand(data_register::CELL_BALANCE_MIN_DELTA_CHARGE, voltage); }
-            uint8_t getStopDeltaCharge() const { return _parent.readSubcommand<uint8_t>(data_register::CELL_BALANCE_STOP_DELTA_CHARGE); }
-            void setStopDeltaCharge(const uint8_t& voltage) const { _parent.writeSubcommand(data_register::CELL_BALANCE_STOP_DELTA_CHARGE, voltage); }
-            int16_t getMinCellVRelax() const { return _parent.readSubcommand<int16_t>(data_register::CELL_BALANCE_MIN_CELL_V_RELAX); }
-            void setMinCellVRelax(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::CELL_BALANCE_MIN_CELL_V_RELAX, voltage, 0, 5000); }
-            uint8_t getMinCellDeltaRelax() const { return _parent.readSubcommand<uint8_t>(data_register::CELL_BALANCE_MIN_DELTA_RELAX); }
-            void setMinCellDeltaRelax(const uint8_t& voltage) const { _parent.writeSubcommand(data_register::CELL_BALANCE_MIN_DELTA_RELAX, voltage); }
-            uint8_t getStopDeltaRelax() const { return _parent.readSubcommand<uint8_t>(data_register::CELL_BALANCE_STOP_DELTA_RELAX); }
-            void setStopDeltaRelax(const uint8_t& voltage) const { _parent.writeSubcommand(data_register::CELL_BALANCE_STOP_DELTA_RELAX, voltage); }
+            balancing_configuration_t get_config() const { return _parent.read_subcommand<balancing_configuration_t>(data_register::BALANCING_CONFIGURATION); }
+            void set_config(const balancing_configuration_t& config) const { _parent.write_subcommand(data_register::BALANCING_CONFIGURATION, config); }
+            int8_t get_min_cell_temp() const { return _parent.read_subcommand<int8_t>(data_register::MIN_CELL_TEMP); }
+            void set_min_cell_temp(const int8_t& temp) const { _parent.write_subcommand(data_register::MIN_CELL_TEMP, temp); }
+            int8_t get_max_internal_temp() const { return _parent.read_subcommand<int8_t>(data_register::MAX_INTERNAL_TEMP); }
+            void set_max_internal_temp(const int8_t& temp) const { _parent.write_subcommand(data_register::MAX_INTERNAL_TEMP, temp); }
+            std::chrono::seconds read_interval() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::CELL_BALANCE_INTERVAL)); }
+            void set_interval(const std::chrono::seconds& interval) const { _parent.write_subcommand_clamped<uint8_t>(data_register::CELL_BALANCE_INTERVAL, static_cast<uint8_t>(interval.count()), 1, 255); }
+            uint8_t get_max_cells() const { return _parent.read_subcommand<uint8_t>(data_register::CELL_BALANCE_MAX_CELLS); }
+            void set_max_cells(const uint8_t& cells) const { _parent.write_subcommand_clamped<uint8_t>(data_register::CELL_BALANCE_MAX_CELLS, cells, 0, 16); }
+            int16_t get_min_cell_v_charge() const { return _parent.read_subcommand<int16_t>(data_register::CELL_BALANCE_MIN_CELL_V_CHARGE); }
+            void set_min_cell_v_charge(const int16_t& voltage) const { _parent.write_subcommand_clamped<int16_t>(data_register::CELL_BALANCE_MIN_CELL_V_CHARGE, voltage, 0, 5000); }
+            uint8_t get_min_cell_delta_charge() const { return _parent.read_subcommand<uint8_t>(data_register::CELL_BALANCE_MIN_DELTA_CHARGE); }
+            void set_min_cell_delta_charge(const uint8_t& voltage) const { _parent.write_subcommand(data_register::CELL_BALANCE_MIN_DELTA_CHARGE, voltage); }
+            uint8_t get_stop_delta_charge() const { return _parent.read_subcommand<uint8_t>(data_register::CELL_BALANCE_STOP_DELTA_CHARGE); }
+            void set_stop_delta_charge(const uint8_t& voltage) const { _parent.write_subcommand(data_register::CELL_BALANCE_STOP_DELTA_CHARGE, voltage); }
+            int16_t get_min_cell_v_relax() const { return _parent.read_subcommand<int16_t>(data_register::CELL_BALANCE_MIN_CELL_V_RELAX); }
+            void set_min_cell_v_relax(const int16_t& voltage) const { _parent.write_subcommand_clamped<int16_t>(data_register::CELL_BALANCE_MIN_CELL_V_RELAX, voltage, 0, 5000); }
+            uint8_t get_min_cell_delta_relax() const { return _parent.read_subcommand<uint8_t>(data_register::CELL_BALANCE_MIN_DELTA_RELAX); }
+            void set_min_cell_delta_relax(const uint8_t& voltage) const { _parent.write_subcommand(data_register::CELL_BALANCE_MIN_DELTA_RELAX, voltage); }
+            uint8_t get_stop_delta_relax() const { return _parent.read_subcommand<uint8_t>(data_register::CELL_BALANCE_STOP_DELTA_RELAX); }
+            void set_stop_delta_relax(const uint8_t& voltage) const { _parent.write_subcommand(data_register::CELL_BALANCE_STOP_DELTA_RELAX, voltage); }
 
         protected:
             CellBalancing(bq76942& parent)
@@ -2105,9 +2105,9 @@ public:
         const Configuration configuration;
         const Protection protection;
         const Alarm alarm;
-        const PermanentFailure permanentFailure;
+        const PermanentFailure permanent_failure;
         const Fet fet;
-        const CellBalancing cellBalancing;
+        const CellBalancing cell_balancing;
 
     protected:
         Settings(bq76942& parent)
@@ -2115,9 +2115,9 @@ public:
               configuration(parent),
               protection(parent),
               alarm(parent),
-              permanentFailure(parent),
+              permanent_failure(parent),
               fet(parent),
-              cellBalancing(parent),
+              cell_balancing(parent),
               _parent(parent)
         {
         }
@@ -2137,33 +2137,33 @@ public:
         class Shutdown final
         {
         public:
-            int16_t getCellVoltage() const { return _parent.readSubcommand<int16_t>(data_register::SHUTDOWN_CELL_VOLTAGE); }
-            void setCellVoltage(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::SHUTDOWN_CELL_VOLTAGE, voltage, 0, std::numeric_limits<int16_t>::max()); }
-            int32_t getStackVoltage() const { return static_cast<int32_t>(_parent.readSubcommand<int16_t>(data_register::SHUTDOWN_STACK_VOLTAGE)) * 10; }
-            void setStackVoltage(const int32_t& voltage) const { _parent.writeSubcommand(data_register::SHUTDOWN_STACK_VOLTAGE, static_cast<int16_t>(voltage / 10)); }
+            int16_t get_cell_voltage() const { return _parent.read_subcommand<int16_t>(data_register::SHUTDOWN_CELL_VOLTAGE); }
+            void set_cell_voltage(const int16_t& voltage) const { _parent.write_subcommand_clamped<int16_t>(data_register::SHUTDOWN_CELL_VOLTAGE, voltage, 0, std::numeric_limits<int16_t>::max()); }
+            int32_t get_stack_voltage() const { return static_cast<int32_t>(_parent.read_subcommand<int16_t>(data_register::SHUTDOWN_STACK_VOLTAGE)) * 10; }
+            void set_stack_voltage(const int32_t& voltage) const { _parent.write_subcommand(data_register::SHUTDOWN_STACK_VOLTAGE, static_cast<int16_t>(voltage / 10)); }
 
-            std::chrono::seconds getLowVDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::LOW_V_SHUTDOWN_DELAY)); }
-            void setLowVDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommandClamped<uint8_t>(data_register::LOW_V_SHUTDOWN_DELAY, static_cast<uint8_t>(delay.count()), 0, 63); };
-            uint8_t getTemperature() const { return _parent.readSubcommand<uint8_t>(data_register::SHUTDOWN_TEMPERATURE); }
-            void setTemperature(const uint8_t& temperature) const { _parent.writeSubcommandClamped<uint8_t>(data_register::SHUTDOWN_TEMPERATURE, temperature, 0, 255); }
-            std::chrono::seconds getTemperatureDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SHUTDOWN_TEMPERATURE_DELAY)); }
-            void setTemperatureDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommandClamped<uint8_t>(data_register::SHUTDOWN_TEMPERATURE_DELAY, static_cast<uint8_t>(delay.count()), 0, 254); }
-            std::chrono::milliseconds getFetOffDelay() const { return std::chrono::milliseconds(_parent.readSubcommand<uint8_t>(data_register::FET_OFF_DELAY) * 250); }
-            void setFetOffDelay(const std::chrono::milliseconds& delay) const
+            std::chrono::seconds get_low_v_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::LOW_V_SHUTDOWN_DELAY)); }
+            void set_low_v_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand_clamped<uint8_t>(data_register::LOW_V_SHUTDOWN_DELAY, static_cast<uint8_t>(delay.count()), 0, 63); };
+            uint8_t get_temperature() const { return _parent.read_subcommand<uint8_t>(data_register::SHUTDOWN_TEMPERATURE); }
+            void set_temperature(const uint8_t& temperature) const { _parent.write_subcommand_clamped<uint8_t>(data_register::SHUTDOWN_TEMPERATURE, temperature, 0, 255); }
+            std::chrono::seconds get_temperature_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::SHUTDOWN_TEMPERATURE_DELAY)); }
+            void set_temperature_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand_clamped<uint8_t>(data_register::SHUTDOWN_TEMPERATURE_DELAY, static_cast<uint8_t>(delay.count()), 0, 254); }
+            std::chrono::milliseconds get_fet_off_delay() const { return std::chrono::milliseconds(_parent.read_subcommand<uint8_t>(data_register::FET_OFF_DELAY) * 250); }
+            void set_fet_off_delay(const std::chrono::milliseconds& delay) const
             {
-                const uint8_t roundedDelay = static_cast<uint8_t>(std::round(delay.count() / 250.0));
-                _parent.writeSubcommandClamped<uint8_t>(data_register::FET_OFF_DELAY, roundedDelay, 0, 127);
+                const uint8_t rounded_delay = static_cast<uint8_t>(std::round(delay.count() / 250.0));
+                _parent.write_subcommand_clamped<uint8_t>(data_register::FET_OFF_DELAY, rounded_delay, 0, 127);
             }
-            std::chrono::milliseconds getCommandDelay() const { return std::chrono::milliseconds(_parent.readSubcommand<uint8_t>(data_register::SHUTDOWN_COMMAND_DELAY) * 250); }
-            void setCommandDelay(const std::chrono::milliseconds& delay) const
+            std::chrono::milliseconds get_command_delay() const { return std::chrono::milliseconds(_parent.read_subcommand<uint8_t>(data_register::SHUTDOWN_COMMAND_DELAY) * 250); }
+            void set_command_delay(const std::chrono::milliseconds& delay) const
             {
-                const uint8_t roundedDelay = static_cast<uint8_t>(std::round(delay.count() / 250.0));
-                _parent.writeSubcommandClamped<uint8_t>(data_register::SHUTDOWN_COMMAND_DELAY, roundedDelay, 0, 254);
+                const uint8_t rounded_delay = static_cast<uint8_t>(std::round(delay.count() / 250.0));
+                _parent.write_subcommand_clamped<uint8_t>(data_register::SHUTDOWN_COMMAND_DELAY, rounded_delay, 0, 254);
             }
-            std::chrono::minutes getAutoShutdownTime() const { return std::chrono::minutes(_parent.readSubcommand<uint8_t>(data_register::AUTO_SHUTDOWN_TIME)); }
-            void setAutoShutdownTime(const std::chrono::minutes& time) const { _parent.writeSubcommandClamped<uint8_t>(data_register::AUTO_SHUTDOWN_TIME, static_cast<uint8_t>(time.count()), 0, 250); }
-            std::chrono::seconds getRamFailShutdownTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::RAM_FAIL_SHUTDOWN_TIME)); }
-            void setRamFailShutdownTime(const std::chrono::seconds& time) const { _parent.writeSubcommand<uint8_t>(data_register::RAM_FAIL_SHUTDOWN_TIME, static_cast<uint8_t>(time.count())); }
+            std::chrono::minutes get_auto_shutdown_time() const { return std::chrono::minutes(_parent.read_subcommand<uint8_t>(data_register::AUTO_SHUTDOWN_TIME)); }
+            void set_auto_shutdown_time(const std::chrono::minutes& time) const { _parent.write_subcommand_clamped<uint8_t>(data_register::AUTO_SHUTDOWN_TIME, static_cast<uint8_t>(time.count()), 0, 250); }
+            std::chrono::seconds get_ram_fail_shutdown_time() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::RAM_FAIL_SHUTDOWN_TIME)); }
+            void set_ram_fail_shutdown_time(const std::chrono::seconds& time) const { _parent.write_subcommand<uint8_t>(data_register::RAM_FAIL_SHUTDOWN_TIME, static_cast<uint8_t>(time.count())); }
 
         protected:
             Shutdown(bq76942& parent)
@@ -2182,18 +2182,18 @@ public:
         class Sleep final
         {
         public:
-            int16_t getCurrent() const { return _parent.readSubcommand<int16_t>(data_register::SLEEP_CURRENT); }
-            void setCurrent(const int16_t& current) const { _parent.writeSubcommandClamped<int16_t>(data_register::SLEEP_CURRENT, current, 0, std::numeric_limits<int16_t>::max()); }
-            std::chrono::seconds getVoltageReadDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::VOLTAGE_TIME)); }
-            void setVoltageReadDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommandClamped<uint8_t>(data_register::VOLTAGE_TIME, static_cast<uint8_t>(delay.count()), 1, 255); }
-            int16_t getWakeComparatorCurrent() const { return _parent.readSubcommand<int16_t>(data_register::WAKE_COMPARATOR_CURRENT); }
-            void setWakeComparatorCurrent(const int16_t& current) const { _parent.writeSubcommandClamped<int16_t>(data_register::WAKE_COMPARATOR_CURRENT, current, 500, std::numeric_limits<int16_t>::max()); }
-            std::chrono::seconds getHysteresisTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SLEEP_HYSTERESIS_TIME)); }
-            void setHysteresisTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SLEEP_HYSTERESIS_TIME, static_cast<uint8_t>(time.count())); }
-            int32_t getChargerVoltageThreshold() const { return static_cast<int32_t>(_parent.readSubcommand<int16_t>(data_register::SLEEP_CHARGER_VOLTAGE_THRESHOLD)) * 10; }
-            void setChargerVoltageThreshold(const int32_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::SLEEP_CHARGER_VOLTAGE_THRESHOLD, static_cast<int16_t>(voltage / 10), 0, std::numeric_limits<int16_t>::max()); }
-            int32_t getChargerPackTosDelta() const { return static_cast<int32_t>(_parent.readSubcommand<int16_t>(data_register::SLEEP_CHARGER_PACK_TOS_DELTA)) * 10; }
-            void setChargerPackTosDelta(const int32_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::SLEEP_CHARGER_PACK_TOS_DELTA, static_cast<int16_t>(voltage / 10), 10, 8500); }
+            int16_t get_current() const { return _parent.read_subcommand<int16_t>(data_register::SLEEP_CURRENT); }
+            void set_current(const int16_t& current) const { _parent.write_subcommand_clamped<int16_t>(data_register::SLEEP_CURRENT, current, 0, std::numeric_limits<int16_t>::max()); }
+            std::chrono::seconds get_voltage_read_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::VOLTAGE_TIME)); }
+            void set_voltage_read_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand_clamped<uint8_t>(data_register::VOLTAGE_TIME, static_cast<uint8_t>(delay.count()), 1, 255); }
+            int16_t get_wake_comparator_current() const { return _parent.read_subcommand<int16_t>(data_register::WAKE_COMPARATOR_CURRENT); }
+            void set_wake_comparator_current(const int16_t& current) const { _parent.write_subcommand_clamped<int16_t>(data_register::WAKE_COMPARATOR_CURRENT, current, 500, std::numeric_limits<int16_t>::max()); }
+            std::chrono::seconds get_hysteresis_time() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::SLEEP_HYSTERESIS_TIME)); }
+            void set_hysteresis_time(const std::chrono::seconds& time) const { _parent.write_subcommand(data_register::SLEEP_HYSTERESIS_TIME, static_cast<uint8_t>(time.count())); }
+            int32_t get_charger_voltage_threshold() const { return static_cast<int32_t>(_parent.read_subcommand<int16_t>(data_register::SLEEP_CHARGER_VOLTAGE_THRESHOLD)) * 10; }
+            void set_charger_voltage_threshold(const int32_t& voltage) const { _parent.write_subcommand_clamped<int16_t>(data_register::SLEEP_CHARGER_VOLTAGE_THRESHOLD, static_cast<int16_t>(voltage / 10), 0, std::numeric_limits<int16_t>::max()); }
+            int32_t get_charger_pack_tos_delta() const { return static_cast<int32_t>(_parent.read_subcommand<int16_t>(data_register::SLEEP_CHARGER_PACK_TOS_DELTA)) * 10; }
+            void set_charger_pack_tos_delta(const int32_t& voltage) const { _parent.write_subcommand_clamped<int16_t>(data_register::SLEEP_CHARGER_PACK_TOS_DELTA, static_cast<int16_t>(voltage / 10), 10, 8500); }
 
         protected:
             Sleep(bq76942& parent)
@@ -2227,8 +2227,8 @@ public:
     };
 
     // System Data:Integrity
-    uint16_t getConfigRamSignature() { return readSubcommand<uint16_t>(data_register::CONFIG_RAM_SIGNATURE); }
-    void setConfigRamSignature(const uint16_t& signature) { writeSubcommandClamped<uint16_t>(data_register::CONFIG_RAM_SIGNATURE, signature, 0, 0x7FFF); }
+    uint16_t get_config_ram_signature() { return read_subcommand<uint16_t>(data_register::CONFIG_RAM_SIGNATURE); }
+    void set_config_ram_signature(const uint16_t& signature) { write_subcommand_clamped<uint16_t>(data_register::CONFIG_RAM_SIGNATURE, signature, 0, 0x7FFF); }
 
     class Protections final
     {
@@ -2237,23 +2237,23 @@ public:
         class CellUnderVoltage final
         {
         public:
-            float getThreshold() const { return _parent.readSubcommand<uint8_t>(data_register::CUV_THRESHOLD) * 50.6; }
-            void setThreshold(const float& threshold) const
+            float get_threshold() const { return _parent.read_subcommand<uint8_t>(data_register::CUV_THRESHOLD) * 50.6; }
+            void set_threshold(const float& threshold) const
             {
-                const uint8_t roundedThreshold = static_cast<uint8_t>(std::round(threshold / 50.6));
-                _parent.writeSubcommandClamped<uint8_t>(data_register::CUV_THRESHOLD, roundedThreshold, 20, 90);
+                const uint8_t rounded_threshold = static_cast<uint8_t>(std::round(threshold / 50.6));
+                _parent.write_subcommand_clamped<uint8_t>(data_register::CUV_THRESHOLD, rounded_threshold, 20, 90);
             }
-            std::chrono::microseconds getActivationDelay() const { return std::chrono::microseconds(_parent.readSubcommand<uint16_t>(data_register::CUV_DELAY) * 3300L); }
-            void setActivationDelay(const std::chrono::microseconds& delay) const
+            std::chrono::microseconds get_activation_delay() const { return std::chrono::microseconds(_parent.read_subcommand<uint16_t>(data_register::CUV_DELAY) * 3300L); }
+            void set_activation_delay(const std::chrono::microseconds& delay) const
             {
-                const uint16_t roundedDelay = static_cast<uint16_t>(std::round(delay.count() / 3300.0));
-                _parent.writeSubcommandClamped<uint16_t>(data_register::CUV_DELAY, roundedDelay, 1, 2047);
+                const uint16_t rounded_delay = static_cast<uint16_t>(std::round(delay.count() / 3300.0));
+                _parent.write_subcommand_clamped<uint16_t>(data_register::CUV_DELAY, rounded_delay, 1, 2047);
             }
-            float getRecoveryHysteresis() const { return _parent.readSubcommand<uint8_t>(data_register::CUV_RECOVERY_HYSTERESIS) * 50.6; }
-            void setRecoveryHysteresis(const float& hysteresis) const
+            float get_recovery_hysteresis() const { return _parent.read_subcommand<uint8_t>(data_register::CUV_RECOVERY_HYSTERESIS) * 50.6; }
+            void set_recovery_hysteresis(const float& hysteresis) const
             {
-                const uint8_t roundedHysteresis = static_cast<uint8_t>(std::round(hysteresis / 50.6));
-                _parent.writeSubcommandClamped<uint8_t>(data_register::CUV_RECOVERY_HYSTERESIS, roundedHysteresis, 2, 20);
+                const uint8_t rounded_hysteresis = static_cast<uint8_t>(std::round(hysteresis / 50.6));
+                _parent.write_subcommand_clamped<uint8_t>(data_register::CUV_RECOVERY_HYSTERESIS, rounded_hysteresis, 2, 20);
             }
 
         protected:
@@ -2272,31 +2272,31 @@ public:
         class CellOverVoltage final
         {
         public:
-            float getThreshold() const { return _parent.readSubcommand<uint8_t>(data_register::COV_THRESHOLD) * 50.6; }
-            void setThreshold(const float& threshold) const
+            float get_threshold() const { return _parent.read_subcommand<uint8_t>(data_register::COV_THRESHOLD) * 50.6; }
+            void set_threshold(const float& threshold) const
             {
-                const uint8_t roundedThreshold = static_cast<uint8_t>(std::round(threshold / 50.6));
-                _parent.writeSubcommandClamped<uint8_t>(data_register::COV_THRESHOLD, roundedThreshold, 20, 110);
+                const uint8_t rounded_threshold = static_cast<uint8_t>(std::round(threshold / 50.6));
+                _parent.write_subcommand_clamped<uint8_t>(data_register::COV_THRESHOLD, rounded_threshold, 20, 110);
             }
-            std::chrono::microseconds getActivationDelay() const { return std::chrono::microseconds(_parent.readSubcommand<uint16_t>(data_register::COV_DELAY) * 3300L); }
-            void setActivationDelay(const std::chrono::microseconds& delay) const
+            std::chrono::microseconds get_activation_delay() const { return std::chrono::microseconds(_parent.read_subcommand<uint16_t>(data_register::COV_DELAY) * 3300L); }
+            void set_activation_delay(const std::chrono::microseconds& delay) const
             {
-                const uint16_t roundedDelay = static_cast<uint16_t>(std::round(delay.count() / 3300.0));
-                _parent.writeSubcommandClamped<uint16_t>(data_register::COV_DELAY, roundedDelay, 1, 2047);
+                const uint16_t rounded_delay = static_cast<uint16_t>(std::round(delay.count() / 3300.0));
+                _parent.write_subcommand_clamped<uint16_t>(data_register::COV_DELAY, rounded_delay, 1, 2047);
             }
-            float getRecoveryHysteresis() const { return _parent.readSubcommand<uint8_t>(data_register::COV_RECOVERY_HYSTERESIS) * 50.6; }
-            void setRecoveryHysteresis(const float& hysteresis) const
+            float get_recovery_hysteresis() const { return _parent.read_subcommand<uint8_t>(data_register::COV_RECOVERY_HYSTERESIS) * 50.6; }
+            void set_recovery_hysteresis(const float& hysteresis) const
             {
-                const uint8_t roundedHysteresis = static_cast<uint8_t>(std::round(hysteresis / 50.6));
-                _parent.writeSubcommandClamped<uint8_t>(data_register::COV_RECOVERY_HYSTERESIS, roundedHysteresis, 2, 20);
+                const uint8_t rounded_hysteresis = static_cast<uint8_t>(std::round(hysteresis / 50.6));
+                _parent.write_subcommand_clamped<uint8_t>(data_register::COV_RECOVERY_HYSTERESIS, rounded_hysteresis, 2, 20);
             }
 
-            uint8_t getLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::COVL_LATCH_LIMIT); }
-            void setLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::COVL_LATCH_LIMIT, limit); }
-            std::chrono::seconds getLatchCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::COVL_COUNTER_DEC_DELAY)); }
-            void setLatchCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::COVL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
-            std::chrono::seconds getLatchRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::COVL_RECOVERY_TIME)); }
-            void setLatchRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::COVL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+            uint8_t get_latch_limit() const { return _parent.read_subcommand<uint8_t>(data_register::COVL_LATCH_LIMIT); }
+            void set_latch_limit(const uint8_t& limit) const { _parent.write_subcommand(data_register::COVL_LATCH_LIMIT, limit); }
+            std::chrono::seconds get_latch_counter_dec_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::COVL_COUNTER_DEC_DELAY)); }
+            void set_latch_counter_dec_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::COVL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
+            std::chrono::seconds get_latch_recovery_time() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::COVL_RECOVERY_TIME)); }
+            void set_latch_recovery_time(const std::chrono::seconds& time) const { _parent.write_subcommand(data_register::COVL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
 
         protected:
             CellOverVoltage(bq76942& parent)
@@ -2314,18 +2314,18 @@ public:
         class OverCurrentCharge final
         {
         public:
-            uint16_t getThresholdVoltage() const { return static_cast<uint16_t>(_parent.readSubcommand<uint8_t>(data_register::OCC_THRESHOLD)) * 2; }
-            void setThresholdVoltage(const uint16_t& voltage) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OCC_THRESHOLD, static_cast<uint8_t>(voltage / 2), 2, 62); }
-            std::chrono::microseconds getActivationDelay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::OCC_DELAY) * 3300L) + 6600L); };
-            void setActivationDelay(const std::chrono::microseconds& delay) const
+            uint16_t get_threshold_voltage() const { return static_cast<uint16_t>(_parent.read_subcommand<uint8_t>(data_register::OCC_THRESHOLD)) * 2; }
+            void set_threshold_voltage(const uint16_t& voltage) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OCC_THRESHOLD, static_cast<uint8_t>(voltage / 2), 2, 62); }
+            std::chrono::microseconds get_activation_delay() const { return std::chrono::microseconds((_parent.read_subcommand<uint8_t>(data_register::OCC_DELAY) * 3300L) + 6600L); };
+            void set_activation_delay(const std::chrono::microseconds& delay) const
             {
-                const uint8_t roundedDelay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
-                _parent.writeSubcommandClamped<uint8_t>(data_register::OCC_DELAY, roundedDelay, 1, 127);
+                const uint8_t rounded_delay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
+                _parent.write_subcommand_clamped<uint8_t>(data_register::OCC_DELAY, rounded_delay, 1, 127);
             }
-            int16_t getRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCC_RECOVERY_THRESHOLD); }
-            void setRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCC_RECOVERY_THRESHOLD, threshold); }
-            int32_t getRecoveryPackStackDelta() const { return static_cast<int32_t>(_parent.readSubcommand<int16_t>(data_register::OCC_PACK_TOS_DELTA)) * 10; }
-            void setRecoveryPackStackDelta(const int32_t& delta) const { _parent.writeSubcommandClamped<int16_t>(data_register::OCC_PACK_TOS_DELTA, static_cast<int32_t>(delta / 10), 10, 8500); }
+            int16_t get_recovery_threshold() const { return _parent.read_subcommand<int16_t>(data_register::OCC_RECOVERY_THRESHOLD); }
+            void set_recovery_threshold(const int16_t& threshold) const { _parent.write_subcommand(data_register::OCC_RECOVERY_THRESHOLD, threshold); }
+            int32_t get_recovery_pack_stack_delta() const { return static_cast<int32_t>(_parent.read_subcommand<int16_t>(data_register::OCC_PACK_TOS_DELTA)) * 10; }
+            void set_recovery_pack_stack_delta(const int32_t& delta) const { _parent.write_subcommand_clamped<int16_t>(data_register::OCC_PACK_TOS_DELTA, static_cast<int32_t>(delta / 10), 10, 8500); }
 
         protected:
             OverCurrentCharge(bq76942& parent)
@@ -2344,39 +2344,39 @@ public:
         {
         public:
             // note: no need to upgrade the type here, since the max of 100*2 = 200 is still within the uint8_t range
-            uint8_t getTier1Threshold() const { return _parent.readSubcommand<uint8_t>(data_register::OCD1_THRESHOLD) * 2; }
-            void setTier1Threshold(const uint8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OCD1_THRESHOLD, threshold / 2, 2, 100); }
-            std::chrono::microseconds getTier1Delay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::OCD1_DELAY) * 3300L) + 6600L); }
-            void setTier1Delay(const std::chrono::microseconds& delay) const
+            uint8_t get_tier_1_threshold() const { return _parent.read_subcommand<uint8_t>(data_register::OCD1_THRESHOLD) * 2; }
+            void set_tier_1_threshold(const uint8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OCD1_THRESHOLD, threshold / 2, 2, 100); }
+            std::chrono::microseconds get_tier_1_delay() const { return std::chrono::microseconds((_parent.read_subcommand<uint8_t>(data_register::OCD1_DELAY) * 3300L) + 6600L); }
+            void set_tier_1_delay(const std::chrono::microseconds& delay) const
             {
-                const uint8_t roundedDelay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
-                _parent.writeSubcommandClamped<uint8_t>(data_register::OCD1_DELAY, roundedDelay, 1, 127);
+                const uint8_t rounded_delay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
+                _parent.write_subcommand_clamped<uint8_t>(data_register::OCD1_DELAY, rounded_delay, 1, 127);
             }
-            uint8_t getTier2Threshold() const { return _parent.readSubcommand<uint8_t>(data_register::OCD2_THRESHOLD) * 2; }
-            void setTier2Threshold(const uint8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OCD2_THRESHOLD, threshold / 2, 2, 100); }
-            std::chrono::microseconds getTier2Delay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::OCD2_DELAY) * 3300L) + 6600L); }
-            void setTier2Delay(const std::chrono::microseconds& delay) const
+            uint8_t get_tier_2_threshold() const { return _parent.read_subcommand<uint8_t>(data_register::OCD2_THRESHOLD) * 2; }
+            void set_tier_2_threshold(const uint8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OCD2_THRESHOLD, threshold / 2, 2, 100); }
+            std::chrono::microseconds get_tier_2_delay() const { return std::chrono::microseconds((_parent.read_subcommand<uint8_t>(data_register::OCD2_DELAY) * 3300L) + 6600L); }
+            void set_tier_2_delay(const std::chrono::microseconds& delay) const
             {
-                const uint8_t roundedDelay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
-                _parent.writeSubcommandClamped<uint8_t>(data_register::OCD2_DELAY, roundedDelay, 1, 127);
+                const uint8_t rounded_delay = static_cast<uint8_t>(std::round((delay.count() - 6600L) / 3300.0));
+                _parent.write_subcommand_clamped<uint8_t>(data_register::OCD2_DELAY, rounded_delay, 1, 127);
             }
 
-            float getTier3Threshold() const;
-            void setTier3Threshold(const float& threshold) const;
-            std::chrono::seconds getTier3Delay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCD3_DELAY)); };
-            void setTier3Delay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OCD3_DELAY, static_cast<uint8_t>(delay.count())); }
+            float get_tier_3_threshold() const;
+            void set_tier_3_threshold(const float& threshold) const;
+            std::chrono::seconds get_tier_3_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::OCD3_DELAY)); };
+            void set_tier_3_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::OCD3_DELAY, static_cast<uint8_t>(delay.count())); }
 
-            int16_t getRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCD_RECOVERY_THRESHOLD); }
-            void setRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCD_RECOVERY_THRESHOLD, threshold); }
+            int16_t get_recovery_threshold() const { return _parent.read_subcommand<int16_t>(data_register::OCD_RECOVERY_THRESHOLD); }
+            void set_recovery_threshold(const int16_t& threshold) const { _parent.write_subcommand(data_register::OCD_RECOVERY_THRESHOLD, threshold); }
 
-            uint8_t getLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::OCDL_LATCH_LIMIT); }
-            void setLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::OCDL_LATCH_LIMIT, limit); }
-            std::chrono::seconds getLatchCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCDL_COUNTER_DEC_DELAY)); }
-            void setLatchCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
-            std::chrono::seconds getLatchRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OCDL_RECOVERY_TIME)); }
-            void setLatchRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::OCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
-            int16_t getLatchRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::OCDL_RECOVERY_THRESHOLD); }
-            void setLatchRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::OCDL_RECOVERY_THRESHOLD, threshold); }
+            uint8_t get_latch_limit() const { return _parent.read_subcommand<uint8_t>(data_register::OCDL_LATCH_LIMIT); }
+            void set_latch_limit(const uint8_t& limit) const { _parent.write_subcommand(data_register::OCDL_LATCH_LIMIT, limit); }
+            std::chrono::seconds get_latch_counter_dec_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::OCDL_COUNTER_DEC_DELAY)); }
+            void set_latch_counter_dec_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::OCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
+            std::chrono::seconds get_latch_recovery_time() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::OCDL_RECOVERY_TIME)); }
+            void set_latch_recovery_time(const std::chrono::seconds& time) const { _parent.write_subcommand(data_register::OCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+            int16_t get_latch_recovery_threshold() const { return _parent.read_subcommand<int16_t>(data_register::OCDL_RECOVERY_THRESHOLD); }
+            void set_latch_recovery_threshold(const int16_t& threshold) const { _parent.write_subcommand(data_register::OCDL_RECOVERY_THRESHOLD, threshold); }
 
         protected:
             OverCurrentDischarge(bq76942& parent)
@@ -2394,25 +2394,25 @@ public:
         class ShortCircuit final
         {
         public:
-            short_circuit_discharge_threshold getThreshold() const { return _parent.readSubcommand<short_circuit_discharge_threshold>(data_register::SCD_THRESHOLD); }
-            void setThreshold(const short_circuit_discharge_threshold& threshold) const { _parent.writeSubcommand(data_register::SCD_THRESHOLD, threshold); }
-            std::chrono::microseconds getActivationDelay() const { return std::chrono::microseconds((_parent.readSubcommand<uint8_t>(data_register::SCD_DELAY) - 1) * 15); }
-            void setActivationDelay(const std::chrono::microseconds& delay) const
+            short_circuit_discharge_threshold get_threshold() const { return _parent.read_subcommand<short_circuit_discharge_threshold>(data_register::SCD_THRESHOLD); }
+            void set_threshold(const short_circuit_discharge_threshold& threshold) const { _parent.write_subcommand(data_register::SCD_THRESHOLD, threshold); }
+            std::chrono::microseconds get_activation_delay() const { return std::chrono::microseconds((_parent.read_subcommand<uint8_t>(data_register::SCD_DELAY) - 1) * 15); }
+            void set_activation_delay(const std::chrono::microseconds& delay) const
             {
-                const uint8_t roundedDelay = static_cast<uint8_t>(std::round(delay.count() / 15.0) + 1);
-                _parent.writeSubcommandClamped<uint8_t>(data_register::SCD_DELAY, roundedDelay, 1, 31);
+                const uint8_t rounded_delay = static_cast<uint8_t>(std::round(delay.count() / 15.0) + 1);
+                _parent.write_subcommand_clamped<uint8_t>(data_register::SCD_DELAY, rounded_delay, 1, 31);
             }
-            std::chrono::seconds getRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCD_RECOVERY_TIME)); }
-            void setRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SCD_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+            std::chrono::seconds get_recovery_time() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::SCD_RECOVERY_TIME)); }
+            void set_recovery_time(const std::chrono::seconds& time) const { _parent.write_subcommand(data_register::SCD_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
 
-            uint8_t getLatchLimit() const { return _parent.readSubcommand<uint8_t>(data_register::SCDL_LATCH_LIMIT); }
-            void setLatchLimit(const uint8_t& limit) const { _parent.writeSubcommand(data_register::SCDL_LATCH_LIMIT, limit); }
-            std::chrono::seconds getLatchCounterDecDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_COUNTER_DEC_DELAY)); }
-            void setLatchCounterDecDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
-            std::chrono::seconds getLatchRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SCDL_RECOVERY_TIME)); }
-            void setLatchRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
-            int16_t getLatchRecoveryThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SCDL_RECOVERY_THRESHOLD); }
-            void setLatchRecoveryThreshold(const int16_t& threshold) const { _parent.writeSubcommand(data_register::SCDL_RECOVERY_THRESHOLD, threshold); }
+            uint8_t get_latch_limit() const { return _parent.read_subcommand<uint8_t>(data_register::SCDL_LATCH_LIMIT); }
+            void set_latch_limit(const uint8_t& limit) const { _parent.write_subcommand(data_register::SCDL_LATCH_LIMIT, limit); }
+            std::chrono::seconds get_latch_counter_dec_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::SCDL_COUNTER_DEC_DELAY)); }
+            void set_latch_counter_dec_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::SCDL_COUNTER_DEC_DELAY, static_cast<uint8_t>(delay.count())); }
+            std::chrono::seconds get_latch_recovery_time() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::SCDL_RECOVERY_TIME)); }
+            void set_latch_recovery_time(const std::chrono::seconds& time) const { _parent.write_subcommand(data_register::SCDL_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+            int16_t get_latch_recovery_threshold() const { return _parent.read_subcommand<int16_t>(data_register::SCDL_RECOVERY_THRESHOLD); }
+            void set_latch_recovery_threshold(const int16_t& threshold) const { _parent.write_subcommand(data_register::SCDL_RECOVERY_THRESHOLD, threshold); }
 
         protected:
             ShortCircuit(bq76942& parent)
@@ -2430,33 +2430,33 @@ public:
         class OverTemperature final
         {
         public:
-            int8_t getChargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTC_THRESHOLD); }
-            void setChargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTC_THRESHOLD, threshold, -40, 120); }
-            std::chrono::seconds getChargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTC_DELAY)); }
-            void setChargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTC_DELAY, static_cast<uint8_t>(delay.count())); }
-            int8_t getChargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTC_RECOVERY); }
-            void setChargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTC_RECOVERY, threshold, -40, 120); }
+            int8_t get_charge_threshold() const { return _parent.read_subcommand<int8_t>(data_register::OTC_THRESHOLD); }
+            void set_charge_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OTC_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds get_charge_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::OTC_DELAY)); }
+            void set_charge_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::OTC_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t get_charge_recovery_threshold() const { return _parent.read_subcommand<int8_t>(data_register::OTC_RECOVERY); }
+            void set_charge_recovery_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OTC_RECOVERY, threshold, -40, 120); }
 
-            int8_t getDischargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_THRESHOLD); }
-            void setDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_THRESHOLD, threshold, -40, 120); }
-            std::chrono::seconds getDischargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTD_DELAY)); }
-            void setDischargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTD_DELAY, static_cast<uint8_t>(delay.count())); }
-            int8_t getDischargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTD_RECOVERY); }
-            void setDischargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTD_RECOVERY, threshold, -40, 120); }
+            int8_t get_discharge_threshold() const { return _parent.read_subcommand<int8_t>(data_register::OTD_THRESHOLD); }
+            void set_discharge_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OTD_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds get_discharge_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::OTD_DELAY)); }
+            void set_discharge_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::OTD_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t get_discharge_recovery_threshold() const { return _parent.read_subcommand<int8_t>(data_register::OTD_RECOVERY); }
+            void set_discharge_recovery_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OTD_RECOVERY, threshold, -40, 120); }
 
-            int8_t getFetThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_THRESHOLD); }
-            void setFetThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_THRESHOLD, threshold, 0, 150); }
-            std::chrono::seconds getFetDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTF_DELAY)); }
-            void setFetDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTF_DELAY, static_cast<uint8_t>(delay.count())); }
-            int8_t getFetRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTF_RECOVERY); }
-            void setFetRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
+            int8_t get_fet_threshold() const { return _parent.read_subcommand<int8_t>(data_register::OTF_THRESHOLD); }
+            void set_fet_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OTF_THRESHOLD, threshold, 0, 150); }
+            std::chrono::seconds get_fet_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::OTF_DELAY)); }
+            void set_fet_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::OTF_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t get_fet_recovery_threshold() const { return _parent.read_subcommand<int8_t>(data_register::OTF_RECOVERY); }
+            void set_fet_recovery_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OTF_RECOVERY, threshold, 0, 150); }
 
-            int8_t getInternalThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTINT_THRESHOLD); }
-            void setInternalThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTINT_THRESHOLD, threshold, -40, 120); }
-            std::chrono::seconds getInternalDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::OTINT_DELAY)); }
-            void setInternalDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::OTINT_DELAY, static_cast<uint8_t>(delay.count())); }
-            int8_t getInternalRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::OTINT_RECOVERY); }
-            void setInternalRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::OTINT_RECOVERY, threshold, -40, 120); }
+            int8_t get_internal_threshold() const { return _parent.read_subcommand<int8_t>(data_register::OTINT_THRESHOLD); }
+            void set_internal_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OTINT_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds get_internal_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::OTINT_DELAY)); }
+            void set_internal_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::OTINT_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t get_internal_recovery_threshold() const { return _parent.read_subcommand<int8_t>(data_register::OTINT_RECOVERY); }
+            void set_internal_recovery_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::OTINT_RECOVERY, threshold, -40, 120); }
 
         protected:
             OverTemperature(bq76942& parent)
@@ -2474,26 +2474,26 @@ public:
         class UnderTemperature final
         {
         public:
-            int8_t getChargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTC_THRESHOLD); }
-            void setChargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTC_THRESHOLD, threshold, -40, 120); }
-            std::chrono::seconds getChargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::UTC_DELAY)); }
-            void setChargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::UTC_DELAY, static_cast<uint8_t>(delay.count())); }
-            int8_t getChargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTC_RECOVERY); }
-            void setChargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTC_RECOVERY, threshold, -40, 120); }
+            int8_t get_charge_threshold() const { return _parent.read_subcommand<int8_t>(data_register::UTC_THRESHOLD); }
+            void set_charge_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::UTC_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds get_charge_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::UTC_DELAY)); }
+            void set_charge_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::UTC_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t get_charge_recovery_threshold() const { return _parent.read_subcommand<int8_t>(data_register::UTC_RECOVERY); }
+            void set_charge_recovery_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::UTC_RECOVERY, threshold, -40, 120); }
 
-            int8_t getDischargeThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTD_THRESHOLD); }
-            void setDischargeThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTD_THRESHOLD, threshold, -40, 120); }
-            std::chrono::seconds getDischargeDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::UTD_DELAY)); }
-            void setDischargeDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::UTD_DELAY, static_cast<uint8_t>(delay.count())); }
-            int8_t getDischargeRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTD_RECOVERY); }
-            void setDischargeRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTD_RECOVERY, threshold, -40, 120); }
+            int8_t get_discharge_threshold() const { return _parent.read_subcommand<int8_t>(data_register::UTD_THRESHOLD); }
+            void set_discharge_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::UTD_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds get_discharge_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::UTD_DELAY)); }
+            void set_discharge_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::UTD_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t get_discharge_recovery_threshold() const { return _parent.read_subcommand<int8_t>(data_register::UTD_RECOVERY); }
+            void set_discharge_recovery_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::UTD_RECOVERY, threshold, -40, 120); }
 
-            int8_t getInternalThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTINT_THRESHOLD); }
-            void setInternalThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTINT_THRESHOLD, threshold, -40, 120); }
-            std::chrono::seconds getInternalDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::UTINT_DELAY)); }
-            void setInternalDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::UTINT_DELAY, static_cast<uint8_t>(delay.count())); }
-            int8_t getInternalRecoveryThreshold() const { return _parent.readSubcommand<int8_t>(data_register::UTINT_RECOVERY); }
-            void setInternalRecoveryThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<uint8_t>(data_register::UTINT_RECOVERY, threshold, -40, 120); }
+            int8_t get_internal_threshold() const { return _parent.read_subcommand<int8_t>(data_register::UTINT_THRESHOLD); }
+            void set_internal_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::UTINT_THRESHOLD, threshold, -40, 120); }
+            std::chrono::seconds get_internal_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::UTINT_DELAY)); }
+            void set_internal_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::UTINT_DELAY, static_cast<uint8_t>(delay.count())); }
+            int8_t get_internal_recovery_threshold() const { return _parent.read_subcommand<int8_t>(data_register::UTINT_RECOVERY); }
+            void set_internal_recovery_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<uint8_t>(data_register::UTINT_RECOVERY, threshold, -40, 120); }
 
         protected:
             UnderTemperature(bq76942& parent)
@@ -2508,43 +2508,43 @@ public:
             bq76942& _parent;
         };
 
-        std::chrono::seconds getRecoveryTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::PROTECTIONS_RECOVERY_TIME)); }
-        void setRecoveryTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::PROTECTIONS_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
+        std::chrono::seconds get_recovery_time() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::PROTECTIONS_RECOVERY_TIME)); }
+        void set_recovery_time(const std::chrono::seconds& time) const { _parent.write_subcommand(data_register::PROTECTIONS_RECOVERY_TIME, static_cast<uint8_t>(time.count())); }
 
-        std::chrono::seconds getHwdTimeout() const { return std::chrono::seconds(_parent.readSubcommand<uint16_t>(data_register::HWD_DELAY)); }
-        void setHwdTimeout(const std::chrono::seconds& timeout) const { _parent.writeSubcommand(data_register::HWD_DELAY, static_cast<uint16_t>(timeout.count())); }
+        std::chrono::seconds get_hwd_timeout() const { return std::chrono::seconds(_parent.read_subcommand<uint16_t>(data_register::HWD_DELAY)); }
+        void set_hwd_timeout(const std::chrono::seconds& timeout) const { _parent.write_subcommand(data_register::HWD_DELAY, static_cast<uint16_t>(timeout.count())); }
 
-        std::chrono::seconds getLoadDetectTime() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::LOAD_DETECT_ACTIVE_TIME)); }
-        void setLoadDetectTime(const std::chrono::seconds& time) const { _parent.writeSubcommand(data_register::LOAD_DETECT_ACTIVE_TIME, static_cast<uint8_t>(time.count())); }
-        std::chrono::seconds getLoadDetectRetryDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::LOAD_DETECT_RETRY_DELAY)); }
-        void setLoadDetectRetryDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::LOAD_DETECT_RETRY_DELAY, static_cast<uint8_t>(delay.count())); }
-        std::chrono::hours getLoadDetectTimeout() const { return std::chrono::hours(_parent.readSubcommand<uint16_t>(data_register::LOAD_DETECT_TIMEOUT)); }
-        void setLoadDetectTimeout(const std::chrono::hours& timeout) const { _parent.writeSubcommand(data_register::LOAD_DETECT_TIMEOUT, static_cast<uint16_t>(timeout.count())); }
+        std::chrono::seconds get_load_detect_time() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::LOAD_DETECT_ACTIVE_TIME)); }
+        void set_load_detect_time(const std::chrono::seconds& time) const { _parent.write_subcommand(data_register::LOAD_DETECT_ACTIVE_TIME, static_cast<uint8_t>(time.count())); }
+        std::chrono::seconds get_load_detect_retry_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::LOAD_DETECT_RETRY_DELAY)); }
+        void set_load_detect_retry_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::LOAD_DETECT_RETRY_DELAY, static_cast<uint8_t>(delay.count())); }
+        std::chrono::hours get_load_detect_timeout() const { return std::chrono::hours(_parent.read_subcommand<uint16_t>(data_register::LOAD_DETECT_TIMEOUT)); }
+        void set_load_detect_timeout(const std::chrono::hours& timeout) const { _parent.write_subcommand(data_register::LOAD_DETECT_TIMEOUT, static_cast<uint16_t>(timeout.count())); }
 
-        int16_t getPrechargeTimeoutCurrentThreshold() const { return _parent.readSubcommand<int16_t>(data_register::PTO_CHARGE_THRESHOLD); }
-        void setPrechargeTimeoutCurrentThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::PTO_CHARGE_THRESHOLD, threshold, 0, 1000); }
-        std::chrono::seconds getPrechargeTimeoutDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint16_t>(data_register::PTO_DELAY)); }
-        void setPrechargeTimeoutDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::PTO_DELAY, static_cast<uint16_t>(delay.count())); }
-        float getPrechargeResetCharge() const;
-        void setPrechargeResetCharge(const float& charge) const;
+        int16_t get_precharge_timeout_current_threshold() const { return _parent.read_subcommand<int16_t>(data_register::PTO_CHARGE_THRESHOLD); }
+        void set_precharge_timeout_current_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::PTO_CHARGE_THRESHOLD, threshold, 0, 1000); }
+        std::chrono::seconds get_precharge_timeout_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint16_t>(data_register::PTO_DELAY)); }
+        void set_precharge_timeout_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::PTO_DELAY, static_cast<uint16_t>(delay.count())); }
+        float get_precharge_reset_charge() const;
+        void set_precharge_reset_charge(const float& charge) const;
 
-        const CellUnderVoltage underVoltage;
-        const CellOverVoltage overVoltage;
-        const OverCurrentCharge overCurrentCharge;
-        const OverCurrentDischarge overCurrentDischarge;
-        const ShortCircuit shortCircuit;
-        const OverTemperature overTemp;
-        const UnderTemperature underTemp;
+        const CellUnderVoltage under_voltage;
+        const CellOverVoltage over_voltage;
+        const OverCurrentCharge over_current_charge;
+        const OverCurrentDischarge over_current_discharge;
+        const ShortCircuit short_circuit;
+        const OverTemperature over_temp;
+        const UnderTemperature under_temp;
 
     protected:
         Protections(bq76942& parent)
-            : underVoltage(parent),
-              overVoltage(parent),
-              overCurrentCharge(parent),
-              overCurrentDischarge(parent),
-              shortCircuit(parent),
-              overTemp(parent),
-              underTemp(parent),
+            : under_voltage(parent),
+              over_voltage(parent),
+              over_current_charge(parent),
+              over_current_discharge(parent),
+              short_circuit(parent),
+              over_temp(parent),
+              under_temp(parent),
               _parent(parent)
         {
         }
@@ -2559,55 +2559,55 @@ public:
     class PermanentFail final
     {
     public:
-        int16_t getCopperDepositionThreshold() const { return _parent.readSubcommand<int16_t>(data_register::CU_DEP_THRESHOLD); }
-        void setCopperDepositionThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::CU_DEP_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
-        std::chrono::seconds getCopperDepositionDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::CU_DEP_DELAY)); }
-        void setCopperDepositionDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::CU_DEP_DELAY, static_cast<uint8_t>(delay.count())); }
+        int16_t get_copper_deposition_threshold() const { return _parent.read_subcommand<int16_t>(data_register::CU_DEP_THRESHOLD); }
+        void set_copper_deposition_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::CU_DEP_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
+        std::chrono::seconds get_copper_deposition_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::CU_DEP_DELAY)); }
+        void set_copper_deposition_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::CU_DEP_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int16_t getUnderVoltageThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SUV_THRESHOLD); }
-        void setUnderVoltageThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::SUV_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
-        std::chrono::seconds getUnderVoltageDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SUV_DELAY)); }
-        void setUnderVoltageDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SUV_DELAY, static_cast<uint8_t>(delay.count())); }
+        int16_t get_under_voltage_threshold() const { return _parent.read_subcommand<int16_t>(data_register::SUV_THRESHOLD); }
+        void set_under_voltage_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::SUV_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
+        std::chrono::seconds get_under_voltage_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::SUV_DELAY)); }
+        void set_under_voltage_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::SUV_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int16_t getOverVoltageThreshold() const { return _parent.readSubcommand<int16_t>(data_register::SOV_THRESHOLD); }
-        void setOverVoltageThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::SOV_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
-        std::chrono::seconds getOverVoltageDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SOV_DELAY)); }
-        void setOverVoltageDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SOV_DELAY, static_cast<uint8_t>(delay.count())); }
+        int16_t get_over_voltage_threshold() const { return _parent.read_subcommand<int16_t>(data_register::SOV_THRESHOLD); }
+        void set_over_voltage_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::SOV_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
+        std::chrono::seconds get_over_voltage_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::SOV_DELAY)); }
+        void set_over_voltage_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::SOV_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int16_t getStackDeltaThreshold() const { return _parent.readSubcommand<int16_t>(data_register::TOS_THRESHOLD); }
-        void setStackDeltaThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::TOS_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
-        std::chrono::seconds getStackDeltaDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::TOS_DELAY)); }
-        void setStackDeltaDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::TOS_DELAY, static_cast<uint8_t>(delay.count())); }
+        int16_t get_stack_delta_threshold() const { return _parent.read_subcommand<int16_t>(data_register::TOS_THRESHOLD); }
+        void set_stack_delta_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::TOS_THRESHOLD, threshold, 0, std::numeric_limits<int16_t>::max()); }
+        std::chrono::seconds get_stack_delta_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::TOS_DELAY)); }
+        void set_stack_delta_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::TOS_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        float getChargeCurrentThreshold() const;
-        void setChargeCurrentThreshold(const float& threshold) const;
+        float get_charge_current_threshold() const;
+        void set_charge_current_threshold(const float& threshold) const;
 
-        float getDischargeCurrentThreshold() const;
-        void setDischargeCurrentThreshold(const float& threshold) const;
+        float get_discharge_current_threshold() const;
+        void set_discharge_current_threshold(const float& threshold) const;
 
-        int8_t getOverTempCellThreshold() const { return _parent.readSubcommand<int8_t>(data_register::SOT_THRESHOLD); }
-        void setOverTempCellThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::SOT_THRESHOLD, threshold, -40, 120); }
-        std::chrono::seconds getOverTempCellDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SOT_DELAY)); }
-        void setOverTempCellDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SOT_DELAY, static_cast<uint8_t>(delay.count())); }
+        int8_t get_over_temp_cell_threshold() const { return _parent.read_subcommand<int8_t>(data_register::SOT_THRESHOLD); }
+        void set_over_temp_cell_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<int8_t>(data_register::SOT_THRESHOLD, threshold, -40, 120); }
+        std::chrono::seconds get_over_temp_cell_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::SOT_DELAY)); }
+        void set_over_temp_cell_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::SOT_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        int8_t getOverTempFetThreshold() const { return _parent.readSubcommand<int8_t>(data_register::SOTF_THRESHOLD); }
-        void setOverTempFetThreshold(const int8_t& threshold) const { _parent.writeSubcommandClamped<int8_t>(data_register::SOTF_THRESHOLD, threshold, 0, 150); }
-        std::chrono::seconds getOverTempFetDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::SOTF_DELAY)); }
-        void setOverTempFetDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::SOTF_DELAY, static_cast<uint8_t>(delay.count())); }
+        int8_t get_over_temp_fet_threshold() const { return _parent.read_subcommand<int8_t>(data_register::SOTF_THRESHOLD); }
+        void set_over_temp_fet_threshold(const int8_t& threshold) const { _parent.write_subcommand_clamped<int8_t>(data_register::SOTF_THRESHOLD, threshold, 0, 150); }
+        std::chrono::seconds get_over_temp_fet_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::SOTF_DELAY)); }
+        void set_over_temp_fet_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::SOTF_DELAY, static_cast<uint8_t>(delay.count())); }
 
         class VoltageImbalanceRelaxed final
         {
         public:
-            int16_t getCheckVoltage() const { return _parent.readSubcommand<int16_t>(data_register::VIMR_CHECK_VOLTAGE); }
-            void setCheckVoltage(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMR_CHECK_VOLTAGE, voltage, 0, 5500); }
-            int16_t getMaxRelaxCurrent() const { return _parent.readSubcommand<int16_t>(data_register::VIMR_MAX_RELAX_CURRENT); }
-            void setMaxRelaxCurrent(const int16_t& current) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMR_MAX_RELAX_CURRENT, current, 10, std::numeric_limits<int16_t>::max()); }
-            int16_t getThreshold() const { return _parent.readSubcommand<int16_t>(data_register::VIMR_THRESHOLD); }
-            void setThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMR_THRESHOLD, threshold, 0, 5500); }
-            std::chrono::seconds readActivationDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::VIMR_DELAY)); }
-            void setActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::VIMR_DELAY, static_cast<uint8_t>(delay.count())); }
-            std::chrono::seconds readRelaxMinDuration() const { return std::chrono::seconds(_parent.readSubcommand<uint16_t>(data_register::VIMR_RELAX_MIN_DURATION)); }
-            void setRelaxMinDuration(const std::chrono::seconds& duration) const { _parent.writeSubcommand(data_register::VIMR_RELAX_MIN_DURATION, static_cast<uint16_t>(duration.count())); }
+            int16_t get_check_voltage() const { return _parent.read_subcommand<int16_t>(data_register::VIMR_CHECK_VOLTAGE); }
+            void set_check_voltage(const int16_t& voltage) const { _parent.write_subcommand_clamped<int16_t>(data_register::VIMR_CHECK_VOLTAGE, voltage, 0, 5500); }
+            int16_t get_max_relax_current() const { return _parent.read_subcommand<int16_t>(data_register::VIMR_MAX_RELAX_CURRENT); }
+            void set_max_relax_current(const int16_t& current) const { _parent.write_subcommand_clamped<int16_t>(data_register::VIMR_MAX_RELAX_CURRENT, current, 10, std::numeric_limits<int16_t>::max()); }
+            int16_t get_threshold() const { return _parent.read_subcommand<int16_t>(data_register::VIMR_THRESHOLD); }
+            void set_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::VIMR_THRESHOLD, threshold, 0, 5500); }
+            std::chrono::seconds read_activation_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::VIMR_DELAY)); }
+            void set_activation_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::VIMR_DELAY, static_cast<uint8_t>(delay.count())); }
+            std::chrono::seconds read_relax_min_duration() const { return std::chrono::seconds(_parent.read_subcommand<uint16_t>(data_register::VIMR_RELAX_MIN_DURATION)); }
+            void set_relax_min_duration(const std::chrono::seconds& duration) const { _parent.write_subcommand(data_register::VIMR_RELAX_MIN_DURATION, static_cast<uint16_t>(duration.count())); }
 
         protected:
             VoltageImbalanceRelaxed(bq76942& parent)
@@ -2625,14 +2625,14 @@ public:
         class VoltageImbalanceActive final
         {
         public:
-            int16_t getCheckVoltage() const { return _parent.readSubcommand<int16_t>(data_register::VIMA_CHECK_VOLTAGE); }
-            void setCheckVoltage(const int16_t& voltage) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMA_CHECK_VOLTAGE, voltage, 0, 5500); }
-            int16_t getMinActiveCurrent() const { return _parent.readSubcommand<int16_t>(data_register::VIMA_MIN_ACTIVE_CURRENT); }
-            void setMinActiveCurrent(const int16_t& current) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMA_MIN_ACTIVE_CURRENT, current, 10, std::numeric_limits<int16_t>::max()); }
-            int16_t getThreshold() const { return _parent.readSubcommand<int16_t>(data_register::VIMA_THRESHOLD); }
-            void setThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::VIMA_THRESHOLD, threshold, 0, 5500); }
-            std::chrono::seconds readActivationDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::VIMA_DELAY)); }
-            void setActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::VIMA_DELAY, static_cast<uint8_t>(delay.count())); }
+            int16_t get_check_voltage() const { return _parent.read_subcommand<int16_t>(data_register::VIMA_CHECK_VOLTAGE); }
+            void set_check_voltage(const int16_t& voltage) const { _parent.write_subcommand_clamped<int16_t>(data_register::VIMA_CHECK_VOLTAGE, voltage, 0, 5500); }
+            int16_t get_min_active_current() const { return _parent.read_subcommand<int16_t>(data_register::VIMA_MIN_ACTIVE_CURRENT); }
+            void set_min_active_current(const int16_t& current) const { _parent.write_subcommand_clamped<int16_t>(data_register::VIMA_MIN_ACTIVE_CURRENT, current, 10, std::numeric_limits<int16_t>::max()); }
+            int16_t get_threshold() const { return _parent.read_subcommand<int16_t>(data_register::VIMA_THRESHOLD); }
+            void set_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::VIMA_THRESHOLD, threshold, 0, 5500); }
+            std::chrono::seconds read_activation_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::VIMA_DELAY)); }
+            void set_activation_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::VIMA_DELAY, static_cast<uint8_t>(delay.count())); }
 
         protected:
             VoltageImbalanceActive(bq76942& parent)
@@ -2650,10 +2650,10 @@ public:
         class ChargeFetFail final
         {
         public:
-            int16_t getThreshold() const { return _parent.readSubcommand<int16_t>(data_register::CFETF_OFF_THRESHOLD); }
-            void setThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::CFETF_OFF_THRESHOLD, threshold, 10, 5000); }
-            std::chrono::seconds readActivationDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::CFETF_OFF_DELAY)); }
-            void setActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::CFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
+            int16_t get_threshold() const { return _parent.read_subcommand<int16_t>(data_register::CFETF_OFF_THRESHOLD); }
+            void set_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::CFETF_OFF_THRESHOLD, threshold, 10, 5000); }
+            std::chrono::seconds read_activation_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::CFETF_OFF_DELAY)); }
+            void set_activation_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::CFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
 
         protected:
             ChargeFetFail(bq76942& parent)
@@ -2670,10 +2670,10 @@ public:
         class DischargeFetFail final
         {
         public:
-            int16_t getThreshold() const { return _parent.readSubcommand<int16_t>(data_register::DFETF_OFF_THRESHOLD); }
-            void setThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::DFETF_OFF_THRESHOLD, threshold, -5000, -10); }
-            std::chrono::seconds readActivationDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::DFETF_OFF_DELAY)); }
-            void setActivationDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::DFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
+            int16_t get_threshold() const { return _parent.read_subcommand<int16_t>(data_register::DFETF_OFF_THRESHOLD); }
+            void set_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::DFETF_OFF_THRESHOLD, threshold, -5000, -10); }
+            std::chrono::seconds read_activation_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::DFETF_OFF_DELAY)); }
+            void set_activation_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::DFETF_OFF_DELAY, static_cast<uint8_t>(delay.count())); }
 
         protected:
             DischargeFetFail(bq76942& parent)
@@ -2688,29 +2688,29 @@ public:
             bq76942& _parent;
         };
 
-        int16_t getVssfThreshold() const { return _parent.readSubcommand<int16_t>(data_register::VSSF_FAIL_THRESHOLD); }
-        void setVssfThreshold(const int16_t& threshold) const { _parent.writeSubcommandClamped<int16_t>(data_register::VSSF_FAIL_THRESHOLD, threshold, 1, std::numeric_limits<int16_t>::max()); };
-        std::chrono::seconds readVssfDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::VSSF_DELAY)); }
-        void setVssfDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::VSSF_DELAY, static_cast<uint8_t>(delay.count())); }
+        int16_t get_vssf_threshold() const { return _parent.read_subcommand<int16_t>(data_register::VSSF_FAIL_THRESHOLD); }
+        void set_vssf_threshold(const int16_t& threshold) const { _parent.write_subcommand_clamped<int16_t>(data_register::VSSF_FAIL_THRESHOLD, threshold, 1, std::numeric_limits<int16_t>::max()); };
+        std::chrono::seconds read_vssf_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::VSSF_DELAY)); }
+        void set_vssf_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::VSSF_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        std::chrono::seconds read2LvlDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::PF_2LVL_DELAY)); }
-        void set2LvlDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::PF_2LVL_DELAY, static_cast<uint8_t>(delay.count())); }
-        std::chrono::seconds readLfofDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::LFOF_DELAY)); }
-        void setLfofDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::LFOF_DELAY, static_cast<uint8_t>(delay.count())); }
-        std::chrono::seconds readHardwareMuxfDelay() const { return std::chrono::seconds(_parent.readSubcommand<uint8_t>(data_register::HWMX_DELAY)); }
-        void setHardwareMuxfDelay(const std::chrono::seconds& delay) const { _parent.writeSubcommand(data_register::HWMX_DELAY, static_cast<uint8_t>(delay.count())); }
+        std::chrono::seconds read_2_lvl_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::PF_2LVL_DELAY)); }
+        void set_2_lvl_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::PF_2LVL_DELAY, static_cast<uint8_t>(delay.count())); }
+        std::chrono::seconds read_lfof_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::LFOF_DELAY)); }
+        void set_lfof_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::LFOF_DELAY, static_cast<uint8_t>(delay.count())); }
+        std::chrono::seconds read_hardware_muxf_delay() const { return std::chrono::seconds(_parent.read_subcommand<uint8_t>(data_register::HWMX_DELAY)); }
+        void set_hardware_muxf_delay(const std::chrono::seconds& delay) const { _parent.write_subcommand(data_register::HWMX_DELAY, static_cast<uint8_t>(delay.count())); }
 
-        const VoltageImbalanceRelaxed voltageImbalanceRelaxed;
-        const VoltageImbalanceActive voltageImbalanceActive;
-        const ChargeFetFail chargeFetFail;
-        const DischargeFetFail dischargeFetFail;
+        const VoltageImbalanceRelaxed voltage_imbalance_relaxed;
+        const VoltageImbalanceActive voltage_imbalance_active;
+        const ChargeFetFail charge_fet_fail;
+        const DischargeFetFail discharge_fet_fail;
 
     protected:
         PermanentFail(bq76942& parent)
-            : voltageImbalanceRelaxed(parent),
-              voltageImbalanceActive(parent),
-              chargeFetFail(parent),
-              dischargeFetFail(parent),
+            : voltage_imbalance_relaxed(parent),
+              voltage_imbalance_active(parent),
+              charge_fet_fail(parent),
+              discharge_fet_fail(parent),
               _parent(parent)
         {
         }
@@ -2722,147 +2722,147 @@ public:
         bq76942& _parent;
     };
 
-    uint16_t getUnsealKey1() { return readSubcommand<uint16_t>(data_register::UNSEAL_KEY_STEP1); }
-    uint16_t getUnsealKey2() { return readSubcommand<uint16_t>(data_register::UNSEAL_KEY_STEP2); }
-    uint16_t getFullAccessKey1() { return readSubcommand<uint16_t>(data_register::FULL_ACCESS_KEY_STEP1); }
-    uint16_t getFullAccessKey2() { return readSubcommand<uint16_t>(data_register::FULL_ACCESS_KEY_STEP2); }
+    uint16_t get_unseal_key1() { return read_subcommand<uint16_t>(data_register::UNSEAL_KEY_STEP1); }
+    uint16_t get_unseal_key2() { return read_subcommand<uint16_t>(data_register::UNSEAL_KEY_STEP2); }
+    uint16_t get_full_access_key1() { return read_subcommand<uint16_t>(data_register::FULL_ACCESS_KEY_STEP1); }
+    uint16_t get_full_access_key2() { return read_subcommand<uint16_t>(data_register::FULL_ACCESS_KEY_STEP2); }
 
     const Calibration calibration{*this};
     const Settings settings{*this};
     const Power power{*this};
     const Protections protections{*this};
-    const PermanentFail permanentFail{*this};
+    const PermanentFail permanent_fail{*this};
 
-    std::vector<uint8_t> readDirect(const uint8_t registerAddr, const size_t bytes);
+    std::vector<uint8_t> read_direct(const uint8_t register_addr, const size_t bytes);
     template <typename T>
-    T readDirect(const uint8_t registerAddr)
+    T read_direct(const uint8_t register_addr)
     {
-        std::vector<uint8_t> dataBuf = readDirect(registerAddr, sizeof(T));
-        if (dataBuf.size() != sizeof(T))
+        std::vector<uint8_t> data_buf = read_direct(register_addr, sizeof(T));
+        if (data_buf.size() != sizeof(T))
         {
             throw std::runtime_error(std::format("Data size mismatch - got {} bytes, expected {} for type {}",
-                                                 dataBuf.size(), sizeof(T), demangle(typeid(T).name())));
+                                                 data_buf.size(), sizeof(T), demangle(typeid(T).name())));
         }
         // both the BMS and the ESP32 are little-endian so this works nicely
         // for all data types
         T data{};
-        std::copy_n(dataBuf.begin(), sizeof(T), reinterpret_cast<uint8_t*>(&data));
+        std::copy_n(data_buf.begin(), sizeof(T), reinterpret_cast<uint8_t*>(&data));
         return data;
     }
-    std::vector<uint8_t> readDirect(const direct_command registerAddr, const size_t bytes)
+    std::vector<uint8_t> read_direct(const direct_command register_addr, const size_t bytes)
     {
-        return readDirect(static_cast<uint8_t>(registerAddr), bytes);
+        return read_direct(static_cast<uint8_t>(register_addr), bytes);
     }
     template <typename T>
-    T readDirect(const direct_command registerAddr)
+    T read_direct(const direct_command register_addr)
     {
-        return readDirect<T>(static_cast<uint8_t>(registerAddr));
+        return read_direct<T>(static_cast<uint8_t>(register_addr));
     }
 
-    void writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>& data);
+    void write_direct(const uint8_t register_addr, const std::vector<uint8_t>& data);
     template <typename T>
-    void writeDirect(const uint8_t registerAddr, const T& data)
+    void write_direct(const uint8_t register_addr, const T& data)
     {
-        std::vector<uint8_t> dataBuf(sizeof(T));
-        std::copy_n(reinterpret_cast<const uint8_t*>(&data), sizeof(T), dataBuf.begin());
-        writeDirect(registerAddr, dataBuf);
+        std::vector<uint8_t> data_buf(sizeof(T));
+        std::copy_n(reinterpret_cast<const uint8_t*>(&data), sizeof(T), data_buf.begin());
+        write_direct(register_addr, data_buf);
     }
-    void writeDirect(const direct_command registerAddr, const std::vector<uint8_t>& data)
+    void write_direct(const direct_command register_addr, const std::vector<uint8_t>& data)
     {
-        writeDirect(static_cast<uint8_t>(registerAddr), data);
+        write_direct(static_cast<uint8_t>(register_addr), data);
     }
     template <typename T>
-    void writeDirect(const direct_command registerAddr, const T& data)
+    void write_direct(const direct_command register_addr, const T& data)
     {
-        writeDirect(static_cast<uint8_t>(registerAddr), data);
+        write_direct(static_cast<uint8_t>(register_addr), data);
     }
 
-    std::vector<uint8_t> readSubcommand(const uint16_t registerAddr);
+    std::vector<uint8_t> read_subcommand(const uint16_t register_addr);
     template <typename T>
-    T readSubcommand(const uint16_t registerAddr)
+    T read_subcommand(const uint16_t register_addr)
     {
-        std::vector<uint8_t> dataBuf = readSubcommand(registerAddr);
+        std::vector<uint8_t> data_buf = read_subcommand(register_addr);
         // can't check for size equality, since data register writes always return a 32 byte memory chunk
-        if (dataBuf.size() < sizeof(T))
+        if (data_buf.size() < sizeof(T))
         {
             throw std::runtime_error(std::format("Data size mismatch - got {} bytes, expected {} for type {}",
-                                                 dataBuf.size(), sizeof(T), demangle(typeid(T).name())));
+                                                 data_buf.size(), sizeof(T), demangle(typeid(T).name())));
         }
         T data{};
-        std::copy_n(dataBuf.begin(), sizeof(T), reinterpret_cast<uint8_t*>(&data));
+        std::copy_n(data_buf.begin(), sizeof(T), reinterpret_cast<uint8_t*>(&data));
         return data;
     }
-    std::vector<uint8_t> readSubcommand(const data_register registerAddr) { return readSubcommand(static_cast<uint16_t>(registerAddr)); }
+    std::vector<uint8_t> read_subcommand(const data_register register_addr) { return read_subcommand(static_cast<uint16_t>(register_addr)); }
     template <typename T>
-    T readSubcommand(const data_register registerAddr)
+    T read_subcommand(const data_register register_addr)
     {
-        return readSubcommand<T>(static_cast<uint16_t>(registerAddr));
+        return read_subcommand<T>(static_cast<uint16_t>(register_addr));
     }
-    std::vector<uint8_t> readSubcommand(const subcommand registerAddr) { return readSubcommand(static_cast<uint16_t>(registerAddr)); }
+    std::vector<uint8_t> read_subcommand(const subcommand register_addr) { return read_subcommand(static_cast<uint16_t>(register_addr)); }
     template <typename T>
-    T readSubcommand(const subcommand registerAddr)
+    T read_subcommand(const subcommand register_addr)
     {
-        return readSubcommand<T>(static_cast<uint16_t>(registerAddr));
+        return read_subcommand<T>(static_cast<uint16_t>(register_addr));
     }
 
     /// @brief Write a subcommand, with optional data, and wait for it to complete
-    /// @param registerAddr The subcommand address to write to
+    /// @param register_addr The subcommand address to write to
     /// @param data The data to write
-    void writeSubcommand(const uint16_t registerAddr, const std::vector<uint8_t>& data = {});
+    void write_subcommand(const uint16_t register_addr, const std::vector<uint8_t>& data = {});
     template <typename T>
-    void writeSubcommand(const uint16_t registerAddr, const T& data)
+    void write_subcommand(const uint16_t register_addr, const T& data)
     {
-        std::vector<uint8_t> dataBuf(sizeof(T));
-        std::copy_n(reinterpret_cast<const uint8_t*>(&data), sizeof(T), dataBuf.begin());
-        writeSubcommand(registerAddr, dataBuf);
+        std::vector<uint8_t> data_buf(sizeof(T));
+        std::copy_n(reinterpret_cast<const uint8_t*>(&data), sizeof(T), data_buf.begin());
+        write_subcommand(register_addr, data_buf);
     }
-    void writeSubcommand(const data_register registerAddr, const std::vector<uint8_t>& data = {}) { writeSubcommand(static_cast<uint16_t>(registerAddr), data); }
+    void write_subcommand(const data_register register_addr, const std::vector<uint8_t>& data = {}) { write_subcommand(static_cast<uint16_t>(register_addr), data); }
     template <typename T>
-    void writeSubcommand(const data_register registerAddr, const T& data)
+    void write_subcommand(const data_register register_addr, const T& data)
     {
-        writeSubcommand(static_cast<uint16_t>(registerAddr), data);
+        write_subcommand(static_cast<uint16_t>(register_addr), data);
     }
-    void writeSubcommand(const subcommand registerAddr, const std::vector<uint8_t>& data = {}) { writeSubcommand(static_cast<uint16_t>(registerAddr), data); }
+    void write_subcommand(const subcommand register_addr, const std::vector<uint8_t>& data = {}) { write_subcommand(static_cast<uint16_t>(register_addr), data); }
     template <typename T>
-    void writeSubcommand(const subcommand registerAddr, const T& data)
+    void write_subcommand(const subcommand register_addr, const T& data)
     {
-        writeSubcommand(static_cast<uint16_t>(registerAddr), data);
+        write_subcommand(static_cast<uint16_t>(register_addr), data);
     }
-    void writeSubcommand(const cmd_only_subcommand registerAddr) { writeSubcommand(static_cast<uint16_t>(registerAddr)); }
+    void write_subcommand(const cmd_only_subcommand register_addr) { write_subcommand(static_cast<uint16_t>(register_addr)); }
 
     template <typename T>
-    void writeSubcommandClamped(const data_register registerAddr, const T& data, const T& minimum, const T& maximum)
+    void write_subcommand_clamped(const data_register register_addr, const T& data, const T& minimum, const T& maximum)
     {
         static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
         if ((data < minimum) || (data > maximum))
         {
             throw std::out_of_range(std::format("Value {} is out of range for register {:#x} - must be between {} and {}",
-                                                data, static_cast<uint16_t>(registerAddr), minimum, maximum));
+                                                data, static_cast<uint16_t>(register_addr), minimum, maximum));
         }
-        writeSubcommand(registerAddr, data);
+        write_subcommand(register_addr, data);
     }
 
-    static float rawTempToCelsius(int16_t raw) { return kelvinToCelsius(raw / 10.0f); }
-    static float kelvinToCelsius(float kelvin) { return kelvin - 273.15f; }
-    static float getUserAmpsMultiplier(const da_configuration_t& config);
-    static int16_t getUserVoltsMultiplier(const da_configuration_t& config);
+    static float raw_temp_to_celsius(int16_t raw) { return kelvin_to_celsius(raw / 10.0f); }
+    static float kelvin_to_celsius(float kelvin) { return kelvin - 273.15f; }
+    static float get_user_amps_multiplier(const da_configuration_t& config);
+    static int16_t get_user_volts_multiplier(const da_configuration_t& config);
 
 private:
     uint8_t _address;
 
-    std::vector<uint8_t> _readDirect(const uint8_t registerAddr, const size_t bytes);
-    void _writeDirect(const uint8_t registerAddr, const std::vector<uint8_t>& data);
-    void _selectSubcommand(const uint16_t registerAddr, bool waitForCompletion = true);
-    std::vector<uint8_t> _readSubcommand(const uint16_t registerAddr);
-    void _writeSubcommand(const uint16_t registerAddr, const std::vector<uint8_t>& data);
-    static uint8_t _calculateChecksum(uint16_t registerAddr, const std::vector<uint8_t>& data);
+    std::vector<uint8_t> _read_direct(const uint8_t register_addr, const size_t bytes);
+    void _write_direct(const uint8_t register_addr, const std::vector<uint8_t>& data);
+    void _select_subcommand(const uint16_t register_addr, bool wait_for_completion = true);
+    std::vector<uint8_t> _read_subcommand(const uint16_t register_addr);
+    void _write_subcommand(const uint16_t register_addr, const std::vector<uint8_t>& data);
+    static uint8_t _calculate_checksum(uint16_t register_addr, const std::vector<uint8_t>& data);
 
-    void _queueTransmit(const uint8_t& data);
-    void _queueTransmit(const std::vector<uint8_t>& data);
+    void _queue_transmit(const uint8_t& data);
+    void _queue_transmit(const std::vector<uint8_t>& data);
 
     /// @brief Temporary buffer for storing data so CRCs can be calculated
-    std::vector<uint8_t> _dataBuf;
+    std::vector<uint8_t> _data_buf;
 
-    std::vector<uint8_t> _transmitQueue;
-    std::vector<uint8_t> _receiveQueue;
+    std::vector<uint8_t> _transmit_queue;
+    std::vector<uint8_t> _receive_queue;
 };

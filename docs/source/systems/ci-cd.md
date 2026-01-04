@@ -23,7 +23,7 @@ Since this project is built with Nix, all dependencies fixed and known ahead-of-
 ### Continuous Deployment
 
 Continuous Deployment is exactly what it sounds like - automatically _deploying_ a project to production after the continuous _delivery_ process of the pipeline finishes its build.
-For this project, we aren't employing continuous deployment for anything but the docs website - see the [documentation architecture](project:/architecture/documentation.md) for details on that.
+For this project, we aren't employing continuous deployment for anything but the docs website - see the [documentation system](project:/systems/documentation.md) for details on that.
 
 ## Execution
 

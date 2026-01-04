@@ -17,13 +17,13 @@ RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
         _can_interface.emplace(RawCanInterface(this->declare_parameter("can_bus", "can0")));
         _packet_manager.emplace(_can_interface.value());
 
-        _packet_manager->setCallback(addressing::filter_t(power::SYSTEM_ID, power::control::SUBSYSTEM_ID,
-                                                          static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
-                                     {.dataCallback =
-                                          [this](const hi_can::Packet& packet)
-                                      {
-                                          this->_can_to_ros(packet);
-                                      }});
+        _packet_manager->set_callback(addressing::filter_t(power::SYSTEM_ID, power::control::SUBSYSTEM_ID,
+                                                           static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
+                                      {.data_callback =
+                                           [this](const hi_can::Packet& packet)
+                                       {
+                                           this->_can_to_ros(packet);
+                                       }});
     }
     catch (const std::exception& e)
     {
@@ -43,7 +43,7 @@ void RcbDriver::_call_receive()
 {
     try
     {
-        _packet_manager->handleReceive();
+        _packet_manager->handle_receive();
     }
     catch (const std::exception& e)
     {
@@ -66,12 +66,12 @@ void RcbDriver::_can_to_ros(const hi_can::Packet& packet)
             static_cast<uint8_t>(device::ROVER_CONTROL_BOARD),
             static_cast<uint8_t>(id),
             static_cast<uint8_t>(power_bus::parameter::POWER_STATUS));
-        if (packet.getAddress() == static_cast<int>(target_address))
+        if (packet.get_address() == static_cast<int>(target_address))
         {
-            const auto& raw_data = packet.getData();
+            const auto& raw_data = packet.get_data();
 
             parameters::legacy::power::control::power_bus::status_t data;
-            data.deserializeData(raw_data);
+            data.deserialize_data(raw_data);
 
             auto message = std_msgs::msg::String();
             nlohmann::json bus_data = {{"name", name}, {"current", data.current}, {"voltage", data.voltage}, {"status", static_cast<int>(data.status)}};
@@ -107,7 +107,7 @@ void RcbDriver::_ros_to_can(std_msgs::msg::String::UniquePtr msg)
                                 static_cast<uint8_t>(power::control::power_bus::parameter::CONTROL_IMMEDIATE));
 
         _can_interface->transmit(Packet(static_cast<addressing::flagged_address_t>(address),
-                                        immediate_control_t(_immediate_control_t{data["on"].get<std::string>()[0] == '1', data["clear"].get<std::string>()[0] == '1', 0}).serializeData()));
+                                        immediate_control_t(_immediate_control_t{data["on"].get<std::string>()[0] == '1', data["clear"].get<std::string>()[0] == '1', 0}).serialize_data()));
     }
     catch (const std::exception& e)
     {

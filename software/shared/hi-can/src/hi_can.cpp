@@ -7,24 +7,24 @@
 using namespace hi_can;
 using namespace hi_can::addressing;
 
-void CanInterface::receiveAll(bool block)
+void CanInterface::receive_all(bool block)
 {
     receive(block);
     while (const auto packet = receive(false));
 }
 
-FilteredCanInterface& FilteredCanInterface::addFilter(const filter_t& filter)
+FilteredCanInterface& FilteredCanInterface::add_filter(const filter_t& filter)
 {
     _filters.emplace(filter);
     return *this;
 }
-FilteredCanInterface& FilteredCanInterface::removeFilter(const filter_t& filter)
+FilteredCanInterface& FilteredCanInterface::remove_filter(const filter_t& filter)
 {
     _filters.erase(filter);
     return *this;
 }
 
-std::optional<filter_t> FilteredCanInterface::findMatchingFilter(const flagged_address_t& address) const
+std::optional<filter_t> FilteredCanInterface::find_matching_filter(const flagged_address_t& address) const
 {
     // because the filters are sorted by most specific mask first, even when multiple filters match,
     // it should generally match the most specific one first
@@ -33,18 +33,18 @@ std::optional<filter_t> FilteredCanInterface::findMatchingFilter(const flagged_a
             return filter;
     return std::nullopt;
 }
-bool FilteredCanInterface::addressMatchesFilters(const flagged_address_t& address) const
+bool FilteredCanInterface::address_matches_filters(const flagged_address_t& address) const
 {
-    return _filters.empty() || findMatchingFilter(address).has_value();
+    return _filters.empty() || find_matching_filter(address).has_value();
 }
 
 std::optional<Packet> SoftwareFilteredCanInterface::receive(bool blocking)
 {
     const auto packet = _interface->receive(blocking);
-    if (!packet || !addressMatchesFilters(packet->getAddress()))
+    if (!packet || !address_matches_filters(packet->get_address()))
         return std::nullopt;
 
-    if (_receiveCallback)
-        _receiveCallback(*packet);
+    if (_receive_callback)
+        _receive_callback(*packet);
     return packet;
 }
