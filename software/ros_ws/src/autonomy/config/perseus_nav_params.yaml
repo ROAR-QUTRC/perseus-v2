@@ -84,7 +84,7 @@ bt_navigator:
     plugin_lib_names:
       # customised BT nodes
       - perseus_bt_nodes
-      # - horizon_bridge_bt
+      - horizon_bridge_bt
 
 docking_server:
   ros__parameters:
