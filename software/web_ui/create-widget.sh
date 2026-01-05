@@ -28,7 +28,7 @@ fi
 cat >"$WIDGET_PATH" <<EOF
 <script lang="ts" module>
 	// This is to expose the widget settings to the panel. Code in here will only run once when the widget is first loaded.
-	import type { WidgetSettingsType } from '\$lib/scripts/state.svelte';
+	import type { WidgetGroupType, WidgetSettingsType } from '\$lib/scripts/state.svelte';
 
 	export const name = 'New Widget';
 	// These properties are optional
@@ -43,7 +43,7 @@ cat >"$WIDGET_PATH" <<EOF
 
 <script lang="ts">
 	// import { getRosConnection } from '\$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
-	// import ROSLIB from 'roslib';
+	// import * as ROSLIB from 'roslib';
 
 	// Widget logic goes here
 </script>

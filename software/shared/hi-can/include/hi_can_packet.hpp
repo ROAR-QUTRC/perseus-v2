@@ -23,8 +23,8 @@ namespace hi_can
         /// @brief Construct a packet from an address and data array
         /// @param address The address of the packet
         /// @param data The packet data
-        /// @param dataLen The length of the data array
-        Packet(const addressing::flagged_address_t& address, const uint8_t data[] = nullptr, size_t dataLen = 0);
+        /// @param data_len The length of the data array
+        Packet(const addressing::flagged_address_t& address, const uint8_t data[] = nullptr, size_t data_len = 0);
         /// @brief Construct a packet from an address and data vector
         /// @param address The address of the packet
         /// @param data The data vector
@@ -36,15 +36,15 @@ namespace hi_can
         template <typename T>
         Packet(const addressing::flagged_address_t& address, const T& data)
         {
-            setAddress(address);
-            setData(data);
+            set_address(address);
+            set_data(data);
         }
 
         /// @brief Copies a packet's data into a buffer
         /// @tparam T The type of the buffer to copy it into
         /// @return The buffer with the data copied into it, or std::nullopt if the buffer does not match the packet size
         template <typename T>
-        std::optional<T> getData() const
+        std::optional<T> get_data() const
         {
             if (_data.size() != sizeof(T))
                 return std::nullopt;
@@ -55,58 +55,58 @@ namespace hi_can
         }
         /// @brief Get the packet data
         /// @return The packet data
-        constexpr const auto& getData() const { return _data; }
+        constexpr const auto& get_data() const { return _data; }
 
         /// @brief Set the packet data
         /// @param data The data to copy into the packet
-        /// @param dataLen The length of the data array
+        /// @param data_len The length of the data array
         /// @exception std::invalid_argument If the data is too large to fit in the packet
-        void setData(const uint8_t data[], size_t dataLen);
+        void set_data(const uint8_t data[], size_t data_len);
         /// @brief Set the packet data
         /// @param data The data to copy into the packet
         /// @exception std::invalid_argument If the data is too large to fit in the packet
-        void setData(const std::vector<uint8_t>& data);
+        void set_data(const std::vector<uint8_t>& data);
         /// @brief Set the packet data
         /// @tparam T The type of the data
         /// @param data The data to copy into the packet
         /// @exception std::invalid_argument If the data is too large to fit in the packet
         template <typename T>
-        void setData(const T& data)
+        void set_data(const T& data)
         {
-            setData(reinterpret_cast<const uint8_t* const>(&data), sizeof(T));
+            set_data(reinterpret_cast<const uint8_t* const>(&data), sizeof(T));
         }
 
         /// @brief Get the length of the data in the packet
         /// @return The data length
-        constexpr auto getDataLen() const { return _data.size(); }
+        constexpr auto get_data_len() const { return _data.size(); }
 
         /// @brief Get the packet address
         /// @return The packet address
-        constexpr auto getAddress() const { return _address; }
+        constexpr auto get_address() const { return _address; }
         /// @brief Set the packet address
         /// @param address The address to set
-        void setAddress(const addressing::flagged_address_t& address);
+        void set_address(const addressing::flagged_address_t& address);
 
         /// @brief Get whether the packet address is RTR
         /// @return Whether the address is RTR
-        constexpr bool getIsRTR() const { return _address.isRtr; }
+        constexpr bool get_is_rtr() const { return _address.is_rtr; }
         /// @brief Set whether the packet address is RTR
-        /// @param isRTR Whether the address is RTR
-        void setIsRTR(const bool& isRTR) { _address.isRtr = isRTR; }
+        /// @param is_rtr Whether the address is RTR
+        void set_is_rtr(const bool& is_rtr) { _address.is_rtr = is_rtr; }
 
         /// @brief Get whether the packet address is an error
         /// @return Whether the address is an error
-        constexpr bool getIsError() const { return _address.isError; }
+        constexpr bool get_is_error() const { return _address.is_error; }
         /// @brief Set whether the packet address is an error
-        /// @param isError Whether the address is an error
-        void setIsError(const bool& isError) { _address.isError = isError; }
+        /// @param is_error Whether the address is an error
+        void set_is_error(const bool& is_error) { _address.is_error = is_error; }
 
         /// @brief Get whether the packet address is extended
         /// @return Whether the address is extended
-        constexpr bool getIsExtended() const { return _address.isExtended; }
+        constexpr bool get_is_extended() const { return _address.is_extended; }
         /// @brief Set whether the packet address is extended
-        /// @param isExtended Whether the address is extended
-        void setIsExtended(const bool& isExtended) { _address.isExtended = isExtended; }
+        /// @param is_extended Whether the address is extended
+        void set_is_extended(const bool& is_extended) { _address.is_extended = is_extended; }
 
         // implement comparison functions for STL containers
         /// @brief Compare two packets (for sorting). Sorts only by @ref addressing::flagged_address_t "address"
@@ -149,11 +149,11 @@ namespace hi_can
         struct callback_config_t
         {
             /// @brief The callback to be called when data is received
-            packet_callback_t dataCallback = nullptr;
+            packet_callback_t data_callback = nullptr;
             /// @brief The callback to be called when a timeout occurs
-            std::function<void(void)> timeoutCallback = nullptr;
+            std::function<void(void)> timeout_callback = nullptr;
             /// @brief The callback to be called when data is received after a timeout
-            packet_callback_t timeoutRecoveryCallback = nullptr;
+            packet_callback_t timeout_recovery_callback = nullptr;
             /// @brief The timeout duration. Zero means no timeout
             std::chrono::steady_clock::duration timeout = std::chrono::steady_clock::duration::zero();
         };
@@ -167,74 +167,74 @@ namespace hi_can
             /// @brief The interval between transmissions - zero means transmit as often as possible
             std::chrono::steady_clock::duration interval = std::chrono::steady_clock::duration::zero();
             /// @brief Whether or not to transmit the packet immediately. If false, will transmit after the interval
-            bool shouldTransmitImmediately = false;
+            bool should_transmit_immediately = false;
         };
 
         /// @brief Constructs a new @ref PacketManager using the given interface for I/O
         /// @param interface The interface to use for I/O
         PacketManager(FilteredCanInterface& interface);
 
-        /// @brief Handles all data reception and transmission - just calls @ref handleReceive and @ref handleTransmit
-        /// @param shouldBlock Whether or not to block until a packet is received
-        /// @param shouldForceTransmission Force transmission of all packets, even if they are not due
-        void handle(bool shouldBlock = false, bool shouldForceTransmission = false)
+        /// @brief Handles all data reception and transmission - just calls @ref handle_receive and @ref handle_transmit
+        /// @param should_block Whether or not to block until a packet is received
+        /// @param should_force_transmission Force transmission of all packets, even if they are not due
+        void handle(bool should_block = false, bool should_force_transmission = false)
         {
-            handleReceive(shouldBlock);
-            handleTransmit(shouldForceTransmission);
+            handle_receive(should_block);
+            handle_transmit(should_force_transmission);
         }
         /// @brief Handles all data reception and associated callbacks
-        /// @param shouldBlock Whether or not to block until a packet is received
-        void handleReceive(bool shouldBlock = false);
+        /// @param should_block Whether or not to block until a packet is received
+        void handle_receive(bool should_block = false);
         /// @brief Handles all data transmissions
-        /// @param shouldForceTransmission Force transmission of all packets, even if they are not due
-        void handleTransmit(bool shouldForceTransmission = false);
+        /// @param should_force_transmission Force transmission of all packets, even if they are not due
+        void handle_transmit(bool should_force_transmission = false);
 
         /// @brief Add a parameter group to the packet manager
         /// @param group Group to add
-        void addGroup(const parameters::ParameterGroup& group);
+        void add_group(const parameters::ParameterGroup& group);
 
         /// @brief Remove a parameter group from the packet manager
         /// @param group Group to remove
-        void removeGroup(const parameters::ParameterGroup& group);
+        void remove_group(const parameters::ParameterGroup& group);
 
         /// @brief Sets a data receive callback which will be called for packets received on the interface matching the filter
         /// @param filter The filter to match packets against
         /// @param config The configuration for the callback
         /// @note The filter will be added to the interface's receive filter list
-        void setCallback(const addressing::filter_t& filter, const callback_config_t& config);
+        void set_callback(const addressing::filter_t& filter, const callback_config_t& config);
         /// @brief Get the callback configuration for a specific filter
         /// @param filter The filter to get the configuration for
         /// @return The callback configuration if found, otherwise std::nullopt
-        std::optional<callback_config_t> getCallback(const addressing::filter_t& filter);
+        std::optional<callback_config_t> get_callback(const addressing::filter_t& filter);
         /// @brief Remove a callback for a specific filter
         /// @param filter The filter to remove the callback for
         /// @note The filter will be removed from the interface's receive filter list
-        void removeCallback(const addressing::filter_t& filter);
+        void remove_callback(const addressing::filter_t& filter);
 
         /// @brief Set a transmit configuration
         /// @param config The configuration to set
-        void setTransmissionConfig(const addressing::flagged_address_t& address, const transmission_config_t& config);
+        void set_transmission_config(const addressing::flagged_address_t& address, const transmission_config_t& config);
         /// @brief Overwrite the transmission data generator for an address
         /// @param address The address to set the generator for
         /// @param generator The transmission data generator
         /// @note If there is no static transmit configuration for the packet's address, nothing will happen
-        void setTransmissionGenerator(const addressing::flagged_address_t& address, const data_generator_t& generator);
+        void set_transmission_generator(const addressing::flagged_address_t& address, const data_generator_t& generator);
         /// @brief Set the transmission interval for an address
         /// @param address The address to set the interval for
         /// @param interval New transmission interval
         /// @note If there is no transmit configuration for the address, nothing will happen
-        void setTransmissionInterval(const addressing::flagged_address_t& address, const std::chrono::steady_clock::duration& interval);
+        void set_transmission_interval(const addressing::flagged_address_t& address, const std::chrono::steady_clock::duration& interval);
         /// @brief Get the transmit configuration for an address
         /// @param address The address to get the configuration for
         /// @return The transmit configuration if found, otherwise std::nullopt
-        std::optional<transmission_config_t> getTransmissionConfig(const addressing::flagged_address_t& address);
+        std::optional<transmission_config_t> get_transmission_config(const addressing::flagged_address_t& address);
         /// @brief Remove a transmit configuration
         /// @param address The address to remove the configuration for
-        void removeTransmission(const addressing::flagged_address_t& address);
+        void remove_transmission(const addressing::flagged_address_t& address);
 
         /// @brief Get the underlying interface used for I/O
         /// @return The interface
-        FilteredCanInterface& getInterface() const { return _interface; }
+        FilteredCanInterface& get_interface() const { return _interface; }
 
     private:
         /// @brief Struct storing all the data we need to track to handle RX callbacks
@@ -243,11 +243,11 @@ namespace hi_can
             /// @brief The callback config
             callback_config_t config{};
             /// @brief The last packet received
-            Packet lastPacket{};
+            Packet last_packet{};
             /// @brief Whether or not it's currently timed out
-            bool hasTimedOut = false;
+            bool has_timed_out = false;
             /// @brief The last time a packet was received
-            std::chrono::steady_clock::time_point lastReceived{};
+            std::chrono::steady_clock::time_point last_received{};
         };
         /// @brief Struct storing all the data we need to track to handle transmissions
         struct transmission_data_t
@@ -255,11 +255,11 @@ namespace hi_can
             /// @brief The transmit configuration
             transmission_config_t config{};
             /// @brief The last time the data was transmitted
-            std::chrono::steady_clock::time_point lastTransmitted{};
+            std::chrono::steady_clock::time_point last_transmitted{};
         };
         /// @brief Handle an incoming packet and call the correct callbacks
         /// @param packet The packet to handle
-        void _handleReceivedPacket(const Packet& packet);
+        void _handle_received_packet(const Packet& packet);
         /// @brief The underlying I/O interface
         FilteredCanInterface& _interface;
         /// @brief Map of filters to their callback data

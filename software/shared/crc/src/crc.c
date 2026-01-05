@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <crc.h>
 #include <stdbool.h>
 
-static const uint8_t crc8Lookup0x07[] = {
+static const uint8_t crc8_lookup_0x07[] = {
     0x00,
     0x07,
     0x0e,
@@ -282,7 +282,7 @@ static const uint8_t crc8Lookup0x07[] = {
     0xf4,
     0xf3,
 };
-static const uint8_t crc8Lookup0x31[] = {
+static const uint8_t crc8_lookup_0x31[] = {
     0x00,
     0x31,
     0x62,
@@ -540,7 +540,7 @@ static const uint8_t crc8Lookup0x31[] = {
     0x9D,
     0xAC,
 };
-static const uint8_t crc8LookupReflected0x31[] = {
+static const uint8_t crc8_lookup_reflected_0x31[] = {
     0x00,
     0x5e,
     0xbc,
@@ -799,7 +799,7 @@ static const uint8_t crc8LookupReflected0x31[] = {
     0x35,
 };
 
-static const uint16_t crc16Lookup0x1021[] = {
+static const uint16_t crc16_lookup_0x1021[] = {
     0x0000,
     0x1021,
     0x2042,
@@ -1057,7 +1057,7 @@ static const uint16_t crc16Lookup0x1021[] = {
     0x0ed1,
     0x1ef0,
 };
-static const uint16_t crc16LookupReflected0x8005[] = {
+static const uint16_t crc16_lookup_reflected_0x8005[] = {
     0x0000,
     0xc0c1,
     0xc181,
@@ -1316,7 +1316,7 @@ static const uint16_t crc16LookupReflected0x8005[] = {
     0x4040,
 };
 
-static const uint32_t crc32Lookup0x04C11DB7[] = {
+static const uint32_t crc32_lookup_0x04C11DB7[] = {
     0x00000000,
     0x04c11db7,
     0x09823b6e,
@@ -1574,7 +1574,7 @@ static const uint32_t crc32Lookup0x04C11DB7[] = {
     0xb5365d03,
     0xb1f740b4,
 };
-static const uint32_t crc32LookupReflected0x04C11DB7[] = {
+static const uint32_t crc32_lookup_reflected_0x04C11DB7[] = {
     0x00000000,
     0x77073096,
     0xee0e612c,
@@ -1832,7 +1832,7 @@ static const uint32_t crc32LookupReflected0x04C11DB7[] = {
     0x5a05df1b,
     0x2d02ef8d,
 };
-static const uint32_t crc32CLookup[] = {
+static const uint32_t crc32_C_lookup[] = {
     0x00000000,
     0xf26b8303,
     0xe13b70f7,
@@ -2091,7 +2091,7 @@ static const uint32_t crc32CLookup[] = {
     0xad7d5351,
 };
 
-static uint8_t crc8Generic(const uint8_t* data, const size_t len, const uint8_t* lookup, const uint8_t init, const bool invert_result)
+static uint8_t crc8_generic(const uint8_t* data, const size_t len, const uint8_t* lookup, const uint8_t init, const bool invert_result)
 {
     uint8_t crc = init;
 
@@ -2104,18 +2104,18 @@ static uint8_t crc8Generic(const uint8_t* data, const size_t len, const uint8_t*
 }
 uint8_t crc8(const uint8_t* data, const size_t len)
 {
-    return crc8Generic(data, len, crc8Lookup0x07, 0x00, false);
+    return crc8_generic(data, len, crc8_lookup_0x07, 0x00, false);
 }
-uint8_t crc8Maxim(const uint8_t* data, const size_t len)
+uint8_t crc8_maxim(const uint8_t* data, const size_t len)
 {
-    return crc8Generic(data, len, crc8LookupReflected0x31, 0x00, false);
+    return crc8_generic(data, len, crc8_lookup_reflected_0x31, 0x00, false);
 }
-uint8_t crc8Sht75(const uint8_t* data, const size_t len)
+uint8_t crc8_sht75(const uint8_t* data, const size_t len)
 {
-    return crc8Generic(data, len, crc8Lookup0x31, 0x00, false);
+    return crc8_generic(data, len, crc8_lookup_0x31, 0x00, false);
 }
 
-static uint16_t crc16Generic(const uint8_t* data, const size_t len, const uint16_t* lookup, const uint16_t init, const bool invert_result)
+static uint16_t crc16_generic(const uint8_t* data, const size_t len, const uint16_t* lookup, const uint16_t init, const bool invert_result)
 {
     uint16_t crc = init;
 
@@ -2127,7 +2127,7 @@ static uint16_t crc16Generic(const uint8_t* data, const size_t len, const uint16
     return crc;
 }
 
-static uint16_t crc16ReflectedGeneric(const uint8_t* data, const size_t len, const uint16_t* lookup, const uint16_t init, const bool invert_result)
+static uint16_t crc16_reflected_generic(const uint8_t* data, const size_t len, const uint16_t* lookup, const uint16_t init, const bool invert_result)
 {
     uint16_t crc = init;
 
@@ -2141,26 +2141,26 @@ static uint16_t crc16ReflectedGeneric(const uint8_t* data, const size_t len, con
 
 uint16_t crc16(const uint8_t* data, const size_t len)
 {
-    return crc16ReflectedGeneric(data, len, crc16LookupReflected0x8005, 0x0000, false);
+    return crc16_reflected_generic(data, len, crc16_lookup_reflected_0x8005, 0x0000, false);
 }
-uint16_t crc16Ccitt(const uint8_t* data, const size_t len)
+uint16_t crc16_ccitt(const uint8_t* data, const size_t len)
 {
-    return crc16Generic(data, len, crc16Lookup0x1021, 0x1D0F, false);
+    return crc16_generic(data, len, crc16_lookup_0x1021, 0x1D0F, false);
 }
-uint16_t crc16Modbus(const uint8_t* data, const size_t len)
+uint16_t crc16_modbus(const uint8_t* data, const size_t len)
 {
-    return crc16ReflectedGeneric(data, len, crc16LookupReflected0x8005, 0xFFFF, false);
+    return crc16_reflected_generic(data, len, crc16_lookup_reflected_0x8005, 0xFFFF, false);
 }
-uint16_t crc16Usb(const uint8_t* data, const size_t len)
+uint16_t crc16_usb(const uint8_t* data, const size_t len)
 {
-    return crc16ReflectedGeneric(data, len, crc16LookupReflected0x8005, 0xFFFF, true);
+    return crc16_reflected_generic(data, len, crc16_lookup_reflected_0x8005, 0xFFFF, true);
 }
-uint16_t crc16Xmodem(const uint8_t* data, const size_t len)
+uint16_t crc16_xmodem(const uint8_t* data, const size_t len)
 {
-    return crc16Generic(data, len, crc16Lookup0x1021, 0x0000, false);
+    return crc16_generic(data, len, crc16_lookup_0x1021, 0x0000, false);
 }
 
-static uint32_t crc32Generic(const uint8_t* data, const size_t len, const uint32_t* lookup, const uint32_t init, const bool invert_result)
+static uint32_t crc32_generic(const uint8_t* data, const size_t len, const uint32_t* lookup, const uint32_t init, const bool invert_result)
 {
     uint32_t crc = init;
 
@@ -2171,7 +2171,7 @@ static uint32_t crc32Generic(const uint8_t* data, const size_t len, const uint32
         crc = ~crc;
     return crc;
 }
-static uint32_t crc32ReflectedGeneric(const uint8_t* data, const size_t len, const uint32_t* lookup, const uint32_t init, const bool invert_result)
+static uint32_t crc32_reflected_generic(const uint8_t* data, const size_t len, const uint32_t* lookup, const uint32_t init, const bool invert_result)
 {
     uint32_t crc = init;
 
@@ -2185,21 +2185,21 @@ static uint32_t crc32ReflectedGeneric(const uint8_t* data, const size_t len, con
 
 uint32_t crc32(const uint8_t* data, const size_t len)
 {
-    return crc32ReflectedGeneric(data, len, crc32LookupReflected0x04C11DB7, 0xFFFFFFFF, true);
+    return crc32_reflected_generic(data, len, crc32_lookup_reflected_0x04C11DB7, 0xFFFFFFFF, true);
 }
-uint32_t crc32Bzip2(const uint8_t* data, const size_t len)
+uint32_t crc32_bzip2(const uint8_t* data, const size_t len)
 {
-    return crc32Generic(data, len, crc32Lookup0x04C11DB7, 0xFFFFFFFF, true);
+    return crc32_generic(data, len, crc32_lookup_0x04C11DB7, 0xFFFFFFFF, true);
 }
-uint32_t crc32Mpeg2(const uint8_t* data, const size_t len)
+uint32_t crc32_mpeg2(const uint8_t* data, const size_t len)
 {
-    return crc32Generic(data, len, crc32Lookup0x04C11DB7, 0xFFFFFFFF, false);
+    return crc32_generic(data, len, crc32_lookup_0x04C11DB7, 0xFFFFFFFF, false);
 }
-uint32_t crc32Sata(const uint8_t* data, const size_t len)
+uint32_t crc32_sata(const uint8_t* data, const size_t len)
 {
-    return crc32Generic(data, len, crc32Lookup0x04C11DB7, 0x52325032, false);
+    return crc32_generic(data, len, crc32_lookup_0x04C11DB7, 0x52325032, false);
 }
-uint32_t crc32C(const uint8_t* data, const size_t len)
+uint32_t crc32_C(const uint8_t* data, const size_t len)
 {
-    return crc32ReflectedGeneric(data, len, crc32CLookup, 0xFFFFFFFF, true);
+    return crc32_reflected_generic(data, len, crc32_C_lookup, 0xFFFFFFFF, true);
 }

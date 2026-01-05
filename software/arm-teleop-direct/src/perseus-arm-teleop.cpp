@@ -83,7 +83,7 @@ ST3215ServoReader::ST3215ServoReader(const std::string& port, unsigned int baud_
         {
             try
             {
-                writeControlRegister(id, register_addr::ACCELERATION, acceleration);
+                write_control_register(id, register_addr::ACCELERATION, acceleration);
                 std::this_thread::sleep_for(timing::MIN_RESPONSE_TIME);  // Wait between writes
             }
             catch (const std::exception& e)
@@ -115,13 +115,13 @@ ST3215ServoReader::~ST3215ServoReader()
     }
 }
 
-uint16_t ST3215ServoReader::readPosition(uint8_t servo_id)
+uint16_t ST3215ServoReader::read_position(uint8_t servo_id)
 {
     for (int retry = 0; retry < communication::MAX_RETRIES; ++retry)
     {
         try
         {
-            return _readPositionOnce(servo_id, timing::DEFAULT_TIMEOUT);
+            return _read_position_once(servo_id, timing::DEFAULT_TIMEOUT);
         }
         catch (const std::runtime_error& e)
         {
@@ -140,10 +140,10 @@ uint16_t ST3215ServoReader::readPosition(uint8_t servo_id)
 #include <fcntl.h>
 #include <termios.h>
 
-uint16_t ST3215ServoReader::_readPositionOnce(uint8_t servo_id, const std::chrono::milliseconds& timeout)
+uint16_t ST3215ServoReader::_read_position_once(uint8_t servo_id, const std::chrono::milliseconds& timeout)
 {
     // Create read position command packet
-    std::vector<uint8_t> command = _createReadCommand(servo_id, register_addr::PRESENT_POSITION, 2);
+    std::vector<uint8_t> command = _create_read_command(servo_id, register_addr::PRESENT_POSITION, 2);
 
     // Clear any existing data and wait for port to clear
     ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);
@@ -298,7 +298,7 @@ uint16_t ST3215ServoReader::_readPositionOnce(uint8_t servo_id, const std::chron
            (static_cast<uint16_t>(response_buffer[HEADER_SIZE + 2]) << 8);
 }
 
-std::vector<uint8_t> ST3215ServoReader::_createReadCommand(uint8_t id, uint8_t address, uint8_t size)
+std::vector<uint8_t> ST3215ServoReader::_create_read_command(uint8_t id, uint8_t address, uint8_t size)
 {
     std::vector<uint8_t> command = {
         protocol::HEADER1, protocol::HEADER2,  // Header
@@ -321,7 +321,7 @@ std::vector<uint8_t> ST3215ServoReader::_createReadCommand(uint8_t id, uint8_t a
     return command;
 }
 
-std::vector<uint8_t> ST3215ServoReader::_createWriteCommand(uint8_t id, uint8_t address, const std::vector<uint8_t>& data)
+std::vector<uint8_t> ST3215ServoReader::_create_write_command(uint8_t id, uint8_t address, const std::vector<uint8_t>& data)
 {
     std::vector<uint8_t> command;
     command.reserve(data.size() + 6);  // Pre-allocate space
@@ -348,7 +348,7 @@ std::vector<uint8_t> ST3215ServoReader::_createWriteCommand(uint8_t id, uint8_t 
     return command;
 }
 
-void ST3215ServoReader::writePosition(uint8_t servo_id, uint16_t position)
+void ST3215ServoReader::write_position(uint8_t servo_id, uint16_t position)
 {
     // Clamp position to valid range
     position = std::min(position, limits::MAX_POSITION);
@@ -359,7 +359,7 @@ void ST3215ServoReader::writePosition(uint8_t servo_id, uint16_t position)
         static_cast<uint8_t>((position >> 8) & 0xFF)};
 
     // Create write command packet
-    std::vector<uint8_t> command = _createWriteCommand(servo_id, register_addr::GOAL_POSITION, data);
+    std::vector<uint8_t> command = _create_write_command(servo_id, register_addr::GOAL_POSITION, data);
 
     // Send command
     boost::system::error_code write_ec;
@@ -418,10 +418,10 @@ void ST3215ServoReader::writePosition(uint8_t servo_id, uint16_t position)
     }
 }
 
-void ST3215ServoReader::writeControlRegister(uint8_t servo_id, uint8_t address, uint8_t value)
+void ST3215ServoReader::write_control_register(uint8_t servo_id, uint8_t address, uint8_t value)
 {
     std::vector<uint8_t> data = {value};
-    std::vector<uint8_t> command = _createWriteCommand(servo_id, address, data);
+    std::vector<uint8_t> command = _create_write_command(servo_id, address, data);
 
     boost::system::error_code write_ec;
     size_t written = boost::asio::write(_serial_port, buffer(command), write_ec);
@@ -452,14 +452,14 @@ void ST3215ServoReader::writeControlRegister(uint8_t servo_id, uint8_t address, 
     }
 }
 
-int16_t ST3215ServoReader::readLoad(uint8_t servo_id)
+int16_t ST3215ServoReader::read_load(uint8_t servo_id)
 {
     for (int retry = 0; retry < communication::MAX_RETRIES; ++retry)
     {
         try
         {
             // Create read load command packet
-            std::vector<uint8_t> command = _createReadCommand(servo_id, register_addr::PRESENT_LOAD, 2);
+            std::vector<uint8_t> command = _create_read_command(servo_id, register_addr::PRESENT_LOAD, 2);
 
             // Clear any existing data
             ::tcflush(static_cast<int>(_serial_port.native_handle()), TCIOFLUSH);

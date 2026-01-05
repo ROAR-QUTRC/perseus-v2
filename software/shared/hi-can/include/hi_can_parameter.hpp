@@ -17,20 +17,20 @@
  *
  * Defined as a macro because we need the using declaration to bring the constructor into scope
  */
-#define HI_CAN_PARAM_DECLARE_SCALED_INT32_T(_className, _scalingFactor) \
-    struct _className : public scaled_int32_t<_scalingFactor>           \
-    {                                                                   \
-        using scaled_int32_t::scaled_int32_t;                           \
+#define HI_CAN_PARAM_DECLARE_SCALED_INT32_T(_class_name, _scaling_factor) \
+    struct _class_name : public scaled_int32_t<_scaling_factor>           \
+    {                                                                     \
+        using scaled_int32_t::scaled_int32_t;                             \
     };
 /**
  * @brief Declare a scaled int16_t type with a scaling factor
  *
  * Defined as a macro because we need the using declaration to bring the constructor into scope
  */
-#define HI_CAN_PARAM_DECLARE_SCALED_INT16_T(_className, _scalingFactor) \
-    struct _className : public scaled_int16_t<_scalingFactor>           \
-    {                                                                   \
-        using scaled_int16_t::scaled_int16_t;                           \
+#define HI_CAN_PARAM_DECLARE_SCALED_INT16_T(_class_name, _scaling_factor) \
+    struct _class_name : public scaled_int16_t<_scaling_factor>           \
+    {                                                                     \
+        using scaled_int16_t::scaled_int16_t;                             \
     };
 
 namespace hi_can::parameters
@@ -58,13 +58,13 @@ namespace hi_can::parameters
             transmission_configs_t;
         /// @brief Get the @ref PacketManager::callback_config_t "callbacks" for the data the group manages
         /// @return Group callback configs
-        virtual const callback_configs_t& getCallbacks() const { return _callbacks; }
+        virtual const callback_configs_t& get_callbacks() const { return _callbacks; }
         /// @brief Get the @ref PacketManager::transmission_config_t "transmissions" the group manages
         /// @return Group transmission configs
-        virtual const transmission_configs_t& getTransmissions() const { return _transmissions; }
+        virtual const transmission_configs_t& get_transmissions() const { return _transmissions; }
         /// @brief Get a list of @ref Packet "Packets" to send upon adding the group
         /// @return Packets to transmit
-        virtual std::vector<Packet> getStartupTransmissions() const { return {}; }
+        virtual std::vector<Packet> get_startup_transmissions() const { return {}; }
 
     protected:
         callback_configs_t _callbacks{};
@@ -73,81 +73,81 @@ namespace hi_can::parameters
     class Serializable
     {
     public:
-        virtual std::vector<uint8_t> serializeData() = 0;
+        virtual std::vector<uint8_t> serialize_data() = 0;
     };
     class Deserializable
     {
     public:
-        virtual void deserializeData(const std::vector<uint8_t>& serializedData) = 0;
+        virtual void deserialize_data(const std::vector<uint8_t>& serialized_data) = 0;
     };
     class BidirectionalSerializable : public Serializable, public Deserializable
     {
     };
-    template <double scalingFactor>
+    template <double scaling_factor>
     struct scaled_int32_t : public BidirectionalSerializable
     {
         double value = 0;
 
         scaled_int32_t() = default;
-        scaled_int32_t(const std::vector<uint8_t>& serializedData)
+        scaled_int32_t(const std::vector<uint8_t>& serialized_data)
         {
-            deserializeData(serializedData);
+            deserialize_data(serialized_data);
         }
-        void deserializeData(const std::vector<uint8_t>& serializedData) override
+        void deserialize_data(const std::vector<uint8_t>& serialized_data) override
         {
-            int32_t rawData;
-            if (serializedData.size() != sizeof(rawData))
+            int32_t raw_data;
+            if (serialized_data.size() != sizeof(raw_data))
                 throw std::invalid_argument("Data size does not match");
-            std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(&rawData));
-            value = static_cast<int32_t>(ntohl(rawData)) / scalingFactor;
+            std::copy(serialized_data.begin(), serialized_data.end(), reinterpret_cast<uint8_t* const>(&raw_data));
+            value = static_cast<int32_t>(ntohl(raw_data)) / scaling_factor;
         }
-        std::vector<uint8_t> serializeData() override
+        std::vector<uint8_t> serialize_data() override
         {
-            int32_t rawData = htonl(static_cast<int32_t>(round(value * scalingFactor)));
-            std::vector<uint8_t> dataBuf;
-            dataBuf.resize(sizeof(rawData));
-            std::copy_n(reinterpret_cast<uint8_t* const>(&rawData), sizeof(rawData), dataBuf.begin());
-            return dataBuf;
+            int32_t raw_data = htonl(static_cast<int32_t>(round(value * scaling_factor)));
+            std::vector<uint8_t> data_buf;
+            data_buf.resize(sizeof(raw_data));
+            std::copy_n(reinterpret_cast<uint8_t* const>(&raw_data), sizeof(raw_data), data_buf.begin());
+            return data_buf;
         }
     };
-    template <double scalingFactor>
+    template <double scaling_factor>
     struct scaled_int16_t : public BidirectionalSerializable
     {
         double value = 0;
 
         scaled_int16_t() = default;
-        scaled_int16_t(double value)
-            : value(value)
+        scaled_int16_t(double _value)
+            : value(_value)
         {
         }
-        scaled_int16_t(const std::vector<uint8_t>& serializedData)
+        scaled_int16_t(const std::vector<uint8_t>& serialized_data)
         {
-            deserializeData(serializedData);
+            deserialize_data(serialized_data);
         }
 
-        void deserializeData(const std::vector<uint8_t>& serializedData) override
+        void deserialize_data(const std::vector<uint8_t>& serialized_data) override
         {
-            int16_t rawData;
-            if (serializedData.size() != sizeof(rawData))
+            int16_t raw_data;
+            if (serialized_data.size() != sizeof(raw_data))
                 throw std::invalid_argument("Data size does not match");
-            std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(&rawData));
-            value = static_cast<int16_t>(ntohs(rawData)) / scalingFactor;
+            std::copy(serialized_data.begin(), serialized_data.end(), reinterpret_cast<uint8_t* const>(&raw_data));
+            value = static_cast<int16_t>(ntohs(raw_data)) / scaling_factor;
         }
-        std::vector<uint8_t> serializeData() override
+        std::vector<uint8_t> serialize_data() override
         {
-            int16_t rawData = htons(static_cast<int16_t>(round(value * scalingFactor)));
-            std::vector<uint8_t> dataBuf;
-            dataBuf.resize(sizeof(rawData));
-            std::copy_n(reinterpret_cast<uint8_t* const>(&rawData), sizeof(rawData), dataBuf.begin());
-            return dataBuf;
+            int16_t raw_data = htons(static_cast<int16_t>(round(value * scaling_factor)));
+            std::vector<uint8_t> data_buf;
+            data_buf.resize(sizeof(raw_data));
+            std::copy_n(reinterpret_cast<uint8_t* const>(&raw_data), sizeof(raw_data), data_buf.begin());
+            return data_buf;
         }
     };
     template <typename T>
     struct wrapped_value_t
     {
         wrapped_value_t() = default;
-        wrapped_value_t(T value)
-            : value(value)
+        wrapped_value_t(T _value)
+            : value(_value)
         {
         }
         T value{};
@@ -162,22 +162,22 @@ namespace hi_can::parameters
         {
             static_cast<T&>(*this) = value;
         }
-        SimpleSerializable(const std::vector<uint8_t>& serializedData)
+        SimpleSerializable(const std::vector<uint8_t>& serialized_data)
         {
-            deserializeData(serializedData);
+            deserialize_data(serialized_data);
         }
-        void deserializeData(const std::vector<uint8_t>& serializedData) override
+        void deserialize_data(const std::vector<uint8_t>& serialized_data) override
         {
-            if (serializedData.size() != sizeof(T))
+            if (serialized_data.size() != sizeof(T))
                 throw std::invalid_argument("Data size does not match");
-            std::copy(serializedData.begin(), serializedData.end(), reinterpret_cast<uint8_t* const>(static_cast<T*>(this)));
+            std::copy(serialized_data.begin(), serialized_data.end(), reinterpret_cast<uint8_t* const>(static_cast<T*>(this)));
         }
-        std::vector<uint8_t> serializeData() override
+        std::vector<uint8_t> serialize_data() override
         {
-            std::vector<uint8_t> dataBuf;
-            dataBuf.resize(sizeof(T));
-            std::copy_n(reinterpret_cast<uint8_t* const>(static_cast<T*>(this)), sizeof(T), dataBuf.begin());
-            return dataBuf;
+            std::vector<uint8_t> data_buf;
+            data_buf.resize(sizeof(T));
+            std::copy_n(reinterpret_cast<uint8_t* const>(static_cast<T*>(this)), sizeof(T), data_buf.begin());
+            return data_buf;
         }
     };
 
@@ -201,44 +201,44 @@ namespace hi_can::parameters
             {
                 double rpm = 0;
                 double current = 0;
-                double dutyCycle = 0;
+                double duty_cycle = 0;
 
-                void deserializeData(const std::vector<uint8_t>& serializedData) override;
-                std::vector<uint8_t> serializeData() override;
+                void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
+                std::vector<uint8_t> serialize_data() override;
             };
             struct status_2_t : public BidirectionalSerializable
             {
                 double ah = 0;
-                double ahCharge = 0;
+                double ah_charge = 0;
 
-                void deserializeData(const std::vector<uint8_t>& serializedData) override;
-                std::vector<uint8_t> serializeData() override;
+                void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
+                std::vector<uint8_t> serialize_data() override;
             };
             struct status_3_t : public BidirectionalSerializable
             {
                 double wh = 0;
-                double whCharge = 0;
+                double wh_charge = 0;
 
-                void deserializeData(const std::vector<uint8_t>& serializedData) override;
-                std::vector<uint8_t> serializeData() override;
+                void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
+                std::vector<uint8_t> serialize_data() override;
             };
             struct status_4_t : public BidirectionalSerializable
             {
-                double tempFet = 0;
-                double tempMotor = 0;
-                double currentIn = 0;
-                double pidPos = 0;
+                double temp_fet = 0;
+                double temp_motor = 0;
+                double current_in = 0;
+                double pid_pos = 0;
 
-                void deserializeData(const std::vector<uint8_t>& serializedData) override;
-                std::vector<uint8_t> serializeData() override;
+                void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
+                std::vector<uint8_t> serialize_data() override;
             };
             struct status_5_t : public BidirectionalSerializable
             {
                 double tachometer = 0;
-                double voltsIn = 0;
+                double volts_in = 0;
 
-                void deserializeData(const std::vector<uint8_t>& serializedData) override;
-                std::vector<uint8_t> serializeData() override;
+                void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
+                std::vector<uint8_t> serialize_data() override;
             };
             struct status_6_t : public BidirectionalSerializable
             {
@@ -247,28 +247,28 @@ namespace hi_can::parameters
                 double adc3 = 0;
                 double ppm = 0;
 
-                void deserializeData(const std::vector<uint8_t>& serializedData) override;
-                std::vector<uint8_t> serializeData() override;
+                void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
+                std::vector<uint8_t> serialize_data() override;
             };
 
             class VescParameterGroup : public ParameterGroup
             {
             public:
-                VescParameterGroup(uint8_t vescId, std::chrono::steady_clock::duration transmissionInterval = std::chrono::steady_clock::duration::zero());
+                VescParameterGroup(uint8_t vesc_id, std::chrono::steady_clock::duration transmission_interval = std::chrono::steady_clock::duration::zero());
 
-                auto& getStatus1() { return _status1; }
-                auto& getStatus2() { return _status2; }
-                auto& getStatus3() { return _status3; }
-                auto& getStatus4() { return _status4; }
-                auto& getStatus5() { return _status5; }
-                auto& getStatus6() { return _status6; }
+                auto& get_status1() { return _status1; }
+                auto& get_status2() { return _status2; }
+                auto& get_status3() { return _status3; }
+                auto& get_status4() { return _status4; }
+                auto& get_status5() { return _status5; }
+                auto& get_status6() { return _status6; }
 
-                auto& getSetRpm() { return _setRpm; }
+                auto& get_set_rpm() { return _set_rpm; }
 
             private:
-                uint8_t _vescId = 0;
+                uint8_t _vesc_id = 0;
 
-                set_rpm_t _setRpm;
+                set_rpm_t _set_rpm;
 
                 status_1_t _status1;
                 status_2_t _status2;
@@ -390,13 +390,13 @@ namespace hi_can::parameters
                 struct _status_t
                 {
                     bool ready = false;
-                    int16_t realSpeed = 0;
-                    int16_t realCurrent = 0;
+                    int16_t real_speed = 0;
+                    int16_t real_current = 0;
                 };
                 struct _limits_t
                 {
-                    int16_t maxCurrent = 0;
-                    int16_t rampSpeed = 0;
+                    int16_t max_current = 0;
+                    int16_t ramp_speed = 0;
                 };
 #pragma pack(pop)
                 typedef SimpleSerializable<_speed_t> speed_t;
@@ -405,19 +405,19 @@ namespace hi_can::parameters
                 class EscParameterGroup : public ParameterGroup
                 {
                 public:
-                    EscParameterGroup(const addressing::legacy::address_t& deviceAddress);
+                    EscParameterGroup(const addressing::legacy::address_t& device_address);
 
                     EscParameterGroup(const EscParameterGroup&);
 
-                    std::vector<Packet> getStartupTransmissions() const override;
+                    std::vector<Packet> get_startup_transmissions() const override;
 
-                    auto& getSpeed() { return _speed; }
-                    auto& getStatus() { return _status; }
-                    auto& getPosition() { return _position; }
-                    auto& getLimits() { return _position; }
+                    auto& get_speed() { return _speed; }
+                    auto& get_status() { return _status; }
+                    auto& get_position() { return _position; }
+                    auto& get_limits() { return _position; }
 
                 private:
-                    addressing::legacy::address_t _deviceAddress;
+                    addressing::legacy::address_t _device_address;
                     speed_t _speed{};
                     status_t _status{};
                     int64_t _position{};
@@ -479,12 +479,12 @@ namespace hi_can::parameters
                     class PowerBusParameterGroup : public ParameterGroup
                     {
                     public:
-                        PowerBusParameterGroup(const addressing::legacy::address_t& deviceAddress, addressing::legacy::power::control::rcb::groups bus);
+                        PowerBusParameterGroup(const addressing::legacy::address_t& device_address, addressing::legacy::power::control::rcb::groups bus);
 
-                        auto& getStatus() { return _status; }
+                        auto& get_status() { return _status; }
 
                     private:
-                        addressing::legacy::address_t _deviceAddress;
+                        addressing::legacy::address_t _device_address;
                         status_t _status{};
                     };
                 }
@@ -498,9 +498,9 @@ namespace hi_can::parameters
                 struct _motor_speed_t
                 {
                     _motor_speed_t() = default;
-                    _motor_speed_t(bool enable, int16_t speed)
-                        : enable(enable),
-                          speed(speed)
+                    _motor_speed_t(bool _enable, int16_t _speed)
+                        : enable(_enable),
+                          speed(_speed)
                     {
                     }
                     bool enable = 0;
