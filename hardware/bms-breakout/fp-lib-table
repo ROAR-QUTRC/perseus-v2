@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "smolbrain")(type "KiCad")(uri "/home/brock/perseus-v2/hardware/post-landing-breakout/smolbrain.pretty")(options "")(descr ""))
+)
