@@ -1,6 +1,5 @@
 <script lang="ts" module>
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
-
 	// Internal identifiers follow: American spelling + snake_case + minimal abbreviations.
 	const widget_name = 'Arena Map Editor';
 	const widget_description = 'Create the YAML file that Perseus will use to navigate';
@@ -22,10 +21,13 @@
 </script>
 
 <script lang="ts">
-	import ROSLIB from 'roslib';
-	import { getRosConnection as get_ros_connection } from '$lib/scripts/ros-bridge.svelte';
+	import * as ROSLIB from 'roslib';
+	import { getRosConnection as get_ros_connection } from '$lib/scripts/rosBridge.svelte';
+	import Button from "$lib/components/ui/button/button.svelte";
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 
 	type Mode = 'waypoint' | 'border';
+	type ros_string_message = { data: string };
 
 	type WaypointRow = {
 		id: string;
@@ -35,6 +37,7 @@
 		click_y: number;
 		centroid_x: number;
 		centroid_y: number;
+		yaw: number;
 	};
 
 	let image_element: HTMLImageElement | null = null;
@@ -67,8 +70,9 @@
 	let border_contour = $state<number[][]>([]);
 
 	// ROS request/response plumbing
-	let request_topic: ROSLIB.Topic | null = null;
-	let response_topic: ROSLIB.Topic | null = null;
+	let request_topic: ROSLIB.Topic<ros_string_message> | null = null;
+	let response_topic: ROSLIB.Topic<ros_string_message> | null = null;
+
 	const pending_requests = new Map<
 		string,
 		{ resolve: (response: any) => void; timeout_handle: any }
@@ -112,17 +116,16 @@
 
 			pending_requests.set(id, { resolve, timeout_handle });
 
-			request_topic!.publish(
-				new ROSLIB.Message({
-					data: JSON.stringify({ id, ...payload })
-				})
-			);
+			request_topic!.publish({
+				data: JSON.stringify({ id, ...payload })
+			});
+
 		});
 	}
 
 	function next_waypoint_name() {
 		const waypoint_number = waypoints.length + 1;
-		return `wp_${String(waypoint_number).padStart(3, '0')}`;
+		return `WP${String(waypoint_number)}`;
 	}
 
 	function add_waypoint_from_response(response: any) {
@@ -156,7 +159,8 @@
 				click_x,
 				click_y,
 				centroid_x,
-				centroid_y
+				centroid_y,
+				yaw:0
 			}
 		];
 	}
@@ -178,10 +182,10 @@
 		lines.push('waypoints:');
 
 		for (const waypoint of waypoints) {
-			lines.push(`  - name: ${waypoint.name}`);
-			lines.push(`    color: "${waypoint.hexadecimal_color}"`);
-			lines.push(`    x: ${waypoint.centroid_x}`);
-			lines.push(`    y: ${waypoint.centroid_y}`);
+			lines.push(`- name: ${waypoint.name}`);
+			lines.push(`x: ${waypoint.centroid_x}`);
+			lines.push(`y: ${waypoint.centroid_y}`);
+			lines.push(`yaw: ${waypoint.yaw}`)
 		}
 
 		return lines.join('\n');
@@ -297,146 +301,136 @@
 		};
 	});
 </script>
+<ScrollArea orientation="vertical" class="relative flex h-full w-full">
+	<div class="wrap">
+		<div class="topbar">
+			<div class="status">Status: {status_message}</div>
 
-<div class="wrap">
-	<div class="topbar">
-		<div class="status">Status: {status_message}</div>
+			<div class="controls flex ">
+				<button class:active={mode === 'waypoint'} on:click={() => (mode = 'waypoint')}>
+					Waypoint mode
+				</button>
+				<button class:active={mode === 'border'} on:click={() => (mode = 'border')}>
+					Border mode
+				</button>
 
-		<div class="controls">
-			<button class:active={mode === 'waypoint'} type="button" on:click={() => (mode = 'waypoint')}>
-				Waypoint mode
-			</button>
-			<button class:active={mode === 'border'} type="button" on:click={() => (mode = 'border')}>
-				Border mode
-			</button>
+				<button type="button" class="danger" on:click={clear_waypoints} disabled={waypoints.length === 0}>
+					Clear table
+				</button>
 
-			<button type="button" class="danger" on:click={clear_waypoints} disabled={waypoints.length === 0}>
-				Clear table
-			</button>
-
-			<button type="button" on:click={copy_yaml} disabled={waypoints.length === 0}>
-				Copy YAML
-			</button>
-		</div>
-	</div>
-
-	<div class="row">
-		<div class="frame">
-			<img
-				bind:this={image_element}
-				src={map_image_url}
-				width="700"
-				alt="map"
-				class="map"
-				on:click={on_map_click}
-				on:load={() => {
-					if (!image_element) return;
-					svg_view_box = `0 0 ${image_element.naturalWidth} ${image_element.naturalHeight}`;
-				}}
-			/>
+				<button type="button" on:click={copy_yaml} disabled={waypoints.length === 0}>
+					Copy YAML
+				</button>
+			</div>
 		</div>
 
-		<!-- Preview -->
-		<svg class="preview" viewBox={svg_view_box} preserveAspectRatio="none" aria-hidden="true">
-			{#if border_contour.length > 0}
-				<polygon
-					points={border_contour.map(([x, y]) => `${x},${y}`).join(' ')}
-					fill="none"
-					stroke="lime"
-					stroke-width="2"
-					opacity="0.9"
+		<div class="row">
+			<div class="frame">
+				<img
+					bind:this={image_element}
+					src={map_image_url}
+					width="700"
+					alt="map"
+					class="map"
+					on:click={on_map_click}
+					on:load={() => {
+						if (!image_element) return;
+						svg_view_box = `0 0 ${image_element.naturalWidth} ${image_element.naturalHeight}`;
+					}}
 				/>
-			{/if}
+			</div>
 
-			{#each waypoints as waypoint (waypoint.id)}
-				<circle cx={waypoint.centroid_x} cy={waypoint.centroid_y} r="6" fill="red" />
-			{/each}
-
-			{#each waypoints as waypoint (waypoint.id)}
-				<circle cx={waypoint.click_x} cy={waypoint.click_y} r="3.5" fill="yellow" opacity="0.9" />
-			{/each}
-		</svg>
-	</div>
-
-	<!-- Big table -->
-	<div class="tableWrap">
-		<table class="tbl">
-			<thead>
-				<tr>
-					<th>#</th>
-					<th>Name</th>
-					<th>Hex</th>
-					<th>Click X</th>
-					<th>Click Y</th>
-					<th>Centroid X</th>
-					<th>Centroid Y</th>
-					<th></th>
-				</tr>
-			</thead>
-			<tbody>
-				{#if waypoints.length === 0}
-					<tr>
-						<td colspan="8" class="empty">No waypoints yet — switch to Waypoint mode and click markers.</td>
-					</tr>
-				{:else}
-					{#each waypoints as waypoint, i (waypoint.id)}
-						<tr>
-							<td>{i + 1}</td>
-							<td>
-								<input
-									class="nameInput"
-									value={waypoint.name}
-									on:input={(event) =>
-										update_name(waypoint.id, (event.target as HTMLInputElement).value)}
-								/>
-							</td>
-							<td>
-								<span class="chip" style={`background:${waypoint.hexadecimal_color || '#eee'}`}>
-									{waypoint.hexadecimal_color}
-								</span>
-							</td>
-							<td>{waypoint.click_x}</td>
-							<td>{waypoint.click_y}</td>
-							<td>{waypoint.centroid_x}</td>
-							<td>{waypoint.centroid_y}</td>
-							<td class="right">
-								<button type="button" class="danger" on:click={() => delete_waypoint(waypoint.id)}>
-									Delete
-								</button>
-							</td>
-						</tr>
-					{/each}
+			<!-- Preview -->
+			<svg class="preview" viewBox={svg_view_box} preserveAspectRatio="none" aria-hidden="true">
+				{#if border_contour.length > 0}
+					<polygon
+						points={border_contour.map(([x, y]) => `${x},${y}`).join(' ')}
+						fill="none"
+						stroke="lime"
+						stroke-width="2"
+						opacity="0.9"
+					/>
 				{/if}
-			</tbody>
-		</table>
-	</div>
 
-	<!-- YAML preview -->
-	<div class="yamlWrap">
-		<div class="yamlTitle">YAML preview</div>
-		<textarea class="yamlBox" readonly value={build_yaml()}></textarea>
-	</div>
-</div>
+				{#each waypoints as waypoint (waypoint.id)}
+					<circle cx={waypoint.centroid_x} cy={waypoint.centroid_y} r="6" fill="red" />
+				{/each}
 
+				{#each waypoints as waypoint (waypoint.id)}
+					<circle cx={waypoint.click_x} cy={waypoint.click_y} r="3.5" fill="yellow" opacity="0.9" />
+				{/each}
+			</svg>
+		</div>
+
+		<!-- Big table -->
+		<div class="tableWrap">
+			<table class="tbl">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Name</th>
+						<th>Hex</th>
+						<th>Waypoint X</th>
+						<th>Waypoint Y</th>
+						<th>Yaw</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					{#if waypoints.length === 0}
+						<tr>
+							<td colspan="8" class="empty">No waypoints yet — switch to Waypoint mode and click markers.</td>
+						</tr>
+					{:else}
+						{#each waypoints as waypoint, i (waypoint.id)}
+							<tr>
+								<td>{i + 1}</td>
+								<td>
+									<input
+										class="nameInput"
+										value={waypoint.name}
+										on:input={(event) =>
+											update_name(waypoint.id, (event.target as HTMLInputElement).value)}
+									/>
+								</td>
+								<td>
+									<span class="chip" style={`background:${waypoint.hexadecimal_color || '#eee'}`}>
+										{waypoint.hexadecimal_color}
+									</span>
+								</td>
+								<td>{waypoint.centroid_x}</td>
+								<td>{waypoint.centroid_y}</td>
+								<td><input type="number" bind:value={waypoint.yaw}></td>
+								<td class="right">
+									<button type="button" class="danger" on:click={() => delete_waypoint(waypoint.id)}>
+										Delete
+									</button>
+								</td>
+							</tr>
+						{/each}
+					{/if}
+				</tbody>
+			</table>
+		</div>
+
+
+		<!-- YAML preview -->
+		<div class="yamlWrap">
+			<div class="yamlTitle">YAML preview</div>
+			<textarea class="yamlBox" readonly value={build_yaml()}></textarea>
+		</div>
+	</div>
+</ScrollArea>
 <style>
-	.wrap {
-		padding: 8px;
-	}
 
 	.topbar {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
 		margin-bottom: 12px;
-	}
-	.status {
-		font-size: 14px;
 	}
 	.controls {
 		display: flex;
 		gap: 8px;
-		align-items: center;
-		flex-wrap: wrap;
 	}
 
 	button {
@@ -504,12 +498,7 @@
 		top: 0;
 		background: #0b0b0b;
 	}
-	.right {
-		text-align: right;
-	}
-	.empty {
-		opacity: 0.8;
-	}
+
 
 	.nameInput {
 		width: 140px;
