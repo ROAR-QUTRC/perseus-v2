@@ -9,6 +9,7 @@ idf_component_register(
   REQUIRES
   board-support
   driver)
+target_compile_options(${COMPONENT_LIB} PRIVATE -std=gnu++20)
 # # set(BUILD_SHARED_LIBS OFF) #
 # add_subdirectory(../../../../software/shared/hi-can hi-can) #
 # target_link_libraries(${COMPONENT_LIB} INTERFACE hi-can) # To build a

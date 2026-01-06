@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <format>
 #include <stdexcept>
 
 #include "sdkconfig.h"

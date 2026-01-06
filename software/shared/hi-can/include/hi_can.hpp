@@ -65,25 +65,25 @@ namespace hi_can
         std::set<addressing::filter_t> _filters;
     };
 
-    /// @brief A variant of @ref FilteredCanInterface implemented in software
-    class SoftwareFilteredCanInterface : public FilteredCanInterface
-    {
-    public:
-        /// @brief Constructs a new @ref SoftwareFilteredCanInterface using the given interface for I/O
-        /// @param interface The interface to use for I/O
-        SoftwareFilteredCanInterface(const std::shared_ptr<CanInterface> interface)
-            : _interface(interface)
-        {
-        }
+    // /// @brief A variant of @ref FilteredCanInterface implemented in software
+    // class SoftwareFilteredCanInterface : public FilteredCanInterface
+    // {
+    // public:
+    //     /// @brief Constructs a new @ref SoftwareFilteredCanInterface using the given interface for I/O
+    //     /// @param interface The interface to use for I/O
+    //     SoftwareFilteredCanInterface(const std::shared_ptr<CanInterface> interface)
+    //         : _interface(interface)
+    //     {
+    //     }
 
-        // note: docs inherited from base class
-        void transmit(const Packet& packet) override { _interface->transmit(packet); }
-        std::optional<Packet> receive(bool blocking = false) override;
+    //     // note: docs inherited from base class
+    //     void transmit(const Packet& packet) override { _interface->transmit(packet); }
+    //     std::optional<Packet> receive(bool blocking = false) override;
 
-        // note: no need to override set_receive_callback since that's based on the receive method
+    //     // note: no need to override set_receive_callback since that's based on the receive method
 
-    private:
-        /// @brief The interface to use for I/O
-        const std::shared_ptr<CanInterface> _interface;
-    };
+    // private:
+    //     /// @brief The interface to use for I/O
+    //     const std::shared_ptr<CanInterface> _interface;
+    // };
 };

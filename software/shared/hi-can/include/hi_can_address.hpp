@@ -324,8 +324,7 @@ namespace hi_can
                     BATTERY_4 = 3,
                     BATTERY_5 = 4,
                     BATTERY_6 = 5,
-                    BATTERY_7 = 6,
-                    BATTERY_8 = 7,
+                    BMS = 6,
                 };
             }
             /// @brief Namespace containing all addresses in the power distribution subsystem
