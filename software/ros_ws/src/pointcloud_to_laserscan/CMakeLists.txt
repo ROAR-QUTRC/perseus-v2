@@ -54,14 +54,6 @@ rclcpp_components_register_node(pointcloud_to_laserscan
   PLUGIN "pointcloud_to_laserscan::PointCloudToLaserScanNode"
   EXECUTABLE pointcloud_to_laserscan_node)
 
-add_executable(dummy_pointcloud_publisher
-  src/dummy_pointcloud_publisher.cpp
-)
-target_link_libraries(dummy_pointcloud_publisher
-  rclcpp::rclcpp
-  "${sensor_msgs_TARGETS}"
-)
-
 install(TARGETS
   laserscan_to_pointcloud
   pointcloud_to_laserscan
@@ -69,11 +61,6 @@ install(TARGETS
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib)
-
-install(TARGETS
-  dummy_pointcloud_publisher
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 install(DIRECTORY include
   DESTINATION include/${PROJECT_NAME}

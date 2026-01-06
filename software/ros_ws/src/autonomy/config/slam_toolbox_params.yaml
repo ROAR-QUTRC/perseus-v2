@@ -11,13 +11,13 @@ slam_toolbox:
     odom_frame: odom
     map_frame: map
     base_frame: base_footprint
-    scan_topic: /scan
+    scan_topic: /lidar_scan
     use_map_saver: true
     mode: mapping #localization
     # if you'd like to immediately start continuing a map at a given pose
     # or at the dock, but they are mutually exclusive, if pose is given
     # will use pose
-    map_file_name: /home/bocho0600/perseus-v2/software/ros_ws/src/autonomy/map/sim_map_serial
+    map_file_name: /home/luca-lubrano/perseus-v2/software/ros_ws/src/autonomy/map/sim_map_serial
     # map_start_pose: [0.0, 0.0, 0.0]
     map_start_at_dock: false
     debug_logging: false
