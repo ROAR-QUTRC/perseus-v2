@@ -9,6 +9,10 @@
             "path": "./battery-management-system"
         },
         {
+            "name": "Legacy BMS Firmware",
+            "path": "./legacy-battery-management-system"
+        },
+        {
             "name": "Light Tower Firmware",
             "path": "./light-tower"
         },
