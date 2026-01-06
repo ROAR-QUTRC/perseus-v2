@@ -1,3 +1,5 @@
 cmake_minimum_required(VERSION 3.16.0)
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(RSBL85-driver)
+list(APPEND EXTRA_COMPONENT_DIRS ../components)
+project(excavation_bucket)

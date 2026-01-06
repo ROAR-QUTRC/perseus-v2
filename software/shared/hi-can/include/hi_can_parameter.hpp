@@ -309,163 +309,6 @@ namespace hi_can::parameters
     }
     namespace post_landing
     {
-        // namespace control
-        // {
-        //     namespace servo
-        //     {
-        //         namespace rsbl
-        //         {
-        //
-        //         }
-        //         namespace rmd
-        //         {
-        //             enum class command_t : uint8_t
-        //             {
-        //                 // Basic commands with no data
-        //                 SHUTDOWN = 0x80,
-        //                 STOP = 0x81,
-        //                 RESTART = 0x76,
-        //                 BRAKE_RELEASE = 0x77,
-        //                 BRAKE_LOCK = 0x78,
-        //
-        //                 // Data commands (Each has a 32bit value associated)
-        //                 READ_POSITION = 0x60,
-        //                 READ_ORIGINAL_POSITION = 0x61,
-        //                 READ_ZERO_OFFSET = 0x62,
-        //                 WRITE_ZERO_OFFSET = 0x63,
-        //                 WRITE_CURRENT_AS_ZERO = 0x64,
-        //                 READ_ANGLE = 0x92,
-        //                 READ_SYSTEM_RUNTIME = 0xB1,
-        //                 READ_SYSTEM_SOFTWARE_DATE = 0xB2,
-        //                 SET_COMMUNICATION_INTERRUPTION_PROTECTION_TIME = 0xB3,
-        //
-        //                 // PID commands
-        //                 READ_PID = 0x30,
-        //                 WRITE_PID_RAM = 0x31,
-        //                 WRITE_PID_ROM = 0x32,
-        //
-        //                 // Read status messages
-        //                 STATUS_1 = 0x9A,
-        //                 STATUS_2 = 0x9C,
-        //                 STATUS_3 = 0x9D,
-        //
-        //                 // Set control attributes
-        //                 TORQUE_CLOSED_LOOP = 0xA1,
-        //                 SPEED_CLOSED_LOOP = 0xA2,
-        //                 ABSOLUTE_POSITION_CLOSED_LOOP = 0xA4,
-        //                 SINGLE_TURN_POSITION = 0xA6,
-        //                 INCREMENTAL_POSITION_CLOSED_LOOP = 0xA8,
-        //
-        //                 // Remaining commands
-        //                 FUNCTION_CONTROL = 0x20,
-        //                 WRITE_ACCELERATION = 0x43,
-        //                 READ_SYSTEM_OPERATING_MODE = 0x70,
-        //                 SET_CAN_ID = 0x79,
-        //                 READ_SINGLE_TURN_ENCODER = 0x90,
-        //                 READ_MULTI_TURN_ANGLE = 0x92,
-        //                 READ_SINGLE_TURN_ANGLE = 0x94,
-        //                 ACTIVE_REPLY_FUNCTION = 0xB6,
-        //
-        //                 // Setup commands
-        //                 SET_COMMUNICATION_BAUD_RATE = 0xB4,
-        //                 READ_MOTOR_MODEL = 0xB5,
-        //             };
-        //             enum class error_t : uint16_t
-        //             {
-        //                 CLEAR = 0x0000,
-        //                 STALL = 0x0002,
-        //                 LOW_VOLTAGE = 0x0004,
-        //                 OVER_VOLTAGE = 0x0008,
-        //                 OVER_CURRENT = 0x0010,
-        //                 POWER_OVERRUN = 0x0040,
-        //                 CALIBRATION_PARAMETER_WRITE = 0x0080,
-        //                 SPEEDING = 0x0100,
-        //                 OVER_TEMPERATURE = 0x1000,
-        //                 ENCODER_CALIBRATION = 0x2000,
-        //             };
-        //
-        //             namespace send
-        //             {
-        //
-        //             }
-        //
-        //             namespace receive
-        //             {
-        //
-        //             }
-        //
-        //             struct _status_1_t
-        //             {
-        //                 int8_t temperature = 0;  // in degC/LSB
-        //                 bool brake_release = 0;  // 0 = locked, 1 = released
-        //                 double voltage = 0;      // in 0.1V/LSB
-        //                 error_t error_code = error_t::CLEAR;
-        //             };
-        //             struct _status_2_t
-        //             {
-        //                 int8_t temperature = 0;  // in degC/LSB
-        //                 double current = 0;      // in 0.01A/LSB
-        //                 int16_t speed = 0;       // in 1dps/LSB (might be degree per second)
-        //                 int16_t position = 0;    // in 0.01deg/LSB (max range ±32767degree)
-        //             };
-        //             struct _status_3_t
-        //             {
-        //                 int8_t temperature = 0;        // in degC/LSB
-        //                 uint16_t phase_current_a = 0;  // in 0.01A/LSB
-        //                 uint16_t phase_current_b = 0;  // in 0.01A/LSB
-        //                 uint16_t phase_current_c = 0;  // in 0.01A/LSB
-        //             };
-        //             struct _position_t
-        //             {
-        //                 int32_t position = 0;  // in 0.01deg/LSB
-        //             };
-        //             struct _set_can_id_t
-        //             {
-        //                 bool read = true;     // 0 = write, 1 = read
-        //                 uint16_t can_id = 0;  // can_id - 0x240 = motor_id
-        //
-        //                 // constructor
-        //                 _set_can_id_t() = default;
-        //                 _set_can_id_t(bool _read)
-        //                     : read(_read ? 1 : 0)
-        //                 {
-        //                 }
-        //                 _set_can_id_t(bool _read, uint16_t _can_id)
-        //                     : read(_read ? 1 : 0),
-        //                       can_id(_can_id)
-        //                 {
-        //                 }
-        //             };
-        //
-        //             typedef SimpleSerializable<_status_1_t> status_1_t;
-        //             typedef SimpleSerializable<_status_2_t> status_2_t;
-        //             typedef SimpleSerializable<_status_3_t> status_3_t;
-        //             typedef SimpleSerializable<_position_t> position_t;
-        //             typedef SimpleSerializable<_set_can_id_t> set_can_id_t;
-        //
-        //             class RmdParameterGroup : public ParameterGroup
-        //             {
-        //             public:
-        //                 RmdParameterGroup(uint8_t motor_id);
-        //
-        //                 auto& get_motor_status_1() { return _motor_status_1; }
-        //                 auto& get_motor_status_2() { return _motor_status_2; }
-        //                 auto& get_motor_status_3() { return _motor_status_3; }
-        //
-        //                 auto& get_set_can_id() { return _set_can_id; }
-        //
-        //             private:
-        //                 uint8_t _motor_id = 0;
-        //
-        //                 set_can_id_t _set_can_id;
-        //
-        //                 status_1_t _motor_status_1;
-        //                 status_2_t _motor_status_2;
-        //                 status_3_t _motor_status_3;
-        //             };
-        //         }
-        //     }
-        // }
         namespace servo
         {
             namespace rmd
@@ -796,7 +639,13 @@ namespace hi_can::parameters
                     std::vector<addressing::post_landing::servo::rmd::motor_id_t> _available_servos;
                 };
             }
-
+            namespace rsbl
+            {
+                enum class command_t : uint8_t
+                {
+                    
+                };
+            }
         }
     }
     namespace excavation
