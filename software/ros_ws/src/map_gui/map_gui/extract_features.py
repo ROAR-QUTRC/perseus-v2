@@ -25,15 +25,22 @@ def hue_saturation_value_ranges(
 ):
     """Return one or two HSV ranges (OpenCV hue wraparound handled)."""
     hue_min, hue_max = int(hue - hue_tolerance), int(hue + hue_tolerance)
-    saturation_min, saturation_max = max(0, int(saturation - saturation_tolerance)), min(
-        255, int(saturation + saturation_tolerance)
+    saturation_min, saturation_max = (
+        max(0, int(saturation - saturation_tolerance)),
+        min(255, int(saturation + saturation_tolerance)),
     )
-    value_min, value_max = max(0, int(value - value_tolerance)), min(255, int(value + value_tolerance))
+    value_min, value_max = (
+        max(0, int(value - value_tolerance)),
+        min(255, int(value + value_tolerance)),
+    )
 
     # Hue wraps in OpenCV: 0..179
     if hue_min < 0:
         return [
-            (np.array([0, saturation_min, value_min]), np.array([hue_max, saturation_max, value_max])),
+            (
+                np.array([0, saturation_min, value_min]),
+                np.array([hue_max, saturation_max, value_max]),
+            ),
             (
                 np.array([179 + hue_min, saturation_min, value_min]),
                 np.array([179, saturation_max, value_max]),
@@ -45,10 +52,18 @@ def hue_saturation_value_ranges(
                 np.array([0, saturation_min, value_min]),
                 np.array([hue_max - 179, saturation_max, value_max]),
             ),
-            (np.array([hue_min, saturation_min, value_min]), np.array([179, saturation_max, value_max])),
+            (
+                np.array([hue_min, saturation_min, value_min]),
+                np.array([179, saturation_max, value_max]),
+            ),
         ]
 
-    return [(np.array([hue_min, saturation_min, value_min]), np.array([hue_max, saturation_max, value_max]))]
+    return [
+        (
+            np.array([hue_min, saturation_min, value_min]),
+            np.array([hue_max, saturation_max, value_max]),
+        )
+    ]
 
 
 def contour_centroid_pixel_position(contour) -> Optional[tuple[int, int]]:
@@ -126,7 +141,12 @@ class ExtractFeatures(Node):
         image_hue_saturation_value = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
         image_height, image_width = image_bgr.shape[:2]
 
-        self.cache[image_id] = (image_bgr, image_hue_saturation_value, image_height, image_width)
+        self.cache[image_id] = (
+            image_bgr,
+            image_hue_saturation_value,
+            image_height,
+            image_width,
+        )
         return image_bgr, image_hue_saturation_value, image_height, image_width
 
     def reply(self, request_id: str, payload: dict[str, Any]):
@@ -143,9 +163,13 @@ class ExtractFeatures(Node):
         closest_contour: Optional[tuple[float, Any]] = None  # (abs_distance, contour)
 
         for contour in contours:
-            signed_distance = cv2.pointPolygonTest(contour, (float(x_pos), float(y_pos)), True)
+            signed_distance = cv2.pointPolygonTest(
+                contour, (float(x_pos), float(y_pos)), True
+            )
             if signed_distance >= 0:
-                contours_containing_click.append((signed_distance, contour))  # prefer most-inside (max distance)
+                contours_containing_click.append(
+                    (signed_distance, contour)
+                )  # prefer most-inside (max distance)
             else:
                 absolute_distance = abs(signed_distance)
                 if closest_contour is None or absolute_distance < closest_contour[0]:
@@ -168,8 +192,14 @@ class ExtractFeatures(Node):
             request_id = str(request.get("id", ""))
 
             operation = request.get("op", "")
-            if operation not in ("extract_feature", "extract_border", "extract_waypoint"):
-                self.reply(request_id, {"ok": False, "message": f"Unsupported op: {operation}"})
+            if operation not in (
+                "extract_feature",
+                "extract_border",
+                "extract_waypoint",
+            ):
+                self.reply(
+                    request_id, {"ok": False, "message": f"Unsupported op: {operation}"}
+                )
                 return
 
             # Normalize to one handler with a mode
@@ -195,7 +225,9 @@ class ExtractFeatures(Node):
             close_kernel_size = int(request.get("close_k", 5))
             median_kernel_size = int(request.get("median_k", 5))
 
-            image_bgr, image_hue_saturation_value, image_height, image_width = self.load_image(image_id)
+            image_bgr, image_hue_saturation_value, image_height, image_width = (
+                self.load_image(image_id)
+            )
 
             if not (0 <= x_pos < image_width and 0 <= y_pos < image_height):
                 self.reply(
@@ -226,7 +258,9 @@ class ExtractFeatures(Node):
                 saturation_tolerance,
                 value_tolerance,
             ):
-                range_mask = cv2.inRange(image_hue_saturation_value, lower_bound, upper_bound)
+                range_mask = cv2.inRange(
+                    image_hue_saturation_value, lower_bound, upper_bound
+                )
                 mask = range_mask if mask is None else cv2.bitwise_or(mask, range_mask)
 
             # Clean mask
@@ -239,7 +273,9 @@ class ExtractFeatures(Node):
                 kernel = np.ones((close_kernel_size, close_kernel_size), np.uint8)
                 mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
-            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            contours, _ = cv2.findContours(
+                mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            )
             if not contours:
                 self.reply(
                     request_id,
@@ -255,7 +291,9 @@ class ExtractFeatures(Node):
                 return
 
             # Filter small blobs (noise)
-            contours = [contour for contour in contours if cv2.contourArea(contour) >= min_area]
+            contours = [
+                contour for contour in contours if cv2.contourArea(contour) >= min_area
+            ]
             if not contours:
                 self.reply(
                     request_id,
@@ -293,7 +331,9 @@ class ExtractFeatures(Node):
             # Always compute centroid (useful for both modes)
             centroid = contour_centroid_pixel_position(chosen_contour)
             if centroid is None:
-                bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = cv2.boundingRect(chosen_contour)
+                bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = (
+                    cv2.boundingRect(chosen_contour)
+                )
                 centroid = (
                     int(bounding_x_pos + bounding_width / 2),
                     int(bounding_y_pos + bounding_height / 2),
