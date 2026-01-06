@@ -20,15 +20,15 @@ private:
     class AxisParser
     {
     public:
-        AxisParser(GenericController& parent, const std::string& paramBaseName, bool hasEnable = false);
+        AxisParser(GenericController& parent, const std::string& param_base_name, bool has_enable = false);
 
-        double getValue();
+        double get_value();
 
     private:
-        std::vector<rclcpp::Parameter> _resolveParams();
-        static std::vector<std::string> _getParamNames(const std::string& baseName);
-        bool _parentHasAllParams(const std::string& followsName);
-        bool _parentHasAnyParams(const std::string& followsName);
+        std::vector<rclcpp::Parameter> _resolve_params();
+        static std::vector<std::string> _get_param_names(const std::string& base_name);
+        bool _parent_has_all_params(const std::string& follows_name);
+        bool _parent_has_any_params(const std::string& follows_name);
 
         static constexpr size_t AXIS_IDX = 0;
         static constexpr size_t BUTTON_POSITIVE_IDX = 1;
@@ -40,38 +40,38 @@ private:
         static constexpr size_t TURBO_IDX = 7;
 
         std::map<std::string, std::pair<int, rcl_interfaces::msg::ParameterDescriptor>>
-            _intParamMap;
+            _int_param_map;
         std::map<std::string, std::pair<double, rcl_interfaces::msg::ParameterDescriptor>>
-            _doubleParamMap;
+            _double_param_map;
         std::map<std::string, std::pair<std::string, rcl_interfaces::msg::ParameterDescriptor>>
-            _stringParamMap;
+            _string_param_map;
 
         GenericController& _parent;
-        const std::string _paramBaseName;
-        bool _hasEnable;
-        double _lastValue = 0.0;
+        const std::string _param_base_name;
+        bool _has_enable;
+        double _last_value = 0.0;
     };
 
     class EnableParser
     {
     public:
-        EnableParser(GenericController& parent, const std::string& paramBaseName, bool isTurbo = false);
+        EnableParser(GenericController& parent, const std::string& param_base_name, bool is_turbo = false);
 
-        bool getValue();
+        bool get_value();
 
     private:
-        std::vector<rclcpp::Parameter> _resolveParams();
-        static std::vector<std::string> _getParamNames(const std::string& baseName);
+        std::vector<rclcpp::Parameter> _resolve_params();
+        static std::vector<std::string> _get_param_names(const std::string& base_name);
 
         static constexpr size_t FOLLOWS_IDX = 0;
         static constexpr size_t THRESHOLD_IDX = 1;
         static constexpr size_t IS_LT_IDX = 2;
 
         GenericController& _parent;
-        const std::string _paramBaseName;
+        const std::string _param_base_name;
     };
-    void _joyTimeoutCallback(void);
-    void _joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg);
+    void _joy_timeout_callback(void);
+    void _joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg);
 
     static constexpr std::string FORWARD_BASE_NAME = "drive.forward";
     static constexpr std::string TURN_BASE_NAME = "drive.turn";
@@ -84,14 +84,14 @@ private:
 
     static constexpr auto JOY_TIMEOUT = std::chrono::milliseconds(100);
 
-    rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _joySubscription;
-    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr _twistPublisher;
-    rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr _actuatorPublisher;
-    rclcpp::TimerBase::SharedPtr _joyTimeoutTimer;
+    rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _joy_subscription;
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr _twist_publisher;
+    rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr _actuator_publisher;
+    rclcpp::TimerBase::SharedPtr _joy_timeout_timer;
 
 protected:
-    sensor_msgs::msg::Joy::SharedPtr _lastReceivedJoy;
-    rclcpp::Time _prevReceivedJoyTime;
-    std::map<std::string, AxisParser> _axisParsers;
-    std::map<std::string, EnableParser> _enableParsers;
+    sensor_msgs::msg::Joy::SharedPtr _last_received_joy;
+    rclcpp::Time _prev_received_joy_time;
+    std::map<std::string, AxisParser> _axis_parsers;
+    std::map<std::string, EnableParser> _enable_parsers;
 };

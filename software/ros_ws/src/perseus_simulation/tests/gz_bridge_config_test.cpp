@@ -26,7 +26,7 @@ protected:
         std::string direction;
     };
 
-    std::vector<BridgeMapping> loadBridgeMappings()
+    std::vector<BridgeMapping> load_bridge_mappings()
     {
         std::vector<BridgeMapping> mappings;
 
@@ -64,7 +64,7 @@ TEST_F(GzBridgeConfigTest, ConfigFileExists)
 
 TEST_F(GzBridgeConfigTest, ValidYamlStructure)
 {
-    auto mappings = loadBridgeMappings();
+    auto mappings = load_bridge_mappings();
     ASSERT_GT(mappings.size(), 0) << "No bridge mappings found in config file";
 
     for (const auto& mapping : mappings)
@@ -79,7 +79,7 @@ TEST_F(GzBridgeConfigTest, ValidYamlStructure)
 
 TEST_F(GzBridgeConfigTest, ValidDirections)
 {
-    auto mappings = loadBridgeMappings();
+    auto mappings = load_bridge_mappings();
     std::unordered_set<std::string> valid_directions = {
         "ROS_TO_GZ", "GZ_TO_ROS", "BIDIRECTIONAL"};
 
@@ -93,7 +93,7 @@ TEST_F(GzBridgeConfigTest, ValidDirections)
 
 TEST_F(GzBridgeConfigTest, ValidRosMessageTypes)
 {
-    auto mappings = loadBridgeMappings();
+    auto mappings = load_bridge_mappings();
     // ROS 2 message types follow the pattern: package_name/msg/MessageName
     // package_name: lowercase with underscores
     // MessageName: PascalCase
@@ -110,7 +110,7 @@ TEST_F(GzBridgeConfigTest, ValidRosMessageTypes)
 
 TEST_F(GzBridgeConfigTest, ValidGazeboMessageTypes)
 {
-    auto mappings = loadBridgeMappings();
+    auto mappings = load_bridge_mappings();
     // Gazebo message types follow the pattern: gz.msgs.MessageName
     // MessageName: PascalCase, may contain underscores
     std::regex gz_type_pattern("^gz\\.msgs\\.[A-Z][A-Za-z0-9_]*$");
@@ -126,7 +126,7 @@ TEST_F(GzBridgeConfigTest, ValidGazeboMessageTypes)
 
 TEST_F(GzBridgeConfigTest, UniqueTopicNames)
 {
-    auto mappings = loadBridgeMappings();
+    auto mappings = load_bridge_mappings();
     std::unordered_set<std::string> ros_topics;
     std::unordered_set<std::string> gz_topics;
 
@@ -141,7 +141,7 @@ TEST_F(GzBridgeConfigTest, UniqueTopicNames)
 
 TEST_F(GzBridgeConfigTest, ExpectedCoreTopics)
 {
-    auto mappings = loadBridgeMappings();
+    auto mappings = load_bridge_mappings();
     std::unordered_set<std::string> required_topics = {
         "clock", "tf", "odom", "joint_states"};
 

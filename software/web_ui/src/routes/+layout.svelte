@@ -18,10 +18,12 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import '../app.css';
 	import { Toaster } from '$lib/components/ui/sonner';
-	import { onMount } from 'svelte';
+	import { getContext, onMount, setContext } from 'svelte';
 	import { availableWidgets } from '$lib/scripts/state.svelte';
 	import { localStore } from '$lib/scripts/localStore.svelte';
-	import { connectRos, disconnectRos, getRosConnection } from '$lib/scripts/ros-bridge.svelte';
+	import { connectRos, disconnectRos, getRosConnection } from '$lib/scripts/rosBridge.svelte';
+	import * as ROSLIB from 'roslib';
+
 	let { children } = $props();
 
 	// automatically connect and disconnect from ROS-bridge
@@ -29,7 +31,7 @@
 		connectRos(localStore('rosAddress', window.location.hostname).value);
 		// This really should be it's own function (the return value is the onUnMount function)
 		return () => {
-			if (getRosConnection()) disconnectRos();
+			disconnectRos();
 		};
 	});
 </script>

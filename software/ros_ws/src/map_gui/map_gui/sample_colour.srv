@@ -1,0 +1,13 @@
+string image_id
+int32 x
+int32 y
+string label
+---
+string hex
+int32 r
+int32 g
+int32 b
+int32 h
+int32 s
+int32 v
+string message

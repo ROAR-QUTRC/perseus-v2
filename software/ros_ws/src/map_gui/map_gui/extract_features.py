@@ -1,376 +1,328 @@
-""" Identify map features based on colour """
+#!/usr/bin/env python3
+import os
+import json
+from typing import Any, Optional
 
-import rclpy
-from rclpy.node import Node
-from std_msgs.msg import (
-    Int16MultiArray,
-    Int16,
-    String
-)
-
-""" Import OpenCV and numpy libraries """
 import cv2
 import numpy as np
-import math
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+MAP_DIR = os.environ.get("PERSEUS_MAP_DIR", "/opt/perseus/maps")
+
+REQUEST_TOPIC_NAME = "/map_editor/request"
+RESPONSE_TOPIC_NAME = "/map_editor/response"
+
+
+def hue_saturation_value_ranges(
+    hue: int,
+    saturation: int,
+    value: int,
+    hue_tolerance: int,
+    saturation_tolerance: int,
+    value_tolerance: int,
+):
+    """Return one or two HSV ranges (OpenCV hue wraparound handled)."""
+    hue_min, hue_max = int(hue - hue_tolerance), int(hue + hue_tolerance)
+    saturation_min, saturation_max = max(0, int(saturation - saturation_tolerance)), min(
+        255, int(saturation + saturation_tolerance)
+    )
+    value_min, value_max = max(0, int(value - value_tolerance)), min(255, int(value + value_tolerance))
+
+    # Hue wraps in OpenCV: 0..179
+    if hue_min < 0:
+        return [
+            (np.array([0, saturation_min, value_min]), np.array([hue_max, saturation_max, value_max])),
+            (
+                np.array([179 + hue_min, saturation_min, value_min]),
+                np.array([179, saturation_max, value_max]),
+            ),
+        ]
+    if hue_max > 179:
+        return [
+            (
+                np.array([0, saturation_min, value_min]),
+                np.array([hue_max - 179, saturation_max, value_max]),
+            ),
+            (np.array([hue_min, saturation_min, value_min]), np.array([179, saturation_max, value_max])),
+        ]
+
+    return [(np.array([hue_min, saturation_min, value_min]), np.array([hue_max, saturation_max, value_max]))]
+
+
+def contour_centroid_pixel_position(contour) -> Optional[tuple[int, int]]:
+    """Return integer centroid (x, y) in pixel coordinates, or None if degenerate."""
+    moments = cv2.moments(contour)
+    if moments["m00"] == 0:
+        return None
+
+    centroid_x = int(round(moments["m10"] / moments["m00"]))
+    centroid_y = int(round(moments["m01"] / moments["m00"]))
+    return centroid_x, centroid_y
+
+
+def contour_to_points(contour) -> list[list[int]]:
+    """Convert OpenCV contour array to [[x, y], ...]."""
+    return [[int(point[0][0]), int(point[0][1])] for point in contour]
 
 
 class ExtractFeatures(Node):
+    """
+    Request/response over std_msgs/String JSON.
+
+    Request:
+      {
+        "id": "...",
+        "op": "extract_feature",
+        "mode": "border" | "waypoint",
+        "image_id": "foo.png",
+        "sample_x": 123,
+        "sample_y": 456,
+        "tol_h": 10,
+        "tol_s": 60,
+        "tol_v": 60,
+        "min_area": 50,          (optional)
+        "approx_eps": 2.0,       (optional)
+        "close_k": 5,            (optional)
+        "median_k": 5            (optional)
+      }
+
+    Response:
+      {
+        "id": "...",
+        "ok": true/false,
+        "message": "...",
+        "sample_x": ...,
+        "sample_y": ...,
+        "sample_hex": "#RRGGBB",
+        "sample_image_hex": "#RRGGBB",   (compatibility field)
+        "centroid": [x, y],
+        "contour": [[x, y], ...]
+      }
+    """
+
     def __init__(self):
-        """I'll figure out what to put here later"""
         super().__init__("extract_features")
 
-        self.test_publisher = self.create_publisher(
-            String, "test_publisher", 10 
+        self.cache: dict[str, tuple[np.ndarray, np.ndarray, int, int]] = {}
+
+        self.request_subscription = self.create_subscription(
+            String, REQUEST_TOPIC_NAME, self.on_request, 10
         )
-
-        self.test_subscriber = self.create_subscription(
-            Int16MultiArray, "test_subscriber", self.process_test_input, 10
-        )
-
-    def process_test_input(self, test_msg: Int16MultiArray) -> None:
-        self.test_publisher.publish("received")
-
-
-    """This should probably be split up"""
-    def everything_else(self):
-        font = cv2.FONT_HERSHEY_COMPLEX
-
-        """ Read the image """
-        map = cv2.imread("ARCh_2025_Autonomous_map.png")
-
-        """ Extract dimensions of the image """
-        length, width, height = map.shape
-
-        """ Convert image to image HSV """
-        hsv = cv2.cvtColor(map, cv2.COLOR_BGR2HSV)
-
-
-        """ Define lower and upper bound HSV values """ 
-        #Outerperimeter - currently green - TO BE CHANGED AS NECESSARY
-        perimeter_lower = np.array([50,40, 0])
-        perimeter_upper = np.array([70, 255, 255])
-
-        #Waypoints - currently green-blue - TO BE CHANGED AS NECESSARY
-        waypoints_lower = np.array([70, 150, 170])
-        waypoints_upper = np.array([90, 255, 255])
-
-        #x-starting point - currently orange - TO BE CHANGED AS NECESSARY
-        x_lower = np.array([5, 100, 255])
-        x_upper = np.array([30, 255, 255])
-
-        #Grid - currently red - TO BE CHANGED AS NECESSARY
-        grid_lower = np.array([10, 0, 0])
-        grid_upper = np.array([100, 255, 255])
-
-        """ Define masks for detecting color """
-        perimeter_mask = cv2.inRange(hsv, perimeter_lower, perimeter_upper)
-        waypoints_mask = cv2.inRange(hsv, waypoints_lower, waypoints_upper)
-        x_mask = cv2.inRange(hsv, x_lower, x_upper)
-        grid_mask = cv2.inRange(hsv, grid_lower, grid_upper)
-
-        """Turn mask back into image so that it can be seperated into colour and gray scale versions"""
-        #There is probably a way to not have to do this
-        cv2.imwrite("perimeter_mask.png", perimeter_mask)
-        cv2.imwrite("waypoints_mask.png", waypoints_mask)
-        cv2.imwrite("x_mask.png", x_mask)
-        cv2.imwrite("grid_mask.png", grid_mask)
-
-
-        """ Define colour and grayscale version of masks """
-        perimeter_colour = cv2.imread("perimeter_mask.png", cv2.IMREAD_COLOR)
-        perimeter_grayscale = cv2.imread("perimeter_mask.png", cv2.IMREAD_GRAYSCALE)
-
-        waypoints_colour = cv2.imread("waypoints_mask.png", cv2.IMREAD_COLOR)
-        waypoints_grayscale = cv2.imread("waypoints_mask.png", cv2.IMREAD_GRAYSCALE)
-
-        x_colour = cv2.imread("x_mask.png", cv2.IMREAD_COLOR)
-        x_grayscale = cv2.imread("x_mask.png", cv2.IMREAD_GRAYSCALE)
-
-        grid_colour = cv2.imread("grid_mask.png", cv2.IMREAD_COLOR)
-        grid_grayscale = cv2.imread("grid_mask.png", cv2.IMREAD_GRAYSCALE)
-
-        """ Binarize masks """
-        _, perimeter_threshold = cv2.threshold(perimeter_grayscale, 110, 255, cv2.THRESH_BINARY)
-        _, waypoints_threshold = cv2.threshold(waypoints_grayscale, 110, 255, cv2.THRESH_BINARY)
-        _, x_threshold = cv2.threshold(x_grayscale, 110, 255, cv2.THRESH_BINARY)
-        _, grid_threshold = cv2.threshold(grid_grayscale, 110, 255, cv2.THRESH_BINARY)
-
-        """ Find contours """
-        perimeter_contours, _ = cv2.findContours(perimeter_threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        waypoints_contours, _ = cv2.findContours(waypoints_threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        x_contours, _ = cv2.findContours(x_threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        grid_contours, _ = cv2.findContours(grid_threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-        """ Define important coordinates """
-        ORIGIN_X = (0,0)
-        ORIGIN_Y = (0,0)
-        ORIGIN = (0,0)
-        PERIMETER_TL = (0,0)
-        PERIMETER_TR = (0,0)
-        PERIMETER_BL = (0,0)
-        PERIMETER_BR = (0,0)
-        WAYPOINT_COORDS = []
-        ARROW_COORDS = []
-        WAYPOINT_ANGLE = []
-
-        """Find perimeter coordinates and write them to the mask and map"""
-        if perimeter_contours:
-            #Get coordinates of all points in the first detected contour (perimeter)
-            first_contour =  perimeter_contours[0]
-
-            #Convert array to list of usable tuples
-            first_contour_formatted = []
-            for i  in range (0, len(first_contour), 1):
-                first_contour_formatted.append(tuple(first_contour[i][0]))
-
-            #Extract extreme points
-            top_left = (min(x[0] for x in first_contour_formatted), min(x[1] for x in first_contour_formatted))
-            bottom_left = (min(x[0] for x in first_contour_formatted), max(x[1] for x in first_contour_formatted))
-            top_right = (max(x[0] for x in first_contour_formatted), min(x[1] for x in first_contour_formatted))
-            bottom_right = (max(x[0] for x in first_contour_formatted), max(x[1] for x in first_contour_formatted))
-
-            #Assign coordinates to global variables
-            PERIMETER_TL = top_left
-            PERIMETER_BL = bottom_left
-            PERIMETER_TR = top_right
-            PERIMETER_BR = bottom_right
-
-            #Print coordinates on mask
-            top_edges = [top_left, top_right]
-            bottom_edges = [bottom_right, bottom_left]
-
-            for edge in top_edges:
-                # cv2.putText(map, f"({str(edge[0])}, {str(edge[1])})", (edge[0]-20, edge[1]-10), font, 0.5, (0, 0, 255))
-                # cv2.circle(map, (edge[0], edge[1]), radius=3, color=(0, 0, 255), thickness=-1)
-                cv2.putText(perimeter_colour, f"({str(edge[0])}, {str(edge[1])})", (edge[0]-20, edge[1]-10), font, 0.5, (0, 0, 255))
-                cv2.circle(perimeter_colour, (edge[0], edge[1]), radius=3, color=(0, 0, 255), thickness=-1)
-
-            for edge in bottom_edges:
-                # cv2.putText(map, f"({str(edge[0])}, {str(edge[1])})", (edge[0]-20, edge[1]+20), font, 0.5, (0, 0, 255))
-                # cv2.circle(map, (edge[0], edge[1]), radius=3, color=(0, 0, 255), thickness=-1)
-                cv2.putText(perimeter_colour, f"({str(edge[0])}, {str(edge[1])})", (edge[0]-20, edge[1]+20), font, 0.5, (0, 0, 255))
-                cv2.circle(perimeter_colour, (edge[0], edge[1]), radius=3, color=(0, 0, 255), thickness=-1)
-
-            #Get coordinate of y arrow
-            arrow_contour = perimeter_contours[5]
-
-            #Convert array to list of usable tuples
-            arrow_contour_formatted = []
-            for i  in range (0, len(arrow_contour), 1):
-                arrow_contour_formatted.append(tuple(arrow_contour[i][0]))
-            
-            #Extract y valyes to find median
-            arrow_contour_formatted_y = []
-            for i in range (0, len(arrow_contour_formatted), 1):
-                arrow_contour_formatted_y.append(arrow_contour_formatted[i][1])
-
-            #Extract rightmost point
-            right_edge = (max(x[0] for x in arrow_contour_formatted), round(np.median(arrow_contour_formatted_y)))
-            ORIGIN_Y = right_edge
-
-            #Print coordinates on mask and map
-            # cv2.putText(map, f"({str(right_edge[0])}, {str(right_edge[1])})", (right_edge[0]-20, right_edge[1]-10), font, 0.5, (0, 0, 255))
-            # cv2.circle(map, (right_edge[0], right_edge[1]), radius=3, color=(0, 0, 255), thickness=-1)
-            cv2.putText(perimeter_colour, f"({str(right_edge[0])}, {str(right_edge[1])})", (right_edge[0]+20, right_edge[1]), font, 0.5, (0, 0, 255))
-            cv2.circle(perimeter_colour, (right_edge[0], right_edge[1]), radius=3, color=(0, 0, 255), thickness=-1)
-
-            #print(f"Extreme points: Left={top_left}, Right={bottom_right}, Top={top_right}, Bottom={bottom_left}")
-
-        if x_contours:
-            #Get coordinates of all points in the firt contour (arrow)
-            arrow_contour =  x_contours[0]
-
-            #convert array to list of usable tuples
-            arrow_contour_formatted = []
-            for i  in range (0, len(arrow_contour), 1):
-                arrow_contour_formatted.append(tuple(arrow_contour[i][0]))
-            
-            #Extract x valyes to find median
-            arrow_contour_formatted_x = []
-            for i in range (0, len(arrow_contour_formatted), 1):
-                arrow_contour_formatted_x.append(arrow_contour_formatted[i][0])
-
-            #Extract rightmost point
-            bottom_edge = (round(np.median(arrow_contour_formatted_x)), max(x[1] for x in arrow_contour_formatted))
-            ORIGIN_X = bottom_edge
-
-            #Print coordinate on mask
-            #cv2.putText(map, f"({str(bottom_edge[0])}, {str(bottom_edge[1])})", (bottom_edge[0]-20, bottom_edge[1]-10), font, 0.5, (0, 0, 255))
-            #cv2.circle(map, (bottom_edge[0], bottom_edge[1]), radius=3, color=(0, 0, 255), thickness=-1)
-            #cv2.putText(x_colour, f"({str(bottom_edge[0])}, {str(bottom_edge[1])})", (bottom_edge[0]-20, bottom_edge[1]-10), font, 0.5, (0, 0, 255))
-            #cv2.circle(x_colour, (bottom_edge[0], bottom_edge[1]), radius=3, color=(0, 0, 255), thickness=-1)
-
-        if waypoints_contours:
-            #print(waypoints_contours)
-            #Get coordinates of all points in the firt contour (arrow)
-            #center_contour =  waypoints_contours[36]
-            circle_contours = [0, 14, 36, 55, 62]
-            arrow_contours = [12, 13, 29, 70, 71]
-
-            #convert array to list of usable tuples
-            
-            for i  in range (0, len(circle_contours), 1):
-                contour_formatted = []
-                for j  in range (0, len(waypoints_contours[circle_contours[i]]), 1):
-                    contour_formatted.append(tuple(waypoints_contours[circle_contours[i]][j][0]))
-
-                    #print(contour_formatted)
-                    contour_formatted_x = []
-                    contour_formatted_y = []
-                    for k in range (0, len(contour_formatted), 1):
-                        contour_formatted_x.append(contour_formatted[k][0])
-                        contour_formatted_y.append(contour_formatted[k][1])
-
-                #Extract middle point
-                middle = (round((max(x[0] for x in contour_formatted)+min(x[0] for x in contour_formatted))/2), round((max(x[1] for x in contour_formatted)+min(x[1] for x in contour_formatted))/2))
-                WAYPOINT_COORDS.append(middle)
-
-                cv2.putText(waypoints_colour, f"({str(middle[0])}, {str(middle[1])})", (middle[0]-100, middle[1]), font, 0.5, (0, 0, 255))
-                cv2.circle(waypoints_colour, (middle[0], middle[1]), radius=3, color=(0, 0, 255), thickness=-1)
-                    
-            for i  in range (0, len(arrow_contours), 1):
-                contour_formatted = []
-                for j  in range (0, len(waypoints_contours[arrow_contours[i]]), 1):
-                    contour_formatted.append(tuple(waypoints_contours[arrow_contours[i]][j][0]))
-
-                    #print(contour_formatted)
-                    contour_formatted_x = []
-                    contour_formatted_y = []
-                    for k in range (0, len(contour_formatted), 1):
-                        contour_formatted_x.append(contour_formatted[k][0])
-                        contour_formatted_y.append(contour_formatted[k][1])
-
-                #Extract middle point
-                middle = (round((max(x[0] for x in contour_formatted)+min(x[0] for x in contour_formatted))/2), round((max(x[1] for x in contour_formatted)+min(x[1] for x in contour_formatted))/2))
-                ARROW_COORDS.append(middle)
-
-                #cv2.putText(waypoints_colour, f"({str(middle[0])}, {str(middle[1])})", (middle[0]-100, middle[1]), font, 0.5, (0, 0, 255))
-                #cv2.circle(waypoints_colour, (middle[0], middle[1]), radius=3, color=(0, 0, 255), thickness=-1)
-
-            for i in range (0, len(WAYPOINT_COORDS)):
-                delta_x = WAYPOINT_COORDS[i][0] - ARROW_COORDS[i][0]
-                delta_y = WAYPOINT_COORDS[i][1] - ARROW_COORDS[i][1]
-                print(delta_x, delta_y)
-            
-                if (delta_x == 0): 
-                    if (WAYPOINT_COORDS[i][1] <= ARROW_COORDS[i][1]):
-                            WAYPOINT_ANGLE.append(np.pi)
-                    elif(WAYPOINT_COORDS[i][1] >= ARROW_COORDS[i][1]):
-                        WAYPOINT_ANGLE.append(0)
-                elif (delta_y == 0):
-                    if (WAYPOINT_COORDS[i][0] >= ARROW_COORDS[i][0]):
-                        WAYPOINT_ANGLE.append(np.pi/2)
-                    elif(WAYPOINT_COORDS[i][0] <= ARROW_COORDS[i][0]):
-                        WAYPOINT_ANGLE.append(3*np.pi/2)
-                else:
-                    if ((delta_x > 0) & (delta_y > 0)):
-                        WAYPOINT_ANGLE.append(math.atan(delta_x/delta_y))
-                        print(1, WAYPOINT_COORDS[i][0], WAYPOINT_COORDS[i][1])
-                    elif((delta_x > 0) & (delta_y < 0)):
-                        WAYPOINT_ANGLE.append(3*np.pi/2 + math.atan(delta_x/delta_y))
-                        print(2, WAYPOINT_COORDS[i][0], WAYPOINT_COORDS[i][1])
-                    elif((delta_x < 0) & (delta_y < 0)):
-                        WAYPOINT_ANGLE.append(np.pi + math.atan(delta_x/delta_y))
-                        print(4, WAYPOINT_COORDS[i][0], WAYPOINT_COORDS[i][1])
-                    elif((delta_x < 0) & (delta_y > 0)):
-                        WAYPOINT_ANGLE.append(np.pi/2 + math.atan(delta_x/delta_y))
-                        print(3, WAYPOINT_COORDS[i][0], WAYPOINT_COORDS[i][1])
-
-                print(WAYPOINT_ANGLE)
-
-                
-            
-
-        #Find origin by taking average of coordinates taken from the x and y arrows
-        ORIGIN = tuple(round((a + b) / 2) for a, b in zip(ORIGIN_X, ORIGIN_Y))
-
-        #Print origin coordinate on map
-        cv2.putText(map, f"(0,0)", (ORIGIN[0]+10, ORIGIN[1]), font, 0.70, (255, 255, 255))
-        cv2.circle(map, (ORIGIN[0], ORIGIN[1]), radius=4, color=(255, 255, 255), thickness=-1)
-
-        #Find coordinates of important locations relative to the origin
-        PERIMETER_TL_RELATIVE = (ORIGIN[0] - PERIMETER_TL[0], ORIGIN[1] - PERIMETER_TL[1])
-        PERIMETER_TR_RELATIVE = (ORIGIN[0] - PERIMETER_TR[0], ORIGIN[1] - PERIMETER_TR[1])
-        PERIMETER_BL_RELATIVE = (ORIGIN[0] - PERIMETER_BL[0], ORIGIN[1] - PERIMETER_BL[1])
-        PERIMETER_BR_RELATIVE = (ORIGIN[0] - PERIMETER_BR[0], ORIGIN[1] - PERIMETER_BR[1])
-
-        #Print coordinates of important locations on map
-        cv2.putText(map, f"({str(PERIMETER_TL_RELATIVE[1])}, {str(PERIMETER_TL_RELATIVE[0])})", (PERIMETER_TL[0]-20, PERIMETER_TL[1]-10), font, 0.6, (255, 255, 255))
-        cv2.circle(map, (PERIMETER_TL[0], PERIMETER_TL[1]), radius=4, color=(255, 255, 255), thickness=-1)
-        cv2.putText(map, f"({str(PERIMETER_TR_RELATIVE[1])}, {str(PERIMETER_TR_RELATIVE[0])})", (PERIMETER_TR[0]-120, PERIMETER_TR[1]-10), font, 0.6, (255, 255, 255))
-        cv2.circle(map, (PERIMETER_TR[0], PERIMETER_TR[1]), radius=4, color=(255, 255, 255), thickness=-1)
-        cv2.putText(map, f"({str(PERIMETER_BL_RELATIVE[1])}, {str(PERIMETER_BL_RELATIVE[0])})", (PERIMETER_BL[0]-20, PERIMETER_BL[1]+20), font, 0.6, (255, 255, 255))
-        cv2.circle(map, (PERIMETER_BL[0], PERIMETER_BL[1]), radius=4, color=(255, 255, 255), thickness=-1)
-        cv2.putText(map, f"({str(PERIMETER_BR_RELATIVE[1])}, {str(PERIMETER_BR_RELATIVE[0])})", (PERIMETER_BR[0]-120, PERIMETER_BR[1]+20), font, 0.6, (255, 255, 255))
-        cv2.circle(map, (PERIMETER_BR[0], PERIMETER_BR[1]), radius=4, color=(255, 255, 255), thickness=-1)
-
-        for i in range(0, len(WAYPOINT_COORDS), 1):
-            waypoint_relative = (WAYPOINT_COORDS[i][0] - ORIGIN[0], ORIGIN[1] - WAYPOINT_COORDS[i][1])
-            cv2.putText(map, f"({str(waypoint_relative[0])}, {str(waypoint_relative[1])})", (WAYPOINT_COORDS[i][0]-110, WAYPOINT_COORDS[i][1]+30), font, 0.6, (255, 255, 255))
-            cv2.putText(map, f"({round(WAYPOINT_ANGLE[i],2)} rad)", (WAYPOINT_COORDS[i][0]-90, WAYPOINT_COORDS[i][1]+60), font, 0.6, (255, 255, 255))
-            cv2.circle(map,(WAYPOINT_COORDS[i][0], WAYPOINT_COORDS[i][1]), radius=4, color=(255, 255, 255), thickness=-1)
-
-
-
-        # for contour in perimeter_contours:
-        #     #Approximate and draw contour
-        #     approx = cv2.approxPolyDP(contour, 0.009 * cv2.arcLength(contour, True), True)
-        #     #cv2.drawContours(perimeter_colour, [approx], 0, (0, 0, 255), 5)
-
-        #     # Flatten points
-        #     n = approx.ravel()
-        #     i = 0
-        #     for j in n:
-        #         if i % 2 == 0:  # x, y coordinates
-        #             x, y = n[i], n[i + 1]
-        #             coord = f"{x} {y}"
-        #             cv2.putText(perimeter_colour, coord, (x, y), font, 0.5, (0, 255, 0))
-        #         i += 1
-
-        # for contour in waypoints_contours:
-        #     #Approximate and draw contour
-        #     approx = cv2.approxPolyDP(contour, 0.009 * cv2.arcLength(contour, True), True)
-        #     #cv2.drawContours(perimeter_colour, [approx], 0, (0, 0, 255), 5)
-
-        #     # Flatten points
-        #     n = approx.ravel()
-        #     i = 0
-        #     for j in n:
-        #         if i % 2 == 0:  # x, y coordinates
-        #             x, y = n[i], n[i + 1]
-        #             coord = f"{x} {y}"
-        #             cv2.putText(waypoints_colour, coord, (x, y), font, 0.5, (0, 255, 0))
-        #             #print("(" + str(x) + ", " +  str(y) + ")")
-        #         i += 1
-
-        # Show result
-        #cv2.imshow('Perimeter with Coordinates', perimeter_colour)
-        #cv2.imshow('X with Coordinates', x_colour)
-        #cv2.imshow('Waypoints with Coordinates', waypoints_colour)
-        combined_image = cv2.bitwise_or(perimeter_colour, waypoints_colour)
-        combined_image = cv2.bitwise_or(x_colour, combined_image)
-        cv2.imshow('Combined Coordinates', combined_image)
-
-
-        # #Grid - DOESNT LINE UP
-        # for i in range(0,width+1,25):
-        #     for j in range (0, length+1, 50):
-        #         cv2.line(map,(i,0),(i,j),(0,0,255),1)
-        #         cv2.line(map,(0,i),(j,i),(0,0,255),1)
-
-        #Display map and masks
-        cv2.imshow("Autonomous Map", map)
-        #cv2.imshow("Grid", grid_mask)
-        #cv2.imshow("Mask", mask)
-        #cv2.imshow("Mask2", mask2)
-
-        #Make python sleep for unlimited time
-        cv2.waitKey(0)
-
-
-def main(args=None):
-    rclpy.init(args=args)
-    extract_features = ExtractFeatures()
-    rclpy.spin(extract_features)
-    extract_features.destroy_node()
+        self.response_publisher = self.create_publisher(String, RESPONSE_TOPIC_NAME, 10)
+
+        self.get_logger().info(f"ExtractFeatures started. PERSEUS_MAP_DIR={MAP_DIR}")
+
+    def load_image(self, image_id: str):
+        if image_id in self.cache:
+            return self.cache[image_id]
+
+        image_path = os.path.join(MAP_DIR, image_id)
+        image_bgr = cv2.imread(image_path, cv2.IMREAD_COLOR)
+        if image_bgr is None:
+            raise FileNotFoundError(f"Cannot read image: {image_path}")
+
+        image_hue_saturation_value = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
+        image_height, image_width = image_bgr.shape[:2]
+
+        self.cache[image_id] = (image_bgr, image_hue_saturation_value, image_height, image_width)
+        return image_bgr, image_hue_saturation_value, image_height, image_width
+
+    def reply(self, request_id: str, payload: dict[str, Any]):
+        payload["id"] = request_id
+        self.response_publisher.publish(String(data=json.dumps(payload)))
+
+    @staticmethod
+    def choose_contour_near_click(contours, x_pos: int, y_pos: int):
+        """
+        Prefer a contour that CONTAINS the click (pointPolygonTest >= 0).
+        If none contain it, pick the closest contour (minimum abs(distance)).
+        """
+        contours_containing_click: list[tuple[float, Any]] = []
+        closest_contour: Optional[tuple[float, Any]] = None  # (abs_distance, contour)
+
+        for contour in contours:
+            signed_distance = cv2.pointPolygonTest(contour, (float(x_pos), float(y_pos)), True)
+            if signed_distance >= 0:
+                contours_containing_click.append((signed_distance, contour))  # prefer most-inside (max distance)
+            else:
+                absolute_distance = abs(signed_distance)
+                if closest_contour is None or absolute_distance < closest_contour[0]:
+                    closest_contour = (absolute_distance, contour)
+
+        if contours_containing_click:
+            contours_containing_click.sort(key=lambda item: item[0], reverse=True)
+            return contours_containing_click[0][1]
+
+        if closest_contour is not None:
+            return closest_contour[1]
+
+        return None
+
+    def on_request(self, message: String):
+        request_id = ""
+
+        try:
+            request = json.loads(message.data)
+            request_id = str(request.get("id", ""))
+
+            operation = request.get("op", "")
+            if operation not in ("extract_feature", "extract_border", "extract_waypoint"):
+                self.reply(request_id, {"ok": False, "message": f"Unsupported op: {operation}"})
+                return
+
+            # Normalize to one handler with a mode
+            mode = request.get("mode")
+            if operation == "extract_border":
+                mode = "border"
+            elif operation == "extract_waypoint":
+                mode = "waypoint"
+            if mode not in ("border", "waypoint"):
+                mode = "border"
+
+            image_id = request["image_id"]
+            x_pos = int(request["sample_x"])
+            y_pos = int(request["sample_y"])
+
+            hue_tolerance = int(request.get("tol_h", 10))
+            saturation_tolerance = int(request.get("tol_s", 60))
+            value_tolerance = int(request.get("tol_v", 60))
+
+            min_area = float(request.get("min_area", 50))
+            approximation_epsilon = float(request.get("approx_eps", 2.0))
+
+            close_kernel_size = int(request.get("close_k", 5))
+            median_kernel_size = int(request.get("median_k", 5))
+
+            image_bgr, image_hue_saturation_value, image_height, image_width = self.load_image(image_id)
+
+            if not (0 <= x_pos < image_width and 0 <= y_pos < image_height):
+                self.reply(
+                    request_id,
+                    {
+                        "ok": False,
+                        "message": f"Out of bounds ({x_pos},{y_pos}) for {image_width}x{image_height}",
+                        "sample_x": x_pos,
+                        "sample_y": y_pos,
+                    },
+                )
+                return
+
+            # Sample HSV and BGR at click point
+            clicked_hue, clicked_saturation, clicked_value = [
+                int(channel) for channel in image_hue_saturation_value[y_pos, x_pos]
+            ]
+            blue, green, red = [int(channel) for channel in image_bgr[y_pos, x_pos]]
+            sample_hexadecimal_color = f"#{red:02X}{green:02X}{blue:02X}"
+
+            # Build mask for the clicked color class
+            mask = None
+            for lower_bound, upper_bound in hue_saturation_value_ranges(
+                clicked_hue,
+                clicked_saturation,
+                clicked_value,
+                hue_tolerance,
+                saturation_tolerance,
+                value_tolerance,
+            ):
+                range_mask = cv2.inRange(image_hue_saturation_value, lower_bound, upper_bound)
+                mask = range_mask if mask is None else cv2.bitwise_or(mask, range_mask)
+
+            # Clean mask
+            if median_kernel_size >= 3:
+                if median_kernel_size % 2 == 0:
+                    median_kernel_size += 1
+                mask = cv2.medianBlur(mask, median_kernel_size)
+
+            if close_kernel_size >= 3:
+                kernel = np.ones((close_kernel_size, close_kernel_size), np.uint8)
+                mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if not contours:
+                self.reply(
+                    request_id,
+                    {
+                        "ok": False,
+                        "message": "No contour found (tolerance too tight?)",
+                        "sample_x": x_pos,
+                        "sample_y": y_pos,
+                        "sample_hex": sample_hexadecimal_color,
+                        "sample_image_hex": sample_hexadecimal_color,
+                    },
+                )
+                return
+
+            # Filter small blobs (noise)
+            contours = [contour for contour in contours if cv2.contourArea(contour) >= min_area]
+            if not contours:
+                self.reply(
+                    request_id,
+                    {
+                        "ok": False,
+                        "message": "Contours found but all filtered by min_area",
+                        "sample_x": x_pos,
+                        "sample_y": y_pos,
+                        "sample_hex": sample_hexadecimal_color,
+                        "sample_image_hex": sample_hexadecimal_color,
+                    },
+                )
+                return
+
+            chosen_contour = self.choose_contour_near_click(contours, x_pos, y_pos)
+            if chosen_contour is None:
+                self.reply(
+                    request_id,
+                    {
+                        "ok": False,
+                        "message": "No suitable contour near click",
+                        "sample_x": x_pos,
+                        "sample_y": y_pos,
+                        "sample_hex": sample_hexadecimal_color,
+                        "sample_image_hex": sample_hexadecimal_color,
+                    },
+                )
+                return
+
+            # Simplify for payload size
+            approximated_contour = cv2.approxPolyDP(
+                chosen_contour, epsilon=approximation_epsilon, closed=True
+            )
+
+            # Always compute centroid (useful for both modes)
+            centroid = contour_centroid_pixel_position(chosen_contour)
+            if centroid is None:
+                bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = cv2.boundingRect(chosen_contour)
+                centroid = (
+                    int(bounding_x_pos + bounding_width / 2),
+                    int(bounding_y_pos + bounding_height / 2),
+                )
+
+            payload: dict[str, Any] = {
+                "ok": True,
+                "message": "OK",
+                "mode": mode,
+                "sample_x": x_pos,
+                "sample_y": y_pos,
+                "sample_hex": sample_hexadecimal_color,
+                "sample_image_hex": sample_hexadecimal_color,  # compatibility for frontend variants
+                "sample_rgb": [red, green, blue],
+                "centroid": [centroid[0], centroid[1]],
+            }
+
+            if mode == "border":
+                payload["contour"] = contour_to_points(approximated_contour)
+
+            self.reply(request_id, payload)
+
+        except Exception as error:
+            self.reply(request_id, {"ok": False, "message": f"ERROR: {error}"})
+
+
+def main(arguments=None):
+    rclpy.init(args=arguments)
+    node = ExtractFeatures()
+    rclpy.spin(node)
+    node.destroy_node()
     rclpy.shutdown()

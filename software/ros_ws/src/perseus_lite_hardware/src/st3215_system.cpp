@@ -9,7 +9,7 @@
 namespace
 {
     template <typename T>
-    bool hasParameter(const std::unordered_map<std::string, T>& params, const std::string& key)
+    bool has_parameter(const std::unordered_map<std::string, T>& params, const std::string& key)
     {
         return params.find(key) != params.end();
     }
@@ -53,12 +53,12 @@ namespace perseus_lite_hardware
         auto logger = rclcpp::get_logger(LOGGER_NAME);
 
         // Check required parameters
-        if (!hasParameter(info.hardware_parameters, "serial_port"))
+        if (!has_parameter(info.hardware_parameters, "serial_port"))
         {
             RCLCPP_ERROR(logger, "Missing required parameter 'serial_port'");
             return hardware_interface::CallbackReturn::ERROR;
         }
-        if (!hasParameter(info.hardware_parameters, "baud_rate"))
+        if (!has_parameter(info.hardware_parameters, "baud_rate"))
         {
             RCLCPP_ERROR(logger, "Missing required parameter 'baud_rate'");
             return hardware_interface::CallbackReturn::ERROR;
@@ -82,7 +82,7 @@ namespace perseus_lite_hardware
         // Extract and validate servo IDs
         for (const auto& joint : info.joints)
         {
-            if (!hasParameter(joint.parameters, "id"))
+            if (!has_parameter(joint.parameters, "id"))
             {
                 RCLCPP_ERROR(logger, "Joint '%s' is missing required parameter 'id'",
                              joint.name.c_str());
@@ -107,7 +107,7 @@ namespace perseus_lite_hardware
         // Verify command interfaces
         for (const auto& joint : info.joints)
         {
-            if (!verifyCommandInterfaces(joint, logger))
+            if (!verify_command_interfaces(joint, logger))
             {
                 return hardware_interface::CallbackReturn::ERROR;
             }
@@ -178,8 +178,8 @@ namespace perseus_lite_hardware
 
             // Set the servos as wheel mode and enable torque
             // Using enum classes instead of #define constants
-            const uint8_t modeRegister = static_cast<uint8_t>(ServoEpromRegister::MODE);
-            const uint8_t torqueRegister = static_cast<uint8_t>(ServoSramRegister::TORQUE_ENABLE);
+            const uint8_t mode_register = static_cast<uint8_t>(ServoEpromRegister::MODE);
+            const uint8_t torque_register = static_cast<uint8_t>(ServoSramRegister::TORQUE_ENABLE);
 
             // Set wheel mode and enable torque for each servo
             for (uint8_t servo_id : _servo_ids)
@@ -188,7 +188,7 @@ namespace perseus_lite_hardware
                              "Setting wheel mode for servo %d", servo_id);
 
                 // Set wheel mode command
-                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{modeRegister, _WHEEL_MODE_VALUE}))
+                if (!send_servo_command(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{mode_register, _WHEEL_MODE_VALUE}))
                 {
                     RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
                                  "Failed to set wheel mode for servo %d", servo_id);
@@ -202,7 +202,7 @@ namespace perseus_lite_hardware
                              "Enabling torque for servo %d", servo_id);
 
                 // Enable torque command
-                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{torqueRegister, _TORQUE_ENABLE_VALUE}))
+                if (!send_servo_command(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{torque_register, _TORQUE_ENABLE_VALUE}))
                 {
                     RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
                                  "Failed to enable torque for servo %d", servo_id);
@@ -217,7 +217,7 @@ namespace perseus_lite_hardware
 
             // Start communication thread
             _comm_thread_running = true;
-            _comm_thread = std::thread(&ST3215SystemHardware::communicationThread, this);
+            _comm_thread = std::thread(&ST3215SystemHardware::communication_thread, this);
 
             RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME), "Successfully configured!");
             return hardware_interface::CallbackReturn::SUCCESS;
@@ -230,7 +230,7 @@ namespace perseus_lite_hardware
         }
     }
 
-    void ST3215SystemHardware::communicationThread() noexcept
+    void ST3215SystemHardware::communication_thread() noexcept
     {
         RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME), "Starting communication thread");
 
@@ -254,7 +254,7 @@ namespace perseus_lite_hardware
 
                 {
                     std::lock_guard<std::mutex> lock(_serial_mutex);
-                    if (!sendServoCommand(servo_id, ServoCommand::READ, std::span{read_data}))
+                    if (!send_servo_command(servo_id, ServoCommand::READ, std::span{read_data}))
                     {
                         RCLCPP_WARN(rclcpp::get_logger(LOGGER_NAME),
                                     "Failed to request status from servo %d", servo_id);
@@ -285,7 +285,7 @@ namespace perseus_lite_hardware
 
                     if (bytes_read > 0)
                     {
-                        processResponse(std::span{buffer.data(), bytes_read});
+                        process_response(std::span{buffer.data(), bytes_read});
                     }
                 }
                 catch (const boost::system::system_error& e)
@@ -477,9 +477,9 @@ namespace perseus_lite_hardware
 
                 // Build write command for velocity - format matches SMS_STS::write_speed
                 // Using the enum class for the goal speed register
-                const uint8_t goalSpeedRegister = static_cast<uint8_t>(ServoSramRegister::GOAL_SPEED_L);
+                const uint8_t goal_speed_register = static_cast<uint8_t>(ServoSramRegister::GOAL_SPEED_L);
                 const std::array<uint8_t, 3> vel_data{
-                    goalSpeedRegister,
+                    goal_speed_register,
                     static_cast<uint8_t>(servo_speed & 0xFF),
                     static_cast<uint8_t>((servo_speed >> 8) & 0xFF)};
 
@@ -488,7 +488,7 @@ namespace perseus_lite_hardware
                              "Servo %d - Final velocity bytes: 0x%02X 0x%02X",
                              _servo_ids[i], vel_data[1], vel_data[2]);
 
-                if (!sendServoCommand(_servo_ids[i], ServoCommand::WRITE, std::span{vel_data}))
+                if (!send_servo_command(_servo_ids[i], ServoCommand::WRITE, std::span{vel_data}))
                 {
                     RCLCPP_WARN(rclcpp::get_logger(LOGGER_NAME),
                                 "Failed to send velocity command to servo %d", _servo_ids[i]);
@@ -506,7 +506,7 @@ namespace perseus_lite_hardware
         }
     }
 
-    bool ST3215SystemHardware::sendServoCommand(
+    bool ST3215SystemHardware::send_servo_command(
         const uint8_t id, const ServoCommand command,
         const std::span<const uint8_t> data) noexcept
     {
@@ -550,7 +550,7 @@ namespace perseus_lite_hardware
         }
     }
 
-    void ST3215SystemHardware::processResponse(const std::span<const uint8_t> response) noexcept
+    void ST3215SystemHardware::process_response(const std::span<const uint8_t> response) noexcept
     {
         // Log raw response bytes for debugging
         {
@@ -729,7 +729,7 @@ namespace perseus_lite_hardware
         }
     }
 
-    bool ST3215SystemHardware::updateServoStates(uint8_t id, size_t index) noexcept
+    bool ST3215SystemHardware::update_servo_states(uint8_t id, size_t index) noexcept
     {
         try
         {
@@ -763,7 +763,7 @@ namespace perseus_lite_hardware
         }
     }
 
-    bool ST3215SystemHardware::verifyCommandInterfaces(
+    bool ST3215SystemHardware::verify_command_interfaces(
         const hardware_interface::ComponentInfo& joint_info,
         const rclcpp::Logger& logger) const
     {

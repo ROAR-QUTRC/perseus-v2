@@ -16,7 +16,7 @@ The Perseus-v2 repository contains all the software for the Perseus rover and in
 
 As such it is imperative that the highest levels of professionalism are demonstrated in how this code is updated and the documentation supporting such changes.
 
-All software development standards are found in the [Software Standards](project:/standards/software.md) page.
+All software development standards are found in the [Software Standards](project:/standards/software/general.md) page.
 
 This pages addresses the incidental documentation associated with pushing new code to the common codebase. Therefore this page will describe the standards required for:
 

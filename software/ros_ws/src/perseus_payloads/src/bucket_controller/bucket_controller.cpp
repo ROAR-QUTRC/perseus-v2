@@ -6,16 +6,16 @@
 BucketController::BucketController(const rclcpp::NodeOptions& options)
     : Node("bucket_controller", options)
 {
-    _joySubscription =
-        this->create_subscription<sensor_msgs::msg::Joy>("bucket_joy", 10, std::bind(&BucketController::_joyCallback, this, std::placeholders::_1));
-    _actuatorPublisher = this->create_publisher<actuator_msgs::msg::Actuators>("bucket_actuators", 10);
+    _joy_subscription =
+        this->create_subscription<sensor_msgs::msg::Joy>("bucket_joy", 10, std::bind(&BucketController::_joy_callback, this, std::placeholders::_1));
+    _actuator_publisher = this->create_publisher<actuator_msgs::msg::Actuators>("bucket_actuators", 10);
     RCLCPP_INFO(this->get_logger(), "Bucket controller node initialized");
 }
 
-void BucketController::_joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg)
+void BucketController::_joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg)
 {
-    actuator_msgs::msg::Actuators actuatorMsg;
-    actuatorMsg.header.stamp = this->now();
+    actuator_msgs::msg::Actuators actuator_msg;
+    actuator_msg.header.stamp = this->now();
 
     static constexpr uint8_t LEFT_STICK_X_AXIS = 0;
     static constexpr uint8_t LEFT_STICK_Y_AXIS = 1;
@@ -33,16 +33,16 @@ void BucketController::_joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg)
     constexpr double ACTUATOR_SPEED = 0.1;  // m/s
     constexpr double ROTATE_SPEED = 1.5;    // rad/s
 
-    actuatorMsg.velocity.push_back(msg->axes[LEFT_STICK_Y_AXIS] * ACTUATOR_SPEED);
-    actuatorMsg.velocity.push_back(msg->axes[RIGHT_STICK_Y_AXIS] * ACTUATOR_SPEED);
-    actuatorMsg.velocity.push_back(msg->axes[RIGHT_STICK_X_AXIS] * ACTUATOR_SPEED);
-    actuatorMsg.velocity.push_back(msg->axes[LEFT_STICK_X_AXIS] * ROTATE_SPEED);
+    actuator_msg.velocity.push_back(msg->axes[LEFT_STICK_Y_AXIS] * ACTUATOR_SPEED);
+    actuator_msg.velocity.push_back(msg->axes[RIGHT_STICK_Y_AXIS] * ACTUATOR_SPEED);
+    actuator_msg.velocity.push_back(msg->axes[RIGHT_STICK_X_AXIS] * ACTUATOR_SPEED);
+    actuator_msg.velocity.push_back(msg->axes[LEFT_STICK_X_AXIS] * ROTATE_SPEED);
 
     // note: inverted, so magnet is released when the button's pressed
-    actuatorMsg.normalized.push_back(!msg->buttons[BUTTON_A]);
+    actuator_msg.normalized.push_back(!msg->buttons[BUTTON_A]);
 
     // Publish actuator message
-    _actuatorPublisher->publish(actuatorMsg);
+    _actuator_publisher->publish(actuator_msg);
 }
 
 int main(int argc, char** argv)

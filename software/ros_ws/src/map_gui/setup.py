@@ -19,8 +19,9 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-            'ExtractFeatures = map_gui.extract_features:main',
+    'console_scripts': [
+        'ExtractFeatures = map_gui.extract_features:main',
+        'connection_comedy = map_gui.connection_comedy:main',
         ],
     },
 )
