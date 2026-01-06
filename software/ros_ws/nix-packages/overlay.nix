@@ -1,6 +1,7 @@
 final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
+  map-gui = final.callPackage ./map-gui.nix { };
   perseus = final.callPackage ./perseus.nix { };
   perseus-can-if = final.callPackage ./perseus-can-if.nix { };
   perseus-description = final.callPackage ./perseus-description.nix { };
