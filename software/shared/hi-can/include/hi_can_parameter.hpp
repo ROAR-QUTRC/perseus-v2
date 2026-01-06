@@ -643,7 +643,7 @@ namespace hi_can::parameters
             {
                 enum class command_t : uint8_t
                 {
-                    
+
                 };
             }
         }
