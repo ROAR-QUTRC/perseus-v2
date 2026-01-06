@@ -166,7 +166,10 @@
             "cschlosser.doxdocgen",
             "mkhl.direnv",
             "ms-vscode.cpptools",
-            "ibecker.treefmt-vscode"
+            "ibecker.treefmt-vscode",
+            // Web UI extensions
+            "svelte.svelte-vscode",
+            "ms-vscode.vscode-typescript-next"
         ]
     }
 }
