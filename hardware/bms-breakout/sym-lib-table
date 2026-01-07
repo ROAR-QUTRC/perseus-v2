@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "custom_power")(type "KiCad")(uri "${KIPRJMOD}/custom_power.kicad_sym")(options "")(descr ""))
+)
