@@ -19,10 +19,6 @@
               <PipelineSequence name="NavigateToPose">
                 <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
                 <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
-                <HorizonBridge
-                  original_goal="{current_goal}"
-                  planner_id="{selected_planner}"
-                  nav_goal="{nav_goal}" />
                 <!-- Plan -->
                 <RateController hz="1.0">
                   <RecoveryNode number_of_retries="1" name="ComputePathToPoseRecovery">
