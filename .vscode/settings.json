@@ -1,3 +1,4 @@
 {
-  "cmake.sourceDirectory": "/home/bocho0600/perseus-v2/firmware/battery-management-system"
+  "cmake.sourceDirectory": "/home/bocho0600/perseus-v2/firmware/battery-management-system",
+  "ros.distro": "jazzy"
 }
