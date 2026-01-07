@@ -1,6 +1,6 @@
 // Run this node on a raspberry pi or a device that has an i2c bus
 
-#include "processing_plant/processing_plant.hpp"
+#include "processing_plant_sensors/processing_plant_sensors.hpp"
 
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
