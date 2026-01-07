@@ -60,10 +60,12 @@ namespace pointcloud_to_laserscan
     {
         target_frame_ = this->declare_parameter("target_frame", "laser_frame");
         tolerance_ = this->declare_parameter("transform_tolerance", 0.01);
+        
         // TODO(hidmic): adjust default input queue size based on actual concurrency levels
         // achievable by the associated executor
         input_queue_size_ = this->declare_parameter(
             "queue_size", static_cast<int>(std::thread::hardware_concurrency()));
+        RCLCPP_INFO(this->get_logger(),"queue size: %d", input_queue_size_);
         min_height_ = this->declare_parameter("min_height", std::numeric_limits<double>::min());
         max_height_ = this->declare_parameter("max_height", std::numeric_limits<double>::max());
         angle_min_ = this->declare_parameter("angle_min", -M_PI);
@@ -81,6 +83,7 @@ namespace pointcloud_to_laserscan
         // if pointcloud target frame specified, we need to filter by transform availability
         if (!target_frame_.empty())
         {
+            RCLCPP_INFO(this->get_logger(),"Target frame %s specified, setting up tf2 message filter", target_frame_.c_str());
             tf2_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
             auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
                 this->get_node_base_interface(), this->get_node_timers_interface());
@@ -95,6 +98,9 @@ namespace pointcloud_to_laserscan
         }
         else
         {  // otherwise setup direct subscription
+            RCLCPP_INFO(
+                this->get_logger(),
+                "Check 2");
             sub_.registerCallback(std::bind(&PointCloudToLaserScanNode::cloudCallback, this, _1));
         }
 
