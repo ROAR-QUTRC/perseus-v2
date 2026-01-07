@@ -1,0 +1,79 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="SequentialWaypointNav">
+
+      <!-- When goals are finished (GetGoalFromGoals fails), convert that final FAILURE into SUCCESS -->
+      <Fallback name="FinishWhenDone">
+
+        <!-- Loop: keep running until ProcessWaypoint FAILS (i.e., no goals left) -->
+        <KeepRunningUntilFailure name="LoopWaypoints">
+          <Sequence name="ProcessWaypoint">
+
+            <!-- Take the first goal (index 0). MUST FAIL when goals is empty -->
+            <GetGoalFromGoals goals="{goals}" index="0" goal="{current_goal}"/>
+
+            <!-- Whole waypoint navigation wrapped in a recovery retry -->
+            <RecoveryNode number_of_retries="2" name="NavigateToWaypointWithRecovery">
+
+              <!-- Main navigation work -->
+              <PipelineSequence name="NavigateToPose">
+                <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
+                <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
+
+                <!-- Plan -->
+                <RateController hz="1.0">
+                  <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+                    <ComputePathToPose goal="{current_goal}" path="{path}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}"/>
+                    <Sequence>
+                      <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
+                      <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                    </Sequence>
+                  </RecoveryNode>
+                </RateController>
+
+                <!-- Follow -->
+                <RecoveryNode number_of_retries="1" name="FollowPath">
+                  <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
+                  <Sequence>
+                    <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
+                    <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+                  </Sequence>
+                </RecoveryNode>
+              </PipelineSequence>
+
+              <!-- Recovery actions if NavigateToPose fails -->
+              <Sequence name="WaypointRecoveryActions">
+                <ClearEntireCostmap name="ClearLocalCostmap-Recovery" service_name="local_costmap/clear_entirely_local_costmap"/>
+                <ClearEntireCostmap name="ClearGlobalCostmap-Recovery" service_name="global_costmap/clear_entirely_global_costmap"/>
+
+                <!-- Spin in place (radians). 1.57 ~ 90deg -->
+                <Spin name="RecoverySpin" spin_dist="1.57"/>
+
+                <!-- Wait a bit -->
+                <Wait name="RecoveryWait" wait_duration="2.0"/>
+
+                <!-- Back up slightly -->
+                <BackUp name="RecoveryBackUp" backup_dist="0.20" backup_speed="0.05"/>
+              </Sequence>
+
+            </RecoveryNode>
+
+            <!-- Only runs if the above SUCCESS (goal reached) -->
+            <Wait name="WaitAtWaypoint" wait_duration="5.0"/>
+
+            <!-- TODO: Call ArucoMarker detection service here (should return SUCCESS/FAILURE) -->
+
+            <!-- Remove the first goal only AFTER success -->
+            <PopFirstGoal input_goals="{goals}" output_goals="{goals}"/>
+
+          </Sequence>
+        </KeepRunningUntilFailure>
+
+        <!-- Loop ended (no more goals) -> mission complete -->
+        <AlwaysSuccess name="AllWaypointsCompleted"/>
+
+      </Fallback>
+
+    </Sequence>
+  </BehaviorTree>
+</root>

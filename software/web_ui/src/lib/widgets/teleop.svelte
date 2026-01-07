@@ -243,7 +243,7 @@
 		if (ros) {
 			topic = new ROSLIB.Topic({
 				ros: ros,
-				name: '/web_vel',
+				name: '/cmd_vel_out',
 				messageType: 'geometry_msgs/TwistStamped'
 			});
 		} else {
