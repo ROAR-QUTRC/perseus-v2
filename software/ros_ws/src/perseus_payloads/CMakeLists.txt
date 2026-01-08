@@ -41,7 +41,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs actuator_msgs)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs actuator_msgs pigpio)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
@@ -68,7 +68,8 @@ endif()
 file(GLOB_RECURSE ARM_DRIVER_CODE_SOURCES src/arm_driver/*.cpp)
 file(GLOB_RECURSE BUCKET_CONTROLLER_CODE_SOURCES src/bucket_controller/*.cpp)
 file(GLOB_RECURSE BUCKET_DRIVER_CODE_SOURCES src/bucket_driver/*.cpp)
-file(GLOB_RECURSE PROCESSING_PLANT_CODE_SOURCES src/processing_plant/*.cpp)
+file(GLOB_RECURSE PROCESSING_PLANT_SENSORS_CODE_SOURCES
+     src/processing_plant_sensors/*.cpp)
 #Space Resources
 file(GLOB_RECURSE CENTRIFUGE_DRIVER_CODE_SOURCES src/space_resources/centrifuge/*.cpp)
 file(GLOB_RECURSE ILMENITE_STATION_CODE_SOURCES src/space_resources/ilmenite/*.cpp)
@@ -79,7 +80,8 @@ file(GLOB_RECURSE SPACE_RESOURCES_CONTROLLER_CODE_SOURCES src/space_resources/sp
 add_executable(arm_driver ${ARM_DRIVER_CODE_SOURCES})
 add_executable(bucket_controller ${BUCKET_CONTROLLER_CODE_SOURCES})
 add_executable(bucket_driver ${BUCKET_DRIVER_CODE_SOURCES})
-add_executable(processing_plant ${PROCESSING_PLANT_CODE_SOURCES})
+add_executable(processing_plant_sensors
+               ${PROCESSING_PLANT_SENSORS_CODE_SOURCES})
 #Space Resources
 add_executable(centrifuge_driver ${CENTRIFUGE_DRIVER_CODE_SOURCES})
 add_executable(ilmenite_station ${ILMENITE_STATION_CODE_SOURCES})
@@ -93,7 +95,7 @@ target_include_directories(bucket_controller
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(bucket_driver
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(processing_plant
+target_include_directories(processing_plant_sensors
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 #Space Resources
 target_include_directories(centrifuge_driver
@@ -113,7 +115,7 @@ ament_target_dependencies(
   sensor_msgs)
 ament_target_dependencies(bucket_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           actuator_msgs)
-ament_target_dependencies(processing_plant PUBLIC
+ament_target_dependencies(processing_plant_sensors PUBLIC
                           ${THIS_PACKAGE_INCLUDE_DEPENDS})
 #Space Resources
 ament_target_dependencies(centrifuge_driver
@@ -133,7 +135,7 @@ target_link_libraries(bucket_driver PUBLIC hi_can_raw)
 install(TARGETS arm_driver DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_controller DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_driver DESTINATION lib/${PROJECT_NAME})
-install(TARGETS processing_plant DESTINATION lib/${PROJECT_NAME})
+install(TARGETS processing_plant_sensors DESTINATION lib/${PROJECT_NAME})
 
 #Space Resources
 install(TARGETS centrifuge_driver DESTINATION lib/${PROJECT_NAME})
