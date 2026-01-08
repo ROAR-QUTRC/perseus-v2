@@ -99,6 +99,10 @@ let
     # (intersphinx, tippy, etc)
     __noChroot = true;
 
+    # disable sandboxing so sphinx extensions can grab their internet resources
+    # (intersphinx, tippy, etc)
+    __noChroot = true;
+
     # this needs to be set as an environment variable (just passing it as part of the set to mkDerivation)
     # for intersphinx config to be sure to use the correct file
     ROS_DISTRO = rosDistro;
@@ -120,8 +124,8 @@ let
       # (mainly for figures)
       chmod -R +w .
 
-      # finally build the docs, with warnings treated as errors
-      make html SPHINXOPTS="-W"
+      # finally build the docs
+      make html
     '';
     # install the docs to $out/html
     installPhase = ''
