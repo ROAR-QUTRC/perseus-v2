@@ -6,6 +6,7 @@
   ament-cmake,
   backward-ros,
   hi-can-raw,
+  pigpio,
   rclcpp,
   sensor-msgs,
 }:
@@ -21,6 +22,7 @@ buildRosPackage rec {
     actuator-msgs
     backward-ros
     hi-can-raw
+    pigpio
     rclcpp
     sensor-msgs
   ];

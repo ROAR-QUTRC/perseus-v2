@@ -53,6 +53,7 @@ pkgs.mkShell {
             navigation2
             nlohmann_json
             openssl
+            pigpio
             pluginlib
             python3Packages.pygame
             python3Packages.pytest

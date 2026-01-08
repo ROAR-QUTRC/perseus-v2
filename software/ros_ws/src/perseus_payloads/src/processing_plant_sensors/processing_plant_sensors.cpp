@@ -11,7 +11,7 @@ ProcessingPlant::ProcessingPlant(const rclcpp::NodeOptions& options)
     : Node("processing_plant", options)
 {
     _init_i2c();
-    if (_check_sensor(_spectral_address) | _check_sensor(_magnetometer_address))
+    if (_check_sensor(_i2c_address::SPECTRAL) | _check_sensor(_i2c_address::MAGNETOMETER))
     {
         return;
     }
@@ -34,46 +34,48 @@ void ProcessingPlant::_init_i2c()
     }
 }
 
-int ProcessingPlant::_check_sensor(const uint16_t address)
+int ProcessingPlant::_check_sensor(const _i2c_address address)
 {
     unsigned long functions = 0;
     if (ioctl(_i2c_file, I2C_FUNCS, &functions) < 0)
     {
-        RCLCPP_ERROR(this->get_logger(), "Error while sending 'get function' message to i2c address %d", address);
+        RCLCPP_ERROR(this->get_logger(), "Error while sending 'get function' message to i2c address %d", static_cast<int>(address));
         return errno;
     }
     if (functions & I2C_FUNC_I2C)
     {
-        RCLCPP_INFO(this->get_logger(), "Device at address %d can be used with I2C_RDWR, continuing", address);
+        RCLCPP_INFO(this->get_logger(), "Device at address %d can be used with I2C_RDWR, continuing", static_cast<int>(address));
         return 0;
     }
     else
-    {  // I didn't want to have to implement the lower-level ways of doing stuff if I didn't have to. I will remove this function if both sensors behave
-        RCLCPP_ERROR(this->get_logger(), "Device at address %d can NOT be used with I2C_RDWR", address);
+    {  // I didn't want to have to implement the lower-level ways of doing stuff if I didn't have to. I will remove this function if both sensors behave. The spectral sensor follows the NCP standard, so it should be fine.
+        RCLCPP_ERROR(this->get_logger(), "Device at address %d can NOT be used with I2C_RDWR", static_cast<int>(address));
         return 1;
     }
 }
 
 void ProcessingPlant::_init_spectral()
 {
-    std::vector<uint8_t> data = {_spectral_enable_register, _spectral_enable_data};
-    _write_i2c(_spectral_address, &data);
+    _write_single_i2c(_i2c_address::SPECTRAL, std::vector<uint8_t>{_spectral_register_address::ENABLE, _spectral_enable::POWER_ON});
+    while (_read_write_i2c(_i2c_address::SPECTRAL, std::vector<uint8_t>{_spectral_register_address::STATUS_4}, 1).front() & _spectral_status_4::INITIALIZATION_BUSY);
+    std::vector<std::pair<const _i2c_address, std::vector<uint8_t>>> data = {
+        {}};
+    _write_multiple_i2c(data);
     RCLCPP_DEBUG(this->get_logger(), "Spectral sensor initialised");
 }
 void ProcessingPlant::_init_magnetometer()
 {
-    std::vector<uint8_t> data = {_magnetometer_enable_data};
-    _write_i2c(_magnetometer_address, &data);
+    _write_single_i2c(_i2c_address::MAGNETOMETER, std::vector<uint8_t>{_magnetometer_enable_data});
     RCLCPP_DEBUG(this->get_logger(), "Magnetometer initialised");
 }
 
-void ProcessingPlant::_write_i2c(const uint16_t address, std::vector<uint8_t>* data)
+void ProcessingPlant::_write_single_i2c(const _i2c_address address, std::vector<uint8_t> data)
 {
     i2c_msg message[] = {{
-        .addr = address,
+        .addr = static_cast<uint16_t>(static_cast<uint8_t>(address) << 1),
         .flags = 0,
-        .len = static_cast<uint16_t>(data->size()),
-        .buf = data->data(),
+        .len = static_cast<uint16_t>(data.size()),
+        .buf = data.data(),
     }};
     i2c_rdwr_ioctl_data send_message = {
         .msgs = message,
@@ -82,15 +84,34 @@ void ProcessingPlant::_write_i2c(const uint16_t address, std::vector<uint8_t>* d
     ioctl(_i2c_file, I2C_RDWR, &send_message);
 }
 
-std::vector<uint8_t> ProcessingPlant::_read_write_i2c(const uint16_t address, std::vector<uint8_t>* send_data, uint16_t read_bytes)
+void ProcessingPlant::_write_multiple_i2c(std::vector<std::pair<const _i2c_address, std::vector<uint8_t>>> messages)
+{
+    std::vector<i2c_msg> messages_formatted = {};
+    for (std::pair<const _i2c_address, std::vector<uint8_t>> message : messages)
+    {
+        messages_formatted.emplace_back(i2c_msg{
+            .addr = static_cast<uint16_t>(static_cast<uint8_t>(message.first) << 1),
+            .flags = 0,
+            .len = static_cast<uint16_t>(message.second.size()),
+            .buf = message.second.data(),
+        });
+    }
+    i2c_rdwr_ioctl_data send_message = {
+        .msgs = messages_formatted.data(),
+        .nmsgs = static_cast<uint32_t>(messages_formatted.size()),
+    };
+    ioctl(_i2c_file, I2C_RDWR, &send_message);
+}
+
+std::vector<uint8_t> ProcessingPlant::_read_write_i2c(const _i2c_address address, std::vector<uint8_t> send_data, uint16_t read_bytes)
 {
     uint8_t* received_data = (uint8_t*)malloc(read_bytes * sizeof(uint8_t));
     i2c_msg messages[] = {
-        {.addr = address,
+        {.addr = static_cast<uint16_t>(static_cast<uint8_t>(address) << 1),
          .flags = 0,
-         .len = static_cast<uint16_t>(send_data->size()),
-         .buf = send_data->data()},
-        {.addr = address,
+         .len = static_cast<uint16_t>(send_data.size()),
+         .buf = send_data.data()},
+        {.addr = static_cast<uint16_t>(static_cast<uint8_t>(address) << 1 | 0b1),
          .flags = I2C_M_RD,
          .len = read_bytes,
          .buf = received_data}};
@@ -112,13 +133,12 @@ std::vector<uint8_t> ProcessingPlant::_read_write_i2c(const uint16_t address, st
 void ProcessingPlant::_read_spectral()
 {
     std::vector<uint8_t> send_data = {};
-    std::vector<uint8_t> receive_data = _read_write_i2c(_spectral_address, &send_data, 36);
+    std::vector<uint8_t> receive_data = _read_write_i2c(_i2c_address::SPECTRAL, send_data, 36);
 }
 
 void ProcessingPlant::_read_magnetometer()
 {
-    std::vector<uint8_t> send_data = {_magnetometer_start};
-    std::vector<uint8_t> receive_data = _read_write_i2c(_magnetometer_address, &send_data, 9);
+    std::vector<uint8_t> receive_data = _read_write_i2c(_i2c_address::MAGNETOMETER, std::vector<uint8_t>{_magnetometer_start}, 9);
     uint8_t status = receive_data.at(0);
     int16_t x = (receive_data.at(1) << 8) | receive_data.at(2);
     int16_t y = (receive_data.at(3) << 8) | receive_data.at(4);
