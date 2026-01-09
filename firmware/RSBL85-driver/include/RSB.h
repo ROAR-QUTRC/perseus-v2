@@ -74,8 +74,16 @@ public:
     // Wheel Mode (Constant Speed Mode)
     virtual int WheelMode(uint8_t ID);
 
-    // Wheel Mode Control Command
+    // Calculate speed in steps/second
+    virtual int SpeCalc(uint16_t Steps, uint16_t Time);
+
     virtual int WriteSpe(uint8_t ID, int16_t Speed, uint8_t ACC = 0);
+    virtual int MoveToAngle(uint8_t ID, int16_t TargetAngle, uint16_t Time, uint8_t ACC = 0);
+    virtual void SyncRotateByAngle(uint8_t ID[], uint8_t IDN, int16_t RotationAngle[], uint16_t Time, uint8_t ACC[]);
+    virtual void SyncMoveToAngle(uint8_t ID[], uint8_t IDN, int16_t TargetAngle[], uint16_t Time, uint8_t ACC[]);
+
+    virtual int WritePosWithTime(uint8_t ID, int16_t Position, uint16_t Time, uint8_t ACC = 0);
+    virtual void SyncWritePosWithTime(uint8_t ID[], uint8_t IDN, int16_t Position[], uint16_t Time, uint8_t ACC[]);
 
     // Torque Control Command
     virtual int EnableTorque(uint8_t ID, uint8_t Enable);
