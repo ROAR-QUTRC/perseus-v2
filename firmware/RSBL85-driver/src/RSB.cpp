@@ -141,131 +141,33 @@ int SMS_STS::WriteSpe(uint8_t ID, int16_t Speed, uint8_t ACC)
 
 int SMS_STS::MoveToAngle(uint8_t ID, int16_t TargetAngle, uint16_t Time, uint8_t ACC)
 {
-    if (TargetAngle == 0 || Time == 0)
+    int32_t position = ((int32_t)TargetAngle * 4096) / 360;
+
+    if (position < 0)
     {
-        return WriteSpe(ID, 0, ACC);
+        position = -position;
+        position |= (1 << 15);
     }
-
-    uint16_t absAngle = abs(TargetAngle);
-    uint16_t targetSteps = ((uint32_t)absAngle * 4096) / 360;
-
-    int16_t Speed = SpeCalc(targetSteps, Time);
-
-    if (TargetAngle < 0)
-    {
-        Speed = -Speed;
-    }
-
-    int result = WriteSpe(ID, Speed, ACC);
-    if (result == -1)
-    {
-        return -1;
-    }
-
-    delay(Time);
-
-    return WriteSpe(ID, 0, ACC);
+    uint8_t bBuf[7];
+    bBuf[0] = ACC;
+    Host2SCS(bBuf + 1, bBuf + 2, (int16_t)position);  
+    Host2SCS(bBuf + 3, bBuf + 4, Time);               
+    Host2SCS(bBuf + 5, bBuf + 6, 0);                  
+    memcpy(bBuf, bBuf, 7);
+    
+    return genWrite(ID, SMS_STS_ACC, (uint8_t*)bBuf, 7);
 }
 
-int SMS_STS::SpeCalc(uint16_t Steps, uint16_t Time)
-{
-    if (Time == 0)
-    {
-        return 0;
-    }
-
-    uint32_t Speed = ((uint32_t)Steps * 1000) / (uint32_t)Time;
-    if (Speed > 0x7FFF)
-    {
-        Speed = 0x7FFF;
-    }
-    return (int16_t)Speed;
-}
-
-// angle in degrees, time in milliseconds
-void SMS_STS::SyncRotateByAngle(uint8_t ID[], uint8_t IDN, int16_t RotationAngle[], uint16_t Time, uint8_t ACC[])
-{
-    int16_t Speed[IDN];
-
-    for (uint8_t i = 0; i < IDN; i++)
-    {
-        if (RotationAngle[i] == 0 || Time == 0)
-        {
-            Speed[i] = 0;
-            continue;
-        }
-
-        uint16_t absAngle = abs(RotationAngle[i]);
-        uint16_t targetSteps = ((uint32_t)absAngle * 4096) / 360;
-
-        int16_t speed = SpeCalc(targetSteps, Time);
-
-        if (RotationAngle[i] < 0)
-        {
-            speed = -speed;
-        }
-
-        Speed[i] = speed;
-    }
-
-    uint8_t accBuf[IDN][1];
-    for (uint8_t i = 0; i < IDN; i++)
-    {
-        accBuf[i][0] = ACC[i];
-    }
-    syncWrite(ID, IDN, SMS_STS_ACC, (uint8_t*)accBuf, 1);
-
-    uint8_t speedBuf[IDN][2];
-    for (uint8_t i = 0; i < IDN; i++)
-    {
-        int16_t speed = Speed[i];
-        if (speed < 0)
-        {
-            speed = -speed;
-            speed |= (1 << 15);
-        }
-        Host2SCS(&speedBuf[i][0], &speedBuf[i][1], speed);
-    }
-    syncWrite(ID, IDN, SMS_STS_GOAL_SPEED_L, (uint8_t*)speedBuf, 2);
-
-    if (Time > 0)
-    {
-        delay(Time);
-
-        uint8_t stopBuf[IDN][2];
-        for (uint8_t i = 0; i < IDN; i++)
-        {
-            Host2SCS(&stopBuf[i][0], &stopBuf[i][1], 0);
-        }
-        syncWrite(ID, IDN, SMS_STS_GOAL_SPEED_L, (uint8_t*)stopBuf, 2);
-    }
-}
-
-// Move TO target angle position with goal time (position + time control)
-// angle in degrees, time in milliseconds
 void SMS_STS::SyncMoveToAngle(uint8_t ID[], uint8_t IDN, int16_t TargetAngle[], uint16_t Time, uint8_t ACC[])
 {
-    uint8_t offbuf[IDN][7];
+    int16_t positions[IDN];
 
     for (uint8_t i = 0; i < IDN; i++)
     {
-        int32_t position = ((int32_t)TargetAngle[i] * 4096) / 360;
-
-        if (position < 0)
-        {
-            position = -position;
-            position |= (1 << 15);
-        }
-
-        uint8_t bBuf[7];
-        bBuf[0] = ACC[i];
-        Host2SCS(bBuf + 1, bBuf + 2, (int16_t)position);  
-        Host2SCS(bBuf + 3, bBuf + 4, Time);               
-        Host2SCS(bBuf + 5, bBuf + 6, 0);                  
-        memcpy(offbuf[i], bBuf, 7);
+        positions[i] = ((int32_t)TargetAngle[i] * 4096) / 360;
     }
 
-    syncWrite(ID, IDN, SMS_STS_ACC, (uint8_t*)offbuf, 7);
+    SyncWritePosWithTime(ID, IDN, positions, Time, ACC);
 }
 
 int SMS_STS::EnableTorque(uint8_t ID, uint8_t Enable)
