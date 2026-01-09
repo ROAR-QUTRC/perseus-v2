@@ -2304,156 +2304,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:D_Zener"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "D"
-				(at 0 2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "D_Zener"
-				(at 0 -2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Zener diode"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "diode"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "TO-???* *_Diode_* *SingleDiode* D_*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "D_Zener_0_1"
-				(polyline
-					(pts
-						(xy -1.27 -1.27) (xy -1.27 1.27) (xy -0.762 1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 0) (xy -1.27 0)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 -1.27) (xy 1.27 1.27) (xy -1.27 0) (xy 1.27 -1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "D_Zener_1_1"
-				(pin passive line
-					(at -3.81 0 0)
-					(length 2.54)
-					(name "K"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 3.81 0 180)
-					(length 2.54)
-					(name "A"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "Device:L"
 			(pin_numbers
 				(hide yes)
@@ -3879,7 +3729,7 @@
 		)
 		(uuid dbdccb4b-6ffd-4f06-ac16-97b57a966520)
 	)
-	(text "(https://webench.ti.com/appinfo/webench/scripts/SDP.cgi?ID=436553DDC7067EBB)\n"
+	(text "https://webench.ti.com/appinfo/webench/scripts/SDP.cgi?ID=436553DDC7067EBB\n"
 		(exclude_from_sim no)
 		(at 56.388 93.98 0)
 		(effects
@@ -4088,12 +3938,6 @@
 		(uuid "181abe7a-f941-42b6-bd46-aaa3131f90fb")
 	)
 	(junction
-		(at 205.74 115.57)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "1f68c4a0-788b-4fb2-8032-e17079465447")
-	)
-	(junction
 		(at 22.86 110.49)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4208,12 +4052,6 @@
 		(uuid "8174b4de-74b1-48db-ab8e-c8432251095b")
 	)
 	(junction
-		(at 193.04 144.78)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "81cb5e58-641d-4c44-8f08-f1f20c2c41a0")
-	)
-	(junction
 		(at 378.46 43.18)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4250,6 +4088,12 @@
 		(uuid "a6b96e19-450d-456a-8e8f-e34c6fce7c4c")
 	)
 	(junction
+		(at 193.04 115.57)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "ade4bc16-202f-478d-ac9f-1d1088e8bbc7")
+	)
+	(junction
 		(at 137.16 135.89)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4278,12 +4122,6 @@
 		(diameter 1.016)
 		(color 0 0 0 0)
 		(uuid "ce83728b-bebd-48c2-8734-b6a50d837931")
-	)
-	(junction
-		(at 193.04 115.57)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "d1cc19be-1aa9-4743-bf47-e0c56233e124")
 	)
 	(junction
 		(at 120.65 115.57)
@@ -4369,6 +4207,16 @@
 	)
 	(wire
 		(pts
+			(xy 193.04 115.57) (xy 199.39 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "085e78ab-5471-4f4c-a3b9-12cf5a1abf00")
+	)
+	(wire
+		(pts
 			(xy 115.57 133.35) (xy 115.57 144.78)
 		)
 		(stroke
@@ -4376,16 +4224,6 @@
 			(type default)
 		)
 		(uuid "09afd835-594c-4cde-9cee-0c291108528e")
-	)
-	(wire
-		(pts
-			(xy 205.74 144.78) (xy 205.74 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0ac62bd3-f808-4c1c-96b8-102a263e92f5")
 	)
 	(wire
 		(pts
@@ -4866,16 +4704,6 @@
 			(type solid)
 		)
 		(uuid "4c544204-3530-479b-b097-35aa046ba896")
-	)
-	(wire
-		(pts
-			(xy 205.74 115.57) (xy 218.44 115.57)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4eac12fb-d01c-46cc-b416-bcaaae00361b")
 	)
 	(wire
 		(pts
@@ -5619,26 +5447,6 @@
 	)
 	(wire
 		(pts
-			(xy 193.04 144.78) (xy 205.74 144.78)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "aa78e817-9e96-4686-baca-4d51d9093651")
-	)
-	(wire
-		(pts
-			(xy 193.04 115.57) (xy 205.74 115.57)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ab02adeb-4d05-409e-8745-14689d05e831")
-	)
-	(wire
-		(pts
 			(xy 271.78 107.95) (xy 271.78 102.87)
 		)
 		(stroke
@@ -5986,16 +5794,6 @@
 			(type default)
 		)
 		(uuid "d8f483c0-9271-4c38-908b-badcd55e2f44")
-	)
-	(wire
-		(pts
-			(xy 205.74 115.57) (xy 205.74 127)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "dbe443a8-edcc-4456-bb5b-e51e7216abdc")
 	)
 	(wire
 		(pts
@@ -6565,28 +6363,6 @@
 			)
 		)
 	)
-	(global_label "5V"
-		(shape input)
-		(at 218.44 115.57 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "20289f93-33fc-44be-919d-248540c91eab")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 223.8184 115.57 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-	)
 	(global_label "24V"
 		(shape input)
 		(at 20.32 110.49 180)
@@ -6979,6 +6755,28 @@
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "5V"
+		(shape input)
+		(at 199.39 115.57 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "cceb68ea-a5e3-4eaa-91dd-fe7fc0ac8f75")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 204.7684 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
 				(hide yes)
 			)
 		)
@@ -8335,7 +8133,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_1808_4520Metric"
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric_Pad1.33x2.70mm_HandSolder"
 			(at 148.2852 133.35 0)
 			(effects
 				(font
@@ -8504,75 +8302,6 @@
 			(project "PiHat2"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
 					(reference "#PWR011")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C")
-		(at 44.45 120.65 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "322ddf28-5065-4f6c-ab18-0c60c4612e80")
-		(property "Reference" "C1"
-			(at 48.26 119.3799 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "2.2u"
-			(at 48.26 121.9199 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 45.4152 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 44.45 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "50V"
-			(at 44.45 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "dd4ed452-4d44-4c9b-aa18-37fda4655869")
-		)
-		(pin "1"
-			(uuid "26497212-e81f-480a-a8e6-6faf385760d0")
-		)
-		(instances
-			(project "PiHat2"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "C1")
 					(unit 1)
 				)
 			)
@@ -8893,7 +8622,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "2.2u"
+		(property "Value" "10u"
 			(at 26.67 121.9199 0)
 			(effects
 				(font
@@ -8902,7 +8631,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
 			(at 23.8252 124.46 0)
 			(effects
 				(font
@@ -9112,7 +8841,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_1808_4520Metric"
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric_Pad1.33x2.70mm_HandSolder"
 			(at 159.7152 133.35 0)
 			(effects
 				(font
@@ -9784,76 +9513,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:D_Zener")
-		(at 205.74 130.81 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "91a4f12e-36c8-4bb4-82e6-cee5a1d1842a")
-		(property "Reference" "D3"
-			(at 208.28 129.5399 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "SMAZ5V1-13-F"
-			(at 208.28 132.0799 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Diode_SMD:D_SMA"
-			(at 205.74 130.81 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 205.74 130.81 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Zener diode"
-			(at 205.74 130.81 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "6d29b42a-669a-45a3-bdad-326fad3500cb")
-		)
-		(pin "2"
-			(uuid "72e1a5e7-def2-4f0c-ad3e-1cdfd55ca928")
-		)
-		(instances
-			(project ""
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "D3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:GND")
 		(at 234.95 148.59 0)
 		(unit 1)
@@ -9913,6 +9572,75 @@
 			(project "PiHat3"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
 					(reference "#PWR09")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 44.45 120.65 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "97bf47a7-eebe-4bf5-abc7-7f696c889529")
+		(property "Reference" "C2"
+			(at 48.26 119.3799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10u"
+			(at 48.26 121.9199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
+			(at 45.4152 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 44.45 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "100V Low ESR"
+			(at 44.45 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "debc2d50-bc90-437f-b05c-d86b0326be94")
+		)
+		(pin "1"
+			(uuid "e60bedba-a0a6-4f72-ad98-cf9bf667cb5f")
+		)
+		(instances
+			(project "PiHat3"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(reference "C2")
 					(unit 1)
 				)
 			)
@@ -11120,75 +10848,6 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 33.02 120.65 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "dfe8ca65-f454-42d8-875d-0b5689a3dd67")
-		(property "Reference" "C2"
-			(at 36.83 119.3799 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "2.2u"
-			(at 36.83 121.9199 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 33.9852 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 33.02 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "50V"
-			(at 33.02 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "edc6d629-ef4e-4919-94c9-4a1569ef5c79")
-		)
-		(pin "1"
-			(uuid "174d92e0-88cb-4492-8a45-6e2d98de4878")
-		)
-		(instances
-			(project "PiHat2"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "C2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C")
 		(at 170.18 129.54 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -11214,7 +10873,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_1808_4520Metric"
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric_Pad1.33x2.70mm_HandSolder"
 			(at 171.1452 133.35 0)
 			(effects
 				(font
@@ -11461,6 +11120,75 @@
 			(project "PiHat3"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
 					(reference "J14")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 33.02 120.65 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "fe6193f6-126e-47d1-aa5f-3e5421a8cb4c")
+		(property "Reference" "C1"
+			(at 36.83 119.3799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10u"
+			(at 36.83 121.9199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
+			(at 33.9852 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 33.02 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "100V Low ESR"
+			(at 33.02 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "30bc770e-3b14-435c-945b-042e92ac66a7")
+		)
+		(pin "1"
+			(uuid "b8aac74e-3f95-45d2-b64a-fec7e51e8057")
+		)
+		(instances
+			(project "PiHat3"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(reference "C1")
 					(unit 1)
 				)
 			)
