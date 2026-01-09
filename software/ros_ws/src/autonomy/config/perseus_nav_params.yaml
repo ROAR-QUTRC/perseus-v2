@@ -52,7 +52,6 @@ amcl:
 
 bt_navigator:
   ros__parameters:
-    use_sim_time: true
     global_frame: map
     robot_base_frame: base_footprint
     transform_tolerance: 0.5
@@ -110,7 +109,6 @@ docking_server:
 
 controller_server:
   ros__parameters:
-    use_sim_time: true
     controller_frequency: 10.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.001
@@ -169,6 +167,7 @@ controller_server:
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
     enable_stamped_cmd_vel: true
+
 local_costmap:
   local_costmap:
     ros__parameters:
@@ -191,7 +190,7 @@ local_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /lidar_scan
+          topic: /scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -204,20 +203,18 @@ local_costmap:
         z_resolution: 0.05
         z_voxels: 16
         max_obstacle_height: 2.0
-        min_obstacle_height: 0.1
         mark_threshold: 0
-        observation_sources: pointcloud
-        pointcloud:
-          topic: /points
+        observation_sources: scan
+        scan:
+          topic: /scan
           max_obstacle_height: 2.0
-          min_obstacle_height: 0.1
           clearing: true
           marking: true
-          data_type: "PointCloud2"
-          raytrace_max_range: 5.0
-          raytrace_min_range: 0.8
-          obstacle_max_range: 4.0
-          obstacle_min_range: 1.0
+          data_type: "LaserScan"
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
       static_layer:
         map_subscribe_transient_local: true
       always_send_full_costmap: true
@@ -239,16 +236,15 @@ global_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /lidar_scan
+          topic: /scan
           max_obstacle_height: 2.0
-          min_obstacle_height: 2.0
           clearing: true
           marking: true
           data_type: "LaserScan"
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 5.0
-          obstacle_min_range: 1.0
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -289,7 +285,7 @@ map_server:
 map_saver:
   ros__parameters:
     save_map_timeout: 5.0
-    free_thresh_defau/slt: 0.25
+    free_thresh_default: 0.25
     occupied_thresh_default: 0.65
     map_subscribe_transient_local: true
 planner_server:
@@ -416,7 +412,7 @@ collision_monitor:
     scan:
       source_timeout: 2.0 # Increased from 1.0 for more robust operation
       type: "scan"
-      topic: "/lidar_scan"
+      topic: "/scan"
       enabled: true
 docking_server:
   ros__parameters:
@@ -451,7 +447,7 @@ docking_server:
       dock_collision_threshold: 0.3
 loopback_simulator:
   ros__parameters:
-    base_frame_id: "base_footprint"
+    base_frame_id: "base_link"
     odom_frame_id: "odom"
     map_frame_id: "map"
     scan_frame_id: "base_scan" # tb4_loopback_simulator.launch.py remaps to 'rplidar_link'
