@@ -1,0 +1,32 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/pointcloud_to_laserscan/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/perseus_lite_hardware/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/perseus_hardware/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/perseus_bt_nodes/include/**",
+        "/opt/ros/jazzy/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/src/perseus_bt_nodes/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/src/perseus_can_if/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/src/perseus_hardware/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/src/perseus_input/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/src/perseus_lite_hardware/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/src/perseus_payloads/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/src/perseus_sensors/include/**",
+        "/home/bocho0600/perseus-v2/software/ros_ws/src/pointcloud_to_laserscan/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

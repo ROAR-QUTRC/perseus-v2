@@ -20,10 +20,10 @@ def generate_launch_description():
                 ],
                 parameters=[
                     {
-                        "target_frame": "base_footprint",
+                        "target_frame": "laser_frame",
                         "transform_tolerance": 0.1,
-                        "min_height": 0.3, # keep points above ground (0.3m) to meet lidar specs
-                        "max_height": 1.5,
+                        "min_height": -10.0,
+                        "max_height": 0.25,# keep points below 0.1m to meet lidar specs
                         "range_min": 1.0,
                         "angle_increment": 0.0174533,
                         "scan_time": 0.1,

@@ -1,3 +1,21 @@
 {
-    "ros.distro": "jazzy"
+    "ros.distro": "jazzy",
+    "python.autoComplete.extraPaths": [
+        "/home/bocho0600/perseus-v2/software/ros_ws/build/teleop_diagnostics",
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/teleop_diagnostics/lib/python3.12/site-packages",
+        "/home/bocho0600/perseus-v2/software/ros_ws/build/perseus_teleop",
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/perseus_teleop/lib/python3.12/site-packages",
+        "/home/bocho0600/perseus-v2/software/ros_ws/build/input_devices",
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/input_devices/lib/python3.12/site-packages",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/bocho0600/perseus-v2/software/ros_ws/build/teleop_diagnostics",
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/teleop_diagnostics/lib/python3.12/site-packages",
+        "/home/bocho0600/perseus-v2/software/ros_ws/build/perseus_teleop",
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/perseus_teleop/lib/python3.12/site-packages",
+        "/home/bocho0600/perseus-v2/software/ros_ws/build/input_devices",
+        "/home/bocho0600/perseus-v2/software/ros_ws/install/input_devices/lib/python3.12/site-packages",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ]
 }

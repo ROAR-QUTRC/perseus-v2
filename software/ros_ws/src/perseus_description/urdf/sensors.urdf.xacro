@@ -57,8 +57,8 @@
   <sensor name="${prefix}lidar_sensor" type="gpu_lidar">
     <topic>scan_3d</topic>
     <update_rate>50</update_rate>
-    <always_on>false</always_on>
-    <visualize>false</visualize>
+    <always_on>true</always_on>
+    <visualize>true</visualize>
     <ray>
       <scan>
         <horizontal>
@@ -76,7 +76,7 @@
       </scan>
       <range>
         <min>0.20</min>
-        <max>30.0</max>
+        <max>70.0</max>
         <resolution>0.013</resolution>
       </range>
     </ray>

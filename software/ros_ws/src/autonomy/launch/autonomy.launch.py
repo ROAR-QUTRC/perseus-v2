@@ -3,17 +3,19 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
     """
-    Launch the complete autonomy stack including SLAM and navigation.
+    Launch the complete autonomy stack including SLAM, navigation, and keepout zones.
     
     This launch file combines:
     - online_async_launch.py: SLAM Toolbox for mapping/localization
     - perseus_nav_bringup.launch.py: Nav2 navigation stack
+    - keepout_filter_launch.py: Keepout zone safety layer
     """
     
     autonomy_dir = get_package_share_directory("autonomy")
@@ -21,6 +23,7 @@ def generate_launch_description():
     nav_params_file = LaunchConfiguration("nav_params_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
     autostart = LaunchConfiguration("autostart")
+    use_keepout_zones = LaunchConfiguration("use_keepout_zones")
 
     # Declare arguments
     declare_use_sim_time_cmd = DeclareLaunchArgument(
@@ -33,6 +36,12 @@ def generate_launch_description():
         "autostart",
         default_value="true",
         description="Automatically startup the autonomy stack",
+    )
+
+    declare_use_keepout_zones_cmd = DeclareLaunchArgument(
+        "use_keepout_zones",
+        default_value="true",
+        description="Enable keepout zone safety filter",
     )
 
     declare_slam_params_file_cmd = DeclareLaunchArgument(
@@ -78,17 +87,30 @@ def generate_launch_description():
         }.items(),
     )
 
+    # Include Keepout Filter launch (optional)
+    keepout_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(autonomy_dir, "launch", "keepout_filter_launch.py")
+        ),
+        launch_arguments={
+            "use_keepout_zones": use_keepout_zones,
+        }.items(),
+        condition=IfCondition(use_keepout_zones),
+    )
+
     # Create launch description
     ld = LaunchDescription()
 
     # Declare arguments
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_autostart_cmd)
+    ld.add_action(declare_use_keepout_zones_cmd)
     ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_nav_params_file_cmd)
 
     # Include launch files
     ld.add_action(slam_launch)
     ld.add_action(nav_launch)
+    ld.add_action(keepout_launch)
 
     return ld
