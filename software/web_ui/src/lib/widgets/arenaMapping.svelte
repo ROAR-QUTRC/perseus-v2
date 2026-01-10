@@ -10,7 +10,6 @@
 	const widget_settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
 	});
-
 	export {
 		widget_name as name,
 		widget_description as description,
@@ -170,7 +169,6 @@
 		}
 	}
 
-
 	const onResponseMessage = (message: rosStringMessage) => {
 		const response: any = JSON.parse(message.data);
 		if (pendingSaveId && response?.id === pendingSaveId) {
@@ -262,7 +260,7 @@
 		];
 	}
 
-	function delete_waypoint(id: string) {
+	function deleteWaypoints(id: string) {
 		waypoints = waypoints.filter((waypoint) => waypoint.id !== id);
 	}
 
@@ -274,11 +272,11 @@
 		waypoints = [];
 	}
 
-	function update_name(id: string, name: string) {
+	function updateName(id: string, name: string) {
 		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
 	}
 
-	function build_yaml(): string {
+	function buildYaml(): string {
 		const lines: string[] = [];
 		lines.push('waypoints:');
 
@@ -293,14 +291,45 @@
 
 		return lines.join('\n');
 	}
+/*
+	async function drawRotatedRectangle(ctx){
+		for (const waypoint of waypoints)
+		{
+			ctx.translate(waypoint.centroidX, waypoint.centroidY);
+			ctx.rotate(waypoint.yaw)
+			return {
+				x: Math.cos(waypoint.yaw) * (pointX-waypoint.centroidX) - Math.sin(waypoint.yaw) * (pointY-waypoint.centroidY) + waypoint.centroidX,
+				y: Math.sin(waypoint.yaw) * (pointX-waypoint.centroidX) + Math.cos(waypoint.yaw) * (pointY-waypoint.centroidY) + waypoint.centroidY
+			};
+		}		
+	}
+*/
+// Function to help translate the difference in case vairables from the back end to front end
+	function getSampleHex(response: any): string {
+		return String(
+			response?.sample_image_hex ??       
+			response?.sampleImageHex ??      
+			response?.sample_image_hexadecimal_color ?? 
+			''
+		);
+	}
 
-	async function copy_yaml() {
-		const yaml_text = build_yaml();
+	async function saveYamlToScripts() {
+		const yaml_text = buildYaml();
 		try {
-			await navigator.clipboard.writeText(yaml_text);
-			status_message = 'YAML copied to clipboard';
-		} catch {
-			status_message = 'Copy failed (clipboard permission). Select and copy manually.';
+			statusMessage = 'Uploading YAML file to Perseus';
+			const response = await sendRequest({
+				op: 'save_yaml',
+				file_name: 'Waypoints.yaml',
+				yaml_text
+			});
+			if (!response?.ok){
+				statusMessage = response?.message ?? 'Save failed';
+				return;
+			}
+    		statusMessage = `Saved: ${response.saved_path ?? 'OK'}`;
+		} catch (e:any) {
+			statusMessage = `Save error: ${e?.message ?? String(e)}`;
 		}
 		 if (mode === 'origin') {
 			addOriginFromResponse(response);
