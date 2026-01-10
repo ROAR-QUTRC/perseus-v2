@@ -9,8 +9,6 @@
 	const widget_settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
 	});
-
-	// Keep the widget framework’s expected export names via aliasing.
 	export {
 		widget_name as name,
 		widget_description as description,
@@ -22,211 +20,246 @@
 
 <script lang="ts">
 	import * as ROSLIB from 'roslib';
-	import { getRosConnection as get_ros_connection } from '$lib/scripts/rosBridge.svelte';
-	import Button from "$lib/components/ui/button/button.svelte";
+	import { getRosConnection as getRosConnection } from '$lib/scripts/rosBridge.svelte';
+	//import Button from "$lib/components/ui/button/button.svelte";
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 
-	type Mode = 'waypoint' | 'border';
-	type ros_string_message = { data: string };
+	//Set these as the only valid string values 
 
-	type WaypointRow = {
+	type Mode = 'waypoint' | 'border';
+	type rosStringMessage = { data: string };
+	//Data modle for the waypoints for the YAML output and table 
+	type waypointRow = {
 		id: string;
 		name: string;
-		hexadecimal_color: string;
-		click_x: number;
-		click_y: number;
-		centroid_x: number;
-		centroid_y: number;
+		hexadecimalColor: string;
+		clickX: number;
+		clickY: number;
+		centroidX: number;
+		centroidY: number;
 		yaw: number;
 	};
 
-	let image_element: HTMLImageElement | null = null;
+	let imageElement: HTMLImageElement | null = null;
 
-	const map_image_id = 'Cropped_ARCh_2025_Autonomous_map.png';
-	const map_image_url = `http://localhost:8000/${map_image_id}`;
+	const mapImageId = 'Cropped_ARCh_2025_Autonomous_map.png';
+	const mapImageUrl = `http://localhost:8000/${mapImageId}`;
 
-	const request_topic_name = '/map_editor/request';
-	const response_topic_name = '/map_editor/response';
+	//Ros topics to listen to requests and reply 
+	const requestTopicName = '/map_editor/request';
+	const responseTopicName = '/map_editor/response';
 
-	const default_request_timeout_milliseconds = 6000;
+	const defaultRequestTimeoutMilliseconds = 6000;
 
-	// NOTE: These are protocol field names expected by your backend; keeping as-is avoids breaking integration.
-	const default_hue_tolerance = 10;
-	const default_saturation_tolerance = 60;
-	const default_value_tolerance = 60;
+	// Setting the hue saturation and value thresholds for the image extraction - can be changed to adjust extraction results
+	const defaultHueTolerance = 10;
+	const defaultSaturationTolerance = 60;
+	const defaultValueTolerance = 60;
 
-	let status_message = $state('Ready');
+	let statusMessage = $state('Ready');
 	let mode = $state<Mode>('waypoint');
 
 	// last response visuals
 	let contour = $state<number[][]>([]);
-	let current_click_position = $state<{ x: number; y: number } | null>(null);
+	let currentClickPosition = $state<{ x: number; y: number } | null>(null);
 	let centroid = $state<[number, number] | null>(null);
-	let sample_image_hexadecimal_color = $state<string>('');
+	let sampleImageHexadecimalColor = $state<string>('');
 	let svg_view_box = $state('0 0 1 1');
 
 	// stored waypoints
-	let waypoints = $state<WaypointRow[]>([]);
+	let waypoints = $state<waypointRow[]>([]);
 	let border_contour = $state<number[][]>([]);
 
-	// ROS request/response plumbing
-	let request_topic: ROSLIB.Topic<ros_string_message> | null = null;
-	let response_topic: ROSLIB.Topic<ros_string_message> | null = null;
+	// ROS request/response 
+	let requestTopic: ROSLIB.Topic<rosStringMessage> | null = null;
+	let response_topic: ROSLIB.Topic<rosStringMessage> | null = null;
 
-	const pending_requests = new Map<
+	const pendingRequests = new Map<
 		string,
-		{ resolve: (response: any) => void; timeout_handle: any }
+		{ resolve: (response: any) => void; timeoutHandle: any }
 	>();
 
-	function generate_id() {
+	//Generates the ID tp send to the backend 
+	function generateId() {
 		return typeof crypto !== 'undefined' && 'randomUUID' in crypto
 			? crypto.randomUUID()
 			: `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 	}
-
+	
 	function clamp(value: number, min_value: number, max_value: number) {
 		return Math.max(min_value, Math.min(max_value, value));
 	}
+	//Converts the click on the image to the pixle coordinates on the image 
+	function clickToNatrualPosition(event: MouseEvent) {
+		if (!imageElement) return null;
 
-	function click_to_natural_position(event: MouseEvent) {
-		if (!image_element) return null;
+		const image_rectangle = imageElement.getBoundingClientRect();
+		const displayX = event.clientX - image_rectangle.left;
+		const displayY = event.clientY - image_rectangle.top;
 
-		const image_rectangle = image_element.getBoundingClientRect();
-		const display_x = event.clientX - image_rectangle.left;
-		const display_y = event.clientY - image_rectangle.top;
-
-		const natural_x = Math.round(display_x * (image_element.naturalWidth / image_rectangle.width));
-		const natural_y = Math.round(display_y * (image_element.naturalHeight / image_rectangle.height));
+		const natrualX = Math.round(displayX * (imageElement.naturalWidth / image_rectangle.width));
+		const natrualY = Math.round(displayY * (imageElement.naturalHeight / image_rectangle.height));
 
 		return {
-			x: clamp(natural_x, 0, image_element.naturalWidth - 1),
-			y: clamp(natural_y, 0, image_element.naturalHeight - 1)
+			x: clamp(natrualX, 0, imageElement.naturalWidth - 1),
+			y: clamp(natrualY, 0, imageElement.naturalHeight - 1)
 		};
 	}
+	// Function that allows the front end to talk to the back end 
+	function sendRequest(payload: any, timeoutMilliseconds = defaultRequestTimeoutMilliseconds): Promise<any> {
+		if (!requestTopic) return Promise.reject(new Error('ROS not connected'));
 
-	function send_request(payload: any, timeout_milliseconds = default_request_timeout_milliseconds): Promise<any> {
-		if (!request_topic) return Promise.reject(new Error('ROS not connected'));
-
-		const id = generate_id();
+		const id = generateId();
 		return new Promise((resolve, reject) => {
-			const timeout_handle = setTimeout(() => {
-				pending_requests.delete(id);
+			const timeoutHandle = setTimeout(() => {
+				pendingRequests.delete(id);
 				reject(new Error(`Timeout waiting for response (${id})`));
-			}, timeout_milliseconds);
+			}, timeoutMilliseconds);
 
-			pending_requests.set(id, { resolve, timeout_handle });
+			pendingRequests.set(id, { resolve, timeoutHandle });
 
-			request_topic!.publish({
+			requestTopic!.publish({
 				data: JSON.stringify({ id, ...payload })
 			});
 
 		});
 	}
-
-	function next_waypoint_name() {
-		const waypoint_number = waypoints.length + 1;
-		return `WP${String(waypoint_number)}`;
+	// creates the waypoint names
+	function nextWaypointName() {
+		const waypointNumber = waypoints.length + 1;
+		return `WP${String(waypointNumber)}`;
 	}
-
-	function add_waypoint_from_response(response: any) {
+	//extracts the coordinates from the centroid 
+	function addWaypointFromResponse(response: any) {
 		if (!response?.ok) return;
 		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
 
-		const centroid_x = Number(response.centroid[0]);
-		const centroid_y = Number(response.centroid[1]);
+		const centroidX = Number(response.centroid[0]);
+		const centroidY = Number(response.centroid[1]);
 
-		// Prefer server echo; fall back to local current_click_position.
-		const click_x = Number(response.sample_x ?? current_click_position?.x);
-		const click_y = Number(response.sample_y ?? current_click_position?.y);
+		// Prefer server echo; fall back to local currentClickPosition.
+		const clickX = Number(response.sample_x ?? currentClickPosition?.x);
+		const clickY = Number(response.sample_y ?? currentClickPosition?.y);
 
 		if (
-			!Number.isFinite(click_x) ||
-			!Number.isFinite(click_y) ||
-			!Number.isFinite(centroid_x) ||
-			!Number.isFinite(centroid_y)
+			!Number.isFinite(clickX) ||
+			!Number.isFinite(clickY) ||
+			!Number.isFinite(centroidX) ||
+			!Number.isFinite(centroidY)
 		) {
 			return;
 		}
 
-		const hexadecimal_color = String(response.sample_image_hex ?? '');
+		const hexadecimalColor = getSampleHex(response);
 
 		waypoints = [
 			...waypoints,
 			{
-				id: generate_id(),
-				name: next_waypoint_name(),
-				hexadecimal_color,
-				click_x,
-				click_y,
-				centroid_x,
-				centroid_y,
+				id: generateId(),
+				name: nextWaypointName(),
+				hexadecimalColor,
+				clickX,
+				clickY,
+				centroidX,
+				centroidY,
 				yaw:0
 			}
 		];
 	}
 
-	function delete_waypoint(id: string) {
+	function deleteWaypoints(id: string) {
 		waypoints = waypoints.filter((waypoint) => waypoint.id !== id);
 	}
 
-	function clear_waypoints() {
+	function clearWaypoints() {
 		waypoints = [];
 	}
 
-	function update_name(id: string, name: string) {
+	function updateName(id: string, name: string) {
 		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
 	}
 
-	function build_yaml(): string {
+	function buildYaml(): string {
 		const lines: string[] = [];
 		lines.push('waypoints:');
 
 		for (const waypoint of waypoints) {
 			lines.push(`- name: ${waypoint.name}`);
-			lines.push(`x: ${waypoint.centroid_x}`);
-			lines.push(`y: ${waypoint.centroid_y}`);
+			lines.push(`x: ${waypoint.centroidX}`);
+			lines.push(`y: ${waypoint.centroidY}`);
 			lines.push(`yaw: ${waypoint.yaw}`)
 		}
 
 		return lines.join('\n');
 	}
+/*
+	async function drawRotatedRectangle(ctx){
+		for (const waypoint of waypoints)
+		{
+			ctx.translate(waypoint.centroidX, waypoint.centroidY);
+			ctx.rotate(waypoint.yaw)
+			return {
+				x: Math.cos(waypoint.yaw) * (pointX-waypoint.centroidX) - Math.sin(waypoint.yaw) * (pointY-waypoint.centroidY) + waypoint.centroidX,
+				y: Math.sin(waypoint.yaw) * (pointX-waypoint.centroidX) + Math.cos(waypoint.yaw) * (pointY-waypoint.centroidY) + waypoint.centroidY
+			};
+		}		
+	}
+*/
+// Function to help translate the difference in case vairables from the back end to front end
+	function getSampleHex(response: any): string {
+		return String(
+			response?.sample_image_hex ??       
+			response?.sampleImageHex ??      
+			response?.sample_image_hexadecimal_color ?? 
+			''
+		);
+	}
 
-	async function copy_yaml() {
-		const yaml_text = build_yaml();
+	async function saveYamlToScripts() {
+		const yaml_text = buildYaml();
 		try {
-			await navigator.clipboard.writeText(yaml_text);
-			status_message = 'YAML copied to clipboard';
-		} catch {
-			status_message = 'Copy failed (clipboard permission). Select and copy manually.';
+			statusMessage = 'Uploading YAML file to Perseus';
+			const response = await sendRequest({
+				op: 'save_yaml',
+				file_name: 'Waypoints.yaml',
+				yaml_text
+			});
+			if (!response?.ok){
+				statusMessage = response?.message ?? 'Save failed';
+				return;
+			}
+    		statusMessage = `Saved: ${response.saved_path ?? 'OK'}`;
+		} catch (e:any) {
+			statusMessage = `Save error: ${e?.message ?? String(e)}`;
 		}
 	}
 
-	async function on_map_click(event: MouseEvent) {
-		const click_position = click_to_natural_position(event);
+	async function onMapClick(event: MouseEvent) {
+		const click_position = clickToNatrualPosition(event);
 
-		current_click_position = click_position;
+		currentClickPosition = click_position;
 		contour = [];
 		centroid = null;
-		sample_image_hexadecimal_color = '';
+		sampleImageHexadecimalColor = '';
 
 		if (!click_position) return;
 
-		status_message = `${mode === 'waypoint' ? 'Waypoint' : 'Border'} @ (${click_position.x}, ${click_position.y})…`;
+		statusMessage = `${mode === 'waypoint' ? 'Waypoint' : 'Border'} @ (${click_position.x}, ${click_position.y})…`;
 
 		try {
-			const response = await send_request({
+			const response = await sendRequest({
 				op: 'extract_feature',
 				mode, // 'waypoint' | 'border' (protocol value)
-				image_id: map_image_id,
+				image_id: mapImageId,
 				sample_x: click_position.x,
 				sample_y: click_position.y,
-				tol_h: default_hue_tolerance,
-				tol_s: default_saturation_tolerance,
-				tol_v: default_value_tolerance
+				tol_h: defaultHueTolerance,
+				tol_s: defaultSaturationTolerance,
+				tol_v: defaultValueTolerance
 			});
 
 			if (!response?.ok) {
-				status_message = response?.message ?? 'Failed';
+				statusMessage = response?.message ?? 'Failed';
 				return;
 			}
 
@@ -234,45 +267,45 @@
 				border_contour = Array.isArray(response.contour) ? response.contour : [];
 			}
 
-			sample_image_hexadecimal_color = String(response.sample_image_hex ?? '');
+			sampleImageHexadecimalColor = getSampleHex(response);
 			centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
 			contour = Array.isArray(response.contour) ? response.contour : [];
 
 			if (mode === 'waypoint') {
-				add_waypoint_from_response(response);
-				status_message = centroid
-					? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sample_image_hexadecimal_color}`
-					: `Waypoint added ${sample_image_hexadecimal_color}`;
+				addWaypointFromResponse(response);
+				statusMessage = centroid
+					? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+					: `Waypoint added ${sampleImageHexadecimalColor}`;
 			} else {
-				status_message = `Border OK ${sample_image_hexadecimal_color}`;
+				statusMessage = `Border OK ${sampleImageHexadecimalColor}`;
 			}
 		} catch (error: any) {
-			status_message = `Error: ${error?.message ?? String(error)}`;
+			statusMessage = `Error: ${error?.message ?? String(error)}`;
 		}
 	}
 
 	$effect(() => {
-		const ros_connection = get_ros_connection();
+		const ros_connection = getRosConnection();
 
 		if (!ros_connection) {
 			response_topic?.unsubscribe();
-			request_topic = null;
+			requestTopic = null;
 			response_topic = null;
 
-			pending_requests.forEach((pending_entry) => clearTimeout(pending_entry.timeout_handle));
-			pending_requests.clear();
+			pendingRequests.forEach((pending_entry) => clearTimeout(pending_entry.timeoutHandle));
+			pendingRequests.clear();
 			return;
 		}
 
-		request_topic = new ROSLIB.Topic({
+		requestTopic = new ROSLIB.Topic({
 			ros: ros_connection,
-			name: request_topic_name,
+			name: requestTopicName,
 			messageType: 'std_msgs/msg/String'
 		});
 
 		response_topic = new ROSLIB.Topic({
 			ros: ros_connection,
-			name: response_topic_name,
+			name: responseTopicName,
 			messageType: 'std_msgs/msg/String'
 		});
 
@@ -286,17 +319,17 @@
 			}
 
 			const id = response?.id;
-			const pending_entry = id ? pending_requests.get(id) : null;
+			const pending_entry = id ? pendingRequests.get(id) : null;
 			if (!pending_entry) return;
 
-			clearTimeout(pending_entry.timeout_handle);
-			pending_requests.delete(id);
+			clearTimeout(pending_entry.timeoutHandle);
+			pendingRequests.delete(id);
 			pending_entry.resolve(response);
 		});
 
 		return () => {
 			response_topic?.unsubscribe();
-			request_topic = null;
+			requestTopic = null;
 			response_topic = null;
 		};
 	});
@@ -304,22 +337,22 @@
 <ScrollArea orientation="vertical" class="relative flex h-full w-full">
 	<div class="wrap">
 		<div class="topbar">
-			<div class="status">Status: {status_message}</div>
+			<div class="status">Status: {statusMessage}</div>
 
 			<div class="controls flex ">
-				<button class:active={mode === 'waypoint'} on:click={() => (mode = 'waypoint')}>
+				<button class:active={mode === 'waypoint'} onclick={() => (mode = 'waypoint')}>
 					Waypoint mode
 				</button>
-				<button class:active={mode === 'border'} on:click={() => (mode = 'border')}>
+				<button class:active={mode === 'border'} onclick={() => (mode = 'border')}>
 					Border mode
 				</button>
 
-				<button type="button" class="danger" on:click={clear_waypoints} disabled={waypoints.length === 0}>
+				<button type="button" class="danger" onclick={clearWaypoints} disabled={waypoints.length === 0}>
 					Clear table
 				</button>
 
-				<button type="button" on:click={copy_yaml} disabled={waypoints.length === 0}>
-					Copy YAML
+				<button type="button" onclick={saveYamlToScripts} disabled={waypoints.length === 0}>
+					Save YAML
 				</button>
 			</div>
 		</div>
@@ -327,15 +360,15 @@
 		<div class="row">
 			<div class="frame">
 				<img
-					bind:this={image_element}
-					src={map_image_url}
+					bind:this={imageElement}
+					src={mapImageUrl}
 					width="700"
 					alt="map"
 					class="map"
-					on:click={on_map_click}
-					on:load={() => {
-						if (!image_element) return;
-						svg_view_box = `0 0 ${image_element.naturalWidth} ${image_element.naturalHeight}`;
+					onclick={onMapClick}
+					onload={() => {
+						if (!imageElement) return;
+						svg_view_box = `0 0 ${imageElement.naturalWidth} ${imageElement.naturalHeight}`;
 					}}
 				/>
 			</div>
@@ -353,11 +386,11 @@
 				{/if}
 
 				{#each waypoints as waypoint (waypoint.id)}
-					<circle cx={waypoint.centroid_x} cy={waypoint.centroid_y} r="6" fill="red" />
+					<circle cx={waypoint.centroidX} cy={waypoint.centroidY} r="6" fill="red" />
 				{/each}
 
 				{#each waypoints as waypoint (waypoint.id)}
-					<circle cx={waypoint.click_x} cy={waypoint.click_y} r="3.5" fill="yellow" opacity="0.9" />
+					<circle cx={waypoint.clickX} cy={waypoint.clickY} r="3.5" fill="yellow" opacity="0.9" />
 				{/each}
 			</svg>
 		</div>
@@ -389,20 +422,20 @@
 									<input
 										class="nameInput"
 										value={waypoint.name}
-										on:input={(event) =>
-											update_name(waypoint.id, (event.target as HTMLInputElement).value)}
+										oninput={(event) =>
+											updateName(waypoint.id, (event.target as HTMLInputElement).value)}
 									/>
 								</td>
 								<td>
-									<span class="chip" style={`background:${waypoint.hexadecimal_color || '#eee'}`}>
-										{waypoint.hexadecimal_color}
+									<span class="chip" style={`background:${waypoint.hexadecimalColor || '#eee'}`}>
+										{waypoint.hexadecimalColor}
 									</span>
 								</td>
-								<td>{waypoint.centroid_x}</td>
-								<td>{waypoint.centroid_y}</td>
+								<td>{waypoint.centroidX}</td>
+								<td>{waypoint.centroidY}</td>
 								<td><input type="number" bind:value={waypoint.yaw}></td>
 								<td class="right">
-									<button type="button" class="danger" on:click={() => delete_waypoint(waypoint.id)}>
+									<button type="button" class="danger" onclick={() => deleteWaypoints(waypoint.id)}>
 										Delete
 									</button>
 								</td>
@@ -417,7 +450,7 @@
 		<!-- YAML preview -->
 		<div class="yamlWrap">
 			<div class="yamlTitle">YAML preview</div>
-			<textarea class="yamlBox" readonly value={build_yaml()}></textarea>
+			<textarea class="yamlBox" readonly value={buildYaml()}></textarea>
 		</div>
 	</div>
 </ScrollArea>
