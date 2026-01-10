@@ -2,6 +2,7 @@
 import os
 import json
 from typing import Any, Optional
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -9,13 +10,22 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-MAP_DIR = os.environ.get("PERSEUS_MAP_DIR", "/opt/perseus/maps")
+MAP_directory = os.environ.get("PERSEUS_MAP_DIR", "/opt/perseus/maps")
+YAML_DIR = Path(os.environ.get("PERSEUS_YAML_DIR", str(Path.home() / "perseus-v2/software/web_ui/static"))).resolve()
+YAML_DIR.mkdir(parents=True, exist_ok=True)
 
 REQUEST_TOPIC_NAME = "/map_editor/request"
 RESPONSE_TOPIC_NAME = "/map_editor/response"
 
 
-def hue_saturation_value_ranges(
+def SaveFileName(name: str) -> str:
+    name = os.path.basename(name or "")
+    if not name.endswith((".yaml", ".yml")):
+        name += ".yaml"
+    return name
+
+
+def HueSaturationValueRanges(
     hue: int,
     saturation: int,
     value: int,
@@ -66,19 +76,16 @@ def hue_saturation_value_ranges(
     ]
 
 
-def contour_centroid_pixel_position(contour) -> Optional[tuple[int, int]]:
-    """Return integer centroid (x, y) in pixel coordinates, or None if degenerate."""
+def ContourCentroidPixelPosition(contour) -> Optional[tuple[int, int]]:
     moments = cv2.moments(contour)
     if moments["m00"] == 0:
         return None
-
     centroid_x = int(round(moments["m10"] / moments["m00"]))
     centroid_y = int(round(moments["m01"] / moments["m00"]))
     return centroid_x, centroid_y
 
 
-def contour_to_points(contour) -> list[list[int]]:
-    """Convert OpenCV contour array to [[x, y], ...]."""
+def ContourToPoints(contour) -> list[list[int]]:
     return [[int(point[0][0]), int(point[0][1])] for point in contour]
 
 
@@ -122,17 +129,18 @@ class ExtractFeatures(Node):
         self.cache: dict[str, tuple[np.ndarray, np.ndarray, int, int]] = {}
 
         self.request_subscription = self.create_subscription(
-            String, REQUEST_TOPIC_NAME, self.on_request, 10
+            String, REQUEST_TOPIC_NAME, self.OnRequest, 10
         )
         self.response_publisher = self.create_publisher(String, RESPONSE_TOPIC_NAME, 10)
 
-        self.get_logger().info(f"ExtractFeatures started. PERSEUS_MAP_DIR={MAP_DIR}")
+        self.get_logger().info(f"ExtractFeatures started. PERSEUS_MAP_DIR={MAP_directory}")
+        self.get_logger().info(f"YAML_DIR={YAML_DIR}")
 
-    def load_image(self, image_id: str):
+    def LoadImage(self, image_id: str):
         if image_id in self.cache:
             return self.cache[image_id]
 
-        image_path = os.path.join(MAP_DIR, image_id)
+        image_path = os.path.join(MAP_directory, image_id)
         image_bgr = cv2.imread(image_path, cv2.IMREAD_COLOR)
         if image_bgr is None:
             raise FileNotFoundError(f"Cannot read image: {image_path}")
@@ -152,14 +160,27 @@ class ExtractFeatures(Node):
         payload["id"] = request_id
         self.response_publisher.publish(String(data=json.dumps(payload)))
 
+    ### ADD: SaveYaml method goes here (same indent as LoadImage/reply/OnRequest)
+    def SaveYaml(self, request_id: str, request: dict):
+        yaml_text = request.get("yaml_text", "")
+        file_name = SaveFileName(request.get("file_name", "waypoints.yaml"))
+
+        try:
+            YAML_DIR.mkdir(parents=True, exist_ok=True)
+            out_path = YAML_DIR / file_name
+
+            tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
+            tmp_path.write_text(yaml_text, encoding="utf-8")
+            tmp_path.replace(out_path)
+
+            self.reply(request_id, {"ok": True, "saved_path": str(out_path)})
+        except Exception as e:
+            self.reply(request_id, {"ok": False, "message": str(e)})
+
     @staticmethod
-    def choose_contour_near_click(contours, x_pos: int, y_pos: int):
-        """
-        Prefer a contour that CONTAINS the click (pointPolygonTest >= 0).
-        If none contain it, pick the closest contour (minimum abs(distance)).
-        """
+    def ChooseContourNearClick(contours, x_pos: int, y_pos: int):
         contours_containing_click: list[tuple[float, Any]] = []
-        closest_contour: Optional[tuple[float, Any]] = None  # (abs_distance, contour)
+        closest_contour: Optional[tuple[float, Any]] = None
 
         for contour in contours:
             signed_distance = cv2.pointPolygonTest(
@@ -183,7 +204,7 @@ class ExtractFeatures(Node):
 
         return None
 
-    def on_request(self, message: String):
+    def OnRequest(self, message: String):
         request_id = ""
 
         try:
@@ -231,38 +252,27 @@ class ExtractFeatures(Node):
             if not (0 <= x_pos < image_width and 0 <= y_pos < image_height):
                 self.reply(
                     request_id,
-                    {
-                        "ok": False,
-                        "message": f"Out of bounds ({x_pos},{y_pos}) for {image_width}x{image_height}",
-                        "sample_x": x_pos,
-                        "sample_y": y_pos,
-                    },
+                    {"ok": False, "message": f"Out of bounds ({x_pos},{y_pos}) for {image_width}x{image_height}",
+                     "sample_x": x_pos, "sample_y": y_pos},
                 )
                 return
 
-            # Sample HSV and BGR at click point
             clicked_hue, clicked_saturation, clicked_value = [
                 int(channel) for channel in image_hue_saturation_value[y_pos, x_pos]
             ]
             blue, green, red = [int(channel) for channel in image_bgr[y_pos, x_pos]]
             sample_hexadecimal_color = f"#{red:02X}{green:02X}{blue:02X}"
 
-            # Build mask for the clicked color class
             mask = None
-            for lower_bound, upper_bound in hue_saturation_value_ranges(
-                clicked_hue,
-                clicked_saturation,
-                clicked_value,
-                hue_tolerance,
-                saturation_tolerance,
-                value_tolerance,
+            for lower_bound, upper_bound in HueSaturationValueRanges(
+                clicked_hue, clicked_saturation, clicked_value,
+                hue_tolerance, saturation_tolerance, value_tolerance,
             ):
                 range_mask = cv2.inRange(
                     image_hue_saturation_value, lower_bound, upper_bound
                 )
                 mask = range_mask if mask is None else cv2.bitwise_or(mask, range_mask)
 
-            # Clean mask
             if median_kernel_size >= 3:
                 if median_kernel_size % 2 == 0:
                     median_kernel_size += 1
@@ -278,14 +288,9 @@ class ExtractFeatures(Node):
             if not contours:
                 self.reply(
                     request_id,
-                    {
-                        "ok": False,
-                        "message": "No contour found (tolerance too tight?)",
-                        "sample_x": x_pos,
-                        "sample_y": y_pos,
-                        "sample_hex": sample_hexadecimal_color,
-                        "sample_image_hex": sample_hexadecimal_color,
-                    },
+                    {"ok": False, "message": "No contour found (tolerance too tight?)",
+                     "sample_x": x_pos, "sample_y": y_pos,
+                     "sample_hex": sample_hexadecimal_color, "sample_image_hex": sample_hexadecimal_color},
                 )
                 return
 
@@ -296,36 +301,23 @@ class ExtractFeatures(Node):
             if not contours:
                 self.reply(
                     request_id,
-                    {
-                        "ok": False,
-                        "message": "Contours found but all filtered by min_area",
-                        "sample_x": x_pos,
-                        "sample_y": y_pos,
-                        "sample_hex": sample_hexadecimal_color,
-                        "sample_image_hex": sample_hexadecimal_color,
-                    },
+                    {"ok": False, "message": "Contours found but all filtered by min_area",
+                     "sample_x": x_pos, "sample_y": y_pos,
+                     "sample_hex": sample_hexadecimal_color, "sample_image_hex": sample_hexadecimal_color},
                 )
                 return
 
-            chosen_contour = self.choose_contour_near_click(contours, x_pos, y_pos)
+            chosen_contour = self.ChooseContourNearClick(contours, x_pos, y_pos)
             if chosen_contour is None:
                 self.reply(
                     request_id,
-                    {
-                        "ok": False,
-                        "message": "No suitable contour near click",
-                        "sample_x": x_pos,
-                        "sample_y": y_pos,
-                        "sample_hex": sample_hexadecimal_color,
-                        "sample_image_hex": sample_hexadecimal_color,
-                    },
+                    {"ok": False, "message": "No suitable contour near click",
+                     "sample_x": x_pos, "sample_y": y_pos,
+                     "sample_hex": sample_hexadecimal_color, "sample_image_hex": sample_hexadecimal_color},
                 )
                 return
 
-            # Simplify for payload size
-            approximated_contour = cv2.approxPolyDP(
-                chosen_contour, epsilon=approximation_epsilon, closed=True
-            )
+            approximated_contour = cv2.approxPolyDP(chosen_contour, epsilon=approximation_epsilon, closed=True)
 
             # Always compute centroid (useful for both modes)
             bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = (
@@ -401,13 +393,13 @@ class ExtractFeatures(Node):
                 "sample_x": x_pos,
                 "sample_y": y_pos,
                 "sample_hex": sample_hexadecimal_color,
-                "sample_image_hex": sample_hexadecimal_color,  # compatibility for frontend variants
+                "sample_image_hex": sample_hexadecimal_color,
                 "sample_rgb": [red, green, blue],
                 "centroid": [centroid[0], centroid[1]],
             }
 
             if mode == "border":
-                payload["contour"] = contour_to_points(approximated_contour)
+                payload["contour"] = ContourToPoints(approximated_contour)
 
             self.reply(request_id, payload)
 
