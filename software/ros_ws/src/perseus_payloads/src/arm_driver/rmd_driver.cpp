@@ -2,7 +2,17 @@
 
 #include <string>
 
-// IF YOU'RE GOING TO IMPLEMENT SPEED CONTROL, ALSO IMPLEMENT A TIMEOUT TO STOP THE SERVO!!!
+// Topics and services:
+// /arm
+//     /rmd
+//         /control (std_msgs/Float64MultiArray) - target positions for servos (subscriber)
+//         /status (std_msgs/Float64MultiArray) - status messages from servos (publisher)
+//         /positions (std_msgs/Float64MultiArray) - current positions of servos (publisher)
+//         /enable_debug_stats (std_srvs/SetBool) - enable/disable debug status messages (service)
+//         /set_id (perseus_msgs/TriggerDevice) - set motor ID service (service)
+//         /set_zero_position (perseus_msgs/TriggerDevice) - set current position as zero position (service)
+//         /restart_motor (perseus_msgs/TriggerDevice) - restart motor service (service)
+//         /get_can_ids (perseus_msgs/RequestInt8Array) - get list of active RMD CAN IDs (service)
 
 using namespace hi_can;
 using namespace hi_can::addressing::post_landing;
@@ -28,97 +38,68 @@ RmdDriver::RmdDriver(const rclcpp::NodeOptions& options)
     {
         _packet_manager->add_group(*parameter_group);
     }
-
-    {
-        using namespace hi_can::addressing;
-
-        // Handle multi-motor send responses
-        _packet_manager->set_callback(
-            filter_t{
-                .address = servo_address_t{message_type::CANID},
-            },
-            PacketManager::callback_config_t{
-                .data_callback = [this](const Packet& packet)
-                {
-                    using namespace hi_can::parameters::post_landing::servo::rmd;
-
-                    const auto address = packet.get_address().address;
-
-                    if (address == static_cast<uint16_t>(message_type::CANID))
-                    {
-                        receive_message::can_id_t can_id_msg;
-                        can_id_msg.deserialize_data(packet.get_data());
-                        const motor_id_t motor_id = motor_id_t(can_id_msg.can_id);
-                        if (std::find(this->_available_servos.begin(), this->_available_servos.end(), motor_id) == this->_available_servos.end())
-                        {
-                            this->_available_servos.emplace_back(motor_id);
-                        }
-                    }
-                },
-            });
-    }
-    _check_available_servos_timer = this->create_wall_timer(
-        std::chrono::seconds(5),
-        [this]()
-        {
-            // Request the ids of all connected servos
-            _can_interface->transmit(Packet{
-                servo_address_t{message_type::CANID},
-                hi_can::parameters::post_landing::servo::rmd::send_message::can_id_t(true).serialize_data()});
-            std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
-        });
+    _packet_timer = this->create_wall_timer(PACKET_HANDLE_MS, std::bind(&RmdDriver::_handle_can, this));
 
     // Initialise all motors on startup with desired functions
     // Stop all motors - motors will lock up and won't flop around
     _can_interface->transmit(Packet{
         servo_address_t{message_type::MULTI_MOTOR_SEND},
         send_message::action_command_t(send_message::action_command_t::command_id_t::STOP).serialize_data()});
-    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
+    std::this_thread::sleep_for(PACKET_DELAY_MS);
+    this->_enable_status_messages(false);
+    _motor_target_positions_subscriber = this->create_subscription<std_msgs::msg::Float64MultiArray>(
+        "/arm/rmd/control", 10, std::bind(&RmdDriver::_handle_position_control, this, std::placeholders::_1));
 
-    // ROS
-    _packet_timer = this->create_wall_timer(PACKET_HANDLE, std::bind(&RmdDriver::_can_handle, this));
-    _command_subscriber = this->create_subscription<std_msgs::msg::Float64MultiArray>("/arm/rmd_control", 10, std::bind(&RmdDriver::_position_control, this, std::placeholders::_1));
-    _status_service = this->create_service<perseus_msgs::srv::RmdServoStatus>("/arm/rmd_status", std::bind(&RmdDriver::_get_rmd_status, this, std::placeholders::_1, std::placeholders::_2));
-    _can_id_service = this->create_service<perseus_msgs::srv::RmdCanId>("/arm/rmd_can_ids", std::bind(&RmdDriver::_get_rmd_can_ids, this, std::placeholders::_1, std::placeholders::_2));
-    _restart_motor_service = this->create_service<perseus_msgs::srv::RmdData>("/arm/rmd_restart_motor", std::bind(&RmdDriver::_restart_motor, this, std::placeholders::_1, std::placeholders::_2));
-    _set_motor_id_service = this->create_service<perseus_msgs::srv::RmdData>("/arm/rmd_set_motor_id", std::bind(&RmdDriver::_set_motor_id, this, std::placeholders::_1, std::placeholders::_2));
-    _set_zero_position_service = this->create_service<perseus_msgs::srv::RmdData>("/arm/rmd_set_zero_position", std::bind(&RmdDriver::_set_zero_position, this, std::placeholders::_1, std::placeholders::_2));
-    _enable_debug_service = this->create_service<std_srvs::srv::SetBool>(
-        "/arm/rmd_enable_status_messages",
+    // Setup motor feedback handling
+    _status_publisher = this->create_publisher<std_msgs::msg::Float64MultiArray>("/arm/rmd/status", 10);
+    _status_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_status_messages, this));
+    _motor_position_publisher = this->create_publisher<std_msgs::msg::Float64MultiArray>("/arm/rmd/positions", 10);
+    _motor_position_timer = this->create_wall_timer(this->POSITION_PUBLISH_MS, std::bind(&RmdDriver::_publish_motor_positions, this));
+    _enable_debug_stats_service = this->create_service<std_srvs::srv::SetBool>(
+        "/arm/rmd/enable_debug_stats",
         [this](const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response)
         {
+            // Respond with true if the status state changed, false if it was already in the desired state
+            const uint16_t last_message_speed = this->_status_message_ms;
             this->_enable_status_messages(request->data);
-            this->_status_messages_enabled = request->data;
-            response->success = true;
+            response->success = (last_message_speed != this->_status_message_ms);
         });
+
+    // Setup config Services
+    _set_motor_id_service = this->create_service<perseus_msgs::srv::TriggerDevice>("/arm/rmd/set_id", std::bind(&RmdDriver::_set_motor_id, this, std::placeholders::_1, std::placeholders::_2));
+    _set_zero_position_service = this->create_service<perseus_msgs::srv::TriggerDevice>("/arm/rmd/set_zero_position", std::bind(&RmdDriver::_set_zero_position, this, std::placeholders::_1, std::placeholders::_2));
+    _restart_motor_service = this->create_service<perseus_msgs::srv::TriggerDevice>("/arm/rmd/restart_motor", std::bind(&RmdDriver::_restart_motor, this, std::placeholders::_1, std::placeholders::_2));
+    _get_can_ids_service = this->create_service<perseus_msgs::srv::RequestInt8Array>("/arm/rmd/get_can_ids", std::bind(&RmdDriver::_get_rmd_can_ids, this, std::placeholders::_1, std::placeholders::_2));
 
     RCLCPP_INFO(this->get_logger(), "RMD servo driver node initialised");
 }
 
-void RmdDriver::_enable_status_messages(bool enable)
+void RmdDriver::_enable_status_messages(bool debug_mode)
 {
+    // Update speed if in debug mode
+    this->_status_message_ms = debug_mode ? 50 : 500;
     // Set motors to transmit error messages when there is an error
     _can_interface->transmit(Packet{
         servo_address_t{message_type::MULTI_MOTOR_SEND},
         send_message::function_control_t(send_message::function_control_t::function_index_t::ERROR_TRANSMISSION_ENABLE, 1).serialize_data()});
+    std::this_thread::sleep_for(PACKET_DELAY_MS);
 
     // Set motors to transmit all three status messages every second
-    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
     _can_interface->transmit(Packet{
         servo_address_t{message_type::MULTI_MOTOR_SEND},
-        send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_1, enable, STATUS_MESSAGE_MS).serialize_data()});
-    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
+        send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_1, true, this->_status_message_ms).serialize_data()});
+    std::this_thread::sleep_for(PACKET_DELAY_MS);
     _can_interface->transmit(Packet{
         servo_address_t{message_type::MULTI_MOTOR_SEND},
-        send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_2, enable, STATUS_MESSAGE_MS).serialize_data()});
-    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
+        send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_2, true, this->_status_message_ms).serialize_data()});
+    std::this_thread::sleep_for(PACKET_DELAY_MS);
     _can_interface->transmit(Packet{
         servo_address_t{message_type::MULTI_MOTOR_SEND},
-        send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_3, enable, STATUS_MESSAGE_MS).serialize_data()});
-    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));  // small delay otherwise messages are ignored by servos
+        send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_3, true, this->_status_message_ms).serialize_data()});
+    std::this_thread::sleep_for(PACKET_DELAY_MS);  // small delay otherwise messages are ignored by servos
 }
 
-void RmdDriver::_position_control(std_msgs::msg::Float64MultiArray servo_control)
+void RmdDriver::_handle_position_control(std_msgs::msg::Float64MultiArray servo_control)
 {
     for (size_t i = 0; i < servo_control.data.size(); i++)
     {
@@ -128,13 +109,57 @@ void RmdDriver::_position_control(std_msgs::msg::Float64MultiArray servo_control
             servo_address_t(message_type::SEND, motor_id),
             send_message::position_t(
                 send_message::position_t::position_command_t::ABSOLUTE,
-                RMD_SPEED_LIMIT,
+                RMD_SPEED_LIMIT * 0.5,
                 servo_control.data[i])
                 .serialize_data()));
     }
 }
 
-void RmdDriver::_can_handle()
+void RmdDriver::_publish_status_messages()
+{
+    std_msgs::msg::Float64MultiArray status_msg;
+
+    for (const auto& motor_id : this->_available_servos)
+    {
+        auto it = this->PARAMETER_GROUP_MAP.find(motor_id);
+        if (it != this->PARAMETER_GROUP_MAP.end())
+        {
+            const auto& parameter_group = it->second;
+            status_msg.data.emplace_back(static_cast<double>(motor_id));
+            status_msg.data.emplace_back(static_cast<uint16_t>(parameter_group->get_error_status()));
+            status_msg.data.emplace_back(static_cast<double>(parameter_group->get_temp()));
+            status_msg.data.emplace_back(parameter_group->get_voltage());
+            status_msg.data.emplace_back(parameter_group->get_torque_current());
+            status_msg.data.emplace_back(static_cast<double>(parameter_group->get_speed()));
+            status_msg.data.emplace_back(static_cast<double>(parameter_group->get_angle()));
+            status_msg.data.emplace_back(parameter_group->get_phase_a_current());
+            status_msg.data.emplace_back(parameter_group->get_phase_b_current());
+            status_msg.data.emplace_back(parameter_group->get_phase_c_current());
+        }
+    }
+
+    _status_publisher->publish(status_msg);
+}
+
+void RmdDriver::_publish_motor_positions()
+{
+    std_msgs::msg::Float64MultiArray position_msg;
+    position_msg.data = std::vector<double>(this->PARAMETER_GROUP_MAP.size(), 0.0);
+
+    for (const auto& motor_id : this->_available_servos)
+    {
+        auto it = this->PARAMETER_GROUP_MAP.find(motor_id);
+        if (it != this->PARAMETER_GROUP_MAP.end())
+        {
+            const auto& parameter_group = it->second;
+            position_msg.data[static_cast<size_t>(motor_id) - 1] = static_cast<double>(parameter_group->get_angle());
+        }
+    }
+
+    _motor_position_publisher->publish(position_msg);
+}
+
+void RmdDriver::_handle_can()
 {
     try
     {
@@ -158,36 +183,53 @@ void RmdDriver::_can_handle()
     }
 }
 
-// HANDLE SERVICE REQUESTS
+#pragma region CONFIG_SERVICE_CALLBACKS
 
-void RmdDriver::_get_rmd_status(const std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Request> request, std::shared_ptr<perseus_msgs::srv::RmdServoStatus::Response> response)
+void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response)
 {
-    const motor_id_t motor_id = static_cast<motor_id_t>(request->motor_id);
+    using function = hi_can::parameters::post_landing::servo::rmd::send_message::function_control_t::function_index_t;
 
-    auto it = this->PARAMETER_GROUP_MAP.find(motor_id);
-    if (it != this->PARAMETER_GROUP_MAP.end())
-    {
-        const auto& parameter_group = it->second;
-        response->motor_id = request->motor_id;
-        response->temperature = parameter_group->get_temp();
-        response->brake_control = parameter_group->get_brake_status() == brake_control_t::BRAKE_RELEASE;
-        response->voltage = parameter_group->get_voltage();
-        response->torque_current = parameter_group->get_torque_current();
-        response->speed = parameter_group->get_speed();
-        response->angle = parameter_group->get_angle();
-        response->phase_a_current = parameter_group->get_phase_a_current();
-        response->phase_b_current = parameter_group->get_phase_b_current();
-        response->phase_c_current = parameter_group->get_phase_c_current();
-        response->error = static_cast<uint16_t>(parameter_group->get_error_status());
-    }
-    else
-    {
-        RCLCPP_ERROR(this->get_logger(), "Requested status for invalid motor ID %d", static_cast<uint8_t>(motor_id));
-        return;
-    }
+    const motor_id_t current_id = static_cast<motor_id_t>(request->id);
+
+    _can_interface->transmit(Packet{
+        servo_address_t(message_type::SEND, current_id),
+        send_message::function_control_t(function::SET_CANID, static_cast<uint32_t>(request->data)).serialize_data()});
+    std::this_thread::sleep_for(PACKET_DELAY_MS);
+    // Since the ID is currently in an undefined state, MULTI_MOTOR_SEND must be used to ensure the motor is reset
+    _can_interface->transmit(Packet{
+        servo_address_t(message_type::MULTI_MOTOR_SEND),
+        send_message::action_command_t(send_message::action_command_t::command_id_t::RESET).serialize_data()});
+    std::this_thread::sleep_for(PACKET_DELAY_MS);
+
+    this->_available_servos.erase(std::remove(this->_available_servos.begin(), this->_available_servos.end(), current_id), this->_available_servos.end());
+
+    response->success = true;
 }
 
-void RmdDriver::_get_rmd_can_ids(const std::shared_ptr<perseus_msgs::srv::RmdCanId::Request> request, std::shared_ptr<perseus_msgs::srv::RmdCanId::Response> response)
+void RmdDriver::_set_zero_position(const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response)
+{
+    const motor_id_t motor_id = static_cast<motor_id_t>(request->id);
+
+    _can_interface->transmit(Packet{
+        servo_address_t(message_type::SEND, motor_id),
+        send_message::zero_offset_t(request->trigger, static_cast<uint32_t>(request->data)).serialize_data()});
+    std::this_thread::sleep_for(PACKET_DELAY_MS);
+    _can_interface->transmit(Packet{
+        servo_address_t(message_type::SEND, motor_id),
+        send_message::action_command_t(send_message::action_command_t::command_id_t::RESET).serialize_data()});
+    std::this_thread::sleep_for(PACKET_DELAY_MS);
+    response->success = true;
+}
+
+void RmdDriver::_restart_motor(const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response)
+{
+    _can_interface->transmit(Packet{
+        servo_address_t(message_type::SEND, static_cast<motor_id_t>(request->id)),
+        send_message::action_command_t(send_message::action_command_t::command_id_t::SHUTDOWN).serialize_data()});
+    response->success = true;
+}
+
+void RmdDriver::_get_rmd_can_ids(const std::shared_ptr<perseus_msgs::srv::RequestInt8Array::Request> request, std::shared_ptr<perseus_msgs::srv::RequestInt8Array::Response> response)
 {
     (void)request;  // request is empty
 
@@ -198,48 +240,7 @@ void RmdDriver::_get_rmd_can_ids(const std::shared_ptr<perseus_msgs::srv::RmdCan
     }
 }
 
-void RmdDriver::_restart_motor(const std::shared_ptr<perseus_msgs::srv::RmdData::Request> request, std::shared_ptr<perseus_msgs::srv::RmdData::Response> response)
-{
-    _can_interface->transmit(Packet{
-        servo_address_t(message_type::SEND, static_cast<motor_id_t>(request->motor_id)),
-        send_message::action_command_t(send_message::action_command_t::command_id_t::SHUTDOWN).serialize_data()});
-    response->success = true;
-}
-
-void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::RmdData::Request> request, std::shared_ptr<perseus_msgs::srv::RmdData::Response> response)
-{
-    using function = hi_can::parameters::post_landing::servo::rmd::send_message::function_control_t::function_index_t;
-
-    const motor_id_t new_id = static_cast<motor_id_t>(request->motor_id);
-
-    _can_interface->transmit(Packet{
-        servo_address_t(message_type::SEND, new_id),
-        send_message::function_control_t(function::SET_CANID, static_cast<uint32_t>(request->data)).serialize_data()});
-    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
-    _can_interface->transmit(Packet{
-        servo_address_t(message_type::MULTI_MOTOR_SEND),
-        send_message::action_command_t(send_message::action_command_t::command_id_t::RESET).serialize_data()});
-    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
-
-    this->_available_servos.erase(std::remove(this->_available_servos.begin(), this->_available_servos.end(), new_id), this->_available_servos.end());
-
-    response->success = true;
-}
-
-void RmdDriver::_set_zero_position(const std::shared_ptr<perseus_msgs::srv::RmdData::Request> request, std::shared_ptr<perseus_msgs::srv::RmdData::Response> response)
-{
-    const motor_id_t motor_id = static_cast<motor_id_t>(request->motor_id);
-
-    _can_interface->transmit(Packet{
-        servo_address_t(message_type::SEND, motor_id),
-        send_message::zero_offset_t(request->trigger, static_cast<uint32_t>(request->data)).serialize_data()});
-    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
-    _can_interface->transmit(Packet{
-        servo_address_t(message_type::SEND, static_cast<motor_id_t>(request->motor_id)),
-        send_message::action_command_t(send_message::action_command_t::command_id_t::RESET).serialize_data()});
-    std::this_thread::sleep_for(std::chrono::milliseconds(PACKET_DELAY_MS));
-    response->success = true;
-}
+#pragma endregion CONFIG_SERVICE_CALLBACKS
 
 void RmdDriver::cleanup()
 {
