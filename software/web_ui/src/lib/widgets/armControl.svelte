@@ -6,7 +6,7 @@
 	// These properties are optional
 	export const description = 'Controller for each of the post landing arm servos';
 	export const group: WidgetGroupType = 'ROS';
-	// export const isRosDependent = true; // Set to true if the widget requires a ROS connection
+	export const isRosDependent = true; // Set to true if the widget requires a ROS connection
 
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
@@ -42,7 +42,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Fa, { FaLayers } from 'svelte-fa';
-	import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+	import { faChevronDown, faChevronUp, faRefresh } from '@fortawesome/free-solid-svg-icons';
 	import { sentenceCase } from 'change-case';
 	import { onMount, untrack } from 'svelte';
 	import type { EmptyRequestType, Float64MultiArrayType, SetBoolRequestType, SetBoolResponseType } from '$lib/scripts/rosTypes';
@@ -76,6 +76,7 @@
 	let restartMotorService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
 	let getCanIdsService: ROSLIB.Service<EmptyRequestType, RequestInt8ArrayResponseType> | null = null;
 	let automaticPositionMessages = $derived(settings.groups.general.automaticallySendMessages.value === 'true');
+	let debugEnabled = $state(false);
 
 	// ROS2 connection
 	$effect(() => {
@@ -192,6 +193,17 @@
 		motors.SHOULDER_TILT.angle = message.data[4] / (motors.SHOULDER_TILT.showDirectPosition ? 1 : motors.SHOULDER_TILT.gearRatio);
 	}
 
+	const onEnableDebug = () => {
+		if (enableDebugStatsService) {
+			enableDebugStatsService.callService({ data: !debugEnabled }, (response) => {
+				if (response.success) {
+					debugEnabled = !debugEnabled;
+				}
+				console.log('Enable debug response:', response);
+			});
+		}
+	}
+
 	// ---------------------------
 	//			UI LOGIC
 	// ---------------------------
@@ -209,7 +221,7 @@
 	let motors = $state<Record<JointNameType, MotorData>>(
 		{} as Record<JointNameType, MotorData>
 	);
-	let onlineMotors = $state<Array<number>>([1])
+	let onlineMotors = $state<Array<number>>([])
 	let bigIncrement = $derived(Number(settings.groups.general.bigIncrementValue.value));
 	let smallIncrement = $derived(Number(settings.groups.general.smallIncrementValue.value));
 
@@ -275,9 +287,11 @@
 </script>
 
 <div class="w-full h-full flex flex-col">
-	<div>
-		<Button class="mb-2" disabled={automaticPositionMessages} onclick={sendPositions}>Send Angle</Button>
-		<Button class="mb-2 ml-2">Enable Debug</Button>
+	<div class="flex items-center w-full pb-2 gap-2 px-4">
+		<Button disabled={automaticPositionMessages} onclick={sendPositions}>Send Angles</Button>
+		<Button onclick={onEnableDebug}>Enable Debug</Button>
+		<p class="ml-auto">Available Motor IDs: {onlineMotors.length > 0 ? onlineMotors.join(', ') : 'None'}</p>
+		<Button class=" rounded-full" variant="ghost" size="icon"><Fa icon={faRefresh} /></Button>
 	</div>
 	<ScrollArea class="h-full w-full pr-2 flex-1">
 		<div class="h-full w-full flex flex-wrap gap-x-2">
