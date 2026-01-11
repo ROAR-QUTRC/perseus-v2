@@ -1,4 +1,0 @@
-uint8 motor_id
-bool brake_enable false
----
-bool success
