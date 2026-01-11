@@ -1,11 +1,11 @@
 export interface ActuatorsMessageType {
-	header: object;
-	velocity: Array<number>;
-	normalized: Array<number>;
+  header: object;
+  velocity: Array<number>;
+  normalized: Array<number>;
 }
 
 export interface Float64MultiArrayType {
-	data: Array<number>;
+  data: Array<number>;
 }
 
 export interface EmptyRequestType {}
@@ -13,10 +13,10 @@ export interface EmptyRequestType {}
 export interface EmptyResponseType {}
 
 export interface SetBoolRequestType {
-	data: boolean;
+  data: boolean;
 }
 
 export interface SetBoolResponseType {
-	success: boolean;
-	message: string;
+  success: boolean;
+  message: string;
 }

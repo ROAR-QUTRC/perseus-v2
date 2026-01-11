@@ -1,13 +1,13 @@
 export interface TriggerDeviceRequestType {
-	id: number;
-	data: number;
-	trigger: boolean;
+  id: number;
+  data: number;
+  trigger: boolean;
 }
 
 export interface TriggerDeviceResponseType {
-	success: boolean;
+  success: boolean;
 }
 
 export interface RequestInt8ArrayResponseType {
-	data: Array<number>;
+  data: Array<number>;
 }
