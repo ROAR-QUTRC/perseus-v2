@@ -6,7 +6,7 @@ options = []
 
 [formatter.clang-format]
 command = "clang-format"
-excludes = []
+excludes = ["*.onnx" ]
 includes = [
     "*.c",
     "*.cc",

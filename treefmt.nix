@@ -60,6 +60,7 @@
         "*.bmp"
         "*.ico"
         "*.pdf"
+        "*.onnx"
         "*sdkconfig*"
         # meshes
         "software/ros_ws/src/**/meshes/**"
