@@ -20,6 +20,7 @@ find_package(image_transport REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(yaml-cpp REQUIRED)
 # ============================
 # ROS2 Interface generation
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -107,7 +108,15 @@ ament_target_dependencies(
 # Cube detector node (YOLO + ONNX)
 add_executable(cube_detector src/cube_detector.cpp)
 
+# Object map server
+add_executable(object_map_server src/object_map_server.cpp)
+
 set_target_properties(cube_detector PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+)
+
+set_target_properties(object_map_server PROPERTIES
   CXX_STANDARD 17
   CXX_STANDARD_REQUIRED ON
 )
@@ -117,6 +126,11 @@ target_include_directories(cube_detector PUBLIC
   ${ONNXRUNTIME_INCLUDE_DIR}
 )
 
+target_include_directories(object_map_server PUBLIC
+  include
+  ${OpenCV_INCLUDE_DIRS}
+)
+
 target_link_libraries(
   cube_detector
   aruco_detector_lib
@@ -124,8 +138,28 @@ target_link_libraries(
   ${OpenCV_LIBS}
 )
 
+target_link_libraries(
+  object_map_server
+  ${OpenCV_LIBS}
+  yaml-cpp
+  "${cpp_typesupport_target}"
+)
+
 ament_target_dependencies(
   cube_detector
+  rclcpp
+  sensor_msgs
+  cv_bridge
+  tf2_ros
+  tf2
+  geometry_msgs
+  tf2_geometry_msgs
+  ament_index_cpp
+  image_transport
+)
+
+ament_target_dependencies(
+  object_map_server
   rclcpp
   sensor_msgs
   cv_bridge
@@ -150,6 +184,7 @@ install(TARGETS
   aruco_detector_lib
   detector_node
   cube_detector
+  object_map_server
   DESTINATION lib/${PROJECT_NAME}
 )
 

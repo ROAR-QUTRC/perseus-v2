@@ -1,0 +1,21 @@
+targets:
+  - name: placecard_1
+    x: 9.5
+    y: 14.5
+    yaw: 2.690
+  - name: placecard_2
+    x: 1.5
+    y: 8.5
+    yaw: 1.994
+  - name: placecard_3
+    x: 5.5
+    y: 4.0
+    yaw: 0.843
+  - name: placecard_4
+    x: 10.5
+    y: -6.5
+    yaw: 3.034
+  - name: placecard_5
+    x: -1.85
+    y: -6.5
+    yaw: -1.994

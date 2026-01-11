@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /TF1
         - /Fused Odometry1/Covariance1/Position1
         - /LaserScan1/Topic1
       Splitter Ratio: 0.5
@@ -206,6 +207,8 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        aruco_marker_24:
+          Value: true
         base_footprint:
           Value: true
         base_link:
@@ -238,6 +241,16 @@ Visualization Manager:
           Value: true
         odom:
           Value: true
+        placecard_1:
+          Value: true
+        placecard_2:
+          Value: true
+        placecard_3:
+          Value: true
+        placecard_4:
+          Value: true
+        placecard_5:
+          Value: true
         rear_left_motor:
           Value: true
         rear_left_wheel:
@@ -252,9 +265,11 @@ Visualization Manager:
       Name: TF
       Show Arrows: true
       Show Axes: true
-      Show Names: false
+      Show Names: true
       Tree:
         map:
+          aruco_marker_24:
+            {}
           odom:
             base_link:
               base_footprint:
@@ -284,6 +299,16 @@ Visualization Manager:
                   rear_right_motor:
                     rear_right_wheel:
                       {}
+            placecard_1:
+              {}
+            placecard_2:
+              {}
+            placecard_3:
+              {}
+            placecard_4:
+              {}
+            placecard_5:
+              {}
       Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/Image
@@ -512,7 +537,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: true
       Max Color: 255; 255; 255
       Max Intensity: 0
@@ -532,7 +557,7 @@ Visualization Manager:
         Value: /points
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -579,25 +604,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 10.303427696228027
+      Distance: 21.274892807006836
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.932403087615967
-        Y: 5.3966569900512695
-        Z: -2.6576008796691895
+        X: 0.3917388319969177
+        Y: 1.8299782276153564
+        Z: -1.2586252689361572
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.839796245098114
+      Pitch: 0.7847968935966492
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.9846863746643066
+      Yaw: 3.3614797592163086
     Saved: ~
 Window Geometry:
   Displays:
