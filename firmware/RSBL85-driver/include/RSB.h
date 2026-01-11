@@ -79,13 +79,13 @@ public:
 
     // Move TO Target angle position with velocity control - angle in degrees, time in milliseconds
     virtual int MoveToAngle(uint8_t ID, int16_t TargetAngle, uint16_t Time, uint8_t ACC = 0);
-   
+
     // Move TO target angle position with goal time (position + time control) - angle in degrees, time in milliseconds
     virtual void SyncMoveToAngle(uint8_t ID[], uint8_t IDN, int16_t TargetAngle[], uint16_t Time, uint8_t ACC[]);
 
     // Move TO target position with goal time (position + time control)
     virtual int WritePosWithTime(uint8_t ID, int16_t Position, uint16_t Time, uint8_t ACC = 0);
-    
+
     // Synchronous write multiple servo position with goal time (position + time control)
     virtual void SyncWritePosWithTime(uint8_t ID[], uint8_t IDN, int16_t Position[], uint16_t Time, uint8_t ACC[]);
 

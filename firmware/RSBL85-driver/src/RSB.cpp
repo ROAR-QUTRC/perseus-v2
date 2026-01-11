@@ -150,11 +150,11 @@ int SMS_STS::MoveToAngle(uint8_t ID, int16_t TargetAngle, uint16_t Time, uint8_t
     }
     uint8_t bBuf[7];
     bBuf[0] = ACC;
-    Host2SCS(bBuf + 1, bBuf + 2, (int16_t)position);  
-    Host2SCS(bBuf + 3, bBuf + 4, Time);               
-    Host2SCS(bBuf + 5, bBuf + 6, 0);                  
+    Host2SCS(bBuf + 1, bBuf + 2, (int16_t)position);
+    Host2SCS(bBuf + 3, bBuf + 4, Time);
+    Host2SCS(bBuf + 5, bBuf + 6, 0);
     memcpy(bBuf, bBuf, 7);
-    
+
     return genWrite(ID, SMS_STS_ACC, (uint8_t*)bBuf, 7);
 }
 
