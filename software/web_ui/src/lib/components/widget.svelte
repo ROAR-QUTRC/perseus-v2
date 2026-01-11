@@ -68,8 +68,23 @@
 
 	// Determine if the widget is unlocked (not ROS dependent or ROS is connected)
 	let unlocked = $derived((widgetData.isRosDependent && getRosConnection()) || !widgetData.isRosDependent)
+
+	// Determine if the widget is unlocked (not ROS dependent or ROS is connected)
+	let unlocked = $derived((widgetData.isRosDependent && getRosConnection()) || !widgetData.isRosDependent)
 </script>
 
+<Card.Root class="h-[100%] min-h-[75px] flex flex-col">
+	<div class="flex border-b">
+		{@render dragHandle()}
+		<div class:disabled={!unlocked}>
+			<DotsHorizontal class="m-2 ml-auto hover:cursor-pointer" onclick={() => (open = !open)} />
+		</div>
+	</div>
+	{#if unlocked}
+		<!-- Render settings -->
+		<Sheet.Root bind:open>
+			<Sheet.Trigger class="outline-none">
+			</Sheet.Trigger>
 <Card.Root class="h-[100%] min-h-[75px] flex flex-col">
 	<div class="flex border-b">
 		{@render dragHandle()}
@@ -177,9 +192,9 @@
 						{/each}
 					</ScrollArea>
 				</div>
-				<div class="mt-4 flex space-x-2 flex-row">
-					<Button size="sm" class="flex-1" onclick={saveState}>Save State</Button>
-					<Button variant="outline" size="sm" class="flex-1" onclick={resetState}>
+				<div class="mt-4 flex space-x-2">
+					<Button size="sm" class="w-full" onclick={saveState}>Save State</Button>
+					<Button variant="outline" size="sm" class="w-full" onclick={resetState}>
 						Reset State
 					</Button>
 				</div>
@@ -194,6 +209,8 @@
 		<!-- No ROS connection message -->
 		<div class="relative flex-grow overflow-hidden">
 			<div class=" absolute left-0 top-0 flex h-full w-full items-center justify-center">
+		<div class="relative flex-grow overflow-hidden">
+			<div class=" absolute left-0 top-0 flex h-full w-full items-center justify-center">
 				<div class="absolute left-[50%] top-[50%] w-[80%] -translate-x-[50%] -translate-y-[50%]">
 					<p class="text-center text-2xl">No ROS Connection found.</p>
 					<p class="text-center">Make sure rosbridge is running and the client is connected.</p>
@@ -203,6 +220,12 @@
 	{/if}
 </Card.Root>
 
+<style>
+	.disabled {
+		pointer-events: none;
+		opacity: 0.5;
+	}
+</style>
 <style>
 	.disabled {
 		pointer-events: none;
