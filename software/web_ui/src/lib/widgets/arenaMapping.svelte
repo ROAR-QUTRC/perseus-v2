@@ -25,8 +25,9 @@
 	import { getRosConnection as get_ros_connection } from '$lib/scripts/rosBridge.svelte';
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
+	import { Square } from 'svelte-radix';
 
-	type Mode = 'waypoint' | 'border';
+	type Mode = 'waypoint' | 'border' | 'origin';
 	type ros_string_message = { data: string };
 
 	type WaypointRow = {
@@ -72,6 +73,10 @@
 	// ROS request/response plumbing
 	let request_topic: ROSLIB.Topic<ros_string_message> | null = null;
 	let response_topic: ROSLIB.Topic<ros_string_message> | null = null;
+
+	//scale
+	let scale = $state(0);
+	let map_height = $state(0);
 
 	const pending_requests = new Map<
 		string,
@@ -183,8 +188,8 @@
 
 		for (const waypoint of waypoints) {
 			lines.push(`- name: ${waypoint.name}`);
-			lines.push(`x: ${waypoint.centroid_x}`);
-			lines.push(`y: ${waypoint.centroid_y}`);
+			lines.push(`x: ${waypoint.centroid_x / scale}`);
+			lines.push(`y: ${waypoint.centroid_y / scale}}`);
 			lines.push(`yaw: ${waypoint.yaw}`)
 		}
 
@@ -211,12 +216,12 @@
 
 		if (!click_position) return;
 
-		status_message = `${mode === 'waypoint' ? 'Waypoint' : 'Border'} @ (${click_position.x}, ${click_position.y})…`;
+		status_message = `${mode} @ (${click_position.x}, ${click_position.y})…`;
 
 		try {
 			const response = await send_request({
 				op: 'extract_feature',
-				mode, // 'waypoint' | 'border' (protocol value)
+				mode, // 'waypoint' | 'border' | 'origin' (protocol value)
 				image_id: map_image_id,
 				sample_x: click_position.x,
 				sample_y: click_position.y,
@@ -238,6 +243,10 @@
 			centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
 			contour = Array.isArray(response.contour) ? response.contour : [];
 
+			if (mode === 'origin') {
+				console.log(`i did it \n ${sample_image_hexadecimal_color}`);
+			}
+
 			if (mode === 'waypoint') {
 				add_waypoint_from_response(response);
 				status_message = centroid
@@ -246,10 +255,22 @@
 			} else {
 				status_message = `Border OK ${sample_image_hexadecimal_color}`;
 			}
+
+
 		} catch (error: any) {
 			status_message = `Error: ${error?.message ?? String(error)}`;
 		}
 	}
+
+	function update_scale() {
+		const squares = document.getElementById("squares") as HTMLInputElement;
+		const grid_spacing = document.getElementById("grid_spacing") as HTMLInputElement;	
+
+		if (squares.valueAsNumber && grid_spacing.valueAsNumber) {
+			scale = map_height / squares.valueAsNumber * grid_spacing.valueAsNumber;
+			scale = parseFloat(scale.toFixed(2));
+		}
+	};
 
 	$effect(() => {
 		const ros_connection = get_ros_connection();
@@ -307,18 +328,20 @@
 			<div class="status">Status: {status_message}</div>
 
 			<div class="controls flex ">
-				<button class:active={mode === 'waypoint'} on:click={() => (mode = 'waypoint')}>
+				<button class:active={mode === 'waypoint'} onclick={() => (mode = 'waypoint')}>
 					Waypoint mode
 				</button>
-				<button class:active={mode === 'border'} on:click={() => (mode = 'border')}>
+				<button class:active={mode === 'border'} onclick={() => (mode = 'border')}>
 					Border mode
 				</button>
-
-				<button type="button" class="danger" on:click={clear_waypoints} disabled={waypoints.length === 0}>
+				<button class:active={mode === 'origin'} onclick={() => (mode = 'origin')}>
+					Origin mode
+				</button>
+				<button type="button" class="danger" onclick={clear_waypoints} disabled={waypoints.length === 0}>
 					Clear table
 				</button>
 
-				<button type="button" on:click={copy_yaml} disabled={waypoints.length === 0}>
+				<button type="button" onclick={copy_yaml} disabled={waypoints.length === 0}>
 					Copy YAML
 				</button>
 			</div>
@@ -332,10 +355,11 @@
 					width="700"
 					alt="map"
 					class="map"
-					on:click={on_map_click}
-					on:load={() => {
+					onclick={on_map_click}
+					onload={() => {
 						if (!image_element) return;
 						svg_view_box = `0 0 ${image_element.naturalWidth} ${image_element.naturalHeight}`;
+						map_height = image_element.naturalHeight;
 					}}
 				/>
 			</div>
@@ -362,9 +386,72 @@
 			</svg>
 		</div>
 
+		<!--Scale table-->
+		<div class="tableWrap">
+			<h2>Scale</h2>
+			<table class="tbl" style="width: 50%">
+				<thead>
+					<tr>
+						<th>Grid spacing (m)</th>
+						<th>Number of squares (top to bottom)</th>
+						<th>Image height (pixels)</th>
+						<th>Scale (pixels per meter)</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							<input onchange={update_scale} id="grid_spacing" type="number" min="0" step="0.01" value="0.00"/>
+						</td>
+						<td>
+							<input onchange={update_scale} id="squares" type="number" min="0" value="0"/>
+						</td>
+						<td>
+							<p>{map_height}</p>
+						</td>
+						<td>
+							<p>{scale}</p>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!--Origin table-->
+		<div class="tableWrap">
+			<h2>Origin</h2>
+			<table class="tbl" style="width: 30%;">
+				<thead>
+					<tr>
+						<th>Origin X</th>
+						<th>Hex</th>
+						<th>Origin Y</th>
+						<th>Hex</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+						
+						</td>
+						<td>
+			
+						</td>
+						<td>
+							
+						</td>
+						<td>
+
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
 		<!-- Big table -->
 		<div class="tableWrap">
-			<table class="tbl">
+			<h2>Waypoints</h2>
+			<table class="tbl" style="min-width: 900px;">
 				<thead>
 					<tr>
 						<th>#</th>
@@ -389,7 +476,7 @@
 									<input
 										class="nameInput"
 										value={waypoint.name}
-										on:input={(event) =>
+										oninput={(event) =>
 											update_name(waypoint.id, (event.target as HTMLInputElement).value)}
 									/>
 								</td>
@@ -398,11 +485,11 @@
 										{waypoint.hexadecimal_color}
 									</span>
 								</td>
-								<td>{waypoint.centroid_x}</td>
-								<td>{waypoint.centroid_y}</td>
+								<td>{(waypoint.centroid_x / scale).toFixed(2)}</td>
+								<td>{(waypoint.centroid_y / scale).toFixed(2)}</td>
 								<td><input type="number" bind:value={waypoint.yaw}></td>
 								<td class="right">
-									<button type="button" class="danger" on:click={() => delete_waypoint(waypoint.id)}>
+									<button type="button" class="danger" onclick={() => delete_waypoint(waypoint.id)}>
 										Delete
 									</button>
 								</td>
@@ -413,10 +500,9 @@
 			</table>
 		</div>
 
-
 		<!-- YAML preview -->
 		<div class="yamlWrap">
-			<div class="yamlTitle">YAML preview</div>
+			<h2>YAML preview</h2>
 			<textarea class="yamlBox" readonly value={build_yaml()}></textarea>
 		</div>
 	</div>
@@ -474,7 +560,7 @@
 
 	.tableWrap {
 		margin-top: 16px;
-		border: 1px solid #333;
+		/*border: 1px solid #333;*/
 		max-height: 340px; /* big + scrollable */
 		overflow: auto;
 	}
@@ -482,7 +568,7 @@
 	.tbl {
 		width: 100%;
 		border-collapse: collapse;
-		min-width: 900px;
+		min-width: 500px;
 	}
 	.tbl th,
 	.tbl td {
@@ -522,10 +608,12 @@
 	.yamlWrap {
 		margin-top: 14px;
 	}
-	.yamlTitle {
+
+	h2 {
 		font-weight: 600;
 		margin-bottom: 6px;
 	}
+
 	.yamlBox {
 		width: 100%;
 		min-height: 180px;
