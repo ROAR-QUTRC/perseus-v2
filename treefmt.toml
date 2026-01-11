@@ -6,7 +6,7 @@ options = []
 
 [formatter.clang-format]
 command = "clang-format"
-excludes = ["*.onnx" ]
+excludes = []
 includes = [
     "*.c",
     "*.cc",
@@ -133,6 +133,7 @@ excludes = [
     "*.bmp",
     "*.ico",
     "*.pdf",
+    "*.onnx",
     "*sdkconfig*",
     "software/ros_ws/src/**/meshes/**",
     "*.dae",
