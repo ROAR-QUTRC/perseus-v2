@@ -8,6 +8,7 @@
   backward-ros,
   rosidl-default-generators,
   rosidl-default-runtime,
+  std-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-msgs";
@@ -27,6 +28,7 @@ buildRosPackage rec {
   propagatedBuildInputs = [
     backward-ros
     rosidl-default-runtime
+    std-msgs
   ];
   nativeBuildInputs = [
     ament-cmake
