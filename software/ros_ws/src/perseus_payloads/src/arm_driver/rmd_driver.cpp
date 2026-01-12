@@ -54,15 +54,13 @@ RmdDriver::RmdDriver(const rclcpp::NodeOptions& options)
     _status_publisher = this->create_publisher<std_msgs::msg::Float64MultiArray>("/arm/rmd/status", 10);
     _status_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_status_messages, this));
     _motor_position_publisher = this->create_publisher<std_msgs::msg::Float64MultiArray>("/arm/rmd/positions", 10);
-    _motor_position_timer = this->create_wall_timer(this->POSITION_PUBLISH_MS, std::bind(&RmdDriver::_publish_motor_positions, this));
+    _motor_position_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_motor_positions, this));
     _enable_debug_stats_service = this->create_service<std_srvs::srv::SetBool>(
         "/arm/rmd/enable_debug_stats",
         [this](const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response)
         {
-            // Respond with true if the status state changed, false if it was already in the desired state
-            const uint16_t last_message_speed = this->_status_message_ms;
             this->_enable_status_messages(request->data);
-            response->success = (last_message_speed != this->_status_message_ms);
+            response->success = this->_status_message_ms == 50;
         });
 
     // Setup config Services
@@ -77,7 +75,17 @@ RmdDriver::RmdDriver(const rclcpp::NodeOptions& options)
 void RmdDriver::_enable_status_messages(bool debug_mode)
 {
     // Update speed if in debug mode
-    this->_status_message_ms = debug_mode ? 50 : 500;
+    this->_status_message_ms = debug_mode ? 50 : 5000;
+    if (this->_status_timer)
+    {
+        this->_status_timer->cancel();
+        this->_status_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_status_messages, this));
+    }
+    if (this->_motor_position_timer)
+    {
+        this->_motor_position_timer->cancel();
+        this->_motor_position_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_motor_positions, this));
+    }
     // Set motors to transmit error messages when there is an error
     _can_interface->transmit(Packet{
         servo_address_t{message_type::MULTI_MOTOR_SEND},
@@ -97,21 +105,33 @@ void RmdDriver::_enable_status_messages(bool debug_mode)
         servo_address_t{message_type::MULTI_MOTOR_SEND},
         send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_3, true, this->_status_message_ms).serialize_data()});
     std::this_thread::sleep_for(PACKET_DELAY_MS);  // small delay otherwise messages are ignored by servos
+
+    // Send position feedback every position publish interval
+    // _can_interface->transmit(Packet{
+    //     servo_address_t{message_type::MULTI_MOTOR_SEND},
+    //     send_message::active_reply_t(send_message::active_reply_t::reply_t::MULTI_TURN_POSITION, true, this->POSITION_PUBLISH_MS).serialize_data()});
+    // std::this_thread::sleep_for(PACKET_DELAY_MS);
 }
 
 void RmdDriver::_handle_position_control(std_msgs::msg::Float64MultiArray servo_control)
 {
-    for (size_t i = 0; i < servo_control.data.size(); i++)
-    {
-        motor_id_t motor_id = static_cast<motor_id_t>(i + 1);
+    // const double target_time_ms = servo_control.normalized[0];
+    // const double max_angle = *std::max_element(servo_control.position.begin(), servo_control.position.end());
+    // uint16_t degrees_per_second = max_angle / (target_time_ms / 1000.0);
+    // degrees_per_second = std::clamp(degrees_per_second, (uint16_t)0, RMD_SPEED_LIMIT);
 
-        _can_interface->transmit(Packet(
+    for (const auto& motor_id : this->_available_servos)
+    {
+        const uint8_t index = static_cast<uint8_t>(motor_id) - 1;
+        const double target_position = servo_control.data[index];
+        _can_interface->transmit(Packet{
             servo_address_t(message_type::SEND, motor_id),
             send_message::position_t(
                 send_message::position_t::position_command_t::ABSOLUTE,
+                // degrees_per_second,
                 RMD_SPEED_LIMIT * 0.5,
-                servo_control.data[i])
-                .serialize_data()));
+                target_position)
+                .serialize_data()});
     }
 }
 
@@ -119,12 +139,23 @@ void RmdDriver::_publish_status_messages()
 {
     std_msgs::msg::Float64MultiArray status_msg;
 
+    RCLCPP_INFO(this->get_logger(), "Publishing RMD status messages:");
+
     for (const auto& motor_id : this->_available_servos)
     {
         auto it = this->PARAMETER_GROUP_MAP.find(motor_id);
         if (it != this->PARAMETER_GROUP_MAP.end())
         {
             const auto& parameter_group = it->second;
+            RCLCPP_INFO(this->get_logger(),
+                        "Motor ID %d Status - Error: %d, Temp: %dC, Voltage: %.2fV, Current: %.2fA, Speed: %drpm, Angle: %.2fdeg",
+                        static_cast<uint8_t>(motor_id),
+                        parameter_group->get_error_status(),
+                        parameter_group->get_temp(),
+                        parameter_group->get_voltage(),
+                        parameter_group->get_torque_current(),
+                        parameter_group->get_speed(),
+                        parameter_group->get_angle());
             status_msg.data.emplace_back(static_cast<double>(motor_id));
             status_msg.data.emplace_back(static_cast<uint16_t>(parameter_group->get_error_status()));
             status_msg.data.emplace_back(static_cast<double>(parameter_group->get_temp()));
@@ -143,6 +174,11 @@ void RmdDriver::_publish_status_messages()
 
 void RmdDriver::_publish_motor_positions()
 {
+    // _can_interface->transmit(Packet{
+    //     servo_address_t(message_type::MULTI_MOTOR_SEND),
+    //     send_message::action_command_t(send_message::action_command_t::command_id_t::READ_POSITION).serialize_data()});
+    // std::this_thread::sleep_for(PACKET_DELAY_MS);
+
     std_msgs::msg::Float64MultiArray position_msg;
     position_msg.data = std::vector<double>(this->PARAMETER_GROUP_MAP.size(), 0.0);
 
@@ -183,7 +219,7 @@ void RmdDriver::_handle_can()
     }
 }
 
-#pragma region CONFIG_SERVICE_CALLBACKS
+#pragma region CONFIG_SERVICES
 
 void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response)
 {
@@ -202,6 +238,7 @@ void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::TriggerDe
     std::this_thread::sleep_for(PACKET_DELAY_MS);
 
     this->_available_servos.erase(std::remove(this->_available_servos.begin(), this->_available_servos.end(), current_id), this->_available_servos.end());
+    this->_enable_status_messages(this->_status_message_ms < 500);
 
     response->success = true;
 }
@@ -233,14 +270,14 @@ void RmdDriver::_get_rmd_can_ids(const std::shared_ptr<perseus_msgs::srv::Reques
 {
     (void)request;  // request is empty
 
-    response->servo_ids.clear();
+    response->data.clear();
     for (const auto& motor_id : this->_available_servos)
     {
-        response->servo_ids.emplace_back(static_cast<uint8_t>(motor_id));
+        response->data.emplace_back(static_cast<uint8_t>(motor_id));
     }
 }
 
-#pragma endregion CONFIG_SERVICE_CALLBACKS
+#pragma endregion CONFIG_SERVICES
 
 void RmdDriver::cleanup()
 {

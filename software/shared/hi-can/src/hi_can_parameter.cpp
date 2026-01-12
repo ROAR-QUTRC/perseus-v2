@@ -221,152 +221,6 @@ namespace hi_can::parameters::drive::vesc
     }
 }
 
-// namespace hi_can::parameters::post_landing::control::servo::rmd
-// {
-//     namespace send
-//     {
-//
-// #pragma pack(push, 1)
-//         struct torque_raw_t
-//         {
-//             command_t _command = command_t::TORQUE_CLOSED_LOOP;
-//             uint8_t _reserved1[3] = {};
-//             int16_t torque;
-//             uint16_t _reserved2 = 0;
-//         };
-//         struct speed_raw_t
-//         {
-//             command_t _command = command_t::SPEED_CLOSED_LOOP;
-//             uint8_t _reserved[3] = {};
-//             int32_t speed = 0;
-//         };
-//         struct position_raw_t
-//         {
-//             position_t::position_command_t position_command;
-//             uint8_t _reserved = 0;
-//             uint16_t speed_limit;
-//             int32_t position_control;
-//         };
-//         struct single_turn_position_raw_t
-//         {
-//             command_t _command = command_t::SINGLE_TURN_POSITION;
-//             single_turn_position_t::rotation_direction_t rotation_direction;
-//             uint16_t speed_limit;
-//             uint16_t position_control;
-//             uint16_t _reserved = 0;
-//         };
-//         struct action_command_raw_t
-//         {
-//             action_command_t::command_id_t command;
-//             uint8_t _reserved[7] = {};
-//         };
-//         struct function_control_raw_t
-//         {
-//             command_t _command = command_t::FUNCTION_CONTROL;
-//             function_control_t::function_index_t function_index;
-//             uint16_t _reserved = 0;
-//             uint32_t input_value;
-//         };
-//         struct active_reply_raw_t
-//         {
-//             command_t _command = command_t::ACTIVE_REPLY_FUNCTION;
-//             active_reply_t::reply_t reply_command;
-//             uint8_t enable;
-//             uint16_t reply_interval;
-//             uint8_t _reserved[3] = {};
-//         };
-// #pragma pack(pop)
-//
-//         std::vector<uint8_t> torque_t::serialize_data()
-//         {
-//             SimpleSerializable<torque_raw_t> raw_data;
-//             raw_data.torque = torque * 100 / 0.12;  // 0.01 A/LSB, 0.12 Nm/A
-//             return raw_data.serialize_data();
-//         }
-//         std::vector<uint8_t> speed_t::serialize_data()
-//         {
-//             SimpleSerializable<speed_raw_t> raw_data;
-//             raw_data.speed = speed * 100;  // 0.01 dps/LSB
-//             return raw_data.serialize_data();
-//         }
-//         std::vector<uint8_t> position_t::serialize_data()
-//         {
-//             SimpleSerializable<position_raw_t> raw_data;
-//             raw_data.position_command = position_command;
-//             raw_data.speed_limit = speed_limit;
-//             raw_data.position_control = position_control * 100;  // 0.01 degrees/LSB
-//             return raw_data.serialize_data();
-//         }
-//         std::vector<uint8_t> single_turn_position_t::serialize_data()
-//         {
-//             SimpleSerializable<single_turn_position_raw_t> raw_data;
-//             raw_data.rotation_direction = rotation_direction;
-//             raw_data.speed_limit = speed_limit;                  // 1 dps/LSB
-//             raw_data.position_control = position_control * 100;  // 0.01 degrees/LSB
-//             return raw_data.serialize_data();
-//         }
-//         std::vector<uint8_t> action_command_t::serialize_data()
-//         {
-//             SimpleSerializable<action_command_raw_t> raw_data;
-//             raw_data.command = command;  // Empty message other than the command
-//             return raw_data.serialize_data();
-//         }
-//         std::vector<uint8_t> function_control_t::serialize_data()
-//         {
-//             SimpleSerializable<function_control_raw_t> raw_data;
-//             raw_data.function_index = function_index;
-//             raw_data.input_value = input_value;
-//             return raw_data.serialize_data();
-//         }
-//         std::vector<uint8_t> active_reply_t::serialize_data()
-//         {
-//             SimpleSerializable<active_reply_raw_t> raw_data;
-//             raw_data.reply_command = reply_command;
-//             raw_data.enable = uint8_t(enable);
-//             raw_data.reply_interval = reply_interval_ms / 10;  // 10ms/LSB
-//             return raw_data.serialize_data();
-//         }
-//     }
-//
-//     namespace receive
-//     {
-//
-//     }
-//
-//     RmdParameterGroup::RmdParameterGroup(uint8_t motor_id)
-//         : _motor_id(motor_id)
-//     {
-//         using namespace addressing::post_landing::servo::rmd;
-//         _callbacks.emplace_back(
-//             filter_t{
-//                 .address = servo_address_t{message_type::RECEIVE, static_cast<motor_id_t>(motor_id)}},
-//             PacketManager::callback_config_t{
-//                 .data_callback = [this](const Packet& packet)
-//                 {
-//                     std::vector<uint8_t> raw_data = packet.get_data();
-//                     command_t command = command_t(raw_data.front());
-//
-//                     switch (command)
-//                     {
-//                     case command_t::STATUS_1:
-//                         _status1.deserialize_data(raw_data);
-//                         break;
-//                     }
-//                 },
-//             });
-//         // _callbacks.emplace_back(
-//         //     filter_t{
-//         //         .address = static_cast<flagged_address_t>(servo_address_t(rmd_id::SEND, static_cast<motor_id_t>(motor_id))),
-//         //     },
-//         //     PacketManager::callback_config_t{
-//         //         .data_callback = [this](const Packet& packet)
-//         //         {
-//         //             _status.deserialize_data(packet.get_data());
-//         //         },
-//         //     });
-//     }
-// }
-
 namespace hi_can::parameters::post_landing::servo::rmd
 {
     namespace send_message
@@ -550,6 +404,12 @@ namespace hi_can::parameters::post_landing::servo::rmd
             uint8_t _reserved[3] = {};
             uint32_t zero_bias = 0;
         };
+        struct data_response_raw_t
+        {
+            command_t _command;
+            uint8_t _reserved[3] = {};
+            uint32_t data = 0;
+        };
         struct can_id_raw_t
         {
             command_t _command = command_t::SET_CAN_ID;
@@ -602,6 +462,12 @@ namespace hi_can::parameters::post_landing::servo::rmd
             SimpleSerializable<zero_offset_raw_t> raw_data(serialized_data);
             command = raw_data._command;
             zero_bias = raw_data.zero_bias;
+        }
+        void data_response_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
+        {
+            SimpleSerializable<data_response_raw_t> raw_data(serialized_data);
+            command = raw_data._command;
+            data = raw_data.data;
         }
         void can_id_t::deserialize_data(const std::vector<uint8_t>& serialized_data)
         {
@@ -657,6 +523,19 @@ namespace hi_can::parameters::post_landing::servo::rmd
                         this->_phase_c_current = status_3.phase_c_current;
                         break;
                     }
+                    case command_t::READ_MULTI_TURN_POSITION:
+                    {
+                        receive_message::data_response_t data_response = {};
+                        data_response.deserialize_data(raw_data);
+                        this->_motor_angle = data_response.data;
+                        break;
+                    }
+                    case command_t::MOTOR_STOP:
+                    case command_t::MOTOR_SHUTDOWN:
+                    case command_t::SYSTEM_BRAKE_RELEASE:
+                    case command_t::SYSTEM_BRAKE_LOCK:
+                        // These don't have any data sent back from the servos, so do nothing
+                        break;
                     default:
                         break;
                     }

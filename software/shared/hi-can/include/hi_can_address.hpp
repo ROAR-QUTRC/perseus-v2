@@ -392,9 +392,9 @@ namespace hi_can
                     enum class motor_id_t : uint8_t
                     {
                         ALL = 0x00,
-                        ELBOW = 0x01,
-                        WRIST_YAW = 0x02,
-                        WRIST_ROLL = 0x03,
+                        WRIST_TILT = 0x01,
+                        WRIST_PAN = 0x02,
+                        ELBOW = 0x03,
                     };
                     struct servo_address_t : public flagged_address_t
                     {

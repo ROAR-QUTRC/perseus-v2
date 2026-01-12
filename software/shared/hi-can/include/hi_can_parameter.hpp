@@ -433,6 +433,7 @@ namespace hi_can::parameters
                             STATUS_1 = uint8_t(command_t::READ_MOTOR_STATUS_1),
                             STATUS_2 = uint8_t(command_t::READ_MOTOR_STATUS_2),
                             STATUS_3 = uint8_t(command_t::READ_MOTOR_STATUS_3),
+                            READ_POSITION = uint8_t(command_t::READ_MULTI_TURN_POSITION),
                         };
                         command_id_t command = {};
                         std::vector<uint8_t> serialize_data() override;
@@ -468,9 +469,11 @@ namespace hi_can::parameters
                     {
                         enum class reply_t : uint8_t
                         {
-                            MULTI_TURN_POSITION = uint8_t(command_t::READ_MULTI_TURN_ANGLE),
+                            // Vector angle
+                            MULTI_TURN_POSITION = uint8_t(command_t::READ_MULTI_TURN_POSITION),
                             MULTI_TURN_ORIGINAL_POSITION = uint8_t(command_t::READ_MULTI_TURN_ORIGINAL_POSITION),
                             MULTI_TURN_ZERO_OFFSET = uint8_t(command_t::READ_MULTI_TURN_ZERO_OFFSET),
+                            // Absolute angle
                             MULTI_TURN_ANGLE = uint8_t(command_t::READ_MULTI_TURN_ANGLE),
                             STATUS_1 = uint8_t(command_t::READ_MOTOR_STATUS_1),
                             STATUS_2 = uint8_t(command_t::READ_MOTOR_STATUS_2),
@@ -586,6 +589,12 @@ namespace hi_can::parameters
                     {
                         command_t command;
                         uint32_t zero_bias = 0;
+                        void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
+                    };
+                    struct data_response_t : Deserializable
+                    {
+                        command_t command;
+                        uint32_t data = 0;
                         void deserialize_data(const std::vector<uint8_t>& serialized_data) override;
                     };
                     struct _function_t

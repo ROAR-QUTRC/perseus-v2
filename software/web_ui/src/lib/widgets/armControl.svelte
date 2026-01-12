@@ -50,6 +50,7 @@
 
 
 	interface MotorData {
+		rmdMotor: boolean;
 		showDirectPosition: boolean;
 		targetAngle: number;
 		draftTargetAngle: number;
@@ -69,7 +70,7 @@
 	let interval: NodeJS.Timeout | null = null;
 	let motorControlTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
 	let motorStatusTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-	let motorPositionTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
+	// let motorPositionTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
 	let enableDebugStatsService: ROSLIB.Service<SetBoolRequestType, SetBoolResponseType> | null = null;
 	let setIdService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
 	let setZeroPositionService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
@@ -93,12 +94,12 @@
 				messageType: 'std_msgs/msg/Float64MultiArray'
 			});
 			motorStatusTopic.subscribe(onStatusMessage)
-			motorPositionTopic = new ROSLIB.Topic({
-				ros: ros,
-				name: '/arm/rmd/positions',
-				messageType: 'std_msgs/msg/Float64MultiArray'
-			});
-			motorPositionTopic.subscribe(onPositionMessage)
+			// motorPositionTopic = new ROSLIB.Topic({
+			// 	ros: ros,
+			// 	name: '/arm/rmd/positions',
+			// 	messageType: 'std_msgs/msg/Float64MultiArray'
+			// });
+			// motorPositionTopic.subscribe(onPositionMessage)
 			enableDebugStatsService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/enable_debug_stats',
@@ -154,17 +155,16 @@
 			joints.forEach((joint) => {
 				motors[joint].targetAngle = motors[joint].draftTargetAngle;
 			});
-			// send
+			const data = [0, 0, 0, 0, 0];
+			Object.keys(jointIdMap).forEach((joint) => {
+				const jointName = joint as JointNameType;
+				data[jointIdMap[jointName] - 1] = motors[jointName].targetAngle * (motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
+			})
 			const message = {
 				// Index of this array corresponds to motor ID - 1
-				data: [
-					motors.ELBOW.targetAngle * (motors.ELBOW.showDirectPosition ? 1 : motors.ELBOW.gearRatio),
-					motors.WRIST_PAN.targetAngle * (motors.WRIST_PAN.showDirectPosition ? 1 : motors.WRIST_PAN.gearRatio),
-					motors.WRIST_TILT.targetAngle * (motors.WRIST_TILT.showDirectPosition ? 1 : motors.WRIST_TILT.gearRatio),
-					motors.SHOULDER_PAN.targetAngle * (motors.SHOULDER_PAN.showDirectPosition ? 1 : motors.SHOULDER_PAN.gearRatio),
-					motors.SHOULDER_TILT.targetAngle * (motors.SHOULDER_TILT.showDirectPosition ? 1 : motors.SHOULDER_TILT.gearRatio),
-				]
+				data
 			};
+			console.log('Sending motor control message:', message.data);
 			motorControlTopic.publish(message);
 		}
 	}
@@ -172,34 +172,39 @@
 	const onStatusMessage = (message: Float64MultiArrayType) => {
 		// message.data is an array of floats in the order:
 		// [motor_id, error_code, temperature, voltage, current, rpm, angle, phase_<a,b,c>_current]
-		const jointName = Object.keys(jointIdMap).find(key => jointIdMap[key as JointNameType] === message.data[0]) as JointNameType;
-		if (jointName) {
-			motors[jointName].error = 'None';
-			motors[jointName].temperature = message.data[2];
-			motors[jointName].voltage = message.data[3];
-			motors[jointName].current = message.data[4];
-			motors[jointName].rpm = message.data[5];
-			motors[jointName].angle = message.data[6] / (motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
+		// Reshape data (Each motor sends 10 values)
+		const data: Array<Array<number>> = [];
+		for (let i = 0; i < message.data.length; i += 10) {
+			data.push(message.data.slice(i, i + 10));
+		}
+		for (const dataSet of data) {
+			const jointName = Object.keys(jointIdMap).find(key => jointIdMap[key as JointNameType] === dataSet[0]) as JointNameType;
+			if (jointName) {
+				// console.log('settings joint ', jointName, ' status:', message.data[0], message.data);
+				motors[jointName].error = 'None';
+				motors[jointName].temperature = dataSet[2];
+				motors[jointName].voltage = dataSet[3];
+				motors[jointName].current = dataSet[4];
+				motors[jointName].rpm = dataSet[5];
+				motors[jointName].angle = dataSet[6] / (motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
+			}
 		}
 	}
 
-	const onPositionMessage = (message: Float64MultiArrayType) => {
-		// message.data is an array of floats in the order:
-		// [elbow, wrist_pan, wrist_tilt, shoulder_pan, shoulder_tilt]
-		motors.ELBOW.angle = message.data[0] / (motors.ELBOW.showDirectPosition ? 1 : motors.ELBOW.gearRatio);
-		motors.WRIST_PAN.angle = message.data[1] / (motors.WRIST_PAN.showDirectPosition ? 1 : motors.WRIST_PAN.gearRatio);
-		motors.WRIST_TILT.angle = message.data[2] / (motors.WRIST_TILT.showDirectPosition ? 1 : motors.WRIST_TILT.gearRatio);
-		motors.SHOULDER_PAN.angle = message.data[3] / (motors.SHOULDER_PAN.showDirectPosition ? 1 : motors.SHOULDER_PAN.gearRatio);
-		motors.SHOULDER_TILT.angle = message.data[4] / (motors.SHOULDER_TILT.showDirectPosition ? 1 : motors.SHOULDER_TILT.gearRatio);
-	}
+	// const onPositionMessage = (message: Float64MultiArrayType) => {
+	// 	// message.data is an array of floats in the order:
+	// 	// [elbow, wrist_pan, wrist_tilt, shoulder_pan, shoulder_tilt]
+	// 	motors.ELBOW.angle = message.data[0] / (motors.ELBOW.showDirectPosition ? 1 : motors.ELBOW.gearRatio);
+	// 	motors.WRIST_PAN.angle = message.data[1] / (motors.WRIST_PAN.showDirectPosition ? 1 : motors.WRIST_PAN.gearRatio);
+	// 	motors.WRIST_TILT.angle = message.data[2] / (motors.WRIST_TILT.showDirectPosition ? 1 : motors.WRIST_TILT.gearRatio);
+	// 	motors.SHOULDER_PAN.angle = message.data[3] / (motors.SHOULDER_PAN.showDirectPosition ? 1 : motors.SHOULDER_PAN.gearRatio);
+	// 	motors.SHOULDER_TILT.angle = message.data[4] / (motors.SHOULDER_TILT.showDirectPosition ? 1 : motors.SHOULDER_TILT.gearRatio);
+	// }
 
 	const onEnableDebug = () => {
 		if (enableDebugStatsService) {
 			enableDebugStatsService.callService({ data: !debugEnabled }, (response) => {
-				if (response.success) {
-					debugEnabled = !debugEnabled;
-				}
-				console.log('Enable debug response:', response);
+				debugEnabled = !debugEnabled;
 			});
 		}
 	}
@@ -212,16 +217,19 @@
 	
 	const joints = ['SHOULDER_PAN', 'SHOULDER_TILT', 'ELBOW', 'WRIST_PAN', 'WRIST_TILT'] as const;
 	const jointIdMap: Record<JointNameType, number> = {
-		SHOULDER_PAN: 1,
-		SHOULDER_TILT: 2,
+		WRIST_TILT: 1,
+		WRIST_PAN: 2,
 		ELBOW: 3,
-		WRIST_PAN: 4,
-		WRIST_TILT: 5
+		SHOULDER_TILT: 4,
+		SHOULDER_PAN: 5,
 	};
 	let motors = $state<Record<JointNameType, MotorData>>(
 		{} as Record<JointNameType, MotorData>
 	);
-	let onlineMotors = $state<Array<number>>([])
+	// $inspect(motors).with((type, motors) => {
+	// 	console.log(type, JSON.stringify(motors.WRIST_TILT))
+	// })
+	let onlineMotors = $state<Array<number>>([1, 3])
 	let bigIncrement = $derived(Number(settings.groups.general.bigIncrementValue.value));
 	let smallIncrement = $derived(Number(settings.groups.general.smallIncrementValue.value));
 
@@ -229,7 +237,7 @@
 		if (motors[motorId].showDirectPosition && directButton) return;
 		if (!motors[motorId].showDirectPosition && !directButton) return;
 		motors[motorId].showDirectPosition = !motors[motorId].showDirectPosition;
-		const scale = motors[motorId].showDirectPosition ? motors[motorId].gearRatio : 1 / motors[motorId].gearRatio;
+		const scale = motors[motorId].showDirectPosition ? motors[motorId].gearRatio : (1 / motors[motorId].gearRatio);
 		motors[motorId].targetAngle = motors[motorId].targetAngle * scale;
 		motors[motorId].draftTargetAngle = motors[motorId].draftTargetAngle * scale;
 		motors[motorId].angle = motors[motorId].angle * scale;
@@ -246,7 +254,7 @@
 	const getAllIds = () => {
 		if (getCanIdsService) {
 			getCanIdsService.callService({}, (response) => {
-				onlineMotors = response.data;
+				// onlineMotors = response.data;
 			})
 		}
 	}
@@ -257,6 +265,7 @@
 		// Initialize motor data
 		joints.forEach((joint) => {
 			motors[joint] = {
+				rmdMotor: true,
 				showDirectPosition: false,
 				targetAngle: 0,
 				draftTargetAngle: 0,
@@ -269,6 +278,15 @@
 				error: 'None'
 			};
 		});
+		// Set correct gear ratios
+		motors.ELBOW.gearRatio = 9;
+		motors.WRIST_PAN.gearRatio = 6;
+		motors.WRIST_TILT.gearRatio = 6;
+		motors.SHOULDER_PAN.gearRatio = 6;
+		motors.SHOULDER_PAN.rmdMotor = false;
+		motors.SHOULDER_TILT.gearRatio = 6;
+		motors.SHOULDER_TILT.rmdMotor = false;
+
 
 		// ensure connected motors is updated regularly
 		getMotorIdInterval = setInterval(getAllIds, 1000);
@@ -289,7 +307,7 @@
 <div class="w-full h-full flex flex-col">
 	<div class="flex items-center w-full pb-2 gap-2 px-4">
 		<Button disabled={automaticPositionMessages} onclick={sendPositions}>Send Angles</Button>
-		<Button onclick={onEnableDebug}>Enable Debug</Button>
+		<Button onclick={onEnableDebug}>{debugEnabled ? 'Disable' : 'Enable'} Debug</Button>
 		<p class="ml-auto">Available Motor IDs: {onlineMotors.length > 0 ? onlineMotors.join(', ') : 'None'}</p>
 		<Button class=" rounded-full" variant="ghost" size="icon"><Fa icon={faRefresh} /></Button>
 	</div>
@@ -299,7 +317,7 @@
 				{@const data = motors[motor as JointNameType]}
 				{@const id = motor as JointNameType}
 				<div class="border rounded-2xl mb-2 w-fit h-fit flex flex-col p-2">
-					<p class="text-xl text-center mb-2">{sentenceCase(motor)}</p>
+					<p class="text-xl text-center mb-2">{sentenceCase(motor)} <span class="opacity-50">(id: {jointIdMap[id]})</span></p>
 					<div class="flex gap-2" class:disabled={!onlineMotors.includes(jointIdMap[id])}>
 						<div>
 							<!-- Gage -->
@@ -314,8 +332,8 @@
 								<svg viewBox="0 0 100 100" class="w-full h-full absolute top-0 left-0 overflow-visible">
 									<circle
 										r="3%"
-										cx={`${50 * Math.cos((data.angle * -1 - 90) * Math.PI / 180) + 50}%`}
-										cy={`${50 * Math.sin((data.angle * -1 - 90) * Math.PI / 180) + 50}%`}
+										cx={`${50 * Math.cos(((data.angle) * -1 - 90) * Math.PI / 180) + 50}%`}
+										cy={`${50 * Math.sin(((data.angle) * -1 - 90) * Math.PI / 180) + 50}%`}
 										fill="red"
 									/>
 									<circle 
@@ -324,6 +342,7 @@
 										cy={`${50 * Math.sin((data.targetAngle * -1 - 90) * Math.PI / 180) + 50}%`}
 										fill="red"
 										opacity="0.3"
+										class="transition-all"
 									/>
 								</svg>
 							</div>
