@@ -13,17 +13,19 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
 	import { Layout } from '../shared/Layout';
 	import { onDestroy, onMount } from 'svelte';
-	import LayoutMenu from '$lib/components/layout-menu.svelte';
+	import LayoutMenu from '$lib/components/layoutMenu.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index';
 	import { Gear } from 'svelte-radix';
-	import SettingsForm from '$lib/components/settings-form.svelte';
+	import SettingsForm from '$lib/components/settingsForm.svelte';
 	import * as Command from '$lib/components/ui/command/index';
 	import * as Popover from '$lib/components/ui/popover/index';
-	import WidgetCanvas from '$lib/components/widget-canvas.svelte';
-	import ConnectionMenu from '$lib/components/connection-menu.svelte';
+	import WidgetCanvas from '$lib/components/widgetCanvas.svelte';
+	import ConnectionMenu from '$lib/components/connectionMenu.svelte';
 
 	let unSub: (() => void) | null = null;
 	let widgetGroups = $state<Array<Array<WidgetType>>>([]);
+	const gridXSize = 20;
+	const gridYSize = 20;
 
 	widgetGroups = Object.values(
 		availableWidgets.reduce((acc: any, item) => {
@@ -96,11 +98,11 @@
 			// if it is then create the widget
 			if (clearedAllWidgets) {
 				foundPlace = true;
-			} else if (x == 9 && y == 9) {
+			} else if (x == gridXSize - 1 && y == gridYSize - 1) {
 				// if it isnt and the last position is reached then throw an error
 				foundPlace = true;
 				throw new Error('No more space for widgets');
-			} else if (x == 9) {
+			} else if (x == gridXSize - 1) {
 				// Move to next row
 				x = 0;
 				y++;
@@ -117,8 +119,8 @@
 					name: label,
 					x: x,
 					y: y,
-					w: 1,
-					h: 1
+					w: Math.min(4, gridXSize - x), // default width and height to 4 if possible
+					h: Math.min(4, gridYSize - y)
 				}
 			]
 		});
@@ -254,7 +256,7 @@
 	</div>
 
 	<!-- Widget canvas -->
-	<WidgetCanvas />
+	<WidgetCanvas {gridXSize} {gridYSize} />
 </div>
 <Dialog.Root bind:open={openSettings}>
 	<Dialog.Content class="w-[80vw]">

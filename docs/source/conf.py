@@ -129,21 +129,21 @@ ros_distro = os.environ.get("ROS_DISTRO", "jazzy")
 # intersphinx config
 # this is a good guide: https://docs.readthedocs.io/en/stable/guides/intersphinx.html
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", "./intersphinx/python.inv"),
-    "ros": (f"https://docs.ros.org/en/{ros_distro}", "./intersphinx/ros.inv"),
-    "sphinx": ("https://www.sphinx-doc.org/en/master", "./intersphinx/sphinx.inv"),
+    "python": ("https://docs.python.org/3", None),
+    "ros": (f"https://docs.ros.org/en/{ros_distro}", None),
+    "sphinx": ("https://www.sphinx-doc.org/en/master", None),
     "myst": (
         "https://myst-parser.readthedocs.io/en/latest",
-        "./intersphinx/myst.inv",
+        None,
     ),
     "breathe": (
         "https://breathe.readthedocs.io/en/stable",
-        "./intersphinx/breathe.inv",
+        None,
     ),
-    "exhale": ("https://exhale.readthedocs.io/en/stable", "./intersphinx/exhale.inv"),
+    "exhale": ("https://exhale.readthedocs.io/en/stable", None),
     "sphinx-immaterial": (
         "https://jbms.github.io/sphinx-immaterial",
-        "./intersphinx/sphinx-immaterial.inv",
+        None,
     ),
 }
 # Sphinx defaults to automatically resolve *unresolved* labels using all your Intersphinx mappings.
@@ -168,7 +168,6 @@ html_extra_path = ["robots.txt", "README.md"]
 
 html_css_files = [
     "css/theme.css",
-    "css/fonts.css",
 ]
 html_js_files = [
     "js/dark-opt-images.js",
@@ -228,7 +227,7 @@ html_theme_options = {
         },
     ],
     # using self-hosted fonts (Roboto): See _static/css/fonts.css and https://sphinx-immaterial.readthedocs.io/en/latest/customization.html#themeconf-font
-    # This prevents CDN downloads which require breaking the Nix build sandbox
+    # This prevents CDN downloads and speeds up the build
     "font": False,
     "globaltoc_collapse": False,
     "toc_title_is_page_title": True,

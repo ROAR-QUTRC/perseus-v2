@@ -40,16 +40,16 @@
 
 <script lang="ts">
 	// TODO: make this use isConnected instead of ros.value === null
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import { getRosConnection } from '$lib/scripts/rosBridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
-	import ROSLIB from 'roslib';
+	import * as ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
 
 	// Widget logic goes here
 	let monitors = $state<
 		{
 			topic: string;
-			listener: ROSLIB.Topic;
+			listener: ROSLIB.Topic<any>;
 			lastData: string;
 			targetFrequency: number;
 			currentFrequency: number;
