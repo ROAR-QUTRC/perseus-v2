@@ -34,7 +34,7 @@
     };
 
 namespace hi_can::parameters
-{
+{ 
     class ParameterGroup
     {
     public:
@@ -648,11 +648,127 @@ namespace hi_can::parameters
                     std::vector<addressing::post_landing::servo::rmd::motor_id_t> _available_servos;
                 };
             }
-            namespace rsbl
+            namespace servo_board
             {
+                /// @brief Servo board command IDs (parameter field in standard address)
                 enum class command_t : uint8_t
                 {
+                    // Write Commands
+                    MOVE_TO_ANGLE = 0x01,  // Individual servo movement
+                    SET_TORQUE_ENABLE = 0x03,
+                    SET_CALIBRATION = 0x06,
+                    SET_LOCK_EEPROM = 0x07,
+                    SET_PWM_VALUES = 0x08,  // Control PWM servos
+                    WRITE_POS_EX = 0x12,    // Position, Speed, Acceleration
 
+                    // Read Commands
+                    READ_STATUS_1 = 0x10,  // Position, Speed, Load
+                    READ_STATUS_2 = 0x11,  // Voltage, Temp, Current, Moving
+                };
+                namespace send_message
+                {
+#pragma pack(push, 1)
+                    struct move_to_angle_raw_t {
+                        uint16_t angle;     // Big Endian
+                        uint16_t time_ms;   // Big Endian
+                        uint8_t acceleration;
+                    };
+#pragma pack(pop)
+
+                    struct move_to_angle_t : Serializable
+                    {
+                        int16_t angle = 0;   
+                        uint16_t time_ms = 0;      
+                        uint8_t acceleration = 0;  
+                        std::vector<uint8_t> serialize_data() override;
+
+                        move_to_angle_t() = default;
+                        move_to_angle_t(int16_t _angle, uint16_t _time_ms, uint8_t _acceleration)
+                            : angle(_angle), time_ms(_time_ms), acceleration(_acceleration)
+                        {
+                        }
+                    };
+
+#pragma pack(push, 1)
+                    struct write_pos_ex_t {
+                        int16_t position;   // Big Endian
+                        uint16_t speed;     // Big Endian
+                        uint8_t acceleration;
+                    };
+#pragma pack(pop)
+
+                    struct set_torque_enable_t : Serializable
+                    {
+                        bool enable = false;
+                        std::vector<uint8_t> serialize_data() override;
+
+                        set_torque_enable_t() = default;
+                        set_torque_enable_t(bool _enable)
+                            : enable(_enable)
+                        {
+                        }
+                    };
+
+#pragma pack(push, 1)
+                    struct set_pwm_raw_t {
+                        uint16_t pwm;       // Big Endian
+                    };
+#pragma pack(pop)
+
+                    struct set_pwm_t : Serializable
+                    {
+                        uint16_t pwm;
+                        std::vector<uint8_t> serialize_data() override;
+
+                        set_pwm_t() = default;
+                        set_pwm_t(uint16_t _pwm)
+                            : pwm(_pwm)
+                        {
+                        }
+                    };
+                }
+                namespace receive_message
+                {
+#pragma pack(push, 1)
+                    struct status_1_t 
+                    {
+                        int16_t position;  // current position in degrees
+                        int16_t speed;     // current speed
+                        int16_t load;      // current load
+                    };
+
+                    struct status_2_t
+                    {
+                        uint16_t voltage;      // voltage in mV
+                        int8_t temperature;    // temperature in celsius
+                        uint16_t current;       // current in mA
+                        uint8_t moving;       // is servo moving
+                    };
+#pragma pack(pop)
+                }
+                class ServoboardParameterGroup : public ParameterGroup
+                {
+                public:
+                    ServoboardParameterGroup(uint8_t servo_id);
+
+                    // Getters for servo status
+                    int16_t get_position() const { return _position; }
+                    int16_t get_speed() const { return _speed; }
+                    int16_t get_load() const { return _load; }
+                    uint16_t get_voltage() const { return _voltage; }
+                    int8_t get_temperature() const { return _temperature; }
+                    int16_t get_current() const { return _current; }
+                    bool is_moving() const { return _moving; }
+
+                private:
+                    uint8_t _servo_id;
+                    int16_t _position = 0;
+                    int16_t _speed = 0;
+                    int16_t _load = 0;
+                    uint16_t _voltage = 0;
+                    int8_t _temperature = 0;
+                    int16_t _current = 0;
+                    bool _moving = false;
                 };
             }
         }

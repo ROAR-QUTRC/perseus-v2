@@ -1,7 +1,6 @@
 #include "hi_can_parameter.hpp"
 
 using namespace hi_can;
-using namespace parameters;
 using namespace addressing;
 
 using namespace std::chrono;
@@ -673,7 +672,68 @@ namespace hi_can::parameters::post_landing::servo::rmd
         return _available_servos;
     }
 }
+namespace hi_can::parameters::post_landing::servo::servo_board
+{
+    namespace send_message
+    {
+         std::vector<uint8_t> move_to_angle_t::serialize_data()
+         {
+             SimpleSerializable<move_to_angle_raw_t> raw_data;
+             raw_data.angle = angle;
+             raw_data.time_ms = time_ms; 
+             raw_data.acceleration = acceleration;
+             return raw_data.serialize_data();
+         }
+         std::vector<uint8_t> set_torque_enable_t::serialize_data()
+         {
+             std::vector<uint8_t> data;
+             data.push_back(enable ? 1 : 0);
+             return data;
+         }
+         std::vector<uint8_t> set_pwm_t::serialize_data()
+         {
+             SimpleSerializable<set_pwm_raw_t> raw_data;
+             raw_data.pwm = pwm;
+             return raw_data.serialize_data();
+         }
+    }
+    namespace receive_message
+    {
+    }
+    parameters::post_landing::servo::servo_board::ServoboardParameterGroup::ServoboardParameterGroup(uint8_t servo_id)
+        : _servo_id(servo_id)
+    {
+        using namespace addressing::post_landing::servo::servo_board;
 
+        _callbacks.emplace_back(
+            filter_t{
+                .address = static_cast<flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::READ_STATUS_1), servo_id_t(servo_id))),
+            },
+            PacketManager::callback_config_t{
+                .data_callback = [this](const Packet& packet)
+                {
+                    SimpleSerializable<receive_message::status_1_t> status(packet.get_data());
+                    this->_position = status.position;
+                    this->_speed = status.speed;
+                    this->_load = status.load;
+                },
+            });
+        _callbacks.emplace_back(
+            filter_t{
+                .address = static_cast<flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::READ_STATUS_2), servo_id_t(servo_id))),
+            },
+            PacketManager::callback_config_t{
+                .data_callback = [this](const Packet& packet)
+                {
+                    SimpleSerializable<receive_message::status_2_t> status(packet.get_data());
+                    this->_voltage = status.voltage;
+                    this->_temperature = status.temperature;
+                    this->_current = status.current;
+                    this->_moving = (status.moving != 0);
+                },
+            });
+    }
+}
 namespace hi_can::parameters::legacy::drive::motors
 {
     EscParameterGroup::EscParameterGroup(const addressing::legacy::address_t& device_address)
@@ -759,17 +819,14 @@ namespace hi_can::parameters::legacy::drive::motors
 
     std::vector<Packet> EscParameterGroup::get_startup_transmissions() const
     {
-        using namespace hi_can::addressing::legacy;
-        using namespace hi_can::addressing::legacy::drive::motors;
-
+        // TODO: Fix namespace issues with legacy drive code
         std::vector<Packet> packets;
-        packets.emplace_back(
-            flagged_address_t{
-                address_t(_device_address,
-                          static_cast<uint8_t>(mcb::groups::ESC),
-                          static_cast<uint8_t>(esc::parameter::LIMITS)),
-                true,
-            });
+        // packets.emplace_back(
+        //     flagged_address_t(
+        //         address_t(_device_address,
+        //                   static_cast<uint8_t>(mcb::groups::ESC),
+        //                   static_cast<uint8_t>(esc::parameter::LIMITS)),
+        //         true));
         return packets;
     }
 }

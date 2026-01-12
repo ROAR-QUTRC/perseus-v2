@@ -99,6 +99,7 @@ ament_target_dependencies(bucket_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           actuator_msgs)
 
 target_link_libraries(rmd_driver PUBLIC hi_can_raw)
+target_link_libraries(arm_controller PUBLIC hi_can_raw)
 target_link_libraries(bucket_driver PUBLIC hi_can_raw)
 
 # Install ROS Executable

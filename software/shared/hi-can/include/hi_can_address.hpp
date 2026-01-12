@@ -409,22 +409,26 @@ namespace hi_can
                         }
                     };
                 }
-                namespace rsbl
+                namespace servo_board // ESP32 servo controller board (RSBL servos + PWM for gripper)
                 {
+                    /// @brief The device ID of the servo board
                     constexpr uint8_t DEVICE_ID = 0x01;
-                    enum class rsbl_group
+
+                    /// @brief Servo board output IDs - includes RSBL servos and PWM channels
+                    enum class servo_id_t : uint8_t
                     {
                         SHOULDER_TILT = 0x00,
                         SHOULDER_PAN = 0x01,
+                        PWM_1 = 0x02,
+                        PWM_2 = 0x03,
                     };
-                    enum class rsbl_function : uint8_t
+                    /// @brief Address structure for servo board outputs
+                    struct servo_address_t : public standard_address_t
                     {
-                        SET_ACCELERATION = 0x01,
-                        SET_POSITION = 0x02,
-                        SET_TORQUE = 0x03,
-                        SET_SPEED = 0x04,
-                        SET_TORQUE_LIMIT = 0x05,
-                        SERVO_STATUS = 0x06,
+                        constexpr servo_address_t(const uint8_t parameter, const servo_id_t servo_id)
+                            : standard_address_t(post_landing::SYSTEM_ID, servo::SUBSYSTEM_ID, DEVICE_ID, static_cast<uint8_t>(servo_id), parameter)
+                        {
+                        }
                     };
                 }
             }

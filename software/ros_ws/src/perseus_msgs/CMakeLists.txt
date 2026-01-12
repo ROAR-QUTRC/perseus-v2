@@ -48,12 +48,18 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+# Message dependencies
+find_package(std_msgs REQUIRED)
+
 # foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
 #   find_package(${Dependency} REQUIRED)
 # endforeach()
 
-rosidl_generate_interfaces(${PROJECT_NAME} "srv/RequestInt8Array.srv"
-                           "srv/TriggerDevice.srv")
+rosidl_generate_interfaces(${PROJECT_NAME}
+                           "msg/ArmControl.msg"
+                           "srv/RequestInt8Array.srv"
+                           "srv/TriggerDevice.srv"
+                           DEPENDENCIES std_msgs)
 
 ament_export_dependencies(rosidl_default_runtime)
 
