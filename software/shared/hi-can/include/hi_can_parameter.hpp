@@ -34,7 +34,7 @@
     };
 
 namespace hi_can::parameters
-{ 
+{
     class ParameterGroup
     {
     public:
@@ -668,31 +668,35 @@ namespace hi_can::parameters
                 namespace send_message
                 {
 #pragma pack(push, 1)
-                    struct move_to_angle_raw_t {
-                        uint16_t angle;     // Big Endian
-                        uint16_t time_ms;   // Big Endian
+                    struct move_to_angle_raw_t
+                    {
+                        uint16_t angle;    // Big Endian
+                        uint16_t time_ms;  // Big Endian
                         uint8_t acceleration;
                     };
 #pragma pack(pop)
 
                     struct move_to_angle_t : Serializable
                     {
-                        int16_t angle = 0;   
-                        uint16_t time_ms = 0;      
-                        uint8_t acceleration = 0;  
+                        int16_t angle = 0;
+                        uint16_t time_ms = 0;
+                        uint8_t acceleration = 0;
                         std::vector<uint8_t> serialize_data() override;
 
                         move_to_angle_t() = default;
                         move_to_angle_t(int16_t _angle, uint16_t _time_ms, uint8_t _acceleration)
-                            : angle(_angle), time_ms(_time_ms), acceleration(_acceleration)
+                            : angle(_angle),
+                              time_ms(_time_ms),
+                              acceleration(_acceleration)
                         {
                         }
                     };
 
 #pragma pack(push, 1)
-                    struct write_pos_ex_t {
-                        int16_t position;   // Big Endian
-                        uint16_t speed;     // Big Endian
+                    struct write_pos_ex_t
+                    {
+                        int16_t position;  // Big Endian
+                        uint16_t speed;    // Big Endian
                         uint8_t acceleration;
                     };
 #pragma pack(pop)
@@ -710,8 +714,9 @@ namespace hi_can::parameters
                     };
 
 #pragma pack(push, 1)
-                    struct set_pwm_raw_t {
-                        uint16_t pwm;       // Big Endian
+                    struct set_pwm_raw_t
+                    {
+                        uint16_t pwm;  // Big Endian
                     };
 #pragma pack(pop)
 
@@ -730,7 +735,7 @@ namespace hi_can::parameters
                 namespace receive_message
                 {
 #pragma pack(push, 1)
-                    struct status_1_t 
+                    struct status_1_t
                     {
                         int16_t position;  // current position in degrees
                         int16_t speed;     // current speed
@@ -739,10 +744,10 @@ namespace hi_can::parameters
 
                     struct status_2_t
                     {
-                        uint16_t voltage;      // voltage in mV
-                        int8_t temperature;    // temperature in celsius
-                        uint16_t current;       // current in mA
-                        uint8_t moving;       // is servo moving
+                        uint16_t voltage;    // voltage in mV
+                        int8_t temperature;  // temperature in celsius
+                        uint16_t current;    // current in mA
+                        uint8_t moving;      // is servo moving
                     };
 #pragma pack(pop)
                 }

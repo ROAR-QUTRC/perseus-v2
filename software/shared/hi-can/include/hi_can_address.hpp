@@ -409,7 +409,7 @@ namespace hi_can
                         }
                     };
                 }
-                namespace servo_board // ESP32 servo controller board (RSBL servos + PWM for gripper)
+                namespace servo_board  // ESP32 servo controller board (RSBL servos + PWM for gripper)
                 {
                     /// @brief The device ID of the servo board
                     constexpr uint8_t DEVICE_ID = 0x01;

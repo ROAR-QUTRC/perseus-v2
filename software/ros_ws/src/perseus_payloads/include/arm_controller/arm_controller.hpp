@@ -31,14 +31,15 @@ private:
 
     // Servo board parameter groups
     const std::unordered_map<hi_can::addressing::post_landing::servo::servo_board::servo_id_t,
-                             std::shared_ptr<hi_can::parameters::post_landing::servo::servo_board::ServoboardParameterGroup>> PARAMETER_GROUP_MAP = {
-        {hi_can::addressing::post_landing::servo::servo_board::servo_id_t::SHOULDER_TILT,
-         std::make_shared<hi_can::parameters::post_landing::servo::servo_board::ServoboardParameterGroup>(
-             static_cast<uint8_t>(hi_can::addressing::post_landing::servo::servo_board::servo_id_t::SHOULDER_TILT))},
-        {hi_can::addressing::post_landing::servo::servo_board::servo_id_t::SHOULDER_PAN,
-         std::make_shared<hi_can::parameters::post_landing::servo::servo_board::ServoboardParameterGroup>(
-             static_cast<uint8_t>(hi_can::addressing::post_landing::servo::servo_board::servo_id_t::SHOULDER_PAN))},
-    };
+                             std::shared_ptr<hi_can::parameters::post_landing::servo::servo_board::ServoboardParameterGroup>>
+        PARAMETER_GROUP_MAP = {
+            {hi_can::addressing::post_landing::servo::servo_board::servo_id_t::SHOULDER_TILT,
+             std::make_shared<hi_can::parameters::post_landing::servo::servo_board::ServoboardParameterGroup>(
+                 static_cast<uint8_t>(hi_can::addressing::post_landing::servo::servo_board::servo_id_t::SHOULDER_TILT))},
+            {hi_can::addressing::post_landing::servo::servo_board::servo_id_t::SHOULDER_PAN,
+             std::make_shared<hi_can::parameters::post_landing::servo::servo_board::ServoboardParameterGroup>(
+                 static_cast<uint8_t>(hi_can::addressing::post_landing::servo::servo_board::servo_id_t::SHOULDER_PAN))},
+        };
 
     // Motor feedback
     constexpr static auto POSITION_PUBLISH_MS = std::chrono::milliseconds(100);
@@ -54,4 +55,3 @@ private:
     // Subscriber
     rclcpp::Subscription<perseus_msgs::msg::ArmControl>::SharedPtr _arm_control_subscriber;
 };
-

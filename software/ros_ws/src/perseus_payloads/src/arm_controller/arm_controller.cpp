@@ -1,4 +1,5 @@
 #include "arm_controller/arm_controller.hpp"
+
 #include <string>
 
 // Arm CAN Controller - handles RSBL servos, PWM servos via CAN
@@ -14,8 +15,6 @@ using namespace hi_can;
 using namespace hi_can::addressing::post_landing;
 using namespace hi_can::addressing::post_landing::servo::servo_board;
 using namespace hi_can::parameters::post_landing::servo::servo_board;
-
-
 
 ArmController::ArmController(const rclcpp::NodeOptions& options)
     : Node("arm_controller", options)
@@ -35,11 +34,11 @@ ArmController::ArmController(const rclcpp::NodeOptions& options)
     _status_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms),
                                             std::bind(&ArmController::_publish_status_messages, this));
     _motor_position_timer = this->create_wall_timer(POSITION_PUBLISH_MS,
-                                                     std::bind(&ArmController::_publish_motor_positions, this));
+                                                    std::bind(&ArmController::_publish_motor_positions, this));
     _status_request_timer = this->create_wall_timer(STATUS_REQUEST_MS,
-                                                     std::bind(&ArmController::_request_servo_status, this));
+                                                    std::bind(&ArmController::_request_servo_status, this));
 
-    for (const auto& [servo_id, parameter_group] : this->PARAMETER_GROUP_MAP)    // Add RSBL parameter groups
+    for (const auto& [servo_id, parameter_group] : this->PARAMETER_GROUP_MAP)  // Add RSBL parameter groups
     {
         if (_packet_manager)
         {
@@ -63,15 +62,16 @@ void ArmController::_handle_arm_control(const perseus_msgs::msg::ArmControl::Sha
 {
     uint8_t acceleration = msg->acceleration;
 
-    if (msg->position.size() >= 2)     // Handle RSBL servo position commands (convert radians to degrees)
+    if (msg->position.size() >= 2)  // Handle RSBL servo position commands (convert radians to degrees)
     {
         int16_t angle_tilt = static_cast<int16_t>(msg->position[0] * 180.0 / M_PI);
         int16_t angle_pan = static_cast<int16_t>(msg->position[1] * 180.0 / M_PI);
-        
+
         uint16_t speed_tilt = 0;
         uint16_t speed_pan = 0;
-        
-        if (msg->velocity.size() >= 2) {
+
+        if (msg->velocity.size() >= 2)
+        {
             speed_tilt = static_cast<uint16_t>(std::abs(msg->velocity[0] * 180.0 / M_PI));
             speed_pan = static_cast<uint16_t>(std::abs(msg->velocity[1] * 180.0 / M_PI));
         }
@@ -95,7 +95,7 @@ void ArmController::_handle_arm_control(const perseus_msgs::msg::ArmControl::Sha
         std::this_thread::sleep_for(PACKET_DELAY_MS);
     }
 
-    for (size_t i = 0; i < msg->normalized.size() && i < 2; i++)     // Handle PWM commands (convert normalized 0.0-1.0 to 0-4095)
+    for (size_t i = 0; i < msg->normalized.size() && i < 2; i++)  // Handle PWM commands (convert normalized 0.0-1.0 to 0-4095)
     {
         servo_id_t pwm_id = (i == 0) ? servo_id_t::PWM_1 : servo_id_t::PWM_2;
         uint16_t pwm_value = static_cast<uint16_t>(msg->normalized[i] * 4095.0);
@@ -108,15 +108,13 @@ void ArmController::_handle_arm_control(const perseus_msgs::msg::ArmControl::Sha
         }
         std::this_thread::sleep_for(PACKET_DELAY_MS);
     }
-
- }
+}
 
 void ArmController::_publish_status_messages()
 {
     std_msgs::msg::Float64MultiArray status_msg;
 
-   
-    for (const auto& servo_id : this->_available_servos) // Publish RSBL servo status
+    for (const auto& servo_id : this->_available_servos)  // Publish RSBL servo status
     {
         auto it = this->PARAMETER_GROUP_MAP.find(servo_id);
         if (it != this->PARAMETER_GROUP_MAP.end())
@@ -170,7 +168,7 @@ void ArmController::_handle_can()
 
 void ArmController::_request_servo_status()
 {
-    for (const auto& servo_id : this->_available_servos) // Request RSBL servo status
+    for (const auto& servo_id : this->_available_servos)  // Request RSBL servo status
     {
         if (_can_interface)
         {

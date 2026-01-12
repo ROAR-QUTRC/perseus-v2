@@ -55,11 +55,9 @@ find_package(std_msgs REQUIRED)
 #   find_package(${Dependency} REQUIRED)
 # endforeach()
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-                           "msg/ArmControl.msg"
-                           "srv/RequestInt8Array.srv"
-                           "srv/TriggerDevice.srv"
-                           DEPENDENCIES std_msgs)
+rosidl_generate_interfaces(
+  ${PROJECT_NAME} "msg/ArmControl.msg" "srv/RequestInt8Array.srv"
+  "srv/TriggerDevice.srv" DEPENDENCIES std_msgs)
 
 ament_export_dependencies(rosidl_default_runtime)
 

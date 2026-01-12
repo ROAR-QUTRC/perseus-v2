@@ -676,26 +676,26 @@ namespace hi_can::parameters::post_landing::servo::servo_board
 {
     namespace send_message
     {
-         std::vector<uint8_t> move_to_angle_t::serialize_data()
-         {
-             SimpleSerializable<move_to_angle_raw_t> raw_data;
-             raw_data.angle = angle;
-             raw_data.time_ms = time_ms; 
-             raw_data.acceleration = acceleration;
-             return raw_data.serialize_data();
-         }
-         std::vector<uint8_t> set_torque_enable_t::serialize_data()
-         {
-             std::vector<uint8_t> data;
-             data.push_back(enable ? 1 : 0);
-             return data;
-         }
-         std::vector<uint8_t> set_pwm_t::serialize_data()
-         {
-             SimpleSerializable<set_pwm_raw_t> raw_data;
-             raw_data.pwm = pwm;
-             return raw_data.serialize_data();
-         }
+        std::vector<uint8_t> move_to_angle_t::serialize_data()
+        {
+            SimpleSerializable<move_to_angle_raw_t> raw_data;
+            raw_data.angle = angle;
+            raw_data.time_ms = time_ms;
+            raw_data.acceleration = acceleration;
+            return raw_data.serialize_data();
+        }
+        std::vector<uint8_t> set_torque_enable_t::serialize_data()
+        {
+            std::vector<uint8_t> data;
+            data.push_back(enable ? 1 : 0);
+            return data;
+        }
+        std::vector<uint8_t> set_pwm_t::serialize_data()
+        {
+            SimpleSerializable<set_pwm_raw_t> raw_data;
+            raw_data.pwm = pwm;
+            return raw_data.serialize_data();
+        }
     }
     namespace receive_message
     {
