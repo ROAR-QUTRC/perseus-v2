@@ -67,18 +67,22 @@ endif()
 
 # Find all source files for the executables
 file(GLOB_RECURSE RMD_DRIVER_CODE_SOURCES src/arm_driver/rmd_driver.cpp)
+file(GLOB_RECURSE RSBL_DRIVER_CODE_SOURCES src/arm_driver/rsbl_driver.cpp)
 file(GLOB_RECURSE ARM_CONTROLLER_CODE_SOURCES src/arm_controller/*.cpp)
 file(GLOB_RECURSE BUCKET_CONTROLLER_CODE_SOURCES src/bucket_controller/*.cpp)
 file(GLOB_RECURSE BUCKET_DRIVER_CODE_SOURCES src/bucket_driver/*.cpp)
 
 # Add exec targets
 add_executable(rmd_driver ${RMD_DRIVER_CODE_SOURCES})
+add_executable(rsbl_driver ${RSBL_DRIVER_CODE_SOURCES})
 add_executable(arm_controller ${ARM_CONTROLLER_CODE_SOURCES})
 add_executable(bucket_controller ${BUCKET_CONTROLLER_CODE_SOURCES})
 add_executable(bucket_driver ${BUCKET_DRIVER_CODE_SOURCES})
 
 # Add include dirs
 target_include_directories(rmd_driver
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(rsbl_driver
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(arm_controller
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -90,6 +94,8 @@ target_include_directories(bucket_driver
 # Add dependencies for the executables
 ament_target_dependencies(rmd_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           sensor_msgs actuator_msgs perseus_msgs)
+ament_target_dependencies(rsbl_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
+                          sensor_msgs actuator_msgs perseus_msgs)
 ament_target_dependencies(arm_controller PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           actuator_msgs)
 ament_target_dependencies(
@@ -99,11 +105,13 @@ ament_target_dependencies(bucket_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           actuator_msgs)
 
 target_link_libraries(rmd_driver PUBLIC hi_can_raw)
+target_link_libraries(rsbl_driver PUBLIC hi_can_raw)
 target_link_libraries(arm_controller PUBLIC hi_can_raw)
 target_link_libraries(bucket_driver PUBLIC hi_can_raw)
 
 # Install ROS Executable
 install(TARGETS rmd_driver DESTINATION lib/${PROJECT_NAME})
+install(TARGETS rsbl_driver DESTINATION lib/${PROJECT_NAME})
 install(TARGETS arm_controller DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_controller DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_driver DESTINATION lib/${PROJECT_NAME})
