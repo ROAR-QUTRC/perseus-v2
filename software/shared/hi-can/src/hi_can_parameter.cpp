@@ -489,6 +489,7 @@ namespace hi_can::parameters::post_landing::servo::rmd
                 {
                     std::vector<uint8_t> raw_data = packet.get_data();
                     command_t command = command_t(raw_data.front());
+                    this->_online = true;  // set motor online when a message is received
 
                     switch (command)
                     {
@@ -626,6 +627,14 @@ namespace hi_can::parameters::post_landing::servo::rmd
             errors.emplace_back("Stall");
         }
         return errors;
+    }
+    bool RmdParameterGroup::is_online()
+    {
+        return _online;
+    }
+    void RmdParameterGroup::set_online(bool online)
+    {
+        _online = online;
     }
     int8_t RmdParameterGroup::get_temp()
     {

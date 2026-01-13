@@ -620,6 +620,8 @@ namespace hi_can::parameters
                 {
                 public:
                     RmdParameterGroup(uint8_t servo_id);
+                    void set_online(bool online);
+                    bool is_online();
                     std::vector<std::string> check_errors();
                     int8_t get_temp();
                     brake_control_t get_brake_status();
@@ -635,6 +637,7 @@ namespace hi_can::parameters
 
                 private:
                     uint8_t _servo_id;
+                    bool _online = false;
                     int8_t _motor_temperature = 0;
                     brake_control_t _brake_status = {};
                     double _voltage = 0;

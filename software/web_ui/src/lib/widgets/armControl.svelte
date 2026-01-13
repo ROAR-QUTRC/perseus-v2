@@ -68,66 +68,61 @@
 	// ---------------------------
 
 	let interval: NodeJS.Timeout | null = null;
-	let motorControlTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-	let motorStatusTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-	// let motorPositionTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-	let enableDebugStatsService: ROSLIB.Service<SetBoolRequestType, SetBoolResponseType> | null = null;
-	let setIdService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
-	let setZeroPositionService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
-	let restartMotorService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
-	let getCanIdsService: ROSLIB.Service<EmptyRequestType, RequestInt8ArrayResponseType> | null = null;
 	let automaticPositionMessages = $derived(settings.groups.general.automaticallySendMessages.value === 'true');
 	let debugEnabled = $state(false);
+	let rmdMotorControlTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
+	let rmdMotorStatusTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
+	let rmdEnableDebugStatsService: ROSLIB.Service<SetBoolRequestType, SetBoolResponseType> | null = null;
+	let rmdSetIdService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
+	let rmdSetZeroPositionService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
+	let rmdRestartMotorService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
+	let rmdGetCanIdsService: ROSLIB.Service<EmptyRequestType, RequestInt8ArrayResponseType> | null = null;
+	let rsblControlTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
+	let rsblStatusTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
 
 	// ROS2 connection
 	$effect(() => {
 		const ros = getRosConnection();
 		if (ros) {
-			motorControlTopic = new ROSLIB.Topic({
+			rmdMotorControlTopic = new ROSLIB.Topic({
 				ros: ros,
 				name: '/arm/rmd/control',
 				messageType: 'std_msgs/msg/Float64MultiArray'
 			});
-			motorStatusTopic = new ROSLIB.Topic({
+			rmdMotorStatusTopic = new ROSLIB.Topic({
 				ros: ros,
 				name: '/arm/rmd/status',
 				messageType: 'std_msgs/msg/Float64MultiArray'
 			});
-			motorStatusTopic.subscribe(onStatusMessage)
-			// motorPositionTopic = new ROSLIB.Topic({
-			// 	ros: ros,
-			// 	name: '/arm/rmd/positions',
-			// 	messageType: 'std_msgs/msg/Float64MultiArray'
-			// });
-			// motorPositionTopic.subscribe(onPositionMessage)
-			enableDebugStatsService = new ROSLIB.Service({
+			rmdMotorStatusTopic.subscribe(onStatusMessage)
+			rmdEnableDebugStatsService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/enable_debug_stats',
 				serviceType: 'std_srvs/srv/SetBool'
 			});
-			setIdService = new ROSLIB.Service({
+			rmdSetIdService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/set_id',
 				serviceType: 'perseus_msgs/srv/TriggerDevice'
 			});
-			setZeroPositionService = new ROSLIB.Service({
+			rmdSetZeroPositionService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/set_zero_position',
 				serviceType: 'perseus_msgs/srv/TriggerDevice'
 			});
-			restartMotorService = new ROSLIB.Service({
+			rmdRestartMotorService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/restart_motor',
 				serviceType: 'perseus_msgs/srv/TriggerDevice'
 			});
-			getCanIdsService = new ROSLIB.Service({
+			rmdGetCanIdsService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/get_can_ids',
 				serviceType: 'perseus_msgs/srv/RequestInt8Array'
 			});
 			getAllIds();
 		} else {
-			motorControlTopic = null;
+			rmdMotorControlTopic = null;
 		}
 	});
 	
@@ -135,7 +130,6 @@
 	$effect(() => {
 		if (!automaticPositionMessages && interval) {
 			clearInterval(interval);
-			console.log('Cleared interval for automatic position messages');
 			interval = null;
 		}
 		untrack(() => {
@@ -150,7 +144,7 @@
 	});
 	
 	const sendPositions = () => {
-		if (motorControlTopic) {
+		if (rmdMotorControlTopic) {
 			// save draft targets to targets
 			joints.forEach((joint) => {
 				motors[joint].targetAngle = motors[joint].draftTargetAngle;
@@ -164,8 +158,7 @@
 				// Index of this array corresponds to motor ID - 1
 				data
 			};
-			console.log('Sending motor control message:', message.data);
-			motorControlTopic.publish(message);
+			rmdMotorControlTopic.publish(message);
 		}
 	}
 
@@ -180,7 +173,6 @@
 		for (const dataSet of data) {
 			const jointName = Object.keys(jointIdMap).find(key => jointIdMap[key as JointNameType] === dataSet[0]) as JointNameType;
 			if (jointName) {
-				// console.log('settings joint ', jointName, ' status:', message.data[0], message.data);
 				motors[jointName].error = 'None';
 				motors[jointName].temperature = dataSet[2];
 				motors[jointName].voltage = dataSet[3];
@@ -191,19 +183,9 @@
 		}
 	}
 
-	// const onPositionMessage = (message: Float64MultiArrayType) => {
-	// 	// message.data is an array of floats in the order:
-	// 	// [elbow, wrist_pan, wrist_tilt, shoulder_pan, shoulder_tilt]
-	// 	motors.ELBOW.angle = message.data[0] / (motors.ELBOW.showDirectPosition ? 1 : motors.ELBOW.gearRatio);
-	// 	motors.WRIST_PAN.angle = message.data[1] / (motors.WRIST_PAN.showDirectPosition ? 1 : motors.WRIST_PAN.gearRatio);
-	// 	motors.WRIST_TILT.angle = message.data[2] / (motors.WRIST_TILT.showDirectPosition ? 1 : motors.WRIST_TILT.gearRatio);
-	// 	motors.SHOULDER_PAN.angle = message.data[3] / (motors.SHOULDER_PAN.showDirectPosition ? 1 : motors.SHOULDER_PAN.gearRatio);
-	// 	motors.SHOULDER_TILT.angle = message.data[4] / (motors.SHOULDER_TILT.showDirectPosition ? 1 : motors.SHOULDER_TILT.gearRatio);
-	// }
-
 	const onEnableDebug = () => {
-		if (enableDebugStatsService) {
-			enableDebugStatsService.callService({ data: !debugEnabled }, (response) => {
+		if (rmdEnableDebugStatsService) {
+			rmdEnableDebugStatsService.callService({ data: !debugEnabled }, (response) => {
 				debugEnabled = !debugEnabled;
 			});
 		}
@@ -226,10 +208,7 @@
 	let motors = $state<Record<JointNameType, MotorData>>(
 		{} as Record<JointNameType, MotorData>
 	);
-	// $inspect(motors).with((type, motors) => {
-	// 	console.log(type, JSON.stringify(motors.WRIST_TILT))
-	// })
-	let onlineMotors = $state<Array<number>>([1, 3])
+	let onlineMotors = $state<Array<number>>([])
 	let bigIncrement = $derived(Number(settings.groups.general.bigIncrementValue.value));
 	let smallIncrement = $derived(Number(settings.groups.general.smallIncrementValue.value));
 
@@ -252,9 +231,9 @@
 	}
 
 	const getAllIds = () => {
-		if (getCanIdsService) {
-			getCanIdsService.callService({}, (response) => {
-				// onlineMotors = response.data;
+		if (rmdGetCanIdsService) {
+			rmdGetCanIdsService.callService({}, (response) => {
+				onlineMotors = response.data;
 			})
 		}
 	}
@@ -281,7 +260,7 @@
 		// Set correct gear ratios
 		motors.ELBOW.gearRatio = 9;
 		motors.WRIST_PAN.gearRatio = 6;
-		motors.WRIST_TILT.gearRatio = 6;
+		motors.WRIST_TILT.gearRatio = 28;
 		motors.SHOULDER_PAN.gearRatio = 6;
 		motors.SHOULDER_PAN.rmdMotor = false;
 		motors.SHOULDER_TILT.gearRatio = 6;
@@ -322,9 +301,9 @@
 						<div>
 							<!-- Gage -->
 							<div class="border aspect-square rounded-[50%] text-center flex flex-col justify-center relative">
-								<p>Angle: {data.angle}&deg;</p>
-								<p>RPM: {data.rpm}</p>
-								<p>Temp: {data.temperature} &deg;C</p>
+								<p>Angle: {data.angle.toFixed(1)}&deg;</p>
+								<p>RPM: {data.rpm.toFixed(1)}</p>
+								<p>Temp: {data.temperature.toFixed(1)} &deg;C</p>
 								<span class="absolute border border-l-0 border-r left-1/2 top-0 h-[5%] translate-x-[-1px]"></span>
 								<span class="absolute border border-l-0 border-r left-1/2 bottom-0 h-[5%] translate-x-[-1px]"></span>
 								<span class="absolute border border-b-0 border-t top-1/2 w-[5%] translate-x-[-1px]"></span>

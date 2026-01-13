@@ -22,6 +22,7 @@ private:
     void _publish_status_messages();
     void _publish_motor_positions();
     void _handle_can();
+    std::vector<hi_can::addressing::post_landing::servo::rmd::motor_id_t> _get_online_servos();
     void _set_motor_id(
         const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request,
         std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response);
@@ -54,16 +55,9 @@ private:
     };
 
     // Motor feedback
-    std::vector<hi_can::addressing::post_landing::servo::rmd::motor_id_t> _available_servos = {
-        hi_can::addressing::post_landing::servo::rmd::motor_id_t::ELBOW,
-        // hi_can::addressing::post_landing::servo::rmd::motor_id_t::WRIST_PAN,
-        hi_can::addressing::post_landing::servo::rmd::motor_id_t::WRIST_TILT,
-    };
     uint16_t _status_message_ms = 500;  // Default to 500ms when not in debug mode
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _status_publisher;
     rclcpp::TimerBase::SharedPtr _status_timer;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _motor_position_publisher;
-    rclcpp::TimerBase::SharedPtr _motor_position_timer;
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr _enable_debug_stats_service;
 
     // Config Services

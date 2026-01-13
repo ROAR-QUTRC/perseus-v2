@@ -53,8 +53,6 @@ RmdDriver::RmdDriver(const rclcpp::NodeOptions& options)
     // Setup motor feedback handling
     _status_publisher = this->create_publisher<std_msgs::msg::Float64MultiArray>("/arm/rmd/status", 10);
     _status_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_status_messages, this));
-    _motor_position_publisher = this->create_publisher<std_msgs::msg::Float64MultiArray>("/arm/rmd/positions", 10);
-    _motor_position_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_motor_positions, this));
     _enable_debug_stats_service = this->create_service<std_srvs::srv::SetBool>(
         "/arm/rmd/enable_debug_stats",
         [this](const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response)
@@ -80,11 +78,6 @@ void RmdDriver::_enable_status_messages(bool debug_mode)
     {
         this->_status_timer->cancel();
         this->_status_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_status_messages, this));
-    }
-    if (this->_motor_position_timer)
-    {
-        this->_motor_position_timer->cancel();
-        this->_motor_position_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_motor_positions, this));
     }
     // Set motors to transmit error messages when there is an error
     _can_interface->transmit(Packet{
@@ -120,7 +113,7 @@ void RmdDriver::_handle_position_control(std_msgs::msg::Float64MultiArray servo_
     // uint16_t degrees_per_second = max_angle / (target_time_ms / 1000.0);
     // degrees_per_second = std::clamp(degrees_per_second, (uint16_t)0, RMD_SPEED_LIMIT);
 
-    for (const auto& motor_id : this->_available_servos)
+    for (const auto& motor_id : this->_get_online_servos())
     {
         const uint8_t index = static_cast<uint8_t>(motor_id) - 1;
         const double target_position = servo_control.data[index];
@@ -139,23 +132,12 @@ void RmdDriver::_publish_status_messages()
 {
     std_msgs::msg::Float64MultiArray status_msg;
 
-    RCLCPP_INFO(this->get_logger(), "Publishing RMD status messages:");
-
-    for (const auto& motor_id : this->_available_servos)
+    for (const auto& motor_id : this->_get_online_servos())
     {
         auto it = this->PARAMETER_GROUP_MAP.find(motor_id);
         if (it != this->PARAMETER_GROUP_MAP.end())
         {
             const auto& parameter_group = it->second;
-            RCLCPP_INFO(this->get_logger(),
-                        "Motor ID %d Status - Error: %d, Temp: %dC, Voltage: %.2fV, Current: %.2fA, Speed: %drpm, Angle: %.2fdeg",
-                        static_cast<uint8_t>(motor_id),
-                        parameter_group->get_error_status(),
-                        parameter_group->get_temp(),
-                        parameter_group->get_voltage(),
-                        parameter_group->get_torque_current(),
-                        parameter_group->get_speed(),
-                        parameter_group->get_angle());
             status_msg.data.emplace_back(static_cast<double>(motor_id));
             status_msg.data.emplace_back(static_cast<uint16_t>(parameter_group->get_error_status()));
             status_msg.data.emplace_back(static_cast<double>(parameter_group->get_temp()));
@@ -170,29 +152,6 @@ void RmdDriver::_publish_status_messages()
     }
 
     _status_publisher->publish(status_msg);
-}
-
-void RmdDriver::_publish_motor_positions()
-{
-    // _can_interface->transmit(Packet{
-    //     servo_address_t(message_type::MULTI_MOTOR_SEND),
-    //     send_message::action_command_t(send_message::action_command_t::command_id_t::READ_POSITION).serialize_data()});
-    // std::this_thread::sleep_for(PACKET_DELAY_MS);
-
-    std_msgs::msg::Float64MultiArray position_msg;
-    position_msg.data = std::vector<double>(this->PARAMETER_GROUP_MAP.size(), 0.0);
-
-    for (const auto& motor_id : this->_available_servos)
-    {
-        auto it = this->PARAMETER_GROUP_MAP.find(motor_id);
-        if (it != this->PARAMETER_GROUP_MAP.end())
-        {
-            const auto& parameter_group = it->second;
-            position_msg.data[static_cast<size_t>(motor_id) - 1] = static_cast<double>(parameter_group->get_angle());
-        }
-    }
-
-    _motor_position_publisher->publish(position_msg);
 }
 
 void RmdDriver::_handle_can()
@@ -219,6 +178,19 @@ void RmdDriver::_handle_can()
     }
 }
 
+std::vector<motor_id_t> RmdDriver::_get_online_servos()
+{
+    std::vector<motor_id_t> online_servos;
+    for (const auto& [motor_id, parameter_group] : this->PARAMETER_GROUP_MAP)
+    {
+        if (parameter_group->is_online())
+        {
+            online_servos.emplace_back(motor_id);
+        }
+    }
+    return online_servos;
+}
+
 #pragma region CONFIG_SERVICES
 
 void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response)
@@ -237,7 +209,8 @@ void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::TriggerDe
         send_message::action_command_t(send_message::action_command_t::command_id_t::RESET).serialize_data()});
     std::this_thread::sleep_for(PACKET_DELAY_MS);
 
-    this->_available_servos.erase(std::remove(this->_available_servos.begin(), this->_available_servos.end(), current_id), this->_available_servos.end());
+    PARAMETER_GROUP_MAP.at(current_id)->set_online(false);  // mark old ID as offline
+
     this->_enable_status_messages(this->_status_message_ms < 500);
 
     response->success = true;
@@ -271,9 +244,15 @@ void RmdDriver::_get_rmd_can_ids(const std::shared_ptr<perseus_msgs::srv::Reques
     (void)request;  // request is empty
 
     response->data.clear();
-    for (const auto& motor_id : this->_available_servos)
+    for (const auto& motor_id : this->_get_online_servos())
     {
         response->data.emplace_back(static_cast<uint8_t>(motor_id));
+    }
+
+    // Not ideal but resetting all the online servos to offline will ensure disconnected servos are removed.
+    for (const auto& [motor_id, parameter_group] : this->PARAMETER_GROUP_MAP)
+    {
+        parameter_group->set_online(false);
     }
 }
 
