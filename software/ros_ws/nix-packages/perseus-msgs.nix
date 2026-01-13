@@ -6,6 +6,8 @@
   ament-lint-auto,
   ament-lint-common,
   backward-ros,
+  builtin-interfaces,
+  geometry-msgs,
   rosidl-default-generators,
   rosidl-default-runtime,
 }:
@@ -26,6 +28,8 @@ buildRosPackage rec {
   ];
   propagatedBuildInputs = [
     backward-ros
+    builtin-interfaces
+    geometry-msgs
     rosidl-default-runtime
   ];
   nativeBuildInputs = [
@@ -34,7 +38,7 @@ buildRosPackage rec {
   ];
 
   meta = {
-    description = "TODO: Package description";
-    license = with lib.licenses; [ "TODO-License-declaration" ];
+    description = "Perseus custom message definitions";
+    license = with lib.licenses; [ "TODO-CATKIN-PACKAGE-LICENSE" ];
   };
 }
