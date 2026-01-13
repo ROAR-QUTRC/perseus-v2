@@ -27,7 +27,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: 2D Lidar Point Cloud
+    SyncSource: PointCloud2
 Visualization Manager:
   Class: ""
   Displays:
@@ -207,8 +207,6 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        aruco_marker_24:
-          Value: true
         base_footprint:
           Value: true
         base_link:
@@ -241,16 +239,6 @@ Visualization Manager:
           Value: true
         odom:
           Value: true
-        placecard_1:
-          Value: true
-        placecard_2:
-          Value: true
-        placecard_3:
-          Value: true
-        placecard_4:
-          Value: true
-        placecard_5:
-          Value: true
         rear_left_motor:
           Value: true
         rear_left_wheel:
@@ -268,8 +256,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          aruco_marker_24:
-            {}
           odom:
             base_link:
               base_footprint:
@@ -299,16 +285,6 @@ Visualization Manager:
                   rear_right_motor:
                     rear_right_wheel:
                       {}
-            placecard_1:
-              {}
-            placecard_2:
-              {}
-            placecard_3:
-              {}
-            placecard_4:
-              {}
-            placecard_5:
-              {}
       Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/Image
@@ -337,7 +313,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 0
@@ -358,7 +334,7 @@ Visualization Manager:
         Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 0.699999988079071
       Binary representation: false
       Binary threshold: 100
@@ -494,8 +470,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 0.3100000023841858
+        Min Value: 0.3100000023841858
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -537,7 +513,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: true
       Max Color: 255; 255; 255
       Max Intensity: 0
@@ -547,7 +523,7 @@ Visualization Manager:
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.05000000074505806
+      Size (m): 0.029999999329447746
       Style: Flat Squares
       Topic:
         Depth: 5
@@ -557,7 +533,7 @@ Visualization Manager:
         Value: /points
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -604,25 +580,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 21.274892807006836
+      Distance: 5.076032638549805
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.3917388319969177
-        Y: 1.8299782276153564
-        Z: -1.2586252689361572
+        X: 3.0803613662719727
+        Y: 5.286798000335693
+        Z: 0.95466148853302
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7847968935966492
+      Pitch: 0.2797962427139282
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.3614797592163086
+      Yaw: 1.7319178581237793
     Saved: ~
 Window Geometry:
   Displays:

@@ -192,7 +192,7 @@ local_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /lidar_scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -208,7 +208,7 @@ local_costmap:
         mark_threshold: 0
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /lidar_scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -238,7 +238,7 @@ global_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /lidar_scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -298,21 +298,21 @@ map_saver:
     map_subscribe_transient_local: true
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 10.0
+    expected_planner_frequency: 2.0 # decreased from 10.0 for stability with SmacPlanner
     planner_plugins: ["GridBased"]
-    GridBased:
-      plugin: "nav2_navfn_planner::NavfnPlanner"
-      tolerance: 0.5 # increased from 0.25 for larger robot
-      use_astar: True
-      allow_unknown: true
     # GridBased:
-    #     plugin: "nav2_smac_planner::SmacPlanner2D"
-    #     tolerance: 1.0
-    #     allow_unknown: true
-    #     max_iterations: 1000000
-    #     max_on_approach_iterations: 1000
-    #     motion_model_for_search: "MOORE"   # allows diagonal motion
-    #     cost_travel_multiplier: 2.0
+    #   plugin: "nav2_navfn_planner::NavfnPlanner"
+    #   tolerance: 0.5 # increased from 0.25 for larger robot
+    #   use_astar: True
+    #   allow_unknown: true
+    GridBased:
+        plugin: "nav2_smac_planner::SmacPlanner2D" # switched to SmacPlanner to plan in costmaps with unknown space, smoother paths
+        tolerance: 1.0
+        allow_unknown: true
+        max_iterations: 1000000
+        max_on_approach_iterations: 1000
+        motion_model_for_search: "MOORE"   # allows diagonal motion
+        cost_travel_multiplier: 2.0
 smoother_server:
   ros__parameters:
     smoother_plugins: ["simple_smoother"]
@@ -428,7 +428,7 @@ collision_monitor:
     scan:
       source_timeout: 2.0 # Increased from 1.0 for more robust operation
       type: "scan"
-      topic: "/scan"
+      topic: "/lidar_scan"
       enabled: true
 docking_server:
   ros__parameters:
