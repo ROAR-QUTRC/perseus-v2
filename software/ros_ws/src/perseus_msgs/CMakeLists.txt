@@ -52,13 +52,15 @@ endforeach()
 #   find_package(${Dependency} REQUIRED)
 # endforeach()
 
-rosidl_generate_interfaces(${PROJECT_NAME} 
-                           "srv/GetFrontierGoal.srv"
-                           "msg/ObjectDetections.msg"
-                           "srv/DetectObjects.srv"
-                           "srv/ToggleWaypoints.srv"
-                           "msg/NavigationData.msg"
-                           DEPENDENCIES geometry_msgs)
+rosidl_generate_interfaces(
+  ${PROJECT_NAME}
+  "srv/GetFrontierGoal.srv"
+  "msg/ObjectDetections.msg"
+  "srv/DetectObjects.srv"
+  "srv/ToggleWaypoints.srv"
+  "msg/NavigationData.msg"
+  DEPENDENCIES
+  geometry_msgs)
 
 ament_export_dependencies(rosidl_default_runtime)
 
