@@ -23,9 +23,9 @@
 	import { getRosConnection as getRosConnection } from '$lib/scripts/rosBridge.svelte';
 	//import Button from "$lib/components/ui/button/button.svelte";
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
+	import { DoubleArrowDown } from 'svelte-radix';
 
 	//Set these as the only valid string values 
-
 	type Mode = 'waypoint' | 'border';
 	type rosStringMessage = { data: string };
 	//Data modle for the waypoints for the YAML output and table 
@@ -38,6 +38,7 @@
 		centroidX: number;
 		centroidY: number;
 		yaw: number;
+		contour: number[][];
 	};
 
 	let imageElement: HTMLImageElement | null = null;
@@ -69,7 +70,6 @@
 	// stored waypoints
 	let waypoints = $state<waypointRow[]>([]);
 	let border_contour = $state<number[][]>([]);
-
 	// ROS request/response 
 	let requestTopic: ROSLIB.Topic<rosStringMessage> | null = null;
 	let response_topic: ROSLIB.Topic<rosStringMessage> | null = null;
@@ -130,7 +130,7 @@
 		return `WP${String(waypointNumber)}`;
 	}
 	//extracts the coordinates from the centroid 
-	function addWaypointFromResponse(response: any) {
+	function addWaypointFromResponse(response: any, extractedContour: number [][]) {
 		if (!response?.ok) return;
 		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
 
@@ -151,7 +151,9 @@
 		}
 
 		const hexadecimalColor = getSampleHex(response);
+		const waypointContour = extractedContour;
 
+		
 		waypoints = [
 			...waypoints,
 			{
@@ -162,7 +164,8 @@
 				clickY,
 				centroidX,
 				centroidY,
-				yaw:0
+				yaw:0,
+				contour:waypointContour
 			}
 		];
 	}
@@ -174,6 +177,10 @@
 	function clearWaypoints() {
 		waypoints = [];
 	}
+	function updateYaw(id: string, yawDeg: number) {
+		const yaw = Number.isFinite(yawDeg) ? yawDeg : 0;
+		waypoints = waypoints.map((w) => (w.id === id ? { ...w, yaw } : w));
+	}
 
 	function updateName(id: string, name: string) {
 		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
@@ -181,30 +188,33 @@
 
 	function buildYaml(): string {
 		const lines: string[] = [];
+		
 		lines.push('waypoints:');
 
 		for (const waypoint of waypoints) {
+			const yawRadians = ((waypoint.yaw)*Math.PI)/180;
 			lines.push(`- name: ${waypoint.name}`);
 			lines.push(`x: ${waypoint.centroidX}`);
 			lines.push(`y: ${waypoint.centroidY}`);
-			lines.push(`yaw: ${waypoint.yaw}`)
+			lines.push(`yaw: ${yawRadians}`)
 		}
 
 		return lines.join('\n');
 	}
-/*
-	async function drawRotatedRectangle(ctx){
-		for (const waypoint of waypoints)
-		{
-			ctx.translate(waypoint.centroidX, waypoint.centroidY);
-			ctx.rotate(waypoint.yaw)
-			return {
-				x: Math.cos(waypoint.yaw) * (pointX-waypoint.centroidX) - Math.sin(waypoint.yaw) * (pointY-waypoint.centroidY) + waypoint.centroidX,
-				y: Math.sin(waypoint.yaw) * (pointX-waypoint.centroidX) + Math.cos(waypoint.yaw) * (pointY-waypoint.centroidY) + waypoint.centroidY
-			};
-		}		
+	  
+	function drawRotatedRectangle(waypoint:waypointRow){
+			const arrowLength = 25; 
+
+			const yawDegrees = ((waypoint.yaw-90) * Math.PI) / 180;
+
+			const yawX1Coordinate = waypoint.centroidX;
+			const yawY1Coordinate = waypoint.centroidY; 
+
+			const yawX2Coordinate = yawX1Coordinate + Math.cos(yawDegrees) * arrowLength;
+			const yawY2Coordinate = yawY1Coordinate + Math.sin(yawDegrees) * arrowLength;
+			return{yawX1Coordinate,yawX2Coordinate, yawY1Coordinate, yawY2Coordinate};
 	}
-*/
+
 // Function to help translate the difference in case vairables from the back end to front end
 	function getSampleHex(response: any): string {
 		return String(
@@ -272,7 +282,7 @@
 			contour = Array.isArray(response.contour) ? response.contour : [];
 
 			if (mode === 'waypoint') {
-				addWaypointFromResponse(response);
+				addWaypointFromResponse(response, contour);
 				statusMessage = centroid
 					? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
 					: `Waypoint added ${sampleImageHexadecimalColor}`;
@@ -359,6 +369,8 @@
 
 		<div class="row">
 			<div class="frame">
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 				<img
 					bind:this={imageElement}
 					src={mapImageUrl}
@@ -386,13 +398,30 @@
 				{/if}
 
 				{#each waypoints as waypoint (waypoint.id)}
-					<circle cx={waypoint.centroidX} cy={waypoint.centroidY} r="6" fill="red" />
+					{#if waypoint.contour && waypoint.contour.length > 0}
+						<polygon
+							points={waypoint.contour.map(([x, y]) => `${x},${y}`).join(' ')}
+							stroke="lime"
+							stroke-width="2"
+							opacity="0.9"
+						/>
+					{/if}
 				{/each}
 
 				{#each waypoints as waypoint (waypoint.id)}
-					<circle cx={waypoint.clickX} cy={waypoint.clickY} r="3.5" fill="yellow" opacity="0.9" />
+					{@const yawDirection = drawRotatedRectangle(waypoint)}
+					<circle cx={waypoint.centroidX} cy={waypoint.centroidY} r="6" fill="red" />
+					<line
+						x1={yawDirection.yawX1Coordinate}
+						y1={yawDirection.yawY1Coordinate}
+						x2={yawDirection.yawX2Coordinate}
+						y2={yawDirection.yawY2Coordinate}
+						stroke="yellow"
+						stroke-width="4"
+					/>
 				{/each}
 			</svg>
+
 		</div>
 
 		<!-- Big table -->
@@ -418,14 +447,7 @@
 						{#each waypoints as waypoint, i (waypoint.id)}
 							<tr>
 								<td>{i + 1}</td>
-								<td>
-									<input
-										class="nameInput"
-										value={waypoint.name}
-										oninput={(event) =>
-											updateName(waypoint.id, (event.target as HTMLInputElement).value)}
-									/>
-								</td>
+								<td><input value={waypoint.name}/></td>
 								<td>
 									<span class="chip" style={`background:${waypoint.hexadecimalColor || '#eee'}`}>
 										{waypoint.hexadecimalColor}
@@ -433,7 +455,9 @@
 								</td>
 								<td>{waypoint.centroidX}</td>
 								<td>{waypoint.centroidY}</td>
-								<td><input type="number" bind:value={waypoint.yaw}></td>
+								<td><input
+									type="number" value={waypoint.yaw} step="1"
+									oninput={(e) => updateYaw(waypoint.id, (e.currentTarget as HTMLInputElement).valueAsNumber)}/></td>
 								<td class="right">
 									<button type="button" class="danger" onclick={() => deleteWaypoints(waypoint.id)}>
 										Delete
