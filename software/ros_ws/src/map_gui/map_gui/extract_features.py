@@ -160,7 +160,7 @@ class ExtractFeatures(Node):
         payload["id"] = request_id
         self.response_publisher.publish(String(data=json.dumps(payload)))
 
-    ### ADD: SaveYaml method goes here (same indent as LoadImage/reply/OnRequest)
+    ### Method that saves the yaml code as a file to a specific folder specified above 
     def SaveYaml(self, request_id: str, request: dict):
         yaml_text = request.get("yaml_text", "")
         file_name = SaveFileName(request.get("file_name", "waypoints.yaml"))
@@ -317,7 +317,8 @@ class ExtractFeatures(Node):
                 )
                 return
 
-            approximated_contour = cv2.approxPolyDP(chosen_contour, epsilon=approximation_epsilon, closed=True)
+            approximated_contour = cv2.approxPolyDP(chosen_contour, approximation_epsilon, True)
+
 
             # Always compute centroid (useful for both modes)
             bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = (
@@ -398,8 +399,7 @@ class ExtractFeatures(Node):
                 "centroid": [centroid[0], centroid[1]],
             }
 
-            if mode == "border":
-                payload["contour"] = ContourToPoints(approximated_contour)
+            payload["contour"] = ContourToPoints(approximated_contour)
 
             self.reply(request_id, payload)
 
