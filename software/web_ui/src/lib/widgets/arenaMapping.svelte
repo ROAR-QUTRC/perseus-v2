@@ -222,11 +222,52 @@
 					pendingYawWaypointId = null;
 				}
 			}
+	}
+}
+
+
+	function add_origin_from_response(response: any) {
+		if (!response?.ok) return;
+		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
+
+		const centroid_x = Number(response.centroid[0]);
+		const centroid_y = Number(response.centroid[1]);
+
+		// Prefer server echo; fall back to local current_click_position.
+		const click_x = Number(response.sample_x ?? current_click_position?.x);
+		const click_y = Number(response.sample_y ?? current_click_position?.y);
+
+		if (
+			!Number.isFinite(click_x) ||
+			!Number.isFinite(click_y) ||
+			!Number.isFinite(centroid_x) ||
+			!Number.isFinite(centroid_y)
+		) {
+			return;
+		}
+
+		const hexadecimal_color = String(response.sample_image_hex ?? '');
+
+		origins = [
+			...origins,
+			{
+				id: generate_id(),
+				name: next_origin_name(),
+				hexadecimal_color,
+				click_x,
+				click_y,
+				centroid_x,
+				centroid_y
+			}
 		];
 	}
 
 	function delete_waypoint(id: string) {
 		waypoints = waypoints.filter((waypoint) => waypoint.id !== id);
+	}
+
+	function delete_origin(id: string) {
+		origins = origins.filter((origin) => origin.id !== id);
 	}
 
 	function clear_waypoints() {
@@ -261,7 +302,7 @@
 		} catch {
 			status_message = 'Copy failed (clipboard permission). Select and copy manually.';
 		}
-		 else if (mode === 'origin') {
+		 if (mode === 'origin') {
 			addOriginFromResponse(response);
 			// calculateOrigin(); 
 			statusMessage = centroid
