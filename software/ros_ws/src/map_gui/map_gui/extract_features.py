@@ -328,7 +328,9 @@ class ExtractFeatures(Node):
             )
 
             # Always compute centroid (useful for both modes)
-            bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = cv2.boundingRect(chosen_contour)
+            bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = (
+                cv2.boundingRect(chosen_contour)
+            )
             if mode == "waypoint" or mode == "border":
                 centroid = contour_centroid_pixel_position(chosen_contour)
                 if centroid is None:
@@ -391,7 +393,6 @@ class ExtractFeatures(Node):
                     #         int(bounding_x_pos + bounding_width / 2),
                     #         int(bounding_y_pos + bounding_height),
                     #     )
-
 
             payload: dict[str, Any] = {
                 "ok": True,
