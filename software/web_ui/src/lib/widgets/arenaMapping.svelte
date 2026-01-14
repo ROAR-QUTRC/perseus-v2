@@ -180,10 +180,43 @@
 
 			return;
 		}
-		if (response?.op === 'save_json') {
-			statusMessage = response?.ok
-			? `Saved: ${response.saved_path ?? 'OK'}`
-			: `Save failed: ${response?.message ?? 'Unknown error'}`;
+
+		const hexadecimalColor = getSampleHex(response);
+		const waypointContour = extractedContour;
+
+		
+		waypoints = [
+			...waypoints,
+			{
+				id: generate_id(),
+				name: next_waypoint_name(),
+				hexadecimal_color,
+				click_x,
+				click_y,
+				centroid_x,
+				centroid_y,
+				yaw:0
+			}
+		];
+	}
+
+	function add_angle_from_response(response: any) {
+		if (!response?.ok) return;
+		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
+
+		const centroid_x = Number(response.centroid[0]);
+		const centroid_y = Number(response.centroid[1]);
+
+		// Prefer server echo; fall back to local current_click_position.
+		const click_x = Number(response.sample_x ?? current_click_position?.x);
+		const click_y = Number(response.sample_y ?? current_click_position?.y);
+
+		if (
+			!Number.isFinite(click_x) ||
+			!Number.isFinite(click_y) ||
+			!Number.isFinite(centroid_x) ||
+			!Number.isFinite(centroid_y)
+		) {
 			return;
 		}
 		// extraction replies
@@ -271,6 +304,10 @@
 	function clear_waypoints() {
 		waypoints = [];
 	}
+	function updateYaw(id: string, yawDeg: number) {
+		const yaw = Number.isFinite(yawDeg) ? yawDeg : 0;
+		waypoints = waypoints.map((w) => (w.id === id ? { ...w, yaw } : w));
+	}
 
 	function updateName(id: string, name: string) {
 		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
@@ -278,32 +315,33 @@
 
 	function buildYaml(): string {
 		const lines: string[] = [];
+		
 		lines.push('waypoints:');
 
 		for (const waypoint of waypoints) {
-			lines.push(`  - name: ${waypoint.name}`);
-			lines.push(`    color: "${waypoint.hexadecimal_color}"`);
-			lines.push(`    click_px: { x: ${waypoint.click_x}, y: ${waypoint.click_y} }`);
-			lines.push(`    centroid_px: { x: ${waypoint.centroid_x}, y: ${waypoint.centroid_y} }`);
-			lines.push(`    x: ${waypoint.centroid_x}`);
-			lines.push(`    y: ${waypoint.centroid_y}`);
+			const yawRadians = ((waypoint.yaw)*Math.PI)/180;
+			lines.push(`- name: ${waypoint.name}`);
+			lines.push(`x: ${waypoint.relative_x / scale}`);
+			lines.push(`y: ${waypoint.relative_y / scale}`);
+			lines.push(`yaw: ${waypoint.yaw}`)
 		}
 
 		return lines.join('\n');
 	}
-/*
-	async function drawRotatedRectangle(ctx){
-		for (const waypoint of waypoints)
-		{
-			ctx.translate(waypoint.centroidX, waypoint.centroidY);
-			ctx.rotate(waypoint.yaw)
-			return {
-				x: Math.cos(waypoint.yaw) * (pointX-waypoint.centroidX) - Math.sin(waypoint.yaw) * (pointY-waypoint.centroidY) + waypoint.centroidX,
-				y: Math.sin(waypoint.yaw) * (pointX-waypoint.centroidX) + Math.cos(waypoint.yaw) * (pointY-waypoint.centroidY) + waypoint.centroidY
-			};
-		}		
+	  
+	function drawRotatedRectangle(waypoint:waypointRow){
+			const arrowLength = 25; 
+
+			const yawDegrees = ((waypoint.yaw-90) * Math.PI) / 180;
+
+			const yawX1Coordinate = waypoint.centroidX;
+			const yawY1Coordinate = waypoint.centroidY; 
+
+			const yawX2Coordinate = yawX1Coordinate + Math.cos(yawDegrees) * arrowLength;
+			const yawY2Coordinate = yawY1Coordinate + Math.sin(yawDegrees) * arrowLength;
+			return{yawX1Coordinate,yawX2Coordinate, yawY1Coordinate, yawY2Coordinate};
 	}
-*/
+
 // Function to help translate the difference in case vairables from the back end to front end
 	function getSampleHex(response: any): string {
 		return String(
