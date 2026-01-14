@@ -28,6 +28,7 @@
 	import { Square } from 'svelte-radix';
 
 	type Mode = 'waypoint' | 'border' | 'origin';
+	type Direction = 'up' | 'down' | 'left' | 'right' | 'unselected';
 	type ros_string_message = { data: string };
 
 	type WaypointRow = {
@@ -38,7 +39,19 @@
 		click_y: number;
 		centroid_x: number;
 		centroid_y: number;
+		relative_x: number;
+		relative_y: number;
 		yaw: number;
+	};
+
+	type OriginRow = {
+		id: string;
+		name: string;
+		hexadecimal_color: string;
+		click_x: number;
+		click_y: number;
+		centroid_x: number;
+		centroid_y: number;
 	};
 
 	let image_element: HTMLImageElement | null = null;
@@ -68,6 +81,7 @@
 
 	// stored waypoints
 	let waypoints = $state<WaypointRow[]>([]);
+	let origins = $state<OriginRow[]>([]);
 	let border_contour = $state<number[][]>([]);
 
 	// ROS request/response plumbing
@@ -75,8 +89,55 @@
 	let response_topic: ROSLIB.Topic<ros_string_message> | null = null;
 
 	//scale
-	let scale = $state(0);
+	let scale = $state(1);
 	let map_height = $state(0);
+
+	//origin
+	let positive_x_direction = $state<Direction>('unselected');
+	let positive_y_direction = $state<Direction>('unselected');
+	let x_origin = $state(0);
+	let y_origin = $state(0);
+
+	function calculate_origin() {
+		let total_x = 0;
+		let total_y = 0;
+		origins.forEach((origin, o) => {
+			total_x += origin.centroid_x;
+			total_y += origin.centroid_y;
+		});
+		x_origin = total_x / origins.length;
+		y_origin = total_y / origins.length;
+
+		waypoints.forEach((waypoint, w) => {
+			switch(positive_x_direction) {
+				case "left":
+					waypoint.relative_x = x_origin - waypoint.centroid_x;
+					break;
+				case "right":
+					waypoint.relative_x = waypoint.centroid_x - x_origin;
+					break;
+				case "down":
+					waypoint.relative_x = waypoint.centroid_y - y_origin;
+					break;
+				case "up":
+					waypoint.relative_x = y_origin - waypoint.centroid_y;
+			}
+			switch(positive_y_direction) {
+				case "left":
+					waypoint.relative_y = x_origin - waypoint.centroid_x;
+					break;
+				case "right":
+					waypoint.relative_y = waypoint.centroid_x - x_origin;
+					break;
+				case "down":
+					waypoint.relative_y = waypoint.centroid_y - y_origin;
+					break;
+				case "up":
+					waypoint.relative_y = y_origin - waypoint.centroid_y;
+			}
+		});
+	}
+
 
 	const pending_requests = new Map<
 		string,
@@ -133,6 +194,11 @@
 		return `WP${String(waypoint_number)}`;
 	}
 
+	function next_origin_name() {
+		const origin_number = origins.length + 1;
+		return `O${String(origin_number)}`;
+	}
+
 	function add_waypoint_from_response(response: any) {
 		if (!response?.ok) return;
 		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
@@ -165,13 +231,56 @@
 				click_y,
 				centroid_x,
 				centroid_y,
+				relative_x: centroid_x,
+				relative_y: centroid_y,
 				yaw:0
+			}
+		];
+	}
+
+
+	function add_origin_from_response(response: any) {
+		if (!response?.ok) return;
+		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
+
+		const centroid_x = Number(response.centroid[0]);
+		const centroid_y = Number(response.centroid[1]);
+
+		// Prefer server echo; fall back to local current_click_position.
+		const click_x = Number(response.sample_x ?? current_click_position?.x);
+		const click_y = Number(response.sample_y ?? current_click_position?.y);
+
+		if (
+			!Number.isFinite(click_x) ||
+			!Number.isFinite(click_y) ||
+			!Number.isFinite(centroid_x) ||
+			!Number.isFinite(centroid_y)
+		) {
+			return;
+		}
+
+		const hexadecimal_color = String(response.sample_image_hex ?? '');
+
+		origins = [
+			...origins,
+			{
+				id: generate_id(),
+				name: next_origin_name(),
+				hexadecimal_color,
+				click_x,
+				click_y,
+				centroid_x,
+				centroid_y
 			}
 		];
 	}
 
 	function delete_waypoint(id: string) {
 		waypoints = waypoints.filter((waypoint) => waypoint.id !== id);
+	}
+
+	function delete_origin(id: string) {
+		origins = origins.filter((origin) => origin.id !== id);
 	}
 
 	function clear_waypoints() {
@@ -188,8 +297,8 @@
 
 		for (const waypoint of waypoints) {
 			lines.push(`- name: ${waypoint.name}`);
-			lines.push(`x: ${waypoint.centroid_x / scale}`);
-			lines.push(`y: ${waypoint.centroid_y / scale}}`);
+			lines.push(`x: ${waypoint.relative_x / scale}`);
+			lines.push(`y: ${waypoint.relative_y / scale}}`);
 			lines.push(`yaw: ${waypoint.yaw}`)
 		}
 
@@ -207,59 +316,81 @@
 	}
 
 	async function on_map_click(event: MouseEvent) {
-		const click_position = click_to_natural_position(event);
-
-		current_click_position = click_position;
-		contour = [];
-		centroid = null;
-		sample_image_hexadecimal_color = '';
-
-		if (!click_position) return;
-
-		status_message = `${mode} @ (${click_position.x}, ${click_position.y})…`;
-
-		try {
-			const response = await send_request({
-				op: 'extract_feature',
-				mode, // 'waypoint' | 'border' | 'origin' (protocol value)
-				image_id: map_image_id,
-				sample_x: click_position.x,
-				sample_y: click_position.y,
-				tol_h: default_hue_tolerance,
-				tol_s: default_saturation_tolerance,
-				tol_v: default_value_tolerance
-			});
-
-			if (!response?.ok) {
-				status_message = response?.message ?? 'Failed';
-				return;
-			}
-
-			if (mode === 'border') {
-				border_contour = Array.isArray(response.contour) ? response.contour : [];
-			}
-
-			sample_image_hexadecimal_color = String(response.sample_image_hex ?? '');
-			centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
-			contour = Array.isArray(response.contour) ? response.contour : [];
-
-			if (mode === 'origin') {
-				console.log(`i did it \n ${sample_image_hexadecimal_color}`);
-			}
-
-			if (mode === 'waypoint') {
-				add_waypoint_from_response(response);
-				status_message = centroid
-					? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sample_image_hexadecimal_color}`
-					: `Waypoint added ${sample_image_hexadecimal_color}`;
-			} else {
-				status_message = `Border OK ${sample_image_hexadecimal_color}`;
-			}
-
-
-		} catch (error: any) {
-			status_message = `Error: ${error?.message ?? String(error)}`;
+		let x_dir;
+		let y_dir;
+		if (document.getElementById("p_direction_x")) {
+			const x_select = document.getElementById("p_direction_x") as HTMLSelectElement;
+			const y_select = document.getElementById("p_direction_y") as HTMLSelectElement;
+			x_dir = x_select.value;
+			y_dir = y_select.value;
 		}
+		else {
+			x_dir = positive_x_direction;
+			y_dir = positive_y_direction;
+		}
+
+		if (mode === 'origin' && x_dir == 'unselected' && y_dir == 'unselected') {
+			status_message = "Assign positive direction for x and y";
+		}
+		else {
+			const click_position = click_to_natural_position(event);
+
+			current_click_position = click_position;
+			contour = [];
+			centroid = null;
+			sample_image_hexadecimal_color = '';
+
+			if (!click_position) return;
+
+			status_message = `${mode} @ (${click_position.x}, ${click_position.y})…`;
+
+			try {
+				const response = await send_request({
+					op: 'extract_feature',
+					mode, // 'waypoint' | 'border' | 'origin' (protocol value)
+					image_id: map_image_id,
+					sample_x: click_position.x,
+					sample_y: click_position.y,
+					tol_h: default_hue_tolerance,
+					tol_s: default_saturation_tolerance,
+					tol_v: default_value_tolerance,
+					x_direction: x_dir,
+					y_direction: y_dir
+				});
+
+				if (!response?.ok) {
+					status_message = response?.message ?? 'Failed';
+					return;
+				}
+
+				if (mode === 'border') {
+					border_contour = Array.isArray(response.contour) ? response.contour : [];
+				}
+
+				sample_image_hexadecimal_color = String(response.sample_image_hex ?? '');
+				centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
+				contour = Array.isArray(response.contour) ? response.contour : [];
+
+				if (mode === 'waypoint') {
+					add_waypoint_from_response(response);
+					status_message = centroid
+						? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sample_image_hexadecimal_color}`
+						: `Waypoint added ${sample_image_hexadecimal_color}`;
+				} else if (mode === 'origin') {
+					add_origin_from_response(response);
+					status_message = centroid
+						? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sample_image_hexadecimal_color}`
+						: `Origin added ${sample_image_hexadecimal_color}`;
+				} else {
+					status_message = `Border OK ${sample_image_hexadecimal_color}`;
+				}
+
+
+			} catch (error: any) {
+				status_message = `Error: ${error?.message ?? String(error)}`;
+			}
+		}
+	
 	}
 
 	function update_scale() {
@@ -420,29 +551,73 @@
 		<!--Origin table-->
 		<div class="tableWrap">
 			<h2>Origin</h2>
-			<table class="tbl" style="width: 30%;">
+			<table class="tbl" style="width:70%">
 				<thead>
 					<tr>
+						<th>Name</th>
+						<th>Hex</th>
+						<th>Positive X direction</th>
 						<th>Origin X</th>
-						<th>Hex</th>
+						<th>Positive Y direction</th>
 						<th>Origin Y</th>
-						<th>Hex</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
+					{#if origins.length === 0}
+						<tr>
+							<td></td>
+							<td></td>
+							<td>
+								<select name="positive direction" id="p_direction_x">
+									<option disabled selected value="unselected">Select direction</option>
+									<option value="up" onclick={() => (positive_x_direction = 'up')}>Up</option>
+									<option value="down" onclick={() => (positive_x_direction = 'down')}>Down</option>
+									<option value="left" onclick={() => (positive_x_direction = 'left')}>Left</option>
+									<option value="right" onclick={() => (positive_x_direction = 'right')}>Right</option>
+								</select>
+							</td>
+							<td></td>
+							<td>
+								<select name="positive direction" id="p_direction_y">
+									<option disabled selected value="unselected">Select direction</option>
+									<option value="up" onclick={() => (positive_y_direction = 'up')}>Up</option>
+									<option value="down" onclick={() => (positive_y_direction = 'down')}>Down</option>
+									<option value="left" onclick={() => (positive_y_direction = 'left')}>Left</option>
+									<option value="right" onclick={() => (positive_y_direction = 'right')}>Right</option>
+								</select>
+							</td>
+							<td></td>
+						</tr>
+					{:else}
+						{#each origins as origin, i (origin.id)}
+						<tr>
+							<td> {origin.name} </td>
+							<td>
+								<span class="chip" style={`background:${origin.hexadecimal_color || '#eee'}`}>
+									{origin.hexadecimal_color}
+								</span>
+							</td>
+							<td> {positive_x_direction} </td>
+							<td>{(origin.centroid_x / scale).toFixed(2)}</td>
+							<td> {positive_y_direction} </td>
+							<td>{(origin.centroid_y / scale).toFixed(2)}</td>
+							<td class="right">
+								<button type="button" class="danger" onclick={() => delete_origin(origin.id)}>
+									Delete
+								</button>
+							</td>
+						</tr>
+						{/each}
+					{/if}
 					<tr>
-						<td>
-						
+						<td class="right">
+							<button type="button" class="danger" onclick={() => calculate_origin()}>
+								Calculate average
+							</button>
 						</td>
-						<td>
-			
-						</td>
-						<td>
-							
-						</td>
-						<td>
-
-						</td>
+						<td>{x_origin / scale}</td>
+						<td>{y_origin / scale}</td>
 					</tr>
 				</tbody>
 			</table>
@@ -458,7 +633,9 @@
 						<th>Name</th>
 						<th>Hex</th>
 						<th>Waypoint X</th>
+						<th>Relative X</th>
 						<th>Waypoint Y</th>
+						<th>Relative Y</th>
 						<th>Yaw</th>
 						<th></th>
 					</tr>
@@ -486,7 +663,9 @@
 									</span>
 								</td>
 								<td>{(waypoint.centroid_x / scale).toFixed(2)}</td>
+								<td>{(waypoint.relative_x / scale).toFixed(2)}</td>
 								<td>{(waypoint.centroid_y / scale).toFixed(2)}</td>
+								<td>{(waypoint.relative_y / scale).toFixed(2)}</td>
 								<td><input type="number" bind:value={waypoint.yaw}></td>
 								<td class="right">
 									<button type="button" class="danger" onclick={() => delete_waypoint(waypoint.id)}>

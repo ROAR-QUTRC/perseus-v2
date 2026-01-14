@@ -90,14 +90,13 @@ class ExtractFeatures(Node):
       {
         "id": "...",
         "op": "extract_feature",
-        "mode": "border" | "waypoint",
+        "mode": "border" | "waypoint" | "origin",
         "image_id": "foo.png",
         "sample_x": 123,
         "sample_y": 456,
         "tol_h": 10,
         "tol_s": 60,
         "tol_v": 60,
-        "min_area": 50,          (optional)
         "approx_eps": 2.0,       (optional)
         "close_k": 5,            (optional)
         "median_k": 5            (optional)
@@ -191,25 +190,19 @@ class ExtractFeatures(Node):
             request = json.loads(message.data)
             request_id = str(request.get("id", ""))
 
-            operation = request.get("op", "")
-            if operation not in (
-                "extract_feature",
-                "extract_border",
-                "extract_waypoint",
-            ):
-                self.reply(
-                    request_id, {"ok": False, "message": f"Unsupported op: {operation}"}
-                )
-                return
+            # operation = request.get("op", "")
+            # if operation not in ("extract_feature", "extract_border", "extract_waypoint"):
+            #     self.reply(request_id, {"ok": False, "message": f"Unsupported op: {operation}"})
+            #     return
 
             # Normalize to one handler with a mode
-            mode = request.get("mode")
-            if operation == "extract_border":
-                mode = "border"
-            elif operation == "extract_waypoint":
-                mode = "waypoint"
-            if mode not in ("border", "waypoint"):
-                mode = "border"
+            mode = request["mode"]
+            # if operation == "extract_border":
+            #     mode = "border"
+            # elif operation == "extract_waypoint":
+            #     mode = "waypoint"
+            # if mode not in ("border", "waypoint"):
+            #     mode = "border"
 
             image_id = request["image_id"]
             x_pos = int(request["sample_x"])
@@ -224,6 +217,12 @@ class ExtractFeatures(Node):
 
             close_kernel_size = int(request.get("close_k", 5))
             median_kernel_size = int(request.get("median_k", 5))
+
+            x_direction = request["x_direction"]
+            y_direction = request["y_direction"]
+
+            x_direction = request["x_direction"]
+            y_direction = request["y_direction"]
 
             image_bgr, image_hue_saturation_value, image_height, image_width = (
                 self.load_image(image_id)
@@ -329,15 +328,70 @@ class ExtractFeatures(Node):
             )
 
             # Always compute centroid (useful for both modes)
-            centroid = contour_centroid_pixel_position(chosen_contour)
-            if centroid is None:
-                bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = (
-                    cv2.boundingRect(chosen_contour)
-                )
-                centroid = (
-                    int(bounding_x_pos + bounding_width / 2),
-                    int(bounding_y_pos + bounding_height / 2),
-                )
+            bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = cv2.boundingRect(chosen_contour)
+            if mode == "waypoint" or mode == "border":
+                centroid = contour_centroid_pixel_position(chosen_contour)
+                if centroid is None:
+                    centroid = (
+                        int(bounding_x_pos + bounding_width / 2),
+                        int(bounding_y_pos + bounding_height / 2),
+                    )
+            elif mode == "origin":
+                if x_direction == "right":
+                    if y_direction == "down":
+                        centroid = (
+                            int(bounding_x_pos),
+                            int(bounding_y_pos),
+                        )
+                    elif y_direction == "up":
+                        centroid = (
+                            int(bounding_x_pos),
+                            int(bounding_y_pos + bounding_height),
+                        )
+                elif x_direction == "left":
+                    if y_direction == "down":
+                        centroid = (
+                            int(bounding_x_pos + bounding_width),
+                            int(bounding_y_pos),
+                        )
+                    elif y_direction == "up":
+                        centroid = (
+                            int(bounding_x_pos + bounding_width),
+                            int(bounding_y_pos + bounding_height),
+                        )
+                elif x_direction == "down":
+                    if y_direction == "right":
+                        centroid = (
+                            int(bounding_x_pos),
+                            int(bounding_y_pos),
+                        )
+                    elif y_direction == "left":
+                        centroid = (
+                            int(bounding_x_pos + bounding_width),
+                            int(bounding_y_pos),
+                        )
+                elif x_direction == "up":
+                    if y_direction == "right":
+                        centroid = (
+                            int(bounding_x_pos),
+                            int(bounding_y_pos + bounding_height),
+                        )
+                    elif y_direction == "left":
+                        centroid = (
+                            int(bounding_x_pos + bounding_width),
+                            int(bounding_y_pos + bounding_height),
+                        )
+                    # if bounding_width > bounding_height:
+                    #     centroid = (
+                    #         int(bounding_x_pos + bounding_width),
+                    #         int(bounding_y_pos + bounding_height / 2),
+                    #     )
+                    # elif bounding_height > bounding_width:
+                    #       centroid = (
+                    #         int(bounding_x_pos + bounding_width / 2),
+                    #         int(bounding_y_pos + bounding_height),
+                    #     )
+
 
             payload: dict[str, Any] = {
                 "ok": True,
