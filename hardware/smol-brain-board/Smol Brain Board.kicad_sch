@@ -12596,7 +12596,7 @@
 				(hide yes)
 			)
 		)
-		(property "manufacturer" "YAGEO"
+		(property "manufacturer" "Stackpole Electronics Inc"
 			(at 336.55 29.21 90)
 			(effects
 				(font
@@ -12605,7 +12605,7 @@
 				(hide yes)
 			)
 		)
-		(property "distributors part number" "311-1KMTR-ND"
+		(property "distributors part number" "RMCF0603FT1K00TR-ND"
 			(at 336.55 29.21 90)
 			(effects
 				(font
@@ -12614,7 +12614,7 @@
 				(hide yes)
 			)
 		)
-		(property "manufactuer part number" "RC0201FR-071KL"
+		(property "manufactuer part number" "RMCF0603FT1K00"
 			(at 336.55 29.21 90)
 			(effects
 				(font
@@ -15353,7 +15353,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_SOD-323F"
+		(property "Footprint" "Diode_SMD:D_SOD-123F"
 			(at 121.92 147.32 0)
 			(effects
 				(font
@@ -16950,7 +16950,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "LED_SMD:LED_0402_1005Metric"
+		(property "Footprint" "LED_SMD:LED_0603_1608Metric"
 			(at 270.51 194.31 0)
 			(effects
 				(font
@@ -17268,7 +17268,7 @@
 				(hide yes)
 			)
 		)
-		(property "manufacturer" "YAGEO"
+		(property "manufacturer" "Stackpole Electronics Inc"
 			(at 336.55 31.75 90)
 			(effects
 				(font
@@ -17277,7 +17277,7 @@
 				(hide yes)
 			)
 		)
-		(property "distributors part number" "311-1KMTR-ND"
+		(property "distributors part number" "RMCF0603FT1K00TR-ND"
 			(at 336.55 31.75 90)
 			(effects
 				(font
@@ -17286,7 +17286,7 @@
 				(hide yes)
 			)
 		)
-		(property "manufactuer part number" "RC0201FR-071KL"
+		(property "manufactuer part number" "RMCF0603FT1K00"
 			(at 336.55 31.75 90)
 			(effects
 				(font
@@ -17326,6 +17326,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "USB_C_Receptacle"
@@ -17334,9 +17335,10 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
-		(property "Footprint" "Connector_USB:USB_C_Receptacle_Amphenol_12401610E4-2A"
+		(property "Footprint" "Connector_USB:USB_C_Receptacle_Amphenol_12401548E4-2A"
 			(at 147.32 63.5 0)
 			(effects
 				(font
@@ -17492,7 +17494,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Value" "WS2812B"
+		(property "Value" "16347"
 			(at 369.57 107.95 0)
 			(effects
 				(font
@@ -18829,7 +18831,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "LED_SMD:LED_0402_1005Metric"
+		(property "Footprint" "LED_SMD:LED_0603_1608Metric"
 			(at 278.13 194.31 0)
 			(effects
 				(font
@@ -19023,7 +19025,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_SOD-323F"
+		(property "Footprint" "Diode_SMD:D_SOD-123F"
 			(at 121.92 152.4 0)
 			(effects
 				(font
