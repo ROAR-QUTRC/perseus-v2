@@ -222,7 +222,7 @@ namespace perseus_lite_hardware
                     static_cast<uint8_t>(_MAX_TORQUE_LIMIT & 0xFF),        // Low byte
                     static_cast<uint8_t>((_MAX_TORQUE_LIMIT >> 8) & 0xFF)  // High byte
                 };
-                if (!sendServoCommand(servo_id, ServoCommand::WRITE, std::span{torqueLimitData}))
+                if (!send_servo_command(servo_id, ServoCommand::WRITE, std::span{torqueLimitData}))
                 {
                     RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
                                  "Failed to set torque limit for servo %d", servo_id);
