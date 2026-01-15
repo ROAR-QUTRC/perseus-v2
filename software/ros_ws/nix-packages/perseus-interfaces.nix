@@ -12,10 +12,10 @@
   rosidl-default-runtime,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-perseus-msgs";
+  pname = "ros-jazzy-perseus-interfaces";
   version = "0.0.0";
 
-  src = ./../src/perseus_msgs;
+  src = ./../src/perseus_interfaces;
 
   buildType = "ament_cmake";
   buildInputs = [
