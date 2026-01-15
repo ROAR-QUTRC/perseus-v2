@@ -48,6 +48,16 @@ ros2 launch perseus_simulation perseus_sim.launch.py
 
 This command launches the Gazebo simulation with the Perseus rover model.
 
+:::{warning}
+Some simulation environments (e.g. worlds with falling rock obstacles) use external assets hosted online.
+
+- An **active internet connection** may be required on first launch to download these assets.
+- Once downloaded, assets are typically **cached locally** by the simulator and can be reused offline.
+- If you experience missing models or world load failures, please ensure you are connected to the internet and restart the simulator.
+
+Future work may migrate these assets to local storage to fully support offline simulation.
+:::
+
 ### 6. Activate the Drive Controller
 
 After the simulation has fully started, you need to activate the drive controller. In a **separate terminal**, run:
