@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(
-  perseus_msgs
+  perseus_interfaces
   VERSION 0.0.0
   LANGUAGES CXX C)
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
