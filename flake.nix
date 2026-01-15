@@ -130,6 +130,9 @@
               "cuda_nvprune"
               "cuda_sanitizer_api"
               "cuda_nvtx"
+              # ONNX Runtime CUDA dependencies
+              "cudnn"
+              "cudnn-frontend"
             ];
         };
         # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
@@ -203,7 +206,10 @@
             libcusolver
             libcusparse
             cuda_nvrtc
+            cudnn
             ;
+          # ONNX Runtime with CUDA support
+          onnxruntime-cuda = pkgs.onnxruntime.override { cudaSupport = true; };
         };
         # Packages needed to run the simulation
         # Note: May not be needed, most needed packages should
@@ -239,6 +245,8 @@
               export CUDA_PATH="${pkgs.cudaPackages.cuda_nvcc}"
               export CUDA_HOME="${pkgs.cudaPackages.cuda_nvcc}"
               export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc}/bin"
+              # ONNX Runtime with CUDA support
+              export ORT_LIB_LOCATION="${devShellPkgs.onnxruntime-cuda}/lib"
             '';
           };
 
