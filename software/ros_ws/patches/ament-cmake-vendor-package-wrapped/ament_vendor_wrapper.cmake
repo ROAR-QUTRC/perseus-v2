@@ -26,7 +26,10 @@
 # patchAmentVendor{Git,File}.
 
 if(NOT ament_cmake_vendor_package_FIND_QUIETLY)
-  message(STATUS "Using ament_vendor wrapped for Nix patching (${ament_cmake_vendor_package_DIR})")
+  message(
+    STATUS
+      "Using ament_vendor wrapped for Nix patching (${ament_cmake_vendor_package_DIR})"
+  )
 endif()
 
 if(AMENT_VENDOR_NIX_PREFETCH)
@@ -39,10 +42,13 @@ if(AMENT_VENDOR_NIX_PREFETCH)
 endif()
 
 macro(ament_vendor TARGET_NAME)
-  cmake_parse_arguments(_ARG "GLOBAL_HOOK;SKIP_INSTALL" "SOURCE_SUBDIR;VCS_TYPE;VCS_URL;VCS_VERSION;SATISFIED" "CMAKE_ARGS;PATCHES" ${ARGN})
+  cmake_parse_arguments(
+    _ARG "GLOBAL_HOOK;SKIP_INSTALL"
+    "SOURCE_SUBDIR;VCS_TYPE;VCS_URL;VCS_VERSION;SATISFIED" "CMAKE_ARGS;PATCHES"
+    ${ARGN})
   if(_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "ament_vendor() called with unused arguments: "
-      "${_ARG_UNPARSED_ARGUMENTS}")
+                        "${_ARG_UNPARSED_ARGUMENTS}")
   endif()
   if(AMENT_VENDOR_NIX_PREFETCH)
     # Read previous version of vendored-source.json
@@ -51,18 +57,21 @@ macro(ament_vendor TARGET_NAME)
     # Add new entry to vendored-source.json
     if(AMENT_VENDOR_NIX_PREFETCH STREQUAL "git")
       execute_process(
-        COMMAND ${NIX_PREFETCH_GIT} --url ${_ARG_VCS_URL} --rev ${_ARG_VCS_VERSION} --fetch-submodules
-        COMMAND ${JQ} "${VENDORED_SOURCE_JSON} + {${TARGET_NAME}: {url: \"${_ARG_VCS_URL}\", rev: \"${_ARG_VCS_VERSION}\", hash: .hash}}"
-        OUTPUT_FILE ${CMAKE_BINARY_DIR}/vendored-source.json
-        COMMAND_ECHO STDOUT
-        COMMAND_ERROR_IS_FATAL ANY)
+        COMMAND ${NIX_PREFETCH_GIT} --url ${_ARG_VCS_URL} --rev
+                ${_ARG_VCS_VERSION} --fetch-submodules
+        COMMAND
+          ${JQ}
+          "${VENDORED_SOURCE_JSON} + {${TARGET_NAME}: {url: \"${_ARG_VCS_URL}\", rev: \"${_ARG_VCS_VERSION}\", hash: .hash}}"
+        OUTPUT_FILE ${CMAKE_BINARY_DIR}/vendored-source.json COMMAND_ECHO
+                    STDOUT COMMAND_ERROR_IS_FATAL ANY)
     elseif(AMENT_VENDOR_NIX_PREFETCH STREQUAL "file")
       execute_process(
         COMMAND ${NIX_PREFETCH_URL} ${_ARG_VCS_URL}
-        COMMAND ${JQ} -R "${VENDORED_SOURCE_JSON} + {${TARGET_NAME}: {url: \"${_ARG_VCS_URL}\", sha256: .}}"
-        OUTPUT_FILE ${CMAKE_BINARY_DIR}/vendored-source.json
-        COMMAND_ECHO STDOUT
-        COMMAND_ERROR_IS_FATAL ANY)
+        COMMAND
+          ${JQ} -R
+          "${VENDORED_SOURCE_JSON} + {${TARGET_NAME}: {url: \"${_ARG_VCS_URL}\", sha256: .}}"
+        OUTPUT_FILE ${CMAKE_BINARY_DIR}/vendored-source.json COMMAND_ECHO
+                    STDOUT COMMAND_ERROR_IS_FATAL ANY)
     endif()
     # Minimal implementation of the original ament_vendor macro that
     # makes zenoh_cpp_vendor happy. Without this, generation of
@@ -70,10 +79,7 @@ macro(ament_vendor TARGET_NAME)
     # also use ament_vendor_orig as below, but this is faster, because
     # is doesn't download anything.
     include(ExternalProject)
-    externalproject_add(
-      ${TARGET_NAME}
-      DOWNLOAD_COMMAND ""
-    )
+    ExternalProject_Add(${TARGET_NAME} DOWNLOAD_COMMAND "")
   else()
     if(_ARG_GLOBAL_HOOK)
       set(_ARG_GLOBAL_HOOK "GLOBAL_HOOK")
@@ -86,29 +92,47 @@ macro(ament_vendor TARGET_NAME)
       unset(_ARG_SKIP_INSTALL)
     endif()
     if(AMENT_VENDOR_NIX_TAR_${TARGET_NAME})
-      cmake_language(CALL ament_vendor_orig ${TARGET_NAME}
-        VCS_TYPE tar
-        VCS_URL file://${AMENT_VENDOR_NIX_TAR_${TARGET_NAME}}
-        VCS_VERSION ${_ARG_VCS_VERSION}
+      cmake_language(
+        CALL
+        ament_vendor_orig
+        ${TARGET_NAME}
+        VCS_TYPE
+        tar
+        VCS_URL
+        file://${AMENT_VENDOR_NIX_TAR_${TARGET_NAME}}
+        VCS_VERSION
+        ${_ARG_VCS_VERSION}
         ${_ARG_GLOBAL_HOOK}
-        SATISFIED ${_ARG_SATISFIED}
+        SATISFIED
+        ${_ARG_SATISFIED}
         ${_ARG_SKIP_INSTALL}
-        SOURCE_SUBDIR ${_ARG_SOURCE_SUBDIR}
-        PATCHES ${_ARG_PATCHES}
-        CMAKE_ARGS ${_ARG_CMAKE_ARGS}
-      )
+        SOURCE_SUBDIR
+        ${_ARG_SOURCE_SUBDIR}
+        PATCHES
+        ${_ARG_PATCHES}
+        CMAKE_ARGS
+        ${_ARG_CMAKE_ARGS})
     elseif(AMENT_VENDOR_NIX_FILE_${TARGET_NAME})
-      cmake_language(CALL ament_vendor_orig ${TARGET_NAME}
-        VCS_TYPE ${_ARG_VCS_TYPE}
-        VCS_URL file://${AMENT_VENDOR_NIX_FILE_${TARGET_NAME}}
-        VCS_VERSION ${_ARG_VCS_VERSION}
+      cmake_language(
+        CALL
+        ament_vendor_orig
+        ${TARGET_NAME}
+        VCS_TYPE
+        ${_ARG_VCS_TYPE}
+        VCS_URL
+        file://${AMENT_VENDOR_NIX_FILE_${TARGET_NAME}}
+        VCS_VERSION
+        ${_ARG_VCS_VERSION}
         ${_ARG_GLOBAL_HOOK}
-        SATISFIED ${_ARG_SATISFIED}
+        SATISFIED
+        ${_ARG_SATISFIED}
         ${_ARG_SKIP_INSTALL}
-        SOURCE_SUBDIR ${_ARG_SOURCE_SUBDIR}
-        PATCHES ${_ARG_PATCHES}
-        CMAKE_ARGS ${_ARG_CMAKE_ARGS}
-      )
+        SOURCE_SUBDIR
+        ${_ARG_SOURCE_SUBDIR}
+        PATCHES
+        ${_ARG_PATCHES}
+        CMAKE_ARGS
+        ${_ARG_CMAKE_ARGS})
     endif()
   endif()
 endmacro()

@@ -199,8 +199,8 @@
           ros.callPackage ros.buildROSWorkspace {
             inherit name;
             devPackages = devPackages // additionalDevPkgs;
-            prebuiltPackages = {};# standardPkgs // additionalPkgs;
-            prebuiltShellPackages ={};# devShellPkgs // formatters;
+            prebuiltPackages = { }; # standardPkgs // additionalPkgs;
+            prebuiltShellPackages = { }; # devShellPkgs // formatters;
             releaseDomainId = productionDomainId;
             environmentDomainId = devDomainId;
             forceReleaseDomainId = true;
