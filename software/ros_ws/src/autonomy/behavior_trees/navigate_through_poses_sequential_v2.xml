@@ -21,7 +21,7 @@
                 <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
 
                 <!-- Plan -->
-                <RateController hz="1.0">
+                <RateController hz="0.5">
                   <RecoveryNode number_of_retries="1" name="ComputePathToPose">
                     <ComputePathToPose goal="{current_goal}" path="{path}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}"/>
                     <Sequence>
