@@ -19,7 +19,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
 BOLD='\033[1m'
 DIM='\033[2m'
 NC='\033[0m' # No Color
@@ -208,6 +207,7 @@ fi
 
 # Source the workspace
 if [[ -f "install/setup.bash" ]]; then
+    # shellcheck source=/dev/null
     source install/setup.bash
 else
     print_error "install/setup.bash not found. Please build first with: $(basename "$0") -b"
@@ -230,7 +230,7 @@ fi
 # Run colcon test (don't exit on failure, we want to show results)
 set +e
 colcon test "${TEST_ARGS[@]}"
-TEST_STATUS=$?
+_TEST_STATUS=$?  # Exit status captured but we use parsed results for final status
 set -e
 
 # Parse and display results
@@ -275,7 +275,9 @@ parse_and_display_results() {
                 local failed_count=0
 
                 if $NO_LINT; then
+                    # shellcheck disable=SC2126  # grep -c won't work with pipeline filtering
                     passed_count=$(grep -A1 'Status="passed"' "$latest_test_xml" 2>/dev/null | grep '<Name>' | grep -v -E -i 'copyright|cpplint|flake8|pep257|xmllint|lint_cmake|uncrustify|cppcheck' | wc -l) || passed_count=0
+                    # shellcheck disable=SC2126
                     failed_count=$(grep -A1 'Status="failed"' "$latest_test_xml" 2>/dev/null | grep '<Name>' | grep -v -E -i 'copyright|cpplint|flake8|pep257|xmllint|lint_cmake|uncrustify|cppcheck' | wc -l) || failed_count=0
                 else
                     passed_count=$(grep -c 'Status="passed"' "$latest_test_xml" 2>/dev/null) || passed_count=0
@@ -300,10 +302,11 @@ parse_and_display_results() {
                 for xml_file in "$pkg_dir"/*/*.xml "$pkg_dir"/*.xml; do
                     if [[ -f "$xml_file" ]]; then
                         if grep -q 'testsuite' "$xml_file" 2>/dev/null; then
-                            local tests=$(grep -oP 'tests="\K[0-9]+' "$xml_file" 2>/dev/null | head -1 || echo "0")
-                            local failures=$(grep -oP 'failures="\K[0-9]+' "$xml_file" 2>/dev/null | head -1 || echo "0")
-                            local errors=$(grep -oP 'errors="\K[0-9]+' "$xml_file" 2>/dev/null | head -1 || echo "0")
-                            local skipped=$(grep -oP 'skipped="\K[0-9]+' "$xml_file" 2>/dev/null | head -1 || echo "0")
+                            local tests failures errors skipped
+                            tests=$(grep -oP 'tests="\K[0-9]+' "$xml_file" 2>/dev/null | head -1 || echo "0")
+                            failures=$(grep -oP 'failures="\K[0-9]+' "$xml_file" 2>/dev/null | head -1 || echo "0")
+                            errors=$(grep -oP 'errors="\K[0-9]+' "$xml_file" 2>/dev/null | head -1 || echo "0")
+                            skipped=$(grep -oP 'skipped="\K[0-9]+' "$xml_file" 2>/dev/null | head -1 || echo "0")
 
                             tests=${tests:-0}
                             failures=${failures:-0}
@@ -418,7 +421,7 @@ parse_and_display_results() {
     print_to_file "  Errors:         $total_errors"
     print_to_file "  Skipped:        $total_skipped"
     print_to_file ""
-    [[ $total_failed -eq 0 && $total_errors -eq 0 ]] && print_to_file "  ✓ ALL TESTS PASSED" || print_to_file "  ✗ SOME TESTS FAILED"
+    [[ $total_failed -eq 0 && $total_errors -eq 0 ]] && print_to_file "  [PASS] ALL TESTS PASSED" || print_to_file "  [FAIL] SOME TESTS FAILED"
     print_to_file ""
     print_to_file "═══════════════════════════════════════════════════════════════"
 
@@ -506,10 +509,10 @@ parse_and_display_results() {
 
                         if [[ $failed -eq 0 ]]; then
                             echo -e "  ${GREEN}✓${NC} ${BOLD}$suite${NC} ($passed/$total passed)"
-                            print_to_file "  ✓ $suite ($passed/$total passed)"
+                            print_to_file "  [PASS] $suite ($passed/$total passed)"
                         else
                             echo -e "  ${RED}✗${NC} ${BOLD}$suite${NC} ($passed/$total passed, $failed failed)"
-                            print_to_file "  ✗ $suite ($passed/$total passed, $failed failed)"
+                            print_to_file "  [FAIL] $suite ($passed/$total passed, $failed failed)"
                         fi
 
                         IFS=';' read -ra tests <<< "${suite_tests[$suite]}"
@@ -519,10 +522,10 @@ parse_and_display_results() {
                                 local status="${test_entry#*|}"
                                 if [[ "$status" == "passed" ]]; then
                                     echo -e "      ${GREEN}✓${NC} $method"
-                                    print_to_file "      ✓ $method"
+                                    print_to_file "      [PASS] $method"
                                 else
                                     echo -e "      ${RED}✗${NC} $method"
-                                    print_to_file "      ✗ $method"
+                                    print_to_file "      [FAIL] $method"
                                 fi
                             fi
                         done
@@ -564,7 +567,7 @@ display_failure_details() {
         echo -e "${RED}${BOLD}✗ $test_name${NC}"
         echo -e "  ${DIM}Package: $pkg${NC}"
         print_to_file ""
-        print_to_file "✗ $test_name"
+        print_to_file "[FAIL] $test_name"
         print_to_file "  Package: $pkg"
 
         # Extract and display failure message from output
