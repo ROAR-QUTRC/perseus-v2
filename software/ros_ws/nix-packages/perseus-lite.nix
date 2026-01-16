@@ -3,6 +3,9 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  ament-cmake-gtest,
+  ament-lint-auto,
+  ament-lint-common,
   controller-manager,
   diff-drive-controller,
   joint-state-broadcaster,
@@ -12,6 +15,7 @@
   ros2launch,
   rviz2,
   xacro,
+  yaml-cpp-vendor,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-lite";
@@ -21,6 +25,12 @@ buildRosPackage rec {
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
+  checkInputs = [
+    ament-cmake-gtest
+    ament-lint-auto
+    ament-lint-common
+    yaml-cpp-vendor
+  ];
   propagatedBuildInputs = [
     controller-manager
     diff-drive-controller
