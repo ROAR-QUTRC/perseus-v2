@@ -1,6 +1,29 @@
 rosDistro: final: prev:
 let
   rosOverlay = rosFinal: rosPrev: {
+    # Fix conflict between ament-cmake-vendor-package and ament-cmake-vendor-package-wrapped.
+    # nix-ros-overlay defines two versions: base (path patches only) and wrapped (adds
+    # ament_vendor_wrapper.cmake for Nix sandbox). Both end up in the devShell's buildEnv
+    # via different dependency paths, causing file conflicts.
+    #
+    # The conflicting files (cmake configs, setup scripts) are functionally identical
+    # between both versions - the wrapper only adds functionality, it doesn't change
+    # existing files. Therefore ignoreCollisions is safe here.
+    #
+    # A proper upstream fix would ensure only one version is used, but that requires
+    # changes to nix-ros-overlay's ros2-overlay.nix. We can't override the packages
+    # directly here due to circular dependencies in how they're defined.
+    #
+    # See: https://github.com/lopsided98/nix-ros-overlay ros2-overlay.nix
+    buildEnv =
+      args:
+      rosPrev.buildEnv (
+        args
+        // {
+          ignoreCollisions = true;
+        }
+      );
+
     # --- GUI patches ---
     fields2cover =
       let
