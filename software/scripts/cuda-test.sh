@@ -107,7 +107,6 @@ if command -v nvidia-smi &> /dev/null; then
         GPU_AVAILABLE=true
         GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)
         DRIVER_VERSION=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -1)
-        CUDA_DRIVER_VERSION=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1 || echo "unknown")
         print_success "NVIDIA GPU detected: $GPU_NAME"
         print_info "Driver Version: $DRIVER_VERSION"
     else
