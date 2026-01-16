@@ -1,0 +1,11 @@
+diff --git a/xtensor.pc.in b/xtensor.pc.in
+index 0352e0bd..8cf2e72c 100644
+--- a/xtensor.pc.in
++++ b/xtensor.pc.in
+@@ -1,5 +1,5 @@
+ prefix=@CMAKE_INSTALL_PREFIX@
+-includedir=${prefix}/include
++includedir=@CMAKE_INSTALL_LIBDIR@
+ 
+ Name: xtensor
+ Description: xtensor is a C++ library meant for numerical analysis with multi-dimensional array expressions.

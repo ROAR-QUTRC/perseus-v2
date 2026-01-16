@@ -1,3 +1,46 @@
+excludes = [
+    "build/**",
+    "result/**",
+    "generated/**",
+    "treefmt.toml",
+    "docs/figures-source/**",
+    "docs/pyproject/**",
+    "docs/source/_static/fonts/**",
+    "docs/source/robots.txt",
+    "docs/source/intersphinx/**",
+    "*.rviz",
+    "setup.cfg",
+    "software/ros_ws/src/**/resource/**",
+    "*.drawio",
+    "*.svg",
+    "*.ttf",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.bmp",
+    "*.ico",
+    "*.pdf",
+    "*sdkconfig*",
+    "software/ros_ws/src/**/meshes/**",
+    "*.dae",
+    "*.stl",
+    "*.step",
+    "*.3mf",
+    "hardware/**",
+    "*.lock",
+    "*.patch",
+    "package-lock.json",
+    "go.mod",
+    "go.sum",
+    ".gitattributes",
+    ".gitignore",
+    ".gitmodules",
+    ".hgignore",
+    ".svnignore",
+    "LICENSE",
+]
+
 [formatter.actionlint]
 command = "actionlint"
 excludes = []
@@ -14,6 +57,13 @@ includes = [
     "*.h",
     "*.hh",
     "*.hpp",
+    "*.glsl",
+    "*.vert",
+    ".tesc",
+    ".tese",
+    ".geom",
+    ".frag",
+    ".comp",
 ]
 options = ["-i"]
 
@@ -62,7 +112,7 @@ includes = [
     "*.yaml",
     "*.yml",
 ]
-options = ["--write", "--config", "/nix/store/mv86pjvpyzhvqb1cpzfa1lzpz0501d68-prettierrc.json"]
+options = ["--write", "--config", "/nix/store/naq2rrlgflpwlissfiklg5bi1y5axihb-prettierrc.json"]
 
 [formatter.ruff-format]
 command = "ruff"
@@ -80,7 +130,7 @@ options = []
 command = "shfmt"
 excludes = []
 includes = ["*.sh", "*.bash", "*.envrc", "*.envrc.*"]
-options = ["-s", "-w", "-i", "2"]
+options = ["-w", "-i", "2", "-s"]
 
 [formatter.taplo]
 command = "taplo"
@@ -92,53 +142,10 @@ options = ["format"]
 command = "typos"
 excludes = []
 includes = ["*"]
-options = ["--write-changes"]
+options = ["--write-changes", "--force-exclude"]
 
 [formatter.yamlfmt]
 command = "yamlfmt"
 excludes = []
 includes = ["*.yaml", "*.yml"]
 options = []
-
-[global]
-excludes = [
-    "*.lock",
-    "*.patch",
-    "package-lock.json",
-    "go.mod",
-    "go.sum",
-    ".gitignore",
-    ".gitmodules",
-    ".hgignore",
-    ".svnignore",
-    "build/**",
-    "result/**",
-    "generated/**",
-    "treefmt.toml",
-    "docs/figures-source/**",
-    "docs/pyproject/**",
-    "docs/source/_static/fonts/**",
-    "docs/source/robots.txt",
-    "docs/source/intersphinx/**",
-    "*.rviz",
-    "setup.cfg",
-    "software/ros_ws/src/**/resource/**",
-    "*.drawio",
-    "*.svg",
-    "*.ttf",
-    "*.png",
-    "*.jpg",
-    "*.jpeg",
-    "*.gif",
-    "*.bmp",
-    "*.ico",
-    "*.pdf",
-    "*sdkconfig*",
-    "software/ros_ws/src/**/meshes/**",
-    "*.dae",
-    "*.stl",
-    "*.step",
-    "*.3mf",
-    "hardware/**",
-]
-on-unmatched = "warn"

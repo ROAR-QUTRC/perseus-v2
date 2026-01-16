@@ -2,36 +2,6 @@ rosDistro: final: prev:
 let
   rosOverlay = rosFinal: rosPrev: {
     # --- GUI patches ---
-    joint-state-publisher-gui = rosPrev.joint-state-publisher-gui.overrideAttrs (
-      {
-        nativeBuildInputs ? [ ],
-        postFixup ? "",
-        ...
-      }:
-      {
-        dontWrapQtApps = false;
-        nativeBuildInputs = nativeBuildInputs ++ [ prev.qt5.wrapQtAppsHook ];
-        postFixup =
-          postFixup
-          + ''
-            wrapQtApp "$out/lib/joint_state_publisher_gui/joint_state_publisher_gui"
-          '';
-      }
-    );
-    # rosbridge incorrectly depends on the bson package instead of pymongo which is what it actually needs
-    # (pymongo provides its own bson implementation, which behaves differently to the bson package)
-    rosbridge-library = rosPrev.rosbridge-library.overrideAttrs (
-      {
-        propagatedBuildInputs ? [ ],
-        ...
-      }:
-      let
-        filteredPropagatedBuildInputs = rosFinal.lib.remove rosPrev.python3Packages.bson propagatedBuildInputs;
-      in
-      {
-        propagatedBuildInputs = filteredPropagatedBuildInputs ++ [ rosPrev.python3Packages.pymongo ];
-      }
-    );
     fields2cover =
       let
         nlohmann_json = final.nlohmann_json.overrideAttrs ({
@@ -119,7 +89,6 @@ let
       in
       rosPrev.fields2cover.overrideAttrs (
         {
-          propagatedBuildInputs ? [ ],
           patches ? [ ],
           postPatch ? "",
           ...
@@ -170,6 +139,7 @@ let
         propagatedBuildInputs = propagatedBuildInputs ++ [ rosFinal.visualization-msgs ];
       }
     );
+
     livox-ros-driver2 = rosPrev.livox-ros-driver2.overrideAttrs (
       {
         buildInputs ? [ ],
@@ -185,19 +155,6 @@ let
       }
     );
 
-    librealsense2 = rosPrev.librealsense2.overrideAttrs (
-      {
-        cmakeFlags ? [ ],
-        ...
-      }:
-      {
-        cmakeFlags = cmakeFlags ++ [
-          "-DCHECK_FOR_UPDATES=OFF"
-          "-DBUILD_GRAPHICAL_EXAMPLES=OFF"
-        ];
-      }
-    );
-
     perseus-input = rosPrev.perseus-input.overrideAttrs (
       {
         propagatedBuildInputs ? [ ],
@@ -208,35 +165,28 @@ let
       }
     );
 
-    # rplidar-ros is not officially released for ROS 2 Jazzy in rosdistro.
-    # It was available in Humble, but has not been ported to Jazzy yet.
-    # We build it from scratch using the upstream ros2 branch which supports the C1 sensor.
-    # See: https://github.com/ros/rosdistro/blob/master/jazzy/distribution.yaml (package not present)
-    rplidar-ros = rosFinal.buildRosPackage rec {
-      pname = "ros-jazzy-rplidar-ros";
-      version = "2.1.5";
+    python-qt-binding = rosPrev.python-qt-binding.overrideAttrs (
+      {
+        buildInputs ? [ ],
+        propagatedBuildInputs ? [ ],
+        ...
+      }:
+      {
+        patches = [ ];
+        propagatedBuildInputs =
+          (final.lib.remove final.python3Packages.pyqt6-sip (
+            final.lib.remove final.python3Packages.pyside6 propagatedBuildInputs
+          ))
+          ++ [
+            final.python312Packages.pyside2
+            final.python312Packages.shiboken2
+          ];
+      }
+    );
 
-      src = final.fetchFromGitHub {
-        owner = "Slamtec";
-        repo = "rplidar_ros";
-        rev = "ros2"; # Using the ros2 branch
-        sha256 = "sha256-oNoDa+IqtQPe8bpfMjHFj2yx7jFUhfbIqaPRQCU/zMQ=";
-      };
-
-      buildType = "ament_cmake";
-      buildInputs = [ rosFinal.ament-cmake-ros ];
-      propagatedBuildInputs = [
-        rosFinal.rclcpp
-        rosFinal.sensor-msgs
-        rosFinal.std-srvs
-      ];
-      nativeBuildInputs = [ rosFinal.ament-cmake-ros ];
-
-      meta = {
-        description = "The ROS 2 driver for RPLIDAR series laser scanners. Version 2.1.5 supports the C1 sensor.";
-        license = with final.lib.licenses; [ bsd2 ];
-      };
-    };
+    nav2-mppi-controller = rosPrev.nav2-mppi-controller.override ({
+      xtensor = final.ros.xtensor-stable;
+    });
   };
 in
 {
@@ -250,44 +200,27 @@ in
     gst-plugins-rs =
       (prev.gst_all_1.gst-plugins-rs.overrideAttrs (
         {
+          patches ? [ ],
           ...
         }:
-        rec {
-          version = "1.14.0-alpha.1";
+        {
+          version = "0.14.4";
           src = final.fetchFromGitLab {
             domain = "gitlab.freedesktop.org";
             owner = "gstreamer";
             repo = "gst-plugins-rs";
-            rev = "9b0aa9c710874c07f37cf37f964e9942f9d89640";
+            rev = "0.14.4";
             # hash = "sha256-4qySdwd0Zo3HT7hm9+x9BjhuxO2Y4TBcDwWprnIJq54=";
-            hash = "sha256-WNuQEu77vr4+cYlY7vrhVRqIpgc6v1PiqLlhUHDZ4SI=";
-            # TODO: temporary workaround for case-insensitivity problems with color-name crate - https://github.com/annymosse/color-name/pull/2
-            postFetch = ''
-              sedSearch="$(cat <<\EOF | sed -ze 's/\n/\\n/g'
-              \[\[package\]\]
-              name = "color-name"
-              version = "\([^"\n]*\)"
-              source = "registry+https://github.com/rust-lang/crates.io-index"
-              checksum = "[^"\n]*"
-              EOF
-              )"
-              sedReplace="$(cat <<\EOF | sed -ze 's/\n/\\n/g'
-              [[package]]
-              name = "color-name"
-              version = "\1"
-              source = "git+https://github.com/lilyinstarlight/color-name#cac0ed5b7d2e0682c08c9bfd13089d5494e81b9a"
-              EOF
-              )"
-              sed -i -ze "s|$sedSearch|$sedReplace|g" $out/Cargo.lock
-            '';
+            hash = "sha256-MZyYHMq6gFJkVxlrmeXUjOmRYsQBHj0848cnF+7mtbU=";
           };
           cargoDeps =
             with final;
             rustPlatform.fetchCargoVendor {
               inherit src;
               name = final.gst_all_1.gst-plugins-rs.name;
-              hash = "sha256-HHMZ8kBA8g2cjYxrZnEsX33xC3glyKius3jxP84H+PY=";
+              hash = "sha256-T+fdu+Oe07Uf1YoRGYl2DMb1QgdSZVLwcOqH4bBNGXU=";
             };
+          patches = builtins.elemAt patches 0;
         }
       )
 

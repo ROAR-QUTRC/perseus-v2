@@ -23,7 +23,7 @@ For any JavaScript, TypeScript or Svelte code there are a number of naming conve
 - Svelte components when referenced in markdown should use **PascalCase**
 - CSS classes should be written in **kebab-case**
 
-## Type Safe Camparisons
+## Type Safe Comparisons
 
 Most languages use `==` for comparison. While this syntax is supported by JS it is not type safe and may return unexpected results. For example:
 

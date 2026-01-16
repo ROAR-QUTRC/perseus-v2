@@ -59,7 +59,7 @@ This is detailed more in the next section, but they're built using the tool's co
 :align: center
 ```
 
-#### Themeing
+#### Theming
 
 If you switch between the light and dark themes, you'll notice that the diagram automatically switches themes too - there's a bit of JavaScript running which automatically switches in the correct image URL based on the currently selected theme, which you can observe if you wish in `_static/js/dark-opt-images.js`.
 This is done using JQuery, which as was previously mentioned is installed with a Sphinx extension.

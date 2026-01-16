@@ -17,8 +17,8 @@ The chassis should never be deconstructed unless parts are being upgraded, in wh
 ## Motors
 
 1. Screw the motor into its 3d printed motor housing using flathead screws until the screw is flush with the top of the housing.
-2. Attach the gearbox collet to the motor shaft by tightening the grub screw with an allen key. Ensure this is tight enough that the Allen key flexes slightly but does not bend. The use of pliers for extra leverage may be necessary to remove.
-3. Then attach the motor housing to the gear box using 4 hex head screws with the collet screw hole pointing upwards.
+2. Attach the gearbox collect to the motor shaft by tightening the grub screw with an allen key. Ensure this is tight enough that the Allen key flexes slightly but does not bend. The use of pliers for extra leverage may be necessary to remove.
+3. Then attach the motor housing to the gear box using 4 hex head screws with the collect screw hole pointing upwards.
 4. Screw the motor housing lid on using 3 bolts.
 
 :::{warning}
@@ -30,7 +30,7 @@ The motors must be put in their housing so that the following conditions are sat
 :::
 
 :::{note}
-These should not be disassembled for travel and only removed from the suspension arms. However, if they are disassembled ensure there is tape over the open end of the gear box and collet screw hole.
+These should not be disassembled for travel and only removed from the suspension arms. However, if they are disassembled ensure there is tape over the open end of the gear box and collect screw hole.
 :::
 
 ## Suspension arms

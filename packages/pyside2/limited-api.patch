@@ -1,0 +1,29 @@
+diff --git a/sources/shiboken2/CMakeLists.txt b/sources/shiboken2/CMakeLists.txt
+index c654602..8d5332c 100644
+--- a/sources/shiboken2/CMakeLists.txt
++++ b/sources/shiboken2/CMakeLists.txt
+@@ -79,9 +79,9 @@ if (NOT PYTHON_EXTENSION_SUFFIX)
+ endif()
+ 
+ option(FORCE_LIMITED_API "Enable the limited API." "yes")
+-set(PYTHON_LIMITED_API 0)
++set(PYTHON_LIMITED_API 1)
+ 
+-shiboken_check_if_limited_api()
++# shiboken_check_if_limited_api()
+ 
+ if (PYTHON_LIMITED_API)
+     set_limited_api()
+diff --git a/sources/shiboken2/libshiboken/pep384impl.cpp b/sources/shiboken2/libshiboken/pep384impl.cpp
+index fed2716..3316998 100644
+--- a/sources/shiboken2/libshiboken/pep384impl.cpp
++++ b/sources/shiboken2/libshiboken/pep384impl.cpp
+@@ -813,7 +813,7 @@ init_PepRuntime()
+ #ifdef Py_LIMITED_API
+ static PyObject *emulatePyType_GetDict(PyTypeObject *type)
+ {
+-    if (_PepRuntimeVersion() < 0x030C00 || type->tp_dict) {
++    if (type->tp_dict) {
+         auto *res = type->tp_dict;
+         Py_XINCREF(res);
+         return res;
