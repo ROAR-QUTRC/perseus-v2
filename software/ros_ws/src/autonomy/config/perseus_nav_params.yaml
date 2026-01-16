@@ -277,7 +277,7 @@ global_costmap:
         transform_tolerance: 0.1
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.7   # was 0.7
+        inflation_radius: 1.0   # was 0.7
         cost_scaling_factor: 1.5 # was 3.0
       keepout_filter:
         plugin: "nav2_costmap_2d::KeepoutFilter"

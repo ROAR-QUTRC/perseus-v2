@@ -7,7 +7,7 @@ aruco_detector:
     marker_length: 0.35 # in meters
     axis_length: 0.1 # in meters
     min_bounding_box_area: 100.0 # minimum bounding box area in pixels
-    camera_frame: "camera_link" # input frame of the camera
+    camera_frame: "camera_link_optical" # input frame of the camera
     publish_tf: true # whether to transform to output frame
     tf_output_frame: "map" # reference frame for published TFs
     compressed_io: false # Enable if input/output images are compressed

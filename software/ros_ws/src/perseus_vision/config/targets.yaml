@@ -10,7 +10,7 @@ targets:
   - name: placecard_3
     x: 5.5
     y: 4.0
-    yaw: -1.309
+    yaw: -2.18166
   - name: placecard_4
     x: 10.5
     y: -6.5

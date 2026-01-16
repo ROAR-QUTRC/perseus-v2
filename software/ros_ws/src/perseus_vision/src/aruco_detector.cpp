@@ -53,16 +53,20 @@ ArucoDetector::ArucoDetector()
         pub_ = this->create_publisher<sensor_msgs::msg::Image>(
             output_img_, 10);
     }
-    //
+
+    // Service
     service_ = this->create_service<DetectObjects>(
-      "detect_objects",
-      std::bind(&ArucoDetector::handle_request, this,
-                std::placeholders::_1,
-                std::placeholders::_2));
+        "detect_objects",
+        std::bind(&ArucoDetector::handle_request, this,
+                  std::placeholders::_1,
+                  std::placeholders::_2));
+
+    // Optional output publisher
     if (publish_output_) {
         detection_pub_ = this->create_publisher<perseus_vision::msg::ObjectDetections>(
             output_topic_, 10);
-    } 
+    }
+
     RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
 }
 
@@ -109,16 +113,16 @@ void ArucoDetector::compressedImageCallback(const sensor_msgs::msg::CompressedIm
     processImage(frame, msg->header);
 
     if (publish_img_)
-    { 
+    {
         sensor_msgs::msg::CompressedImage compressed_msg;
         compressed_msg.header = msg->header;
         compressed_msg.format = "jpeg";
-        
+
         std::vector<uchar> buffer;
         std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 90};
         cv::imencode(".jpg", frame, buffer, params);
         compressed_msg.data = buffer;
-        
+
         compressed_pub_->publish(compressed_msg);
     }
 }
@@ -141,7 +145,8 @@ void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Head
     if (!ids.empty())
     {
         std::vector<cv::Vec3d> rvecs, tvecs;
-        cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
+        cv::aruco::estimatePoseSingleMarkers(
+            corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
         cv::aruco::drawDetectedMarkers(const_cast<cv::Mat&>(frame), corners, ids);
 
@@ -151,25 +156,30 @@ void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Head
             const auto& corner = corners[i];
             double min_x = corner[0].x, max_x = corner[0].x;
             double min_y = corner[0].y, max_y = corner[0].y;
-            
+
             for (const auto& pt : corner) {
                 min_x = std::min(min_x, static_cast<double>(pt.x));
                 max_x = std::max(max_x, static_cast<double>(pt.x));
                 min_y = std::min(min_y, static_cast<double>(pt.y));
                 max_y = std::max(max_y, static_cast<double>(pt.y));
             }
-            
+
             double bbox_area = (max_x - min_x) * (max_y - min_y);
-            
+
             // Skip detections with bounding box area smaller than threshold
             if (bbox_area < min_bounding_box_area_) {
-                RCLCPP_DEBUG(this->get_logger(), 
-                    "Filtered out marker %d: area %.1f < min_area %.1f", 
+                RCLCPP_DEBUG(this->get_logger(),
+                    "Filtered out marker %d: area %.1f < min_area %.1f",
                     ids[i], bbox_area, min_bounding_box_area_);
                 continue;
             }
-            
-            cv::drawFrameAxes(const_cast<cv::Mat&>(frame), camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], axis_length_);
+
+            cv::drawFrameAxes(
+                const_cast<cv::Mat&>(frame),
+                camera_matrix_, dist_coeffs_,
+                rvecs[i], tvecs[i],
+                axis_length_);
+
             transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
         }
     }
@@ -194,18 +204,22 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
 {
     try
     {
-        geometry_msgs::msg::PoseStamped  marker_pose_camera;
+        geometry_msgs::msg::PoseStamped marker_pose_camera;
         marker_pose_camera.header.stamp = header.stamp;
         marker_pose_camera.header.frame_id = camera_frame_;
 
-        // OpenCV to ROS coordinate adjustment
-        marker_pose_camera.pose.position.x = tvec[2];
-        marker_pose_camera.pose.position.y = -tvec[0];
-        marker_pose_camera.pose.position.z = -tvec[1];
+        // OpenCV ArUco pose is already in the camera optical frame
+        // (X right, Y down, Z forward)
+        marker_pose_camera.pose.position.x = tvec[0];
+        marker_pose_camera.pose.position.y = tvec[1];
+        marker_pose_camera.pose.position.z = tvec[2];
 
         cv::Mat rotation_matrix;
         cv::Rodrigues(rvec, rotation_matrix);
+
+        // Rotation is also already in the camera optical frame
         tf2::Quaternion quat = rotationMatrixToQuaternion(rotation_matrix);
+        quat.normalize();
 
         marker_pose_camera.pose.orientation.x = quat.x();
         marker_pose_camera.pose.orientation.y = quat.y();
@@ -213,6 +227,10 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
         marker_pose_camera.pose.orientation.w = quat.w();
 
         geometry_msgs::msg::PoseStamped marker_pose_out;
+
+        // Transform into output frame (map/odom). If you get occasional TF timing warnings,
+        // you can use tf2::TimePointZero to request the latest available transform:
+        // tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_, tf2::TimePointZero);
         tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_);
 
         // Cache this detection for service requests
@@ -230,7 +248,6 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
         transform.transform.translation.x = marker_pose_out.pose.position.x;
         transform.transform.translation.y = marker_pose_out.pose.position.y;
         transform.transform.translation.z = marker_pose_out.pose.position.z;
-
         transform.transform.rotation = marker_pose_out.pose.orientation;
 
         if (publish_tf_) {
@@ -301,17 +318,17 @@ tf2::Quaternion ArucoDetector::rotationMatrixToQuaternion(const cv::Mat& rotatio
 }
 
 void ArucoDetector::handle_request(const std::shared_ptr<DetectObjects::Request> request,
-                                    std::shared_ptr<DetectObjects::Response> response)
+                                   std::shared_ptr<DetectObjects::Response> response)
 {
     (void)request;  // Suppress unused parameter warning
-    
+
     std::lock_guard<std::mutex> lock(detections_mutex_);
-    
+
     response->stamp = latest_timestamp_;
     response->frame_id = tf_output_frame_;
     response->ids = latest_ids_;
     response->poses = latest_poses_;
-    
+
     if (!latest_ids_.empty()) {
         RCLCPP_INFO(this->get_logger(), "Service request: returning %zu detections", latest_ids_.size());
     } else {
