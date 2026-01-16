@@ -336,17 +336,9 @@
       "https://ros.cachix.org"
     ];
 
-    # note that this is normally a VERY BAD IDEA but it may be needed so the docs can have internet access,
-    # with certain configurations. Currently, everything is configured to work offline with cached files in the git repo.
-
-    # Unless otherwise configured, sphinx-immaterial will pull fonts from Google's CDN, which obviously requires internet access.
-    # The Roboto (and RobotoMono) fonts have been downloaded locally and are used instead.
-    # These should never change, so it really doesn't matter.
-
-    # intersphinx also normally expects to be able to download inventory (.inv) files from the target projects,
-    # but it has also been configured to use local copies. Updating these files is done with `nix run .#docs.fetch-inventories`,
-    # and is run automatically from the CI pipeline (it makes a commit with the update).
-
-    # sandbox = "relaxed";
+    # Note that this is normally a VERY BAD IDEA but is needed to make building the docs easier.
+    # Several steps in the build process require either internet access
+    # or annoying workarounds, and internet access removes a maintenance burden.
+    sandbox = "relaxed";
   };
 }

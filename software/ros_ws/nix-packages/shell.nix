@@ -38,6 +38,7 @@ pkgs.mkShell {
             ament-pep257
             backward-ros
             boost
+            builtin-interfaces
             controller-manager
             diff-drive-controller
             geometry-msgs
