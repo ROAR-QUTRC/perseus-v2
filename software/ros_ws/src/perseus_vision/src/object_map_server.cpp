@@ -79,13 +79,35 @@ void ObjectMapServer::load_targets_and_broadcast()
             
             // Check if yaw is provided (convert to quaternion)
             if (item["yaw"]) {
-                double yaw = item["yaw"].as<double>();
-                // Convert yaw to quaternion (rotation around Z axis)
-                double half_yaw = yaw / 2.0;
-                t.qx = 0.0;
-                t.qy = 0.0;
-                t.qz = std::sin(half_yaw);
-                t.qw = std::cos(half_yaw);
+                const double yaw = item["yaw"].as<double>();
+
+                // Build an ArUco-style frame in the MAP frame:
+                //   Z_marker = outward normal in XY plane (from yaw)
+                //   Y_marker = down (OpenCV convention)
+                //   X_marker = Y x Z (right-handed)
+                tf2::Vector3 z_m(std::cos(yaw), std::sin(yaw), 0.0);  // marker normal in map XY
+                tf2::Vector3 y_m(0.0, 0.0, 1.0);                    // marker "down" in map
+                tf2::Vector3 x_m = y_m.cross(z_m);                   // right-handed: X = Y x Z
+
+                // Normalize just in case
+                z_m.normalize();
+                x_m.normalize();
+
+                // Rotation matrix with columns = (X, Y, Z) axes expressed in parent(map)
+                tf2::Matrix3x3 R(
+                    x_m.x(), y_m.x(), z_m.x(),
+                    x_m.y(), y_m.y(), z_m.y(),
+                    x_m.z(), y_m.z(), z_m.z()
+                );
+
+                tf2::Quaternion q;
+                R.getRotation(q);
+                q.normalize();
+
+                t.qx = q.x();
+                t.qy = q.y();
+                t.qz = q.z();
+                t.qw = q.w();
             } else {
                 // Use explicit quaternion if provided
                 t.qx = item["qx"].as<double>(0.0);
@@ -93,7 +115,7 @@ void ObjectMapServer::load_targets_and_broadcast()
                 t.qz = item["qz"].as<double>(0.0);
                 t.qw = item["qw"].as<double>(1.0);
             }
-            
+
             targets_[name] = t;
             RCLCPP_INFO(this->get_logger(), "Loaded waypoint: %s at (%.2f, %.2f, %.2f) yaw=%.3f rad", 
                        name.c_str(), t.x, t.y, t.z, 
