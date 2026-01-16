@@ -7,6 +7,15 @@
 
 #include "perseus_msgs/msg/arm_control.hpp"
 
+// Arm CAN Controller - handles RSBL servos, PWM servos via CAN
+//
+// Topics:
+// /arm
+//     /rsbl
+//          /control (subscriber) - ArmControl message with position, velocity, normalized
+//          /status (publisher) - Status messages from all servos
+//          /positions (publisher) - Current positions of all servos
+
 class ArmController : public rclcpp::Node
 {
 public:

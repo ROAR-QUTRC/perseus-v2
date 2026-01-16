@@ -1,4 +1,4 @@
-// #include <actuator_msgs/msg/actuators.hpp>
+#include <actuator_msgs/msg/actuators.hpp>
 #include <chrono>
 #include <hi_can_raw.hpp>
 #include <map>
@@ -9,6 +9,18 @@
 #include "perseus_msgs/srv/request_int8_array.hpp"
 #include "perseus_msgs/srv/trigger_device.hpp"
 
+// Topics and services:
+// /arm
+//     /rmd
+//         /control (std_msgs/Float64MultiArray) - target positions for servos (subscriber)
+//         /status (std_msgs/Float64MultiArray) - status messages from servos (publisher)
+//         /positions (std_msgs/Float64MultiArray) - current positions of servos (publisher)
+//         /enable_debug_stats (std_srvs/SetBool) - enable/disable debug status messages (service)
+//         /set_id (perseus_msgs/TriggerDevice) - set motor ID service (service)
+//         /set_zero_position (perseus_msgs/TriggerDevice) - set current position as zero position (service)
+//         /restart_motor (perseus_msgs/TriggerDevice) - restart motor service (service)
+//         /get_can_ids (perseus_msgs/RequestInt8Array) - get list of active RMD CAN IDs (service)
+
 class RmdDriver : public rclcpp::Node
 {
 public:
@@ -17,8 +29,8 @@ public:
     void cleanup();
 
 private:
-    void _enable_status_messages(bool debug_mode);
-    void _handle_position_control(std_msgs::msg::Float64MultiArray servo_control);
+    void _enable_status_messages();
+    void _handle_position_control(actuator_msgs::msg::Actuators servo_control);
     void _publish_status_messages();
     void _publish_motor_positions();
     void _handle_can();
@@ -38,7 +50,7 @@ private:
 
     constexpr static uint16_t RMD_SPEED_LIMIT = UINT16_MAX;  // max speed
     constexpr static auto PACKET_DELAY_MS = std::chrono::milliseconds(25);
-    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr _motor_target_positions_subscriber;
+    rclcpp::Subscription<actuator_msgs::msg::Actuators>::SharedPtr _motor_target_positions_subscriber;
 
     // CAN handling
     constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(50);
@@ -55,9 +67,13 @@ private:
     };
 
     // Motor feedback
-    uint16_t _status_message_ms = 500;  // Default to 500ms when not in debug mode
+    constexpr static uint16_t FEEDBACK_MESSAGE_MS = 10;
+    bool _publish_debug_status = false;
+    // uint16_t _status_message_ms = 500;  // Default to 500ms when not in debug mode
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _status_publisher;
     rclcpp::TimerBase::SharedPtr _status_timer;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _position_publisher;
+    rclcpp::TimerBase::SharedPtr _position_timer;
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr _enable_debug_stats_service;
 
     // Config Services

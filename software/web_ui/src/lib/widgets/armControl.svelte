@@ -70,59 +70,56 @@
 	let interval: NodeJS.Timeout | null = null;
 	let automaticPositionMessages = $derived(settings.groups.general.automaticallySendMessages.value === 'true');
 	let debugEnabled = $state(false);
-	let rmdMotorControlTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-	let rmdMotorStatusTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-	let rmdEnableDebugStatsService: ROSLIB.Service<SetBoolRequestType, SetBoolResponseType> | null = null;
-	let rmdSetIdService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
-	let rmdSetZeroPositionService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
-	let rmdRestartMotorService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
-	let rmdGetCanIdsService: ROSLIB.Service<EmptyRequestType, RequestInt8ArrayResponseType> | null = null;
-	let rsblControlTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-	let rsblStatusTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-
+	let motorControlTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
+	let motorStatusTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
+	let enableDebugStatsService: ROSLIB.Service<SetBoolRequestType, SetBoolResponseType> | null = null;
+	let setIdService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
+	let setZeroPositionService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
+	let restartMotorService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
+	let getCanIdsService: ROSLIB.Service<EmptyRequestType, RequestInt8ArrayResponseType> | null = null;
 	// ROS2 connection
 	$effect(() => {
 		const ros = getRosConnection();
 		if (ros) {
-			rmdMotorControlTopic = new ROSLIB.Topic({
+			motorControlTopic = new ROSLIB.Topic({
 				ros: ros,
-				name: '/arm/rmd/control',
+				name: '/arm/control',
 				messageType: 'std_msgs/msg/Float64MultiArray'
 			});
-			rmdMotorStatusTopic = new ROSLIB.Topic({
+			motorStatusTopic = new ROSLIB.Topic({
 				ros: ros,
-				name: '/arm/rmd/status',
+				name: '/arm/status',
 				messageType: 'std_msgs/msg/Float64MultiArray'
 			});
-			rmdMotorStatusTopic.subscribe(onStatusMessage)
-			rmdEnableDebugStatsService = new ROSLIB.Service({
+			motorStatusTopic.subscribe(onStatusMessage)
+			enableDebugStatsService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/enable_debug_stats',
 				serviceType: 'std_srvs/srv/SetBool'
 			});
-			rmdSetIdService = new ROSLIB.Service({
+			setIdService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/set_id',
 				serviceType: 'perseus_msgs/srv/TriggerDevice'
 			});
-			rmdSetZeroPositionService = new ROSLIB.Service({
+			setZeroPositionService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/set_zero_position',
 				serviceType: 'perseus_msgs/srv/TriggerDevice'
 			});
-			rmdRestartMotorService = new ROSLIB.Service({
+			restartMotorService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/restart_motor',
 				serviceType: 'perseus_msgs/srv/TriggerDevice'
 			});
-			rmdGetCanIdsService = new ROSLIB.Service({
+			getCanIdsService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/get_can_ids',
 				serviceType: 'perseus_msgs/srv/RequestInt8Array'
 			});
 			getAllIds();
 		} else {
-			rmdMotorControlTopic = null;
+			motorControlTopic = null;
 		}
 	});
 	
@@ -144,7 +141,7 @@
 	});
 	
 	const sendPositions = () => {
-		if (rmdMotorControlTopic) {
+		if (motorControlTopic) {
 			// save draft targets to targets
 			joints.forEach((joint) => {
 				motors[joint].targetAngle = motors[joint].draftTargetAngle;
@@ -158,7 +155,7 @@
 				// Index of this array corresponds to motor ID - 1
 				data
 			};
-			rmdMotorControlTopic.publish(message);
+			motorControlTopic.publish(message);
 		}
 	}
 
@@ -184,8 +181,8 @@
 	}
 
 	const onEnableDebug = () => {
-		if (rmdEnableDebugStatsService) {
-			rmdEnableDebugStatsService.callService({ data: !debugEnabled }, (response) => {
+		if (enableDebugStatsService) {
+			enableDebugStatsService.callService({ data: !debugEnabled }, (response) => {
 				debugEnabled = !debugEnabled;
 			});
 		}
@@ -231,8 +228,8 @@
 	}
 
 	const getAllIds = () => {
-		if (rmdGetCanIdsService) {
-			rmdGetCanIdsService.callService({}, (response) => {
+		if (getCanIdsService) {
+			getCanIdsService.callService({}, (response) => {
 				onlineMotors = response.data;
 			})
 		}
@@ -258,7 +255,7 @@
 			};
 		});
 		// Set correct gear ratios
-		motors.ELBOW.gearRatio = 9;
+		motors.ELBOW.gearRatio = 28;
 		motors.WRIST_PAN.gearRatio = 6;
 		motors.WRIST_TILT.gearRatio = 28;
 		motors.SHOULDER_PAN.gearRatio = 6;
@@ -313,13 +310,13 @@
 										r="3%"
 										cx={`${50 * Math.cos(((data.angle) * -1 - 90) * Math.PI / 180) + 50}%`}
 										cy={`${50 * Math.sin(((data.angle) * -1 - 90) * Math.PI / 180) + 50}%`}
-										fill="red"
+										fill="hsl(20.5 90.2% 48.2%)"
 									/>
 									<circle 
 										r="3%"
 										cx={`${50 * Math.cos((data.targetAngle * -1 - 90) * Math.PI / 180) + 50}%`}
 										cy={`${50 * Math.sin((data.targetAngle * -1 - 90) * Math.PI / 180) + 50}%`}
-										fill="red"
+										fill="hsl(20.5 90.2% 48.2%)"
 										opacity="0.3"
 										class="transition-all"
 									/>

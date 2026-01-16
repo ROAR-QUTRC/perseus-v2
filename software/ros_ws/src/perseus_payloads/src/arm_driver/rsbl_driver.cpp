@@ -2,15 +2,6 @@
 
 #include <string>
 
-// Arm CAN Controller - handles RSBL servos, PWM servos via CAN
-//
-// Topics:
-// /arm_angles (subscriber) - ArmControl message with position, velocity, normalized
-// /arm
-//      /rsbl
-//            /status (publisher) - Status messages from all servos
-//            /positions (publisher) - Current positions of all servos
-
 using namespace hi_can;
 using namespace hi_can::addressing::post_landing;
 using namespace hi_can::addressing::post_landing::servo::servo_board;
@@ -53,7 +44,7 @@ ArmController::ArmController(const rclcpp::NodeOptions& options)
 
     // Subscriber
     _arm_control_subscriber = this->create_subscription<perseus_msgs::msg::ArmControl>(
-        "/arm_angles", 10, std::bind(&ArmController::_handle_arm_control, this, std::placeholders::_1));
+        "/arm/rsbl/control", 10, std::bind(&ArmController::_handle_arm_control, this, std::placeholders::_1));
 
     RCLCPP_INFO(this->get_logger(), "Arm Controller initialized - controlling RSBL servos and PWM outputs");
 }

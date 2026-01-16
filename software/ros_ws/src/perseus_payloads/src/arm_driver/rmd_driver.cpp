@@ -1,19 +1,5 @@
 #include "arm_driver/rmd_driver.hpp"
 
-#include <string>
-
-// Topics and services:
-// /arm
-//     /rmd
-//         /control (std_msgs/Float64MultiArray) - target positions for servos (subscriber)
-//         /status (std_msgs/Float64MultiArray) - status messages from servos (publisher)
-//         /positions (std_msgs/Float64MultiArray) - current positions of servos (publisher)
-//         /enable_debug_stats (std_srvs/SetBool) - enable/disable debug status messages (service)
-//         /set_id (perseus_msgs/TriggerDevice) - set motor ID service (service)
-//         /set_zero_position (perseus_msgs/TriggerDevice) - set current position as zero position (service)
-//         /restart_motor (perseus_msgs/TriggerDevice) - restart motor service (service)
-//         /get_can_ids (perseus_msgs/RequestInt8Array) - get list of active RMD CAN IDs (service)
-
 using namespace hi_can;
 using namespace hi_can::addressing::post_landing;
 using namespace hi_can::addressing::post_landing::servo::rmd;
@@ -46,19 +32,22 @@ RmdDriver::RmdDriver(const rclcpp::NodeOptions& options)
         servo_address_t{message_type::MULTI_MOTOR_SEND},
         send_message::action_command_t(send_message::action_command_t::command_id_t::STOP).serialize_data()});
     std::this_thread::sleep_for(PACKET_DELAY_MS);
-    this->_enable_status_messages(false);
-    _motor_target_positions_subscriber = this->create_subscription<std_msgs::msg::Float64MultiArray>(
+    this->_enable_status_messages();
+    _motor_target_positions_subscriber = this->create_subscription<actuator_msgs::msg::Actuators>(
         "/arm/rmd/control", 10, std::bind(&RmdDriver::_handle_position_control, this, std::placeholders::_1));
 
     // Setup motor feedback handling
     _status_publisher = this->create_publisher<std_msgs::msg::Float64MultiArray>("/arm/rmd/status", 10);
-    _status_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_status_messages, this));
+    _status_timer = this->create_wall_timer(std::chrono::milliseconds(this->FEEDBACK_MESSAGE_MS), std::bind(&RmdDriver::_publish_status_messages, this));
+    _position_publisher = this->create_publisher<std_msgs::msg::Float64MultiArray>("/arm/rmd/positions", 10);
+    _position_timer = this->create_wall_timer(std::chrono::milliseconds(this->FEEDBACK_MESSAGE_MS), std::bind(&RmdDriver::_publish_motor_positions, this));
     _enable_debug_stats_service = this->create_service<std_srvs::srv::SetBool>(
         "/arm/rmd/enable_debug_stats",
         [this](const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response)
         {
-            this->_enable_status_messages(request->data);
-            response->success = this->_status_message_ms == 50;
+            this->_publish_debug_status = request->data;
+            this->_enable_status_messages();
+            response->success = this->_publish_debug_status;
         });
 
     // Setup config Services
@@ -70,59 +59,46 @@ RmdDriver::RmdDriver(const rclcpp::NodeOptions& options)
     RCLCPP_INFO(this->get_logger(), "RMD servo driver node initialised");
 }
 
-void RmdDriver::_enable_status_messages(bool debug_mode)
+void RmdDriver::_enable_status_messages()
 {
-    // Update speed if in debug mode
-    this->_status_message_ms = debug_mode ? 50 : 5000;
-    if (this->_status_timer)
-    {
-        this->_status_timer->cancel();
-        this->_status_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms), std::bind(&RmdDriver::_publish_status_messages, this));
-    }
-    // Set motors to transmit error messages when there is an error
+    // Send status messages if in debug mode
     _can_interface->transmit(Packet{
         servo_address_t{message_type::MULTI_MOTOR_SEND},
-        send_message::function_control_t(send_message::function_control_t::function_index_t::ERROR_TRANSMISSION_ENABLE, 1).serialize_data()});
-    std::this_thread::sleep_for(PACKET_DELAY_MS);
-
-    // Set motors to transmit all three status messages every second
-    _can_interface->transmit(Packet{
-        servo_address_t{message_type::MULTI_MOTOR_SEND},
-        send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_1, true, this->_status_message_ms).serialize_data()});
+        send_message::active_reply_t(
+            send_message::active_reply_t::reply_t::STATUS_1,
+            this->_publish_debug_status, this->FEEDBACK_MESSAGE_MS * 3)
+            .serialize_data()});
     std::this_thread::sleep_for(PACKET_DELAY_MS);
     _can_interface->transmit(Packet{
         servo_address_t{message_type::MULTI_MOTOR_SEND},
-        send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_2, true, this->_status_message_ms).serialize_data()});
+        send_message::active_reply_t(
+            send_message::active_reply_t::reply_t::STATUS_2,
+            true, this->FEEDBACK_MESSAGE_MS * (this->_publish_debug_status ? 3 : 1))  // Factor of 3 since there will be 3 times as much data
+            .serialize_data()});
     std::this_thread::sleep_for(PACKET_DELAY_MS);
     _can_interface->transmit(Packet{
         servo_address_t{message_type::MULTI_MOTOR_SEND},
-        send_message::active_reply_t(send_message::active_reply_t::reply_t::STATUS_3, true, this->_status_message_ms).serialize_data()});
+        send_message::active_reply_t(
+            send_message::active_reply_t::reply_t::STATUS_3,
+            this->_publish_debug_status, this->FEEDBACK_MESSAGE_MS * 3)
+            .serialize_data()});
     std::this_thread::sleep_for(PACKET_DELAY_MS);  // small delay otherwise messages are ignored by servos
-
-    // Send position feedback every position publish interval
-    // _can_interface->transmit(Packet{
-    //     servo_address_t{message_type::MULTI_MOTOR_SEND},
-    //     send_message::active_reply_t(send_message::active_reply_t::reply_t::MULTI_TURN_POSITION, true, this->POSITION_PUBLISH_MS).serialize_data()});
-    // std::this_thread::sleep_for(PACKET_DELAY_MS);
 }
 
-void RmdDriver::_handle_position_control(std_msgs::msg::Float64MultiArray servo_control)
+void RmdDriver::_handle_position_control(actuator_msgs::msg::Actuators servo_control)
 {
-    // const double target_time_ms = servo_control.normalized[0];
-    // const double max_angle = *std::max_element(servo_control.position.begin(), servo_control.position.end());
-    // uint16_t degrees_per_second = max_angle / (target_time_ms / 1000.0);
-    // degrees_per_second = std::clamp(degrees_per_second, (uint16_t)0, RMD_SPEED_LIMIT);
-
     for (const auto& motor_id : this->_get_online_servos())
     {
+        // For each online servo, send position command
         const uint8_t index = static_cast<uint8_t>(motor_id) - 1;
-        const double target_position = servo_control.data[index];
+        const double target_position = servo_control.position[index];
         _can_interface->transmit(Packet{
             servo_address_t(message_type::SEND, motor_id),
             send_message::position_t(
                 send_message::position_t::position_command_t::ABSOLUTE,
+                servo_control.velocity[index],
                 // degrees_per_second,
-                RMD_SPEED_LIMIT * 0.5,
+                // RMD_SPEED_LIMIT * 0.5,
                 target_position)
                 .serialize_data()});
     }
@@ -152,6 +128,26 @@ void RmdDriver::_publish_status_messages()
     }
 
     _status_publisher->publish(status_msg);
+}
+
+void RmdDriver::_publish_motor_positions()
+{
+    std_msgs::msg::Float64MultiArray position_msg;
+
+    position_msg.data.resize(3, 0.0);
+
+    for (const auto& motor_id : this->_get_online_servos())
+    {
+        auto it = this->PARAMETER_GROUP_MAP.find(motor_id);
+        if (it != this->PARAMETER_GROUP_MAP.end())
+        {
+            const auto& parameter_group = it->second;
+            const uint8_t index = static_cast<uint8_t>(motor_id) - 1;
+            position_msg.data[index] = static_cast<double>(parameter_group->get_angle());
+        }
+    }
+
+    _position_publisher->publish(position_msg);
 }
 
 void RmdDriver::_handle_can()
@@ -211,7 +207,7 @@ void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::TriggerDe
 
     PARAMETER_GROUP_MAP.at(current_id)->set_online(false);  // mark old ID as offline
 
-    this->_enable_status_messages(this->_status_message_ms < 500);
+    this->_enable_status_messages();
 
     response->success = true;
 }
@@ -250,10 +246,10 @@ void RmdDriver::_get_rmd_can_ids(const std::shared_ptr<perseus_msgs::srv::Reques
     }
 
     // Not ideal but resetting all the online servos to offline will ensure disconnected servos are removed.
-    for (const auto& [motor_id, parameter_group] : this->PARAMETER_GROUP_MAP)
-    {
-        parameter_group->set_online(false);
-    }
+    // for (const auto& [motor_id, parameter_group] : this->PARAMETER_GROUP_MAP)
+    // {
+    //     parameter_group->set_online(false);
+    // }
 }
 
 #pragma endregion CONFIG_SERVICES
