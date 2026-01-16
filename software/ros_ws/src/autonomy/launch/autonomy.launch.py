@@ -6,6 +6,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -21,6 +22,7 @@ def generate_launch_description():
     autonomy_dir = get_package_share_directory("autonomy")
     slam_params_file = LaunchConfiguration("slam_params_file")
     nav_params_file = LaunchConfiguration("nav_params_file")
+    ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
     autostart = LaunchConfiguration("autostart")
     use_keepout_zones = LaunchConfiguration("use_keepout_zones")
@@ -56,6 +58,12 @@ def generate_launch_description():
         "nav_params_file",
         default_value=os.path.join(autonomy_dir, "config", "perseus_nav_params.yaml"),
         description="Full path to the ROS2 parameters file for Nav2",
+    )
+
+    declare_ekf_config_file_cmd = DeclareLaunchArgument(
+        "ekf_config_file",
+        default_value=os.path.join(autonomy_dir, "config", "ekf_params.yaml"),
+        description="Full path to the ROS2 parameters file for EKF",
     )
 
     # Include SLAM Toolbox launch
@@ -98,6 +106,19 @@ def generate_launch_description():
         condition=IfCondition(use_keepout_zones),
     )
 
+    # EKF Node for sensor fusion and localization
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[ekf_config_file, {"use_sim_time": use_sim_time}],
+        # Explicit remapping to ensure proper topic connections
+        remappings=[
+            ("/odometry/filtered", "/odometry/filtered"),  # EKF output
+        ],
+    )
+
     # Create launch description
     ld = LaunchDescription()
 
@@ -107,8 +128,10 @@ def generate_launch_description():
     ld.add_action(declare_use_keepout_zones_cmd)
     ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_nav_params_file_cmd)
+    ld.add_action(declare_ekf_config_file_cmd)
 
-    # Include launch files
+    # Include launch files and nodes
+    ld.add_action(ekf_node)
     ld.add_action(slam_launch)
     ld.add_action(nav_launch)
     ld.add_action(keepout_launch)

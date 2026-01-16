@@ -104,28 +104,10 @@ def generate_launch_description():
         },
     )
 
-    # EKF node - only run if wheel_odom_only is FALSE
-    ekf_node = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_filter_node",
-        output="screen",
-        parameters=[ekf_config_file, {"use_sim_time": use_sim_time}],
-        # Explicit remapping to ensure proper topic connections
-        remappings=[
-            ("/odometry/filtered", "/odometry/filtered"),  # EKF output
-        ],
-    )
-    # Add delay to EKF to ensure all other nodes are ready
-    ekf_delayed = TimerAction(
-        period=5.0,
-        actions=[ekf_node],
-    )
     launch_files = [
         gz_launch,
         rsp_launch,
         controllers_launch,
-        ekf_delayed,
         rviz,
     ]
 
