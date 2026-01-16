@@ -195,7 +195,12 @@
         };
         # Packages which should be available only in the dev shell
         devShellPkgs = {
-          inherit (pkgs) man-pages man-pages-posix stdmanpages nix-gl-host;
+          inherit (pkgs)
+            man-pages
+            man-pages-posix
+            stdmanpages
+            nix-gl-host
+            ;
           inherit (pkgs.cudaPackages)
             cuda_nvcc
             cuda_cudart
