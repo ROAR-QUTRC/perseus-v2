@@ -421,7 +421,11 @@ parse_and_display_results() {
     print_to_file "  Errors:         $total_errors"
     print_to_file "  Skipped:        $total_skipped"
     print_to_file ""
-    [[ $total_failed -eq 0 && $total_errors -eq 0 ]] && print_to_file "  [PASS] ALL TESTS PASSED" || print_to_file "  [FAIL] SOME TESTS FAILED"
+    if [[ $total_failed -eq 0 && $total_errors -eq 0 ]]; then
+        print_to_file "  [PASS] ALL TESTS PASSED"
+    else
+        print_to_file "  [FAIL] SOME TESTS FAILED"
+    fi
     print_to_file ""
     print_to_file "═══════════════════════════════════════════════════════════════"
 
@@ -437,8 +441,9 @@ parse_and_display_results() {
 
     for pkg_testing_dir in build/*/Testing; do
         if [[ -d "$pkg_testing_dir" ]]; then
-            local pkg_name=$(basename "$(dirname "$pkg_testing_dir")")
-            local latest_test_xml=""
+            local pkg_name latest_test_xml
+            pkg_name=$(basename "$(dirname "$pkg_testing_dir")")
+            latest_test_xml=""
             for test_dir in "$pkg_testing_dir"/*/; do
                 [[ -f "${test_dir}Test.xml" ]] && latest_test_xml="${test_dir}Test.xml"
             done
@@ -576,7 +581,8 @@ display_failure_details() {
             output=$(echo "$output" | sed 's/&lt;/</g; s/&gt;/>/g; s/&amp;/\&/g; s/&quot;/"/g')
 
             # Extract failure lines (GTest format)
-            local failure_info=$(echo "$output" | grep -A5 -E '(FAILED|Expected|Actual|Value of|Which is)' | head -10)
+            local failure_info
+            failure_info=$(echo "$output" | grep -A5 -E '(FAILED|Expected|Actual|Value of|Which is)' | head -10)
             if [[ -n "$failure_info" ]]; then
                 echo -e "  ${YELLOW}Failure:${NC}"
                 print_to_file "  Failure:"
@@ -712,10 +718,12 @@ generate_allure_report() {
     if [[ "$NO_LINT" != "true" ]]; then
         for pkg_dir in build/*/test_results; do
             if [[ -d "$pkg_dir" ]]; then
-                local pkg_name=$(basename "$(dirname "$pkg_dir")")
+                local pkg_name
+                pkg_name=$(basename "$(dirname "$pkg_dir")")
                 for xml_file in "$pkg_dir"/*/*.xunit.xml "$pkg_dir"/*.xunit.xml; do
                     if [[ -f "$xml_file" ]]; then
-                        local base_name=$(basename "$xml_file")
+                        local base_name
+                        base_name=$(basename "$xml_file")
                         cp "$xml_file" "$ALLURE_RESULTS_DIR/${pkg_name}_${base_name}" 2>/dev/null || true
                     fi
                 done
