@@ -206,7 +206,7 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        aruco_marker_24:
+        aruco_27:
           Value: true
         aruco_marker_27:
           Value: true
@@ -269,7 +269,7 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          aruco_marker_24:
+          aruco_27:
             {}
           aruco_marker_27:
             {}
@@ -607,25 +607,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 30.01810073852539
+      Distance: 7.016397476196289
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.083583116531372
-        Y: 6.900849342346191
-        Z: 0.12469346821308136
+        X: 4.22507905960083
+        Y: 2.7856521606445312
+        Z: -1.1652287244796753
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5497960448265076
+      Pitch: 0.5397953987121582
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.542381763458252
+      Yaw: 3.6892101764678955
     Saved: ~
 Window Geometry:
   Displays:

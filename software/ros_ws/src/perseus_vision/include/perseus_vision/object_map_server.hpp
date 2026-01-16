@@ -22,7 +22,7 @@
 #include "builtin_interfaces/msg/time.hpp"
 #include "perseus_vision/srv/detect_objects.hpp"
 #include "perseus_vision/msg/object_detections.hpp"
-
+#include <limits>
 using DetectObjects = perseus_vision::srv::DetectObjects;
 
 class ObjectMapServer : public rclcpp::Node
@@ -33,7 +33,8 @@ public:
 private:
     void aruco_callback(
         const perseus_vision::msg::ObjectDetections::SharedPtr msg);
-    
+    void cube_callback(
+        const perseus_vision::msg::ObjectDetections::SharedPtr msg);
     void load_targets_and_broadcast();
     void broadcast_target_frames();
 
@@ -43,6 +44,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::CompressedImage>::SharedPtr aruco_image_compressed_sub_; // for compressed images (aruco markers)
     rclcpp::Subscription<perseus_vision::msg::ObjectDetections>::SharedPtr aruco_detections_sub_; // for object detections (aruco markers)
     int capture_radius_;// radius around detected object to capture image
+    double max_detection_distance_;  // maximum distance from robot to ArUco marker for renaming
 
     // Cube Detection Subscriptions
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr cube_image_sub_; // for uncompressed images (cube detection)
@@ -51,6 +53,8 @@ private:
     
     // TF2 Broadcasting
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
     rclcpp::TimerBase::SharedPtr tf_broadcast_timer_;
     
     // Targets status storage
@@ -71,6 +75,7 @@ private:
     bool capture_images_;
     std::string aruco_detect_topic_;
     std::string cube_detect_topic_;
+    std::string robot_base_frame_;
 };
 
 #endif  // OBJECT_MAP_SERVER_HPP

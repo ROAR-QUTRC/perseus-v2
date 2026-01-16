@@ -1,5 +1,6 @@
 #include "perseus_vision/object_map_server.hpp"
 
+
 ObjectMapServer::ObjectMapServer()
     : Node("object_map_server")
 {
@@ -8,13 +9,18 @@ ObjectMapServer::ObjectMapServer()
     capture_images_ = this->declare_parameter<bool>("capture_images", false);
     aruco_detect_topic_ = this->declare_parameter<std::string>("aruco_detect_topic", "/detection/aruco");
     cube_detect_topic_ = this->declare_parameter<std::string>("cube_detect_topic", "/detection/cube");
-    capture_aruco_ = this->declare_parameter<bool>("capture_aruco", true);
-    capture_cube_ = this->declare_parameter<bool>("capture_cube", true);
-    capture_radius_ = this->declare_parameter<int>("capture_radius", 5); // Meters (tolerance around detected object to capture image)
+    capture_aruco_ = this->declare_parameter<bool>("enable_aruco_tracking", true);
+    capture_cube_ = this->declare_parameter<bool>("enable_cube_tracking", true);
+    capture_radius_ = this->declare_parameter<int>("capture_radius", 3); // Meters (tolerance around detected object to capture image)
+    max_detection_distance_ = this->declare_parameter<double>("max_detection_distance", 7.0); // Maximum distance from robot to ArUco marker for renaming
     targets_file_ = this->declare_parameter<std::string>("targets_file", "perseus-v2/software/ros_ws/src/perseus_vision/config/targets.yaml");
-    
+    robot_base_frame_ = this->declare_parameter<std::string>("robot_base_frame", "base_link");
     // Initialize TF2 broadcaster
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+    
+    // Initialize TF2 buffer and listener for transform lookups
+    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
     
     // Load targets from YAML file
     load_targets_and_broadcast();
@@ -32,7 +38,13 @@ ObjectMapServer::ObjectMapServer()
                 aruco_detect_topic_, 10,
                 std::bind(&ObjectMapServer::aruco_callback, this, std::placeholders::_1));
     }
-
+    if (capture_cube_) 
+    {
+        cube_detections_sub_ =
+            this->create_subscription<perseus_vision::msg::ObjectDetections>(
+                cube_detect_topic_, 10,
+                std::bind(&ObjectMapServer::cube_callback, this, std::placeholders::_1));
+    }
     RCLCPP_INFO(this->get_logger(), "Perseus' ObjectMapServer node started.");
 }
 
@@ -180,6 +192,37 @@ void ObjectMapServer::aruco_callback(
       "Aruco ID=%d in frame=%s at t=%.3f",
       id, frame.c_str(), t.seconds());
 
+    // Transform marker pose from map frame to base_link frame to get distance from robot
+    double aruco_distance_from_robot = std::numeric_limits<double>::max();
+    try {
+      geometry_msgs::msg::PoseStamped marker_pose_map;
+      marker_pose_map.header.frame_id = frame;
+      marker_pose_map.header.stamp = msg->stamp;
+      marker_pose_map.pose = pose;
+
+      // Transform marker pose from map/odom frame to base_link frame
+      geometry_msgs::msg::PoseStamped marker_pose_baselink;
+      tf_buffer_->transform(marker_pose_map, marker_pose_baselink, robot_base_frame_, tf2::Duration(0));
+
+      // Calculate distance from base_link origin to marker
+      aruco_distance_from_robot = std::sqrt(
+        marker_pose_baselink.pose.position.x * marker_pose_baselink.pose.position.x + 
+        marker_pose_baselink.pose.position.y * marker_pose_baselink.pose.position.y + 
+        marker_pose_baselink.pose.position.z * marker_pose_baselink.pose.position.z);
+    }
+    catch (tf2::TransformException& ex) {
+      RCLCPP_WARN(this->get_logger(),
+        "Could not transform marker pose to base_link: %s", ex.what());
+      continue;
+    }
+    
+    if (aruco_distance_from_robot > max_detection_distance_) {
+      RCLCPP_DEBUG(this->get_logger(),
+        "ArUco marker %d too far (%.2f m > max %.2f m). Skipping target matching.",
+        id, aruco_distance_from_robot, max_detection_distance_);
+      continue;
+    }
+
     // Check if this ArUco is within capture_radius of any unlocked target
     double aruco_x = pose.position.x;
     double aruco_y = pose.position.y;
@@ -221,6 +264,15 @@ void ObjectMapServer::aruco_callback(
   }
 }
 
+
+void ObjectMapServer::cube_callback(
+  const perseus_vision::msg::ObjectDetections::SharedPtr msg)
+{
+  // Currently not implemented
+  RCLCPP_INFO(this->get_logger(),
+    "Cube detection callback received %zu detections (not implemented).",
+    msg->ids.size());
+}
 
 int main(int argc, char **argv)
 {
