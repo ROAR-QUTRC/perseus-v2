@@ -53,11 +53,12 @@ private:
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     rclcpp::TimerBase::SharedPtr tf_broadcast_timer_;
     
-    // Targets storage
+    // Targets status storage
     struct Target {
         std::string frame_id;
         double x, y, z;  // position
         double qx, qy, qz, qw;  // quaternion
+        bool locked = false;  // if true, target cannot be renamed by ArUco detections
     };
     std::map<std::string, Target> targets_;
     std::string targets_file_;

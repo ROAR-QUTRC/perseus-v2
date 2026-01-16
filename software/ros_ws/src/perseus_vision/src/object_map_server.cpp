@@ -135,7 +135,7 @@ void ObjectMapServer::broadcast_target_frames()
 {
     auto now = this->get_clock()->now();
     
-    for (const auto& [name, target] : targets_) {
+    for (const auto& [name, target] : targets_) { // Scan all targets and broadcast
         geometry_msgs::msg::TransformStamped t;
         t.header.stamp = now;
         t.header.frame_id = tf_output_frame_;
@@ -179,6 +179,45 @@ void ObjectMapServer::aruco_callback(
     RCLCPP_INFO(this->get_logger(),
       "Aruco ID=%d in frame=%s at t=%.3f",
       id, frame.c_str(), t.seconds());
+
+    // Check if this ArUco is within capture_radius of any unlocked target
+    double aruco_x = pose.position.x;
+    double aruco_y = pose.position.y;
+    std::string target_to_rename;
+    double closest_distance = capture_radius_;
+
+    for (const auto& [target_name, target] : targets_) { // Scan all targets
+      // Skip locked targets - they cannot be renamed
+      if (target.locked) {
+        continue;
+      }
+      
+      double dx = aruco_x - target.x;
+      double dy = aruco_y - target.y;
+      double distance = std::sqrt(dx * dx + dy * dy);
+
+      if (distance < closest_distance) {
+        closest_distance = distance;
+        target_to_rename = target_name;
+      }
+    }
+
+    // Rename the closest target if it's within capture radius
+    if (!target_to_rename.empty()) {
+      std::string new_name = "aruco_" + std::to_string(id);
+      RCLCPP_INFO(this->get_logger(),
+        "ArUco marker %d found within capture radius (%.2f m) of target '%s'. Renaming to '%s' (LOCKED)",
+        id, closest_distance, target_to_rename.c_str(), new_name.c_str());
+
+      // Create updated target with new name
+      Target target_copy = targets_[target_to_rename];
+      target_copy.frame_id = new_name;
+      target_copy.locked = true;  // Lock the target so it cannot be renamed again
+      
+      // Remove old entry and add new one (permanently stores the rename)
+      targets_.erase(target_to_rename);
+      targets_[new_name] = target_copy;
+    }
   }
 }
 

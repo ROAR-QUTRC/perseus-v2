@@ -26,7 +26,7 @@ CubeDetector::CubeDetector()
     this->declare_parameter("output_topic", "/detection/cube");
     this->declare_parameter("model_path", "/model/best.onnx");
     this->declare_parameter("use_cuda", false);
-    this->declare_parameter("input_depth", "/camera/camera/depth/image_raw");
+    this->declare_parameter("input_depth", "/rgbd_camera/depth/image_raw");
     // Get parameters
     auto camera_matrix = this->get_parameter("camera_matrix").as_double_array();
     camera_fx_ = camera_matrix[0];
@@ -477,9 +477,9 @@ void CubeDetector::imageCb(const sensor_msgs::msg::Image::SharedPtr msg)
         cam_pose.header.frame_id = camera_frame_;
 
         // Apply OpenCV to ROS coordinate transformation
-        cam_pose.pose.position.x = Z_cv;
-        cam_pose.pose.position.y = -X_cv;
-        cam_pose.pose.position.z = -Y_cv;
+        cam_pose.pose.position.x = X_cv;
+        cam_pose.pose.position.y = Y_cv;
+        cam_pose.pose.position.z = Z_cv;
         cam_pose.pose.orientation.w = 1.0;
 
         if (tf_available)
@@ -560,7 +560,7 @@ std::string CubeDetector::getClassName(int class_id)
     // Map class IDs to class names from your YOLO model
     // Update these with your actual class names
     static const std::vector<std::string> class_names = {
-        "green",      // class 0
+        "blue",      // class 0
         "red",       // class 1
         "blue",    // class 2
         "white"       // class 3

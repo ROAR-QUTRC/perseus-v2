@@ -228,10 +228,9 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
 
         geometry_msgs::msg::PoseStamped marker_pose_out;
 
-        // Transform into output frame (map/odom). If you get occasional TF timing warnings,
-        // you can use tf2::TimePointZero to request the latest available transform:
-        // tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_, tf2::TimePointZero);
-        tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_);
+        // Transform into output frame (map/odom). Using Duration(0) to request the latest available transform
+        tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_, tf2::Duration(0));
+
 
         // Cache this detection for service requests
         {
