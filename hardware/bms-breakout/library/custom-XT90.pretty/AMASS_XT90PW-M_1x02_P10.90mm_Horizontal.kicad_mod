@@ -1,0 +1,282 @@
+(footprint "AMASS_XT90PW-M_1x02_P10.90mm_Horizontal"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "Connector XT90 Horizontal PCB Male  500V 30A IP40, https://www.bto.pl/pdf/09025/XT90PW-M.pdf")
+	(tags "RC")
+	(property "Reference" "J1"
+		(at 5.449999 -17.5 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "895548fe-bc49-43c4-812b-f735c301c97c")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "IN-A"
+		(at 3.6 4 0)
+		(layer "F.Fab")
+		(uuid "ee7a9e50-4c02-44fb-9828-8f310025b8a9")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "6f6931f1-4c04-40c4-9df7-eabb3bc1094d")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "94cea5c0-17b1-4391-accf-4e55b07ac00b")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_line
+		(start -5 -24.65)
+		(end -5 -1.522958)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "a55d97b5-e64b-42ea-bf0b-415d8a2754fa")
+	)
+	(fp_line
+		(start -5 -24.65)
+		(end 15.9 -24.65)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "0ca18754-b859-4bdd-a773-bba905c8c6d0")
+	)
+	(fp_line
+		(start 3.7 2.6)
+		(end 7.9 2.6)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "47a50713-9942-4dd9-bfa9-daa8f047b6bd")
+	)
+	(fp_line
+		(start 15.9 -24.65)
+		(end 15.9 -1.522958)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "e7df3d8a-5889-4cf9-8790-6a42ec95389a")
+	)
+	(fp_arc
+		(start -4.064641 1.1)
+		(mid -4.759165 -0.130585)
+		(end -5 -1.522958)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "8db918ac-58eb-4b20-bdac-f6dd53926f15")
+	)
+	(fp_arc
+		(start 15.9 -1.522958)
+		(mid 15.659164 -0.130586)
+		(end 14.964641 1.1)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "e7cebeb9-7cb3-49d1-b1de-86c54dca4f9f")
+	)
+	(fp_rect
+		(start -5.45 -25.1)
+		(end 16.35 4.1)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "3a50e68e-1828-4e2a-a379-2de75667e035")
+	)
+	(fp_line
+		(start -4.95 -24.6)
+		(end -4.95 -1.59)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "67d4965a-84b8-40d4-99b9-cd3ee1841b4a")
+	)
+	(fp_line
+		(start -4.95 -24.6)
+		(end 15.85 -24.6)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "6d52baac-a45e-42df-86fe-9107d966d16d")
+	)
+	(fp_line
+		(start -0.85 2.51)
+		(end 11.75 2.51)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "13e03f6f-bcfd-48d2-9033-37f212076ab8")
+	)
+	(fp_line
+		(start 15.85 -24.6)
+		(end 15.85 -1.59)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "460e2f3f-d4bd-4078-9fcb-84756f18e3e6")
+	)
+	(fp_arc
+		(start -0.85 2.51)
+		(mid -3.749138 1.309138)
+		(end -4.95 -1.59)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "8d44340e-44c5-467d-a8bb-1f690a1f2fe8")
+	)
+	(fp_arc
+		(start 15.85 -1.59)
+		(mid 14.649138 1.309138)
+		(end 11.75 2.51)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "bb86545f-86dd-4300-8fcd-b5dcc7b1c374")
+	)
+	(fp_text user "+"
+		(at 14.7 2.5 0)
+		(layer "F.SilkS")
+		(uuid "2b7411e3-674d-4aa8-aa62-6416f60873d0")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text user "-"
+		(at -6.2 2.5 0)
+		(layer "F.SilkS")
+		(uuid "4a89a423-c15e-4f78-82fc-1df8833b1058")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text user "${REFERENCE}"
+		(at 5.449999 -8.5 0)
+		(layer "F.Fab")
+		(uuid "6f2410b6-4d0b-432e-8a01-3c2460b82672")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" thru_hole roundrect
+		(at 0 0)
+		(size 7.2 7.2)
+		(drill 3.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(roundrect_rratio 0.25)
+		(uuid "1184f951-7a2f-43ea-a85e-29e706b7645e")
+	)
+	(pad "2" thru_hole circle
+		(at 10.899998 0)
+		(size 7.2 7.2)
+		(drill 3.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "08e85484-eea2-4e4c-9e6e-1ce281437ac6")
+	)
+	(pad "3" thru_hole rect
+		(at 14.9 -9.4)
+		(size 1.6 2.4)
+		(drill oval 0.6 1.4)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "3f657b3c-682d-44df-b439-565c61ef68b7")
+	)
+	(pad "4" thru_hole rect
+		(at -4 -9.4)
+		(size 1.6 2.4)
+		(drill oval 0.6 1.4)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "32079aae-0776-463b-91dc-895930553241")
+	)
+	(embedded_fonts no)
+	(model "${KICAD9_3DMODEL_DIR}/Connector_AMASS.3dshapes/AMASS_XT90PW-M_1x02_P10.90mm_Horizontal.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+	(model "${KIPRJMOD}/models/XT90PW-M--3DModel-STEP-56544.STEP"
+		(offset
+			(xyz 5.5 9.5 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz -90 -0 -180)
+		)
+	)
+)
