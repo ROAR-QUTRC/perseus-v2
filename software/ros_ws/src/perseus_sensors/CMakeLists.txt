@@ -130,18 +130,19 @@ if(BUILD_TESTING)
   set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/perseus_sensors")
 
   # IMU Device Config Tests
-  add_executable(imu_device_config_test
-    ${TESTS_DIR}/imu_device_config_test.cpp
-    i2c_imu_driver/src/imu_device_config.cpp)
-  target_include_directories(imu_device_config_test
+  add_executable(
+    imu_device_config_test ${TESTS_DIR}/imu_device_config_test.cpp
+                           i2c_imu_driver/src/imu_device_config.cpp)
+  target_include_directories(
+    imu_device_config_test
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/i2c_imu_driver/include)
   target_link_libraries(imu_device_config_test GTest::gtest GTest::gtest_main)
   gtest_discover_tests(imu_device_config_test)
 
   # IMU Calibration Tests (header-only, no additional sources needed)
-  add_executable(imu_calibration_test
-    ${TESTS_DIR}/imu_calibration_test.cpp)
-  target_include_directories(imu_calibration_test
+  add_executable(imu_calibration_test ${TESTS_DIR}/imu_calibration_test.cpp)
+  target_include_directories(
+    imu_calibration_test
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/i2c_imu_driver/include)
   target_link_libraries(imu_calibration_test GTest::gtest GTest::gtest_main)
   gtest_discover_tests(imu_calibration_test)

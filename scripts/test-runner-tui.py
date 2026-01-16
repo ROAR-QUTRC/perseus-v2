@@ -8,9 +8,7 @@ Uses Python's built-in curses module for cross-platform compatibility.
 
 import curses
 import subprocess
-import os
 import sys
-import json
 import time
 import re
 import threading
@@ -20,17 +18,17 @@ from enum import Enum
 from pathlib import Path
 
 # ASCII box drawing characters
-BOX_H = '-'
-BOX_V = '|'
-BOX_TL = '+'
-BOX_TR = '+'
-BOX_BL = '+'
-BOX_BR = '+'
-BOX_T = '+'
-BOX_B = '+'
-BOX_L = '+'
-BOX_R = '+'
-BOX_X = '+'
+BOX_H = "-"
+BOX_V = "|"
+BOX_TL = "+"
+BOX_TR = "+"
+BOX_BL = "+"
+BOX_BR = "+"
+BOX_T = "+"
+BOX_B = "+"
+BOX_L = "+"
+BOX_R = "+"
+BOX_X = "+"
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -109,11 +107,11 @@ class TestRunnerTUI:
         curses.use_default_colors()
 
         # Define color pairs
-        curses.init_pair(1, curses.COLOR_GREEN, -1)   # Passed
-        curses.init_pair(2, curses.COLOR_RED, -1)     # Failed
+        curses.init_pair(1, curses.COLOR_GREEN, -1)  # Passed
+        curses.init_pair(2, curses.COLOR_RED, -1)  # Failed
         curses.init_pair(3, curses.COLOR_YELLOW, -1)  # Running/Warning
-        curses.init_pair(4, curses.COLOR_CYAN, -1)    # Info/Selected
-        curses.init_pair(5, curses.COLOR_MAGENTA, -1) # Header
+        curses.init_pair(4, curses.COLOR_CYAN, -1)  # Info/Selected
+        curses.init_pair(5, curses.COLOR_MAGENTA, -1)  # Header
         curses.init_pair(6, curses.COLOR_WHITE, curses.COLOR_BLUE)  # Highlight
 
         self.COLOR_PASSED = curses.color_pair(1)
@@ -132,67 +130,190 @@ class TestRunnerTUI:
 
         # Test executables and their packages
         test_executables = [
-            ("perseus_input", "axis_math_test", [
-                ("DeadbandTest", ["ValueWithinDeadbandReturnsZero", "ValueAtDeadbandBoundaryReturnsZero",
-                                  "ValueAboveDeadbandIsNormalized", "ValueBelowNegativeDeadbandIsNormalized",
-                                  "AsymmetricDeadband", "NaNDeadbandReturnsOriginalValue", "ZeroDeadbandPassesThrough"]),
-                ("ButtonOverrideTest", ["NoButtonsReturnsOriginalValue", "PositiveButtonReturnsOne",
-                                        "NegativeButtonReturnsNegativeOne", "BothButtonsReturnsZero"]),
-                ("ScalingTest", ["BasicScaling", "NaNScalingDefaultsToOne", "ZeroScalingReturnsZero",
-                                 "NegativeScalingInvertsAxis"]),
-                ("ResolveNegativeDeadbandTest", ["FiniteNegativeDeadbandReturnsAsIs",
-                                                  "NaNNegativeDeadbandDefaultsToNegativePositive"]),
-                ("EnableThresholdTest", ["GreaterThanThreshold", "LessThanThreshold",
-                                         "NaNThresholdDefaultsToHalf", "NegativeThreshold"]),
-                ("FullPipelineTest", ["TypicalJoystickInput", "ButtonOverridesDeadband",
-                                      "SmallInputInDeadbandIsZero"]),
-            ]),
-            ("perseus_input", "controller_config_test", [
-                ("ControllerConfigTest", ["AllConfigFilesExist", "AllConfigFilesAreValidYaml",
-                                          "AllConfigsHaveGenericControllerSection", "AllConfigsHaveDriveSection",
-                                          "DriveAxesHaveValidConfiguration", "ScalingValuesAreReasonable",
-                                          "EnableConfigurationsAreValid", "TimeoutIsConfigured",
-                                          "ButtonIndicesAreValid", "BucketSectionIsConsistent",
-                                          "FollowsReferencesAreValid", "TurboScalingIsReasonable"]),
-            ]),
-            ("perseus_lite", "controller_config_test", [
-                ("PerseusLiteControllerConfigTest", ["ConfigFileExists", "ValidYamlStructure",
-                                                     "HasControllerManagerSection", "ControllerManagerUpdateRateIsValid",
-                                                     "HasRequiredControllers", "ControllerTypesAreCorrect",
-                                                     "HasHardwareInterfaceSection", "AllFourWheelJointsDefined",
-                                                     "JointsHaveRequiredInterfaces", "HasDiffDriveControllerSection",
-                                                     "WheelNamesMatchHardwareJoints", "WheelGeometryIsValid",
-                                                     "KinematicLimitsAreValid", "CmdVelTimeoutIsValid",
-                                                     "OdomFrameIdsAreConfigured", "CovarianceDiagonalsAreValid",
-                                                     "PublishRateIsValid", "WriteOpModesIsConfigured",
-                                                     "RegressionWheelGeometry"]),
-            ]),
-            ("perseus_simulation", "gz_bridge_config_test", [
-                ("GzBridgeConfigTest", ["ConfigFileExists", "ValidYamlStructure", "ValidDirections",
-                                        "ValidRosMessageTypes", "ValidGazeboMessageTypes",
-                                        "UniqueTopicNames", "ExpectedCoreTopics"]),
-            ]),
-            ("perseus_sensors", "imu_device_config_test", [
-                ("ImuDeviceRegistryTest", ["GetSupportedDevicesReturnsExpectedCount",
-                                           "GetSupportedDevicesContainsExpectedDevices",
-                                           "GetDefaultDeviceReturnsLsm6dsox",
-                                           "GetDeviceConfigReturnsValidConfigForAllDevices",
-                                           "GetDeviceConfigReturnsNulloptForUnknownDevice"]),
-                ("ImuScaleFactorTest", ["Lsm6dsoxAccelScaleIsCorrect", "Mpu6050AccelScaleIsCorrect",
-                                        "GyroScaleConvertsToRadPerSec"]),
-            ]),
-            ("perseus_sensors", "imu_calibration_test", [
-                ("ImuCalibrationTest", ["IdentityCalibrationPreservesAccelData",
-                                        "IdentityCalibrationPreservesGyroData",
-                                        "AccelOffsetIsSubtracted", "GyroOffsetIsSubtracted",
-                                        "NegativeOffsetIncreasesValue", "AccelScaleIsApplied",
-                                        "GyroScaleIsApplied", "OffsetThenScaleOrder",
-                                        "FullCalibrationComputation", "TemperatureIsPreserved",
-                                        "TimestampIsPreserved", "ZeroInputData",
-                                        "ZeroScaleZerosOutput", "NegativeScaleInvertsData",
-                                        "LargeValuesHandledCorrectly", "NegativeInputData",
-                                        "GravityCompensation", "GyroDriftCompensation"]),
-            ]),
+            (
+                "perseus_input",
+                "axis_math_test",
+                [
+                    (
+                        "DeadbandTest",
+                        [
+                            "ValueWithinDeadbandReturnsZero",
+                            "ValueAtDeadbandBoundaryReturnsZero",
+                            "ValueAboveDeadbandIsNormalized",
+                            "ValueBelowNegativeDeadbandIsNormalized",
+                            "AsymmetricDeadband",
+                            "NaNDeadbandReturnsOriginalValue",
+                            "ZeroDeadbandPassesThrough",
+                        ],
+                    ),
+                    (
+                        "ButtonOverrideTest",
+                        [
+                            "NoButtonsReturnsOriginalValue",
+                            "PositiveButtonReturnsOne",
+                            "NegativeButtonReturnsNegativeOne",
+                            "BothButtonsReturnsZero",
+                        ],
+                    ),
+                    (
+                        "ScalingTest",
+                        [
+                            "BasicScaling",
+                            "NaNScalingDefaultsToOne",
+                            "ZeroScalingReturnsZero",
+                            "NegativeScalingInvertsAxis",
+                        ],
+                    ),
+                    (
+                        "ResolveNegativeDeadbandTest",
+                        [
+                            "FiniteNegativeDeadbandReturnsAsIs",
+                            "NaNNegativeDeadbandDefaultsToNegativePositive",
+                        ],
+                    ),
+                    (
+                        "EnableThresholdTest",
+                        [
+                            "GreaterThanThreshold",
+                            "LessThanThreshold",
+                            "NaNThresholdDefaultsToHalf",
+                            "NegativeThreshold",
+                        ],
+                    ),
+                    (
+                        "FullPipelineTest",
+                        [
+                            "TypicalJoystickInput",
+                            "ButtonOverridesDeadband",
+                            "SmallInputInDeadbandIsZero",
+                        ],
+                    ),
+                ],
+            ),
+            (
+                "perseus_input",
+                "controller_config_test",
+                [
+                    (
+                        "ControllerConfigTest",
+                        [
+                            "AllConfigFilesExist",
+                            "AllConfigFilesAreValidYaml",
+                            "AllConfigsHaveGenericControllerSection",
+                            "AllConfigsHaveDriveSection",
+                            "DriveAxesHaveValidConfiguration",
+                            "ScalingValuesAreReasonable",
+                            "EnableConfigurationsAreValid",
+                            "TimeoutIsConfigured",
+                            "ButtonIndicesAreValid",
+                            "BucketSectionIsConsistent",
+                            "FollowsReferencesAreValid",
+                            "TurboScalingIsReasonable",
+                        ],
+                    ),
+                ],
+            ),
+            (
+                "perseus_lite",
+                "controller_config_test",
+                [
+                    (
+                        "PerseusLiteControllerConfigTest",
+                        [
+                            "ConfigFileExists",
+                            "ValidYamlStructure",
+                            "HasControllerManagerSection",
+                            "ControllerManagerUpdateRateIsValid",
+                            "HasRequiredControllers",
+                            "ControllerTypesAreCorrect",
+                            "HasHardwareInterfaceSection",
+                            "AllFourWheelJointsDefined",
+                            "JointsHaveRequiredInterfaces",
+                            "HasDiffDriveControllerSection",
+                            "WheelNamesMatchHardwareJoints",
+                            "WheelGeometryIsValid",
+                            "KinematicLimitsAreValid",
+                            "CmdVelTimeoutIsValid",
+                            "OdomFrameIdsAreConfigured",
+                            "CovarianceDiagonalsAreValid",
+                            "PublishRateIsValid",
+                            "WriteOpModesIsConfigured",
+                            "RegressionWheelGeometry",
+                        ],
+                    ),
+                ],
+            ),
+            (
+                "perseus_simulation",
+                "gz_bridge_config_test",
+                [
+                    (
+                        "GzBridgeConfigTest",
+                        [
+                            "ConfigFileExists",
+                            "ValidYamlStructure",
+                            "ValidDirections",
+                            "ValidRosMessageTypes",
+                            "ValidGazeboMessageTypes",
+                            "UniqueTopicNames",
+                            "ExpectedCoreTopics",
+                        ],
+                    ),
+                ],
+            ),
+            (
+                "perseus_sensors",
+                "imu_device_config_test",
+                [
+                    (
+                        "ImuDeviceRegistryTest",
+                        [
+                            "GetSupportedDevicesReturnsExpectedCount",
+                            "GetSupportedDevicesContainsExpectedDevices",
+                            "GetDefaultDeviceReturnsLsm6dsox",
+                            "GetDeviceConfigReturnsValidConfigForAllDevices",
+                            "GetDeviceConfigReturnsNulloptForUnknownDevice",
+                        ],
+                    ),
+                    (
+                        "ImuScaleFactorTest",
+                        [
+                            "Lsm6dsoxAccelScaleIsCorrect",
+                            "Mpu6050AccelScaleIsCorrect",
+                            "GyroScaleConvertsToRadPerSec",
+                        ],
+                    ),
+                ],
+            ),
+            (
+                "perseus_sensors",
+                "imu_calibration_test",
+                [
+                    (
+                        "ImuCalibrationTest",
+                        [
+                            "IdentityCalibrationPreservesAccelData",
+                            "IdentityCalibrationPreservesGyroData",
+                            "AccelOffsetIsSubtracted",
+                            "GyroOffsetIsSubtracted",
+                            "NegativeOffsetIncreasesValue",
+                            "AccelScaleIsApplied",
+                            "GyroScaleIsApplied",
+                            "OffsetThenScaleOrder",
+                            "FullCalibrationComputation",
+                            "TemperatureIsPreserved",
+                            "TimestampIsPreserved",
+                            "ZeroInputData",
+                            "ZeroScaleZerosOutput",
+                            "NegativeScaleInvertsData",
+                            "LargeValuesHandledCorrectly",
+                            "NegativeInputData",
+                            "GravityCompensation",
+                            "GyroDriftCompensation",
+                        ],
+                    ),
+                ],
+            ),
         ]
 
         # Build package/suite/test hierarchy
@@ -235,8 +356,13 @@ class TestRunnerTUI:
 
     def get_selected_tests(self) -> int:
         """Get number of selected tests."""
-        return sum(1 for pkg in self.packages for suite in pkg.suites
-                   for test in suite.tests if test.selected)
+        return sum(
+            1
+            for pkg in self.packages
+            for suite in pkg.suites
+            for test in suite.tests
+            if test.selected
+        )
 
     def draw_header(self):
         """Draw the application header."""
@@ -257,13 +383,13 @@ class TestRunnerTUI:
         if self.last_run_time > 0:
             stats += f"| Last run: {self.last_run_passed} passed, {self.last_run_failed} failed ({self.last_run_time:.1f}s) "
 
-        self.stdscr.addstr(1, 0, stats[:width-1])
+        self.stdscr.addstr(1, 0, stats[: width - 1])
 
         # Allure server URL line (if running)
         if self.allure_server_url:
             allure_line = f" Allure: {self.allure_server_url} "
             self.stdscr.attron(self.COLOR_INFO)
-            self.stdscr.addstr(2, 0, allure_line[:width-1])
+            self.stdscr.addstr(2, 0, allure_line[: width - 1])
             self.stdscr.attroff(self.COLOR_INFO)
 
     def draw_test_list(self):
@@ -334,7 +460,7 @@ class TestRunnerTUI:
                 attr |= self.COLOR_HIGHLIGHT
 
             # Truncate and pad line
-            line = line[:width-1].ljust(width-1)
+            line = line[: width - 1].ljust(width - 1)
 
             try:
                 self.stdscr.addstr(y, 0, line, attr)
@@ -354,12 +480,12 @@ class TestRunnerTUI:
         else:
             help_text = " [Space] Toggle | [Enter] Expand | [r] Run | [a] Allure | [b] Build | [h] Help | [q] Quit "
         self.stdscr.attron(curses.A_DIM)
-        self.stdscr.addstr(height - 2, 0, help_text[:width-1])
+        self.stdscr.addstr(height - 2, 0, help_text[: width - 1])
         self.stdscr.attroff(curses.A_DIM)
 
         # Status line
         status = f" {self.status_msg} "
-        self.stdscr.addstr(height - 1, 0, status[:width-1].ljust(width-1))
+        self.stdscr.addstr(height - 1, 0, status[: width - 1].ljust(width - 1))
 
     def draw(self):
         """Main draw function."""
@@ -455,10 +581,10 @@ class TestRunnerTUI:
                 cwd=str(ROS_WS),
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=300,
             )
 
-            self.test_output = result.stdout.split('\n') + result.stderr.split('\n')
+            self.test_output = result.stdout.split("\n") + result.stderr.split("\n")
             elapsed = time.time() - start_time
 
             # Parse results - mark all selected tests as passed/failed based on output
@@ -472,7 +598,10 @@ class TestRunnerTUI:
                         if test.selected:
                             # Check if test failed in output
                             test_pattern = f"{suite.name}.{test.name}"
-                            if f"FAILED" in result.stdout and test_pattern in result.stdout:
+                            if (
+                                "FAILED" in result.stdout
+                                and test_pattern in result.stdout
+                            ):
                                 test.status = TestStatus.FAILED
                                 failed += 1
                             else:
@@ -504,7 +633,7 @@ class TestRunnerTUI:
                 cwd=str(ROS_WS),
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=300,
             )
 
             if result.returncode == 0:
@@ -512,7 +641,7 @@ class TestRunnerTUI:
             else:
                 self.status_msg = "Build failed! Check output for details"
 
-            self.test_output = result.stdout.split('\n') + result.stderr.split('\n')
+            self.test_output = result.stdout.split("\n") + result.stderr.split("\n")
 
         except subprocess.TimeoutExpired:
             self.status_msg = "Build timed out!"
@@ -522,17 +651,17 @@ class TestRunnerTUI:
     def _capture_allure_url(self, process):
         """Background thread to capture Allure server URL from output."""
         try:
-            for line in iter(process.stdout.readline, ''):
+            for line in iter(process.stdout.readline, ""):
                 if not line:
                     break
                 # Look for server URL in output
                 # Allure outputs: "Server started at <http://...>. Press <Ctrl+C> to exit"
-                match = re.search(r'<(https?://[^>]+)>', line)
+                match = re.search(r"<(https?://[^>]+)>", line)
                 if match:
                     self.allure_server_url = match.group(1)
                     break
                 # Also try without angle brackets
-                match = re.search(r'(https?://\S+:\d+)', line)
+                match = re.search(r"(https?://\S+:\d+)", line)
                 if match:
                     self.allure_server_url = match.group(1)
                     break
@@ -557,19 +686,24 @@ class TestRunnerTUI:
         try:
             # Use nix-shell to run allure open command
             self.allure_process = subprocess.Popen(
-                ["nix-shell", "-p", "allure", "--run",
-                 f"allure open '{allure_report_dir}'"],
+                [
+                    "nix-shell",
+                    "-p",
+                    "allure",
+                    "--run",
+                    f"allure open '{allure_report_dir}'",
+                ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                start_new_session=True
+                start_new_session=True,
             )
 
             # Start background thread to capture URL
             capture_thread = threading.Thread(
                 target=self._capture_allure_url,
                 args=(self.allure_process,),
-                daemon=True
+                daemon=True,
             )
             capture_thread.start()
 
@@ -577,17 +711,17 @@ class TestRunnerTUI:
             capture_thread.join(timeout=5.0)
 
             if self.allure_server_url:
-                self.status_msg = f"Allure server running"
+                self.status_msg = "Allure server running"
             else:
                 self.status_msg = "Allure server started. Check your browser."
 
-        except Exception as e:
+        except Exception:
             # Fallback to xdg-open if nix-shell fails
             try:
                 subprocess.Popen(
                     ["xdg-open", str(ALLURE_REPORT)],
                     stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
+                    stderr=subprocess.DEVNULL,
                 )
                 self.status_msg = "Opening Allure report in browser..."
             except Exception as e2:
@@ -618,7 +752,7 @@ class TestRunnerTUI:
                 cwd=str(ROS_WS),
                 capture_output=True,
                 text=True,
-                timeout=120
+                timeout=120,
             )
 
             if result.returncode == 0:
@@ -680,7 +814,7 @@ class TestRunnerTUI:
                 line = BOX_BL + BOX_H * (box_w - 2) + BOX_BR
             else:
                 content = help_lines[i - 1] if i - 1 < len(help_lines) else ""
-                line = BOX_V + content.ljust(box_w - 2)[:box_w - 2] + BOX_V
+                line = BOX_V + content.ljust(box_w - 2)[: box_w - 2] + BOX_V
 
             try:
                 self.stdscr.addstr(y, start_x, line)
@@ -702,12 +836,14 @@ class TestRunnerTUI:
 
         while True:
             self.stdscr.clear()
-            self.stdscr.addstr(0, 0, " TEST OUTPUT (q to close, arrows to scroll) ", curses.A_REVERSE)
+            self.stdscr.addstr(
+                0, 0, " TEST OUTPUT (q to close, arrows to scroll) ", curses.A_REVERSE
+            )
 
             for i in range(height - 2):
                 line_idx = scroll + i
                 if line_idx < len(self.test_output):
-                    line = self.test_output[line_idx][:width - 1]
+                    line = self.test_output[line_idx][: width - 1]
                     try:
                         self.stdscr.addstr(i + 1, 0, line)
                     except curses.error:
@@ -716,7 +852,7 @@ class TestRunnerTUI:
             self.stdscr.refresh()
 
             key = self.stdscr.getch()
-            if key in (ord('q'), ord('Q'), 27):
+            if key in (ord("q"), ord("Q"), 27):
                 break
             elif key == curses.KEY_UP:
                 scroll = max(0, scroll - 1)
@@ -735,51 +871,53 @@ class TestRunnerTUI:
             key = self.stdscr.getch()
 
             # Navigation
-            if key in (curses.KEY_UP, ord('k')):
+            if key in (curses.KEY_UP, ord("k")):
                 self.cursor_pos = max(0, self.cursor_pos - 1)
-            elif key in (curses.KEY_DOWN, ord('j')):
+            elif key in (curses.KEY_DOWN, ord("j")):
                 self.cursor_pos = min(len(self.visible_items) - 1, self.cursor_pos + 1)
             elif key == curses.KEY_PPAGE:
                 height = self.stdscr.getmaxyx()[0]
                 self.cursor_pos = max(0, self.cursor_pos - (height - 6))
             elif key == curses.KEY_NPAGE:
                 height = self.stdscr.getmaxyx()[0]
-                self.cursor_pos = min(len(self.visible_items) - 1, self.cursor_pos + (height - 6))
+                self.cursor_pos = min(
+                    len(self.visible_items) - 1, self.cursor_pos + (height - 6)
+                )
             elif key == curses.KEY_HOME:
                 self.cursor_pos = 0
             elif key == curses.KEY_END:
                 self.cursor_pos = len(self.visible_items) - 1
 
             # Selection
-            elif key == ord(' '):
+            elif key == ord(" "):
                 self.toggle_selection()
             elif key in (curses.KEY_ENTER, 10, 13):
                 self.toggle_expand()
-            elif key in (ord('A'),):
+            elif key in (ord("A"),):
                 self.select_all()
-            elif key in (ord('N'),):
+            elif key in (ord("N"),):
                 self.select_none()
 
             # Actions
-            elif key in (ord('r'), ord('R')):
+            elif key in (ord("r"), ord("R")):
                 self.run_tests()
-            elif key in (ord('b'), ord('B')):
+            elif key in (ord("b"), ord("B")):
                 self.run_build()
-            elif key in (ord('g'), ord('G')):
+            elif key in (ord("g"), ord("G")):
                 self.generate_allure_report()
-            elif key in (ord('a'),):
+            elif key in (ord("a"),):
                 self.open_allure_report()
-            elif key in (ord('S'),):
+            elif key in (ord("S"),):
                 self.stop_allure_server()
-            elif key in (ord('o'), ord('O')):
+            elif key in (ord("o"), ord("O")):
                 self.show_output()
 
             # Help
-            elif key in (ord('h'), ord('H'), ord('?')):
+            elif key in (ord("h"), ord("H"), ord("?")):
                 self.show_help()
 
             # Quit
-            elif key in (ord('q'), ord('Q'), 27):
+            elif key in (ord("q"), ord("Q"), 27):
                 self.running = False
 
 

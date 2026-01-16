@@ -7,7 +7,9 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <cmath>
+
 #include "i2c_imu_driver/imu_data_types.hpp"
 
 using namespace i2c_imu_driver;
@@ -47,10 +49,10 @@ TEST(ImuCalibrationTest, IdentityCalibrationPreservesAccelData)
     // Identity calibration: scale=1, offset=0
     ImuData calibrated = apply_calibration(
         raw,
-        1.0, 1.0, 1.0,  // accel scales
-        0.0, 0.0, 0.0,  // accel offsets
-        1.0, 1.0, 1.0,  // gyro scales
-        0.0, 0.0, 0.0); // gyro offsets
+        1.0, 1.0, 1.0,   // accel scales
+        0.0, 0.0, 0.0,   // accel offsets
+        1.0, 1.0, 1.0,   // gyro scales
+        0.0, 0.0, 0.0);  // gyro offsets
 
     EXPECT_DOUBLE_EQ(calibrated.accel_x, raw.accel_x);
     EXPECT_DOUBLE_EQ(calibrated.accel_y, raw.accel_y);
@@ -106,9 +108,9 @@ TEST(ImuCalibrationTest, GyroOffsetIsSubtracted)
         1.0, 1.0, 1.0,
         0.1, 0.2, 0.3);  // gyro offsets
 
-    EXPECT_DOUBLE_EQ(calibrated.gyro_x, 0.9);   // 1.0 - 0.1
-    EXPECT_DOUBLE_EQ(calibrated.gyro_y, 1.8);   // 2.0 - 0.2
-    EXPECT_DOUBLE_EQ(calibrated.gyro_z, 2.7);   // 3.0 - 0.3
+    EXPECT_DOUBLE_EQ(calibrated.gyro_x, 0.9);  // 1.0 - 0.1
+    EXPECT_DOUBLE_EQ(calibrated.gyro_y, 1.8);  // 2.0 - 0.2
+    EXPECT_DOUBLE_EQ(calibrated.gyro_z, 2.7);  // 3.0 - 0.3
 }
 
 TEST(ImuCalibrationTest, NegativeOffsetIncreasesValue)
@@ -200,10 +202,10 @@ TEST(ImuCalibrationTest, FullCalibrationComputation)
     // Realistic calibration values
     ImuData calibrated = apply_calibration(
         raw,
-        1.01, 0.99, 1.02,     // accel scales (slight correction)
-        0.1, -0.05, 0.2,       // accel offsets (bias correction)
-        1.005, 0.995, 1.0,     // gyro scales
-        0.001, 0.002, -0.001); // gyro offsets (drift correction)
+        1.01, 0.99, 1.02,       // accel scales (slight correction)
+        0.1, -0.05, 0.2,        // accel offsets (bias correction)
+        1.005, 0.995, 1.0,      // gyro scales
+        0.001, 0.002, -0.001);  // gyro offsets (drift correction)
 
     // Expected: (raw - offset) * scale
     double expected_accel_x = (9.81 - 0.1) * 1.01;
@@ -400,4 +402,3 @@ TEST(ImuCalibrationTest, GyroDriftCompensation)
     EXPECT_NEAR(calibrated.gyro_y, 0.0, 1e-10);
     EXPECT_NEAR(calibrated.gyro_z, 0.0, 1e-10);
 }
-
