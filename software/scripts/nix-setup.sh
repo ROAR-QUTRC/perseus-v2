@@ -61,6 +61,15 @@ else
   RESTART_NIX_DAEMON=true
 fi
 
+TRUSTED_USERS="trusted-users = $USER"
+if grep -Fq "$TRUSTED_USERS" "$NIX_CONFIG_FILE_PATH"; then
+  echo "Trusted users already set!"
+else
+  echo "Adding $USER to trusted users..."
+  echo "$TRUSTED_USERS" | sudo tee -a "$NIX_CONFIG_FILE_PATH"
+  RESTART_NIX_DAEMON=true
+fi
+
 # restart Nix daemon so above changes take effect - but only if needed
 if [ "${RESTART_NIX_DAEMON:-}" = true ]; then
   echo "Restarting nix daemon"
