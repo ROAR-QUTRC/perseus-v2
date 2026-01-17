@@ -2,7 +2,6 @@
 
 This project is built using [Nix](https://nixos.org/), which makes getting started quite easy - all you have to do is install Nix and `direnv`, and they take care of the rest.
 Whilst this page will get you started, it is strongly recommended that you read through <project:nix-basics.md> after reading through this document so you understand how to use the tooling.
-If the system has a firewall, the network must be set to trusted to download assets needed for the simulation.
 
 ## First-time Setup
 
