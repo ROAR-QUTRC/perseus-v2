@@ -13,7 +13,14 @@ let
 
   # add a wrapper to run CUDA programs with host GPU driver passthrough
   # uses nix-gl-host which handles both OpenGL and CUDA on NVIDIA hardware
+  # On Jetson devices, we also need to add the host CUDA library paths
   nixcuda-script = prev.writeShellScriptBin "nixcuda" ''
+    # Add Jetson/Tegra CUDA library paths if they exist
+    for cuda_path in /usr/lib/aarch64-linux-gnu/tegra /usr/local/cuda/lib64; do
+      if [ -d "$cuda_path" ]; then
+        export LD_LIBRARY_PATH="$cuda_path''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+      fi
+    done
     exec ${prev.nix-gl-host}/bin/nixglhost "$@"
   '';
 
