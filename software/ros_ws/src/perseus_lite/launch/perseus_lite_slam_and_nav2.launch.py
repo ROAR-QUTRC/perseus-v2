@@ -197,7 +197,11 @@ def generate_launch_description():
     # Use nixcuda prefix to ensure proper CUDA library paths on Jetson
     # nixcuda adds Tegra/CUDA library paths and runs through nixglhost
     import shutil
-    nixcuda_path = shutil.which("nixcuda") or "/nix/store/ch74hb3iqv7jaf36b3xjmxbdgxvmisf5-nixcuda/bin/nixcuda"
+
+    nixcuda_path = (
+        shutil.which("nixcuda")
+        or "/nix/store/ch74hb3iqv7jaf36b3xjmxbdgxvmisf5-nixcuda/bin/nixcuda"
+    )
     slam_toolbox = LifecycleNode(
         package="slam_toolbox",
         executable="async_slam_toolbox_node",

@@ -254,7 +254,7 @@ let
         src = final.fetchFromGitHub {
           owner = "DingoOz";
           repo = "slam_toolbox";
-          rev = "f9a568fe195c84dd788a8bde1f4ac84a5f844be2";  # Remove cudaMemAdvise, add error checking
+          rev = "f9a568fe195c84dd788a8bde1f4ac84a5f844be2"; # Remove cudaMemAdvise, add error checking
           hash = "sha256-GnrUn9w8F965v0uzwGtxwthkMCCADaKC1Wt7lfLlKGA=";
         };
 
