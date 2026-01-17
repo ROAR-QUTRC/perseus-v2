@@ -237,6 +237,50 @@ let
         license = with final.lib.licenses; [ bsd2 ];
       };
     };
+
+    # CUDA-enabled slam_toolbox from fork
+    slam-toolbox = rosPrev.slam-toolbox.overrideAttrs (
+      {
+        buildInputs ? [ ],
+        nativeBuildInputs ? [ ],
+        propagatedBuildInputs ? [ ],
+        cmakeFlags ? [ ],
+        patches ? [ ],
+        ...
+      }:
+      {
+        version = "2.9.1-cuda";
+
+        src = final.fetchFromGitHub {
+          owner = "DingoOz";
+          repo = "slam_toolbox";
+          rev = "feat/scan-match-with-cuda";
+          hash = "sha256-wn0+EI2AwNMzYOhrKIqEKwXIPdhMVqo43QAfyziA3z8=";
+        };
+
+        nativeBuildInputs = nativeBuildInputs ++ [
+          final.cudaPackages.cuda_nvcc
+        ];
+
+        buildInputs = buildInputs ++ [
+          final.cudaPackages.cuda_cudart
+          final.cudaPackages.cuda_cccl
+        ];
+
+        propagatedBuildInputs = propagatedBuildInputs ++ [
+          rosFinal.message-filters
+        ];
+
+        patches = patches ++ [
+          ./patches/slam-toolbox/fix-jazzy-includes.patch
+        ];
+
+        cmakeFlags = cmakeFlags ++ [
+          "-DSLAM_TOOLBOX_USE_CUDA=ON"
+          "-DCMAKE_CUDA_ARCHITECTURES=87" # Jetson Orin Nano
+        ];
+      }
+    );
   };
 in
 {
