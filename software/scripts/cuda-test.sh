@@ -250,6 +250,10 @@ if $CUDA_TOOLKIT_OK; then
   else
     echo "  Run:      nixcuda ./my_app  (requires GPU)"
   fi
+  echo ""
+  echo -e "${BLUE}Try the visual demo:${NC}"
+  echo "  ./software/scripts/cuda-demo.sh"
+  echo "  (Matrix multiplication - CPU vs CUDA comparison)"
 else
   echo -e "${RED}CUDA development environment is not configured.${NC}"
   echo "Make sure you're in the Nix dev shell: nix develop"
