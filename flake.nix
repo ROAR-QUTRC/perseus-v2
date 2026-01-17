@@ -384,8 +384,13 @@
     };
   nixConfig = {
     extra-substituters = [
+      "https://perseus-v2.cachix.org"
       "https://roar-qutrc.cachix.org"
       "https://ros.cachix.org"
+    ];
+
+    extra-trusted-public-keys = [
+      "perseus-v2.cachix.org-1:Ey7Kc4bRmGHCfsT20RvTH9o2DNUImxjsENlyI96z4zI="
     ];
 
     # Note that this is normally a VERY BAD IDEA but is needed to make building the docs easier.
