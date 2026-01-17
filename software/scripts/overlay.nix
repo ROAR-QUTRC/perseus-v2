@@ -36,5 +36,13 @@ in
         kmod
       ]
     );
+    cuda-test = build-wrapped-script "cuda-test" (
+      with prev;
+      [
+        coreutils
+        gnugrep
+        gnused
+      ]
+    );
   };
 }
