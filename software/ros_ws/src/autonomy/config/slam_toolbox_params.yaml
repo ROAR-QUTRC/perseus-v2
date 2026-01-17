@@ -49,6 +49,7 @@ slam_toolbox:
     use_scan_matching: true
     use_scan_barycenter: true
     use_imu: true
+    use_cuda: true  # Enable CUDA-accelerated scan matching
     minimum_travel_distance: 0.1
     minimum_travel_heading: 0.2
     scan_buffer_size: 50
