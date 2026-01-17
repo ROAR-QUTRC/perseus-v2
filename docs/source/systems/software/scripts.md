@@ -28,8 +28,9 @@ This script should be run on every device that wants to run the perseus repo (me
 1. Installs Nix package manager (see the Nix Basics page)
 2. Adds binary caches (and keys) to the trusted substituters so your computer can copy them instead of compiling them itself
 3. Disables the dirty git tree warning (which will run _everytime_ you have local staged changes and try to build the flake)
-4. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
-5. Hides the massive wall of text displaying the environment variables on startup/reload
+4. Adds the current user to the 'trusted-users' in the nix config, which stops the warning when running nix in a 'relaxed sandbox'.
+5. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
+6. Hides the massive wall of text displaying the environment variables on startup/reload
 
 :::{note}
 The nix-setup script can't be run on NixOS - you'll have to set these manually in your configuration.nix file (and your home.nix home-manager file), but if you're using NixOS, you should have no trouble doing this
