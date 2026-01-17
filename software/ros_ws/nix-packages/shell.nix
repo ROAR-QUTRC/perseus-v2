@@ -38,6 +38,7 @@ pkgs.mkShell {
             ament-pep257
             backward-ros
             boost
+            builtin-interfaces
             controller-manager
             diff-drive-controller
             geometry-msgs
@@ -69,6 +70,8 @@ pkgs.mkShell {
             ros-gz-sim
             ros2controlcli
             ros2launch
+            rosidl-default-generators
+            rosidl-default-runtime
             rplidar-ros
             rviz2
             sensor-msgs
