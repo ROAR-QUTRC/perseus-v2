@@ -17,7 +17,7 @@ sudo apt-get install -y gh git direnv >/dev/null 2>&1
 # Sign into gh CLI
 if ! gh auth status >/dev/null 2>&1; then
   echo "You need to sign into github CLI. Follow these instructions:"
-  gh auth login -w -p https
+  gh auth login -w
 else
   echo "GitHub CLI already logged in."
 fi
