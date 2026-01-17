@@ -2,7 +2,7 @@
 
 This is mostly ROS code, and is located in `software/ros_ws/src/`.
 Since it's a ROS2 project, it's comprised of code in two languages - C++ and Python.
-Although, as detailed in the [standards](project:/standards/software.md), we try to keep all the software to C++, there are some cases for which Python just makes more sense (such as input handling - see the `input_devices` package).
+Although, as detailed in the [standards](project:/standards/software/general.md), we try to keep all the software to C++, there are some cases for which Python just makes more sense (such as input handling - see the `input_devices` package).
 The C++ code is all built using [CMake](https://cmake.org/) since that's what ROS2 uses by default, and extending that to non-ROS code allows easy interoperability, as you'll see shortly.
 
 Internally, the code is split into several sections:
@@ -63,7 +63,7 @@ Shared libraries can be made available to your ROS2 package and nodes by includi
 
 ### Hi-CAN
 
-Abbreviated from "hierarchical CAN", Hi-CAN is the library implementing the standards laid out [here](project:/architecture/can-bus.md), and is shared across ROS and native code, as well as firmware.
+Abbreviated from "hierarchical CAN", Hi-CAN is the library implementing the standards laid out [here](project:/systems/can-bus.md), and is shared across ROS and native code, as well as firmware.
 The main library contains the code defining the main interfaces with which code will interact with the library, as well as all of the devices on the bus and their parameters.
 :::{warning}
 Since this particular library is shared between both the ROS code _and_ the firmware, it needs to be written in pure C++ (no external dependencies).

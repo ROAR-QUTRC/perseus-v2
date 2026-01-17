@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>perseus_sensors</name>
-  <version>1.0.0</version>
+  <version>0.1.0</version>
   <description>ROS 2 package for managing and processing point-cloud data from the Slamtec M2M2 lidar device which is accessed by TCP ethernet. Handles network access, data processing and provides ROS sensor message information.</description>
   <maintainer email="1388693+DingoOz@users.noreply.github.com">DingoOz</maintainer>
   <license>MIT</license>
@@ -11,12 +11,18 @@
 
   <depend>simple-networking</depend>
   <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>hardware_interface</depend>
   <depend>backward_ros</depend>
   <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
   <depend>openssl</depend>
   <depend>nlohmann-json-dev</depend>
   <exec_depend>realsense2-camera</exec_depend>
   <exec_depend>realsense2-description</exec_depend>
+  <exec_depend>rplidar_ros</exec_depend>
   
 
   <export>

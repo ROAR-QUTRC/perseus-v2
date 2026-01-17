@@ -1,125 +1,138 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
-  <xacro:macro name="sensors" params="prefix:=^">
-    <link name="${prefix}laser_frame">
-        <visual>
-            <origin xyz="0 0 0"/>
-            <geometry>
-                <cylinder radius="0.06" length="0.06"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder radius="0.06" length="0.06"/>
-            </geometry>
-        </collision>
-    </link>
+<robot name="lidar" xmlns:xacro="http://ros.org/wiki/xacro">
 
-    <joint name="${prefix}laser_joint" type="fixed">
-        <parent link="${prefix}chassis"/>
-        <child link="${prefix}laser_frame"/>
-        <origin xyz="0 0 0.23" rpy="0 0 0"/>
-    </joint>
+<!-- 3D LIDAR (Existing - Livox MID-360) -->
+<link name="${prefix}livox_frame">
+    <inertial>
+        <origin xyz="0 0 0"/>
+        <mass value="${livox_mass}"/>
+        <xacro:box_inertia m="${livox_mass}" x="${livox_length}" y="${livox_radius}" z="${livox_radius}"/>
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0"/>
+        <geometry>
+            <cylinder radius="${livox_radius}" length="${livox_length}"/>
+        </geometry>
+        <material name="black"/>
+    </visual>
+    <collision>
+        <geometry>
+            <cylinder radius="${livox_radius}" length="${livox_length}"/>
+        </geometry>
+    </collision>
+</link>
 
-    <link name="${prefix}m2m2_lidar_frame">
-        <inertial>
-            <mass value="0.165"/>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <inertia ixx="0.0001" ixy="0" ixz="0" 
-                     iyy="0.0001" iyz="0" 
-                     izz="0.0001"/>
-        </inertial>
-        <visual>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <box size="0.055 0.055 0.080"/>
-            </geometry>
-            <material name="grey"/>
-        </visual>
-        <collision>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <box size="0.055 0.055 0.080"/>
-            </geometry>
-        </collision>
-    </link>
+<!-- 2D LIDAR -->
+<link name="${prefix}laser_2d_frame">
+    <inertial>
+        <origin xyz="0 0 0"/>
+        <mass value="${laser_2d_mass}"/>
+        <xacro:box_inertia m="${laser_2d_mass}" x="${laser_2d_length}" y="${laser_2d_radius}" z="${laser_2d_radius}"/>
+    </inertial>
 
-    <joint name="${prefix}m2m2_lidar_joint" type="fixed">
-        <parent link="${prefix}base_link"/>
-        <child link="${prefix}m2m2_lidar_frame"/>
-        <origin xyz="0.2 0.4 0.35" rpy="0 0 0"/>
-    </joint>
+    <visual>
+        <origin xyz="0 0 0"/>
+        <geometry>
+            <cylinder radius="${laser_2d_radius}" length="${laser_2d_length}"/>
+        </geometry>
+        <material name="blue">
+            <color rgba="0.0 0.0 1.0 1.0"/>
+        </material>
+    </visual>
+    <collision>
+        <geometry>
+            <cylinder radius="0.04" length="0.04"/>
+        </geometry>
+    </collision>
+</link>
 
-        <link name="${prefix}livox_frame">
-        <inertial>
-            <mass value="0.165"/>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <inertia ixx="0.0001" ixy="0" ixz="0" 
-                     iyy="0.0001" iyz="0" 
-                     izz="0.0001"/>
-        </inertial>
-        <visual>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <box size="0.055 0.055 0.080"/>
-            </geometry>
-            <material name="grey"/>
-        </visual>
-        <collision>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <box size="0.055 0.055 0.080"/>
-            </geometry>
-        </collision>
-    </link>
 
-    <joint name="${prefix}livox_joint" type="fixed">
-        <parent link="${prefix}base_link"/>
-        <child link="${prefix}livox_frame"/>
-	<origin xyz="0.8 0 1.1" rpy="${pi} 0 0"/>
-    </joint>
+<!-- Simulating the Livox MID-360 -->
+<gazebo reference="${prefix}livox_frame">
+  <material>
+    <ambient>0.1 0.1 0.1 1</ambient>
+    <diffuse>0.1 0.1 0.1 1</diffuse>
+    <specular>0.1 0.1 0.1 1</specular>
+  </material>
+  <sensor name="${prefix}lidar_sensor" type="gpu_lidar">
+    <topic>scan_3d</topic>
+    <update_rate>50</update_rate>
+    <always_on>false</always_on>
+    <visualize>false</visualize>
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>720</samples>
+          <resolution>1</resolution>
+          <min_angle>-3.14159</min_angle>
+          <max_angle>3.14159</max_angle>
+        </horizontal>
+        <!-- Angle Simulating the Livox MID-360 -->
+        <vertical> 
+          <samples>32</samples>
+          <min_angle>-0.1222</min_angle>     <!-- –7° in radians -->
+          <max_angle>0.9076</max_angle>      <!-- +52° in radians -->
+        </vertical>
+      </scan>
+      <range>
+        <min>0.20</min>
+        <max>30.0</max>
+        <resolution>0.013</resolution>
+      </range>
+    </ray>
+    <gz_frame_id>${prefix}livox_frame</gz_frame_id>
+  </sensor>
+</gazebo>
 
-    <gazebo reference="${prefix}m2m2_lidar_frame">
-        <material>Gazebo/Black</material>
-        <sensor name="laser" type="gpu_lidar">
-            <pose>0 0 0 0 0 0</pose>
-            <visualize>true</visualize>
-            <update_rate>10</update_rate>
-            <topic>scan</topic>
-            <ray>
-                <scan>
-                    <horizontal>
-                        <samples>360</samples>
-                        <min_angle>-3.14</min_angle>
-                        <max_angle>3.14</max_angle>
-                    </horizontal>
-                    <!-- vertical scan probably requires some kind of pointcloud, laserscan message doesn't show in rviz -->
-                    <!-- <vertical>
-                        <samples>10</samples>
-                        <resolution>1</resolution>
-                        <min_angle>0</min_angle>
-                        <max_angle>1.03</max_angle> 
-                    </vertical> -->
-                </scan>
-                <range>
-                    <min>0.3</min>
-                    <max>12</max>
-                </range>
-            </ray>
-            <!-- <gz_frame_id>${prefix}laser_frame</gz_frame_id> -->
-            <frame>${prefix}m2m2_lidar_frame</frame>
-        </sensor>
-    </gazebo>
+<!-- 2D LIDAR SENSOR (Traditional 2D Laser Scanner) -->
+<gazebo reference="${prefix}laser_2d_frame">
+  <material>
+    <ambient>0.0 0.0 1.0 1</ambient>
+    <diffuse>0.0 0.0 1.0 1</diffuse>
+    <specular>0.0 0.0 1.0 1</specular>
+  </material>
+  <sensor name="${prefix}laser_2d_sensor" type="gpu_lidar">
+    <topic>scan</topic>
+    <update_rate>10</update_rate>
+    <always_on>true</always_on>
+    <visualize>false</visualize>
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>720</samples>
+          <resolution>1</resolution>
+          <min_angle>-3.14159</min_angle>
+          <max_angle>3.14159</max_angle>
+        </horizontal>
+        <!-- Single horizontal plane for 2D scanning -->
+        <vertical> 
+          <samples>1</samples>
+          <min_angle>0.0</min_angle>
+          <max_angle>0.0</max_angle>
+        </vertical>
+      </scan>
+      <range>
+        <min>0.05</min>
+        <max>200.0</max>
+        <resolution>0.01</resolution>
+      </range>
+    </ray>
+    <gz_frame_id>${prefix}laser_2d_frame</gz_frame_id>
+  </sensor>
+</gazebo>
 
-    <gazebo reference="${prefix}chassis">
-        <material>Gazebo/Grey</material>
-        <sensor name="imu_sensor" type="imu">
-            <always_on>1</always_on>
-            <update_rate>10</update_rate>
-            <visualize>true</visualize>
-            <topic>imu</topic>
-        </sensor>
-    </gazebo>
-  </xacro:macro>
+
+<gazebo reference="${prefix}livox_frame">
+    <material>Gazebo/Grey</material>
+    <sensor name="${prefix}lidar_imu" type="imu">
+        <always_on>1</always_on>
+        <update_rate>10</update_rate>
+        <visualize>true</visualize>
+        <topic>scan_3d/imu</topic>
+        <!-- Add frame id to imu sensor (achieving correct frame association)-->
+        <gz_frame_id>${prefix}livox_frame</gz_frame_id>
+    </sensor>
+</gazebo>
+
+
 </robot>

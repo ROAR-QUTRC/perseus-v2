@@ -3,6 +3,9 @@
 ## 2026 Team Members
 
 Nigel
+Natalia Hoyos Gonzalez
+Jasper
+Lachlan Ikeguchi
 
 ## Map Generation Using SLAM
 

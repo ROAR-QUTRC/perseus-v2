@@ -11,7 +11,7 @@ The other major change is related to the [build type](https://cmake.org/cmake/he
 When you run CMake manually, there is by default no `CMAKE_BUILD_TYPE` specified.
 In this instance, the projects have some additional config in their `CMakeLists.txt` files to default to the `Debug` release type.
 Nix builds, by contrast, _specify_ the `Release` build type.
-The reason this is important is because these projects add the `-Werror` to the GCC build flags for `Release` builds, thus enforcing the [no warnings](project:/standards/software.md#warnings-are-not-acceptable) section of the software standards.
+The reason this is important is because these projects add the `-Werror` to the GCC build flags for `Release` builds, thus enforcing the [no warnings](project:/standards/software/general.md#warnings-are-not-acceptable) section of the software standards.
 
 If you're curious as to what all this looks like in practice, check out the `software/templates/` directory.
 

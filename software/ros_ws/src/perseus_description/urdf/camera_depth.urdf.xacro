@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<robot name="camera_depth" xmlns:xacro="http://ros.org/wiki/xacro">
+    <link name="${prefix}camera_link">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="${camera_mass}"/>
+            <xacro:box_inertia m="${camera_mass}" x="${camera_depth}" y="${camera_width}" z="${camera_height}"/>
+        </inertial>
+
+        <visual>
+            <geometry>
+                <box size="${camera_depth} ${camera_width} ${camera_height}"/> 
+            </geometry>
+            <material name="red"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${camera_depth} ${camera_width} ${camera_height}"/> 
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="${prefix}camera_optical_joint" type="fixed">
+        <parent link="${prefix}camera_link"/>
+        <child link="${prefix}camera_link_optical"/>
+        <origin xyz="0 0 0" rpy="-1.57079632679 0 -1.57079632679"/>
+    </joint>
+
+    <link name="${prefix}camera_link_optical"></link>
+
+    <gazebo reference="${prefix}camera_link">
+        <material>Gazebo/Red</material>
+
+        <sensor name="rgbd_camera" type="rgbd_camera">
+            <pose> 0 0 0 0 0 0 </pose>
+            <visualize>true</visualize>
+            <update_rate>30</update_rate>
+            <always_on>true</always_on>
+            <camera>
+                <horizontal_fov>1.089</horizontal_fov>
+                <image>
+                    <width>640</width>
+                    <height>480</height>
+                </image>
+                <clip>
+                    <near>0.05</near>
+                    <far>100</far>
+                </clip>
+            </camera>
+            <topic>/perseus/rgbd_camera</topic>
+            <gz_frame_id>${prefix}camera_link</gz_frame_id>
+            <min_depth>0.05</min_depth>
+            <max_depth>100.0</max_depth>
+        </sensor>
+    </gazebo>
+
+
+
+</robot>

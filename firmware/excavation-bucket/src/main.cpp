@@ -62,24 +62,24 @@ public:
         pinMode(_pins.second, INPUT);
     }
 
-    void setSpeed(int16_t speed)
+    void set_speed(int16_t speed)
     {
         speed = map(speed, std::numeric_limits<int16_t>::min(),
                     std::numeric_limits<int16_t>::max(),
                     -PWM_MAX,
                     PWM_MAX);
 
-        direction currentDir = direction::STOPPED;
+        direction current_dir = direction::STOPPED;
         if (speed > 0)
-            currentDir = direction::FORWARD;
+            current_dir = direction::FORWARD;
         else if (speed < 0)
-            currentDir = direction::BACKWARD;
-        bool dirChanged = (currentDir != _prevDirection);
-        _prevDirection = currentDir;
+            current_dir = direction::BACKWARD;
+        bool dir_changed = (current_dir != _prev_direction);
+        _prev_direction = current_dir;
 
-        if (dirChanged)
+        if (dir_changed)
         {
-            if (currentDir == direction::FORWARD)
+            if (current_dir == direction::FORWARD)
             {
                 pinMode(_pins.second, OUTPUT);
                 digitalWrite(_pins.second, LOW);
@@ -87,7 +87,7 @@ public:
                 analogWriteResolution(_pins.first, PWM_BITS);
                 analogWriteFrequency(_pins.first, PWM_FREQ);
             }
-            else if (currentDir == direction::BACKWARD)
+            else if (current_dir == direction::BACKWARD)
             {
                 pinMode(_pins.first, OUTPUT);
                 digitalWrite(_pins.first, LOW);
@@ -111,7 +111,7 @@ public:
     }
 
 private:
-    direction _prevDirection = direction::STOPPED;
+    direction _prev_direction = direction::STOPPED;
 
     pin_pair_t _pins;
 };
@@ -122,13 +122,13 @@ public:
     static constexpr uint16_t CURRENT_SENSE_RESISTOR = 1000;        // ohms
     static constexpr float CURRENT_SENSE_PROPORTIONALITY = 450e-6;  // amps per amp
 
-    // static constexpr float currentToVoltage(const float& current);
-    // static constexpr float voltageToCurrent(const float& voltage);
-    static constexpr float currentToVoltage(const float& current)
+    // static constexpr float current_to_voltage(const float& current);
+    // static constexpr float voltage_to_current(const float& voltage);
+    static constexpr float current_to_voltage(const float& current)
     {
         return current * (CURRENT_SENSE_RESISTOR * CURRENT_SENSE_PROPORTIONALITY);
     }
-    static constexpr float voltageToCurrent(const float& voltage)
+    static constexpr float voltage_to_current(const float& voltage)
     {
         return voltage / (CURRENT_SENSE_RESISTOR * CURRENT_SENSE_PROPORTIONALITY);
     }
@@ -136,40 +136,40 @@ public:
     static constexpr float MAX_VOLTAGE = 3.3f;  // volts
     static constexpr float MAX_CURRENT = 6.0f;  // amps
 
-    MotorBank(const pin_pair_t& driverAPins,
-              const pin_pair_t& driverBPins,
-              const gpio_num_t& currentLimitPin,
-              const gpio_num_t& currentSensePin,
-              const gpio_num_t& faultPin)
-        : _driverA(driverAPins),
-          _driverB(driverBPins),
-          _currentLimitPin(currentLimitPin),
-          _currentSensePin(currentSensePin),
-          _faultPin(faultPin)
+    MotorBank(const pin_pair_t& driver_A_pins,
+              const pin_pair_t& driver_B_pins,
+              const gpio_num_t& current_limit_pin,
+              const gpio_num_t& current_sense_pin,
+              const gpio_num_t& fault_pin)
+        : _driver_A(driver_A_pins),
+          _driver_B(driver_B_pins),
+          _current_limit_pin(current_limit_pin),
+          _current_sense_pin(current_sense_pin),
+          _fault_pin(fault_pin)
     {
-        pinMode(_currentLimitPin, OUTPUT);
-        pinMode(_currentSensePin, INPUT);
-        pinMode(_faultPin, INPUT_PULLUP);
+        pinMode(_current_limit_pin, OUTPUT);
+        pinMode(_current_sense_pin, INPUT);
+        pinMode(_fault_pin, INPUT_PULLUP);
 
-        setSpeed(0, 0);
+        set_speed(0, 0);
 
         sdm_config_t config = {
-            .gpio_num = _currentLimitPin,
+            .gpio_num = _current_limit_pin,
             .clk_src = SDM_CLK_SRC_DEFAULT,
             .sample_rate_hz = 1000 * 1000,
         };
-        esp_err_t err = sdm_new_channel(&config, &_currentLimitChannel);
+        esp_err_t err = sdm_new_channel(&config, &_current_limit_channel);
         if (err != ESP_OK)
         {
             throw std::runtime_error(std::format("Failed to create SDM channel: {}", esp_err_to_name(err)));
         }
 
-        sdm_channel_enable(_currentLimitChannel);
+        sdm_channel_enable(_current_limit_channel);
         if (err != ESP_OK)
         {
             throw std::runtime_error(std::format("Failed to enable SDM channel: {}", esp_err_to_name(err)));
         }
-        setCurrentLimit(MAX_CURRENT);
+        set_current_limit(MAX_CURRENT);
     }
 
     // delete copy/move semantics
@@ -180,65 +180,65 @@ public:
 
     virtual ~MotorBank()
     {
-        sdm_channel_set_pulse_density(_currentLimitChannel, -128);
-        sdm_channel_disable(_currentLimitChannel);
-        sdm_del_channel(_currentLimitChannel);
-        pinMode(_currentLimitPin, INPUT);
-        pinMode(_currentSensePin, INPUT);
-        pinMode(_faultPin, INPUT_PULLUP);
+        sdm_channel_set_pulse_density(_current_limit_channel, -128);
+        sdm_channel_disable(_current_limit_channel);
+        sdm_del_channel(_current_limit_channel);
+        pinMode(_current_limit_pin, INPUT);
+        pinMode(_current_sense_pin, INPUT);
+        pinMode(_fault_pin, INPUT_PULLUP);
     }
 
-    void setSpeed(int16_t speedA, int16_t speedB)
+    void set_speed(int16_t speed_a, int16_t speed_b)
     {
-        _driverA.setSpeed(speedA);
-        _driverB.setSpeed(speedB);
+        _driver_A.set_speed(speed_a);
+        _driver_B.set_speed(speed_b);
     }
-    void setSpeedA(int16_t speed)
+    void set_speed_a(int16_t speed)
     {
-        _driverA.setSpeed(speed);
+        _driver_A.set_speed(speed);
     }
-    void setSpeedB(int16_t speed)
+    void set_speed_b(int16_t speed)
     {
-        _driverB.setSpeed(speed);
+        _driver_B.set_speed(speed);
     }
 
-    float getCurrentLimit() const
+    float get_current_limit() const
     {
-        return _currentLimit;
+        return _current_limit;
     }
-    void setCurrentLimit(float limit)
+    void set_current_limit(float limit)
     {
         if (limit > MAX_CURRENT)
             limit = MAX_CURRENT;
-        _currentLimit = limit;
-        float voltage = currentToVoltage(limit);
-        const int8_t pwmValue = static_cast<int8_t>(
+        _current_limit = limit;
+        float voltage = current_to_voltage(limit);
+        const int8_t pwm_value = static_cast<int8_t>(
             std::clamp((voltage * 255 / MAX_VOLTAGE) - 128,
                        static_cast<float>(std::numeric_limits<int8_t>::min()),
                        static_cast<float>(std::numeric_limits<int8_t>::max())));
-        sdm_channel_set_pulse_density(_currentLimitChannel, pwmValue);
-        printf(std::format("Set current limit to {:.02f} {:.02f} {}\n", limit, voltage, pwmValue).c_str());
+        sdm_channel_set_pulse_density(_current_limit_channel, pwm_value);
+        printf(std::format("Set current limit to {:.02f} {:.02f} {}\n", limit, voltage, pwm_value).c_str());
     }
-    float getAverageCurrent()
+    float get_average_current()
     {
-        return voltageToCurrent(analogReadMilliVolts(_currentSensePin) / 1000.0f);
+        return voltage_to_current(analogReadMilliVolts(_current_sense_pin) / 1000.0f);
     }
 
-    bool isInFault()
+    bool is_in_fault()
     {
-        return digitalRead(_faultPin) == LOW;
+        return digitalRead(_fault_pin) == LOW;
     }
 
 private:
-    float _currentLimit = 0.0f;
-    sdm_channel_handle_t _currentLimitChannel;
+    float _current_limit = 0.0f;
+    sdm_channel_handle_t _current_limit_channel;
 
-    MotorDriver _driverA;
-    MotorDriver _driverB;
+    MotorDriver _driver_A;
+    MotorDriver _driver_B;
 
-    const gpio_num_t _currentLimitPin;
-    const gpio_num_t _currentSensePin;
-    const gpio_num_t _faultPin;
+    const gpio_num_t _current_limit_pin;
+    const gpio_num_t _current_sense_pin;
+    const gpio_num_t _fault_pin;
 };
 
 using namespace std::chrono;
@@ -246,20 +246,20 @@ using namespace std::chrono_literals;
 using namespace hi_can;
 using namespace hi_can::addressing;
 
-std::optional<PacketManager> packetManager;
+std::optional<PacketManager> packet_manager;
 
-void handleMotorSpeedData(const Packet& packet);
-void handleMotorCurrentData(const Packet& packet);
-void setMotorSpeed(const excavation::bucket::controller::group& group,
-                   const int16_t& speed);
-void setMotorCurrent(const excavation::bucket::controller::group& group,
-                     const uint16_t& current);
-void registerMotorBank(const excavation::bucket::controller::group& group,
-                       const uint8_t& speedParam);
+void handle_motor_speed_data(const Packet& packet);
+void handle_motor_current_data(const Packet& packet);
+void set_motor_speed(const excavation::bucket::controller::group& group,
+                     const int16_t& speed);
+void set_motor_current(const excavation::bucket::controller::group& group,
+                       const uint16_t& current);
+void register_motor_bank(const excavation::bucket::controller::group& group,
+                         const uint8_t& speed_param);
 
-std::optional<MotorBank> motorBank1;
-std::optional<MotorBank> motorBank2;
-std::optional<MotorBank> motorBank3;
+std::optional<MotorBank> motor_bank_1;
+std::optional<MotorBank> motor_bank_2;
+std::optional<MotorBank> motor_bank_3;
 
 constexpr standard_address_t DEVICE_ADDRESS{
     excavation::SYSTEM_ID,
@@ -274,34 +274,34 @@ void setup()
     digitalWrite(SLEEP, LOW);
     delay(100);
     digitalWrite(SLEEP, HIGH);
-    motorBank1.emplace(DRIVER_1_PINS,
-                       DRIVER_2_PINS,
-                       BANK_1_CURRENT_LIMIT,
-                       BANK_1_CURRENT_SENSE,
-                       BANK_1_FAULT);
-    motorBank2.emplace(DRIVER_3_PINS,
-                       DRIVER_4_PINS,
-                       BANK_2_CURRENT_LIMIT,
-                       BANK_2_CURRENT_SENSE,
-                       BANK_2_FAULT);
-    motorBank3.emplace(DRIVER_5_PINS,
-                       DRIVER_6_PINS,
-                       BANK_3_CURRENT_LIMIT,
-                       BANK_3_CURRENT_SENSE,
-                       BANK_3_FAULT);
+    motor_bank_1.emplace(DRIVER_1_PINS,
+                         DRIVER_2_PINS,
+                         BANK_1_CURRENT_LIMIT,
+                         BANK_1_CURRENT_SENSE,
+                         BANK_1_FAULT);
+    motor_bank_2.emplace(DRIVER_3_PINS,
+                         DRIVER_4_PINS,
+                         BANK_2_CURRENT_LIMIT,
+                         BANK_2_CURRENT_SENSE,
+                         BANK_2_FAULT);
+    motor_bank_3.emplace(DRIVER_5_PINS,
+                         DRIVER_6_PINS,
+                         BANK_3_CURRENT_LIMIT,
+                         BANK_3_CURRENT_SENSE,
+                         BANK_3_FAULT);
 
     pinMode(MAGNET_PIN, OUTPUT);
     digitalWrite(MAGNET_PIN, LOW);
 
-    auto& interface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
-                                                 filter_t{
-                                                     .address = static_cast<flagged_address_t>(DEVICE_ADDRESS),
-                                                     .mask = DEVICE_MASK,
-                                                 });
-    packetManager.emplace(interface);
+    auto& interface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
+                                                  filter_t{
+                                                      .address = static_cast<flagged_address_t>(DEVICE_ADDRESS),
+                                                      .mask = DEVICE_MASK,
+                                                  });
+    packet_manager.emplace(interface);
 
     using namespace excavation::bucket::controller;
-    const std::vector<group> actuatorGroups = {
+    const std::vector<group> actuator_groups = {
         group::LIFT_BOTH,
         group::LIFT_LEFT,
         group::LIFT_RIGHT,
@@ -313,13 +313,13 @@ void setup()
         group::JAWS_RIGHT,
     };
 
-    for (const auto& group : actuatorGroups)
-        registerMotorBank(group, static_cast<uint8_t>(actuator_parameter::SPEED));
-    registerMotorBank(group::MAGNET,
-                      static_cast<uint8_t>(magnet_parameter::ROTATE_SPEED));
+    for (const auto& group : actuator_groups)
+        register_motor_bank(group, static_cast<uint8_t>(actuator_parameter::SPEED));
+    register_motor_bank(group::MAGNET,
+                        static_cast<uint8_t>(magnet_parameter::ROTATE_SPEED));
 
     using namespace parameters::excavation::bucket::controller;
-    packetManager->setTransmissionConfig(
+    packet_manager->set_transmission_config(
         static_cast<flagged_address_t>(
             standard_address_t{DEVICE_ADDRESS,
                                static_cast<uint8_t>(group::BANK_1),
@@ -327,23 +327,23 @@ void setup()
         {
             .generator = [=]()
             {
-                return current_t{static_cast<uint16_t>(std::clamp(motorBank1->getAverageCurrent() * 1000,
+                return current_t{static_cast<uint16_t>(std::clamp(motor_bank_1->get_average_current() * 1000,
                                                                   static_cast<float>(std::numeric_limits<uint16_t>::min()),
                                                                   static_cast<float>(std::numeric_limits<uint16_t>::max())))}
-                    .serializeData();
+                    .serialize_data();
             },
             .interval = 100ms,
-            .shouldTransmitImmediately = true,
+            .should_transmit_immediately = true,
         });
-    packetManager->setCallback(
+    packet_manager->set_callback(
         filter_t{static_cast<flagged_address_t>(
             standard_address_t{DEVICE_ADDRESS,
                                static_cast<uint8_t>(group::BANK_1),
                                static_cast<uint8_t>(bank_parameter::CURRENT_LIMIT)})},
         {
-            .dataCallback = handleMotorCurrentData,
+            .data_callback = handle_motor_current_data,
         });
-    packetManager->setTransmissionConfig(
+    packet_manager->set_transmission_config(
         static_cast<flagged_address_t>(
             standard_address_t{DEVICE_ADDRESS,
                                static_cast<uint8_t>(group::BANK_2),
@@ -351,23 +351,23 @@ void setup()
         {
             .generator = [=]()
             {
-                return current_t{static_cast<uint16_t>(std::clamp(motorBank2->getAverageCurrent() * 1000,
+                return current_t{static_cast<uint16_t>(std::clamp(motor_bank_2->get_average_current() * 1000,
                                                                   static_cast<float>(std::numeric_limits<uint16_t>::min()),
                                                                   static_cast<float>(std::numeric_limits<uint16_t>::max())))}
-                    .serializeData();
+                    .serialize_data();
             },
             .interval = 100ms,
-            .shouldTransmitImmediately = true,
+            .should_transmit_immediately = true,
         });
-    packetManager->setCallback(
+    packet_manager->set_callback(
         filter_t{static_cast<flagged_address_t>(
             standard_address_t{DEVICE_ADDRESS,
                                static_cast<uint8_t>(group::BANK_2),
                                static_cast<uint8_t>(bank_parameter::CURRENT_LIMIT)})},
         {
-            .dataCallback = handleMotorCurrentData,
+            .data_callback = handle_motor_current_data,
         });
-    packetManager->setTransmissionConfig(
+    packet_manager->set_transmission_config(
         static_cast<flagged_address_t>(
             standard_address_t{DEVICE_ADDRESS,
                                static_cast<uint8_t>(group::BANK_3),
@@ -375,56 +375,56 @@ void setup()
         {
             .generator = [=]()
             {
-                return current_t{static_cast<uint16_t>(std::clamp(motorBank3->getAverageCurrent() * 1000,
+                return current_t{static_cast<uint16_t>(std::clamp(motor_bank_3->get_average_current() * 1000,
                                                                   static_cast<float>(std::numeric_limits<uint16_t>::min()),
                                                                   static_cast<float>(std::numeric_limits<uint16_t>::max())))}
-                    .serializeData();
+                    .serialize_data();
             },
             .interval = 100ms,
-            .shouldTransmitImmediately = true,
+            .should_transmit_immediately = true,
         });
-    packetManager->setCallback(
+    packet_manager->set_callback(
         filter_t{static_cast<flagged_address_t>(
             standard_address_t{DEVICE_ADDRESS,
                                static_cast<uint8_t>(group::BANK_3),
                                static_cast<uint8_t>(bank_parameter::CURRENT_LIMIT)})},
         {
-            .dataCallback = handleMotorCurrentData,
+            .data_callback = handle_motor_current_data,
         });
 }
 
 void loop()
 {
-    packetManager->handle();
+    packet_manager->handle();
     delay(1);
 }
 
-void handleMotorSpeedData(const Packet& packet)
+void handle_motor_speed_data(const Packet& packet)
 {
     using namespace excavation::bucket::controller;
     using namespace hi_can::parameters::excavation::bucket::controller;
     try
     {
-        standard_address_t address{packet.getAddress().address};
-        setMotorSpeed(
-            static_cast<group>(standard_address_t(packet.getAddress().address).group),
-            speed_t{packet.getData()}.value);
+        standard_address_t address{packet.get_address().address};
+        set_motor_speed(
+            static_cast<group>(standard_address_t(packet.get_address().address).group),
+            speed_t{packet.get_data()}.value);
     }
     catch (const std::exception& e)
     {
         printf(std::format("Failed to parse speed packet: {}\n", e.what()).c_str());
     }
 }
-void handleMotorCurrentData(const Packet& packet)
+void handle_motor_current_data(const Packet& packet)
 {
     using namespace excavation::bucket::controller;
     using namespace hi_can::parameters::excavation::bucket::controller;
     try
     {
-        standard_address_t address{packet.getAddress().address};
-        setMotorCurrent(static_cast<group>(
-                            standard_address_t(packet.getAddress().address).group),
-                        current_t{packet.getData()}.value);
+        standard_address_t address{packet.get_address().address};
+        set_motor_current(static_cast<group>(
+                              standard_address_t(packet.get_address().address).group),
+                          current_t{packet.get_data()}.value);
     }
     catch (const std::exception& e)
     {
@@ -432,7 +432,7 @@ void handleMotorCurrentData(const Packet& packet)
     }
 }
 
-void setMotorSpeed(const excavation::bucket::controller::group& group, const int16_t& speed)
+void set_motor_speed(const excavation::bucket::controller::group& group, const int16_t& speed)
 {
     using namespace excavation::bucket::controller;
     // printf(std::format("Setting motor (group) {:#x} to speed {}\n",
@@ -441,68 +441,68 @@ void setMotorSpeed(const excavation::bucket::controller::group& group, const int
     switch (group)
     {
     case group::LIFT_BOTH:
-        setMotorSpeed(group::LIFT_LEFT, speed);
-        setMotorSpeed(group::LIFT_RIGHT, speed);
+        set_motor_speed(group::LIFT_LEFT, speed);
+        set_motor_speed(group::LIFT_RIGHT, speed);
         break;
     case group::LIFT_LEFT:
-        motorBank1->setSpeedA(speed);
+        motor_bank_1->set_speed_a(speed);
         break;
     case group::LIFT_RIGHT:
-        motorBank1->setSpeedB(speed);
+        motor_bank_1->set_speed_b(speed);
         break;
     case group::TILT_BOTH:
-        motorBank3->setSpeedA(speed);
+        motor_bank_3->set_speed_a(speed);
         break;
     case group::JAWS_BOTH:
-        setMotorSpeed(group::JAWS_LEFT, speed);
-        setMotorSpeed(group::JAWS_RIGHT, speed);
+        set_motor_speed(group::JAWS_LEFT, speed);
+        set_motor_speed(group::JAWS_RIGHT, speed);
         break;
     case group::JAWS_LEFT:
-        motorBank2->setSpeedA(speed);
+        motor_bank_2->set_speed_a(speed);
         break;
     case group::JAWS_RIGHT:
-        motorBank2->setSpeedB(speed);
+        motor_bank_2->set_speed_b(speed);
         break;
     case group::MAGNET:
-        motorBank3->setSpeedB(speed);
+        motor_bank_3->set_speed_b(speed);
         break;
     default:
         break;
     }
 }
-void setMotorCurrent(const excavation::bucket::controller::group& group,
-                     const uint16_t& current)
+void set_motor_current(const excavation::bucket::controller::group& group,
+                       const uint16_t& current)
 {
     using namespace excavation::bucket::controller;
     printf(std::format("Setting {:#x} current to {}mA\n", static_cast<uint8_t>(group), current).c_str());
     switch (group)
     {
     case group::BANK_1:
-        motorBank1->setCurrentLimit(current / 1000.0f);
+        motor_bank_1->set_current_limit(current / 1000.0f);
         break;
     case group::BANK_2:
-        motorBank2->setCurrentLimit(current / 1000.0f);
+        motor_bank_2->set_current_limit(current / 1000.0f);
         break;
     case group::BANK_3:
-        motorBank3->setCurrentLimit(current / 1000.0f);
+        motor_bank_3->set_current_limit(current / 1000.0f);
         break;
     default:
         break;
     }
 }
 
-void registerMotorBank(const excavation::bucket::controller::group& group,
-                       const uint8_t& speedParam)
+void register_motor_bank(const excavation::bucket::controller::group& group,
+                         const uint8_t& speed_param)
 {
-    const standard_address_t speedAddress{DEVICE_ADDRESS,
-                                          static_cast<uint8_t>(group),
-                                          static_cast<uint8_t>(speedParam)};
-    packetManager->setCallback(filter_t{
-                                   static_cast<flagged_address_t>(speedAddress),
-                               },
-                               {
-                                   .dataCallback = handleMotorSpeedData,
-                                   .timeoutCallback = std::bind(setMotorSpeed, group, (int16_t)0),
-                                   .timeout = 200ms,
-                               });
+    const standard_address_t speed_address{DEVICE_ADDRESS,
+                                           static_cast<uint8_t>(group),
+                                           static_cast<uint8_t>(speed_param)};
+    packet_manager->set_callback(filter_t{
+                                     static_cast<flagged_address_t>(speed_address),
+                                 },
+                                 {
+                                     .data_callback = handle_motor_speed_data,
+                                     .timeout_callback = std::bind(set_motor_speed, group, (int16_t)0),
+                                     .timeout = 200ms,
+                                 });
 }
