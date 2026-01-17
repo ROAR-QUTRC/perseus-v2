@@ -22,7 +22,6 @@ NC='\033[0m' # No Color
 # ANSI cursor control
 HIDE_CURSOR='\033[?25l'
 SHOW_CURSOR='\033[?25h'
-CLEAR_LINE='\033[K'
 
 # Default parameters
 MATRIX_SIZE=1024
@@ -74,11 +73,11 @@ draw_progress_bar() {
     local filled=$((percent * BAR_WIDTH / 100))
     local empty=$((BAR_WIDTH - filled))
 
-    printf "${color}"
+    printf '%b' "$color"
     for ((i=0; i<filled; i++)); do printf "%s" "$BAR_FILLED"; done
-    printf "${DIM}"
+    printf '%b' "$DIM"
     for ((i=0; i<empty; i++)); do printf "%s" "$BAR_EMPTY"; done
-    printf "${NC}"
+    printf '%b' "$NC"
 }
 
 # Parse command line arguments
@@ -106,7 +105,11 @@ done
 
 # Create temp directory for compilation
 TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR; printf '${SHOW_CURSOR}' 2>/dev/null || true" EXIT
+cleanup() {
+    rm -rf "$TEMP_DIR"
+    printf '%b' "$SHOW_CURSOR" 2>/dev/null || true
+}
+trap cleanup EXIT
 
 CPU_SOURCE="$SCRIPT_DIR/matrix_cpu.c"
 CUDA_SOURCE="$SCRIPT_DIR/matrix_cuda.cu"
@@ -174,11 +177,9 @@ echo ""
 
 # Sequential mode (original behavior)
 if $SEQUENTIAL_MODE || ! $CUDA_AVAILABLE; then
-    ARGS="-n $MATRIX_SIZE"
-
     print_header "Running CPU Version"
     echo ""
-    CPU_OUTPUT=$("$CPU_BINARY" $ARGS)
+    CPU_OUTPUT=$("$CPU_BINARY" -n "$MATRIX_SIZE")
     echo "$CPU_OUTPUT" | grep -v "TIME_MS:" | grep -v "CHECKSUM:"
     CPU_TIME=$(echo "$CPU_OUTPUT" | grep "TIME_MS:" | cut -d: -f2)
     echo ""
@@ -190,9 +191,9 @@ if $SEQUENTIAL_MODE || ! $CUDA_AVAILABLE; then
         echo ""
 
         if $GPU_AVAILABLE && command -v nixcuda &>/dev/null; then
-            CUDA_OUTPUT=$(nixcuda "$CUDA_BINARY" $ARGS 2>/dev/null || echo "GPU_USED:0")
+            CUDA_OUTPUT=$(nixcuda "$CUDA_BINARY" -n "$MATRIX_SIZE" 2>/dev/null || echo "GPU_USED:0")
         else
-            CUDA_OUTPUT=$("$CUDA_BINARY" $ARGS 2>/dev/null || echo "GPU_USED:0")
+            CUDA_OUTPUT=$("$CUDA_BINARY" -n "$MATRIX_SIZE" 2>/dev/null || echo "GPU_USED:0")
         fi
 
         echo "$CUDA_OUTPUT" | grep -v "TIME_MS:" | grep -v "GPU_USED:" | grep -v "CHECKSUM:"
@@ -227,18 +228,18 @@ CUDA_OUTPUT_FILE="$TEMP_DIR/cuda_output.txt"
 touch "$CPU_OUTPUT_FILE" "$CUDA_OUTPUT_FILE"
 
 # Print header row
-printf "  ${YELLOW}${BOLD}%-$((BAR_WIDTH + 15))s${NC}" "CPU"
-printf "  ${GREEN}${BOLD}%-$((BAR_WIDTH + 15))s${NC}\n" "CUDA"
+printf "  %b%-$((BAR_WIDTH + 15))s%b" "$YELLOW$BOLD" "CPU" "$NC"
+printf "  %b%-$((BAR_WIDTH + 15))s%b\n" "$GREEN$BOLD" "CUDA" "$NC"
 
 # Print separator
-printf "  ${DIM}"
+printf "  %b" "$DIM"
 for ((i=0; i<BAR_WIDTH + 15; i++)); do printf "─"; done
 printf "  "
 for ((i=0; i<BAR_WIDTH + 15; i++)); do printf "─"; done
-printf "${NC}\n"
+printf "%b\n" "$NC"
 
 # Hide cursor
-printf "${HIDE_CURSOR}"
+printf '%b' "$HIDE_CURSOR"
 
 # Print initial progress bars
 printf "  "
@@ -249,7 +250,7 @@ draw_progress_bar 0 "$GREEN"
 printf "   0%%   0.0ms\n"
 
 # Status line
-printf "  ${DIM}Starting...${NC}\n"
+printf "  %bStarting...%b\n" "$DIM" "$NC"
 
 # Move cursor back to progress line
 printf "\033[2A"
@@ -367,7 +368,7 @@ printf " 100%% %7.1fms\n" "$cuda_final_time"
 printf "\n"
 
 # Show cursor
-printf "${SHOW_CURSOR}"
+printf '%b' "$SHOW_CURSOR"
 
 # Results
 echo ""
@@ -377,22 +378,22 @@ echo ""
 [[ -z "$cpu_final_time" ]] && cpu_final_time="N/A"
 [[ -z "$cuda_final_time" ]] && cuda_final_time="N/A"
 
-printf "  ${YELLOW}CPU Time:  ${BOLD}%s ms${NC}\n" "$cpu_final_time"
+printf "  %bCPU Time:  %b%s ms%b\n" "$YELLOW" "$BOLD" "$cpu_final_time" "$NC"
 
 if [[ "$gpu_used" == "1" ]]; then
-    printf "  ${GREEN}CUDA Time: ${BOLD}%s ms${NC} (GPU accelerated)\n" "$cuda_final_time"
+    printf "  %bCUDA Time: %b%s ms%b (GPU accelerated)\n" "$GREEN" "$BOLD" "$cuda_final_time" "$NC"
 
     if [[ "$cpu_final_time" != "N/A" && "$cuda_final_time" != "N/A" ]]; then
         speedup=$(awk "BEGIN {printf \"%.1f\", $cpu_final_time / $cuda_final_time}")
         echo ""
-        printf "  ${GREEN}${BOLD}>>> Speedup: %sx faster with CUDA! <<<${NC}\n" "$speedup"
+        printf "  %b%b>>> Speedup: %sx faster with CUDA! <<<%b\n" "$GREEN" "$BOLD" "$speedup" "$NC"
     fi
 else
-    printf "  ${YELLOW}CUDA Time: ${BOLD}%s ms${NC} (CPU fallback - no GPU)\n" "$cuda_final_time"
+    printf "  %bCUDA Time: %b%s ms%b (CPU fallback - no GPU)\n" "$YELLOW" "$BOLD" "$cuda_final_time" "$NC"
     echo ""
-    printf "  ${CYAN}Run with nixcuda or on a GPU system for acceleration${NC}\n"
+    printf "  %bRun with nixcuda or on a GPU system for acceleration%b\n" "$CYAN" "$NC"
 fi
 
 echo ""
-printf "${DIM}Tip: Try -n 768 or -n 1024 for more dramatic speed differences${NC}\n"
+printf "%bTip: Try -n 768 or -n 1024 for more dramatic speed differences%b\n" "$DIM" "$NC"
 echo ""
