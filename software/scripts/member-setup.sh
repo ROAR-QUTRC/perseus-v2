@@ -7,7 +7,7 @@ set -euo pipefail
 # exit if run as root
 if [ "$EUID" -eq 0 ]; then
   echo "Please run as yourself! Running as superuser (ie, with sudo) breaks the setup."
-  exit
+  exit 1
 fi
 
 # Update and install required packages
@@ -37,16 +37,6 @@ echo "Running nix-setup.sh script. If asked, accept all config options by typing
 cd ~/perseus-v2
 ./software/scripts/nix-setup.sh
 
-# Check the script ran correctly and didn't fail
-EXIT_STATUS=$?
-
-if ! [ $EXIT_STATUS -eq 0 ]; then
-  echo "nix-setup.sh script failed (Exit code $EXIT_STATUS). Exiting"
-  exit
-else
-  echo "nix-setup.sh script ran successfully. Continuing"
-fi
-
 # Build nix packages
 echo "Building nix packages. If asked, accept all config options with 'y'"
 /nix/var/nix/profiles/default/bin/nix build --accept-flake-config
@@ -54,4 +44,4 @@ echo "Building nix packages. If asked, accept all config options with 'y'"
 echo "Setup script ran successfully!"
 echo "Restarting shell"
 
-exec $SHELL
+exec "$SHELL"
