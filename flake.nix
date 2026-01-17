@@ -111,6 +111,31 @@
             pkg:
             builtins.elem (pkgs.lib.getName pkg) [
               "drawio"
+              # CUDA packages
+              "cuda_cudart"
+              "cuda_nvcc"
+              "cuda_cccl"
+              "libcublas"
+              "libcufft"
+              "libcurand"
+              "libcusolver"
+              "libcusparse"
+              "libnpp"
+              "cuda_nvrtc"
+              "cuda_nvml_dev"
+              "cuda_profiler_api"
+              "cudatoolkit"
+              "libnvjitlink"
+              "cuda_cuobjdump"
+              "cuda_gdb"
+              "cuda_cuxxfilt"
+              "cuda_nvdisasm"
+              "cuda_nvprune"
+              "cuda_sanitizer_api"
+              "cuda_nvtx"
+              # ONNX Runtime CUDA dependencies
+              "cudnn"
+              "cudnn-frontend"
             ];
         };
         # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
@@ -141,6 +166,7 @@
             can-utils
             corepack_24
             nixgl-script
+            nixcuda-script
             ncurses
             glibcLocales
             yaml-cpp
@@ -180,7 +206,26 @@
         };
         # Packages which should be available only in the dev shell
         devShellPkgs = {
-          inherit (pkgs) man-pages man-pages-posix stdmanpages;
+          inherit (pkgs)
+            man-pages
+            man-pages-posix
+            stdmanpages
+            nix-gl-host
+            ;
+          inherit (pkgs.cudaPackages)
+            cuda_nvcc
+            cuda_cudart
+            cuda_cccl
+            libcublas
+            libcufft
+            libcurand
+            libcusolver
+            libcusparse
+            cuda_nvrtc
+            cudnn
+            ;
+          # ONNX Runtime with CUDA support
+          onnxruntime-cuda = pkgs.onnxruntime.override { cudaSupport = true; };
         };
         # Packages needed to run the simulation
         # Note: May not be needed, most needed packages should
@@ -212,6 +257,12 @@
               export RCUTILS_COLORIZED_OUTPUT=1
               # fix locale issues
               export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+              # CUDA environment setup
+              export CUDA_PATH="${pkgs.cudaPackages.cuda_nvcc}"
+              export CUDA_HOME="${pkgs.cudaPackages.cuda_nvcc}"
+              export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc}/bin"
+              # ONNX Runtime with CUDA support
+              export ORT_LIB_LOCATION="${devShellPkgs.onnxruntime-cuda}/lib"
             '';
           };
 
