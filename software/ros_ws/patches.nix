@@ -273,11 +273,13 @@ let
 
         patches = patches ++ [
           ./patches/slam-toolbox/fix-jazzy-includes.patch
+          ./patches/slam-toolbox/fix-null-loop-scan-matcher.patch
         ];
 
         cmakeFlags = cmakeFlags ++ [
           "-DSLAM_TOOLBOX_USE_CUDA=ON"
           "-DCMAKE_CUDA_ARCHITECTURES=87" # Jetson Orin Nano
+          "-DCMAKE_BUILD_TYPE=RelWithDebInfo"  # Include debug symbols
         ];
       }
     );
