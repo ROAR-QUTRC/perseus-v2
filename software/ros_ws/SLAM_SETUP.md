@@ -72,13 +72,13 @@ ros2 topic hz /map
 
 ### Key Topics to Monitor
 
-| Topic | Description |
-|-------|-------------|
-| `/scan` | LIDAR data (from rplidar_node) |
-| `/map` | SLAM-generated occupancy grid |
-| `/odom` | Odometry from wheel encoders |
-| `/odometry/filtered` | Fused odometry from EKF |
-| `/tf` | Transform tree |
+| Topic                | Description                    |
+| -------------------- | ------------------------------ |
+| `/scan`              | LIDAR data (from rplidar_node) |
+| `/map`               | SLAM-generated occupancy grid  |
+| `/odom`              | Odometry from wheel encoders   |
+| `/odometry/filtered` | Fused odometry from EKF        |
+| `/tf`                | Transform tree                 |
 
 ### RViz Displays to Add
 

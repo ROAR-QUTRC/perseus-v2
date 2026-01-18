@@ -219,7 +219,9 @@ def generate_launch_description():
                 TimerAction(
                     period=2.0,  # Wait for node to initialize before configuring
                     actions=[
-                        LogInfo(msg="[LifecycleLaunch] SLAM Toolbox node is configuring."),
+                        LogInfo(
+                            msg="[LifecycleLaunch] SLAM Toolbox node is configuring."
+                        ),
                         EmitEvent(
                             event=ChangeState(
                                 lifecycle_node_matcher=matches_action(slam_toolbox),
