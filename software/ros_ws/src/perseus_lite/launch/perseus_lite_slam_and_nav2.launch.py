@@ -10,7 +10,9 @@ from launch.actions import (
     EmitEvent,
     LogInfo,
     RegisterEventHandler,
+    TimerAction,
 )
+from launch.event_handlers import OnProcessStart
 from launch.conditions import IfCondition
 from launch.events import matches_action
 from launch.substitutions import (
@@ -194,14 +196,7 @@ def generate_launch_description():
     )
 
     # SLAM Toolbox node (as LifecycleNode)
-    # Use nixcuda prefix to ensure proper CUDA library paths on Jetson
-    # nixcuda adds Tegra/CUDA library paths and runs through nixglhost
-    import shutil
-
-    nixcuda_path = (
-        shutil.which("nixcuda")
-        or "/nix/store/ch74hb3iqv7jaf36b3xjmxbdgxvmisf5-nixcuda/bin/nixcuda"
-    )
+    # CUDA-enabled slam_toolbox from DingoOz/slam_toolbox fork with null pointer fix
     slam_toolbox = LifecycleNode(
         package="slam_toolbox",
         executable="async_slam_toolbox_node",
@@ -212,14 +207,28 @@ def generate_launch_description():
         remappings=[
             ("imu", "/imu/data"),
         ],
-        prefix=[nixcuda_path],
     )
 
     # SLAM Toolbox lifecycle management
-    configure_slam_event = EmitEvent(
-        event=ChangeState(
-            lifecycle_node_matcher=matches_action(slam_toolbox),
-            transition_id=Transition.TRANSITION_CONFIGURE,
+    # Wait for node process to start, then configure after a brief delay
+    # This fixes the race condition where configure was sent before node was ready
+    configure_slam_event = RegisterEventHandler(
+        OnProcessStart(
+            target_action=slam_toolbox,
+            on_start=[
+                TimerAction(
+                    period=2.0,  # Wait for node to initialize before configuring
+                    actions=[
+                        LogInfo(msg="[LifecycleLaunch] SLAM Toolbox node is configuring."),
+                        EmitEvent(
+                            event=ChangeState(
+                                lifecycle_node_matcher=matches_action(slam_toolbox),
+                                transition_id=Transition.TRANSITION_CONFIGURE,
+                            )
+                        ),
+                    ],
+                ),
+            ],
         ),
         condition=IfCondition(autostart),
     )
@@ -230,7 +239,7 @@ def generate_launch_description():
             start_state="configuring",
             goal_state="inactive",
             entities=[
-                LogInfo(msg="[LifecycleLaunch] Slamtoolbox node is activating."),
+                LogInfo(msg="[LifecycleLaunch] SLAM Toolbox node is activating."),
                 EmitEvent(
                     event=ChangeState(
                         lifecycle_node_matcher=matches_action(slam_toolbox),

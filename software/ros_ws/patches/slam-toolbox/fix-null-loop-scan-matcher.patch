@@ -1,0 +1,15 @@
+diff --git a/lib/karto_sdk/src/Mapper.cpp b/lib/karto_sdk/src/Mapper.cpp
+--- a/lib/karto_sdk/src/Mapper.cpp
++++ b/lib/karto_sdk/src/Mapper.cpp
+@@ -3344,6 +3344,11 @@ ScanMatcher * Mapper::GetSequentialScanMatcher() const
+
+ ScanMatcher * Mapper::GetLoopScanMatcher() const
+ {
++  // Guard against null m_pGraph - the graph isn't created until Initialize()
++  // is called, which happens on the first Process() call (first scan).
++  if (m_pGraph == nullptr) {
++    return nullptr;
++  }
+   return m_pGraph->GetLoopScanMatcher();
+ }
+ }  // namespace karto
