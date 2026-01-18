@@ -11,9 +11,16 @@ add_library(${PROJECT_NAME} SHARED
   src/register_nodes.cpp
 )
 
+find_package(perseus_vision REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+
 ament_target_dependencies(${PROJECT_NAME}
+  perseus_vision
   behaviortree_cpp
   geometry_msgs
+  builtin_interfaces
+  rclcpp
 )
 
 install(TARGETS ${PROJECT_NAME}
@@ -21,6 +28,7 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
 
 install(DIRECTORY include/
   DESTINATION include/

@@ -22,7 +22,7 @@ def generate_launch_description():
                     {
                         "target_frame": "laser_frame",
                         "transform_tolerance": 0.1,
-                        "min_height": 0.2,
+                        "min_height": -10.0,
                         "max_height": 0.25,# keep points below 0.1m to meet lidar specs
                         "range_min": 1.0,
                         "angle_increment": 0.0174533,

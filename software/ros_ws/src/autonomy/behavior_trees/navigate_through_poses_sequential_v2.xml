@@ -32,7 +32,7 @@
                 </RateController>
 
                 <!-- Follow -->
-                <RecoveryNode number_of_retries="1" name="FollowPath">
+                <RecoveryNode number_of_retries="3" name="FollowPath">
                   <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
                   <Sequence>
                     <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
@@ -41,17 +41,14 @@
                 </RecoveryNode>
               </PipelineSequence>
 
-              <!-- Recovery actions if NavigateToPose fails -->
+              <!-- Recovery actions if Pipeline Sequence NavigateToPose fails -->
               <Sequence name="WaypointRecoveryActions">
                 <ClearEntireCostmap name="ClearLocalCostmap-Recovery" service_name="local_costmap/clear_entirely_local_costmap"/>
                 <ClearEntireCostmap name="ClearGlobalCostmap-Recovery" service_name="global_costmap/clear_entirely_global_costmap"/>
-
                 <!-- Spin in place (radians). 1.57 ~ 90deg -->
                 <Spin name="RecoverySpin" spin_dist="1.57"/>
-
                 <!-- Wait a bit -->
                 <Wait name="RecoveryWait" wait_duration="2.0"/>
-
                 <!-- Back up slightly -->
                 <BackUp name="RecoveryBackUp" backup_dist="0.20" backup_speed="0.05"/>
               </Sequence>
@@ -61,7 +58,16 @@
             <!-- Only runs if the above SUCCESS (goal reached) -->
             <Wait name="WaitAtWaypoint" wait_duration="5.0"/>
 
-            <!-- TODO: Call ArucoMarker detection service here (should return SUCCESS/FAILURE) -->
+            <Fallback name="ArucoOptional">
+              <DetectAruco service_name="/detect_objects"
+                          timeout_sec="0.2"
+                          max_age_sec="0.5"
+                          min_count="1"
+                          ids="{aruco_ids}"
+                          poses="{aruco_poses}"
+                          frame_id="{aruco_frame_id}"/>
+              <AlwaysSuccess/>
+            </Fallback>
 
             <!-- Remove the first goal only AFTER success -->
             <PopFirstGoal input_goals="{goals}" output_goals="{goals}"/>
