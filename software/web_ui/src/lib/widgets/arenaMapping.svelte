@@ -29,7 +29,7 @@
 	//Set these as the only valid string values 
 	type Mode = 'waypoint' | 'border';
 	type rosStringMessage = { data: string };
-	//Data modle for the waypoints for the YAML output and table 
+	//Data model for the waypoints for the YAML output and table 
 	type waypointRow = {
 		id: string;
 		name: string;
