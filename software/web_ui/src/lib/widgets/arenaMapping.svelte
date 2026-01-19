@@ -484,9 +484,8 @@
 	}
 
 	function buildYaml(): string {
-		const lines: string[] = [];
-		
-		lines.push('waypoints:');
+	const lines: string[] = [];
+	lines.push('waypoints:');
 
 		for (const waypoint of waypoints) {
 			const yawRadians = ((waypoint.yaw)*Math.PI)/180;
@@ -496,8 +495,9 @@
 			lines.push(`yaw: ${waypoint.yaw}`)
 		}
 
-		return lines.join('\n');
+	return lines.join('\n');
 	}
+
 	  
 	function drawRotatedRectangle(waypoint:waypointRow){
 			const arrowLength = 25; 
