@@ -521,7 +521,7 @@
 			''
 		);
 	}
-
+// Function that sets the file name of the saved file created in buildYaml()
 	async function saveYamlToScripts() {
 		const yaml_text = buildYaml();
 		try {
