@@ -51,6 +51,7 @@ pkgs.mkShell {
             joint-state-publisher-gui
             joy
             mecanum-drive-controller
+            nav2-msgs
             navigation2
             nlohmann_json
             openssl
@@ -58,6 +59,7 @@ pkgs.mkShell {
             python3Packages.pygame
             python3Packages.pytest
             rclcpp
+            rclcpp-action
             rclcpp-lifecycle
             rclpy
             realsense2-camera
