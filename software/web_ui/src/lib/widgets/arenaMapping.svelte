@@ -133,6 +133,7 @@
 	// bind the next arrow click to the waypoint that was just added
 	let pendingYawWaypointId: string | null = null;
 
+<<<<<<< HEAD
 	$effect(() => {
 		const rosConnection = getRosConnection();
 		if (rosConnection) {
@@ -140,6 +141,146 @@
 				ros: rosConnection,
 				name: requestTopicName,
 				messageType: 'std_msgs/msg/String'
+=======
+	function calculate_origin() {
+		let total_x = 0;
+		let total_y = 0;
+		origins.forEach((origin, o) => {
+			total_x += origin.centroid_x;
+			total_y += origin.centroid_y;
+		});
+		x_origin = total_x / origins.length;
+		y_origin = total_y / origins.length;
+
+		waypoints.forEach((waypoint, w) => {
+			switch(positive_x_direction) {
+				case "left":
+					waypoint.relative_x = x_origin - waypoint.centroid_x;
+					break;
+				case "right":
+					waypoint.relative_x = waypoint.centroid_x - x_origin;
+					break;
+				case "down":
+					waypoint.relative_x = waypoint.centroid_y - y_origin;
+					break;
+				case "up":
+					waypoint.relative_x = y_origin - waypoint.centroid_y;
+			}
+			switch(positive_y_direction) {
+				case "left":
+					waypoint.relative_y = x_origin - waypoint.centroid_x;
+					break;
+				case "right":
+					waypoint.relative_y = waypoint.centroid_x - x_origin;
+					break;
+				case "down":
+					waypoint.relative_y = waypoint.centroid_y - y_origin;
+					break;
+				case "up":
+					waypoint.relative_y = y_origin - waypoint.centroid_y;
+			}
+		});
+	}
+
+	function calculate_angle() {
+		console.log("hello1");
+		waypoints.forEach((waypoint, w) => {
+			arrows.forEach((arrow, a) => {
+				if (waypoint.name.slice(2) === arrow.name.slice(2)) {
+
+					const delta_x = waypoint.centroid_x - arrow.centroid_x;
+					const delta_y = waypoint.centroid_y - arrow.centroid_y;
+					
+					console.log(delta_x);
+					console.log(delta_y);
+					console.log(waypoint.yaw);
+				
+					if (delta_x == 0) {
+						if (waypoint.centroid_y <= arrow.centroid_y) {
+							waypoint.yaw = Math.PI;
+						}
+						else if(waypoint.centroid_y >= arrow.centroid_y){
+							waypoint.yaw = 0;
+						}
+					}
+					else if (delta_y == 0) {
+						if (waypoint.centroid_x >= arrow.centroid_x){
+							waypoint.yaw = Math.PI/2;
+						}
+						else if(waypoint.centroid_x <= arrow.centroid_x){
+							waypoint.yaw = 3*Math.PI/2;
+						}
+					}
+					else {
+						if ((delta_x > 0) && (delta_y > 0)) {
+							waypoint.yaw = Math.atan(delta_x/delta_y);
+						}
+						else if((delta_x < 0) && (delta_y > 0)) {
+							waypoint.yaw = 3*Math.PI/2 + Math.abs(Math.atan(delta_y/delta_x));
+						}
+						else if((delta_x < 0) && (delta_y < 0)){
+							waypoint.yaw = Math.PI + Math.abs(Math.atan(delta_x/delta_y));
+						}
+						else if((delta_x > 0) && (delta_y < 0)) {
+							waypoint.yaw = Math.PI/2 + Math.abs(Math.atan(delta_x/delta_y));
+						}
+					}
+				}
+			})
+		})
+	}
+
+	function to_waypoint() {
+		waypoint_toggle ? status_message = 'Click on waypoint' : status_message = 'Click on arrow';
+	}
+
+	const pendingRequests = new Map<
+		string,
+		{ resolve: (response: any) => void; timeoutHandle: any }
+	>();
+
+	function generate_id() {
+		last_id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+			? crypto.randomUUID()
+			: `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+		return last_id;
+	}
+	
+	function clamp(value: number, min_value: number, max_value: number) {
+		return Math.max(min_value, Math.min(max_value, value));
+	}
+	//Converts the click on the image to the pixle coordinates on the image 
+	function clickToNaturalPosition(event: MouseEvent) {
+		if (!imageElement) return null;
+
+		const image_rectangle = imageElement.getBoundingClientRect();
+		const displayX = event.clientX - image_rectangle.left;
+		const displayY = event.clientY - image_rectangle.top;
+
+		const naturalX = Math.round(displayX * (imageElement.naturalWidth / image_rectangle.width));
+		const naturalY = Math.round(displayY * (imageElement.naturalHeight / image_rectangle.height));
+
+		return {
+			x: clamp(naturalX, 0, imageElement.naturalWidth - 1),
+			y: clamp(naturalY, 0, imageElement.naturalHeight - 1)
+		};
+	}
+	// Function that allows the front end to talk to the back end 
+	function sendRequest(payload: any, timeoutMilliseconds = defaultRequestTimeoutMilliseconds): Promise<any> {
+		if (!requestTopic) return Promise.reject(new Error('ROS not connected'));
+
+		const id = generateId();
+		return new Promise((resolve, reject) => {
+			const timeoutHandle = setTimeout(() => {
+				pendingRequests.delete(id);
+				reject(new Error(`Timeout waiting for response (${id})`));
+			}, timeoutMilliseconds);
+
+			pendingRequests.set(id, { resolve, timeoutHandle });
+
+			requestTopic!.publish({
+				data: JSON.stringify({ id, ...payload })
+>>>>>>> e67ad1cf (chore: Format and lint)
 			});
 			responseTopic = new ROSLIB.Topic({
 				ros: rosConnection,
@@ -342,7 +483,7 @@
 			return{yawX1Coordinate,yawX2Coordinate, yawY1Coordinate, yawY2Coordinate};
 	}
 
-// Function to help translate the difference in case vairables from the back end to front end
+// Function to help translate the difference in case variables from the back end to front end
 	function getSampleHex(response: any): string {
 		return String(
 			response?.sample_image_hex ??       
