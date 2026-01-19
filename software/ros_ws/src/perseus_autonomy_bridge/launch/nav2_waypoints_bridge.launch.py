@@ -11,9 +11,7 @@ def generate_launch_description():
                 name="nav2_waypoints_bridge",
                 output="screen",
                 parameters=[
-                    {
-                        "waypoints_dir": "${HOME}/perseus-v2/software/web_ui/static"
-                    }
+                    {"waypoints_dir": "${HOME}/perseus-v2/software/web_ui/static"}
                 ],
             )
         ]
