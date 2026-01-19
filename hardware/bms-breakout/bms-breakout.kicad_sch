@@ -2120,7 +2120,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Jumper:Jumper_2_Open"
+		(symbol "Jumper:Jumper_2_Bridged"
 			(pin_numbers
 				(hide yes)
 			)
@@ -2132,15 +2132,15 @@
 			(in_bom yes)
 			(on_board yes)
 			(property "Reference" "JP"
-				(at 0 2.794 0)
+				(at 0 1.905 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
 				)
 			)
-			(property "Value" "Jumper_2_Open"
-				(at 0 -2.286 0)
+			(property "Value" "Jumper_2_Bridged"
+				(at 0 -2.54 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2165,7 +2165,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "Jumper, 2-pole, open"
+			(property "Description" "Jumper, 2-pole, closed/bridged"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2192,7 +2192,7 @@
 					(hide yes)
 				)
 			)
-			(symbol "Jumper_2_Open_0_0"
+			(symbol "Jumper_2_Bridged_0_0"
 				(circle
 					(center -2.032 0)
 					(radius 0.508)
@@ -2216,11 +2216,11 @@
 					)
 				)
 			)
-			(symbol "Jumper_2_Open_0_1"
+			(symbol "Jumper_2_Bridged_0_1"
 				(arc
-					(start -1.524 1.27)
-					(mid 0 1.778)
-					(end 1.524 1.27)
+					(start -1.524 0.254)
+					(mid 0 0.762)
+					(end 1.524 0.254)
 					(stroke
 						(width 0)
 						(type default)
@@ -2230,7 +2230,7 @@
 					)
 				)
 			)
-			(symbol "Jumper_2_Open_1_1"
+			(symbol "Jumper_2_Bridged_1_1"
 				(pin passive line
 					(at -5.08 0 0)
 					(length 2.54)
@@ -4996,7 +4996,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 0102d353-7c9a-4bdd-b03f-84372a2c30b2)
 	)
@@ -5027,13 +5028,14 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 031b0db7-cdca-468f-b310-30cbabb40635)
 	)
 	(rectangle
 		(start 200.66 45.72)
-		(end 273.05 95.25)
+		(end 273.05 106.68)
 		(stroke
 			(width 0)
 			(type default)
@@ -5092,13 +5094,14 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 059048de-f609-48fa-8fd2-b5742041457b)
 	)
 	(rectangle
-		(start 200.66 97.79)
-		(end 224.79 115.57)
+		(start 102.87 100.33)
+		(end 127 118.11)
 		(stroke
 			(width 0)
 			(type default)
@@ -5174,7 +5177,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 0e8d3a97-8003-48af-9123-f5722165c877)
 	)
@@ -5243,7 +5247,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 10c591aa-4023-4147-bf41-2f21c9187eae)
 	)
@@ -5293,7 +5298,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 11a4ce85-aa65-45cf-af2d-b136a77c15bd)
 	)
@@ -5343,7 +5349,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 230836b3-1586-4177-aea4-cedef50a6e9e)
 	)
@@ -5391,7 +5398,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 23c21a11-2c59-46c6-9b62-77cb4a5ee4de)
 	)
@@ -5418,7 +5426,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 2e4290c9-f1e3-48c1-9088-19d71f50a748)
 	)
@@ -5432,7 +5441,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 3172834e-a2fd-4b86-bec2-18b664aad178)
 	)
@@ -5472,7 +5482,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 31bad99e-1d6a-410a-867d-23eb48e58761)
 	)
@@ -5542,7 +5553,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 34246c27-a78e-4393-ac4e-fa6ada70df07)
 	)
@@ -5648,7 +5660,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 36bd5766-0e8a-4c0b-8192-41806dac8f97)
 	)
@@ -5742,7 +5755,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 4876acb3-8557-45f0-98e1-a763fc0da8d1)
 	)
@@ -5818,7 +5832,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 5000a4d6-c088-4bf1-a72a-c6ea1bcd4155)
 	)
@@ -5888,7 +5903,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 5752f94d-1c40-4eaa-bab5-604a2841708e)
 	)
@@ -5916,7 +5932,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 5aa75af5-b311-4e5f-aa63-d17ec1b93d50)
 	)
@@ -5986,7 +6003,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 5ceb099a-c47c-475b-8dc0-7747db656d36)
 	)
@@ -6014,7 +6032,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 5ef48725-16ec-4ee6-8dc2-be0739aedc65)
 	)
@@ -6082,7 +6101,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 626acc54-1b65-4730-81d2-1a80c481864b)
 	)
@@ -6152,7 +6172,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 6ae167fa-b47f-4437-bde0-bbe5a8b865d9)
 	)
@@ -6234,7 +6255,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 7b2334d2-59d2-4529-b08f-52bb95fa1ea2)
 	)
@@ -6299,7 +6321,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 7c83cc91-6a85-472f-9096-837deb6fa7c5)
 	)
@@ -6331,7 +6354,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 8b44598e-3e7e-4dfa-a925-57dc75bd4228)
 	)
@@ -6387,7 +6411,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 8ca3fdc1-8de1-4c91-959b-38cf22b5f6d4)
 	)
@@ -6424,7 +6449,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 9310eb57-6d15-4a8b-be84-6e4f0374efff)
 	)
@@ -6473,7 +6499,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 948051a4-a646-494d-ae6e-1e6e826c5c42)
 	)
@@ -6529,7 +6556,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 9c364fd2-27dc-4f64-a687-92908f9ea3b5)
 	)
@@ -6577,7 +6605,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid 9f2defdf-e5cd-4273-b717-93f3b458ff1d)
 	)
@@ -6647,7 +6676,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid a2b63f38-a0b7-4c87-b6e3-2813dfe97253)
 	)
@@ -6747,7 +6777,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid ac41d227-4806-4800-b42e-caf3def50c13)
 	)
@@ -6775,7 +6806,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid aed2c2a5-bb77-462a-b9f7-9c0e22adb756)
 	)
@@ -6805,7 +6837,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid b0383cd9-9b5b-4642-a685-ce3d8314a716)
 	)
@@ -6852,7 +6885,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid b69bfe66-b8ba-40cd-b269-b094fb7046a8)
 	)
@@ -6917,7 +6951,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid b78e1a49-ad99-4f3d-86ed-b1e377cd8183)
 	)
@@ -6961,7 +6996,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid ba05f960-be85-454f-8d2a-258a2d5bab53)
 	)
@@ -7049,7 +7085,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid bd526373-7d69-476b-a8db-e64bb1ba2c4d)
 	)
@@ -7119,7 +7156,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid c3beede6-d396-413e-a454-954f4ee62213)
 	)
@@ -7175,7 +7213,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid c45447fd-9020-4ffb-b24b-351167a1280e)
 	)
@@ -7214,7 +7253,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid c7c8a609-653e-4f09-8853-4b5942c97e70)
 	)
@@ -7254,7 +7294,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid d3fb5d9d-9c4d-45c9-8464-e5d9aee792b7)
 	)
@@ -7360,7 +7401,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid dd302da0-9074-4a21-86a3-427916ba6673)
 	)
@@ -7391,7 +7433,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid dd67219f-fe10-4ee0-8828-074eda6f9a96)
 	)
@@ -7447,7 +7490,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid e411d107-e46e-4aaf-973c-7ea44f1a25f5)
 	)
@@ -7517,7 +7561,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid e558c2b3-0bb4-4a49-8d1e-2287e8938ce0)
 	)
@@ -7587,7 +7632,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid e943c46b-5f26-404e-bf52-8901406561c2)
 	)
@@ -7643,7 +7689,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid f6206f69-b033-4737-bb65-83f08d2f0e20)
 	)
@@ -7683,7 +7730,8 @@
 			(type solid)
 		)
 		(fill
-			(type outline)
+			(type color)
+			(color 0 0 0 0)
 		)
 		(uuid ff24e741-7257-42ac-9226-9a920a4e7d38)
 	)
@@ -7729,7 +7777,7 @@
 	)
 	(text "BMS Discharge Switch"
 		(exclude_from_sim no)
-		(at 212.598 100.076 0)
+		(at 114.808 102.616 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7786,6 +7834,17 @@
 			)
 		)
 		(uuid "5606fcec-5741-4357-89ba-598f07785bbb")
+	)
+	(text "When K_POS and K_NEG are connected the BMS discharges its mozfets \nand switches off. The jumper is if the mozfet does not work. \nThe killswitch needs to be switched on for the batteries to run."
+		(exclude_from_sim no)
+		(at 201.676 101.092 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "6edd1885-93c9-4534-9b25-5db49595fcd9")
 	)
 	(text "DE-9 CAN CONNECTOR"
 		(exclude_from_sim no)
@@ -7914,12 +7973,6 @@
 		(uuid "5e4efbe3-4a51-48b9-8442-c4b35edf08da")
 	)
 	(junction
-		(at 257.81 67.31)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "6306eda6-b228-43b9-8fc1-0355b6dd51dd")
-	)
-	(junction
 		(at 243.84 74.93)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -8014,12 +8067,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "d4bb72f2-3caa-4017-a997-b0f8cee15a9c")
-	)
-	(junction
-		(at 257.81 82.55)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "d5474049-ca99-4252-8d08-54548d88d0ef")
 	)
 	(junction
 		(at 35.56 137.16)
@@ -8261,7 +8308,7 @@
 	)
 	(wire
 		(pts
-			(xy 265.43 88.9) (xy 262.89 88.9)
+			(xy 265.43 90.17) (xy 262.89 90.17)
 		)
 		(stroke
 			(width 0)
@@ -8278,16 +8325,6 @@
 			(type default)
 		)
 		(uuid "0864d1df-ba3f-426f-aabf-532e870a4580")
-	)
-	(wire
-		(pts
-			(xy 257.81 80.01) (xy 257.81 82.55)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0bc7216b-616e-49cb-9423-ec095f71c535")
 	)
 	(wire
 		(pts
@@ -8351,7 +8388,7 @@
 	)
 	(wire
 		(pts
-			(xy 217.17 110.49) (xy 217.17 113.03)
+			(xy 119.38 113.03) (xy 119.38 115.57)
 		)
 		(stroke
 			(width 0)
@@ -8418,16 +8455,6 @@
 			(type default)
 		)
 		(uuid "2c04075e-6054-4ee9-af6d-7aadaf1af9e9")
-	)
-	(wire
-		(pts
-			(xy 257.81 67.31) (xy 261.62 67.31)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2c5ff3f1-0305-4902-a94b-30ca84bc70ae")
 	)
 	(wire
 		(pts
@@ -8591,7 +8618,7 @@
 	)
 	(wire
 		(pts
-			(xy 250.19 88.9) (xy 252.73 88.9)
+			(xy 250.19 90.17) (xy 252.73 90.17)
 		)
 		(stroke
 			(width 0)
@@ -8678,6 +8705,16 @@
 			(type default)
 		)
 		(uuid "4ddc3da8-dc93-4c19-afc8-82effefdd566")
+	)
+	(wire
+		(pts
+			(xy 257.81 82.55) (xy 257.81 86.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4ed1fe77-b0c3-433b-a4cb-2dd1abc916c7")
 	)
 	(wire
 		(pts
@@ -8781,7 +8818,7 @@
 	)
 	(wire
 		(pts
-			(xy 257.81 67.31) (xy 257.81 69.85)
+			(xy 257.81 64.77) (xy 257.81 69.85)
 		)
 		(stroke
 			(width 0)
@@ -8961,7 +8998,7 @@
 	)
 	(wire
 		(pts
-			(xy 215.9 110.49) (xy 217.17 110.49)
+			(xy 118.11 113.03) (xy 119.38 113.03)
 		)
 		(stroke
 			(width 0)
@@ -9041,17 +9078,7 @@
 	)
 	(wire
 		(pts
-			(xy 257.81 82.55) (xy 257.81 85.09)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "909bf82b-2235-4e16-bc9b-881fd5397585")
-	)
-	(wire
-		(pts
-			(xy 217.17 105.41) (xy 217.17 107.95)
+			(xy 119.38 107.95) (xy 119.38 110.49)
 		)
 		(stroke
 			(width 0)
@@ -9341,7 +9368,7 @@
 	)
 	(wire
 		(pts
-			(xy 215.9 107.95) (xy 217.17 107.95)
+			(xy 118.11 110.49) (xy 119.38 110.49)
 		)
 		(stroke
 			(width 0)
@@ -9461,6 +9488,16 @@
 	)
 	(wire
 		(pts
+			(xy 257.81 80.01) (xy 261.62 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d70747fd-c55a-45f3-81b1-31480e99e743")
+	)
+	(wire
+		(pts
 			(xy 168.91 120.65) (xy 168.91 105.41)
 		)
 		(stroke
@@ -9478,16 +9515,6 @@
 			(type default)
 		)
 		(uuid "de022d40-c3a1-440c-b8a9-d9977c892cb5")
-	)
-	(wire
-		(pts
-			(xy 257.81 64.77) (xy 257.81 67.31)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "de787e84-4fff-416f-810a-fb11c39f50ec")
 	)
 	(wire
 		(pts
@@ -9620,7 +9647,7 @@
 		(uuid "fe5128eb-ffab-44fe-ab51-794a80d6472a")
 	)
 	(label "K_POS"
-		(at 250.19 88.9 180)
+		(at 250.19 90.17 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9629,7 +9656,7 @@
 		)
 		(uuid "028f37af-c6f7-4736-964a-03b33e59ff61")
 	)
-	(label "MOZZ_S"
+	(label "MOZZ_D"
 		(at 218.44 82.55 180)
 		(effects
 			(font
@@ -9680,7 +9707,7 @@
 		(uuid "1387763e-75e7-4128-9056-491fc8cde905")
 	)
 	(label "K_NEG"
-		(at 265.43 88.9 0)
+		(at 265.43 90.17 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9850,7 +9877,7 @@
 		(uuid "72bf07d9-5865-4838-b243-74a4ad214022")
 	)
 	(label "K_POS"
-		(at 217.17 105.41 0)
+		(at 119.38 107.95 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9878,16 +9905,6 @@
 			(justify right bottom)
 		)
 		(uuid "7a89bdd0-0c52-471b-8ad5-fb72aab54fa5")
-	)
-	(label "MOZZ_S"
-		(at 261.62 67.31 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "7d49ceb8-8c18-49d0-a1fe-13289ae66afa")
 	)
 	(label "CAN_H_A"
 		(at 44.45 41.91 180)
@@ -10010,7 +10027,7 @@
 		(uuid "cfa25f9d-ac99-485a-817c-7b41bb4ce71c")
 	)
 	(label "K_NEG"
-		(at 217.17 113.03 0)
+		(at 119.38 115.57 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -10018,6 +10035,16 @@
 			(justify left bottom)
 		)
 		(uuid "d185dbf8-3325-4221-bebb-577b64df63fd")
+	)
+	(label "MOZZ_D"
+		(at 261.62 80.01 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d1944a07-abe9-41ff-9e25-c9e6b9631a5e")
 	)
 	(label "I2C_SCK"
 		(at 90.17 26.67 0)
@@ -10528,7 +10555,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Jumper:Jumper_2_Open")
+		(lib_id "Jumper:Jumper_2_Bridged")
 		(at 234.95 82.55 0)
 		(mirror x)
 		(unit 1)
@@ -10553,7 +10580,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm"
+		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm"
 			(at 234.95 82.55 0)
 			(effects
 				(font
@@ -10571,7 +10598,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Jumper, 2-pole, open"
+		(property "Description" "Jumper, 2-pole, closed/bridged"
 			(at 234.95 82.55 0)
 			(effects
 				(font
@@ -11432,7 +11459,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_3_Open")
-		(at 257.81 88.9 180)
+		(at 257.81 90.17 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom no)
@@ -11440,7 +11467,7 @@
 		(dnp no)
 		(uuid "3ae53e2b-c709-4b7f-bdea-fd8fff126999")
 		(property "Reference" "JP2"
-			(at 259.588 91.948 0)
+			(at 259.588 93.218 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11449,7 +11476,7 @@
 			)
 		)
 		(property "Value" "Drain_Side"
-			(at 276.352 88.646 90)
+			(at 276.352 89.916 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11459,7 +11486,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-3_P1.3mm_Open_RoundedPad1.0x1.5mm"
-			(at 257.81 88.9 0)
+			(at 257.81 90.17 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11468,7 +11495,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 257.81 88.9 0)
+			(at 257.81 90.17 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11477,7 +11504,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 3-pole, open"
-			(at 257.81 88.9 0)
+			(at 257.81 90.17 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12019,7 +12046,7 @@
 	)
 	(symbol
 		(lib_id "Connector_Generic:Conn_01x02")
-		(at 210.82 110.49 180)
+		(at 113.03 113.03 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -12027,7 +12054,7 @@
 		(dnp no)
 		(uuid "56111b52-4030-4551-adb1-6b41740723a0")
 		(property "Reference" "J24"
-			(at 207.772 109.22 0)
+			(at 109.982 111.76 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12036,7 +12063,7 @@
 			)
 		)
 		(property "Value" "SWITCH"
-			(at 213.36 103.886 0)
+			(at 115.57 106.426 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12045,7 +12072,7 @@
 			)
 		)
 		(property "Footprint" "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical"
-			(at 210.82 110.49 0)
+			(at 113.03 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12054,7 +12081,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 210.82 110.49 0)
+			(at 113.03 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12063,7 +12090,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 210.82 110.49 0)
+			(at 113.03 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
