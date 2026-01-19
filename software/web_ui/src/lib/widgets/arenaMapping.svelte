@@ -91,19 +91,19 @@
 		return Math.max(min_value, Math.min(max_value, value));
 	}
 	//Converts the click on the image to the pixle coordinates on the image 
-	function clickToNatrualPosition(event: MouseEvent) {
+	function clickToNaturalPosition(event: MouseEvent) {
 		if (!imageElement) return null;
 
 		const image_rectangle = imageElement.getBoundingClientRect();
 		const displayX = event.clientX - image_rectangle.left;
 		const displayY = event.clientY - image_rectangle.top;
 
-		const natrualX = Math.round(displayX * (imageElement.naturalWidth / image_rectangle.width));
-		const natrualY = Math.round(displayY * (imageElement.naturalHeight / image_rectangle.height));
+		const naturalX = Math.round(displayX * (imageElement.naturalWidth / image_rectangle.width));
+		const naturalY = Math.round(displayY * (imageElement.naturalHeight / image_rectangle.height));
 
 		return {
-			x: clamp(natrualX, 0, imageElement.naturalWidth - 1),
-			y: clamp(natrualY, 0, imageElement.naturalHeight - 1)
+			x: clamp(naturalX, 0, imageElement.naturalWidth - 1),
+			y: clamp(naturalY, 0, imageElement.naturalHeight - 1)
 		};
 	}
 	// Function that allows the front end to talk to the back end 
@@ -218,7 +218,7 @@
 			return{yawX1Coordinate,yawX2Coordinate, yawY1Coordinate, yawY2Coordinate};
 	}
 
-// Function to help translate the difference in case vairables from the back end to front end
+// Function to help translate the difference in case variables from the back end to front end
 	function getSampleHex(response: any): string {
 		return String(
 			response?.sample_image_hex ??       
@@ -248,7 +248,7 @@
 	}
 
 	async function onMapClick(event: MouseEvent) {
-		const click_position = clickToNatrualPosition(event);
+		const click_position = clickToNaturalPosition(event);
 
 		currentClickPosition = click_position;
 		contour = [];

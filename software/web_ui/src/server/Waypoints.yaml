@@ -1,21 +1,21 @@
 waypoints:
-- name: WP1
-  x: 1644
-  y: 576
-  yaw: 0
-- name: WP2
-  x: 849
-  y: 1358
-  yaw: 0
-- name: WP3
-  x: 524
-  y: 803
-  yaw: 0
-- name: WP4
-  x: 1294
-  y: 1526
-  yaw: 0
-- name: WP5
-  x: 907
-  y: 310
-  yaw: 0
+  - name: WP1
+    x: 1644
+    y: 576
+    yaw: 0
+  - name: WP2
+    x: 849
+    y: 1358
+    yaw: 0
+  - name: WP3
+    x: 524
+    y: 803
+    yaw: 0
+  - name: WP4
+    x: 1294
+    y: 1526
+    yaw: 0
+  - name: WP5
+    x: 907
+    y: 310
+    yaw: 0
