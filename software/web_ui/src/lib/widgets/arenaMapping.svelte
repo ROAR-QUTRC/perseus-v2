@@ -44,7 +44,7 @@
 
 	let imageElement: HTMLImageElement | null = null;
 
-	const mapImageId = 'Cropped_ARCh_2025_Autonomous_map.png';
+	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_2.png';
 	const mapImageUrl = `http://localhost:8000/${mapImageId}`;
 
 	//Ros topics to listen to requests and reply 
