@@ -188,20 +188,21 @@
 	}
 
 	function buildYaml(): string {
-	const lines: string[] = [];
-	lines.push('waypoints:');
+		const lines: string[] = [];
+		lines.push('waypoints:');
 
-	for (const waypoint of waypoints) {
-		const yawRadians = (waypoint.yaw * Math.PI) / 180;
+		for (const waypoint of waypoints) {
+			const yawRadians = (waypoint.yaw * Math.PI) / 180;
 
-		lines.push(`  - name: ${waypoint.name}`);
-		lines.push(`    x: ${waypoint.centroidX}`);
-		lines.push(`    y: ${waypoint.centroidY}`);
-		lines.push(`    yaw: ${yawRadians}`);
+			lines.push(`- name: ${waypoint.name}`);
+			lines.push(`  x: ${waypoint.centroidX}`);
+			lines.push(`  y: ${waypoint.centroidY}`);
+			lines.push(`  yaw: ${yawRadians}`);
+		}
+
+		return lines.join('\n');
 	}
 
-	return lines.join('\n');
-	}
 
 	  
 	function drawRotatedRectangle(waypoint:waypointRow){
