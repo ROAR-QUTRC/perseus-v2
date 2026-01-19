@@ -12,7 +12,7 @@ def generate_launch_description():
                 output="screen",
                 parameters=[
                     {
-                        "waypoints_dir": "/home/bocho0600/perseus-v2/software/web_ui/static"
+                        "waypoints_dir": "${HOME}/perseus-v2/software/web_ui/static"
                     }
                 ],
             )
