@@ -1,0 +1,28 @@
+Merge remote-tracking branch 'upstream/feat/map-gui' into feat/map-gui
+
+# Conflicts:
+#	software/ros_ws/src/map_gui/map_gui/extract_features.py
+#	software/web_ui/src/lib/widgets/arenaMapping.svelte
+#
+# It looks like you may be committing a merge.
+# If this is not correct, please run
+#	git update-ref -d MERGE_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch feat/map-gui
+# Your branch is up to date with 'origin/feat/map-gui'.
+#
+# All conflicts fixed but you are still merging.
+#
+# Changes to be committed:
+#	new file:   software/ros_ws/nix-packages/map-gui.nix
+#	modified:   software/ros_ws/nix-packages/overlay.nix
+#	modified:   software/ros_ws/src/map_gui/map_gui/extract_features.py
+#	modified:   software/ros_ws/src/map_gui/package.xml
+#	modified:   software/web_ui/src/lib/widgets/arenaMapping.svelte
+fix: merge of improved yaw and origin features
+ 
