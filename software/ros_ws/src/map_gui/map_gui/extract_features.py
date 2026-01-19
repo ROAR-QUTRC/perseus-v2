@@ -11,7 +11,11 @@ from rclpy.node import Node
 from std_msgs.msg import String
 
 MAP_directory = os.environ.get("PERSEUS_MAP_DIR", "/opt/perseus/maps")
-YAML_DIR = Path(os.environ.get("PERSEUS_YAML_DIR", str(Path.home() / "perseus-v2/software/web_ui/static"))).resolve()
+YAML_DIR = Path(
+    os.environ.get(
+        "PERSEUS_YAML_DIR", str(Path.home() / "perseus-v2/software/web_ui/static")
+    )
+).resolve()
 YAML_DIR.mkdir(parents=True, exist_ok=True)
 
 REQUEST_TOPIC_NAME = "/map_editor/request"
@@ -133,7 +137,9 @@ class ExtractFeatures(Node):
         )
         self.response_publisher = self.create_publisher(String, RESPONSE_TOPIC_NAME, 10)
 
-        self.get_logger().info(f"ExtractFeatures started. PERSEUS_MAP_DIR={MAP_directory}")
+        self.get_logger().info(
+            f"ExtractFeatures started. PERSEUS_MAP_DIR={MAP_directory}"
+        )
         self.get_logger().info(f"YAML_DIR={YAML_DIR}")
 
     def LoadImage(self, image_id: str):
@@ -160,7 +166,7 @@ class ExtractFeatures(Node):
         payload["id"] = request_id
         self.response_publisher.publish(String(data=json.dumps(payload)))
 
-    ### Method that saves the yaml code as a file to a specific folder specified above 
+    ### Method that saves the yaml code as a file to a specific folder specified above
     def SaveYaml(self, request_id: str, request: dict):
         yaml_text = request.get("yaml_text", "")
         file_name = SaveFileName(request.get("file_name", "waypoints.yaml"))
@@ -252,8 +258,12 @@ class ExtractFeatures(Node):
             if not (0 <= x_pos < image_width and 0 <= y_pos < image_height):
                 self.reply(
                     request_id,
-                    {"ok": False, "message": f"Out of bounds ({x_pos},{y_pos}) for {image_width}x{image_height}",
-                     "sample_x": x_pos, "sample_y": y_pos},
+                    {
+                        "ok": False,
+                        "message": f"Out of bounds ({x_pos},{y_pos}) for {image_width}x{image_height}",
+                        "sample_x": x_pos,
+                        "sample_y": y_pos,
+                    },
                 )
                 return
 
@@ -265,8 +275,12 @@ class ExtractFeatures(Node):
 
             mask = None
             for lower_bound, upper_bound in HueSaturationValueRanges(
-                clicked_hue, clicked_saturation, clicked_value,
-                hue_tolerance, saturation_tolerance, value_tolerance,
+                clicked_hue,
+                clicked_saturation,
+                clicked_value,
+                hue_tolerance,
+                saturation_tolerance,
+                value_tolerance,
             ):
                 range_mask = cv2.inRange(
                     image_hue_saturation_value, lower_bound, upper_bound
@@ -288,9 +302,14 @@ class ExtractFeatures(Node):
             if not contours:
                 self.reply(
                     request_id,
-                    {"ok": False, "message": "No contour found (tolerance too tight?)",
-                     "sample_x": x_pos, "sample_y": y_pos,
-                     "sample_hex": sample_hexadecimal_color, "sample_image_hex": sample_hexadecimal_color},
+                    {
+                        "ok": False,
+                        "message": "No contour found (tolerance too tight?)",
+                        "sample_x": x_pos,
+                        "sample_y": y_pos,
+                        "sample_hex": sample_hexadecimal_color,
+                        "sample_image_hex": sample_hexadecimal_color,
+                    },
                 )
                 return
 
@@ -301,9 +320,14 @@ class ExtractFeatures(Node):
             if not contours:
                 self.reply(
                     request_id,
-                    {"ok": False, "message": "Contours found but all filtered by min_area",
-                     "sample_x": x_pos, "sample_y": y_pos,
-                     "sample_hex": sample_hexadecimal_color, "sample_image_hex": sample_hexadecimal_color},
+                    {
+                        "ok": False,
+                        "message": "Contours found but all filtered by min_area",
+                        "sample_x": x_pos,
+                        "sample_y": y_pos,
+                        "sample_hex": sample_hexadecimal_color,
+                        "sample_image_hex": sample_hexadecimal_color,
+                    },
                 )
                 return
 
@@ -311,9 +335,14 @@ class ExtractFeatures(Node):
             if chosen_contour is None:
                 self.reply(
                     request_id,
-                    {"ok": False, "message": "No suitable contour near click",
-                     "sample_x": x_pos, "sample_y": y_pos,
-                     "sample_hex": sample_hexadecimal_color, "sample_image_hex": sample_hexadecimal_color},
+                    {
+                        "ok": False,
+                        "message": "No suitable contour near click",
+                        "sample_x": x_pos,
+                        "sample_y": y_pos,
+                        "sample_hex": sample_hexadecimal_color,
+                        "sample_image_hex": sample_hexadecimal_color,
+                    },
                 )
                 return
 
