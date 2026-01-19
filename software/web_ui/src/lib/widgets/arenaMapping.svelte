@@ -9,6 +9,7 @@
 	const widget_settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
 	});
+	//KEY KAD!!
 	export {
 		widget_name as name,
 		widget_description as description,
