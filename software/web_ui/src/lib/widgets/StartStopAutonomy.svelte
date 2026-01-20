@@ -173,55 +173,6 @@
 		}
 	};
 
-	const loadWaypointsYaml = async () => {
-		try {
-			isLoadingYaml = true;
-			jsonError = null;
-
-			const url = getSelectedYaml(); // HTTP path
-			const res = await fetch(url, { cache: 'no-store' });
-			if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-
-			const lines = (await res.text())
-				.split('\n')
-				.map((l) => l.trim())
-				.filter((l) => l && !l.startsWith('#') && l !== 'waypoints:');
-
-			const parsed: any[] = [];
-			let cur: any = null;
-
-			for (const l of lines) {
-				if (l.startsWith('- ')) {
-					if (cur) parsed.push(cur);
-					cur = {};
-					const rest = l.slice(2);
-					if (rest.includes(':')) {
-						const [k, ...v] = rest.split(':');
-						cur[k.trim()] = v.join(':').trim();
-					}
-				} else if (cur && l.includes(':')) {
-					const [k, ...v] = l.split(':');
-					cur[k.trim()] = v.join(':').trim();
-				}
-			}
-			if (cur) parsed.push(cur);
-
-			waypoints = parsed
-				.map((w, i) => ({
-					name: w.name ?? `WP${i + 1}`,
-					x: Number(w.x),
-					y: Number(w.y),
-					yaw: w.yaw !== undefined ? Number(w.yaw) : undefined
-				}))
-				.filter((w) => Number.isFinite(w.x) && Number.isFinite(w.y));
-		} catch (e: any) {
-			jsonError = e?.message ?? 'Failed to load YAML';
-			waypoints = [];
-		} finally {
-			isLoadingYaml = false;
-		}
-	};
-
 	// Auto-reload when dropdown changes
 	$effect(() => {
 		void settings.groups.waypoints.jsonFile.value;
