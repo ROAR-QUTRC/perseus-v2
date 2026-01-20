@@ -117,6 +117,14 @@ private:
         INITIALIZATION_BUSY = static_cast<uint8_t>(0b1 << 0),
     };
 
+    enum _interrupt_enable : uint8_t
+    {
+        SATURATION_INTERRUPT_ENABLE = static_cast<uint8_t>(0b1 << 7),
+        SPECTRAL_INTERRUPT_ENABLE = static_cast<uint8_t>(0b1 << 3),
+        FIFO_FULL_INTERRUPT_ENABLE = static_cast<uint8_t>(0b1 << 2),
+        SYSTEM_INTERRUPT_ENABLE = static_cast<uint8_t>(0b1 << 0),
+    };
+
     void _init_i2c();
     int _check_sensor(const _i2c_address address);
     void _init_spectral();
@@ -134,6 +142,6 @@ private:
     const uint8_t _magnetometer_enable_xyz = 0b00000111;
     const uint8_t _magnetometer_start = 0x3E;
     const uint8_t _magnetometer_read = 0x4E;
-    const std::string _i2c_filename = "/dev/i2c-0";  // TODO: Make this a ROS2 input option
+    std::string _i2c_filename;
     int _i2c_file = -1;
 };
