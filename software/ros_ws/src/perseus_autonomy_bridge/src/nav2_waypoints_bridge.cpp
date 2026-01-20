@@ -14,7 +14,6 @@
 #include "perseus_interfaces/msg/navigation_data.hpp"
 #include "perseus_interfaces/msg/waypoint.hpp"
 #include "perseus_interfaces/srv/run_waypoints.hpp"
-#include "perseus_interfaces/srv/toggle_waypoints.hpp"
 using NavigateThroughPoses = nav2_msgs::action::NavigateThroughPoses;
 using GoalHandleNav = rclcpp_action::ClientGoalHandle<NavigateThroughPoses>;
 
