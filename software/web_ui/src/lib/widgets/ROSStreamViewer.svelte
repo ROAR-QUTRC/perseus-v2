@@ -11,7 +11,7 @@
 			stream: {
 				topic: {
 					type: 'string',
-					value: '/camera/image'
+					value: '/camera/camera/color/image_raw'
 				}
 			}
 		}
