@@ -44,6 +44,10 @@ Or (combined version):
 git checkout -b NEW_BRANCH_NAME
 ```
 
+:::{note}
+Make sure to follow the [github standards](project:/standards/github.md) when creating and naming your branch.
+:::
+
 These commands create a new branch and switch to it. The new branch will be a copy of whatever branch you had currently checked out. To make a branch from a different branch than the one you are on, you can do:
 
 ```console
@@ -57,7 +61,7 @@ Or (combined version):
 git checkout -b NEW_BRANCH_NAME OLD_BRANCH_NAME
 ```
 
-When you've made changes, you can stage them - either using the vscode source control feature, or using:
+When you've made changes, you can stage them - either using the vscode source control feature (Source control tab on left sidebar below Explorer tab), or using:
 
 ```console
 git add path_to_file
@@ -79,7 +83,7 @@ git add .
 If you do this while in the base folder (`~/perseus-v2`), it will add all files in the repo.
 
 Then you can push your commits to GitHub. The first time you do this, you'll need to run `git push --set-upstream origin NEW_BRANCH_NAME` to get your local branch on the GitHub.
-Then after that, you can just run `git push` whenever you want to update the GitHub branch from your local branch (after staging changes).
+Then after that, you can just run `git push` whenever you want to update the GitHub branch from your local branch (after staging changes). Make sure that you follow the Github standards when making commits to ensure the repository remains professional.
 
 ## CI/CD
 
@@ -91,7 +95,7 @@ Have a look at <project:/systems/ci-cd.md> for more details on our CI/CD.
 
 ## Pull Requests
 
-Once you've finished developing on your branch, you can open a Pull Request (PR) to merge your branch into the main branch. To do this, go to the [Perseus GitHub repo](https://github.com/ROAR-QUTRC/perseus-v2) and go to "Pull requests" then click "New pull request". Select your branch and click "View pull request". This will take you to the pull request page, where you can write a title and a description of your changes.
+Once you've finished developing on your branch, you can open a Pull Request (PR) to merge your branch into the main branch. To do this, go to the [Perseus GitHub repo](https://github.com/ROAR-QUTRC/perseus-v2) and go to "Pull requests" then click "New pull request". Select your branch and click "View pull request". This will take you to the pull request page, where you can write a title and a description of your changes. Make sure your branch is not behind main when submitting the pull request, see <project:#merges> below for more detail.
 
 For changes to the docs, please ensure you include a screenshot of the built changes to ensure they are formatted properly (see <project:/development/documentation-index.md>).
 
@@ -110,7 +114,11 @@ Reviewers need to approve every file change in the PR. If they have any problems
 
 ## Merges
 
-Once a PR is approved and is passing all CI/CD checks, that branch can be added to the merge queue. GitHub will automatically merge your branch into the main branch. If your branch is several commits behind main, it may not be able to be automatically merged. During development, you should be merging main into your branch whenever there are changes on main using `git merge main`. This ensures that any changes someone else has made don't conflict with your changes. Make sure you run `git pull` to update your local main branch before running this though, or there won't be any changes to be merged.
+Once a PR is approved and is passing all CI/CD checks, that branch will be added to the merge queue. GitHub will automatically merge your branch into the main branch. If your branch is several commits behind main, it may not be able to be automatically merged. During development you should be regularly merging main into your branch using `git merge main`. Make sure you are on the correct branch before running this command (you should be on your branch, not main). Merging ensures that any changes someone else has made don't conflict with your changes. Make sure you run `git pull` to update your local main branch before running this though, or there won't be any changes to be merged.
+
+:::{note}
+Keep track of your PR and it's current status while waiting for it to be merged. Make sure to keep the branch up-to-date with commits from main if the PR is taking a while to be approved or rejected.
+:::
 
 ## Updating your local repo
 
