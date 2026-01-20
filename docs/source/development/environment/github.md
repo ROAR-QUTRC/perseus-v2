@@ -61,7 +61,7 @@ Or (combined version):
 git checkout -b NEW_BRANCH_NAME OLD_BRANCH_NAME
 ```
 
-When you've made changes, you can stage them - either using the vscode source control feature (Source control tab on left sidebar below Explorer tab), or using:
+When you've made changes, you can stage them. Staging your changes adds them to the next commit, essentially moving them from 'in-progress/development' to 'section done'. When making a commit it is important to remember that it is only in your local repository, to push your changes to the remote repository see below. You can stage changes by either using the vscode source control feature (Source control tab on left sidebar below Explorer tab), or using:
 
 ```console
 git add path_to_file
@@ -80,10 +80,10 @@ Or (to add the current folder):
 git add .
 ```
 
-If you do this while in the base folder (`~/perseus-v2`), it will add all files in the repo.
+If you do this while in the base folder (`~/perseus-v2`), it will add all changed files in the local repository.
 
-Then you can push your commits to GitHub. The first time you do this, you'll need to run `git push --set-upstream origin NEW_BRANCH_NAME` to get your local branch on the GitHub.
-Then after that, you can just run `git push` whenever you want to update the GitHub branch from your local branch (after staging changes). Make sure that you follow the Github standards when making commits to ensure the repository remains professional.
+Then you can push your commits to the remote GitHub repository. The first time you do this, you'll need to run `git push --set-upstream origin NEW_BRANCH_NAME` to add your local branch to the GitHub.
+After that, you can just run `git push` whenever you want to update the remote GitHub branch from your local branch (after staging changes). Make sure that you follow the Github standards when making commits to ensure the repository remains professional.
 
 ## CI/CD
 
