@@ -29,6 +29,7 @@
 	import * as ROSLIB from 'roslib';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 
 	// ---------------- ROS (Services) ----------------
 	let runSrv = $state<ROSLIB.Service | null>(null);
@@ -46,6 +47,7 @@
 
 	// ---------------- Hold-to-stop ----------------
 	const HOLD_MS = 3000;
+	const PROGRESS_UPDATE_INTERVAL_MS = 16; // ~60fps
 	let isHoldingStop = $state(false);
 	let holdProgress = $state(0);
 	let holdTimer: number | null = null;
@@ -55,8 +57,10 @@
 	const clearHold = () => {
 		isHoldingStop = false;
 		holdProgress = 0;
-		if (holdTimer) clearTimeout(holdTimer);
-		if (progressTimer) clearInterval(progressTimer);
+
+		if (holdTimer) globalThis.clearTimeout(holdTimer as unknown as number);
+		if (progressTimer) globalThis.clearInterval(progressTimer as unknown as number);
+
 		holdTimer = null;
 		progressTimer = null;
 	};
@@ -65,7 +69,7 @@
 	type Waypoint = { name: string; x: number; y: number; yaw?: number };
 
 	let waypoints = $state<Waypoint[]>([]);
-	let yamlError = $state<string | null>(null);
+	let jsonError = $state<string | null>(null);
 	let isLoadingYaml = $state(false);
 
 	// Selected JSON HTTP path (used for preview table fetch)
@@ -80,7 +84,7 @@
 	const loadWaypointsJson = async () => {
 		try {
 			isLoadingYaml = true;
-			yamlError = null;
+			jsonError = null;
 
 			const url = getSelectedJson(); // HTTP path
 			const res = await fetch(url, { cache: 'no-store' });
@@ -96,7 +100,7 @@
 					name: w.name ?? `WP${i + 1}`,
 					x: Number(w.x),
 					y: Number(w.y),
-					yaw: w.yaw !== undefined ? Number(w.yaw) : undefined
+					yaw: w.yaw || undefined ? Number(w.yaw) : undefined // if the yaw is provided
 				}))
 				.filter((w) => Number.isFinite(w.x) && Number.isFinite(w.y));
 
@@ -104,7 +108,7 @@
 				throw new Error('No valid waypoints found in JSON');
 			}
 		} catch (e: any) {
-			yamlError = e?.message ?? 'Failed to load JSON';
+			jsonError = e?.message ?? 'Failed to load JSON';
 			waypoints = [];
 		} finally {
 			isLoadingYaml = false;
@@ -113,7 +117,7 @@
 
 	const saveWaypointsJsonFile = () => {
 		if (waypoints.length === 0) {
-			yamlError = 'No waypoints to save';
+			jsonError = 'No waypoints to save';
 			return;
 		}
 
@@ -136,7 +140,7 @@
 
 		try {
 			isLoadingYaml = true;
-			yamlError = null;
+			jsonError = null;
 
 			const file = files[0];
 			const text = await file.text();
@@ -161,7 +165,7 @@
 
 			srvStatus = `Loaded ${waypoints.length} waypoints from JSON`;
 		} catch (e: any) {
-			yamlError = e?.message ?? 'Failed to load JSON';
+			jsonError = e?.message ?? 'Failed to load JSON';
 			waypoints = [];
 		} finally {
 			isLoadingYaml = false;
@@ -172,7 +176,7 @@
 	const loadWaypointsYaml = async () => {
 		try {
 			isLoadingYaml = true;
-			yamlError = null;
+			jsonError = null;
 
 			const url = getSelectedYaml(); // HTTP path
 			const res = await fetch(url, { cache: 'no-store' });
@@ -211,7 +215,7 @@
 				}))
 				.filter((w) => Number.isFinite(w.x) && Number.isFinite(w.y));
 		} catch (e: any) {
-			yamlError = e?.message ?? 'Failed to load YAML';
+			jsonError = e?.message ?? 'Failed to load YAML';
 			waypoints = [];
 		} finally {
 			isLoadingYaml = false;
@@ -293,7 +297,8 @@
 		isHoldingStop = true;
 		holdStartTs = Date.now();
 
-		holdTimer = window.setTimeout(() => {
+		// NOTE: use globalThis timers (SSR-safe) + cast for TS
+		holdTimer = globalThis.setTimeout(() => {
 			if (!cancelSrv) {
 				srvStatus = 'Cancel service not ready';
 				isStarted = false;
@@ -318,11 +323,11 @@
 					clearHold();
 				}
 			);
-		}, HOLD_MS);
+		}, HOLD_MS) as unknown as number;
 
-		progressTimer = window.setInterval(() => {
+		progressTimer = globalThis.setInterval(() => {
 			holdProgress = Math.min(1, (Date.now() - holdStartTs) / HOLD_MS);
-		}, 16);
+		}, PROGRESS_UPDATE_INTERVAL_MS) as unknown as number;
 	};
 
 	// Set up persistent subscription to navigation_info
@@ -418,9 +423,9 @@
 				</div>
 			</div>
 
-			{#if yamlError}
+			{#if jsonError}
 				<div class="px-3 py-2">
-					<p class="text-xs font-semibold text-red-500">{yamlError}</p>
+					<p class="text-xs font-semibold text-red-500">{jsonError}</p>
 				</div>
 			{:else}
 				<!-- This area will shrink + scroll -->
