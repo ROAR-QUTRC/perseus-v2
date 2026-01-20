@@ -59,6 +59,8 @@ rosidl_generate_interfaces(
   "srv/DetectObjects.srv"
   "srv/ToggleWaypoints.srv"
   "msg/NavigationData.msg"
+  "srv/RunWaypoints.srv"
+  "msg/Waypoint.msg"
   DEPENDENCIES
   geometry_msgs)
 

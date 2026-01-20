@@ -11,12 +11,12 @@
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
 			waypoints: {
-				yamlFile: {
+				jsonFile: {
 					type: 'select',
-					value: '/waypoints_simulation.yaml',
+					value: '/waypoints_simulation.json',
 					options: [
-						{ label: 'waypoints.yaml', value: '/waypoints.yaml' },
-						{ label: 'waypoints_simulation.yaml', value: '/waypoints_simulation.yaml' },
+						{ label: 'waypoints.json', value: '/waypoints.json' },
+						{ label: 'waypoints_simulation.json', value: '/waypoints_simulation.json' },
 					]
 				}
 			}
@@ -68,13 +68,105 @@
 	let yamlError = $state<string | null>(null);
 	let isLoadingYaml = $state(false);
 
-	// Selected YAML HTTP path (used for preview table fetch)
-	const getSelectedYaml = () => settings.groups.waypoints.yamlFile.value || '/waypoints.yaml';
+	// Selected JSON HTTP path (used for preview table fetch)
+	const getSelectedJson = () => settings.groups.waypoints.jsonFile.value || '/waypoints.json';
 
-	const getSelectedYamlBasename = () => {
-		const p = getSelectedYaml();
+	const getSelectedJsonBasename = () => {
+		const p = getSelectedJson();
 		const last = p.split('/').pop();
-		return last ?? 'waypoints.yaml';
+		return last ?? 'waypoints.json';
+	};
+
+	const loadWaypointsJson = async () => {
+		try {
+			isLoadingYaml = true;
+			yamlError = null;
+
+			const url = getSelectedJson(); // HTTP path
+			const res = await fetch(url, { cache: 'no-store' });
+			if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+
+			const loaded = await res.json();
+			if (!Array.isArray(loaded)) {
+				throw new Error('JSON must be an array of waypoints');
+			}
+
+			waypoints = loaded
+				.map((w: any, i: number) => ({
+					name: w.name ?? `WP${i + 1}`,
+					x: Number(w.x),
+					y: Number(w.y),
+					yaw: w.yaw !== undefined ? Number(w.yaw) : undefined
+				}))
+				.filter((w) => Number.isFinite(w.x) && Number.isFinite(w.y));
+
+			if (waypoints.length === 0) {
+				throw new Error('No valid waypoints found in JSON');
+			}
+		} catch (e: any) {
+			yamlError = e?.message ?? 'Failed to load JSON';
+			waypoints = [];
+		} finally {
+			isLoadingYaml = false;
+		}
+	};
+
+	const saveWaypointsJsonFile = () => {
+		if (waypoints.length === 0) {
+			yamlError = 'No waypoints to save';
+			return;
+		}
+
+		const json = JSON.stringify(waypoints, null, 2);
+		const blob = new Blob([json], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `waypoints_${new Date().toISOString().split('T')[0]}.json`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	};
+
+	const loadWaypointsJsonFileUpload = async (event: Event) => {
+		const target = event.target as HTMLInputElement;
+		const files = target.files;
+		if (!files || files.length === 0) return;
+
+		try {
+			isLoadingYaml = true;
+			yamlError = null;
+
+			const file = files[0];
+			const text = await file.text();
+			const loaded = JSON.parse(text);
+
+			if (!Array.isArray(loaded)) {
+				throw new Error('JSON must be an array of waypoints');
+			}
+
+			waypoints = loaded
+				.map((w: any, i: number) => ({
+					name: w.name ?? `WP${i + 1}`,
+					x: Number(w.x),
+					y: Number(w.y),
+					yaw: w.yaw !== undefined ? Number(w.yaw) : undefined
+				}))
+				.filter((w) => Number.isFinite(w.x) && Number.isFinite(w.y));
+
+			if (waypoints.length === 0) {
+				throw new Error('No valid waypoints in JSON file');
+			}
+
+			srvStatus = `Loaded ${waypoints.length} waypoints from JSON`;
+		} catch (e: any) {
+			yamlError = e?.message ?? 'Failed to load JSON';
+			waypoints = [];
+		} finally {
+			isLoadingYaml = false;
+			target.value = ''; // reset file input
+		}
 	};
 
 	const loadWaypointsYaml = async () => {
@@ -128,8 +220,8 @@
 
 	// Auto-reload when dropdown changes
 	$effect(() => {
-		void settings.groups.waypoints.yamlFile.value;
-		loadWaypointsYaml();
+		void settings.groups.waypoints.jsonFile.value;
+		loadWaypointsJson();
 	});
 
 	// ---------------- ROS connection (services) ----------------
@@ -148,7 +240,7 @@
 		runSrv = new ROSLIB.Service({
 			ros,
 			name: '/autonomy/run_waypoints',
-			serviceType: 'perseus_interfaces/srv/ToggleWaypoints'
+			serviceType: 'perseus_interfaces/srv/RunWaypoints'
 		});
 
 		cancelSrv = new ROSLIB.Service({
@@ -166,13 +258,23 @@
 			return;
 		}
 
+		if (waypoints.length === 0) {
+			srvStatus = 'No waypoints loaded';
+			return;
+		}
+
 		srvBusy = true;
 		srvStatus = 'Sending run request...';
 
-		const yaml_path = getSelectedYamlBasename();
-
 		runSrv.callService(
-			new ROSLIB.ServiceRequest({ yaml_path }),
+			new ROSLIB.ServiceRequest({ 
+				waypoints: waypoints.map((wp) => ({
+					name: wp.name,
+					x: wp.x,
+					y: wp.y,
+					yaw: wp.yaw ?? 0.0
+				}))
+			}),
 			(resp: any) => {
 				srvBusy = false;
 				srvStatus = resp?.message ?? 'Run response received';
@@ -259,7 +361,7 @@
 	});
 
 	onMount(() => {
-		loadWaypointsYaml();
+		loadWaypointsJson();
 	});
 </script>
 
@@ -273,23 +375,41 @@
 					<p class="text-sm font-semibold">Remaining Waypoints</p>
 
 					<div class="mt-0.5 flex flex-wrap items-center gap-2">
-						<p class="text-xs opacity-60">{getSelectedYaml()}</p>
+						<p class="text-xs opacity-60">{getSelectedJson()}</p>
 
 						<select
 							class="h-7 rounded-md border bg-background px-2 text-xs hover:bg-accent"
-							bind:value={settings.groups.waypoints.yamlFile.value}
+							bind:value={settings.groups.waypoints.jsonFile.value}
 						>
-							{#each settings.groups.waypoints.yamlFile.options as opt}
+							{#each settings.groups.waypoints.jsonFile.options as opt}
 								<option value={opt.value}>{opt.label}</option>
 							{/each}
 						</select>
 
 						<button
 							class="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-							onclick={loadWaypointsYaml}
+							onclick={loadWaypointsJson}
 						>
 							Refresh
 						</button>
+
+						<button
+							class="rounded-md border px-2 py-1 text-xs hover:bg-accent"
+							onclick={saveWaypointsJsonFile}
+							disabled={waypoints.length === 0}
+						>
+							Save JSON
+						</button>
+
+						<label class="rounded-md border px-2 py-1 text-xs hover:bg-accent cursor-pointer">
+							<input
+								type="file"
+								accept=".json"
+								onchange={loadWaypointsJsonFileUpload}
+								class="hidden"
+							/>
+							Load JSON
+						</label>
 
 						{#if isLoadingYaml}
 							<span class="text-xs animate-pulse opacity-70">Loading…</span>
