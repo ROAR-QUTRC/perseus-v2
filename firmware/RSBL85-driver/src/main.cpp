@@ -36,7 +36,7 @@ void setup()
         delay(100);
     }
 
-    auto& can_interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_21, GPIO_NUM_22));  // initialize TWAI pins
+    auto& can_interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_21, GPIO_NUM_42));  // initialize TWAI pins
     packet_manager.emplace(can_interface);
     Serial.println("CAN interface initialized");
 
@@ -67,7 +67,7 @@ void setup()
                         Serial.printf("MOVE_TO_ANGLE: servo=%d, angle=%d, time=%d, acc=%d\n",
                                       servo_idx, angle, time_ms, acceleration);
                     }
-                    catch (...)
+                    catch (const std::exception& e)
                     {
                         Serial.println("Error parsing MOVE_TO_ANGLE");
                     }
