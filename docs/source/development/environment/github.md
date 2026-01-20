@@ -61,7 +61,7 @@ Or (combined version):
 git checkout -b NEW_BRANCH_NAME OLD_BRANCH_NAME
 ```
 
-When you've made changes, you can stage them. Staging your changes adds them to the next commit, essentially moving them from 'in-progress/development' to 'section done'. When making a commit it is important to remember that commits remain within your local repository *until* you push the changes to GitHub. For details on pushing commits to the remote repository see below. You can stage changes by either using the vscode source control feature (Source control tab on left sidebar below Explorer tab), or using:
+When you've made changes, you can stage them. Staging your changes adds them to the next commit, essentially moving them from 'in-progress/development' to 'section done'. When making a commit it is important to remember that commits remain within your local repository _until_ you push the changes to GitHub. For details on pushing commits to the remote repository see below. You can stage changes by either using the vscode source control feature (Source control tab on left sidebar below Explorer tab), or using:
 
 ```console
 git add path_to_file
@@ -101,7 +101,7 @@ Have a look at <project:/systems/ci-cd.md> for more details on our CI/CD.
 Once you've finished developing on your branch , you can open a Pull Request (PR) to merge your branch into the main branch. To do this, go to the [Perseus GitHub repo](https://github.com/ROAR-QUTRC/perseus-v2) and go to "Pull requests" then click "New pull request". Select your branch and click "View pull request". This will take you to the pull request page, where you can write a title and a description of your changes. Make sure your branch is not behind main when submitting the pull request, see <project:#merges> below for more detail.
 
 :::{warning}
-*Finished developing* means your code is finalised, has been tested, and in your opinion should not require any more changes. Testing is required before a pull-request is made, you must be able to show/prove your code works before it can get merged into the main Github branch.
+_Finished developing_ means your code is finalised, has been tested, and in your opinion should not require any more changes. Testing is required before a pull-request is made, you must be able to show/prove your code works before it can get merged into the main Github branch.
 :::
 
 For changes to the docs, please ensure you include a screenshot of the built changes to ensure they are formatted properly (see <project:/development/documentation-index.md>).
