@@ -1,9 +1,0 @@
-waypoints:
-  - name: WP1
-    x: 1.2
-    y: -0.5
-    yaw: 1.57
-  - name: WP2
-    x: 3.0
-    y: 2.2
-    yaw: 0.0
