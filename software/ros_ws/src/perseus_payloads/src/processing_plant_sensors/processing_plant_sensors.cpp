@@ -10,6 +10,7 @@
 ProcessingPlant::ProcessingPlant(const rclcpp::NodeOptions& options)
     : Node("processing_plant", options)
 {
+    _i2c_filename = this->declare_parameter("i2c_bus", "/dev/i2c-0");
     _init_i2c();
     if (_check_sensor(_i2c_address::SPECTRAL) | _check_sensor(_i2c_address::MAGNETOMETER))
     {
@@ -59,7 +60,10 @@ void ProcessingPlant::_init_spectral()
     _write_single_i2c(_i2c_address::SPECTRAL, std::vector<uint8_t>{_spectral_register_address::ENABLE, _spectral_enable::POWER_ON});
     while (_read_write_i2c(_i2c_address::SPECTRAL, std::vector<uint8_t>{_spectral_register_address::STATUS_4}, 1).front() & _spectral_status_4::INITIALIZATION_BUSY);
     std::vector<std::pair<const _i2c_address, std::vector<uint8_t>>> data = {
-        {}};
+        {_i2c_address::SPECTRAL, {_spectral_register_address::INTENAB, (_interrupt_enable::FIFO_FULL_INTERRUPT_ENABLE | _interrupt_enable::SPECTRAL_INTERRUPT_ENABLE | _interrupt_enable::SYSTEM_INTERRUPT_ENABLE)}},
+        {_i2c_address::SPECTRAL, {_spectral_register_address::PERS, 13}},
+        {_i2c_address::SPECTRAL, {_spectral_register_address::CFG_1, _spectral_gain::GAIN_256}},
+        {_i2c_address::SPECTRAL, {}}};
     _write_multiple_i2c(data);
     RCLCPP_DEBUG(this->get_logger(), "Spectral sensor initialised");
 }
