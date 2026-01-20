@@ -61,11 +61,10 @@ Or (combined version):
 git checkout -b NEW_BRANCH_NAME OLD_BRANCH_NAME
 ```
 
-When you've made changes, you can stage them. Staging your changes adds them to the next commit, essentially moving them from 'in-progress/development' to 'section done'. When making a commit it is important to remember that it is only in your local repository, to push your changes to the remote repository see below. You can stage changes by either using the vscode source control feature (Source control tab on left sidebar below Explorer tab), or using:
+When you've made changes, you can stage them. Staging your changes adds them to the next commit, essentially moving them from 'in-progress/development' to 'section done'. When making a commit it is important to remember that commits remain within your local repository *until* you push the changes to GitHub. For details on pushing commits to the remote repository see below. You can stage changes by either using the vscode source control feature (Source control tab on left sidebar below Explorer tab), or using:
 
 ```console
 git add path_to_file
-git commit -m "COMMIT MESSAGE"
 ```
 
 You can also add everything in a folder:
@@ -83,7 +82,11 @@ git add .
 If you do this while in the base folder (`~/perseus-v2`), it will add all changed files in the local repository.
 
 Then you can push your commits to the remote GitHub repository. The first time you do this, you'll need to run `git push --set-upstream origin NEW_BRANCH_NAME` to add your local branch to the GitHub.
-After that, you can just run `git push` whenever you want to update the remote GitHub branch from your local branch (after staging changes). Make sure that you follow the Github standards when making commits to ensure the repository remains professional.
+After that, you can just run `git push` whenever you want to update the remote GitHub branch from your local branch (after staging changes). Make sure that you follow the GitHub standards when making commits to ensure the repository remains professional.
+
+:::{note}
+When making a commit, be sure to follow the [github standards](project:/standards/github.md) to ensure consistency across the GitHub.
+:::
 
 ## CI/CD
 
