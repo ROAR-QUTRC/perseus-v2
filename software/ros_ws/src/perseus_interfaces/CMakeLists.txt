@@ -57,7 +57,6 @@ rosidl_generate_interfaces(
   "srv/GetFrontierGoal.srv"
   "msg/ObjectDetections.msg"
   "srv/DetectObjects.srv"
-  "srv/ToggleWaypoints.srv"
   "msg/NavigationData.msg"
   "srv/RunWaypoints.srv"
   "msg/Waypoint.msg"
