@@ -58,8 +58,8 @@
 		isHoldingStop = false;
 		holdProgress = 0;
 
-		if (holdTimer) globalThis.clearTimeout(holdTimer as unknown as number);
-		if (progressTimer) globalThis.clearInterval(progressTimer as unknown as number);
+		if (holdTimer) clearTimeout(holdTimer as unknown as number);
+		if (progressTimer) clearInterval(progressTimer as unknown as number);
 
 		holdTimer = null;
 		progressTimer = null;
@@ -249,7 +249,7 @@
 		holdStartTs = Date.now();
 
 		// NOTE: use globalThis timers (SSR-safe) + cast for TS
-		holdTimer = globalThis.setTimeout(() => {
+		holdTimer = setTimeout(() => {
 			if (!cancelSrv) {
 				srvStatus = 'Cancel service not ready';
 				isStarted = false;
@@ -276,7 +276,7 @@
 			);
 		}, HOLD_MS) as unknown as number;
 
-		progressTimer = globalThis.setInterval(() => {
+		progressTimer = setInterval(() => {
 			holdProgress = Math.min(1, (Date.now() - holdStartTs) / HOLD_MS);
 		}, PROGRESS_UPDATE_INTERVAL_MS) as unknown as number;
 	};

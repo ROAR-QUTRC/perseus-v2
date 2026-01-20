@@ -10,7 +10,7 @@
 		groups: {
 			stream: {
 				topic: {
-					type: 'string',
+					type: 'text',
 					value: '/camera/camera/color/image_raw'
 				}
 			}
