@@ -71,7 +71,7 @@ public:
             "/autonomy/run_waypoints",
             std::bind(&Nav2WaypointsBridge::on_run, this, std::placeholders::_1, std::placeholders::_2));
 
-        _srv_cancel = create_service<perseus_interfaces::srv::ToggleWaypoints>(
+        _srv_cancel = create_service<perseus_interfaces::srv::RunWaypoints>(
             "/autonomy/cancel_waypoints",
             std::bind(&Nav2WaypointsBridge::on_cancel, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -93,7 +93,7 @@ private:
     builtin_interfaces::msg::Time _last_feedback_time;
 
     rclcpp::Service<perseus_interfaces::srv::RunWaypoints>::SharedPtr _srv_run;
-    rclcpp::Service<perseus_interfaces::srv::ToggleWaypoints>::SharedPtr _srv_cancel;
+    rclcpp::Service<perseus_interfaces::srv::RunWaypoints>::SharedPtr _srv_cancel;
 
     std::string _feedback_topic_name;
 
@@ -184,8 +184,8 @@ private:
     }
 
     void on_cancel(
-        const std::shared_ptr<perseus_interfaces::srv::ToggleWaypoints::Request> req,
-        std::shared_ptr<perseus_interfaces::srv::ToggleWaypoints::Response> resp)
+        const std::shared_ptr<perseus_interfaces::srv::RunWaypoints::Request> req,
+        std::shared_ptr<perseus_interfaces::srv::RunWaypoints::Response> resp)
     {
         if (!_active_goal)
         {

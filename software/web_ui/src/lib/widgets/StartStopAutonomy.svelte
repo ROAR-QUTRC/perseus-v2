@@ -246,7 +246,7 @@
 		cancelSrv = new ROSLIB.Service({
 			ros,
 			name: '/autonomy/cancel_waypoints',
-			serviceType: 'perseus_interfaces/srv/ToggleWaypoints'
+			serviceType: 'perseus_interfaces/srv/RunWaypoints'
 		});
 
 		srvStatus = 'ROS connected';
