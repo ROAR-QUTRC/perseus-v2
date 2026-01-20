@@ -38,8 +38,8 @@
 	let isStarted = $state(false);
 
 	// Service status / busy
-	let svcStatus = $state<string>('ROS disconnected');
-	let svcBusy = $state(false);
+	let srvStatus = $state<string>('ROS disconnected');
+	let srvBusy = $state(false);
 
 	// Navigation info subscription (internal, not exposed as state)
 	let navInfoSub: ROSLIB.Topic | null = null;
@@ -136,10 +136,11 @@
 	$effect(() => {
 		const ros = getRosConnection();
 		if (!ros) {
-		runSrv = null;
-		cancelSrv = null;
-		svcStatus = 'ROS disconnected';
-		svcBusy = false;			isStarted = false;
+			runSrv = null;
+			cancelSrv = null;
+			srvStatus = 'ROS disconnected';
+			srvBusy = false;
+			isStarted = false;
 			clearHold();
 			return;
 		}
@@ -156,62 +157,62 @@
 			serviceType: 'perseus_interfaces/srv/ToggleWaypoints'
 		});
 
-		svcStatus = 'ROS connected';
+		srvStatus = 'ROS connected';
 	});
 
 	const sendStart = () => {
 		if (!runSrv) {
-			svcStatus = 'Run service not ready';
+			srvStatus = 'Run service not ready';
 			return;
 		}
 
-		svcBusy = true;
-		svcStatus = 'Sending run request...';
+		srvBusy = true;
+		srvStatus = 'Sending run request...';
 
 		const yaml_path = getSelectedYamlBasename();
 
 		runSrv.callService(
 			new ROSLIB.ServiceRequest({ yaml_path }),
 			(resp: any) => {
-				svcBusy = false;
-				svcStatus = resp?.message ?? 'Run response received';
+				srvBusy = false;
+				srvStatus = resp?.message ?? 'Run response received';
 				if (resp?.success) isStarted = true;
 			},
 			(err: any) => {
-				svcBusy = false;
-				svcStatus = `Run failed: ${err?.toString?.() ?? err}`;
+				srvBusy = false;
+				srvStatus = `Run failed: ${err?.toString?.() ?? err}`;
 			}
 		);
 	};
 
 	const startHoldStop = () => {
-		if (!isStarted || isHoldingStop || svcBusy) return;
+		if (!isStarted || isHoldingStop || srvBusy) return;
 
 		isHoldingStop = true;
 		holdStartTs = Date.now();
 
 		holdTimer = window.setTimeout(() => {
 			if (!cancelSrv) {
-				svcStatus = 'Cancel service not ready';
+				srvStatus = 'Cancel service not ready';
 				isStarted = false;
 				clearHold();
 				return;
 			}
 
-			svcBusy = true;
-			svcStatus = 'Cancelling...';
+			srvBusy = true;
+			srvStatus = 'Cancelling...';
 
 			cancelSrv.callService(
 				new ROSLIB.ServiceRequest({}),
 				(resp: any) => {
-					svcBusy = false;
-					svcStatus = resp?.message ?? 'Cancel response received';
+					srvBusy = false;
+					srvStatus = resp?.message ?? 'Cancel response received';
 					isStarted = false;
 					clearHold();
 				},
 				(err: any) => {
-					svcBusy = false;
-					svcStatus = `Cancel failed: ${err?.toString?.() ?? err}`;
+					srvBusy = false;
+					srvStatus = `Cancel failed: ${err?.toString?.() ?? err}`;
 					clearHold();
 				}
 			);
@@ -222,10 +223,8 @@
 		}, 16);
 	};
 
-	onMount(() => {
-		loadWaypointsYaml();
-
-		// Set up persistent subscription to navigation_info
+	// Set up persistent subscription to navigation_info
+	$effect(() => {
 		const setupNavInfoSub = () => {
 			const ros = getRosConnection();
 			if (!ros) {
@@ -240,11 +239,11 @@
 				messageType: 'perseus_interfaces/msg/NavigationData'
 			});
 
-		navInfoSub.subscribe((msg: any) => {
-			// Sync button state with actual navigation state
-			const navActive = msg.navigation_active ?? false;
-			if (navActive !== isStarted) {
-				isStarted = navActive;
+			navInfoSub.subscribe((msg: any) => {
+				// Sync button state with actual navigation state
+				const navActive = msg.navigation_active ?? false;
+				if (navActive !== isStarted) {
+					isStarted = navActive;
 				}
 			});
 		};
@@ -257,6 +256,10 @@
 				navInfoSub.unsubscribe();
 			}
 		};
+	});
+
+	onMount(() => {
+		loadWaypointsYaml();
 	});
 </script>
 
@@ -340,7 +343,7 @@
 			disabled={isStarted || !runSrv}
 			onclick={sendStart}
 		>
-			{#if svcBusy && !isStarted}
+			{#if srvBusy && !isStarted}
 				SENDING RUN REQUEST…
 			{:else if isStarted}
 				AUTONOMY IN PROGRESS
@@ -352,7 +355,7 @@
 		<!-- STOP (fixed height) -->
 		<Button
 			class="relative w-full font-bold bg-red-600 text-white overflow-hidden h-12 shrink-0"
-			disabled={!isStarted || !cancelSrv || svcBusy}
+			disabled={!isStarted || !cancelSrv || srvBusy}
 			onpointerdown={(e) => e.button === 0 && startHoldStop()}
 			onpointerup={clearHold}
 			onpointerleave={clearHold}
@@ -373,7 +376,7 @@
 
 		<!-- STATUS (single line) -->
 		<p class="text-xs opacity-70">
-			Status: <span class="font-mono">{svcStatus}</span>
+			Status: <span class="font-mono">{srvStatus}</span>
 		</p>
 	</div>
 </div>

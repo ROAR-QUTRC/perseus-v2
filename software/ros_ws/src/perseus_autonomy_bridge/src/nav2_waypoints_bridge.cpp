@@ -146,72 +146,72 @@ public:
     {
         // Directory where YAML files live on the robot/PC running this node.
         // IMPORTANT: UI should send only a filename (e.g. "waypoints_simulation.yaml").
-        waypoints_dir_ = this->declare_parameter<std::string>("waypoints_dir", "");
+        _waypoints_dir = this->declare_parameter<std::string>("waypoints_dir", "");
 
         // Customizable feedback topic name
-        feedback_topic_name_ = this->declare_parameter<std::string>("feedback_topic", "/autonomy/navigation_info");
+        _feedback_topic_name = this->declare_parameter<std::string>("feedback_topic", "/autonomy/navigation_info");
 
-        action_client_ = rclcpp_action::create_client<NavigateThroughPoses>(this, "/navigate_through_poses");
+        _action_client = rclcpp_action::create_client<NavigateThroughPoses>(this, "/navigate_through_poses");
 
         // Publisher for navigation info
-        nav_info_pub_ = this->create_publisher<perseus_interfaces::msg::NavigationData>(
-            feedback_topic_name_, 10);
+        _nav_info_pub = this->create_publisher<perseus_interfaces::msg::NavigationData>(
+            _feedback_topic_name, 10);
 
         // Subscribe to the feedback topic using a generic subscription with a lambda
         // The feedback message contains the navigation data we need
         auto generic_callback = [this](std::shared_ptr<rclcpp::SerializedMessage> msg)
         {
             // Store the serialized message for later deserialization
-            this->last_serialized_feedback_ = msg;
+            this->_last_serialized_feedback = msg;
             // Update the timestamp to track when we last received feedback
-            this->last_feedback_time_ = this->now();
+            this->_last_feedback_time = this->now();
         };
 
-        feedback_sub_ = this->create_generic_subscription(
+        _feedback_sub = this->create_generic_subscription(
             "/navigate_through_poses/_action/feedback",
             "nav2_msgs/action/NavigateThroughPoses_FeedbackMessage",
             rclcpp::SensorDataQoS(),
             generic_callback);
 
         // Timer to publish navigation info periodically
-        nav_info_timer_ = this->create_wall_timer(
+        _nav_info_timer = this->create_wall_timer(
             std::chrono::milliseconds(100),
             std::bind(&Nav2WaypointsBridge::publish_nav_info, this));
 
-        // Initialize last_feedback_time_ to now so we don't start in an inactive state
-        // last_feedback_time_ = this->now();
+        // Initialize _last_feedback_time to now so we don't start in an inactive state
+        // _last_feedback_time = this->now();
 
-        srv_run_ = create_service<perseus_interfaces::srv::ToggleWaypoints>(
+        _srv_run = create_service<perseus_interfaces::srv::ToggleWaypoints>(
             "/autonomy/run_waypoints",
             std::bind(&Nav2WaypointsBridge::on_run, this, std::placeholders::_1, std::placeholders::_2));
 
-        srv_cancel_ = create_service<perseus_interfaces::srv::ToggleWaypoints>(
+        _srv_cancel = create_service<perseus_interfaces::srv::ToggleWaypoints>(
             "/autonomy/cancel_waypoints",
             std::bind(&Nav2WaypointsBridge::on_cancel, this, std::placeholders::_1, std::placeholders::_2));
 
         RCLCPP_INFO(get_logger(), "Ready: /autonomy/run_waypoints, /autonomy/cancel_waypoints");
-        RCLCPP_INFO(get_logger(), "Feedback topic: '%s'", feedback_topic_name_.c_str());
-        RCLCPP_INFO(get_logger(), "waypoints_dir param: '%s'", waypoints_dir_.c_str());
+        RCLCPP_INFO(get_logger(), "Feedback topic: '%s'", _feedback_topic_name.c_str());
+        RCLCPP_INFO(get_logger(), "waypoints_dir param: '%s'", _waypoints_dir.c_str());
     }
 
 private:
-    rclcpp_action::Client<NavigateThroughPoses>::SharedPtr action_client_;
-    GoalHandleNav::SharedPtr active_goal_;
+    rclcpp_action::Client<NavigateThroughPoses>::SharedPtr _action_client;
+    GoalHandleNav::SharedPtr _active_goal;
 
-    rclcpp::Publisher<perseus_interfaces::msg::NavigationData>::SharedPtr nav_info_pub_;
-    rclcpp::TimerBase::SharedPtr nav_info_timer_;
-    std::shared_ptr<rclcpp::GenericSubscription> feedback_sub_;
-    std::shared_ptr<rclcpp::SerializedMessage> last_serialized_feedback_;
+    rclcpp::Publisher<perseus_interfaces::msg::NavigationData>::SharedPtr _nav_info_pub;
+    rclcpp::TimerBase::SharedPtr _nav_info_timer;
+    std::shared_ptr<rclcpp::GenericSubscription> _feedback_sub;
+    std::shared_ptr<rclcpp::SerializedMessage> _last_serialized_feedback;
 
     // Current navigation feedback data
-    nav2_msgs::action::NavigateThroughPoses::Feedback current_feedback_;
-    builtin_interfaces::msg::Time last_feedback_time_;
+    nav2_msgs::action::NavigateThroughPoses::Feedback _current_feedback;
+    builtin_interfaces::msg::Time _last_feedback_time;
 
-    rclcpp::Service<perseus_interfaces::srv::ToggleWaypoints>::SharedPtr srv_run_;
-    rclcpp::Service<perseus_interfaces::srv::ToggleWaypoints>::SharedPtr srv_cancel_;
+    rclcpp::Service<perseus_interfaces::srv::ToggleWaypoints>::SharedPtr _srv_run;
+    rclcpp::Service<perseus_interfaces::srv::ToggleWaypoints>::SharedPtr _srv_cancel;
 
-    std::string waypoints_dir_;
-    std::string feedback_topic_name_;
+    std::string _waypoints_dir;
+    std::string _feedback_topic_name;
 
     // Resolve request yaml_path into a full filesystem path.
     // - If req sends "/waypoints_simulation.yaml" => treat as "waypoints_simulation.yaml"
@@ -228,13 +228,13 @@ private:
         if (p.empty())
             p = "waypoints.yaml";
 
-        if (waypoints_dir_.empty())
+        if (_waypoints_dir.empty())
         {
             // No directory configured: fall back to current working directory (not recommended)
             return p;
         }
 
-        std::string dir = waypoints_dir_;
+        std::string dir = _waypoints_dir;
         // ensure trailing slash
         if (!dir.empty() && dir.back() != '/')
             dir.push_back('/');
@@ -248,17 +248,17 @@ private:
     {
         try
         {
-            if (!action_client_->wait_for_action_server(std::chrono::seconds(2)))
+            if (!_action_client->wait_for_action_server(std::chrono::seconds(2)))
             {
                 resp->success = false;
                 resp->message = "Nav2 action server /navigate_through_poses not available";
                 return;
             }
 
-            if (active_goal_)
+            if (_active_goal)
             {
-                action_client_->async_cancel_goal(active_goal_);
-                active_goal_.reset();
+                _action_client->async_cancel_goal(_active_goal);
+                _active_goal.reset();
             }
 
             const std::string yaml_full_path = resolve_yaml_path(req->yaml_path);
@@ -291,7 +291,7 @@ private:
                     RCLCPP_ERROR(this->get_logger(), "Goal rejected by Nav2");
                     return;
                 }
-                this->active_goal_ = goal_handle;
+                this->_active_goal = goal_handle;
                 RCLCPP_INFO(this->get_logger(), "Goal accepted");
             };
 
@@ -299,7 +299,7 @@ private:
                 [this](const GoalHandleNav::WrappedResult& /*result*/)
             {
                 RCLCPP_INFO(this->get_logger(), "Goal finished (result received)");
-                this->active_goal_.reset();
+                this->_active_goal.reset();
             };
 
             opts.feedback_callback =
@@ -308,11 +308,11 @@ private:
                 if (!feedback)
                     return;
                 // Store the feedback; the timer will publish it with proper navigation_active flag
-                this->current_feedback_ = *feedback;
-                this->last_feedback_time_ = this->now();
+                this->_current_feedback = *feedback;
+                this->_last_feedback_time = this->now();
             };
 
-            action_client_->async_send_goal(goal, opts);
+            _action_client->async_send_goal(goal, opts);
 
             resp->success = true;
             resp->message = "Goal sent to /navigate_through_poses";
@@ -328,15 +328,15 @@ private:
         const std::shared_ptr<perseus_interfaces::srv::ToggleWaypoints::Request>,
         std::shared_ptr<perseus_interfaces::srv::ToggleWaypoints::Response> resp)
     {
-        if (!active_goal_)
+        if (!_active_goal)
         {
             resp->success = true;
             resp->message = "No active goal";
             return;
         }
 
-        action_client_->async_cancel_goal(active_goal_);
-        active_goal_.reset();
+        _action_client->async_cancel_goal(_active_goal);
+        _active_goal.reset();
         resp->success = true;
         resp->message = "Cancel requested";
     }
@@ -344,17 +344,17 @@ private:
     void publish_nav_info()
     {
         // Try to deserialize the feedback if we have a serialized message
-        if (last_serialized_feedback_)
+        if (_last_serialized_feedback)
         {
             try
             {
                 // Deserialize the FeedbackMessage which wraps the actual Feedback
                 rclcpp::Serialization<nav2_msgs::action::NavigateThroughPoses_FeedbackMessage> serialization;
                 nav2_msgs::action::NavigateThroughPoses_FeedbackMessage feedback_msg;
-                serialization.deserialize_message(last_serialized_feedback_.get(), &feedback_msg);
+                serialization.deserialize_message(_last_serialized_feedback.get(), &feedback_msg);
 
                 // Extract the feedback struct
-                current_feedback_ = feedback_msg.feedback;
+                _current_feedback = feedback_msg.feedback;
             }
             catch (const std::exception& e)
             {
@@ -365,21 +365,21 @@ private:
 
         // Create and publish the navigation info message
         auto nav_info = std::make_unique<perseus_interfaces::msg::NavigationData>();
-        nav_info->current_pose = current_feedback_.current_pose;
-        nav_info->navigation_time = current_feedback_.navigation_time;
-        nav_info->estimated_time_remaining = current_feedback_.estimated_time_remaining;
-        nav_info->number_of_recoveries = current_feedback_.number_of_recoveries;
-        nav_info->distance_remaining = current_feedback_.distance_remaining;
-        nav_info->number_of_poses_remaining = current_feedback_.number_of_poses_remaining;
+        nav_info->current_pose = _current_feedback.current_pose;
+        nav_info->navigation_time = _current_feedback.navigation_time;
+        nav_info->estimated_time_remaining = _current_feedback.estimated_time_remaining;
+        nav_info->number_of_recoveries = _current_feedback.number_of_recoveries;
+        nav_info->distance_remaining = _current_feedback.distance_remaining;
+        nav_info->number_of_poses_remaining = _current_feedback.number_of_poses_remaining;
 
         // Check if navigation is active: we need both an active goal AND recent feedback
         auto now = this->now();
-        auto time_since_feedback = (now - last_feedback_time_).seconds();
+        auto time_since_feedback = (now - _last_feedback_time).seconds();
         // Active only if we have an active goal AND received feedback within last 2 seconds
-        nav_info->navigation_active = (active_goal_ != nullptr) || (time_since_feedback < 0.2);
+        nav_info->navigation_active = (_active_goal != nullptr) || (time_since_feedback < 0.2);
         RCLCPP_INFO(this->get_logger(), "Time since last feedback: %.2f seconds, active_goal: %s",
-                    time_since_feedback, (active_goal_ != nullptr) ? "yes" : "no");
-        nav_info_pub_->publish(std::move(nav_info));
+                    time_since_feedback, (_active_goal != nullptr) ? "yes" : "no");
+        _nav_info_pub->publish(std::move(nav_info));
     }
 };
 
