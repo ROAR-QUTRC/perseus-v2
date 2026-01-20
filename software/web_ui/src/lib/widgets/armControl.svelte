@@ -36,17 +36,17 @@
 
 <script lang="ts">
 	import { getRosConnection } from '$lib/scripts/rosBridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
-	import * as ROSLIB from 'roslib';
-	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
 	import * as ButtonGroup from '$lib/components/ui/button-group/index';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import Fa, { FaLayers } from 'svelte-fa';
+	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
+	import type { RequestInt8ArrayResponseType, TriggerDeviceRequestType, TriggerDeviceResponseType } from '$lib/scripts/perseusMsgs';
+	import type { EmptyRequestType, Float64MultiArrayType, SetBoolRequestType, SetBoolResponseType } from '$lib/scripts/rosTypes';
 	import { faChevronDown, faChevronUp, faRefresh } from '@fortawesome/free-solid-svg-icons';
 	import { sentenceCase } from 'change-case';
+	import * as ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
-	import type { EmptyRequestType, Float64MultiArrayType, SetBoolRequestType, SetBoolResponseType } from '$lib/scripts/rosTypes';
-	import type { RequestInt8ArrayResponseType, TriggerDeviceRequestType, TriggerDeviceResponseType } from '$lib/scripts/perseusMsgs';
+	import Fa, { FaLayers } from 'svelte-fa';
 
 
 	interface MotorData {
@@ -223,6 +223,15 @@
 		motors[joint].targetAngle = angle ?? motors[joint].draftTargetAngle;
 		motors[joint].draftTargetAngle = motors[joint].targetAngle;
 	}
+
+	const setCurrentToZero = (joint: JointNameType) => {
+		if (setZeroPositionService) {
+			setZeroPositionService.callService({ id: jointIdMap[joint], trigger: true, data: 0 }, (response) => {
+				// Do nothing for now
+			});
+		}
+	}
+
 	const incrementDraftTarget = (joint: JointNameType, increment: number) => {
 		motors[joint].draftTargetAngle += increment;
 	}
@@ -256,7 +265,7 @@
 		});
 		// Set correct gear ratios
 		motors.ELBOW.gearRatio = 28;
-		motors.WRIST_PAN.gearRatio = 6;
+		motors.WRIST_PAN.gearRatio = 19;
 		motors.WRIST_TILT.gearRatio = 28;
 		motors.SHOULDER_PAN.gearRatio = 6;
 		motors.SHOULDER_PAN.rmdMotor = false;
@@ -359,6 +368,7 @@
 						<div class="flex flex-col">
 							<!-- Extra stats -->
 							<Button variant="outline" onclick={() => setTargetAngle(id, 0)}>Zero Servo</Button>
+							<Button disabled={!motors[id].rmdMotor} class="mt-2" onclick={() => setCurrentToZero(id)}>Write Zero Pos</Button>
 							<p>Current: {data.current.toFixed(2)} A</p>
 							<p>Voltage: {data.voltage.toFixed(2)} V</p>
 							<p>Error: {data.error}</p>

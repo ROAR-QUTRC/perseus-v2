@@ -492,6 +492,7 @@ namespace hi_can::parameters
                         {
                         }
                     };
+                    // _zero_bias is ignored if _use_current_as_zero is true
                     struct zero_offset_t : Serializable
                     {
                         command_t command;
