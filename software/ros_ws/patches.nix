@@ -239,47 +239,17 @@ let
     };
 
     # CUDA-enabled slam_toolbox from fork
+    # Note: CUDA build is disabled until CUDA/GCC intrinsic compatibility is resolved
+    # The nvcc compiler has issues with GCC 12/13 x86 intrinsics (AVX512, CMPCCXADD, etc.)
+    # For now, use the upstream non-CUDA version with just the message-filters dependency
     slam-toolbox = rosPrev.slam-toolbox.overrideAttrs (
       {
-        buildInputs ? [ ],
-        nativeBuildInputs ? [ ],
         propagatedBuildInputs ? [ ],
-        cmakeFlags ? [ ],
-        patches ? [ ],
         ...
       }:
       {
-        version = "2.9.1-cuda";
-
-        src = final.fetchFromGitHub {
-          owner = "DingoOz";
-          repo = "slam_toolbox";
-          rev = "f9a568fe195c84dd788a8bde1f4ac84a5f844be2"; # Remove cudaMemAdvise, add error checking
-          hash = "sha256-GnrUn9w8F965v0uzwGtxwthkMCCADaKC1Wt7lfLlKGA=";
-        };
-
-        nativeBuildInputs = nativeBuildInputs ++ [
-          final.cudaPackages.cuda_nvcc
-        ];
-
-        buildInputs = buildInputs ++ [
-          final.cudaPackages.cuda_cudart
-          final.cudaPackages.cuda_cccl
-        ];
-
         propagatedBuildInputs = propagatedBuildInputs ++ [
           rosFinal.message-filters
-        ];
-
-        patches = patches ++ [
-          ./patches/slam-toolbox/fix-jazzy-includes.patch
-          ./patches/slam-toolbox/fix-null-loop-scan-matcher.patch
-        ];
-
-        cmakeFlags = cmakeFlags ++ [
-          "-DSLAM_TOOLBOX_USE_CUDA=ON"
-          "-DCMAKE_CUDA_ARCHITECTURES=87" # Jetson Orin Nano
-          "-DCMAKE_BUILD_TYPE=RelWithDebInfo" # Include debug symbols
         ];
       }
     );
