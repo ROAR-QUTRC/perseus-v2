@@ -30,7 +30,14 @@ pkgs.mkShell {
             # Dependencies from package.xml files
             actuator-msgs
             ament-cmake
+            ament-cmake-cppcheck
+            ament-cmake-cpplint
+            ament-cmake-flake8
             ament-cmake-gtest
+            ament-cmake-lint-cmake
+            ament-cmake-pep257
+            ament-cmake-uncrustify
+            ament-cmake-xmllint
             ament-copyright
             ament-flake8
             ament-lint-auto
@@ -50,7 +57,11 @@ pkgs.mkShell {
             joint-state-publisher
             joint-state-publisher-gui
             joy
+            laser-geometry
+            launch
+            launch-ros
             mecanum-drive-controller
+            message-filters
             navigation2
             nlohmann_json
             openssl
@@ -58,6 +69,7 @@ pkgs.mkShell {
             python3Packages.pygame
             python3Packages.pytest
             rclcpp
+            rclcpp-components
             rclcpp-lifecycle
             rclpy
             realsense2-camera
@@ -82,6 +94,8 @@ pkgs.mkShell {
             teleop-twist-keyboard
             tf2
             tf2-geometry-msgs
+            tf2-ros
+            tf2-sensor-msgs
             twist-mux
             urdf
             xacro
