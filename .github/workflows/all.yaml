@@ -33,7 +33,6 @@ jobs:
             echo 'extra-trusted-substituters = https://roar-qutrc.cachix.org https://ros.cachix.org'
             echo 'extra-trusted-public-keys = roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA= ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo='
             echo "extra-trusted-users = $(whoami)"
-            echo 'allowed-uris = https://docs.python.org/3 https://docs.ros.org/en/ https://www.sphinx-doc.org/en/master https://myst-parser.readthedocs.io/en/latest https://breathe.readthedocs.io/en/stable https://exhale.readthedocs.io/en/stable https://jbms.github.io/sphinx-immaterial'
             echo 'NIX_EOF'
           } >> "$GITHUB_OUTPUT"
           {

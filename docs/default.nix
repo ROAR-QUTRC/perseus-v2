@@ -95,6 +95,10 @@ let
         ;
     };
 
+    # disable sandboxing so sphinx extensions can grab their internet resources
+    # (intersphinx, tippy, etc)
+    __noChroot = true;
+
     # this needs to be set as an environment variable (just passing it as part of the set to mkDerivation)
     # for intersphinx config to be sure to use the correct file
     ROS_DISTRO = rosDistro;
