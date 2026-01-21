@@ -8,7 +8,7 @@
 
 extern "C" void BT_RegisterNodesFromPlugin(BT::BehaviorTreeFactory& factory)
 {
-  factory.registerNodeType<perseus_bt_nodes::GetGoalFromGoals>("GetGoalFromGoals");
-  factory.registerNodeType<perseus_bt_nodes::IncrementIndex>("IncrementIndex");
-  factory.registerNodeType<perseus_bt_nodes::PopFirstGoal>("PopFirstGoal");
+    factory.registerNodeType<perseus_bt_nodes::GetGoalFromGoals>("GetGoalFromGoals");
+    factory.registerNodeType<perseus_bt_nodes::IncrementIndex>("IncrementIndex");
+    factory.registerNodeType<perseus_bt_nodes::PopFirstGoal>("PopFirstGoal");
 }
