@@ -7,7 +7,7 @@ set -euo pipefail
 # exit if run as root
 if [ "$EUID" -eq 0 ]; then
   echo "Please run as yourself! Running as superuser (ie, with sudo) breaks the setup."
-  exit
+  exit 1
 fi
 
 echo "Setting up git submodule repos"
@@ -58,6 +58,15 @@ if grep -Fq "$DISABLE_WARN_DIRTY" "$NIX_CONFIG_FILE_PATH"; then
 else
   echo "Disabling dirty git tree warning..."
   echo "$DISABLE_WARN_DIRTY" | sudo tee -a "$NIX_CONFIG_FILE_PATH"
+  RESTART_NIX_DAEMON=true
+fi
+
+TRUSTED_USERS="trusted-users = $USER"
+if grep -Fq "$TRUSTED_USERS" "$NIX_CONFIG_FILE_PATH"; then
+  echo "Trusted users already set!"
+else
+  echo "Adding $USER to trusted users..."
+  echo "$TRUSTED_USERS" | sudo tee -a "$NIX_CONFIG_FILE_PATH"
   RESTART_NIX_DAEMON=true
 fi
 

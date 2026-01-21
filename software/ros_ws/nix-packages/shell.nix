@@ -38,6 +38,7 @@ pkgs.mkShell {
             ament-pep257
             backward-ros
             boost
+            builtin-interfaces
             controller-manager
             diff-drive-controller
             geometry-msgs
@@ -50,6 +51,7 @@ pkgs.mkShell {
             joint-state-publisher-gui
             joy
             mecanum-drive-controller
+            nav2-msgs
             navigation2
             nlohmann_json
             openssl
@@ -57,6 +59,7 @@ pkgs.mkShell {
             python3Packages.pygame
             python3Packages.pytest
             rclcpp
+            rclcpp-action
             rclcpp-lifecycle
             rclpy
             realsense2-camera
@@ -69,6 +72,8 @@ pkgs.mkShell {
             ros-gz-sim
             ros2controlcli
             ros2launch
+            rosidl-default-generators
+            rosidl-default-runtime
             rplidar-ros
             rviz2
             sensor-msgs
