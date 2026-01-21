@@ -113,9 +113,9 @@
 			(subtractmaskfromsilk no)
 			(outputformat 1)
 			(mirror no)
-			(drillshape 1)
+			(drillshape 0)
 			(scaleselection 1)
-			(outputdirectory "")
+			(outputdirectory "manufacture/")
 		)
 	)
 	(net 0 "")
@@ -7186,6 +7186,58 @@
 		)
 		(layer "Edge.Cuts")
 		(uuid "ec679a59-19d7-44b6-913d-db4ed0453b10")
+	)
+	(gr_text "GND\n"
+		(at 131.5 106.5 0)
+		(layer "F.SilkS" knockout)
+		(uuid "2f24da46-a613-47a8-a909-a7802f56db19")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.3)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "GND"
+		(at 134 80 0)
+		(layer "F.SilkS" knockout)
+		(uuid "2f8625de-8905-461a-96ce-70fa3e8abe3e")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.3)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "3.3v"
+		(at 110 79 0)
+		(layer "F.SilkS" knockout)
+		(uuid "8453e9e8-968f-4bd7-8041-bf9be9a9dd7d")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.3)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "5v"
+		(at 109.5 105.5 0)
+		(layer "F.SilkS" knockout)
+		(uuid "aded5d80-819e-4870-b934-b6513eb71498")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.3)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
 	)
 	(segment
 		(start 134.075 91.575)
