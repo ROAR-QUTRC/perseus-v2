@@ -1,0 +1,721 @@
+#!/usr/bin/env python3
+"""
+Autonomy Diagnostics TUI - A comprehensive diagnostic tool for autonomy system monitoring.
+
+Uses curses (standard library) for the terminal interface - no external dependencies.
+Falls back to simple text mode when no TTY is available.
+
+This tool provides a real-time view of:
+- Topic presence and rates (scan, imu, odom, etc.)
+- TF frame connectivity (map->odom->base_link chain)
+- Nav2 lifecycle node states
+- Config file existence
+"""
+
+import curses
+import os
+import sys
+import rclpy
+from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import ReentrantCallbackGroup
+import threading
+import time
+import signal
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple
+from collections import deque
+
+from sensor_msgs.msg import LaserScan, Imu, JointState
+from nav_msgs.msg import Odometry, OccupancyGrid
+from geometry_msgs.msg import Twist
+from lifecycle_msgs.srv import GetState
+from tf2_ros import Buffer, TransformListener
+from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
+
+# =============================================================================
+# Constants
+# =============================================================================
+
+# Timing thresholds (seconds)
+STALE_DATA_TIMEOUT = 2.0
+TF_CHECK_INTERVAL = 1.0
+LIFECYCLE_CHECK_INTERVAL = 2.0
+
+# Rate calculation
+RATE_WINDOW_SIZE = 10
+
+# UI refresh
+CURSES_REFRESH_MS = 200
+SIMPLE_MODE_REFRESH_INTERVAL = 1.0
+
+# Rate thresholds for status
+RATE_WARNING_THRESHOLD = 0.8  # Warn if rate < 80% expected
+RATE_CRITICAL_THRESHOLD = 0.5  # Critical if rate < 50% expected
+
+# ROS workspace path for config file checks
+ROS_WS_SRC_PATH = "/home/dingo/perseus-v2/software/ros_ws/src"
+
+# =============================================================================
+# Topic Configurations
+# =============================================================================
+
+MONITORED_TOPICS = [
+    {"name": "scan", "topic": "/scan", "type": "LaserScan", "expected_hz": 10.0, "critical": True},
+    {"name": "imu", "topic": "/imu/data", "type": "Imu", "expected_hz": 100.0, "critical": True},
+    {"name": "odom", "topic": "/odom", "type": "Odometry", "expected_hz": 50.0, "critical": True},
+    {"name": "odom_filtered", "topic": "/odometry/filtered", "type": "Odometry", "expected_hz": 30.0, "critical": True},
+    {"name": "map", "topic": "/map", "type": "OccupancyGrid", "expected_hz": 0.1, "critical": False},
+    {"name": "cmd_vel", "topic": "/cmd_vel", "type": "Twist", "expected_hz": 0.0, "critical": False},
+    {"name": "joint_states", "topic": "/joint_states", "type": "JointState", "expected_hz": 50.0, "critical": True},
+]
+
+# TF frame chains to verify
+TF_FRAMES = [
+    {"parent": "map", "child": "odom", "description": "SLAM/AMCL", "critical": True},
+    {"parent": "odom", "child": "base_link", "description": "EKF", "critical": True},
+    {"parent": "base_link", "child": "chassis", "description": "URDF", "critical": True},
+    {"parent": "chassis", "child": "laser_2d_frame", "description": "LiDAR", "critical": True},
+    {"parent": "chassis", "child": "imu_link", "description": "IMU", "critical": True},
+]
+
+# Nav2 lifecycle nodes to check
+LIFECYCLE_NODES = [
+    "bt_navigator",
+    "controller_server",
+    "planner_server",
+    "map_server",
+    "amcl",
+    "smoother_server",
+    "velocity_smoother",
+    "collision_monitor",
+    "waypoint_follower",
+    "behavior_server",
+]
+
+# Config files to verify
+CONFIG_FILES = [
+    {"path": "autonomy/config/ekf_params.yaml", "description": "EKF params"},
+    {"path": "autonomy/config/slam_toolbox_params.yaml", "description": "SLAM params"},
+    {"path": "autonomy/config/perseus_nav_params.yaml", "description": "Nav2 params"},
+    {"path": "autonomy/config/cmd_vel_mux.yaml", "description": "Mux config"},
+]
+
+
+# =============================================================================
+# Data Classes
+# =============================================================================
+
+@dataclass
+class TopicStatus:
+    """Status of a monitored topic."""
+    name: str
+    topic: str
+    msg_type: str
+    expected_hz: float
+    actual_hz: float = 0.0
+    last_msg_time: float = 0.0
+    msg_count: int = 0
+    critical: bool = True
+
+    @property
+    def status(self) -> str:
+        """Determine status based on rate and staleness."""
+        now = time.time()
+        if self.msg_count == 0:
+            return "NONE"
+        if now - self.last_msg_time > STALE_DATA_TIMEOUT:
+            return "STALE"
+        if self.expected_hz <= 0:
+            return "OK"  # Variable rate topics
+        ratio = self.actual_hz / self.expected_hz
+        if ratio < RATE_CRITICAL_THRESHOLD:
+            return "CRIT"
+        if ratio < RATE_WARNING_THRESHOLD:
+            return "WARN"
+        return "OK"
+
+
+@dataclass
+class TFStatus:
+    """Status of a TF transform."""
+    parent: str
+    child: str
+    description: str
+    connected: bool = False
+    error_msg: str = ""
+    critical: bool = True
+
+
+@dataclass
+class LifecycleStatus:
+    """Status of a lifecycle node."""
+    name: str
+    state: str = "unknown"
+    last_check: float = 0.0
+
+
+@dataclass
+class ConfigStatus:
+    """Status of a config file."""
+    path: str
+    description: str
+    exists: bool = False
+
+
+# =============================================================================
+# Rate Calculator
+# =============================================================================
+
+class RateCalculator:
+    """Calculate message rate from timestamps using sliding window."""
+
+    def __init__(self, window_size: int = RATE_WINDOW_SIZE):
+        self.timestamps: deque = deque(maxlen=window_size)
+
+    def add_timestamp(self, ts: float) -> float:
+        self.timestamps.append(ts)
+        if len(self.timestamps) < 2:
+            return 0.0
+        duration = self.timestamps[-1] - self.timestamps[0]
+        if duration <= 0:
+            return 0.0
+        return (len(self.timestamps) - 1) / duration
+
+
+# =============================================================================
+# Main Node
+# =============================================================================
+
+class AutonomyDiagnosticsNode(Node):
+    """ROS2 node for autonomy system diagnostics."""
+
+    def __init__(self):
+        super().__init__("autonomy_diagnostics")
+
+        # Callback group for service calls
+        self.cb_group = ReentrantCallbackGroup()
+
+        # Initialize data structures
+        self.topic_statuses: Dict[str, TopicStatus] = {}
+        self.rate_calculators: Dict[str, RateCalculator] = {}
+        self.tf_statuses: List[TFStatus] = []
+        self.lifecycle_statuses: Dict[str, LifecycleStatus] = {}
+        self.config_statuses: List[ConfigStatus] = []
+
+        # TF buffer and listener
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
+        # Initialize topic monitoring
+        self._setup_topic_monitoring()
+
+        # Initialize TF status tracking
+        self._setup_tf_monitoring()
+
+        # Initialize lifecycle node tracking
+        self._setup_lifecycle_monitoring()
+
+        # Check config files once
+        self._check_config_files()
+
+        # Create timers for periodic checks
+        self.tf_timer = self.create_timer(
+            TF_CHECK_INTERVAL, self._check_tf_frames, callback_group=self.cb_group
+        )
+        self.lifecycle_timer = self.create_timer(
+            LIFECYCLE_CHECK_INTERVAL, self._check_lifecycle_nodes, callback_group=self.cb_group
+        )
+
+        self.get_logger().info("Autonomy diagnostics node started")
+
+    def _setup_topic_monitoring(self):
+        """Set up subscribers for all monitored topics."""
+        # QoS for sensor data
+        sensor_qos = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            depth=10,
+        )
+
+        for topic_cfg in MONITORED_TOPICS:
+            name = topic_cfg["name"]
+            topic = topic_cfg["topic"]
+            msg_type = topic_cfg["type"]
+
+            # Create status tracker
+            self.topic_statuses[name] = TopicStatus(
+                name=name,
+                topic=topic,
+                msg_type=msg_type,
+                expected_hz=topic_cfg["expected_hz"],
+                critical=topic_cfg["critical"],
+            )
+            self.rate_calculators[name] = RateCalculator()
+
+            # Create subscriber based on message type
+            if msg_type == "LaserScan":
+                self.create_subscription(
+                    LaserScan, topic,
+                    lambda msg, n=name: self._topic_callback(n),
+                    sensor_qos
+                )
+            elif msg_type == "Imu":
+                self.create_subscription(
+                    Imu, topic,
+                    lambda msg, n=name: self._topic_callback(n),
+                    sensor_qos
+                )
+            elif msg_type == "Odometry":
+                self.create_subscription(
+                    Odometry, topic,
+                    lambda msg, n=name: self._topic_callback(n),
+                    sensor_qos
+                )
+            elif msg_type == "OccupancyGrid":
+                self.create_subscription(
+                    OccupancyGrid, topic,
+                    lambda msg, n=name: self._topic_callback(n),
+                    10
+                )
+            elif msg_type == "Twist":
+                self.create_subscription(
+                    Twist, topic,
+                    lambda msg, n=name: self._topic_callback(n),
+                    10
+                )
+            elif msg_type == "JointState":
+                self.create_subscription(
+                    JointState, topic,
+                    lambda msg, n=name: self._topic_callback(n),
+                    sensor_qos
+                )
+
+    def _topic_callback(self, topic_name: str):
+        """Generic callback for topic monitoring."""
+        now = time.time()
+        status = self.topic_statuses[topic_name]
+        status.last_msg_time = now
+        status.msg_count += 1
+        status.actual_hz = self.rate_calculators[topic_name].add_timestamp(now)
+
+    def _setup_tf_monitoring(self):
+        """Initialize TF status tracking."""
+        for tf_cfg in TF_FRAMES:
+            self.tf_statuses.append(TFStatus(
+                parent=tf_cfg["parent"],
+                child=tf_cfg["child"],
+                description=tf_cfg["description"],
+                critical=tf_cfg["critical"],
+            ))
+
+    def _check_tf_frames(self):
+        """Check connectivity of all required TF frames."""
+        for tf_status in self.tf_statuses:
+            try:
+                self.tf_buffer.lookup_transform(
+                    tf_status.parent,
+                    tf_status.child,
+                    rclpy.time.Time(),
+                    timeout=rclpy.duration.Duration(seconds=0.1)
+                )
+                tf_status.connected = True
+                tf_status.error_msg = ""
+            except (LookupException, ConnectivityException, ExtrapolationException) as e:
+                tf_status.connected = False
+                tf_status.error_msg = str(e)[:50]
+
+    def _setup_lifecycle_monitoring(self):
+        """Initialize lifecycle node tracking."""
+        for node_name in LIFECYCLE_NODES:
+            self.lifecycle_statuses[node_name] = LifecycleStatus(name=node_name)
+
+    def _check_lifecycle_nodes(self):
+        """Query lifecycle state of Nav2 nodes."""
+        for node_name, status in self.lifecycle_statuses.items():
+            service_name = f"/{node_name}/get_state"
+            try:
+                # Check if service exists
+                if service_name not in [s[0] for s in self.get_service_names_and_types()]:
+                    status.state = "not_found"
+                    continue
+
+                # Create client and call
+                client = self.create_client(GetState, service_name, callback_group=self.cb_group)
+                if not client.wait_for_service(timeout_sec=0.1):
+                    status.state = "unavail"
+                    continue
+
+                future = client.call_async(GetState.Request())
+                # Non-blocking check - we'll get it next cycle
+                if future.done():
+                    result = future.result()
+                    if result is not None:
+                        status.state = result.current_state.label
+                    else:
+                        status.state = "error"
+                else:
+                    # Keep previous state, mark as checking
+                    pass
+                status.last_check = time.time()
+                client.destroy()
+            except Exception as e:
+                status.state = "error"
+                self.get_logger().debug(f"Lifecycle check failed for {node_name}: {e}")
+
+    def _check_config_files(self):
+        """Verify existence of required config files."""
+        for cfg in CONFIG_FILES:
+            full_path = os.path.join(ROS_WS_SRC_PATH, cfg["path"])
+            self.config_statuses.append(ConfigStatus(
+                path=cfg["path"],
+                description=cfg["description"],
+                exists=os.path.isfile(full_path),
+            ))
+
+
+# =============================================================================
+# TUI
+# =============================================================================
+
+class AutonomyTUI:
+    """Curses-based TUI for autonomy diagnostics."""
+
+    # Color pair indices
+    COLOR_OK = 1
+    COLOR_WARN = 2
+    COLOR_CRIT = 3
+    COLOR_INFO = 4
+
+    def __init__(self, node: AutonomyDiagnosticsNode):
+        self.node = node
+        self.running = True
+        self.stdscr = None
+
+    def safe_addstr(self, y: int, x: int, text: str, attr=0):
+        """Safely add string, handling screen boundaries."""
+        if self.stdscr is None:
+            return
+        max_y, max_x = self.stdscr.getmaxyx()
+        if y < 0 or y >= max_y or x < 0:
+            return
+        available = max_x - x - 1
+        if available <= 0:
+            return
+        try:
+            self.stdscr.addstr(y, x, text[:available], attr)
+        except curses.error:
+            pass
+
+    def draw_box(self, y: int, x: int, h: int, w: int, title: str = ""):
+        """Draw a box with optional title using ASCII characters."""
+        # Top border
+        self.safe_addstr(y, x, "+" + "-" * (w - 2) + "+")
+        # Title
+        if title:
+            title_str = f" {title} "
+            self.safe_addstr(y, x + 2, title_str, curses.A_BOLD)
+        # Sides
+        for i in range(1, h - 1):
+            self.safe_addstr(y + i, x, "|")
+            self.safe_addstr(y + i, x + w - 1, "|")
+        # Bottom border
+        self.safe_addstr(y + h - 1, x, "+" + "-" * (w - 2) + "+")
+
+    def get_status_attr(self, status: str) -> int:
+        """Get curses attribute for status string."""
+        if status in ("OK", "active"):
+            return curses.color_pair(self.COLOR_OK) | curses.A_BOLD
+        elif status in ("WARN", "inactive", "unconfigured"):
+            return curses.color_pair(self.COLOR_WARN) | curses.A_BOLD
+        elif status in ("CRIT", "STALE", "NONE", "not_found", "unavail", "error", "finalized"):
+            return curses.color_pair(self.COLOR_CRIT) | curses.A_BOLD
+        return curses.A_DIM
+
+    def draw_summary_bar(self, y: int, max_x: int):
+        """Draw summary status bar."""
+        # Count statuses
+        topics_ok = sum(1 for t in self.node.topic_statuses.values() if t.status == "OK")
+        topics_total = len(self.node.topic_statuses)
+
+        tf_ok = sum(1 for t in self.node.tf_statuses if t.connected)
+        tf_total = len(self.node.tf_statuses)
+
+        lifecycle_active = sum(1 for n in self.node.lifecycle_statuses.values() if n.state == "active")
+        lifecycle_total = len(self.node.lifecycle_statuses)
+
+        config_ok = sum(1 for c in self.node.config_statuses if c.exists)
+        config_total = len(self.node.config_statuses)
+
+        # Determine overall status
+        all_ok = (topics_ok == topics_total and tf_ok == tf_total and config_ok == config_total)
+
+        summary = f" SUMMARY: Topics {topics_ok}/{topics_total}"
+        summary += f" | TF {tf_ok}/{tf_total}"
+        summary += f" | Lifecycle {lifecycle_active}/{lifecycle_total}"
+        summary += f" | Config {config_ok}/{config_total}"
+        summary += " "
+
+        attr = curses.color_pair(self.COLOR_OK) if all_ok else curses.color_pair(self.COLOR_WARN)
+        self.safe_addstr(y, 0, summary.ljust(max_x), attr | curses.A_BOLD)
+
+    def draw_topics_panel(self, y: int, x: int, w: int, h: int):
+        """Draw topics monitoring panel."""
+        self.draw_box(y, x, h, w, "TOPICS")
+
+        row = y + 1
+        # Header
+        header = f"{'Topic':<22} {'Rate':>8} {'Exp':>6} {'Status':>6}"
+        self.safe_addstr(row, x + 2, header, curses.A_BOLD)
+        row += 1
+        self.safe_addstr(row, x + 2, "-" * (w - 4))
+        row += 1
+
+        for name, status in self.node.topic_statuses.items():
+            if row >= y + h - 1:
+                break
+            topic_short = status.topic[-20:] if len(status.topic) > 20 else status.topic
+            rate_str = f"{status.actual_hz:>6.1f}Hz" if status.actual_hz > 0 else "   ---  "
+            exp_str = f"{status.expected_hz:>4.1f}Hz" if status.expected_hz > 0 else "  var"
+
+            line = f"{topic_short:<22} {rate_str} {exp_str}"
+            self.safe_addstr(row, x + 2, line)
+
+            # Status with color
+            stat_attr = self.get_status_attr(status.status)
+            self.safe_addstr(row, x + w - 8, f"[{status.status:^4}]", stat_attr)
+            row += 1
+
+    def draw_tf_panel(self, y: int, x: int, w: int, h: int):
+        """Draw TF frames panel."""
+        self.draw_box(y, x, h, w, "TF FRAMES")
+
+        row = y + 1
+        # Header
+        header = f"{'Transform':<24} {'Status':>6} {'Desc':<10}"
+        self.safe_addstr(row, x + 2, header, curses.A_BOLD)
+        row += 1
+        self.safe_addstr(row, x + 2, "-" * (w - 4))
+        row += 1
+
+        for tf_status in self.node.tf_statuses:
+            if row >= y + h - 1:
+                break
+            transform = f"{tf_status.parent} -> {tf_status.child}"
+            transform = transform[:24]
+
+            status_str = "OK" if tf_status.connected else "FAIL"
+            stat_attr = self.get_status_attr(status_str if tf_status.connected else "CRIT")
+
+            line = f"{transform:<24}"
+            self.safe_addstr(row, x + 2, line)
+            self.safe_addstr(row, x + 27, f"[{status_str:^4}]", stat_attr)
+            self.safe_addstr(row, x + 35, tf_status.description[:w-37], curses.A_DIM)
+            row += 1
+
+    def draw_lifecycle_panel(self, y: int, x: int, w: int, h: int):
+        """Draw lifecycle nodes panel."""
+        self.draw_box(y, x, h, w, "LIFECYCLE NODES")
+
+        row = y + 1
+        # Header
+        header = f"{'Node':<22} {'State':>12}"
+        self.safe_addstr(row, x + 2, header, curses.A_BOLD)
+        row += 1
+        self.safe_addstr(row, x + 2, "-" * (w - 4))
+        row += 1
+
+        for name, status in self.node.lifecycle_statuses.items():
+            if row >= y + h - 1:
+                break
+            node_short = name[:22]
+            state_str = status.state[:12]
+
+            self.safe_addstr(row, x + 2, f"{node_short:<22}")
+            stat_attr = self.get_status_attr(status.state)
+            self.safe_addstr(row, x + 24, f"[{state_str:^10}]", stat_attr)
+            row += 1
+
+    def draw_config_panel(self, y: int, x: int, w: int, h: int):
+        """Draw config files panel."""
+        self.draw_box(y, x, h, w, "CONFIG FILES")
+
+        row = y + 1
+        # Header
+        header = f"{'File':<28} {'Status':>6}"
+        self.safe_addstr(row, x + 2, header, curses.A_BOLD)
+        row += 1
+        self.safe_addstr(row, x + 2, "-" * (w - 4))
+        row += 1
+
+        for cfg in self.node.config_statuses:
+            if row >= y + h - 1:
+                break
+            # Show just filename
+            filename = os.path.basename(cfg.path)[:28]
+            status_str = "OK" if cfg.exists else "MISS"
+            stat_attr = self.get_status_attr("OK" if cfg.exists else "CRIT")
+
+            self.safe_addstr(row, x + 2, f"{filename:<28}")
+            self.safe_addstr(row, x + 31, f"[{status_str:^4}]", stat_attr)
+            row += 1
+
+    def run_curses(self, stdscr):
+        """Main curses loop."""
+        self.stdscr = stdscr
+        curses.curs_set(0)  # Hide cursor
+        stdscr.nodelay(True)  # Non-blocking input
+        stdscr.timeout(CURSES_REFRESH_MS)
+
+        # Initialize color pairs
+        curses.start_color()
+        curses.use_default_colors()
+        curses.init_pair(self.COLOR_OK, curses.COLOR_GREEN, -1)
+        curses.init_pair(self.COLOR_WARN, curses.COLOR_YELLOW, -1)
+        curses.init_pair(self.COLOR_CRIT, curses.COLOR_RED, -1)
+        curses.init_pair(self.COLOR_INFO, curses.COLOR_CYAN, -1)
+
+        while self.running:
+            try:
+                stdscr.clear()
+                max_y, max_x = stdscr.getmaxyx()
+
+                # Title bar
+                title = " AUTONOMY DIAGNOSTICS - Press 'q' to quit "
+                self.safe_addstr(0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD)
+
+                # Summary bar
+                self.draw_summary_bar(1, max_x)
+
+                # Calculate panel dimensions
+                half_x = max_x // 2
+                panel_h_top = 12
+                panel_h_bot = max_y - panel_h_top - 4
+
+                # Draw panels - 2x2 grid
+                # Top left: Topics
+                self.draw_topics_panel(2, 0, half_x, panel_h_top)
+
+                # Top right: TF Frames
+                self.draw_tf_panel(2, half_x, max_x - half_x, panel_h_top)
+
+                # Bottom left: Lifecycle Nodes
+                self.draw_lifecycle_panel(2 + panel_h_top, 0, half_x, panel_h_bot)
+
+                # Bottom right: Config Files
+                self.draw_config_panel(2 + panel_h_top, half_x, max_x - half_x, panel_h_bot)
+
+                # Status bar
+                status_time = time.strftime("%H:%M:%S")
+                status = f" Time: {status_time} | Refresh: {CURSES_REFRESH_MS}ms "
+                self.safe_addstr(max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE)
+
+                stdscr.refresh()
+
+                # Check for quit
+                key = stdscr.getch()
+                if key == ord("q") or key == ord("Q"):
+                    self.running = False
+
+            except curses.error:
+                pass
+            except KeyboardInterrupt:
+                self.running = False
+
+    def run_simple(self):
+        """Simple text output mode for non-TTY environments."""
+        print("AUTONOMY DIAGNOSTICS - Simple Mode (no TTY detected)")
+        print("=" * 70)
+        print("Press Ctrl+C to exit\n")
+
+        while self.running:
+            try:
+                # Clear screen (ANSI escape)
+                print("\033[2J\033[H", end="")
+                print("=" * 70)
+                print(" AUTONOMY DIAGNOSTICS - Simple Mode")
+                print("=" * 70)
+
+                # Topics
+                print("\n[TOPICS]")
+                for name, status in self.node.topic_statuses.items():
+                    rate_str = f"{status.actual_hz:.1f}Hz" if status.actual_hz > 0 else "---"
+                    print(f"  {status.topic:<25} {rate_str:>8}  [{status.status}]")
+
+                # TF Frames
+                print("\n[TF FRAMES]")
+                for tf_status in self.node.tf_statuses:
+                    status_str = "OK" if tf_status.connected else "FAIL"
+                    print(f"  {tf_status.parent} -> {tf_status.child:<15} [{status_str}] {tf_status.description}")
+
+                # Lifecycle Nodes
+                print("\n[LIFECYCLE NODES]")
+                for name, status in self.node.lifecycle_statuses.items():
+                    print(f"  {name:<22} [{status.state}]")
+
+                # Config Files
+                print("\n[CONFIG FILES]")
+                for cfg in self.node.config_statuses:
+                    status_str = "OK" if cfg.exists else "MISSING"
+                    print(f"  {cfg.description:<20} [{status_str}]")
+
+                print("\n" + "=" * 70)
+                print(f"Updated: {time.strftime('%H:%M:%S')}")
+
+                time.sleep(SIMPLE_MODE_REFRESH_INTERVAL)
+
+            except KeyboardInterrupt:
+                self.running = False
+                break
+
+    def run(self):
+        """Run the TUI - uses curses if TTY available, otherwise simple text."""
+        if os.isatty(sys.stdout.fileno()):
+            try:
+                curses.wrapper(self.run_curses)
+            except curses.error as e:
+                print(f"Curses error: {e}, falling back to simple mode")
+                self.run_simple()
+        else:
+            self.run_simple()
+
+    def stop(self):
+        """Stop the TUI."""
+        self.running = False
+
+
+# =============================================================================
+# Main
+# =============================================================================
+
+def main(args=None):
+    """Main entry point."""
+    rclpy.init(args=args)
+
+    node = AutonomyDiagnosticsNode()
+    tui = AutonomyTUI(node)
+
+    # Handle SIGINT
+    def signal_handler(sig, frame):
+        tui.stop()
+
+    signal.signal(signal.SIGINT, signal_handler)
+
+    # Run ROS spinner in background
+    executor = MultiThreadedExecutor()
+    executor.add_node(node)
+    spin_thread = threading.Thread(target=executor.spin, daemon=True)
+    spin_thread.start()
+
+    try:
+        tui.run()
+    finally:
+        tui.stop()
+        executor.shutdown()
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()
