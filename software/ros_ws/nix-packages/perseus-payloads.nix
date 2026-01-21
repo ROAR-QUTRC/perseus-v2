@@ -5,9 +5,19 @@
   actuator-msgs,
   ament-cmake,
   backward-ros,
+  hardware-interface,
   hi-can-raw,
+  moveit-core,
+  moveit-ros-move-group,
+  moveit-ros-planning-interface,
+  moveit-visual-tools,
   perseus-msgs,
+  pluginlib,
   rclcpp,
+  rclcpp-lifecycle,
+  ros2-control,
+  ros2-controllers,
+  rviz2,
   sensor-msgs,
   std-msgs,
 }:
@@ -22,9 +32,19 @@ buildRosPackage rec {
   propagatedBuildInputs = [
     actuator-msgs
     backward-ros
+    hardware-interface
     hi-can-raw
+    moveit-core
+    moveit-ros-move-group
+    moveit-ros-planning-interface
+    moveit-visual-tools
     perseus-msgs
+    pluginlib
     rclcpp
+    rclcpp-lifecycle
+    ros2-control
+    ros2-controllers
+    rviz2
     sensor-msgs
     std-msgs
   ];
