@@ -4,7 +4,7 @@
 	export const name = 'Start/Stop';
 	export const description =
 		'Start/Stop autonomy by calling ROS2 services + show waypoint table.';
-	export const group: WidgetGroupType = 'ROS';
+	export const group: WidgetGroupType = 'Autonomy UI';
 	export const isRosDependent = true;
 
 	// YAMLs are served by the Svelte app (HTTP paths)
