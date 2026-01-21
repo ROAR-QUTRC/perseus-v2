@@ -129,7 +129,7 @@ def generate_launch_description():
         actions=[ekf_node],
         condition=IfCondition(launch_ekf),
     )
-    
+
     launch_files = [
         gz_launch,
         rsp_launch,

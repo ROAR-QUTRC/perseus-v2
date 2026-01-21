@@ -3,7 +3,6 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -12,12 +11,12 @@ from launch_ros.actions import Node
 def generate_launch_description():
     """
     Launch the complete autonomy stack including SLAM, navigation.
-    
+
     This launch file combines:
     - online_async_launch.py: SLAM Toolbox for mapping/localization
     - perseus_nav_bringup.launch.py: Nav2 navigation stack
     """
-    
+
     autonomy_dir = get_package_share_directory("autonomy")
     slam_params_file = LaunchConfiguration("slam_params_file")
     nav_params_file = LaunchConfiguration("nav_params_file")
@@ -39,9 +38,7 @@ def generate_launch_description():
     )
     declare_slam_params_file_cmd = DeclareLaunchArgument(
         "slam_params_file",
-        default_value=os.path.join(
-            autonomy_dir, "config", "slam_toolbox_params.yaml"
-        ),
+        default_value=os.path.join(autonomy_dir, "config", "slam_toolbox_params.yaml"),
         description="Full path to the ROS2 parameters file for SLAM Toolbox",
     )
 
@@ -66,7 +63,7 @@ def generate_launch_description():
             "slam_params_file": slam_params_file,
             "use_sim_time": use_sim_time,
             "autostart": autostart,
-            "map_file_name": "$HOME/perseus-v2/software/ros_ws/src/autonomy/map/sim_map_serial", # FOR SIMULATION ONLY
+            "map_file_name": "$HOME/perseus-v2/software/ros_ws/src/autonomy/map/sim_map_serial",  # FOR SIMULATION ONLY
         }.items(),
     )
 
