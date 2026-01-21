@@ -30,6 +30,7 @@ from collections import deque
 from sensor_msgs.msg import LaserScan, Imu, JointState
 from nav_msgs.msg import Odometry, OccupancyGrid
 from geometry_msgs.msg import Twist
+from tf2_msgs.msg import TFMessage
 from lifecycle_msgs.srv import GetState
 from tf2_ros import Buffer, TransformListener
 from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
@@ -208,6 +209,23 @@ class AutonomyDiagnosticsNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
+        # Track when we last received tf_static messages (for static transform staleness)
+        self.last_tf_static_time = 0.0
+        self.last_tf_time = 0.0
+
+        # Subscribe to /tf and /tf_static to track message reception
+        tf_static_qos = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            depth=100,
+        )
+        self.create_subscription(
+            TFMessage, "/tf_static", self._tf_static_callback, tf_static_qos
+        )
+        self.create_subscription(
+            TFMessage, "/tf", self._tf_callback, 100
+        )
+
         # Initialize topic monitoring
         self._setup_topic_monitoring()
 
@@ -300,6 +318,14 @@ class AutonomyDiagnosticsNode(Node):
         status.msg_count += 1
         status.actual_hz = self.rate_calculators[topic_name].add_timestamp(now)
 
+    def _tf_static_callback(self, msg: TFMessage):
+        """Callback for /tf_static messages."""
+        self.last_tf_static_time = time.time()
+
+    def _tf_callback(self, msg: TFMessage):
+        """Callback for /tf messages."""
+        self.last_tf_time = time.time()
+
     def _setup_tf_monitoring(self):
         """Initialize TF status tracking."""
         for tf_cfg in TF_FRAMES:
@@ -312,16 +338,42 @@ class AutonomyDiagnosticsNode(Node):
 
     def _check_tf_frames(self):
         """Check connectivity of all required TF frames."""
+        now = time.time()
+
+        # Check if robot_state_publisher is running (publishes static transforms)
+        node_names = [name for name, ns in self.get_node_names_and_namespaces()]
+        rsp_running = "robot_state_publisher" in node_names
+
         for tf_status in self.tf_statuses:
             try:
-                self.tf_buffer.lookup_transform(
+                transform = self.tf_buffer.lookup_transform(
                     tf_status.parent,
                     tf_status.child,
                     rclpy.time.Time(),
                     timeout=rclpy.duration.Duration(seconds=0.1)
                 )
-                tf_status.connected = True
-                tf_status.error_msg = ""
+                # Check if transform is stale by comparing timestamp age
+                tf_time_sec = transform.header.stamp.sec + transform.header.stamp.nanosec * 1e-9
+                if tf_time_sec == 0:
+                    # Static transform - check if robot_state_publisher is running
+                    if not rsp_running:
+                        tf_status.connected = False
+                        tf_status.error_msg = "RSP not running"
+                    else:
+                        tf_status.connected = True
+                        tf_status.error_msg = ""
+                else:
+                    # Dynamic transform - check staleness based on transform timestamp
+                    now_msg = self.get_clock().now().to_msg()
+                    now_sec = now_msg.sec + now_msg.nanosec * 1e-9
+                    age = now_sec - tf_time_sec
+
+                    if age > STALE_DATA_TIMEOUT:
+                        tf_status.connected = False
+                        tf_status.error_msg = f"stale ({age:.1f}s old)"
+                    else:
+                        tf_status.connected = True
+                        tf_status.error_msg = ""
             except (LookupException, ConnectivityException, ExtrapolationException) as e:
                 tf_status.connected = False
                 tf_status.error_msg = str(e)[:50]
