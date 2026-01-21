@@ -87,26 +87,6 @@ bt_navigator:
       # customised BT nodes
       - perseus_bt_nodes
 
-docking_server:
-  ros__parameters:
-    dock_plugins: ['nova_carter_dock']
-    nova_carter_dock:
-      plugin: 'opennav_docking::SimpleChargingDock'
-    docks: ['home_dock','flex_dock1', 'flex_dock2']
-    home_dock:
-      type: 'nova_carter_dock'
-      frame: map
-      pose: [0.0, 0.0, 0.0]
-    flex_dock1:
-      type: 'nova_carter_dock'
-      frame: map
-      pose: [10.0, 10.0, 0.0]
-    flex_dock2:
-      type: 'nova_carter_dock'
-      frame: map
-      pose: [30.0, 30.0, 0.0]
-    enable_stamped_cmd_vel: true
-
 controller_server:
   ros__parameters:
     enable_stamped_cmd_vel: true
