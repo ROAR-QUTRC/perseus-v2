@@ -1,4 +1,21 @@
-{ lib, buildRosPackage, fetchurl, ament-cmake-copyright, ament-cmake-core, ament-cmake-lint-cmake, ament-cmake-test, ament-cmake-vendor-package-wrapped, ament-cmake-xmllint, gz-cmake-vendor, gz-math-vendor, gz-tools-vendor, protobuf, python3, python3Packages, tinyxml-2 }:
+{
+  lib,
+  buildRosPackage,
+  fetchurl,
+  ament-cmake-copyright,
+  ament-cmake-core,
+  ament-cmake-lint-cmake,
+  ament-cmake-test,
+  ament-cmake-vendor-package-wrapped,
+  ament-cmake-xmllint,
+  gz-cmake-vendor,
+  gz-math-vendor,
+  gz-tools-vendor,
+  protobuf,
+  python3,
+  python3Packages,
+  tinyxml-2,
+}:
 buildRosPackage {
   pname = "ros-jazzy-gz-msgs-vendor";
   version = "0.0.5-r1";
@@ -10,10 +27,31 @@ buildRosPackage {
   };
 
   buildType = "ament_cmake";
-  buildInputs = [ ament-cmake-core ament-cmake-test ament-cmake-vendor-package-wrapped ];
-  checkInputs = [ ament-cmake-copyright ament-cmake-lint-cmake ament-cmake-xmllint python3Packages.pytest ];
-  propagatedBuildInputs = [ gz-cmake-vendor gz-math-vendor gz-tools-vendor protobuf python3 python3Packages.protobuf tinyxml-2 ];
-  nativeBuildInputs = [ ament-cmake-core ament-cmake-test ament-cmake-vendor-package-wrapped ];
+  buildInputs = [
+    ament-cmake-core
+    ament-cmake-test
+    ament-cmake-vendor-package-wrapped
+  ];
+  checkInputs = [
+    ament-cmake-copyright
+    ament-cmake-lint-cmake
+    ament-cmake-xmllint
+    python3Packages.pytest
+  ];
+  propagatedBuildInputs = [
+    gz-cmake-vendor
+    gz-math-vendor
+    gz-tools-vendor
+    protobuf
+    python3
+    python3Packages.protobuf
+    tinyxml-2
+  ];
+  nativeBuildInputs = [
+    ament-cmake-core
+    ament-cmake-test
+    ament-cmake-vendor-package-wrapped
+  ];
 
   meta = {
     description = "Vendor package for: gz-msgs10 10.3.1
