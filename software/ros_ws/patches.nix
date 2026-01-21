@@ -190,7 +190,6 @@ let
 
     python-qt-binding = rosPrev.python-qt-binding.overrideAttrs (
       {
-        buildInputs ? [ ],
         propagatedBuildInputs ? [ ],
         ...
       }:
@@ -207,29 +206,9 @@ let
       }
     );
 
-    nav2-mppi-controller = rosPrev.nav2-mppi-controller.override ({
+    nav2-mppi-controller = rosPrev.nav2-mppi-controller.override {
       xtensor = final.ros.xtensor-stable;
-    });
-
-    ament-cmake-vendor-package = rosPrev.ament-cmake-vendor-package.overrideAttrs (
-      {
-        postPatch ? "",
-        ...
-      }:
-      {
-        postPatch = postPatch + ''
-          # Rename the macro so that we can wrap it with our wrapper
-          substituteInPlace cmake/ament_vendor.cmake \
-            --replace-fail 'macro(ament_vendor TARGET_NAME)' 'macro(ament_vendor_orig TARGET_NAME)'
-          cp ${./patches/ament-cmake-vendor-package-wrapped/ament_vendor_wrapper.cmake} ament_vendor_wrapper.cmake
-          # Add our wrapper to the list of cmake files
-          substituteInPlace CMakeLists.txt \
-            --replace-fail 'CONFIG_EXTRAS' 'CONFIG_EXTRAS "ament_vendor_wrapper.cmake"'
-        '';
-      }
-    );
-    ament-cmake-vendor-package-wrapped = rosFinal.ament-cmake-vendor-package;
-
+    };
   };
 in
 {

@@ -244,8 +244,8 @@
           ros.callPackage ros.buildROSWorkspace {
             inherit name;
             devPackages = devPackages // additionalDevPkgs;
-            prebuiltPackages = { }; # standardPkgs // additionalPkgs;
-            prebuiltShellPackages = { }; # devShellPkgs // formatters;
+            prebuiltPackages = standardPkgs // additionalPkgs;
+            prebuiltShellPackages = devShellPkgs // formatters;
             releaseDomainId = productionDomainId;
             environmentDomainId = devDomainId;
             forceReleaseDomainId = true;
@@ -401,6 +401,6 @@
     # Note that this is normally a VERY BAD IDEA but is needed to make building the docs easier.
     # Several steps in the build process require either internet access
     # or annoying workarounds, and internet access removes a maintenance burden.
-    sandbox = "relaxed";
+    # sandbox = "relaxed";
   };
 }
