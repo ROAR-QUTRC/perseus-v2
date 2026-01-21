@@ -54,9 +54,19 @@
 		centroid_y: number;
 	};
 
+	type ArrowRow = {
+		id: string;
+		name: string;
+		hexadecimal_color: string;
+		click_x: number;
+		click_y: number;
+		centroid_x: number;
+		centroid_y: number;
+	};
+
 	let image_element: HTMLImageElement | null = null;
 
-	const map_image_id = 'Cropped_ARCh_2025_Autonomous_map.png';
+	const map_image_id = 'Cropped_ARCH_2025_Autonomous_map_2.png';
 	const map_image_url = `http://localhost:8000/${map_image_id}`;
 
 	const request_topic_name = '/map_editor/request';
@@ -81,7 +91,17 @@
 
 	// stored waypoints
 	let waypoints = $state<WaypointRow[]>([]);
+	let waypoint_toggle = $state(0);
+	// 0 -> selecting waypoint
+	// 1 -> selecting arrow
+	let last_id = $state('');
+
+	//stored origin
 	let origins = $state<OriginRow[]>([]);
+
+	//stored arrow
+	let arrows = $state<ArrowRow[]>([]);
+
 	let border_contour = $state<number[][]>([]);
 
 	// ROS request/response plumbing
@@ -138,6 +158,57 @@
 		});
 	}
 
+	function calculate_angle() {
+		console.log("hello1");
+		waypoints.forEach((waypoint, w) => {
+			arrows.forEach((arrow, a) => {
+				if (waypoint.name.slice(2) === arrow.name.slice(2)) {
+
+					const delta_x = waypoint.centroid_x - arrow.centroid_x;
+					const delta_y = waypoint.centroid_y - arrow.centroid_y;
+					
+					console.log(delta_x);
+					console.log(delta_y);
+					console.log(waypoint.yaw);
+				
+					if (delta_x == 0) {
+						if (waypoint.centroid_y <= arrow.centroid_y) {
+							waypoint.yaw = Math.PI;
+						}
+						else if(waypoint.centroid_y >= arrow.centroid_y){
+							waypoint.yaw = 0;
+						}
+					}
+					else if (delta_y == 0) {
+						if (waypoint.centroid_x >= arrow.centroid_x){
+							waypoint.yaw = Math.PI/2;
+						}
+						else if(waypoint.centroid_x <= arrow.centroid_x){
+							waypoint.yaw = 3*Math.PI/2;
+						}
+					}
+					else {
+						if ((delta_x > 0) && (delta_y > 0)) {
+							waypoint.yaw = Math.atan(delta_x/delta_y);
+						}
+						else if((delta_x < 0) && (delta_y > 0)) {
+							waypoint.yaw = 3*Math.PI/2 + Math.abs(Math.atan(delta_y/delta_x));
+						}
+						else if((delta_x < 0) && (delta_y < 0)){
+							waypoint.yaw = Math.PI + Math.abs(Math.atan(delta_x/delta_y));
+						}
+						else if((delta_x > 0) && (delta_y < 0)) {
+							waypoint.yaw = Math.PI/2 + Math.abs(Math.atan(delta_x/delta_y));
+						}
+					}
+				}
+			})
+		})
+	}
+
+	function to_waypoint() {
+		waypoint_toggle ? status_message = 'Click on waypoint' : status_message = 'Click on arrow';
+	}
 
 	const pending_requests = new Map<
 		string,
@@ -145,9 +216,10 @@
 	>();
 
 	function generate_id() {
-		return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+		last_id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
 			? crypto.randomUUID()
 			: `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+		return last_id;
 	}
 
 	function clamp(value: number, min_value: number, max_value: number) {
@@ -199,6 +271,11 @@
 		return `O${String(origin_number)}`;
 	}
 
+	function next_arrow_name() {
+		const arrow_number = arrows.length + 1;
+		return `AR${String(arrow_number)}`;
+	}
+
 	function add_waypoint_from_response(response: any) {
 		if (!response?.ok) return;
 		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
@@ -238,6 +315,41 @@
 		];
 	}
 
+	function add_angle_from_response(response: any) {
+		if (!response?.ok) return;
+		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
+
+		const centroid_x = Number(response.centroid[0]);
+		const centroid_y = Number(response.centroid[1]);
+
+		// Prefer server echo; fall back to local current_click_position.
+		const click_x = Number(response.sample_x ?? current_click_position?.x);
+		const click_y = Number(response.sample_y ?? current_click_position?.y);
+
+		if (
+			!Number.isFinite(click_x) ||
+			!Number.isFinite(click_y) ||
+			!Number.isFinite(centroid_x) ||
+			!Number.isFinite(centroid_y)
+		) {
+			return;
+		}
+
+		const hexadecimal_color = String(response.sample_image_hex ?? '');
+
+		arrows = [
+			...arrows,
+			{
+				id: generate_id(),
+				name: next_arrow_name(),
+				hexadecimal_color,
+				click_x,
+				click_y,
+				centroid_x,
+				centroid_y
+			}
+		];
+	}
 
 	function add_origin_from_response(response: any) {
 		if (!response?.ok) return;
@@ -298,7 +410,7 @@
 		for (const waypoint of waypoints) {
 			lines.push(`- name: ${waypoint.name}`);
 			lines.push(`x: ${waypoint.relative_x / scale}`);
-			lines.push(`y: ${waypoint.relative_y / scale}}`);
+			lines.push(`y: ${waypoint.relative_y / scale}`);
 			lines.push(`yaw: ${waypoint.yaw}`)
 		}
 
@@ -372,10 +484,21 @@
 				contour = Array.isArray(response.contour) ? response.contour : [];
 
 				if (mode === 'waypoint') {
-					add_waypoint_from_response(response);
-					status_message = centroid
-						? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sample_image_hexadecimal_color}`
-						: `Waypoint added ${sample_image_hexadecimal_color}`;
+					if (waypoint_toggle == 0) {
+						add_waypoint_from_response(response);
+						status_message = centroid
+							? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sample_image_hexadecimal_color}`
+							: `Waypoint added ${sample_image_hexadecimal_color}`;
+						waypoint_toggle = 1;
+					}
+					else {
+						add_angle_from_response(response);
+						status_message = centroid
+							? `Arrow added — centroid (${centroid[0]}, ${centroid[1]}) ${sample_image_hexadecimal_color}`
+							: `Arrow added ${sample_image_hexadecimal_color}`;
+						waypoint_toggle = 0;
+						calculate_angle();
+					}
 				} else if (mode === 'origin') {
 					add_origin_from_response(response);
 					status_message = centroid
@@ -666,7 +789,7 @@
 								<td>{(waypoint.relative_x / scale).toFixed(2)}</td>
 								<td>{(waypoint.centroid_y / scale).toFixed(2)}</td>
 								<td>{(waypoint.relative_y / scale).toFixed(2)}</td>
-								<td><input type="number" bind:value={waypoint.yaw}></td>
+								<td>{(waypoint.yaw * (180 / Math.PI)).toFixed(2)}</td>
 								<td class="right">
 									<button type="button" class="danger" onclick={() => delete_waypoint(waypoint.id)}>
 										Delete
