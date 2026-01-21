@@ -12,6 +12,7 @@ autonomy-navigation-tuning
 autonomy-launch-reference
 autonomy-preflight-checklist
 autonomy-troubleshooting
+autonomy-diagnostics-tool
 ```
 
 This section provides the definitive reference for Perseus autonomy operations. It serves as both a repeatable bring-up procedure and a contract specification—changes to items marked as **contracts** require coordination with the autonomy team before implementation.
@@ -35,6 +36,7 @@ This section provides the definitive reference for Perseus autonomy operations. 
 | [Launch Reference](autonomy-launch-reference.md) | Detailed launch file documentation |
 | [Pre-Flight Checklist](autonomy-preflight-checklist.md) | Test-day verification steps |
 | [Troubleshooting](autonomy-troubleshooting.md) | Common issues and debug commands |
+| [Diagnostics Tool](autonomy-diagnostics-tool.md) | Real-time TUI for system health monitoring |
 
 **Who Should Read This**
 
