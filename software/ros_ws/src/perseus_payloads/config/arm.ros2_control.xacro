@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:macro name="arm_ros2_control" params="name initial_positions_file">
+        <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
+
+        <ros2_control name="${name}" type="system">
+            <hardware>
+                <plugin>perseus_payloads/PerseusArmHardware</plugin>
+            </hardware>
+            <joint name="shoulder_pan">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['shoulder_pan']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="shoulder_tilt">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['shoulder_tilt']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="elbow">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['elbow']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="wrist_pitch">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['wrist_pitch']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="wrist_roll">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['wrist_roll']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+
+        </ros2_control>
+    </xacro:macro>
+</robot>

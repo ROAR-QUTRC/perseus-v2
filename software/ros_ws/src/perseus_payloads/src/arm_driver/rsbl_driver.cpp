@@ -53,25 +53,25 @@ void ArmController::_handle_arm_control(const perseus_msgs::msg::ArmControl::Sha
 {
     uint8_t acceleration = msg->acceleration;
 
-    if (msg->position.size() >= 2)  // Handle RSBL servo position commands (convert radians to degrees)
+    if (msg->position.size() >= 2) 
     {
-        int16_t angle_tilt = static_cast<int16_t>(msg->position[0] * 180.0 / M_PI);
-        int16_t angle_pan = static_cast<int16_t>(msg->position[1] * 180.0 / M_PI);
+        int16_t pos_tilt = static_cast<int16_t>((msg->position[0] * (4096.0 / (2.0 * M_PI))) + 2048.0);
+        int16_t pos_pan = static_cast<int16_t>((msg->position[1] * (4096.0 / (2.0 * M_PI))) + 2048.0);
 
         uint16_t speed_tilt = 0;
         uint16_t speed_pan = 0;
 
         if (msg->velocity.size() >= 2)
         {
-            speed_tilt = static_cast<uint16_t>(std::abs(msg->velocity[0] * 180.0 / M_PI));
-            speed_pan = static_cast<uint16_t>(std::abs(msg->velocity[1] * 180.0 / M_PI));
+            speed_tilt = static_cast<uint16_t>(std::abs(msg->velocity[0] * (4096.0 / (2.0 * M_PI))));
+            speed_pan = static_cast<uint16_t>(std::abs(msg->velocity[1] * (4096.0 / (2.0 * M_PI))));
         }
 
         if (_can_interface)
         {
             _can_interface->transmit(Packet(
                 static_cast<hi_can::addressing::flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::WRITE_POS_EX), servo_id_t::SHOULDER_TILT)),
-                send_message::write_pos_ex_t{angle_tilt, speed_tilt, acceleration}));
+                send_message::write_pos_ex_t{pos_tilt, speed_tilt, acceleration}));
         }
 
         std::this_thread::sleep_for(PACKET_DELAY_MS);
@@ -80,7 +80,7 @@ void ArmController::_handle_arm_control(const perseus_msgs::msg::ArmControl::Sha
         {
             _can_interface->transmit(Packet(
                 static_cast<hi_can::addressing::flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::WRITE_POS_EX), servo_id_t::SHOULDER_PAN)),
-                send_message::write_pos_ex_t{angle_pan, speed_pan, acceleration}));
+                send_message::write_pos_ex_t{pos_pan, speed_pan, acceleration}));
         }
 
         std::this_thread::sleep_for(PACKET_DELAY_MS);

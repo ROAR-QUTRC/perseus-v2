@@ -1,0 +1,8 @@
+# Default initial positions for arm's ros2_control fake system
+
+initial_positions:
+  elbow: 0
+  shoulder_pan: 0
+  shoulder_tilt: 0
+  wrist_pitch: 0
+  wrist_roll: 0

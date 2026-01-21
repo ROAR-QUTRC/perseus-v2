@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+<robot name="arm">
+
+  <material name="gray">
+    <color rgba="0.5 0.5 0.5 1.0"/>
+  </material>
+  
+  <material name="blue">
+    <color rgba="0.2 0.4 0.8 1.0"/>
+  </material>
+  
+  <material name="red">
+    <color rgba="0.8 0.2 0.2 1.0"/>
+  </material>
+  
+  <material name="green">
+    <color rgba="0.2 0.8 0.2 1.0"/>
+  </material>
+  
+  <material name="orange">
+    <color rgba="1.0 0.5 0.0 1.0"/>
+  </material>
+  
+  <material name="yellow">
+    <color rgba="0.9 0.9 0.2 1.0"/>
+  </material>
+  
+  <material name="purple">
+    <color rgba="0.6 0.2 0.8 1.0"/>
+  </material>
+
+  <link name="plate">
+    <visual>
+      <geometry>
+        <cylinder length="0.029471" radius="0.0885"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.029471" radius="0.0885"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="shoulder_base">
+    <visual>
+      <geometry>
+        <cylinder length="0.061043" radius="0.05"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.0305215"/>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.061043" radius="0.05"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.0305215"/>
+    </collision>
+  </link>
+
+  <joint name="shoulder_pan" type="continuous">
+    <parent link="plate"/>
+    <child link="shoulder_base"/>
+    <origin xyz="0 0 0.0147355" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10.0" velocity="2.0"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="shoulder_arm">
+    <visual>
+      <geometry>
+        <box size="0.05 0.03 0.3"/>
+      </geometry>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.05 0.03 0.3"/>
+      </geometry>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    </collision>
+  </link>
+  
+  <joint name="shoulder_tilt" type="revolute">
+    <parent link="shoulder_base"/>
+    <child link="shoulder_arm"/>
+    <origin xyz="0 0 0.061043" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="10.0" velocity="2.0"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="forearm">
+    <visual>
+      <geometry>
+        <box size="0.05 0.03 0.558"/>
+      </geometry>
+      <origin xyz="0 0 0.279" rpy="0 0 0"/>
+      <material name="green"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.05 0.03 0.558"/>
+      </geometry>
+      <origin xyz="0 0 0.279" rpy="0 0 0"/>
+    </collision>
+  </link>
+  
+  <joint name="elbow" type="revolute">
+    <parent link="shoulder_arm"/>
+    <child link="forearm"/>
+    <origin xyz="0 0 0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.62" upper="2.62" effort="8.0" velocity="2.0"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="wrist_pitch_link">
+    <visual>
+      <geometry>
+        <box size="0.04 0.06 0.04"/>
+      </geometry>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <material name="orange"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.04 0.06 0.04"/>
+      </geometry>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+    </collision>
+  </link>
+  
+  <joint name="wrist_pitch" type="revolute">
+    <parent link="forearm"/>
+    <child link="wrist_pitch_link"/>
+    <origin xyz="0 0 0.558" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="5.0" velocity="3.0"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <link name="wrist_roll_link">
+    <visual>
+      <geometry>
+        <box size="0.035 0.035 0.028"/>
+      </geometry>
+      <origin xyz="0 0 0.014" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.035 0.035 0.028"/>
+      </geometry>
+      <origin xyz="0 0 0.014" rpy="0 0 0"/>
+    </collision>
+  </link>
+  
+  <joint name="wrist_roll" type="continuous">
+    <parent link="wrist_pitch_link"/>
+    <child link="wrist_roll_link"/>
+    <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="5.0" velocity="3.0"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <link name="end_effector">
+    <visual>
+      <geometry>
+        <cylinder length="0.01" radius="0.02"/>
+      </geometry>
+      <origin xyz="0 0 0.005" rpy="0 0 0"/>
+      <material name="purple"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.01" radius="0.02"/>
+      </geometry>
+      <origin xyz="0 0 0.005" rpy="0 0 0"/>
+    </collision>
+  </link>
+  
+  <joint name="end_effector_mount" type="fixed">
+    <parent link="wrist_roll_link"/>
+    <child link="end_effector"/>
+    <origin xyz="0 0 0.028" rpy="0 0 0"/>
+  </joint>
+
+</robot>

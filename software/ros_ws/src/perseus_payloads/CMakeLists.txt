@@ -42,7 +42,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # public dependencies (which should propagate)
 set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs actuator_msgs perseus_msgs
-                                 std_msgs std_srvs)
+                                 std_msgs std_srvs hardware_interface pluginlib rclcpp_lifecycle)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
@@ -120,5 +120,27 @@ install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
+
+add_library(
+  perseus_arm_hardware
+  SHARED
+  src/hardware_interface/PerseusArmHardware.cpp
+)
+target_include_directories(perseus_arm_hardware PRIVATE include)
+ament_target_dependencies(perseus_arm_hardware ${THIS_PACKAGE_INCLUDE_DEPENDS})
+pluginlib_export_plugin_description_file(hardware_interface config/perseus_arm_hardware.xml)
+
+install(
+  TARGETS perseus_arm_hardware
+  DESTINATION lib
+)
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+install(
+  FILES config/perseus_arm_hardware.xml
+  DESTINATION share/${PROJECT_NAME}
+)
 
 ament_package()

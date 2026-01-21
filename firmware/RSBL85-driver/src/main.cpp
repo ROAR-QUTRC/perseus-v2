@@ -30,7 +30,7 @@ void setup()
     for (uint8_t id = 0; id <= 1; id++)  // Servo Setup - Configure both servos (IDs 0 and 1 for SHOULDER)
     {
         servo.unLockEprom(id);
-        servo.writeByte(id, SMS_STS_MODE, 3);  // Step mode
+       // servo.writeByte(id, SMS_STS_MODE, 3);  // Step mode
         servo.LockEprom(id);
         servo.EnableTorque(id, 1);
         delay(100);
@@ -87,7 +87,7 @@ void setup()
                         uint16_t speed = cmd.speed;
                         uint8_t acceleration = cmd.acceleration;
 
-                        // servo.WritePosEx(servo_idx, position, speed, acceleration);
+                        servo.WritePosEx(servo_idx, position, speed, acceleration);
                         Serial.printf("WRITE_POS_EX: servo=%d, pos=%d, spd=%d, acc=%d\n",
                                       servo_idx, position, speed, acceleration);
                     }

@@ -1,0 +1,7 @@
+<library path="perseus_arm_hardware">
+  <class name="perseus_payloads/PerseusArmHardware" type="PerseusArmHardware" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      The hardware interface for the Perseus Arm.
+    </description>
+  </class>
+</library>
