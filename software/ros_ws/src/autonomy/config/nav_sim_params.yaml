@@ -185,7 +185,7 @@ local_costmap:
       plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.7
+        inflation_radius: 1.5
         cost_scaling_factor: 5.0
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -232,7 +232,7 @@ global_costmap:
       robot_radius: 0.3
       resolution: 0.05
       track_unknown_space: true
-      plugins: ["static_layer", "obstacle_layer", "voxel_layer", "inflation_layer", "keepout_filter"]
+      plugins: ["static_layer", "obstacle_layer", "voxel_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
@@ -277,14 +277,8 @@ global_costmap:
         transform_tolerance: 0.1
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 1.0   # was 0.7
+        inflation_radius: 2.0   # Increased to ensure proper collision checking
         cost_scaling_factor: 1.5 # was 3.0
-      keepout_filter:
-        plugin: "nav2_costmap_2d::KeepoutFilter"
-        enabled: true
-        # these names must match what your mask server + info server publish
-        filter_info_topic: "/keepout_costmap_filter_info"
-        mask_topic: "/keepout_filter_mask"
       always_send_full_costmap: true
 map_server:
   ros__parameters:
@@ -468,8 +462,3 @@ loopback_simulator:
     map_frame_id: "map"
     scan_frame_id: "base_scan" # tb4_loopback_simulator.launch.py remaps to 'rplidar_link'
     update_duration: 0.02
-keepout_costmap_filter_info_server:
-  ros__parameters:
-    filter_info_topic: "keepout_costmap_filter_info"
-    mask_topic: "keepout_filter_mask"
-    type: 0
