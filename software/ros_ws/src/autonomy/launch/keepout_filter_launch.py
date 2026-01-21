@@ -13,9 +13,6 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     """Generate launch description for keepout filter."""
-    
-    use_keepout_zones = LaunchConfiguration("use_keepout_zones")
-
     # Declare arguments
     declare_use_keepout_zones_cmd = DeclareLaunchArgument(
         "use_keepout_zones",
