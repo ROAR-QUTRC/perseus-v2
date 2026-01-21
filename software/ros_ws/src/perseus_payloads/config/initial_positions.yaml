@@ -1,5 +1,4 @@
 # Default initial positions for arm's ros2_control fake system
-
 initial_positions:
   elbow: 0
   shoulder_pan: 0

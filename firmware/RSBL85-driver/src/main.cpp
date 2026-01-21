@@ -30,7 +30,7 @@ void setup()
     for (uint8_t id = 0; id <= 1; id++)  // Servo Setup - Configure both servos (IDs 0 and 1 for SHOULDER)
     {
         servo.unLockEprom(id);
-       // servo.writeByte(id, SMS_STS_MODE, 3);  // Step mode
+        // servo.writeByte(id, SMS_STS_MODE, 3);  // Step mode
         servo.LockEprom(id);
         servo.EnableTorque(id, 1);
         delay(100);

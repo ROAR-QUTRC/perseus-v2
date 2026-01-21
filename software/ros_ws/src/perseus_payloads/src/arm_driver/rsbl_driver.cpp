@@ -53,7 +53,7 @@ void ArmController::_handle_arm_control(const perseus_msgs::msg::ArmControl::Sha
 {
     uint8_t acceleration = msg->acceleration;
 
-    if (msg->position.size() >= 2) 
+    if (msg->position.size() >= 2)
     {
         int16_t pos_tilt = static_cast<int16_t>((msg->position[0] * (4096.0 / (2.0 * M_PI))) + 2048.0);
         int16_t pos_pan = static_cast<int16_t>((msg->position[1] * (4096.0 / (2.0 * M_PI))) + 2048.0);
