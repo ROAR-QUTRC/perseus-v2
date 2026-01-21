@@ -11,12 +11,11 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     """
-    Launch the complete autonomy stack including SLAM, navigation, and keepout zones.
+    Launch the complete autonomy stack including SLAM, navigation.
     
     This launch file combines:
     - online_async_launch.py: SLAM Toolbox for mapping/localization
     - perseus_nav_bringup.launch.py: Nav2 navigation stack
-    - keepout_filter_launch.py: Keepout zone safety layer
     """
     
     autonomy_dir = get_package_share_directory("autonomy")
@@ -25,7 +24,6 @@ def generate_launch_description():
     ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
     autostart = LaunchConfiguration("autostart")
-    use_keepout_zones = LaunchConfiguration("use_keepout_zones")
 
     # Declare arguments
     declare_use_sim_time_cmd = DeclareLaunchArgument(
@@ -39,13 +37,6 @@ def generate_launch_description():
         default_value="true",
         description="Automatically startup the autonomy stack",
     )
-
-    declare_use_keepout_zones_cmd = DeclareLaunchArgument(
-        "use_keepout_zones",
-        default_value="true",
-        description="Enable keepout zone safety filter",
-    )
-
     declare_slam_params_file_cmd = DeclareLaunchArgument(
         "slam_params_file",
         default_value=os.path.join(
@@ -96,15 +87,6 @@ def generate_launch_description():
     )
 
     # Include Keepout Filter launch (optional)
-    keepout_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(autonomy_dir, "launch", "keepout_filter_launch.py")
-        ),
-        launch_arguments={
-            "use_keepout_zones": use_keepout_zones,
-        }.items(),
-        condition=IfCondition(use_keepout_zones),
-    )
 
     # EKF Node for sensor fusion and localization
     ekf_node = Node(
@@ -121,7 +103,6 @@ def generate_launch_description():
     # Declare arguments
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_autostart_cmd)
-    ld.add_action(declare_use_keepout_zones_cmd)
     ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_nav_params_file_cmd)
     ld.add_action(declare_ekf_config_file_cmd)
@@ -130,6 +111,5 @@ def generate_launch_description():
     ld.add_action(ekf_node)
     ld.add_action(slam_launch)
     ld.add_action(nav_launch)
-    ld.add_action(keepout_launch)
 
     return ld
