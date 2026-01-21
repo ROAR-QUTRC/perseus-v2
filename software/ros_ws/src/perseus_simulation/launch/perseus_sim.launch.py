@@ -5,6 +5,7 @@ from launch.actions import (
     ExecuteProcess,
     TimerAction,
 )
+from launch.conditions import IfCondition
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
@@ -17,12 +18,18 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
+    launch_ekf = LaunchConfiguration("launch_ekf")
 
     arguments = [
         DeclareLaunchArgument(
             "use_sim_time",
             default_value="true",
             description="If true, use simulated clock",
+        ),
+        DeclareLaunchArgument(
+            "launch_ekf",
+            default_value="false",
+            description="If true, launch the EKF filter node",
         ),
     ]
     # IMPORTED LAUNCH FILES
@@ -104,7 +111,7 @@ def generate_launch_description():
         },
     )
 
-    # EKF node - only run if wheel_odom_only is FALSE
+    # EKF node - only run if launch_ekf parameter is true
     ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
@@ -120,6 +127,7 @@ def generate_launch_description():
     ekf_delayed = TimerAction(
         period=5.0,
         actions=[ekf_node],
+        condition=IfCondition(launch_ekf),
     )
     launch_files = [
         gz_launch,
