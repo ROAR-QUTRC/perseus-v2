@@ -5,7 +5,7 @@
 Unless you're making major edits to the raw markdown/reST files, or you're fiddling with the build toolchain, you probably don't need to build them locally - let the continuous deployment take care of it for you!
 However, if you do need to test things locally, you have two options.
 The first is to enter a _development shell_ using `nix develop` - if you want slightly faster builds, you're modifying Python dependencies, or you're tinkering with the build toolchain, this is what you'll need.
-The second is to use `nix build` - this option (by default) requires root access in order to allow the continuous deployment to have access to the internet.
+The second is to use `nix build` - this option (by default) requires root access in order to allow the build to have access to the internet.
 If you have root access, this option is useful if you're making small edits to the documentation and you want to check that everything's building properly before pushing to GitHub.
 
 ### Using `nix develop`
