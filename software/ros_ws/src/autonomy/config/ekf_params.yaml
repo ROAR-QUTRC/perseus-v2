@@ -10,7 +10,7 @@ ekf_filter_node:
     sensor_timeout: 0.1
     # If this is set to true, no 3D information will be used in your state estimate.
     # Use this if you are operating in a planar environment and want to ignore the effect of small variations in the ground plane that might otherwise be detected by, for example, an IMU.
-    two_d_mode: false
+    two_d_mode: true
     # Whether to publish the acceleration state. Defaults to false if unspecified.
     publish_acceleration: false
     # Whether to broadcast the transformation over the /tf topic. Defaults to true if unspecified.
@@ -47,7 +47,7 @@ ekf_filter_node:
     # ----- IMU -----
     # Configuration for IMU (imu0)
     # The order of the values is x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az
-    imu0: /imu/data
+    imu0: /livox/imu
     imu0_config: [false, false, false, true, true, true, false, false, false, true, true, true, true, true, true]
     imu0_queue_size: 10
     imu0_nodelay: false
