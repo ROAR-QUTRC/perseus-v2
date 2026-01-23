@@ -4,11 +4,15 @@
   buildRosPackage,
   actuator-msgs,
   ament-cmake,
+  ament-cmake-gtest,
+  ament-lint-auto,
+  ament-lint-common,
   backward-ros,
   geometry-msgs,
   perseus-input-config,
   rclcpp,
   sensor-msgs,
+  yaml-cpp-vendor,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-input";
@@ -18,6 +22,12 @@ buildRosPackage rec {
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
+  checkInputs = [
+    ament-cmake-gtest
+    ament-lint-auto
+    ament-lint-common
+    yaml-cpp-vendor
+  ];
   propagatedBuildInputs = [
     actuator-msgs
     backward-ros
