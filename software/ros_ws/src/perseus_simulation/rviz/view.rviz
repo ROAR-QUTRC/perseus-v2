@@ -156,12 +156,12 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        laser_frame:
+        left_rocker:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        left_rocker:
+        livox_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -206,10 +206,6 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        aruco_27:
-          Value: true
-        aruco_marker_27:
-          Value: true
         base_footprint:
           Value: true
         base_link:
@@ -234,23 +230,13 @@ Visualization Manager:
           Value: true
         laser_2d_frame:
           Value: true
-        laser_frame:
-          Value: true
         left_rocker:
+          Value: true
+        livox_frame:
           Value: true
         map:
           Value: true
         odom:
-          Value: true
-        placecard_1:
-          Value: true
-        placecard_2:
-          Value: true
-        placecard_3:
-          Value: true
-        placecard_4:
-          Value: true
-        placecard_5:
           Value: true
         rear_left_motor:
           Value: true
@@ -269,10 +255,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          aruco_27:
-            {}
-          aruco_marker_27:
-            {}
           odom:
             base_link:
               base_footprint:
@@ -286,8 +268,6 @@ Visualization Manager:
                     {}
                 laser_2d_frame:
                   {}
-                laser_frame:
-                  {}
                 left_rocker:
                   front_left_motor:
                     front_left_wheel:
@@ -295,6 +275,8 @@ Visualization Manager:
                   rear_left_motor:
                     rear_left_wheel:
                       {}
+                livox_frame:
+                  {}
                 right_rocker:
                   front_right_motor:
                     front_right_wheel:
@@ -302,16 +284,6 @@ Visualization Manager:
                   rear_right_motor:
                     rear_right_wheel:
                       {}
-          placecard_1:
-            {}
-          placecard_2:
-            {}
-          placecard_3:
-            {}
-          placecard_4:
-            {}
-          placecard_5:
-            {}
       Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/Image
@@ -326,7 +298,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rgbd_camera/image_raw
+        Value: /camera/camera/color/image_raw
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -557,7 +529,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /points
+        Value: /livox/lidar
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -607,25 +579,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 7.016397476196289
+      Distance: 30.266002655029297
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 4.22507905960083
-        Y: 2.7856521606445312
-        Z: -1.1652287244796753
+        X: 3.374941349029541
+        Y: 1.6674829721450806
+        Z: -2.3403871059417725
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5397953987121582
+      Pitch: 0.5897952318191528
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.6892101764678955
+      Yaw: 3.64421010017395
     Saved: ~
 Window Geometry:
   Displays:

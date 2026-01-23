@@ -15,6 +15,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include "builtin_interfaces/msg/time.hpp"
 #include "perseus_vision/srv/detect_objects.hpp"
@@ -31,6 +32,7 @@ private:
     // ROS callbacks and helpers
     void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
     void compressedImageCallback(const sensor_msgs::msg::CompressedImage::SharedPtr msg);
+    void cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
     void processImage(const cv::Mat& frame, const std_msgs::msg::Header& header);
     void transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
                                    const cv::Vec3d& rvec, const cv::Vec3d& tvec);
@@ -41,6 +43,7 @@ private:
     // ROS interfaces
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_; // for uncompressed images 
     rclcpp::Subscription<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_sub_; // for compressed images
+    rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_sub_; // for camera info
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_; // for uncompressed images 
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_pub_;// for compressed images 
     rclcpp::Publisher<perseus_vision::msg::ObjectDetections>::SharedPtr detection_pub_;// for publishing detections 
@@ -57,6 +60,8 @@ private:
     // Camera intrinsics
     cv::Mat camera_matrix_;
     cv::Mat dist_coeffs_;
+    mutable std::mutex camera_info_mutex_; // for thread-safe camera info updates
+    bool camera_info_received_ = false;
 
     // Configurable parameters
     int dictionary_id;

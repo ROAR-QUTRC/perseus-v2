@@ -15,12 +15,12 @@ def generate_launch_description():
                 package="pointcloud_to_laserscan",
                 executable="pointcloud_to_laserscan_node",
                 remappings=[
-                    ("cloud_in", "/points"),
+                    ("cloud_in", "/livox/lidar"),
                     ("scan", "/lidar_scan"),
                 ],
                 parameters=[
                     {
-                        "target_frame": "laser_frame",
+                        "target_frame": "livox_frame",
                         "transform_tolerance": 0.1,
                         "min_height": -10.0,
                         "max_height": 0.25,# keep points below 0.1m to meet lidar specs

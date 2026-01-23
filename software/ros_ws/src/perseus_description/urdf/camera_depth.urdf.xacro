@@ -48,7 +48,7 @@
                 </clip>
             </camera>
             <topic>/perseus/rgbd_camera</topic>
-            <gz_frame_id>${prefix}camera_link_optical</gz_frame_id>
+            <gz_frame_id>${prefix}camera_link</gz_frame_id>
             <min_depth>0.05</min_depth>
             <max_depth>100.0</max_depth>
         </sensor>

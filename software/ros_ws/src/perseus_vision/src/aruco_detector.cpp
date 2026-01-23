@@ -17,15 +17,11 @@ ArucoDetector::ArucoDetector()
     compressed_io_ = this->declare_parameter<bool>("compressed_io", false);
     publish_output_ = this->declare_parameter<bool>("publish_output", false);
     output_topic_ = this->declare_parameter<std::string>("output_topic", "/detection/aruco/detections");
+    std::string camera_info_topic = this->declare_parameter<std::string>("camera_info_topic", "/rgbd_camera/camera_info");
 
-    std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
-        "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
-    std::vector<double> dist_coeffs_param = this->declare_parameter<std::vector<double>>(
-        "distortion_coefficients", {0, 0, 0, 0, 0});
-
-    // Convert parameters to OpenCV matrices
-    camera_matrix_ = cv::Mat(3, 3, CV_64F, camera_matrix_param.data()).clone();
-    dist_coeffs_ = cv::Mat(dist_coeffs_param).clone();
+    // Initialize camera matrices with default values (will be updated from camera_info topic)
+    camera_matrix_ = cv::Mat(3, 3, CV_64F);
+    dist_coeffs_ = cv::Mat::zeros(5, 1, CV_64F);
 
     // ArUco setup
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dictionary_id);
@@ -54,6 +50,11 @@ ArucoDetector::ArucoDetector()
             output_img_, 10);
     }
 
+    // Camera info subscriber
+    camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
+        camera_info_topic, 10,
+        std::bind(&ArucoDetector::cameraInfoCallback, this, std::placeholders::_1));
+
     // Service
     service_ = this->create_service<DetectObjects>(
         "detect_objects",
@@ -68,6 +69,33 @@ ArucoDetector::ArucoDetector()
     }
 
     RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
+}
+
+void ArucoDetector::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg)
+{
+    std::lock_guard<std::mutex> lock(camera_info_mutex_);
+    
+    // Extract camera matrix from camera_info
+    // K is the camera matrix in row-major order [fx 0 cx 0 fy cy 0 0 1]
+    camera_matrix_ = cv::Mat(3, 3, CV_64F);
+    camera_matrix_.at<double>(0, 0) = msg->k[0];  // fx
+    camera_matrix_.at<double>(0, 1) = msg->k[1];  // 0
+    camera_matrix_.at<double>(0, 2) = msg->k[2];  // cx
+    camera_matrix_.at<double>(1, 0) = msg->k[3];  // 0
+    camera_matrix_.at<double>(1, 1) = msg->k[4];  // fy
+    camera_matrix_.at<double>(1, 2) = msg->k[5];  // cy
+    camera_matrix_.at<double>(2, 0) = msg->k[6];  // 0
+    camera_matrix_.at<double>(2, 1) = msg->k[7];  // 0
+    camera_matrix_.at<double>(2, 2) = msg->k[8];  // 1
+
+    // Extract distortion coefficients
+    dist_coeffs_ = cv::Mat(msg->d);
+    
+    if (!camera_info_received_) {
+        RCLCPP_INFO(this->get_logger(), "Camera info received: fx=%.2f, fy=%.2f, cx=%.2f, cy=%.2f",
+                    msg->k[0], msg->k[4], msg->k[2], msg->k[5]);
+        camera_info_received_ = true;
+    }
 }
 
 void ArucoDetector::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
@@ -129,6 +157,13 @@ void ArucoDetector::compressedImageCallback(const sensor_msgs::msg::CompressedIm
 
 void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Header& header)
 {
+    // Ensure camera info has been received
+    if (!camera_info_received_) {
+        RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+                             "Waiting for camera_info message...");
+        return;
+    }
+
     std::vector<int> ids;
     std::vector<std::vector<cv::Point2f>> corners;
     detector_.detectMarkers(frame, corners, ids);
@@ -144,9 +179,18 @@ void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Head
 
     if (!ids.empty())
     {
+        // Use lock to safely access camera matrices
+        cv::Mat camera_matrix_copy;
+        cv::Mat dist_coeffs_copy;
+        {
+            std::lock_guard<std::mutex> lock(camera_info_mutex_);
+            camera_matrix_copy = camera_matrix_.clone();
+            dist_coeffs_copy = dist_coeffs_.clone();
+        }
+
         std::vector<cv::Vec3d> rvecs, tvecs;
         cv::aruco::estimatePoseSingleMarkers(
-            corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
+            corners, marker_length_, camera_matrix_copy, dist_coeffs_copy, rvecs, tvecs);
 
         cv::aruco::drawDetectedMarkers(const_cast<cv::Mat&>(frame), corners, ids);
 
@@ -176,7 +220,7 @@ void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Head
 
             cv::drawFrameAxes(
                 const_cast<cv::Mat&>(frame),
-                camera_matrix_, dist_coeffs_,
+                camera_matrix_copy, dist_coeffs_copy,
                 rvecs[i], tvecs[i],
                 axis_length_);
 
