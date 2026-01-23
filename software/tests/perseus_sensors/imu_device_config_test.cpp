@@ -6,10 +6,12 @@
  * to ensure correct device configurations for all supported IMU sensors.
  */
 
-#include <gtest/gtest.h>
-#include <cmath>
-#include <algorithm>
 #include "i2c_imu_driver/imu_device_config.hpp"
+
+#include <gtest/gtest.h>
+
+#include <algorithm>
+#include <cmath>
 
 using namespace i2c_imu_driver;
 

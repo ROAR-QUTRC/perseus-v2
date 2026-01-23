@@ -17,11 +17,11 @@ For Large Robotics Projects with Hardware (e.g. Perseus-v2)
 ## 2. Recommended Package Layout
 ```
 
-my_package/ ├── CMakeLists.txt ├── package.xml ├── include/my_package/          # C++ headers ├── src/                         # Implementation ├── test/ │   ├── gtest/                   # C++ GoogleTest files │   ├── pytest/                  # Python pytest files │   ├── mocks/                   # Mock classes / fixtures │   └── launch/                  # Integration launch tests └── resource/my_package          # colcon marker file
+my_package/ ├── CMakeLists.txt ├── package.xml ├── include/my_package/ # C++ headers ├── src/ # Implementation ├── test/ │ ├── gtest/ # C++ GoogleTest files │ ├── pytest/ # Python pytest files │ ├── mocks/ # Mock classes / fixtures │ └── launch/ # Integration launch tests └── resource/my_package # colcon marker file
 
 text
 
-```
+````
 ## 3. CMakeLists.txt Template (ament_cmake)
 
 ```cmake
@@ -64,7 +64,7 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
-```
+````
 
 ## 4. Testing Tools Cheat Sheet
 
@@ -179,4 +179,3 @@ YAML
 - launch_testing examples → https://github.com/ros2/launch_ros/tree/rolling/launch_testing
 - Real-world repo with excellent CI → https://github.com/ros-industrial/universal_robot
 - GTest + ROS 2 tutorial → https://automaticaddison.com/how-to-create-unit-tests-with-gtest-ros-2-jazzy/
-

@@ -1,9 +1,9 @@
+#include "generic_controller/axis_math.hpp"
+
 #include <gtest/gtest.h>
 
 #include <cmath>
 #include <limits>
-
-#include "generic_controller/axis_math.hpp"
 
 using namespace axis_math;
 
