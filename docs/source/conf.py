@@ -127,6 +127,8 @@ suppress_warnings = ["myst.strikethrough"]
 
 ros_distro = os.environ.get("ROS_DISTRO", "jazzy")
 # intersphinx config
+# If you're adding a site to this list, you also need to add it to the Github Actions workflow
+# to allow intersphinx to access the site during a build
 # this is a good guide: https://docs.readthedocs.io/en/stable/guides/intersphinx.html
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
