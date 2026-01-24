@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Custom BehaviorTree nodes for Perseus waypoint navigation</description>
   <maintainer email="nguyenleminh1002@gmail.com">bocho0600</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
