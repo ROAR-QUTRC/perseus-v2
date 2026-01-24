@@ -34,7 +34,7 @@ private:
     void compressedImageCallback(const sensor_msgs::msg::CompressedImage::SharedPtr msg);
     void cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
     void processImage(const cv::Mat& frame, const std_msgs::msg::Header& header);
-    void transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
+    bool transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
                                    const cv::Vec3d& rvec, const cv::Vec3d& tvec);
     tf2::Quaternion rotationMatrixToQuaternion(const cv::Mat& rotation_matrix);
     void handle_request(const std::shared_ptr<DetectObjects::Request> request,

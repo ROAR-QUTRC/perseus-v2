@@ -8,7 +8,7 @@ aruco_detector:
     camera_frame: "camera_link_optical" # input frame of the camera
     camera_info_topic: "/camera/camera/color/camera_info" # topic to receive camera calibration from (camera matrix and distortion coefficients)
     publish_tf: true # whether to transform to output frame
-    tf_output_frame: "map" # reference frame for published TFs
+    tf_output_frame: "base_link" # reference frame for published TFs
     compressed_io: false # Enable if input/output images are compressed
     input_img: "/camera/camera/color/image_raw"
     publish_img: true  # disable publishing of output image

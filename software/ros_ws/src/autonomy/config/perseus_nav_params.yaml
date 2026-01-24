@@ -101,7 +101,7 @@ controller_server:
     use_realtime_priority: false
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.5
+      required_movement_radius: 0.1
       movement_time_allowance: 20.0 # Increased allowing more time
     general_goal_checker:
       stateful: true

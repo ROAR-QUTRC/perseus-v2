@@ -17,7 +17,7 @@ ArucoDetector::ArucoDetector()
     compressed_io_ = this->declare_parameter<bool>("compressed_io", false);
     publish_output_ = this->declare_parameter<bool>("publish_output", false);
     output_topic_ = this->declare_parameter<std::string>("output_topic", "/detection/aruco/detections");
-    std::string camera_info_topic = this->declare_parameter<std::string>("camera_info_topic", "/rgbd_camera/camera_info");
+    std::string camera_info_topic = this->declare_parameter<std::string>("camera_info_topic", "/camera/camera/color/camera_info");
 
     // Initialize camera matrices with default values (will be updated from camera_info topic)
     camera_matrix_ = cv::Mat(3, 3, CV_64F);
@@ -91,10 +91,10 @@ void ArucoDetector::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::Share
     // Extract distortion coefficients
     dist_coeffs_ = cv::Mat(msg->d);
     
-    if (!camera_info_received_) {
+    if (!camera_info_received_) { // Log only the first time
         RCLCPP_INFO(this->get_logger(), "Camera info received: fx=%.2f, fy=%.2f, cx=%.2f, cy=%.2f",
                     msg->k[0], msg->k[4], msg->k[2], msg->k[5]);
-        camera_info_received_ = true;
+        camera_info_received_ = true; // Set flag only once
     }
 }
 
@@ -218,13 +218,20 @@ void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Head
                 continue;
             }
 
+            // Always draw axis in camera frame (no transform needed)
             cv::drawFrameAxes(
                 const_cast<cv::Mat&>(frame),
                 camera_matrix_copy, dist_coeffs_copy,
                 rvecs[i], tvecs[i],
                 axis_length_);
 
-            transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
+            // Try to transform and publish marker, but continue drawing even if transform fails
+            bool transform_success = transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
+            if (!transform_success) {
+                RCLCPP_DEBUG(this->get_logger(),
+                    "Marker %d detected but transform to %s failed",
+                    ids[i], tf_output_frame_.c_str());
+            }
         }
     }
 
@@ -243,7 +250,7 @@ void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Head
     }
 }
 
-void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
+bool ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
                                               const cv::Vec3d& rvec, const cv::Vec3d& tvec)
 {
     try
@@ -258,12 +265,27 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
         marker_pose_camera.pose.position.y = tvec[1];
         marker_pose_camera.pose.position.z = tvec[2];
 
+        // Validate position values
+        if (std::isnan(marker_pose_camera.pose.position.x) || 
+            std::isnan(marker_pose_camera.pose.position.y) || 
+            std::isnan(marker_pose_camera.pose.position.z)) {
+            RCLCPP_WARN(this->get_logger(), "Marker %d has NaN position values, skipping", marker_id);
+            return false;
+        }
+
         cv::Mat rotation_matrix;
         cv::Rodrigues(rvec, rotation_matrix);
 
         // Rotation is also already in the camera optical frame
         tf2::Quaternion quat = rotationMatrixToQuaternion(rotation_matrix);
         quat.normalize();
+
+        // Validate quaternion values
+        if (std::isnan(quat.x()) || std::isnan(quat.y()) || 
+            std::isnan(quat.z()) || std::isnan(quat.w())) {
+            RCLCPP_WARN(this->get_logger(), "Marker %d has NaN quaternion values, skipping", marker_id);
+            return false;
+        }
 
         marker_pose_camera.pose.orientation.x = quat.x();
         marker_pose_camera.pose.orientation.y = quat.y();
@@ -272,9 +294,17 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
 
         geometry_msgs::msg::PoseStamped marker_pose_out;
 
-        // Transform into output frame (map/odom). Using Duration(0) to request the latest available transform
-        tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_, tf2::Duration(0));
-
+        // Try to transform into output frame. Use a small timeout to wait for transform
+        try {
+            tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_, tf2::Duration(std::chrono::milliseconds(100)));
+        } catch (const tf2::TransformException& ex) {
+            // If transform to output frame fails, just use camera frame pose
+            RCLCPP_DEBUG(this->get_logger(), 
+                        "Could not transform to %s frame: %s. Using camera frame instead.",
+                        tf_output_frame_.c_str(), ex.what());
+            marker_pose_out = marker_pose_camera;
+            marker_pose_out.header.frame_id = camera_frame_;
+        }
 
         // Cache this detection for service requests
         {
@@ -285,7 +315,7 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
 
         geometry_msgs::msg::TransformStamped transform;
         transform.header.stamp = header.stamp;
-        transform.header.frame_id = tf_output_frame_;
+        transform.header.frame_id = marker_pose_out.header.frame_id;
         transform.child_frame_id = "aruco_marker_" + std::to_string(marker_id);
 
         transform.transform.translation.x = marker_pose_out.pose.position.x;
@@ -299,19 +329,27 @@ void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& heade
 
         RCLCPP_INFO(this->get_logger(),
                     "ArUco %d in %s: x=%.2f, y=%.2f, z=%.2f",
-                    marker_id, tf_output_frame_.c_str(),
+                    marker_id, marker_pose_out.header.frame_id.c_str(),
                     marker_pose_out.pose.position.x,
                     marker_pose_out.pose.position.y,
                     marker_pose_out.pose.position.z);
+        return true;
     }
-    catch (tf2::TransformException& ex)
+    catch (const std::exception& ex)
     {
-        RCLCPP_WARN(this->get_logger(), "Could not transform marker pose: %s", ex.what());
+        RCLCPP_WARN(this->get_logger(), "Error processing marker %d: %s", marker_id, ex.what());
+        return false;
     }
 }
 
 tf2::Quaternion ArucoDetector::rotationMatrixToQuaternion(const cv::Mat& rotation_matrix)
 {
+    // Validate rotation matrix
+    if (rotation_matrix.empty() || rotation_matrix.rows != 3 || rotation_matrix.cols != 3) {
+        RCLCPP_WARN(this->get_logger(), "Invalid rotation matrix dimensions");
+        return tf2::Quaternion(0, 0, 0, 1);  // Return identity quaternion
+    }
+
     // Extract rotation matrix elements
     double r11 = rotation_matrix.at<double>(0, 0);
     double r12 = rotation_matrix.at<double>(0, 1);
@@ -322,6 +360,14 @@ tf2::Quaternion ArucoDetector::rotationMatrixToQuaternion(const cv::Mat& rotatio
     double r31 = rotation_matrix.at<double>(2, 0);
     double r32 = rotation_matrix.at<double>(2, 1);
     double r33 = rotation_matrix.at<double>(2, 2);
+
+    // Check for NaN values in rotation matrix
+    if (std::isnan(r11) || std::isnan(r12) || std::isnan(r13) ||
+        std::isnan(r21) || std::isnan(r22) || std::isnan(r23) ||
+        std::isnan(r31) || std::isnan(r32) || std::isnan(r33)) {
+        RCLCPP_WARN(this->get_logger(), "Rotation matrix contains NaN values");
+        return tf2::Quaternion(0, 0, 0, 1);  // Return identity quaternion
+    }
 
     tf2::Quaternion quat;
     double trace = r11 + r22 + r33;
