@@ -34,12 +34,14 @@ The autonomy stack must be started in the following order:
 ### Real Robot — Full Autonomy Stack
 
 **Terminal 1 — Perseus (SSH)**
+
 ```console
 cd perseus-v2
 nix run .#ros2 -- launch perseus perseus.launch.py
 ```
 
 **Terminal 2 — Perseus (SSH)**
+
 ```console
 cd perseus-v2
 nix run .#ros2 -- run perseus_sensors m2m2_lidar --ros-args \
@@ -48,12 +50,14 @@ nix run .#ros2 -- run perseus_sensors m2m2_lidar --ros-args \
 ```
 
 **Terminal 3 — Development Laptop**
+
 ```console
 cd perseus-v2
 nix run .#ros2 -- launch autonomy mapping_using_slam_toolbox.launch.py
 ```
 
 **Terminal 4 — Development Laptop (Navigation)**
+
 ```console
 cd perseus-v2
 nix run .#ros2 -- launch autonomy perseus_nav_bringup.launch.py

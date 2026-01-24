@@ -21,12 +21,14 @@ Use this checklist before every autonomous run.
 ## Sensor Verification
 
 ### LiDAR
+
 - [ ] `ros2 topic echo /scan --once` — Data present
 - [ ] `ros2 topic hz /scan` — Rate ~10 Hz
 - [ ] Scan range values are reasonable (not all zeros or max)
 - [ ] LiDAR visible in RViz, aligned with robot
 
 ### IMU
+
 - [ ] `ros2 topic echo /imu/data --once` — Data present
 - [ ] `ros2 topic hz /imu/data` — Rate ~100 Hz
 - [ ] Orientation quaternion is valid (magnitude ≈ 1)
@@ -101,14 +103,14 @@ ros2 run rqt_graph rqt_graph
 
 ## If Something Fails
 
-| Check Failed | First Action |
-|--------------|--------------|
-| TF missing | Verify launch order, check RSP is running |
-| No odometry | Check controller manager, joint states |
-| No LiDAR data | Verify IP/port, check network connection |
-| No IMU data | Check I2C connection, verify device address |
-| EKF diverging | Check sensor covariances, rejection thresholds |
-| Nav2 won't start | Check all TF frames exist, verify map loaded |
-| Robot won't move | Check E-STOP, verify `/cmd_vel` is published |
+| Check Failed     | First Action                                   |
+| ---------------- | ---------------------------------------------- |
+| TF missing       | Verify launch order, check RSP is running      |
+| No odometry      | Check controller manager, joint states         |
+| No LiDAR data    | Verify IP/port, check network connection       |
+| No IMU data      | Check I2C connection, verify device address    |
+| EKF diverging    | Check sensor covariances, rejection thresholds |
+| Nav2 won't start | Check all TF frames exist, verify map loaded   |
+| Robot won't move | Check E-STOP, verify `/cmd_vel` is published   |
 
 See [Troubleshooting](autonomy-troubleshooting.md) for detailed solutions.

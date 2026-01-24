@@ -2,18 +2,18 @@
 
 ## Common Failure Modes
 
-| Symptom | Likely Cause | Solution |
-|---------|--------------|----------|
-| Robot turns opposite direction | Frame sign mismatch or encoder direction | Check wheel joint directions in URDF |
-| Nav2 won't activate | Missing TF or lifecycle failure | `ros2 run tf2_tools view_frames`, check lifecycle states |
-| SLAM/AMCL diverging | Wheel radius or encoder misconfiguration | Verify `wheel_radius` and `wheel_separation` |
-| Costmap shows phantom obstacles | Sensor frame mismatch | Verify `laser_2d_frame` position in URDF |
-| Robot oscillates | Tuning too aggressive | Reduce `max_vel_*` and `acc_lim_*` |
-| Localisation jumps | AMCL particle depletion | Increase `min_particles` |
-| `/odometry/filtered` lags | EKF rejecting measurements | Check rejection thresholds in `ekf_params.yaml` |
-| Robot doesn't move | E-STOP engaged or no cmd_vel | Check E-STOP, verify topic flow |
-| Path planning fails | Costmap inflation too large | Reduce inflation radius |
-| Robot stops at obstacles | Collision monitor too sensitive | Adjust `PolygonStop` radius |
+| Symptom                         | Likely Cause                             | Solution                                                 |
+| ------------------------------- | ---------------------------------------- | -------------------------------------------------------- |
+| Robot turns opposite direction  | Frame sign mismatch or encoder direction | Check wheel joint directions in URDF                     |
+| Nav2 won't activate             | Missing TF or lifecycle failure          | `ros2 run tf2_tools view_frames`, check lifecycle states |
+| SLAM/AMCL diverging             | Wheel radius or encoder misconfiguration | Verify `wheel_radius` and `wheel_separation`             |
+| Costmap shows phantom obstacles | Sensor frame mismatch                    | Verify `laser_2d_frame` position in URDF                 |
+| Robot oscillates                | Tuning too aggressive                    | Reduce `max_vel_*` and `acc_lim_*`                       |
+| Localisation jumps              | AMCL particle depletion                  | Increase `min_particles`                                 |
+| `/odometry/filtered` lags       | EKF rejecting measurements               | Check rejection thresholds in `ekf_params.yaml`          |
+| Robot doesn't move              | E-STOP engaged or no cmd_vel             | Check E-STOP, verify topic flow                          |
+| Path planning fails             | Costmap inflation too large              | Reduce inflation radius                                  |
+| Robot stops at obstacles        | Collision monitor too sensitive          | Adjust `PolygonStop` radius                              |
 
 ## Debug Commands
 
@@ -119,30 +119,30 @@ git push origin --tags
 
 ### What Requires Change Control
 
-| Change Type | Requires Coordination |
-|-------------|----------------------|
-| Joint names | Yes |
-| Topic names | Yes |
-| Frame names | Yes |
-| Wheel geometry | Yes |
-| Sensor mounting | Yes |
-| Nav2 parameters | Recommended |
-| EKF parameters | Recommended |
-| Launch file structure | Recommended |
+| Change Type           | Requires Coordination |
+| --------------------- | --------------------- |
+| Joint names           | Yes                   |
+| Topic names           | Yes                   |
+| Frame names           | Yes                   |
+| Wheel geometry        | Yes                   |
+| Sensor mounting       | Yes                   |
+| Nav2 parameters       | Recommended           |
+| EKF parameters        | Recommended           |
+| Launch file structure | Recommended           |
 
 ---
 
 ## Key Configuration Files
 
-| File | Purpose |
-|------|---------|
-| `autonomy/config/ekf_params.yaml` | EKF sensor fusion tuning |
-| `autonomy/config/slam_toolbox_params.yaml` | SLAM configuration |
-| `autonomy/config/perseus_nav_params.yaml` | Nav2 navigation parameters |
-| `perseus/config/perseus_controllers.yaml` | DiffDrive controller settings |
-| `perseus_description/urdf/perseus.urdf.xacro` | Robot model and geometry |
-| `perseus_description/ros2_control/perseus.ros2_control.xacro` | Hardware interface config |
-| `perseus_sensors/i2c_imu_driver/config/i2c_imu_config.yaml` | IMU driver settings |
+| File                                                          | Purpose                       |
+| ------------------------------------------------------------- | ----------------------------- |
+| `autonomy/config/ekf_params.yaml`                             | EKF sensor fusion tuning      |
+| `autonomy/config/slam_toolbox_params.yaml`                    | SLAM configuration            |
+| `autonomy/config/perseus_nav_params.yaml`                     | Nav2 navigation parameters    |
+| `perseus/config/perseus_controllers.yaml`                     | DiffDrive controller settings |
+| `perseus_description/urdf/perseus.urdf.xacro`                 | Robot model and geometry      |
+| `perseus_description/ros2_control/perseus.ros2_control.xacro` | Hardware interface config     |
+| `perseus_sensors/i2c_imu_driver/config/i2c_imu_config.yaml`   | IMU driver settings           |
 
 ## Known-Good Topic Snapshot
 

@@ -18,15 +18,15 @@ Press `q` to quit.
 
 ### Topics
 
-| Topic | Expected Rate | Critical | Description |
-|-------|---------------|----------|-------------|
-| `/scan` | 10 Hz | Yes | 2D LiDAR scans |
-| `/imu/data` | 100 Hz | Yes | IMU measurements |
-| `/odom` | 50 Hz | Yes | Wheel odometry |
-| `/odometry/filtered` | 30 Hz | Yes | EKF-filtered odometry |
-| `/map` | 0.1 Hz | No | Occupancy grid map |
-| `/cmd_vel` | Variable | No | Velocity commands |
-| `/joint_states` | 50 Hz | Yes | Joint feedback |
+| Topic                | Expected Rate | Critical | Description           |
+| -------------------- | ------------- | -------- | --------------------- |
+| `/scan`              | 10 Hz         | Yes      | 2D LiDAR scans        |
+| `/imu/data`          | 100 Hz        | Yes      | IMU measurements      |
+| `/odom`              | 50 Hz         | Yes      | Wheel odometry        |
+| `/odometry/filtered` | 30 Hz         | Yes      | EKF-filtered odometry |
+| `/map`               | 0.1 Hz        | No       | Occupancy grid map    |
+| `/cmd_vel`           | Variable      | No       | Velocity commands     |
+| `/joint_states`      | 50 Hz         | Yes      | Joint feedback        |
 
 ### TF Frames
 
@@ -98,14 +98,14 @@ Verifies existence of required config files:
 
 ## Status Indicators
 
-| Status | Color | Meaning |
-|--------|-------|---------|
-| `[OK]` | Green | Working correctly |
-| `[WARN]` | Yellow | Rate below 80% of expected |
-| `[CRIT]` | Red | Rate below 50% of expected |
-| `[STALE]` | Red | No messages for > 2 seconds |
-| `[NONE]` | Red | No messages received |
-| `[FAIL]` | Red | TF transform not available |
+| Status    | Color  | Meaning                     |
+| --------- | ------ | --------------------------- |
+| `[OK]`    | Green  | Working correctly           |
+| `[WARN]`  | Yellow | Rate below 80% of expected  |
+| `[CRIT]`  | Red    | Rate below 50% of expected  |
+| `[STALE]` | Red    | No messages for > 2 seconds |
+| `[NONE]`  | Red    | No messages received        |
+| `[FAIL]`  | Red    | TF transform not available  |
 
 ## Simple Mode
 
