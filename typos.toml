@@ -13,6 +13,7 @@ extend-ignore-re = [
 [default.extend-words]
 area_sizez = "area_sizez"
 sizez = "sizez"
+Fo = "Fo"
 
 [type.md]
 extend-ignore-re = [

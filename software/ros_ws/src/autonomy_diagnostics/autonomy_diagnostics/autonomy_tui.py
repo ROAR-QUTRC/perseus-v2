@@ -338,8 +338,6 @@ class AutonomyDiagnosticsNode(Node):
 
     def _check_tf_frames(self):
         """Check connectivity of all required TF frames."""
-        now = time.time()
-
         # Check if robot_state_publisher is running (publishes static transforms)
         node_names = [name for name, ns in self.get_node_names_and_namespaces()]
         rsp_running = "robot_state_publisher" in node_names
