@@ -1,7 +1,6 @@
 # Autonomy Diagnostics Configuration
 # This file documents the expected topics, frames, and nodes for autonomy systems.
 # The actual configuration is hardcoded in the node for simplicity.
-
 autonomy_diagnostics:
   ros__parameters:
     # Topic monitoring configuration
@@ -14,7 +13,6 @@ autonomy_diagnostics:
       - {topic: "/map", type: "OccupancyGrid", expected_hz: 0.1, critical: false}
       - {topic: "/cmd_vel", type: "Twist", expected_hz: 0.0, critical: false}
       - {topic: "/joint_states", type: "JointState", expected_hz: 50.0, critical: true}
-
     # TF frame chains to verify
     # Format: parent frame, child frame, description, critical flag
     tf_frames:
@@ -23,7 +21,6 @@ autonomy_diagnostics:
       - {parent: "base_link", child: "chassis", description: "URDF fixed transform", critical: true}
       - {parent: "chassis", child: "laser_2d_frame", description: "2D LiDAR mounting", critical: true}
       - {parent: "chassis", child: "imu_link", description: "IMU mounting", critical: true}
-
     # Nav2 lifecycle nodes to check
     lifecycle_nodes:
       - "bt_navigator"
@@ -36,14 +33,12 @@ autonomy_diagnostics:
       - "collision_monitor"
       - "waypoint_follower"
       - "behavior_server"
-
     # Config files to verify exist
     config_files:
       - {path: "autonomy/config/ekf_params.yaml", description: "EKF parameters"}
       - {path: "autonomy/config/slam_toolbox_params.yaml", description: "SLAM Toolbox parameters"}
       - {path: "autonomy/config/perseus_nav_params.yaml", description: "Nav2 parameters"}
       - {path: "autonomy/config/cmd_vel_mux.yaml", description: "Velocity mux configuration"}
-
     # UI settings
     ui:
       refresh_rate_ms: 200
