@@ -3,7 +3,7 @@
 <package format="3">
   <name>perseus_bt_nodes</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Custom BehaviorTree nodes for Perseus waypoint navigation</description>
   <maintainer email="nguyenleminh1002@gmail.com">bocho0600</maintainer>
   <license>TODO: License declaration</license>
 

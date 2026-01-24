@@ -245,10 +245,6 @@ global_costmap:
         inflation_radius: 1.0 # Increased to ensure proper collision checking
         cost_scaling_factor: 1.5 # was 3.0
       always_send_full_costmap: true
-map_server:
-  ros__parameters:
-    yaml_filename: "/home/USER/perseus-v2/software/ros_ws/src/autonomy/map/sim_map.yaml" # This params should be changed (SIMULATION MAP)
-    introspection_mode: "disabled"
 map_saver:
   ros__parameters:
     save_map_timeout: 5.0
