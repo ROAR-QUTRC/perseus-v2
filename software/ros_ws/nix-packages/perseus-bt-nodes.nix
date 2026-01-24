@@ -32,6 +32,6 @@ buildRosPackage rec {
 
   meta = {
     description = "Custom BehaviorTree nodes for Perseus waypoint navigation";
-    license = with lib.licenses; [ mit ];
+    license = with lib.licenses; [ "TODO-License-declaration" ];
   };
 }
