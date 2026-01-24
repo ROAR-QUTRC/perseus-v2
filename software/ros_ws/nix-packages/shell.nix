@@ -50,7 +50,9 @@ pkgs.mkShell {
             joint-state-publisher
             joint-state-publisher-gui
             joy
+            lifecycle-msgs
             mecanum-drive-controller
+            nav-msgs
             nav2-msgs
             navigation2
             nlohmann_json
@@ -84,6 +86,7 @@ pkgs.mkShell {
             teleop-twist-keyboard
             tf2
             tf2-geometry-msgs
+            tf2-ros
             twist-mux
             urdf
             xacro
