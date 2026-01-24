@@ -31,7 +31,7 @@ buildRosPackage rec {
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "TODO: Package description";
-    license = with lib.licenses; [ "TODO-License-declaration" ];
+    description = "Custom BehaviorTree nodes for Perseus waypoint navigation";
+    license = with lib.licenses; [ mit ];
   };
 }

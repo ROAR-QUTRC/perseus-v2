@@ -16,7 +16,7 @@ def generate_launch_description():
     - online_async_launch.py: SLAM Toolbox for mapping/localization
     - perseus_nav_bringup.launch.py: Nav2 navigation stack
     """
-
+    
     autonomy_dir = get_package_share_directory("autonomy")
     slam_params_file = LaunchConfiguration("slam_params_file")
     nav_params_file = LaunchConfiguration("nav_params_file")
@@ -31,6 +31,11 @@ def generate_launch_description():
         description="Use simulation/Gazebo clock",
     )
 
+    declare_imu_topic = DeclareLaunchArgument(
+        "imu_topic",
+        default_value="/livox/imu",
+        description="IMU topic for robot_localization ekf (imu0)"
+    )
     declare_autostart_cmd = DeclareLaunchArgument(
         "autostart",
         default_value="true",
@@ -41,6 +46,8 @@ def generate_launch_description():
         default_value=os.path.join(autonomy_dir, "config", "slam_toolbox_params.yaml"),
         description="Full path to the ROS2 parameters file for SLAM Toolbox",
     )
+
+    map_file = os.path.join( autonomy_dir, "map", "sim_map_serial" )
 
     declare_nav_params_file_cmd = DeclareLaunchArgument(
         "nav_params_file",
@@ -63,7 +70,7 @@ def generate_launch_description():
             "slam_params_file": slam_params_file,
             "use_sim_time": use_sim_time,
             "autostart": autostart,
-            "map_file_name": "$HOME/perseus-v2/software/ros_ws/src/autonomy/map/sim_map_serial",  # FOR SIMULATION ONLY
+            "map_file_name": map_file,  # FOR SIMULATION ONLY
         }.items(),
     )
 
@@ -91,15 +98,16 @@ def generate_launch_description():
         executable="ekf_node",
         name="ekf_filter_node",
         output="screen",
-        parameters=[ekf_config_file, {"use_sim_time": use_sim_time}],
+        parameters=[ekf_config_file, {"use_sim_time": use_sim_time, "imu0": LaunchConfiguration("imu_topic")}],
     )
 
     # Create launch description
     ld = LaunchDescription()
-
+    
     # Declare arguments
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_autostart_cmd)
+    ld.add_action(declare_imu_topic) 
     ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_nav_params_file_cmd)
     ld.add_action(declare_ekf_config_file_cmd)
