@@ -38,6 +38,8 @@
  * Author: Paul Bovbel
  */
 
+#include "pointcloud_to_laserscan/pointcloud_to_laserscan_node.hpp"
+
 #include <chrono>
 #include <functional>
 #include <limits>
@@ -46,7 +48,6 @@
 #include <thread>
 #include <utility>
 
-#include "pointcloud_to_laserscan/pointcloud_to_laserscan_node.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "tf2_ros/create_timer_ros.h"
 #include "tf2_sensor_msgs/tf2_sensor_msgs.hpp"
