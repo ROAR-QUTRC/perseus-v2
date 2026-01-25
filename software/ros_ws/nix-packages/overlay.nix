@@ -1,6 +1,7 @@
 final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
+  kibisis = final.callPackage ./kibisis.nix { };
   perseus = final.callPackage ./perseus.nix { };
   perseus-autonomy-bridge = final.callPackage ./perseus-autonomy-bridge.nix { };
   perseus-bt-nodes = final.callPackage ./perseus-bt-nodes.nix { };
