@@ -103,7 +103,7 @@
     <joint name="${prefix}laser_joint" type="fixed">
       <parent link="${prefix}chassis"/>
       <child link="${prefix}livox_frame"/>
-      <origin xyz="-0.193 -0.047 -0.03375" rpy="0 ${pi} ${pi}"/>
+      <origin xyz="-0.173 -0.047 -0.03375" rpy="0 ${pi} ${pi}"/>
     </joint>
 
     <joint name="${prefix}laser_2d_joint" type="fixed">
