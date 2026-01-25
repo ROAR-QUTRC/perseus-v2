@@ -70,7 +70,7 @@ def exhale_kind_overrides(kind):
 
 exhale_args = {
     # Required arguments
-    "containmentFolder": "./generated",
+    "containmentFolder": "./generated/exhale",
     "rootFileName": "index.rst",
     "rootFileTitle": "Generated Documentation",
     "doxygenStripFromPath": "../..",
