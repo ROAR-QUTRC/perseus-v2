@@ -30,7 +30,18 @@ deserialise = "deserialize"
 
 [type.md]
 extend-ignore-re = [
-  # ignore align: center (for inserting images)
+  # align: center (for inserting images)
   "(?Rm)^\\s*:?align:\\s*center$",
+  # inline code snippets
+  "`.+?`",
+  "<.+?>",
+  # code blocks (should never be more than 3 levels deep hopefully)
+  "(?Rms)^\\s*`{5}[^`]*$.*?^\\s*`{5}$",
+  "(?Rms)^\\s*`{4}[^`]*$.*?^\\s*`{4}$",
+  "(?Rms)^\\s*`{3}[^`]*$.*?^\\s*`{3}$",
+  # links
+  "\\]\\(.*\\)",
+  # package/directory names (though they should be in backticks anyway)
+  "\\w*(?:-|_)\\w*",
 ]
 # spellchecker:on
