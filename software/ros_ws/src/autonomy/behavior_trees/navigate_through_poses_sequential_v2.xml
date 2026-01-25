@@ -58,7 +58,7 @@
             <!-- Only runs if the above SUCCESS (goal reached) -->
             <Wait name="WaitAtWaypoint" wait_duration="5.0"/>
 
-            <Fallback name="ArucoOptional">
+            <!-- <Fallback name="ArucoOptional">
               <DetectAruco service_name="/detect_objects"
                           timeout_sec="0.2"
                           max_age_sec="0.5"
@@ -67,7 +67,7 @@
                           poses="{aruco_poses}"
                           frame_id="{aruco_frame_id}"/>
               <AlwaysSuccess/>
-            </Fallback>
+            </Fallback> -->
 
             <!-- Remove the first goal only AFTER success -->
             <PopFirstGoal input_goals="{goals}" output_goals="{goals}"/>
