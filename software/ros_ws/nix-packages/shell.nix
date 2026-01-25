@@ -63,6 +63,7 @@ pkgs.mkShell {
             launch-ros
             mecanum-drive-controller
             message-filters
+            nav2-msgs
             navigation2
             nlohmann_json
             openssl
@@ -70,6 +71,7 @@ pkgs.mkShell {
             python3Packages.pygame
             python3Packages.pytest
             rclcpp
+            rclcpp-action
             rclcpp-components
             rclcpp-lifecycle
             rclpy
