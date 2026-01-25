@@ -73,7 +73,7 @@ exhale_args = {
     "containmentFolder": "./generated",
     "rootFileName": "index.rst",
     "rootFileTitle": "Generated Documentation",
-    "doxygenStripFromPath": "../../software",
+    "doxygenStripFromPath": "../..",
     # Optional arguments
     "createTreeView": True,
     # configure Exhale to run doxygen if it's available AND we haven't already generated output (speeds up dev shell builds a bit)
@@ -85,17 +85,22 @@ exhale_args = {
         """
         INPUT= ./../../software ./../../firmware/components
         RECURSIVE = YES
-        EXCLUDE_PATTERNS = *.md setup.py __init__.py __pycache__* */tests/* */test/* */launch/*
+        EXCLUDE_PATTERNS = */tests/* */test/* */launch/*
+        EXCLUDE_PATTERNS += */build/*
+        EXCLUDE_PATTERNS += *.py __pycache__*
+        EXCLUDE_PATTERNS += */main.cpp
+        EXCLUDE_PATTERNS += *.md
         EXCLUDE_SYMLINKS = YES
 
-        # we do NOT want program listings as that exposes the source code
-        XML_PROGRAMLISTING = NO
+        BUILTIN_STL_SUPPORT = YES
 
         # generate graphs
         HAVE_DOT = YES
 
         # exclude main functions
         EXCLUDE_SYMBOLS += main
+
+        PREDEFINED += DOXYGEN_SHOULD_SKIP_THIS
         """
     ),
     # Page layout configuration
