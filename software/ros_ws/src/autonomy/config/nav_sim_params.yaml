@@ -158,7 +158,7 @@ local_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /lidar/scan
+          topic: /livox/scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -174,7 +174,7 @@ local_costmap:
         mark_threshold: 0
         observation_sources: scan
         scan:
-          topic: /lidar/scan
+          topic: /livox/scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -203,7 +203,7 @@ global_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /lidar/scan
+          topic: /livox/scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -382,7 +382,7 @@ collision_monitor:
     scan:
       source_timeout: 2.0 # Increased from 1.0 for more robust operation
       type: "scan"
-      topic: "/lidar/scan"
+      topic: "/livox/scan"
       enabled: true
 docking_server:
   ros__parameters:
@@ -420,5 +420,5 @@ loopback_simulator:
     base_frame_id: "base_link"
     odom_frame_id: "odom"
     map_frame_id: "map"
-    scan_frame_id: "livox/frame"
+    scan_frame_id: "livox_frame"
     update_duration: 0.02
