@@ -391,6 +391,8 @@
     # Note that this is normally a VERY BAD IDEA but is needed to make building the docs easier.
     # Several steps in the build process require either internet access
     # or annoying workarounds, and internet access removes a maintenance burden.
-    sandbox = "relaxed";
+    # sandbox = "relaxed";
+    # This setting is set during the Github Actions to allow the online docs to be built with internet access
+    # without having to have all members set themselves as 'trusted-users' in nix.conf
   };
 }
