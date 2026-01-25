@@ -139,7 +139,7 @@ myst_enable_extensions = [
     "replacements",
     "strikethrough",
 ]
-myst_heading_anchors = 4  # auto-generated heading anchors (slugs)
+myst_heading_anchors = 5  # auto-generated heading anchors (slugs)
 suppress_warnings = ["myst.strikethrough"]
 
 ros_distro = os.environ.get("ROS_DISTRO", "jazzy")
