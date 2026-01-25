@@ -18,6 +18,16 @@ extend-ignore-re = [
 area_sizez = "area_sizez"
 sizez = "sizez"
 
+# unfortunately we need to use American spelling in code
+[type.cpp]
+serialise = "serialize"
+deserialise = "deserialize"
+centre = "center"
+
+[type.py]
+serialise = "serialize"
+deserialise = "deserialize"
+
 [type.md]
 extend-ignore-re = [
   # ignore align: center (for inserting images)
