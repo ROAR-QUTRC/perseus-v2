@@ -29,6 +29,7 @@ serialise = "serialize"
 deserialise = "deserialize"
 
 [type.md]
+extend-words = { ros = "ROS" }
 extend-ignore-re = [
   # align: center (for inserting images)
   "(?Rm)^\\s*:?align:\\s*center$",
