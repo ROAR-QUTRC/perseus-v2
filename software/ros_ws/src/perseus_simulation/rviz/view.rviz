@@ -78,9 +78,92 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /livox/lidar
-      Use Fixed Frame: true
-      Use rainbow: true
+        Value: /processed_aruco/image_raw
+      Value: false
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        camera_link:
+          Value: true
+        camera_link_optical:
+          Value: true
+        chassis:
+          Value: true
+        differential_bar:
+          Value: true
+        flange_bearing:
+          Value: true
+        front_left_motor:
+          Value: true
+        front_left_wheel:
+          Value: true
+        front_right_motor:
+          Value: true
+        front_right_wheel:
+          Value: true
+        laser_2d_frame:
+          Value: true
+        left_rocker:
+          Value: true
+        livox_frame:
+          Value: true
+        odom:
+          Value: true
+        rear_left_motor:
+          Value: true
+        rear_left_wheel:
+          Value: true
+        rear_right_motor:
+          Value: true
+        rear_right_wheel:
+          Value: true
+        right_rocker:
+          Value: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: false
+      Tree:
+        base_link:
+          base_footprint:
+            {}
+          chassis:
+            camera_link:
+              camera_link_optical:
+                {}
+            flange_bearing:
+              differential_bar:
+                {}
+            laser_2d_frame:
+              {}
+            left_rocker:
+              front_left_motor:
+                front_left_wheel:
+                  {}
+              rear_left_motor:
+                rear_left_wheel:
+                  {}
+            livox_frame:
+              {}
+            right_rocker:
+              front_right_motor:
+                front_right_wheel:
+                  {}
+              rear_right_motor:
+                rear_right_wheel:
+                  {}
+        odom:
+          {}
+      Update Interval: 0
       Value: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -618,7 +701,7 @@ Window Geometry:
   Tool Properties:
     collapsed: false
   Views:
-    collapsed: false
-  Width: 3840
-  X: 2928
-  Y: 64
+    collapsed: true
+  Width: 1920
+  X: 640
+  Y: 504
