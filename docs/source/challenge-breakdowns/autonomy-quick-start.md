@@ -33,34 +33,55 @@ The autonomy stack must be started in the following order:
 
 ### Real Robot — Full Autonomy Stack
 
-**Terminal 1 — Perseus (SSH)**
+#### 1. Perseus (big-brain) SSH: 
+**Terminal 1.1 — Perseus (SSH)**
 ```console
 cd perseus-v2
-nix run .#ros2 -- launch perseus perseus.launch.py
+nix run
 ```
-
-**Terminal 2 — Perseus (SSH)**
+**Terminal 1.2 — Perseus (SSH)**
 ```console
 cd perseus-v2
-nix run .#ros2 -- run perseus_sensors m2m2_lidar --ros-args \
-    -p sensor_ip:=192.168.1.137 \
-    -p sensor_port:=1446
+nix shell
+nix run .#ros2 -- launch autonomy autonomy.launch.py
+```
+**Terminal 1.3 — Perseus (SSH)**
+```console
+cd perseus-v2/software/web-ui
+nix shell
+yarn # This installs dependencies
+yarn build # Build the server
+yarn start # Runs the built server on port 3000
+```
+**Terminal 1.4 — Perseus (SSH)**
+```console
+cd perseus-v2/software/ros_ws
+nix shell
+source install/setup.sh
+ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+```
+**Terminal 1.5 — Perseus (SSH)**
+```console
+cd perseus-v2/software/ros_ws
+nix shell
+source install/setup.sh
+ros2 launch perseus_autonomy_bridge nav2_waypoints_bridge.launch.py
 ```
 
-**Terminal 3 — Development Laptop**
+#### 2. Perseus (medium-brain) SSH: 
+**Terminal 2.1 — Development Laptop**
 ```console
 cd perseus-v2
 nix run .#ros2 -- launch autonomy mapping_using_slam_toolbox.launch.py
 ```
 
-**Terminal 4 — Development Laptop (Navigation)**
+**Terminal 2.2 — Development Laptop (Navigation)**
 ```console
 cd perseus-v2
 nix run .#ros2 -- launch autonomy perseus_nav_bringup.launch.py
 ```
 
 ### Simulation
-
 ```console
 cd perseus-v2
 nix run .#ros2 -- launch perseus perseus.launch.py use_sim_time:=True hardware_plugin:=gz_ros2_control/GazeboSimSystem
