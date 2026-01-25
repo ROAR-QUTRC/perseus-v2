@@ -25,9 +25,10 @@ void handle_pwm_data(const Packet& packet);
 const addressing::standard_address_t base_address{
     SYSTEM_ID,
     arm::SUBSYSTEM_ID,
-    arm::control_board::DEVICE_ID };
+    arm::control_board::DEVICE_ID};
 
-void setup() {
+void setup()
+{
     can_interface.emplace(RawCanInterface("tyler"));
     packet_manager.emplace(can_interface.value());
     std::cout << "CAN interface initialized on vcan0" << std::endl;
@@ -134,19 +135,24 @@ void setup() {
     std::cout << "Setup complete - ready to receive CAN commands" << std::endl;
 }
 
-void loop() {
+void loop()
+{
     static unsigned long last_debug = 0;
 
-    try {
+    try
+    {
         packet_manager->handle();
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         std::cout << "CAN error: " << e.what() << std::endl;
     }
     // std::cout << "Handling CAN packets...4" << std::endl;
 
     // Debug: print status every 2 seconds
     last_debug++;
-    if (/*millis() - */ last_debug > 2000000) {
+    if (/*millis() - */ last_debug > 2000000)
+    {
         // last_debug = millis();
         // Serial.println("Waiting for CAN messages...");
         // std::cout << "Sending motor status messages..." << std::endl;
@@ -163,40 +169,50 @@ void loop() {
     // TODO: Control PWM output pin for PWM_1
 }
 
-int main() {
+int main()
+{
     setup();
 
-    while (true) {
+    while (true)
+    {
         loop();
     }
 }
 
-void handle_pwm_data(const Packet& packet) {
-    try {
+void handle_pwm_data(const Packet& packet)
+{
+    try
+    {
         // get target device group from address
         control_board::group group_id = static_cast<control_board::group>(
             static_cast<standard_address_t>(
                 packet.get_address().address)
-            .group);
-        uint16_t pwm_value = pwm_t{ packet.get_data() }.value;
+                .group);
+        uint16_t pwm_value = pwm_t{packet.get_data()}.value;
         // set pwm value
-        if (group_id == control_board::group::PWM_1) {
+        if (group_id == control_board::group::PWM_1)
+        {
             std::cout << std::format("Received PWM_1 command: {}\n", pwm_value);
-        } else if (group_id == control_board::group::PWM_2) {
+        }
+        else if (group_id == control_board::group::PWM_2)
+        {
             std::cout << std::format("Received PWM_2 command: {}\n", pwm_value);
         }
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         std::cout << std::format("Failed to parse speed packet: {}\n", e.what());
     }
 }
 
-void register_pwm_device(const control_board::group& group) {
+void register_pwm_device(const control_board::group& group)
+{
     const standard_address_t address{
         base_address,
         static_cast<uint8_t>(group),
-        static_cast<uint8_t>(control_board::pwm_parameters::SET_PWM) };
+        static_cast<uint8_t>(control_board::pwm_parameters::SET_PWM)};
 
     packet_manager->set_callback(
-        filter_t{ static_cast<flagged_address_t>(address) },
-        { .data_callback = handle_pwm_data });
+        filter_t{static_cast<flagged_address_t>(address)},
+        {.data_callback = handle_pwm_data});
 }
