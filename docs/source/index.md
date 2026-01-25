@@ -30,6 +30,7 @@ systems-index
 standards-index
 development-index
 maintenance-index
+hardware-index
 challenge-breakdowns-index
 tutorials-index
 generated/exhale/index
