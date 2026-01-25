@@ -21,7 +21,7 @@ def generate_launch_description():
                 parameters=[
                     {
                         "target_frame": "livox_frame",
-                        "transform_tolerance": 0.1,1
+                        "transform_tolerance": 0.1,
                         "min_height": -2.0,
                         "max_height": 0.2,# keep points below 0.1m to meet lidar specs
                         "range_min": 1.0,
