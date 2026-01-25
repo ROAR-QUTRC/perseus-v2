@@ -38,8 +38,6 @@
  * Author: Paul Bovbel
  */
 
-#include "pointcloud_to_laserscan/pointcloud_to_laserscan_node.hpp"
-
 #include <chrono>
 #include <functional>
 #include <limits>
@@ -48,6 +46,7 @@
 #include <thread>
 #include <utility>
 
+#include "pointcloud_to_laserscan/pointcloud_to_laserscan_node.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "tf2_ros/create_timer_ros.h"
 #include "tf2_sensor_msgs/tf2_sensor_msgs.hpp"
@@ -58,7 +57,7 @@ namespace pointcloud_to_laserscan
     PointCloudToLaserScanNode::PointCloudToLaserScanNode(const rclcpp::NodeOptions& options)
         : rclcpp::Node("pointcloud_to_laserscan", options)
     {
-        target_frame_ = this->declare_parameter("target_frame", "laser_frame");
+        target_frame_ = this->declare_parameter("target_frame", "livox_frame");
         tolerance_ = this->declare_parameter("transform_tolerance", 0.01);
         // TODO(hidmic): adjust default input queue size based on actual concurrency levels
         // achievable by the associated executor
@@ -74,8 +73,9 @@ namespace pointcloud_to_laserscan
         range_max_ = this->declare_parameter("range_max", std::numeric_limits<double>::max());
         inf_epsilon_ = this->declare_parameter("inf_epsilon", 1.0);
         use_inf_ = this->declare_parameter("use_inf", true);
-
-        pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("lidar_scan", rclcpp::SensorDataQoS());
+        cloud_in_ = this->declare_parameter("cloud_in", "/livox/lidar");
+        scan_out_ = this->declare_parameter("scan_out", "/livox/scan");
+        pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(scan_out_, rclcpp::SensorDataQoS());
 
         using std::placeholders::_1;
         // if pointcloud target frame specified, we need to filter by transform availability
@@ -91,15 +91,15 @@ namespace pointcloud_to_laserscan
                 this->get_node_logging_interface(),
                 this->get_node_clock_interface());
             message_filter_->registerCallback(
-                std::bind(&PointCloudToLaserScanNode::cloudCallback, this, _1));
+                std::bind(&PointCloudToLaserScanNode::cloud_callback, this, _1));
         }
         else
         {  // otherwise setup direct subscription
-            sub_.registerCallback(std::bind(&PointCloudToLaserScanNode::cloudCallback, this, _1));
+            sub_.registerCallback(std::bind(&PointCloudToLaserScanNode::cloud_callback, this, _1));
         }
 
         subscription_listener_thread_ = std::thread(
-            std::bind(&PointCloudToLaserScanNode::subscriptionListenerThreadLoop, this));
+            std::bind(&PointCloudToLaserScanNode::subscription_listener_thread_loop, this));
     }
 
     PointCloudToLaserScanNode::~PointCloudToLaserScanNode()
@@ -108,7 +108,7 @@ namespace pointcloud_to_laserscan
         subscription_listener_thread_.join();
     }
 
-    void PointCloudToLaserScanNode::subscriptionListenerThreadLoop()
+    void PointCloudToLaserScanNode::subscription_listener_thread_loop()
     {
         rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
 
@@ -126,7 +126,7 @@ namespace pointcloud_to_laserscan
                         "Got a subscriber to laserscan, starting pointcloud subscriber");
                     rclcpp::SensorDataQoS qos;
                     qos.keep_last(input_queue_size_);
-                    sub_.subscribe(this, "cloud_in", qos.get_rmw_qos_profile());
+                    sub_.subscribe(this, cloud_in_, qos.get_rmw_qos_profile());
                 }
             }
             else if (sub_.getSubscriber())
@@ -142,7 +142,7 @@ namespace pointcloud_to_laserscan
         sub_.unsubscribe();
     }
 
-    void PointCloudToLaserScanNode::cloudCallback(
+    void PointCloudToLaserScanNode::cloud_callback(
         sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg)
     {
         // build laserscan output

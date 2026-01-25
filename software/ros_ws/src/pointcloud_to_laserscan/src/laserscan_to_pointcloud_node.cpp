@@ -38,8 +38,6 @@
  * Author: Rein Appeldoorn
  */
 
-#include "pointcloud_to_laserscan/laserscan_to_pointcloud_node.hpp"
-
 #include <chrono>
 #include <functional>
 #include <limits>
@@ -48,6 +46,7 @@
 #include <thread>
 #include <utility>
 
+#include "pointcloud_to_laserscan/laserscan_to_pointcloud_node.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "tf2_ros/create_timer_ros.h"
 #include "tf2_sensor_msgs/tf2_sensor_msgs.hpp"
@@ -82,24 +81,24 @@ namespace pointcloud_to_laserscan
                 this->get_node_clock_interface());
             message_filter_->registerCallback(
                 std::bind(
-                    &LaserScanToPointCloudNode::scanCallback, this, _1));
+                    &LaserScanToPointCloudNode::scan_callback, this, _1));
         }
         else
         {  // otherwise setup direct subscription
-            sub_.registerCallback(std::bind(&LaserScanToPointCloudNode::scanCallback, this, _1));
+            sub_.registerCallback(std::bind(&LaserScanToPointCloudNode::scan_callback, this, _1));
         }
 
         subscription_listener_thread_ = std::thread(
-            std::bind(&LaserScanToPointCloudNode::subscriptionListenerThreadLoop, this));
+            std::bind(&LaserScanToPointCloudNode::subscription_listener_thread_loop, this));
     }
 
     LaserScanToPointCloudNode::~LaserScanToPointCloudNode()
     {
-        alive_.store(true);
+        alive_.store(false);
         subscription_listener_thread_.join();
     }
 
-    void LaserScanToPointCloudNode::subscriptionListenerThreadLoop()
+    void LaserScanToPointCloudNode::subscription_listener_thread_loop()
     {
         rclcpp::Context::SharedPtr context = this->get_node_base_interface()->get_context();
 
@@ -133,7 +132,7 @@ namespace pointcloud_to_laserscan
         sub_.unsubscribe();
     }
 
-    void LaserScanToPointCloudNode::scanCallback(sensor_msgs::msg::LaserScan::ConstSharedPtr scan_msg)
+    void LaserScanToPointCloudNode::scan_callback(sensor_msgs::msg::LaserScan::ConstSharedPtr scan_msg)
     {
         auto cloud_msg = std::make_unique<sensor_msgs::msg::PointCloud2>();
 

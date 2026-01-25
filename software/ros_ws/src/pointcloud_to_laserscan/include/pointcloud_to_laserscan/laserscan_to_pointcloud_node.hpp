@@ -71,9 +71,9 @@ namespace pointcloud_to_laserscan
         ~LaserScanToPointCloudNode() override;
 
     private:
-        void scanCallback(sensor_msgs::msg::LaserScan::ConstSharedPtr scan_msg);
+        void scan_callback(sensor_msgs::msg::LaserScan::ConstSharedPtr scan_msg);
 
-        void subscriptionListenerThreadLoop();
+        void subscription_listener_thread_loop();
 
         std::unique_ptr<tf2_ros::Buffer> tf2_;
         std::unique_ptr<tf2_ros::TransformListener> tf2_listener_;

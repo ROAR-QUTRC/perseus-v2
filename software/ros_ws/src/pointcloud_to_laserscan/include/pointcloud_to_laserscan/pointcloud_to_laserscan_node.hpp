@@ -72,9 +72,9 @@ namespace pointcloud_to_laserscan
         ~PointCloudToLaserScanNode() override;
 
     private:
-        void cloudCallback(sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg);
+        void cloud_callback(sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg);
 
-        void subscriptionListenerThreadLoop();
+        void subscription_listener_thread_loop();
 
         std::unique_ptr<tf2_ros::Buffer> tf2_;
         std::unique_ptr<tf2_ros::TransformListener> tf2_listener_;
@@ -93,6 +93,8 @@ namespace pointcloud_to_laserscan
             range_max_;
         bool use_inf_;
         double inf_epsilon_;
+        std::string cloud_in_;
+        std::string scan_out_;
     };
 
 }  // namespace pointcloud_to_laserscan
