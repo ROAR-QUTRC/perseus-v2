@@ -252,7 +252,7 @@ class ExtractFeatures(Node):
             y_direction = request["y_direction"]
 
             image_bgr, image_hue_saturation_value, image_height, image_width = (
-                self.load_image(image_id)
+                self.LoadImage(image_id)
             )
 
             if not (0 <= x_pos < image_width and 0 <= y_pos < image_height):
@@ -354,7 +354,7 @@ class ExtractFeatures(Node):
                 cv2.boundingRect(chosen_contour)
             )
             if mode == "waypoint" or mode == "border":
-                centroid = contour_centroid_pixel_position(chosen_contour)
+                centroid = ContourCentroidPixelPosition(chosen_contour)
                 if centroid is None:
                     centroid = (
                         int(bounding_x_pos + bounding_width / 2),
