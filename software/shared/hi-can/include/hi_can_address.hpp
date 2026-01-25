@@ -366,14 +366,14 @@ namespace hi_can
             /// @brief The post-landing system ID
             constexpr uint8_t SYSTEM_ID = 0x03;
             /// @brief Namespace containing all addresses in the arm subsystem
-            namespace servo
+            namespace arm
             {
                 /// @brief The arm subsystem ID
-                constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                constexpr uint8_t SUBSYSTEM_ID = 0x01;
                 /// @brief Namespace containing all the servos in the arm subsystem
-                namespace rmd
+                namespace rmd_servo
                 {
-                    /// @brief The device ID of the arm servos
+                    /// @brief The device ID of the rmd servos
                     constexpr uint8_t DEVICE_ID = 0x00;
                     /// @brief The RMD-L-4015-100-C Motor ID commands
                     enum class message_type : uint16_t
@@ -409,26 +409,33 @@ namespace hi_can
                         }
                     };
                 }
-                namespace servo_board  // ESP32 servo controller board (RSBL servos + PWM for gripper)
+
+                namespace control_board  // ESP32 servo controller board (RSBL servos + PWM for gripper)
                 {
                     /// @brief The device ID of the servo board
-                    constexpr uint8_t DEVICE_ID = 0x01;
+                    constexpr uint8_t DEVICE_ID = 0x05;
 
                     /// @brief Servo board output IDs - includes RSBL servos and PWM channels
-                    enum class servo_id_t : uint8_t
+                    enum class group : uint8_t
                     {
-                        SHOULDER_TILT = 0x00,
-                        SHOULDER_PAN = 0x01,
-                        PWM_1 = 0x02,
-                        PWM_2 = 0x03,
+                        SHOULDER_TILT = 0x01,
+                        SHOULDER_PAN = 0x02,
+                        PWM_1 = 0x03,
+                        PWM_2 = 0x04,
                     };
-                    /// @brief Address structure for servo board outputs
-                    struct servo_address_t : public standard_address_t
+                    enum class pwm_parameters
                     {
-                        constexpr servo_address_t(const uint8_t parameter, const servo_id_t servo_id)
-                            : standard_address_t(post_landing::SYSTEM_ID, servo::SUBSYSTEM_ID, DEVICE_ID, static_cast<uint8_t>(servo_id), parameter)
-                        {
-                        }
+                        SET_PWM = 0x00,
+                        SET_DIGITAL = 0x01,
+                    };
+                    enum class rsbl_parameters
+                    {
+                        SET_POS_EX = 0x00,
+                        SET_POSITION_SINGLE = 0x01,
+                        SET_SPEED = 0x02,
+                        SET_TORQUE_ENABLE = 0x03,
+                        STATUS_1 = 0x04,
+                        STATUS_2 = 0x05,
                     };
                 }
             }

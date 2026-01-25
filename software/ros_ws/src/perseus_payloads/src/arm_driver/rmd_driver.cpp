@@ -3,7 +3,7 @@
 using namespace hi_can;
 using namespace hi_can::addressing::post_landing;
 using namespace hi_can::addressing::post_landing::servo::rmd;
-using namespace hi_can::parameters::post_landing::servo::rmd;
+using namespace hi_can::parameters::post_landing::servo::rmd_servo;
 
 RmdDriver::RmdDriver(const rclcpp::NodeOptions& options)
     : Node("rmd_servo_driver", options)
