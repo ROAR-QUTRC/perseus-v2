@@ -9,7 +9,7 @@
         <xacro:box_inertia m="${livox_mass}" x="${livox_length}" y="${livox_radius}" z="${livox_radius}"/>
     </inertial>
     <visual>
-        <origin xyz="0 0.0 -0.02" rpy="${pi/2} 0.0 0.0"/>
+        <origin xyz="0 0.0 -0.02" rpy="${pi/2} 0.0 ${pi}"/>
         <geometry>
             <mesh scale="1.0 1.0  1.0" filename="file://$(find perseus_description)/meshes/mid-360.dae"/>
         </geometry>
