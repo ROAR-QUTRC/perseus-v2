@@ -42,9 +42,9 @@ This script should be run on every device that wants to run the perseus repo (me
 5. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
 6. Hides the massive wall of text displaying the environment variables on startup/reload
 
-:::{note}
+```{note}
 The nix-setup script can't be run on NixOS - you'll have to set these manually in your configuration.nix file (and your home.nix home-manager file), but if you're using NixOS, you should have no trouble doing this
-:::
+```
 
 ## update.sh
 
