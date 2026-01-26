@@ -318,7 +318,7 @@ However, in the few cases where filters need to be implemented on the applicatio
 To actually _represent_ CAN frames, the {expr}`Packet` class bundles together data, the frame ID, frame flags, and methods for conveniently setting/getting the data.
 This is what the {expr}`CanInterface` class actually deals with user-side.
 However, this still leaves the burden of handling interval transmissions or fail-safe parameters, for which the {expr}`PacketManager` class was written.
-For data transmission, it handles interval (scheduled) parameters, since single-shot frames can be transmitted with lass hassle directly through the {expr}`CanInterface`.
+For data transmission, it handles interval (scheduled) parameters, since single-shot frames can be transmitted with less hassle directly through the {expr}`CanInterface`.
 Its primary use-case, however, is data _reception_.
 When properly configured, the {expr}`PacketManager` will automatically handle calling callbacks on data reception, parameter timeout, and recovery if data is received after a timeout.
 As usual, check its documentation for the full API, or the library [usage](#hi-can-usage) section for the fundamentals.
