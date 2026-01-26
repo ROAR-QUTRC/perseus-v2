@@ -7,9 +7,9 @@ The C++ code is all built using [CMake](https://cmake.org/) since that's what RO
 
 Internally, the code is split into several sections:
 
-- [`software/native/`](project:#dir_native): Programs which run natively, independent of ROS
-- [`software/ros_ws/`](project:#dir_ros_ws): Workspace containing ROS2 code
-- [`software/shared/`](project:#dir_shared): Shared libraries between native and ROS2 code, and sometimes firmware too
+- {file}`software/native/`: Programs which run natively, independent of ROS
+- [`software/ros_ws/`](project:#dir_software_ros_ws): Workspace containing ROS2 code
+- [`software/shared/`](project:#dir_software_shared): Shared libraries between native and ROS2 code, and sometimes firmware too
 
 ## Native Programs
 

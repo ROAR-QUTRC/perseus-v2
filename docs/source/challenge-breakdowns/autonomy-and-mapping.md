@@ -75,7 +75,7 @@ This sequence launches RViz2, providing visualisation of Perseus and the develop
 
 - **Goal:** Autonomous exploration and mapping, navigation to specific landmarks by Perseus.
 
-#### Points break-down
+### Points break-down
 
 | Activity                                  | Points                  |
 | ----------------------------------------- | ----------------------- |
