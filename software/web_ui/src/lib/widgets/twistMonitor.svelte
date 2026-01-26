@@ -139,7 +139,7 @@
 		}
 
 		
-			//genereate random numbers for testing
+			//generate random numbers for testing
 			twist.x = (Math.random() - 0.5) * 4;
 			twist.y = (Math.random() - 0.5) * 4;
 			twist.rotation = (Math.random() - 0.5) * 4

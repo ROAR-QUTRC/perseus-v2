@@ -38,9 +38,9 @@ export interface ActuatorsMessageType {
 }
 
 // Service types
-export interface EmptyRequestType { }
+export interface EmptyRequestType {}
 
-export interface EmptyResponseType { }
+export interface EmptyResponseType {}
 
 export interface SetBoolRequestType {
   data: boolean;
@@ -50,4 +50,3 @@ export interface SetBoolResponseType {
   success: boolean;
   message: string;
 }
-
