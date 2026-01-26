@@ -681,68 +681,56 @@ namespace hi_can::parameters::post_landing::arm::rmd_servo
         return _available_servos;
     }
 }
-// namespace hi_can::parameters::post_landing::arm::control_board
-// {
-//     namespace send_message
-//     {
-//         std::vector<uint8_t> move_to_angle_t::serialize_data()
-//         {
-//             SimpleSerializable<move_to_angle_raw_t> raw_data;
-//             raw_data.angle = angle;
-//             raw_data.time_ms = time_ms;
-//             raw_data.acceleration = acceleration;
-//             return raw_data.serialize_data();
-//         }
-//         std::vector<uint8_t> set_torque_enable_t::serialize_data()
-//         {
-//             std::vector<uint8_t> data;
-//             data.push_back(enable ? 1 : 0);
-//             return data;
-//         }
-//         std::vector<uint8_t> set_pwm_t::serialize_data()
-//         {
-//             SimpleSerializable<set_pwm_raw_t> raw_data;
-//             raw_data.pwm = pwm;
-//             return raw_data.serialize_data();
-//         }
-//     }
-//     namespace receive_message
-//     {
-//     }
-//     parameters::post_landing::servo::servo_board::ServoboardParameterGroup::ServoboardParameterGroup(uint8_t servo_id)
-//         : _servo_id(servo_id)
-//     {
-//         using namespace addressing::post_landing::servo::servo_board;
+namespace hi_can::parameters::post_landing::arm::control_board
+{
+    ControlBoardParameterGroup::ControlBoardParameterGroup(addressing::post_landing::arm::control_board::group servo_id)
+        : _servo_id(servo_id)
+    {
+        const standard_address_t address(
+            addressing::post_landing::SYSTEM_ID,
+            addressing::post_landing::arm::SUBSYSTEM_ID,
+            addressing::post_landing::arm::control_board::DEVICE_ID,
+            static_cast<uint8_t>(servo_id));
 
-//         // _callbacks.emplace_back(
-//         //     filter_t{
-//         //         .address = static_cast<flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::READ_STATUS_1), servo_id_t(servo_id))),
-//         //     },
-//         //     PacketManager::callback_config_t{
-//         //         .data_callback = [this](const Packet& packet)
-//         //         {
-//         //             SimpleSerializable<receive_message::status_1_t> status(packet.get_data());
-//         //             this->_position = status.position;
-//         //             this->_speed = status.speed;
-//         //             this->_load = status.load;
-//         //         },
-//         //     });
-//         // _callbacks.emplace_back(
-//         //     filter_t{
-//         //         .address = static_cast<flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::READ_STATUS_2), servo_id_t(servo_id))),
-//         //     },
-//         //     PacketManager::callback_config_t{
-//         //         .data_callback = [this](const Packet& packet)
-//         //         {
-//         //             SimpleSerializable<receive_message::status_2_t> status(packet.get_data());
-//         //             this->_voltage = status.voltage;
-//         //             this->_temperature = status.temperature;
-//         //             this->_current = status.current;
-//         //             this->_moving = (status.moving != 0);
-//         //         },
-//         //     });
-//     }
-// }
+        _callbacks.emplace_back(
+            filter_t{
+                .address = flagged_address_t(address),
+                // Mask everything except for the parameter ID
+                .mask = 0xFFFFFF00,
+            },
+            PacketManager::callback_config_t{
+                .data_callback = [this](const Packet& packet)
+                {
+                    typedef hi_can::addressing::post_landing::arm::control_board::rsbl_parameters parameter_id_t;
+
+                    const parameter_id_t parameter_id =
+                        static_cast<parameter_id_t>(packet.get_address().address & 0x000000FF);
+                    std::vector<uint8_t> raw_data = packet.get_data();
+                    switch (parameter_id)
+                    {
+                    case parameter_id_t::STATUS_1:
+                    {
+                        status_1_t status_1 = {};
+                        status_1.deserialize_data(raw_data);
+                        this->_position = status_1.position;
+                        this->_status_1 = status_1;
+                        break;
+                    }
+                    case parameter_id_t::STATUS_2:
+                    {
+                        status_2_t status_2 = {};
+                        status_2.deserialize_data(raw_data);
+                        this->_status_2 = status_2;
+                        break;
+                    }
+                    default:
+                        break;
+                    }
+                },
+            });
+    }
+}
+
 namespace hi_can::parameters::legacy::drive::motors
 {
     EscParameterGroup::EscParameterGroup(const addressing::legacy::address_t& device_address)

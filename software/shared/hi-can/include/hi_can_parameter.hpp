@@ -769,6 +769,51 @@ namespace hi_can::parameters
             namespace control_board  // DEVICE 05
             {
                 typedef SimpleSerializable<wrapped_value_t<uint16_t>> pwm_t;
+                typedef SimpleSerializable<wrapped_value_t<int16_t>> position_t;
+                typedef SimpleSerializable<wrapped_value_t<uint16_t>> speed_t;
+                typedef SimpleSerializable<wrapped_value_t<uint8_t>> acceleration_t;
+                typedef SimpleSerializable<wrapped_value_t<bool>> torque_enable_t;
+
+#pragma pack(push, 1)
+                struct _position_control_t
+                {
+                    int16_t position;
+                    uint16_t duration_ms;
+                    uint8_t acceleration;
+                };
+                struct _status_1_t
+                {
+                    int16_t position;  // current position in degrees
+                    int16_t speed;     // current speed
+                    int16_t load;      // current load
+                };
+                struct _status_2_t
+                {
+                    uint16_t voltage;    // voltage in mV
+                    int8_t temperature;  // temperature in celsius
+                    uint16_t current;    // current in mA
+                    uint8_t moving;      // is servo moving
+                };
+#pragma pack(pop)
+
+                typedef SimpleSerializable<_position_control_t> position_control_t;
+                typedef SimpleSerializable<_status_1_t> status_1_t;
+                typedef SimpleSerializable<_status_2_t> status_2_t;
+
+                class ControlBoardParameterGroup : public ParameterGroup
+                {
+                public:
+                    ControlBoardParameterGroup(addressing::post_landing::arm::control_board::group servo_id);
+                    int16_t& get_position_control() { return _position.value; }
+                    status_1_t& get_status_1() { return _status_1; }
+                    status_2_t& get_status_2() { return _status_2; }
+
+                private:
+                    addressing::post_landing::arm::control_board::group _servo_id;
+                    position_t _position{};
+                    status_1_t _status_1{};
+                    status_2_t _status_2{};
+                };
             }
         }
     }

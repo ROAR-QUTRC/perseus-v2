@@ -5,6 +5,8 @@
 #include <optional>
 #include <thread>
 
+using namespace std::chrono_literals;
+
 using namespace hi_can;
 using namespace hi_can::addressing;
 using namespace hi_can::addressing::post_landing;
@@ -21,6 +23,8 @@ std::optional<hi_can::PacketManager> packet_manager;
 
 void register_pwm_device(const control_board::group& group);
 void handle_pwm_data(const Packet& packet);
+void register_rsbl_servo(const control_board::group& group);
+void handle_rsbl_servo_command(const Packet& packet);
 
 const addressing::standard_address_t base_address{
     SYSTEM_ID,
@@ -33,112 +37,16 @@ void setup()
     packet_manager.emplace(can_interface.value());
     std::cout << "CAN interface initialized on vcan0" << std::endl;
 
-    // using namespace addressing;
-
     register_pwm_device(control_board::group::PWM_1);
     register_pwm_device(control_board::group::PWM_2);
-
-    // motor_id_t move_servo_ids[] = {motor_id_t::SHOULDER_TILT, motor_id_t::SHOULDER_PAN};  // Register MOVE_TO_ANGLE callbacks for both servos
-    // for (uint8_t servo_idx = 0; servo_idx <= 1; servo_idx++)
-    // {
-    //     motor_id_t servo_id = move_servo_ids[servo_idx];
-
-    //     packet_manager->set_callback(
-    //         filter_t{
-    //             .address = static_cast<flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::MOVE_TO_ANGLE), servo_id))},
-    //         PacketManager::callback_config_t{
-    //             .data_callback = [servo_idx](const Packet& packet)
-    //             {
-    //                 try
-    //                 {
-    //                     SimpleSerializable<move_to_angle_raw_t> cmd(packet.get_data());
-
-    //                     int16_t angle = cmd.angle;
-    //                     uint16_t time_ms = cmd.time_ms;
-    //                     uint8_t acceleration = cmd.acceleration;
-
-    //                     // TESTING uncomment HERE
-    //                     // servo.moveToAngle(servo_idx, angle, time_ms, acceleration);
-
-    //                     std::cout << "MOVE_TO_ANGLE: servo=" << static_cast<int>(servo_idx)
-    //                               << ", angle=" << angle
-    //                               << ", time=" << time_ms
-    //                               << ", acc=" << static_cast<int>(acceleration) << std::endl;
-    //                 }
-    //                 catch (const std::exception& e)
-    //                 {
-    //                     std::cout << "Exception: " << e.what() << std::endl;
-    //                 }
-    //             }});
-
-    //     packet_manager->set_callback(
-    //         filter_t{
-    //             .address = static_cast<flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::WRITE_POS_EX), servo_id))},
-    //         PacketManager::callback_config_t{
-    //             .data_callback = [servo_idx](const Packet& packet)
-    //             {
-    //                 try
-    //                 {
-    //                     SimpleSerializable<write_pos_ex_t> cmd(packet.get_data());
-
-    //                     int16_t position = cmd.position;
-    //                     uint16_t speed = cmd.speed;
-    //                     uint8_t acceleration = cmd.acceleration;
-
-    //                     // servo.WritePosEx(servo_idx, position, speed, acceleration);
-    //                     std::cout << "WRITE_POS_EX: servo=" << static_cast<int>(servo_idx)
-    //                               << ", pos=" << position
-    //                               << ", spd=" << speed
-    //                               << ", acc=" << static_cast<int>(acceleration) << std::endl;
-    //                 }
-    //                 catch (...)
-    //                 {
-    //                     std::cout << "Error parsing WRITE_POS_EX" << std::endl;
-    //                 }
-    //             }});
-    // }
-
-    // packet_manager->set_callback(  // Register callback for PWM_1
-    //     filter_t{
-    //         .address = static_cast<flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::SET_PWM_VALUES), motor_id_t::PWM_1))},
-    //     PacketManager::callback_config_t{
-    //         .data_callback = [](const Packet& packet)
-    //         {
-    //             try
-    //             {
-    //                 SimpleSerializable<set_pwm_raw_t> cmd(packet.get_data());
-    //                 uint16_t pwm = cmd.pwm;
-    //                 std::cout << "PWM1: value=" << pwm << std::endl;
-    //             }
-    //             catch (...)
-    //             {
-    //             }
-    //         }});
-
-    // packet_manager->set_callback(  // Register callback for PWM_2
-    //     filter_t{
-    //         .address = static_cast<flagged_address_t>(servo_address_t(static_cast<uint8_t>(command_t::SET_PWM_VALUES), motor_id_t::PWM_2))},
-    //     PacketManager::callback_config_t{
-    //         .data_callback = [](const Packet& packet)
-    //         {
-    //             try
-    //             {
-    //                 SimpleSerializable<set_pwm_raw_t> cmd(packet.get_data());
-    //                 uint16_t pwm = cmd.pwm;
-    //                 std::cout << "PWM2: value=" << pwm << std::endl;
-    //             }
-    //             catch (...)
-    //             {
-    //             }
-    //         }});
+    register_rsbl_servo(control_board::group::SHOULDER_TILT);
+    register_rsbl_servo(control_board::group::SHOULDER_PAN);
 
     std::cout << "Setup complete - ready to receive CAN commands" << std::endl;
 }
 
 void loop()
 {
-    static unsigned long last_debug = 0;
-
     try
     {
         packet_manager->handle();
@@ -147,26 +55,6 @@ void loop()
     {
         std::cout << "CAN error: " << e.what() << std::endl;
     }
-    // std::cout << "Handling CAN packets...4" << std::endl;
-
-    // Debug: print status every 2 seconds
-    last_debug++;
-    if (/*millis() - */ last_debug > 2000000)
-    {
-        // last_debug = millis();
-        // Serial.println("Waiting for CAN messages...");
-        // std::cout << "Sending motor status messages..." << std::endl;
-        // if (can_interface) {
-        //     can_interface->transmit(Packet(static_cast<flagged_address_t>(
-        //         standard_address_t{ base_address,
-        //                            static_cast<uint8_t>(control_board::group::PWM_1),
-        //                            static_cast<uint8_t>(control_board::pwm_parameters::SET_PWM) }),
-        //         pwm_t{ 1234 }.serialize_data()));
-        // }
-        last_debug = 0;
-    }
-
-    // TODO: Control PWM output pin for PWM_1
 }
 
 int main()
@@ -176,8 +64,105 @@ int main()
     while (true)
     {
         loop();
+        std::this_thread::sleep_for(1ms);
     }
 }
+
+#pragma region RSBL Servo
+
+void handle_rsbl_servo_command(const Packet& packet)
+{
+    using namespace control_board;
+
+    try
+    {
+        // get target device group from address
+        control_board::group group_id = static_cast<control_board::group>(
+            static_cast<standard_address_t>(
+                packet.get_address().address)
+                .group);
+        // Get the command type from the parameter ID
+        control_board::rsbl_parameters command_type = static_cast<control_board::rsbl_parameters>(
+            static_cast<standard_address_t>(
+                packet.get_address().address)
+                .parameter);
+
+        std::cout << "Target device group: " << static_cast<int>(group_id) << std::endl;
+
+        // action command
+        switch (command_type)
+        {
+        case rsbl_parameters::SET_POS_EX:
+        {
+            const position_control_t position_control_cmd = position_control_t{packet.get_data()};
+            std::cout << "SET_POS_EX command not implemented."
+                      << " Target position: " << position_control_cmd.position
+                      << ", speed: " << position_control_cmd.duration_ms
+                      << ", acceleration: " << static_cast<int>(position_control_cmd.acceleration)
+                      << std::endl;
+            break;
+        }
+        case rsbl_parameters::SET_POSITION_SINGLE:
+        {
+            const int16_t position_cmd = position_t{packet.get_data()}.value;
+            std::cout << "SET_POSITION_SINGLE command not implemented. Target position: " << position_cmd << std::endl;
+            break;
+        }
+        case rsbl_parameters::SET_SPEED:
+        {
+            const uint16_t speed_cmd = speed_t{packet.get_data()}.value;
+            std::cout << "SET_SPEED command not implemented. Target speed: " << speed_cmd << std::endl;
+            break;
+        }
+        case rsbl_parameters::SET_TORQUE_ENABLE:
+        {
+            const bool torque_enable = torque_enable_t{packet.get_data()}.value;
+            std::cout << "SET_TORQUE_ENABLE command not implemented. Target: " << torque_enable << std::endl;
+            break;
+        }
+        case rsbl_parameters::STATUS_1:
+        case rsbl_parameters::STATUS_2:
+            // Not a command we handle
+            break;
+        default:
+            std::cout << std::format("Unknown RSBL command type: {}\n", static_cast<uint8_t>(command_type));
+            break;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << std::format("Failed to parse RSBL servo packet: {}\n", e.what());
+    }
+}
+
+void register_rsbl_servo(const control_board::group& group)
+{
+    standard_address_t address{
+        base_address,
+        static_cast<uint8_t>(group), 0};  // Parameter ignored by mask
+
+    packet_manager->set_callback(
+        filter_t{.address = static_cast<flagged_address_t>(address),
+                 // Mask out parameter ID to catch all RSBL servo commands
+                 .mask = 0xFFFFFF00},
+        {.data_callback = handle_rsbl_servo_command});
+
+    address.parameter = static_cast<uint8_t>(control_board::rsbl_parameters::STATUS_1);
+    packet_manager->set_transmission_config(static_cast<flagged_address_t>(address),
+                                            {.generator = [=]()
+                                             {
+                                                 status_1_t status{};  // TODO: get actual position
+                                                 status.position = 12;
+                                                 status.speed = 23;
+                                                 status.load = 112;
+                                                 return status.serialize_data();
+                                             },
+                                             .interval = 100ms});
+}
+
+#pragma endregion RSBL Servo
+
+#pragma region PWM Device
 
 void handle_pwm_data(const Packet& packet)
 {
@@ -216,3 +201,5 @@ void register_pwm_device(const control_board::group& group)
         filter_t{static_cast<flagged_address_t>(address)},
         {.data_callback = handle_pwm_data});
 }
+
+#pragma endregion PWM Device
