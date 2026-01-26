@@ -250,7 +250,7 @@ $effect(() => {
 });
 ```
 
-Now when you type a new topic name our widget will automatically try listening and publishing to that topic. The key word being "try" as we are currently not handling the event that the topic does not exist which would silently break the widget without an error. As an extension to this tutorial you should try and add some error handling (hint: check the other arguments of the ros.getTopicType function)
+Now when you type a new topic name our widget will automatically try listening and publishing to that topic. The key word being "try" as we are currently not handling the event that the topic does not exist which would silently break the widget without an error. As an extension to this tutorial you should try and add some error handling (hint: check the other arguments of the `ros.getTopicType` function)
 
 ## Congratulations
 

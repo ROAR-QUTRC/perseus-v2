@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 # Set the project name and version
 project(
-  hi_can_common
+  hi_can_basic_write
   VERSION 0.0.1
   LANGUAGES CXX)
 
@@ -47,7 +47,7 @@ find_package(hi_can_raw QUIET)
 if(NOT hi_can_raw_FOUND)
   message(STATUS "hi_can_raw not found, adding subdirectory...")
   # add the directory with its CMakeLists.txt
-  add_subdirectory(../../shared/hi-can-raw hi-can-raw)
+  add_subdirectory(../../../../shared/hi-can-raw hi-can-raw)
 endif()
 
 # Link in libraries needed
