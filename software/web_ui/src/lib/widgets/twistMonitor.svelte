@@ -5,9 +5,9 @@
 	export const name = 'Twistometer';
 	export const description = 'Vector based gauge to display raw ros twist messages';
 	export const group = 'ROS';
-	export const isRosDependent = true;
+	export const isRosDependent = false;
 
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
+	export const settings = $state<WidgetSettingsType>({
 		groups: {
 			General: {
 				topic: {
@@ -15,11 +15,6 @@
 					description: 'ROS topic to subscribe to',
 					options: [],
 					value: ''
-				},
-				gaugeSize: {
-					type: 'number',
-					description: 'Size of the gauge in pixels',
-					value: '300'
 				},
 				MaxXValue: {
 					type: 'number',
@@ -43,13 +38,14 @@
 
 <script lang="ts">
 	import { getRosConnection } from '$lib/scripts/rosBridge.svelte';
+	import type { StampedTwistMessageType } from '$lib/scripts/rosTypes';
 	import * as ROSLIB from 'roslib';
 	import { onMount } from 'svelte';
 
 	let canvas = $state<HTMLCanvasElement | null>(null);
 	let context = $state<CanvasRenderingContext2D | null>(null);
 	// alias and type conversion for settings.groups.General.gaugeSize.value
-	let canvasSize = $derived(Number(settings.groups.General.gaugeSize.value));
+	let canvasSize = 600;
 	let twist = $state<{ x: number; y: number; rotation: number }>({ x: 0, y: 0, rotation: 0 });
 
 	function canvas_arrow(
@@ -59,6 +55,7 @@
 		tox: number,
 		toy: number
 	) {
+		if (!context) return;
 		var headlen = 10; // length of head in pixels
 		var dx = tox - fromx;
 		var dy = toy - fromy;
@@ -86,7 +83,7 @@
 		canvas_arrow(context!, canvasSize / 2, canvasSize / 2, canvasSize / 2 + y, canvasSize / 2 + x);
 	};
 
-	let twistTopic: ROSLIB.Topic | null = null;
+	let twistTopic: ROSLIB.Topic<StampedTwistMessageType> | null = null;
 
 	$effect(() => {
 		if (getRosConnection()) {
@@ -103,14 +100,6 @@
 					twist.y = message.twist.linear.x;
 					twist.x = message.twist.linear.y;
 					twist.rotation = -message.twist.angular.z;
-
-					context?.clearRect(0, 0, canvasSize, canvasSize);
-					context?.beginPath();
-					drawArrow(
-						(twist.x / Number(settings.groups.General.MaxXValue.value)) * (canvasSize / 2),
-						(twist.y / Number(settings.groups.General.MaxYValue.value)) * (canvasSize / 2)
-					);
-					context?.stroke();
 				});
 			}
 
@@ -129,6 +118,16 @@
 		}
 	});
 
+	$effect(() => {
+		context?.clearRect(0, 0, canvasSize, canvasSize);
+		context?.beginPath();
+		drawArrow(
+			(twist.x / Number(settings.groups.General.MaxXValue.value)) * (canvasSize / 2),
+			(twist.y / Number(settings.groups.General.MaxYValue.value)) * (canvasSize / 2)
+		);
+		context?.stroke();
+	})
+
 	onMount(() => {
 		if (canvas) {
 			context = canvas.getContext('2d');
@@ -139,13 +138,74 @@
 			context?.translate(-canvasSize / 2, -canvasSize / 2);
 		}
 
+		
+			//genereate random numbers for testing
+			twist.x = (Math.random() - 0.5) * 4;
+			twist.y = (Math.random() - 0.5) * 4;
+			twist.rotation = (Math.random() - 0.5) * 4
+		
+
 		return () => {
 			if (twistTopic) twistTopic.unsubscribe();
 		};
 	});
+
+	const RADIUS = 45;
 </script>
 
-<div class="flex w-fit flex-col items-center justify-center gap-2">
+<div class="flex flex-col w-full h-full"
+		style:--transition-length="100ms">
+	<div class="flex-1">
+		<div class="aspect-square max-h-full max-w-full p-[8%] relative">
+			<svg fill="none" class=" z-2 absolute top-0 left-0" stroke-width="2" viewBox="0 0 100 100">
+				<circle
+					r={RADIUS}
+					stroke="#dc26263f"
+					style:--stroke-percent={100 / 2}
+					style:--circumference={2 * Math.PI * RADIUS}
+				/>
+				<circle
+					r={RADIUS}
+					stroke="#dc2626"
+					style:transform="rotate(-90deg) scale(1, -1)"
+					style:--stroke-percent={-(
+						(twist.rotation / Number(settings.groups.General.MaxZValue.value)) *
+						25
+					)}
+					style:--circumference={2 * Math.PI * RADIUS}
+				/>
+				<circle
+					r={RADIUS}
+					stroke="#dc2626"
+					style:transform="rotate(-90deg)"
+					style:--stroke-percent={(twist.rotation / Number(settings.groups.General.MaxZValue.value)) *
+						25}
+					style:--circumference={2 * Math.PI * RADIUS}
+				/>
+			</svg>
+			<div class=" rounded-full relative w-full h-full border">
+				<span class="absolute border border-l-0 border-r left-1/2 top-0 h-[5%] translate-x-[-1px]"></span>
+				<p class="absolute left-[calc(50%-0.25em)] top-0 mt-[5%] translate-x-[-1px]">{settings.groups.General.MaxYValue.value}</p>
+				<span class="absolute border border-l-0 border-r left-1/2 bottom-0 h-[5%] translate-x-[-1px]"></span>
+				<p class="absolute left-[calc(50%-0.25em)] bottom-0 mb-[5%] translate-x-[-1px]">-{settings.groups.General.MaxYValue.value}</p>
+				<span class="absolute border border-b-0 border-t top-1/2 w-[5%] translate-x-[-1px]"></span>
+				<p class="absolute top-[calc(50%-0.6em)] left-0 ml-[6%] translate-x-[-1px]">-{settings.groups.General.MaxXValue.value}</p>
+				<span class="absolute border border-b-0 border-t top-1/2 right-0 w-[5%] translate-x-[-1px]"></span>
+				<p class="absolute top-[calc(50%-0.6em)] right-0 mr-[6%] translate-x-[-1px]">{settings.groups.General.MaxXValue.value}</p>
+				<canvas
+					bind:this={canvas}
+					width={canvasSize}
+					height={canvasSize}
+					class="absolute left-0 top-0 h-full w-full"
+				></canvas>					
+			</div>
+		</div>
+	</div>
+	<p class="mx-auto">Angular -> z: {Math.round(twist.rotation * 100) / 100}</p>
+	<p class="mx-auto">Linear -> x: {Math.round(twist.x * 100) / 100}, y: {Math.round(twist.y * 100) / 100}</p>
+</div>
+
+<!-- <div class="flex w-fit flex-col items-center justify-center gap-2">
 	<div
 		class="relative w-fit overflow-hidden rounded-[50%]"
 		style:--circle-size="100px"
@@ -208,7 +268,7 @@
 		</div>
 	</div>
 </div>
-
+ -->
 <style>
 	canvas {
 		z-index: 1;
@@ -217,7 +277,6 @@
 	circle {
 		cx: 50;
 		cy: 50;
-		stroke-width: 4;
 		stroke-linecap: round;
 		stroke-linejoin: round;
 
