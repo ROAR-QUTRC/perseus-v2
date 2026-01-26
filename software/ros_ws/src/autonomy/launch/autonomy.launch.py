@@ -57,7 +57,7 @@ def generate_launch_description():
 
     declare_ekf_config_file_cmd = DeclareLaunchArgument(
         "ekf_config_file",
-        default_value=os.path.join(autonomy_dir, "config", "ekf_params.yaml"),
+        default_value=os.path.join(autonomy_dir, "config", "ekf_config.yaml"),
         description="Full path to the ROS2 parameters file for EKF",
     )
 
