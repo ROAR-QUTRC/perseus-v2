@@ -24,134 +24,134 @@ let
         }
       );
 
-    # --- GUI patches ---
-    fields2cover =
-      let
-        nlohmann_json = final.nlohmann_json.overrideAttrs ({
-          src = final.fetchFromGitHub {
-            owner = "nlohmann";
-            repo = "json";
-            rev = "v3.10.5";
-            sha256 = "sha256-DTsZrdB9GcaNkx7ZKxcgCA3A9ShM5icSF0xyGguJNbk=";
-          };
-          doCheck = false;
-        });
-        tinyxml-2 = final.tinyxml-2.overrideAttrs ({
-          src = final.fetchFromGitHub {
-            owner = "leethomason";
-            repo = "tinyxml2";
-            rev = "c2d30872e20621955ca7feb9168bad996d591a19";
-            sha256 = "sha256-Gn4d6v7p60XRam2wclaSFAiAxmNgKAKPxRCEmcMtJIE=";
-          };
-        });
-        steering-functions = final.stdenv.mkDerivation ({
-          name = "steering-functions";
-          src = final.fetchFromGitHub {
-            owner = "Fields2Cover";
-            repo = "steering_functions";
-            rev = "33fc010017efa1ef2c8a2d4779fcda94b4b30d20";
-            sha256 = "sha256-IaqvFWQFgU6yGOrvCrz7c7TEH4+vFf34iZ5qBZ1yMUw=";
-          };
-          nativeBuildInputs = with final; [
-            cmake
-          ];
-          propagatedBuildInputs = with final; [
-            eigen
-          ];
+    # # --- GUI patches ---
+    # fields2cover =
+    #   let
+    #     nlohmann_json = final.nlohmann_json.overrideAttrs ({
+    #       src = final.fetchFromGitHub {
+    #         owner = "nlohmann";
+    #         repo = "json";
+    #         rev = "v3.10.5";
+    #         sha256 = "sha256-DTsZrdB9GcaNkx7ZKxcgCA3A9ShM5icSF0xyGguJNbk=";
+    #       };
+    #       doCheck = false;
+    #     });
+    #     tinyxml-2 = final.tinyxml-2.overrideAttrs ({
+    #       src = final.fetchFromGitHub {
+    #         owner = "leethomason";
+    #         repo = "tinyxml2";
+    #         rev = "c2d30872e20621955ca7feb9168bad996d591a19";
+    #         sha256 = "sha256-Gn4d6v7p60XRam2wclaSFAiAxmNgKAKPxRCEmcMtJIE=";
+    #       };
+    #     });
+    #     steering-functions = final.stdenv.mkDerivation ({
+    #       name = "steering-functions";
+    #       src = final.fetchFromGitHub {
+    #         owner = "Fields2Cover";
+    #         repo = "steering_functions";
+    #         rev = "33fc010017efa1ef2c8a2d4779fcda94b4b30d20";
+    #         sha256 = "sha256-IaqvFWQFgU6yGOrvCrz7c7TEH4+vFf34iZ5qBZ1yMUw=";
+    #       };
+    #       nativeBuildInputs = with final; [
+    #         cmake
+    #       ];
+    #       propagatedBuildInputs = with final; [
+    #         eigen
+    #       ];
 
-          patches = [
-            ./patches/fields2cover/steering-functions.patch
-          ];
-        });
-        spline = final.stdenv.mkDerivation {
-          name = "spline";
-          # no version!
+    #       patches = [
+    #         ./patches/fields2cover/steering-functions.patch
+    #       ];
+    #     });
+    #     spline = final.stdenv.mkDerivation {
+    #       name = "spline";
+    #       # no version!
 
-          src = final.fetchFromGitHub {
-            owner = "Fields2Cover";
-            repo = "spline";
-            rev = "1b5d4bad29082997076b264de84ca6d46c2ae6ab";
-            sha256 = "sha256-nWaanoqOVzDlxbfWFjT4j6ZQtp76E9tVbNVvx1R2dlM=";
-          };
+    #       src = final.fetchFromGitHub {
+    #         owner = "Fields2Cover";
+    #         repo = "spline";
+    #         rev = "1b5d4bad29082997076b264de84ca6d46c2ae6ab";
+    #         sha256 = "sha256-nWaanoqOVzDlxbfWFjT4j6ZQtp76E9tVbNVvx1R2dlM=";
+    #       };
 
-          nativeBuildInputs = with final; [
-            cmake
-          ];
+    #       nativeBuildInputs = with final; [
+    #         cmake
+    #       ];
 
-          patches = [
-            ./patches/fields2cover/spline.patch
-          ];
+    #       patches = [
+    #         ./patches/fields2cover/spline.patch
+    #       ];
 
-          meta = {
-            description = "c++ cubic spline library";
-            license = with final.lib.licenses; [ gpl2 ];
-          };
-        };
-        matplotlib-cpp = final.stdenv.mkDerivation {
-          name = "matplotlib-cpp";
-          # also no version!
-          src = final.fetchFromGitHub {
-            owner = "Fields2Cover";
-            repo = "matplotlib-cpp";
-            rev = "75c15d0c907a4b68bca5ef97032302bd14ccab8e";
-            sha256 = "sha256-6rUm40oJaA8V9z1lj3HIC/TdZAp9GGEUPC0OvdESOMI=";
-          };
+    #       meta = {
+    #         description = "c++ cubic spline library";
+    #         license = with final.lib.licenses; [ gpl2 ];
+    #       };
+    #     };
+    #     matplotlib-cpp = final.stdenv.mkDerivation {
+    #       name = "matplotlib-cpp";
+    #       # also no version!
+    #       src = final.fetchFromGitHub {
+    #         owner = "Fields2Cover";
+    #         repo = "matplotlib-cpp";
+    #         rev = "75c15d0c907a4b68bca5ef97032302bd14ccab8e";
+    #         sha256 = "sha256-6rUm40oJaA8V9z1lj3HIC/TdZAp9GGEUPC0OvdESOMI=";
+    #       };
 
-          nativeBuildInputs = with final; [
-            cmake
-          ];
-          propagatedBuildInputs = with final; [
-            python3
-            python3Packages.matplotlib
-          ];
+    #       nativeBuildInputs = with final; [
+    #         cmake
+    #       ];
+    #       propagatedBuildInputs = with final; [
+    #         python3
+    #         python3Packages.matplotlib
+    #       ];
 
-          patches = [
-            ./patches/fields2cover/matplotlib-cpp.patch
-          ];
-        };
-      in
-      rosPrev.fields2cover.overrideAttrs (
-        {
-          patches ? [ ],
-          postPatch ? "",
-          ...
-        }:
-        {
-          version = "1.2.1";
-          src = final.fetchFromGitHub {
-            owner = "ros2-gbp";
-            repo = "fields2cover-release";
-            rev = "upstream/1.2.1";
-            sha256 = "sha256-g8LitJGD3iceBB2j10jdcNQWc3qE3JoSKe6oYsDR/CU=";
-          };
-          propagatedBuildInputs =
-            with rosFinal;
-            with final;
-            [
-              boost
-              eigen
-              gdal
-              geos
-              git
-              gtest
-              python3
-              python3Packages.tkinter
-              swig
-              tbb_2021_11
-              nlohmann_json
-              tinyxml-2
-              steering-functions
-              spline
-              matplotlib-cpp
-            ];
-          buildInputs = with final; [ or-tools ];
-          patches = patches ++ [ ./patches/fields2cover/fields2cover.patch ];
-          postPatch = ''
-            ${postPatch}
-            find . -type f -exec sed -i -e "s,gdal/,,g" {} \;
-          '';
-        }
-      );
+    #       patches = [
+    #         ./patches/fields2cover/matplotlib-cpp.patch
+    #       ];
+    #     };
+    #   in
+    #   rosPrev.fields2cover.overrideAttrs (
+    #     {
+    #       patches ? [ ],
+    #       postPatch ? "",
+    #       ...
+    #     }:
+    #     {
+    #       version = "1.2.1";
+    #       src = final.fetchFromGitHub {
+    #         owner = "ros2-gbp";
+    #         repo = "fields2cover-release";
+    #         rev = "upstream/1.2.1";
+    #         sha256 = "sha256-g8LitJGD3iceBB2j10jdcNQWc3qE3JoSKe6oYsDR/CU=";
+    #       };
+    #       propagatedBuildInputs =
+    #         with rosFinal;
+    #         with final;
+    #         [
+    #           boost
+    #           eigen
+    #           gdal
+    #           geos
+    #           git
+    #           gtest
+    #           python3
+    #           python3Packages.tkinter
+    #           swig
+    #           tbb_2021_11
+    #           nlohmann_json
+    #           tinyxml-2
+    #           steering-functions
+    #           spline
+    #           matplotlib-cpp
+    #         ];
+    #       buildInputs = with final; [ or-tools ];
+    #       patches = patches ++ [ ./patches/fields2cover/fields2cover.patch ];
+    #       postPatch = ''
+    #         ${postPatch}
+    #         find . -type f -exec sed -i -e "s,gdal/,,g" {} \;
+    #       '';
+    #     }
+    #   );
 
     opennav-coverage = rosPrev.opennav-coverage.overrideAttrs (
       {
@@ -209,6 +209,47 @@ let
     nav2-mppi-controller = rosPrev.nav2-mppi-controller.override {
       xtensor = final.ros.xtensor-stable;
     };
+
+    gz-physics-vendor = rosPrev.gz-physics-vendor.overrideAttrs ({
+      patches ? [ ],
+      ...
+    }:
+    {
+      patches = patches ++ [ ./patches/gz-physics-vendor/version.patch ];
+    });
+    
+    gz-rendering-vendor = rosPrev.gz-rendering-vendor.overrideAttrs ({
+      patches ? [ ],
+      ...
+    }:
+    {
+      patches = patches ++ [ ./patches/gz-rendering-vendor/version.patch ];
+    });
+
+    gz-msgs-vendor = rosPrev.gz-msgs-vendor.override {
+      protobuf = final.oldPkgs.protobuf_28;
+      python3Packages = prev.python3Packages // {
+        protobuf = prev.python3Packages.protobuf.override {
+          protobuf = final.oldPkgs.protobuf_28;
+        };
+      };
+    };
+
+    gz-transport-vendor = rosPrev.gz-transport-vendor.overrideAttrs ({
+      patches ? [ ],
+      ...
+    }:
+    {
+      patches = patches ++ [ ./patches/gz-transport-vendor/version.patch ];
+    });
+
+    gz-sim-vendor = rosPrev.gz-sim-vendor.overrideAttrs ({
+      patches ? [ ],
+      ...
+    }:
+    {
+      patches = patches ++ [ ./patches/gz-sim-vendor/version.patch ];
+    });
   };
 in
 {
@@ -247,11 +288,12 @@ in
       )
 
       ).override
-        ({
+        {
           plugins = [
             "rtp"
             "webrtc"
           ];
-        });
+        };
   };
+  pcl = final.oldPkgs.pcl;
 }

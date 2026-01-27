@@ -103,8 +103,6 @@
               # and add pkgs.unstable access
               unstable = pkgs-unstable;
               oldPkgs = pkgs-old;
-              pcl = pkgs-old.pcl;
-              freeimage = pkgs-old.freeimage;
             })
           ];
           config.allowUnfreePredicate =

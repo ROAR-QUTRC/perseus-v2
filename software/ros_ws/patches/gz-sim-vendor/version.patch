@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6f117ad..5349936 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -4,7 +4,7 @@ project(gz_sim_vendor)
+ 
+ # Project-specific settings
+ set(LIB_VER_MAJOR 8)
+-set(LIB_VER_MINOR 10)
++set(LIB_VER_MINOR 9)
+ set(LIB_VER_PATCH 0)
+ set(LIB_VER_SUFFIX "")
+ 

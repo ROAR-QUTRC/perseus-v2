@@ -2,7 +2,8 @@
 final: prev: {
   groot2 = final.callPackage ./groot2 { };
   livox-sdk2 = final.callPackage ./livox-sdk2 { };
-  python312 = prev.python312.override ({
+  freeimage = final.callPackage ./freeimage { };
+  python312 = prev.python312.override {
     packageOverrides = pyFinal: pyPrev: {
       pyside2 = pyPrev.pyside2.overrideAttrs (
         {
@@ -15,5 +16,5 @@ final: prev: {
       );
       pyside6 = { };
     };
-  });
+  };
 }
