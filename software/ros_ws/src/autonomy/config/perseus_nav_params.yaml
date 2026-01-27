@@ -160,7 +160,7 @@ local_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /livox/scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -189,7 +189,7 @@ global_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /livox/scan
           max_obstacle_height: 2.0
           clearing: true
           marking: true
@@ -329,7 +329,7 @@ collision_monitor:
     scan:
       source_timeout: 0.5 # Increased from 0.1 to reduce timeout issues
       type: "scan"
-      topic: "/scan"
+      topic: "/livox/scan"
       enabled: true
 docking_server:
   ros__parameters:
