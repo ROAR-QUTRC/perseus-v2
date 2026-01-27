@@ -8,6 +8,7 @@ from launch.actions import (
     GroupAction,
     SetEnvironmentVariable,
     EmitEvent,
+    ExecuteProcess,
     LogInfo,
     RegisterEventHandler,
     TimerAction,
@@ -195,62 +196,30 @@ def generate_launch_description():
         ],
     )
 
-    # SLAM Toolbox node (as LifecycleNode)
-    # CUDA-enabled slam_toolbox from DingoOz/slam_toolbox fork with null pointer fix
-    slam_toolbox = LifecycleNode(
-        package="slam_toolbox",
-        executable="async_slam_toolbox_node",
-        name="slam_toolbox",
-        output="screen",
-        namespace="",
-        parameters=[slam_params_file, {"use_sim_time": use_sim_time}],
-        remappings=[
-            ("imu", "/imu/data"),
-        ],
-    )
+    # SLAM Toolbox - TEMPORARILY DISABLED due to CUDA crash during lifecycle configure
+    # The Nix-built slam_toolbox crashes with SIGSEGV during lifecycle configuration.
+    # TODO: Fix the CUDA build or use a non-CUDA version
+    # slam_toolbox = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         PathJoinSubstitution(
+    #             [FindPackageShare("slam_toolbox"), "launch", "online_async_launch.py"]
+    #         )
+    #     ),
+    #     launch_arguments={
+    #         "use_sim_time": use_sim_time,
+    #         "slam_params_file": slam_params_file,
+    #         "autostart": "true",
+    #         "use_lifecycle_manager": "false",
+    #     }.items(),
+    # )
 
-    # SLAM Toolbox lifecycle management
-    # Wait for node process to start, then configure after a brief delay
-    # This fixes the race condition where configure was sent before node was ready
-    configure_slam_event = RegisterEventHandler(
-        OnProcessStart(
-            target_action=slam_toolbox,
-            on_start=[
-                TimerAction(
-                    period=2.0,  # Wait for node to initialize before configuring
-                    actions=[
-                        LogInfo(
-                            msg="[LifecycleLaunch] SLAM Toolbox node is configuring."
-                        ),
-                        EmitEvent(
-                            event=ChangeState(
-                                lifecycle_node_matcher=matches_action(slam_toolbox),
-                                transition_id=Transition.TRANSITION_CONFIGURE,
-                            )
-                        ),
-                    ],
-                ),
-            ],
-        ),
-        condition=IfCondition(autostart),
-    )
-
-    activate_slam_event = RegisterEventHandler(
-        OnStateTransition(
-            target_lifecycle_node=slam_toolbox,
-            start_state="configuring",
-            goal_state="inactive",
-            entities=[
-                LogInfo(msg="[LifecycleLaunch] SLAM Toolbox node is activating."),
-                EmitEvent(
-                    event=ChangeState(
-                        lifecycle_node_matcher=matches_action(slam_toolbox),
-                        transition_id=Transition.TRANSITION_ACTIVATE,
-                    )
-                ),
-            ],
-        ),
-        condition=IfCondition(autostart),
+    # Static map->odom transform as temporary workaround until SLAM is fixed
+    # This allows Nav2 to function for testing without actual SLAM mapping
+    static_map_odom_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_map_odom_publisher",
+        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
     )
 
     # Nav2 remappings
@@ -497,9 +466,7 @@ def generate_launch_description():
         perseus_lite_launch,
         cmd_vel_mux_launch,
         ekf_node,
-        slam_toolbox,
-        configure_slam_event,
-        activate_slam_event,
+        static_map_odom_tf,  # Temporary workaround - replace with slam_toolbox when CUDA fixed
         load_nav2_nodes,
         load_composable_nav2_nodes,
     ]

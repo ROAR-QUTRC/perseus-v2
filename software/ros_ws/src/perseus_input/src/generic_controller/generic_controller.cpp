@@ -21,7 +21,7 @@ GenericController::GenericController(const rclcpp::NodeOptions& options)
         this->create_subscription<sensor_msgs::msg::Joy>("joy", 10, std::bind(&GenericController::_joy_callback, this, std::placeholders::_1));
     _twist_publisher = this->create_publisher<geometry_msgs::msg::TwistStamped>("joy_vel", 10);
     _actuator_publisher = this->create_publisher<actuator_msgs::msg::Actuators>("bucket_actuators", 10);
-    if (this->declare_parameter("timeout_enable", "true") == "true")
+    if (this->declare_parameter("timeout_enable", true))
     {
         _joy_timeout_timer = this->create_wall_timer(JOY_TIMEOUT, std::bind(&GenericController::_joy_timeout_callback, this));
     }
