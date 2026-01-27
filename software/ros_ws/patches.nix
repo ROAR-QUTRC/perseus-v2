@@ -210,21 +210,25 @@ let
       xtensor = final.ros.xtensor-stable;
     };
 
-    gz-physics-vendor = rosPrev.gz-physics-vendor.overrideAttrs ({
-      patches ? [ ],
-      ...
-    }:
-    {
-      patches = patches ++ [ ./patches/gz-physics-vendor/version.patch ];
-    });
-    
-    gz-rendering-vendor = rosPrev.gz-rendering-vendor.overrideAttrs ({
-      patches ? [ ],
-      ...
-    }:
-    {
-      patches = patches ++ [ ./patches/gz-rendering-vendor/version.patch ];
-    });
+    gz-physics-vendor = rosPrev.gz-physics-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-physics-vendor/version.patch ];
+      }
+    );
+
+    gz-rendering-vendor = rosPrev.gz-rendering-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-rendering-vendor/version.patch ];
+      }
+    );
 
     gz-msgs-vendor = rosPrev.gz-msgs-vendor.override {
       protobuf = final.oldPkgs.protobuf_28;
@@ -235,21 +239,25 @@ let
       };
     };
 
-    gz-transport-vendor = rosPrev.gz-transport-vendor.overrideAttrs ({
-      patches ? [ ],
-      ...
-    }:
-    {
-      patches = patches ++ [ ./patches/gz-transport-vendor/version.patch ];
-    });
+    gz-transport-vendor = rosPrev.gz-transport-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-transport-vendor/version.patch ];
+      }
+    );
 
-    gz-sim-vendor = rosPrev.gz-sim-vendor.overrideAttrs ({
-      patches ? [ ],
-      ...
-    }:
-    {
-      patches = patches ++ [ ./patches/gz-sim-vendor/version.patch ];
-    });
+    gz-sim-vendor = rosPrev.gz-sim-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-sim-vendor/version.patch ];
+      }
+    );
   };
 in
 {

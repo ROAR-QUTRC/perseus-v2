@@ -1,4 +1,13 @@
-{ stdenv, fetchFromGitHub, libjpeg, libpng, libtiff, git, cmake, ... }:
+{
+  stdenv,
+  fetchFromGitHub,
+  libjpeg,
+  libpng,
+  libtiff,
+  git,
+  cmake,
+  ...
+}:
 stdenv.mkDerivation {
   name = "FreeImageRe";
   version = "0.3";
@@ -10,7 +19,12 @@ stdenv.mkDerivation {
   };
   buildtype = "cmake";
   buildInputs = [ ];
-  propagatedBuildInputs = [ libjpeg libpng libtiff git ];
+  propagatedBuildInputs = [
+    libjpeg
+    libpng
+    libtiff
+    git
+  ];
   nativeBuildInputs = [ cmake ];
   cmakeFlags = [
     "-DEXTERNALPROJECT_UNPACK_IN_BINARY_DIR=ON"
