@@ -37,6 +37,7 @@ pkgs.mkShell {
             ament-lint-common
             ament-pep257
             backward-ros
+            behaviortree-cpp
             boost
             builtin-interfaces
             controller-manager
