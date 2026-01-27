@@ -108,13 +108,37 @@
             pkg:
             builtins.elem (pkgs.lib.getName pkg) [
               "drawio"
+              # CUDA packages
+              "cuda_cudart"
+              "cuda_nvcc"
+              "cuda_cccl"
+              "libcublas"
+              "libcufft"
+              "libcurand"
+              "libcusolver"
+              "libcusparse"
+              "libnpp"
+              "cuda_nvrtc"
+              "cuda_nvml_dev"
+              "cuda_profiler_api"
+              "cudatoolkit"
+              "libnvjitlink"
+              "cuda_cuobjdump"
+              "cuda_gdb"
+              "cuda_cuxxfilt"
+              "cuda_nvdisasm"
+              "cuda_nvprune"
+              "cuda_sanitizer_api"
+              "cuda_nvtx"
+              # ONNX Runtime CUDA dependencies
+              "cudnn"
+              "cudnn-frontend"
             ];
         };
         # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
         pkgs-unstable = import nixpkgs-unstable {
           inherit system;
           overlays = [
-            (import ./docs/nix/overlay.nix)
           ];
           config.allowUnfree = true; # needed for draw.io for the docs
         };
@@ -130,6 +154,7 @@
             nodejs_23
             yarn
             nixgl-script
+            nixcuda-script
             ncurses
             glibcLocales
             yaml-cpp
@@ -169,7 +194,26 @@
         };
         # Packages which should be available only in the dev shell
         devShellPkgs = {
-          inherit (pkgs) man-pages man-pages-posix stdmanpages;
+          inherit (pkgs)
+            man-pages
+            man-pages-posix
+            stdmanpages
+            nix-gl-host
+            ;
+          inherit (pkgs.cudaPackages)
+            cuda_nvcc
+            cuda_cudart
+            cuda_cccl
+            libcublas
+            libcufft
+            libcurand
+            libcusolver
+            libcusparse
+            cuda_nvrtc
+            cudnn
+            ;
+          # ONNX Runtime with CUDA support
+          onnxruntime-cuda = pkgs.onnxruntime.override { cudaSupport = true; };
         };
         # Packages needed to run the simulation
         # Note: May not be needed, most needed packages should
@@ -201,6 +245,12 @@
               export RCUTILS_COLORIZED_OUTPUT=1
               # fix locale issues
               export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+              # CUDA environment setup
+              export CUDA_PATH="${pkgs.cudaPackages.cuda_nvcc}"
+              export CUDA_HOME="${pkgs.cudaPackages.cuda_nvcc}"
+              export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc}/bin"
+              # ONNX Runtime with CUDA support
+              export ORT_LIB_LOCATION="${devShellPkgs.onnxruntime-cuda}/lib"
             '';
           };
 
@@ -337,17 +387,11 @@
       "https://ros.cachix.org"
     ];
 
-    # note that this is normally a VERY BAD IDEA but it may be needed so the docs can have internet access,
-    # with certain configurations. Currently, everything is configured to work offline with cached files in the git repo.
-
-    # Unless otherwise configured, sphinx-immaterial will pull fonts from Google's CDN, which obviously requires internet access.
-    # The Roboto (and RobotoMono) fonts have been downloaded locally and are used instead.
-    # These should never change, so it really doesn't matter.
-
-    # intersphinx also normally expects to be able to download inventory (.inv) files from the target projects,
-    # but it has also been configured to use local copies. Updating these files is done with `nix run .#docs.fetch-inventories`,
-    # and is run automatically from the CI pipeline (it makes a commit with the update).
-
+    # Note that this is normally a VERY BAD IDEA but is needed to make building the docs easier.
+    # Several steps in the build process require either internet access
+    # or annoying workarounds, and internet access removes a maintenance burden.
     # sandbox = "relaxed";
+    # This setting is set during the Github Actions to allow the online docs to be built with internet access
+    # without having to have all members set themselves as 'trusted-users' in nix.conf
   };
 }
