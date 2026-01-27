@@ -5,13 +5,13 @@
 namespace space_resources
 {
 
-class CentrifugeDriver : public rclcpp::Node
-{
-public:
-  explicit CentrifugeDriver();
+    class CentrifugeDriver : public rclcpp::Node
+    {
+    public:
+        explicit CentrifugeDriver();
 
-private:
-  // timers, publishers, subscribers, services etc (do later)
-};
+    private:
+        // timers, publishers, subscribers, services etc (do later)
+    };
 
 }

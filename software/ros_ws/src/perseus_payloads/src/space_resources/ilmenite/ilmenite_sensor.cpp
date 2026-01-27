@@ -4,5 +4,5 @@ IlmeniteSensor::IlmeniteSensor() {}
 
 void IlmeniteSensor::update()
 {
-  // logic
+    // logic
 }

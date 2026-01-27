@@ -4,5 +4,5 @@ IlmeniteMechanics::IlmeniteMechanics() {}
 
 void IlmeniteMechanics::update()
 {
-  // logic here
+    // logic here
 }

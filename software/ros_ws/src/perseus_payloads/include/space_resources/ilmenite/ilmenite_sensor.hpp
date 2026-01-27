@@ -5,13 +5,13 @@
 namespace space_resources
 {
 
-class IlmeniteSensor : public rclcpp::Node
-{
-public:
-  explicit IlmeniteSensor();
+    class IlmeniteSensor : public rclcpp::Node
+    {
+    public:
+        explicit IlmeniteSensor();
 
-private:
-  //spectral sensor interface and led control
-};
+    private:
+        // spectral sensor interface and led control
+    };
 
 }

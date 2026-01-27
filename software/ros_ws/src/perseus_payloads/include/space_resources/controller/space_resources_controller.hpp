@@ -5,13 +5,13 @@
 namespace space_resources
 {
 
-class SpaceResourcesController : public rclcpp::Node
-{
-public:
-  explicit SpaceResourcesController();
+    class SpaceResourcesController : public rclcpp::Node
+    {
+    public:
+        explicit SpaceResourcesController();
 
-private:
-  // logic here
-};
+    private:
+        // logic here
+    };
 
 }
