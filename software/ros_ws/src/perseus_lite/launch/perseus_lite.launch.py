@@ -11,6 +11,7 @@ from launch.substitutions import (
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -145,11 +146,25 @@ def generate_launch_description():
         }.items(),
     )
 
+    # twist_mux to arbitrate between joystick and navigation cmd_vel sources
+    twist_mux_config = PathJoinSubstitution(
+        [FindPackageShare("autonomy"), "config", "twist_mux.yaml"]
+    )
+    twist_mux_node = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        name="twist_mux",
+        output="screen",
+        parameters=[twist_mux_config, {"use_sim_time": use_sim_time}],
+        remappings=[("/cmd_vel_out", "/cmd_vel")],
+    )
+
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
         rplidar_launch,
         i2c_imu_launch,
+        twist_mux_node,
     ]
 
     return LaunchDescription(arguments + launch_files)

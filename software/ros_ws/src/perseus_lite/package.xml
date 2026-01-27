@@ -29,6 +29,7 @@
 
   <!-- SLAM and navigation -->
   <exec_depend>autonomy</exec_depend>
+  <exec_depend>twist_mux</exec_depend>
   <exec_depend>slam_toolbox</exec_depend>
   <exec_depend>robot_localization</exec_depend>
   <exec_depend>navigation2</exec_depend>
