@@ -25,7 +25,7 @@ def generate_launch_description():
 
     declare_autostart_cmd = DeclareLaunchArgument(
         "autostart",
-        default_value="true",   
+        default_value="true",
         description="Automatically startup the slamtoolbox. "
         "Ignored when use_lifecycle_manager is true.",
     )
