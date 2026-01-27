@@ -35,6 +35,26 @@ nix run .#generic_controller -- type:=8bitdo
 nix run .#generic_controller -- type:=logitech wireless:=false
 ```
 
+### Terminal 3 - Visualize in rviz2 (on laptop)
+
+```bash
+ROS_DOMAIN_ID=42 rviz2
+```
+
+On non-NixOS systems, use:
+
+```bash
+ROS_DOMAIN_ID=42 nixgl rviz2
+```
+
+In rviz2:
+
+1. Set **Fixed Frame** to `odom` or `base_link`
+2. Add displays:
+   - **Add** → **By topic** → `/scan` → **LaserScan**
+   - **Add** → **By topic** → `/tf` → **TF**
+   - **Add** → **RobotModel** (uses `/robot_description`)
+
 ### Verify operation
 
 ```bash
