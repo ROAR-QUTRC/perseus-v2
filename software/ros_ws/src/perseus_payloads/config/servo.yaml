@@ -4,13 +4,11 @@ scale:
   linear: 0.4
   rotational: 0.8
   joint: 0.5
-
 # Frame configuration
 move_group_name: "arm"
 planning_frame: plate
 ee_frame_name: end_effector
 robot_link_command_frame: plate
-
 # Topics
 joint_command_in_topic: "~/delta_joint_cmds"
 cartesian_command_in_topic: "~/delta_twist_cmds"
@@ -19,38 +17,30 @@ command_out_type: "trajectory_msgs/JointTrajectory"
 joint_state_topic: "/joint_states"
 status_topic: "~/status"
 halt_all_joints_topic: "~/halt_all_joints"
-
 # Publishing configuration
-publish_period: 0.02  # 50Hz
+publish_period: 0.02 # 50Hz
 publish_joint_positions: true
 publish_joint_velocities: true
 publish_joint_accelerations: false
 publish_status: true
-
 # Timeout and stopping behavior
 incoming_command_timeout: 0.1
-num_outgoing_halt_msgs_to_publish: 4  
-
+num_outgoing_halt_msgs_to_publish: 4
 # Collision checking
 check_collisions: false
 collision_check_rate: 10.0
 self_collision_proximity_threshold: 0.02
 scene_collision_proximity_threshold: 0.05
-
 # Singularity handling
-lower_singularity_threshold: 30.0 
+lower_singularity_threshold: 30.0
 hard_stop_singularity_threshold: 60.0
 leaving_singularity_threshold_multiplier: 2.0
-
 # Joint limit margins
 joint_limit_margins: [0.1, 0.1, 0.1, 0.1, 0.1]
-
 # Smoothing
 smoothing_filter_plugin_name: "online_signal_smoothing::ButterworthFilterPlugin"
 low_pass_filter_coeff: 2.0
-
 # Planning scene monitor
 is_primary_planning_scene_monitor: true
-
 # Low latency mode
 low_latency_mode: true

@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, TimerAction, ExecuteProcess
+from launch.actions import DeclareLaunchArgument
 from launch.substitutions import (
     Command,
     FindExecutable,
@@ -200,7 +200,7 @@ def generate_launch_description():
         ],
     )
 
-    # 5. MoveIt Servo Node 
+    # 5. MoveIt Servo Node
     servo_node = Node(
         package="moveit_servo",
         executable="servo_node",
