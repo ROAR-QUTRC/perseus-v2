@@ -16,6 +16,7 @@
   ros2launch,
   rviz2,
   slam-toolbox,
+  twist-mux,
   xacro,
 }:
 buildRosPackage rec {
@@ -40,6 +41,7 @@ buildRosPackage rec {
     ros2launch
     rviz2
     slam-toolbox
+    twist-mux
     xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
