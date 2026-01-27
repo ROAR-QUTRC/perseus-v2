@@ -17,7 +17,7 @@ If you're curious as to what all this looks like in practice, check out the `sof
 
 :::{note}
 Under the hood, Nix's [`stdenv.mkDerivation`](https://nixos.org/manual/nixpkgs/stable/#sec-using-stdenv) automatically detects and uses CMake for these projects.
-More on that here: <project:nix.md>.
+More on that here: <project:/systems/nix.md>.
 :::
 
 ## Testing
