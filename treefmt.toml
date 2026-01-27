@@ -112,7 +112,7 @@ includes = [
     "*.yaml",
     "*.yml",
 ]
-options = ["--write", "--config", "/nix/store/naq2rrlgflpwlissfiklg5bi1y5axihb-prettierrc.json"]
+options = ["--write", "--config", "/nix/store/08dd0r4gskvj94nzfkppinw9z0393jnd-prettierrc.json"]
 
 [formatter.ruff-format]
 command = "ruff"
