@@ -54,12 +54,12 @@ ROS_DOMAIN_ID=42 ros2 topic echo /cmd_vel
 
 ## Launch Arguments
 
-| Argument | Default | Description |
-|----------|---------|-------------|
-| `use_sim_time` | `False` | Use simulation time |
-| `use_mock_hardware` | `False` | Use mock hardware instead of real servos |
-| `serial_port` | `/dev/ttyACM0` | ST3215 servo serial port |
-| `baud_rate` | `1000000` | Servo baud rate |
+| Argument            | Default        | Description                              |
+| ------------------- | -------------- | ---------------------------------------- |
+| `use_sim_time`      | `False`        | Use simulation time                      |
+| `use_mock_hardware` | `False`        | Use mock hardware instead of real servos |
+| `serial_port`       | `/dev/ttyACM0` | ST3215 servo serial port                 |
+| `baud_rate`         | `1000000`      | Servo baud rate                          |
 
 ## Architecture
 

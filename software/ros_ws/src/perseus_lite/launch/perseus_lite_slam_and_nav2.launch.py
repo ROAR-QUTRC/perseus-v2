@@ -7,27 +7,17 @@ from launch.actions import (
     IncludeLaunchDescription,
     GroupAction,
     SetEnvironmentVariable,
-    EmitEvent,
-    ExecuteProcess,
-    LogInfo,
-    RegisterEventHandler,
-    TimerAction,
 )
-from launch.event_handlers import OnProcessStart
 from launch.conditions import IfCondition
-from launch.events import matches_action
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
     PythonExpression,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node, LoadComposableNodes, SetParameter, LifecycleNode
+from launch_ros.actions import Node, LoadComposableNodes, SetParameter
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.descriptions import ComposableNode, ParameterFile
-from launch_ros.event_handlers import OnStateTransition
-from launch_ros.events.lifecycle import ChangeState
-from lifecycle_msgs.msg import Transition
 from nav2_common.launch import RewrittenYaml
 
 
@@ -44,7 +34,7 @@ def generate_launch_description():
     cmd_vel_topic = LaunchConfiguration("cmd_vel_topic")
 
     # SLAM arguments
-    slam_params_file = LaunchConfiguration("slam_params_file")
+    _slam_params_file = LaunchConfiguration("slam_params_file")  # noqa: F841
 
     # Robot localization arguments
     ekf_params_file = LaunchConfiguration("ekf_params_file")
