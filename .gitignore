@@ -359,3 +359,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Temporary Fast-LIO package
+/software/ros_ws/src/spark-fast-lio

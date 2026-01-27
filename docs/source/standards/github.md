@@ -46,7 +46,7 @@ These prefixes follow the [Conventional Branch](https://conventional-branch.gith
 
 #### Acceptable Examples of Branch names
 
-```
+```none
 feat/c1_lidar
 test/simulation-unit-tests
 docs/update-to-getting-started
@@ -54,7 +54,7 @@ docs/update-to-getting-started
 
 #### Incorrect Examples
 
-```
+```none
 john-feature-branch        // No prefix or description
 feat/stuff                 // Too vague
 bugfix/bug                 // Not descriptive
@@ -67,7 +67,7 @@ Professional commit messages are essential for maintaining a clear project histo
 
 It is possible to run 'git log --oneline' at the terminal to see a summary of the latest commits. For example:
 
-```
+```none
 0290680 docs(simulation): add tutorial on launching the simulation
 4c6fd68 Merge pull request #217 from ROAR-QUTRC/feat/livox-fixing
 b970635 chore(perseus_sensors): format and lint
@@ -91,7 +91,7 @@ By keeping the first line of the commit message under 72 characters it keeps thi
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification, which provides a lightweight convention for creating an explicit commit history. This format makes it easier to write automated tools on top of the commit history and enables automatic version bumping and changelog generation.
 
-```
+```none
 <type>(<scope>): <description>
 
 [optional body]
@@ -119,7 +119,7 @@ Use these standard commit types as defined by [Conventional Commits](https://www
 
 The scope should indicate the part of the codebase being changed:
 
-```
+```none
 - perseus_lite
 - perseus_sensors
 - perseus_nav
@@ -142,7 +142,7 @@ The scope should indicate the part of the codebase being changed:
 
 Please note the use of a line to separate the initial short summary from the body
 
-```
+```none
 feat(perseus_sensors): add M2M2 lidar support
 
 - corrected the number of points published to /scan
@@ -152,7 +152,7 @@ feat(perseus_sensors): add M2M2 lidar support
 
 Other examples:
 
-```
+```none
 fix(perseus_control): resolve motor timeout issue
 docs(perseus_nav): update obstacle avoidance documentation
 refactor(web-ui): simplify dashboard component structure
@@ -161,7 +161,7 @@ test(perseus_lite): add unit tests for CAN communication
 
 #### Examples of Poor Commit Messages to Avoid
 
-```
+```none
 added stuff                    // Completely uninformative
 late night coding              // Unprofessional and uninformative
 fix                            // Missing type, scope, and description
@@ -192,7 +192,7 @@ Use the commit body to add relevant detail if someone needed to learn more. Best
 
 #### Example with Body
 
-```
+```none
 feat(web-ui): add user authentication system
 
 Implemented JWT-based authentication with refresh token support.
@@ -212,13 +212,13 @@ Relates to #123
 
 Follow the same conventions as commit messages:
 
-```
+```none
 <type>(<scope>): <description>
 ```
 
 Examples:
 
-```
+```none
 feat(perseus_nav): add autonomous navigation mode
 fix(firmware): resolve CAN bus communication issues
 docs(setup): improve installation instructions
