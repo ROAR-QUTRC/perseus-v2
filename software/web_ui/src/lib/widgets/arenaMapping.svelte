@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
+
 	// Internal identifiers follow: American spelling + snake_case + minimal abbreviations.
 	const widget_name = 'Arena Map Editor';
 	const widget_description = 'Create the YAML file that Perseus will use to navigate';
@@ -9,7 +10,7 @@
 	const widget_settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
 	});
-	//KEY KAD!!
+
 	export {
 		widget_name as name,
 		widget_description as description,
@@ -19,9 +20,9 @@
 	};
 
 
-	function nextWaypointName(): string {
-		throw new Error('Function not implemented.');
-	}
+	// function nextWaypointName(): string {
+	// 	throw new Error('Function not implemented.');
+	// }
 </script>
 
 <script lang="ts">
@@ -30,10 +31,11 @@
 	//import Button from "$lib/components/ui/button/button.svelte";
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import { Square } from 'svelte-radix';
+	//import { response } from 'express';
 
 	type Mode = 'waypoint' | 'border' | 'origin';
 	type Direction = 'up' | 'down' | 'left' | 'right' | 'unselected';
-	type ros_string_message = { data: string };
+	type rosStringMessage = { data: string };
 
 	type WaypointRow = {
 		id: string;
@@ -71,14 +73,12 @@
 
 	let imageElement: HTMLImageElement | null = null;
 
-	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_5.png';
+	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_2.png';
 	const mapImageUrl = `http://localhost:8000/${mapImageId}`;
 
-	//Ros topics to listen to requests and reply 
+	//Ros topics to listen to requests and reply
 	const requestTopicName = '/map_editor/request';
 	const responseTopicName = '/map_editor/response';
-
-	const defaultRequestTimeoutMilliseconds = 6000;
 
 	// Setting the hue saturation and value thresholds for the image extraction - can be changed to adjust extraction results
 	const defaultHueTolerance = 10;
@@ -93,14 +93,14 @@
 	let currentClickPosition = $state<{ x: number; y: number } | null>(null);
 	let centroid = $state<[number, number] | null>(null);
 	let sampleImageHexadecimalColor = $state<string>('');
-	let svg_view_box = $state('0 0 1 1');
+	let svgViewBox = $state('0 0 1 1');
 
 	// stored waypoints
 	let waypoints = $state<WaypointRow[]>([]);
-	let waypoint_toggle = $state(0);
+	let waypointToggle = $state(0);
 	// 0 -> selecting waypoint
 	// 1 -> selecting arrow
-	let last_id = $state('');
+	let lastID = $state('');
 
 	//stored origin
 	let origins = $state<OriginRow[]>([]);
@@ -108,11 +108,11 @@
 	//stored arrow
 	let arrows = $state<ArrowRow[]>([]);
 
-	let border_contour = $state<number[][]>([]);
+	let borderContour = $state<number[][]>([]);
 
 	// ROS request/response plumbing
-	let requestTopic: ROSLIB.Topic<ros_string_message> | null = null;
-	let responseTopic: ROSLIB.Topic<ros_string_message> | null = null;
+	let requestTopic: ROSLIB.Topic<rosStringMessage> | null = null;
+	let responseTopic: ROSLIB.Topic<rosStringMessage> | null = null;
 
 	//scale
 	let scale = $state(1);
@@ -124,17 +124,80 @@
 	let x_origin = $state(0);
 	let y_origin = $state(0);
 
+	$effect(() => {
+		const ros_connection = getRosConnection();
+		if (ros_connection) {
+			requestTopic = new ROSLIB.Topic({
+				ros: ros_connection,
+				name: requestTopicName,
+				messageType: 'std_msgs/msg/String'
+			});
+			responseTopic = new ROSLIB.Topic({
+				ros: ros_connection,
+				name: responseTopicName,
+				messageType: 'std_msgs/msg/String'
+			});
+			responseTopic.subscribe(onResponseMessage);
+		}
+		else {
+			responseTopic?.unsubscribe();
+			requestTopic = null;
+			responseTopic = null;
+
+			// pendingRequests.forEach((pending_entry) => clearTimeout(pending_entry.timeoutHandle));
+			// pendingRequests.clear();
+		}
+	});
+
+	const onResponseMessage = (message: rosStringMessage) => {
+		let response: any;
+		response = JSON.parse(message.data);
+		if (mode === 'border') {
+			borderContour = Array.isArray(response.contour) ? response.contour : [];
+		}
+
+		sampleImageHexadecimalColor = String(response.sample_image_hex ?? '');
+		centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
+		contour = Array.isArray(response.contour) ? response.contour : [];
+
+		if (mode === 'waypoint') {
+			if (waypointToggle == 0) {
+				add_waypoint_from_response(response, contour);
+				statusMessage = centroid
+					? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+					: `Waypoint added ${sampleImageHexadecimalColor}`;
+				waypointToggle = 1;
+			}
+			else {
+				addAngleFromResponse(response);
+				statusMessage = centroid
+					? `Arrow added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+					: `Arrow added ${sampleImageHexadecimalColor}`;
+				waypointToggle = 0;
+				calculate_angle();
+			}
+		} else if (mode === 'origin') {
+			add_origin_from_response(response);
+			statusMessage = centroid
+				? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+				: `Origin added ${sampleImageHexadecimalColor}`;
+		} else {
+			statusMessage = `Border OK ${sampleImageHexadecimalColor}`;
+		}
+	}
+
+
 	function calculate_origin() {
 		let total_x = 0;
 		let total_y = 0;
-		origins.forEach((origin, o) => {
+		origins.forEach((origin) => {
 			total_x += origin.centroidX;
 			total_y += origin.centroidY;
 		});
 		x_origin = total_x / origins.length;
 		y_origin = total_y / origins.length;
 
-		waypoints.forEach((waypoint, w) => {
+		waypoints.forEach((waypoint) => {
 			switch(positive_x_direction) {
 				case "left":
 					waypoint.relativeX = x_origin - waypoint.centroidX;
@@ -165,73 +228,55 @@
 	}
 
 	function calculate_angle() {
-		console.log("hello1");
 		waypoints.forEach((waypoint, w) => {
-			arrows.forEach((arrow, a) => {
-				if (waypoint.name.slice(2) === arrow.name.slice(2)) {
+			const delta_x = waypoint.centroidX - arrows[w].centroidX;
+			const delta_y = waypoint.centroidY - arrows[w].centroidY;
 
-					const delta_x = waypoint.centroidX - arrow.centroidX;
-					const delta_y = waypoint.centroidY - arrow.centroidY;
-					
-					console.log(delta_x);
-					console.log(delta_y);
-					console.log(waypoint.yaw);
-				
-					if (delta_x == 0) {
-						if (waypoint.centroidY <= arrow.centroidY) {
-							waypoint.yaw = Math.PI;
-						}
-						else if(waypoint.centroidY >= arrow.centroidY){
-							waypoint.yaw = 0;
-						}
-					}
-					else if (delta_y == 0) {
-						if (waypoint.centroidX >= arrow.centroidX){
-							waypoint.yaw = Math.PI/2;
-						}
-						else if(waypoint.centroidX <= arrow.centroidX){
-							waypoint.yaw = 3*Math.PI/2;
-						}
-					}
-					else {
-						if ((delta_x > 0) && (delta_y > 0)) {
-							waypoint.yaw = Math.atan(delta_x/delta_y);
-						}
-						else if((delta_x < 0) && (delta_y > 0)) {
-							waypoint.yaw = 3*Math.PI/2 + Math.abs(Math.atan(delta_y/delta_x));
-						}
-						else if((delta_x < 0) && (delta_y < 0)){
-							waypoint.yaw = Math.PI + Math.abs(Math.atan(delta_x/delta_y));
-						}
-						else if((delta_x > 0) && (delta_y < 0)) {
-							waypoint.yaw = Math.PI/2 + Math.abs(Math.atan(delta_x/delta_y));
-						}
-					}
+			if (delta_x == 0) {
+				if (waypoint.centroidY <= arrows[w].centroidY) {
+					waypoint.yaw = Math.PI;
 				}
-			})
-		})
+				else if(waypoint.centroidY >= arrows[w].centroidY){
+					waypoint.yaw = 0;
+				}
+			}
+			else if (delta_y == 0) {
+				if (waypoint.centroidX >= arrows[w].centroidX){
+					waypoint.yaw = Math.PI/2;
+				}
+				else if(waypoint.centroidX <= arrows[w].centroidX){
+					waypoint.yaw = 3*Math.PI/2;
+				}
+			}
+			else {
+				if ((delta_x > 0) && (delta_y > 0)) {
+					waypoint.yaw = Math.atan(delta_x/delta_y);
+				}
+				else if((delta_x < 0) && (delta_y > 0)) {
+					waypoint.yaw = 3*Math.PI/2 + Math.abs(Math.atan(delta_y/delta_x));
+				}
+				else if((delta_x < 0) && (delta_y < 0)){
+					waypoint.yaw = Math.PI + Math.abs(Math.atan(delta_x/delta_y));
+				}
+				else if((delta_x > 0) && (delta_y < 0)) {
+					waypoint.yaw = Math.PI/2 + Math.abs(Math.atan(delta_x/delta_y));
+				}
+			}
+		});
 	}
-
-	function to_waypoint() {
-		waypoint_toggle ? statusMessage = 'Click on waypoint' : statusMessage = 'Click on arrow';
-	}
-
-	const pendingRequests = new Map<
-		string,
-		{ resolve: (response: any) => void; timeoutHandle: any }
-	>();
 
 	function generateID() {
-		last_id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+		lastID = typeof crypto !== 'undefined' && 'randomUUID' in crypto
 			? crypto.randomUUID()
 			: `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-		return last_id;
+		return lastID;
 	}
-	
+
 	function clamp(value: number, min_value: number, max_value: number) {
 		return Math.max(min_value, Math.min(max_value, value));
 	}
-	//Converts the click on the image to the pixle coordinates on the image 
+
+	//Converts the click on the image to the pixle coordinates on the image
 	function clickToNaturalPosition(event: MouseEvent) {
 		if (!imageElement) return null;
 
@@ -247,25 +292,7 @@
 			y: clamp(naturalY, 0, imageElement.naturalHeight - 1)
 		};
 	}
-	// Function that allows the front end to talk to the back end 
-	function sendRequest(payload: any, timeoutMilliseconds = defaultRequestTimeoutMilliseconds): Promise<any> {
-		if (!requestTopic) return Promise.reject(new Error('ROS not connected'));
 
-		const id = generateID();
-		return new Promise((resolve, reject) => {
-			const timeoutHandle = setTimeout(() => {
-				pendingRequests.delete(id);
-				reject(new Error(`Timeout waiting for response (${id})`));
-			}, timeoutMilliseconds);
-
-			pendingRequests.set(id, { resolve, timeoutHandle });
-
-			requestTopic!.publish({
-				data: JSON.stringify({ id, ...payload })
-			});
-
-		});
-	}
 	// creates the waypoint names
 	function nextWaypointName() {
 		const waypointNumber = waypoints.length + 1;
@@ -305,7 +332,7 @@
 		const hexadecimalColor = getSampleHex(response);
 		const waypointContour = extractedContour;
 
-		
+
 		waypoints = [
 			...waypoints,
 			{
@@ -417,71 +444,71 @@
 	}
 
 	function wrapPi(rad: number) {
-	return Math.atan2(Math.sin(rad), Math.cos(rad));
+		return Math.atan2(Math.sin(rad), Math.cos(rad));
 	}
 
 	function buildYaml(): string {
-	const lines: string[] = [];
-	lines.push('waypoints:');
+		const lines: string[] = [];
+		lines.push('waypoints:');
 
-		for (const waypoint of waypoints) {
-			const yawRadians = ((waypoint.yaw)*Math.PI)/180;
-			lines.push(`- name: ${waypoint.name}`);
-			lines.push(`x: ${waypoint.relativeX / scale}`);
-			lines.push(`y: ${waypoint.relativeY / scale}`);
-			lines.push(`yaw: ${waypoint.yaw}`)
-		}
+			for (const waypoint of waypoints) {
+				const yawRadians = ((waypoint.yaw)*Math.PI)/180;
+				lines.push(`- name: ${waypoint.name}`);
+				lines.push(`x: ${waypoint.relativeX / scale}`);
+				lines.push(`y: ${waypoint.relativeY / scale}`);
+				lines.push(`yaw: ${waypoint.yaw}`)
+			}
 
-	return lines.join('\n');
+		return lines.join('\n');
 	}
 
 	function drawRotatedRectangle(waypoint: WaypointRow) {
-	const arrowLength = 25;
+		const arrowLength = 25;
 
-	// Same convention as YAML: N=0, E=-pi/2, W=+pi/2
-	const t = (-waypoint.yaw * Math.PI) / 180;
+		// Same convention as YAML: N=0, E=-pi/2, W=+pi/2
+		const t = (-waypoint.yaw * Math.PI) / 180;
 
-	const yawX1Coordinate = waypoint.centroidX;
-	const yawY1Coordinate = waypoint.centroidY;
+		const yawX1Coordinate = waypoint.centroidX;
+		const yawY1Coordinate = waypoint.centroidY;
 
-	// t=0 points up: dx=0, dy=-1
-	const yawX2Coordinate = yawX1Coordinate + Math.sin(t) * arrowLength;
-	const yawY2Coordinate = yawY1Coordinate - Math.cos(t) * arrowLength;
+		// t=0 points up: dx=0, dy=-1
+		const yawX2Coordinate = yawX1Coordinate + Math.sin(t) * arrowLength;
+		const yawY2Coordinate = yawY1Coordinate - Math.cos(t) * arrowLength;
 
-	return { yawX1Coordinate, yawX2Coordinate, yawY1Coordinate, yawY2Coordinate };
+		return { yawX1Coordinate, yawX2Coordinate, yawY1Coordinate, yawY2Coordinate };
 	}
 
 
 // Function to help translate the difference in case variables from the back end to front end
 	function getSampleHex(response: any): string {
 		return String(
-			response?.sample_image_hex ??       
-			response?.sampleImageHex ??      
-			response?.sampleImageHexadecimalColor ?? 
+			response?.sample_image_hex ??
+			response?.sampleImageHex ??
+			response?.sampleImageHexadecimalColor ??
 			''
 		);
 	}
 // Function that sets the file name of the saved file created in buildYaml()
 	async function saveYamlToScripts() {
-		const yaml_text = buildYaml();
-		try {
-			statusMessage = 'Uploading YAML file to Perseus';
-			const response = await sendRequest({
-				op: 'save_yaml',
-				file_name: 'Waypoints.yaml',
-				yaml_text
-			});
-			if (!response?.ok){
-				statusMessage = response?.message ?? 'Save failed';
-				return;
-			}
-    		statusMessage = `Saved: ${response.saved_path ?? 'OK'}`;
-		} catch (e:any) {
-			statusMessage = `Save error: ${e?.message ?? String(e)}`;
-		}
+	// 	const yaml_text = buildYaml();
+	// 	try {
+	// 		statusMessage = 'Uploading YAML file to Perseus';
+	// 		const response = await sendRequest({
+	// 			op: 'save_yaml',
+	// 			file_name: 'Waypoints.yaml',
+	// 			yaml_text
+	// 		});
+	// 		if (!response?.ok){
+	// 			statusMessage = response?.message ?? 'Save failed';
+	// 			return;
+	// 		}
+    // 		statusMessage = `Saved: ${response.saved_path ?? 'OK'}`;
+	// 	} catch (e:any) {
+	// 		statusMessage = `Save error: ${e?.message ?? String(e)}`;
+	// 	}
 	}
 
-	async function on_map_click(event: MouseEvent) {
+	async function onMapClick(event: MouseEvent) {
 		let x_dir;
 		let y_dir;
 		if (document.getElementById("p_direction_x")) {
@@ -510,69 +537,35 @@
 
 			statusMessage = `${mode} @ (${click_position.x}, ${click_position.y})…`;
 
-			try {
-				const response = await sendRequest({
-					op: 'extract_feature',
-					mode, // 'waypoint' | 'border' | 'origin' (protocol value)
-					image_id: mapImageId,
-					sample_x: click_position.x,
-					sample_y: click_position.y,
-					tol_h: defaultHueTolerance,
-					tol_s: defaultSaturationTolerance,
-					tol_v: defaultValueTolerance,
-					x_direction: x_dir,
-					y_direction: y_dir
+			const request = ({
+				op: 'extract_feature',
+				mode, // 'waypoint' | 'border' | 'origin' (protocol value)
+				image_id: mapImageId,
+				sample_x: click_position.x,
+				sample_y: click_position.y,
+				tol_h: defaultHueTolerance,
+				tol_s: defaultSaturationTolerance,
+				tol_v: defaultValueTolerance,
+				x_direction: x_dir,
+				y_direction: y_dir
+			});
+
+			const id = generateID();
+			if (requestTopic) {
+				requestTopic.publish({
+					data: JSON.stringify({ id, ...request})
 				});
-
-				if (!response?.ok) {
-					statusMessage = response?.message ?? 'Failed';
-					return;
-				}
-
-				if (mode === 'border') {
-					border_contour = Array.isArray(response.contour) ? response.contour : [];
-				}
-
-				sampleImageHexadecimalColor = String(response.sample_image_hex ?? '');
-				centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
-				contour = Array.isArray(response.contour) ? response.contour : [];
-
-				if (mode === 'waypoint') {
-					if (waypoint_toggle == 0) {
-						add_waypoint_from_response(response, contour);
-						statusMessage = centroid
-							? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
-							: `Waypoint added ${sampleImageHexadecimalColor}`;
-						waypoint_toggle = 1;
-					}
-					else {
-						addAngleFromResponse(response);
-						statusMessage = centroid
-							? `Arrow added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
-							: `Arrow added ${sampleImageHexadecimalColor}`;
-						waypoint_toggle = 0;
-						calculate_angle();
-					}
-				} else if (mode === 'origin') {
-					add_origin_from_response(response);
-					statusMessage = centroid
-						? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
-						: `Origin added ${sampleImageHexadecimalColor}`;
-				} else {
-					statusMessage = `Border OK ${sampleImageHexadecimalColor}`;
-				}
-
-
-			} catch (error: any) {
-				statusMessage = `Error: ${error?.message ?? String(error)}`;
 			}
+			else {
+				new Error('ROS not connected');
+			};
 		}
-	
+
 	}
 
 	function update_scale() {
 		const squares = document.getElementById("squares") as HTMLInputElement;
-		const grid_spacing = document.getElementById("grid_spacing") as HTMLInputElement;	
+		const grid_spacing = document.getElementById("grid_spacing") as HTMLInputElement;
 
 		if (squares.valueAsNumber && grid_spacing.valueAsNumber) {
 			scale = map_height / squares.valueAsNumber * grid_spacing.valueAsNumber;
@@ -580,55 +573,6 @@
 		}
 	};
 
-	$effect(() => {
-		const ros_connection = getRosConnection();
-
-		if (!ros_connection) {
-			responseTopic?.unsubscribe();
-			requestTopic = null;
-			responseTopic = null;
-
-			pendingRequests.forEach((pending_entry) => clearTimeout(pending_entry.timeoutHandle));
-			pendingRequests.clear();
-			return;
-		}
-
-		requestTopic = new ROSLIB.Topic({
-			ros: ros_connection,
-			name: requestTopicName,
-			messageType: 'std_msgs/msg/String'
-		});
-
-		responseTopic = new ROSLIB.Topic({
-			ros: ros_connection,
-			name: responseTopicName,
-			messageType: 'std_msgs/msg/String'
-		});
-
-		responseTopic.subscribe((message: any) => {
-			let response: any;
-
-			try {
-				response = JSON.parse(message.data);
-			} catch {
-				return;
-			}
-
-			const id = response?.id;
-			const pending_entry = id ? pendingRequests.get(id) : null;
-			if (!pending_entry) return;
-
-			clearTimeout(pending_entry.timeoutHandle);
-			pendingRequests.delete(id);
-			pending_entry.resolve(response);
-		});
-
-		return () => {
-			responseTopic?.unsubscribe();
-			requestTopic = null;
-			responseTopic = null;
-		};
-	});
 </script>
 <ScrollArea orientation="vertical" class="relative flex h-full w-full">
 	<div class="wrap">
@@ -665,20 +609,20 @@
 					width="700"
 					alt="map"
 					class="map"
-					onclick={on_map_click}
+					onclick={onMapClick}
 					onload={() => {
 						if (!imageElement) return;
-						svg_view_box = `0 0 ${imageElement.naturalWidth} ${imageElement.naturalHeight}`;
+						svgViewBox = `0 0 ${imageElement.naturalWidth} ${imageElement.naturalHeight}`;
 						map_height = imageElement.naturalHeight;
 					}}
 				/>
 			</div>
 
 			<!-- Preview -->
-			<svg class="preview" viewBox={svg_view_box} preserveAspectRatio="none" aria-hidden="true">
-				{#if border_contour.length > 0}
+			<svg class="preview" viewBox={svgViewBox} preserveAspectRatio="none" aria-hidden="true">
+				{#if borderContour.length > 0}
 					<polygon
-						points={border_contour.map(([x, y]) => `${x},${y}`).join(' ')}
+						points={borderContour.map(([x, y]) => `${x},${y}`).join(' ')}
 						fill="none"
 						stroke="lime"
 						stroke-width="2"

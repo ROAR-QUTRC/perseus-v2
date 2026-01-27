@@ -346,8 +346,9 @@ class ExtractFeatures(Node):
                 )
                 return
 
-            approximated_contour = cv2.approxPolyDP(chosen_contour, approximation_epsilon, True)
-
+            approximated_contour = cv2.approxPolyDP(
+                chosen_contour, approximation_epsilon, True
+            )
 
             # Always compute centroid (useful for both modes)
             bounding_x_pos, bounding_y_pos, bounding_width, bounding_height = (
