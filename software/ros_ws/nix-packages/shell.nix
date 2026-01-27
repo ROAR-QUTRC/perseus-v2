@@ -54,6 +54,7 @@ pkgs.mkShell {
             moveit-core
             moveit-ros-move-group
             moveit-ros-planning-interface
+            moveit-servo
             moveit-visual-tools
             navigation2
             nlohmann_json

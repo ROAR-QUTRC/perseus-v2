@@ -20,9 +20,10 @@
   <depend>pluginlib</depend>
   <depend>rclcpp_lifecycle</depend>
   <exec_depend>moveit_ros_move_group</exec_depend>
-  <exec_depend>moveit_ros_planning_interface</exec_depend>
   <exec_depend>moveit_visual_tools</exec_depend>
+  <exec_depend>moveit_ros_planning_interface</exec_depend>
   <exec_depend>moveit_core</exec_depend>
+  <exec_depend>moveit_servo</exec_depend>
   <exec_depend>rviz2</exec_depend>
   <exec_depend>ros2_control</exec_depend>
   <exec_depend>ros2_controllers</exec_depend>

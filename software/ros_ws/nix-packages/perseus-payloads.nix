@@ -10,6 +10,7 @@
   moveit-core,
   moveit-ros-move-group,
   moveit-ros-planning-interface,
+  moveit-servo,
   moveit-visual-tools,
   perseus-msgs,
   pluginlib,
@@ -37,6 +38,7 @@ buildRosPackage rec {
     moveit-core
     moveit-ros-move-group
     moveit-ros-planning-interface
+    moveit-servo
     moveit-visual-tools
     perseus-msgs
     pluginlib

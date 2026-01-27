@@ -124,6 +124,10 @@ install(TARGETS arm_controller DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_controller DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_driver DESTINATION lib/${PROJECT_NAME})
 
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY src/moveit DESTINATION share/${PROJECT_NAME}/src)
+
 install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}

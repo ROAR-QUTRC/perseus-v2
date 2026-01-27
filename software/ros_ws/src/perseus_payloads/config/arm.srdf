@@ -41,7 +41,7 @@
         <joint name="wrist_roll" value="0"/>
     </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
-    <end_effector name="Gripper" parent_link="end_effector" group="arm" parent_group="arm"/>
+    <end_effector name="Gripper" parent_link="end_effector" group="arm"/>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="end_effector" link2="forearm" reason="Never"/>
     <disable_collisions link1="end_effector" link2="plate" reason="Never"/>
