@@ -4,12 +4,11 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /3D Lidar PointCloud1
-        - /3D Lidar PointCloud1/Status1
+        - /Converted Livox Scan1/Status1
+        - /Converted Livox Scan1/Topic1
         - /Fused Odometry1/Covariance1/Position1
-        - /Polygon1/Topic1
       Splitter Ratio: 0.5
-    Tree Height: 714
+    Tree Height: 715
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -27,7 +26,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: 2D Lidar Point Cloud
+    SyncSource: Converted Livox Scan
 Visualization Manager:
   Class: ""
   Displays:
@@ -52,8 +51,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 1.3862489461898804
+        Min Value: -0.027578622102737427
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -81,6 +80,93 @@ Visualization Manager:
         Value: /livox/lidar
       Use Fixed Frame: true
       Use rainbow: true
+      Value: true
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        camera_link:
+          Value: true
+        camera_link_optical:
+          Value: true
+        chassis:
+          Value: true
+        differential_bar:
+          Value: true
+        flange_bearing:
+          Value: true
+        front_left_motor:
+          Value: true
+        front_left_wheel:
+          Value: true
+        front_right_motor:
+          Value: true
+        front_right_wheel:
+          Value: true
+        laser_2d_frame:
+          Value: true
+        left_rocker:
+          Value: true
+        livox_frame:
+          Value: true
+        map:
+          Value: true
+        odom:
+          Value: true
+        rear_left_motor:
+          Value: true
+        rear_left_wheel:
+          Value: true
+        rear_right_motor:
+          Value: true
+        rear_right_wheel:
+          Value: true
+        right_rocker:
+          Value: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: false
+      Tree:
+        map:
+          odom:
+            base_link:
+              base_footprint:
+                {}
+              chassis:
+                camera_link:
+                  camera_link_optical:
+                    {}
+                flange_bearing:
+                  differential_bar:
+                    {}
+                laser_2d_frame:
+                  {}
+                left_rocker:
+                  front_left_motor:
+                    front_left_wheel:
+                      {}
+                  rear_left_motor:
+                    rear_left_wheel:
+                      {}
+                livox_frame:
+                  {}
+                right_rocker:
+                  front_right_motor:
+                    front_right_wheel:
+                      {}
+                  rear_right_motor:
+                    rear_right_wheel:
+                      {}
+      Update Interval: 0
       Value: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -304,34 +390,34 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 0.3062500059604645
+        Min Value: 0.3062500059604645
         Value: true
       Axis: Z
-      Channel Name: intensity
+      Channel Name: x
       Class: rviz_default_plugins/LaserScan
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0
+      Max Intensity: 15.440167427062988
       Min Color: 0; 0; 0
-      Min Intensity: 0
-      Name: 2D Lidar Point Cloud
+      Min Intensity: -8.496444702148438
+      Name: Converted Livox Scan
       Position Transformer: XYZ
       Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.05000000074505806
-      Style: Squares
+      Size (Pixels): 10
+      Size (m): 0.10000000149011612
+      Style: Points
       Topic:
         Depth: 5
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /scan
+        Reliability Policy: Best Effort
+        Value: /livox/scan
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -500,42 +586,6 @@ Visualization Manager:
         Value: /global_costmap/costmap_updates
       Use Timestamp: false
       Value: true
-    - Alpha: 1
-      Class: rviz_default_plugins/Polygon
-      Color: 25; 255; 0
-      Enabled: true
-      Name: Polygon
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /global_costmap/published_footprint
-      Value: true
-    - Alpha: 0.699999988079071
-      Binary representation: false
-      Binary threshold: 100
-      Class: rviz_default_plugins/Map
-      Color Scheme: map
-      Draw Behind: false
-      Enabled: false
-      Name: Voxel Layer
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /global_costmap/voxel_layer
-      Update Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /global_costmap/voxel_layer_updates
-      Use Timestamp: false
-      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -581,26 +631,21 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz_default_plugins/Orbit
-      Distance: 22.941802978515625
+      Angle: 1.5700000524520874
+      Class: rviz_default_plugins/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: 2.6094107627868652
-        Y: 4.824416637420654
-        Z: 0.09972743690013885
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7447967529296875
+      Scale: -65
       Target Frame: <Fixed Frame>
-      Value: Orbit (rviz)
-      Yaw: 4.091682434082031
+      Value: TopDownOrtho (rviz_default_plugins)
+      X: 3.469463586807251
+      Y: 2.5535531044006348
     Saved: ~
 Window Geometry:
   Displays:
@@ -610,7 +655,7 @@ Window Geometry:
   Hide Right Dock: false
   Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000004f700000666fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b000000b200fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000700000033c0000018600fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006501000003b80000031e0000002800ffffff000000010000015d00000666fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730100000070000006660000013800fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000f00000000d4fc0100000002fb0000000800540069006d0065010000000000000f000000047a00fffffffb0000000800540069006d00650100000000000004500000000000000000000008940000066600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000043d00000666fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b000000b200fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000700000033d0000018600fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006501000003b90000031d0000002800ffffff000000010000015d00000666fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730100000070000006660000013800fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000f00000000d4fc0100000002fb0000000800540069006d0065010000000000000f000000047a00fffffffb0000000800540069006d006501000000000000045000000000000000000000094e0000066600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:

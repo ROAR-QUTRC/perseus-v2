@@ -8,8 +8,9 @@
         </inertial>
 
         <visual>
+            <origin xyz="0.003 0 0" rpy="${pi/2} 0.0 ${pi/2}"/>
             <geometry>
-                <box size="${camera_depth} ${camera_width} ${camera_height}"/> 
+                <mesh scale="1.0 1.0 1.0" filename="file://$(find perseus_description)/meshes/d455.dae"/>
             </geometry>
             <material name="red"/>
         </visual>

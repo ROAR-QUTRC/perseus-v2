@@ -2,7 +2,7 @@
 
 ## autocomplete.sh
 
-For what this script actually does, run `echo $(mk-workspace-shell-setup)`, but it pretty much does what it says in the .envrc file (shown everytime you enter direnv - whenever you go into the perseus repo), setting up autocomplete for ros and python.
+For what this script actually does, run `echo $(mk-workspace-shell-setup)`, but it pretty much does what it says in the .envrc file (shown everytime you enter direnv - whenever you go into the perseus repo), setting up autocomplete for ROS and python.
 
 ## clean.sh
 
@@ -29,7 +29,7 @@ Which gets the raw content of the .sh file and executes it by piping it directly
 
 ## nix-packages.sh
 
-This script should be run whenever the ros2 package dependencies (any package.xml files in the ros_ws folder) have been changed. It updates the nix packaging with the new dependencies and automatically commits the changes using git (use the `--no-commit` flag to not do this)
+This script should be run whenever the ROS2 package dependencies (any package.xml files in the [`ros_ws`](project:#dir_software_ros_ws) folder) have been changed. It updates the nix packaging with the new dependencies and automatically commits the changes using git (use the `--no-commit` flag to not do this)
 
 ## nix-setup.sh
 
@@ -42,9 +42,9 @@ This script should be run on every device that wants to run the perseus repo (me
 5. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
 6. Hides the massive wall of text displaying the environment variables on startup/reload
 
-:::{note}
+```{note}
 The nix-setup script can't be run on NixOS - you'll have to set these manually in your configuration.nix file (and your home.nix home-manager file), but if you're using NixOS, you should have no trouble doing this
-:::
+```
 
 ## update.sh
 
@@ -52,4 +52,4 @@ This script will update the nix flake packages to their latest version and then 
 
 ## vcan-setup.sh
 
-This script can be run if you need to test CAN software on your computer without booting up Perseus. It sets up a virtual CAN network, so instead of physically connecting into the CAN network like on the big-brain, you can run Perseus ros2 scripts to make sure they work together.
+This script can be run if you need to test CAN software on your computer without booting up Perseus. It sets up a virtual CAN network, so instead of physically connecting into the CAN network like on the big-brain, you can run Perseus ROS2 scripts to make sure they work together.
