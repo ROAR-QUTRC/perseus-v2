@@ -63,6 +63,7 @@ pkgs.mkShell {
             python3Packages.pygame
             python3Packages.pytest
             rclcpp
+            rclcpp-action
             rclcpp-lifecycle
             rclpy
             realsense2-camera
