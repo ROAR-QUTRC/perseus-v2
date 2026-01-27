@@ -10,6 +10,10 @@
 	const widget_settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {}
 	});
+<<<<<<< HEAD
+=======
+
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 	export {
 		widget_name as name,
 		widget_description as description,
@@ -30,7 +34,10 @@
 	//import Button from "$lib/components/ui/button/button.svelte";
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import { Square } from 'svelte-radix';
+<<<<<<< HEAD
 	import type { Point } from 'chart.js';
+=======
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 	//import { response } from 'express';
 
 	type Mode = 'waypoint' | 'border' | 'origin'| 'manual';
@@ -77,8 +84,13 @@
 
 	let imageElement: HTMLImageElement | null = null;
 
+<<<<<<< HEAD
 	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_12.png';
 	// mapImageUrl = `http://localhost:8000/${mapImageId}`;
+=======
+	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_2.png';
+	const mapImageUrl = `http://localhost:8000/${mapImageId}`;
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 
 	//Ros topics to listen to requests and reply
 	const requestTopicName = '/map_editor/request';
@@ -102,7 +114,10 @@
 	// stored waypoints
 	let waypoints = $state<WaypointRow[]>([]);
 	let waypointToggle = $state(0);
+<<<<<<< HEAD
 
+=======
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 	// 0 -> selecting waypoint
 	// 1 -> selecting arrow
 	let lastID = $state('');
@@ -114,8 +129,11 @@
 	let arrows = $state<ArrowRow[]>([]);
 
 	let borderContour = $state<number[][]>([]);
+<<<<<<< HEAD
 
 	let pendingSaveId: string | null = null; 
+=======
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 
 	// ROS request/response plumbing
 	let requestTopic: ROSLIB.Topic<rosStringMessage> | null = null;
@@ -134,6 +152,7 @@
 	let pendingYawWaypointId: string | null = null;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	$effect(() => {
 		const rosConnection = getRosConnection();
 		if (rosConnection) {
@@ -148,11 +167,82 @@
 		origins.forEach((origin, o) => {
 			total_x += origin.centroid_x;
 			total_y += origin.centroid_y;
+=======
+	$effect(() => {
+		const ros_connection = getRosConnection();
+		if (ros_connection) {
+			requestTopic = new ROSLIB.Topic({
+				ros: ros_connection,
+				name: requestTopicName,
+				messageType: 'std_msgs/msg/String'
+			});
+			responseTopic = new ROSLIB.Topic({
+				ros: ros_connection,
+				name: responseTopicName,
+				messageType: 'std_msgs/msg/String'
+			});
+			responseTopic.subscribe(onResponseMessage);
+		}
+		else {
+			responseTopic?.unsubscribe();
+			requestTopic = null;
+			responseTopic = null;
+
+			// pendingRequests.forEach((pending_entry) => clearTimeout(pending_entry.timeoutHandle));
+			// pendingRequests.clear();
+		}
+	});
+
+	const onResponseMessage = (message: rosStringMessage) => {
+		let response: any;
+		response = JSON.parse(message.data);
+		if (mode === 'border') {
+			borderContour = Array.isArray(response.contour) ? response.contour : [];
+		}
+
+		sampleImageHexadecimalColor = String(response.sample_image_hex ?? '');
+		centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
+		contour = Array.isArray(response.contour) ? response.contour : [];
+
+		if (mode === 'waypoint') {
+			if (waypointToggle == 0) {
+				add_waypoint_from_response(response, contour);
+				statusMessage = centroid
+					? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+					: `Waypoint added ${sampleImageHexadecimalColor}`;
+				waypointToggle = 1;
+			}
+			else {
+				addAngleFromResponse(response);
+				statusMessage = centroid
+					? `Arrow added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+					: `Arrow added ${sampleImageHexadecimalColor}`;
+				waypointToggle = 0;
+				calculate_angle();
+			}
+		} else if (mode === 'origin') {
+			add_origin_from_response(response);
+			statusMessage = centroid
+				? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+				: `Origin added ${sampleImageHexadecimalColor}`;
+		} else {
+			statusMessage = `Border OK ${sampleImageHexadecimalColor}`;
+		}
+	}
+
+
+	function calculate_origin() {
+		let total_x = 0;
+		let total_y = 0;
+		origins.forEach((origin) => {
+			total_x += origin.centroidX;
+			total_y += origin.centroidY;
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 		});
 		x_origin = total_x / origins.length;
 		y_origin = total_y / origins.length;
 
-		waypoints.forEach((waypoint, w) => {
+		waypoints.forEach((waypoint) => {
 			switch(positive_x_direction) {
 				case "left":
 					waypoint.relative_x = x_origin - waypoint.centroid_x;
@@ -183,11 +273,11 @@
 	}
 
 	function calculate_angle() {
-		console.log("hello1");
 		waypoints.forEach((waypoint, w) => {
-			arrows.forEach((arrow, a) => {
-				if (waypoint.name.slice(2) === arrow.name.slice(2)) {
+			const delta_x = waypoint.centroidX - arrows[w].centroidX;
+			const delta_y = waypoint.centroidY - arrows[w].centroidY;
 
+<<<<<<< HEAD
 					const delta_x = waypoint.centroid_x - arrow.centroid_x;
 					const delta_y = waypoint.centroid_y - arrow.centroid_y;
 					
@@ -225,11 +315,42 @@
 							waypoint.yaw = Math.PI/2 + Math.abs(Math.atan(delta_x/delta_y));
 						}
 					}
+=======
+			if (delta_x == 0) {
+				if (waypoint.centroidY <= arrows[w].centroidY) {
+					waypoint.yaw = Math.PI;
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 				}
-			})
-		})
+				else if(waypoint.centroidY >= arrows[w].centroidY){
+					waypoint.yaw = 0;
+				}
+			}
+			else if (delta_y == 0) {
+				if (waypoint.centroidX >= arrows[w].centroidX){
+					waypoint.yaw = Math.PI/2;
+				}
+				else if(waypoint.centroidX <= arrows[w].centroidX){
+					waypoint.yaw = 3*Math.PI/2;
+				}
+			}
+			else {
+				if ((delta_x > 0) && (delta_y > 0)) {
+					waypoint.yaw = Math.atan(delta_x/delta_y);
+				}
+				else if((delta_x < 0) && (delta_y > 0)) {
+					waypoint.yaw = 3*Math.PI/2 + Math.abs(Math.atan(delta_y/delta_x));
+				}
+				else if((delta_x < 0) && (delta_y < 0)){
+					waypoint.yaw = Math.PI + Math.abs(Math.atan(delta_x/delta_y));
+				}
+				else if((delta_x > 0) && (delta_y < 0)) {
+					waypoint.yaw = Math.PI/2 + Math.abs(Math.atan(delta_x/delta_y));
+				}
+			}
+		});
 	}
 
+<<<<<<< HEAD
 	function to_waypoint() {
 		waypoint_toggle ? status_message = 'Click on waypoint' : status_message = 'Click on arrow';
 	}
@@ -241,15 +362,20 @@
 
 	function generate_id() {
 		last_id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+=======
+	function generateID() {
+		lastID = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 			? crypto.randomUUID()
 			: `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-		return last_id;
+		return lastID;
 	}
-	
+
 	function clamp(value: number, min_value: number, max_value: number) {
 		return Math.max(min_value, Math.min(max_value, value));
 	}
-	//Converts the click on the image to the pixle coordinates on the image 
+
+	//Converts the click on the image to the pixle coordinates on the image
 	function clickToNaturalPosition(event: MouseEvent) {
 		if (!imageElement) return null;
 
@@ -265,10 +391,8 @@
 			y: clamp(naturalY, 0, imageElement.naturalHeight - 1)
 		};
 	}
-	// Function that allows the front end to talk to the back end 
-	function sendRequest(payload: any, timeoutMilliseconds = defaultRequestTimeoutMilliseconds): Promise<any> {
-		if (!requestTopic) return Promise.reject(new Error('ROS not connected'));
 
+<<<<<<< HEAD
 		const id = generateId();
 		return new Promise((resolve, reject) => {
 			const timeoutHandle = setTimeout(() => {
@@ -308,6 +432,12 @@
 			case 'up':    return -dy;
 			default:      return 0;
 		}
+=======
+	// creates the waypoint names
+	function nextWaypointName() {
+		const waypointNumber = waypoints.length + 1;
+		return `WP${String(waypointNumber)}`;
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 	}
 
 	const onResponseMessage = (message: rosStringMessage) => {
@@ -325,7 +455,7 @@
 		const hexadecimalColor = getSampleHex(response);
 		const waypointContour = extractedContour;
 
-		
+
 		waypoints = [
 			...waypoints,
 			{
@@ -454,6 +584,7 @@
 		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
 	}
 
+<<<<<<< HEAD
 	function buildYaml(): string {
 		const lines: string[] = [];
 		
@@ -466,6 +597,23 @@
 			lines.push(`y: ${waypoint.relative_y / scale}`);
 			lines.push(`yaw: ${waypoint.yaw}`)
 		}
+=======
+	function wrapPi(rad: number) {
+		return Math.atan2(Math.sin(rad), Math.cos(rad));
+	}
+
+	function buildYaml(): string {
+		const lines: string[] = [];
+		lines.push('waypoints:');
+
+			for (const waypoint of waypoints) {
+				const yawRadians = ((waypoint.yaw)*Math.PI)/180;
+				lines.push(`- name: ${waypoint.name}`);
+				lines.push(`x: ${waypoint.relativeX / scale}`);
+				lines.push(`y: ${waypoint.relativeY / scale}`);
+				lines.push(`yaw: ${waypoint.yaw}`)
+			}
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 
 		return lines.join('\n');
 	}
@@ -473,6 +621,7 @@
 	function drawRotatedRectangle(waypoint:waypointRow){
 			const arrowLength = 25; 
 
+<<<<<<< HEAD
 			const yawDegrees = ((waypoint.yaw-90) * Math.PI) / 180;
 
 			const yawX1Coordinate = waypoint.centroidX;
@@ -481,19 +630,42 @@
 			const yawX2Coordinate = yawX1Coordinate + Math.cos(yawDegrees) * arrowLength;
 			const yawY2Coordinate = yawY1Coordinate + Math.sin(yawDegrees) * arrowLength;
 			return{yawX1Coordinate,yawX2Coordinate, yawY1Coordinate, yawY2Coordinate};
+=======
+	function drawRotatedRectangle(waypoint: WaypointRow) {
+		const arrowLength = 25;
+
+		// Same convention as YAML: N=0, E=-pi/2, W=+pi/2
+		const t = (-waypoint.yaw * Math.PI) / 180;
+
+		const yawX1Coordinate = waypoint.centroidX;
+		const yawY1Coordinate = waypoint.centroidY;
+
+		// t=0 points up: dx=0, dy=-1
+		const yawX2Coordinate = yawX1Coordinate + Math.sin(t) * arrowLength;
+		const yawY2Coordinate = yawY1Coordinate - Math.cos(t) * arrowLength;
+
+		return { yawX1Coordinate, yawX2Coordinate, yawY1Coordinate, yawY2Coordinate };
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 	}
 
 // Function to help translate the difference in case variables from the back end to front end
 	function getSampleHex(response: any): string {
 		return String(
+<<<<<<< HEAD
 			response?.sample_image_hex ??       
 			response?.sampleImageHex ??      
 			response?.sample_image_hexadecimal_color ?? 
+=======
+			response?.sample_image_hex ??
+			response?.sampleImageHex ??
+			response?.sampleImageHexadecimalColor ??
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 			''
 		);
 	}
 
 	async function saveYamlToScripts() {
+<<<<<<< HEAD
 		const yaml_text = buildYaml();
 		try {
 			statusMessage = 'Uploading YAML file to Perseus';
@@ -525,6 +697,38 @@
 	function toRelative(centroidX: number, centroidY: number) {
 		if (origins.length === 0) {
 			return { relativeX: centroidX, relativeY: centroidY };
+=======
+	// 	const yaml_text = buildYaml();
+	// 	try {
+	// 		statusMessage = 'Uploading YAML file to Perseus';
+	// 		const response = await sendRequest({
+	// 			op: 'save_yaml',
+	// 			file_name: 'Waypoints.yaml',
+	// 			yaml_text
+	// 		});
+	// 		if (!response?.ok){
+	// 			statusMessage = response?.message ?? 'Save failed';
+	// 			return;
+	// 		}
+    // 		statusMessage = `Saved: ${response.saved_path ?? 'OK'}`;
+	// 	} catch (e:any) {
+	// 		statusMessage = `Save error: ${e?.message ?? String(e)}`;
+	// 	}
+	}
+
+	async function onMapClick(event: MouseEvent) {
+		let x_dir;
+		let y_dir;
+		if (document.getElementById("p_direction_x")) {
+			const x_select = document.getElementById("p_direction_x") as HTMLSelectElement;
+			const y_select = document.getElementById("p_direction_y") as HTMLSelectElement;
+			x_dir = x_select.value;
+			y_dir = y_select.value;
+		}
+		else {
+			x_dir = positive_x_direction;
+			y_dir = positive_y_direction;
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 		}
 
 		// Default to common map convention if user hasn't selected directions yet
@@ -949,6 +1153,7 @@
 
 			statusMessage = `${mode} @ (${clickPosition.x}, ${clickPosition.y})…`;
 
+<<<<<<< HEAD
 			const extractionMode = mode === 'waypoint' ? 'border' : mode;
 
 			const request = ({
@@ -963,6 +1168,21 @@
 				xOriginDirectionection: xOriginDirection,
 				yOriginDirectionection: yOriginDirection
 			});
+=======
+			const request = ({
+				op: 'extract_feature',
+				mode, // 'waypoint' | 'border' | 'origin' (protocol value)
+				image_id: mapImageId,
+				sample_x: click_position.x,
+				sample_y: click_position.y,
+				tol_h: defaultHueTolerance,
+				tol_s: defaultSaturationTolerance,
+				tol_v: defaultValueTolerance,
+				x_direction: x_dir,
+				y_direction: y_dir
+			});
+
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 			const id = generateID();
 			if (requestTopic) {
 				requestTopic.publish({
@@ -970,6 +1190,7 @@
 				});
 			}
 			else {
+<<<<<<< HEAD
 				statusMessage = 'ROS not connected';
 				return;
 			}
@@ -994,6 +1215,24 @@
 		}
 	}
 
+=======
+				new Error('ROS not connected');
+			};
+		}
+
+	}
+
+	function update_scale() {
+		const squares = document.getElementById("squares") as HTMLInputElement;
+		const grid_spacing = document.getElementById("grid_spacing") as HTMLInputElement;
+
+		if (squares.valueAsNumber && grid_spacing.valueAsNumber) {
+			scale = map_height / squares.valueAsNumber * grid_spacing.valueAsNumber;
+			scale = parseFloat(scale.toFixed(2));
+		}
+	};
+
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 </script>
 <ScrollArea orientation="vertical" class="relative flex h-full w-full">
 	<div class="wrap">
@@ -1037,7 +1276,11 @@
 					onload={() => {
 						if (!imageElement) return;
 						svgViewBox = `0 0 ${imageElement.naturalWidth} ${imageElement.naturalHeight}`;
+<<<<<<< HEAD
 						mapHeight = imageElement.naturalHeight;
+=======
+						map_height = imageElement.naturalHeight;
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 					}}
 				/>
 			</div>
@@ -1046,7 +1289,11 @@
 			<svg class="preview" viewBox={svgViewBox} preserveAspectRatio="none" aria-hidden="true">
 				{#if borderContour.length > 0}
 					<polygon
+<<<<<<< HEAD
 						points={borderContour.map(([x, y]) => `${x}, ${y}`).join(' ')}
+=======
+						points={borderContour.map(([x, y]) => `${x},${y}`).join(' ')}
+>>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 						fill="none"
 						stroke="lime"
 						stroke-width="2"
