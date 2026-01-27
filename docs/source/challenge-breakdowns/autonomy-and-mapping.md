@@ -51,7 +51,7 @@ This section provides the definitive reference for Perseus autonomy operations. 
 - **After** test days with observed discrepancies
 - **After** any calibration or tuning session
 
-### Technical Notes
+## Technical Notes
 
 - Map updates occur only after Perseus has executed sufficient movement or rotation to trigger an update
 - Update trigger parameters are configurable in `config/slam_toolbox_params.yaml`
