@@ -37,6 +37,7 @@ pkgs.mkShell {
           ament-pep257
           backward-ros
           boost
+          builtin-interfaces
           controller-manager
           diff-drive-controller
           geometry-msgs
@@ -49,6 +50,11 @@ pkgs.mkShell {
           joint-state-publisher-gui
           joy
           mecanum-drive-controller
+          moveit-core
+          moveit-ros-move-group
+          moveit-ros-planning-interface
+          moveit-servo
+          moveit-visual-tools
           navigation2
           nlohmann_json
           openssl
@@ -66,8 +72,12 @@ pkgs.mkShell {
           ros-gz-image
           ros-gz-interfaces
           ros-gz-sim
+          ros2-control
+          ros2-controllers
           ros2controlcli
           ros2launch
+          rosidl-default-generators
+          rosidl-default-runtime
           rplidar-ros
           rviz2
           sensor-msgs
