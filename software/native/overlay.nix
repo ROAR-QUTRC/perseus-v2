@@ -1,1 +1,6 @@
-final: prev: { hi-can-common = final.callPackage ./hi-can-common { }; }
+final: prev: {
+  examples = final.lib.packagesFromDirectoryRecursive {
+    callPackage = final.callPackage;
+    directory = ./examples;
+  };
+}

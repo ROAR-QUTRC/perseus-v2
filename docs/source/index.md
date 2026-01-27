@@ -4,7 +4,7 @@ Welcome! This is the home of the Perseus Rover documentation. It contains (well,
 
 If you're new here, you'll probably be wanting to read through the <project:/home/getting-started.md> page, which contains everything you need to know to get yourself set up to start writing code.
 Alternatively, if you're instead arms-deep in the rover's guts and wondering where that wire goes, or you're interested in designing electronics to go on-board the rover, check out the [hardware system](project:/systems/hardware-index.md).
-Finally, if you're wondering what a specific bit of code does, you probably want look over the [software system](project:/systems/software-index.md), or alternatively there's the auto-generated [code documentation](project:/generated/index.rst).
+Finally, if you're wondering what a specific bit of code does, you probably want look over the [software system](project:/systems/software-index.md), or alternatively there's the auto-generated [code documentation](project:/generated/exhale/index.rst).
 
 ## Conventions
 
@@ -30,7 +30,8 @@ systems-index
 standards-index
 development-index
 maintenance-index
+hardware-index
 challenge-breakdowns-index
 tutorials-index
-generated/index
+generated/exhale/index
 ```
