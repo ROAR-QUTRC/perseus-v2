@@ -103,3 +103,27 @@ diff_drive_controller
 ```
 
 The `twist_mux` node arbitrates between joystick input (`/joy_vel`, priority 10) and navigation commands (`/cmd_vel_nav`, priority 1). Joystick always overrides navigation when active.
+
+## Teleop with SLAM Mapping
+
+To drive the robot while building a map in real-time:
+
+### Terminal 1 - Launch rover with SLAM and Nav2
+
+```bash
+ROS_DOMAIN_ID=42 ros2 launch perseus_lite perseus_lite_slam_and_nav2.launch.py
+```
+
+### Terminal 2 - Launch the Xbox controller (wireless)
+
+```bash
+nix run .#generic_controller
+```
+
+### Terminal 3 - Visualize in rviz2 (on laptop)
+
+```bash
+ROS_DOMAIN_ID=42 rviz2
+```
+
+In rviz2, add the **Map** display (**Add** → **By topic** → `/map`) to see the map being built in real-time as you drive around.
