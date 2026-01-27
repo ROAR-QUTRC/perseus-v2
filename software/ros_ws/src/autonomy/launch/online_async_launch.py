@@ -25,7 +25,7 @@ def generate_launch_description():
 
     declare_autostart_cmd = DeclareLaunchArgument(
         "autostart",
-        default_value="true",
+        default_value="true",   
         description="Automatically startup the slamtoolbox. "
         "Ignored when use_lifecycle_manager is true.",
     )
@@ -35,14 +35,14 @@ def generate_launch_description():
         description="Enable bond connection during node activation",
     )
     declare_use_sim_time_argument = DeclareLaunchArgument(
-        "use_sim_time", default_value="true", description="Use simulation/Gazebo clock"
+        "use_sim_time", default_value="false", description="Use simulation/Gazebo clock"
     )
     declare_slam_params_file_cmd = DeclareLaunchArgument(
         "slam_params_file",
         default_value=os.path.join(
             get_package_share_directory("slam_toolbox"),
             "config",
-            "mapper_params_online_async.yaml",
+            "slam_toolbox_params.yaml",
         ),
         description="Full path to the ROS2 parameters file to use for the slam_toolbox node",
     )
