@@ -40,7 +40,7 @@ git checkout NEW_BRANCH_NAME
 
 Or (combined version):
 
-```
+```console
 git checkout -b NEW_BRANCH_NAME
 ```
 
@@ -109,7 +109,7 @@ For changes to the docs, please ensure you include a screenshot of the built cha
 Once you're finished writing the description of your PR, you can select reviewers. For most files, the reviewers will be autoselected from the `.github/CODEOWNERS` file, which specifies who can approve changes to which files.
 For example, this line:
 
-```
+```none
 /software/web_ui/ @OMEN44 @UltraFishy
 ```
 
