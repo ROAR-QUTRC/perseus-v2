@@ -2,7 +2,7 @@
 
 ## Data Flow
 
-```
+```text
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │   Sensors   │───▶│  Perception │───▶│ Localisation│───▶│    Nav2     │
 │ LiDAR, IMU  │    │ SLAM Toolbox│    │  EKF, AMCL  │    │  Planner    │
@@ -16,7 +16,7 @@
 
 ## TF Tree Structure
 
-```
+```text
 map (world-fixed, from SLAM/AMCL)
   │
   └── odom (local odometry frame, from EKF)

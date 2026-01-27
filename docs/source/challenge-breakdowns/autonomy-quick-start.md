@@ -10,7 +10,7 @@
 
 The autonomy stack must be started in the following order:
 
-```
+```text
 1. Base Hardware / Drivers (perseus.launch.py)
    └── Robot State Publisher, Controllers, Twist Mux
 
