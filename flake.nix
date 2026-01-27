@@ -1,13 +1,16 @@
 {
   inputs = {
     # ros inputs
-    nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay";
+    nix-ros-overlay = {
+      url = "github:lopsided98/nix-ros-overlay";
+    };
     nixpkgs.follows = "nix-ros-overlay/nixpkgs"; # IMPORTANT!!!
     nix-ros-workspace = {
       url = "github:RandomSpaceship/nix-ros-workspace";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nix-ros-overlay.follows = "nix-ros-overlay";
     };
+    nixpkgs-old.url = "nixpkgs/nixos-24.11";
     # docs inputs
     nixpkgs-unstable.url = "nixpkgs/nixpkgs-unstable";
     pyproject-nix = {
@@ -59,6 +62,7 @@
       nix-ros-overlay,
       nix-ros-workspace,
       nixpkgs-unstable,
+      nixpkgs-old,
       pyproject-nix,
       uv2nix,
       pyproject-build-systems,
@@ -98,16 +102,38 @@
               ros = final.rosPackages.${rosDistro};
               # and add pkgs.unstable access
               unstable = pkgs-unstable;
+              oldPkgs = pkgs-old;
             })
           ];
-          # Gazebo makes use of Freeimage.
-          # Freeimage is blocked by default since it has a whole bunch of CVEs.
-          # This means we have to explicitly permit Freeimage to allow Gazebo to run.
-          config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
           config.allowUnfreePredicate =
             pkg:
             builtins.elem (pkgs.lib.getName pkg) [
               "drawio"
+              # CUDA packages
+              "cuda_cudart"
+              "cuda_nvcc"
+              "cuda_cccl"
+              "libcublas"
+              "libcufft"
+              "libcurand"
+              "libcusolver"
+              "libcusparse"
+              "libnpp"
+              "cuda_nvrtc"
+              "cuda_nvml_dev"
+              "cuda_profiler_api"
+              "cudatoolkit"
+              "libnvjitlink"
+              "cuda_cuobjdump"
+              "cuda_gdb"
+              "cuda_cuxxfilt"
+              "cuda_nvdisasm"
+              "cuda_nvprune"
+              "cuda_sanitizer_api"
+              "cuda_nvtx"
+              # ONNX Runtime CUDA dependencies
+              "cudnn"
+              "cudnn-frontend"
             ];
         };
         # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
@@ -119,6 +145,15 @@
           config.allowUnfree = true; # needed for draw.io for the docs
         };
 
+        pkgs-old = import nixpkgs-old {
+          inherit system;
+          # Gazebo makes use of Freeimage.
+          # Freeimage is blocked by default since it has a whole bunch of CVEs.
+          # This means we have to explicitly permit Freeimage to allow Gazebo to run.
+          # Freeimage is also abandoned, so we have to use the version from an old version of nixpkgs.
+          config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
+        };
+
         # --- INPUT PACKAGE SETS ---
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
@@ -127,8 +162,10 @@
             groot2
             bashInteractive
             can-utils
-            corepack_23
+            nodejs_24
+            yarn
             nixgl-script
+            nixcuda-script
             ncurses
             glibcLocales
             yaml-cpp
@@ -168,7 +205,26 @@
         };
         # Packages which should be available only in the dev shell
         devShellPkgs = {
-          inherit (pkgs) man-pages man-pages-posix stdmanpages;
+          inherit (pkgs)
+            man-pages
+            man-pages-posix
+            stdmanpages
+            nix-gl-host
+            ;
+          inherit (pkgs.cudaPackages)
+            cuda_nvcc
+            cuda_cudart
+            cuda_cccl
+            libcublas
+            libcufft
+            libcurand
+            libcusolver
+            libcusparse
+            cuda_nvrtc
+            cudnn
+            ;
+          # ONNX Runtime with CUDA support
+          onnxruntime-cuda = pkgs.onnxruntime.override { cudaSupport = true; };
         };
         # Packages needed to run the simulation
         # Note: May not be needed, most needed packages should
@@ -200,6 +256,12 @@
               export RCUTILS_COLORIZED_OUTPUT=1
               # fix locale issues
               export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+              # CUDA environment setup
+              export CUDA_PATH="${pkgs.cudaPackages.cuda_nvcc}"
+              export CUDA_HOME="${pkgs.cudaPackages.cuda_nvcc}"
+              export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc}/bin"
+              # ONNX Runtime with CUDA support
+              export ORT_LIB_LOCATION="${devShellPkgs.onnxruntime-cuda}/lib"
             '';
           };
 
@@ -241,13 +303,12 @@
         treefmtEval = treefmt-nix.lib.evalModule pkgs-unstable ./treefmt.nix;
 
         # formatters package set for use in ROS workspaces
-        formatters =
-          {
-            # include treefmt wrapped with the config from ./treefmt.nix
-            treefmt = treefmtEval.config.build.wrapper;
-          }
-          # plus all of the individual formatter programs from said config
-          // treefmtEval.config.build.programs;
+        formatters = {
+          # include treefmt wrapped with the config from ./treefmt.nix
+          treefmt = treefmtEval.config.build.wrapper;
+        }
+        # plus all of the individual formatter programs from said config
+        // treefmtEval.config.build.programs;
       in
       {
         # rover development environment
@@ -339,6 +400,6 @@
     # Note that this is normally a VERY BAD IDEA but is needed to make building the docs easier.
     # Several steps in the build process require either internet access
     # or annoying workarounds, and internet access removes a maintenance burden.
-    sandbox = "relaxed";
+    # sandbox = "relaxed";
   };
 }

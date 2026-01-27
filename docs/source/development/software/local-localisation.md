@@ -274,13 +274,11 @@ In practice, you tune these two matrices together:
 - Tune **IMU covariances first** to stabilise orientation and angular velocity.
 - Tune **encoder covariances next** to achieve smooth linear velocity and yaw estimates.
 - Adjust based on behaviour:
-
   - **Jittering / jumping** → increase measurement covariance.
   - **Lagging / slow response** → decrease measurement covariance.
   - **Oscillation / divergence** → increase process noise.
 
 - Validate tuning by driving the rover and monitoring:
-
   - `/odometry/filtered`
   - raw `/odom`
   - raw `/imu`

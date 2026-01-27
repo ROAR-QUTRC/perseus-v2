@@ -59,13 +59,11 @@ Perseus should automatically connect to the QUTRC-ROAR network. Verify the conne
 #### Network Troubleshooting
 
 1. Physical Connectivity
-
    - Confirm Unifi UX is powered and fully booted (screen shows device count)
    - Verify power LED indicators are lit
    - Check E-Stop position as it affects system power
 
 2. Laptop Connectivity
-
    - Verify connection to "QUTRC-ROAR" network
    - Check signal strength (maintain line of sight with Unifi UX if possible)
    - Confirm IP address allocation using `ip addr`
