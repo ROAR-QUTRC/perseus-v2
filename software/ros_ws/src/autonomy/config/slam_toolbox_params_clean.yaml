@@ -23,7 +23,7 @@ slam_toolbox:
     enable_interactive_mode: true
     publish_period: 0.05 # Faster map publishing
     map_update_interval: 0.1 # More frequent map updates
-    resolution: 0.02
+    resolution: 0.2 # Increased resolution from 0.02 to 0.2 for cleaner maps, suitable for large scale outdoor
     max_laser_range: 6.0 # Reduced from 8.0 for cleaner indoor maps
     minimum_time_interval: 0.5 # Increased to reduce noise
     transform_timeout: 1.0 # Increased from 0.5

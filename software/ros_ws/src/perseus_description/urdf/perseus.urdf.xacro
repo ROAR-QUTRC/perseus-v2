@@ -76,7 +76,7 @@
     <link name="${prefix}base_link"/>
 
     <joint name="${prefix}chassis_joint" type="fixed"> <!-- Joint Connect base_link and chassis -->
-      <origin xyz="0 0.0 ${chassis_z_offset}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${chassis_length} 0.0 ${chassis_z_offset}" rpy="0.0 0.0 0.0"/>
       <parent link="${prefix}base_link"/>
       <child link="${prefix}chassis"/>
     </joint>
@@ -103,7 +103,7 @@
     <joint name="${prefix}laser_joint" type="fixed">
       <parent link="${prefix}chassis"/>
       <child link="${prefix}livox_frame"/>
-      <origin xyz="-0.27 -0.04 -0.04" rpy="0 ${pi} ${pi}"/>
+      <origin xyz="-0.193 -0.047 -0.03375" rpy="0 ${pi} ${pi}"/>
     </joint>
 
     <joint name="${prefix}laser_2d_joint" type="fixed">
@@ -115,7 +115,7 @@
     <joint name="${prefix}camera_joint" type="fixed">
         <parent link="${prefix}chassis"/>
         <child link="${prefix}camera_link"/>
-        <origin xyz="0.145 0 0.34" rpy="0 0.174533 0"/>
+        <origin xyz="0.055 0 0.184" rpy="0 0.174533 0"/>
     </joint>
     
   </xacro:macro>
