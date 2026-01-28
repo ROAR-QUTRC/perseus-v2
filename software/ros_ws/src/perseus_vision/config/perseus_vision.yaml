@@ -5,7 +5,7 @@ aruco_detector:
     dictionary_id: 1 # 4x4: 50=0, 100=1, 250=2, 1000=3 | 5x5: 50=4, 100=5, 250=6, 1000=7 | 6x6: 50=8, 100=9, 250=10, 1000=11
     camera_frame: camera_link_optical
     tf_output_frame: odom
-    input_img: /rgbd_camera/image_raw
+    input_img: /camera/camera/color/image_raw
     output_img: /detection/aruco/image
     publish_tf: true
     publish_img: true
@@ -13,8 +13,8 @@ aruco_detector:
     publish_output: false
     output_topic: /detection/aruco
     # Enable reading camera calibration from camera_info topic instead of parameters
-    use_camera_info: false
-    camera_info_topic: /camera/camera_info
+    use_camera_info: true
+    camera_info_topic: /camera/camera/color/camera_info
     # Row-major 3x3 K
     camera_matrix: [530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0]
     distortion_coefficients: [0, 0, 0, 0, 0]
