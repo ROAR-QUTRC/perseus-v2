@@ -17,16 +17,21 @@ ArucoDetector::ArucoDetector()
     publish_img_ = this->declare_parameter<bool>("publish_img", true);
     compressed_io_ = this->declare_parameter<bool>("compressed_io", false);
     publish_output_ = this->declare_parameter<bool>("publish_output", false);
+    use_camera_info_ = this->declare_parameter<bool>("use_camera_info", false);
     output_topic_ = this->declare_parameter<std::string>("output_topic", "/detection/aruco/detections");
+    camera_info_topic_ = this->declare_parameter<std::string>("camera_info_topic", "/camera/camera_info");
 
     std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
         "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
     std::vector<double> dist_coeffs_param = this->declare_parameter<std::vector<double>>(
         "distortion_coefficients", {0, 0, 0, 0, 0});
 
-    // Convert parameters to OpenCV matrices
-    camera_matrix_ = cv::Mat(3, 3, CV_64F, camera_matrix_param.data()).clone();
-    dist_coeffs_ = cv::Mat(dist_coeffs_param).clone();
+    // Convert parameters to OpenCV matrices (will be overwritten by camera_info if use_camera_info is true)
+    if (!use_camera_info_)
+    {
+        camera_matrix_ = cv::Mat(3, 3, CV_64F, camera_matrix_param.data()).clone();
+        dist_coeffs_ = cv::Mat(dist_coeffs_param).clone();
+    }
 
     // ArUco setup
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dictionary_id);
@@ -51,7 +56,17 @@ ArucoDetector::ArucoDetector()
         sub_ = this->create_subscription<sensor_msgs::msg::Image>(
             input_img_, 10,
             std::bind(&ArucoDetector::imageCallback, this, std::placeholders::_1));
-        pub_ = this->create_publisher<sensor_msgs::msg::Image>(
+    
+    // Camera info subscriber if enabled
+    if (use_camera_info_)
+    {
+        camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
+            camera_info_topic_, 
+            rclcpp::SensorDataQoS(),
+            std::bind(&ArucoDetector::cameraInfoCallback, this, std::placeholders::_1));
+        
+        RCLCPP_INFO(this->get_logger(), "Subscribing to camera_info from topic: %s", camera_info_topic_.c_str());
+    }  pub_ = this->create_publisher<sensor_msgs::msg::Image>(
             output_img_, 10);
     }
     //
@@ -296,6 +311,32 @@ void ArucoDetector::handle_request(const std::shared_ptr<DetectObjects::Request>
     } else {
         RCLCPP_INFO(this->get_logger(), "Service request: no detections available");
     }
+}
+
+void ArucoDetector::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg)
+{
+    // Extract camera matrix K (3x3)
+    // Camera matrix is stored as [fx, 0, cx, 0, fy, cy, 0, 0, 1]
+    camera_matrix_ = cv::Mat(3, 3, CV_64F);
+    camera_matrix_.at<double>(0, 0) = msg->k[0];  // fx
+    camera_matrix_.at<double>(0, 1) = msg->k[1];  // skew (usually 0)
+    camera_matrix_.at<double>(0, 2) = msg->k[2];  // cx
+    camera_matrix_.at<double>(1, 0) = msg->k[3];  // 0
+    camera_matrix_.at<double>(1, 1) = msg->k[4];  // fy
+    camera_matrix_.at<double>(1, 2) = msg->k[5];  // cy
+    camera_matrix_.at<double>(2, 0) = msg->k[6];  // 0
+    camera_matrix_.at<double>(2, 1) = msg->k[7];  // 0
+    camera_matrix_.at<double>(2, 2) = msg->k[8];  // 1
+
+    // Extract distortion coefficients
+    // Typically [k1, k2, p1, p2, k3] but can have more
+    dist_coeffs_ = cv::Mat(msg->d.size(), 1, CV_64F);
+    for (size_t i = 0; i < msg->d.size(); ++i)
+    {
+        dist_coeffs_.at<double>(i, 0) = msg->d[i];
+    }
+
+    RCLCPP_DEBUG(this->get_logger(), "Updated camera calibration from camera_info topic");
 }
 
 }  // namespace perseus_vision

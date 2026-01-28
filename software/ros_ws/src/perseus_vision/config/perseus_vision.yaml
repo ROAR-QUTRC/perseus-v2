@@ -15,7 +15,11 @@ aruco_detector:
     compressed_io: false
 
     publish_output: false
-    output_topic: /detection/aruco/detections
+    output_topic: /detection/aruco
+    
+    # Enable reading camera calibration from camera_info topic instead of parameters
+    use_camera_info: false
+    camera_info_topic: /camera/camera_info
 
     # Row-major 3x3 K
     camera_matrix: [530.4, 0.0, 320.0,
