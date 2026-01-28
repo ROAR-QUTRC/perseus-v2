@@ -34,7 +34,7 @@ def generate_launch_description():
     cmd_vel_topic = LaunchConfiguration("cmd_vel_topic")
 
     # SLAM arguments
-    _slam_params_file = LaunchConfiguration("slam_params_file")  # noqa: F841
+    slam_params_file = LaunchConfiguration("slam_params_file")
 
     # Robot localization arguments
     ekf_params_file = LaunchConfiguration("ekf_params_file")
@@ -103,7 +103,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "slam_params_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("autonomy"), "config", "slam_toolbox_params.yaml"]
+                [FindPackageShare("autonomy"), "config", "slam_toolbox_params_perseus_lite.yaml"]
             ),
             description="Full path to the ROS2 parameters file for SLAM Toolbox",
         ),
@@ -111,7 +111,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "ekf_params_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("autonomy"), "config", "ekf_params.yaml"]
+                [FindPackageShare("autonomy"), "config", "ekf_params_perseus_lite.yaml"]
             ),
             description="Full path to the ROS2 parameters file for robot_localization EKF",
         ),
@@ -127,7 +127,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "nav_params_file",
             default_value=os.path.join(
-                bringup_dir, "config", "perseus_nav_params.yaml"
+                bringup_dir, "config", "nav_params_perseus_lite.yaml"
             ),
             description="Full path to the ROS2 parameters file to use for all launched nodes",
         ),
@@ -186,30 +186,19 @@ def generate_launch_description():
         ],
     )
 
-    # SLAM Toolbox - TEMPORARILY DISABLED due to CUDA crash during lifecycle configure
-    # The Nix-built slam_toolbox crashes with SIGSEGV during lifecycle configuration.
-    # TODO: Fix the CUDA build or use a non-CUDA version
-    # slam_toolbox = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         PathJoinSubstitution(
-    #             [FindPackageShare("slam_toolbox"), "launch", "online_async_launch.py"]
-    #         )
-    #     ),
-    #     launch_arguments={
-    #         "use_sim_time": use_sim_time,
-    #         "slam_params_file": slam_params_file,
-    #         "autostart": "true",
-    #         "use_lifecycle_manager": "false",
-    #     }.items(),
-    # )
-
-    # Static map->odom transform as temporary workaround until SLAM is fixed
-    # This allows Nav2 to function for testing without actual SLAM mapping
-    static_map_odom_tf = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="static_map_odom_publisher",
-        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
+    # SLAM Toolbox (use_cuda disabled in slam_toolbox_params.yaml to avoid Jetson CUDA crash)
+    slam_toolbox = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("slam_toolbox"), "launch", "online_async_launch.py"]
+            )
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "slam_params_file": slam_params_file,
+            "autostart": "true",
+            "use_lifecycle_manager": "false",
+        }.items(),
     )
 
     # Nav2 remappings
@@ -456,7 +445,7 @@ def generate_launch_description():
         perseus_lite_launch,
         cmd_vel_mux_launch,
         ekf_node,
-        static_map_odom_tf,  # Temporary workaround - replace with slam_toolbox when CUDA fixed
+        slam_toolbox,
         load_nav2_nodes,
         load_composable_nav2_nodes,
     ]
