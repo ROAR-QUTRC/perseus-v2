@@ -42,7 +42,8 @@ find_package(OpenCV REQUIRED)
 
 # Your interfaces
 find_package(perseus_interfaces REQUIRED)
-find_package(perseus_vision_msgs QUIET) # optional if you split msgs; ignore if not used
+find_package(perseus_vision_msgs QUIET
+)# optional if you split msgs; ignore if not used
 
 # If ObjectDetections is in THIS package, you must also:
 # find_package(rosidl_default_generators REQUIRED)
@@ -50,13 +51,11 @@ find_package(perseus_vision_msgs QUIET) # optional if you split msgs; ignore if 
 
 include_directories(include)
 
-add_executable(aruco_detector_node
-  src/aruco_detector.cpp
-  src/aruco_detector_node.cpp
-)
+add_executable(aruco_detector_node src/aruco_detector.cpp
+                                   src/aruco_detector_node.cpp)
 
-ament_target_dependencies(aruco_detector_node
->>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
+ament_target_dependencies(
+  aruco_detector_node
   rclcpp
   sensor_msgs
   std_msgs
@@ -66,8 +65,6 @@ ament_target_dependencies(aruco_detector_node
   tf2_geometry_msgs
   cv_bridge
   OpenCV
-<<<<<<< HEAD
-  visualization_msgs
   perseus_interfaces)
 
 target_include_directories(
@@ -80,28 +77,5 @@ install(TARGETS aruco_detector_node DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY include/ DESTINATION include/)
 
 install(DIRECTORY config/ DESTINATION share/${PROJECT_NAME}/config)
-
-install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
-=======
-  perseus_interfaces
-)
-
-target_include_directories(aruco_detector_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-
-install(TARGETS aruco_detector_node
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-install(DIRECTORY include/
-  DESTINATION include/
-)
-
-install(DIRECTORY config/
-  DESTINATION share/${PROJECT_NAME}/config
-)
->>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
 
 ament_package()
