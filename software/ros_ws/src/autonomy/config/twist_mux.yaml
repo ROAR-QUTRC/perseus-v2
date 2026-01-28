@@ -7,6 +7,6 @@ twist_mux:
         timeout: 0.5
         priority: 10 # Higher priority - joystick overrides nav
       navigation:
-        topic: /cmd_vel_safe  # From collision_monitor (was /cmd_vel_nav)
+        topic: /cmd_vel_safe # From collision_monitor (was /cmd_vel_nav)
         timeout: 0.5
         priority: 1 # Lower priority - nav runs when joystick inactive
