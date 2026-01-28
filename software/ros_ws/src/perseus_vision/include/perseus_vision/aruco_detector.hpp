@@ -9,6 +9,7 @@
 
 #include "sensor_msgs/msg/image.hpp"
 #include "sensor_msgs/msg/compressed_image.hpp"
+#include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/header.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -44,6 +45,7 @@ private:
   // Callbacks
   void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
   void compressedImageCallback(const sensor_msgs::msg::CompressedImage::SharedPtr msg);
+  void cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
 
   // Core
   void processImage(const cv::Mat& frame, const std_msgs::msg::Header& header);
@@ -77,8 +79,10 @@ private:
   bool publish_tf_{true};
   bool publish_img_{true};
   bool compressed_io_{false};
+  bool use_camera_info_{false};
   bool publish_output_{false};
   std::string output_topic_{"/detection/aruco/detections"};
+  std::string camera_info_topic_{"/camera/camera_info"};
 
   // Camera intrinsics
   cv::Mat camera_matrix_;
@@ -98,6 +102,8 @@ private:
 
   rclcpp::Subscription<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_sub_;
   rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_pub_;
+
+  rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_sub_;
 
   rclcpp::Service<DetectObjects>::SharedPtr service_;
 
