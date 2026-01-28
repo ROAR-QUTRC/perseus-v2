@@ -81,6 +81,33 @@ ROS_DOMAIN_ID=42 ros2 topic echo /cmd_vel
 | `serial_port`       | `/dev/ttyACM0` | ST3215 servo serial port                 |
 | `baud_rate`         | `1000000`      | Servo baud rate                          |
 
+## Configuration Files
+
+Perseus Lite uses dedicated config files in `autonomy/config/` with hardware-specific settings:
+
+| Config File                                | Description                        |
+| ------------------------------------------ | ---------------------------------- |
+| `slam_toolbox_params_perseus_lite.yaml`    | SLAM Toolbox (main)                |
+| `slam_toolbox_params_clean_perseus_lite.yaml` | SLAM Toolbox (tuned for clean maps) |
+| `slam_toolbox_params_minimal_perseus_lite.yaml` | SLAM Toolbox (minimal/fast)     |
+| `nav_params_perseus_lite.yaml`             | Nav2 navigation stack              |
+| `ekf_params_perseus_lite.yaml`             | Robot localization EKF             |
+
+These differ from the full Perseus rover configs:
+
+- `base_frame`: `base_link` (Perseus uses `base_footprint`)
+- `scan_topic`: `/scan` (Perseus uses `/livox/scan`)
+- `robot_radius`: `0.12` (smaller footprint)
+
+Override configs via launch arguments:
+
+```bash
+ros2 launch perseus_lite perseus_lite_slam_and_nav2.launch.py \
+    slam_params_file:=/path/to/custom_slam.yaml \
+    nav_params_file:=/path/to/custom_nav.yaml \
+    ekf_params_file:=/path/to/custom_ekf.yaml
+```
+
 ## Architecture
 
 ```
