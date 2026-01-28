@@ -142,6 +142,7 @@ ROS_DOMAIN_ID=42 ros2 launch perseus_lite perseus_lite_slam_and_nav2.launch.py
 ```
 
 This launches:
+
 - Perseus Lite hardware (diff_drive_controller, LIDAR, IMU)
 - SLAM Toolbox for mapping
 - Nav2 navigation stack
