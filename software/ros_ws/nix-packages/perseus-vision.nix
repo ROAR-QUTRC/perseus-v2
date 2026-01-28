@@ -8,15 +8,13 @@
   builtin-interfaces,
   cv-bridge,
   geometry-msgs,
+  image-transport,
   opencv,
-  perseus-interfaces,
   rclcpp,
   sensor-msgs,
-  std-msgs,
   tf2,
   tf2-geometry-msgs,
   tf2-ros,
-  visualization-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-vision";
@@ -34,20 +32,18 @@ buildRosPackage rec {
     builtin-interfaces
     cv-bridge
     geometry-msgs
+    image-transport
     opencv
-    perseus-interfaces
     rclcpp
     sensor-msgs
-    std-msgs
     tf2
     tf2-geometry-msgs
     tf2-ros
-    visualization-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "A package to do vision/detection tasks of Perseus";
+    description = "A package to do visionary tasks of Perseus";
     license = with lib.licenses; [ mit ];
   };
 }
