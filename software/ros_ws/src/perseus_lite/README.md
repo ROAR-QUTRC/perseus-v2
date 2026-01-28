@@ -135,17 +135,26 @@ The `twist_mux` node arbitrates between joystick input (`/joy_vel`, priority 10)
 
 To drive the robot while building a map in real-time:
 
-### Terminal 1 - Launch rover with SLAM and Nav2
+### Terminal 1 - Launch rover with SLAM and Nav2 (on robot)
 
 ```bash
 ROS_DOMAIN_ID=42 ros2 launch perseus_lite perseus_lite_slam_and_nav2.launch.py
 ```
 
-### Terminal 2 - Launch the Xbox controller (wireless)
+This launches:
+- Perseus Lite hardware (diff_drive_controller, LIDAR, IMU)
+- SLAM Toolbox for mapping
+- Nav2 navigation stack
+- EKF for odometry fusion
+- twist_mux for cmd_vel arbitration
+
+### Terminal 2 - Launch the Xbox controller (on robot or laptop)
 
 ```bash
 nix run .#generic_controller
 ```
+
+**Important**: Hold the **left trigger (LT)** as a dead-man switch while using the left stick to drive. Release LT to stop.
 
 ### Terminal 3 - Visualize in rviz2 (on laptop)
 
@@ -153,4 +162,37 @@ nix run .#generic_controller
 ROS_DOMAIN_ID=42 rviz2
 ```
 
-In rviz2, add the **Map** display (**Add** → **By topic** → `/map`) to see the map being built in real-time as you drive around.
+On non-NixOS systems:
+
+```bash
+ROS_DOMAIN_ID=42 nixgl rviz2
+```
+
+In rviz2:
+
+1. Set **Fixed Frame** to `map`
+2. Add displays:
+   - **Add** → **By topic** → `/map` → **Map** (to see SLAM map)
+   - **Add** → **By topic** → `/scan` → **LaserScan**
+   - **Add** → **By topic** → `/tf` → **TF**
+   - **Add** → **RobotModel** (uses `/robot_description`)
+
+### Verify SLAM is working
+
+```bash
+# Check SLAM node is running
+ROS_DOMAIN_ID=42 ros2 node list | grep slam
+
+# Expected: /slam_toolbox or /async_slam_toolbox_node
+
+# Check map is being published
+ROS_DOMAIN_ID=42 ros2 topic hz /map
+
+# Should show ~0.1-1 Hz when moving
+```
+
+### Save the map
+
+```bash
+ROS_DOMAIN_ID=42 ros2 run nav2_map_server map_saver_cli -f ~/my_map
+```
