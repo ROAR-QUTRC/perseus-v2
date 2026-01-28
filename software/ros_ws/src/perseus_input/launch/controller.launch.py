@@ -90,7 +90,7 @@ def generate_launch_description():
         name="generic_controller",
         output="both",
         emulate_tty=True,
-        parameters=[config_path, timeout_enable],
+        parameters=[config_path, {"timeout_enable": timeout_enable}],
         remappings=[],
         ros_arguments=["--log-level", debug_arg],
     )
