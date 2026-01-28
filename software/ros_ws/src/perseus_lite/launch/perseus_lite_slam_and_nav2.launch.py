@@ -426,28 +426,12 @@ def generate_launch_description():
         ],
     )
 
-    # cmd_vel mux to combine joystick and navigation commands
-    cmd_vel_mux_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                PathJoinSubstitution(
-                    [
-                        FindPackageShare("autonomy"),
-                        "launch",
-                        "cmd_vel_mux.launch.py",
-                    ]
-                )
-            ]
-        ),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-        }.items(),
-    )
+    # NOTE: twist_mux is already launched by perseus_lite.launch.py
+    # Do not launch cmd_vel_mux.launch.py here to avoid duplicates
 
     launch_files = [
         stdout_linebuf_envvar,
         perseus_lite_launch,
-        cmd_vel_mux_launch,
         ekf_node,
         slam_toolbox,
         load_nav2_nodes,

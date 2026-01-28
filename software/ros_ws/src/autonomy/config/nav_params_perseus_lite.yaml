@@ -298,7 +298,7 @@ collision_monitor:
     base_frame_id: "base_link"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
-    cmd_vel_out_topic: "cmd_vel"
+    cmd_vel_out_topic: "cmd_vel_safe"  # Output to twist_mux, not directly to controller
     state_topic: "collision_monitor_state"
     transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
     source_timeout: 5.0 # Increased from 2.0 for more robust operation
