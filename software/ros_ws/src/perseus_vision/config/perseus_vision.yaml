@@ -3,27 +3,18 @@ aruco_detector:
     marker_length: 0.35
     axis_length: 0.03
     dictionary_id: 1
-
     camera_frame: camera_link_optical
     tf_output_frame: odom
-
     input_img: /rgbd_camera/image_raw
     output_img: /detection/aruco/image
-
     publish_tf: true
     publish_img: true
     compressed_io: false
-
     publish_output: false
     output_topic: /detection/aruco
-    
     # Enable reading camera calibration from camera_info topic instead of parameters
     use_camera_info: false
     camera_info_topic: /camera/camera_info
-
     # Row-major 3x3 K
-    camera_matrix: [530.4, 0.0, 320.0,
-                    0.0, 530.4, 240.0,
-                    0.0, 0.0, 1.0]
-
+    camera_matrix: [530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0]
     distortion_coefficients: [0, 0, 0, 0, 0]
