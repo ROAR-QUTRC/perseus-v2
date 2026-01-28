@@ -3,7 +3,11 @@
 <package format="3">
   <name>perseus_vision</name>
   <version>0.0.0</version>
+<<<<<<< HEAD
   <description>A package to do vision/detection tasks of Perseus</description>
+=======
+  <description>A package to do visionary tasks of Perseus</description>
+>>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
   <maintainer email="nguyenleminh1002@gmail.com">Kelvin L.</maintainer>
   <license>MIT</license>
 
@@ -11,20 +15,37 @@
   <depend>builtin_interfaces</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
+<<<<<<< HEAD
   <depend>std_msgs</depend>
   <depend>cv_bridge</depend>
+=======
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+>>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
   <depend>geometry_msgs</depend>
   <depend>tf2_geometry_msgs</depend>
+<<<<<<< HEAD
   <depend>visualization_msgs</depend>
+=======
+>>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
   <build_depend>opencv</build_depend>
   <exec_depend>opencv</exec_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+<<<<<<< HEAD
   <build_depend>perseus_interfaces</build_depend>
   <exec_depend>perseus_interfaces</exec_depend>
   <export>
     <build_type>ament_cmake</build_type>
   </export>
 </package>
+=======
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <member_of_group>rosidl_interface_packages</member_of_group>
+  </export>
+</package>
+>>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
