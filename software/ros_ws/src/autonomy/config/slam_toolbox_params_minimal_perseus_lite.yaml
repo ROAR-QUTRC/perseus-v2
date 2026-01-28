@@ -2,7 +2,6 @@
 # Differences from Perseus (full):
 #   - base_frame: base_link (not base_footprint)
 #   - scan_topic: /scan (not /livox/scan)
-
 slam_toolbox:
   ros__parameters:
     solver_plugin: solver_plugins::CeresSolver

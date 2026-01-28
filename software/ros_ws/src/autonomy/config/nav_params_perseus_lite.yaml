@@ -3,7 +3,6 @@
 #   - base_frame: base_link (not base_footprint)
 #   - scan_topic: /scan (not /livox/scan)
 #   - robot_radius: 0.12 (smaller footprint)
-
 amcl:
   ros__parameters:
     alpha1: 0.2

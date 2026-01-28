@@ -85,13 +85,13 @@ ROS_DOMAIN_ID=42 ros2 topic echo /cmd_vel
 
 Perseus Lite uses dedicated config files in `autonomy/config/` with hardware-specific settings:
 
-| Config File                                | Description                        |
-| ------------------------------------------ | ---------------------------------- |
-| `slam_toolbox_params_perseus_lite.yaml`    | SLAM Toolbox (main)                |
-| `slam_toolbox_params_clean_perseus_lite.yaml` | SLAM Toolbox (tuned for clean maps) |
-| `slam_toolbox_params_minimal_perseus_lite.yaml` | SLAM Toolbox (minimal/fast)     |
-| `nav_params_perseus_lite.yaml`             | Nav2 navigation stack              |
-| `ekf_params_perseus_lite.yaml`             | Robot localization EKF             |
+| Config File                                     | Description                         |
+| ----------------------------------------------- | ----------------------------------- |
+| `slam_toolbox_params_perseus_lite.yaml`         | SLAM Toolbox (main)                 |
+| `slam_toolbox_params_clean_perseus_lite.yaml`   | SLAM Toolbox (tuned for clean maps) |
+| `slam_toolbox_params_minimal_perseus_lite.yaml` | SLAM Toolbox (minimal/fast)         |
+| `nav_params_perseus_lite.yaml`                  | Nav2 navigation stack               |
+| `ekf_params_perseus_lite.yaml`                  | Robot localization EKF              |
 
 These differ from the full Perseus rover configs:
 

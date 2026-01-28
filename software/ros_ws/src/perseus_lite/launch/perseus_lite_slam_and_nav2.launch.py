@@ -103,7 +103,11 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "slam_params_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("autonomy"), "config", "slam_toolbox_params_perseus_lite.yaml"]
+                [
+                    FindPackageShare("autonomy"),
+                    "config",
+                    "slam_toolbox_params_perseus_lite.yaml",
+                ]
             ),
             description="Full path to the ROS2 parameters file for SLAM Toolbox",
         ),
