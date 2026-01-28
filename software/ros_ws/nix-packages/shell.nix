@@ -48,12 +48,14 @@ pkgs.mkShell {
             boost
             builtin-interfaces
             controller-manager
+            cv-bridge
             diff-drive-controller
             geometry-msgs
             gz-ros2-control
             hardware-interface
             hi-can
             hi-can-raw
+            image-transport
             joint-state-broadcaster
             joint-state-publisher
             joint-state-publisher-gui
@@ -66,6 +68,7 @@ pkgs.mkShell {
             nav2-msgs
             navigation2
             nlohmann_json
+            opencv
             openssl
             pluginlib
             python3Packages.pygame
