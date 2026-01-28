@@ -97,6 +97,66 @@
       <uri>model://Moon_DEM</uri>
     </include>
 
+    <!-- Falling Rock 1 (3x) -->
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 1</uri>
+      <name>falling_rock_1_a</name>
+      <pose>-6.42  3.17  0  0  0  1.36</pose>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 1</uri>
+      <name>falling_rock_1_b</name>
+      <pose>4.88 -7.54  0  0  0 -2.11</pose>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 1</uri>
+      <name>falling_rock_1_c</name>
+      <pose>1.23  8.06  0  0  0  0.44</pose>
+    </include>
+
+
+    <!-- Falling Rock 2 (3x) -->
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 2</uri>
+      <name>falling_rock_2_a</name>
+      <pose>-8.71 -2.96  0  0  0 -1.57</pose>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 2</uri>
+      <name>falling_rock_2_b</name>
+      <pose>7.95  2.41  0  0  0  2.62</pose>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 2</uri>
+      <name>falling_rock_2_c</name>
+      <pose>0.47  1.32  0  0  0  1.94</pose>
+    </include>
+
+
+    <!-- Falling Rock 4 (3x) -->
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 4</uri>
+      <name>falling_rock_4_a</name>
+      <pose>8.36 -5.12  0  0  0  1.88</pose>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 4</uri>
+      <name>falling_rock_4_b</name>
+      <pose>-5.44 -8.09  0  0  0 -2.83</pose>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 4</uri>
+      <name>falling_rock_4_c</name>
+      <pose>3.29  0.74  0  0  0  0.12</pose>
+    </include>
+
+
     <!-- Flat Ground -->
     <!-- <include>
       <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>

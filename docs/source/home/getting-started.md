@@ -5,6 +5,28 @@ Whilst this page will get you started, it is strongly recommended that you read 
 
 ## First-time Setup
 
+If you're on a Debian-based distro (like Ubuntu), you can run the `member-setup.sh` script, which will automatically set everything up for you. If you're not or you just want to, you can go through the steps manually (but you'll have to adjust the apt commands to suit your distro).
+
+### Curl script
+
+First, make sure you have `curl` installed:
+
+```console
+sudo apt-get update
+sudo apt-get install curl
+```
+
+Then, you can run this command (it will prompt you for sudo permissions):
+
+```console
+curl https://raw.githubusercontent.com/ROAR-QUTRC/perseus-v2/refs/heads/main/software/scripts/member-setup.sh | bash
+```
+
+Which automates the manual process described below. After you run this command, you may need to restart your shell to ensure `direnv` loads properly.
+The script clones the repo into your home directory (~), so if you want it installed elsewhere, you should do it manually.
+
+### Manual
+
 1. Install the [GitHub CLI](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
 2. Run the following shell commands to install `curl` and `direnv` (this assumes a Debian-based distro like Ubuntu):
 

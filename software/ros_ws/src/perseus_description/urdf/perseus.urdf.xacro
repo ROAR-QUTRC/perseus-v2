@@ -50,17 +50,17 @@
 
     <!-- Depth Camera Properties -->
     <xacro:property name="camera_mass" value="0.1"/>
-    <xacro:property name="camera_width" value="0.07"/>
+    <xacro:property name="camera_width" value="0.12"/>
     <xacro:property name="camera_height" value="0.03"/>
-    <xacro:property name="camera_depth" value="0.020"/>
+    <xacro:property name="camera_depth" value="0.025"/>
 
     <!-- 2D and 3D LIDAR Properties -->
     <xacro:property name="laser_2d_mass" value="0.1"/>
     <xacro:property name="laser_2d_radius" value="0.04"/>
     <xacro:property name="laser_2d_length" value="0.04"/>
-    <xacro:property name="laser_3d_mass" value="0.2"/>
-    <xacro:property name="laser_3d_radius" value="0.06"/>
-    <xacro:property name="laser_3d_length" value="0.06"/>
+    <xacro:property name="livox_mass" value="0.2"/>
+    <xacro:property name="livox_radius" value="0.04"/>
+    <xacro:property name="livox_length" value="0.04"/>
 
     <!-- ADD COMPONENTS -->
     <xacro:include filename="$(find perseus_description)/urdf/inertia_macros.xacro"/>
@@ -76,7 +76,7 @@
     <link name="${prefix}base_link"/>
 
     <joint name="${prefix}chassis_joint" type="fixed"> <!-- Joint Connect base_link and chassis -->
-      <origin xyz="0 0.0 ${chassis_z_offset}" rpy="0.0 0.0 0.0"/>
+      <origin xyz="${chassis_length} 0.0 ${chassis_z_offset}" rpy="0.0 0.0 0.0"/>
       <parent link="${prefix}base_link"/>
       <child link="${prefix}chassis"/>
     </joint>
@@ -102,8 +102,8 @@
 
     <joint name="${prefix}laser_joint" type="fixed">
       <parent link="${prefix}chassis"/>
-      <child link="${prefix}laser_frame"/>
-      <origin xyz="0 0 -0.04" rpy="0 ${pi} 0"/>
+      <child link="${prefix}livox_frame"/>
+      <origin xyz="-0.173 0.047 -0.04375" rpy="0 ${pi} ${pi/2}"/>
     </joint>
 
     <joint name="${prefix}laser_2d_joint" type="fixed">
@@ -115,7 +115,8 @@
     <joint name="${prefix}camera_joint" type="fixed">
         <parent link="${prefix}chassis"/>
         <child link="${prefix}camera_link"/>
-        <origin xyz="0.01 0 0.18" rpy="0 0 0"/>
+        <origin xyz="0.055 0 0.184" rpy="0 0.0 0"/>
     </joint>
+    
   </xacro:macro>
 </robot>

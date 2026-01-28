@@ -11,6 +11,19 @@ let
     NIXPKGS_ALLOW_UNFREE=1 QT_QPA_PLATFORM=xcb QT_SCREEN_SCALE_FACTORS=1 nix run --impure ${final.self}#pkgs.nixgl.auto.nixGLDefault -- "$@"
   '';
 
+  # add a wrapper to run CUDA programs with host GPU driver passthrough
+  # uses nix-gl-host which handles both OpenGL and CUDA on NVIDIA hardware
+  # On Jetson devices, we also need to add the host CUDA library paths
+  nixcuda-script = prev.writeShellScriptBin "nixcuda" ''
+    # Add Jetson/Tegra CUDA library paths if they exist
+    for cuda_path in /usr/lib/aarch64-linux-gnu/tegra /usr/local/cuda/lib64; do
+      if [ -d "$cuda_path" ]; then
+        export LD_LIBRARY_PATH="$cuda_path''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+      fi
+    done
+    exec ${prev.nix-gl-host}/bin/nixglhost "$@"
+  '';
+
   rosPkgsOverlay =
     rosFinal: rosPrev:
     # use composeManyExtensions to "combine" the overlays in the order specified
@@ -55,7 +68,7 @@ let
 in
 prev.lib.composeManyExtensions [
   (final: prev: {
-    inherit nixgl-script;
+    inherit nixgl-script nixcuda-script;
     rosPackages = prev.rosPackages // {
       ${rosDistro} = prev.rosPackages.${rosDistro}.overrideScope rosPkgsOverlay;
     };

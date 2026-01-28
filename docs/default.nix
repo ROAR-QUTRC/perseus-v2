@@ -48,7 +48,7 @@ let
     name = "roar-docs-env";
     paths = [
       pyEnv
-      unstable.doxygen12
+      unstable.doxygen
       graphviz
     ];
   };
@@ -120,8 +120,8 @@ let
       # (mainly for figures)
       chmod -R +w .
 
-      # finally build the docs
-      make html
+      # finally build the docs, with warnings treated as errors
+      make html SPHINXOPTS="-W"
     '';
     # install the docs to $out/html
     installPhase = ''
