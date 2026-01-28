@@ -3,7 +3,7 @@
 
 	// Internal identifiers follow: American spelling + snake_case + minimal abbreviations.
 	const widget_name = 'Arena Map Editor';
-	const widget_description = 'Create the YAML file that Perseus will use to navigate';
+	const widget_description = 'Create the json file that Perseus will use to navigate';
 	const widget_group = 'ROS';
 	const is_ros_dependent = true;
 
@@ -33,7 +33,7 @@
 	import { Square } from 'svelte-radix';
 	//import { response } from 'express';
 
-	type Mode = 'waypoint' | 'border' | 'origin';
+	type Mode = 'waypoint' | 'border' | 'origin'| 'manual';
 	type Direction = 'up' | 'down' | 'left' | 'right' | 'unselected';
 	type rosStringMessage = { data: string };
 
@@ -155,6 +155,7 @@
 		if (mode === 'border') {
 			borderContour = Array.isArray(response.contour) ? response.contour : [];
 		}
+		if (mode === 'manual') return; // manual mode never consumes ROS extraction replies
 
 		sampleImageHexadecimalColor = String(response.sample_image_hex ?? '');
 		centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
@@ -228,41 +229,18 @@
 	}
 
 	function calculate_angle() {
-		waypoints.forEach((waypoint, w) => {
-			const delta_x = waypoint.centroidX - arrows[w].centroidX;
-			const delta_y = waypoint.centroidY - arrows[w].centroidY;
+		const n = Math.min(waypoints.length, arrows.length);
+		waypoints = waypoints.map((wp, i) => {
+			if (i >= n) return wp;
 
-			if (delta_x == 0) {
-				if (waypoint.centroidY <= arrows[w].centroidY) {
-					waypoint.yaw = Math.PI;
-				}
-				else if(waypoint.centroidY >= arrows[w].centroidY){
-					waypoint.yaw = 0;
-				}
-			}
-			else if (delta_y == 0) {
-				if (waypoint.centroidX >= arrows[w].centroidX){
-					waypoint.yaw = Math.PI/2;
-				}
-				else if(waypoint.centroidX <= arrows[w].centroidX){
-					waypoint.yaw = 3*Math.PI/2;
-				}
-			}
-			else {
-				if ((delta_x > 0) && (delta_y > 0)) {
-					waypoint.yaw = Math.atan(delta_x/delta_y);
-				}
-				else if((delta_x < 0) && (delta_y > 0)) {
-					waypoint.yaw = 3*Math.PI/2 + Math.abs(Math.atan(delta_y/delta_x));
-				}
-				else if((delta_x < 0) && (delta_y < 0)){
-					waypoint.yaw = Math.PI + Math.abs(Math.atan(delta_x/delta_y));
-				}
-				else if((delta_x > 0) && (delta_y < 0)) {
-					waypoint.yaw = Math.PI/2 + Math.abs(Math.atan(delta_x/delta_y));
-				}
-			}
+			const ar = arrows[i];
+			const dx = ar.centroidX - wp.centroidX;
+			const dy = ar.centroidY - wp.centroidY;
+
+			const deg = ((Math.atan2(-dx, -dy) * 180) / Math.PI + 360) % 360;
+			return { ...wp, yaw: deg };
 		});
+
 	}
 
 	function generateID() {
@@ -308,6 +286,30 @@
 		const arrow_number = arrows.length + 1;
 		return `AR${String(arrow_number)}`;
 	}
+	function add_manual_waypoint(click_position: { x: number; y: number }) {
+		const clickX = click_position.x;
+		const clickY = click_position.y;
+
+		waypoints = [
+			...waypoints,
+			{
+				id: generateID(),
+				name: nextWaypointName(),
+				hexadecimalColor: '#ffffff', // manual marker colour
+				clickX,
+				clickY,
+				centroidX: clickX,
+				centroidY: clickY,
+				relativeX: clickX,
+				relativeY: clickY,
+				yaw: 0,          // store yaw as DEGREES (0=N, 90=W, 180=S, 270=E)
+				contour: []      // no contour in manual mode
+			}
+		];
+
+		statusMessage = `Manual waypoint added @ (${clickX}, ${clickY})`;
+	}
+
 
 	function add_waypoint_from_response(response: any, extractedContour: number [][]) {
 		if (!response?.ok) return;
@@ -435,9 +437,11 @@
 		waypoints = [];
 	}
 	function updateYaw(id: string, yawDeg: number) {
-		const yaw = Number.isFinite(yawDeg) ? yawDeg : 0;
+		let yaw = Number.isFinite(yawDeg) ? yawDeg : 0;
+		yaw = ((yaw % 360) + 360) % 360; // keep within 0..359.999
 		waypoints = waypoints.map((w) => (w.id === id ? { ...w, yaw } : w));
 	}
+
 
 	function updateName(id: string, name: string) {
 		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
@@ -446,26 +450,34 @@
 	function wrapPi(rad: number) {
 		return Math.atan2(Math.sin(rad), Math.cos(rad));
 	}
+	function roundTo(n: number, dp: number) {
+		return Number.isFinite(n) ? Number(n.toFixed(dp)) : 0;
+	}
+	function buildjson(): string {
+			const payload = {
+		waypoints: waypoints.map((w) => {
+			const x_m = w.relativeX / scale;
+			const y_m = w.relativeY / scale;
 
-	function buildYaml(): string {
-		const lines: string[] = [];
-		lines.push('waypoints:');
+			// yaw stored as DEGREES in UI; output yaw in RADIANS for navigation
+			const yaw_rad = wrapPi((w.yaw * Math.PI) / 180);
 
-			for (const waypoint of waypoints) {
-				const yawRadians = ((waypoint.yaw)*Math.PI)/180;
-				lines.push(`- name: ${waypoint.name}`);
-				lines.push(`x: ${waypoint.relativeX / scale}`);
-				lines.push(`y: ${waypoint.relativeY / scale}`);
-				lines.push(`yaw: ${waypoint.yaw}`)
-			}
+			return {
+				name: w.name,
+				x: roundTo(x_m, 3),
+				y: roundTo(y_m, 3),
+				yaw: roundTo(yaw_rad, 6)
+			};
+		})
+	};
 
-		return lines.join('\n');
+	return JSON.stringify(payload, null, 2);
 	}
 
 	function drawRotatedRectangle(waypoint: WaypointRow) {
 		const arrowLength = 25;
 
-		// Same convention as YAML: N=0, E=-pi/2, W=+pi/2
+		// Same convention as json: N=0, E=-pi/2, W=+pi/2
 		const t = (-waypoint.yaw * Math.PI) / 180;
 
 		const yawX1Coordinate = waypoint.centroidX;
@@ -488,15 +500,15 @@
 			''
 		);
 	}
-// Function that sets the file name of the saved file created in buildYaml()
-	async function saveYamlToScripts() {
-	// 	const yaml_text = buildYaml();
+// Function that sets the file name of the saved file created in buildjson()
+	async function savejsonToScripts() {
+	// 	const json_text = buildjson();
 	// 	try {
-	// 		statusMessage = 'Uploading YAML file to Perseus';
+	// 		statusMessage = 'Uploading json file to Perseus';
 	// 		const response = await sendRequest({
-	// 			op: 'save_yaml',
-	// 			file_name: 'Waypoints.yaml',
-	// 			yaml_text
+	// 			op: 'save_json',
+	// 			file_name: 'Waypoints.json',
+	// 			json_text
 	// 		});
 	// 		if (!response?.ok){
 	// 			statusMessage = response?.message ?? 'Save failed';
@@ -520,6 +532,14 @@
 		else {
 			x_dir = positive_x_direction;
 			y_dir = positive_y_direction;
+		}
+		if (mode === 'manual') {
+			const click_position = clickToNaturalPosition(event);
+			if (!click_position) return;
+
+			currentClickPosition = click_position;
+			add_manual_waypoint(click_position);
+			return;
 		}
 
 		if (mode === 'origin' && x_dir == 'unselected' && y_dir == 'unselected') {
@@ -589,12 +609,15 @@
 				<button class:active={mode === 'origin'} onclick={() => (mode = 'origin')}>
 					Origin mode
 				</button>
+				<button class:active={mode === 'manual'} onclick={() => (mode = 'manual')}>
+					Manual mode
+				</button>
 				<button type="button" class="danger" onclick={clear_waypoints} disabled={waypoints.length === 0}>
 					Clear table
 				</button>
 
-				<button type="button" onclick={saveYamlToScripts} disabled={waypoints.length === 0}>
-					Save YAML
+				<button type="button" onclick={savejsonToScripts} disabled={waypoints.length === 0}>
+					Save json
 				</button>
 			</div>
 		</div>
@@ -805,7 +828,13 @@
 								<td>{(waypoint.relativeX / scale).toFixed(2)}</td>
 								<td>{(waypoint.centroidY / scale).toFixed(2)}</td>
 								<td>{(waypoint.relativeY / scale).toFixed(2)}</td>
-								<td>{(waypoint.yaw * (180 / Math.PI)).toFixed(2)}</td>
+								<td>
+									<input
+										class="yawInput" type="number" min="0" max="360"step="1"
+										value={waypoint.yaw} oninput={(event) => updateYaw(waypoint.id, Number((event.target as HTMLInputElement).value))}
+									/>
+								</td>
+
 								<td class="right">
 									<button type="button" class="danger" onclick={() => delete_waypoint(waypoint.id)}>
 										Delete
@@ -818,10 +847,10 @@
 			</table>
 		</div>
 
-		<!-- YAML preview -->
-		<div class="yamlWrap">
-			<h2>YAML preview</h2>
-			<textarea class="yamlBox" readonly value={buildYaml()}></textarea>
+		<!-- json preview -->
+		<div class="jsonWrap">
+			<h2>json preview</h2>
+			<textarea class="jsonBox" readonly value={buildjson()}></textarea>
 		</div>
 	</div>
 </ScrollArea>
@@ -923,7 +952,7 @@
 		text-align: center;
 	}
 
-	.yamlWrap {
+	.jsonWrap {
 		margin-top: 14px;
 	}
 
@@ -932,7 +961,7 @@
 		margin-bottom: 6px;
 	}
 
-	.yamlBox {
+	.jsonBox {
 		width: 100%;
 		min-height: 180px;
 		border: 1px solid #333;
