@@ -30,37 +30,37 @@ slam_toolbox:
     # Multi-threading parameters
     enable_interactive_mode: true
     publish_period: 0.1
-    map_update_interval: 0.1  # Faster map republishing (was 0.3)
-    resolution: 0.05  # Larger cells absorb alignment errors
+    map_update_interval: 0.1 # Faster map republishing (was 0.3)
+    resolution: 0.05 # Larger cells absorb alignment errors
     max_laser_range: 8.0 #for rastering images - reduced for indoor
-    minimum_time_interval: 0.1  # Balance speed and stability
+    minimum_time_interval: 0.1 # Balance speed and stability
     transform_timeout: 0.5
     tf_buffer_duration: 30.
     stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
     # General Parameters
     use_scan_matching: true
     use_scan_barycenter: true
-    use_imu: true  # Helps reject scans when robot is tilted
+    use_imu: true # Helps reject scans when robot is tilted
     imu_topic: /imu/data
     use_cuda: false # Disabled - CUDA causes segfault on Jetson
-    minimum_travel_distance: 0.08  # Require more movement before updating
-    minimum_travel_heading: 0.1  # Add scans on smaller rotations (was 0.2)
-    scan_buffer_size: 40  # More scans for better matching context
+    minimum_travel_distance: 0.08 # Require more movement before updating
+    minimum_travel_heading: 0.1 # Add scans on smaller rotations (was 0.2)
+    scan_buffer_size: 40 # More scans for better matching context
     scan_buffer_maximum_scan_distance: 10.0
-    link_match_minimum_response_fine: 0.4  # Stricter - reject more poorly matched scans
+    link_match_minimum_response_fine: 0.4 # Stricter - reject more poorly matched scans
     link_scan_maximum_distance: 1.5
-    loop_search_maximum_distance: 1.5  # Aggressive for tight indoor spaces
+    loop_search_maximum_distance: 1.5 # Aggressive for tight indoor spaces
     do_loop_closing: true
     loop_match_minimum_chain_size: 10
     loop_match_maximum_variance_coarse: 3.0
     loop_match_minimum_response_coarse: 0.35
     loop_match_minimum_response_fine: 0.45
     # Correlation Parameters - Correlation Parameters
-    correlation_search_space_dimension: 0.6  # Larger search to find existing walls
-    correlation_search_space_resolution: 0.005  # Finer search precision
-    correlation_search_space_smear_deviation: 0.05  # Tighter correlation (was 0.1)
+    correlation_search_space_dimension: 0.6 # Larger search to find existing walls
+    correlation_search_space_resolution: 0.005 # Finer search precision
+    correlation_search_space_smear_deviation: 0.05 # Tighter correlation (was 0.1)
     # Correlation Parameters - Loop Closure Parameters
-    loop_search_space_dimension: 6.0  # Larger loop closure search
+    loop_search_space_dimension: 6.0 # Larger loop closure search
     loop_search_space_resolution: 0.05
     loop_search_space_smear_deviation: 0.03
     # Scan Matcher Parameters
@@ -69,8 +69,8 @@ slam_toolbox:
     fine_search_angle_offset: 0.00349
     coarse_search_angle_offset: 0.349
     coarse_angle_resolution: 0.0349
-    minimum_angle_penalty: 0.95  # Stricter angle matching (was 0.9)
-    minimum_distance_penalty: 0.7  # Stricter distance matching (was 0.5)
+    minimum_angle_penalty: 0.95 # Stricter angle matching (was 0.9)
+    minimum_distance_penalty: 0.7 # Stricter distance matching (was 0.5)
     use_response_expansion: true
-    min_pass_through: 1  # Single pass clears cells - removes ghosts faster
+    min_pass_through: 1 # Single pass clears cells - removes ghosts faster
     occupancy_threshold: 0.1
