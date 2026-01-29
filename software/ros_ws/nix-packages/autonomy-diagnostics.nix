@@ -31,6 +31,7 @@ buildRosPackage rec {
     geometry-msgs
     lifecycle-msgs
     nav-msgs
+    python3Packages.pyyaml
     rclpy
     sensor-msgs
     std-msgs
