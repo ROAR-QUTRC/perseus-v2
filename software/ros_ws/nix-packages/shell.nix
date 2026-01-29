@@ -100,6 +100,7 @@ pkgs.mkShell {
             teleop-twist-keyboard
             tf2
             tf2-geometry-msgs
+            tf2-msgs
             tf2-ros
             tf2-sensor-msgs
             twist-mux

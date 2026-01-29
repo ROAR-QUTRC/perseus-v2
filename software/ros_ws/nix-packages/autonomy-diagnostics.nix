@@ -36,8 +36,8 @@ buildRosPackage rec {
     rclpy
     sensor-msgs
     std-msgs
-    tf2-ros
     tf2-msgs
+    tf2-ros
   ];
 
   meta = {
