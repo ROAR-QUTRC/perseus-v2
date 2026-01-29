@@ -1,39 +1,37 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+
 def generate_launch_description():
-    # NODES
     centrifuge_driver = Node(
-        package='perseus_payloads',
-        executable='centrifuge_driver',
-        name='centrifuge_driver',
-        output='screen'
-    )
-    ilmenite_mechanics = Node(
-        package='perseus_payloads',
-        executable='ilmenite_mechanics',
-        name='ilmenite_mechanics',
-        output='screen'
-    )
-    ilmenite_sensor = Node(
-        package='perseus_payloads',
-        executable='ilmenite_sensor',
-        name='ilmenite_sensor',
-        output='screen'
-    )
-    space_resources_controller = Node(
-        package='perseus_payloads',
-        executable='space_resources_controller',
-        name='space_resources_controller',
-        output='screen'
+        package="perseus_payloads",
+        executable="centrifuge_driver",
+        output="both",
     )
 
-    # List of nodes
+    ilmenite_station = Node(
+        package="perseus_payloads",
+        executable="ilmenite_station",
+        output="both",
+    )
+
+    ilmenite_ml = Node(
+        package="perseus_payloads",
+        executable="ilmenite_ml",
+        output="both",
+    )
+
+    space_resources_controller = Node(
+        package="perseus_payloads",
+        executable="space_resources_controller",
+        output="both",
+    )
+
     nodes = [
         centrifuge_driver,
-        ilmenite_mechanics,
-        ilmenite_sensor,
-        space_resources_controller
+        ilmenite_station,
+        ilmenite_ml,
+        space_resources_controller,
     ]
 
     return LaunchDescription(nodes)

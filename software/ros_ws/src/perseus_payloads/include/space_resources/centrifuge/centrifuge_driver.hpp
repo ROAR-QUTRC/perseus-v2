@@ -8,10 +8,11 @@ namespace space_resources
 class CentrifugeDriver : public rclcpp::Node
 {
 public:
-  explicit CentrifugeDriver();
+  explicit CentrifugeDriver(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
-  // timers, publishers, subscribers, services etc (do later)
+// publishers, subscirbers, params
+
 };
 
 }
