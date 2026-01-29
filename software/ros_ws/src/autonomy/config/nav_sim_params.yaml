@@ -318,8 +318,8 @@ velocity_smoother:
     smoothing_frequency: 20.0 # Increased from 10.0 for smoother operation
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.30, 0.0, 0.5] # x, y, theta components
-    min_velocity: [-0.30, 0.0, -0.5]
+    max_velocity: [0.30, 0.0, 0.3] # x, y, theta components
+    min_velocity: [-0.30, 0.0, -0.3]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]
