@@ -41,7 +41,7 @@ def generate_launch_description():
 
     nodes = [
         twist_mux,
-        twist_stamper,
+        # twist_stamper,
     ]
 
     return LaunchDescription(arguments + nodes)
