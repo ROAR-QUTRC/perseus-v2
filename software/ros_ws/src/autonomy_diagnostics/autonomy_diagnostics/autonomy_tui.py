@@ -93,6 +93,7 @@ def get_ros_ws_src_path() -> str:
     # Last resort: return empty string (config file checks will fail gracefully)
     return ""
 
+
 # =============================================================================
 # Configuration Loading
 # =============================================================================
@@ -107,37 +108,110 @@ def load_config() -> Dict[str, Any]:
     # Default configuration (fallback if config file not found)
     defaults = {
         "monitored_topics": [
-            {"name": "scan", "topic": "/scan", "type": "LaserScan",
-             "expected_hz": 10.0, "critical": True},
-            {"name": "imu", "topic": "/imu/data", "type": "Imu",
-             "expected_hz": 100.0, "critical": True},
-            {"name": "odom", "topic": "/odom", "type": "Odometry",
-             "expected_hz": 50.0, "critical": True},
-            {"name": "odom_filtered", "topic": "/odometry/filtered", "type": "Odometry",
-             "expected_hz": 30.0, "critical": True},
-            {"name": "map", "topic": "/map", "type": "OccupancyGrid",
-             "expected_hz": 0.1, "critical": False},
-            {"name": "cmd_vel", "topic": "/cmd_vel", "type": "Twist",
-             "expected_hz": 0.0, "critical": False},
-            {"name": "joint_states", "topic": "/joint_states", "type": "JointState",
-             "expected_hz": 50.0, "critical": True},
+            {
+                "name": "scan",
+                "topic": "/scan",
+                "type": "LaserScan",
+                "expected_hz": 10.0,
+                "critical": True,
+            },
+            {
+                "name": "imu",
+                "topic": "/imu/data",
+                "type": "Imu",
+                "expected_hz": 100.0,
+                "critical": True,
+            },
+            {
+                "name": "odom",
+                "topic": "/odom",
+                "type": "Odometry",
+                "expected_hz": 50.0,
+                "critical": True,
+            },
+            {
+                "name": "odom_filtered",
+                "topic": "/odometry/filtered",
+                "type": "Odometry",
+                "expected_hz": 30.0,
+                "critical": True,
+            },
+            {
+                "name": "map",
+                "topic": "/map",
+                "type": "OccupancyGrid",
+                "expected_hz": 0.1,
+                "critical": False,
+            },
+            {
+                "name": "cmd_vel",
+                "topic": "/cmd_vel",
+                "type": "Twist",
+                "expected_hz": 0.0,
+                "critical": False,
+            },
+            {
+                "name": "joint_states",
+                "topic": "/joint_states",
+                "type": "JointState",
+                "expected_hz": 50.0,
+                "critical": True,
+            },
         ],
         "tf_frames": [
-            {"parent": "map", "child": "odom", "description": "SLAM/AMCL", "critical": True},
-            {"parent": "odom", "child": "base_link", "description": "EKF", "critical": True},
-            {"parent": "base_link", "child": "chassis", "description": "URDF", "critical": True},
-            {"parent": "chassis", "child": "laser_2d_frame", "description": "LiDAR", "critical": True},
-            {"parent": "chassis", "child": "imu_link", "description": "IMU", "critical": True},
+            {
+                "parent": "map",
+                "child": "odom",
+                "description": "SLAM/AMCL",
+                "critical": True,
+            },
+            {
+                "parent": "odom",
+                "child": "base_link",
+                "description": "EKF",
+                "critical": True,
+            },
+            {
+                "parent": "base_link",
+                "child": "chassis",
+                "description": "URDF",
+                "critical": True,
+            },
+            {
+                "parent": "chassis",
+                "child": "laser_2d_frame",
+                "description": "LiDAR",
+                "critical": True,
+            },
+            {
+                "parent": "chassis",
+                "child": "imu_link",
+                "description": "IMU",
+                "critical": True,
+            },
         ],
         "lifecycle_nodes": [
-            "bt_navigator", "controller_server", "planner_server", "map_server",
-            "amcl", "smoother_server", "velocity_smoother", "collision_monitor",
-            "waypoint_follower", "behavior_server",
+            "bt_navigator",
+            "controller_server",
+            "planner_server",
+            "map_server",
+            "amcl",
+            "smoother_server",
+            "velocity_smoother",
+            "collision_monitor",
+            "waypoint_follower",
+            "behavior_server",
         ],
         "config_files": [
             {"path": "autonomy/config/ekf_params.yaml", "description": "EKF params"},
-            {"path": "autonomy/config/slam_toolbox_params.yaml", "description": "SLAM params"},
-            {"path": "autonomy/config/perseus_nav_params.yaml", "description": "Nav2 params"},
+            {
+                "path": "autonomy/config/slam_toolbox_params.yaml",
+                "description": "SLAM params",
+            },
+            {
+                "path": "autonomy/config/perseus_nav_params.yaml",
+                "description": "Nav2 params",
+            },
             {"path": "autonomy/config/cmd_vel_mux.yaml", "description": "Mux config"},
         ],
     }
