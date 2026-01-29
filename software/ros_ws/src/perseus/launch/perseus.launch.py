@@ -157,7 +157,7 @@ def generate_launch_description():
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
-        twist_mux_launch,
+        # twist_mux_launch,
         rosbridge_launch,
         OpaqueFunction(function=launch_payload),
     ]
