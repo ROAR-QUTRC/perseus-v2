@@ -26,6 +26,7 @@ ekf_filter_node:
     imu0_differential: false
     imu0_remove_gravitational_acceleration: true
     imu0_queue_size: 5
+    imu0_qos: "reliable"
     imu0_nodelay: true
     imu0_relative: false
     imu0_pose_rejection_threshold: 2.0
