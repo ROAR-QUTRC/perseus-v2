@@ -115,9 +115,13 @@
 	let waypoints = $state<WaypointRow[]>([]);
 	let waypointToggle = $state(0);
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
+=======
+
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 	// 0 -> selecting waypoint
 	// 1 -> selecting arrow
 	let lastID = $state('');
@@ -135,6 +139,8 @@
 =======
 >>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
 
+	let pendingSaveId: string | null = null; 
+
 	// ROS request/response plumbing
 	let requestTopic: ROSLIB.Topic<rosStringMessage> | null = null;
 	let responseTopic: ROSLIB.Topic<rosStringMessage> | null = null;
@@ -144,12 +150,19 @@
 	let mapHeight = $state(0);
 
 	//origin
+<<<<<<< HEAD
 	let positiveXDirection = $state<Direction>('up');
 	let positiveYDirection = $state<Direction>('left');
 	let xOriginAverage = $state(0);
 	let yOriginAverage = $state(0);
 	// bind the next arrow click to the waypoint that was just added
 	let pendingYawWaypointId: string | null = null;
+=======
+	let positive_x_direction = $state<Direction>('up');
+	let positive_y_direction = $state<Direction>('right');
+	let x_origin = $state(0);
+	let y_origin = $state(0);
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -194,8 +207,25 @@
 	});
 
 	const onResponseMessage = (message: rosStringMessage) => {
-		let response: any;
-		response = JSON.parse(message.data);
+		const response: any = JSON.parse(message.data);
+		if (pendingSaveId && response?.id === pendingSaveId) {
+			pendingSaveId = null;
+
+			statusMessage = response?.ok
+			? `Saved: ${response.saved_path ?? 'OK'}`
+			: `Save failed: ${response?.message ?? 'Unknown error'}`;
+
+			return;
+		}
+		if (response?.op === 'save_json') {
+			statusMessage = response?.ok
+			? `Saved: ${response.saved_path ?? 'OK'}`
+			: `Save failed: ${response?.message ?? 'Unknown error'}`;
+			return;
+		}
+		// extraction replies
+		if (mode === 'manual') return;
+
 		if (mode === 'border') {
 			borderContour = Array.isArray(response.contour) ? response.contour : [];
 		}
@@ -203,6 +233,7 @@
 		sampleImageHexadecimalColor = String(response.sample_image_hex ?? '');
 		centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
 		contour = Array.isArray(response.contour) ? response.contour : [];
+
 
 		if (mode === 'waypoint') {
 			if (waypointToggle == 0) {
@@ -222,6 +253,7 @@
 			}
 		} else if (mode === 'origin') {
 			add_origin_from_response(response);
+			calculate_origin();
 			statusMessage = centroid
 				? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
 				: `Origin added ${sampleImageHexadecimalColor}`;
@@ -230,18 +262,36 @@
 		}
 	}
 
+		function toRelative(centroidX: number, centroidY: number) {
+		if (origins.length === 0) {
+			return { relativeX: centroidX, relativeY: centroidY };
+		}
+		return {
+			relativeX: y_origin - centroidY,
+			relativeY: centroidX - x_origin
+		};
+	}
 
 	function calculate_origin() {
+		if (origins.length === 0) return;
 		let total_x = 0;
 		let total_y = 0;
+<<<<<<< HEAD
 		origins.forEach((origin) => {
 			total_x += origin.centroidX;
 			total_y += origin.centroidY;
 >>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
+=======
+		origins.forEach((o) => {
+			total_x += o.centroidX;
+			total_y += o.centroidY;
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 		});
+
 		x_origin = total_x / origins.length;
 		y_origin = total_y / origins.length;
 
+<<<<<<< HEAD
 		waypoints.forEach((waypoint) => {
 			switch(positive_x_direction) {
 				case "left":
@@ -269,6 +319,11 @@
 				case "up":
 					waypoint.relative_y = y_origin - waypoint.centroid_y;
 			}
+=======
+		waypoints = waypoints.map((w) => {
+			const rel = toRelative(w.centroidX, w.centroidY);
+			return { ...w, relativeX: rel.relativeX, relativeY: rel.relativeY };
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 		});
 	}
 
@@ -445,20 +500,71 @@
 		if (pendingSaveId && response?.id === pendingSaveId) {
 			pendingSaveId = null;
 
+<<<<<<< HEAD
 			statusMessage = response?.ok
 			? `Saved: ${response.saved_path ?? 'OK'}`
 			: `Save failed: ${response?.message ?? 'Unknown error'}`;
 
+=======
+	function next_arrow_name() {
+		const arrow_number = arrows.length + 1;
+		return `AR${String(arrow_number)}`;
+	}
+	function add_manual_waypoint(click_position: { x: number; y: number }) {
+		const clickX = click_position.x;
+		const clickY = click_position.y;
+		const rel = toRelative(clickX, clickY);
+
+		waypoints = [
+			...waypoints,
+			{
+				id: generateID(),
+				name: nextWaypointName(),
+				hexadecimalColor: '#ffffff', // manual marker colour
+				clickX,
+				clickY,
+				centroidX: clickX,
+				centroidY: clickY,
+				relativeX: rel.relativeX,
+				relativeY: rel.relativeY,
+				yaw: 0,          // store yaw as DEGREES (0=N, 90=W, 180=S, 270=E)
+				contour: []      // no contour in manual mode
+			}
+		];
+
+		statusMessage = `Manual waypoint added @ (${clickX}, ${clickY})`;
+	}
+
+
+	function add_waypoint_from_response(response: any, extractedContour: number [][]) {
+		if (!response?.ok) return;
+		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
+
+		const centroidX = Number(response.centroid[0]);
+		const centroidY = Number(response.centroid[1]);
+
+		// Prefer server echo; fall back to local currentClickPosition.
+		const clickX = Number(response.sample_x ?? currentClickPosition?.x);
+		const clickY = Number(response.sample_y ?? currentClickPosition?.y);
+
+		if (
+			!Number.isFinite(clickX) ||
+			!Number.isFinite(clickY) ||
+			!Number.isFinite(centroidX) ||
+			!Number.isFinite(centroidY)
+		) {
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 			return;
 		}
 
 		const hexadecimalColor = getSampleHex(response);
 		const waypointContour = extractedContour;
-
+		const rel = toRelative(centroidX, centroidY);
 
 		waypoints = [
 			...waypoints,
 			{
+<<<<<<< HEAD
 				id: generate_id(),
 				name: next_waypoint_name(),
 				hexadecimal_color,
@@ -467,6 +573,19 @@
 				centroid_x,
 				centroid_y,
 				yaw:0
+=======
+				id: generateID(),
+				name: nextWaypointName(),
+				hexadecimalColor: hexadecimalColor,
+				clickX,
+				clickY,
+				centroidX,
+				centroidY,
+				relativeX: rel.relativeX,
+				relativeY: rel.relativeY,
+				yaw: 0,
+				contour: waypointContour
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 			}
 		];
 	}
@@ -617,9 +736,17 @@
 
 		return lines.join('\n');
 	}
+<<<<<<< HEAD
 	  
 	function drawRotatedRectangle(waypoint:waypointRow){
 			const arrowLength = 25; 
+=======
+	function buildJson(): string {
+			const payload = {
+		waypoints: waypoints.map((w) => {
+			const x_m = w.relativeX / scale;
+			const y_m = w.relativeY / scale;
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 
 <<<<<<< HEAD
 			const yawDegrees = ((waypoint.yaw-90) * Math.PI) / 180;
@@ -663,6 +790,7 @@
 			''
 		);
 	}
+<<<<<<< HEAD
 
 	async function saveYamlToScripts() {
 <<<<<<< HEAD
@@ -714,9 +842,33 @@
 	// 	} catch (e:any) {
 	// 		statusMessage = `Save error: ${e?.message ?? String(e)}`;
 	// 	}
+=======
+	// Function that sets the file name of the saved file created in buildJson()
+	function saveJsonToScripts() {
+	if (!requestTopic) {
+		statusMessage = 'ROS not connected';
+		return;
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 	}
 
+	const id = generateID();
+	pendingSaveId = id;
+	statusMessage = 'Sending JSON save request…';
+
+	requestTopic.publish({
+		data: JSON.stringify({
+		id,
+		op: 'save_json',
+		file_name: 'Waypoints.json',
+		json_text: buildJson()
+		})
+	});
+	}
+
+
+
 	async function onMapClick(event: MouseEvent) {
+<<<<<<< HEAD
 		let x_dir;
 		let y_dir;
 		if (document.getElementById("p_direction_x")) {
@@ -889,6 +1041,18 @@
 
 		const id = generateID();
 		const rel = toRelative(centroidX, centroidY);
+=======
+		const x_dir = positive_x_direction;
+		const y_dir = positive_y_direction;
+		if (mode === 'manual') {
+			const click_position = clickToNaturalPosition(event);
+			if (!click_position) return;
+			currentClickPosition = click_position;
+			add_manual_waypoint(click_position);
+			return;
+		}
+			const click_position = clickToNaturalPosition(event);
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 
 		waypoints = [
 			...waypoints,
@@ -1218,7 +1382,6 @@
 =======
 				new Error('ROS not connected');
 			};
-		}
 
 	}
 
@@ -1499,9 +1662,15 @@
 		</div>
 
 		<!-- YAML preview -->
+<<<<<<< HEAD
 		<div class="jsonWrap">
 			<h2>JSON preview</h2>
 			<textarea class="jsonBox" readonly value={buildJson()}></textarea>
+=======
+		<div class="yamlWrap">
+			<h2>YAML preview</h2>
+			<textarea class="yamlBox" readonly value={buildJson()}></textarea>
+>>>>>>> f6ade2b6 (feat: Added manual waypoint mode and converted yaml export to json)
 		</div>
 	</div>
 </ScrollArea>
@@ -1602,7 +1771,7 @@
 		text-align: center;
 	}
 
-	.jsonWrap {
+	.yamlWrap {
 		margin-top: 14px;
 	}
 
@@ -1611,7 +1780,7 @@
 		margin-bottom: 6px;
 	}
 
-	.jsonBox {
+	.yamlBox {
 		width: 100%;
 		min-height: 180px;
 		border: 1px solid #333;
