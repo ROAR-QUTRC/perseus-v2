@@ -1,7 +1,6 @@
 # Autonomy Diagnostics Configuration
 # This file configures the topics, TF frames, lifecycle nodes, and config files
 # that the autonomy_tui monitors.
-
 # Topics to monitor for rate and connectivity
 monitored_topics:
   - name: scan
@@ -39,7 +38,6 @@ monitored_topics:
     type: JointState
     expected_hz: 50.0
     critical: true
-
 # TF frame chains to verify connectivity
 tf_frames:
   - parent: map
@@ -62,7 +60,6 @@ tf_frames:
     child: imu_link
     description: IMU
     critical: true
-
 # Nav2 lifecycle nodes to monitor state
 lifecycle_nodes:
   - bt_navigator
@@ -75,7 +72,6 @@ lifecycle_nodes:
   - collision_monitor
   - waypoint_follower
   - behavior_server
-
 # Config files to verify existence (paths relative to ROS workspace src directory)
 config_files:
   - path: autonomy/config/ekf_params.yaml
