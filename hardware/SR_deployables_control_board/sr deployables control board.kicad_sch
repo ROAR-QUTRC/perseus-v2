@@ -1,7 +1,7 @@
 (kicad_sch
 	(version 20250114)
 	(generator "eeschema")
-	(generator_version "9.99")
+	(generator_version "9.0")
 	(uuid "ee4bb141-42cd-4f29-afe2-345915c99666")
 	(paper "A4")
 	(lib_symbols
@@ -30,47 +30,47 @@
 			)
 			(property "Footprint" ""
 				(at 0 -2.54 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "http://ww1.microchip.com/downloads/en/DeviceDoc/21294E.pdf"
 				(at 0 5.08 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Dual Channel 10-Bit A/D Converter with SPI Serial Interface"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "Dual Channel 10-Bit ADC SPI 2CH"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_fp_filters" "DIP*W7.62mm** SOIC*3.9x4.9mm*P1.27mm* TSSOP*3x3mm*P0.65mm* MSOP*3x3mm*P0.65mm*"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "MCP3002_0_1"
@@ -261,47 +261,47 @@
 			)
 			(property "Footprint" ""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "~"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "connector"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_fp_filters" "Connector*:*_1x??_*"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "Conn_01x02_1_1"
@@ -404,47 +404,47 @@
 			)
 			(property "Footprint" ""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "~"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Generic connectable mounting pin connector, single row, 01x07, script generated (kicad-library-utils/schlib/autogen/connector/)"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "connector"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_fp_filters" "Connector*:*_1x??-1MP*"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "Conn_01x07_MountingPin_1_1"
@@ -730,47 +730,47 @@
 			)
 			(property "Footprint" ""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "~"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Generic connectable mounting pin connector, single row, 01x12, script generated (kicad-library-utils/schlib/autogen/connector/)"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "connector"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_fp_filters" "Connector*:*_1x??-1MP*"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "Conn_01x12_MountingPin_1_1"
@@ -1204,47 +1204,47 @@
 			)
 			(property "Footprint" ""
 				(at 0.9652 -3.81 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "~"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Unpolarized capacitor"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "cap capacitor"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_fp_filters" "C_*"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "C_0_1"
@@ -1341,47 +1341,47 @@
 			)
 			(property "Footprint" ""
 				(at -1.778 0 90)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "~"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Resistor"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "R res resistor"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_fp_filters" "R_*"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "R_0_1"
@@ -1459,47 +1459,47 @@
 			)
 			(property "Footprint" "Package_SON:WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm"
 				(at 0 -21.59 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "http://www.ti.com/lit/ds/symlink/drv8837c.pdf"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "H-Bridge driver, 1A, Low Voltage, PWM input, WSON-8"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "half bridge driver"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_fp_filters" "WSON*1EP*2x2mm*P0.5mm*"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "DRV8837C_0_1"
@@ -1711,47 +1711,47 @@
 			)
 			(property "Footprint" ""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "~"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Mounting Hole with connection"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "mounting hole"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_fp_filters" "MountingHole*Pad*"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "MountingHole_Pad_0_1"
@@ -1816,50 +1816,50 @@
 			)
 			(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
 				(at 5.08 -1.905 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 						(italic yes)
 					)
 					(justify left)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "https://www.onsemi.com/pub/Collateral/NDS7002A-D.PDF"
 				(at 5.08 -3.81 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
 					(justify left)
+					(hide yes)
 				)
 			)
 			(property "Description" "0.115A Id, 60V Vds, N-Channel MOSFET, SOT-23"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "N-Channel Switching MOSFET"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_fp_filters" "SOT?23*"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "2N7002_0_1"
@@ -2101,11 +2101,11 @@
 			(on_board yes)
 			(property "Reference" "#PWR"
 				(at 0 -3.81 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Value" "+3.3V"
@@ -2118,38 +2118,38 @@
 			)
 			(property "Footprint" ""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" ""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "global power"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "+3.3V_0_1"
@@ -2226,11 +2226,11 @@
 			(on_board yes)
 			(property "Reference" "#PWR"
 				(at 0 -6.35 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Value" "GND"
@@ -2243,38 +2243,38 @@
 			)
 			(property "Footprint" ""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" ""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "global power"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "GND_0_1"
@@ -2327,11 +2327,11 @@
 			(on_board yes)
 			(property "Reference" "#FLG"
 				(at 0 1.905 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Value" "PWR_FLAG"
@@ -2344,38 +2344,38 @@
 			)
 			(property "Footprint" ""
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Datasheet" "~"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "Description" "Special symbol for telling ERC where power comes from"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(property "ki_keywords" "flag power"
 				(at 0 0 0)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
 			(symbol "PWR_FLAG_0_0"
@@ -2683,10 +2683,10 @@
 		(uuid "636ea2c3-e76f-44b0-af64-51915b844c23")
 	)
 	(junction
-		(at 229.87 102.87)
+		(at 236.22 102.87)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "70dcec05-5f62-4c03-b4f0-0c49592eddf4")
+		(uuid "6a95fdc3-2bad-4920-ac1f-2990f277a500")
 	)
 	(junction
 		(at 187.96 68.58)
@@ -2902,6 +2902,16 @@
 	)
 	(wire
 		(pts
+			(xy 236.22 92.71) (xy 236.22 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "396be609-c8b5-4c69-bb6a-5aaf32c0b3df")
+	)
+	(wire
+		(pts
 			(xy 227.33 63.5) (xy 218.44 63.5)
 		)
 		(stroke
@@ -2969,6 +2979,16 @@
 			(type default)
 		)
 		(uuid "53af08a0-80b0-4771-bcdd-4e71ec8eb5c4")
+	)
+	(wire
+		(pts
+			(xy 236.22 101.6) (xy 236.22 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5754a4a1-4f0c-4b51-8dba-72b2a1363305")
 	)
 	(wire
 		(pts
@@ -3052,7 +3072,7 @@
 	)
 	(wire
 		(pts
-			(xy 222.25 102.87) (xy 218.44 102.87)
+			(xy 218.44 102.87) (xy 236.22 102.87)
 		)
 		(stroke
 			(width 0)
@@ -3152,7 +3172,7 @@
 	)
 	(wire
 		(pts
-			(xy 219.71 110.49) (xy 229.87 110.49)
+			(xy 219.71 110.49) (xy 236.22 110.49)
 		)
 		(stroke
 			(width 0)
@@ -3282,16 +3302,6 @@
 	)
 	(wire
 		(pts
-			(xy 229.87 102.87) (xy 233.68 102.87)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "cc4c7a58-a1b4-45de-b7b3-fb74ee83285d")
-	)
-	(wire
-		(pts
 			(xy 149.86 147.32) (xy 152.4 147.32)
 		)
 		(stroke
@@ -3413,12 +3423,12 @@
 		(uuid "04af897f-5d42-44c8-9603-40018659a6b9")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 252.3453 88.9 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3435,12 +3445,12 @@
 		(uuid "2368863d-3e81-4fd0-b504-2c3387a279ca")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 124.0148 87.63 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3457,12 +3467,12 @@
 		(uuid "29a08070-e060-4534-8d65-30d9067761f4")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 253.1314 106.68 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3479,12 +3489,12 @@
 		(uuid "2a2cf7ca-a194-4ae6-be99-667595dc8f1e")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 124.0148 102.87 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3501,12 +3511,12 @@
 		(uuid "34aa0ca8-1299-4a0f-b530-c937ed0faf06")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 253.1314 104.14 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3523,12 +3533,12 @@
 		(uuid "374c72b8-a8e8-45d8-9243-8f05c6a329ef")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 195.7833 92.71 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -3545,12 +3555,12 @@
 		(uuid "5e1b4b48-3944-43dd-bc6a-ee29c3d4d028")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 225.2352 97.79 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -3567,12 +3577,12 @@
 		(uuid "6effb91d-2646-4a7f-b904-d1ac5e5d3910")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 252.7686 93.98 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3589,18 +3599,18 @@
 		(uuid "6ffd0c1e-a29d-4ee1-b27a-624132b4a405")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 196.8114 97.79 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
 	(global_label "SWITCH"
 		(shape input)
-		(at 233.68 102.87 0)
+		(at 236.22 92.71 90)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3610,13 +3620,13 @@
 		)
 		(uuid "70e9f562-1e4b-4d06-a2fd-7b9abfd7b074")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 243.499 102.87 0)
-			(hide yes)
+			(at 236.22 82.891 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -3633,12 +3643,12 @@
 		(uuid "8613113a-ff08-4e16-9e94-2619c861976c")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 196.8114 100.33 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -3655,12 +3665,12 @@
 		(uuid "863441cf-fc0e-4a46-b827-a5a9c99a8747")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 252.7686 96.52 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3677,12 +3687,12 @@
 		(uuid "8e5b3f0a-6ded-4e09-b1fb-c9fd8c5b0a8c")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 273.9186 132.08 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -3699,12 +3709,12 @@
 		(uuid "976d0092-2ac0-43d7-820f-b437c42732e8")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 228.1986 95.25 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -3721,12 +3731,12 @@
 		(uuid "a1b72df8-6149-4d19-ac55-30fbcc389b08")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 252.5267 91.44 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3743,12 +3753,12 @@
 		(uuid "aa1f9eb0-492d-446f-8bd1-2e7abb9da4d4")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 250.531 109.22 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3765,12 +3775,12 @@
 		(uuid "ad8ddced-d007-4983-a100-26b74f293159")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 242.7901 140.97 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3787,12 +3797,12 @@
 		(uuid "b2573ada-1f25-41f5-a8c8-2ceb054efec2")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 195.8001 140.97 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3809,12 +3819,12 @@
 		(uuid "b960b738-4203-44ff-a831-550cfea352bf")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 228.1986 92.71 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -3831,12 +3841,12 @@
 		(uuid "b9897c75-d1ad-4282-ab5d-06da9a79daa7")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 251.6801 99.06 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3853,12 +3863,12 @@
 		(uuid "c5d76a3a-680d-4351-9297-86bb95156962")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 194.6947 90.17 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -3875,12 +3885,12 @@
 		(uuid "c92b886c-e3c6-4e2b-8722-356c0f735754")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 225.2352 100.33 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -3897,12 +3907,12 @@
 		(uuid "d8a60743-26f0-452c-be1c-c14cdabe9ac6")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 132.4814 160.02 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3919,12 +3929,12 @@
 		(uuid "dd349a88-4029-49eb-90cb-11c49b5e2ce7")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 251.6801 101.6 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3941,12 +3951,12 @@
 		(uuid "e9dff800-380e-4eb0-ac2f-ad0e36fce8b6")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 132.4814 162.56 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
 			)
 		)
 	)
@@ -3963,12 +3973,12 @@
 		(uuid "ff60489c-9dc3-40a2-8bdb-899cb8175e8d")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 226.9286 132.08 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 	)
@@ -4002,29 +4012,29 @@
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_Pad_Via"
 			(at 218.44 58.42 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 218.44 58.42 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Mounting Hole with connection"
 			(at 218.44 58.42 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4051,11 +4061,11 @@
 		(uuid "13763e7f-e0c1-4e76-94ee-357cc6dc4a1c")
 		(property "Reference" "#PWR06"
 			(at 257.81 87.63 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "+3.3V"
@@ -4068,29 +4078,29 @@
 		)
 		(property "Footprint" ""
 			(at 257.81 83.82 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 257.81 83.82 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 257.81 83.82 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4135,29 +4145,29 @@
 		)
 		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 			(at 188.9252 76.2 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 187.96 72.39 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 187.96 72.39 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4187,47 +4197,47 @@
 		(uuid "1c2c6bfa-9694-4cb5-a22f-70a4ac637627")
 		(property "Reference" "#PWR01"
 			(at 187.96 82.55 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 187.96 81.28 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 187.96 76.2 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 187.96 76.2 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 187.96 76.2 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4253,11 +4263,11 @@
 		(uuid "1c347533-0d77-4e8f-91f4-e9334bf40d87")
 		(property "Reference" "#PWR02"
 			(at 255.27 87.63 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "+5V"
@@ -4271,29 +4281,29 @@
 		)
 		(property "Footprint" ""
 			(at 255.27 83.82 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 255.27 83.82 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 255.27 83.82 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4319,11 +4329,11 @@
 		(uuid "22a4df41-1b3e-4712-9bf1-3cf74e9f4711")
 		(property "Reference" "#PWR017"
 			(at 152.4 151.13 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "+5V"
@@ -4337,29 +4347,29 @@
 		)
 		(property "Footprint" ""
 			(at 152.4 147.32 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 152.4 147.32 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 152.4 147.32 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4376,7 +4386,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 226.06 102.87 90)
+		(at 236.22 97.79 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4384,15 +4394,15 @@
 		(dnp no)
 		(uuid "26e615f4-d7e5-4bba-9ed6-7863fef42024")
 		(property "Reference" "R10"
-			(at 226.822 98.806 90)
+			(at 232.156 97.028 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "10k"
-			(at 226.822 100.584 90)
+		(property "Value" "8k"
+			(at 233.934 97.028 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4400,30 +4410,30 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
-			(at 226.06 104.648 90)
-			(hide yes)
+			(at 237.998 97.79 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
-			(at 226.06 102.87 0)
-			(hide yes)
+			(at 236.22 97.79 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Resistor"
-			(at 226.06 102.87 0)
-			(hide yes)
+			(at 236.22 97.79 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "2"
@@ -4433,7 +4443,7 @@
 			(uuid "8ef83a15-d2c3-43df-a5a9-a0f396726dfb")
 		)
 		(instances
-			(project "sr ir sensor"
+			(project "sr deployables control board"
 				(path "/ee4bb141-42cd-4f29-afe2-345915c99666"
 					(reference "R10")
 					(unit 1)
@@ -4471,29 +4481,29 @@
 		)
 		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 255.778 148.59 90)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 254 148.59 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Resistor"
 			(at 254 148.59 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "2"
@@ -4540,29 +4550,29 @@
 		)
 		(property "Footprint" "Package_DIP:DIP-8_W7.62mm"
 			(at 167.64 97.79 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "http://ww1.microchip.com/downloads/en/DeviceDoc/21294E.pdf"
 			(at 167.64 90.17 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Dual Channel 10-Bit A/D Converter with SPI Serial Interface"
 			(at 167.64 95.25 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "5"
@@ -4610,47 +4620,47 @@
 		(uuid "4d88b568-dc85-4517-9048-f5e4920b86cb")
 		(property "Reference" "#FLG01"
 			(at 252.095 86.36 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "PWR_FLAG"
 			(at 248.92 86.36 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 254 86.36 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 254 86.36 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Special symbol for telling ERC where power comes from"
 			(at 254 86.36 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4677,47 +4687,47 @@
 		(uuid "4dfb1ca7-5134-4c49-bd95-fe88de3c893e")
 		(property "Reference" "#PWR015"
 			(at 219.71 116.84 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 219.71 115.57 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 219.71 110.49 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 219.71 110.49 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 219.71 110.49 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4762,32 +4772,32 @@
 		)
 		(property "Footprint" "Package_TO_SOT_SMD:SOT-23_Handsoldering"
 			(at 219.71 142.875 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(italic yes)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/NDS7002A-D.PDF"
 			(at 219.71 144.78 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 		(property "Description" "0.115A Id, 60V Vds, N-Channel MOSFET, SOT-23"
 			(at 214.63 140.97 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4838,29 +4848,29 @@
 		)
 		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 			(at 176.2252 76.2 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 175.26 72.39 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 175.26 72.39 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4907,29 +4917,29 @@
 		)
 		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 			(at 139.3952 95.25 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 138.43 91.44 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 138.43 91.44 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -4959,47 +4969,47 @@
 		(uuid "7e052807-edc4-40d8-97a1-29f07a18ffdb")
 		(property "Reference" "#PWR019"
 			(at 132.08 101.6 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 132.08 100.33 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 132.08 95.25 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 132.08 95.25 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 132.08 95.25 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5026,47 +5036,47 @@
 		(uuid "7e395a04-97a0-465c-a561-25848a653de7")
 		(property "Reference" "#PWR012"
 			(at 260.35 160.02 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 260.35 158.75 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 260.35 153.67 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 260.35 153.67 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 260.35 153.67 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5112,29 +5122,29 @@
 		)
 		(property "Footprint" "Connector_JST:JST_ZH_S12B-ZR-SM4A-TF_1x12-1MP_P1.50mm_Horizontal"
 			(at 265.43 99.06 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 265.43 99.06 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Generic connectable mounting pin connector, single row, 01x12, script generated (kicad-library-utils/schlib/autogen/connector/)"
 			(at 265.43 99.06 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "3"
@@ -5197,47 +5207,47 @@
 		(uuid "86bba2c0-4085-45dd-8f13-8ab24cbb94dd")
 		(property "Reference" "#FLG04"
 			(at 260.35 113.665 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "PWR_FLAG"
 			(at 260.35 116.84 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 260.35 111.76 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 260.35 111.76 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Special symbol for telling ERC where power comes from"
 			(at 260.35 111.76 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5264,47 +5274,47 @@
 		(uuid "945a5c44-df3f-4301-8335-36b659a350a4")
 		(property "Reference" "#FLG03"
 			(at 260.35 81.915 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "PWR_FLAG"
 			(at 260.35 78.74 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 260.35 83.82 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 260.35 83.82 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Special symbol for telling ERC where power comes from"
 			(at 260.35 83.82 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5349,29 +5359,29 @@
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_Pad_Via"
 			(at 227.33 58.42 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 227.33 58.42 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Mounting Hole with connection"
 			(at 227.33 58.42 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5415,29 +5425,29 @@
 		)
 		(property "Footprint" "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical"
 			(at 167.64 158.75 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 167.64 158.75 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
 			(at 167.64 158.75 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "2"
@@ -5482,29 +5492,29 @@
 		)
 		(property "Footprint" "Connector_JST:JST_ZH_S7B-ZR-SM4A-TF_1x07-1MP_P1.50mm_Horizontal"
 			(at 213.36 97.79 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 213.36 97.79 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Generic connectable mounting pin connector, single row, 01x07, script generated (kicad-library-utils/schlib/autogen/connector/)"
 			(at 213.36 97.79 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5552,47 +5562,47 @@
 		(uuid "9fbd6816-d048-4511-bdfa-cfd8109bc64b")
 		(property "Reference" "#PWR08"
 			(at 158.75 144.78 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 158.75 143.51 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 158.75 138.43 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 158.75 138.43 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 158.75 138.43 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5637,29 +5647,29 @@
 		)
 		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 208.788 148.59 90)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 207.01 148.59 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Resistor"
 			(at 207.01 148.59 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "2"
@@ -5707,29 +5717,29 @@
 		)
 		(property "Footprint" "Package_SON:WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm"
 			(at 149.86 181.61 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "http://www.ti.com/lit/ds/symlink/drv8837c.pdf"
 			(at 149.86 160.02 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "H-Bridge driver, 1A, Low Voltage, PWM input, WSON-8"
 			(at 149.86 160.02 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "9"
@@ -5779,11 +5789,11 @@
 		(uuid "bdf865fa-00ea-420a-bc07-b739e1e91a0f")
 		(property "Reference" "#PWR09"
 			(at 139.7 151.13 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "+3.3V"
@@ -5796,29 +5806,29 @@
 		)
 		(property "Footprint" ""
 			(at 139.7 147.32 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 139.7 147.32 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 139.7 147.32 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5863,32 +5873,32 @@
 		)
 		(property "Footprint" "Package_TO_SOT_SMD:SOT-23_Handsoldering"
 			(at 266.7 142.875 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(italic yes)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/NDS7002A-D.PDF"
 			(at 266.7 144.78 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
+				(hide yes)
 			)
 		)
 		(property "Description" "0.115A Id, 60V Vds, N-Channel MOSFET, SOT-23"
 			(at 261.62 140.97 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5938,29 +5948,29 @@
 		)
 		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 			(at 139.3952 102.87 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 138.43 99.06 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 138.43 99.06 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5990,47 +6000,47 @@
 		(uuid "cb037228-fb3c-4f77-8416-a50a8c3a2ddd")
 		(property "Reference" "#PWR03"
 			(at 256.54 120.65 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 256.54 119.38 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 256.54 114.3 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 256.54 114.3 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 256.54 114.3 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6072,29 +6082,29 @@
 		)
 		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 147.32 104.648 90)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 147.32 102.87 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Resistor"
 			(at 147.32 102.87 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "2"
@@ -6142,29 +6152,29 @@
 		)
 		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 			(at 150.8252 146.05 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 149.86 142.24 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 149.86 142.24 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "2"
@@ -6193,11 +6203,11 @@
 		(uuid "da51ec76-a724-4b0d-a765-b26b607992c3")
 		(property "Reference" "#PWR016"
 			(at 219.71 91.44 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "+5V"
@@ -6211,29 +6221,29 @@
 		)
 		(property "Footprint" ""
 			(at 219.71 87.63 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 219.71 87.63 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 219.71 87.63 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6260,47 +6270,47 @@
 		(uuid "dbdb7bf3-33fa-44ea-88a2-bcae476eeda5")
 		(property "Reference" "#PWR010"
 			(at 218.44 71.12 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 218.44 69.85 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 218.44 64.77 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 218.44 64.77 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 218.44 64.77 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6327,47 +6337,47 @@
 		(uuid "df94a71c-6832-4b59-9268-976557c8f673")
 		(property "Reference" "#PWR011"
 			(at 213.36 160.02 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 213.36 158.75 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 213.36 153.67 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 213.36 153.67 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 213.36 153.67 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6411,29 +6421,29 @@
 		)
 		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 			(at 145.7452 146.05 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 144.78 142.24 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 144.78 142.24 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "2"
@@ -6478,29 +6488,29 @@
 		)
 		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 147.32 89.408 90)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
 			(at 147.32 87.63 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Resistor"
 			(at 147.32 87.63 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "2"
@@ -6530,11 +6540,11 @@
 		(uuid "e7a7751b-15a0-4eb3-87b9-10e3d1eb8c97")
 		(property "Reference" "#PWR04"
 			(at 187.96 72.39 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "+3.3V"
@@ -6547,29 +6557,29 @@
 		)
 		(property "Footprint" ""
 			(at 187.96 68.58 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 187.96 68.58 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 187.96 68.58 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6596,47 +6606,47 @@
 		(uuid "ea1e1235-6ce3-4f4d-bac3-488397ef19b7")
 		(property "Reference" "#PWR07"
 			(at 149.86 179.07 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 149.86 177.8 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 149.86 172.72 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 149.86 172.72 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 149.86 172.72 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6653,7 +6663,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 229.87 106.68 180)
+		(at 236.22 106.68 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6661,15 +6671,15 @@
 		(dnp no)
 		(uuid "f3699872-23cb-4dd7-9d7b-9d5f21b70789")
 		(property "Reference" "R11"
-			(at 225.806 106.68 90)
+			(at 232.156 106.68 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "18k"
-			(at 227.584 106.426 90)
+		(property "Value" "10k"
+			(at 233.934 106.426 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6677,30 +6687,30 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
-			(at 231.648 106.68 90)
-			(hide yes)
+			(at 237.998 106.68 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" "~"
-			(at 229.87 106.68 0)
-			(hide yes)
+			(at 236.22 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Resistor"
-			(at 229.87 106.68 0)
-			(hide yes)
+			(at 236.22 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "2"
@@ -6730,47 +6740,47 @@
 		(uuid "f49258d4-35a9-482c-9ea1-14698b8e1daf")
 		(property "Reference" "#PWR05"
 			(at 167.64 115.57 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Value" "GND"
 			(at 167.64 114.3 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
 			(at 167.64 109.22 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Datasheet" ""
 			(at 167.64 109.22 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 167.64 109.22 0)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
