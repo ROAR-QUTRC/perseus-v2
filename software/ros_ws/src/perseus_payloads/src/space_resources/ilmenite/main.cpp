@@ -1,7 +1,8 @@
 #include "space_resources/ilmenite/main.hpp"
+
 #include <memory>
 
-int main(int argc, char * argv[])
+int main(int argc, char* argv[])
 {
     rclcpp::init(argc, argv);
 
