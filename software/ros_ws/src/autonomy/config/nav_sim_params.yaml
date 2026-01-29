@@ -106,8 +106,8 @@ controller_server:
     general_goal_checker:
       stateful: true
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.8
+      yaw_goal_tolerance: 0.3
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
       # Core speed
@@ -119,7 +119,7 @@ controller_server:
       lookahead_time: 1.0 # was 1.5 (less "late correction")
       # Rotation / heading handling (reduce overshoot)
       use_rotate_to_heading: true
-      rotate_to_heading_angular_vel: 0.6 # was 1.0 (less aggressive)
+      rotate_to_heading_angular_vel: 0.8 # was 1.0 (less aggressive)
       rotate_to_heading_min_angle: 1.05 # was 0.785 (~60deg). Avoids flip-flopping
       # Limit angular aggressiveness to reduce oscillation
       max_angular_accel: 2.0 # was 3.2
@@ -299,9 +299,9 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_timeout: 0.2 # Increased from 0.1 for timing tolerance
     simulate_ahead_time: 2.0
-    max_rotational_vel: 0.5 # # Reduced from 1.0 for smoother rotation for EFK
-    min_rotational_vel: 0.2 # Reduced from 0.
-    rotational_acc_lim: 3.2 # increased from 2.0 for better responsiveness
+    max_rotational_vel: 0.8
+    min_rotational_vel: 0.3
+    rotational_acc_lim: 3.5
     enable_stamped_cmd_vel: true
 waypoint_follower:
   ros__parameters:
@@ -318,11 +318,11 @@ velocity_smoother:
     smoothing_frequency: 20.0 # Increased from 10.0 for smoother operation
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.30, 0.0, 0.3] # x, y, theta components
-    min_velocity: [-0.30, 0.0, -0.3]
+    max_velocity: [0.30, 0.0, 0.8]     # allow up to 0.8 rad/s
+    min_velocity: [-0.30, 0.0, -0.8]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-    max_accel:  [0.6, 0.0, 1.2]     # [m/s^2, m/s^2, rad/s^2]
+    max_accel:  [0.6, 0.0, 2.5]        # faster ramp in yaw
     max_decel: [-0.8, 0.0, -1.6]
     odom_topic: "odometry/filtered"
     odom_duration: 0.1
