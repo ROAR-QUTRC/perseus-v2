@@ -21,7 +21,7 @@ If you're curious as to what this documentation uses, check out the list of them
 
 Code (API) documentation is provided with Doxygen through the use of [Breathe](inv:breathe#index), which acts as a bridge from the output Doxygen provides to ReST for Sphinx.
 Although it's not leveraged much in this documentation, you can reference specific [files](inv:breathe#file), [classes](inv:breathe#class), or [methods](inv:breathe#function), and [more](inv:breathe#directives) using Breathe.
-Next is the [Exhale](inv:exhale#index) extension, which provides the Doxygen-style namespace, class, and file [lists](project:/generated/index.rst).
+Next is the [Exhale](inv:exhale#index) extension, which provides the Doxygen-style namespace, class, and file [lists](project:/generated/exhale/index.rst).
 It's also set up to automatically run Doxygen, so there's no need for a standard configuration `Doxyfile` - the modifications to the standard configuration are provided with [configuration](inv:exhale#*exhaleDoxygenStdin) options on top of Exhale's [defaults](inv:exhale#*DEFAULT_DOXYGEN_STDIN_BASE).
 
 #### Theming

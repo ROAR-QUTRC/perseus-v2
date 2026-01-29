@@ -140,7 +140,7 @@ options = ["format"]
 
 [formatter.typos]
 command = "typos"
-excludes = []
+excludes = ["typos.toml"]
 includes = ["*"]
 options = ["--write-changes", "--force-exclude"]
 
