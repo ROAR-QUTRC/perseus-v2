@@ -11,22 +11,15 @@ from rclpy.node import Node
 from std_msgs.msg import String
 
 MAP_directory = os.environ.get("PERSEUS_MAP_DIR", "/opt/perseus/maps")
-YAML_DIR = Path(
+JSON_DIR = Path(
     os.environ.get(
-        "PERSEUS_YAML_DIR", str(Path.home() / "perseus-v2/software/web_ui/static")
+        "PERSEUS_JSON_DIR", str(Path.home() / "perseus-v2/software/web_ui/static")
     )
 ).resolve()
-YAML_DIR.mkdir(parents=True, exist_ok=True)
+JSON_DIR.mkdir(parents=True, exist_ok=True)
 
 REQUEST_TOPIC_NAME = "/map_editor/request"
 RESPONSE_TOPIC_NAME = "/map_editor/response"
-
-
-def SaveFileName(name: str) -> str:
-    name = os.path.basename(name or "")
-    if not name.endswith((".yaml", ".yml")):
-        name += ".yaml"
-    return name
 
 
 def HueSaturationValueRanges(
@@ -94,53 +87,39 @@ def ContourToPoints(contour) -> list[list[int]]:
 
 
 class ExtractFeatures(Node):
-    """
-    Request/response over std_msgs/String JSON.
-
-    Request:
-      {
-        "id": "...",
-        "op": "extract_feature",
-        "mode": "border" | "waypoint" | "origin",
-        "image_id": "foo.png",
-        "sample_x": 123,
-        "sample_y": 456,
-        "tol_h": 10,
-        "tol_s": 60,
-        "tol_v": 60,
-        "approx_eps": 2.0,       (optional)
-        "close_k": 5,            (optional)
-        "median_k": 5            (optional)
-      }
-
-    Response:
-      {
-        "id": "...",
-        "ok": true/false,
-        "message": "...",
-        "sample_x": ...,
-        "sample_y": ...,
-        "sample_hex": "#RRGGBB",
-        "sample_image_hex": "#RRGGBB",   (compatibility field)
-        "centroid": [x, y],
-        "contour": [[x, y], ...]
-      }
-    """
-
     def __init__(self):
         super().__init__("extract_features")
-
-        self.cache: dict[str, tuple[np.ndarray, np.ndarray, int, int]] = {}
-
+        self.get_logger().info(f"SaveJson exists? {hasattr(self, 'SaveJson')}")
+        self.cache = {}
         self.request_subscription = self.create_subscription(
             String, REQUEST_TOPIC_NAME, self.OnRequest, 10
         )
         self.response_publisher = self.create_publisher(String, RESPONSE_TOPIC_NAME, 10)
 
-        self.get_logger().info(
-            f"ExtractFeatures started. PERSEUS_MAP_DIR={MAP_directory}"
-        )
-        self.get_logger().info(f"YAML_DIR={YAML_DIR}")
+    def reply(self, request_id: str, payload: dict[str, Any]):
+        payload["id"] = request_id
+        self.response_publisher.publish(String(data=json.dumps(payload)))
+
+    @staticmethod
+    def SaveJsonFileName(name: str) -> str:
+        name = os.path.basename(name or "")
+        if not name.endswith(".json"):
+            name += ".json"
+        return name
+
+
+    def SaveJson(self, request_id: str, request: dict):
+        json_text = request.get("json_text", "")
+        file_name = self.SaveJsonFileName(request.get("file_name", "waypoints.json"))
+        try:
+            JSON_DIR.mkdir(parents=True, exist_ok=True)
+            out_path = JSON_DIR / file_name
+            tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
+            tmp_path.write_text(json_text, encoding="utf-8")
+            tmp_path.replace(out_path)
+            self.reply(request_id, {"ok": True, "saved_path": str(out_path)})
+        except Exception as e:
+            self.reply(request_id, {"ok": False, "message": str(e)})
 
     def LoadImage(self, image_id: str):
         if image_id in self.cache:
@@ -161,27 +140,6 @@ class ExtractFeatures(Node):
             image_width,
         )
         return image_bgr, image_hue_saturation_value, image_height, image_width
-
-    def reply(self, request_id: str, payload: dict[str, Any]):
-        payload["id"] = request_id
-        self.response_publisher.publish(String(data=json.dumps(payload)))
-
-    ### Method that saves the yaml code as a file to a specific folder specified above
-    def SaveYaml(self, request_id: str, request: dict):
-        yaml_text = request.get("yaml_text", "")
-        file_name = SaveFileName(request.get("file_name", "waypoints.yaml"))
-
-        try:
-            YAML_DIR.mkdir(parents=True, exist_ok=True)
-            out_path = YAML_DIR / file_name
-
-            tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
-            tmp_path.write_text(yaml_text, encoding="utf-8")
-            tmp_path.replace(out_path)
-
-            self.reply(request_id, {"ok": True, "saved_path": str(out_path)})
-        except Exception as e:
-            self.reply(request_id, {"ok": False, "message": str(e)})
 
     @staticmethod
     def ChooseContourNearClick(contours, x_pos: int, y_pos: int):
@@ -217,20 +175,13 @@ class ExtractFeatures(Node):
             request = json.loads(message.data)
             request_id = str(request.get("id", ""))
 
-            # operation = request.get("op", "")
-            # if operation not in ("extract_feature", "extract_border", "extract_waypoint"):
-            #     self.reply(request_id, {"ok": False, "message": f"Unsupported op: {operation}"})
-            #     return
+            operation = str(request.get("op", ""))
 
-            # Normalize to one handler with a mode
+            if operation == "save_json":
+                self.SaveJson(request_id, request)
+                return
+
             mode = request["mode"]
-            # if operation == "extract_border":
-            #     mode = "border"
-            # elif operation == "extract_waypoint":
-            #     mode = "waypoint"
-            # if mode not in ("border", "waypoint"):
-            #     mode = "border"
-
             image_id = request["image_id"]
             x_pos = int(request["sample_x"])
             y_pos = int(request["sample_y"])

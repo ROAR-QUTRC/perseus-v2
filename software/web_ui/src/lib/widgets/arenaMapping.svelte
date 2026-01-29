@@ -3,7 +3,7 @@
 
 	// Internal identifiers follow: American spelling + snake_case + minimal abbreviations.
 	const widget_name = 'Arena Map Editor';
-	const widget_description = 'Create the json file that Perseus will use to navigate';
+	const widget_description = 'Create the YAML file that Perseus will use to navigate';
 	const widget_group = 'ROS';
 	const is_ros_dependent = true;
 
@@ -98,6 +98,7 @@
 	// stored waypoints
 	let waypoints = $state<WaypointRow[]>([]);
 	let waypointToggle = $state(0);
+
 	// 0 -> selecting waypoint
 	// 1 -> selecting arrow
 	let lastID = $state('');
@@ -110,6 +111,8 @@
 
 	let borderContour = $state<number[][]>([]);
 
+	let pendingSaveId: string | null = null; 
+
 	// ROS request/response plumbing
 	let requestTopic: ROSLIB.Topic<rosStringMessage> | null = null;
 	let responseTopic: ROSLIB.Topic<rosStringMessage> | null = null;
@@ -119,8 +122,8 @@
 	let map_height = $state(0);
 
 	//origin
-	let positive_x_direction = $state<Direction>('unselected');
-	let positive_y_direction = $state<Direction>('unselected');
+	let positive_x_direction = $state<Direction>('up');
+	let positive_y_direction = $state<Direction>('right');
 	let x_origin = $state(0);
 	let y_origin = $state(0);
 
@@ -150,16 +153,33 @@
 	});
 
 	const onResponseMessage = (message: rosStringMessage) => {
-		let response: any;
-		response = JSON.parse(message.data);
+		const response: any = JSON.parse(message.data);
+		if (pendingSaveId && response?.id === pendingSaveId) {
+			pendingSaveId = null;
+
+			statusMessage = response?.ok
+			? `Saved: ${response.saved_path ?? 'OK'}`
+			: `Save failed: ${response?.message ?? 'Unknown error'}`;
+
+			return;
+		}
+		if (response?.op === 'save_json') {
+			statusMessage = response?.ok
+			? `Saved: ${response.saved_path ?? 'OK'}`
+			: `Save failed: ${response?.message ?? 'Unknown error'}`;
+			return;
+		}
+		// extraction replies
+		if (mode === 'manual') return;
+
 		if (mode === 'border') {
 			borderContour = Array.isArray(response.contour) ? response.contour : [];
 		}
-		if (mode === 'manual') return; // manual mode never consumes ROS extraction replies
 
 		sampleImageHexadecimalColor = String(response.sample_image_hex ?? '');
 		centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
 		contour = Array.isArray(response.contour) ? response.contour : [];
+
 
 		if (mode === 'waypoint') {
 			if (waypointToggle == 0) {
@@ -179,6 +199,7 @@
 			}
 		} else if (mode === 'origin') {
 			add_origin_from_response(response);
+			calculate_origin();
 			statusMessage = centroid
 				? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
 				: `Origin added ${sampleImageHexadecimalColor}`;
@@ -187,44 +208,31 @@
 		}
 	}
 
+		function toRelative(centroidX: number, centroidY: number) {
+		if (origins.length === 0) {
+			return { relativeX: centroidX, relativeY: centroidY };
+		}
+		return {
+			relativeX: y_origin - centroidY,
+			relativeY: centroidX - x_origin
+		};
+	}
 
 	function calculate_origin() {
+		if (origins.length === 0) return;
 		let total_x = 0;
 		let total_y = 0;
-		origins.forEach((origin) => {
-			total_x += origin.centroidX;
-			total_y += origin.centroidY;
+		origins.forEach((o) => {
+			total_x += o.centroidX;
+			total_y += o.centroidY;
 		});
+
 		x_origin = total_x / origins.length;
 		y_origin = total_y / origins.length;
 
-		waypoints.forEach((waypoint) => {
-			switch(positive_x_direction) {
-				case "left":
-					waypoint.relativeX = x_origin - waypoint.centroidX;
-					break;
-				case "right":
-					waypoint.relativeX = waypoint.centroidX - x_origin;
-					break;
-				case "down":
-					waypoint.relativeX = waypoint.centroidY - y_origin;
-					break;
-				case "up":
-					waypoint.relativeX = y_origin - waypoint.centroidY;
-			}
-			switch(positive_y_direction) {
-				case "left":
-					waypoint.relativeY = x_origin - waypoint.centroidX;
-					break;
-				case "right":
-					waypoint.relativeY = waypoint.centroidX - x_origin;
-					break;
-				case "down":
-					waypoint.relativeY = waypoint.centroidY - y_origin;
-					break;
-				case "up":
-					waypoint.relativeY = y_origin - waypoint.centroidY;
-			}
+		waypoints = waypoints.map((w) => {
+			const rel = toRelative(w.centroidX, w.centroidY);
+			return { ...w, relativeX: rel.relativeX, relativeY: rel.relativeY };
 		});
 	}
 
@@ -289,6 +297,7 @@
 	function add_manual_waypoint(click_position: { x: number; y: number }) {
 		const clickX = click_position.x;
 		const clickY = click_position.y;
+		const rel = toRelative(clickX, clickY);
 
 		waypoints = [
 			...waypoints,
@@ -300,8 +309,8 @@
 				clickY,
 				centroidX: clickX,
 				centroidY: clickY,
-				relativeX: clickX,
-				relativeY: clickY,
+				relativeX: rel.relativeX,
+				relativeY: rel.relativeY,
 				yaw: 0,          // store yaw as DEGREES (0=N, 90=W, 180=S, 270=E)
 				contour: []      // no contour in manual mode
 			}
@@ -333,7 +342,7 @@
 
 		const hexadecimalColor = getSampleHex(response);
 		const waypointContour = extractedContour;
-
+		const rel = toRelative(centroidX, centroidY);
 
 		waypoints = [
 			...waypoints,
@@ -345,10 +354,10 @@
 				clickY,
 				centroidX,
 				centroidY,
-				relativeX: centroidX,
-				relativeY: centroidY,
-				yaw:0,
-				contour:waypointContour
+				relativeX: rel.relativeX,
+				relativeY: rel.relativeY,
+				yaw: 0,
+				contour: waypointContour
 			}
 		];
 	}
@@ -453,7 +462,7 @@
 	function roundTo(n: number, dp: number) {
 		return Number.isFinite(n) ? Number(n.toFixed(dp)) : 0;
 	}
-	function buildjson(): string {
+	function buildJson(): string {
 			const payload = {
 		waypoints: waypoints.map((w) => {
 			const x_m = w.relativeX / scale;
@@ -477,7 +486,7 @@
 	function drawRotatedRectangle(waypoint: WaypointRow) {
 		const arrowLength = 25;
 
-		// Same convention as json: N=0, E=-pi/2, W=+pi/2
+		// Same convention as YAML: N=0, E=-pi/2, W=+pi/2
 		const t = (-waypoint.yaw * Math.PI) / 180;
 
 		const yawX1Coordinate = waypoint.centroidX;
@@ -500,52 +509,39 @@
 			''
 		);
 	}
-// Function that sets the file name of the saved file created in buildjson()
-	async function savejsonToScripts() {
-	// 	const json_text = buildjson();
-	// 	try {
-	// 		statusMessage = 'Uploading json file to Perseus';
-	// 		const response = await sendRequest({
-	// 			op: 'save_json',
-	// 			file_name: 'Waypoints.json',
-	// 			json_text
-	// 		});
-	// 		if (!response?.ok){
-	// 			statusMessage = response?.message ?? 'Save failed';
-	// 			return;
-	// 		}
-    // 		statusMessage = `Saved: ${response.saved_path ?? 'OK'}`;
-	// 	} catch (e:any) {
-	// 		statusMessage = `Save error: ${e?.message ?? String(e)}`;
-	// 	}
+	// Function that sets the file name of the saved file created in buildJson()
+	function saveJsonToScripts() {
+	if (!requestTopic) {
+		statusMessage = 'ROS not connected';
+		return;
 	}
 
+	const id = generateID();
+	pendingSaveId = id;
+	statusMessage = 'Sending JSON save request…';
+
+	requestTopic.publish({
+		data: JSON.stringify({
+		id,
+		op: 'save_json',
+		file_name: 'Waypoints.json',
+		json_text: buildJson()
+		})
+	});
+	}
+
+
+
 	async function onMapClick(event: MouseEvent) {
-		let x_dir;
-		let y_dir;
-		if (document.getElementById("p_direction_x")) {
-			const x_select = document.getElementById("p_direction_x") as HTMLSelectElement;
-			const y_select = document.getElementById("p_direction_y") as HTMLSelectElement;
-			x_dir = x_select.value;
-			y_dir = y_select.value;
-		}
-		else {
-			x_dir = positive_x_direction;
-			y_dir = positive_y_direction;
-		}
+		const x_dir = positive_x_direction;
+		const y_dir = positive_y_direction;
 		if (mode === 'manual') {
 			const click_position = clickToNaturalPosition(event);
 			if (!click_position) return;
-
 			currentClickPosition = click_position;
 			add_manual_waypoint(click_position);
 			return;
 		}
-
-		if (mode === 'origin' && x_dir == 'unselected' && y_dir == 'unselected') {
-			statusMessage = "Assign positive direction for x and y";
-		}
-		else {
 			const click_position = clickToNaturalPosition(event);
 
 			currentClickPosition = click_position;
@@ -579,7 +575,6 @@
 			else {
 				new Error('ROS not connected');
 			};
-		}
 
 	}
 
@@ -616,8 +611,8 @@
 					Clear table
 				</button>
 
-				<button type="button" onclick={savejsonToScripts} disabled={waypoints.length === 0}>
-					Save json
+				<button type="button" onclick={saveJsonToScripts} disabled={waypoints.length === 0}>
+					Save YAML
 				</button>
 			</div>
 		</div>
@@ -847,10 +842,10 @@
 			</table>
 		</div>
 
-		<!-- json preview -->
-		<div class="jsonWrap">
-			<h2>json preview</h2>
-			<textarea class="jsonBox" readonly value={buildjson()}></textarea>
+		<!-- YAML preview -->
+		<div class="yamlWrap">
+			<h2>YAML preview</h2>
+			<textarea class="yamlBox" readonly value={buildJson()}></textarea>
 		</div>
 	</div>
 </ScrollArea>
@@ -952,7 +947,7 @@
 		text-align: center;
 	}
 
-	.jsonWrap {
+	.yamlWrap {
 		margin-top: 14px;
 	}
 
@@ -961,7 +956,7 @@
 		margin-bottom: 6px;
 	}
 
-	.jsonBox {
+	.yamlBox {
 		width: 100%;
 		min-height: 180px;
 		border: 1px solid #333;
