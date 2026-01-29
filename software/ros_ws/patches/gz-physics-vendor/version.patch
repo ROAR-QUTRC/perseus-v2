@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2f90193..3aa1a2b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -4,7 +4,7 @@ project(gz_physics_vendor)
+ 
+ # Project-specific settings
+ set(LIB_VER_MAJOR 7)
+-set(LIB_VER_MINOR 6)
++set(LIB_VER_MINOR 5)
+ set(LIB_VER_PATCH 0)
+ set(LIB_VER_SUFFIX "")
+ 

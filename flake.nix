@@ -1,13 +1,16 @@
 {
   inputs = {
     # ros inputs
-    nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay";
+    nix-ros-overlay = {
+      url = "github:lopsided98/nix-ros-overlay";
+    };
     nixpkgs.follows = "nix-ros-overlay/nixpkgs"; # IMPORTANT!!!
     nix-ros-workspace = {
       url = "github:RandomSpaceship/nix-ros-workspace";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nix-ros-overlay.follows = "nix-ros-overlay";
     };
+    nixpkgs-old.url = "nixpkgs/nixos-24.11";
     # docs inputs
     nixpkgs-unstable.url = "nixpkgs/nixpkgs-unstable";
     pyproject-nix = {
@@ -59,6 +62,7 @@
       nix-ros-overlay,
       nix-ros-workspace,
       nixpkgs-unstable,
+      nixpkgs-old,
       pyproject-nix,
       uv2nix,
       pyproject-build-systems,
@@ -98,12 +102,9 @@
               ros = final.rosPackages.${rosDistro};
               # and add pkgs.unstable access
               unstable = pkgs-unstable;
+              oldPkgs = pkgs-old;
             })
           ];
-          # Gazebo makes use of Freeimage.
-          # Freeimage is blocked by default since it has a whole bunch of CVEs.
-          # This means we have to explicitly permit Freeimage to allow Gazebo to run.
-          config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
           config.allowUnfreePredicate =
             pkg:
             builtins.elem (pkgs.lib.getName pkg) [
@@ -144,6 +145,15 @@
           config.allowUnfree = true; # needed for draw.io for the docs
         };
 
+        pkgs-old = import nixpkgs-old {
+          inherit system;
+          # Gazebo makes use of Freeimage.
+          # Freeimage is blocked by default since it has a whole bunch of CVEs.
+          # This means we have to explicitly permit Freeimage to allow Gazebo to run.
+          # Freeimage is also abandoned, so we have to use the version from an old version of nixpkgs.
+          config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
+        };
+
         # --- INPUT PACKAGE SETS ---
         devPackages = pkgs.ros.devPackages // pkgs.sharedDevPackages // pkgs.nativeDevPackages;
         # Packages which should be available in the shell, both in development and production
@@ -152,7 +162,8 @@
             groot2
             bashInteractive
             can-utils
-            corepack_23
+            nodejs_24
+            yarn
             nixgl-script
             nixcuda-script
             ncurses
@@ -292,13 +303,12 @@
         treefmtEval = treefmt-nix.lib.evalModule pkgs-unstable ./treefmt.nix;
 
         # formatters package set for use in ROS workspaces
-        formatters =
-          {
-            # include treefmt wrapped with the config from ./treefmt.nix
-            treefmt = treefmtEval.config.build.wrapper;
-          }
-          # plus all of the individual formatter programs from said config
-          // treefmtEval.config.build.programs;
+        formatters = {
+          # include treefmt wrapped with the config from ./treefmt.nix
+          treefmt = treefmtEval.config.build.wrapper;
+        }
+        # plus all of the individual formatter programs from said config
+        // treefmtEval.config.build.programs;
       in
       {
         # rover development environment

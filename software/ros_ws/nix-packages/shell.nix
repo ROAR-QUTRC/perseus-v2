@@ -13,10 +13,9 @@ pkgs.mkShell {
   packages = [
     (pkgs.rosPackages.${rosDistro}.buildEnv {
       wrapPrograms = false;
-      paths =
-        [
-          pkgs.colcon
-          pkgs.rosPackages.${rosDistro}.ros-core
+      paths = [
+        pkgs.colcon
+        pkgs.rosPackages.${rosDistro}.ros-core
 
           # Work around https://github.com/lopsided98/nix-ros-overlay/pull/624
           pkgs.rosPackages.${rosDistro}.ament-cmake-core
@@ -101,13 +100,12 @@ pkgs.mkShell {
         ++ withPackages (pkgs // pkgs.rosPackages.${rosDistro});
     })
   ];
-  shellHook =
-    ''
-      # Setup ROS 2 shell completion. Doing it in direnv is useless.
-      if [[ ! $DIRENV_IN_ENVRC ]]; then
-          eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete ros2)"
-          eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete colcon)"
-      fi
-    ''
-    + extraShellHook;
+  shellHook = ''
+    # Setup ROS 2 shell completion. Doing it in direnv is useless.
+    if [[ ! $DIRENV_IN_ENVRC ]]; then
+        eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete ros2)"
+        eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete colcon)"
+    fi
+  ''
+  + extraShellHook;
 }
