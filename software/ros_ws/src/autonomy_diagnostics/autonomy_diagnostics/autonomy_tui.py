@@ -10,30 +10,36 @@ This tool provides a real-time view of:
 - TF frame connectivity (map->odom->base_link chain)
 - Nav2 lifecycle node states
 - Config file existence
+
+Configuration is loaded from config/diagnostics.yaml in the package share directory.
 """
 
 import curses
 import os
+import signal
+import subprocess
 import sys
-import rclpy
-from rclpy.node import Node
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
-from rclpy.executors import MultiThreadedExecutor
-from rclpy.callback_groups import ReentrantCallbackGroup
 import threading
 import time
-import signal
-from dataclasses import dataclass
-from typing import Dict, List
 from collections import deque
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
-from sensor_msgs.msg import LaserScan, Imu, JointState
-from nav_msgs.msg import Odometry, OccupancyGrid
+import yaml
+from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import Twist
-from tf2_msgs.msg import TFMessage
 from lifecycle_msgs.srv import GetState
+from nav_msgs.msg import OccupancyGrid, Odometry
+from sensor_msgs.msg import Imu, JointState, LaserScan
+from tf2_msgs.msg import TFMessage
 from tf2_ros import Buffer, TransformListener
-from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
+from tf2_ros import ConnectivityException, ExtrapolationException, LookupException
+
+import rclpy
+from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 
 # =============================================================================
 # Constants
@@ -55,105 +61,104 @@ SIMPLE_MODE_REFRESH_INTERVAL = 1.0
 RATE_WARNING_THRESHOLD = 0.8  # Warn if rate < 80% expected
 RATE_CRITICAL_THRESHOLD = 0.5  # Critical if rate < 50% expected
 
-# ROS workspace path for config file checks
-ROS_WS_SRC_PATH = "/home/dingo/perseus-v2/software/ros_ws/src"
+
+def get_ros_ws_src_path() -> str:
+    """Get the ROS workspace src path dynamically.
+
+    Attempts to find the path by:
+    1. Looking for a git repository root and finding ros_ws/src within it
+    2. Falling back to ~/perseus-v2/software/ros_ws/src
+    """
+    try:
+        # Try to find git repo root
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            git_root = result.stdout.strip()
+            ros_ws_src = os.path.join(git_root, "software", "ros_ws", "src")
+            if os.path.isdir(ros_ws_src):
+                return ros_ws_src
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+
+    # Fallback to home directory based path
+    home_path = os.path.expanduser("~/perseus-v2/software/ros_ws/src")
+    if os.path.isdir(home_path):
+        return home_path
+
+    # Last resort: return empty string (config file checks will fail gracefully)
+    return ""
 
 # =============================================================================
-# Topic Configurations
+# Configuration Loading
 # =============================================================================
 
-MONITORED_TOPICS = [
-    {
-        "name": "scan",
-        "topic": "/scan",
-        "type": "LaserScan",
-        "expected_hz": 10.0,
-        "critical": True,
-    },
-    {
-        "name": "imu",
-        "topic": "/imu/data",
-        "type": "Imu",
-        "expected_hz": 100.0,
-        "critical": True,
-    },
-    {
-        "name": "odom",
-        "topic": "/odom",
-        "type": "Odometry",
-        "expected_hz": 50.0,
-        "critical": True,
-    },
-    {
-        "name": "odom_filtered",
-        "topic": "/odometry/filtered",
-        "type": "Odometry",
-        "expected_hz": 30.0,
-        "critical": True,
-    },
-    {
-        "name": "map",
-        "topic": "/map",
-        "type": "OccupancyGrid",
-        "expected_hz": 0.1,
-        "critical": False,
-    },
-    {
-        "name": "cmd_vel",
-        "topic": "/cmd_vel",
-        "type": "Twist",
-        "expected_hz": 0.0,
-        "critical": False,
-    },
-    {
-        "name": "joint_states",
-        "topic": "/joint_states",
-        "type": "JointState",
-        "expected_hz": 50.0,
-        "critical": True,
-    },
-]
 
-# TF frame chains to verify
-TF_FRAMES = [
-    {"parent": "map", "child": "odom", "description": "SLAM/AMCL", "critical": True},
-    {"parent": "odom", "child": "base_link", "description": "EKF", "critical": True},
-    {
-        "parent": "base_link",
-        "child": "chassis",
-        "description": "URDF",
-        "critical": True,
-    },
-    {
-        "parent": "chassis",
-        "child": "laser_2d_frame",
-        "description": "LiDAR",
-        "critical": True,
-    },
-    {"parent": "chassis", "child": "imu_link", "description": "IMU", "critical": True},
-]
+def load_config() -> Dict[str, Any]:
+    """Load configuration from the package's config file.
 
-# Nav2 lifecycle nodes to check
-LIFECYCLE_NODES = [
-    "bt_navigator",
-    "controller_server",
-    "planner_server",
-    "map_server",
-    "amcl",
-    "smoother_server",
-    "velocity_smoother",
-    "collision_monitor",
-    "waypoint_follower",
-    "behavior_server",
-]
+    Returns a dictionary with keys: monitored_topics, tf_frames, lifecycle_nodes,
+    config_files. Falls back to defaults if config file is not found.
+    """
+    # Default configuration (fallback if config file not found)
+    defaults = {
+        "monitored_topics": [
+            {"name": "scan", "topic": "/scan", "type": "LaserScan",
+             "expected_hz": 10.0, "critical": True},
+            {"name": "imu", "topic": "/imu/data", "type": "Imu",
+             "expected_hz": 100.0, "critical": True},
+            {"name": "odom", "topic": "/odom", "type": "Odometry",
+             "expected_hz": 50.0, "critical": True},
+            {"name": "odom_filtered", "topic": "/odometry/filtered", "type": "Odometry",
+             "expected_hz": 30.0, "critical": True},
+            {"name": "map", "topic": "/map", "type": "OccupancyGrid",
+             "expected_hz": 0.1, "critical": False},
+            {"name": "cmd_vel", "topic": "/cmd_vel", "type": "Twist",
+             "expected_hz": 0.0, "critical": False},
+            {"name": "joint_states", "topic": "/joint_states", "type": "JointState",
+             "expected_hz": 50.0, "critical": True},
+        ],
+        "tf_frames": [
+            {"parent": "map", "child": "odom", "description": "SLAM/AMCL", "critical": True},
+            {"parent": "odom", "child": "base_link", "description": "EKF", "critical": True},
+            {"parent": "base_link", "child": "chassis", "description": "URDF", "critical": True},
+            {"parent": "chassis", "child": "laser_2d_frame", "description": "LiDAR", "critical": True},
+            {"parent": "chassis", "child": "imu_link", "description": "IMU", "critical": True},
+        ],
+        "lifecycle_nodes": [
+            "bt_navigator", "controller_server", "planner_server", "map_server",
+            "amcl", "smoother_server", "velocity_smoother", "collision_monitor",
+            "waypoint_follower", "behavior_server",
+        ],
+        "config_files": [
+            {"path": "autonomy/config/ekf_params.yaml", "description": "EKF params"},
+            {"path": "autonomy/config/slam_toolbox_params.yaml", "description": "SLAM params"},
+            {"path": "autonomy/config/perseus_nav_params.yaml", "description": "Nav2 params"},
+            {"path": "autonomy/config/cmd_vel_mux.yaml", "description": "Mux config"},
+        ],
+    }
 
-# Config files to verify
-CONFIG_FILES = [
-    {"path": "autonomy/config/ekf_params.yaml", "description": "EKF params"},
-    {"path": "autonomy/config/slam_toolbox_params.yaml", "description": "SLAM params"},
-    {"path": "autonomy/config/perseus_nav_params.yaml", "description": "Nav2 params"},
-    {"path": "autonomy/config/cmd_vel_mux.yaml", "description": "Mux config"},
-]
+    try:
+        pkg_share = get_package_share_directory("autonomy_diagnostics")
+        config_path = os.path.join(pkg_share, "config", "diagnostics.yaml")
+
+        if os.path.isfile(config_path):
+            with open(config_path, "r") as f:
+                config = yaml.safe_load(f)
+                if config:
+                    # Merge with defaults for any missing keys
+                    for key in defaults:
+                        if key not in config:
+                            config[key] = defaults[key]
+                    return config
+    except Exception:
+        pass  # Fall back to defaults
+
+    return defaults
 
 
 # =============================================================================
@@ -254,6 +259,10 @@ class AutonomyDiagnosticsNode(Node):
     def __init__(self):
         super().__init__("autonomy_diagnostics")
 
+        # Load configuration from YAML file
+        self.config = load_config()
+        self.ros_ws_src_path = get_ros_ws_src_path()
+
         # Callback group for service calls
         self.cb_group = ReentrantCallbackGroup()
 
@@ -308,7 +317,12 @@ class AutonomyDiagnosticsNode(Node):
         self.get_logger().info("Autonomy diagnostics node started")
 
     def _setup_topic_monitoring(self):
-        """Set up subscribers for all monitored topics."""
+        """Set up subscribers for all monitored topics.
+
+        Note: Subscribing to topics like LaserScan does add some bandwidth overhead,
+        but the callbacks only record timestamps for rate calculation - the actual
+        message data is not stored or processed, minimizing memory impact.
+        """
         # QoS for sensor data
         sensor_qos = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
@@ -316,7 +330,7 @@ class AutonomyDiagnosticsNode(Node):
             depth=10,
         )
 
-        for topic_cfg in MONITORED_TOPICS:
+        for topic_cfg in self.config["monitored_topics"]:
             name = topic_cfg["name"]
             topic = topic_cfg["topic"]
             msg_type = topic_cfg["type"]
@@ -387,7 +401,7 @@ class AutonomyDiagnosticsNode(Node):
 
     def _setup_tf_monitoring(self):
         """Initialize TF status tracking."""
-        for tf_cfg in TF_FRAMES:
+        for tf_cfg in self.config["tf_frames"]:
             self.tf_statuses.append(
                 TFStatus(
                     parent=tf_cfg["parent"],
@@ -445,7 +459,7 @@ class AutonomyDiagnosticsNode(Node):
 
     def _setup_lifecycle_monitoring(self):
         """Initialize lifecycle node tracking."""
-        for node_name in LIFECYCLE_NODES:
+        for node_name in self.config["lifecycle_nodes"]:
             self.lifecycle_statuses[node_name] = LifecycleStatus(name=node_name)
 
     def _check_lifecycle_nodes(self):
@@ -487,8 +501,8 @@ class AutonomyDiagnosticsNode(Node):
 
     def _check_config_files(self):
         """Verify existence of required config files."""
-        for cfg in CONFIG_FILES:
-            full_path = os.path.join(ROS_WS_SRC_PATH, cfg["path"])
+        for cfg in self.config["config_files"]:
+            full_path = os.path.join(self.ros_ws_src_path, cfg["path"])
             self.config_statuses.append(
                 ConfigStatus(
                     path=cfg["path"],
