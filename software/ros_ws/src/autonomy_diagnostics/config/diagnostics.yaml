@@ -1,0 +1,88 @@
+# Autonomy Diagnostics Configuration
+# This file configures the topics, TF frames, lifecycle nodes, and config files
+# that the autonomy_tui monitors.
+
+# Topics to monitor for rate and connectivity
+monitored_topics:
+  - name: scan
+    topic: /scan
+    type: LaserScan
+    expected_hz: 10.0
+    critical: true
+  - name: imu
+    topic: /imu/data
+    type: Imu
+    expected_hz: 100.0
+    critical: true
+  - name: odom
+    topic: /odom
+    type: Odometry
+    expected_hz: 50.0
+    critical: true
+  - name: odom_filtered
+    topic: /odometry/filtered
+    type: Odometry
+    expected_hz: 30.0
+    critical: true
+  - name: map
+    topic: /map
+    type: OccupancyGrid
+    expected_hz: 0.1
+    critical: false
+  - name: cmd_vel
+    topic: /cmd_vel
+    type: Twist
+    expected_hz: 0.0
+    critical: false
+  - name: joint_states
+    topic: /joint_states
+    type: JointState
+    expected_hz: 50.0
+    critical: true
+
+# TF frame chains to verify connectivity
+tf_frames:
+  - parent: map
+    child: odom
+    description: SLAM/AMCL
+    critical: true
+  - parent: odom
+    child: base_link
+    description: EKF
+    critical: true
+  - parent: base_link
+    child: chassis
+    description: URDF
+    critical: true
+  - parent: chassis
+    child: laser_2d_frame
+    description: LiDAR
+    critical: true
+  - parent: chassis
+    child: imu_link
+    description: IMU
+    critical: true
+
+# Nav2 lifecycle nodes to monitor state
+lifecycle_nodes:
+  - bt_navigator
+  - controller_server
+  - planner_server
+  - map_server
+  - amcl
+  - smoother_server
+  - velocity_smoother
+  - collision_monitor
+  - waypoint_follower
+  - behavior_server
+
+# Config files to verify existence (paths relative to ROS workspace src directory)
+config_files:
+  - path: autonomy/config/ekf_params.yaml
+    description: EKF params
+  - path: autonomy/config/slam_toolbox_params.yaml
+    description: SLAM params
+  - path: autonomy/config/perseus_nav_params.yaml
+    description: Nav2 params
+  - path: autonomy/config/cmd_vel_mux.yaml
+    description: Mux config

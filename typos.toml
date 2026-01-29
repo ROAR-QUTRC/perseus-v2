@@ -17,7 +17,6 @@ extend-ignore-re = [
 [default.extend-words]
 area_sizez = "area_sizez"
 sizez = "sizez"
-Fo = "Fo"
 
 # unfortunately we need to use American spelling in code
 [type.cpp]
