@@ -972,7 +972,9 @@ class AutonomyTUI:
 
                 print("\n" + "=" * 70)
                 domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
-                print(f"Updated: {time.strftime('%H:%M:%S')} | ROS_DOMAIN_ID: {domain_id}")
+                print(
+                    f"Updated: {time.strftime('%H:%M:%S')} | ROS_DOMAIN_ID: {domain_id}"
+                )
 
                 time.sleep(SIMPLE_MODE_REFRESH_INTERVAL)
 
