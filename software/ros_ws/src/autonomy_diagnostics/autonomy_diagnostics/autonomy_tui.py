@@ -913,7 +913,8 @@ class AutonomyTUI:
 
                 # Status bar
                 status_time = time.strftime("%H:%M:%S")
-                status = f" Time: {status_time} | Refresh: {CURSES_REFRESH_MS}ms "
+                domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
+                status = f" Time: {status_time} | ROS_DOMAIN_ID: {domain_id} | Refresh: {CURSES_REFRESH_MS}ms "
                 self.safe_addstr(max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE)
 
                 stdscr.refresh()
@@ -970,7 +971,8 @@ class AutonomyTUI:
                     print(f"  {cfg.description:<20} [{status_str}]")
 
                 print("\n" + "=" * 70)
-                print(f"Updated: {time.strftime('%H:%M:%S')}")
+                domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
+                print(f"Updated: {time.strftime('%H:%M:%S')} | ROS_DOMAIN_ID: {domain_id}")
 
                 time.sleep(SIMPLE_MODE_REFRESH_INTERVAL)
 
