@@ -13,6 +13,7 @@
   <depend>nav_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf2_ros</depend>
+  <depend>tf2_msgs</depend>
   <depend>lifecycle_msgs</depend>
   <exec_depend>python3-yaml</exec_depend>
 

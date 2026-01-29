@@ -2,7 +2,8 @@
 """
 Autonomy Diagnostics TUI - A comprehensive diagnostic tool for autonomy system monitoring.
 
-Uses curses (standard library) for the terminal interface - no external dependencies.
+Uses curses (standard library) for the terminal interface.
+Requires PyYAML for configuration loading.
 Falls back to simple text mode when no TTY is available.
 
 This tool provides a real-time view of:
@@ -15,6 +16,7 @@ Configuration is loaded from config/diagnostics.yaml in the package share direct
 """
 
 import curses
+import logging
 import os
 import signal
 import subprocess
@@ -22,8 +24,8 @@ import sys
 import threading
 import time
 from collections import deque
-from dataclasses import dataclass
-from typing import Any, Dict, List
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
 import yaml
 from ament_index_python.packages import get_package_share_directory
@@ -216,6 +218,7 @@ def load_config() -> Dict[str, Any]:
         ],
     }
 
+    logger = logging.getLogger(__name__)
     try:
         pkg_share = get_package_share_directory("autonomy_diagnostics")
         config_path = os.path.join(pkg_share, "config", "diagnostics.yaml")
@@ -229,8 +232,8 @@ def load_config() -> Dict[str, Any]:
                         if key not in config:
                             config[key] = defaults[key]
                     return config
-    except Exception:
-        pass  # Fall back to defaults
+    except Exception as e:
+        logger.warning(f"Failed to load config file, using defaults: {e}")
 
     return defaults
 
@@ -340,6 +343,9 @@ class AutonomyDiagnosticsNode(Node):
         # Callback group for service calls
         self.cb_group = ReentrantCallbackGroup()
 
+        # Lock for thread-safe access to status data
+        self._status_lock = threading.Lock()
+
         # Initialize data structures
         self.topic_statuses: Dict[str, TopicStatus] = {}
         self.rate_calculators: Dict[str, RateCalculator] = {}
@@ -347,26 +353,15 @@ class AutonomyDiagnosticsNode(Node):
         self.lifecycle_statuses: Dict[str, LifecycleStatus] = {}
         self.config_statuses: List[ConfigStatus] = []
 
+        # Lifecycle service clients (created once, reused)
+        self._lifecycle_clients: Dict[str, Any] = {}
+        self._pending_lifecycle_futures: Dict[str, Any] = {}
+
         # TF buffer and listener
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        # Track when we last received tf_static messages (for static transform staleness)
-        self.last_tf_static_time = 0.0
-        self.last_tf_time = 0.0
-
-        # Subscribe to /tf and /tf_static to track message reception
-        tf_static_qos = QoSProfile(
-            reliability=ReliabilityPolicy.RELIABLE,
-            durability=DurabilityPolicy.TRANSIENT_LOCAL,
-            depth=100,
-        )
-        self.create_subscription(
-            TFMessage, "/tf_static", self._tf_static_callback, tf_static_qos
-        )
-        self.create_subscription(TFMessage, "/tf", self._tf_callback, 100)
-
-        # Initialize topic monitoring
+        # Initialize monitoring systems
         self._setup_topic_monitoring()
 
         # Initialize TF status tracking
@@ -460,18 +455,11 @@ class AutonomyDiagnosticsNode(Node):
     def _topic_callback(self, topic_name: str):
         """Generic callback for topic monitoring."""
         now = time.time()
-        status = self.topic_statuses[topic_name]
-        status.last_msg_time = now
-        status.msg_count += 1
-        status.actual_hz = self.rate_calculators[topic_name].add_timestamp(now)
-
-    def _tf_static_callback(self, msg: TFMessage):
-        """Callback for /tf_static messages."""
-        self.last_tf_static_time = time.time()
-
-    def _tf_callback(self, msg: TFMessage):
-        """Callback for /tf messages."""
-        self.last_tf_time = time.time()
+        with self._status_lock:
+            status = self.topic_statuses[topic_name]
+            status.last_msg_time = now
+            status.msg_count += 1
+            status.actual_hz = self.rate_calculators[topic_name].add_timestamp(now)
 
     def _setup_tf_monitoring(self):
         """Initialize TF status tracking."""
@@ -491,45 +479,46 @@ class AutonomyDiagnosticsNode(Node):
         node_names = [name for name, ns in self.get_node_names_and_namespaces()]
         rsp_running = "robot_state_publisher" in node_names
 
-        for tf_status in self.tf_statuses:
-            try:
-                transform = self.tf_buffer.lookup_transform(
-                    tf_status.parent,
-                    tf_status.child,
-                    rclpy.time.Time(),
-                    timeout=rclpy.duration.Duration(seconds=0.1),
-                )
-                # Check if transform is stale by comparing timestamp age
-                tf_time_sec = (
-                    transform.header.stamp.sec + transform.header.stamp.nanosec * 1e-9
-                )
-                if tf_time_sec == 0:
-                    # Static transform - check if robot_state_publisher is running
-                    if not rsp_running:
-                        tf_status.connected = False
-                        tf_status.error_msg = "RSP not running"
+        with self._status_lock:
+            for tf_status in self.tf_statuses:
+                try:
+                    transform = self.tf_buffer.lookup_transform(
+                        tf_status.parent,
+                        tf_status.child,
+                        rclpy.time.Time(),
+                        timeout=rclpy.duration.Duration(seconds=0.1),
+                    )
+                    # Check if transform is stale by comparing timestamp age
+                    tf_time_sec = (
+                        transform.header.stamp.sec + transform.header.stamp.nanosec * 1e-9
+                    )
+                    if tf_time_sec == 0:
+                        # Static transform - check if robot_state_publisher is running
+                        if not rsp_running:
+                            tf_status.connected = False
+                            tf_status.error_msg = "RSP not running"
+                        else:
+                            tf_status.connected = True
+                            tf_status.error_msg = ""
                     else:
-                        tf_status.connected = True
-                        tf_status.error_msg = ""
-                else:
-                    # Dynamic transform - check staleness based on transform timestamp
-                    now_msg = self.get_clock().now().to_msg()
-                    now_sec = now_msg.sec + now_msg.nanosec * 1e-9
-                    age = now_sec - tf_time_sec
+                        # Dynamic transform - check staleness based on transform timestamp
+                        now_msg = self.get_clock().now().to_msg()
+                        now_sec = now_msg.sec + now_msg.nanosec * 1e-9
+                        age = now_sec - tf_time_sec
 
-                    if age > STALE_DATA_TIMEOUT:
-                        tf_status.connected = False
-                        tf_status.error_msg = f"stale ({age:.1f}s old)"
-                    else:
-                        tf_status.connected = True
-                        tf_status.error_msg = ""
-            except (
-                LookupException,
-                ConnectivityException,
-                ExtrapolationException,
-            ) as e:
-                tf_status.connected = False
-                tf_status.error_msg = str(e)[:50]
+                        if age > STALE_DATA_TIMEOUT:
+                            tf_status.connected = False
+                            tf_status.error_msg = f"stale ({age:.1f}s old)"
+                        else:
+                            tf_status.connected = True
+                            tf_status.error_msg = ""
+                except (
+                    LookupException,
+                    ConnectivityException,
+                    ExtrapolationException,
+                ) as e:
+                    tf_status.connected = False
+                    tf_status.error_msg = str(e)[:50]
 
     def _setup_lifecycle_monitoring(self):
         """Initialize lifecycle node tracking."""
@@ -537,40 +526,68 @@ class AutonomyDiagnosticsNode(Node):
             self.lifecycle_statuses[node_name] = LifecycleStatus(name=node_name)
 
     def _check_lifecycle_nodes(self):
-        """Query lifecycle state of Nav2 nodes."""
-        for node_name, status in self.lifecycle_statuses.items():
+        """Query lifecycle state of Nav2 nodes.
+
+        Uses persistent service clients and properly handles async responses.
+        Checks are non-blocking - results are processed on the next timer cycle.
+        """
+        available_services = [s[0] for s in self.get_service_names_and_types()]
+
+        for node_name in self.lifecycle_statuses:
             service_name = f"/{node_name}/get_state"
-            try:
-                # Check if service exists
-                if service_name not in [
-                    s[0] for s in self.get_service_names_and_types()
-                ]:
-                    status.state = "not_found"
-                    continue
 
-                # Create client and call
-                client = self.create_client(
-                    GetState, service_name, callback_group=self.cb_group
-                )
-                if not client.wait_for_service(timeout_sec=0.1):
-                    status.state = "unavail"
-                    continue
-
-                future = client.call_async(GetState.Request())
-                # Non-blocking check - we'll get it next cycle
+            # First, check if we have a pending future from a previous call
+            if node_name in self._pending_lifecycle_futures:
+                future = self._pending_lifecycle_futures[node_name]
                 if future.done():
-                    result = future.result()
-                    if result is not None:
-                        status.state = result.current_state.label
-                    else:
-                        status.state = "error"
-                else:
-                    # Keep previous state, mark as checking
-                    pass
-                status.last_check = time.time()
-                client.destroy()
+                    try:
+                        result = future.result()
+                        with self._status_lock:
+                            if result is not None:
+                                self.lifecycle_statuses[node_name].state = (
+                                    result.current_state.label
+                                )
+                            else:
+                                self.lifecycle_statuses[node_name].state = "error"
+                            self.lifecycle_statuses[node_name].last_check = time.time()
+                    except Exception as e:
+                        with self._status_lock:
+                            self.lifecycle_statuses[node_name].state = "error"
+                        self.get_logger().debug(
+                            f"Lifecycle result failed for {node_name}: {e}"
+                        )
+                    del self._pending_lifecycle_futures[node_name]
+                # If not done, skip this node - still waiting for response
+                continue
+
+            # Check if service exists
+            if service_name not in available_services:
+                with self._status_lock:
+                    self.lifecycle_statuses[node_name].state = "not_found"
+                continue
+
+            try:
+                # Get or create client for this service
+                if node_name not in self._lifecycle_clients:
+                    self._lifecycle_clients[node_name] = self.create_client(
+                        GetState, service_name, callback_group=self.cb_group
+                    )
+
+                client = self._lifecycle_clients[node_name]
+
+                # Check if service is available (non-blocking)
+                if not client.service_is_ready():
+                    with self._status_lock:
+                        self.lifecycle_statuses[node_name].state = "unavail"
+                    continue
+
+                # Issue async call and store future for next cycle
+                future = client.call_async(GetState.Request())
+                self._pending_lifecycle_futures[node_name] = future
+
             except Exception as e:
-                status.state = "error"
+                with self._status_lock:
+                    self.lifecycle_statuses[node_name].state = "error"
                 self.get_logger().debug(f"Lifecycle check failed for {node_name}: {e}")
 
     def _check_config_files(self):
@@ -655,22 +672,23 @@ class AutonomyTUI:
 
     def draw_summary_bar(self, y: int, max_x: int):
         """Draw summary status bar."""
-        # Count statuses
-        topics_ok = sum(
-            1 for t in self.node.topic_statuses.values() if t.status == "OK"
-        )
-        topics_total = len(self.node.topic_statuses)
+        # Count statuses (thread-safe read)
+        with self.node._status_lock:
+            topics_ok = sum(
+                1 for t in self.node.topic_statuses.values() if t.status == "OK"
+            )
+            topics_total = len(self.node.topic_statuses)
 
-        tf_ok = sum(1 for t in self.node.tf_statuses if t.connected)
-        tf_total = len(self.node.tf_statuses)
+            tf_ok = sum(1 for t in self.node.tf_statuses if t.connected)
+            tf_total = len(self.node.tf_statuses)
 
-        lifecycle_active = sum(
-            1 for n in self.node.lifecycle_statuses.values() if n.state == "active"
-        )
-        lifecycle_total = len(self.node.lifecycle_statuses)
+            lifecycle_active = sum(
+                1 for n in self.node.lifecycle_statuses.values() if n.state == "active"
+            )
+            lifecycle_total = len(self.node.lifecycle_statuses)
 
-        config_ok = sum(1 for c in self.node.config_statuses if c.exists)
-        config_total = len(self.node.config_statuses)
+            config_ok = sum(1 for c in self.node.config_statuses if c.exists)
+            config_total = len(self.node.config_statuses)
 
         # Determine overall status
         all_ok = (
@@ -704,7 +722,11 @@ class AutonomyTUI:
         self.safe_addstr(row, x + 2, "-" * (w - 4))
         row += 1
 
-        for name, status in self.node.topic_statuses.items():
+        # Thread-safe snapshot of topic statuses
+        with self.node._status_lock:
+            topic_items = list(self.node.topic_statuses.items())
+
+        for name, status in topic_items:
             if row >= y + h - 1:
                 break
             topic_short = status.topic[-20:] if len(status.topic) > 20 else status.topic
@@ -735,7 +757,11 @@ class AutonomyTUI:
         self.safe_addstr(row, x + 2, "-" * (w - 4))
         row += 1
 
-        for tf_status in self.node.tf_statuses:
+        # Thread-safe snapshot of TF statuses
+        with self.node._status_lock:
+            tf_items = list(self.node.tf_statuses)
+
+        for tf_status in tf_items:
             if row >= y + h - 1:
                 break
             transform = f"{tf_status.parent} -> {tf_status.child}"
@@ -764,7 +790,11 @@ class AutonomyTUI:
         self.safe_addstr(row, x + 2, "-" * (w - 4))
         row += 1
 
-        for name, status in self.node.lifecycle_statuses.items():
+        # Thread-safe snapshot of lifecycle statuses
+        with self.node._status_lock:
+            lifecycle_items = list(self.node.lifecycle_statuses.items())
+
+        for name, status in lifecycle_items:
             if row >= y + h - 1:
                 break
             node_short = name[:22]
@@ -787,7 +817,11 @@ class AutonomyTUI:
         self.safe_addstr(row, x + 2, "-" * (w - 4))
         row += 1
 
-        for cfg in self.node.config_statuses:
+        # Config statuses are only set at startup, but use lock for consistency
+        with self.node._status_lock:
+            config_items = list(self.node.config_statuses)
+
+        for cfg in config_items:
             if row >= y + h - 1:
                 break
             # Show just filename
@@ -828,10 +862,37 @@ class AutonomyTUI:
                 # Summary bar
                 self.draw_summary_bar(1, max_x)
 
-                # Calculate panel dimensions
+                # Calculate panel dimensions dynamically based on content
                 half_x = max_x // 2
-                panel_h_top = 12
-                panel_h_bot = max_y - panel_h_top - 4
+                available_height = max_y - 4  # Title bar, summary bar, status bar, margin
+
+                # Get content counts for sizing (thread-safe)
+                with self.node._status_lock:
+                    num_topics = len(self.node.topic_statuses)
+                    num_tf = len(self.node.tf_statuses)
+                    num_lifecycle = len(self.node.lifecycle_statuses)
+                    num_config = len(self.node.config_statuses)
+
+                # Calculate heights: header(1) + separator(1) + items + border(2)
+                topics_needed = num_topics + 4
+                tf_needed = num_tf + 4
+                lifecycle_needed = num_lifecycle + 4
+                config_needed = num_config + 4
+
+                # Top row needs max of topics/tf, bottom row needs max of lifecycle/config
+                top_row_min = max(topics_needed, tf_needed)
+                bottom_row_min = max(lifecycle_needed, config_needed)
+
+                # Distribute available height proportionally, with minimums
+                total_needed = top_row_min + bottom_row_min
+                if total_needed <= available_height:
+                    panel_h_top = top_row_min
+                    panel_h_bot = available_height - panel_h_top
+                else:
+                    # Not enough space - split proportionally
+                    ratio = top_row_min / total_needed
+                    panel_h_top = max(6, int(available_height * ratio))
+                    panel_h_bot = max(6, available_height - panel_h_top)
 
                 # Draw panels - 2x2 grid
                 # Top left: Topics
@@ -943,11 +1004,12 @@ def main(args=None):
     node = AutonomyDiagnosticsNode()
     tui = AutonomyTUI(node)
 
-    # Handle SIGINT
+    # Handle SIGINT and SIGTERM for clean shutdown
     def signal_handler(sig, frame):
         tui.stop()
 
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     # Run ROS spinner in background
     executor = MultiThreadedExecutor()
