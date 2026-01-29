@@ -24,8 +24,8 @@ import sys
 import threading
 import time
 from collections import deque
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 import yaml
 from ament_index_python.packages import get_package_share_directory
@@ -33,7 +33,6 @@ from geometry_msgs.msg import Twist
 from lifecycle_msgs.srv import GetState
 from nav_msgs.msg import OccupancyGrid, Odometry
 from sensor_msgs.msg import Imu, JointState, LaserScan
-from tf2_msgs.msg import TFMessage
 from tf2_ros import Buffer, TransformListener
 from tf2_ros import ConnectivityException, ExtrapolationException, LookupException
 
@@ -490,7 +489,8 @@ class AutonomyDiagnosticsNode(Node):
                     )
                     # Check if transform is stale by comparing timestamp age
                     tf_time_sec = (
-                        transform.header.stamp.sec + transform.header.stamp.nanosec * 1e-9
+                        transform.header.stamp.sec
+                        + transform.header.stamp.nanosec * 1e-9
                     )
                     if tf_time_sec == 0:
                         # Static transform - check if robot_state_publisher is running
@@ -544,9 +544,9 @@ class AutonomyDiagnosticsNode(Node):
                         result = future.result()
                         with self._status_lock:
                             if result is not None:
-                                self.lifecycle_statuses[node_name].state = (
-                                    result.current_state.label
-                                )
+                                self.lifecycle_statuses[
+                                    node_name
+                                ].state = result.current_state.label
                             else:
                                 self.lifecycle_statuses[node_name].state = "error"
                             self.lifecycle_statuses[node_name].last_check = time.time()
@@ -864,7 +864,9 @@ class AutonomyTUI:
 
                 # Calculate panel dimensions dynamically based on content
                 half_x = max_x // 2
-                available_height = max_y - 4  # Title bar, summary bar, status bar, margin
+                available_height = (
+                    max_y - 4
+                )  # Title bar, summary bar, status bar, margin
 
                 # Get content counts for sizing (thread-safe)
                 with self.node._status_lock:
