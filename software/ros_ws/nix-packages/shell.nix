@@ -29,13 +29,21 @@ pkgs.mkShell {
             # Dependencies from package.xml files
             actuator-msgs
             ament-cmake
+            ament-cmake-cppcheck
+            ament-cmake-cpplint
+            ament-cmake-flake8
             ament-cmake-gtest
+            ament-cmake-lint-cmake
+            ament-cmake-pep257
+            ament-cmake-uncrustify
+            ament-cmake-xmllint
             ament-copyright
             ament-flake8
             ament-lint-auto
             ament-lint-common
             ament-pep257
             backward-ros
+            behaviortree-cpp
             boost
             builtin-interfaces
             controller-manager
@@ -49,7 +57,11 @@ pkgs.mkShell {
             joint-state-publisher
             joint-state-publisher-gui
             joy
+            laser-geometry
+            launch
+            launch-ros
             mecanum-drive-controller
+            message-filters
             moveit-core
             moveit-ros-move-group
             moveit-ros-planning-interface
@@ -63,6 +75,7 @@ pkgs.mkShell {
             python3Packages.pytest
             rclcpp
             rclcpp-action
+            rclcpp-components
             rclcpp-lifecycle
             rclpy
             realsense2-camera
@@ -89,6 +102,8 @@ pkgs.mkShell {
             teleop-twist-keyboard
             tf2
             tf2-geometry-msgs
+            tf2-ros
+            tf2-sensor-msgs
             twist-mux
             urdf
             xacro

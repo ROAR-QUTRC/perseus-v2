@@ -140,7 +140,6 @@
         pkgs-unstable = import nixpkgs-unstable {
           inherit system;
           overlays = [
-            (import ./docs/nix/overlay.nix)
           ];
           config.allowUnfree = true; # needed for draw.io for the docs
         };
