@@ -111,7 +111,7 @@ controller_server:
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
       # Core speed
-      desired_linear_vel: 0.25 # was 0.3 (slightly calmer)
+      desired_linear_vel: 0.20 # was 0.3 (slightly calmer)
       # Lookahead tuning (reduces zig-zag / wobble)
       lookahead_dist: 0.75 # was 0.6
       min_lookahead_dist: 0.50 # was 0.3
@@ -322,8 +322,8 @@ velocity_smoother:
     min_velocity: [-0.30, 0.0, -0.3]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
+    max_accel:  [0.6, 0.0, 1.2]     # [m/s^2, m/s^2, rad/s^2]
+    max_decel: [-0.8, 0.0, -1.6]
     odom_topic: "odometry/filtered"
     odom_duration: 0.1
     use_realtime_priority: false
