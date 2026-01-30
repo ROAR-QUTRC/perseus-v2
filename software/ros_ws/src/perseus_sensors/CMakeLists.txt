@@ -105,8 +105,20 @@ target_include_directories(
 ament_target_dependencies(i2c_imu_node PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 target_link_libraries(i2c_imu_node PUBLIC fd_wrapper)
 
+# Topic Remapper
+# Dynamic topic remapper that detects message type and republishes at lower frequency
+add_executable(
+  topic_remapper
+  src/topic_remapper/main.cpp
+  src/topic_remapper/topic_remapper.cpp)
+
+target_include_directories(
+  topic_remapper PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+ament_target_dependencies(topic_remapper PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 # Install ROS Executables
-install(TARGETS m2m2_lidar i2c_imu_node DESTINATION lib/${PROJECT_NAME})
+install(TARGETS m2m2_lidar i2c_imu_node topic_remapper DESTINATION lib/${PROJECT_NAME})
 
 # Install launch
 install(
