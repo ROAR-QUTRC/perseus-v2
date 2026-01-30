@@ -63,16 +63,14 @@ namespace hi_can
         constexpr mask_t PARAM_MASK = (MASK_ALL << PARAM_ADDRESS_POS) & MASK_ALL;
 
         /// @brief An address which can be converted to a raw address - all addressing in the Hi-CAN library should inherit from this if possible
-        struct structured_address_t
-        {
+        struct structured_address_t {
             structured_address_t() = default;
             /// @brief Convert to a raw address
             /// @return The raw address
             virtual constexpr operator raw_address_t() const = 0;
         };
         /// @brief A CAN address with flags for RTR, error, and extended (29-bit) addressing
-        struct flagged_address_t : public structured_address_t
-        {
+        struct flagged_address_t : public structured_address_t {
             /// @brief The base raw address
             raw_address_t address = 0;
             /// @brief Whether the address is an RTR frame
@@ -86,16 +84,13 @@ namespace hi_can
             constexpr flagged_address_t() = default;
             /// @brief Construct a flagged address from a raw address and flags
             constexpr flagged_address_t(raw_address_t _address, bool _is_rtr = false, bool _is_error = false, bool _is_extended = true)
-                : address(_address & (_is_extended ? MAX_ADDRESS : MAX_SHORT_ADDRESS)),
-                  is_rtr(_is_rtr),
-                  is_error(_is_error),
-                  is_extended(_is_extended)
-            {
-            }
+                : address(_address& (_is_extended ? MAX_ADDRESS : MAX_SHORT_ADDRESS)),
+                is_rtr(_is_rtr),
+                is_error(_is_error),
+                is_extended(_is_extended) { }
 
             /// @brief Convert a flagged address to a raw address
-            constexpr explicit operator raw_address_t() const override
-            {
+            constexpr explicit operator raw_address_t() const override {
                 return address & (is_extended ? MAX_ADDRESS : MAX_SHORT_ADDRESS);
             }
 
@@ -103,8 +98,7 @@ namespace hi_can
             /// @brief Compare two flagged addresses (for sorting)
             /// @param other Address to compare against
             /// @return The result of the comparison
-            constexpr auto operator<=>(const flagged_address_t& other) const
-            {
+            constexpr auto operator<=>(const flagged_address_t& other) const {
                 if (address != other.address)
                     return address <=> other.address;
                 if (is_rtr != other.is_rtr)
@@ -116,22 +110,19 @@ namespace hi_can
             /// @brief Check if two addresses are equal. Checks address and all flags.
             /// @param other Address to compare against
             /// @return Whether the addresses are equal
-            constexpr auto operator==(const flagged_address_t& other) const
-            {
+            constexpr auto operator==(const flagged_address_t& other) const {
                 return (address == other.address) && (is_rtr == other.is_rtr) && (is_error == other.is_error) && (is_extended == other.is_extended);
             }
             /// @brief Check if two addresses are not equal
             /// @param other Address to compare against
             /// @return Whether the addresses differ
-            constexpr auto operator!=(const flagged_address_t& other) const
-            {
+            constexpr auto operator!=(const flagged_address_t& other) const {
                 return !(*this == other);
             }
         };
 
         /// @brief A CAN address and mask for filtering, as well as whether to match RTR and error frames
-        struct filter_t
-        {
+        struct filter_t {
             /// @brief The address to accept
             flagged_address_t address = MAX_ADDRESS;
             /// @brief The mask of address bits to care about
@@ -151,8 +142,7 @@ namespace hi_can
             /// @brief Compare two filters for sorting
             /// @param other Filter to compare against
             /// @return The result of the comparison
-            constexpr auto operator<=>(const filter_t& other) const
-            {
+            constexpr auto operator<=>(const filter_t& other) const {
                 if (mask != other.mask)
                     return other.mask <=> mask;
                 if (address != other.address)
@@ -165,27 +155,23 @@ namespace hi_can
             /// @brief Check if address matches the filter
             /// @param _address Address to check
             /// @return Whether the address matches the filter
-            constexpr bool matches(const flagged_address_t& _address) const
-            {
+            constexpr bool matches(const flagged_address_t& _address) const {
                 return (static_cast<raw_address_t>(address) & mask) == (static_cast<raw_address_t>(_address) & mask) &&
-                       (address.is_extended == _address.is_extended) &&
-                       (!should_match_rtr || (address.is_rtr == (_address.is_rtr))) &&
-                       (!should_match_error || (address.is_error == (_address.is_error)));
+                    (address.is_extended == _address.is_extended) &&
+                    (!should_match_rtr || (address.is_rtr == (_address.is_rtr))) &&
+                    (!should_match_error || (address.is_error == (_address.is_error)));
             }
 
-            constexpr raw_address_t get_masked_address() const
-            {
+            constexpr raw_address_t get_masked_address() const {
                 return static_cast<raw_address_t>(address) & mask;
             }
-            constexpr raw_address_t get_unmasked_address() const
-            {
+            constexpr raw_address_t get_unmasked_address() const {
                 return static_cast<raw_address_t>(address) & (~mask);
             }
         };
 
         /// @brief A standard address for a Hi-CAN compliant device
-        struct standard_address_t : public structured_address_t
-        {
+        struct standard_address_t : public structured_address_t {
             /// @brief The system ID
             uint8_t system : SYSTEM_ADDRESS_BITS;
             /// @brief The subsystem ID
@@ -198,48 +184,41 @@ namespace hi_can
             uint8_t parameter : PARAM_ADDRESS_BITS;
             /// @brief Padding to fill out the rest of 32 bits so it's aligned
             const uint8_t _padding : (32 -
-                                      SYSTEM_ADDRESS_BITS -
-                                      SUBSYSTEM_ADDRESS_BITS -
-                                      DEVICE_ADDRESS_BITS -
-                                      GROUP_ADDRESS_BITS -
-                                      PARAM_ADDRESS_BITS) = 0;
+                SYSTEM_ADDRESS_BITS -
+                SUBSYSTEM_ADDRESS_BITS -
+                DEVICE_ADDRESS_BITS -
+                GROUP_ADDRESS_BITS -
+                PARAM_ADDRESS_BITS) = 0;
 
             constexpr standard_address_t(const raw_address_t& address = 0)
-                : system((address >> SYSTEM_ADDRESS_POS) & ((1UL << SYSTEM_ADDRESS_BITS) - 1)),
-                  subsystem((address >> SUBSYSTEM_ADDRESS_POS) & ((1UL << SUBSYSTEM_ADDRESS_BITS) - 1)),
-                  device((address >> DEVICE_ADDRESS_POS) & ((1UL << DEVICE_ADDRESS_BITS) - 1)),
-                  group((address >> GROUP_ADDRESS_POS) & ((1UL << GROUP_ADDRESS_BITS) - 1)),
-                  parameter((address >> PARAM_ADDRESS_POS) & ((1UL << PARAM_ADDRESS_BITS) - 1))
-            {
-            }
+                : system((address >> SYSTEM_ADDRESS_POS)& ((1UL << SYSTEM_ADDRESS_BITS) - 1)),
+                subsystem((address >> SUBSYSTEM_ADDRESS_POS)& ((1UL << SUBSYSTEM_ADDRESS_BITS) - 1)),
+                device((address >> DEVICE_ADDRESS_POS)& ((1UL << DEVICE_ADDRESS_BITS) - 1)),
+                group((address >> GROUP_ADDRESS_POS)& ((1UL << GROUP_ADDRESS_BITS) - 1)),
+                parameter((address >> PARAM_ADDRESS_POS)& ((1UL << PARAM_ADDRESS_BITS) - 1)) { }
             constexpr standard_address_t(const uint8_t& _system = 0x00,
-                                         const uint8_t& _subsystem = 0x00,
-                                         const uint8_t& _device = 0x00,
-                                         const uint8_t& _group = 0x00,
-                                         const uint8_t& _parameter = 0x00)
+                const uint8_t& _subsystem = 0x00,
+                const uint8_t& _device = 0x00,
+                const uint8_t& _group = 0x00,
+                const uint8_t& _parameter = 0x00)
                 : system(_system),
-                  subsystem(_subsystem),
-                  device(_device),
-                  group(_group),
-                  parameter(_parameter)
-            {
-            }
+                subsystem(_subsystem),
+                device(_device),
+                group(_group),
+                parameter(_parameter) { }
             constexpr standard_address_t(const standard_address_t& device_address, const uint8_t& _group, const uint8_t& _parameter)
                 : system(device_address.system),
-                  subsystem(device_address.subsystem),
-                  device(device_address.device),
-                  group(_group),
-                  parameter(_parameter)
-            {
-            }
+                subsystem(device_address.subsystem),
+                device(device_address.device),
+                group(_group),
+                parameter(_parameter) { }
 
-            constexpr operator raw_address_t() const override
-            {
+            constexpr operator raw_address_t() const override {
                 return (static_cast<raw_address_t>(system) << SYSTEM_ADDRESS_POS) |
-                       (static_cast<raw_address_t>(subsystem) << SUBSYSTEM_ADDRESS_POS) |
-                       (static_cast<raw_address_t>(device) << DEVICE_ADDRESS_POS) |
-                       (static_cast<raw_address_t>(group) << GROUP_ADDRESS_POS) |
-                       (static_cast<raw_address_t>(parameter) << PARAM_ADDRESS_POS);
+                    (static_cast<raw_address_t>(subsystem) << SUBSYSTEM_ADDRESS_POS) |
+                    (static_cast<raw_address_t>(device) << DEVICE_ADDRESS_POS) |
+                    (static_cast<raw_address_t>(group) << GROUP_ADDRESS_POS) |
+                    (static_cast<raw_address_t>(parameter) << PARAM_ADDRESS_POS);
             }
         };
 
@@ -258,16 +237,14 @@ namespace hi_can
                 /// @brief The VESC subsystem ID
                 constexpr uint8_t SUBSYSTEM_ID = 0x00;
                 /// @brief The main drive VESC device IDs
-                enum class device
-                {
+                enum class device {
                     FRONT_LEFT = 0,
                     FRONT_RIGHT = 1,
                     REAR_LEFT = 2,
                     REAR_RIGHT = 3,
                 };
                 /// @brief VESC command IDs
-                enum class command_id
-                {
+                enum class command_id {
                     SET_DUTY = 0,
                     SET_CURRENT = 1,
                     SET_CURRENT_BRAKE = 2,
@@ -286,20 +263,16 @@ namespace hi_can
                 };
 
                 /// @brief VESC command packet address
-                struct address_t : public structured_address_t
-                {
+                struct address_t : public structured_address_t {
                     address_t(const uint8_t& _vesc, const command_id& _command)
                         : vesc(_vesc),
-                          command(_command)
-                    {
-                    }
+                        command(_command) { }
                     /// @brief The VESC device ID
                     uint8_t vesc = static_cast<uint8_t>(device::FRONT_LEFT);
                     /// @brief The VESC command ID
                     command_id command = command_id::SET_DUTY;
 
-                    constexpr operator raw_address_t() const override
-                    {
+                    constexpr operator raw_address_t() const override {
                         return (static_cast<raw_address_t>(command) << 8) | static_cast<raw_address_t>(vesc);
                     }
                 };
@@ -316,8 +289,7 @@ namespace hi_can
                 /// @brief The battery subsystem ID
                 constexpr uint8_t SUBSYSTEM_ID = 0x00;
                 /// @brief List of battery device IDs
-                enum class device
-                {
+                enum class device {
                     BATTERY_1 = 0,
                     BATTERY_2 = 1,
                     BATTERY_3 = 2,
@@ -334,8 +306,7 @@ namespace hi_can
                 /// @brief The power distribution subsystem ID
                 constexpr uint8_t SUBSYSTEM_ID = 0x01;
                 /// @brief List of power distribution device IDs
-                enum class device
-                {
+                enum class device {
                     ROVER_CONTROL_BOARD = 0,
                 };
             }
@@ -351,8 +322,7 @@ namespace hi_can
                 /// @brief The primary compute subsystem ID
                 constexpr uint8_t SUBSYSTEM_ID = 0x00;
                 /// @brief List of primary compute device IDs
-                enum class device
-                {
+                enum class device {
                     BIG_BRAIN = 0,
                     MEDIUM_BRAIN = 1,
                 };
@@ -365,6 +335,71 @@ namespace hi_can
         {
             /// @brief The post-landing system ID
             constexpr uint8_t SYSTEM_ID = 0x03;
+            /// @brief Namespace containing all addresses in the arm subsystem
+            namespace arm
+            {
+                /// @brief The arm subsystem ID
+                constexpr uint8_t SUBSYSTEM_ID = 0x01;
+                /// @brief Namespace containing all the servos in the arm subsystem
+                namespace rmd_servo
+                {
+                    /// @brief The device ID of the rmd servos
+                    constexpr uint8_t DEVICE_ID = 0x00;
+                    /// @brief The RMD-L-4015-100-C Motor ID commands
+                    enum class message_type : uint16_t {
+                        // SEND ADDRESS - 0x140 + ID
+                        SEND = 0x140,
+                        // RECEIVE ADDRESS - 0x240 + ID
+                        RECEIVE = 0x240,
+                        // MOTION MODE CONTROL ADDRESS - 0x400 + ID
+                        MOTION_MODE = 0x400,
+                        // MULTI-MOTOR COMMAND
+                        MULTI_MOTOR_SEND = 0x280,
+                        // CANID SETTING - CAUTION: sets all motors on the CANBUS to the same address! To change one motor's ID, use the function control command
+                        CANID = 0x300,
+                    };
+                    enum class motor_id_t : uint8_t {
+                        ALL = 0x00,
+                        WRIST_TILT = 0x01,
+                        WRIST_PAN = 0x02,
+                        ELBOW = 0x03,
+                    };
+                    struct servo_address_t : public flagged_address_t {
+                        constexpr servo_address_t() = default;
+                        constexpr servo_address_t(const message_type function, const motor_id_t motor_id = motor_id_t::ALL)
+                            : flagged_address_t(static_cast<uint16_t>(function) + static_cast<uint8_t>(motor_id), false, false, false) { }
+                        constexpr uint8_t get_motor_id() {
+                            return (address && 0x000F);
+                        }
+                    };
+                }
+
+                namespace control_board  // ESP32 servo controller board (RSBL servos + PWM for gripper)
+                {
+                    /// @brief The device ID of the servo board
+                    constexpr uint8_t DEVICE_ID = 0x05;
+
+                    /// @brief Servo board output IDs - includes RSBL servos and PWM channels
+                    enum class group : uint8_t {
+                        SHOULDER_TILT = 0x01,
+                        SHOULDER_PAN = 0x02,
+                        PWM_1 = 0x03,
+                        PWM_2 = 0x04,
+                    };
+                    enum class pwm_parameters {
+                        SET_PWM = 0x00,
+                        SET_DIGITAL = 0x01,
+                    };
+                    enum class rsbl_parameters {
+                        SET_POS_EX = 0x00,
+                        SET_POSITION_SINGLE = 0x01,
+                        SET_SPEED = 0x02,
+                        SET_TORQUE_ENABLE = 0x03,
+                        STATUS_1 = 0x04,
+                        STATUS_2 = 0x05,
+                    };
+                }
+            }
         }
         /// @brief Namespace containing all addresses in the excavation system
         namespace excavation
@@ -381,8 +416,7 @@ namespace hi_can
                 {
                     /// @brief The bucket controller device ID
                     constexpr uint8_t DEVICE_ID = 0x00;
-                    enum class group
-                    {
+                    enum class group {
                         BANK_1 = 0x01,
                         BANK_2 = 0x02,
                         BANK_3 = 0x03,
@@ -397,18 +431,15 @@ namespace hi_can
                         JAWS_RIGHT = 0x0c,
                         MAGNET = 0x0d,
                     };
-                    enum class bank_parameter
-                    {
+                    enum class bank_parameter {
                         CURRENT_LIMIT = 0x00,
                         STATUS = 0x01,
                     };
-                    enum class actuator_parameter
-                    {
+                    enum class actuator_parameter {
                         SPEED = 0x00,
                         POSITION = 0x01,
                     };
-                    enum class magnet_parameter
-                    {
+                    enum class magnet_parameter {
                         ROTATE_SPEED = 0x00,
                         ROTATE_POSITION = 0x01,
                         MAGNET_ENABLE = 0x03,
@@ -432,12 +463,11 @@ namespace hi_can
                 constexpr uint8_t SUBSYSTEM_ID = 0x00;
                 namespace elevator
                 {
-                    const standard_address_t DEVICE_ADDRESS{SYSTEM_ID, SUBSYSTEM_ID, 0x00};
+                    const standard_address_t DEVICE_ADDRESS{ SYSTEM_ID, SUBSYSTEM_ID, 0x00 };
                     namespace motor
                     {
                         constexpr uint8_t GROUP_ID = 0x01;
-                        enum class parameter
-                        {
+                        enum class parameter {
                             SPEED = 0x00,
                         };
                     }
@@ -448,8 +478,7 @@ namespace hi_can
         /// @brief Namespace containing all addresses in the legacy system
         namespace legacy
         {
-            struct address_t : public structured_address_t
-            {
+            struct address_t : public structured_address_t {
                 /// @brief The system ID
                 uint8_t system : 5;
                 /// @brief The subsystem ID
@@ -464,33 +493,28 @@ namespace hi_can
                 const uint8_t _padding : (32 - 5 - 4 - 8 - 8 - 4) = 0;
 
                 address_t(const uint8_t& _system = 0x00,
-                          const uint8_t& _subsystem = 0x00,
-                          const uint8_t& _device = 0x00,
-                          const uint8_t& _group = 0x00,
-                          const uint8_t& _parameter = 0x00)
+                    const uint8_t& _subsystem = 0x00,
+                    const uint8_t& _device = 0x00,
+                    const uint8_t& _group = 0x00,
+                    const uint8_t& _parameter = 0x00)
                     : system(_system),
-                      subsystem(_subsystem),
-                      device(_device),
-                      group(_group),
-                      parameter(_parameter)
-                {
-                }
+                    subsystem(_subsystem),
+                    device(_device),
+                    group(_group),
+                    parameter(_parameter) { }
                 address_t(address_t device_address, const uint8_t& _group, const uint8_t& _parameter)
                     : system(device_address.system),
-                      subsystem(device_address.subsystem),
-                      device(device_address.device),
-                      group(_group),
-                      parameter(_parameter)
-                {
-                }
+                    subsystem(device_address.subsystem),
+                    device(device_address.device),
+                    group(_group),
+                    parameter(_parameter) { }
 
-                constexpr operator raw_address_t() const override
-                {
+                constexpr operator raw_address_t() const override {
                     return (static_cast<raw_address_t>(system) << 24) |
-                           (static_cast<raw_address_t>(subsystem) << 20) |
-                           (static_cast<raw_address_t>(device) << 12) |
-                           (static_cast<raw_address_t>(group) << 4) |
-                           (static_cast<raw_address_t>(parameter) << 0);
+                        (static_cast<raw_address_t>(subsystem) << 20) |
+                        (static_cast<raw_address_t>(device) << 12) |
+                        (static_cast<raw_address_t>(group) << 4) |
+                        (static_cast<raw_address_t>(parameter) << 0);
                 }
             };
             // SYSTEMS
@@ -500,15 +524,13 @@ namespace hi_can
                 namespace control
                 {
                     constexpr uint8_t SUBSYSTEM_ID = 0x00;
-                    enum class device
-                    {
+                    enum class device {
                         ROVER_CONTROL_BOARD = 0x00,
                     };
                     // DEVICES
                     namespace rcb
                     {
-                        enum class groups
-                        {
+                        enum class groups {
                             CONTACTOR = 0x01,
                             COMPUTE_BUS = 0x02,
                             DRIVE_BUS = 0x03,
@@ -519,15 +541,13 @@ namespace hi_can
                     // PARAMETER GROUPS
                     namespace contactor
                     {
-                        enum class parameter
-                        {
+                        enum class parameter {
                             SHUTDOWN = 0x00
                         };
                     }
                     namespace power_bus
                     {
-                        enum class parameter
-                        {
+                        enum class parameter {
                             CONTROL_IMMEDIATE = 0x00,
                             CONTROL_SCHEDULED = 0x01,
                             CURRENT_LIMIT = 0x02,
@@ -542,8 +562,7 @@ namespace hi_can
                 namespace motors
                 {
                     constexpr uint8_t SUBSYSTEM_ID = 0x00;
-                    enum class device
-                    {
+                    enum class device {
                         FRONT_LEFT_MOTOR = 0x00,
                         FRONT_RIGHT_MOTOR = 0x01,
                         REAR_LEFT_MOTOR = 0x02,
@@ -552,8 +571,7 @@ namespace hi_can
                     // DEVICES
                     namespace mcb
                     {
-                        enum class groups
-                        {
+                        enum class groups {
                             ESC = 0x01,
                         };
                     }
@@ -561,8 +579,7 @@ namespace hi_can
                     namespace esc
                     {
                         constexpr uint8_t esc = 0x01;
-                        enum class parameter
-                        {
+                        enum class parameter {
                             SPEED = 0x00,
                             LIMITS = 0x01,
                             STATUS = 0x02,
@@ -577,8 +594,7 @@ namespace hi_can
                 namespace bucket
                 {
                     constexpr uint8_t SUBSYSTEM_ID = 0x00;
-                    enum class device
-                    {
+                    enum class device {
                         BUCKET = 0x00,
                     };
                     namespace bucket
@@ -586,8 +602,7 @@ namespace hi_can
                         namespace motors
                         {
                             constexpr uint8_t GROUP_ID = 0x01;
-                            enum class parameter
-                            {
+                            enum class parameter {
                                 LIFT_SPEED = 0x00,
                                 TILT_SPEED = 0x01,
                                 JAWS_SPEED = 0x02,
@@ -596,8 +611,7 @@ namespace hi_can
                         namespace manipulation
                         {
                             constexpr uint8_t GROUP_ID = 0x02;
-                            enum class parameter
-                            {
+                            enum class parameter {
                                 SPIN_SPEED = 0x00,
                                 ELECTROMAGNET = 0x01,
                             };
@@ -612,8 +626,7 @@ namespace hi_can
             /// @brief Status parameter group ID - will always be 0x00
             constexpr uint8_t GROUP_ID = 0x00;
             /// @brief Status parameter IDs
-            enum class parameter
-            {
+            enum class parameter {
                 /// @brief Power control
                 POWER = 0x00,
                 /// @brief Device current status
