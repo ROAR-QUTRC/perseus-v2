@@ -16,7 +16,8 @@
 //          /status (publisher) - Status messages from all servos
 //          /positions (publisher) - Current positions of all servos
 
-class ArmController : public rclcpp::Node {
+class ArmController : public rclcpp::Node
+{
 public:
     explicit ArmController(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
@@ -39,15 +40,15 @@ private:
 
     // Servo board parameter groups
     const std::unordered_map<hi_can::addressing::post_landing::arm::control_board::group,
-        std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
+                             std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
         PARAMETER_GROUP_MAP = {
-        // {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT,
-        //  std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-        //      static_cast<uint8_t>(hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT))},
-        // {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN,
-        //  std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-        //      static_cast<uint8_t>(hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN))},
-    };
+            // {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT,
+            //  std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
+            //      static_cast<uint8_t>(hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT))},
+            // {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN,
+            //  std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
+            //      static_cast<uint8_t>(hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN))},
+        };
 
     // Motor feedback
     constexpr static auto POSITION_PUBLISH_MS = std::chrono::milliseconds(100);
