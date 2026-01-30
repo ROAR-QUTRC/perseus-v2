@@ -37,6 +37,7 @@ To begin developing a widget run the command: `./create-widget.sh <file-name>`. 
 ```
 
 - The first script tag with the `module` property is a server only module. This is used here as it is only run once when the component is first loaded and it also allows for exports that are used to expose some properties. You likely will not need to write your own code here.
+
   - **name -** This string is the unique name of the widget that will be displayed at the top of the widget and is used to ensure duplicates of widgets are not loaded.
   - **settings -** This is the object that structures the settings/state panel of each widget. Here is an example settings object and how to access the value of each setting:
 
