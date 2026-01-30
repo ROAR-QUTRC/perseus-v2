@@ -856,7 +856,9 @@ class AutonomyTUI:
 
         while self.running:
             try:
-                stdscr.clear()
+                # Use erase() instead of clear() to avoid screen flicker
+                # clear() forces a full terminal redraw, erase() just overwrites
+                stdscr.erase()
                 max_y, max_x = stdscr.getmaxyx()
 
                 # Title bar
