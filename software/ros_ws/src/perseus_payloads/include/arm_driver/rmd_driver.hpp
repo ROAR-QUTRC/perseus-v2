@@ -21,8 +21,7 @@
 //         /restart_motor (perseus_msgs/TriggerDevice) - restart motor service (service)
 //         /get_can_ids (perseus_msgs/RequestInt8Array) - get list of active RMD CAN IDs (service)
 
-class RmdDriver : public rclcpp::Node
-{
+class RmdDriver : public rclcpp::Node {
 public:
     explicit RmdDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
@@ -34,7 +33,7 @@ private:
     void _publish_status_messages();
     void _publish_motor_positions();
     void _handle_can();
-    std::vector<hi_can::addressing::post_landing::servo::rmd::motor_id_t> _get_online_servos();
+    std::vector<hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t> _get_online_servos();
     void _set_motor_id(
         const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request,
         std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response);
@@ -57,13 +56,13 @@ private:
     rclcpp::TimerBase::SharedPtr _packet_timer;
     std::optional<hi_can::RawCanInterface> _can_interface;
     std::optional<hi_can::PacketManager> _packet_manager;
-    const std::unordered_map<hi_can::addressing::post_landing::servo::rmd::motor_id_t, std::shared_ptr<hi_can::parameters::post_landing::servo::rmd_servo::RmdParameterGroup>> PARAMETER_GROUP_MAP = {
-        {hi_can::addressing::post_landing::servo::rmd::motor_id_t::ELBOW,
-         std::make_shared<hi_can::parameters::post_landing::servo::rmd_servo::RmdParameterGroup>(static_cast<uint8_t>(hi_can::addressing::post_landing::servo::rmd::motor_id_t::ELBOW))},
-        {hi_can::addressing::post_landing::servo::rmd::motor_id_t::WRIST_TILT,
-         std::make_shared<hi_can::parameters::post_landing::servo::rmd_servo::RmdParameterGroup>(static_cast<uint8_t>(hi_can::addressing::post_landing::servo::rmd::motor_id_t::WRIST_TILT))},
-        {hi_can::addressing::post_landing::servo::rmd::motor_id_t::WRIST_PAN,
-         std::make_shared<hi_can::parameters::post_landing::servo::rmd_servo::RmdParameterGroup>(static_cast<uint8_t>(hi_can::addressing::post_landing::servo::rmd::motor_id_t::WRIST_PAN))},
+    const std::unordered_map<hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t, std::shared_ptr<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>> PARAMETER_GROUP_MAP = {
+        {hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::ELBOW,
+         std::make_shared<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>(static_cast<uint8_t>(hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::ELBOW))},
+        {hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_TILT,
+         std::make_shared<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>(static_cast<uint8_t>(hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_TILT))},
+        {hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_PAN,
+         std::make_shared<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>(static_cast<uint8_t>(hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_PAN))},
     };
 
     // Motor feedback
