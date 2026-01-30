@@ -59,10 +59,15 @@ private:
   // ROS components
   std::shared_ptr<rclcpp::GenericSubscription> subscription_;
   std::shared_ptr<rclcpp::GenericPublisher> publisher_;
+  rclcpp::TimerBase::SharedPtr detection_timer_;
 
   // Timing for frequency reduction
   std::chrono::steady_clock::time_point last_publish_time_;
   std::chrono::milliseconds publish_interval_;
+
+  // Retry tracking
+  int detection_attempts_;
+  static constexpr int MAX_DETECTION_ATTEMPTS = 50;  // ~5 seconds at 100ms intervals
 
   // Flag to track if we've detected and set up the publisher
   bool is_setup_complete_;
