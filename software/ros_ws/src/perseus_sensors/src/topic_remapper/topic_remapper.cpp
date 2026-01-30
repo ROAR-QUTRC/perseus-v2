@@ -14,7 +14,7 @@
 using namespace std::chrono_literals;
 
 TopicRemapper::TopicRemapper(const rclcpp::NodeOptions& options)
-    : Node("topic_remapper", options), is_setup_complete_(false)
+    : Node("topic_remapper", options), is_setup_complete_(false), detection_attempts_(0)
 {
   RCLCPP_INFO(this->get_logger(), "Initializing TopicRemapper node...");
 
@@ -53,15 +53,26 @@ TopicRemapper::TopicRemapper(const rclcpp::NodeOptions& options)
   // Initialize timing
   last_publish_time_ = std::chrono::steady_clock::now();
 
-  // Start detection and subscription
-  detect_and_subscribe();
+  // Start detection with a timer that retries periodically
+  detection_timer_ = this->create_wall_timer(100ms, [this]() { this->detect_and_subscribe(); });
 }
 
 TopicRemapper::~TopicRemapper() { RCLCPP_INFO(this->get_logger(), "TopicRemapper node shutting down"); }
 
 void TopicRemapper::detect_and_subscribe()
 {
-  RCLCPP_INFO(this->get_logger(), "Attempting to detect message type on topic: %s", input_topic_name_.c_str());
+  // Only run once setup is complete
+  if (is_setup_complete_)
+  {
+    return;
+  }
+
+  detection_attempts_++;
+
+  if (detection_attempts_ == 1)
+  {
+    RCLCPP_INFO(this->get_logger(), "Attempting to detect message type on topic: %s", input_topic_name_.c_str());
+  }
 
   // Get topic names and types from the node graph
   auto topic_names_and_types = this->get_topic_names_and_types();
@@ -73,35 +84,60 @@ void TopicRemapper::detect_and_subscribe()
     {
       message_type_ = types[0];
       topic_found = true;
-      RCLCPP_INFO(this->get_logger(), "Detected message type for topic '%s': %s", input_topic_name_.c_str(),
-                  message_type_.c_str());
       break;
     }
   }
 
   if (!topic_found)
   {
-    RCLCPP_WARN(this->get_logger(),
-                "Topic '%s' not found or has no publishers yet. Will attempt to subscribe anyway.",
-                input_topic_name_.c_str());
+    if (detection_attempts_ == 1)
+    {
+      RCLCPP_INFO(this->get_logger(), "Topic '%s' not found yet. Waiting for publisher...", input_topic_name_.c_str());
+    }
+    else if (detection_attempts_ % 10 == 0)
+    {
+      RCLCPP_DEBUG(this->get_logger(), "Still waiting for topic '%s'... (attempt %d/%d)", input_topic_name_.c_str(),
+                   detection_attempts_, MAX_DETECTION_ATTEMPTS);
+    }
+
+    if (detection_attempts_ >= MAX_DETECTION_ATTEMPTS)
+    {
+      RCLCPP_ERROR(this->get_logger(), "Failed to detect message type after %d attempts. Topic '%s' may not exist.",
+                   MAX_DETECTION_ATTEMPTS, input_topic_name_.c_str());
+      detection_timer_->cancel();
+      return;
+    }
+
+    return;  // Wait for next attempt
   }
 
-  // Create generic publisher
-  // GenericPublisher requires: topic_name, message_type, queue_size, publish_options
-  publisher_ = this->create_generic_publisher(output_topic_name_, message_type_.empty() ? "*" : message_type_, 10);
+  RCLCPP_INFO(this->get_logger(), "Detected message type for topic '%s': %s", input_topic_name_.c_str(),
+              message_type_.c_str());
 
-  RCLCPP_INFO(this->get_logger(), "Created generic publisher on topic: %s", output_topic_name_.c_str());
+  // Cancel the detection timer since we found the topic
+  detection_timer_->cancel();
 
-  // Create generic subscription
-  // GenericSubscription requires: topic_name, message_type, queue_size, callback, options
-  subscription_ = this->create_generic_subscription(
-      input_topic_name_, message_type_.empty() ? "*" : message_type_, 10,
-      std::bind(&TopicRemapper::generic_message_callback, this, std::placeholders::_1));
+  try
+  {
+    // Create generic publisher
+    publisher_ = this->create_generic_publisher(output_topic_name_, message_type_, 10);
+    RCLCPP_INFO(this->get_logger(), "Created generic publisher on topic: %s", output_topic_name_.c_str());
 
-  RCLCPP_INFO(this->get_logger(), "Created generic subscription on topic: %s", input_topic_name_.c_str());
-  RCLCPP_INFO(this->get_logger(), "TopicRemapper is now active and will republish at %.2f Hz", reduction_frequency_);
+    // Create generic subscription
+    subscription_ = this->create_generic_subscription(
+        input_topic_name_, message_type_, 10,
+        std::bind(&TopicRemapper::generic_message_callback, this, std::placeholders::_1));
 
-  is_setup_complete_ = true;
+    RCLCPP_INFO(this->get_logger(), "Created generic subscription on topic: %s", input_topic_name_.c_str());
+    RCLCPP_INFO(this->get_logger(), "TopicRemapper is now active and will republish at %.2f Hz", reduction_frequency_);
+
+    is_setup_complete_ = true;
+  }
+  catch (const std::exception& e)
+  {
+    RCLCPP_ERROR(this->get_logger(), "Failed to create subscription/publisher: %s", e.what());
+    detection_timer_->cancel();
+  }
 }
 
 void TopicRemapper::generic_message_callback(std::shared_ptr<rclcpp::SerializedMessage> msg)
