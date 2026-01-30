@@ -33,11 +33,11 @@
 		isSettingsOpen = !isSettingsOpen;
 	};
 
-	let resolution = $state<string>(
+	let resolution = $derived<string>(
 		`${config.resolution.width}x${config.resolution.height}` || '320x240'
 	);
 
-	let transform = $state<string>(config.transform || 'none');
+	let transform = $derived<string>(config.transform || 'none');
 
 	const onValueChange = () => {
 		isSettingsOpen = false;
