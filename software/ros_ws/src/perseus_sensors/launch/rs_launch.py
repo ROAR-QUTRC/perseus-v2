@@ -143,9 +143,19 @@ def generate_launch_description():
             description='Input RGB image topic to compress (raw)',
         ),
         DeclareLaunchArgument(
+            'rgb_out',
+            default_value='/camera/color/image_compressed',
+            description='Output RGB compressed image topic',
+        ),
+        DeclareLaunchArgument(
             'depth_in',
             default_value='/camera/depth/image_rect_raw',
             description='Input depth image topic to compress (raw)',
+        ),
+        DeclareLaunchArgument(
+            'depth_out',
+            default_value='/camera/depth/image_compressedDepth',
+            description='Output depth compressed image topic',
         ),
     ]
 
@@ -160,7 +170,7 @@ def generate_launch_description():
     )
 
     # ---- Added: image_transport republish nodes ----
-    # RGB: raw -> compressed (creates <rgb_in>/compressed)
+    # RGB: raw -> compressed (creates <rgb_out>)
     rgb_compress = Node(
         package='image_transport',
         executable='republish',
@@ -171,12 +181,12 @@ def generate_launch_description():
         ],
         remappings=[
             ('in', LaunchConfiguration('rgb_in')),
-            ('out', LaunchConfiguration('rgb_in')),
+            ('out', LaunchConfiguration('rgb_out')),
         ],
         condition=None,  # keep simple; see note below
     )
 
-    # Depth: raw -> compressedDepth (creates <depth_in>/compressedDepth)
+    # Depth: raw -> compressedDepth (creates <depth_out>)
     depth_compress = Node(
         package='image_transport',
         executable='republish',
@@ -187,7 +197,7 @@ def generate_launch_description():
         ],
         remappings=[
             ('in', LaunchConfiguration('depth_in')),
-            ('out', LaunchConfiguration('depth_in')),
+            ('out', LaunchConfiguration('depth_out')),
         ],
         condition=None,  # keep simple; see note below
     )
