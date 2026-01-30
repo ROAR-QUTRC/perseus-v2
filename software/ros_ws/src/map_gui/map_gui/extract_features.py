@@ -107,7 +107,6 @@ class ExtractFeatures(Node):
             name += ".json"
         return name
 
-
     def SaveJson(self, request_id: str, request: dict):
         json_text = request.get("json_text", "")
         file_name = self.SaveJsonFileName(request.get("file_name", "waypoints.json"))
