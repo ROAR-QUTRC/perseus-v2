@@ -112,18 +112,24 @@ controller_server:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
       # Core speed
       desired_linear_vel: 0.20 # was 0.3 (slightly calmer)
+      max_linear_vel: 0.5
+      min_linear_vel: -0.5
+      max_angular_vel: 2.5
+      min_angular_vel: -2.5
+      max_linear_accel: 2.5
+      max_linear_decel: -2.5
+      max_angular_accel: 3.2
+      max_angular_decel: -3.2
       # Lookahead tuning (reduces zig-zag / wobble)
       lookahead_dist: 0.75 # was 0.6
       min_lookahead_dist: 0.50 # was 0.3
       max_lookahead_dist: 1.10 # was 0.9
-      lookahead_time: 1.0 # was 1.5 (less "late correction")
+      lookahead_time: 1.0  # was 1.5 (less "late correction")
       # Rotation / heading handling (reduce overshoot)
       use_rotate_to_heading: true
       rotate_to_heading_angular_vel: 0.8 # was 1.0 (less aggressive)
       rotate_to_heading_min_angle: 1.05 # was 0.785 (~60deg). Avoids flip-flopping
       # Limit angular aggressiveness to reduce oscillation
-      max_angular_accel: 2.0 # was 3.2
-      max_linear_accel: 2.0
       # Collision / regulation behavior (avoid speed oscillations)
       max_allowed_time_to_collision_up_to_carrot: 1.2
       use_regulated_linear_velocity_scaling: true
