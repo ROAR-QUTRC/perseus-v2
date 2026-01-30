@@ -8,7 +8,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
     ekf_config_file = LaunchConfiguration("ekf_config")
-    imu_topic = LaunchConfiguration("imu_topic", default="/livox/imu")
+    imu_topic = LaunchConfiguration("imu_topic", default="/livox/imu_remapped")
 
     declare_use_sim_time = DeclareLaunchArgument(
         "use_sim_time",
@@ -26,7 +26,7 @@ def generate_launch_description():
 
     declare_imu_topic = DeclareLaunchArgument(
         "imu_topic",
-        default_value="/livox/imu",
+        default_value="/livox/imu_remapped",
         description="IMU topic name",
     )
 
