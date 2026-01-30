@@ -14,7 +14,7 @@
 using namespace std::chrono_literals;
 
 TopicRemapper::TopicRemapper(const rclcpp::NodeOptions& options)
-    : Node("topic_remapper", options), is_setup_complete_(false), detection_attempts_(0)
+    : Node("topic_remapper", options), detection_attempts_(0), is_setup_complete_(false)
 {
   RCLCPP_INFO(this->get_logger(), "Initializing TopicRemapper node...");
 
