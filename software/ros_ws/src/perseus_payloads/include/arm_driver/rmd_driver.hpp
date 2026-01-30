@@ -21,7 +21,8 @@
 //         /restart_motor (perseus_msgs/TriggerDevice) - restart motor service (service)
 //         /get_can_ids (perseus_msgs/RequestInt8Array) - get list of active RMD CAN IDs (service)
 
-class RmdDriver : public rclcpp::Node {
+class RmdDriver : public rclcpp::Node
+{
 public:
     explicit RmdDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 

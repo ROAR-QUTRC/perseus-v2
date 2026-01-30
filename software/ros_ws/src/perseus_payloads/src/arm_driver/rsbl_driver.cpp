@@ -8,26 +8,31 @@ using namespace hi_can::addressing::post_landing::arm::control_board;
 using namespace hi_can::parameters::post_landing::arm::control_board;
 
 ArmController::ArmController(const rclcpp::NodeOptions& options)
-    : Node("arm_controller", options) {
-    try {
+    : Node("arm_controller", options)
+{
+    try
+    {
         _can_interface.emplace(RawCanInterface(this->declare_parameter("can_bus", "can0")));
         _packet_manager.emplace(_can_interface.value());
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         RCLCPP_FATAL(this->get_logger(), "Failed to initialise CAN bus: %s", e.what());
     }
 
     // Timers
     _packet_timer = this->create_wall_timer(PACKET_HANDLE_MS, std::bind(&ArmController::_handle_can, this));
     _status_timer = this->create_wall_timer(std::chrono::milliseconds(this->_status_message_ms),
-        std::bind(&ArmController::_publish_status_messages, this));
+                                            std::bind(&ArmController::_publish_status_messages, this));
     _motor_position_timer = this->create_wall_timer(POSITION_PUBLISH_MS,
-        std::bind(&ArmController::_publish_motor_positions, this));
+                                                    std::bind(&ArmController::_publish_motor_positions, this));
     _status_request_timer = this->create_wall_timer(STATUS_REQUEST_MS,
-        std::bind(&ArmController::_request_servo_status, this));
+                                                    std::bind(&ArmController::_request_servo_status, this));
 
     for (const auto& [servo_id, parameter_group] : this->PARAMETER_GROUP_MAP)  // Add RSBL parameter groups
     {
-        if (_packet_manager) {
+        if (_packet_manager)
+        {
             _packet_manager->add_group(*parameter_group);
         }
         _available_servos.push_back(servo_id);
@@ -44,17 +49,20 @@ ArmController::ArmController(const rclcpp::NodeOptions& options)
     RCLCPP_INFO(this->get_logger(), "Arm Controller initialized - controlling RSBL servos and PWM outputs");
 }
 
-void ArmController::_handle_arm_control(const perseus_msgs::msg::ArmControl::SharedPtr msg) {
+void ArmController::_handle_arm_control(const perseus_msgs::msg::ArmControl::SharedPtr msg)
+{
     uint8_t acceleration = msg->acceleration;
 
-    if (msg->position.size() >= 2) {
+    if (msg->position.size() >= 2)
+    {
         int16_t pos_tilt = static_cast<int16_t>((msg->position[0] * (4096.0 / (2.0 * M_PI))) + 2048.0);
         int16_t pos_pan = static_cast<int16_t>((msg->position[1] * (4096.0 / (2.0 * M_PI))) + 2048.0);
 
         uint16_t speed_tilt = 0;
         uint16_t speed_pan = 0;
 
-        if (msg->velocity.size() >= 2) {
+        if (msg->velocity.size() >= 2)
+        {
             speed_tilt = static_cast<uint16_t>(std::abs(msg->velocity[0] * (4096.0 / (2.0 * M_PI))));
             speed_pan = static_cast<uint16_t>(std::abs(msg->velocity[1] * (4096.0 / (2.0 * M_PI))));
         }
@@ -90,13 +98,15 @@ void ArmController::_handle_arm_control(const perseus_msgs::msg::ArmControl::Sha
     }
 }
 
-void ArmController::_publish_status_messages() {
+void ArmController::_publish_status_messages()
+{
     std_msgs::msg::Float64MultiArray status_msg;
 
     for (const auto& servo_id : this->_available_servos)  // Publish RSBL servo status
     {
         auto it = this->PARAMETER_GROUP_MAP.find(servo_id);
-        if (it != this->PARAMETER_GROUP_MAP.end()) {
+        if (it != this->PARAMETER_GROUP_MAP.end())
+        {
             const auto& parameter_group = it->second;
             // status_msg.data.emplace_back(static_cast<double>(parameter_group->get_position()));
             // status_msg.data.emplace_back(static_cast<double>(parameter_group->get_speed()));
@@ -111,13 +121,16 @@ void ArmController::_publish_status_messages() {
     _status_publisher->publish(status_msg);
 }
 
-void ArmController::_publish_motor_positions() {
+void ArmController::_publish_motor_positions()
+{
     std_msgs::msg::Float64MultiArray position_msg;
     position_msg.data = std::vector<double>(this->PARAMETER_GROUP_MAP.size(), 0.0);
 
-    for (const auto& servo_id : this->_available_servos) {
+    for (const auto& servo_id : this->_available_servos)
+    {
         auto it = this->PARAMETER_GROUP_MAP.find(servo_id);
-        if (it != this->PARAMETER_GROUP_MAP.end()) {
+        if (it != this->PARAMETER_GROUP_MAP.end())
+        {
             const auto& parameter_group = it->second;
             // position_msg.data[static_cast<size_t>(servo_id)] = static_cast<double>(parameter_group->get_position());
         }
@@ -126,17 +139,23 @@ void ArmController::_publish_motor_positions() {
     _motor_position_publisher->publish(position_msg);
 }
 
-void ArmController::_handle_can() {
-    try {
-        if (_packet_manager) {
+void ArmController::_handle_can()
+{
+    try
+    {
+        if (_packet_manager)
+        {
             _packet_manager->handle();
         }
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         RCLCPP_WARN_THROTTLE(this->get_logger(), *get_clock(), 1000, "CAN Handle failed: %s", e.what());
     }
 }
 
-void ArmController::_request_servo_status() {
+void ArmController::_request_servo_status()
+{
     for (const auto& servo_id : this->_available_servos)  // Request RSBL servo status
     {
         // if (_can_interface) {
@@ -155,19 +174,24 @@ void ArmController::_request_servo_status() {
     }
 }
 
-void ArmController::cleanup() {
+void ArmController::cleanup()
+{
     _packet_manager.reset();
     _can_interface.reset();
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     rclcpp::init(argc, argv);
-    try {
+    try
+    {
         auto node = std::make_shared<ArmController>();
         RCLCPP_INFO(rclcpp::get_logger("main"), "Starting Arm Controller node");
         rclcpp::spin(node);
         node->cleanup();
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         RCLCPP_ERROR(rclcpp::get_logger("main"), "Error running Arm Controller: %s", e.what());
         return EXIT_FAILURE;
     }
