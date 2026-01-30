@@ -110,33 +110,45 @@ controller_server:
       xy_goal_tolerance: 0.5
       yaw_goal_tolerance: 0.3
     FollowPath:
-      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      # Core speed
-      desired_linear_vel: 0.25 # was 0.3 (slightly calmer)
-      # Lookahead tuning (reduces zig-zag / wobble)
-      lookahead_dist: 0.75 # was 0.6
-      min_lookahead_dist: 0.50 # was 0.3
-      max_lookahead_dist: 1.10 # was 0.9
-      lookahead_time: 1.0 # was 1.5 (less "late correction")
-      # Rotation / heading handling (reduce overshoot)
-      use_rotate_to_heading: true
-      rotate_to_heading_angular_vel: 0.6 # was 1.0 (less aggressive)
-      rotate_to_heading_min_angle: 1.05 # was 0.785 (~60deg). Avoids flip-flopping
-      # Limit angular aggressiveness to reduce oscillation
-      max_angular_accel: 2.0 # was 3.2
-      max_linear_accel: 2.0
-      # Collision / regulation behavior (avoid speed oscillations)
-      max_allowed_time_to_collision_up_to_carrot: 1.2
-      use_regulated_linear_velocity_scaling: true
-      use_cost_regulated_linear_velocity_scaling: true
-      cost_scaling_dist: 0.45 # was 0.3 (start scaling a bit later / smoother)
-      cost_scaling_gain: 0.6 # was 1.0 (less oscillatory modulation)
-      inflation_cost_scaling_factor: 3.0
-      # Approaching goal behavior (smooth final approach)
-      use_velocity_scaled_lookahead_dist: true
-      approach_velocity_scaling_dist: 0.8 # was 0.6 (more gradual slow down)
-      min_approach_linear_velocity: 0.06 # was 0.05
-      transform_tolerance: 0.5
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: true
+      min_vel_x: 0.2
+      min_vel_y: 0.0
+      max_vel_x: 0.5 # Reduced from 0.25 for more conservative movement
+      max_vel_y: 0.0
+      max_vel_theta: 0.4 # Reduced from 1.0 for smoother rotation
+      min_speed_xy: 0.0
+      max_speed_xy: 0.2 # Reduced from 0.25
+      min_speed_theta: 0.2
+      acc_lim_x: 2.0 # Reduced from 3.0 for smoother acceleration
+      acc_lim_y: 0.0
+      acc_lim_theta: 2.5 # Reduced from 3.2 for smoother rotation
+      decel_lim_x: -2.0 # Less aggressive deceleration
+      decel_lim_y: 0.0
+      decel_lim_theta: -2.5 # Less aggressive deceleration
+      vx_samples: 20 # Increased from 15 for better trajectory options
+      vy_samples: 0
+      vtheta_samples: 40 # Increased from 30 for better rotation options
+      sim_time: 1.5 # Increased from 1.0 for better lookahead
+      linear_granularity: 0.05 # Increased from 0.03 for computational efficiency
+      angular_granularity: 0.025
+      transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
+      xy_goal_tolerance: 0.1 # Increased from 0.08
+      trans_stopped_velocity: 0.2 # Reduced from 0.25
+      short_circuit_trajectory_evaluation: true # Changed to true for efficiency
+      stateful: true
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "PathAlign", "PathDist", "GoalAlign", "GoalDist"]
+      BaseObstacle.scale: 0.05 # Increased from 0.02 for better obstacle avoidance
+      PathAlign.scale: 32.0 # Reduced from 160.0 for less aggressive path following
+      PathAlign.forward_point_distance: 0.325
+      GoalAlign.scale: 24.0 # Increased from 12.0 for better goal alignment
+      GoalAlign.forward_point_distance: 0.325
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0 # Reduced from 32.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
+    # enable_stamped_cmd_vel: true
 local_costmap:
   local_costmap:
     ros__parameters:
