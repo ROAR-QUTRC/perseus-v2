@@ -617,10 +617,16 @@ class AutonomyTUI:
     COLOR_CRIT = 3
     COLOR_INFO = 4
 
+    # Refresh rate bounds (ms)
+    REFRESH_MIN_MS = 100
+    REFRESH_MAX_MS = 2000
+    REFRESH_STEP_MS = 100
+
     def __init__(self, node: AutonomyDiagnosticsNode):
         self.node = node
         self.running = True
         self.stdscr = None
+        self.refresh_ms = CURSES_REFRESH_MS  # Mutable refresh rate
 
     def safe_addstr(self, y: int, x: int, text: str, attr=0):
         """Safely add string, handling screen boundaries."""
@@ -838,7 +844,7 @@ class AutonomyTUI:
         self.stdscr = stdscr
         curses.curs_set(0)  # Hide cursor
         stdscr.nodelay(True)  # Non-blocking input
-        stdscr.timeout(CURSES_REFRESH_MS)
+        stdscr.timeout(self.refresh_ms)
 
         # Initialize color pairs
         curses.start_color()
@@ -854,7 +860,7 @@ class AutonomyTUI:
                 max_y, max_x = stdscr.getmaxyx()
 
                 # Title bar
-                title = " AUTONOMY DIAGNOSTICS - Press 'q' to quit "
+                title = " AUTONOMY DIAGNOSTICS - q:quit  +/-:refresh rate "
                 self.safe_addstr(
                     0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
                 )
@@ -914,15 +920,27 @@ class AutonomyTUI:
                 # Status bar
                 status_time = time.strftime("%H:%M:%S")
                 domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
-                status = f" Time: {status_time} | ROS_DOMAIN_ID: {domain_id} | Refresh: {CURSES_REFRESH_MS}ms "
+                status = f" Time: {status_time} | ROS_DOMAIN_ID: {domain_id} | Refresh: {self.refresh_ms}ms "
                 self.safe_addstr(max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE)
 
                 stdscr.refresh()
 
-                # Check for quit
+                # Handle keyboard input
                 key = stdscr.getch()
                 if key == ord("q") or key == ord("Q"):
                     self.running = False
+                elif key == ord("+") or key == ord("="):
+                    # Increase refresh rate (slower updates)
+                    self.refresh_ms = min(
+                        self.refresh_ms + self.REFRESH_STEP_MS, self.REFRESH_MAX_MS
+                    )
+                    stdscr.timeout(self.refresh_ms)
+                elif key == ord("-") or key == ord("_"):
+                    # Decrease refresh rate (faster updates)
+                    self.refresh_ms = max(
+                        self.refresh_ms - self.REFRESH_STEP_MS, self.REFRESH_MIN_MS
+                    )
+                    stdscr.timeout(self.refresh_ms)
 
             except curses.error:
                 pass
