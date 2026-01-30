@@ -37,7 +37,7 @@ def generate_launch_description():
 
     reduction_frequency_arg = DeclareLaunchArgument(
         "reduction_frequency",
-        default_value="10.0",
+        default_value="50.0",
         description="Target output frequency in Hz",
     )
 
