@@ -485,30 +485,28 @@
 		return Number.isFinite(n) ? Number(n.toFixed(dp)) : 0;
 	}
 	function buildJson(): string {
-			const payload = {
-			waypoints: waypoints.map((w) => {
-				const xRelativeCoordinate = w.relativeX / scale;
-				const yRelativeCoordinate = w.relativeY / scale;
+		const payload = waypoints.map((w) => {
+			const xRelativeCoordinate = w.relativeX / scale;
+			const yRelativeCoordinate = w.relativeY / scale;
 
-				// yaw stored as DEGREES in UI but output yaw in RADIANS for navigation
-				const YawOutputRadians = wrapPi((w.yaw * Math.PI) / 180);
+			// yaw stored as DEGREES in UI but output yaw in RADIANS for navigation
+			const yawOutputRadians = wrapPi((w.yaw * Math.PI) / 180);
 
-				return {
-					name: w.name,
-					x: roundJsonOutput(xRelativeCoordinate, 3),
-					y: roundJsonOutput(yRelativeCoordinate, 3),
-					yaw: roundJsonOutput(YawOutputRadians, 6)
-				};
-			})
-	};
+			return {
+			name: w.name,
+			x: roundJsonOutput(xRelativeCoordinate, 3),
+			y: roundJsonOutput(yRelativeCoordinate, 3),
+			yaw: roundJsonOutput(yawOutputRadians, 6)
+			};
+		});
 
-	return JSON.stringify(payload, null, 2);
-	}
+		return JSON.stringify(payload, null, 2);
+		}
 
 	function drawRotatedRectangle(waypoint: WaypointRow) {
 		const arrowLength = 25;
 
-		// Same convention as YAML: N=0, E=-pi/2, W=+pi/2
+		// Same convention as JSON: N=0, E=-pi/2, W=+pi/2
 		const t = (-waypoint.yaw * Math.PI) / 180;
 
 		const yawX1Coordinate = waypoint.centroidX;
@@ -639,7 +637,7 @@
 				</button>
 
 				<button type="button" onclick={saveJsonToScripts} disabled={waypoints.length === 0}>
-					Save YAML
+					Save JSON
 				</button>
 			</div>
 		</div>
@@ -869,7 +867,7 @@
 			</table>
 		</div>
 
-		<!-- YAML preview -->
+		<!-- JSON preview -->
 		<div class="jsonWrap">
 			<h2>JSON preview</h2>
 			<textarea class="jsonBox" readonly value={buildJson()}></textarea>
