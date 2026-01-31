@@ -249,19 +249,21 @@ let
       }
     );
 
-    gz-sim-vendor = (rosPrev.lib.patchAmentVendorGit rosPrev.gz-sim-vendor {
-      patchesFor.gz_sim_vendor = [ ./patches/gz-sim/runGui.patch ];
-    }).overrideAttrs (
-      {
-        passthru,
-        patches ? [ ],
-        ...
-      }:
-      {
-        patches = patches ++ [ ./patches/gz-sim-vendor/version.patch ];
-        gz-sim-source = passthru.amentVendorSrcs.gz_sim_vendor;
-      }
-    );
+    gz-sim-vendor =
+      (rosPrev.lib.patchAmentVendorGit rosPrev.gz-sim-vendor {
+        patchesFor.gz_sim_vendor = [ ./patches/gz-sim/runGui.patch ];
+      }).overrideAttrs
+        (
+          {
+            passthru,
+            patches ? [ ],
+            ...
+          }:
+          {
+            patches = patches ++ [ ./patches/gz-sim-vendor/version.patch ];
+            gz-sim-source = passthru.amentVendorSrcs.gz_sim_vendor;
+          }
+        );
     ros-gz-sim = rosPrev.ros-gz-sim.overrideAttrs {
       version = "1.0.17-r1";
 
@@ -272,7 +274,6 @@ let
       };
     };
   };
-
 
 in
 {

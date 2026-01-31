@@ -1,6 +1,15 @@
 # spellchecker:off
 [files]
-extend-exclude = ["typos.toml"]
+extend-exclude = [
+  "typos.toml",
+  "treefmt.toml",
+  "hardware/**",
+  "**/sdkconfig.*",
+  "*.svg",
+  "*.png",
+  "*.drawio",
+  "*.patch",
+]
 
 [default]
 
@@ -17,20 +26,19 @@ extend-ignore-re = [
 [default.extend-words]
 area_sizez = "area_sizez"
 sizez = "sizez"
+substituters = "substituters"
 
 # unfortunately we need to use American spelling in code
 [type.cpp]
-serialise = "serialize"
-deserialise = "deserialize"
-centre = "center"
+extend-words = { serialise = "serialize", deserialise = "deserialize", centre = "center" }
 
 [type.py]
-serialise = "serialize"
-deserialise = "deserialize"
+extend-words = { serialise = "serialize", deserialise = "deserialize" }
 
 [type.md]
 extend-words = { ros = "ROS" }
 extend-ignore-re = [
+  "ROS",
   # align: center (for inserting images)
   "(?Rm)^\\s*:?align:\\s*center$",
   # inline code snippets
