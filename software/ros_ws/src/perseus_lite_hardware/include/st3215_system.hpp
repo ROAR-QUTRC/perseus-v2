@@ -1,8 +1,8 @@
 #pragma once
 
 #include <boost/asio.hpp>
-#include <hardware_interface/system_interface.hpp>
 #include <hardware_interface/hardware_component_interface.hpp>
+#include <hardware_interface/system_interface.hpp>
 #include <iomanip>
 #include <mutex>
 #include <numbers>
