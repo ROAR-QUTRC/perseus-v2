@@ -61,8 +61,6 @@
         "*.ico"
         "*.pdf"
         "*sdkconfig*"
-        # Formatting these breaks the patch - carriage return stuff
-        "*.diff"
         # meshes
         "software/ros_ws/src/**/meshes/**"
         "*.dae"
