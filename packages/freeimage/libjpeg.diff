@@ -1,0 +1,19 @@
+diff --git a/Makefile.gnu b/Makefile.gnu
+index be95476..2edd07f 100644
+--- a/Makefile.gnu
++++ b/Makefile.gnu
+@@ -11,12 +11,12 @@ INSTALLDIR ?= $(DESTDIR)/usr/lib
+ # Converts cr/lf to just lf
+ DOS2UNIX = dos2unix
+ 
+-LIBRARIES = -lstdc++ $(shell pkg-config --libs OpenEXR libopenjp2 libraw libpng libtiff-4 libwebp libwebpmux zlib libjxr libjpeg)
++LIBRARIES = -lstdc++ LIBJPEG_LIBRARIES $(shell pkg-config --libs OpenEXR libopenjp2 libraw libpng libtiff-4 libwebp libwebpmux zlib libjxr)
+ 
+ MODULES = $(SRCS:.c=.o)
+ MODULES := $(MODULES:.cpp=.o)
+ 
+-INCLUDE += $(shell pkg-config --cflags OpenEXR libopenjp2 libraw libpng libtiff-4 libwebp libwebpmux zlib libjxr libjpeg)
++INCLUDE += LIBJPEG_INCLUDES $(shell pkg-config --cflags OpenEXR libopenjp2 libraw libpng libtiff-4 libwebp libwebpmux zlib libjxr)
+ 
+ # C flags
+ CFLAGS ?= -std=c99 -O3 -fPIC -fexceptions -fvisibility=hidden

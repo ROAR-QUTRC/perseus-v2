@@ -105,6 +105,11 @@
               oldPkgs = pkgs-old;
             })
           ];
+          # Gazebo makes use of Freeimage.
+          # Freeimage is blocked by default since it has a whole bunch of CVEs.
+          # This means we have to explicitly permit Freeimage to allow Gazebo to run.
+          # Freeimage is also abandoned, so we have to use the version from an old version of nixpkgs.
+          config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
           config.allowUnfreePredicate =
             pkg:
             builtins.elem (pkgs.lib.getName pkg) [
@@ -147,10 +152,6 @@
 
         pkgs-old = import nixpkgs-old {
           inherit system;
-          # Gazebo makes use of Freeimage.
-          # Freeimage is blocked by default since it has a whole bunch of CVEs.
-          # This means we have to explicitly permit Freeimage to allow Gazebo to run.
-          # Freeimage is also abandoned, so we have to use the version from an old version of nixpkgs.
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
         };
 
