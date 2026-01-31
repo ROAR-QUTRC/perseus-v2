@@ -55,14 +55,13 @@ stdenv.mkDerivation (finalAttrs: {
   outputs = [
     "bin"
     "dev"
-    "dev_private"
     "out"
     "man"
     "doc"
   ];
 
   postFixup = ''
-    moveToOutput include/transupp.h $dev_private
+    moveToOutput include/transupp.h $dev
   '';
 
   nativeBuildInputs = [

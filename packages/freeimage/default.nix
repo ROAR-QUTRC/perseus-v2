@@ -48,7 +48,6 @@ stdenv.mkDerivation (finalAttrs: {
       --replace "pkg-config" "$PKG_CONFIG"
     echo "libjpeg source: ${libjpeg-src.out}"
     echo "libjpeg dev source: ${libjpeg-src.dev}"
-    echo "libjpeg private dev source ${libjpeg-src.dev_private}"
     substituteInPlace Makefile.gnu \
       --replace "LIBJPEG_LIBRARIES" "-L${libjpeg-src.out}/lib -ljpeg"
     substituteInPlace Makefile.gnu \
@@ -76,7 +75,7 @@ stdenv.mkDerivation (finalAttrs: {
     openexr
     openjpeg
     libjpeg-src
-    libjpeg-src.dev_private
+    libjpeg-src.dev
     jxrlib
   ];
 

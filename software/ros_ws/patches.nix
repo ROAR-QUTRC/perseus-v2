@@ -249,16 +249,31 @@ let
       }
     );
 
-    gz-sim-vendor = rosPrev.gz-sim-vendor.overrideAttrs (
+    gz-sim-vendor = (rosPrev.lib.patchAmentVendorGit rosPrev.gz-sim-vendor {
+      patchesFor.gz_sim_vendor = [ ./patches/gz-sim/runGui.patch ];
+    }).overrideAttrs (
       {
+        passthru,
         patches ? [ ],
         ...
       }:
       {
         patches = patches ++ [ ./patches/gz-sim-vendor/version.patch ];
+        gz-sim-source = passthru.amentVendorSrcs.gz_sim_vendor;
       }
     );
+    ros-gz-sim = rosPrev.ros-gz-sim.overrideAttrs {
+      version = "1.0.17-r1";
+
+      src = prev.fetchurl {
+        url = "https://github.com/ros2-gbp/ros_ign-release/archive/release/jazzy/ros_gz_sim/1.0.17-1.tar.gz";
+        name = "1.0.17-1.tar.gz";
+        sha256 = "sha256-+iszAtEbbNhflq/bgBNe9RugiHkmCCmP3Ywzt22R2FA=";
+      };
+    };
   };
+
+
 in
 {
   rosPackages = prev.rosPackages // {
