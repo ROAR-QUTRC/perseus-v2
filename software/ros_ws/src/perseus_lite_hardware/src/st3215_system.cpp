@@ -41,10 +41,10 @@ namespace perseus_lite_hardware
     }
 
     hardware_interface::CallbackReturn ST3215SystemHardware::on_init(
-        const hardware_interface::HardwareInfo& info)
+        const hardware_interface::HardwareComponentInterfaceParams& params)
     {
-        RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME), "Initializing ST3215 hardware interface with %zu joints", info.joints.size());
-        if (const auto result = SystemInterface::on_init(info);
+        RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME), "Initializing ST3215 hardware interface with %zu joints", params.hardware_info.joints.size());
+        if (const auto result = SystemInterface::on_init(params);
             result != hardware_interface::CallbackReturn::SUCCESS)
         {
             return result;
@@ -53,23 +53,23 @@ namespace perseus_lite_hardware
         auto logger = rclcpp::get_logger(LOGGER_NAME);
 
         // Check required parameters
-        if (!has_parameter(info.hardware_parameters, "serial_port"))
+        if (!has_parameter(params.hardware_info.hardware_parameters, "serial_port"))
         {
             RCLCPP_ERROR(logger, "Missing required parameter 'serial_port'");
             return hardware_interface::CallbackReturn::ERROR;
         }
-        if (!has_parameter(info.hardware_parameters, "baud_rate"))
+        if (!has_parameter(params.hardware_info.hardware_parameters, "baud_rate"))
         {
             RCLCPP_ERROR(logger, "Missing required parameter 'baud_rate'");
             return hardware_interface::CallbackReturn::ERROR;
         }
 
         RCLCPP_DEBUG(logger, "Serial configuration - Port: %s, Baud Rate: %s",
-                     info.hardware_parameters.at("serial_port").c_str(),
-                     info.hardware_parameters.at("baud_rate").c_str());
+                     params.hardware_info.hardware_parameters.at("serial_port").c_str(),
+                     params.hardware_info.hardware_parameters.at("baud_rate").c_str());
 
         // Pre-allocate vectors with known size
-        const auto joint_count = info.joints.size();
+        const auto joint_count = params.hardware_info.joints.size();
         _command_speeds.resize(joint_count, 0.0);
         _current_positions.resize(joint_count, 0.0);
         _current_velocities.resize(joint_count, 0.0);
@@ -80,7 +80,7 @@ namespace perseus_lite_hardware
         _last_update_times.resize(joint_count, rclcpp::Time(0, 0, RCL_ROS_TIME));
 
         // Extract and validate servo IDs
-        for (const auto& joint : info.joints)
+        for (const auto& joint : params.hardware_info.joints)
         {
             if (!has_parameter(joint.parameters, "id"))
             {
@@ -105,7 +105,7 @@ namespace perseus_lite_hardware
         }
 
         // Verify command interfaces
-        for (const auto& joint : info.joints)
+        for (const auto& joint : params.hardware_info.joints)
         {
             if (!verify_command_interfaces(joint, logger))
             {

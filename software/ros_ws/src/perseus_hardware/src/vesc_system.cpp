@@ -24,15 +24,15 @@ VescSystemHardware::~VescSystemHardware()
     on_cleanup(rclcpp_lifecycle::State());
 }
 
-CallbackReturn VescSystemHardware::on_init(const HardwareInfo& info)
+CallbackReturn VescSystemHardware::on_init(const HardwareComponentInterfaceParams& params)
 {
-    if (const auto& ret = SystemInterface::on_init(info);
+    if (const auto& ret = SystemInterface::on_init(params);
         ret != CallbackReturn::SUCCESS)
         return ret;
 
-    CHECK_HARDWARE_PARAMETER_EXISTS(get_logger(), info, "can_bus");
+    CHECK_HARDWARE_PARAMETER_EXISTS(get_logger(), params.hardware_info, "can_bus");
 
-    for (const auto& joint : info.joints)
+    for (const auto& joint : params.hardware_info.joints)
     {
         CHECK_EQ_INTERFACE_COUNT(get_logger(), joint, command_interfaces, "command", 1);
         CHECK_EQ_INTERFACE_COUNT(get_logger(), joint, state_interfaces, "state", 4);

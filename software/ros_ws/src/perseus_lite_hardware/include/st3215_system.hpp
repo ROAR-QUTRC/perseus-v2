@@ -2,6 +2,7 @@
 
 #include <boost/asio.hpp>
 #include <hardware_interface/system_interface.hpp>
+#include <hardware_interface/hardware_component_interface.hpp>
 #include <iomanip>
 #include <mutex>
 #include <numbers>
@@ -92,7 +93,7 @@ namespace perseus_lite_hardware
 
         // ROS 2 Control Functions
         [[nodiscard]] hardware_interface::CallbackReturn on_init(
-            const hardware_interface::HardwareInfo& info) override;
+            const hardware_interface::HardwareComponentInterfaceParams& params) override;
 
         [[nodiscard]] std::vector<hardware_interface::StateInterface>
         export_state_interfaces() override;

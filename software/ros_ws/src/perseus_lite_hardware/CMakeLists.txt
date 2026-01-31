@@ -6,6 +6,7 @@ project(
   VERSION 0.0.1
   LANGUAGES CXX)
 
+cmake_policy(SET CMP0167 NEW)
 # Version compatibility check for better Boost integration
 if(CMAKE_VERSION VERSION_LESS "3.20.0")
   message(
