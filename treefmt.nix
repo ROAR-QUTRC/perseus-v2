@@ -47,7 +47,7 @@
         # config
         "*.rviz"
         "setup.cfg"
-        # ros stuff
+        # ROS stuff
         "software/ros_ws/src/**/resource/**"
         # non-formattable file types
         "*.drawio"
@@ -79,6 +79,11 @@
           "CMakeLists.txt"
           "**/CMakeLists.txt"
           "**/*.cmake"
+        ];
+      };
+      typos = {
+        excludes = [
+          "typos.toml"
         ];
       };
     };

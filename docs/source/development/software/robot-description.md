@@ -15,7 +15,7 @@ It provides a central source of truth for the robot’s physical structure, and 
 
 Below is the structure:
 
-```
+```none
 perseus_description/
  ├── launch/
  │    └── view_perseus.launch.py               # Launch file to visualise the URDF in RViz
@@ -193,7 +193,7 @@ These joints define not only kinematic relationships but also how transforms pro
 
 All links and joints come together to form a coherent kinematic chain:
 
-```
+```none
 base_link
  └── chassis
       ├── rocker links

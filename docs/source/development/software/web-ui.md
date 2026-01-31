@@ -25,7 +25,7 @@ SvelteKit provides several methods of assisting with server communication, howev
 
 To assist with creating widgets there is a basic script that populates a file with all the required boilerplate.
 
-##### Usage
+#### Usage
 
 The script is located in the Web UI directory root. When calling the script provide the name of the file with no spaces as an argument:
 
@@ -225,7 +225,7 @@ export interface WidgetType {
 :::{important}
 Any extra components or scripts needed for widgets should go in a folder sharing the same name as the widget in the `src/lib/widgets` directory. For example:
 
-```
+```none
 src/lib/widgets
 ├── myWidget
 │       ├──myComponent.svelte
@@ -317,7 +317,7 @@ The WebSocket connection is managed inside the file: `src/lib/scripts/ros-bridge
 
 The connect and disconnect functions are used by the connection manager at the top middle of the Web UI layout and should only be used internally.
 
-`getRosConnection` should be used to access the current ROS2 connection instance. This function returns a `$state` rune that is either `false` or the handle for the ros connection. This allows for very clear boolean evaluation in if statements and integration with the Svelte reactivity suite.
+`getRosConnection` should be used to access the current ROS2 connection instance. This function returns a `$state` rune that is either `false` or the handle for the ROS connection. This allows for very clear boolean evaluation in if statements and integration with the Svelte reactivity suite.
 
 ### Development Pattern
 
