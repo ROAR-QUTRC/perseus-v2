@@ -19,6 +19,7 @@
 		widget_settings as settings
 	};
 
+	declare module "*.png";
 
 	// function nextWaypointName(): string {
 	// 	throw new Error('Function not implemented.');
@@ -74,7 +75,7 @@
 	let imageElement: HTMLImageElement | null = null;
 
 	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_2.png';
-	const mapImageUrl = `http://localhost:8000/${mapImageId}`;
+	// const mapImageUrl = `http://localhost:8000/${mapImageId}`;
 
 	//Ros topics to listen to requests and reply
 	const requestTopicName = '/map_editor/request';
@@ -648,7 +649,7 @@
 				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 				<img
 					bind:this={imageElement}
-					src={mapImageUrl}
+					src={`/${mapImageId}`}
 					width="700"
 					alt="map"
 					class="map"
