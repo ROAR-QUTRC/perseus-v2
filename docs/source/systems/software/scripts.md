@@ -17,6 +17,16 @@ This script is designed to be run on the big-brain to setup any config that the 
 3. Creates network rule files (can't create these without sudo, but home-manager can edit them without sudo)
 4. Sets the CAN network send buffer length to be 128 (there was a buffer issue when running E&C)
 
+## member-setup.sh
+
+This script should be run whenever installing the repo on a fresh device. It installs required packages (direnv, git, gh), clones the repo, runs nix-setup.sh, builds the nix packages, and restarts the shell. It is designed to be run by the command:
+
+```console
+curl https://raw.githubusercontent.com/ROAR-QUTRC/perseus-v2/refs/heads/main/software/scripts/member-setup.sh | bash
+```
+
+Which gets the raw content of the .sh file and executes it by piping it directly into bash.
+
 ## nix-packages.sh
 
 This script should be run whenever the ros2 package dependencies (any package.xml files in the ros_ws folder) have been changed. It updates the nix packaging with the new dependencies and automatically commits the changes using git (use the `--no-commit` flag to not do this)
@@ -28,8 +38,9 @@ This script should be run on every device that wants to run the perseus repo (me
 1. Installs Nix package manager (see the Nix Basics page)
 2. Adds binary caches (and keys) to the trusted substituters so your computer can copy them instead of compiling them itself
 3. Disables the dirty git tree warning (which will run _everytime_ you have local staged changes and try to build the flake)
-4. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
-5. Hides the massive wall of text displaying the environment variables on startup/reload
+4. Adds the current user to the 'trusted-users' in the nix config, which stops the warning when running nix in a 'relaxed sandbox'.
+5. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
+6. Hides the massive wall of text displaying the environment variables on startup/reload
 
 :::{note}
 The nix-setup script can't be run on NixOS - you'll have to set these manually in your configuration.nix file (and your home.nix home-manager file), but if you're using NixOS, you should have no trouble doing this

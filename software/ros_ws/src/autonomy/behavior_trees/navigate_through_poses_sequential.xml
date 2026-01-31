@@ -1,0 +1,52 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="SequentialWaypointNav">
+
+      <!-- Loop through waypoints until goals array is empty -->
+      <!-- Use Fallback to catch GetGoalFromGoals failure (empty array = success) -->
+      <Fallback name="LoopWaypoints">
+        <Sequence name="ProcessWaypoint">
+
+          <!-- Extract first goal from remaining goals (fails when array is empty, which triggers fallback) -->
+          <GetGoalFromGoals goals="{goals}" index="0" goal="{current_goal}"/>
+
+          <!-- Navigate to single goal -->
+          <PipelineSequence name="NavigateToPose">
+            <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
+            <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
+
+            <!-- Plan to this single goal -->
+            <RateController hz="1.0">
+              <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+                <ComputePathToPose goal="{current_goal}" path="{path}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}"/>
+                <Sequence>
+                  <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
+                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                </Sequence>
+              </RecoveryNode>
+            </RateController>
+
+            <!-- Follow path to goal -->
+            <RecoveryNode number_of_retries="1" name="FollowPath">
+              <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
+              <Sequence>
+                <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
+                <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+              </Sequence>
+            </RecoveryNode>
+          </PipelineSequence>
+
+          <!-- Wait at waypoint after reaching it -->
+          <Wait name="WaitAtWaypoint" wait_duration="2.0"/>
+
+          <!-- Remove the first goal from the array and shift remaining goals forward -->
+          <PopFirstGoal input_goals="{goals}" output_goals="{goals}"/>
+
+        </Sequence>
+        <!-- When ProcessWaypoint fails (no more goals), return SUCCESS to complete navigation -->
+        <Sequence name="AllGoalsCompleted"/>
+      </Fallback>
+
+    </Sequence>
+  </BehaviorTree>
+</root>

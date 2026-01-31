@@ -1,0 +1,5 @@
+geometry_msgs/PoseStamped original_goal
+---
+bool success
+string message
+geometry_msgs/PoseStamped frontier_goal

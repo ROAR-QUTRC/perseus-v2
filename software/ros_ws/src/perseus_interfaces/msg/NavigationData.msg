@@ -1,0 +1,7 @@
+geometry_msgs/PoseStamped current_pose
+builtin_interfaces/Duration navigation_time
+builtin_interfaces/Duration estimated_time_remaining
+uint32 number_of_recoveries
+float32 distance_remaining
+uint32 number_of_poses_remaining
+bool navigation_active
