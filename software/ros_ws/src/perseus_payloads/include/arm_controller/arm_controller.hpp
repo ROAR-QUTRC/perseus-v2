@@ -1,9 +1,8 @@
 #include <actuator_msgs/msg/actuators.hpp>
 #include <chrono>
+#include <hi_can_raw.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
-
-#include <hi_can_raw.hpp>
 
 // Topics:
 // /arm
@@ -19,7 +18,8 @@
 
 #define STATUS_FIELD_COUNT 8
 
-class ArmController : public rclcpp::Node {
+class ArmController : public rclcpp::Node
+{
 public:
     explicit ArmController(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 

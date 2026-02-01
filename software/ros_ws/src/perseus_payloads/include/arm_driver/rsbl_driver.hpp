@@ -1,10 +1,10 @@
 #pragma once
 
+#include <actuator_msgs/msg/actuators.hpp>
 #include <chrono>
 #include <hi_can_raw.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
-#include <actuator_msgs/msg/actuators.hpp>
 
 #include "perseus_msgs/srv/request_int8_array.hpp"
 
@@ -17,7 +17,8 @@
 //          /status (publisher) - Status messages from all servos
 //          /positions (publisher) - Current positions of all servos
 
-class RsblDriver : public rclcpp::Node {
+class RsblDriver : public rclcpp::Node
+{
 public:
     explicit RsblDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
@@ -33,7 +34,7 @@ private:
     const hi_can::addressing::standard_address_t baseAddress{
         hi_can::addressing::post_landing::SYSTEM_ID,
         hi_can::addressing::post_landing::arm::SUBSYSTEM_ID,
-        hi_can::addressing::post_landing::arm::control_board::DEVICE_ID };
+        hi_can::addressing::post_landing::arm::control_board::DEVICE_ID};
 
     // CAN handling
     constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(100);
@@ -43,7 +44,7 @@ private:
 
     // Servo board parameter groups
     const std::unordered_map<hi_can::addressing::post_landing::arm::control_board::group,
-        std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
+                             std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
         PARAMETER_GROUP_MAP = {
             {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN,
              std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
@@ -51,7 +52,7 @@ private:
             {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT,
              std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
                  hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT)},
-    };
+        };
 
     // Motor feedback
     constexpr static auto POSITION_PUBLISH_MS = std::chrono::milliseconds(100);
