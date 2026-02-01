@@ -59,11 +59,14 @@ private:
     std::optional<hi_can::PacketManager> _packet_manager;
     const std::unordered_map<hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t, std::shared_ptr<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>> PARAMETER_GROUP_MAP = {
         {hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::ELBOW,
-         std::make_shared<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>(static_cast<uint8_t>(hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::ELBOW))},
+         std::make_shared<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>(
+             static_cast<uint8_t>(hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::ELBOW))},
         {hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_TILT,
-         std::make_shared<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>(static_cast<uint8_t>(hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_TILT))},
+         std::make_shared<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>(
+             static_cast<uint8_t>(hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_TILT))},
         {hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_PAN,
-         std::make_shared<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>(static_cast<uint8_t>(hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_PAN))},
+         std::make_shared<hi_can::parameters::post_landing::arm::rmd_servo::RmdParameterGroup>(
+             static_cast<uint8_t>(hi_can::addressing::post_landing::arm::rmd_servo::motor_id_t::WRIST_PAN))},
     };
 
     // Motor feedback

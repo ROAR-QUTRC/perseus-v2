@@ -153,6 +153,19 @@ void register_rsbl_servo(const control_board::group& group)
                                                  return status.serialize_data();
                                              },
                                              .interval = 100ms});
+
+    address.parameter = static_cast<uint8_t>(control_board::rsbl_parameters::STATUS_2);
+    packet_manager->set_transmission_config(static_cast<flagged_address_t>(address),
+                                            {.generator = [=]()
+                                             {
+                                                 status_2_t status{};  // TODO: get actual data
+                                                 status.voltage = 12;
+                                                 status.temperature = 23;
+                                                 status.current = 112;
+                                                 status.moving = 1;
+                                                 return status.serialize_data();
+                                             },
+                                             .interval = 1000ms});
 }
 
 #pragma endregion RSBL Servo

@@ -4,8 +4,9 @@
 #include <hi_can_raw.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
+#include <actuator_msgs/msg/actuators.hpp>
 
-#include "perseus_msgs/msg/arm_control.hpp"
+#include "perseus_msgs/srv/request_int8_array.hpp"
 
 // Arm CAN Controller - handles RSBL servos, PWM servos via CAN
 //
@@ -16,21 +17,23 @@
 //          /status (publisher) - Status messages from all servos
 //          /positions (publisher) - Current positions of all servos
 
-class ArmController : public rclcpp::Node
-{
+class RsblDriver : public rclcpp::Node {
 public:
-    explicit ArmController(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+    explicit RsblDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
     void cleanup();
 
 private:
-    void _handle_arm_control(const perseus_msgs::msg::ArmControl::SharedPtr msg);
+    void _handle_arm_control(const actuator_msgs::msg::Actuators::SharedPtr msg);
     void _publish_status_messages();
     void _publish_motor_positions();
     void _handle_can();
-    void _request_servo_status();
 
     constexpr static auto PACKET_DELAY_MS = std::chrono::milliseconds(20);
+    const hi_can::addressing::standard_address_t baseAddress{
+        hi_can::addressing::post_landing::SYSTEM_ID,
+        hi_can::addressing::post_landing::arm::SUBSYSTEM_ID,
+        hi_can::addressing::post_landing::arm::control_board::DEVICE_ID };
 
     // CAN handling
     constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(100);
@@ -40,15 +43,15 @@ private:
 
     // Servo board parameter groups
     const std::unordered_map<hi_can::addressing::post_landing::arm::control_board::group,
-                             std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
+        std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
         PARAMETER_GROUP_MAP = {
-            // {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT,
-            //  std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-            //      static_cast<uint8_t>(hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT))},
-            // {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN,
-            //  std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-            //      static_cast<uint8_t>(hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN))},
-        };
+            {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN,
+             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
+                 hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN)},
+            {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT,
+             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
+                 hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT)},
+    };
 
     // Motor feedback
     constexpr static auto POSITION_PUBLISH_MS = std::chrono::milliseconds(100);
@@ -59,8 +62,7 @@ private:
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _motor_position_publisher;
     rclcpp::TimerBase::SharedPtr _status_timer;
     rclcpp::TimerBase::SharedPtr _motor_position_timer;
-    rclcpp::TimerBase::SharedPtr _status_request_timer;
 
     // Subscriber
-    rclcpp::Subscription<perseus_msgs::msg::ArmControl>::SharedPtr _arm_control_subscriber;
+    rclcpp::Subscription<actuator_msgs::msg::Actuators>::SharedPtr _arm_control_subscriber;
 };
