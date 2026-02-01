@@ -4,70 +4,39 @@ This document describes the patches and custom package builds maintained in `pat
 
 ## Table of Contents
 
-- [rplidar-ros](#rplidar-ros)
+- [Python QT Binding](#python-qt-binding)
+- [NAV2 MPPI Controller](#nav2-mppi-controller)
+- [ROS GZ Sim](#ros-gz-sim)
+- [GZ Msgs Vendor](#gz-msgs-vendor)
+- [Other GZ Vendors](#other-gz-vendors)
+- [PCL](#pcl)
 - [Other Patches](#other-patches)
 
 ---
 
-## rplidar-ros
+## Python QT Binding
 
-### Status
+Python QT Binding has shifted to focus only on QT6, however all of ROS2 Jazzy (e.g. rqtgraph) still relies on QT5. The two options for QT bindings are Pyside (shiboken) and PyQt (SIP). Shiboken2 and SIP4 both work for QT5, but their updated versions, Shiboken6 and SIP6 only work for QT6. SIP4 doesn't work with Nix - it tries to edit something in the nix store when it shouldn't, so Shiboken is added to replace PyQt6 and Pyside6 in the Python QT Binding package. Pyside2 also needed a patch to allow it to work with python 3.13 and python 3.12, so it's patched in `packages/pyside2`.
 
-**Custom build from source** (not using rosdistro package)
+## NAV2 MPPI Controller
 
-### Why This Exists
+This package depends on the _stable_ version of XTensor, but the version in nixpkgs is unstable, so XTensor and it's dependency XTL had to have their versions changed.
 
-The `rplidar-ros` package is **not officially released for ROS 2 Jazzy** in the rosdistro repository. While it was available for earlier distributions like Humble, it has not been ported to Jazzy as of November 2025.
+## ROS GZ Sim
 
-You can verify this by checking the [official Jazzy distribution file](https://github.com/ros/rosdistro/blob/master/jazzy/distribution.yaml) - rplidar_ros is not present.
+The version in the overlay (currently 1.0.19) is incompatible with the version of gz-sim (provided by gz-sim-vendor, currently 8.9.0) that's in the overlay. The updated version had some restructuring that throws error, so we roll back two versions to 1.0.17.
 
-### History
+## GZ Msgs Vendor
 
-1. **Before June 2025**: The older version of `nix-ros-overlay` (commit `503be406`) may have included rplidar-ros through cross-distro access or manual overrides
+Similar to ROS GZ Sim, the version of gz-msgs (provided by gz-msgs-vendor, currently 10.3.2) is incompatible with the protobuf versions in nixpkgs (they removed protobuf_28 because it was a 'leaf package' see https://github.com/NixOS/nixpkgs/pull/416677) so we override the version and hash, accessing the underlying function and calling version 28.
 
-2. **June 8, 2025** (commit `3904f9f`): An override was added in `patches.nix` attempting to upgrade what was thought to be an "old version" of rplidar-ros to v2.1.5 to support the C1 sensor
+## Other GZ Vendors
 
-3. **November 19, 2025** (commit `dbd25bf` on branch `feat/flake-update`): When updating `flake.lock` to a newer `nix-ros-overlay` (commit `41e92bed`), the base rplidar-ros package disappeared, causing the override to fail with "package not found" errors
+Because of the way ament-cmake-vendor-package-wrapped is set up, it can change the version of the package that it supplied to the vendor. However, the vendor searches for a specific version, causing version mismatches when building. Each vendor needs a patch to change the version they're searching for to the version they're given.
 
-### Current Solution
+## PCL
 
-Since rplidar-ros is not in the official Jazzy rosdistro, we build it as a custom package from the upstream Slamtec repository's `ros2` branch. The implementation in `patches.nix` uses `buildRosPackage` to compile it from source rather than attempting to override a non-existent base package.
-
-### Version Information
-
-- **Version**: 2.1.5
-- **Source**: [Slamtec/rplidar_ros](https://github.com/Slamtec/rplidar_ros) (ros2 branch)
-- **Notable Features**: Version 2.1.5 adds support for the RPLiDAR C1 sensor
-- **License**: BSD-2-Clause
-
-### Dependencies
-
-```nix
-buildInputs = [ ament-cmake-ros ]
-propagatedBuildInputs = [ rclcpp sensor-msgs std-srvs ]
-```
-
-### Usage
-
-The package is included in the Perseus Lite configuration and can be launched via:
-
-```bash
-ros2 launch rplidar_ros rplidar_c1_launch.py
-```
-
-See `src/perseus_lite/launch/perseus_lite.launch.py` for integration details.
-
-### Future Considerations
-
-If rplidar-ros is officially released to Jazzy rosdistro in the future, this custom build should be:
-
-1. Removed from `patches.nix`
-2. Added as a regular dependency in the relevant package.xml files
-3. The package will then be automatically included via nix-ros-overlay
-
-To check if it's been added to Jazzy, monitor the [rosdistro jazzy distribution.yaml](https://github.com/ros/rosdistro/blob/master/jazzy/distribution.yaml) file.
-
----
+The nixpkgs version of PCL (Point Cloud Library) has been updated to run on QT6, which conflicts with everything else in our environment that run on QT5. To fix this, we simply replace the QT6 inputs with QT5.
 
 ## Other Patches
 
