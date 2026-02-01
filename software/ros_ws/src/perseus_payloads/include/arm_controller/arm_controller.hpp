@@ -3,6 +3,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
 
+#include <hi_can_raw.hpp>
+
 // Topics:
 // /arm
 //     /rsbl
@@ -15,8 +17,9 @@
 //     /control (subscriber Float64MultiArray) - High level control parameters for the arm
 //     /position (publisher Float64MultiArray) - High level control parameters for the arm
 
-class ArmController : public rclcpp::Node
-{
+#define STATUS_FIELD_COUNT 8
+
+class ArmController : public rclcpp::Node {
 public:
     explicit ArmController(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
@@ -33,6 +36,7 @@ private:
 
     constexpr static auto PUBLISH_TIMER_MS = std::chrono::milliseconds(10);
     std::vector<double> _current_arm_positions;
+    std::vector<double> _motor_status = std::vector(5 * STATUS_FIELD_COUNT, 0.0);  // 5 servos with 8 status fields
     rclcpp::TimerBase::SharedPtr _position_timer;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _arm_status_publisher;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _arm_position_publisher;
