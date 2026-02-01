@@ -47,7 +47,6 @@
 	import JsonTree from '$lib/components/jsonTree.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 
-
 	// Widget logic goes here
 	let monitors = $state<
 		{
@@ -57,6 +56,7 @@
 			lastData: object;
 			targetFrequency: number;
 			currentFrequency: number;
+			throttledValue: number;
 			lastMessage: number;
 			deadTime: number | null;
 		}[]
@@ -79,9 +79,9 @@
 	});
 
 	const innit = () => {
-		const ros = getRosConnection()
+		const ros = getRosConnection();
 		if (!ros) return;
-		
+
 		settings.groups.newMonitor.topic.value = '';
 
 		ros.getTopics(
@@ -118,14 +118,20 @@
 			return;
 		}
 
-		monitors[index].lastData = message
+		monitors[index].lastData = message;
 
 		// update frequency
 		monitors[index].currentFrequency = 1000 / (Date.now() - monitors[index].lastMessage);
 		monitors[index].lastMessage = Date.now();
+		throttleValue(index);
 	};
 
-	const registerSettings = (topic: string, listener: ROSLIB.Topic<object> | null, frequency: number, topicFound: boolean) => {
+	const registerSettings = (
+		topic: string,
+		listener: ROSLIB.Topic<object> | null,
+		frequency: number,
+		topicFound: boolean
+	) => {
 		// add monitor to state
 		monitors.push({
 			topic: topic,
@@ -190,9 +196,14 @@
 				}
 			}
 		};
-	}
+	};
 
-	const addMonitor = (topic: string | undefined, frequency: number, loadedFromConfig: boolean, shouldRegisterSettings: boolean = true) => {
+	const addMonitor = (
+		topic: string | undefined,
+		frequency: number,
+		loadedFromConfig: boolean,
+		shouldRegisterSettings: boolean = true
+	) => {
 		const ros = getRosConnection();
 		if (!ros) return 'ROS not connected';
 
@@ -232,11 +243,10 @@
 				}
 
 				// if this is a new monitor, add it to the config
-				if (!loadedFromConfig) 
+				if (!loadedFromConfig)
 					settings.groups.newMonitor.config.value += topic + '@' + frequency + ',';
 
-				if (shouldRegisterSettings)
-					registerSettings(topic, listener, frequency, topicType !== '');
+				if (shouldRegisterSettings) registerSettings(topic, listener, frequency, topicType !== '');
 
 				if (topicType !== '') {
 					// if we're loading from config, we need to register the settings after we've found the topic type
@@ -259,11 +269,11 @@
 
 	const getColor = (currentFrequency: number, targetFrequency: number) => {
 		const error = currentFrequency - targetFrequency;
-		if (error >= 0) return 'green' // on or above target frequency
+		if (error >= 0) return 'green'; // on or above target frequency
 		const maxError = Number(settings.groups.general.maxErrorPercent.value);
-		if (Math.abs(error / targetFrequency) * 100 > maxError) return 'red'
-		else return 'green'
-	}
+		if (Math.abs(error / targetFrequency) * 100 > maxError) return 'red';
+		else return 'green';
+	};
 
 	let interval: NodeJS.Timeout | null = null;
 	const MESSAGE_TIMEOUT_MS = 1000;
@@ -286,19 +296,17 @@
 				if (now - monitor.lastMessage > MESSAGE_TIMEOUT_MS) {
 					monitor.currentFrequency = 0;
 					monitor.deadTime = now - monitor.lastMessage;
-				}
-				else {
+				} else {
 					monitor.deadTime = null;
 				}
 			}
-		}, 100)
+		}, 100);
 
 		return () => {
 			// Cleanup
 			settings.groups.newMonitor.topic.options = [];
 
-			if (interval)
-				clearInterval(interval);
+			if (interval) clearInterval(interval);
 
 			for (const monitor of monitors) {
 				monitor.listener?.unsubscribe();
@@ -307,41 +315,50 @@
 	});
 </script>
 
-<ScrollArea class="h-full -m-2" orientation="vertical">
+<ScrollArea class="-m-2 h-full" orientation="vertical">
 	<div class="relative h-full w-full">
 		<table class="w-full table-auto">
 			<thead>
 				<tr class="border-b">
-					<th class="p-2 min-w-[200px]">Topic</th>
+					<th class="min-w-[200px] p-2">Topic</th>
 					<th class="border-l p-2">Last Data</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each monitors as monitor}
-					<tr class="border border-l-0 border-x-0">
-						<td class="p-2 flex flex-col">
-							<p class="w-full text-center mb-2"><b>{monitor.topic}</b></p>
-						
+					<tr class="border border-x-0 border-l-0">
+						<td class="flex flex-col p-2">
+							<p class="mb-2 w-full text-center"><b>{monitor.topic}</b></p>
+
 							<p
-								class="rounded-[10px] text-border py-1 px-4 transition-colors text-center w-fit mx-auto"
+								class="mx-auto w-fit rounded-[10px] px-4 py-1 text-center text-border transition-colors"
 								style:background-color={getColor(monitor.currentFrequency, monitor.targetFrequency)}
 							>
 								{monitor.currentFrequency.toFixed(1)}Hz
 							</p>
-							<p class="opacity-50 text-center">
-								Target: {monitor.targetFrequency}Hz (&PlusMinus;{((Number(settings.groups.general.maxErrorPercent.value) / 100 * monitor.targetFrequency) as number).toFixed(2)}Hz)
+							<p class="text-center opacity-50">
+								Target: {monitor.targetFrequency}Hz (&PlusMinus;{(
+									((Number(settings.groups.general.maxErrorPercent.value) / 100) *
+										monitor.targetFrequency) as number
+								).toFixed(2)}Hz)
 							</p>
 							{#if !monitor.topicFound}
-								<p class="text-red-500 text-center">Topic not found</p>
+								<p class="text-center text-red-500">Topic not found</p>
 							{:else if monitor.deadTime !== null}
-								<p class="text-red-500 text-center">No message received for {(monitor.deadTime / 1000).toFixed(2)}s</p>
+								<p class="text-center text-red-500">
+									No message received for {(monitor.deadTime / 1000).toFixed(2)}s
+								</p>
 							{/if}
 						</td>
 						<td class="max-h-[200px] w-full overflow-hidden border-l p-2">
 							{#if monitor.topicFound}
-								<JsonTree data={monitor.lastData}/>
+								<JsonTree data={monitor.lastData} />
 							{:else}
-								<Button class="ml-[50%] -translate-x-[50%]" onclick={() => addMonitor(monitor.topic, monitor.targetFrequency, true, false)}>Reconnect</Button>
+								<Button
+									class="ml-[50%] -translate-x-[50%]"
+									onclick={() => addMonitor(monitor.topic, monitor.targetFrequency, true, false)}
+									>Reconnect</Button
+								>
 							{/if}
 						</td>
 					</tr>
