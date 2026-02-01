@@ -597,6 +597,11 @@
   resolved "https://registry.yarnpkg.com/@types/http-errors/-/http-errors-2.0.5.tgz#5b749ab2b16ba113423feb1a64a95dcd30398472"
   integrity sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==
 
+"@types/lodash@^4.17.23":
+  version "4.17.23"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.17.23.tgz#c1bb06db218acc8fc232da0447473fc2fb9d9841"
+  integrity sha512-RDvF6wTulMPjrNdCoYRC8gNR880JNGT8uB+REUpC2Ns4pRqQJhGz90wh7rgdXDPpCczF3VGktDuFGVnz8zP7HA==
+
 "@types/node@*", "@types/node@>=10.0.0":
   version "25.0.10"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-25.0.10.tgz#4864459c3c9459376b8b75fd051315071c8213e7"
@@ -1294,7 +1299,7 @@ finalhandler@~1.3.1:
     statuses "~2.0.2"
     unpipe "~1.0.0"
 
-formsnap@^2.0.0:
+formsnap@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/formsnap/-/formsnap-2.0.1.tgz#3bceac3896121ed968403c864e8724ebb3ec69bb"
   integrity sha512-iJSe4YKd/W6WhLwKDVJU9FQeaJRpEFuolhju7ZXlRpUVyDdqFdMP8AUBICgnVvQPyP41IPAlBa/v0Eo35iE6wQ==
@@ -1503,6 +1508,11 @@ json-schema-to-ts@^3.1.1:
     "@babel/runtime" "^7.18.3"
     ts-algebra "^2.0.0"
 
+json-tree-viewer@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/json-tree-viewer/-/json-tree-viewer-0.0.2.tgz#2abbe97dc65d53c5f9a7d4298adb949789ebb5f3"
+  integrity sha512-iVvQqWm8JhTVxyG2QGflYQwW9eOhFamz9SwV6dFkWq8D/CwC+rYCihjyfX3QCruAlj6fqrAlQ0ELX1y6WlhvUw==
+
 kleur@^4.1.5:
   version "4.1.5"
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-4.1.5.tgz#95106101795f7050c6c650f350c683febddb1780"
@@ -1527,6 +1537,11 @@ locate-character@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/locate-character/-/locate-character-3.0.0.tgz#0305c5b8744f61028ef5d01f444009e00779f974"
   integrity sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA==
+
+lodash@^4.17.23:
+  version "4.17.23"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.23.tgz#f113b0378386103be4f6893388c73d0bde7f2c5a"
+  integrity sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==
 
 lucide-svelte@^0.469.0:
   version "0.469.0"
@@ -2190,6 +2205,11 @@ svelte-grid-extended@^1.2.1:
   resolved "https://registry.yarnpkg.com/svelte-grid-extended/-/svelte-grid-extended-1.2.1.tgz#b8336bca885ae9fcaa54f722292aa9e696fbe7a3"
   integrity sha512-ASEN5L6cHQMsyBkBsG//nR1vrRNJxlzqg0QhmbNLh9r4jp9tMNGg2v2UQ6Bh4jp9IbqIgpX4jRD/Ds/wFzyULg==
 
+svelte-json-tree@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/svelte-json-tree/-/svelte-json-tree-2.2.0.tgz#17879114c0c96c4788f7ff69d8f60bd9746b2330"
+  integrity sha512-zcfepTrJ6xhpdgRZEujmiFh+ainRw7HO4Bsoh8PMAsm7fkgUPtnrZi3An8tmCFY8jajYhMrauHsd1S1XTeuiCw==
+
 svelte-radix@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/svelte-radix/-/svelte-radix-3.0.2.tgz#3d4008b9125f4620fba7d6849e0b6a852c67dc23"
@@ -2247,7 +2267,7 @@ svelte@^5.0.0:
     magic-string "^0.30.11"
     zimmerframe "^1.1.2"
 
-sveltekit-superforms@^2.22.1:
+sveltekit-superforms@^2.28.1:
   version "2.29.1"
   resolved "https://registry.yarnpkg.com/sveltekit-superforms/-/sveltekit-superforms-2.29.1.tgz#4a0d31c95003e86584d7e14e7d58713689c339a8"
   integrity sha512-9Cv1beOVPgm8rb8NZBqLdlZ9cBqRBTk0+6/oHn7DWvHQoAFie1EPjh1e4NHO3Qouv1Zq9QTGrZNDbYcetkuOVw==
