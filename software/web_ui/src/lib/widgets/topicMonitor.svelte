@@ -10,7 +10,7 @@
 	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
 		groups: {
 			general: {
-				maxFrequencyError: {
+				maxErrorPercent: {
 					type: 'number',
 					value: '10',
 					description:
@@ -44,15 +44,19 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import * as ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
+	import _ from 'lodash';
+	import JSONTree from 'svelte-json-tree'
+
 
 	// Widget logic goes here
 	let monitors = $state<
 		{
 			topic: string;
 			listener: ROSLIB.Topic<any>;
-			lastData: string;
+			lastData: object;
 			targetFrequency: number;
 			currentFrequency: number;
+			throttledValue: number;
 			lastMessage: number;
 		}[]
 	>([]);
@@ -110,20 +114,23 @@
 		}
 	};
 
-	const onMessage = (message: any, topic: string) => {
+	const throttleValue = _.throttle((index: number) => {
+		monitors[index].throttledValue = monitors[index].currentFrequency;
+	}, 100)
+
+	const onMessage = (message: object, topic: string) => {
 		const index = monitors.findIndex((monitor) => monitor.topic === topic);
 		if (index === -1) {
 			console.error('How are we subscribed to a topic with no monitor?');
 			return;
 		}
 
-		monitors[index].lastData = JSON.stringify(JSON.parse(JSON.stringify(message)), null, 2)
-			.replaceAll('\n', '<br>')
-			.replaceAll(' ', '&nbsp;&nbsp;&nbsp;&nbsp;');
+		monitors[index].lastData = message
 
 		// update frequency
 		monitors[index].currentFrequency = 1000 / (Date.now() - monitors[index].lastMessage);
 		monitors[index].lastMessage = Date.now();
+		throttleValue(index);
 	};
 
 	const addMonitor = (topic: string | undefined, frequency: number, loadedFromConfig: boolean) => {
@@ -148,7 +155,7 @@
 					name: topic,
 					messageType: topicType
 				});
-				listener.subscribe((message) => onMessage(message, topic));
+				listener.subscribe((message) => onMessage(message as object, topic));
 
 				// if this is a new monitor, add it to the config
 				if (!loadedFromConfig)
@@ -158,9 +165,10 @@
 				monitors.push({
 					topic: topic,
 					listener: listener,
-					lastData: '',
+					lastData: {},
 					targetFrequency: frequency,
 					currentFrequency: 0,
+					throttledValue: 0,
 					lastMessage: Date.now()
 				});
 
@@ -191,6 +199,29 @@
 
 							return 'Monitor updated';
 						}
+					},
+					deleteMonitor: {
+						type: 'button',
+						action: () => {
+							// unsubscribe from topic
+							const index = monitors.findIndex((monitor) => monitor.topic === topic);
+							if (index === -1) {
+								console.error('How are we subscribed to a topic with no monitor?');
+								return 'Monitor not found';
+							}
+							monitors[index].listener.unsubscribe();
+							monitors.splice(index, 1);
+							// remove settings node
+							delete settings.groups[topic];
+							// update readonly config
+							const config = settings.groups.newMonitor.config.value!.split(',');
+							const topicIndex = config.findIndex((config) => config.split('@')[0] === topic);
+							if (topicIndex === -1) return 'Monitor not found in config';
+							config.splice(topicIndex, 1);
+							settings.groups.newMonitor.config.value = config.join(',');
+
+							return `${topic} monitor deleted`;
+						}
 					}
 				};
 			},
@@ -202,13 +233,12 @@
 		return 'Monitor created';
 	};
 
-	function getColor(value: number) {
-		//value from 0 to 1
-		value = Math.abs(value);
-		if (value > 1) value = 1;
-		if (value < 0) value = 0;
-		var hue = ((1 - value) * 120).toString(10);
-		return ['hsl(', hue, ',100%,50%)'].join('');
+	const getColor = (currentFrequency: number, targetFrequency: number) => {
+		const error = currentFrequency - targetFrequency;
+		if (error >= 0) return 'green' // on or above target frequency
+		const maxError = Number(settings.groups.general.maxFrequencyError.value);
+		if (Math.abs(error / targetFrequency) * 100 > maxError) return 'red'
+		else return 'green'
 	}
 
 	onMount(() => {
@@ -256,18 +286,18 @@
 				{#each monitors as monitor}
 					<tr class="border">
 						<td class="border p-2">{monitor.topic}</td>
-						<td class="max-h-[200px] w-full overflow-hidden border p-2"
-							><ScrollArea class="" orientation="vertical">{@html monitor.lastData}</ScrollArea></td
-						>
-						<td class="min-w-[140px] border p-2 text-black"
+						<td class="max-h-[200px] w-full overflow-hidden border p-2">
+							<!-- <ScrollArea orientation="horizontal"> -->
+							<!-- <ScrollArea class="" orientation="vertical">{@html monitor.lastData}</ScrollArea> -->
+							 	<JSONTree value={monitor.lastData}/>
+							<!-- </ScrollArea> -->
+						</td>
+						<td class="min-w-[160px] border p-2 text-black"
 							><p
-								class="rounded-[10px] py-2 text-center"
-								style:background-color={getColor(
-									Math.abs(monitor.currentFrequency - monitor.targetFrequency) /
-										Number(settings.groups.general.maxFrequencyError.value!)
-								)}
+								class="rounded-[10px] py-2 px-2 transition-colors flex justify-between"
+								style:background-color={getColor(monitor.throttledValue, monitor.targetFrequency)}
 							>
-								{Math.round(monitor.currentFrequency * 100) / 100}Hz / {monitor.targetFrequency}Hz
+								{monitor.throttledValue.toFixed()}Hz <span>/</span> {monitor.targetFrequency}Hz
 							</p></td
 						>
 					</tr>
@@ -279,3 +309,15 @@
 		{/if}
 	</div>
 </ScrollArea>
+
+<style>
+	:root {
+		--json-tree-string-color: white;
+	}
+
+	:global(span .arrow, span .arrow) {
+		display: none !important;
+		margin-left: -40px !important;
+		margin-top: 20px !important;
+	}
+</style>
