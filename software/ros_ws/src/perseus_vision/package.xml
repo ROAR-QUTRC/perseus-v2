@@ -35,6 +35,7 @@
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 <<<<<<< HEAD
+<<<<<<< HEAD
   <build_depend>perseus_interfaces</build_depend>
   <exec_depend>perseus_interfaces</exec_depend>
   <export>
@@ -43,6 +44,10 @@
 </package>
 =======
 
+=======
+  <build_depend>perseus_interfaces</build_depend>
+  <exec_depend>perseus_interfaces</exec_depend>
+>>>>>>> 2c48d33b (fix: correct coordinate adjustment for marker pose in ArucoDetector)
   <export>
     <build_type>ament_cmake</build_type>
     <member_of_group>rosidl_interface_packages</member_of_group>

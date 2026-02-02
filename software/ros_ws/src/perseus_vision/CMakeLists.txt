@@ -16,6 +16,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 <<<<<<< HEAD
+<<<<<<< HEAD
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -33,21 +34,14 @@ ament_target_dependencies(
   aruco_detector_node
 =======
 find_package(perseus_interfaces REQUIRED)
+=======
+>>>>>>> 2c48d33b (fix: correct coordinate adjustment for marker pose in ArucoDetector)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
-
-# Your interfaces
 find_package(perseus_interfaces REQUIRED)
-find_package(perseus_vision_msgs QUIET
-)# optional if you split msgs; ignore if not used
-
-# If ObjectDetections is in THIS package, you must also:
-# find_package(rosidl_default_generators REQUIRED)
-# rosidl_generate_interfaces(...)
 
 include_directories(include)
 

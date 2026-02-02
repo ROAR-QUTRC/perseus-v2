@@ -197,8 +197,8 @@ namespace perseus_vision
 
             // OpenCV to ROS coordinate adjustment
             marker_pose_camera.pose.position.x = tvec[2];
-            marker_pose_camera.pose.position.y = -tvec[0];
-            marker_pose_camera.pose.position.z = -tvec[1];
+            marker_pose_camera.pose.position.y = tvec[0];
+            marker_pose_camera.pose.position.z = tvec[1];
 
             cv::Mat rotation_matrix;
             cv::Rodrigues(rvec, rotation_matrix);
