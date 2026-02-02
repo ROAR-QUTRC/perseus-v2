@@ -34,14 +34,14 @@ def generate_launch_description():
         output="screen",
         parameters=[use_sim_time_param],
         remappings=[
-            ("/cmd_vel_in", "/cmd_vel_nav"),
-            ("/cmd_vel_out", "/cmd_vel_nav_stamped"),
+            ("/cmd_vel_in", "/cmd_vel_foxglove"),
+            ("/cmd_vel_out", "/web_vel"),
         ],
     )
 
     nodes = [
         twist_mux,
-        # twist_stamper,
+        twist_stamper,
     ]
 
     return LaunchDescription(arguments + nodes)

@@ -92,6 +92,20 @@ def generate_launch_description():
 
     # Include Keepout Filter launch (optional)
 
+    # Include nav2_waypoints_bridge launch
+    waypoints_bridge_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("perseus_autonomy_bridge"),
+                "launch",
+                "nav2_waypoints_bridge.launch.py",
+            )
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
     # EKF Node for sensor fusion and localization
     ekf_node = Node(
         package="robot_localization",
@@ -119,5 +133,6 @@ def generate_launch_description():
     ld.add_action(ekf_node)
     ld.add_action(slam_launch)
     ld.add_action(nav_launch)
+    ld.add_action(waypoints_bridge_launch)
 
     return ld
