@@ -25,13 +25,18 @@ namespace perseus_vision
         std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
             "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
         std::vector<double> dist_coeffs_param = this->declare_parameter<std::vector<double>>(
-            "distortion_coefficients", {0, 0, 0, 0, 0});
+            "distortion_coefficients", {0.0, 0.0, 0.0, 0.0, 0.0});
 
         // Convert parameters to OpenCV matrices (will be overwritten by camera_info if use_camera_info is true)
-        if (!use_camera_info_)
+        camera_matrix_ = cv::Mat(3, 3, CV_64F);
+        for (size_t i = 0; i < 9; ++i)
         {
-            camera_matrix_ = cv::Mat(3, 3, CV_64F, camera_matrix_param.data()).clone();
-            dist_coeffs_ = cv::Mat(dist_coeffs_param).clone();
+            camera_matrix_.at<double>(i / 3, i % 3) = camera_matrix_param[i];
+        }
+        dist_coeffs_ = cv::Mat(dist_coeffs_param.size(), 1, CV_64F);
+        for (size_t i = 0; i < dist_coeffs_param.size(); ++i)
+        {
+            dist_coeffs_.at<double>(i, 0) = dist_coeffs_param[i];
         }
 
         // ArUco setup
@@ -159,6 +164,13 @@ namespace perseus_vision
 
         if (!ids.empty())
         {
+            // Check if camera matrix is initialized
+            if (camera_matrix_.empty())
+            {
+                RCLCPP_WARN_ONCE(this->get_logger(), "Camera matrix not initialized, skipping pose estimation");
+                return;
+            }
+
             std::vector<cv::Vec3d> rvecs, tvecs;
             cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
@@ -191,17 +203,22 @@ namespace perseus_vision
     {
         try
         {
+            // Apply 180-degree rotation around Y-axis to align ArUco axis with ROS convention
+            // ArUco Z-axis points outward from marker, but we want it to point inward for standard conventions
+            cv::Vec3d adjusted_rvec = rvec;
+            adjusted_rvec[0] += M_PI;  // Rotate 180 degrees around Y-axis
+
             geometry_msgs::msg::PoseStamped marker_pose_camera;
             marker_pose_camera.header.stamp = header.stamp;
             marker_pose_camera.header.frame_id = camera_frame_;
 
             // OpenCV to ROS coordinate adjustment
             marker_pose_camera.pose.position.x = tvec[2];
-            marker_pose_camera.pose.position.y = tvec[0];
-            marker_pose_camera.pose.position.z = tvec[1];
+            marker_pose_camera.pose.position.y = -tvec[0];
+            marker_pose_camera.pose.position.z = -tvec[1];
 
             cv::Mat rotation_matrix;
-            cv::Rodrigues(rvec, rotation_matrix);
+            cv::Rodrigues(adjusted_rvec, rotation_matrix);
             tf2::Quaternion quat = rotationMatrixToQuaternion(rotation_matrix);
 
             marker_pose_camera.pose.orientation.x = quat.x();
