@@ -34,7 +34,7 @@
     };
     # home-manager (for device setup)
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # note: nix-gl-host works way better than NixGL on Nvidia hardware,
