@@ -10,6 +10,7 @@
   geometry-msgs,
   image-transport,
   opencv,
+  perseus-interfaces,
   rclcpp,
   sensor-msgs,
   tf2,
@@ -34,6 +35,7 @@ buildRosPackage rec {
     geometry-msgs
     image-transport
     opencv
+    perseus-interfaces
     rclcpp
     sensor-msgs
     tf2
