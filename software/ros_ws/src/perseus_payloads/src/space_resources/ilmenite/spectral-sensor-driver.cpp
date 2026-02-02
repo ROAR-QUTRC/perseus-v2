@@ -1,6 +1,6 @@
-#include "space_resources/ilmenite/main.hpp"
-
 #include <memory>
+
+#include "space_resources/ilmenite/main.hpp"
 
 int main(int argc, char* argv[])
 {
