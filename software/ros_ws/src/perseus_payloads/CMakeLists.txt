@@ -71,10 +71,14 @@ file(GLOB_RECURSE BUCKET_DRIVER_CODE_SOURCES src/bucket_driver/*.cpp)
 file(GLOB_RECURSE PROCESSING_PLANT_SENSORS_CODE_SOURCES
      src/processing_plant_sensors/*.cpp)
 #Space Resources
-file(GLOB_RECURSE CENTRIFUGE_DRIVER_CODE_SOURCES src/space_resources/centrifuge/*.cpp)
-file(GLOB_RECURSE ILMENITE_STATION_CODE_SOURCES src/space_resources/ilmenite/*.cpp)
-file(GLOB_RECURSE ILMENITE_ML_CODE_SOURCES src/space_resources/ilmenite_ML/*.cpp)
-file(GLOB_RECURSE SPACE_RESOURCES_CONTROLLER_CODE_SOURCES src/space_resources/space_resources_controller/*.cpp)
+file(GLOB_RECURSE CENTRIFUGE_DRIVER_CODE_SOURCES
+     src/space_resources/centrifuge/*.cpp)
+file(GLOB_RECURSE ILMENITE_STATION_CODE_SOURCES
+     src/space_resources/ilmenite/*.cpp)
+file(GLOB_RECURSE ILMENITE_ML_CODE_SOURCES
+     src/space_resources/ilmenite_ML/*.cpp)
+file(GLOB_RECURSE SPACE_RESOURCES_CONTROLLER_CODE_SOURCES
+     src/space_resources/space_resources_controller/*.cpp)
 
 # Add exec targets
 add_executable(arm_driver ${ARM_DRIVER_CODE_SOURCES})
@@ -86,7 +90,8 @@ add_executable(processing_plant_sensors
 add_executable(centrifuge_driver ${CENTRIFUGE_DRIVER_CODE_SOURCES})
 add_executable(ilmenite_station ${ILMENITE_STATION_CODE_SOURCES})
 add_executable(ilmenite_ml ${ILMENITE_ML_CODE_SOURCES})
-add_executable(space_resources_controller ${SPACE_RESOURCES_CONTROLLER_CODE_SOURCES})
+add_executable(space_resources_controller
+               ${SPACE_RESOURCES_CONTROLLER_CODE_SOURCES})
 
 # Add include dirs
 target_include_directories(arm_driver
@@ -118,14 +123,12 @@ ament_target_dependencies(bucket_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
 ament_target_dependencies(processing_plant_sensors PUBLIC
                           ${THIS_PACKAGE_INCLUDE_DEPENDS})
 #Space Resources
-ament_target_dependencies(centrifuge_driver
-  PUBLIC rclcpp sensor_msgs actuator_msgs)
-ament_target_dependencies(ilmenite_station
-  PUBLIC rclcpp actuator_msgs)
-ament_target_dependencies(ilmenite_ml
-  PUBLIC rclcpp sensor_msgs)
-ament_target_dependencies(space_resources_controller
-  PUBLIC rclcpp actuator_msgs)
+ament_target_dependencies(centrifuge_driver PUBLIC rclcpp sensor_msgs
+                          actuator_msgs)
+ament_target_dependencies(ilmenite_station PUBLIC rclcpp actuator_msgs)
+ament_target_dependencies(ilmenite_ml PUBLIC rclcpp sensor_msgs)
+ament_target_dependencies(space_resources_controller PUBLIC rclcpp
+                          actuator_msgs)
 
 # target_link_libraries(arm_driver PUBLIC st3215_lib)
 target_link_libraries(bucket_driver PUBLIC hi_can_raw)
@@ -142,7 +145,6 @@ install(TARGETS centrifuge_driver DESTINATION lib/${PROJECT_NAME})
 install(TARGETS ilmenite_station DESTINATION lib/${PROJECT_NAME})
 install(TARGETS ilmenite_ml DESTINATION lib/${PROJECT_NAME})
 install(TARGETS space_resources_controller DESTINATION lib/${PROJECT_NAME})
-
 
 install(
   DIRECTORY launch
