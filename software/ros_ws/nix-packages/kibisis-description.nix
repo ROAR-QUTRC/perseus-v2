@@ -5,21 +5,18 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
-  controller-manager,
-  diff-drive-controller,
-  joint-state-broadcaster,
-  kibisis-hardware,
+  joint-state-publisher,
+  joint-state-publisher-gui,
   robot-state-publisher,
-  ros2controlcli,
-  ros2launch,
   rviz2,
+  urdf,
   xacro,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-kibisis";
+  pname = "ros-jazzy-kibisis-description";
   version = "0.1.0";
 
-  src = ./../src/kibisis;
+  src = ./../src/kibisis_description;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
@@ -28,20 +25,17 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
-    controller-manager
-    diff-drive-controller
-    joint-state-broadcaster
-    kibisis-hardware
+    joint-state-publisher
+    joint-state-publisher-gui
     robot-state-publisher
-    ros2controlcli
-    ros2launch
     rviz2
+    urdf
     xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "Kibisis Robot Bringup - Two-wheel differential drive robot";
+    description = "Package containing URDF description for Kibisis robot - a two-wheel differential drive robot";
     license = with lib.licenses; [ mit ];
   };
 }
