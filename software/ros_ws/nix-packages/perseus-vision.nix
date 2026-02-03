@@ -45,7 +45,7 @@ buildRosPackage rec {
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "A package to do visionary tasks of Perseus";
+    description = "A package to do vision/detection tasks of Perseus";
     license = with lib.licenses; [ mit ];
   };
 }
