@@ -1,7 +1,8 @@
 #include "perseus_vision/aruco_detector.hpp"
+
 #include <chrono>
-#include <ctime>
 #include <cstdio>
+#include <ctime>
 
 namespace perseus_vision
 {
@@ -201,7 +202,8 @@ namespace perseus_vision
                 double min_x = corner[0].x, max_x = corner[0].x;
                 double min_y = corner[0].y, max_y = corner[0].y;
 
-                for (const auto& pt : corner) {
+                for (const auto& pt : corner)
+                {
                     min_x = std::min(min_x, static_cast<double>(pt.x));
                     max_x = std::max(max_x, static_cast<double>(pt.x));
                     min_y = std::min(min_y, static_cast<double>(pt.y));
@@ -211,10 +213,11 @@ namespace perseus_vision
                 double bbox_area = (max_x - min_x) * (max_y - min_y);
 
                 // Skip detections with bounding box area smaller than threshold
-                if (bbox_area < min_bounding_box_area_) {
+                if (bbox_area < min_bounding_box_area_)
+                {
                     RCLCPP_DEBUG(this->get_logger(),
-                        "Filtered out marker %d: area %.1f < min_area %.1f",
-                        ids[i], bbox_area, min_bounding_box_area_);
+                                 "Filtered out marker %d: area %.1f < min_area %.1f",
+                                 ids[i], bbox_area, min_bounding_box_area_);
                     continue;
                 }
 
@@ -411,10 +414,10 @@ namespace perseus_vision
                             struct tm* timeinfo = std::localtime(&time_t);
                             char timestamp_str[100];
                             std::strftime(timestamp_str, sizeof(timestamp_str), "%Y-%m-%d %H:%M:%S", timeinfo);
-                            
+
                             cv::putText(output_frame, std::string("Time: ") + timestamp_str,
-                                       cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.6,
-                                       cv::Scalar(0, 255, 0), 2);
+                                        cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                                        cv::Scalar(0, 255, 0), 2);
                         }
 
                         // Add marker coordinates to image
@@ -422,20 +425,20 @@ namespace perseus_vision
                         {
                             int y_offset = 70;
                             cv::putText(output_frame, "Marker Coordinates (XYZ):",
-                                       cv::Point(10, y_offset), cv::FONT_HERSHEY_SIMPLEX, 0.5,
-                                       cv::Scalar(0, 255, 255), 1);
-                            
+                                        cv::Point(10, y_offset), cv::FONT_HERSHEY_SIMPLEX, 0.5,
+                                        cv::Scalar(0, 255, 255), 1);
+
                             for (const auto& mc : latest_marker_coords_)
                             {
                                 y_offset += 25;
                                 char coord_str[150];
-                                std::snprintf(coord_str, sizeof(coord_str), 
-                                             "ID %d: X=%.3f, Y=%.3f, Z=%.3f",
-                                             mc.first, mc.second.x, mc.second.y, mc.second.z);
-                                
+                                std::snprintf(coord_str, sizeof(coord_str),
+                                              "ID %d: X=%.3f, Y=%.3f, Z=%.3f",
+                                              mc.first, mc.second.x, mc.second.y, mc.second.z);
+
                                 cv::putText(output_frame, std::string(coord_str),
-                                           cv::Point(10, y_offset), cv::FONT_HERSHEY_SIMPLEX, 0.5,
-                                           cv::Scalar(255, 255, 0), 1);
+                                            cv::Point(10, y_offset), cv::FONT_HERSHEY_SIMPLEX, 0.5,
+                                            cv::Scalar(255, 255, 0), 1);
                             }
                         }
 
@@ -443,11 +446,13 @@ namespace perseus_vision
                         std::string ids_str;
                         for (size_t i = 0; i < latest_ids_.size(); ++i)
                         {
-                            if (i > 0) ids_str += "_";
+                            if (i > 0)
+                                ids_str += "_";
                             ids_str += std::to_string(latest_ids_[i]);
                         }
-                        if (ids_str.empty()) ids_str = "no_markers";
-                        
+                        if (ids_str.empty())
+                            ids_str = "no_markers";
+
                         std::string filename = request->img_save_path + "/aruco_" + ids_str + ".png";
 
                         // Save the annotated frame
