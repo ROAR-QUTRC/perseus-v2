@@ -1,4 +1,6 @@
 from launch import LaunchDescription
+from launch.actions import RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
@@ -30,14 +32,18 @@ def generate_launch_description():
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[controller_config, use_sim_time_param],
-        output="both",  # output to both screen and log file
+        output="both",
         remappings=[],
         condition=IfCondition(launch_controller_manager),
     )
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster"],
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager-timeout",
+            "30",
+        ],
         parameters=[use_sim_time_param],
     )
     base_controller_spawner = Node(
@@ -47,6 +53,8 @@ def generate_launch_description():
             "diff_drive_base_controller",
             "--controller-manager",
             "controller_manager",
+            "--controller-manager-timeout",
+            "30",
             "--controller-ros-args",
             ["--remap /diff_drive_base_controller/cmd_vel:=", cmd_vel_topic],
         ],
@@ -54,10 +62,20 @@ def generate_launch_description():
         parameters=[use_sim_time_param],
     )
 
+    # Launch controller_manager and joint_state_broadcaster first
     nodes = [
         controller_manager,
-        base_controller_spawner,
         joint_state_broadcaster_spawner,
     ]
 
-    return LaunchDescription(arguments + nodes)
+    # EVENT HANDLERS - launch base_controller after joint_state_broadcaster completes
+    handlers = [
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=joint_state_broadcaster_spawner,
+                on_exit=[base_controller_spawner],
+            )
+        ),
+    ]
+
+    return LaunchDescription(arguments + nodes + handlers)
