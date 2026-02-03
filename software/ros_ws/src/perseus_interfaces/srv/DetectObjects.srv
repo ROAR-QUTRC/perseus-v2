@@ -1,6 +1,11 @@
 # Request
+<<<<<<< HEAD
 # Calling this service asks the node to return the latest detected ArUco marker
 # poses in the target frame. Optionally, capture and save an annotated image.
+=======
+# Empty request: calling this service asks the node to return
+# the latest detected ArUco marker poses in the target frame.
+>>>>>>> 624da9ed (feat: enhance ArucoDetector with image capture functionality and update configuration parameters)
 bool capture_image
 string img_save_path
 ---
