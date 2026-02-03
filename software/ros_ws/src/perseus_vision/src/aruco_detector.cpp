@@ -262,19 +262,14 @@ namespace perseus_vision
     {
         try
         {
-            // Apply 180-degree rotation around Y-axis to align ArUco axis with ROS convention
-            // ArUco Z-axis points outward from marker, but we want it to point inward for standard conventions
-            cv::Vec3d adjusted_rvec = rvec;
-            adjusted_rvec[0] += M_PI;  // Rotate 180 degrees around Y-axis
-
             geometry_msgs::msg::PoseStamped marker_pose_camera;
             marker_pose_camera.header.stamp = header.stamp;
             marker_pose_camera.header.frame_id = camera_frame_;
 
             // OpenCV to ROS coordinate adjustment
-            marker_pose_camera.pose.position.x = tvec[2];
-            marker_pose_camera.pose.position.y = -tvec[0];
-            marker_pose_camera.pose.position.z = -tvec[1];
+            marker_pose_camera.pose.position.x = tvec[0];
+            marker_pose_camera.pose.position.y = tvec[1];
+            marker_pose_camera.pose.position.z = tvec[2];
 
             cv::Mat rotation_matrix;
             cv::Rodrigues(rvec, rotation_matrix);
