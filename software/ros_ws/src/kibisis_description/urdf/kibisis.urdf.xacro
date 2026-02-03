@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="kibisis" params="prefix">
+    <!-- Import component files -->
+    <xacro:include filename="$(find kibisis_description)/urdf/inertia_macros.xacro"/>
+    <xacro:include filename="$(find kibisis_description)/urdf/kibisis_base.urdf.xacro"/>
+    <xacro:include filename="$(find kibisis_description)/urdf/kibisis_wheels.urdf.xacro"/>
+    <xacro:include filename="$(find kibisis_description)/urdf/kibisis_sensors.urdf.xacro"/>
+
+    <!-- Robot properties -->
+    <!-- Wheel dimensions: 20cm diameter, 30cm apart -->
+    <xacro:property name="wheel_radius" value="0.10"/>
+    <xacro:property name="wheel_width" value="0.04"/>
+    <xacro:property name="wheel_separation" value="0.30"/>
+    <xacro:property name="wheel_mass" value="0.3"/>
+
+    <!-- Base dimensions (disc-shaped like Roomba) -->
+    <xacro:property name="base_radius" value="0.17"/>
+    <xacro:property name="base_height" value="0.08"/>
+    <xacro:property name="base_mass" value="2.5"/>
+
+    <!-- Caster wheel properties -->
+    <xacro:property name="caster_radius" value="0.025"/>
+    <xacro:property name="caster_mass" value="0.1"/>
+
+    <!-- Camera position: 4cm above wheel axle -->
+    <xacro:property name="camera_height" value="0.04"/>
+
+    <!-- Base link -->
+    <link name="${prefix}base_link"/>
+
+    <!-- Footprint link (ground contact point) -->
+    <link name="${prefix}base_footprint"/>
+    <joint name="${prefix}base_footprint_joint" type="fixed">
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="${prefix}base_footprint"/>
+      <child link="${prefix}base_link"/>
+    </joint>
+
+    <!-- CHASSIS -->
+    <xacro:kibisis_base prefix="${prefix}"
+                        radius="${base_radius}"
+                        height="${base_height}"
+                        mass="${base_mass}"
+                        wheel_radius="${wheel_radius}"/>
+
+    <!-- WHEELS -->
+    <!-- Left wheel -->
+    <xacro:kibisis_wheel prefix="${prefix}"
+                         side="left"
+                         radius="${wheel_radius}"
+                         width="${wheel_width}"
+                         mass="${wheel_mass}"
+                         separation="${wheel_separation}"/>
+
+    <!-- Right wheel -->
+    <xacro:kibisis_wheel prefix="${prefix}"
+                         side="right"
+                         radius="${wheel_radius}"
+                         width="${wheel_width}"
+                         mass="${wheel_mass}"
+                         separation="${wheel_separation}"/>
+
+    <!-- Caster wheel (rear support) -->
+    <xacro:kibisis_caster prefix="${prefix}"
+                          radius="${caster_radius}"
+                          mass="${caster_mass}"
+                          base_radius="${base_radius}"
+                          wheel_radius="${wheel_radius}"/>
+
+    <!-- SENSORS -->
+    <xacro:kibisis_sensors prefix="${prefix}"
+                           camera_height="${camera_height}"/>
+
+  </xacro:macro>
+</robot>

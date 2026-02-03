@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Kibisis sensors - camera only (no lidar, no IMU) -->
+
+  <xacro:macro name="kibisis_sensors" params="prefix camera_height">
+
+    <!-- Camera link -->
+    <link name="${prefix}camera_link">
+      <inertial>
+        <mass value="0.05"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <xacro:box_inertia m="0.05" x="0.03" y="0.08" z="0.02"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.03 0.08 0.02"/>
+        </geometry>
+        <material name="dark"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.03 0.08 0.02"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- Camera joint - mounted at front, 4cm above wheel axle (which is at base_link) -->
+    <joint name="${prefix}camera_joint" type="fixed">
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}camera_link"/>
+      <!-- Camera at front of robot, camera_height above axle, pointing forward -->
+      <origin xyz="0.10 0.0 ${camera_height}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Camera optical frame (standard ROS convention: Z forward, X right, Y down) -->
+    <link name="${prefix}camera_optical_frame"/>
+    <joint name="${prefix}camera_optical_joint" type="fixed">
+      <parent link="${prefix}camera_link"/>
+      <child link="${prefix}camera_optical_frame"/>
+      <!-- Rotate to align with optical frame convention -->
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+
+    <!-- Gazebo camera sensor -->
+    <gazebo reference="${prefix}camera_link">
+      <material>Gazebo/DarkGrey</material>
+      <sensor name="camera" type="camera">
+        <pose>0 0 0 0 0 0</pose>
+        <visualize>true</visualize>
+        <update_rate>30</update_rate>
+        <topic>camera/image_raw</topic>
+        <camera>
+          <horizontal_fov>1.3962634</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <frame>${prefix}camera_optical_frame</frame>
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+</robot>

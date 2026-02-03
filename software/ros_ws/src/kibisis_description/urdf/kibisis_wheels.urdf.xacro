@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<robot name="kibisis_wheels" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Kibisis drive wheels and caster wheel -->
+
+  <!-- Drive wheel macro -->
+  <xacro:macro name="kibisis_wheel" params="prefix side radius width mass separation">
+    <!-- Calculate Y position based on side -->
+    <xacro:property name="y_pos" value="${separation/2 if side == 'left' else -separation/2}"/>
+
+    <link name="${prefix}${side}_wheel">
+      <inertial>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <mass value="${mass}"/>
+        <xacro:cylinder_inertia_y m="${mass}" radius="${radius}" length="${width}"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${width}"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${width}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- Wheel joint - continuous rotation -->
+    <joint name="${prefix}${side}_wheel_joint" type="continuous">
+      <origin xyz="0.0 ${y_pos} 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}${side}_wheel"/>
+      <axis xyz="0 1 0"/>
+      <dynamics damping="0.5" friction="0.5"/>
+    </joint>
+
+    <!-- Transmission for ros2_control -->
+    <transmission name="${prefix}${side}_wheel_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}${side}_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <actuator name="${prefix}${side}_wheel_motor">
+        <mechanical_reduction>1.0</mechanical_reduction>
+      </actuator>
+    </transmission>
+
+    <!-- Gazebo material and friction for wheel -->
+    <gazebo reference="${prefix}${side}_wheel">
+      <material>Gazebo/Black</material>
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.001</minDepth>
+      <maxVel>1.0</maxVel>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Caster wheel macro (passive support wheel) -->
+  <xacro:macro name="kibisis_caster" params="prefix radius mass base_radius wheel_radius">
+    <!-- Caster housing link -->
+    <link name="${prefix}caster_housing">
+      <inertial>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <mass value="0.05"/>
+        <xacro:sphere_inertia m="0.05" radius="0.01"/>
+      </inertial>
+    </link>
+
+    <!-- Caster housing joint - fixed to chassis, at rear -->
+    <joint name="${prefix}caster_housing_joint" type="fixed">
+      <origin xyz="${-base_radius + radius + 0.02} 0.0 ${-wheel_radius + radius}" rpy="0.0 0.0 0.0"/>
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}caster_housing"/>
+    </joint>
+
+    <!-- Caster wheel link (sphere) -->
+    <link name="${prefix}caster_wheel">
+      <inertial>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <mass value="${mass}"/>
+        <xacro:sphere_inertia m="${mass}" radius="${radius}"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <sphere radius="${radius}"/>
+        </geometry>
+        <material name="grey"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <sphere radius="${radius}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- Caster wheel joint - ball joint simulated as fixed for simplicity -->
+    <joint name="${prefix}caster_wheel_joint" type="fixed">
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <parent link="${prefix}caster_housing"/>
+      <child link="${prefix}caster_wheel"/>
+    </joint>
+
+    <!-- Gazebo material and friction for caster -->
+    <gazebo reference="${prefix}caster_wheel">
+      <material>Gazebo/Grey</material>
+      <mu1>0.01</mu1>
+      <mu2>0.01</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.001</minDepth>
+      <maxVel>1.0</maxVel>
+    </gazebo>
+  </xacro:macro>
+
+</robot>

@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<robot name="kibisis_base" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Kibisis base/chassis - disc-shaped like a Roomba -->
+
+  <xacro:macro name="kibisis_base" params="prefix radius height mass wheel_radius">
+    <!-- Main chassis body -->
+    <link name="${prefix}chassis">
+      <inertial>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <mass value="${mass}"/>
+        <!-- Cylinder inertia for disc-shaped base -->
+        <xacro:cylinder_inertia m="${mass}" radius="${radius}" length="${height}"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${height}"/>
+        </geometry>
+        <material name="dark"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${height}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- Connect chassis to base_link -->
+    <!-- Position chassis so wheel axle is at base_link height -->
+    <joint name="${prefix}chassis_joint" type="fixed">
+      <origin xyz="0.0 0.0 ${wheel_radius}" rpy="0.0 0.0 0.0"/>
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}chassis"/>
+    </joint>
+
+    <!-- Gazebo material for chassis -->
+    <gazebo reference="${prefix}chassis">
+      <material>Gazebo/DarkGrey</material>
+    </gazebo>
+
+  </xacro:macro>
+</robot>
