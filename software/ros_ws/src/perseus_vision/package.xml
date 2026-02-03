@@ -30,10 +30,7 @@
   <depend>tf2</depend>
   <depend>geometry_msgs</depend>
   <depend>tf2_geometry_msgs</depend>
-<<<<<<< HEAD
   <depend>visualization_msgs</depend>
-=======
->>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
   <build_depend>opencv</build_depend>
   <exec_depend>opencv</exec_depend>
   <test_depend>ament_lint_auto</test_depend>
