@@ -64,7 +64,7 @@ Used only when `use_camera_info = true` **and** `compressed_io = false` (as impl
 /camera/camera/color/camera_info
 ```
 
-> Note: In your current code, `camera_info` subscription is created only in the raw-image branch (not in the compressed branch).
+> Note: In the current code, `camera_info` subscription is created only in the raw-image branch (not in the compressed branch).
 
 ---
 
@@ -188,7 +188,7 @@ aruco_detector:
 | ----------------------- | -----: | ------: | ---------------------------------------------------------------------------------------------------- |
 | `marker_length`         | double |  `0.35` | Physical marker size (meters). Used for pose estimation scale.                                       |
 | `axis_length`           | double |  `0.03` | Length of drawn axes in the debug image (meters).                                                    |
-| `dictionary_id`         |    int |     `1` | OpenCV predefined dictionary enum value (must match your printed markers).                           |
+| `dictionary_id`         |    int |     `1` | OpenCV predefined dictionary enum value (must match the printed markers).                           |
 | `min_bounding_box_area` | double | `100.0` | Filters detections: marker’s 2D bounding box area in pixels must be ≥ this threshold to be accepted. |
 
 **Bounding box filtering details**
@@ -212,7 +212,7 @@ This helps reject:
 
 | Parameter         |   Type |               Default | Description                                                                                 |
 | ----------------- | -----: | --------------------: | ------------------------------------------------------------------------------------------- |
-| `camera_frame`    | string | `camera_link_optical` | Frame ID assigned to marker poses before TF transform. Should be your camera optical frame. |
+| `camera_frame`    | string | `camera_link_optical` | Frame ID assigned to marker poses before TF transform. Should be the camera optical frame. |
 | `tf_output_frame` | string |                `odom` | Target frame to transform marker poses into. Also used as `frame_id` in outputs.            |
 
 ---
@@ -266,7 +266,7 @@ If enabled, incoming `CameraInfo` replaces intrinsics.
 - `dist_coeffs_` is built from `msg->d[]` (any length supported)
 
 > In `processImage`, if `camera_matrix_` is empty, pose estimation is skipped (warn once).
-> In your current code, `camera_matrix_` is initialized from params, so it will not be empty unless changed elsewhere.
+> In the current code, `camera_matrix_` is initialized from params, so it will not be empty unless changed elsewhere.
 
 ---
 
@@ -365,7 +365,6 @@ ros2 service call /detect_objects perseus_interfaces/srv/DetectObjects "{}"
 
 ### Service call (capture image)
 
-(Fields depend on your `.srv` definition, but conceptually:)
 
 ```bash
 ros2 service call /detect_objects perseus_interfaces/srv/DetectObjects \
