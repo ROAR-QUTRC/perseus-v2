@@ -2,12 +2,29 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>kibisis</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <version>0.1.0</version>
+  <description>Kibisis Robot Bringup - Two-wheel differential drive robot</description>
   <maintainer email="mcugl@todo.todo">mcugl</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- base -->
+  <exec_depend>kibisis_hardware</exec_depend>
+
+  <!-- ros2 control -->
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>diff_drive_controller</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>ros2controlcli</exec_depend>
+
+  <!-- launching -->
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <!-- GUI tools -->
+  <exec_depend>rviz2</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

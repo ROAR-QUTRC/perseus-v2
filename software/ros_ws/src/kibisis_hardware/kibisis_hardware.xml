@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<library path="kibisis_hardware">
+    <class name="kibisis_hardware/KibisisSystemHardware"
+           type="kibisis_hardware::KibisisSystemHardware"
+           base_class_type="hardware_interface::SystemInterface">
+        <description>
+            ROS2 Control hardware interface for Kibisis robot using GPIO motor control on Raspberry Pi.
+        </description>
+    </class>
+</library>

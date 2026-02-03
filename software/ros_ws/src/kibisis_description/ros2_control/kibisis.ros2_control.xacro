@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="kibisis_ros2_control" params="name prefix hardware_plugin">
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <plugin>${hardware_plugin}</plugin>
+      </hardware>
+
+      <joint name="${prefix}left_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <param name="gpio_pin_a">17</param>
+        <param name="gpio_pin_b">27</param>
+        <param name="encoder_pin_a">5</param>
+        <param name="encoder_pin_b">6</param>
+      </joint>
+
+      <joint name="${prefix}right_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <param name="gpio_pin_a">22</param>
+        <param name="gpio_pin_b">23</param>
+        <param name="encoder_pin_a">12</param>
+        <param name="encoder_pin_b">13</param>
+      </joint>
+    </ros2_control>
+  </xacro:macro>
+</robot>

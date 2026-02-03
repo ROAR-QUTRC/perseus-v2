@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="kibisis">
+  <xacro:arg name="prefix" default="" />
+  <xacro:arg name="hardware_plugin" default="kibisis_hardware/KibisisSystemHardware" />
+
+  <!-- Import URDF description -->
+  <xacro:include filename="$(find kibisis_description)/urdf/kibisis.urdf.xacro" />
+  <!-- Import colours for rviz -->
+  <xacro:include filename="$(find kibisis_description)/urdf/kibisis.materials.xacro" />
+  <!-- Import ros2_control description -->
+  <xacro:include filename="$(find kibisis_description)/ros2_control/kibisis.ros2_control.xacro" />
+
+  <!-- Instantiate the description and the ROS2 control information -->
+  <xacro:kibisis prefix="$(arg prefix)" />
+  <xacro:kibisis_ros2_control
+    name="Kibisis"
+    prefix="$(arg prefix)"
+    hardware_plugin="$(arg hardware_plugin)"/>
+</robot>
