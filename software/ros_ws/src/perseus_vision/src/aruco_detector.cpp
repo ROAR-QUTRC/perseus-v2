@@ -92,11 +92,11 @@ namespace perseus_vision
             detection_pub_ = this->create_publisher<::perseus_interfaces::msg::ObjectDetections>(
                 output_topic_, 10);
         }
-        
+
         // Create marker array publisher for visualization
         marker_array_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
             "/detection/aruco/markers", 10);
-        
+
         RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
     }
 
@@ -260,26 +260,26 @@ namespace perseus_vision
                 marker.id = latest_ids_[i];
                 marker.type = visualization_msgs::msg::Marker::CUBE;
                 marker.action = visualization_msgs::msg::Marker::ADD;
-                
+
                 // Set position from pose
                 marker.pose.position.x = latest_poses_[i].position.x;
                 marker.pose.position.y = latest_poses_[i].position.y;
                 marker.pose.position.z = latest_poses_[i].position.z;
-                
+
                 // Set orientation from pose
                 marker.pose.orientation = latest_poses_[i].orientation;
-                
+
                 // Set scale (cube size)
                 marker.scale.x = marker_length_;
                 marker.scale.y = marker_length_;
                 marker.scale.z = 0.01;  // thin cube
-                
+
                 // Set color (RGBA)
                 marker.color.r = 1.0f;
                 marker.color.g = 1.0f;
                 marker.color.b = 1.0f;
                 marker.color.a = 1.f;
-                
+
                 marker_array.markers.push_back(marker);
             }
         }
