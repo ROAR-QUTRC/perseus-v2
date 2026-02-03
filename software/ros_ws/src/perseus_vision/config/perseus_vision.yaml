@@ -12,6 +12,7 @@ aruco_detector:
     compressed_io: false
     publish_output: false
     output_topic: /detection/aruco
+    min_bounding_box_area: 100.0
     # Enable reading camera calibration from camera_info topic instead of parameters
     use_camera_info: true
     camera_info_topic: /camera/camera/color/camera_info
