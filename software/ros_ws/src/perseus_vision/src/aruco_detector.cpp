@@ -12,7 +12,7 @@ namespace perseus_vision
         dictionary_id = this->declare_parameter<int>("dictionary_id", 1);
         camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_link_optical");
         tf_output_frame_ = this->declare_parameter<std::string>("tf_output_frame", "odom");
-        input_img_ = this->declare_parameter<std::string>("input_img", "/rgbd_camera/image_raw");
+        input_img_ = this->declare_parameter<std::string>("input_img", "/camera/camera/color/image_raw");
         output_img_ = this->declare_parameter<std::string>("output_img", "/detection/aruco/image");
         publish_tf_ = this->declare_parameter<bool>("publish_tf", true);
         publish_img_ = this->declare_parameter<bool>("publish_img", true);
@@ -20,7 +20,8 @@ namespace perseus_vision
         publish_output_ = this->declare_parameter<bool>("publish_output", false);
         use_camera_info_ = this->declare_parameter<bool>("use_camera_info", false);
         output_topic_ = this->declare_parameter<std::string>("output_topic", "/detection/aruco/detections");
-        camera_info_topic_ = this->declare_parameter<std::string>("camera_info_topic", "/camera/camera_info");
+        camera_info_topic_ = this->declare_parameter<std::string>("camera_info_topic", "/camera/camera/color/camera_info");
+        min_bounding_box_area_ = this->declare_parameter<double>("min_bounding_box_area", 100.0);
 
         std::vector<double> camera_matrix_param = this->declare_parameter<std::vector<double>>(
             "camera_matrix", {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0});
@@ -178,7 +179,34 @@ namespace perseus_vision
 
             for (size_t i = 0; i < ids.size(); ++i)
             {
-                cv::drawFrameAxes(const_cast<cv::Mat&>(frame), camera_matrix_, dist_coeffs_, rvecs[i], tvecs[i], axis_length_);
+                // Calculate bounding box area for filtering
+                const auto& corner = corners[i];
+                double min_x = corner[0].x, max_x = corner[0].x;
+                double min_y = corner[0].y, max_y = corner[0].y;
+
+                for (const auto& pt : corner) {
+                    min_x = std::min(min_x, static_cast<double>(pt.x));
+                    max_x = std::max(max_x, static_cast<double>(pt.x));
+                    min_y = std::min(min_y, static_cast<double>(pt.y));
+                    max_y = std::max(max_y, static_cast<double>(pt.y));
+                }
+
+                double bbox_area = (max_x - min_x) * (max_y - min_y);
+
+                // Skip detections with bounding box area smaller than threshold
+                if (bbox_area < min_bounding_box_area_) {
+                    RCLCPP_DEBUG(this->get_logger(),
+                        "Filtered out marker %d: area %.1f < min_area %.1f",
+                        ids[i], bbox_area, min_bounding_box_area_);
+                    continue;
+                }
+
+                cv::drawFrameAxes(
+                    const_cast<cv::Mat&>(frame),
+                    camera_matrix_, dist_coeffs_,
+                    rvecs[i], tvecs[i],
+                    axis_length_);
+
                 transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
             }
         }
@@ -218,7 +246,7 @@ namespace perseus_vision
             marker_pose_camera.pose.position.z = -tvec[1];
 
             cv::Mat rotation_matrix;
-            cv::Rodrigues(adjusted_rvec, rotation_matrix);
+            cv::Rodrigues(rvec, rotation_matrix);
             tf2::Quaternion quat = rotationMatrixToQuaternion(rotation_matrix);
 
             marker_pose_camera.pose.orientation.x = quat.x();
