@@ -4,15 +4,15 @@ Kibisis is a two-wheel differential drive robot designed for the Raspberry Pi pl
 
 ## Robot Specifications
 
-| Parameter | Value |
-|-----------|-------|
-| Drive type | Two-wheel differential drive |
-| Wheel diameter | 20 cm (0.2 m) |
-| Wheel separation | 30 cm (0.3 m) |
-| Max linear velocity | 1.0 m/s |
-| Max angular velocity | 3.0 rad/s |
-| Camera | Forward-facing, 4 cm above wheel axle |
-| Sensors | Camera only (no lidar, no IMU) |
+| Parameter            | Value                                 |
+| -------------------- | ------------------------------------- |
+| Drive type           | Two-wheel differential drive          |
+| Wheel diameter       | 20 cm (0.2 m)                         |
+| Wheel separation     | 30 cm (0.3 m)                         |
+| Max linear velocity  | 1.0 m/s                               |
+| Max angular velocity | 3.0 rad/s                             |
+| Camera               | Forward-facing, 4 cm above wheel axle |
+| Sensors              | Camera only (no lidar, no IMU)        |
 
 ## Package Structure
 
@@ -40,6 +40,7 @@ kibisis_hardware/           # Hardware interface plugin
 Kibisis requires a motor control board that interfaces with the Raspberry Pi's GPIO pins. Unlike robots that use serial-based servo controllers (like Dynamixel), Kibisis uses direct GPIO control for motor actuation.
 
 **Typical motor control board features:**
+
 - H-bridge motor drivers (e.g., L298N, TB6612FNG, or similar)
 - PWM input for speed control
 - Direction control pins
@@ -49,12 +50,12 @@ Kibisis requires a motor control board that interfaces with the Raspberry Pi's G
 
 The default pin assignments in `kibisis_description/ros2_control/kibisis.ros2_control.xacro`:
 
-| Function | Left Wheel | Right Wheel |
-|----------|------------|-------------|
-| Motor Pin A (PWM/Direction) | GPIO 17 | GPIO 22 |
-| Motor Pin B (Direction) | GPIO 27 | GPIO 23 |
-| Encoder Pin A | GPIO 5 | GPIO 12 |
-| Encoder Pin B | GPIO 6 | GPIO 13 |
+| Function                    | Left Wheel | Right Wheel |
+| --------------------------- | ---------- | ----------- |
+| Motor Pin A (PWM/Direction) | GPIO 17    | GPIO 22     |
+| Motor Pin B (Direction)     | GPIO 27    | GPIO 23     |
+| Encoder Pin A               | GPIO 5     | GPIO 12     |
+| Encoder Pin B               | GPIO 6     | GPIO 13     |
 
 **Note:** These pins should be configured to match your specific motor control board wiring.
 
@@ -98,11 +99,11 @@ The hardware interface in `kibisis_hardware` contains placeholder implementation
 
 Choose a GPIO library based on your Raspberry Pi setup:
 
-| Library | Description | Installation |
-|---------|-------------|--------------|
-| [pigpio](http://abyz.me.uk/rpi/pigpio/) | Feature-rich, supports PWM and interrupts | `sudo apt install pigpio` |
-| [lgpio](https://github.com/joan2937/lg) | Lightweight, newer alternative | `sudo apt install lg` |
-| [gpiod](https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git/) | Linux kernel GPIO interface | `sudo apt install libgpiod-dev` |
+| Library                                                             | Description                               | Installation                    |
+| ------------------------------------------------------------------- | ----------------------------------------- | ------------------------------- |
+| [pigpio](http://abyz.me.uk/rpi/pigpio/)                             | Feature-rich, supports PWM and interrupts | `sudo apt install pigpio`       |
+| [lgpio](https://github.com/joan2937/lg)                             | Lightweight, newer alternative            | `sudo apt install lg`           |
+| [gpiod](https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git/) | Linux kernel GPIO interface               | `sudo apt install libgpiod-dev` |
 
 ### Example Implementation (pigpio)
 
@@ -182,19 +183,20 @@ And add to `package.xml`:
 
 ## Topics
 
-| Topic | Type | Description |
-|-------|------|-------------|
-| `/cmd_vel` | `geometry_msgs/Twist` | Velocity commands |
-| `/diff_drive_base_controller/odom` | `nav_msgs/Odometry` | Odometry output |
-| `/joint_states` | `sensor_msgs/JointState` | Joint positions/velocities |
-| `/tf` | `tf2_msgs/TFMessage` | Transform tree |
-| `/camera/image_raw` | `sensor_msgs/Image` | Camera images (when camera driver running) |
+| Topic                              | Type                     | Description                                |
+| ---------------------------------- | ------------------------ | ------------------------------------------ |
+| `/cmd_vel`                         | `geometry_msgs/Twist`    | Velocity commands                          |
+| `/diff_drive_base_controller/odom` | `nav_msgs/Odometry`      | Odometry output                            |
+| `/joint_states`                    | `sensor_msgs/JointState` | Joint positions/velocities                 |
+| `/tf`                              | `tf2_msgs/TFMessage`     | Transform tree                             |
+| `/camera/image_raw`                | `sensor_msgs/Image`      | Camera images (when camera driver running) |
 
 ## Troubleshooting
 
 ### Permission Denied for GPIO
 
 Run with sudo or add user to gpio group:
+
 ```bash
 sudo usermod -aG gpio $USER
 # Log out and back in
@@ -203,6 +205,7 @@ sudo usermod -aG gpio $USER
 ### Controllers Not Loading
 
 Check that the hardware interface is properly activated:
+
 ```bash
 ros2 control list_hardware_interfaces
 ros2 control list_controllers

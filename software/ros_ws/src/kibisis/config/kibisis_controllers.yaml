@@ -7,7 +7,6 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
     diff_drive_base_controller:
       type: diff_drive_controller/DiffDriveController
-
 # Hardware interface configuration
 Kibisis:
   ros__parameters:
@@ -24,34 +23,30 @@ Kibisis:
         state_interfaces:
           - position
           - velocity
-
 # Parameters for individual controllers
 joint_state_broadcaster:
   ros__parameters:
     map_interface_to_joint_state:
       effort: current
-
 diff_drive_base_controller:
   ros__parameters:
     # Hardware configuration
     # Kibisis is a two-wheel differential drive robot
     left_wheel_names: ["left_wheel_joint"]
     right_wheel_names: ["right_wheel_joint"]
-    wheel_separation: 0.30  # 30cm between wheels
+    wheel_separation: 0.30 # 30cm between wheels
     wheels_per_side: 1
-    wheel_radius: 0.10  # 20cm diameter = 10cm radius
+    wheel_radius: 0.10 # 20cm diameter = 10cm radius
     write_op_modes: ["velocity"]
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
-    open_loop: false  # Use encoder feedback for accurate odometry
-
+    open_loop: false # Use encoder feedback for accurate odometry
     # ROS I/O configuration
     publish_rate: 50.0
     odom_frame_id: odom
     base_frame_id: base_link
     enable_odom_tf: true
     cmd_vel_timeout: 0.5
-
     # Kinematic limits
     linear.x.max_velocity: 1.0
     linear.x.max_acceleration: 5.0

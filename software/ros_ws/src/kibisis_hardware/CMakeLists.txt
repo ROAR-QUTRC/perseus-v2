@@ -71,10 +71,8 @@ target_include_directories(
 # Link against dependencies using explicit targets
 target_link_libraries(
   ${PROJECT_NAME}
-  PUBLIC hardware_interface::hardware_interface
-         pluginlib::pluginlib
-         rclcpp::rclcpp
-         rclcpp_lifecycle::rclcpp_lifecycle)
+  PUBLIC hardware_interface::hardware_interface pluginlib::pluginlib
+         rclcpp::rclcpp rclcpp_lifecycle::rclcpp_lifecycle)
 
 # Installation configuration
 # Install library binaries
