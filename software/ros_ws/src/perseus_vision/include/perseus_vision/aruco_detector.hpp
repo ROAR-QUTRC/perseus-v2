@@ -65,7 +65,7 @@ namespace perseus_vision
         // -------------------------
         double marker_length_{0.35};
         double axis_length_{0.03};
-        double min_bounding_box_area_{100.0};   
+        double min_bounding_box_area_{100.0};
         int dictionary_id{1};
 
         std::string camera_frame_{"camera_link_optical"};
@@ -113,7 +113,7 @@ namespace perseus_vision
         std::vector<int> latest_ids_;
         std::vector<geometry_msgs::msg::Pose> latest_poses_;
         bool has_detections_{false};
-        cv::Mat latest_frame_;  // Store latest annotated frame for capture
+        cv::Mat latest_frame_;                                           // Store latest annotated frame for capture
         std::vector<std::pair<int, cv::Point3d>> latest_marker_coords_;  // Store marker coordinates for annotation
     };
 
