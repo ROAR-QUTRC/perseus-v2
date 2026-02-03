@@ -73,14 +73,31 @@ ros2 launch kibisis kibisis.launch.py use_mock_hardware:=True
 ros2 launch kibisis kibisis.launch.py
 ```
 
-### Send Velocity Commands
+### Teleoperation with Xbox Controller
+
+To teleoperate Kibisis using the generic controller (Xbox, 8BitDo, or Logitech):
+
+**Terminal 1 - Launch Kibisis with joy_vel topic:**
+```bash
+ros2 launch kibisis kibisis.launch.py use_mock_hardware:=True cmd_vel_topic:=/joy_vel
+```
+
+**Terminal 2 - Launch the controller:**
+```bash
+nix run .#generic_controller
+```
+
+The `cmd_vel_topic:=/joy_vel` parameter configures the diff_drive_controller to accept
+`TwistStamped` messages from the generic_controller on the `/joy_vel` topic.
+
+### Send Velocity Commands Manually
 
 ```bash
-# Move forward at 0.2 m/s
-ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.2}, angular: {z: 0.0}}"
+# Move forward at 0.2 m/s (using TwistStamped for compatibility)
+ros2 topic pub /joy_vel geometry_msgs/msg/TwistStamped "{header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, twist: {linear: {x: 0.2}, angular: {z: 0.0}}}"
 
-# Rotate in place
-ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0}, angular: {z: 0.5}}"
+# Or use plain Twist on /cmd_vel (when not using generic_controller)
+ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.2}, angular: {z: 0.0}}"
 ```
 
 ## Implementing GPIO Motor Control
