@@ -71,7 +71,7 @@ namespace perseus_vision
         std::string camera_frame_{"camera_link_optical"};
         std::string tf_output_frame_{"odom"};
 
-        std::string input_img_{"/rgbd_camera/image_raw"};
+        std::string input_img_{"/camera/camera/color/image_raw"};
         std::string output_img_{"/detection/aruco/image"};
 
         bool publish_tf_{true};
@@ -80,7 +80,7 @@ namespace perseus_vision
         bool use_camera_info_{false};
         bool publish_output_{false};
         std::string output_topic_{"/detection/aruco/detections"};
-        std::string camera_info_topic_{"/camera/camera_info"};
+        std::string camera_info_topic_{"/camera/camera/color/camera_info"};
 
         // Camera intrinsics
         cv::Mat camera_matrix_;
@@ -113,6 +113,8 @@ namespace perseus_vision
         std::vector<int> latest_ids_;
         std::vector<geometry_msgs::msg::Pose> latest_poses_;
         bool has_detections_{false};
+        cv::Mat latest_frame_;  // Store latest annotated frame for capture
+        std::vector<std::pair<int, cv::Point3d>> latest_marker_coords_;  // Store marker coordinates for annotation
     };
 
 }  // namespace perseus_vision
