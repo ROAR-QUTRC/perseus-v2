@@ -78,11 +78,13 @@ ros2 launch kibisis kibisis.launch.py
 To teleoperate Kibisis using the generic controller (Xbox, 8BitDo, or Logitech):
 
 **Terminal 1 - Launch Kibisis with joy_vel topic:**
+
 ```bash
 ros2 launch kibisis kibisis.launch.py use_mock_hardware:=True cmd_vel_topic:=/joy_vel
 ```
 
 **Terminal 2 - Launch the controller:**
+
 ```bash
 nix run .#generic_controller
 ```
@@ -200,14 +202,14 @@ And add to `package.xml`:
 
 ## Topics
 
-| Topic                              | Type                          | Description                                         |
-| ---------------------------------- | ----------------------------- | --------------------------------------------------- |
-| `/cmd_vel`                         | `geometry_msgs/Twist`         | Velocity commands (default)                         |
-| `/joy_vel`                         | `geometry_msgs/TwistStamped`  | Velocity commands from generic_controller           |
-| `/diff_drive_base_controller/odom` | `nav_msgs/Odometry`           | Odometry output                                     |
-| `/joint_states`                    | `sensor_msgs/JointState`      | Joint positions/velocities                          |
-| `/tf`                              | `tf2_msgs/TFMessage`          | Transform tree                                      |
-| `/camera/image_raw`                | `sensor_msgs/Image`           | Camera images (when camera driver running)          |
+| Topic                              | Type                         | Description                                |
+| ---------------------------------- | ---------------------------- | ------------------------------------------ |
+| `/cmd_vel`                         | `geometry_msgs/Twist`        | Velocity commands (default)                |
+| `/joy_vel`                         | `geometry_msgs/TwistStamped` | Velocity commands from generic_controller  |
+| `/diff_drive_base_controller/odom` | `nav_msgs/Odometry`          | Odometry output                            |
+| `/joint_states`                    | `sensor_msgs/JointState`     | Joint positions/velocities                 |
+| `/tf`                              | `tf2_msgs/TFMessage`         | Transform tree                             |
+| `/camera/image_raw`                | `sensor_msgs/Image`          | Camera images (when camera driver running) |
 
 ## Troubleshooting
 
