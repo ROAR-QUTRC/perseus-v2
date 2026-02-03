@@ -69,6 +69,7 @@ namespace perseus_vision
         // -------------------------
         double marker_length_{0.35};
         double axis_length_{0.03};
+        double min_bounding_box_area_{100.0};   
         int dictionary_id{1};
 
         std::string camera_frame_{"camera_link_optical"};
