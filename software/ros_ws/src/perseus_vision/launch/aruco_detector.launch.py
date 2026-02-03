@@ -14,7 +14,7 @@ def generate_launch_description():
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
-        "use_sim_time", default_value="false", description="Use simulated time"
+        "use_sim_time", default_value="true", description="Use simulated time"
     )
 
     # Create the aruco_detector node

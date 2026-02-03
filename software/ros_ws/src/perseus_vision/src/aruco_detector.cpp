@@ -1,4 +1,7 @@
 #include "perseus_vision/aruco_detector.hpp"
+#include <chrono>
+#include <ctime>
+#include <cstdio>
 
 namespace perseus_vision
 {
@@ -108,8 +111,12 @@ namespace perseus_vision
 
         if (publish_img_)
         {
-            auto processed_msg = cv_bridge::CvImage(msg->header, "bgr8", frame).toImageMsg();
-            pub_->publish(*processed_msg);
+            // Get the latest annotated frame
+            {
+                std::lock_guard<std::mutex> lock(detections_mutex_);
+                auto processed_msg = cv_bridge::CvImage(msg->header, "bgr8", latest_frame_).toImageMsg();
+                pub_->publish(*processed_msg);
+            }
         }
     }
 
@@ -139,10 +146,14 @@ namespace perseus_vision
             compressed_msg.header = msg->header;
             compressed_msg.format = "jpeg";
 
-            std::vector<uchar> buffer;
-            std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 90};
-            cv::imencode(".jpg", frame, buffer, params);
-            compressed_msg.data = buffer;
+            // Get the latest annotated frame
+            {
+                std::lock_guard<std::mutex> lock(detections_mutex_);
+                std::vector<uchar> buffer;
+                std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 90};
+                cv::imencode(".jpg", latest_frame_, buffer, params);
+                compressed_msg.data = buffer;
+            }
 
             compressed_pub_->publish(compressed_msg);
         }
@@ -154,6 +165,9 @@ namespace perseus_vision
         std::vector<std::vector<cv::Point2f>> corners;
         detector_.detectMarkers(frame, corners, ids);
 
+        // Work with a copy for annotation
+        cv::Mat annotated_frame = frame.clone();
+
         // Clear previous detections and update timestamp for service requests
         {
             std::lock_guard<std::mutex> lock(detections_mutex_);
@@ -162,6 +176,9 @@ namespace perseus_vision
             latest_timestamp_ = header.stamp;
             has_detections_ = true;
         }
+
+        // Store marker info for corner display
+        std::vector<std::pair<int, cv::Point3d>> marker_coords;  // marker_id, position
 
         if (!ids.empty())
         {
@@ -175,7 +192,7 @@ namespace perseus_vision
             std::vector<cv::Vec3d> rvecs, tvecs;
             cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
-            cv::aruco::drawDetectedMarkers(const_cast<cv::Mat&>(frame), corners, ids);
+            cv::aruco::drawDetectedMarkers(annotated_frame, corners, ids);
 
             for (size_t i = 0; i < ids.size(); ++i)
             {
@@ -202,13 +219,24 @@ namespace perseus_vision
                 }
 
                 cv::drawFrameAxes(
-                    const_cast<cv::Mat&>(frame),
+                    annotated_frame,
                     camera_matrix_, dist_coeffs_,
                     rvecs[i], tvecs[i],
                     axis_length_);
 
+                // Store marker position for display
+                cv::Point3d pos(tvecs[i][2], -tvecs[i][0], -tvecs[i][1]);
+                marker_coords.push_back({ids[i], pos});
+
                 transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
             }
+        }
+
+        // Store annotated frame for capture service
+        {
+            std::lock_guard<std::mutex> lock(detections_mutex_);
+            latest_frame_ = annotated_frame.clone();
+            latest_marker_coords_ = marker_coords;
         }
 
         // Publish detections message if enabled
@@ -346,14 +374,99 @@ namespace perseus_vision
     void ArucoDetector::handle_request(const std::shared_ptr<DetectObjects::Request> request,
                                        std::shared_ptr<DetectObjects::Response> response)
     {
-        (void)request;  // Suppress unused parameter warning
-
         std::lock_guard<std::mutex> lock(detections_mutex_);
 
         response->stamp = latest_timestamp_;
         response->frame_id = tf_output_frame_;
         response->ids = latest_ids_;
         response->poses = latest_poses_;
+
+        // Handle image capture if requested
+        if (request->capture_image)
+        {
+            if (latest_frame_.empty())
+            {
+                RCLCPP_WARN(this->get_logger(), "Capture requested but no frame available");
+            }
+            else
+            {
+                try
+                {
+                    // Create directory if it doesn't exist
+                    std::string mkdir_cmd = "mkdir -p \"" + request->img_save_path + "\"";
+                    int ret = system(mkdir_cmd.c_str());
+                    if (ret != 0)
+                    {
+                        RCLCPP_WARN(this->get_logger(), "Failed to create directory: %s", request->img_save_path.c_str());
+                    }
+                    else
+                    {
+                        // Create annotated copy for output
+                        cv::Mat output_frame = latest_frame_.clone();
+
+                        // Add timestamp to image
+                        {
+                            auto now = std::chrono::system_clock::now();
+                            auto time_t = std::chrono::system_clock::to_time_t(now);
+                            struct tm* timeinfo = std::localtime(&time_t);
+                            char timestamp_str[100];
+                            std::strftime(timestamp_str, sizeof(timestamp_str), "%Y-%m-%d %H:%M:%S", timeinfo);
+                            
+                            cv::putText(output_frame, std::string("Time: ") + timestamp_str,
+                                       cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                                       cv::Scalar(0, 255, 0), 2);
+                        }
+
+                        // Add marker coordinates to image
+                        if (!latest_marker_coords_.empty())
+                        {
+                            int y_offset = 70;
+                            cv::putText(output_frame, "Marker Coordinates (XYZ):",
+                                       cv::Point(10, y_offset), cv::FONT_HERSHEY_SIMPLEX, 0.5,
+                                       cv::Scalar(0, 255, 255), 1);
+                            
+                            for (const auto& mc : latest_marker_coords_)
+                            {
+                                y_offset += 25;
+                                char coord_str[150];
+                                std::snprintf(coord_str, sizeof(coord_str), 
+                                             "ID %d: X=%.3f, Y=%.3f, Z=%.3f",
+                                             mc.first, mc.second.x, mc.second.y, mc.second.z);
+                                
+                                cv::putText(output_frame, std::string(coord_str),
+                                           cv::Point(10, y_offset), cv::FONT_HERSHEY_SIMPLEX, 0.5,
+                                           cv::Scalar(255, 255, 0), 1);
+                            }
+                        }
+
+                        // Generate filename with marker IDs
+                        std::string ids_str;
+                        for (size_t i = 0; i < latest_ids_.size(); ++i)
+                        {
+                            if (i > 0) ids_str += "_";
+                            ids_str += std::to_string(latest_ids_[i]);
+                        }
+                        if (ids_str.empty()) ids_str = "no_markers";
+                        
+                        std::string filename = request->img_save_path + "/aruco_" + ids_str + ".png";
+
+                        // Save the annotated frame
+                        if (cv::imwrite(filename, output_frame))
+                        {
+                            RCLCPP_INFO(this->get_logger(), "Captured annotated image saved to: %s", filename.c_str());
+                        }
+                        else
+                        {
+                            RCLCPP_ERROR(this->get_logger(), "Failed to write image to: %s", filename.c_str());
+                        }
+                    }
+                }
+                catch (const std::exception& e)
+                {
+                    RCLCPP_ERROR(this->get_logger(), "Exception during image capture: %s", e.what());
+                }
+            }
+        }
 
         if (!latest_ids_.empty())
         {
