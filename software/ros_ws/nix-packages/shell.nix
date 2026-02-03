@@ -104,6 +104,7 @@ pkgs.mkShell {
             tf2-sensor-msgs
             twist-mux
             urdf
+            visualization-msgs
             xacro
             yaml-cpp-vendor
           ]

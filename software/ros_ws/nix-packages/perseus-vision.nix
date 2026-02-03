@@ -16,6 +16,7 @@
   tf2,
   tf2-geometry-msgs,
   tf2-ros,
+  visualization-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-vision";
@@ -41,6 +42,7 @@ buildRosPackage rec {
     tf2
     tf2-geometry-msgs
     tf2-ros
+    visualization-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
