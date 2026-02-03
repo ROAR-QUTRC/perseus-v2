@@ -3,6 +3,6 @@ project(kibisis_description)
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY urdf ros2_control rviz meshes launch
+install(DIRECTORY urdf ros2_control
         DESTINATION share/${PROJECT_NAME})
 ament_package()
