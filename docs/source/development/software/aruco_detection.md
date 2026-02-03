@@ -4,13 +4,13 @@
 
 `aruco_detector` detects **OpenCV ArUco markers** in a camera stream and estimates each marker’s **6-DoF pose** using known camera intrinsics + marker size. It can:
 
-- Subscribe to **raw** or **compressed** images
-- Optionally subscribe to **CameraInfo** for live calibration
-- Filter weak detections using a **minimum bounding-box area** threshold
-- Publish **annotated debug images**
-- Publish detections on a topic (`ObjectDetections`) (optional)
-- Broadcast TF frames for each detected marker (`aruco_marker_<id>`) (optional)
-- Provide detections via a **service**, with an option to **save an annotated image to disk**
+* Subscribe to **raw** or **compressed** images
+* Optionally subscribe to **CameraInfo** for live calibration
+* Filter weak detections using a **minimum bounding-box area** threshold
+* Publish **annotated debug images**
+* Publish detections on a topic (`ObjectDetections`) (optional)
+* Broadcast TF frames for each detected marker (`aruco_marker_<id>`) (optional)
+* Provide detections via a **service**, with an option to **save an annotated image to disk**
 
 ---
 
@@ -64,7 +64,7 @@ Used only when `use_camera_info = true` **and** `compressed_io = false` (as impl
 /camera/camera/color/camera_info
 ```
 
-> Note: In the current code, `camera_info` subscription is created only in the raw-image branch (not in the compressed branch).
+> Note: In your current code, `camera_info` subscription is created only in the raw-image branch (not in the compressed branch).
 
 ---
 
@@ -144,28 +144,29 @@ odom
 
 Returns the **latest cached detections**, including:
 
-- `ids[]`: marker IDs
-- `poses[]`: marker poses in `tf_output_frame`
-- `stamp`: timestamp of the processed frame
-- `frame_id`: set to `tf_output_frame`
+* `ids[]`: marker IDs
+* `poses[]`: marker poses in `tf_output_frame`
+* `stamp`: timestamp of the processed frame
+* `frame_id`: set to `tf_output_frame`
 
 #### Image capture feature (new)
 
 The request supports an image capture mode:
 
-- `request->capture_image` (bool)
-- `request->img_save_path` (string path)
+* `request->capture_image` (bool)
+* `request->img_save_path` (string path)
 
 If `capture_image = true`, the node will:
 
 1. Create the directory `img_save_path` (via `mkdir -p`)
 2. Save an annotated PNG image:
-   - Filename includes detected marker IDs: `aruco_<id1>_<id2>...png`
-   - If no markers: `aruco_no_markers.png`
 
+   * Filename includes detected marker IDs: `aruco_<id1>_<id2>...png`
+   * If no markers: `aruco_no_markers.png`
 3. Overlay text on the image:
-   - Human-readable timestamp (system clock)
-   - Marker coordinate summary (`X, Y, Z` derived from `tvec` conversion)
+
+   * Human-readable timestamp (system clock)
+   * Marker coordinate summary (`X, Y, Z` derived from `tvec` conversion)
 
 > The saved image uses the node’s cached `latest_frame_` which includes drawn markers/axes.
 
@@ -177,7 +178,8 @@ All parameters are under:
 
 ```yaml
 aruco_detector:
-  ros__parameters: ...
+  ros__parameters:
+    ...
 ```
 
 ### Marker detection / pose estimation
@@ -186,31 +188,31 @@ aruco_detector:
 | ----------------------- | -----: | ------: | ---------------------------------------------------------------------------------------------------- |
 | `marker_length`         | double |  `0.35` | Physical marker size (meters). Used for pose estimation scale.                                       |
 | `axis_length`           | double |  `0.03` | Length of drawn axes in the debug image (meters).                                                    |
-| `dictionary_id`         |    int |     `1` | OpenCV predefined dictionary enum value (must match the printed markers).                            |
+| `dictionary_id`         |    int |     `1` | OpenCV predefined dictionary enum value (must match your printed markers).                           |
 | `min_bounding_box_area` | double | `100.0` | Filters detections: marker’s 2D bounding box area in pixels must be ≥ this threshold to be accepted. |
 
 **Bounding box filtering details**
 
-- For each detected marker’s 4 corner points, the node computes:
-  - `min_x, max_x, min_y, max_y`
-  - area = `(max_x - min_x) * (max_y - min_y)`
+* For each detected marker’s 4 corner points, the node computes:
 
-- If area < `min_bounding_box_area`, the marker is ignored (no TF, no output pose).
+  * `min_x, max_x, min_y, max_y`
+  * area = `(max_x - min_x) * (max_y - min_y)`
+* If area < `min_bounding_box_area`, the marker is ignored (no TF, no output pose).
 
 This helps reject:
 
-- tiny far-away false positives
-- noisy corner detections
-- partially detected markers
+* tiny far-away false positives
+* noisy corner detections
+* partially detected markers
 
 ---
 
 ### Frames / transforms
 
-| Parameter         |   Type |               Default | Description                                                                                |
-| ----------------- | -----: | --------------------: | ------------------------------------------------------------------------------------------ |
-| `camera_frame`    | string | `camera_link_optical` | Frame ID assigned to marker poses before TF transform. Should be the camera optical frame. |
-| `tf_output_frame` | string |                `odom` | Target frame to transform marker poses into. Also used as `frame_id` in outputs.           |
+| Parameter         |   Type |               Default | Description                                                                                 |
+| ----------------- | -----: | --------------------: | ------------------------------------------------------------------------------------------- |
+| `camera_frame`    | string | `camera_link_optical` | Frame ID assigned to marker poses before TF transform. Should be your camera optical frame. |
+| `tf_output_frame` | string |                `odom` | Target frame to transform marker poses into. Also used as `frame_id` in outputs.            |
 
 ---
 
@@ -259,11 +261,11 @@ If enabled, incoming `CameraInfo` replaces intrinsics.
 
 **CameraInfo behavior**
 
-- `camera_matrix_` is built from `msg->k[0..8]`
-- `dist_coeffs_` is built from `msg->d[]` (any length supported)
+* `camera_matrix_` is built from `msg->k[0..8]`
+* `dist_coeffs_` is built from `msg->d[]` (any length supported)
 
 > In `processImage`, if `camera_matrix_` is empty, pose estimation is skipped (warn once).
-> In the current code, `camera_matrix_` is initialized from params, so it will not be empty unless changed elsewhere.
+> In your current code, `camera_matrix_` is initialized from params, so it will not be empty unless changed elsewhere.
 
 ---
 
@@ -275,32 +277,35 @@ If enabled, incoming `CameraInfo` replaces intrinsics.
    ```cpp
    detector_.detectMarkers(frame, corners, ids);
    ```
-
 3. Clone frame for annotation:
 
    ```cpp
    annotated_frame = frame.clone();
    ```
-
 4. Clear cached detections and update timestamp:
-   - `latest_ids_`, `latest_poses_`
-   - `latest_timestamp_ = header.stamp`
 
+   * `latest_ids_`, `latest_poses_`
+   * `latest_timestamp_ = header.stamp`
 5. If markers exist:
-   - draw marker borders
-   - for each marker:
-     - estimate pose via `cv::solvePnP` using 3D marker corner points and detected 2D image points
-     - compute bbox area in pixels
-     - apply `min_bounding_box_area` filter
-     - draw axes
-     - convert pose + transform to output frame
-     - cache pose + id
-     - optionally publish TF transform
 
+   * estimate pose:
+
+     ```cpp
+     estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
+     ```
+   * draw marker borders
+   * for each marker:
+
+     * compute bbox area in pixels
+     * apply `min_bounding_box_area` filter
+     * draw axes
+     * convert pose + transform to output frame
+     * cache pose + id
+     * optionally publish TF transform
 6. Cache annotated frame:
-   - `latest_frame_ = annotated_frame.clone()`
-   - `latest_marker_coords_` stores marker positions (in the camera-converted XYZ convention used for display)
 
+   * `latest_frame_ = annotated_frame.clone()`
+   * `latest_marker_coords_` stores marker positions (in the camera-converted XYZ convention used for display)
 7. Optionally publish `ObjectDetections` message if enabled.
 
 ---
@@ -313,7 +318,7 @@ aruco_detector:
     marker_length: 0.35
     axis_length: 0.03
     # 4x4: 50=0, 100=1, 250=2, 1000=3 | 5x5: 50=4, 100=5, 250=6, 1000=7 | 6x6: 50=8, 100=9, 250=10, 1000=11
-    dictionary_id: 1
+    dictionary_id: 1 
     min_bounding_box_area: 150.0
 
     camera_frame: camera_link_optical
@@ -353,6 +358,8 @@ ros2 service call /detect_objects perseus_interfaces/srv/DetectObjects "{}"
 
 ### Service call (capture image)
 
+(Fields depend on your `.srv` definition, but conceptually:)
+
 ```bash
 ros2 service call /detect_objects perseus_interfaces/srv/DetectObjects \
 "{capture_image: true, img_save_path: '/tmp/aruco_captures'}"
@@ -362,11 +369,11 @@ ros2 service call /detect_objects perseus_interfaces/srv/DetectObjects \
 
 ## Notes
 
-- `dictionary_id` must match the marker dictionary used to generate/print the tags.
-- `marker_length` must match the real marker size in meters.
-- Filtering by `min_bounding_box_area` is in **pixels²**, so thresholds depend on:
-  - camera resolution
-  - distance to marker
-  - FOV and lens
+* `dictionary_id` must match the marker dictionary used to generate/print the tags.
+* `marker_length` must match the real marker size in meters.
+* Filtering by `min_bounding_box_area` is in **pixels²**, so thresholds depend on:
 
-- In current modifications, `camera_info` subscription happens only in the raw-image path.
+  * camera resolution
+  * distance to marker
+  * FOV and lens
+* In current modifications, `camera_info` subscription happens only in the raw-image path.
