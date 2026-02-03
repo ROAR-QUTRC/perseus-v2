@@ -23,6 +23,7 @@
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
+#include "visualization_msgs/msg/marker_array.hpp"
 
 // ---- custom interfaces ----
 #include "perseus_interfaces/msg/object_detections.hpp"
@@ -106,6 +107,7 @@ namespace perseus_vision
         rclcpp::Service<DetectObjects>::SharedPtr service_;
 
         rclcpp::Publisher<perseus_interfaces::msg::ObjectDetections>::SharedPtr detection_pub_;
+        rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_array_pub_;
 
         // Cached detections for service + topic
         std::mutex detections_mutex_;

@@ -16,6 +16,7 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(perseus_interfaces REQUIRED)
 
 include_directories(include)
@@ -34,6 +35,7 @@ ament_target_dependencies(
   tf2_geometry_msgs
   cv_bridge
   OpenCV
+  visualization_msgs
   perseus_interfaces)
 
 target_include_directories(
