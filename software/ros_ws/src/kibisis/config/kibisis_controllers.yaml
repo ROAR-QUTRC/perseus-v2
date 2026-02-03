@@ -47,8 +47,7 @@ diff_drive_base_controller:
     base_frame_id: base_link
     enable_odom_tf: true
     cmd_vel_timeout: 0.5
-    use_stamped_vel: true  # Accept TwistStamped from generic_controller
-
+    use_stamped_vel: true # Accept TwistStamped from generic_controller
     # Kinematic limits
     linear.x.max_velocity: 1.0
     linear.x.max_acceleration: 5.0
