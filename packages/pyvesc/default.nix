@@ -1,4 +1,9 @@
-{ stdenv, fetchFromGitHub, python3, ... }:
+{
+  stdenv,
+  fetchFromGitHub,
+  python3,
+  ...
+}:
 stdenv.mkDerivation {
   pname = "pyvesc";
   version = "1.0";
