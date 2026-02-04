@@ -5,6 +5,7 @@ This document describes the patches and custom package builds maintained in `pat
 ## Table of Contents
 
 - [Python QT Binding](#python-qt-binding)
+- [Pyside2](#pyside2)
 - [NAV2 MPPI Controller](#nav2-mppi-controller)
 - [ROS GZ Sim](#ros-gz-sim)
 - [GZ Msgs Vendor](#gz-msgs-vendor)
@@ -17,6 +18,10 @@ This document describes the patches and custom package builds maintained in `pat
 ## Python QT Binding
 
 Python QT Binding has shifted to focus only on QT6, however all of ROS2 Jazzy (e.g. rqtgraph) still relies on QT5. The two options for QT bindings are Pyside (shiboken) and PyQt (SIP). Shiboken2 and SIP4 both work for QT5, but their updated versions, Shiboken6 and SIP6 only work for QT6. SIP4 doesn't work with Nix - it tries to edit something in the nix store when it shouldn't, so Shiboken is added to replace PyQt6 and Pyside6 in the Python QT Binding package. Pyside2 also needed a patch to allow it to work with python 3.13 and python 3.12, so it's patched in `packages/pyside2`.
+
+## Pyside2
+
+Pyside2 has a limited API option for when the python version that it runs with doesn't match the one it's been built with. Since Pyside2 is marked as broken in Python 3.13, we have to use the Python 3.12 version while still using Python 3.13 in Python-QT-Binding, so we need to set the limited API option. The way that Pyside 2 has set up the limited API cmake option doesn't work for some reason, so it's been patched to remove the option and set it to always true. Also, there is a slight error in the code for Pyside2 where \_PepRuntimeVersion() is accessed, but it is not defined anywhere. This has also been patched to remove it.
 
 ## NAV2 MPPI Controller
 
