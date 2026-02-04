@@ -1,29 +1,6 @@
 rosDistro: final: prev:
 let
   rosOverlay = rosFinal: rosPrev: {
-    # Fix conflict between ament-cmake-vendor-package and ament-cmake-vendor-package-wrapped.
-    # nix-ros-overlay defines two versions: base (path patches only) and wrapped (adds
-    # ament_vendor_wrapper.cmake for Nix sandbox). Both end up in the devShell's buildEnv
-    # via different dependency paths, causing file conflicts.
-    #
-    # The conflicting files (cmake configs, setup scripts) are functionally identical
-    # between both versions - the wrapper only adds functionality, it doesn't change
-    # existing files. Therefore ignoreCollisions is safe here.
-    #
-    # A proper upstream fix would ensure only one version is used, but that requires
-    # changes to nix-ros-overlay's ros2-overlay.nix. We can't override the packages
-    # directly here due to circular dependencies in how they're defined.
-    #
-    # See: https://github.com/lopsided98/nix-ros-overlay ros2-overlay.nix
-    buildEnv =
-      args:
-      rosPrev.buildEnv (
-        args
-        // {
-          ignoreCollisions = true;
-        }
-      );
-
     # --- GUI patches ---
     fields2cover =
       let
@@ -321,60 +298,5 @@ in
   };
 
   # This needs to be fully overridden because nix still thinks qt6 is in there even if all of them are replaced with qt5
-  pcl = final.stdenv.mkDerivation (finalAttrs: {
-    pname = "pcl";
-    version = "1.15.1";
-
-    src = final.fetchFromGitHub {
-      owner = "PointCloudLibrary";
-      repo = "pcl";
-      tag = "pcl-${finalAttrs.version}";
-      hash = "sha256-+KyaajJM0I5CAcr8AiOLC4TkGV3Gm73a0/X8LQWFZMI=";
-    };
-
-    strictDeps = true;
-
-    # remove attempt to prevent (x86/x87-specific) extended precision use
-    # when SSE not detected
-    postPatch = final.lib.optionalString (!final.stdenv.hostPlatform.isx86) ''
-      sed -i '/-ffloat-store/d' cmake/pcl_find_sse.cmake
-    '';
-
-    nativeBuildInputs =
-      with final;
-      [
-        pkg-config
-        cmake
-        qt5.wrapQtAppsHook
-      ]
-      ++ lib.optionals final.config.cudaSupport [ cudaPackages.cuda_nvcc ];
-
-    buildInputs =
-      with final;
-      [
-        eigen
-        libxt
-        libpcap
-        qt5.qtbase
-        libusb1
-        nanoflann
-      ]
-      ++ lib.optionals stdenv.cc.isClang [ llvmPackages.openmp ];
-
-    propagatedBuildInputs = with final; [
-      boost
-      flann
-      libpng
-      libtiff
-      qhull
-      vtk
-    ];
-
-    cmakeFlags = [
-      (prev.lib.cmakeBool "BUILD_CUDA" final.config.cudaSupport)
-      (prev.lib.cmakeBool "BUILD_GPU" final.config.cudaSupport)
-      (prev.lib.cmakeBool "PCL_ENABLE_MARCHNATIVE" false)
-      (prev.lib.cmakeBool "WITH_CUDA" final.config.cudaSupport)
-    ];
-  });
+  pcl = final.callPackage ./patches/pcl { };
 }
