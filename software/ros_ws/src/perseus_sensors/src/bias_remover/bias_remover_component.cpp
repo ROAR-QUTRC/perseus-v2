@@ -47,7 +47,7 @@ public:
     } else {
       output_min_dt_ = rclcpp::Duration(0, 0);
     }
-    last_output_pub_ = this->get_clock()->now();43
+    last_output_pub_ = this->get_clock()->now();
 
     pub_ = create_publisher<sensor_msgs::msg::Imu>(imu_out_topic_, rclcpp::SensorDataQoS());
 
