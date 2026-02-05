@@ -42,7 +42,7 @@ def generate_launch_description():
 
         # Color stream parameters
         DeclareLaunchArgument('enable_color', default_value='true', description='enable color stream'),
-        DeclareLaunchArgument('rgb_camera.color_profile', default_value='0,0,0', description='color stream profile'),
+        DeclareLaunchArgument('rgb_camera.color_profile', default_value='640,480,15', description='color stream profile'),
         DeclareLaunchArgument('rgb_camera.color_format', default_value='RGB8', description='color stream format'),
         DeclareLaunchArgument('rgb_camera.enable_auto_exposure', default_value='true', description='enable/disable auto exposure for color image'),
 
@@ -139,12 +139,12 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'rgb_in',
-            default_value='/camera/color/image_raw',
+            default_value='/camera/camera/color/image_raw',
             description='Input RGB image topic to compress (raw)',
         ),
         DeclareLaunchArgument(
             'rgb_out',
-            default_value='/camera/color/image_compressed',
+            default_value='/camera/camera/color/image_compressed',
             description='Output RGB compressed image topic',
         ),
         DeclareLaunchArgument(
