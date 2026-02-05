@@ -1,0 +1,31 @@
+imu_bias_estimator:
+  ros__parameters:
+    # --- Stationary detection ---
+    use_odom: true
+    use_cmd_vel: false
+    use_stamped: true
+    stationary_mode: "AND"
+
+    # --- Bias estimation ---
+    accumulator_alpha: 0.01
+    estimator_rate_hz: 50.0
+
+    # --- Topics ---
+    imu_in_topic: "/livox/imu"
+    odom_topic: "/odom"
+    cmd_vel_topic: "/cmd_vel_out"
+    bias_out_topic: "/livox/gyro_bias"
+    # Optional thresholds
+    cmd_vel_threshold: 0.001
+    odom_threshold: 0.001
+
+imu_bias_remover:
+  ros__parameters:
+    # --- Topics ---
+    imu_in_topic: "/livox/imu"
+    bias_in_topic: "/livox/gyro_bias"
+    imu_out_topic: "/livox/imu/corrected"
+
+    # --- Output control ---
+    output_rate_hz: 50.0
+    zero_when_no_bias: false

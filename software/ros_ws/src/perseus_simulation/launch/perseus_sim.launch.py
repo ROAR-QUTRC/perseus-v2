@@ -10,10 +10,13 @@ from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
 )
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
-
+from launch.launch_description_sources import (
+    PythonLaunchDescriptionSource,
+    AnyLaunchDescriptionSource,
+)
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     # ARGUMENTS
@@ -129,12 +132,44 @@ def generate_launch_description():
         actions=[ekf_node],
         condition=IfCondition(launch_ekf),
     )
-
+    rosbridge_launch = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("rosbridge_server"),
+                        "launch",
+                        "rosbridge_websocket_launch.xml",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+    twist_mux_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus"),
+                        "launch",
+                        "twist_mux.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
     launch_files = [
         gz_launch,
         rsp_launch,
         controllers_launch,
         ekf_delayed,
+        rosbridge_launch,
         rviz,
     ]
 

@@ -16,13 +16,21 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import ComposableNodeContainer, Node
+from launch_ros.descriptions import ComposableNode
 from launch_ros.substitutions import FindPackageShare
-from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+from pathlib import Path
 import os
+
 
 def generate_launch_description():
     """Generate launch description for Livox with topic remapper."""
+    lidar_processing_config_file = os.path.join(
+        get_package_share_directory("perseus_sensors"),
+        "config",
+        "lidar_processing_config.yaml",
+    )
     pointcloud_to_laserscan_config_file = os.path.join(
         get_package_share_directory("perseus_sensors"),
         "config",
@@ -53,25 +61,33 @@ def generate_launch_description():
         ),
     )
 
-    # Get launch configuration
-    imu_frequency = LaunchConfiguration("imu_frequency")
-    lidar_frequency = LaunchConfiguration("lidar_frequency")
     scan_in = LaunchConfiguration("scan_in")
     scan_out = LaunchConfiguration("scan_out")
 
-    # Create topic remapper nodes for IMU and LiDAR
-    imu_remapper_node = Node(
-        package="perseus_sensors",
-        executable="topic_remapper",
-        name="imu_remapper",
+    imu_bias_container = ComposableNodeContainer(
+        name="imu_bias_container",
+        namespace="",
+        package="rclcpp_components",
+        executable="component_container_mt",
         output="screen",
-        parameters=[
-            {"input_topic": "/livox/imu"},
-            {"output_topic": "/livox/imu_remapped"},
-            {"reduction_frequency": imu_frequency},
+        composable_node_descriptions=[
+            ComposableNode(
+                package="perseus_sensors",
+                plugin="imu_processors::BiasEstimator",
+                name="imu_bias_estimator",
+                parameters=[str(lidar_processing_config_file)],
+                extra_arguments=[{"use_intra_process_comms": True}],
+            ),
+            ComposableNode(
+                package="perseus_sensors",
+                plugin="imu_processors::BiasRemover",
+                name="imu_bias_remover",
+                parameters=[str(lidar_processing_config_file)],
+                extra_arguments=[{"use_intra_process_comms": True}],
+            ),
         ],
     )
-
+    
     # Pointcloud to Laserscan converter node
     pointcloud_to_laserscan_node = Node(
         package="pointcloud_to_laserscan",
@@ -98,6 +114,6 @@ def generate_launch_description():
 
     # Add nodes
     ld.add_action(pointcloud_to_laserscan_node)
-    ld.add_action(imu_remapper_node)
+    ld.add_action(imu_bias_container)
 
     return ld
