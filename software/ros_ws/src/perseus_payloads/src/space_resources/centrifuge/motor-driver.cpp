@@ -1,4 +1,4 @@
-#include "space_resources/centrifuge/centrifuge_driver.hpp"
+#include "space_resources/centrifuge/motor-driver.hpp"
 
 namespace space_resources
 {

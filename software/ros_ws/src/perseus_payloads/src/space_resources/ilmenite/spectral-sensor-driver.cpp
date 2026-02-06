@@ -1,6 +1,6 @@
-#include <memory>
+#include "space_resources/ilmenite/spectral-sensor-driver.hpp"
 
-#include "space_resources/ilmenite/main.hpp"
+#include <memory>
 
 int main(int argc, char* argv[])
 {
