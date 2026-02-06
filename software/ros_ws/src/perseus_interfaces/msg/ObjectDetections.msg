@@ -1,0 +1,13 @@
+# Message representing multiple object detections
+# Time at which the detections are valid (e.g. camera header.stamp)
+builtin_interfaces/Time stamp
+
+# Frame in which the poses are expressed (e.g. "odom" or "map")
+string frame_id
+
+# IDs of all detected markers
+int32[] ids
+
+# Pose of each detected marker, in the same order as `ids`
+# (ids[i] corresponds to poses[i])
+geometry_msgs/Pose[] poses

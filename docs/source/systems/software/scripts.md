@@ -2,7 +2,7 @@
 
 ## autocomplete.sh
 
-For what this script actually does, run `echo $(mk-workspace-shell-setup)`, but it pretty much does what it says in the .envrc file (shown everytime you enter direnv - whenever you go into the perseus repo), setting up autocomplete for ros and python.
+For what this script actually does, run `echo $(mk-workspace-shell-setup)`, but it pretty much does what it says in the .envrc file (shown everytime you enter direnv - whenever you go into the perseus repo), setting up autocomplete for ROS and python.
 
 ## clean.sh
 
@@ -17,9 +17,19 @@ This script is designed to be run on the big-brain to setup any config that the 
 3. Creates network rule files (can't create these without sudo, but home-manager can edit them without sudo)
 4. Sets the CAN network send buffer length to be 128 (there was a buffer issue when running E&C)
 
+## member-setup.sh
+
+This script should be run whenever installing the repo on a fresh device. It installs required packages (direnv, git, gh), clones the repo, runs nix-setup.sh, builds the nix packages, and restarts the shell. It is designed to be run by the command:
+
+```console
+curl https://raw.githubusercontent.com/ROAR-QUTRC/perseus-v2/refs/heads/main/software/scripts/member-setup.sh | bash
+```
+
+Which gets the raw content of the .sh file and executes it by piping it directly into bash.
+
 ## nix-packages.sh
 
-This script should be run whenever the ros2 package dependencies (any package.xml files in the ros_ws folder) have been changed. It updates the nix packaging with the new dependencies and automatically commits the changes using git (use the `--no-commit` flag to not do this)
+This script should be run whenever the ROS2 package dependencies (any package.xml files in the [`ros_ws`](project:#dir_software_ros_ws) folder) have been changed. It updates the nix packaging with the new dependencies and automatically commits the changes using git (use the `--no-commit` flag to not do this)
 
 ## nix-setup.sh
 
@@ -28,12 +38,13 @@ This script should be run on every device that wants to run the perseus repo (me
 1. Installs Nix package manager (see the Nix Basics page)
 2. Adds binary caches (and keys) to the trusted substituters so your computer can copy them instead of compiling them itself
 3. Disables the dirty git tree warning (which will run _everytime_ you have local staged changes and try to build the flake)
-4. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
-5. Hides the massive wall of text displaying the environment variables on startup/reload
+4. Adds the current user to the 'trusted-users' in the nix config, which stops the warning when running nix in a 'relaxed sandbox'.
+5. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
+6. Hides the massive wall of text displaying the environment variables on startup/reload
 
-:::{note}
+```{note}
 The nix-setup script can't be run on NixOS - you'll have to set these manually in your configuration.nix file (and your home.nix home-manager file), but if you're using NixOS, you should have no trouble doing this
-:::
+```
 
 ## update.sh
 
@@ -41,4 +52,4 @@ This script will update the nix flake packages to their latest version and then 
 
 ## vcan-setup.sh
 
-This script can be run if you need to test CAN software on your computer without booting up Perseus. It sets up a virtual CAN network, so instead of physically connecting into the CAN network like on the big-brain, you can run Perseus ros2 scripts to make sure they work together.
+This script can be run if you need to test CAN software on your computer without booting up Perseus. It sets up a virtual CAN network, so instead of physically connecting into the CAN network like on the big-brain, you can run Perseus ROS2 scripts to make sure they work together.

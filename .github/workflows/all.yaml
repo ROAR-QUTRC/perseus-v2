@@ -32,6 +32,7 @@ jobs:
             echo 'nix_conf<<NIX_EOF'
             echo 'extra-trusted-substituters = https://roar-qutrc.cachix.org https://ros.cachix.org'
             echo 'extra-trusted-public-keys = roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA= ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo='
+            echo "extra-trusted-users = $(whoami)"
             echo 'NIX_EOF'
           } >> "$GITHUB_OUTPUT"
           {
@@ -156,7 +157,7 @@ jobs:
         with:
           nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
       - name: Build docs
-        run: nix build -L .#docs
+        run: nix build --option sandbox relaxed -L .#docs
       # From here, deploying to the website repo
       - name: Checkout website repo
         if: ${{ (needs.global-vars.outputs.can-push-commits == 'true') && (needs.global-vars.outputs.is-main == 'true') }}

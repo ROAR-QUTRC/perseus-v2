@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /RobotModel1
+        - /TF1
         - /Axes1
       Splitter Ratio: 0.5
     Tree Height: 1144
@@ -66,7 +67,20 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        camera_link_optical:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -105,12 +119,17 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        laser_frame:
+        laser_2d_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
         left_rocker:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        livox_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -155,7 +174,13 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        base_footprint:
+          Value: true
         base_link:
+          Value: true
+        camera_link:
+          Value: true
+        camera_link_optical:
           Value: true
         chassis:
           Value: true
@@ -171,9 +196,11 @@ Visualization Manager:
           Value: true
         front_right_wheel:
           Value: true
-        laser_frame:
+        laser_2d_frame:
           Value: true
         left_rocker:
+          Value: true
+        livox_frame:
           Value: true
         rear_left_motor:
           Value: true
@@ -185,18 +212,23 @@ Visualization Manager:
           Value: true
         right_rocker:
           Value: true
-      Marker Scale: 1
+      Marker Scale: 0.10000000149011612
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: false
       Tree:
         base_link:
+          base_footprint:
+            {}
           chassis:
+            camera_link:
+              camera_link_optical:
+                {}
             flange_bearing:
               differential_bar:
                 {}
-            laser_frame:
+            laser_2d_frame:
               {}
             left_rocker:
               front_left_motor:
@@ -205,6 +237,8 @@ Visualization Manager:
               rear_left_motor:
                 rear_left_wheel:
                   {}
+            livox_frame:
+              {}
             right_rocker:
               front_right_motor:
                 front_right_wheel:
@@ -267,25 +301,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.1141700744628906
+      Distance: 0.3147137463092804
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.01849193684756756
-        Y: 0.21500332653522491
-        Z: 0.5378531813621521
+        X: 0.6432691812515259
+        Y: -0.10050792247056961
+        Z: 0.4299720227718353
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.47039729356765747
+      Pitch: 0.740397036075592
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 6.183574199676514
+      Yaw: 1.410388469696045
     Saved: ~
 Window Geometry:
   Displays:
@@ -304,4 +338,4 @@ Window Geometry:
     collapsed: false
   Width: 2880
   X: 0
-  Y: 64
+  Y: 330

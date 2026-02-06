@@ -48,7 +48,7 @@ let
     name = "roar-docs-env";
     paths = [
       pyEnv
-      unstable.doxygen12
+      unstable.doxygen
       graphviz
     ];
   };
@@ -60,9 +60,6 @@ let
   decompress = callPackage (import ./nix/decompress.nix) { };
   cd-docs-source = callPackage (import ./nix/cd-docs-source.nix) { };
   figures = callPackage (import ./nix/figures.nix) { };
-  fetch-inventories = callPackage (import ./nix/fetch-inventories.nix) {
-    inherit rosDistro cd-docs-source;
-  };
   setup = callPackage (import ./nix/setup.nix) { inherit cd-docs-source figures; };
 
   # create derivation which builds the docs
@@ -94,10 +91,13 @@ let
         compressed
         decompress
         figures
-        fetch-inventories
         setup
         ;
     };
+
+    # disable sandboxing so sphinx extensions can grab their internet resources
+    # (intersphinx, tippy, etc)
+    __noChroot = true;
 
     # this needs to be set as an environment variable (just passing it as part of the set to mkDerivation)
     # for intersphinx config to be sure to use the correct file
@@ -106,8 +106,6 @@ let
     # make needs to be run from the docs directory, but we need the whole tree for Doxygen generation
     # (hence source being the whole project)
 
-    # note that (although they should not be present anyway due to doxygen config) the program_listing files are removed to
-    # doubly ensure that there are no source code leaks
     buildPhase = ''
       cd docs
 
@@ -118,18 +116,12 @@ let
       # needed to prevent /homeless-shelter from being created
       export HOME=$PWD
 
-      # this needed because Sphinx does a dumb thing and overrides the "current year" in copyright with SOURCE_DATE_EPOCH
-      # see https://github.com/sphinx-doc/sphinx/issues/3451#issuecomment-877801728
-      unset SOURCE_DATE_EPOCH
       # make the entire directory writable - allows us to modify the files during the Sphinx build
       # (mainly for figures)
       chmod -R +w .
 
-      # finally build the docs
-      make html
-
-      # failsafe to *ensure* that program listings are removed - we REALLY don't want to leak source code
-      find -type f -name '*program_listing*' -delete
+      # finally build the docs, with warnings treated as errors
+      make html SPHINXOPTS="-W"
     '';
     # install the docs to $out/html
     installPhase = ''

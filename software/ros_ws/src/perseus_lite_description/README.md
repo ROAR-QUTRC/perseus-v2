@@ -12,7 +12,7 @@ This package contains the URDF description files for the Perseus Lite robot, a 5
 
 ## File Structure
 
-````
+```none
 perseus_lite_description/
 ├── urdf/                    # URDF/Xacro files
 │   ├── perseus_lite.urdf.xacro      # Main robot description
@@ -26,6 +26,7 @@ perseus_lite_description/
 │   └── perseus_lite.ros2_control.xacro
 ├── rviz/                   # RViz configuration files
 └── launch/                 # Launch files (to be added)
+```
 
 ## Usage
 
@@ -33,7 +34,7 @@ perseus_lite_description/
 
 ```bash
 ros2 launch perseus_lite_description view_robot.launch.py
-````
+```
 
 ### Generate URDF
 
