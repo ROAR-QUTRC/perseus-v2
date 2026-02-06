@@ -1,7 +1,8 @@
 #include "space_resources/space_resources_controller/main.hpp"
 
 #include <memory>
-SpaceResourcesController::SpaceResourcesController(const rclcpp::NodeOptions& options) : rclcpp::Node("space_resources_controller", options)
+SpaceResourcesController::SpaceResourcesController(const rclcpp::NodeOptions& options)
+    : rclcpp::Node("space_resources_controller", options)
 {
     _water_concentration_service = this->create_client<perseus_interfaces::srv::Concentration>("/water/concentration");
     _ilmenite_concentration_service = this->create_client<perseus_interfaces::srv::Concentration>("/ilmenite/concentration");
