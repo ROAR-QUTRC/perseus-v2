@@ -1,0 +1,12 @@
+controller_names:
+  - servo_controller
+servo_controller:
+  action_ns: follow_joint_trajectory
+  default: true
+  type: FollowJointTrajectory
+  joints:
+    - shoulder_pan
+    - shoulder_tilt
+    - elbow
+    - wrist_pitch
+    - wrist_roll

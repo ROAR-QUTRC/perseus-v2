@@ -41,8 +41,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs actuator_msgs perseus_msgs
-                                 std_msgs std_srvs)
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+    rclcpp
+    sensor_msgs
+    actuator_msgs
+    perseus_msgs
+    std_msgs
+    std_srvs
+    hardware_interface
+    pluginlib
+    rclcpp_lifecycle)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
@@ -73,17 +81,17 @@ file(GLOB_RECURSE BUCKET_CONTROLLER_CODE_SOURCES src/bucket_controller/*.cpp)
 file(GLOB_RECURSE BUCKET_DRIVER_CODE_SOURCES src/bucket_driver/*.cpp)
 
 # Add exec targets
-add_executable(rmd_driver ${RMD_DRIVER_CODE_SOURCES})
-add_executable(rsbl_driver ${RSBL_DRIVER_CODE_SOURCES})
+# add_executable(rmd_driver ${RMD_DRIVER_CODE_SOURCES})
+# add_executable(rsbl_driver ${RSBL_DRIVER_CODE_SOURCES})
 add_executable(arm_controller ${ARM_CONTROLLER_CODE_SOURCES})
 add_executable(bucket_controller ${BUCKET_CONTROLLER_CODE_SOURCES})
 add_executable(bucket_driver ${BUCKET_DRIVER_CODE_SOURCES})
 
 # Add include dirs
-target_include_directories(rmd_driver
-                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(rsbl_driver
-                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+# target_include_directories(rmd_driver
+#                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+# target_include_directories(rsbl_driver
+#                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(arm_controller
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(bucket_controller
@@ -92,10 +100,10 @@ target_include_directories(bucket_driver
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add dependencies for the executables
-ament_target_dependencies(rmd_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
-                          sensor_msgs actuator_msgs perseus_msgs)
-ament_target_dependencies(rsbl_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
-                          sensor_msgs actuator_msgs perseus_msgs)
+# ament_target_dependencies(rmd_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
+#                           sensor_msgs actuator_msgs perseus_msgs)
+# ament_target_dependencies(rsbl_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
+#                           sensor_msgs actuator_msgs perseus_msgs)
 ament_target_dependencies(arm_controller PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           actuator_msgs)
 ament_target_dependencies(
@@ -104,21 +112,36 @@ ament_target_dependencies(
 ament_target_dependencies(bucket_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           actuator_msgs)
 
-target_link_libraries(rmd_driver PUBLIC hi_can_raw)
-target_link_libraries(rsbl_driver PUBLIC hi_can_raw)
+# target_link_libraries(rmd_driver PUBLIC hi_can_raw)
+# target_link_libraries(rsbl_driver PUBLIC hi_can_raw)
 target_link_libraries(arm_controller PUBLIC hi_can_raw)
 target_link_libraries(bucket_driver PUBLIC hi_can_raw)
 
 # Install ROS Executable
-install(TARGETS rmd_driver DESTINATION lib/${PROJECT_NAME})
-install(TARGETS rsbl_driver DESTINATION lib/${PROJECT_NAME})
+# install(TARGETS rmd_driver DESTINATION lib/${PROJECT_NAME})
+# install(TARGETS rsbl_driver DESTINATION lib/${PROJECT_NAME})
 install(TARGETS arm_controller DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_controller DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_driver DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY src/moveit DESTINATION share/${PROJECT_NAME}/src)
 
 install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
+
+add_library(perseus_arm_hardware SHARED
+            src/hardware_interface/PerseusArmHardware.cpp)
+target_include_directories(perseus_arm_hardware PRIVATE include)
+ament_target_dependencies(perseus_arm_hardware ${THIS_PACKAGE_INCLUDE_DEPENDS})
+pluginlib_export_plugin_description_file(hardware_interface
+                                         config/perseus_arm_hardware.xml)
+
+install(TARGETS perseus_arm_hardware DESTINATION lib)
+install(DIRECTORY include/ DESTINATION include)
+install(FILES config/perseus_arm_hardware.xml DESTINATION share/${PROJECT_NAME})
 
 ament_package()
