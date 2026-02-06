@@ -10,6 +10,7 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
+from launch.conditions import IfCondition
 import os
 import yaml
 
@@ -43,10 +44,18 @@ def generate_launch_description():
             description="Use simulation (Gazebo) clock if true",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_rviz",
+            default_value="true",
+            description="Start RViz2",
+        )
+    )
 
     # Initialize Arguments
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     use_sim_time = LaunchConfiguration("use_sim_time")
+    use_rviz = LaunchConfiguration("use_rviz")
 
     robot_description_content = Command(
         [
@@ -234,6 +243,7 @@ def generate_launch_description():
             ompl_planning_pipeline_config,
             {"use_sim_time": use_sim_time},
         ],
+        condition=IfCondition(use_rviz),
     )
 
     # 7. Static Transform Publisher (world -> plate)

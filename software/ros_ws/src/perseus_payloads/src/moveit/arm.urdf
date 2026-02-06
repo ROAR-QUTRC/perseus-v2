@@ -245,9 +245,8 @@
   </link>
   
   <joint name="end_effector_mount" type="fixed">
-    <parent link="wrist_pitch_link"/>
+    <parent link="wrist_roll_link"/>
     <child link="end_effector"/>
     <origin xyz="0 0 0.028" rpy="0 0 0"/>
   </joint>
-
 </robot>

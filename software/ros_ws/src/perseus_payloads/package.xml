@@ -27,7 +27,6 @@
   <exec_depend>rviz2</exec_depend>
   <exec_depend>ros2_control</exec_depend>
   <exec_depend>ros2_controllers</exec_depend>
-  <exec_depend>pick_ik</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
