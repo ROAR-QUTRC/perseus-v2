@@ -57,13 +57,11 @@ rosidl_generate_interfaces(
   "msg/ObjectDetections.msg"
   "msg/NavigationData.msg"
   "msg/Waypoint.msg"
-
   "srv/GetFrontierGoal.srv"
   "srv/DetectObjects.srv"
   "srv/RunWaypoints.srv"
   "srv/RequestInt8Array.srv"
   "srv/TriggerDevice.srv"
-
   DEPENDENCIES
   geometry_msgs)
 
