@@ -12,7 +12,7 @@ RsblDriver::RsblDriver(const rclcpp::NodeOptions& options)
 {
     try
     {
-        _can_interface.emplace(RawCanInterface(this->declare_parameter("can_bus", "vcan0")));
+        _can_interface.emplace(RawCanInterface(this->declare_parameter("can_bus", "can0")));
         _packet_manager.emplace(_can_interface.value());
     }
     catch (const std::exception& e)

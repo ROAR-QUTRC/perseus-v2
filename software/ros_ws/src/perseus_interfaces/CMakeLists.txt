@@ -54,12 +54,14 @@ endforeach()
 
 rosidl_generate_interfaces(
   ${PROJECT_NAME}
-  "srv/GetFrontierGoal.srv"
   "msg/ObjectDetections.msg"
-  "srv/DetectObjects.srv"
   "msg/NavigationData.msg"
-  "srv/RunWaypoints.srv"
   "msg/Waypoint.msg"
+  "srv/GetFrontierGoal.srv"
+  "srv/DetectObjects.srv"
+  "srv/RunWaypoints.srv"
+  "srv/RequestInt8Array.srv"
+  "srv/TriggerDevice.srv"
   DEPENDENCIES
   geometry_msgs)
 

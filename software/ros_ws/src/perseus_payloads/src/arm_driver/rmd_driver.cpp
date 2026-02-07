@@ -10,7 +10,7 @@ RmdDriver::RmdDriver(const rclcpp::NodeOptions& options)
 {
     try
     {
-        _can_interface.emplace(RawCanInterface(this->declare_parameter("can_bus", "vcan0")));
+        _can_interface.emplace(RawCanInterface(this->declare_parameter("can_bus", "can0")));
         _packet_manager.emplace(_can_interface.value());
     }
     catch (const std::exception& e)
@@ -51,10 +51,10 @@ RmdDriver::RmdDriver(const rclcpp::NodeOptions& options)
         });
 
     // Setup config Services
-    _set_motor_id_service = this->create_service<perseus_msgs::srv::TriggerDevice>("/arm/rmd/set_id", std::bind(&RmdDriver::_set_motor_id, this, std::placeholders::_1, std::placeholders::_2));
-    _set_zero_position_service = this->create_service<perseus_msgs::srv::TriggerDevice>("/arm/rmd/set_zero_position", std::bind(&RmdDriver::_set_zero_position, this, std::placeholders::_1, std::placeholders::_2));
-    _restart_motor_service = this->create_service<perseus_msgs::srv::TriggerDevice>("/arm/rmd/restart_motor", std::bind(&RmdDriver::_restart_motor, this, std::placeholders::_1, std::placeholders::_2));
-    _get_can_ids_service = this->create_service<perseus_msgs::srv::RequestInt8Array>("/arm/rmd/get_can_ids", std::bind(&RmdDriver::_get_rmd_can_ids, this, std::placeholders::_1, std::placeholders::_2));
+    _set_motor_id_service = this->create_service<perseus_interfaces::srv::TriggerDevice>("/arm/rmd/set_id", std::bind(&RmdDriver::_set_motor_id, this, std::placeholders::_1, std::placeholders::_2));
+    _set_zero_position_service = this->create_service<perseus_interfaces::srv::TriggerDevice>("/arm/rmd/set_zero_position", std::bind(&RmdDriver::_set_zero_position, this, std::placeholders::_1, std::placeholders::_2));
+    _restart_motor_service = this->create_service<perseus_interfaces::srv::TriggerDevice>("/arm/rmd/restart_motor", std::bind(&RmdDriver::_restart_motor, this, std::placeholders::_1, std::placeholders::_2));
+    _get_can_ids_service = this->create_service<perseus_interfaces::srv::RequestInt8Array>("/arm/rmd/get_can_ids", std::bind(&RmdDriver::_get_rmd_can_ids, this, std::placeholders::_1, std::placeholders::_2));
 
     RCLCPP_INFO(this->get_logger(), "RMD servo driver node initialised");
 }
@@ -87,6 +87,7 @@ void RmdDriver::_enable_status_messages()
 
 void RmdDriver::_handle_position_control(actuator_msgs::msg::Actuators servo_control)
 {
+    RCLCPP_INFO(this->get_logger(), "Received position control command for RMD servos");
     for (const auto& motor_id : this->_get_online_servos())
     {
         // For each online servo, send position command
@@ -184,7 +185,7 @@ std::vector<motor_id_t> RmdDriver::_get_online_servos()
 
 #pragma region CONFIG_SERVICES
 
-void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response)
+void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_interfaces::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_interfaces::srv::TriggerDevice::Response> response)
 {
     using function = hi_can::parameters::post_landing::arm::rmd_servo::send_message::function_control_t::function_index_t;
 
@@ -207,7 +208,7 @@ void RmdDriver::_set_motor_id(const std::shared_ptr<perseus_msgs::srv::TriggerDe
     response->success = true;
 }
 
-void RmdDriver::_set_zero_position(const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response)
+void RmdDriver::_set_zero_position(const std::shared_ptr<perseus_interfaces::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_interfaces::srv::TriggerDevice::Response> response)
 {
     const motor_id_t motor_id = static_cast<motor_id_t>(request->id);
 
@@ -222,7 +223,7 @@ void RmdDriver::_set_zero_position(const std::shared_ptr<perseus_msgs::srv::Trig
     response->success = true;
 }
 
-void RmdDriver::_restart_motor(const std::shared_ptr<perseus_msgs::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_msgs::srv::TriggerDevice::Response> response)
+void RmdDriver::_restart_motor(const std::shared_ptr<perseus_interfaces::srv::TriggerDevice::Request> request, std::shared_ptr<perseus_interfaces::srv::TriggerDevice::Response> response)
 {
     _can_interface->transmit(Packet{
         servo_address_t(message_type::SEND, static_cast<motor_id_t>(request->id)),
@@ -230,7 +231,7 @@ void RmdDriver::_restart_motor(const std::shared_ptr<perseus_msgs::srv::TriggerD
     response->success = true;
 }
 
-void RmdDriver::_get_rmd_can_ids(const std::shared_ptr<perseus_msgs::srv::RequestInt8Array::Request> request, std::shared_ptr<perseus_msgs::srv::RequestInt8Array::Response> response)
+void RmdDriver::_get_rmd_can_ids(const std::shared_ptr<perseus_interfaces::srv::RequestInt8Array::Request> request, std::shared_ptr<perseus_interfaces::srv::RequestInt8Array::Response> response)
 {
     (void)request;  // request is empty
 

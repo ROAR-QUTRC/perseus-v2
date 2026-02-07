@@ -100,22 +100,22 @@
 			setIdService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/set_id',
-				serviceType: 'perseus_msgs/srv/TriggerDevice'
+				serviceType: 'perseus_interfaces/srv/TriggerDevice'
 			});
 			setZeroPositionService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/set_zero_position',
-				serviceType: 'perseus_msgs/srv/TriggerDevice'
+				serviceType: 'perseus_interfaces/srv/TriggerDevice'
 			});
 			restartMotorService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/restart_motor',
-				serviceType: 'perseus_msgs/srv/TriggerDevice'
+				serviceType: 'perseus_interfaces/srv/TriggerDevice'
 			});
 			getCanIdsService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/get_can_ids',
-				serviceType: 'perseus_msgs/srv/RequestInt8Array'
+				serviceType: 'perseus_interfaces/srv/RequestInt8Array'
 			});
 			getAllIds();
 		} else {
@@ -151,6 +151,7 @@
 				const jointName = joint as JointNameType;
 				data[jointIdMap[jointName] - 1] = motors[jointName].targetAngle * (motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
 			})
+			console.log(data)
 			const message = {
 				// Index of this array corresponds to motor ID - 1
 				data
@@ -161,21 +162,22 @@
 
 	const onStatusMessage = (message: Float64MultiArrayType) => {
 		// message.data is an array of floats in the order:
-		// [motor_id, error_code, temperature, voltage, current, rpm, angle, phase_<a,b,c>_current]
+		// [motor_id, error_code, angle, rpm, temperature, voltage, current, load]
 		// Reshape data (Each motor sends 10 values)
+		const SUBARRAY_SIZE = 8;
 		const data: Array<Array<number>> = [];
-		for (let i = 0; i < message.data.length; i += 10) {
-			data.push(message.data.slice(i, i + 10));
+		for (let i = 0; i < message.data.length; i += SUBARRAY_SIZE) {
+			data.push(message.data.slice(i, i + SUBARRAY_SIZE));
 		}
 		for (const dataSet of data) {
 			const jointName = Object.keys(jointIdMap).find(key => jointIdMap[key as JointNameType] === dataSet[0]) as JointNameType;
 			if (jointName) {
-				motors[jointName].error = 'None';
-				motors[jointName].temperature = dataSet[2];
-				motors[jointName].voltage = dataSet[3];
-				motors[jointName].current = dataSet[4];
-				motors[jointName].rpm = dataSet[5];
-				motors[jointName].angle = dataSet[6] / (motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
+				motors[jointName].error = dataSet[1] === 0 ? 'None' : `Error code ${dataSet[1]}`;
+				motors[jointName].angle = dataSet[2] / (motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
+				motors[jointName].rpm = dataSet[3]; 
+				motors[jointName].temperature = dataSet[4];
+				motors[jointName].voltage = dataSet[5];
+				motors[jointName].current = dataSet[6];
 			}
 		}
 	}
@@ -264,12 +266,13 @@
 			};
 		});
 		// Set correct gear ratios
-		motors.ELBOW.gearRatio = 28;
-		motors.WRIST_PAN.gearRatio = 19;
-		motors.WRIST_TILT.gearRatio = 28;
+		motors.WRIST_PAN.gearRatio = 28.4;
+		motors.WRIST_TILT.gearRatio = 28.4;
+		motors.ELBOW.gearRatio = 25;
+		motors.ELBOW.rmdMotor = false;
 		motors.SHOULDER_PAN.gearRatio = 6;
 		motors.SHOULDER_PAN.rmdMotor = false;
-		motors.SHOULDER_TILT.gearRatio = 6;
+		motors.SHOULDER_TILT.gearRatio = 25;
 		motors.SHOULDER_TILT.rmdMotor = false;
 
 

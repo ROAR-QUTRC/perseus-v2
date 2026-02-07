@@ -46,6 +46,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     sensor_msgs
     actuator_msgs
     perseus_msgs
+    perseus_interfaces
     std_msgs
     std_srvs
     hardware_interface
@@ -100,10 +101,10 @@ target_include_directories(bucket_driver
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add dependencies for the executables
-# ament_target_dependencies(rmd_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
-#                           sensor_msgs actuator_msgs perseus_msgs)
-# ament_target_dependencies(rsbl_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
-#                           sensor_msgs actuator_msgs perseus_msgs)
+ament_target_dependencies(rmd_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
+                          sensor_msgs actuator_msgs perseus_msgs perseus_interfaces)
+ament_target_dependencies(rsbl_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
+                          sensor_msgs actuator_msgs perseus_msgs perseus_interfaces)
 ament_target_dependencies(arm_controller PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           actuator_msgs)
 ament_target_dependencies(
