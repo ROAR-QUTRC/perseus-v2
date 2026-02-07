@@ -6,7 +6,7 @@
   ament-cmake,
   backward-ros,
   hi-can-raw,
-  perseus-msgs,
+  perseus-interfaces,
   rclcpp,
   sensor-msgs,
   std-msgs,
@@ -23,7 +23,7 @@ buildRosPackage rec {
     actuator-msgs
     backward-ros
     hi-can-raw
-    perseus-msgs
+    perseus-interfaces
     rclcpp
     sensor-msgs
     std-msgs
