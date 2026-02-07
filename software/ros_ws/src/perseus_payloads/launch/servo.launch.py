@@ -199,7 +199,7 @@ def generate_launch_description():
         parameters=[{"use_sim_time": use_sim_time}],
     )
 
-    # 4. RSBL Driver Node (CAN bridge to firmware)
+    # 4. RSBL Driver Node 
     rsbl_driver_node = Node(
         package="perseus_payloads",
         executable="rsbl_driver",

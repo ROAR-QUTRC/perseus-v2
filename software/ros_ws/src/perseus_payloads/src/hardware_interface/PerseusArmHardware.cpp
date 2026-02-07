@@ -141,7 +141,7 @@ hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time&, co
             // TODO: Change this, have rsbl driver send radians instead of steps
             // Convert to radians: steps 0-4096 -> 0-2PI
             // Assuming 2048 is 0 rads, scaling factor 4096 / 2pi
-            double pos_rad = (servo_pos_steps - 0.0) / (4096.0 / (2.0 * M_PI));
+            double pos_rad = servo_pos_steps / (4096.0 / (2.0 * M_PI));
 
             std::string joint_name = "";
 
