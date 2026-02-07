@@ -13,7 +13,8 @@
 // ]
 
 ArmController::ArmController(const rclcpp::NodeOptions& options)
-    : Node("arm_controller", options) {
+    : Node("arm_controller", options)
+{
     RCLCPP_INFO(this->get_logger(), "Initializing Arm Controller...");
 
     // Initialise ROS2 communications
@@ -48,61 +49,74 @@ ArmController::ArmController(const rclcpp::NodeOptions& options)
         std::bind(&ArmController::_receive_rsbl_positions, this, std::placeholders::_1));
 
     // Initialize current arm positions
-    _current_arm_positions = { 0.0, 0.0, 0.0, 0.0, 0.0 };
+    _current_arm_positions = {0.0, 0.0, 0.0, 0.0, 0.0};
 
     RCLCPP_INFO(this->get_logger(), "Arm Controller initialized");
 }
 
-void ArmController::_publish_arm_status() {
+void ArmController::_publish_arm_status()
+{
     auto status_msg = std_msgs::msg::Float64MultiArray();
 
     status_msg.data = this->_motor_status;
     _arm_status_publisher->publish(status_msg);
 }
 
-void ArmController::_publish_arm_position() {
+void ArmController::_publish_arm_position()
+{
     auto position_msg = std_msgs::msg::Float64MultiArray();
     position_msg.data = _current_arm_positions;
     _arm_position_publisher->publish(position_msg);
 }
 
-void ArmController::_receive_rmd_positions(const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
+void ArmController::_receive_rmd_positions(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
+{
     // Update current arm positions with RMD servo data
-    for (size_t i = 0; i < msg->data.size() && i < _current_arm_positions.size(); ++i) {
+    for (size_t i = 0; i < msg->data.size() && i < _current_arm_positions.size(); ++i)
+    {
         // Should be positions 0 to 2
         _current_arm_positions[i] = msg->data[i];
     }
 }
 
-void ArmController::_receive_rsbl_positions(const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
+void ArmController::_receive_rsbl_positions(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
+{
     // Update current arm positions with RSBL servo data
-    for (size_t i = 0; i < msg->data.size() && (i + 3) < _current_arm_positions.size(); ++i) {
+    for (size_t i = 0; i < msg->data.size() && (i + 3) < _current_arm_positions.size(); ++i)
+    {
         // Should be positions 3 and 4
         _current_arm_positions[i + 3] = msg->data[i];
     }
 }
 
-void ArmController::_receive_rmd_status(const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
+void ArmController::_receive_rmd_status(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
+{
     // Handle RMD status message if needed
-    for (size_t i = 0; i < msg->data.size(); i++) {
-        if (i < _motor_status.size()) {
+    for (size_t i = 0; i < msg->data.size(); i++)
+    {
+        if (i < _motor_status.size())
+        {
             _motor_status[i] = msg->data[i];
         }
     }
 }
 
-void ArmController::_receive_rsbl_status(const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
+void ArmController::_receive_rsbl_status(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
+{
     // Handle RSBL status message if needed
     const size_t offset = 3 * STATUS_FIELD_COUNT;
 
-    for (size_t i = 0; i < msg->data.size(); i++) {
-        if (offset + i < _motor_status.size()) {
+    for (size_t i = 0; i < msg->data.size(); i++)
+    {
+        if (offset + i < _motor_status.size())
+        {
             _motor_status[offset + i] = msg->data[i] + (i % STATUS_FIELD_COUNT == 0 ? 3 : 0);  // Adjust motor_id
         }
     }
 }
 
-void ArmController::_handle_arm_control(const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
+void ArmController::_handle_arm_control(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
+{
     RCLCPP_INFO(this->get_logger(), "Received arm control message with %zu positions", msg->data.size());
     RCLCPP_INFO(this->get_logger(), "Data [%f, %f, %f, %f, %f]", msg->data[0], msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
     // if (msg->data.size() < 5) {
@@ -122,7 +136,7 @@ void ArmController::_handle_arm_control(const std_msgs::msg::Float64MultiArray::
 
     using namespace hi_can::addressing::post_landing::arm::rmd_servo;
 
-    const uint8_t WRIST_PAN_ID = static_cast<size_t>(motor_id_t::WRIST_PAN) - 1; // index starts at zero but id's start at 1
+    const uint8_t WRIST_PAN_ID = static_cast<size_t>(motor_id_t::WRIST_PAN) - 1;  // index starts at zero but id's start at 1
     const uint8_t WRIST_TILT_ID = static_cast<size_t>(motor_id_t::WRIST_TILT) - 1;
     RCLCPP_INFO(this->get_logger(), "IDs: Pan %d, Tilt %d", WRIST_PAN_ID, WRIST_TILT_ID);
     const double wrist_pan_target = msg->data[WRIST_PAN_ID];
@@ -156,18 +170,23 @@ void ArmController::_handle_arm_control(const std_msgs::msg::Float64MultiArray::
     // _rsbl_control_publisher->publish(rsbl_msg);
 }
 
-void ArmController::cleanup() {
+void ArmController::cleanup()
+{
     RCLCPP_INFO(this->get_logger(), "Shutting down Arm Controller...");
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     rclcpp::init(argc, argv);
-    try {
+    try
+    {
         auto node = std::make_shared<ArmController>();
         RCLCPP_INFO(rclcpp::get_logger("main"), "Starting Arm Controller node");
         rclcpp::spin(node);
         node->cleanup();
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         RCLCPP_FATAL(rclcpp::get_logger("main"), "Unhandled exception in Arm Controller: %s", e.what());
     }
     rclcpp::shutdown();
