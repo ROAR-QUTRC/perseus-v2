@@ -12,19 +12,19 @@
                   <plugin>perseus_payloads/PerseusArmHardware</plugin>
                 </xacro:unless>
             </hardware>
-            <joint name="shoulder_pan">
-                <command_interface name="position"/>
-                <command_interface name="velocity"/>
-                <state_interface name="position">
-                  <param name="initial_value">${initial_positions['shoulder_pan']}</param>
-                </state_interface>
-                <state_interface name="velocity"/>
-            </joint>
             <joint name="shoulder_tilt">
                 <command_interface name="position"/>
                 <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['shoulder_tilt']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="shoulder_pan">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['shoulder_pan']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>

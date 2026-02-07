@@ -74,7 +74,7 @@
     <child link="shoulder_base"/>
     <origin xyz="0 0 0.0147355" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-3.14" upper="3.14" effort="10.0" velocity="2.0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="10.0" velocity="2.0"/>
     <dynamics damping="0.1" friction="0.05"/>
   </joint>
 
@@ -134,7 +134,7 @@
     <child link="forearm"/>
     <origin xyz="0 -0.03 0.275" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
-    <limit lower="-3.14" upper="3.14" effort="8.0" velocity="2.0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="8.0" velocity="2.0"/>
     <dynamics damping="0.1" friction="0.05"/>
   </joint>
 
@@ -219,7 +219,7 @@
     <child link="wrist_roll_link"/>
     <origin xyz="0 0 0.04" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-3.14" upper="3.14" effort="5.0" velocity="3.0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="10.0" velocity="2.0"/>
     <dynamics damping="0.05" friction="0.02"/>
   </joint>
 

@@ -21,6 +21,7 @@ arm_controller:
       - wrist_roll
     command_interfaces:
       - position
+      - velocity
     state_interfaces:
       - position
       - velocity
@@ -35,6 +36,7 @@ servo_controller:
       - wrist_roll
     command_interfaces:
       - position
+      - velocity
     state_interfaces:
       - position
       - velocity

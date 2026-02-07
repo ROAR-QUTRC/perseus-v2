@@ -50,12 +50,12 @@ RsblDriver::RsblDriver(const rclcpp::NodeOptions& options)
 // Normalised field contains: [time_ms, acceleration]
 void RsblDriver::_handle_arm_control(const actuator_msgs::msg::Actuators::SharedPtr msg)
 {
-    uint8_t acceleration = msg->normalized[1];
+    uint8_t acceleration = (msg->normalized.size() >= 2) ? static_cast<uint8_t>(msg->normalized[1]) : 0;
 
     if (msg->position.size() >= 2)
     {
-        int16_t pos_tilt = static_cast<int16_t>((msg->position[0] * (4096.0 / (2.0 * M_PI))) + 2048.0);
-        int16_t pos_pan = static_cast<int16_t>((msg->position[1] * (4096.0 / (2.0 * M_PI))) + 2048.0);
+        int16_t pos_tilt = static_cast<int16_t>((msg->position[0] * (4096.0 / (2.0 * M_PI))));
+        int16_t pos_pan = static_cast<int16_t>((msg->position[1] * (4096.0 / (2.0 * M_PI))));
 
         uint16_t speed_tilt = 0;
         uint16_t speed_pan = 0;

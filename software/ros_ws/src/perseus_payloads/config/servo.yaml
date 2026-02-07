@@ -41,7 +41,7 @@ leaving_singularity_threshold_multiplier: 2.0
 # Joint limit margins
 joint_limit_margins: [0.1, 0.1, 0.1]
 # Smoothing
-smoothing_filter_plugin_name: "online_signal_smoothing::AccelerationLimitedPlugin"
+smoothing_filter_plugin_name: "online_signal_smoothing::ButterworthFilterPlugin"
 low_pass_filter_coeff: 2.0
 # Planning scene monitor
 is_primary_planning_scene_monitor: true

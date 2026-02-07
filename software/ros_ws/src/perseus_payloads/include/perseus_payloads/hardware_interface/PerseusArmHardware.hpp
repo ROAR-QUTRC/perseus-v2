@@ -1,6 +1,7 @@
 #ifndef PERSEUS_PAYLOADS__PERSEUS_ARM_HARDWARE_HPP_
 #define PERSEUS_PAYLOADS__PERSEUS_ARM_HARDWARE_HPP_
 
+#include <actuator_msgs/msg/actuators.hpp>
 #include <map>
 #include <memory>
 #include <string>
@@ -10,7 +11,6 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "perseus_msgs/msg/arm_control.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
@@ -48,10 +48,11 @@ private:
     rclcpp::Node::SharedPtr _node;
 
     // Publishers
-    rclcpp::Publisher<perseus_msgs::msg::ArmControl>::SharedPtr _rsbl_publisher;
+    rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr _rsbl_publisher;
 
     // Subscribers
     rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr _rsbl_status_subscriber;
+    std::shared_ptr<rclcpp::Subscription<std_msgs::msg::Float64MultiArray>> _rsbl_position_subscriber;
 
     std::vector<double> _latest_rsbl_status;
 

@@ -9,6 +9,7 @@ import termios
 import tty
 import time
 import rclpy
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from rclpy.node import Node
 from geometry_msgs.msg import TwistStamped
 from control_msgs.msg import JointJog
@@ -21,22 +22,26 @@ KEY_DOWN = '\x1b[B'
 KEY_RIGHT = '\x1b[C'
 KEY_LEFT = '\x1b[D'
 
-
 class KeyboardTeleop(Node):
 
     def __init__(self) -> None:
         super().__init__('keyboard_teleop')
         
+        qos_profile = QoSProfile(
+            depth=10,
+            reliability=ReliabilityPolicy.BEST_EFFORT
+        )
+        
         # Publisher
         self.twist_pub = self.create_publisher(
             TwistStamped, 
             '/servo_node/delta_twist_cmds', 
-            10
+            qos_profile
         )
         self.joint_pub = self.create_publisher(
             JointJog, 
             '/servo_node/delta_joint_cmds', 
-            10
+            qos_profile
         )
         
         # Service client

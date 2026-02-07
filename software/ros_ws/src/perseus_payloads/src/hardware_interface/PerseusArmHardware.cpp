@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "hi_can_address.hpp"
 #include "pluginlib/class_list_macros.hpp"
 
 hardware_interface::CallbackReturn PerseusArmHardware::on_init(const hardware_interface::HardwareInfo& info)
@@ -102,7 +103,7 @@ hardware_interface::CallbackReturn PerseusArmHardware::on_activate(const rclcpp_
     _node = rclcpp::Node::make_shared("perseus_arm_hardware_node");
 
     // Create publisher
-    _rsbl_publisher = _node->create_publisher<perseus_msgs::msg::ArmControl>("/arm/rsbl/control", 10);
+    _rsbl_publisher = _node->create_publisher<actuator_msgs::msg::Actuators>("/arm/rsbl/control", 10);
 
     // Create subscriber
     _rsbl_status_subscriber = _node->create_subscription<std_msgs::msg::Float64MultiArray>(
@@ -112,13 +113,13 @@ hardware_interface::CallbackReturn PerseusArmHardware::on_activate(const rclcpp_
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::CallbackReturn PerseusArmHardware::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
+hardware_interface::CallbackReturn PerseusArmHardware::on_deactivate(const rclcpp_lifecycle::State&)
 {
     RCLCPP_INFO(rclcpp::get_logger("PerseusArmHardware"), "Perseus Arm Hardware Deactivated");
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
+hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time&, const rclcpp::Duration&)
 {
     // created internal node to handle subscriptions and publishers
     if (_node)
@@ -126,20 +127,46 @@ hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time& /*t
         rclcpp::spin_some(_node);
     }
 
-    if (_latest_rsbl_status.size() >= 14)  // At 7 bits per servo
+    using namespace hi_can::addressing::post_landing::arm::control_board;
+    const size_t STATUS_BLOCK_SIZE = 8;  // [id, error, pos, speed, temp, volt, curr, load]
+
+    if (!_latest_rsbl_status.empty() && _latest_rsbl_status.size() % STATUS_BLOCK_SIZE == 0)
     {
-        double tilt_steps = _latest_rsbl_status[0];
-        double pan_steps = _latest_rsbl_status[7];
-
-        double tilt_rad = (tilt_steps - 2048.0) / (4096.0 / (2.0 * M_PI));
-        double pan_rad = (pan_steps - 2048.0) / (4096.0 / (2.0 * M_PI));
-
-        for (size_t i = 0; i < info_.joints.size(); ++i)
+        for (size_t offset = 0; offset < _latest_rsbl_status.size(); offset += STATUS_BLOCK_SIZE)
         {
-            if (info_.joints[i].name == "shoulder_tilt")
-                _hw_states_position[i] = tilt_rad;
-            if (info_.joints[i].name == "shoulder_pan")
-                _hw_states_position[i] = pan_rad;
+            // ID is the first element of the block
+            int servo_id = static_cast<int>(_latest_rsbl_status[offset]);
+            double servo_pos_steps = _latest_rsbl_status[offset + 2];  // Status 1 position
+
+            // TODO: Change this, have rsbl driver send radians instead of steps
+            // Convert to radians: steps 0-4096 -> 0-2PI
+            // Assuming 2048 is 0 rads, scaling factor 4096 / 2pi
+            double pos_rad = (servo_pos_steps - 0.0) / (4096.0 / (2.0 * M_PI));
+
+            std::string joint_name = "";
+
+            // Map ID to joint name
+            if (servo_id == static_cast<int>(group::SHOULDER_TILT))
+            {
+                joint_name = "shoulder_tilt";
+            }
+            else if (servo_id == static_cast<int>(group::SHOULDER_PAN))
+            {
+                joint_name = "shoulder_pan";
+            }
+
+            // Update state
+            if (!joint_name.empty())
+            {
+                for (size_t i = 0; i < info_.joints.size(); ++i)
+                {
+                    if (info_.joints[i].name == joint_name)
+                    {
+                        _hw_states_position[i] = pos_rad;
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -151,13 +178,14 @@ void PerseusArmHardware::_rsbl_status_callback(const std_msgs::msg::Float64Multi
     _latest_rsbl_status = msg->data;
 }
 
-hardware_interface::return_type PerseusArmHardware::write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
+hardware_interface::return_type PerseusArmHardware::write(const rclcpp::Time&, const rclcpp::Duration&)
 {
     if (_rsbl_publisher)
     {
-        perseus_msgs::msg::ArmControl msg;
+        actuator_msgs::msg::Actuators msg;
         msg.position.resize(2);
         msg.velocity.resize(2);
+        msg.normalized.resize(2, 0.0);
 
         double pan_cmd = 0.0;
         double tilt_cmd = 0.0;
@@ -185,13 +213,11 @@ hardware_interface::return_type PerseusArmHardware::write(const rclcpp::Time& /*
 
         msg.velocity[0] = tilt_vel_cmd;
         msg.velocity[1] = pan_vel_cmd;
-        msg.acceleration = 0;
+        msg.normalized[0] = 0.0;
+        msg.normalized[1] = 0.0;
 
         _rsbl_publisher->publish(msg);
     }
-
-    // RMD Driver Integration (Elbow and Wrist) - Placeholder
-    // TODO: Implement communication with RMD driver for elbow, wrist_pitch, wrist_roll
 
     return hardware_interface::return_type::OK;
 }
