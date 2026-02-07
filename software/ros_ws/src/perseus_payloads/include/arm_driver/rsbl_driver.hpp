@@ -6,7 +6,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
 
-#include "perseus_msgs/srv/request_int8_array.hpp"
+#include "perseus_interfaces/srv/request_int8_array.hpp"
 
 // Arm CAN Controller - handles RSBL servos, PWM servos via CAN
 //

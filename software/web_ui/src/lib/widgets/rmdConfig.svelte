@@ -71,25 +71,25 @@
 			statusService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd_status',
-				serviceType: 'perseus_msgs/srv/RmdServoStatus'
+				serviceType: 'perseus_interfaces/srv/RmdServoStatus'
 			});
 
 			canIdService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd_can_ids',
-				serviceType: 'perseus_msgs/srv/RmdCanId'
+				serviceType: 'perseus_interfaces/srv/RmdCanId'
 			});
 
 			brakeEnableService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd_set_brake',
-				serviceType: 'perseus_msgs/srv/RmdBrake'
+				serviceType: 'perseus_interfaces/srv/RmdBrake'
 			});
 
 			restartMotorService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd_restart_motor',
-				serviceType: 'perseus_msgs/srv/RmdData'
+				serviceType: 'perseus_interfaces/srv/RmdData'
 			});
 
 			enableStatusService = new ROSLIB.Service({
@@ -101,13 +101,13 @@
 			setIdService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd_set_motor_id',
-				serviceType: 'perseus_msgs/srv/RmdData'
+				serviceType: 'perseus_interfaces/srv/RmdData'
 			});
 
 			zeroMotorService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd_set_zero_position',
-				serviceType: 'perseus_msgs/srv/RmdData'
+				serviceType: 'perseus_interfaces/srv/RmdData'
 			});
 
 			callGetIds();
