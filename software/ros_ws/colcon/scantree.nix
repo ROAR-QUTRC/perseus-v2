@@ -8,11 +8,13 @@
   six,
   pytest,
   pytest-cov,
+  setuptools,
 }:
 
 buildPythonPackage rec {
   pname = "scantree";
   version = "0.0.1";
+  pyproject = true;
 
   src = fetchPypi {
     inherit pname version;
@@ -21,13 +23,17 @@ buildPythonPackage rec {
     hash = "sha256-KosWPeDksvnk83+Mrz8LJlFyu/F0ER4b68eVVYGJWzk=";
   };
 
-  propagatedBuildInputs = [
+  build-system = [
+    setuptools
     versioneer
+  ];
+
+  dependencies = [
     pathspec
     attrs
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     six
     pytest
     pytest-cov
