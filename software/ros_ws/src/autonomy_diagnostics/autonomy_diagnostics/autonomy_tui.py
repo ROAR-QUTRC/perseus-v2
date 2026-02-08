@@ -741,6 +741,7 @@ class AutonomyTUI:
         self.show_help = False  # Toggle for help dialog overlay
         self.show_network = False  # Toggle for network info overlay
         self.show_lidar = False  # Toggle for LiDAR scan view
+        self._lidar_view_range = 0.0  # 0 = auto-init to sensor range_max
         self._net_ifaces: List[Dict[str, str]] = []  # Cached interface list
         self._net_sel = 0  # Currently selected interface index
         self._net_neighbors: List[Dict[str, str]] = []  # Cached neighbor list
@@ -1491,10 +1492,12 @@ class AutonomyTUI:
         # Title bar
         if has_data:
             age = time.time() - scan_ts
+            vr = self._lidar_view_range if self._lidar_view_range > 0 else range_max
             title = (
                 f" LIDAR SCAN | {num_pts} pts | "
-                f"range {range_min:.1f}-{range_max:.1f}m | "
-                f"age {age:.1f}s | l/Esc:close "
+                f"view {vr:.1f}m | "
+                f"sensor {range_max:.1f}m | "
+                f"age {age:.1f}s | +/-:zoom  l/Esc:close "
             )
         else:
             title = " LIDAR SCAN | Waiting for /scan data... | l/Esc:close "
@@ -1510,7 +1513,7 @@ class AutonomyTUI:
             self.safe_addstr(max_y - 1, 0, " ".ljust(max_x), curses.A_REVERSE)
             return
 
-        # Find actual max range for auto-scaling
+        # Count valid points and find actual max
         actual_max = 0.0
         valid_count = 0
         for r in ranges:
@@ -1519,29 +1522,33 @@ class AutonomyTUI:
                     actual_max = r
                 valid_count += 1
 
-        if actual_max <= 0:
-            actual_max = range_max
+        # Initialize view range to sensor max on first data
+        if self._lidar_view_range <= 0:
+            self._lidar_view_range = range_max if range_max > 0 else 10.0
+
+        # Use the user-controlled view range for scaling
+        view_range = self._lidar_view_range
 
         # View radius in pixels, with margin
         view_radius = min(px_w, px_h) / 2.0 - 4
-        scale = view_radius / actual_max if actual_max > 0 else 1.0
+        scale = view_radius / view_range if view_range > 0 else 1.0
 
         # Initialize braille cell grid and a separate grid for range rings
         cells = [[0] * chart_w for _ in range(chart_h)]
         grid_cells = [[0] * chart_w for _ in range(chart_h)]
 
         # Draw range rings at nice intervals
-        if actual_max > 0:
+        if view_range > 0:
             # Pick ring spacing: 0.5, 1, 2, 5, 10, 20, 50 meters
             ring_options = [0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0]
             ring_step = ring_options[0]
             for opt in ring_options:
-                if actual_max / opt <= 6:
+                if view_range / opt <= 6:
                     ring_step = opt
                     break
 
             ring_r = ring_step
-            while ring_r < actual_max:
+            while ring_r < view_range:
                 # Draw circle: sample points around 360 degrees
                 r_px = ring_r * scale
                 for deg in range(360):
@@ -1635,9 +1642,9 @@ class AutonomyTUI:
         )
 
         # Range labels on rings
-        if actual_max > 0 and ring_step > 0:
+        if view_range > 0 and ring_step > 0:
             ring_r = ring_step
-            while ring_r < actual_max:
+            while ring_r < view_range:
                 # Place label above center on the vertical axis
                 label_py = int(cy - ring_r * scale)
                 label_row = label_py // 4 + 1
@@ -1662,8 +1669,9 @@ class AutonomyTUI:
             f" {valid_count}/{num_pts} valid pts | "
             f"FOV {abs(fov_deg):.0f}deg | "
             f"max {actual_max:.1f}m | "
+            f"view {view_range:.1f}m | "
             f"ring {ring_step:.1f}m | "
-            f"l/Esc:close "
+            f"+/-:zoom  l/Esc:close "
         )
         self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
 
@@ -2135,8 +2143,24 @@ class AutonomyTUI:
                 if self.show_lidar:
                     if key in (ord("l"), ord("L"), 27):
                         self.show_lidar = False
+                        self._lidar_view_range = 0.0  # Reset for next open
                     elif key == ord("q") or key == ord("Q"):
                         self.running = False
+                    elif key == ord("-") or key == ord("_"):
+                        # Zoom out (increase view range)
+                        if self._lidar_view_range > 0:
+                            self._lidar_view_range = min(
+                                200.0, self._lidar_view_range * 1.25
+                            )
+                    elif key == ord("+") or key == ord("="):
+                        # Zoom in (decrease view range)
+                        if self._lidar_view_range > 0:
+                            self._lidar_view_range = max(
+                                0.5, self._lidar_view_range / 1.25
+                            )
+                    elif key == ord("0"):
+                        # Reset zoom to sensor max
+                        self._lidar_view_range = 0.0
                     continue
                 if key == ord("q") or key == ord("Q"):
                     self.running = False
