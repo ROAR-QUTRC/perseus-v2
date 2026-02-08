@@ -629,6 +629,7 @@ class AutonomyTUI:
         self.stdscr = None
         self.refresh_ms = CURSES_REFRESH_MS  # Mutable refresh rate
         self.new_domain_id: Optional[int] = None  # Set when user requests domain change
+        self.show_help = False  # Toggle for help dialog overlay
 
     def safe_addstr(self, y: int, x: int, text: str, attr=0):
         """Safely add string, handling screen boundaries."""
@@ -841,6 +842,53 @@ class AutonomyTUI:
             self.safe_addstr(row, x + 31, f"[{status_str:^4}]", stat_attr)
             row += 1
 
+    def draw_help_dialog(self):
+        """Draw a centered help dialog listing all keyboard shortcuts."""
+        if self.stdscr is None:
+            return
+        max_y, max_x = self.stdscr.getmaxyx()
+
+        shortcuts = [
+            ("q", "Quit the application"),
+            ("h", "Toggle this help dialog"),
+            ("d", "Change ROS_DOMAIN_ID"),
+            ("+/=", "Increase refresh interval (slower)"),
+            ("-/_", "Decrease refresh interval (faster)"),
+        ]
+
+        # Calculate dialog dimensions
+        max_desc_len = max(len(desc) for _, desc in shortcuts)
+        box_w = min(max_x - 4, max_desc_len + 16)
+        box_h = len(shortcuts) + 6  # title + header + separator + items + blank + footer
+        box_y = max(0, max_y // 2 - box_h // 2)
+        box_x = max(0, max_x // 2 - box_w // 2)
+
+        # Clear the area behind the dialog
+        for i in range(box_h):
+            self.safe_addstr(box_y + i, box_x, " " * box_w)
+
+        # Draw dialog box
+        self.draw_box(box_y, box_x, box_h, box_w, "HELP - Keyboard Shortcuts")
+
+        row = box_y + 1
+        header = f"  {'Key':<8} {'Action'}"
+        self.safe_addstr(row, box_x + 2, header, curses.A_BOLD)
+        row += 1
+        self.safe_addstr(row, box_x + 2, "-" * (box_w - 4))
+        row += 1
+
+        for key_str, desc in shortcuts:
+            self.safe_addstr(
+                row, box_x + 4, key_str, curses.color_pair(self.COLOR_INFO) | curses.A_BOLD
+            )
+            self.safe_addstr(row, box_x + 12, desc)
+            row += 1
+
+        row += 1
+        self.safe_addstr(
+            row, box_x + 2, "Press h or Esc to close", curses.A_DIM
+        )
+
     def prompt_domain_id(self) -> Optional[int]:
         """Show a popup prompt for entering a new ROS_DOMAIN_ID. Returns the ID or None."""
         if self.stdscr is None:
@@ -916,7 +964,7 @@ class AutonomyTUI:
                 max_y, max_x = stdscr.getmaxyx()
 
                 # Title bar
-                title = " AUTONOMY DIAGNOSTICS - q:quit  d:domain  +/-:refresh rate "
+                title = " AUTONOMY DIAGNOSTICS - q:quit  d:domain  +/-:refresh  h:help "
                 self.safe_addstr(
                     0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
                 )
@@ -973,6 +1021,10 @@ class AutonomyTUI:
                     2 + panel_h_top, half_x, max_x - half_x, panel_h_bot
                 )
 
+                # Help dialog overlay (drawn on top of panels)
+                if self.show_help:
+                    self.draw_help_dialog()
+
                 # Status bar
                 status_time = time.strftime("%H:%M:%S")
                 domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
@@ -983,8 +1035,17 @@ class AutonomyTUI:
 
                 # Handle keyboard input
                 key = stdscr.getch()
+                if self.show_help:
+                    # While help is open, only h/H/Esc dismiss it
+                    if key in (ord("h"), ord("H"), 27):
+                        self.show_help = False
+                    elif key == ord("q") or key == ord("Q"):
+                        self.running = False
+                    continue
                 if key == ord("q") or key == ord("Q"):
                     self.running = False
+                elif key == ord("h") or key == ord("H"):
+                    self.show_help = True
                 elif key == ord("d") or key == ord("D"):
                     new_id = self.prompt_domain_id()
                     if new_id is not None:
