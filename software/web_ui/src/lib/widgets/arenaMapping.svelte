@@ -85,12 +85,17 @@
 	let imageElement: HTMLImageElement | null = null;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_12.png';
 	// mapImageUrl = `http://localhost:8000/${mapImageId}`;
 =======
 	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_2.png';
 	const mapImageUrl = `http://localhost:8000/${mapImageId}`;
 >>>>>>> e2ab3e4e (fix(map-gui): simplified arena mapping publisher and subscriber)
+=======
+	const mapImageId = 'New_Farm_Autonomy_Map.png';
+	// const mapImageUrl = `http://localhost:8000/${mapImageId}`;
+>>>>>>> 4f4c6dd9 (fix(map-gui): adjusted filepath for map image and json file to simplify setup)
 
 	//Ros topics to listen to requests and reply
 	const requestTopicName = '/map_editor/request';
@@ -230,12 +235,17 @@
 			borderContour = Array.isArray(response.contour) ? response.contour : [];
 		}
 
+<<<<<<< HEAD
 		sampleImageHexadecimalColor = String(response.sample_image_hex ?? '');
+=======
+		sampleImageHexadecimalColor = String(response.sampleHex ?? '');
+>>>>>>> 4f4c6dd9 (fix(map-gui): adjusted filepath for map image and json file to simplify setup)
 		centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
 		contour = Array.isArray(response.contour) ? response.contour : [];
 
 
 		if (mode === 'waypoint') {
+			console.log(sampleImageHexadecimalColor);
 			if (waypointToggle == 0) {
 				add_waypoint_from_response(response, contour);
 				statusMessage = centroid
@@ -1025,7 +1035,12 @@
 
 
 
+<<<<<<< HEAD
 	function addWaypointFromResponse(response: any, extractedContour: number[][]) {
+=======
+	function addWaypointFromRespomse(response: any, extractedContour: number [][]) {
+		console.log("help2");
+>>>>>>> 4f4c6dd9 (fix(map-gui): adjusted filepath for map image and json file to simplify setup)
 		if (!response?.ok) return;
 		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
 
@@ -1039,7 +1054,12 @@
 			return;
 		}
 
+<<<<<<< HEAD
 		const id = generateID();
+=======
+		const hexadecimalColor = String(response.sampleHex ?? '');
+		const waypointContour = extractedContour;
+>>>>>>> 4f4c6dd9 (fix(map-gui): adjusted filepath for map image and json file to simplify setup)
 		const rel = toRelative(centroidX, centroidY);
 =======
 		const x_dir = positive_x_direction;
@@ -1059,7 +1079,11 @@
 			{
 				id,
 				name: nextWaypointName(),
+<<<<<<< HEAD
 				hexadecimalColor: getSampleHex(response),
+=======
+				hexadecimalColor,
+>>>>>>> 4f4c6dd9 (fix(map-gui): adjusted filepath for map image and json file to simplify setup)
 				clickX,
 				clickY,
 				centroidX,
@@ -1095,8 +1119,25 @@
 			centroidY
 		};
 
+<<<<<<< HEAD
 		arrows = [...arrows, arrow];
 		return arrow;
+=======
+		const hexadecimalColor = String(response.sampleHex ?? '');
+
+		arrows = [
+			...arrows,
+			{
+				id: generateID(),
+				name: nextArrowName(),
+				hexadecimalColor,
+				clickX,
+				clickY,
+				centroidX,
+				centroidY
+			}
+		];
+>>>>>>> 4f4c6dd9 (fix(map-gui): adjusted filepath for map image and json file to simplify setup)
 	}
 
 	function applyArrowYawToWaypoint(waypointId: string, arrow: ArrowRow) {
@@ -1257,14 +1298,15 @@
 	}
 
 	// Function to help translate the difference in case variables from the back end to front end
-	function getSampleHex(response: any): string {
-		return String(
-			response?.sampleImageHexValue ??
-			response?.sampleImageHex ??
-			response?.sampleImageHexadecimalColor ??
-			''
-		);
-	}
+	// function getSampleHex(response: any): string {
+	// 	return String(
+	// 		response?.sampleImageHexValue ??
+	// 		response?.sampleImageHex ??
+	// 		response?.sampleImageHexadecimalColor ??
+	// 		''
+	// 	);
+	// }
+
 	// Function that sets the file name of the saved file created in buildJson()
 	function saveJsonToScripts() {
 		if (!requestTopic) {
@@ -1287,6 +1329,7 @@
 	}
 
 	async function onMapClick(event: MouseEvent) {
+		console.log(mode);
 		const xOriginDirection = positiveXDirection;
 		const yOriginDirection = positiveYDirection;
 		if (mode === 'manual') {
@@ -1306,17 +1349,18 @@
 			addManualOrigin(clickPosition);
 			return;
 		}
-			const clickPosition = clickToNaturalPosition(event);
-			if(!clickPosition) return;
-			currentClickPosition = clickPosition;
-			contour = [];
-			centroid = null;
-			sampleImageHexadecimalColor = '';
+		const clickPosition = clickToNaturalPosition(event);
+		if(!clickPosition) return;
+		currentClickPosition = clickPosition;
+		contour = [];
+		centroid = null;
+		sampleImageHexadecimalColor = '';
 
-			if (!clickPosition) return;
+		if (!clickPosition) return;
 
-			statusMessage = `${mode} @ (${clickPosition.x}, ${clickPosition.y})…`;
+		statusMessage = `${mode} @ (${clickPosition.x}, ${clickPosition.y})…`;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 			const extractionMode = mode === 'waypoint' ? 'border' : mode;
 
@@ -1358,6 +1402,30 @@
 				statusMessage = 'ROS not connected';
 				return;
 			}
+=======
+		const request = ({
+			op: 'extract_feature',
+			mode, // 'waypoint' | 'border' | 'origin' | 'manual'
+			imageID: mapImageId,
+			sampleXPosition: clickPosition.x,
+			sampleYPosition: clickPosition.y,
+			hueTolerance: defaultHueTolerance,
+			saturationTolerance: defaultSaturationTolerance,
+			valueTolerance: defaultValueTolerance,
+			xOriginDirectionection: xOriginDirection,
+			yOriginDirectionection: yOriginDirection
+		});
+
+		const id = generateID();
+		if (requestTopic) {
+			requestTopic.publish({
+				data: JSON.stringify({ id, ...request})
+			})
+		}
+		else {
+			new Error('ROS not connected');
+		};
+>>>>>>> 4f4c6dd9 (fix(map-gui): adjusted filepath for map image and json file to simplify setup)
 
 	}
 
@@ -1365,6 +1433,7 @@
 		const squares = document.getElementById("squares") as HTMLInputElement;
 		const gridSpacing = document.getElementById("gridSpacing") as HTMLInputElement;
 
+<<<<<<< HEAD
 		const nSquares = squares.valueAsNumber;
 		const metersPerSquare = gridSpacing.valueAsNumber;
 
@@ -1391,6 +1460,10 @@
 
 		if (squares.valueAsNumber && grid_spacing.valueAsNumber) {
 			scale = map_height / squares.valueAsNumber * grid_spacing.valueAsNumber;
+=======
+		if (squares.valueAsNumber && gridSpacing.valueAsNumber) {
+			scale = mapHeight / squares.valueAsNumber / gridSpacing.valueAsNumber;
+>>>>>>> 4f4c6dd9 (fix(map-gui): adjusted filepath for map image and json file to simplify setup)
 			scale = parseFloat(scale.toFixed(2));
 		}
 	};
@@ -1592,8 +1665,8 @@
 								Calculate average
 							</button>
 						</td>
-						<td>{xOriginAverage / scale}</td>
-						<td>{yOriginAverage / scale}</td>
+						<td>{(xOriginAverage / scale).toFixed(2)}</td>
+						<td>{(yOriginAverage / scale).toFixed(2)}</td>
 					</tr>
 				</tbody>
 			</table>
