@@ -1,6 +1,22 @@
 # Autonomy Diagnostics Configuration
 # This file configures the topics, TF frames, lifecycle nodes, and config files
 # that the autonomy_tui monitors.
+
+# Global settings for timing, rate calculation, and UI refresh
+settings:
+  # Timing thresholds (seconds)
+  stale_data_timeout: 2.0        # seconds before data marked stale
+  tf_check_interval: 1.0         # seconds between TF frame checks
+  lifecycle_check_interval: 2.0  # seconds between lifecycle queries
+  # Rate calculation
+  rate_window_size: 10           # sliding window message count
+  rate_warning_threshold: 0.8    # warn if actual < 80% of expected
+  rate_critical_threshold: 0.5   # critical if actual < 50% of expected
+  # UI refresh
+  refresh_ms: 200                # initial TUI refresh rate (ms)
+  refresh_min_ms: 100            # minimum refresh rate (ms)
+  refresh_max_ms: 2000           # maximum refresh rate (ms)
+  refresh_step_ms: 100           # +/- step size (ms)
 # Topics to monitor for rate and connectivity
 monitored_topics:
   - name: scan
@@ -38,6 +54,14 @@ monitored_topics:
     type: JointState
     expected_hz: 50.0
     critical: true
+  - name: joy
+    topic: /joy
+    type: Joy
+    expected_hz: 0.0
+    critical: false
+# Joystick device monitoring
+joystick:
+  device_path: "/dev/input/js*"   # glob pattern for joystick device files
 # TF frame chains to verify connectivity
 tf_frames:
   - parent: map
