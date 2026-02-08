@@ -420,5 +420,5 @@ loopback_simulator:
     base_frame_id: "base_link"
     odom_frame_id: "odom"
     map_frame_id: "map"
-    scan_frame_id: "scan"
+    scan_frame_id: "c1_lidar_frame"
     update_duration: 0.02
