@@ -15,6 +15,7 @@ This tool provides a real-time view of:
 Configuration is loaded from config/diagnostics.yaml in the package share directory.
 """
 
+import argparse
 import curses
 import logging
 import os
@@ -25,7 +26,7 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import yaml
 from ament_index_python.packages import get_package_share_directory
@@ -627,6 +628,7 @@ class AutonomyTUI:
         self.running = True
         self.stdscr = None
         self.refresh_ms = CURSES_REFRESH_MS  # Mutable refresh rate
+        self.new_domain_id: Optional[int] = None  # Set when user requests domain change
 
     def safe_addstr(self, y: int, x: int, text: str, attr=0):
         """Safely add string, handling screen boundaries."""
@@ -839,6 +841,56 @@ class AutonomyTUI:
             self.safe_addstr(row, x + 31, f"[{status_str:^4}]", stat_attr)
             row += 1
 
+    def prompt_domain_id(self) -> Optional[int]:
+        """Show a popup prompt for entering a new ROS_DOMAIN_ID. Returns the ID or None."""
+        if self.stdscr is None:
+            return None
+        max_y, max_x = self.stdscr.getmaxyx()
+
+        # Popup dimensions and position
+        box_w = 40
+        box_h = 5
+        box_y = max_y // 2 - box_h // 2
+        box_x = max_x // 2 - box_w // 2
+
+        current_id = os.environ.get("ROS_DOMAIN_ID", "0")
+        input_buf = ""
+
+        while True:
+            # Draw popup
+            self.draw_box(box_y, box_x, box_h, box_w, "Set ROS_DOMAIN_ID")
+            self.safe_addstr(
+                box_y + 1, box_x + 2, f"Current: {current_id}", curses.A_DIM
+            )
+            prompt_line = f"New ID (0-232): {input_buf}_"
+            self.safe_addstr(box_y + 2, box_x + 2, " " * (box_w - 4))
+            self.safe_addstr(box_y + 2, box_x + 2, prompt_line)
+            self.safe_addstr(box_y + 3, box_x + 2, "Enter=confirm  Esc=cancel", curses.A_DIM)
+            self.stdscr.refresh()
+
+            # Block for input (override nodelay temporarily)
+            self.stdscr.nodelay(False)
+            try:
+                key = self.stdscr.getch()
+            finally:
+                self.stdscr.nodelay(True)
+                self.stdscr.timeout(self.refresh_ms)
+
+            if key == 27:  # Escape
+                return None
+            elif key in (curses.KEY_ENTER, 10, 13):
+                if input_buf == "":
+                    return None
+                value = int(input_buf)
+                if 0 <= value <= 232:
+                    return value
+                # Invalid range — flash and let them retry
+                input_buf = ""
+            elif key in (curses.KEY_BACKSPACE, 127, 8):
+                input_buf = input_buf[:-1]
+            elif ord("0") <= key <= ord("9") and len(input_buf) < 3:
+                input_buf += chr(key)
+
     def run_curses(self, stdscr):
         """Main curses loop."""
         self.stdscr = stdscr
@@ -862,7 +914,7 @@ class AutonomyTUI:
                 max_y, max_x = stdscr.getmaxyx()
 
                 # Title bar
-                title = " AUTONOMY DIAGNOSTICS - q:quit  +/-:refresh rate "
+                title = " AUTONOMY DIAGNOSTICS - q:quit  d:domain  +/-:refresh rate "
                 self.safe_addstr(
                     0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
                 )
@@ -931,6 +983,11 @@ class AutonomyTUI:
                 key = stdscr.getch()
                 if key == ord("q") or key == ord("Q"):
                     self.running = False
+                elif key == ord("d") or key == ord("D"):
+                    new_id = self.prompt_domain_id()
+                    if new_id is not None:
+                        self.new_domain_id = new_id
+                        self.running = False  # Signal restart
                 elif key == ord("+") or key == ord("="):
                     # Increase refresh rate (slower updates)
                     self.refresh_ms = min(
@@ -1023,33 +1080,64 @@ class AutonomyTUI:
 # =============================================================================
 
 
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description="Autonomy Diagnostics TUI")
+    parser.add_argument(
+        "-d",
+        "--domain-id",
+        type=int,
+        default=None,
+        metavar="ID",
+        help="Set the ROS_DOMAIN_ID (0-232). Overrides the environment variable.",
+    )
+    # Parse only known args so ROS args (e.g. --ros-args) pass through
+    known, _ = parser.parse_known_args()
+    return known
+
+
 def main(args=None):
     """Main entry point."""
-    rclpy.init(args=args)
+    cli_args = parse_args()
 
-    node = AutonomyDiagnosticsNode()
-    tui = AutonomyTUI(node)
+    if cli_args.domain_id is not None:
+        if not 0 <= cli_args.domain_id <= 232:
+            print(f"Error: domain-id must be 0-232, got {cli_args.domain_id}")
+            sys.exit(1)
+        os.environ["ROS_DOMAIN_ID"] = str(cli_args.domain_id)
 
-    # Handle SIGINT and SIGTERM for clean shutdown
-    def signal_handler(sig, frame):
-        tui.stop()
+    while True:
+        rclpy.init(args=args)
 
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+        node = AutonomyDiagnosticsNode()
+        tui = AutonomyTUI(node)
 
-    # Run ROS spinner in background
-    executor = MultiThreadedExecutor()
-    executor.add_node(node)
-    spin_thread = threading.Thread(target=executor.spin, daemon=True)
-    spin_thread.start()
+        # Handle SIGINT and SIGTERM for clean shutdown
+        def signal_handler(sig, frame):
+            tui.stop()
 
-    try:
-        tui.run()
-    finally:
-        tui.stop()
-        executor.shutdown()
-        node.destroy_node()
-        rclpy.shutdown()
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        # Run ROS spinner in background
+        executor = MultiThreadedExecutor()
+        executor.add_node(node)
+        spin_thread = threading.Thread(target=executor.spin, daemon=True)
+        spin_thread.start()
+
+        try:
+            tui.run()
+        finally:
+            tui.stop()
+            executor.shutdown()
+            node.destroy_node()
+            rclpy.shutdown()
+
+        # Check if user requested a domain ID change (restart) or just quit
+        if tui.new_domain_id is not None:
+            os.environ["ROS_DOMAIN_ID"] = str(tui.new_domain_id)
+            continue
+        break
 
 
 if __name__ == "__main__":
