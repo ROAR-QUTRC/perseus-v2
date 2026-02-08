@@ -1,15 +1,15 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
-#include <functional>
 #include <unordered_map>
 
+#include "rclcpp/generic_publisher.hpp"
+#include "rclcpp/generic_subscription.hpp"
+#include "rclcpp/message_info.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/serialization.hpp"
-#include "rclcpp/message_info.hpp"
-#include "rclcpp/generic_subscription.hpp"
-#include "rclcpp/generic_publisher.hpp"
 
 /**
  * @file topic_remapper.hpp
@@ -23,52 +23,52 @@
 class TopicRemapper : public rclcpp::Node
 {
 public:
-  /**
-   * @brief Constructor
-   * @param options ROS node options
-   */
-  explicit TopicRemapper(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+    /**
+     * @brief Constructor
+     * @param options ROS node options
+     */
+    explicit TopicRemapper(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
-  /**
-   * @brief Destructor
-   */
-  ~TopicRemapper();
+    /**
+     * @brief Destructor
+     */
+    ~TopicRemapper();
 
 private:
-  /**
-   * @brief Detects and subscribes to the input topic
-   *
-   * This method is called to set up the subscription after the topic name is known.
-   * It automatically detects the message type and creates an appropriate subscription.
-   */
-  void detect_and_subscribe();
+    /**
+     * @brief Detects and subscribes to the input topic
+     *
+     * This method is called to set up the subscription after the topic name is known.
+     * It automatically detects the message type and creates an appropriate subscription.
+     */
+    void detect_and_subscribe();
 
-  /**
-   * @brief Generic message callback that handles any message type
-   *
-   * @param msg The serialized message
-   */
-  void generic_message_callback(std::shared_ptr<rclcpp::SerializedMessage> msg);
+    /**
+     * @brief Generic message callback that handles any message type
+     *
+     * @param msg The serialized message
+     */
+    void generic_message_callback(std::shared_ptr<rclcpp::SerializedMessage> msg);
 
-  // ROS parameters
-  std::string input_topic_name_;
-  std::string output_topic_name_;
-  double reduction_frequency_;  // Target output frequency in Hz
-  std::string message_type_;    // Detected message type
+    // ROS parameters
+    std::string input_topic_name_;
+    std::string output_topic_name_;
+    double reduction_frequency_;  // Target output frequency in Hz
+    std::string message_type_;    // Detected message type
 
-  // ROS components
-  std::shared_ptr<rclcpp::GenericSubscription> subscription_;
-  std::shared_ptr<rclcpp::GenericPublisher> publisher_;
-  rclcpp::TimerBase::SharedPtr detection_timer_;
+    // ROS components
+    std::shared_ptr<rclcpp::GenericSubscription> subscription_;
+    std::shared_ptr<rclcpp::GenericPublisher> publisher_;
+    rclcpp::TimerBase::SharedPtr detection_timer_;
 
-  // Timing for frequency reduction
-  std::chrono::steady_clock::time_point last_publish_time_;
-  std::chrono::milliseconds publish_interval_;
+    // Timing for frequency reduction
+    std::chrono::steady_clock::time_point last_publish_time_;
+    std::chrono::milliseconds publish_interval_;
 
-  // Retry tracking
-  int detection_attempts_;
-  static constexpr int MAX_DETECTION_ATTEMPTS = 50;  // ~5 seconds at 100ms intervals
+    // Retry tracking
+    int detection_attempts_;
+    static constexpr int MAX_DETECTION_ATTEMPTS = 50;  // ~5 seconds at 100ms intervals
 
-  // Flag to track if we've detected and set up the publisher
-  bool is_setup_complete_;
+    // Flag to track if we've detected and set up the publisher
+    bool is_setup_complete_;
 };

@@ -2,6 +2,7 @@ from launch import LaunchDescription
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
+
 def generate_launch_description():
     container = ComposableNodeContainer(
         name="imu_bias_container",
@@ -14,27 +15,31 @@ def generate_launch_description():
                 package="perseus_sensors",
                 plugin="imu_processors::BiasEstimator",
                 name="imu_bias_estimator",
-                parameters=[{
-                    "use_odom": True,
-                    "use_cmd_vel": False,
-                    "accumulator_alpha": 0.01,
-                    "stationary_mode": "AND",   # OR / AND
-                    "imu_in_topic": "/livox/imu",
-                    "odom_topic": "/odom",
-                    "bias_out_topic": "/livox/gyro_bias",
-                    "estimator_rate_hz": 50.0,
-                }],
+                parameters=[
+                    {
+                        "use_odom": True,
+                        "use_cmd_vel": False,
+                        "accumulator_alpha": 0.01,
+                        "stationary_mode": "AND",  # OR / AND
+                        "imu_in_topic": "/livox/imu",
+                        "odom_topic": "/odom",
+                        "bias_out_topic": "/livox/gyro_bias",
+                        "estimator_rate_hz": 50.0,
+                    }
+                ],
             ),
             ComposableNode(
                 package="perseus_sensors",
                 plugin="imu_processors::BiasRemover",
                 name="imu_bias_remover",
-                parameters=[{
-                    "imu_in_topic": "/livox/imu",
-                    "bias_in_topic": "/livox/gyro_bias",
-                    "imu_out_topic": "/livox/corrected",
-                    "output_rate_hz": 50.0,
-                }],
+                parameters=[
+                    {
+                        "imu_in_topic": "/livox/imu",
+                        "bias_in_topic": "/livox/gyro_bias",
+                        "imu_out_topic": "/livox/corrected",
+                        "output_rate_hz": 50.0,
+                    }
+                ],
             ),
         ],
     )

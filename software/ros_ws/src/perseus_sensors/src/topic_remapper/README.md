@@ -19,11 +19,11 @@ The Topic Remapper node subscribes to any ROS 2 topic, automatically detects its
 
 ## Parameters
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `input_topic` | string | (required) | The name of the input topic to subscribe to |
-| `output_topic` | string | "remapped" | The name of the output topic to publish to |
-| `reduction_frequency` | double | 10.0 | Target output frequency in Hz (must be positive) |
+| Parameter             | Type   | Default    | Description                                      |
+| --------------------- | ------ | ---------- | ------------------------------------------------ |
+| `input_topic`         | string | (required) | The name of the input topic to subscribe to      |
+| `output_topic`        | string | "remapped" | The name of the output topic to publish to       |
+| `reduction_frequency` | double | 10.0       | Target output frequency in Hz (must be positive) |
 
 ## Usage
 
@@ -46,6 +46,7 @@ ros2 launch perseus_sensors topic_remapper.launch.xml
 ```
 
 This will:
+
 - Subscribe to `/scan` topic
 - Republish to `/scan_remapped` topic
 - Output at 10 Hz frequency
@@ -67,6 +68,7 @@ The node maintains a timestamp of the last published message. When a new message
 3. Otherwise, skip the message
 
 For example, with `reduction_frequency=10.0`:
+
 - Publish interval = 1000ms / 10 = 100ms
 - Messages arriving within 100ms of the last publish are skipped
 - Only messages arriving ≥100ms after the last publish are republished
@@ -74,6 +76,7 @@ For example, with `reduction_frequency=10.0`:
 ## Example Scenarios
 
 ### Scenario 1: Reduce LiDAR Scan Rate
+
 ```bash
 ros2 launch perseus_sensors topic_remapper.launch.xml \
   input_topic:=/lidar/scan \
@@ -82,6 +85,7 @@ ros2 launch perseus_sensors topic_remapper.launch.xml \
 ```
 
 ### Scenario 2: Reduce IMU Frequency from 100Hz to 20Hz
+
 ```bash
 ros2 launch perseus_sensors topic_remapper.launch.xml \
   input_topic:=/imu/data \
@@ -90,6 +94,7 @@ ros2 launch perseus_sensors topic_remapper.launch.xml \
 ```
 
 ### Scenario 3: Reduce Camera Image Stream
+
 ```bash
 ros2 launch perseus_sensors topic_remapper.launch.xml \
   input_topic:=/camera/image_raw \
@@ -108,12 +113,14 @@ ros2 launch perseus_sensors topic_remapper.launch.xml \
 ### Type Detection
 
 The node uses the ROS 2 node graph API (`get_topic_names_and_types()`) to discover what message type is being published on the input topic. This allows it to:
+
 - Work with any message type without compile-time dependencies
 - Handle custom message types automatically
 
 ### Serialization
 
 The node uses `rclcpp::SerializedMessage` for the subscription and publication, which:
+
 - Avoids deserialization/reserialization overhead
 - Works with any message type
 - Preserves message data integrity
@@ -130,6 +137,7 @@ The node uses `rclcpp::SerializedMessage` for the subscription and publication, 
 ### Output frequency is not as expected
 
 The frequency reduction is approximate and depends on:
+
 - The actual frequency of incoming messages
 - System scheduling and timing precision
 - Other processes running on the system
@@ -139,6 +147,7 @@ If the input topic publishes less frequently than the target frequency, the outp
 ### Message type not detected
 
 If the topic type shows as empty in logs:
+
 - The topic may not have any publishers when the node started
 - Wait for publishers to connect, or restart the node after publishers are running
 - The node will still function, it just won't have type information for logging
