@@ -13,20 +13,15 @@ ekf_filter_node:
 
     odom0_differential: false
     odom0_relative: false
-    odom0_queue_size: 5
+    odom0_queue_size: 10
     odom0_nodelay: true
     odom0_pose_rejection_threshold: 2.0
     odom0_twist_rejection_threshold: 2.0
-    imu0: /livox/corrected
-    imu0_config: [false, false, false,
-              false, false, false,
-              false, false, false,
-              false, false, true,
-              false, false, false]
+    imu0: /livox/imu/corrected
+    imu0_config: [false, false, false, true, true, true, false, false, false, false, false, true, false, false, false]
     imu0_differential: false
     imu0_remove_gravitational_acceleration: true
-    imu0_queue_size: 50
-    imu0_qos: "reliable"
+    imu0_queue_size: 5
     imu0_nodelay: true
     imu0_relative: true
     imu0_pose_rejection_threshold: 2.0

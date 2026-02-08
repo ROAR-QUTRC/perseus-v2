@@ -52,15 +52,6 @@ def generate_launch_description():
         description="Target output frequency for remapped IMU in Hz",
     )
 
-    # Include the main livox launch file
-    livox_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("perseus_sensors"), "launch", "livox.launch.py"]
-            )
-        ),
-    )
-
     scan_in = LaunchConfiguration("scan_in")
     scan_out = LaunchConfiguration("scan_out")
 
@@ -76,14 +67,12 @@ def generate_launch_description():
                 plugin="imu_processors::BiasEstimator",
                 name="imu_bias_estimator",
                 parameters=[str(lidar_processing_config_file)],
-                extra_arguments=[{"use_intra_process_comms": True}],
             ),
             ComposableNode(
                 package="perseus_sensors",
                 plugin="imu_processors::BiasRemover",
                 name="imu_bias_remover",
                 parameters=[str(lidar_processing_config_file)],
-                extra_arguments=[{"use_intra_process_comms": True}],
             ),
         ],
     )
@@ -108,9 +97,6 @@ def generate_launch_description():
     ld.add_action(declare_publisher_name)
     ld.add_action(declare_subscriber_name)
     ld.add_action(imu_frequency_arg)
-
-    # Add livox driver
-    ld.add_action(livox_launch)
 
     # Add nodes
     ld.add_action(pointcloud_to_laserscan_node)
