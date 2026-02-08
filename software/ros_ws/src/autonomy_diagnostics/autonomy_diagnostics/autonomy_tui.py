@@ -865,7 +865,9 @@ class AutonomyTUI:
             prompt_line = f"New ID (0-232): {input_buf}_"
             self.safe_addstr(box_y + 2, box_x + 2, " " * (box_w - 4))
             self.safe_addstr(box_y + 2, box_x + 2, prompt_line)
-            self.safe_addstr(box_y + 3, box_x + 2, "Enter=confirm  Esc=cancel", curses.A_DIM)
+            self.safe_addstr(
+                box_y + 3, box_x + 2, "Enter=confirm  Esc=cancel", curses.A_DIM
+            )
             self.stdscr.refresh()
 
             # Block for input (override nodelay temporarily)
