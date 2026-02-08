@@ -17,11 +17,14 @@ Configuration is loaded from config/diagnostics.yaml in the package share direct
 
 import argparse
 import curses
+import glob as glob_module
 import logging
 import os
 import signal
+import socket
 import subprocess
 import sys
+import termios
 import threading
 import time
 from collections import deque
@@ -33,7 +36,7 @@ from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import Twist
 from lifecycle_msgs.srv import GetState
 from nav_msgs.msg import OccupancyGrid, Odometry
-from sensor_msgs.msg import Imu, JointState, LaserScan
+from sensor_msgs.msg import Imu, JointState, Joy, LaserScan
 from tf2_ros import Buffer, TransformListener
 from tf2_ros import ConnectivityException, ExtrapolationException, LookupException
 
@@ -109,6 +112,18 @@ def load_config() -> Dict[str, Any]:
     """
     # Default configuration (fallback if config file not found)
     defaults = {
+        "settings": {
+            "stale_data_timeout": STALE_DATA_TIMEOUT,
+            "tf_check_interval": TF_CHECK_INTERVAL,
+            "lifecycle_check_interval": LIFECYCLE_CHECK_INTERVAL,
+            "rate_window_size": RATE_WINDOW_SIZE,
+            "rate_warning_threshold": RATE_WARNING_THRESHOLD,
+            "rate_critical_threshold": RATE_CRITICAL_THRESHOLD,
+            "refresh_ms": CURSES_REFRESH_MS,
+            "refresh_min_ms": 100,
+            "refresh_max_ms": 2000,
+            "refresh_step_ms": 100,
+        },
         "monitored_topics": [
             {
                 "name": "scan",
@@ -216,6 +231,9 @@ def load_config() -> Dict[str, Any]:
             },
             {"path": "autonomy/config/cmd_vel_mux.yaml", "description": "Mux config"},
         ],
+        "joystick": {
+            "device_path": "/dev/input/js*",
+        },
     }
 
     logger = logging.getLogger(__name__)
@@ -255,6 +273,9 @@ class TopicStatus:
     last_msg_time: float = 0.0
     msg_count: int = 0
     critical: bool = True
+    stale_data_timeout: float = STALE_DATA_TIMEOUT
+    rate_warning_threshold: float = RATE_WARNING_THRESHOLD
+    rate_critical_threshold: float = RATE_CRITICAL_THRESHOLD
 
     @property
     def status(self) -> str:
@@ -262,14 +283,14 @@ class TopicStatus:
         now = time.time()
         if self.msg_count == 0:
             return "NONE"
-        if now - self.last_msg_time > STALE_DATA_TIMEOUT:
+        if now - self.last_msg_time > self.stale_data_timeout:
             return "STALE"
         if self.expected_hz <= 0:
             return "OK"  # Variable rate topics
         ratio = self.actual_hz / self.expected_hz
-        if ratio < RATE_CRITICAL_THRESHOLD:
+        if ratio < self.rate_critical_threshold:
             return "CRIT"
-        if ratio < RATE_WARNING_THRESHOLD:
+        if ratio < self.rate_warning_threshold:
             return "WARN"
         return "OK"
 
@@ -302,6 +323,17 @@ class ConfigStatus:
     path: str
     description: str
     exists: bool = False
+
+
+@dataclass
+class JoystickStatus:
+    """Status of a joystick device."""
+
+    device_path: str = ""
+    device_connected: bool = False
+    num_axes: int = 0
+    num_buttons: int = 0
+    last_msg_time: float = 0.0
 
 
 # =============================================================================
@@ -340,6 +372,15 @@ class AutonomyDiagnosticsNode(Node):
         self.config = load_config()
         self.ros_ws_src_path = get_ros_ws_src_path()
 
+        # Extract settings from config
+        settings = self.config["settings"]
+        self.stale_data_timeout = settings["stale_data_timeout"]
+        self.tf_check_interval = settings["tf_check_interval"]
+        self.lifecycle_check_interval = settings["lifecycle_check_interval"]
+        self.rate_window_size = settings["rate_window_size"]
+        self.rate_warning_threshold = settings["rate_warning_threshold"]
+        self.rate_critical_threshold = settings["rate_critical_threshold"]
+
         # Callback group for service calls
         self.cb_group = ReentrantCallbackGroup()
 
@@ -352,6 +393,7 @@ class AutonomyDiagnosticsNode(Node):
         self.tf_statuses: List[TFStatus] = []
         self.lifecycle_statuses: Dict[str, LifecycleStatus] = {}
         self.config_statuses: List[ConfigStatus] = []
+        self.joystick_status = JoystickStatus()
 
         # Lifecycle service clients (created once, reused)
         self._lifecycle_clients: Dict[str, Any] = {}
@@ -370,15 +412,16 @@ class AutonomyDiagnosticsNode(Node):
         # Initialize lifecycle node tracking
         self._setup_lifecycle_monitoring()
 
-        # Check config files once
+        # Check config files and joystick device once at startup
         self._check_config_files()
+        self._check_joystick_device()
 
         # Create timers for periodic checks
         self.tf_timer = self.create_timer(
-            TF_CHECK_INTERVAL, self._check_tf_frames, callback_group=self.cb_group
+            self.tf_check_interval, self._check_tf_frames, callback_group=self.cb_group
         )
         self.lifecycle_timer = self.create_timer(
-            LIFECYCLE_CHECK_INTERVAL,
+            self.lifecycle_check_interval,
             self._check_lifecycle_nodes,
             callback_group=self.cb_group,
         )
@@ -411,8 +454,13 @@ class AutonomyDiagnosticsNode(Node):
                 msg_type=msg_type,
                 expected_hz=topic_cfg["expected_hz"],
                 critical=topic_cfg["critical"],
+                stale_data_timeout=self.stale_data_timeout,
+                rate_warning_threshold=self.rate_warning_threshold,
+                rate_critical_threshold=self.rate_critical_threshold,
             )
-            self.rate_calculators[name] = RateCalculator()
+            self.rate_calculators[name] = RateCalculator(
+                window_size=self.rate_window_size
+            )
 
             # Create subscriber based on message type
             if msg_type == "LaserScan":
@@ -444,6 +492,13 @@ class AutonomyDiagnosticsNode(Node):
                 self.create_subscription(
                     Twist, topic, lambda msg, n=name: self._topic_callback(n), 10
                 )
+            elif msg_type == "Joy":
+                self.create_subscription(
+                    Joy,
+                    topic,
+                    lambda msg, n=name: self._joy_callback(msg, n),
+                    sensor_qos,
+                )
             elif msg_type == "JointState":
                 self.create_subscription(
                     JointState,
@@ -460,6 +515,28 @@ class AutonomyDiagnosticsNode(Node):
             status.last_msg_time = now
             status.msg_count += 1
             status.actual_hz = self.rate_calculators[topic_name].add_timestamp(now)
+
+    def _joy_callback(self, msg, topic_name: str):
+        """Callback for Joy topic - records rate and captures axes/buttons."""
+        self._topic_callback(topic_name)
+        with self._status_lock:
+            self.joystick_status.num_axes = len(msg.axes)
+            self.joystick_status.num_buttons = len(msg.buttons)
+            self.joystick_status.last_msg_time = time.time()
+
+    def _check_joystick_device(self):
+        """Check if a joystick device is physically connected."""
+        pattern = self.config.get("joystick", {}).get(
+            "device_path", "/dev/input/js*"
+        )
+        devices = sorted(glob_module.glob(pattern))
+        with self._status_lock:
+            if devices:
+                self.joystick_status.device_path = devices[0]
+                self.joystick_status.device_connected = True
+            else:
+                self.joystick_status.device_path = ""
+                self.joystick_status.device_connected = False
 
     def _setup_tf_monitoring(self):
         """Initialize TF status tracking."""
@@ -507,7 +584,7 @@ class AutonomyDiagnosticsNode(Node):
                         now_sec = now_msg.sec + now_msg.nanosec * 1e-9
                         age = now_sec - tf_time_sec
 
-                        if age > STALE_DATA_TIMEOUT:
+                        if age > self.stale_data_timeout:
                             tf_status.connected = False
                             tf_status.error_msg = f"stale ({age:.1f}s old)"
                         else:
@@ -520,6 +597,9 @@ class AutonomyDiagnosticsNode(Node):
                 ) as e:
                     tf_status.connected = False
                     tf_status.error_msg = str(e)[:50]
+
+        # Piggyback joystick device check on the TF timer
+        self._check_joystick_device()
 
     def _setup_lifecycle_monitoring(self):
         """Initialize lifecycle node tracking."""
@@ -612,24 +692,38 @@ class AutonomyDiagnosticsNode(Node):
 class AutonomyTUI:
     """Curses-based TUI for autonomy diagnostics."""
 
-    # Color pair indices
+    # Color pair indices — dashboard
     COLOR_OK = 1
     COLOR_WARN = 2
     COLOR_CRIT = 3
     COLOR_INFO = 4
-
-    # Refresh rate bounds (ms)
-    REFRESH_MIN_MS = 100
-    REFRESH_MAX_MS = 2000
-    REFRESH_STEP_MS = 100
+    # Color pair indices — YAML editor syntax highlighting
+    COLOR_YAML_KEY = 5
+    COLOR_YAML_VALUE = 6
+    COLOR_YAML_COMMENT = 7
+    COLOR_YAML_STRING = 8
+    COLOR_YAML_BOOL = 9
+    COLOR_YAML_NUMBER = 10
 
     def __init__(self, node: AutonomyDiagnosticsNode):
         self.node = node
         self.running = True
         self.stdscr = None
-        self.refresh_ms = CURSES_REFRESH_MS  # Mutable refresh rate
         self.new_domain_id: Optional[int] = None  # Set when user requests domain change
         self.show_help = False  # Toggle for help dialog overlay
+        self.show_network = False  # Toggle for network info overlay
+        self._net_ifaces: List[Dict[str, str]] = []  # Cached interface list
+        self._net_sel = 0  # Currently selected interface index
+        self._net_neighbors: List[Dict[str, str]] = []  # Cached neighbor list
+        self._net_last_sel = -1  # Track selection changes to refresh neighbors
+        self._net_neighbor_scroll = 0  # Scroll offset for neighbor list
+
+        # UI refresh settings from config
+        settings = node.config["settings"]
+        self.refresh_ms = settings["refresh_ms"]
+        self.REFRESH_MIN_MS = settings["refresh_min_ms"]
+        self.REFRESH_MAX_MS = settings["refresh_max_ms"]
+        self.REFRESH_STEP_MS = settings["refresh_step_ms"]
 
     def safe_addstr(self, y: int, x: int, text: str, attr=0):
         """Safely add string, handling screen boundaries."""
@@ -852,6 +946,8 @@ class AutonomyTUI:
             ("q", "Quit the application"),
             ("h", "Toggle this help dialog"),
             ("d", "Change ROS_DOMAIN_ID"),
+            ("e", "Edit diagnostics.yaml config"),
+            ("n", "Network view (r:refresh neighbors)"),
             ("+/=", "Increase refresh interval (slower)"),
             ("-/_", "Decrease refresh interval (faster)"),
         ]
@@ -891,6 +987,652 @@ class AutonomyTUI:
 
         row += 1
         self.safe_addstr(row, box_x + 2, "Press h or Esc to close", curses.A_DIM)
+
+    @staticmethod
+    def _get_network_interfaces() -> List[Dict[str, str]]:
+        """Get all IPv4 network interfaces and their addresses.
+
+        Uses /proc/net and socket to avoid external dependencies.
+        """
+        interfaces = []
+        try:
+            # Parse /proc/net/if_inet6 won't help for IPv4; use socket + ioctl
+            # or simply parse ip command output
+            result = subprocess.run(
+                ["ip", "-4", "-o", "addr", "show"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                for line in result.stdout.strip().splitlines():
+                    # Format: "2: eth0    inet 192.168.1.10/24 brd 192.168.1.255 scope global eth0"
+                    parts = line.split()
+                    if len(parts) >= 4:
+                        iface = parts[1].rstrip(":")
+                        addr = parts[3]  # includes /prefix
+                        scope = ""
+                        if "scope" in parts:
+                            scope_idx = parts.index("scope") + 1
+                            if scope_idx < len(parts):
+                                scope = parts[scope_idx]
+                        state = "UP"
+                        interfaces.append(
+                            {
+                                "iface": iface,
+                                "addr": addr,
+                                "scope": scope,
+                                "state": state,
+                            }
+                        )
+
+            # Get link state for each interface
+            result2 = subprocess.run(
+                ["ip", "-o", "link", "show"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result2.returncode == 0:
+                link_states = {}
+                for line in result2.stdout.strip().splitlines():
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        iface = parts[1].rstrip(":")
+                        # Extract state from <...> flags
+                        for p in parts:
+                            if p.startswith("<") and p.endswith(">"):
+                                flags = p.strip("<>").split(",")
+                                if "UP" in flags and "LOWER_UP" in flags:
+                                    link_states[iface] = "UP"
+                                elif "UP" in flags:
+                                    link_states[iface] = "NO-CARRIER"
+                                else:
+                                    link_states[iface] = "DOWN"
+                                break
+                # Update states
+                for entry in interfaces:
+                    if entry["iface"] in link_states:
+                        entry["state"] = link_states[entry["iface"]]
+
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+
+        # Also get hostname
+        try:
+            hostname = socket.gethostname()
+            interfaces.insert(
+                0, {"iface": "hostname", "addr": hostname, "scope": "", "state": ""}
+            )
+        except Exception:
+            pass
+
+        return interfaces
+
+    @staticmethod
+    def _get_neighbors(iface: str) -> List[Dict[str, str]]:
+        """Get ARP/neighbor table entries for a given interface."""
+        neighbors = []
+        try:
+            result = subprocess.run(
+                ["ip", "-4", "neigh", "show", "dev", iface],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                for line in result.stdout.strip().splitlines():
+                    if not line.strip():
+                        continue
+                    # Format: "192.168.1.1 lladdr aa:bb:cc:dd:ee:ff REACHABLE"
+                    parts = line.split()
+                    if len(parts) >= 1:
+                        ip_addr = parts[0]
+                        mac = ""
+                        state = ""
+                        if "lladdr" in parts:
+                            mac_idx = parts.index("lladdr") + 1
+                            if mac_idx < len(parts):
+                                mac = parts[mac_idx]
+                        # State is typically the last word
+                        if parts[-1] in (
+                            "REACHABLE",
+                            "STALE",
+                            "DELAY",
+                            "PROBE",
+                            "FAILED",
+                            "NOARP",
+                            "PERMANENT",
+                            "INCOMPLETE",
+                        ):
+                            state = parts[-1]
+
+                        # Try reverse DNS (non-blocking with short timeout)
+                        hostname = ""
+                        try:
+                            hostname = socket.gethostbyaddr(ip_addr)[0]
+                        except (socket.herror, socket.gaierror, OSError):
+                            pass
+
+                        neighbors.append(
+                            {
+                                "ip": ip_addr,
+                                "mac": mac,
+                                "state": state,
+                                "hostname": hostname,
+                            }
+                        )
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+
+        # Sort by IP address
+        neighbors.sort(key=lambda n: tuple(int(x) for x in n["ip"].split(".") if x.isdigit()))
+        return neighbors
+
+    def draw_network_dialog(self):
+        """Draw full-screen network view with selectable interfaces and neighbor list."""
+        if self.stdscr is None:
+            return
+        max_y, max_x = self.stdscr.getmaxyx()
+
+        # Refresh interface list each frame (lightweight)
+        self._net_ifaces = self._get_network_interfaces()
+
+        # Strip hostname entry for display separately
+        hostname = ""
+        ifaces = self._net_ifaces
+        if ifaces and ifaces[0]["iface"] == "hostname":
+            hostname = ifaces[0]["addr"]
+            ifaces = ifaces[1:]
+
+        # Clamp selection
+        if ifaces:
+            self._net_sel = max(0, min(self._net_sel, len(ifaces) - 1))
+        else:
+            self._net_sel = 0
+
+        # Refresh neighbors when selection changes
+        if self._net_sel != self._net_last_sel:
+            self._net_last_sel = self._net_sel
+            self._net_neighbor_scroll = 0
+            if ifaces:
+                sel_iface = ifaces[self._net_sel]["iface"]
+                self._net_neighbors = self._get_neighbors(sel_iface)
+            else:
+                self._net_neighbors = []
+
+        # Layout: full-screen overlay
+        # Title bar (row 0), interface panel (left), neighbor panel (right),
+        # footer (last row)
+        left_w = min(56, max_x // 2)
+        right_w = max_x - left_w
+
+        # Title bar
+        title = " NETWORK INTERFACES"
+        if hostname:
+            title += f" - {hostname}"
+        title += " | Up/Down:select  n/Esc:close "
+        self.safe_addstr(0, 0, title.ljust(max_x), curses.A_REVERSE | curses.A_BOLD)
+
+        # ── Left panel: Interfaces ──
+        self.draw_box(1, 0, max_y - 2, left_w, "Interfaces")
+        row = 2
+        # Header
+        header = f"  {'Interface':<12} {'Address':<18} {'State'}"
+        self.safe_addstr(row, 2, header[: left_w - 4], curses.A_BOLD)
+        row += 1
+
+        for idx, entry in enumerate(ifaces):
+            if row >= max_y - 2:
+                break
+            iface = entry["iface"][:12]
+            addr = entry["addr"][:18]
+            state = entry["state"]
+
+            is_selected = idx == self._net_sel
+            line_attr = curses.A_REVERSE if is_selected else 0
+
+            # Highlight marker
+            marker = ">" if is_selected else " "
+            self.safe_addstr(row, 2, marker, line_attr | curses.A_BOLD)
+            self.safe_addstr(row, 3, f" {iface:<12}", line_attr)
+            self.safe_addstr(
+                row, 16, f"{addr:<18}",
+                line_attr | curses.color_pair(self.COLOR_INFO),
+            )
+
+            # State with color (keep highlight background if selected)
+            if state == "UP":
+                s_attr = curses.color_pair(self.COLOR_OK) | curses.A_BOLD
+            elif state == "DOWN":
+                s_attr = curses.color_pair(self.COLOR_CRIT) | curses.A_BOLD
+            else:
+                s_attr = curses.color_pair(self.COLOR_WARN) | curses.A_BOLD
+            if is_selected:
+                s_attr |= curses.A_REVERSE
+            self.safe_addstr(row, 35, state[:left_w - 37], s_attr)
+            row += 1
+
+        if not ifaces:
+            self.safe_addstr(
+                row, 4, "No IPv4 interfaces found",
+                curses.color_pair(self.COLOR_WARN),
+            )
+
+        # ── Right panel: Neighbors for selected interface ──
+        if ifaces:
+            sel_name = ifaces[self._net_sel]["iface"]
+            panel_title = f"Neighbors on {sel_name}"
+        else:
+            panel_title = "Neighbors"
+
+        self.draw_box(1, left_w, max_y - 2, right_w, panel_title)
+
+        row = 2
+        neighbor_area_h = max_y - 5  # rows available for neighbor entries
+        # Header
+        n_header = f"  {'IP Address':<16} {'MAC Address':<18} {'Host':<16} {'State'}"
+        self.safe_addstr(row, left_w + 2, n_header[: right_w - 4], curses.A_BOLD)
+        row += 1
+
+        # Clamp scroll
+        max_scroll = max(0, len(self._net_neighbors) - neighbor_area_h)
+        self._net_neighbor_scroll = max(
+            0, min(self._net_neighbor_scroll, max_scroll)
+        )
+
+        visible_neighbors = self._net_neighbors[
+            self._net_neighbor_scroll : self._net_neighbor_scroll + neighbor_area_h
+        ]
+
+        for entry in visible_neighbors:
+            if row >= max_y - 2:
+                break
+            ip_addr = entry["ip"][:16]
+            mac = entry["mac"][:18] if entry["mac"] else "incomplete"
+            host = entry["hostname"][:16] if entry["hostname"] else ""
+            state = entry["state"]
+
+            self.safe_addstr(row, left_w + 4, f"{ip_addr:<16}")
+            self.safe_addstr(
+                row, left_w + 20, f"{mac:<18}",
+                curses.color_pair(self.COLOR_INFO),
+            )
+            self.safe_addstr(row, left_w + 38, f"{host:<16}", curses.A_DIM)
+
+            # State color
+            if state in ("REACHABLE", "PERMANENT", "NOARP"):
+                s_attr = curses.color_pair(self.COLOR_OK)
+            elif state in ("STALE", "DELAY", "PROBE"):
+                s_attr = curses.color_pair(self.COLOR_WARN)
+            else:
+                s_attr = curses.color_pair(self.COLOR_CRIT)
+            self.safe_addstr(row, left_w + 54, state[: right_w - 56], s_attr)
+            row += 1
+
+        if not self._net_neighbors:
+            self.safe_addstr(
+                row, left_w + 4, "No neighbors found",
+                curses.color_pair(self.COLOR_WARN),
+            )
+
+        # Scroll indicator
+        if len(self._net_neighbors) > neighbor_area_h:
+            scroll_info = (
+                f" [{self._net_neighbor_scroll + 1}-"
+                f"{min(self._net_neighbor_scroll + neighbor_area_h, len(self._net_neighbors))}"
+                f"/{len(self._net_neighbors)}] PgUp/PgDn to scroll "
+            )
+            self.safe_addstr(
+                max_y - 2, left_w + 2, scroll_info[: right_w - 4], curses.A_DIM
+            )
+
+        # Footer
+        count = len(self._net_neighbors)
+        footer = f" {count} neighbor(s) | Up/Down:select interface  PgUp/PgDn:scroll neighbors  n/Esc:close "
+        self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
+
+    def _draw_yaml_line(self, row: int, col: int, text: str, max_w: int):
+        """Draw a single line of YAML with syntax highlighting."""
+        if not text:
+            return
+        text = text[:max_w]
+
+        # Full-line comment
+        stripped = text.lstrip()
+        if stripped.startswith("#"):
+            self.safe_addstr(
+                row, col, text, curses.color_pair(self.COLOR_YAML_COMMENT)
+            )
+            return
+
+        # List item prefix (- )
+        indent_end = len(text) - len(text.lstrip())
+        prefix = text[:indent_end]
+        rest = text[indent_end:]
+
+        x = col
+        # Draw leading whitespace
+        if prefix:
+            self.safe_addstr(row, x, prefix)
+            x += len(prefix)
+
+        # Handle list item dash
+        if rest.startswith("- "):
+            self.safe_addstr(row, x, "- ", curses.A_BOLD)
+            x += 2
+            rest = rest[2:]
+
+        # Check for inline comment
+        comment_part = ""
+        in_quote = False
+        comment_idx = -1
+        for i, ch in enumerate(rest):
+            if ch in ('"', "'") and (i == 0 or rest[i - 1] != "\\"):
+                in_quote = not in_quote
+            elif ch == "#" and not in_quote and i > 0 and rest[i - 1] == " ":
+                comment_idx = i
+                break
+
+        if comment_idx >= 0:
+            comment_part = rest[comment_idx:]
+            rest = rest[:comment_idx]
+
+        # Key: value pair
+        colon_idx = rest.find(": ")
+        if colon_idx == -1 and rest.endswith(":"):
+            colon_idx = len(rest) - 1
+
+        if colon_idx >= 0:
+            key_part = rest[: colon_idx + 1]
+            value_part = rest[colon_idx + 1 :]
+
+            # Draw key
+            self.safe_addstr(
+                row, x, key_part, curses.color_pair(self.COLOR_YAML_KEY) | curses.A_BOLD
+            )
+            x += len(key_part)
+
+            # Draw value
+            if value_part:
+                val_stripped = value_part.lstrip()
+                val_leading = value_part[: len(value_part) - len(val_stripped)]
+                self.safe_addstr(row, x, val_leading)
+                x += len(val_leading)
+
+                # Determine value type for coloring
+                if val_stripped.startswith('"') or val_stripped.startswith("'"):
+                    attr = curses.color_pair(self.COLOR_YAML_STRING)
+                elif val_stripped in ("true", "false", "True", "False", "yes", "no"):
+                    attr = curses.color_pair(self.COLOR_YAML_BOOL) | curses.A_BOLD
+                elif val_stripped and (
+                    val_stripped[0].isdigit()
+                    or (val_stripped[0] in "-." and len(val_stripped) > 1)
+                ):
+                    attr = curses.color_pair(self.COLOR_YAML_NUMBER)
+                else:
+                    attr = curses.color_pair(self.COLOR_YAML_VALUE)
+                self.safe_addstr(row, x, val_stripped, attr)
+                x += len(val_stripped)
+        else:
+            # Plain value (e.g., list item value)
+            val = rest.strip()
+            leading = rest[: len(rest) - len(rest.lstrip())]
+            if leading:
+                self.safe_addstr(row, x, leading)
+                x += len(leading)
+            if val:
+                if val.startswith('"') or val.startswith("'"):
+                    attr = curses.color_pair(self.COLOR_YAML_STRING)
+                elif val in ("true", "false", "True", "False", "yes", "no"):
+                    attr = curses.color_pair(self.COLOR_YAML_BOOL) | curses.A_BOLD
+                elif val and (
+                    val[0].isdigit()
+                    or (val[0] in "-." and len(val) > 1 and val[1:2].isdigit())
+                ):
+                    attr = curses.color_pair(self.COLOR_YAML_NUMBER)
+                else:
+                    attr = curses.color_pair(self.COLOR_YAML_VALUE)
+                self.safe_addstr(row, x, val, attr)
+                x += len(val)
+
+        # Draw inline comment
+        if comment_part:
+            self.safe_addstr(
+                row, x, comment_part, curses.color_pair(self.COLOR_YAML_COMMENT)
+            )
+
+    def _get_config_path(self) -> str:
+        """Return path to the installed diagnostics.yaml."""
+        try:
+            pkg_share = get_package_share_directory("autonomy_diagnostics")
+            return os.path.join(pkg_share, "config", "diagnostics.yaml")
+        except Exception:
+            return ""
+
+    def edit_config(self):
+        """Full-screen curses text editor for diagnostics.yaml."""
+        if self.stdscr is None:
+            return
+        config_path = self._get_config_path()
+        if not config_path or not os.path.isfile(config_path):
+            return
+
+        # Load file content
+        with open(config_path, "r") as f:
+            lines = f.read().splitlines()
+        if not lines:
+            lines = [""]
+
+        cursor_y = 0  # Line index
+        cursor_x = 0  # Column index
+        scroll_y = 0  # First visible line
+        scroll_x = 0  # First visible column
+        modified = False
+        status_msg = ""
+
+        # Switch to blocking input
+        self.stdscr.nodelay(False)
+        curses.curs_set(1)
+
+        # Disable XON/XOFF flow control so Ctrl+S reaches the application
+        # instead of freezing the terminal
+        fd = sys.stdin.fileno()
+        old_term = termios.tcgetattr(fd)
+        new_term = termios.tcgetattr(fd)
+        new_term[0] &= ~termios.IXON  # Disable IXON in input flags
+        termios.tcsetattr(fd, termios.TCSADRAIN, new_term)
+
+        try:
+            while True:
+                self.stdscr.erase()
+                max_y, max_x = self.stdscr.getmaxyx()
+
+                # Reserve rows: 1 for title, 1 for status bar
+                edit_h = max_y - 2
+                gutter_w = 5  # Width for line numbers
+                text_w = max_x - gutter_w - 1
+
+                # Title bar
+                mod_indicator = " [modified]" if modified else ""
+                title = f" EDIT: {os.path.basename(config_path)}{mod_indicator} "
+                title += "| Ctrl-S/F2:save  Esc:close "
+                self.safe_addstr(
+                    0, 0, title.ljust(max_x), curses.A_REVERSE | curses.A_BOLD
+                )
+
+                # Clamp scroll so cursor is always visible
+                if cursor_y < scroll_y:
+                    scroll_y = cursor_y
+                elif cursor_y >= scroll_y + edit_h:
+                    scroll_y = cursor_y - edit_h + 1
+                if cursor_x < scroll_x:
+                    scroll_x = cursor_x
+                elif cursor_x >= scroll_x + text_w:
+                    scroll_x = cursor_x - text_w + 1
+
+                # Draw lines with YAML syntax highlighting
+                for i in range(edit_h):
+                    line_idx = scroll_y + i
+                    row = i + 1  # +1 for title bar
+                    if line_idx < len(lines):
+                        # Line number gutter
+                        ln_str = f"{line_idx + 1:>4} "
+                        self.safe_addstr(row, 0, ln_str, curses.A_DIM)
+                        # Line content (scrolled horizontally) with highlighting
+                        visible = lines[line_idx][scroll_x : scroll_x + text_w]
+                        self._draw_yaml_line(row, gutter_w, visible, text_w)
+                    else:
+                        self.safe_addstr(row, 0, "   ~ ", curses.A_DIM)
+
+                # Status bar
+                pos_info = f" Ln {cursor_y + 1}, Col {cursor_x + 1} | {len(lines)} lines "
+                if status_msg:
+                    bar = f" {status_msg} | {pos_info}"
+                else:
+                    bar = pos_info
+                self.safe_addstr(
+                    max_y - 1, 0, bar.ljust(max_x), curses.A_REVERSE
+                )
+
+                # Position cursor
+                screen_cy = cursor_y - scroll_y + 1
+                screen_cx = cursor_x - scroll_x + gutter_w
+                try:
+                    self.stdscr.move(screen_cy, screen_cx)
+                except curses.error:
+                    pass
+
+                self.stdscr.refresh()
+                key = self.stdscr.getch()
+                status_msg = ""
+
+                # Navigation
+                if key == curses.KEY_UP:
+                    if cursor_y > 0:
+                        cursor_y -= 1
+                        cursor_x = min(cursor_x, len(lines[cursor_y]))
+                elif key == curses.KEY_DOWN:
+                    if cursor_y < len(lines) - 1:
+                        cursor_y += 1
+                        cursor_x = min(cursor_x, len(lines[cursor_y]))
+                elif key == curses.KEY_LEFT:
+                    if cursor_x > 0:
+                        cursor_x -= 1
+                    elif cursor_y > 0:
+                        cursor_y -= 1
+                        cursor_x = len(lines[cursor_y])
+                elif key == curses.KEY_RIGHT:
+                    if cursor_x < len(lines[cursor_y]):
+                        cursor_x += 1
+                    elif cursor_y < len(lines) - 1:
+                        cursor_y += 1
+                        cursor_x = 0
+                elif key == curses.KEY_HOME:
+                    cursor_x = 0
+                elif key == curses.KEY_END:
+                    cursor_x = len(lines[cursor_y])
+                elif key == curses.KEY_PPAGE:  # Page Up
+                    cursor_y = max(0, cursor_y - edit_h)
+                    cursor_x = min(cursor_x, len(lines[cursor_y]))
+                elif key == curses.KEY_NPAGE:  # Page Down
+                    cursor_y = min(len(lines) - 1, cursor_y + edit_h)
+                    cursor_x = min(cursor_x, len(lines[cursor_y]))
+
+                # Save: Ctrl+S or F2
+                elif key in (19, curses.KEY_F2):
+                    try:
+                        content = "\n".join(lines) + "\n"
+                        with open(config_path, "w") as f:
+                            f.write(content)
+                        modified = False
+                        status_msg = "Saved! Restart (q then relaunch) to apply."
+                    except PermissionError:
+                        status_msg = "ERROR: Permission denied (installed config is read-only)"
+                    except Exception as e:
+                        status_msg = f"ERROR: {e}"
+
+                # Cancel: Escape
+                elif key == 27:
+                    if modified:
+                        # Confirm discard - draw prompt
+                        self.safe_addstr(
+                            max_y - 1,
+                            0,
+                            " Unsaved changes! Press Esc again to discard, any other key to resume ".ljust(
+                                max_x
+                            ),
+                            curses.color_pair(self.COLOR_WARN) | curses.A_REVERSE,
+                        )
+                        self.stdscr.refresh()
+                        confirm = self.stdscr.getch()
+                        if confirm == 27:
+                            break
+                    else:
+                        break
+
+                # Backspace
+                elif key in (curses.KEY_BACKSPACE, 127, 8):
+                    if cursor_x > 0:
+                        line = lines[cursor_y]
+                        lines[cursor_y] = line[: cursor_x - 1] + line[cursor_x:]
+                        cursor_x -= 1
+                        modified = True
+                    elif cursor_y > 0:
+                        # Join with previous line
+                        cursor_x = len(lines[cursor_y - 1])
+                        lines[cursor_y - 1] += lines[cursor_y]
+                        del lines[cursor_y]
+                        cursor_y -= 1
+                        modified = True
+
+                # Delete
+                elif key == curses.KEY_DC:
+                    line = lines[cursor_y]
+                    if cursor_x < len(line):
+                        lines[cursor_y] = line[:cursor_x] + line[cursor_x + 1 :]
+                        modified = True
+                    elif cursor_y < len(lines) - 1:
+                        lines[cursor_y] += lines[cursor_y + 1]
+                        del lines[cursor_y + 1]
+                        modified = True
+
+                # Enter
+                elif key in (curses.KEY_ENTER, 10, 13):
+                    line = lines[cursor_y]
+                    # Auto-indent: carry over leading whitespace
+                    indent = ""
+                    for ch in line:
+                        if ch in (" ", "\t"):
+                            indent += ch
+                        else:
+                            break
+                    lines[cursor_y] = line[:cursor_x]
+                    lines.insert(cursor_y + 1, indent + line[cursor_x:])
+                    cursor_y += 1
+                    cursor_x = len(indent)
+                    modified = True
+
+                # Tab -> 2 spaces (YAML convention)
+                elif key == 9:
+                    line = lines[cursor_y]
+                    lines[cursor_y] = line[:cursor_x] + "  " + line[cursor_x:]
+                    cursor_x += 2
+                    modified = True
+
+                # Regular character
+                elif 32 <= key <= 126:
+                    line = lines[cursor_y]
+                    lines[cursor_y] = line[:cursor_x] + chr(key) + line[cursor_x:]
+                    cursor_x += 1
+                    modified = True
+
+        finally:
+            # Restore terminal flow control settings
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_term)
+            curses.curs_set(0)
+            self.stdscr.nodelay(True)
+            self.stdscr.timeout(self.refresh_ms)
 
     def prompt_domain_id(self) -> Optional[int]:
         """Show a popup prompt for entering a new ROS_DOMAIN_ID. Returns the ID or None."""
@@ -958,6 +1700,13 @@ class AutonomyTUI:
         curses.init_pair(self.COLOR_WARN, curses.COLOR_YELLOW, -1)
         curses.init_pair(self.COLOR_CRIT, curses.COLOR_RED, -1)
         curses.init_pair(self.COLOR_INFO, curses.COLOR_CYAN, -1)
+        # YAML editor syntax colors
+        curses.init_pair(self.COLOR_YAML_KEY, curses.COLOR_CYAN, -1)
+        curses.init_pair(self.COLOR_YAML_VALUE, curses.COLOR_WHITE, -1)
+        curses.init_pair(self.COLOR_YAML_COMMENT, curses.COLOR_GREEN, -1)
+        curses.init_pair(self.COLOR_YAML_STRING, curses.COLOR_YELLOW, -1)
+        curses.init_pair(self.COLOR_YAML_BOOL, curses.COLOR_MAGENTA, -1)
+        curses.init_pair(self.COLOR_YAML_NUMBER, curses.COLOR_RED, -1)
 
         while self.running:
             try:
@@ -966,73 +1715,107 @@ class AutonomyTUI:
                 stdscr.erase()
                 max_y, max_x = stdscr.getmaxyx()
 
-                # Title bar
-                title = " AUTONOMY DIAGNOSTICS - q:quit  d:domain  +/-:refresh  h:help "
-                self.safe_addstr(
-                    0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
-                )
-
-                # Summary bar
-                self.draw_summary_bar(1, max_x)
-
-                # Calculate panel dimensions dynamically based on content
-                half_x = max_x // 2
-                available_height = (
-                    max_y - 4
-                )  # Title bar, summary bar, status bar, margin
-
-                # Get content counts for sizing (thread-safe)
-                with self.node._status_lock:
-                    num_topics = len(self.node.topic_statuses)
-                    num_tf = len(self.node.tf_statuses)
-                    num_lifecycle = len(self.node.lifecycle_statuses)
-                    num_config = len(self.node.config_statuses)
-
-                # Calculate heights: header(1) + separator(1) + items + border(2)
-                topics_needed = num_topics + 4
-                tf_needed = num_tf + 4
-                lifecycle_needed = num_lifecycle + 4
-                config_needed = num_config + 4
-
-                # Top row needs max of topics/tf, bottom row needs max of lifecycle/config
-                top_row_min = max(topics_needed, tf_needed)
-                bottom_row_min = max(lifecycle_needed, config_needed)
-
-                # Distribute available height proportionally, with minimums
-                total_needed = top_row_min + bottom_row_min
-                if total_needed <= available_height:
-                    panel_h_top = top_row_min
-                    panel_h_bot = available_height - panel_h_top
+                if self.show_network:
+                    # Full-screen network view (replaces dashboard)
+                    self.draw_network_dialog()
                 else:
-                    # Not enough space - split proportionally
-                    ratio = top_row_min / total_needed
-                    panel_h_top = max(6, int(available_height * ratio))
-                    panel_h_bot = max(6, available_height - panel_h_top)
+                    # Normal dashboard view
+                    # Title bar
+                    title = " AUTONOMY DIAGNOSTICS - q:quit  d:domain  e:edit  n:network  +/-:refresh  h:help "
+                    self.safe_addstr(
+                        0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
+                    )
 
-                # Draw panels - 2x2 grid
-                # Top left: Topics
-                self.draw_topics_panel(2, 0, half_x, panel_h_top)
+                    # Summary bar
+                    self.draw_summary_bar(1, max_x)
 
-                # Top right: TF Frames
-                self.draw_tf_panel(2, half_x, max_x - half_x, panel_h_top)
+                    # Calculate panel dimensions dynamically based on content
+                    half_x = max_x // 2
+                    available_height = (
+                        max_y - 4
+                    )  # Title bar, summary bar, status bar, margin
 
-                # Bottom left: Lifecycle Nodes
-                self.draw_lifecycle_panel(2 + panel_h_top, 0, half_x, panel_h_bot)
+                    # Get content counts for sizing (thread-safe)
+                    with self.node._status_lock:
+                        num_topics = len(self.node.topic_statuses)
+                        num_tf = len(self.node.tf_statuses)
+                        num_lifecycle = len(self.node.lifecycle_statuses)
+                        num_config = len(self.node.config_statuses)
 
-                # Bottom right: Config Files
-                self.draw_config_panel(
-                    2 + panel_h_top, half_x, max_x - half_x, panel_h_bot
-                )
+                    # Calculate heights: header(1) + separator(1) + items + border(2)
+                    topics_needed = num_topics + 4
+                    tf_needed = num_tf + 4
+                    lifecycle_needed = num_lifecycle + 4
+                    config_needed = num_config + 4
 
-                # Help dialog overlay (drawn on top of panels)
-                if self.show_help:
-                    self.draw_help_dialog()
+                    # Top row needs max of topics/tf, bottom row needs max of lifecycle/config
+                    top_row_min = max(topics_needed, tf_needed)
+                    bottom_row_min = max(lifecycle_needed, config_needed)
 
-                # Status bar
-                status_time = time.strftime("%H:%M:%S")
-                domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
-                status = f" Time: {status_time} | ROS_DOMAIN_ID: {domain_id} | Refresh: {self.refresh_ms}ms "
-                self.safe_addstr(max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE)
+                    # Distribute available height proportionally, with minimums
+                    total_needed = top_row_min + bottom_row_min
+                    if total_needed <= available_height:
+                        panel_h_top = top_row_min
+                        panel_h_bot = available_height - panel_h_top
+                    else:
+                        # Not enough space - split proportionally
+                        ratio = top_row_min / total_needed
+                        panel_h_top = max(6, int(available_height * ratio))
+                        panel_h_bot = max(6, available_height - panel_h_top)
+
+                    # Draw panels - 2x2 grid
+                    # Top left: Topics
+                    self.draw_topics_panel(2, 0, half_x, panel_h_top)
+
+                    # Top right: TF Frames
+                    self.draw_tf_panel(2, half_x, max_x - half_x, panel_h_top)
+
+                    # Bottom left: Lifecycle Nodes
+                    self.draw_lifecycle_panel(2 + panel_h_top, 0, half_x, panel_h_bot)
+
+                    # Bottom right: Config Files
+                    self.draw_config_panel(
+                        2 + panel_h_top, half_x, max_x - half_x, panel_h_bot
+                    )
+
+                    # Help dialog overlay (drawn on top of panels)
+                    if self.show_help:
+                        self.draw_help_dialog()
+
+                    # Status bar
+                    status_time = time.strftime("%H:%M:%S")
+                    domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
+                    status = f" Time: {status_time} | ROS_DOMAIN_ID: {domain_id} | Refresh: {self.refresh_ms}ms"
+
+                    # Joystick status in status bar
+                    with self.node._status_lock:
+                        joy = self.node.joystick_status
+                        joy_device = joy.device_connected
+                        joy_path = os.path.basename(joy.device_path) if joy.device_path else ""
+                        joy_axes = joy.num_axes
+                        joy_buttons = joy.num_buttons
+                        joy_active = joy.last_msg_time > 0 and (
+                            time.time() - joy.last_msg_time
+                            < self.node.stale_data_timeout
+                        )
+
+                    if joy_device and joy_active:
+                        joy_str = f"{joy_path} {joy_axes}ax/{joy_buttons}btn"
+                        joy_status = "OK"
+                    elif joy_device:
+                        joy_str = f"{joy_path} (idle)"
+                        joy_status = "WARN"
+                    else:
+                        joy_str = "no device"
+                        joy_status = "NONE"
+
+                    status += f" | Joy: {joy_str} "
+                    self.safe_addstr(max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE)
+
+                    # Color the joy status portion
+                    joy_label_pos = status.find("Joy: ") + 5
+                    joy_attr = self.get_status_attr(joy_status) | curses.A_REVERSE
+                    self.safe_addstr(max_y - 1, joy_label_pos, joy_str, joy_attr)
 
                 stdscr.refresh()
 
@@ -1045,6 +1828,30 @@ class AutonomyTUI:
                     elif key == ord("q") or key == ord("Q"):
                         self.running = False
                     continue
+                if self.show_network:
+                    if key in (ord("n"), ord("N"), 27):
+                        self.show_network = False
+                        self._net_last_sel = -1  # Reset so neighbors refresh on reopen
+                    elif key == ord("q") or key == ord("Q"):
+                        self.running = False
+                    elif key == curses.KEY_UP:
+                        self._net_sel = max(0, self._net_sel - 1)
+                    elif key == curses.KEY_DOWN:
+                        iface_count = len(self._net_ifaces)
+                        # Subtract 1 for hostname entry if present
+                        if self._net_ifaces and self._net_ifaces[0]["iface"] == "hostname":
+                            iface_count -= 1
+                        self._net_sel = min(iface_count - 1, self._net_sel + 1)
+                    elif key == curses.KEY_PPAGE:
+                        self._net_neighbor_scroll = max(
+                            0, self._net_neighbor_scroll - (max_y - 6)
+                        )
+                    elif key == curses.KEY_NPAGE:
+                        self._net_neighbor_scroll += max_y - 6
+                    elif key == ord("r") or key == ord("R"):
+                        # Force refresh neighbors
+                        self._net_last_sel = -1
+                    continue
                 if key == ord("q") or key == ord("Q"):
                     self.running = False
                 elif key == ord("h") or key == ord("H"):
@@ -1054,6 +1861,10 @@ class AutonomyTUI:
                     if new_id is not None:
                         self.new_domain_id = new_id
                         self.running = False  # Signal restart
+                elif key == ord("e") or key == ord("E"):
+                    self.edit_config()
+                elif key == ord("n") or key == ord("N"):
+                    self.show_network = True
                 elif key == ord("+") or key == ord("="):
                     # Increase refresh rate (slower updates)
                     self.refresh_ms = min(
@@ -1112,6 +1923,19 @@ class AutonomyTUI:
                 for cfg in self.node.config_statuses:
                     status_str = "OK" if cfg.exists else "MISSING"
                     print(f"  {cfg.description:<20} [{status_str}]")
+
+                # Joystick
+                print("\n[JOYSTICK]")
+                joy = self.node.joystick_status
+                if joy.device_connected and joy.last_msg_time > 0:
+                    print(
+                        f"  Device: {joy.device_path}  "
+                        f"Axes: {joy.num_axes}  Buttons: {joy.num_buttons}  [OK]"
+                    )
+                elif joy.device_connected:
+                    print(f"  Device: {joy.device_path}  [IDLE - no messages]")
+                else:
+                    print("  No joystick device detected")
 
                 print("\n" + "=" * 70)
                 domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
