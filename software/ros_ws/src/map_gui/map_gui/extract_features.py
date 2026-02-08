@@ -2,7 +2,6 @@
 import os
 import json
 from typing import Any, Optional
-from pathlib import Path
 
 import cv2
 import numpy as np
@@ -110,16 +109,18 @@ class ExtractFeatures(Node):
     def SaveJson(self, request_id: str, request: dict):
         json_text = request.get("json_text", "")
         file_name = self.SaveJsonFileName(request.get("file_name", "waypoints.json"))
-        file_path = os.path.expanduser(f"~/perseus-v2/software/web_ui/static/{file_name}")
+        file_path = os.path.expanduser(
+            f"~/perseus-v2/software/web_ui/static/{file_name}"
+        )
         try:
             with open(file_path, "w", encoding="utf-8") as file:
                 file.write(json_text)
-            #JSON_DIR = 
-            #JSON_DIR.mkdir(parents=True, exist_ok=True)
-            #out_path = os.path.expanduser(f"~/perseus-v2/software/web_ui/static/{json_text}")
-            #tmp_path = JSON_DIR.with_suffix(JSON_DIR.suffix + ".tmp")
-            #JSON_DIR.write_text(json_text, encoding="utf-8")
-            #tmp_path.replace(JSON_DIR)
+            # JSON_DIR =
+            # JSON_DIR.mkdir(parents=True, exist_ok=True)
+            # out_path = os.path.expanduser(f"~/perseus-v2/software/web_ui/static/{json_text}")
+            # tmp_path = JSON_DIR.with_suffix(JSON_DIR.suffix + ".tmp")
+            # JSON_DIR.write_text(json_text, encoding="utf-8")
+            # tmp_path.replace(JSON_DIR)
             self.reply(request_id, {"ok": True, "saved_path": str(file_path)})
         except Exception as e:
             self.reply(request_id, {"ok": False, "message": str(e)})
@@ -128,8 +129,10 @@ class ExtractFeatures(Node):
         if imageID in self.cache:
             return self.cache[imageID]
 
-        #image_path = os.path.join(MAP_directory, imageID)
-        image_path = os.path.expanduser(f"~/perseus-v2/software/web_ui/static/{imageID}")
+        # image_path = os.path.join(MAP_directory, imageID)
+        image_path = os.path.expanduser(
+            f"~/perseus-v2/software/web_ui/static/{imageID}"
+        )
         image_bgr = cv2.imread(image_path, cv2.IMREAD_COLOR)
         if image_bgr is None:
             raise FileNotFoundError(f"Cannot read image: {image_path}")
