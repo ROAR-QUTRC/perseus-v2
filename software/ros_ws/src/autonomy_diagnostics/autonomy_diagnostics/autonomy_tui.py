@@ -1454,7 +1454,7 @@ class AutonomyTUI:
 
         # Reserve: row 0 for title, row max_y-1 for footer
         chart_h = max_y - 2  # character rows for the canvas
-        chart_w = max_x       # character columns for the canvas
+        chart_w = max_x  # character columns for the canvas
         if chart_h < 4 or chart_w < 10:
             return
 
@@ -1502,7 +1502,9 @@ class AutonomyTUI:
 
         if not has_data:
             self.safe_addstr(
-                max_y // 2, max_x // 2 - 12, "No scan data received",
+                max_y // 2,
+                max_x // 2 - 12,
+                "No scan data received",
                 curses.color_pair(self.COLOR_WARN) | curses.A_BOLD,
             )
             self.safe_addstr(max_y - 1, 0, " ".ljust(max_x), curses.A_REVERSE)
@@ -1552,7 +1554,9 @@ class AutonomyTUI:
                         dot_x = px % 2
                         dot_y = py % 4
                         if 0 <= cell_x < chart_w and 0 <= cell_y < chart_h:
-                            grid_cells[cell_y][cell_x] |= self._BRAILLE_DOT[dot_y][dot_x]
+                            grid_cells[cell_y][cell_x] |= self._BRAILLE_DOT[dot_y][
+                                dot_x
+                            ]
                 ring_r += ring_step
 
             # Draw cross axes through center
@@ -1624,7 +1628,9 @@ class AutonomyTUI:
         center_row = int(cy / 4) + 1
         center_col = int(cx / 2)
         self.safe_addstr(
-            center_row, center_col, "+",
+            center_row,
+            center_col,
+            "+",
             curses.color_pair(self.COLOR_CRIT) | curses.A_BOLD,
         )
 
@@ -1637,15 +1643,21 @@ class AutonomyTUI:
                 label_row = label_py // 4 + 1
                 label_col = int(cx / 2) + 1
                 if 1 <= label_row < max_y - 1:
-                    label = f"{ring_r:.0f}m" if ring_r == int(ring_r) else f"{ring_r:.1f}m"
+                    label = (
+                        f"{ring_r:.0f}m" if ring_r == int(ring_r) else f"{ring_r:.1f}m"
+                    )
                     self.safe_addstr(
-                        label_row, label_col, label,
+                        label_row,
+                        label_col,
+                        label,
                         curses.color_pair(self.COLOR_INFO) | curses.A_DIM,
                     )
                 ring_r += ring_step
 
         # Footer
-        fov_deg = math.degrees(angle_min + angle_inc * num_pts) - math.degrees(angle_min)
+        fov_deg = math.degrees(angle_min + angle_inc * num_pts) - math.degrees(
+            angle_min
+        )
         footer = (
             f" {valid_count}/{num_pts} valid pts | "
             f"FOV {abs(fov_deg):.0f}deg | "
