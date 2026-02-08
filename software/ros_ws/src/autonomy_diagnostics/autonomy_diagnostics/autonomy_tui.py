@@ -19,6 +19,7 @@ import argparse
 import curses
 import glob as glob_module
 import logging
+import math
 import os
 import signal
 import socket
@@ -336,6 +337,19 @@ class JoystickStatus:
     last_msg_time: float = 0.0
 
 
+@dataclass
+class LidarScanData:
+    """Cached laser scan data for visualization."""
+
+    angle_min: float = 0.0
+    angle_max: float = 0.0
+    angle_increment: float = 0.0
+    range_min: float = 0.0
+    range_max: float = 0.0
+    ranges: Optional[List[float]] = None
+    timestamp: float = 0.0
+
+
 # =============================================================================
 # Rate Calculator
 # =============================================================================
@@ -394,6 +408,7 @@ class AutonomyDiagnosticsNode(Node):
         self.lifecycle_statuses: Dict[str, LifecycleStatus] = {}
         self.config_statuses: List[ConfigStatus] = []
         self.joystick_status = JoystickStatus()
+        self.lidar_scan = LidarScanData()
 
         # Lifecycle service clients (created once, reused)
         self._lifecycle_clients: Dict[str, Any] = {}
@@ -467,7 +482,7 @@ class AutonomyDiagnosticsNode(Node):
                 self.create_subscription(
                     LaserScan,
                     topic,
-                    lambda msg, n=name: self._topic_callback(n),
+                    lambda msg, n=name: self._scan_callback(msg, n),
                     sensor_qos,
                 )
             elif msg_type == "Imu":
@@ -523,6 +538,18 @@ class AutonomyDiagnosticsNode(Node):
             self.joystick_status.num_axes = len(msg.axes)
             self.joystick_status.num_buttons = len(msg.buttons)
             self.joystick_status.last_msg_time = time.time()
+
+    def _scan_callback(self, msg, topic_name: str):
+        """Callback for LaserScan topic - records rate and stores scan data."""
+        self._topic_callback(topic_name)
+        with self._status_lock:
+            self.lidar_scan.ranges = list(msg.ranges)
+            self.lidar_scan.angle_min = msg.angle_min
+            self.lidar_scan.angle_max = msg.angle_max
+            self.lidar_scan.angle_increment = msg.angle_increment
+            self.lidar_scan.range_min = msg.range_min
+            self.lidar_scan.range_max = msg.range_max
+            self.lidar_scan.timestamp = time.time()
 
     def _check_joystick_device(self):
         """Check if a joystick device is physically connected."""
@@ -702,6 +729,9 @@ class AutonomyTUI:
     COLOR_YAML_STRING = 8
     COLOR_YAML_BOOL = 9
     COLOR_YAML_NUMBER = 10
+    # Color pair indices — LiDAR view
+    COLOR_LIDAR_SCAN = 11
+    COLOR_LIDAR_GRID = 12
 
     def __init__(self, node: AutonomyDiagnosticsNode):
         self.node = node
@@ -710,6 +740,7 @@ class AutonomyTUI:
         self.new_domain_id: Optional[int] = None  # Set when user requests domain change
         self.show_help = False  # Toggle for help dialog overlay
         self.show_network = False  # Toggle for network info overlay
+        self.show_lidar = False  # Toggle for LiDAR scan view
         self._net_ifaces: List[Dict[str, str]] = []  # Cached interface list
         self._net_sel = 0  # Currently selected interface index
         self._net_neighbors: List[Dict[str, str]] = []  # Cached neighbor list
@@ -945,6 +976,7 @@ class AutonomyTUI:
             ("h", "Toggle this help dialog"),
             ("d", "Change ROS_DOMAIN_ID"),
             ("e", "Edit diagnostics.yaml config"),
+            ("l", "LiDAR scan view (braille render)"),
             ("n", "Network view (r:refresh neighbors)"),
             ("+/=", "Increase refresh interval (slower)"),
             ("-/_", "Decrease refresh interval (faster)"),
@@ -1406,6 +1438,223 @@ class AutonomyTUI:
                 row, x, comment_part, curses.color_pair(self.COLOR_YAML_COMMENT)
             )
 
+    # Braille dot bit values: BRAILLE_DOT[row][col] for a 2-wide x 4-tall cell
+    _BRAILLE_DOT = [
+        [0x01, 0x08],  # row 0
+        [0x02, 0x10],  # row 1
+        [0x04, 0x20],  # row 2
+        [0x40, 0x80],  # row 3
+    ]
+
+    def draw_lidar_view(self):
+        """Draw full-screen LiDAR scan visualization using braille characters."""
+        if self.stdscr is None:
+            return
+        max_y, max_x = self.stdscr.getmaxyx()
+
+        # Reserve: row 0 for title, row max_y-1 for footer
+        chart_h = max_y - 2  # character rows for the canvas
+        chart_w = max_x       # character columns for the canvas
+        if chart_h < 4 or chart_w < 10:
+            return
+
+        # Pixel resolution (braille gives 2x horizontal, 4x vertical)
+        px_w = chart_w * 2
+        px_h = chart_h * 4
+
+        # Center in pixel space
+        cx = px_w / 2.0
+        cy = px_h / 2.0
+
+        # Thread-safe snapshot of scan data
+        with self.node._status_lock:
+            scan = self.node.lidar_scan
+            if scan.ranges is None or len(scan.ranges) == 0:
+                has_data = False
+                ranges = []
+                angle_min = 0.0
+                angle_inc = 0.0
+                range_min = 0.0
+                range_max = 0.0
+                scan_ts = 0.0
+                num_pts = 0
+            else:
+                has_data = True
+                ranges = list(scan.ranges)
+                angle_min = scan.angle_min
+                angle_inc = scan.angle_increment
+                range_min = scan.range_min
+                range_max = scan.range_max
+                scan_ts = scan.timestamp
+                num_pts = len(ranges)
+
+        # Title bar
+        if has_data:
+            age = time.time() - scan_ts
+            title = (
+                f" LIDAR SCAN | {num_pts} pts | "
+                f"range {range_min:.1f}-{range_max:.1f}m | "
+                f"age {age:.1f}s | l/Esc:close "
+            )
+        else:
+            title = " LIDAR SCAN | Waiting for /scan data... | l/Esc:close "
+        self.safe_addstr(0, 0, title.ljust(max_x), curses.A_REVERSE | curses.A_BOLD)
+
+        if not has_data:
+            self.safe_addstr(
+                max_y // 2, max_x // 2 - 12, "No scan data received",
+                curses.color_pair(self.COLOR_WARN) | curses.A_BOLD,
+            )
+            self.safe_addstr(max_y - 1, 0, " ".ljust(max_x), curses.A_REVERSE)
+            return
+
+        # Find actual max range for auto-scaling
+        actual_max = 0.0
+        valid_count = 0
+        for r in ranges:
+            if range_min <= r <= range_max and math.isfinite(r):
+                if r > actual_max:
+                    actual_max = r
+                valid_count += 1
+
+        if actual_max <= 0:
+            actual_max = range_max
+
+        # View radius in pixels, with margin
+        view_radius = min(px_w, px_h) / 2.0 - 4
+        scale = view_radius / actual_max if actual_max > 0 else 1.0
+
+        # Initialize braille cell grid and a separate grid for range rings
+        cells = [[0] * chart_w for _ in range(chart_h)]
+        grid_cells = [[0] * chart_w for _ in range(chart_h)]
+
+        # Draw range rings at nice intervals
+        if actual_max > 0:
+            # Pick ring spacing: 0.5, 1, 2, 5, 10, 20, 50 meters
+            ring_options = [0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0]
+            ring_step = ring_options[0]
+            for opt in ring_options:
+                if actual_max / opt <= 6:
+                    ring_step = opt
+                    break
+
+            ring_r = ring_step
+            while ring_r < actual_max:
+                # Draw circle: sample points around 360 degrees
+                r_px = ring_r * scale
+                for deg in range(360):
+                    theta = math.radians(deg)
+                    px = int(cx - r_px * math.sin(theta))
+                    py = int(cy - r_px * math.cos(theta))
+                    if 0 <= px < px_w and 0 <= py < px_h:
+                        cell_x = px // 2
+                        cell_y = py // 4
+                        dot_x = px % 2
+                        dot_y = py % 4
+                        if 0 <= cell_x < chart_w and 0 <= cell_y < chart_h:
+                            grid_cells[cell_y][cell_x] |= self._BRAILLE_DOT[dot_y][dot_x]
+                ring_r += ring_step
+
+            # Draw cross axes through center
+            for i in range(px_h):
+                # Vertical line (forward axis)
+                px = int(cx)
+                if 0 <= px < px_w and 0 <= i < px_h:
+                    cell_x = px // 2
+                    cell_y = i // 4
+                    dot_x = px % 2
+                    dot_y = i % 4
+                    if 0 <= cell_x < chart_w and 0 <= cell_y < chart_h:
+                        grid_cells[cell_y][cell_x] |= self._BRAILLE_DOT[dot_y][dot_x]
+            for i in range(px_w):
+                # Horizontal line (left-right axis)
+                py = int(cy)
+                if 0 <= i < px_w and 0 <= py < px_h:
+                    cell_x = i // 2
+                    cell_y = py // 4
+                    dot_x = i % 2
+                    dot_y = py % 4
+                    if 0 <= cell_x < chart_w and 0 <= cell_y < chart_h:
+                        grid_cells[cell_y][cell_x] |= self._BRAILLE_DOT[dot_y][dot_x]
+
+        # Plot scan points
+        angle = angle_min
+        for r in ranges:
+            if range_min <= r <= range_max and math.isfinite(r):
+                # ROS: x=r*cos(a) forward, y=r*sin(a) left
+                # Screen: x right, y down; forward=up, left=left
+                px = int(cx - r * math.sin(angle) * scale)
+                py = int(cy - r * math.cos(angle) * scale)
+                if 0 <= px < px_w and 0 <= py < px_h:
+                    cell_x = px // 2
+                    cell_y = py // 4
+                    dot_x = px % 2
+                    dot_y = py % 4
+                    if 0 <= cell_x < chart_w and 0 <= cell_y < chart_h:
+                        cells[cell_y][cell_x] |= self._BRAILLE_DOT[dot_y][dot_x]
+            angle += angle_inc
+
+        # Render braille characters to screen
+        scan_attr = curses.color_pair(self.COLOR_LIDAR_SCAN) | curses.A_BOLD
+        grid_attr = curses.color_pair(self.COLOR_LIDAR_GRID)
+        for row in range(chart_h):
+            line_chars = []
+            line_attrs = []
+            for col in range(chart_w):
+                scan_val = cells[row][col]
+                grid_val = grid_cells[row][col]
+                if scan_val:
+                    # Scan points take priority — merge with grid for completeness
+                    line_chars.append(chr(0x2800 + (scan_val | grid_val)))
+                    line_attrs.append(scan_attr)
+                elif grid_val:
+                    line_chars.append(chr(0x2800 + grid_val))
+                    line_attrs.append(grid_attr)
+                else:
+                    line_chars.append(" ")
+                    line_attrs.append(0)
+
+            # Draw row character by character (for per-cell color)
+            screen_row = row + 1  # offset for title bar
+            for col, (ch, attr) in enumerate(zip(line_chars, line_attrs)):
+                if ch != " ":
+                    self.safe_addstr(screen_row, col, ch, attr)
+
+        # Robot marker at center
+        center_row = int(cy / 4) + 1
+        center_col = int(cx / 2)
+        self.safe_addstr(
+            center_row, center_col, "+",
+            curses.color_pair(self.COLOR_CRIT) | curses.A_BOLD,
+        )
+
+        # Range labels on rings
+        if actual_max > 0 and ring_step > 0:
+            ring_r = ring_step
+            while ring_r < actual_max:
+                # Place label above center on the vertical axis
+                label_py = int(cy - ring_r * scale)
+                label_row = label_py // 4 + 1
+                label_col = int(cx / 2) + 1
+                if 1 <= label_row < max_y - 1:
+                    label = f"{ring_r:.0f}m" if ring_r == int(ring_r) else f"{ring_r:.1f}m"
+                    self.safe_addstr(
+                        label_row, label_col, label,
+                        curses.color_pair(self.COLOR_INFO) | curses.A_DIM,
+                    )
+                ring_r += ring_step
+
+        # Footer
+        fov_deg = math.degrees(angle_min + angle_inc * num_pts) - math.degrees(angle_min)
+        footer = (
+            f" {valid_count}/{num_pts} valid pts | "
+            f"FOV {abs(fov_deg):.0f}deg | "
+            f"max {actual_max:.1f}m | "
+            f"ring {ring_step:.1f}m | "
+            f"l/Esc:close "
+        )
+        self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
+
     def _get_config_path(self) -> str:
         """Return path to the installed diagnostics.yaml."""
         try:
@@ -1713,6 +1962,9 @@ class AutonomyTUI:
         curses.init_pair(self.COLOR_YAML_STRING, curses.COLOR_YELLOW, -1)
         curses.init_pair(self.COLOR_YAML_BOOL, curses.COLOR_MAGENTA, -1)
         curses.init_pair(self.COLOR_YAML_NUMBER, curses.COLOR_RED, -1)
+        # LiDAR view colors
+        curses.init_pair(self.COLOR_LIDAR_SCAN, curses.COLOR_GREEN, -1)
+        curses.init_pair(self.COLOR_LIDAR_GRID, curses.COLOR_BLUE, -1)
 
         while self.running:
             try:
@@ -1721,13 +1973,16 @@ class AutonomyTUI:
                 stdscr.erase()
                 max_y, max_x = stdscr.getmaxyx()
 
-                if self.show_network:
-                    # Full-screen network view (replaces dashboard)
+                if self.show_lidar:
+                    # Full-screen LiDAR scan view
+                    self.draw_lidar_view()
+                elif self.show_network:
+                    # Full-screen network view
                     self.draw_network_dialog()
                 else:
                     # Normal dashboard view
                     # Title bar
-                    title = " AUTONOMY DIAGNOSTICS - q:quit  d:domain  e:edit  n:network  +/-:refresh  h:help "
+                    title = " AUTONOMY DIAGNOSTICS - q:quit  d:domain  e:edit  n:network  l:lidar  +/-:refresh  h:help "
                     self.safe_addstr(
                         0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
                     )
@@ -1865,6 +2120,12 @@ class AutonomyTUI:
                         # Force refresh neighbors
                         self._net_last_sel = -1
                     continue
+                if self.show_lidar:
+                    if key in (ord("l"), ord("L"), 27):
+                        self.show_lidar = False
+                    elif key == ord("q") or key == ord("Q"):
+                        self.running = False
+                    continue
                 if key == ord("q") or key == ord("Q"):
                     self.running = False
                 elif key == ord("h") or key == ord("H"):
@@ -1878,6 +2139,8 @@ class AutonomyTUI:
                     self.edit_config()
                 elif key == ord("n") or key == ord("N"):
                     self.show_network = True
+                elif key == ord("l") or key == ord("L"):
+                    self.show_lidar = True
                 elif key == ord("+") or key == ord("="):
                     # Increase refresh rate (slower updates)
                     self.refresh_ms = min(
