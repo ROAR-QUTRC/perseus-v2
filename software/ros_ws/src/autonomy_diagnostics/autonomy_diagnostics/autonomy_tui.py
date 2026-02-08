@@ -258,7 +258,9 @@ def load_config(robot_name: str = "perseus-lite") -> Dict[str, Any]:
                             config[key] = defaults[key]
                     return config
     except Exception as e:
-        logger.warning(f"Failed to load config file for '{robot_name}', using defaults: {e}")
+        logger.warning(
+            f"Failed to load config file for '{robot_name}', using defaults: {e}"
+        )
 
     return defaults
 
@@ -404,7 +406,9 @@ class AutonomyDiagnosticsNode(Node):
         self.rate_calculators: Dict[str, RateCalculator] = {}
         self.tf_statuses: List[TFStatus] = []
         self.lifecycle_statuses: Dict[str, LifecycleStatus] = {}
-        self.tf_tree_data: Dict[str, Dict[str, Any]] = {}  # frame -> {parent, children, status}
+        self.tf_tree_data: Dict[
+            str, Dict[str, Any]
+        ] = {}  # frame -> {parent, children, status}
         self.joystick_status = JoystickStatus()
         self.lidar_scan = LidarScanData()
 
@@ -681,12 +685,13 @@ class AutonomyDiagnosticsNode(Node):
                 continue  # Root frame — always OK
             try:
                 transform = self.tf_buffer.lookup_transform(
-                    parent, frame_name, rclpy.time.Time(),
+                    parent,
+                    frame_name,
+                    rclpy.time.Time(),
                     timeout=rclpy.duration.Duration(seconds=0.05),
                 )
                 tf_time_sec = (
-                    transform.header.stamp.sec
-                    + transform.header.stamp.nanosec * 1e-9
+                    transform.header.stamp.sec + transform.header.stamp.nanosec * 1e-9
                 )
                 if tf_time_sec == 0:
                     data["status"] = "OK"  # Static transform
@@ -773,7 +778,6 @@ class AutonomyDiagnosticsNode(Node):
                 with self._status_lock:
                     self.lifecycle_statuses[node_name].state = "error"
                 self.get_logger().debug(f"Lifecycle check failed for {node_name}: {e}")
-
 
 
 # =============================================================================
@@ -890,9 +894,7 @@ class AutonomyTUI:
 
             tf_tree_total = len(self.node.tf_tree_data)
             tf_tree_ok = sum(
-                1
-                for d in self.node.tf_tree_data.values()
-                if d["status"] == "OK"
+                1 for d in self.node.tf_tree_data.values() if d["status"] == "OK"
             )
 
         # Determine overall status
@@ -1062,7 +1064,7 @@ class AutonomyTUI:
             # Draw tree prefix
             avail = w - 4
             display = prefix_str + frame_name
-            display = display[:avail - 7]  # leave room for status
+            display = display[: avail - 7]  # leave room for status
             self.safe_addstr(row, x + 2, display)
 
             # Status tag
@@ -2206,7 +2208,9 @@ class AutonomyTUI:
                     topics_needed = num_topics + 4
                     tf_needed = num_tf + 4
                     lifecycle_needed = num_lifecycle + 4
-                    tf_tree_needed = num_tf_tree + 5  # +5 for border(2) + header(1) + count(1) + margin
+                    tf_tree_needed = (
+                        num_tf_tree + 5
+                    )  # +5 for border(2) + header(1) + count(1) + margin
 
                     # Top row needs max of topics/tf, bottom row needs max of lifecycle/tf_tree
                     top_row_min = max(topics_needed, tf_needed)
