@@ -181,7 +181,9 @@ namespace perseus_lite_hardware
             const uint8_t mode_register = static_cast<uint8_t>(ServoEpromRegister::MODE);
             const uint8_t torque_register = static_cast<uint8_t>(ServoSramRegister::TORQUE_ENABLE);
 
-            // Set wheel mode and enable torque for each servo
+            // Set wheel mode, acceleration, and enable torque for each servo
+            const uint8_t acc_register = static_cast<uint8_t>(ServoSramRegister::ACC);
+
             for (uint8_t servo_id : _servo_ids)
             {
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
@@ -196,6 +198,16 @@ namespace perseus_lite_hardware
                 }
 
                 // Small delay between commands
+                std::this_thread::sleep_for(_COMMAND_DELAY);
+
+                // Set acceleration to 0 (instant acceleration, no ramp)
+                if (!send_servo_command(servo_id, ServoCommand::WRITE, std::array<uint8_t, 2>{acc_register, 0}))
+                {
+                    RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
+                                 "Failed to set acceleration for servo %d", servo_id);
+                    return hardware_interface::CallbackReturn::ERROR;
+                }
+
                 std::this_thread::sleep_for(_COMMAND_DELAY);
 
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
@@ -430,24 +442,19 @@ namespace perseus_lite_hardware
                                  "Servo %d - Inverted direction for left side motor", _servo_ids[i]);
                 }
 
-                // Convert velocity command to servo units
-                // ST3215 expects -1000 to 1000 for velocity
-                const double normalized_velocity = corrected_speed * _RAD_S_TO_RPM;  // to RPM
+                // Convert velocity command to servo protocol units
+                // STS3215 protocol uses 15-bit magnitude (0-32767) + sign bit for direction
+                const double rpm = corrected_speed * _RAD_S_TO_RPM;
 
                 RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
                              "Servo %d - Converted to RPM: %f",
-                             _servo_ids[i], normalized_velocity);
+                             _servo_ids[i], rpm);
 
-                // Debug print the _RPM_SCALE_FACTOR value being used
-                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                             "Servo %d - Using _RPM_SCALE_FACTOR value: %f",
-                             _servo_ids[i], _RPM_SCALE_FACTOR);
-
-                // Safe conversion with overflow protection
-                double scaled_velocity = normalized_velocity * (_MAX_VELOCITY_RPM / _RPM_SCALE_FACTOR);
+                // Scale RPM to protocol units: protocol = RPM * (MAX_PROTOCOL / MAX_RPM)
+                double scaled_velocity = rpm * (static_cast<double>(_MAX_VELOCITY_PROTOCOL) / _SERVO_MAX_RPM);
                 double clamped_velocity = std::clamp(scaled_velocity,
-                                                     static_cast<double>(_MIN_VELOCITY_RPM),
-                                                     static_cast<double>(_MAX_VELOCITY_RPM));
+                                                     static_cast<double>(_MIN_VELOCITY_PROTOCOL),
+                                                     static_cast<double>(_MAX_VELOCITY_PROTOCOL));
 
                 // Ensure value is within int16_t range before conversion
                 if (clamped_velocity > std::numeric_limits<int16_t>::max())
@@ -703,13 +710,13 @@ namespace perseus_lite_hardware
                         // Safe conversion to signed integer
                         int16_t raw_vel = static_cast<int16_t>(raw_vel_unsigned);
 
-                        // Handle velocity according to protocol (-1000 to 1000)
+                        // Handle velocity sign bit (bit 15 = direction)
                         if (raw_vel & _SIGN_BIT_MASK)
                         {  // Check sign bit
                             raw_vel = -(raw_vel & ~_SIGN_BIT_MASK);
                         }
-                        // Convert to rad/s (protocol units are roughly RPM/1000)
-                        const double rpm = raw_vel * (_RPM_SCALE_FACTOR / _MAX_VELOCITY_RPM);
+                        // Convert protocol units to RPM: RPM = protocol * (MAX_RPM / MAX_PROTOCOL)
+                        const double rpm = raw_vel * (_SERVO_MAX_RPM / static_cast<double>(_MAX_VELOCITY_PROTOCOL));
                         double velocity_rad_s = rpm * _RPM_TO_RAD_S;
 
                         state.velocity = velocity_rad_s;
