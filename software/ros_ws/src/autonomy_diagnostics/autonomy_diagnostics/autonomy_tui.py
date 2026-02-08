@@ -526,9 +526,7 @@ class AutonomyDiagnosticsNode(Node):
 
     def _check_joystick_device(self):
         """Check if a joystick device is physically connected."""
-        pattern = self.config.get("joystick", {}).get(
-            "device_path", "/dev/input/js*"
-        )
+        pattern = self.config.get("joystick", {}).get("device_path", "/dev/input/js*")
         devices = sorted(glob_module.glob(pattern))
         with self._status_lock:
             if devices:
@@ -1126,7 +1124,9 @@ class AutonomyTUI:
             pass
 
         # Sort by IP address
-        neighbors.sort(key=lambda n: tuple(int(x) for x in n["ip"].split(".") if x.isdigit()))
+        neighbors.sort(
+            key=lambda n: tuple(int(x) for x in n["ip"].split(".") if x.isdigit())
+        )
         return neighbors
 
     def draw_network_dialog(self):
@@ -1197,7 +1197,9 @@ class AutonomyTUI:
             self.safe_addstr(row, 2, marker, line_attr | curses.A_BOLD)
             self.safe_addstr(row, 3, f" {iface:<12}", line_attr)
             self.safe_addstr(
-                row, 16, f"{addr:<18}",
+                row,
+                16,
+                f"{addr:<18}",
                 line_attr | curses.color_pair(self.COLOR_INFO),
             )
 
@@ -1210,12 +1212,14 @@ class AutonomyTUI:
                 s_attr = curses.color_pair(self.COLOR_WARN) | curses.A_BOLD
             if is_selected:
                 s_attr |= curses.A_REVERSE
-            self.safe_addstr(row, 35, state[:left_w - 37], s_attr)
+            self.safe_addstr(row, 35, state[: left_w - 37], s_attr)
             row += 1
 
         if not ifaces:
             self.safe_addstr(
-                row, 4, "No IPv4 interfaces found",
+                row,
+                4,
+                "No IPv4 interfaces found",
                 curses.color_pair(self.COLOR_WARN),
             )
 
@@ -1237,9 +1241,7 @@ class AutonomyTUI:
 
         # Clamp scroll
         max_scroll = max(0, len(self._net_neighbors) - neighbor_area_h)
-        self._net_neighbor_scroll = max(
-            0, min(self._net_neighbor_scroll, max_scroll)
-        )
+        self._net_neighbor_scroll = max(0, min(self._net_neighbor_scroll, max_scroll))
 
         visible_neighbors = self._net_neighbors[
             self._net_neighbor_scroll : self._net_neighbor_scroll + neighbor_area_h
@@ -1255,7 +1257,9 @@ class AutonomyTUI:
 
             self.safe_addstr(row, left_w + 4, f"{ip_addr:<16}")
             self.safe_addstr(
-                row, left_w + 20, f"{mac:<18}",
+                row,
+                left_w + 20,
+                f"{mac:<18}",
                 curses.color_pair(self.COLOR_INFO),
             )
             self.safe_addstr(row, left_w + 38, f"{host:<16}", curses.A_DIM)
@@ -1272,7 +1276,9 @@ class AutonomyTUI:
 
         if not self._net_neighbors:
             self.safe_addstr(
-                row, left_w + 4, "No neighbors found",
+                row,
+                left_w + 4,
+                "No neighbors found",
                 curses.color_pair(self.COLOR_WARN),
             )
 
@@ -1301,9 +1307,7 @@ class AutonomyTUI:
         # Full-line comment
         stripped = text.lstrip()
         if stripped.startswith("#"):
-            self.safe_addstr(
-                row, col, text, curses.color_pair(self.COLOR_YAML_COMMENT)
-            )
+            self.safe_addstr(row, col, text, curses.color_pair(self.COLOR_YAML_COMMENT))
             return
 
         # List item prefix (- )
@@ -1486,14 +1490,14 @@ class AutonomyTUI:
                         self.safe_addstr(row, 0, "   ~ ", curses.A_DIM)
 
                 # Status bar
-                pos_info = f" Ln {cursor_y + 1}, Col {cursor_x + 1} | {len(lines)} lines "
+                pos_info = (
+                    f" Ln {cursor_y + 1}, Col {cursor_x + 1} | {len(lines)} lines "
+                )
                 if status_msg:
                     bar = f" {status_msg} | {pos_info}"
                 else:
                     bar = pos_info
-                self.safe_addstr(
-                    max_y - 1, 0, bar.ljust(max_x), curses.A_REVERSE
-                )
+                self.safe_addstr(max_y - 1, 0, bar.ljust(max_x), curses.A_REVERSE)
 
                 # Position cursor
                 screen_cy = cursor_y - scroll_y + 1
@@ -1548,7 +1552,9 @@ class AutonomyTUI:
                         modified = False
                         status_msg = "Saved! Restart (q then relaunch) to apply."
                     except PermissionError:
-                        status_msg = "ERROR: Permission denied (installed config is read-only)"
+                        status_msg = (
+                            "ERROR: Permission denied (installed config is read-only)"
+                        )
                     except Exception as e:
                         status_msg = f"ERROR: {e}"
 
@@ -1791,7 +1797,9 @@ class AutonomyTUI:
                     with self.node._status_lock:
                         joy = self.node.joystick_status
                         joy_device = joy.device_connected
-                        joy_path = os.path.basename(joy.device_path) if joy.device_path else ""
+                        joy_path = (
+                            os.path.basename(joy.device_path) if joy.device_path else ""
+                        )
                         joy_axes = joy.num_axes
                         joy_buttons = joy.num_buttons
                         joy_active = joy.last_msg_time > 0 and (
@@ -1810,7 +1818,9 @@ class AutonomyTUI:
                         joy_status = "NONE"
 
                     status += f" | Joy: {joy_str} "
-                    self.safe_addstr(max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE)
+                    self.safe_addstr(
+                        max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE
+                    )
 
                     # Color the joy status portion
                     joy_label_pos = status.find("Joy: ") + 5
@@ -1839,7 +1849,10 @@ class AutonomyTUI:
                     elif key == curses.KEY_DOWN:
                         iface_count = len(self._net_ifaces)
                         # Subtract 1 for hostname entry if present
-                        if self._net_ifaces and self._net_ifaces[0]["iface"] == "hostname":
+                        if (
+                            self._net_ifaces
+                            and self._net_ifaces[0]["iface"] == "hostname"
+                        ):
                             iface_count -= 1
                         self._net_sel = min(iface_count - 1, self._net_sel + 1)
                     elif key == curses.KEY_PPAGE:
