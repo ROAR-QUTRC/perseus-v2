@@ -859,7 +859,9 @@ class AutonomyTUI:
         # Calculate dialog dimensions
         max_desc_len = max(len(desc) for _, desc in shortcuts)
         box_w = min(max_x - 4, max_desc_len + 16)
-        box_h = len(shortcuts) + 6  # title + header + separator + items + blank + footer
+        box_h = (
+            len(shortcuts) + 6
+        )  # title + header + separator + items + blank + footer
         box_y = max(0, max_y // 2 - box_h // 2)
         box_x = max(0, max_x // 2 - box_w // 2)
 
@@ -879,15 +881,16 @@ class AutonomyTUI:
 
         for key_str, desc in shortcuts:
             self.safe_addstr(
-                row, box_x + 4, key_str, curses.color_pair(self.COLOR_INFO) | curses.A_BOLD
+                row,
+                box_x + 4,
+                key_str,
+                curses.color_pair(self.COLOR_INFO) | curses.A_BOLD,
             )
             self.safe_addstr(row, box_x + 12, desc)
             row += 1
 
         row += 1
-        self.safe_addstr(
-            row, box_x + 2, "Press h or Esc to close", curses.A_DIM
-        )
+        self.safe_addstr(row, box_x + 2, "Press h or Esc to close", curses.A_DIM)
 
     def prompt_domain_id(self) -> Optional[int]:
         """Show a popup prompt for entering a new ROS_DOMAIN_ID. Returns the ID or None."""
