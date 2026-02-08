@@ -10,9 +10,10 @@ This tool provides a real-time view of:
 - Topic presence and rates (scan, imu, odom, etc.)
 - TF frame connectivity (map->odom->base_link chain)
 - Nav2 lifecycle node states
-- Config file existence
+- Live TF tree hierarchy
 
-Configuration is loaded from config/diagnostics.yaml in the package share directory.
+Supports multiple robot configurations (perseus-lite, perseus, kibisis).
+Configuration is loaded from config/<robot>.yaml in the package share directory.
 """
 
 import argparse
@@ -105,11 +106,28 @@ def get_ros_ws_src_path() -> str:
 # =============================================================================
 
 
-def load_config() -> Dict[str, Any]:
-    """Load configuration from the package's config file.
+def discover_robot_configs() -> List[str]:
+    """Scan the package config directory for available robot config files.
 
-    Returns a dictionary with keys: monitored_topics, tf_frames, lifecycle_nodes,
-    config_files. Falls back to defaults if config file is not found.
+    Returns a sorted list of robot names (filename stems).
+    """
+    try:
+        pkg_share = get_package_share_directory("autonomy_diagnostics")
+        config_dir = os.path.join(pkg_share, "config")
+        configs = []
+        for f in sorted(os.listdir(config_dir)):
+            if f.endswith(".yaml"):
+                configs.append(f[:-5])  # strip .yaml extension
+        return configs
+    except Exception:
+        return ["perseus-lite"]
+
+
+def load_config(robot_name: str = "perseus-lite") -> Dict[str, Any]:
+    """Load configuration from the package's config file for the given robot.
+
+    Returns a dictionary with keys: monitored_topics, tf_frames, lifecycle_nodes.
+    Falls back to defaults if config file is not found.
     """
     # Default configuration (fallback if config file not found)
     defaults = {
@@ -220,18 +238,6 @@ def load_config() -> Dict[str, Any]:
             "waypoint_follower",
             "behavior_server",
         ],
-        "config_files": [
-            {"path": "autonomy/config/ekf_params.yaml", "description": "EKF params"},
-            {
-                "path": "autonomy/config/slam_toolbox_params.yaml",
-                "description": "SLAM params",
-            },
-            {
-                "path": "autonomy/config/perseus_nav_params.yaml",
-                "description": "Nav2 params",
-            },
-            {"path": "autonomy/config/cmd_vel_mux.yaml", "description": "Mux config"},
-        ],
         "joystick": {
             "device_path": "/dev/input/js*",
         },
@@ -240,7 +246,7 @@ def load_config() -> Dict[str, Any]:
     logger = logging.getLogger(__name__)
     try:
         pkg_share = get_package_share_directory("autonomy_diagnostics")
-        config_path = os.path.join(pkg_share, "config", "diagnostics.yaml")
+        config_path = os.path.join(pkg_share, "config", f"{robot_name}.yaml")
 
         if os.path.isfile(config_path):
             with open(config_path, "r") as f:
@@ -252,7 +258,7 @@ def load_config() -> Dict[str, Any]:
                             config[key] = defaults[key]
                     return config
     except Exception as e:
-        logger.warning(f"Failed to load config file, using defaults: {e}")
+        logger.warning(f"Failed to load config file for '{robot_name}', using defaults: {e}")
 
     return defaults
 
@@ -318,15 +324,6 @@ class LifecycleStatus:
 
 
 @dataclass
-class ConfigStatus:
-    """Status of a config file."""
-
-    path: str
-    description: str
-    exists: bool = False
-
-
-@dataclass
 class JoystickStatus:
     """Status of a joystick device."""
 
@@ -379,11 +376,12 @@ class RateCalculator:
 class AutonomyDiagnosticsNode(Node):
     """ROS2 node for autonomy system diagnostics."""
 
-    def __init__(self):
+    def __init__(self, robot_name: str = "perseus-lite"):
         super().__init__("autonomy_diagnostics")
 
-        # Load configuration from YAML file
-        self.config = load_config()
+        # Load configuration from YAML file for the specified robot
+        self.robot_name = robot_name
+        self.config = load_config(robot_name)
         self.ros_ws_src_path = get_ros_ws_src_path()
 
         # Extract settings from config
@@ -406,7 +404,7 @@ class AutonomyDiagnosticsNode(Node):
         self.rate_calculators: Dict[str, RateCalculator] = {}
         self.tf_statuses: List[TFStatus] = []
         self.lifecycle_statuses: Dict[str, LifecycleStatus] = {}
-        self.config_statuses: List[ConfigStatus] = []
+        self.tf_tree_data: Dict[str, Dict[str, Any]] = {}  # frame -> {parent, children, status}
         self.joystick_status = JoystickStatus()
         self.lidar_scan = LidarScanData()
 
@@ -427,8 +425,7 @@ class AutonomyDiagnosticsNode(Node):
         # Initialize lifecycle node tracking
         self._setup_lifecycle_monitoring()
 
-        # Check config files and joystick device once at startup
-        self._check_config_files()
+        # Check joystick device at startup
         self._check_joystick_device()
 
         # Create timers for periodic checks
@@ -623,8 +620,89 @@ class AutonomyDiagnosticsNode(Node):
                     tf_status.connected = False
                     tf_status.error_msg = str(e)[:50]
 
+        # Build the TF tree from the buffer
+        self._build_tf_tree()
+
         # Piggyback joystick device check on the TF timer
         self._check_joystick_device()
+
+    def _build_tf_tree(self):
+        """Build a hierarchical TF tree from the tf2 buffer.
+
+        Uses all_frames_as_yaml() to discover all frames and their parent relationships,
+        then checks transform freshness for each pair.
+        """
+        try:
+            frames_yaml = self.tf_buffer.all_frames_as_yaml()
+        except Exception:
+            return
+
+        if not frames_yaml or frames_yaml.strip() == "":
+            with self._status_lock:
+                self.tf_tree_data = {}
+            return
+
+        try:
+            frames_data = yaml.safe_load(frames_yaml)
+        except Exception:
+            return
+
+        if not isinstance(frames_data, dict):
+            with self._status_lock:
+                self.tf_tree_data = {}
+            return
+
+        # Build tree structure: {frame: {parent, children, status}}
+        tree: Dict[str, Dict[str, Any]] = {}
+
+        # First pass: register all frames and their parents
+        for frame_name, info in frames_data.items():
+            parent = info.get("parent", "") if isinstance(info, dict) else ""
+            tree[frame_name] = {"parent": parent, "children": [], "status": "OK"}
+            # Ensure parent is also in tree
+            if parent and parent not in tree:
+                tree[parent] = {"parent": "", "children": [], "status": "OK"}
+
+        # Second pass: build children lists
+        for frame_name, data in tree.items():
+            parent = data["parent"]
+            if parent and parent in tree:
+                if frame_name not in tree[parent]["children"]:
+                    tree[parent]["children"].append(frame_name)
+
+        # Sort children for consistent display
+        for data in tree.values():
+            data["children"].sort()
+
+        # Third pass: check transform freshness for each parent->child pair
+        for frame_name, data in tree.items():
+            parent = data["parent"]
+            if not parent:
+                continue  # Root frame — always OK
+            try:
+                transform = self.tf_buffer.lookup_transform(
+                    parent, frame_name, rclpy.time.Time(),
+                    timeout=rclpy.duration.Duration(seconds=0.05),
+                )
+                tf_time_sec = (
+                    transform.header.stamp.sec
+                    + transform.header.stamp.nanosec * 1e-9
+                )
+                if tf_time_sec == 0:
+                    data["status"] = "OK"  # Static transform
+                else:
+                    now_msg = self.get_clock().now().to_msg()
+                    now_sec = now_msg.sec + now_msg.nanosec * 1e-9
+                    age = now_sec - tf_time_sec
+                    if age > self.stale_data_timeout:
+                        data["status"] = "STALE"
+                    else:
+                        data["status"] = "OK"
+            except (LookupException, ConnectivityException, ExtrapolationException):
+                data["status"] = "FAIL"
+
+        with self._status_lock:
+            self.tf_tree_data = tree
 
     def _setup_lifecycle_monitoring(self):
         """Initialize lifecycle node tracking."""
@@ -696,17 +774,6 @@ class AutonomyDiagnosticsNode(Node):
                     self.lifecycle_statuses[node_name].state = "error"
                 self.get_logger().debug(f"Lifecycle check failed for {node_name}: {e}")
 
-    def _check_config_files(self):
-        """Verify existence of required config files."""
-        for cfg in self.config["config_files"]:
-            full_path = os.path.join(self.ros_ws_src_path, cfg["path"])
-            self.config_statuses.append(
-                ConfigStatus(
-                    path=cfg["path"],
-                    description=cfg["description"],
-                    exists=os.path.isfile(full_path),
-                )
-            )
 
 
 # =============================================================================
@@ -738,6 +805,7 @@ class AutonomyTUI:
         self.running = True
         self.stdscr = None
         self.new_domain_id: Optional[int] = None  # Set when user requests domain change
+        self.new_robot_name: Optional[str] = None  # Set when user requests robot change
         self.show_help = False  # Toggle for help dialog overlay
         self.show_network = False  # Toggle for network info overlay
         self.show_lidar = False  # Toggle for LiDAR scan view
@@ -820,20 +888,20 @@ class AutonomyTUI:
             )
             lifecycle_total = len(self.node.lifecycle_statuses)
 
-            config_ok = sum(1 for c in self.node.config_statuses if c.exists)
-            config_total = len(self.node.config_statuses)
+            tf_tree_total = len(self.node.tf_tree_data)
+            tf_tree_ok = sum(
+                1
+                for d in self.node.tf_tree_data.values()
+                if d["status"] == "OK"
+            )
 
         # Determine overall status
-        all_ok = (
-            topics_ok == topics_total
-            and tf_ok == tf_total
-            and config_ok == config_total
-        )
+        all_ok = topics_ok == topics_total and tf_ok == tf_total
 
         summary = f" SUMMARY: Topics {topics_ok}/{topics_total}"
         summary += f" | TF {tf_ok}/{tf_total}"
         summary += f" | Lifecycle {lifecycle_active}/{lifecycle_total}"
-        summary += f" | Config {config_ok}/{config_total}"
+        summary += f" | Tree {tf_tree_ok}/{tf_tree_total}"
         summary += " "
 
         attr = (
@@ -938,32 +1006,69 @@ class AutonomyTUI:
             self.safe_addstr(row, x + 24, f"[{state_str:^10}]", stat_attr)
             row += 1
 
-    def draw_config_panel(self, y: int, x: int, w: int, h: int):
-        """Draw config files panel."""
-        self.draw_box(y, x, h, w, "CONFIG FILES")
+    def draw_tf_tree_panel(self, y: int, x: int, w: int, h: int):
+        """Draw live TF tree panel showing frame hierarchy."""
+        self.draw_box(y, x, h, w, "TF TREE")
 
         row = y + 1
-        # Header
-        header = f"{'File':<28} {'Status':>6}"
-        self.safe_addstr(row, x + 2, header, curses.A_BOLD)
-        row += 1
-        self.safe_addstr(row, x + 2, "-" * (w - 4))
-        row += 1
 
-        # Config statuses are only set at startup, but use lock for consistency
+        # Thread-safe snapshot
         with self.node._status_lock:
-            config_items = list(self.node.config_statuses)
+            tree = dict(self.node.tf_tree_data)
 
-        for cfg in config_items:
+        if not tree:
+            self.safe_addstr(
+                row, x + 2, "No TF frames detected", curses.color_pair(self.COLOR_WARN)
+            )
+            return
+
+        # Find root frames (no parent)
+        roots = sorted(name for name, data in tree.items() if not data["parent"])
+
+        # Render tree depth-first
+        lines: List[tuple] = []  # (prefix_str, frame_name, status)
+
+        def walk(frame: str, prefix: str, is_last: bool):
+            data = tree.get(frame, {"children": [], "status": "OK"})
+            # Build connector
+            if prefix == "":
+                connector = ""
+            elif is_last:
+                connector = prefix[:-2] + "\\-"
+            else:
+                connector = prefix[:-2] + "|-"
+            lines.append((connector, frame, data["status"]))
+            children = data.get("children", [])
+            for i, child in enumerate(children):
+                child_is_last = i == len(children) - 1
+                if prefix == "":
+                    child_prefix = "  "
+                elif is_last:
+                    child_prefix = prefix[:-2] + "    "
+                else:
+                    child_prefix = prefix[:-2] + "|   "
+                walk(child, child_prefix, child_is_last)
+
+        for i, root in enumerate(roots):
+            walk(root, "", i == len(roots) - 1)
+
+        # Frame count header
+        self.safe_addstr(row, x + 2, f"{len(tree)} frames", curses.A_DIM)
+        row += 1
+
+        for prefix_str, frame_name, status in lines:
             if row >= y + h - 1:
                 break
-            # Show just filename
-            filename = os.path.basename(cfg.path)[:28]
-            status_str = "OK" if cfg.exists else "MISS"
-            stat_attr = self.get_status_attr("OK" if cfg.exists else "CRIT")
+            # Draw tree prefix
+            avail = w - 4
+            display = prefix_str + frame_name
+            display = display[:avail - 7]  # leave room for status
+            self.safe_addstr(row, x + 2, display)
 
-            self.safe_addstr(row, x + 2, f"{filename:<28}")
-            self.safe_addstr(row, x + 31, f"[{status_str:^4}]", stat_attr)
+            # Status tag
+            stat_attr = self.get_status_attr(status)
+            status_col = x + w - 8
+            self.safe_addstr(row, status_col, f"[{status:^4}]", stat_attr)
             row += 1
 
     def draw_help_dialog(self):
@@ -975,10 +1080,11 @@ class AutonomyTUI:
         shortcuts = [
             ("q", "Quit the application"),
             ("h", "Toggle this help dialog"),
+            ("r", "Switch robot configuration"),
             ("d", "Change ROS_DOMAIN_ID"),
-            ("e", "Edit diagnostics.yaml config"),
+            ("e", "Edit robot config YAML"),
             ("l", "LiDAR scan view (braille render)"),
-            ("n", "Network view (r:refresh neighbors)"),
+            ("n", "Network view"),
             ("+/=", "Increase refresh interval (slower)"),
             ("-/_", "Decrease refresh interval (faster)"),
         ]
@@ -1676,15 +1782,15 @@ class AutonomyTUI:
         self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
 
     def _get_config_path(self) -> str:
-        """Return path to the installed diagnostics.yaml."""
+        """Return path to the installed config YAML for the current robot."""
         try:
             pkg_share = get_package_share_directory("autonomy_diagnostics")
-            return os.path.join(pkg_share, "config", "diagnostics.yaml")
+            return os.path.join(pkg_share, "config", f"{self.node.robot_name}.yaml")
         except Exception:
             return ""
 
     def edit_config(self):
-        """Full-screen curses text editor for diagnostics.yaml."""
+        """Full-screen curses text editor for the active robot config YAML."""
         if self.stdscr is None:
             return
         config_path = self._get_config_path()
@@ -1961,6 +2067,79 @@ class AutonomyTUI:
             elif ord("0") <= key <= ord("9") and len(input_buf) < 3:
                 input_buf += chr(key)
 
+    def prompt_robot_config(self) -> Optional[str]:
+        """Show a popup listing available robot configs for selection. Returns name or None."""
+        if self.stdscr is None:
+            return None
+        max_y, max_x = self.stdscr.getmaxyx()
+
+        configs = discover_robot_configs()
+        if not configs:
+            return None
+
+        # Find current selection index
+        selected = 0
+        for i, name in enumerate(configs):
+            if name == self.node.robot_name:
+                selected = i
+                break
+
+        # Popup dimensions
+        max_name = max(len(c) for c in configs)
+        box_w = min(max_x - 4, max(max_name + 12, 36))
+        box_h = min(max_y - 4, len(configs) + 5)
+        box_y = max(0, max_y // 2 - box_h // 2)
+        box_x = max(0, max_x // 2 - box_w // 2)
+
+        while True:
+            # Clear area and draw popup
+            for i in range(box_h):
+                self.safe_addstr(box_y + i, box_x, " " * box_w)
+
+            self.draw_box(box_y, box_x, box_h, box_w, "Select Robot Config")
+            self.safe_addstr(
+                box_y + 1, box_x + 2, f"Current: {self.node.robot_name}", curses.A_DIM
+            )
+
+            # List configs
+            visible = box_h - 5  # header + current + separator + footer
+            scroll = max(0, selected - visible + 1)
+            row = box_y + 2
+            for i in range(scroll, min(scroll + visible, len(configs))):
+                marker = ">" if i == selected else " "
+                name = configs[i]
+                attr = curses.A_REVERSE | curses.A_BOLD if i == selected else 0
+                self.safe_addstr(row, box_x + 2, f" {marker} {name:<{box_w - 8}}", attr)
+                row += 1
+
+            self.safe_addstr(
+                box_y + box_h - 2,
+                box_x + 2,
+                "Up/Down:select  Enter:confirm  Esc:cancel",
+                curses.A_DIM,
+            )
+            self.stdscr.refresh()
+
+            # Block for input
+            self.stdscr.nodelay(False)
+            try:
+                key = self.stdscr.getch()
+            finally:
+                self.stdscr.nodelay(True)
+                self.stdscr.timeout(self.refresh_ms)
+
+            if key == 27:  # Escape
+                return None
+            elif key == curses.KEY_UP:
+                selected = max(0, selected - 1)
+            elif key == curses.KEY_DOWN:
+                selected = min(len(configs) - 1, selected + 1)
+            elif key in (curses.KEY_ENTER, 10, 13):
+                chosen = configs[selected]
+                if chosen == self.node.robot_name:
+                    return None  # No change
+                return chosen
+
     def run_curses(self, stdscr):
         """Main curses loop."""
         self.stdscr = stdscr
@@ -2002,7 +2181,7 @@ class AutonomyTUI:
                 else:
                     # Normal dashboard view
                     # Title bar
-                    title = " AUTONOMY DIAGNOSTICS - q:quit  d:domain  e:edit  n:network  l:lidar  +/-:refresh  h:help "
+                    title = f" AUTONOMY DIAGNOSTICS [{self.node.robot_name}] - q:quit  r:robot  d:domain  e:edit  n:network  l:lidar  h:help "
                     self.safe_addstr(
                         0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
                     )
@@ -2021,17 +2200,17 @@ class AutonomyTUI:
                         num_topics = len(self.node.topic_statuses)
                         num_tf = len(self.node.tf_statuses)
                         num_lifecycle = len(self.node.lifecycle_statuses)
-                        num_config = len(self.node.config_statuses)
+                        num_tf_tree = len(self.node.tf_tree_data)
 
                     # Calculate heights: header(1) + separator(1) + items + border(2)
                     topics_needed = num_topics + 4
                     tf_needed = num_tf + 4
                     lifecycle_needed = num_lifecycle + 4
-                    config_needed = num_config + 4
+                    tf_tree_needed = num_tf_tree + 5  # +5 for border(2) + header(1) + count(1) + margin
 
-                    # Top row needs max of topics/tf, bottom row needs max of lifecycle/config
+                    # Top row needs max of topics/tf, bottom row needs max of lifecycle/tf_tree
                     top_row_min = max(topics_needed, tf_needed)
-                    bottom_row_min = max(lifecycle_needed, config_needed)
+                    bottom_row_min = max(lifecycle_needed, tf_tree_needed)
 
                     # Distribute available height proportionally, with minimums
                     total_needed = top_row_min + bottom_row_min
@@ -2054,8 +2233,8 @@ class AutonomyTUI:
                     # Bottom left: Lifecycle Nodes
                     self.draw_lifecycle_panel(2 + panel_h_top, 0, half_x, panel_h_bot)
 
-                    # Bottom right: Config Files
-                    self.draw_config_panel(
+                    # Bottom right: TF Tree
+                    self.draw_tf_tree_panel(
                         2 + panel_h_top, half_x, max_x - half_x, panel_h_bot
                     )
 
@@ -2166,6 +2345,11 @@ class AutonomyTUI:
                     self.running = False
                 elif key == ord("h") or key == ord("H"):
                     self.show_help = True
+                elif key == ord("r") or key == ord("R"):
+                    new_robot = self.prompt_robot_config()
+                    if new_robot is not None:
+                        self.new_robot_name = new_robot
+                        self.running = False  # Signal restart
                 elif key == ord("d") or key == ord("D"):
                     new_id = self.prompt_domain_id()
                     if new_id is not None:
@@ -2206,7 +2390,7 @@ class AutonomyTUI:
                 # Clear screen (ANSI escape)
                 print("\033[2J\033[H", end="")
                 print("=" * 70)
-                print(" AUTONOMY DIAGNOSTICS - Simple Mode")
+                print(f" AUTONOMY DIAGNOSTICS [{self.node.robot_name}] - Simple Mode")
                 print("=" * 70)
 
                 # Topics
@@ -2230,11 +2414,31 @@ class AutonomyTUI:
                 for name, status in self.node.lifecycle_statuses.items():
                     print(f"  {name:<22} [{status.state}]")
 
-                # Config Files
-                print("\n[CONFIG FILES]")
-                for cfg in self.node.config_statuses:
-                    status_str = "OK" if cfg.exists else "MISSING"
-                    print(f"  {cfg.description:<20} [{status_str}]")
+                # TF Tree
+                print("\n[TF TREE]")
+                with self.node._status_lock:
+                    tree = dict(self.node.tf_tree_data)
+                if not tree:
+                    print("  No TF frames detected")
+                else:
+                    roots = sorted(
+                        name for name, data in tree.items() if not data["parent"]
+                    )
+
+                    def print_tree(frame, prefix="", is_last=True):
+                        data = tree.get(frame, {"children": [], "status": "OK"})
+                        connector = prefix + ("\\-" if is_last else "|-")
+                        if not prefix:
+                            connector = ""
+                        print(f"  {connector}{frame} [{data['status']}]")
+                        children = data.get("children", [])
+                        for i, child in enumerate(children):
+                            ext = "    " if is_last else "|   "
+                            child_prefix = prefix + ext if prefix else "  "
+                            print_tree(child, child_prefix, i == len(children) - 1)
+
+                    for i, root in enumerate(roots):
+                        print_tree(root)
 
                 # Joystick
                 print("\n[JOYSTICK]")
@@ -2293,6 +2497,15 @@ def parse_args() -> argparse.Namespace:
         metavar="ID",
         help="Set the ROS_DOMAIN_ID (0-232). Overrides the environment variable.",
     )
+    parser.add_argument(
+        "-r",
+        "--robot",
+        type=str,
+        default="perseus-lite",
+        metavar="NAME",
+        help="Robot configuration to load (default: perseus-lite). "
+        "Corresponds to config/<NAME>.yaml in the package.",
+    )
     # Parse only known args so ROS args (e.g. --ros-args) pass through
     known, _ = parser.parse_known_args()
     return known
@@ -2308,10 +2521,12 @@ def main(args=None):
             sys.exit(1)
         os.environ["ROS_DOMAIN_ID"] = str(cli_args.domain_id)
 
+    robot_name = cli_args.robot
+
     while True:
         rclpy.init(args=args)
 
-        node = AutonomyDiagnosticsNode()
+        node = AutonomyDiagnosticsNode(robot_name=robot_name)
         tui = AutonomyTUI(node)
 
         # Handle SIGINT and SIGTERM for clean shutdown
@@ -2335,9 +2550,12 @@ def main(args=None):
             node.destroy_node()
             rclpy.shutdown()
 
-        # Check if user requested a domain ID change (restart) or just quit
+        # Check if user requested a restart (domain ID or robot config change)
         if tui.new_domain_id is not None:
             os.environ["ROS_DOMAIN_ID"] = str(tui.new_domain_id)
+            continue
+        if tui.new_robot_name is not None:
+            robot_name = tui.new_robot_name
             continue
         break
 
