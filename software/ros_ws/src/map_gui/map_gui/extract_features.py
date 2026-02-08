@@ -10,13 +10,13 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-MAP_directory = os.environ.get("PERSEUS_MAP_DIR", "/opt/perseus/maps")
-JSON_DIR = Path(
-    os.environ.get(
-        "PERSEUS_JSON_DIR", str(Path.home() / "perseus-v2/software/web_ui/static")
-    )
-).resolve()
-JSON_DIR.mkdir(parents=True, exist_ok=True)
+# MAP_directory = os.environ.get("PERSEUS_MAP_DIR", "/opt/perseus/maps")
+# JSON_DIR = Path(
+#     os.environ.get(
+#         "PERSEUS_JSON_DIR", str(Path.home() / "perseus-v2/software/web_ui/static")
+#     )
+# ).resolve()
+# JSON_DIR.mkdir(parents=True, exist_ok=True)
 
 REQUEST_TOPIC_NAME = "/map_editor/request"
 RESPONSE_TOPIC_NAME = "/map_editor/response"
@@ -110,21 +110,26 @@ class ExtractFeatures(Node):
     def SaveJson(self, request_id: str, request: dict):
         json_text = request.get("json_text", "")
         file_name = self.SaveJsonFileName(request.get("file_name", "waypoints.json"))
+        file_path = os.path.expanduser(f"~/perseus-v2/software/web_ui/static/{file_name}")
         try:
-            JSON_DIR.mkdir(parents=True, exist_ok=True)
-            out_path = JSON_DIR / file_name
-            tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
-            tmp_path.write_text(json_text, encoding="utf-8")
-            tmp_path.replace(out_path)
-            self.reply(request_id, {"ok": True, "saved_path": str(out_path)})
+            with open(file_path, "w", encoding="utf-8") as file:
+                file.write(json_text)
+            #JSON_DIR = 
+            #JSON_DIR.mkdir(parents=True, exist_ok=True)
+            #out_path = os.path.expanduser(f"~/perseus-v2/software/web_ui/static/{json_text}")
+            #tmp_path = JSON_DIR.with_suffix(JSON_DIR.suffix + ".tmp")
+            #JSON_DIR.write_text(json_text, encoding="utf-8")
+            #tmp_path.replace(JSON_DIR)
+            self.reply(request_id, {"ok": True, "saved_path": str(file_path)})
         except Exception as e:
             self.reply(request_id, {"ok": False, "message": str(e)})
 
-    def LoadImage(self, image_id: str):
-        if image_id in self.cache:
-            return self.cache[image_id]
+    def LoadImage(self, imageID: str):
+        if imageID in self.cache:
+            return self.cache[imageID]
 
-        image_path = os.path.join(MAP_directory, image_id)
+        #image_path = os.path.join(MAP_directory, imageID)
+        image_path = os.path.expanduser(f"~/perseus-v2/software/web_ui/static/{imageID}")
         image_bgr = cv2.imread(image_path, cv2.IMREAD_COLOR)
         if image_bgr is None:
             raise FileNotFoundError(f"Cannot read image: {image_path}")
@@ -132,7 +137,7 @@ class ExtractFeatures(Node):
         image_hue_saturation_value = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
         image_height, image_width = image_bgr.shape[:2]
 
-        self.cache[image_id] = (
+        self.cache[imageID] = (
             image_bgr,
             image_hue_saturation_value,
             image_height,
@@ -181,13 +186,13 @@ class ExtractFeatures(Node):
                 return
 
             mode = request["mode"]
-            image_id = request["image_id"]
-            x_pos = int(request["sample_x"])
-            y_pos = int(request["sample_y"])
+            image_id = request["imageID"]
+            x_pos = int(request["sampleXPosition"])
+            y_pos = int(request["sampleYPosition"])
 
-            hue_tolerance = int(request.get("tol_h", 10))
-            saturation_tolerance = int(request.get("tol_s", 60))
-            value_tolerance = int(request.get("tol_v", 60))
+            hue_tolerance = int(request.get("hueTolerance", 10))
+            saturation_tolerance = int(request.get("saturationTolerance", 60))
+            value_tolerance = int(request.get("valueTolerance", 60))
 
             min_area = float(request.get("min_area", 50))
             approximation_epsilon = float(request.get("approx_eps", 2.0))
@@ -195,11 +200,8 @@ class ExtractFeatures(Node):
             close_kernel_size = int(request.get("close_k", 5))
             median_kernel_size = int(request.get("median_k", 5))
 
-            x_direction = request["x_direction"]
-            y_direction = request["y_direction"]
-
-            x_direction = request["x_direction"]
-            y_direction = request["y_direction"]
+            x_direction = request["xOriginDirectionection"]
+            y_direction = request["yOriginDirectionection"]
 
             image_bgr, image_hue_saturation_value, image_height, image_width = (
                 self.LoadImage(image_id)
@@ -211,8 +213,8 @@ class ExtractFeatures(Node):
                     {
                         "ok": False,
                         "message": f"Out of bounds ({x_pos},{y_pos}) for {image_width}x{image_height}",
-                        "sample_x": x_pos,
-                        "sample_y": y_pos,
+                        "sampleXPosition": x_pos,
+                        "sampleYPosition": y_pos,
                     },
                 )
                 return
@@ -221,7 +223,7 @@ class ExtractFeatures(Node):
                 int(channel) for channel in image_hue_saturation_value[y_pos, x_pos]
             ]
             blue, green, red = [int(channel) for channel in image_bgr[y_pos, x_pos]]
-            sample_hexadecimal_color = f"#{red:02X}{green:02X}{blue:02X}"
+            sampleHexadecimalColor = f"#{red:02X}{green:02X}{blue:02X}"
 
             mask = None
             for lower_bound, upper_bound in HueSaturationValueRanges(
@@ -255,10 +257,10 @@ class ExtractFeatures(Node):
                     {
                         "ok": False,
                         "message": "No contour found (tolerance too tight?)",
-                        "sample_x": x_pos,
-                        "sample_y": y_pos,
-                        "sample_hex": sample_hexadecimal_color,
-                        "sample_image_hex": sample_hexadecimal_color,
+                        "sampleXPosition": x_pos,
+                        "sampleYPosition": y_pos,
+                        "sampleHex": sampleHexadecimalColor,
+                        "sample_image_hex": sampleHexadecimalColor,
                     },
                 )
                 return
@@ -273,10 +275,10 @@ class ExtractFeatures(Node):
                     {
                         "ok": False,
                         "message": "Contours found but all filtered by min_area",
-                        "sample_x": x_pos,
-                        "sample_y": y_pos,
-                        "sample_hex": sample_hexadecimal_color,
-                        "sample_image_hex": sample_hexadecimal_color,
+                        "sampleXPosition": x_pos,
+                        "sampleYPosition": y_pos,
+                        "sampleHex": sampleHexadecimalColor,
+                        "sample_image_hex": sampleHexadecimalColor,
                     },
                 )
                 return
@@ -288,10 +290,10 @@ class ExtractFeatures(Node):
                     {
                         "ok": False,
                         "message": "No suitable contour near click",
-                        "sample_x": x_pos,
-                        "sample_y": y_pos,
-                        "sample_hex": sample_hexadecimal_color,
-                        "sample_image_hex": sample_hexadecimal_color,
+                        "sampleXPosition": x_pos,
+                        "sampleYPosition": y_pos,
+                        "sampleHex": sampleHexadecimalColor,
+                        "sample_image_hex": sampleHexadecimalColor,
                     },
                 )
                 return
@@ -371,10 +373,9 @@ class ExtractFeatures(Node):
                 "ok": True,
                 "message": "OK",
                 "mode": mode,
-                "sample_x": x_pos,
-                "sample_y": y_pos,
-                "sample_hex": sample_hexadecimal_color,
-                "sample_image_hex": sample_hexadecimal_color,
+                "sampleXPosition": x_pos,
+                "sampleYPosition": y_pos,
+                "sampleHex": sampleHexadecimalColor,
                 "sample_rgb": [red, green, blue],
                 "centroid": [centroid[0], centroid[1]],
             }

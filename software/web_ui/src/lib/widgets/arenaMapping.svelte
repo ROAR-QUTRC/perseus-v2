@@ -74,7 +74,7 @@
 
 	let imageElement: HTMLImageElement | null = null;
 
-	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_2.png';
+	const mapImageId = 'New_Farm_Autonomy_Map.png';
 	// const mapImageUrl = `http://localhost:8000/${mapImageId}`;
 
 	//Ros topics to listen to requests and reply
@@ -177,12 +177,13 @@
 			borderContour = Array.isArray(response.contour) ? response.contour : [];
 		}
 
-		sampleImageHexadecimalColor = String(response.sampleImageHexValue ?? '');
+		sampleImageHexadecimalColor = String(response.sampleHex ?? '');
 		centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
 		contour = Array.isArray(response.contour) ? response.contour : [];
 
 
 		if (mode === 'waypoint') {
+			console.log(sampleImageHexadecimalColor);
 			if (waypointToggle == 0) {
 				addWaypointFromRespomse(response, contour);
 				statusMessage = centroid
@@ -296,6 +297,7 @@
 		const arrowNumber = arrows.length + 1;
 		return `AR${String(arrowNumber)}`;
 	}
+
 	function addManualWaypoint(clickPosition: { x: number; y: number }) {
 		const clickX = clickPosition.x;
 		const clickY = clickPosition.y;
@@ -344,6 +346,7 @@
 
 
 	function addWaypointFromRespomse(response: any, extractedContour: number [][]) {
+		console.log("help2");
 		if (!response?.ok) return;
 		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
 
@@ -363,7 +366,7 @@
 			return;
 		}
 
-		const hexadecimalColor = getSampleHex(response);
+		const hexadecimalColor = String(response.sampleHex ?? '');
 		const waypointContour = extractedContour;
 		const rel = toRelative(centroidX, centroidY);
 
@@ -372,7 +375,7 @@
 			{
 				id: generateID(),
 				name: nextWaypointName(),
-				hexadecimalColor: hexadecimalColor,
+				hexadecimalColor,
 				clickX,
 				clickY,
 				centroidX,
@@ -405,7 +408,7 @@
 			return;
 		}
 
-		const hexadecimalColor = String(response.sampleImageHexValue ?? '');
+		const hexadecimalColor = String(response.sampleHex ?? '');
 
 		arrows = [
 			...arrows,
@@ -519,14 +522,15 @@
 	}
 
 	// Function to help translate the difference in case variables from the back end to front end
-	function getSampleHex(response: any): string {
-		return String(
-			response?.sampleImageHexValue ??
-			response?.sampleImageHex ??
-			response?.sampleImageHexadecimalColor ??
-			''
-		);
-	}
+	// function getSampleHex(response: any): string {
+	// 	return String(
+	// 		response?.sampleImageHexValue ??
+	// 		response?.sampleImageHex ??
+	// 		response?.sampleImageHexadecimalColor ??
+	// 		''
+	// 	);
+	// }
+
 	// Function that sets the file name of the saved file created in buildJson()
 	function saveJsonToScripts() {
 		if (!requestTopic) {
@@ -549,6 +553,7 @@
 	}
 
 	async function onMapClick(event: MouseEvent) {
+		console.log(mode);
 		const xOriginDirection = positiveXDirection;
 		const yOriginDirection = positiveYDirection;
 		if (mode === 'manual') {
@@ -568,39 +573,39 @@
 			addManualOrigin(clickPosition);
 			return;
 		}
-			const clickPosition = clickToNaturalPosition(event);
-			if(!clickPosition) return;
-			currentClickPosition = clickPosition;
-			contour = [];
-			centroid = null;
-			sampleImageHexadecimalColor = '';
+		const clickPosition = clickToNaturalPosition(event);
+		if(!clickPosition) return;
+		currentClickPosition = clickPosition;
+		contour = [];
+		centroid = null;
+		sampleImageHexadecimalColor = '';
 
-			if (!clickPosition) return;
+		if (!clickPosition) return;
 
-			statusMessage = `${mode} @ (${clickPosition.x}, ${clickPosition.y})…`;
+		statusMessage = `${mode} @ (${clickPosition.x}, ${clickPosition.y})…`;
 
-			const request = ({
-				op: 'extract_feature',
-				mode, // 'waypoint' | 'border' | 'origin' | 'manual'
-				image_id: mapImageId,
-				sampleXPosition: clickPosition.x,
-				sampleYPosition: clickPosition.y,
-				hueTolerance: defaultHueTolerance,
-				saturationTolerance: defaultSaturationTolerance,
-				valueTolerance: defaultValueTolerance,
-				xOriginDirectionection: xOriginDirection,
-				yOriginDirectionection: yOriginDirection
-			});
+		const request = ({
+			op: 'extract_feature',
+			mode, // 'waypoint' | 'border' | 'origin' | 'manual'
+			imageID: mapImageId,
+			sampleXPosition: clickPosition.x,
+			sampleYPosition: clickPosition.y,
+			hueTolerance: defaultHueTolerance,
+			saturationTolerance: defaultSaturationTolerance,
+			valueTolerance: defaultValueTolerance,
+			xOriginDirectionection: xOriginDirection,
+			yOriginDirectionection: yOriginDirection
+		});
 
-			const id = generateID();
-			if (requestTopic) {
-				requestTopic.publish({
-					data: JSON.stringify({ id, ...request})
-				});
-			}
-			else {
-				new Error('ROS not connected');
-			};
+		const id = generateID();
+		if (requestTopic) {
+			requestTopic.publish({
+				data: JSON.stringify({ id, ...request})
+			})
+		}
+		else {
+			new Error('ROS not connected');
+		};
 
 	}
 
@@ -609,7 +614,7 @@
 		const gridSpacing = document.getElementById("gridSpacing") as HTMLInputElement;
 
 		if (squares.valueAsNumber && gridSpacing.valueAsNumber) {
-			scale = mapHeight / squares.valueAsNumber * gridSpacing.valueAsNumber;
+			scale = mapHeight / squares.valueAsNumber / gridSpacing.valueAsNumber;
 			scale = parseFloat(scale.toFixed(2));
 		}
 	};
@@ -799,8 +804,8 @@
 								Calculate average
 							</button>
 						</td>
-						<td>{xOriginAverage / scale}</td>
-						<td>{yOriginAverage / scale}</td>
+						<td>{(xOriginAverage / scale).toFixed(2)}</td>
+						<td>{(yOriginAverage / scale).toFixed(2)}</td>
 					</tr>
 				</tbody>
 			</table>
