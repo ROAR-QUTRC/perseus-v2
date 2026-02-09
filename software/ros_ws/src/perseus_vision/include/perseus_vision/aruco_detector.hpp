@@ -24,9 +24,11 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
 #include "visualization_msgs/msg/marker_array.hpp"
+#include "vision_msgs/msg/detection3_d_array.hpp"
+#include "vision_msgs/msg/detection3_d.hpp"
+#include "vision_msgs/msg/object_hypothesis_with_pose.hpp"
 
 // ---- custom interfaces ----
-#include "perseus_interfaces/msg/object_detections.hpp"
 #include "perseus_interfaces/srv/detect_objects.hpp"
 
 namespace perseus_vision
@@ -49,7 +51,7 @@ namespace perseus_vision
         void processImage(const cv::Mat& frame, const std_msgs::msg::Header& header);
         void transformAndPublishMarker(
             const std_msgs::msg::Header& header,
-            int marker_id,
+            int32_t marker_id,
             const cv::Vec3d& rvec,
             const cv::Vec3d& tvec);
 
@@ -67,7 +69,7 @@ namespace perseus_vision
         double marker_length_{0.35};
         double axis_length_{0.03};
         double min_bounding_box_area_{100.0};
-        int dictionary_id{1};
+        int32_t dictionary_id_{1};
 
         std::string camera_frame_{"camera_link_optical"};
         std::string tf_output_frame_{"odom"};
@@ -106,7 +108,7 @@ namespace perseus_vision
 
         rclcpp::Service<DetectObjects>::SharedPtr service_;
 
-        rclcpp::Publisher<perseus_interfaces::msg::ObjectDetections>::SharedPtr detection_pub_;
+        rclcpp::Publisher<vision_msgs::msg::Detection3DArray>::SharedPtr detection_pub_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_array_pub_;
 
         // Cached detections for service + topic
@@ -117,6 +119,9 @@ namespace perseus_vision
         bool has_detections_{false};
         cv::Mat latest_frame_;                                           // Store latest annotated frame for capture
         std::vector<std::pair<int, cv::Point3d>> latest_marker_coords_;  // Store marker coordinates for annotation
+
+        // Camera calibration synchronization
+        std::mutex camera_matrix_mutex_;
     };
 
 }  // namespace perseus_vision
