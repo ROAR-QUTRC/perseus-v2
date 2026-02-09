@@ -1,0 +1,33 @@
+layout {
+    cwd "$ZELLIJ_CONFIG_DIR/../../"
+    pane  {
+        split_direction "horizontal"
+        pane {
+            size 1
+            plugin {
+                location "zellij:tab-bar"
+            }
+            borderless true
+        }
+        pane  {
+            split_direction "vertical"
+            pane {
+                command "$SHELL"
+                args "-c" "nix run .#perseus -- payload:=bucket"
+                size 80
+            }
+            pane {
+                cwd "software/web_ui"
+                command "$SHELL"
+                args "-c" "yarn && yarn camera-online"
+            }
+        }
+        pane {
+            size 1
+            plugin {
+                location "zellij:status-bar"
+            }
+            borderless true
+        }
+    }
+}

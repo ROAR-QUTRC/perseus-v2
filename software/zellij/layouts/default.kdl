@@ -1,0 +1,31 @@
+layout {
+    pane  {
+        split_direction "horizontal"
+        pane {
+            size 1
+            plugin {
+                location "zellij:tab-bar"
+            }
+            borderless true
+        }
+        pane  {
+            split_direction "vertical"
+            pane
+            pane {
+                split_direction "horizontal"
+                pane
+                pane {
+                    command "btop" 
+                    close_on_exit true
+                }
+            }
+        }
+        pane {
+            size 1 
+            plugin {
+                location "zellij:status-bar"
+            }
+            borderless true
+        }
+    }
+}

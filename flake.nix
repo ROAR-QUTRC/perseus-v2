@@ -160,6 +160,7 @@
             glibcLocales
             yaml-cpp
             libnice
+            zellij
             ;
           inherit (pkgs.gst_all_1)
             gstreamer
@@ -252,6 +253,8 @@
               export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc}/bin"
               # ONNX Runtime with CUDA support
               export ORT_LIB_LOCATION="${devShellPkgs.onnxruntime-cuda}/lib"
+              # Zellij config is relative to the top-level of the repo
+              export ZELLIJ_CONFIG_DIR=$(${pkgs.git}/bin/git rev-parse --show-toplevel)/software/zellij
             '';
           };
 

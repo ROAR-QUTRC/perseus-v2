@@ -1,0 +1,45 @@
+layout {
+    cwd "$ZELLIJ_CONFIG_DIR/../../"
+    pane {
+        split_direction "horizontal" 
+        pane {
+            size 1 
+            plugin {
+                location "zellij:tab-bar"
+            }
+            borderless true
+        }
+        pane {
+            split_direction "vertical" 
+            pane {
+                size 40 
+                command "candump" 
+                args "can0" 
+                close_on_exit true
+            }
+            pane {
+                split_direction "horizontal" 
+                pane
+                pane
+            }
+        }
+        pane {
+            size 1 
+            plugin {
+                location "zellij:status-bar"
+            }
+            borderless true
+        }
+    }
+    floating_panes {
+        pane  {
+            cwd "software/web_ui" 
+            command "$SHELL"
+            args "-c" "yarn && yarn dev" 
+            x "5%"
+            y "5%"
+            width "80%"
+            height "80%"
+        }
+    }
+}
