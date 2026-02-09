@@ -23,7 +23,7 @@ find_package(perseus_interfaces REQUIRED)
 include_directories(include)
 
 add_executable(aruco_detector src/aruco_detector.cpp
-                                   src/aruco_detector_node.cpp)
+                              src/aruco_detector_node.cpp)
 
 ament_target_dependencies(
   aruco_detector
@@ -41,9 +41,8 @@ ament_target_dependencies(
   perseus_interfaces)
 
 target_include_directories(
-  aruco_detector
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         $<INSTALL_INTERFACE:include>)
+  aruco_detector PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                        $<INSTALL_INTERFACE:include>)
 
 install(TARGETS aruco_detector DESTINATION lib/${PROJECT_NAME})
 
