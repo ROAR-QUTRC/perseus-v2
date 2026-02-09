@@ -181,7 +181,6 @@ namespace perseus_vision
             latest_ids_.clear();
             latest_poses_.clear();
             latest_timestamp_ = header.stamp;
-            has_detections_ = true;
         }
 
         // Store marker info for corner display
@@ -209,12 +208,27 @@ namespace perseus_vision
             if (has_camera_matrix)
             {
                 std::vector<cv::Vec3d> rvecs, tvecs;
-                cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, local_camera_matrix, local_dist_coeffs, rvecs, tvecs);
 
                 cv::aruco::drawDetectedMarkers(annotated_frame, corners, ids);
 
+                // Marker corner points in 3D (square marker with given length)
+                std::vector<cv::Point3f> markerObjPoints;
+                float half_length = marker_length_ / 2.0f;
+                markerObjPoints.push_back(cv::Point3f(-half_length, half_length, 0));
+                markerObjPoints.push_back(cv::Point3f(half_length, half_length, 0));
+                markerObjPoints.push_back(cv::Point3f(half_length, -half_length, 0));
+                markerObjPoints.push_back(cv::Point3f(-half_length, -half_length, 0));
+
                 for (size_t i = 0; i < ids.size(); ++i)
                 {
+                    // Estimate pose using cv::solvePnP
+                    cv::Vec3d rvec, tvec;
+                    std::vector<cv::Point2f> imagePoints(corners[i].begin(), corners[i].end());
+                    
+                    cv::solvePnP(markerObjPoints, imagePoints, local_camera_matrix, local_dist_coeffs, rvec, tvec);
+                    rvecs.push_back(rvec);
+                    tvecs.push_back(tvec);
+
                     // Calculate bounding box area for filtering
                     const auto& corner = corners[i];
                     double min_x = corner[0].x, max_x = corner[0].x;
@@ -262,7 +276,7 @@ namespace perseus_vision
         // Store annotated frame for capture service
         {
             std::lock_guard<std::mutex> lock(detections_mutex_);
-            latest_frame_ = annotated_frame.clone();
+            latest_frame_ = std::move(annotated_frame);
             latest_marker_coords_ = marker_coords;
         }
 
