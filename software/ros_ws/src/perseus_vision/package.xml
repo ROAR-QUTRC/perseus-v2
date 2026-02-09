@@ -19,15 +19,11 @@
   <depend>builtin_interfaces</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
-<<<<<<< HEAD
   <depend>std_msgs</depend>
   <depend>cv_bridge</depend>
-=======
-  <depend>cv_bridge</depend>
-  <depend>image_transport</depend>
->>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
+  <depend>vision_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>visualization_msgs</depend>
@@ -43,15 +39,3 @@
     <build_type>ament_cmake</build_type>
   </export>
 </package>
-=======
-
-=======
-  <build_depend>perseus_interfaces</build_depend>
-  <exec_depend>perseus_interfaces</exec_depend>
->>>>>>> 2c48d33b (fix: correct coordinate adjustment for marker pose in ArucoDetector)
-  <export>
-    <build_type>ament_cmake</build_type>
-    <member_of_group>rosidl_interface_packages</member_of_group>
-  </export>
-</package>
->>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
