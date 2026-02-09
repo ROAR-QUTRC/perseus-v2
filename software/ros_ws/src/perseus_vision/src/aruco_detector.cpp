@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdio>
 #include <ctime>
+#include <filesystem>
 
 namespace perseus_vision
 {
@@ -13,17 +14,17 @@ namespace perseus_vision
         // Declare and load parameters
         marker_length_ = this->declare_parameter<double>("marker_length", 0.35);
         axis_length_ = this->declare_parameter<double>("axis_length", 0.03);
-        dictionary_id = this->declare_parameter<int>("dictionary_id", 1);
+        dictionary_id_ = this->declare_parameter<int>("dictionary_id", 1);
         camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_link_optical");
         tf_output_frame_ = this->declare_parameter<std::string>("tf_output_frame", "odom");
         input_img_ = this->declare_parameter<std::string>("input_img", "/camera/camera/color/image_raw");
-        output_img_ = this->declare_parameter<std::string>("output_img", "/detection/aruco/image");
+        output_img_ = this->declare_parameter<std::string>("output_img", "/perseus_vision/aruco/image");
         publish_tf_ = this->declare_parameter<bool>("publish_tf", true);
         publish_img_ = this->declare_parameter<bool>("publish_img", true);
         compressed_io_ = this->declare_parameter<bool>("compressed_io", false);
         publish_output_ = this->declare_parameter<bool>("publish_output", false);
         use_camera_info_ = this->declare_parameter<bool>("use_camera_info", false);
-        output_topic_ = this->declare_parameter<std::string>("output_topic", "/detection/aruco/detections");
+        output_topic_ = this->declare_parameter<std::string>("output_topic", "/perseus_vision/aruco/detections");
         camera_info_topic_ = this->declare_parameter<std::string>("camera_info_topic", "/camera/camera/color/camera_info");
         min_bounding_box_area_ = this->declare_parameter<double>("min_bounding_box_area", 100.0);
 
@@ -45,7 +46,7 @@ namespace perseus_vision
         }
 
         // ArUco setup
-        cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dictionary_id);
+        cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dictionary_id_);
         detector_ = cv::aruco::ArucoDetector(dictionary);
 
         // TF broadcaster and listener
@@ -89,7 +90,7 @@ namespace perseus_vision
                       std::placeholders::_2));
         if (publish_output_)
         {
-            detection_pub_ = this->create_publisher<::perseus_interfaces::msg::ObjectDetections>(
+            detection_pub_ = this->create_publisher<vision_msgs::msg::Detection3DArray>(
                 output_topic_, 10);
         }
 
@@ -188,55 +189,73 @@ namespace perseus_vision
 
         if (!ids.empty())
         {
-            // Check if camera matrix is initialized
-            if (camera_matrix_.empty())
+            // Check if camera matrix is initialized and get safe copies
+            cv::Mat local_camera_matrix, local_dist_coeffs;
+            bool has_camera_matrix = false;
             {
-                RCLCPP_WARN_ONCE(this->get_logger(), "Camera matrix not initialized, skipping pose estimation");
-                return;
+                std::lock_guard<std::mutex> lock(camera_matrix_mutex_);
+                if (!camera_matrix_.empty())
+                {
+                    local_camera_matrix = camera_matrix_.clone();
+                    local_dist_coeffs = dist_coeffs_.clone();
+                    has_camera_matrix = true;
+                }
+                else
+                {
+                    RCLCPP_WARN_ONCE(this->get_logger(), "Camera matrix not initialized, skipping pose estimation");
+                }
             }
 
-            std::vector<cv::Vec3d> rvecs, tvecs;
-            cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
-
-            cv::aruco::drawDetectedMarkers(annotated_frame, corners, ids);
-
-            for (size_t i = 0; i < ids.size(); ++i)
+            if (has_camera_matrix)
             {
-                // Calculate bounding box area for filtering
-                const auto& corner = corners[i];
-                double min_x = corner[0].x, max_x = corner[0].x;
-                double min_y = corner[0].y, max_y = corner[0].y;
+                std::vector<cv::Vec3d> rvecs, tvecs;
+                cv::aruco::estimatePoseSingleMarkers(corners, marker_length_, local_camera_matrix, local_dist_coeffs, rvecs, tvecs);
 
-                for (const auto& pt : corner)
+                cv::aruco::drawDetectedMarkers(annotated_frame, corners, ids);
+
+                for (size_t i = 0; i < ids.size(); ++i)
                 {
-                    min_x = std::min(min_x, static_cast<double>(pt.x));
-                    max_x = std::max(max_x, static_cast<double>(pt.x));
-                    min_y = std::min(min_y, static_cast<double>(pt.y));
-                    max_y = std::max(max_y, static_cast<double>(pt.y));
+                    // Calculate bounding box area for filtering
+                    const auto& corner = corners[i];
+                    double min_x = corner[0].x, max_x = corner[0].x;
+                    double min_y = corner[0].y, max_y = corner[0].y;
+
+                    for (const auto& pt : corner)
+                    {
+                        min_x = std::min(min_x, static_cast<double>(pt.x));
+                        max_x = std::max(max_x, static_cast<double>(pt.x));
+                        min_y = std::min(min_y, static_cast<double>(pt.y));
+                        max_y = std::max(max_y, static_cast<double>(pt.y));
+                    }
+
+                    double bbox_area = (max_x - min_x) * (max_y - min_y);
+
+                    // Skip detections with bounding box area smaller than threshold
+                    if (bbox_area < min_bounding_box_area_)
+                    {
+                        RCLCPP_DEBUG(this->get_logger(),
+                                     "Filtered out marker %d: area %.1f < min_area %.1f",
+                                     ids[i], bbox_area, min_bounding_box_area_);
+                        continue;
+                    }
+
+                    cv::drawFrameAxes(
+                        annotated_frame,
+                        local_camera_matrix, local_dist_coeffs,
+                        rvecs[i], tvecs[i],
+                        axis_length_);
+
+                    // Store marker position for display
+                    cv::Point3d pos(tvecs[i][2], -tvecs[i][0], -tvecs[i][1]);
+                    marker_coords.push_back({ids[i], pos});
+
+                    transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
                 }
-
-                double bbox_area = (max_x - min_x) * (max_y - min_y);
-
-                // Skip detections with bounding box area smaller than threshold
-                if (bbox_area < min_bounding_box_area_)
-                {
-                    RCLCPP_DEBUG(this->get_logger(),
-                                 "Filtered out marker %d: area %.1f < min_area %.1f",
-                                 ids[i], bbox_area, min_bounding_box_area_);
-                    continue;
-                }
-
-                cv::drawFrameAxes(
-                    annotated_frame,
-                    camera_matrix_, dist_coeffs_,
-                    rvecs[i], tvecs[i],
-                    axis_length_);
-
-                // Store marker position for display
-                cv::Point3d pos(tvecs[i][2], -tvecs[i][0], -tvecs[i][1]);
-                marker_coords.push_back({ids[i], pos});
-
-                transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
+            }
+            else
+            {
+                // Camera matrix not available, just draw detected corners
+                cv::aruco::drawDetectedMarkers(annotated_frame, corners, ids);
             }
         }
 
@@ -280,6 +299,9 @@ namespace perseus_vision
                 marker.color.b = 1.0f;
                 marker.color.a = 1.f;
 
+                // Set lifetime to ensure stale markers are cleaned up
+                marker.lifetime = rclcpp::Duration(2, 0);  // 2 seconds
+
                 marker_array.markers.push_back(marker);
             }
         }
@@ -288,13 +310,25 @@ namespace perseus_vision
         // Publish detections message if enabled
         if (publish_output_ && detection_pub_)
         {
-            ::perseus_interfaces::msg::ObjectDetections detection_msg;
+            vision_msgs::msg::Detection3DArray detection_msg;
+            detection_msg.header.stamp = header.stamp;
+            detection_msg.header.frame_id = tf_output_frame_;
             {
                 std::lock_guard<std::mutex> lock(detections_mutex_);
-                detection_msg.stamp = latest_timestamp_;
-                detection_msg.frame_id = tf_output_frame_;
-                detection_msg.ids = latest_ids_;
-                detection_msg.poses = latest_poses_;
+                for (size_t i = 0; i < latest_ids_.size(); ++i)
+                {
+                    vision_msgs::msg::Detection3D detection;
+                    detection.header.stamp = latest_timestamp_;
+                    detection.header.frame_id = tf_output_frame_;
+                    
+                    vision_msgs::msg::ObjectHypothesisWithPose hyp;
+                    hyp.hypothesis.class_id = std::to_string(latest_ids_[i]);
+                    hyp.hypothesis.score = 1.0;
+                    hyp.pose.pose = latest_poses_[i];
+                    
+                    detection.results.push_back(hyp);
+                    detection_msg.detections.push_back(detection);
+                }
             }
             detection_pub_->publish(detection_msg);
         }
@@ -349,7 +383,7 @@ namespace perseus_vision
                 tf_broadcaster_->sendTransform(transform);
             }
 
-            RCLCPP_INFO(this->get_logger(),
+            RCLCPP_DEBUG(this->get_logger(),
                         "ArUco %d in %s: x=%.2f, y=%.2f, z=%.2f",
                         marker_id, tf_output_frame_.c_str(),
                         marker_pose_out.pose.position.x,
@@ -415,17 +449,31 @@ namespace perseus_vision
     void ArucoDetector::handle_request(const std::shared_ptr<DetectObjects::Request> request,
                                        std::shared_ptr<DetectObjects::Response> response)
     {
-        std::lock_guard<std::mutex> lock(detections_mutex_);
+        // Get data snapshot while holding lock, then release before I/O
+        cv::Mat frame_to_save;
+        std::vector<std::pair<int, cv::Point3d>> marker_coords_copy;
+        std::vector<int> ids_copy;
+        {
+            std::lock_guard<std::mutex> lock(detections_mutex_);
 
-        response->stamp = latest_timestamp_;
-        response->frame_id = tf_output_frame_;
-        response->ids = latest_ids_;
-        response->poses = latest_poses_;
+            response->stamp = latest_timestamp_;
+            response->frame_id = tf_output_frame_;
+            response->ids = latest_ids_;
+            response->poses = latest_poses_;
 
-        // Handle image capture if requested
+            // Copy data needed for image processing
+            if (request->capture_image)
+            {
+                frame_to_save = latest_frame_.clone();
+                marker_coords_copy = latest_marker_coords_;
+                ids_copy = latest_ids_;
+            }
+        }
+
+        // Handle image capture if requested (outside of lock)
         if (request->capture_image)
         {
-            if (latest_frame_.empty())
+            if (frame_to_save.empty())
             {
                 RCLCPP_WARN(this->get_logger(), "Capture requested but no frame available");
             }
@@ -434,16 +482,16 @@ namespace perseus_vision
                 try
                 {
                     // Create directory if it doesn't exist
-                    std::string mkdir_cmd = "mkdir -p \"" + request->img_save_path + "\"";
-                    int ret = system(mkdir_cmd.c_str());
-                    if (ret != 0)
+                    std::error_code ec;
+                    std::filesystem::create_directories(request->img_save_path, ec);
+                    if (ec)
                     {
                         RCLCPP_WARN(this->get_logger(), "Failed to create directory: %s", request->img_save_path.c_str());
                     }
                     else
                     {
                         // Create annotated copy for output
-                        cv::Mat output_frame = latest_frame_.clone();
+                        cv::Mat output_frame = frame_to_save.clone();
 
                         // Add timestamp to image
                         {
@@ -459,14 +507,14 @@ namespace perseus_vision
                         }
 
                         // Add marker coordinates to image
-                        if (!latest_marker_coords_.empty())
+                        if (!marker_coords_copy.empty())
                         {
                             int y_offset = 70;
                             cv::putText(output_frame, "Marker Coordinates (XYZ):",
                                         cv::Point(10, y_offset), cv::FONT_HERSHEY_SIMPLEX, 0.5,
                                         cv::Scalar(0, 255, 255), 1);
 
-                            for (const auto& mc : latest_marker_coords_)
+                            for (const auto& mc : marker_coords_copy)
                             {
                                 y_offset += 25;
                                 char coord_str[150];
@@ -482,11 +530,11 @@ namespace perseus_vision
 
                         // Generate filename with marker IDs
                         std::string ids_str;
-                        for (size_t i = 0; i < latest_ids_.size(); ++i)
+                        for (size_t i = 0; i < ids_copy.size(); ++i)
                         {
                             if (i > 0)
                                 ids_str += "_";
-                            ids_str += std::to_string(latest_ids_[i]);
+                            ids_str += std::to_string(ids_copy[i]);
                         }
                         if (ids_str.empty())
                             ids_str = "no_markers";
@@ -523,6 +571,8 @@ namespace perseus_vision
 
     void ArucoDetector::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg)
     {
+        std::lock_guard<std::mutex> lock(camera_matrix_mutex_);
+
         // Extract camera matrix K (3x3)
         // Camera matrix is stored as [fx, 0, cx, 0, fy, cy, 0, 0, 1]
         camera_matrix_ = cv::Mat(3, 3, CV_64F);
