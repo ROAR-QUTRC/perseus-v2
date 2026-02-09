@@ -17,15 +17,16 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(vision_msgs REQUIRED)
 find_package(perseus_interfaces REQUIRED)
 
 include_directories(include)
 
-add_executable(aruco_detector_node src/aruco_detector.cpp
+add_executable(aruco_detector src/aruco_detector.cpp
                                    src/aruco_detector_node.cpp)
 
 ament_target_dependencies(
-  aruco_detector_node
+  aruco_detector
   rclcpp
   sensor_msgs
   std_msgs
@@ -36,14 +37,15 @@ ament_target_dependencies(
   cv_bridge
   OpenCV
   visualization_msgs
+  vision_msgs
   perseus_interfaces)
 
 target_include_directories(
-  aruco_detector_node
+  aruco_detector
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:include>)
 
-install(TARGETS aruco_detector_node DESTINATION lib/${PROJECT_NAME})
+install(TARGETS aruco_detector DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/ DESTINATION include/)
 
