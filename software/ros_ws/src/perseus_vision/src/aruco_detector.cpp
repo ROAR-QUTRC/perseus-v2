@@ -221,11 +221,11 @@ namespace perseus_vision
 
                 for (size_t i = 0; i < ids.size(); ++i)
                 {
-                    // Estimate pose using cv::solvePnP
+                    // Estimate pose using cv::solveOnP
                     cv::Vec3d rvec, tvec;
                     std::vector<cv::Point2f> imagePoints(corners[i].begin(), corners[i].end());
-                    
-                    cv::solvePnP(markerObjPoints, imagePoints, local_camera_matrix, local_dist_coeffs, rvec, tvec);
+
+                    cv::solveOnP(markerObjPoints, imagePoints, local_camera_matrix, local_dist_coeffs, rvec, tvec);
                     rvecs.push_back(rvec);
                     tvecs.push_back(tvec);
 
