@@ -1,4 +1,4 @@
 final: prev:
 { 
-  roar-ml = final.callPackage ./. {};
+  roar_ml = final.callPackage ./. {};
 }
