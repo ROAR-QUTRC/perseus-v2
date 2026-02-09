@@ -320,12 +320,12 @@ namespace perseus_vision
                     vision_msgs::msg::Detection3D detection;
                     detection.header.stamp = latest_timestamp_;
                     detection.header.frame_id = tf_output_frame_;
-                    
+
                     vision_msgs::msg::ObjectHypothesisWithPose hyp;
                     hyp.hypothesis.class_id = std::to_string(latest_ids_[i]);
                     hyp.hypothesis.score = 1.0;
                     hyp.pose.pose = latest_poses_[i];
-                    
+
                     detection.results.push_back(hyp);
                     detection_msg.detections.push_back(detection);
                 }
@@ -384,11 +384,11 @@ namespace perseus_vision
             }
 
             RCLCPP_DEBUG(this->get_logger(),
-                        "ArUco %d in %s: x=%.2f, y=%.2f, z=%.2f",
-                        marker_id, tf_output_frame_.c_str(),
-                        marker_pose_out.pose.position.x,
-                        marker_pose_out.pose.position.y,
-                        marker_pose_out.pose.position.z);
+                         "ArUco %d in %s: x=%.2f, y=%.2f, z=%.2f",
+                         marker_id, tf_output_frame_.c_str(),
+                         marker_pose_out.pose.position.x,
+                         marker_pose_out.pose.position.y,
+                         marker_pose_out.pose.position.z);
         }
         catch (tf2::TransformException& ex)
         {
