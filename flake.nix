@@ -361,6 +361,7 @@
           {
             perseus = mkRosLaunchApp "perseus" "perseus" "perseus.launch.py";
             perseus-lite = mkRosLaunchApp "perseus-lite" "perseus_lite" "perseus_lite.launch.py";
+            autonomy = mkRosLaunchApp "autonomy" "autonomy" "autonomy.launch.py";
             default = self.apps.${system}.perseus;
             generic_controller = mkRosLaunchApp "generic_controller" "perseus_input" "controller.launch.py";
             ros2 = {
