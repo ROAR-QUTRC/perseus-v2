@@ -1,6 +1,3 @@
-import torch
-
-
 def main():
     print("Imported Torch")
 
