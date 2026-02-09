@@ -90,7 +90,7 @@ namespace perseus_vision
                       std::placeholders::_2));
         if (publish_output_)
         {
-            detection_pub_ = this->create_publisher<vision_msgs::msg::Detection3DArray>(
+            detection_pub_ = this->create_publisher<perseus_interfaces::msg::ObjectDetections>(
                 output_topic_, 10);
         }
 
@@ -310,25 +310,13 @@ namespace perseus_vision
         // Publish detections message if enabled
         if (publish_output_ && detection_pub_)
         {
-            vision_msgs::msg::Detection3DArray detection_msg;
-            detection_msg.header.stamp = header.stamp;
-            detection_msg.header.frame_id = tf_output_frame_;
+            perseus_interfaces::msg::ObjectDetections detection_msg;
+            detection_msg.stamp = header.stamp;
+            detection_msg.frame_id = tf_output_frame_;
             {
                 std::lock_guard<std::mutex> lock(detections_mutex_);
-                for (size_t i = 0; i < latest_ids_.size(); ++i)
-                {
-                    vision_msgs::msg::Detection3D detection;
-                    detection.header.stamp = latest_timestamp_;
-                    detection.header.frame_id = tf_output_frame_;
-
-                    vision_msgs::msg::ObjectHypothesisWithPose hyp;
-                    hyp.hypothesis.class_id = std::to_string(latest_ids_[i]);
-                    hyp.hypothesis.score = 1.0;
-                    hyp.pose.pose = latest_poses_[i];
-
-                    detection.results.push_back(hyp);
-                    detection_msg.detections.push_back(detection);
-                }
+                detection_msg.ids = latest_ids_;
+                detection_msg.poses = latest_poses_;
             }
             detection_pub_->publish(detection_msg);
         }

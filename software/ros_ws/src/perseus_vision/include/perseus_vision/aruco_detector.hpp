@@ -27,12 +27,10 @@
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
-#include "vision_msgs/msg/detection3_d.hpp"
-#include "vision_msgs/msg/detection3_d_array.hpp"
-#include "vision_msgs/msg/object_hypothesis_with_pose.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 
 // ---- custom interfaces ----
+#include "perseus_interfaces/msg/object_detections.hpp"
 #include "perseus_interfaces/srv/detect_objects.hpp"
 
 namespace perseus_vision
@@ -112,7 +110,7 @@ namespace perseus_vision
 
         rclcpp::Service<DetectObjects>::SharedPtr service_;
 
-        rclcpp::Publisher<vision_msgs::msg::Detection3DArray>::SharedPtr detection_pub_;
+        rclcpp::Publisher<perseus_interfaces::msg::ObjectDetections>::SharedPtr detection_pub_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_array_pub_;
 
         // Cached detections for service + topic
