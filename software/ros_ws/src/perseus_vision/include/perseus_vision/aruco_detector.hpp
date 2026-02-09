@@ -23,10 +23,10 @@
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
-#include "visualization_msgs/msg/marker_array.hpp"
-#include "vision_msgs/msg/detection3_d_array.hpp"
 #include "vision_msgs/msg/detection3_d.hpp"
+#include "vision_msgs/msg/detection3_d_array.hpp"
 #include "vision_msgs/msg/object_hypothesis_with_pose.hpp"
+#include "visualization_msgs/msg/marker_array.hpp"
 
 // ---- custom interfaces ----
 #include "perseus_interfaces/srv/detect_objects.hpp"
