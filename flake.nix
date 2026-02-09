@@ -99,6 +99,7 @@
               # and add pkgs.unstable access
               unstable = pkgs-unstable;
             })
+            (import ./software/machine_learning/overlay.nix)
           ];
           # Gazebo makes use of Freeimage.
           # Freeimage is blocked by default since it has a whole bunch of CVEs.
