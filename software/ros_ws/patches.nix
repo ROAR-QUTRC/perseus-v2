@@ -2,39 +2,9 @@ rosDistro: final: prev:
 let
   rosOverlay = rosFinal: rosPrev: {
     # --- GUI patches ---
-    joint-state-publisher-gui = rosPrev.joint-state-publisher-gui.overrideAttrs (
-      {
-        nativeBuildInputs ? [ ],
-        postFixup ? "",
-        ...
-      }:
-      {
-        dontWrapQtApps = false;
-        nativeBuildInputs = nativeBuildInputs ++ [ prev.qt5.wrapQtAppsHook ];
-        postFixup =
-          postFixup
-          + ''
-            wrapQtApp "$out/lib/joint_state_publisher_gui/joint_state_publisher_gui"
-          '';
-      }
-    );
-    # rosbridge incorrectly depends on the bson package instead of pymongo which is what it actually needs
-    # (pymongo provides its own bson implementation, which behaves differently to the bson package)
-    rosbridge-library = rosPrev.rosbridge-library.overrideAttrs (
-      {
-        propagatedBuildInputs ? [ ],
-        ...
-      }:
-      let
-        filteredPropagatedBuildInputs = rosFinal.lib.remove rosPrev.python3Packages.bson propagatedBuildInputs;
-      in
-      {
-        propagatedBuildInputs = filteredPropagatedBuildInputs ++ [ rosPrev.python3Packages.pymongo ];
-      }
-    );
     fields2cover =
       let
-        nlohmann_json = final.nlohmann_json.overrideAttrs ({
+        nlohmann_json = final.nlohmann_json.overrideAttrs {
           src = final.fetchFromGitHub {
             owner = "nlohmann";
             repo = "json";
@@ -42,16 +12,16 @@ let
             sha256 = "sha256-DTsZrdB9GcaNkx7ZKxcgCA3A9ShM5icSF0xyGguJNbk=";
           };
           doCheck = false;
-        });
-        tinyxml-2 = final.tinyxml-2.overrideAttrs ({
+        };
+        tinyxml-2 = final.tinyxml-2.overrideAttrs {
           src = final.fetchFromGitHub {
             owner = "leethomason";
             repo = "tinyxml2";
             rev = "c2d30872e20621955ca7feb9168bad996d591a19";
             sha256 = "sha256-Gn4d6v7p60XRam2wclaSFAiAxmNgKAKPxRCEmcMtJIE=";
           };
-        });
-        steering-functions = final.stdenv.mkDerivation ({
+        };
+        steering-functions = final.stdenv.mkDerivation {
           name = "steering-functions";
           src = final.fetchFromGitHub {
             owner = "Fields2Cover";
@@ -69,7 +39,7 @@ let
           patches = [
             ./patches/fields2cover/steering-functions.patch
           ];
-        });
+        };
         spline = final.stdenv.mkDerivation {
           name = "spline";
           # no version!
@@ -119,7 +89,6 @@ let
       in
       rosPrev.fields2cover.overrideAttrs (
         {
-          propagatedBuildInputs ? [ ],
           patches ? [ ],
           postPatch ? "",
           ...
@@ -170,6 +139,7 @@ let
         propagatedBuildInputs = propagatedBuildInputs ++ [ rosFinal.visualization-msgs ];
       }
     );
+
     livox-ros-driver2 = rosPrev.livox-ros-driver2.overrideAttrs (
       {
         buildInputs ? [ ],
@@ -185,19 +155,6 @@ let
       }
     );
 
-    librealsense2 = rosPrev.librealsense2.overrideAttrs (
-      {
-        cmakeFlags ? [ ],
-        ...
-      }:
-      {
-        cmakeFlags = cmakeFlags ++ [
-          "-DCHECK_FOR_UPDATES=OFF"
-          "-DBUILD_GRAPHICAL_EXAMPLES=OFF"
-        ];
-      }
-    );
-
     perseus-input = rosPrev.perseus-input.overrideAttrs (
       {
         propagatedBuildInputs ? [ ],
@@ -208,36 +165,121 @@ let
       }
     );
 
-    # rplidar-ros is not officially released for ROS 2 Jazzy in rosdistro.
-    # It was available in Humble, but has not been ported to Jazzy yet.
-    # We build it from scratch using the upstream ros2 branch which supports the C1 sensor.
-    # See: https://github.com/ros/rosdistro/blob/master/jazzy/distribution.yaml (package not present)
-    rplidar-ros = rosFinal.buildRosPackage rec {
-      pname = "ros-jazzy-rplidar-ros";
-      version = "2.1.5";
+    python-qt-binding = rosPrev.python-qt-binding.overrideAttrs (
+      {
+        propagatedBuildInputs ? [ ],
+        ...
+      }:
+      {
+        patches = [ ];
+        propagatedBuildInputs =
+          (final.lib.remove final.python3Packages.pyqt6-sip (
+            final.lib.remove final.python3Packages.pyside6 propagatedBuildInputs
+          ))
+          ++ [
+            final.python312Packages.pyside2
+            final.python312Packages.shiboken2
+          ];
+      }
+    );
 
-      src = final.fetchFromGitHub {
-        owner = "Slamtec";
-        repo = "rplidar_ros";
-        rev = "ros2"; # Using the ros2 branch
-        sha256 = "sha256-oNoDa+IqtQPe8bpfMjHFj2yx7jFUhfbIqaPRQCU/zMQ=";
+    nav2-mppi-controller =
+      let
+        xtl-stable = prev.xtensor.overrideAttrs rec {
+          version = "0.7.5";
+          src = prev.fetchFromGitHub {
+            owner = "xtensor-stack";
+            repo = "xtl";
+            rev = version;
+            sha256 = "sha256-Vc1VKOWmG1sAw3UQpNJAhm9PvXSqJ0iO2qLjP6/xjtI=";
+          };
+        };
+        xtensor-stable =
+          (prev.xtensor.override {
+            xtl = xtl-stable;
+          }).overrideAttrs
+            rec {
+              version = "0.25.0";
+
+              src = prev.fetchFromGitHub {
+                owner = "xtensor-stack";
+                repo = "xtensor";
+                tag = version;
+                hash = "sha256-hVfdtYcJ6mzqj0AUu6QF9aVKQGYKd45RngY6UN3yOH4=";
+              };
+            };
+      in
+      rosPrev.nav2-mppi-controller.override {
+        xtensor = xtensor-stable;
       };
 
-      buildType = "ament_cmake";
-      buildInputs = [ rosFinal.ament-cmake-ros ];
-      propagatedBuildInputs = [
-        rosFinal.rclcpp
-        rosFinal.sensor-msgs
-        rosFinal.std-srvs
-      ];
-      nativeBuildInputs = [ rosFinal.ament-cmake-ros ];
-
-      meta = {
-        description = "The ROS 2 driver for RPLIDAR series laser scanners. Version 2.1.5 supports the C1 sensor.";
-        license = with final.lib.licenses; [ bsd2 ];
+    ros-gz-sim = rosPrev.ros-gz-sim.overrideAttrs {
+      version = "1.0.17-r1";
+      src = prev.fetchurl {
+        url = "https://github.com/ros2-gbp/ros_ign-release/archive/release/jazzy/ros_gz_sim/1.0.17-1.tar.gz";
+        name = "1.0.17-1.tar.gz";
+        sha256 = "sha256-+iszAtEbbNhflq/bgBNe9RugiHkmCCmP3Ywzt22R2FA=";
       };
     };
+
+    gz-msgs-vendor =
+      let
+        protobuf_28 = prev.protobuf.override {
+          version = "28.3";
+          hash = "sha256-+bb5RxITzxuX50ItmpQhWEG1kMfvlizWTMJJzwlhhYM=";
+        };
+      in
+      rosPrev.gz-msgs-vendor.override {
+        protobuf = protobuf_28;
+        python3Packages = prev.python3Packages // {
+          protobuf = prev.python3Packages.protobuf.override {
+            protobuf = protobuf_28;
+          };
+        };
+      };
+
+    # Gazebo vendor patches
+    gz-physics-vendor = rosPrev.gz-physics-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-vendors/physics-version.patch ];
+      }
+    );
+
+    gz-rendering-vendor = rosPrev.gz-rendering-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-vendors/rendering-version.patch ];
+      }
+    );
+
+    gz-transport-vendor = rosPrev.gz-transport-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-vendors/transport-version.patch ];
+      }
+    );
+
+    gz-sim-vendor = rosPrev.gz-sim-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-vendors/sim-version.patch ];
+      }
+    );
   };
+
 in
 {
   rosPackages = prev.rosPackages // {
@@ -247,56 +289,14 @@ in
   };
 
   gst_all_1 = prev.gst_all_1 // {
-    gst-plugins-rs =
-      (prev.gst_all_1.gst-plugins-rs.overrideAttrs (
-        {
-          ...
-        }:
-        rec {
-          version = "1.14.0-alpha.1";
-          src = final.fetchFromGitLab {
-            domain = "gitlab.freedesktop.org";
-            owner = "gstreamer";
-            repo = "gst-plugins-rs";
-            rev = "9b0aa9c710874c07f37cf37f964e9942f9d89640";
-            # hash = "sha256-4qySdwd0Zo3HT7hm9+x9BjhuxO2Y4TBcDwWprnIJq54=";
-            hash = "sha256-WNuQEu77vr4+cYlY7vrhVRqIpgc6v1PiqLlhUHDZ4SI=";
-            # TODO: temporary workaround for case-insensitivity problems with color-name crate - https://github.com/annymosse/color-name/pull/2
-            postFetch = ''
-              sedSearch="$(cat <<\EOF | sed -ze 's/\n/\\n/g'
-              \[\[package\]\]
-              name = "color-name"
-              version = "\([^"\n]*\)"
-              source = "registry+https://github.com/rust-lang/crates.io-index"
-              checksum = "[^"\n]*"
-              EOF
-              )"
-              sedReplace="$(cat <<\EOF | sed -ze 's/\n/\\n/g'
-              [[package]]
-              name = "color-name"
-              version = "\1"
-              source = "git+https://github.com/lilyinstarlight/color-name#cac0ed5b7d2e0682c08c9bfd13089d5494e81b9a"
-              EOF
-              )"
-              sed -i -ze "s|$sedSearch|$sedReplace|g" $out/Cargo.lock
-            '';
-          };
-          cargoDeps =
-            with final;
-            rustPlatform.fetchCargoVendor {
-              inherit src;
-              name = final.gst_all_1.gst-plugins-rs.name;
-              hash = "sha256-HHMZ8kBA8g2cjYxrZnEsX33xC3glyKius3jxP84H+PY=";
-            };
-        }
-      )
-
-      ).override
-        ({
-          plugins = [
-            "rtp"
-            "webrtc"
-          ];
-        });
+    gst-plugins-rs = prev.gst_all_1.gst-plugins-rs.override {
+      plugins = [
+        "rtp"
+        "webrtc"
+      ];
+    };
   };
+
+  # This needs to be fully overridden because nix still thinks qt6 is in there even if all of them are replaced with qt5
+  pcl = final.callPackage ./patches/pcl { };
 }
