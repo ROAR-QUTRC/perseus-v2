@@ -8,14 +8,15 @@
   builtin-interfaces,
   cv-bridge,
   geometry-msgs,
-  image-transport,
   opencv,
   perseus-interfaces,
   rclcpp,
   sensor-msgs,
+  std-msgs,
   tf2,
   tf2-geometry-msgs,
   tf2-ros,
+  vision-msgs,
   visualization-msgs,
 }:
 buildRosPackage rec {
@@ -34,14 +35,15 @@ buildRosPackage rec {
     builtin-interfaces
     cv-bridge
     geometry-msgs
-    image-transport
     opencv
     perseus-interfaces
     rclcpp
     sensor-msgs
+    std-msgs
     tf2
     tf2-geometry-msgs
     tf2-ros
+    vision-msgs
     visualization-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
