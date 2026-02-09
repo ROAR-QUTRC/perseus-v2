@@ -118,7 +118,6 @@ namespace perseus_vision
         rclcpp::Time latest_timestamp_{0, 0, RCL_ROS_TIME};
         std::vector<int> latest_ids_;
         std::vector<geometry_msgs::msg::Pose> latest_poses_;
-        bool has_detections_{false};
         cv::Mat latest_frame_;                                           // Store latest annotated frame for capture
         std::vector<std::pair<int, cv::Point3d>> latest_marker_coords_;  // Store marker coordinates for annotation
 
