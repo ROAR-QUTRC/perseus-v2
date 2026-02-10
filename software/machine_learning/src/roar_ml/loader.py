@@ -5,7 +5,6 @@ from torch.utils.data import Dataset
 
 class IlmeniteDataLoader(Dataset):
     def __init__(self, root_dir, data_file):
-
         # Getting data from yaml
         data_dir = os.path.join(root_dir, data_file + ".yaml")
         with open(data_dir, "r") as f:
@@ -25,7 +24,6 @@ class IlmeniteDataLoader(Dataset):
         return len(self.labeled_data)
 
     def __getitem__(self, idx):
-
         # Reject out of range
         if idx >= len(self):
             raise IndexError
@@ -44,10 +42,7 @@ class IlmeniteDataLoader(Dataset):
 def main():
     # Use absolute path or get from environment/argument
     PATH = "~/projects/perseus-v2/software/machine_learning/data/"
-    data_dir = os.environ.get(
-        "ROAR_DATA_DIR",
-        os.path.expanduser(PATH)
-    )
+    data_dir = os.environ.get("ROAR_DATA_DIR", os.path.expanduser(PATH))
 
     IlmeniteDataLoader(data_dir, "test_1").__getitem__(0)
 
