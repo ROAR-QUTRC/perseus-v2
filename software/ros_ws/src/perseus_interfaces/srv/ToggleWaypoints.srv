@@ -1,5 +1,0 @@
-# Sends a path of waypoints in YAML format to be toggled (enabled/disabled)
-string yaml_path
----
-bool success
-string message

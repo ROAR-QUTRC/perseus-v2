@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2025 James Nichol
+Copyright (c) 2026 James Nichol
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+#if !defined(DOXYGEN_SHOULD_SKIP_THIS)
 #include <crc.h>
 #include <stdbool.h>
 
@@ -2203,3 +2204,4 @@ uint32_t crc32_C(const uint8_t* data, const size_t len)
 {
     return crc32_reflected_generic(data, len, crc32_C_lookup, 0xFFFFFFFF, true);
 }
+#endif  // DOXYGEN_SHOULD_SKIP_THIS

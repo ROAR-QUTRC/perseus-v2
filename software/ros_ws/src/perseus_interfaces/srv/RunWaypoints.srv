@@ -1,0 +1,4 @@
+Waypoint[] waypoints
+---
+bool success
+string message
