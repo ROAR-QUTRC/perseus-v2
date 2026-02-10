@@ -17,6 +17,7 @@
   rviz2,
   slam-toolbox,
   twist-mux,
+  v4l2-camera,
   xacro,
 }:
 buildRosPackage rec {
@@ -42,6 +43,7 @@ buildRosPackage rec {
     rviz2
     slam-toolbox
     twist-mux
+    v4l2-camera
     xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
