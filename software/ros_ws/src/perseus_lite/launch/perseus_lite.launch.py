@@ -9,7 +9,10 @@ from launch.substitutions import (
     LaunchConfiguration,
 )
 from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import (
+    PythonLaunchDescriptionSource,
+    AnyLaunchDescriptionSource,
+)
 
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -159,12 +162,31 @@ def generate_launch_description():
         remappings=[("/cmd_vel_out", "/cmd_vel")],
     )
 
+    # Rosbridge WebSocket server (for AndroidRViz / web UI connections on port 9090)
+    rosbridge_launch = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("rosbridge_server"),
+                        "launch",
+                        "rosbridge_websocket_launch.xml",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
         rplidar_launch,
         i2c_imu_launch,
         twist_mux_node,
+        rosbridge_launch,
     ]
 
     return LaunchDescription(arguments + launch_files)
