@@ -5,18 +5,20 @@ This document outlines planned improvements for faster iteration, CUDA version r
 ## Background
 
 ### Current Architecture
+
 - **Nix CUDA**: Compilation environment with nvcc, headers, and libraries from `/nix/store`
 - **Host CUDA**: Runtime via `nixcuda` wrapper for GPU driver passthrough
 - **Jetson targets**: big-brain, medium-brain (aarch64-linux with JetPack CUDA 12.x)
 - **Autonomy stack**: SLAM (slam_toolbox) + Nav2 - currently CPU-only
 
 ### Key Files
-| File | Purpose |
-|------|---------|
-| `flake.nix` | Nix configuration, CUDA packages, shell hooks |
-| `software/ros_ws/overlay.nix` | nixcuda wrapper, ROS package overlays |
-| `software/scripts/cuda-test.sh` | Existing CUDA validation script |
-| `software/scripts/cuda-demo.sh` | CUDA vs CPU benchmark demo |
+
+| File                            | Purpose                                       |
+| ------------------------------- | --------------------------------------------- |
+| `flake.nix`                     | Nix configuration, CUDA packages, shell hooks |
+| `software/ros_ws/overlay.nix`   | nixcuda wrapper, ROS package overlays         |
+| `software/scripts/cuda-test.sh` | Existing CUDA validation script               |
+| `software/scripts/cuda-demo.sh` | CUDA vs CPU benchmark demo                    |
 
 ---
 
@@ -26,20 +28,24 @@ This document outlines planned improvements for faster iteration, CUDA version r
 
 Create `/home/dingo/perseus-v2/CLAUDE.md` with project-specific context:
 
-```markdown
+````markdown
 # Perseus-v2 Project Context
 
 ## Architecture
+
 - ROS2 Jazzy on Nix with CUDA support
 - Jetson Orin targets: big-brain, medium-brain (aarch64-linux)
 - Dev machines: x86_64-linux with optional GPU
 
 ## CUDA Environment
+
 The project uses a two-layer CUDA approach:
+
 1. **Nix CUDA**: Portable compilation (nvcc, headers, libs in /nix/store)
 2. **Host CUDA**: Runtime via `nixcuda` wrapper for GPU access
 
 ### Running CUDA Programs
+
 ```bash
 # Compile with Nix CUDA
 nvcc -o program program.cu
@@ -47,8 +53,10 @@ nvcc -o program program.cu
 # Run with host GPU libraries
 nixcuda ./program
 ```
+````
 
 ## Key Commands
+
 - `./software/scripts/cuda-test.sh` - Verify CUDA environment
 - `./software/scripts/cuda-demo.sh` - Visual CUDA vs CPU demo
 - `./software/scripts/cuda-version-check.sh` - Version compatibility check
@@ -56,16 +64,19 @@ nixcuda ./program
 - `nix develop` - Enter dev shell with all dependencies
 
 ## Autonomy Stack (CPU-only currently)
+
 - SLAM: slam_toolbox with CeresSolver (CPU)
 - Navigation: Full Nav2 stack (CPU)
 - Teleoperation: joy_node -> xbox_controller -> cmd_vel_mux -> /cmd_vel
 
 ## Common Issues
+
 1. **CUDA version mismatch**: Check `nvcc --version` vs `nvidia-smi` CUDA version
 2. **Missing GPU libraries**: Use `nixcuda` wrapper, not direct execution
 3. **TF staleness**: Check robot_state_publisher is running
 4. **GPU not detected**: Ensure you're using `nixcuda` for CUDA programs
-```
+
+````
 
 ### 1.2 Add CUDA Diagnostics Skill
 
@@ -85,36 +96,42 @@ Run the following diagnostic sequence:
 echo "CUDA_PATH: ${CUDA_PATH:-NOT SET}"
 echo "CUDA_HOME: ${CUDA_HOME:-NOT SET}"
 which nvcc || echo "nvcc not found"
-```
+````
 
 2. Check Nix CUDA version:
+
 ```bash
 nvcc --version 2>/dev/null | grep release || echo "No nvcc"
 ```
 
 3. Check host GPU and driver:
+
 ```bash
 nvidia-smi --query-gpu=name,driver_version,compute_cap --format=csv 2>/dev/null || echo "No GPU/driver"
 ```
 
 4. Check Jetson-specific paths (if on aarch64):
+
 ```bash
 ls -la /usr/lib/aarch64-linux-gnu/tegra/ 2>/dev/null | head -5
 ls -la /usr/local/cuda/lib64/ 2>/dev/null | head -5
 ```
 
 5. Run version compatibility check:
+
 ```bash
 ./software/scripts/cuda-version-check.sh
 ```
 
 6. Run quick compilation test:
+
 ```bash
 ./software/scripts/cuda-test.sh 2>&1 | tail -30
 ```
 
 Report findings with recommendations for any mismatches.
-```
+
+````
 
 ### 1.3 Add Version Check Script
 
@@ -250,7 +267,7 @@ if command -v nvidia-smi &>/dev/null; then
     echo -e "${CYAN}=== GPU Status ===${NC}"
     nvidia-smi --query-gpu=name,memory.total,compute_cap --format=csv,noheader 2>/dev/null || echo "GPU query failed"
 fi
-```
+````
 
 ---
 
@@ -261,6 +278,7 @@ fi
 Modify `/home/dingo/perseus-v2/software/ros_ws/overlay.nix` lines 17-25.
 
 **Current implementation:**
+
 ```nix
 nixcuda-script = prev.writeShellScriptBin "nixcuda" ''
   # Add Jetson/Tegra CUDA library paths if they exist
@@ -274,6 +292,7 @@ nixcuda-script = prev.writeShellScriptBin "nixcuda" ''
 ```
 
 **Enhanced implementation with version detection:**
+
 ```nix
 nixcuda-script = prev.writeShellScriptBin "nixcuda" ''
   # Detect host CUDA version for dynamic path resolution
@@ -309,11 +328,13 @@ nixcuda-script = prev.writeShellScriptBin "nixcuda" ''
 **Approach: Runtime detection only** (no version pinning in flake.nix)
 
 The enhanced `nixcuda` wrapper detects and adapts to the host CUDA version at runtime. This avoids:
+
 - Maintaining version pins that may drift
 - Rebuilding when CUDA versions change
 - Conflicts between different Jetson devices with different JetPack versions
 
 If explicit pinning becomes necessary later, add to `flake.nix`:
+
 ```nix
 cudaPackages = prev.cudaPackages_12;  # Match JetPack CUDA 12
 ```
@@ -454,6 +475,7 @@ esac
 **Environment variable only** - no launch file modifications needed.
 
 The `CUDA_VISIBLE_DEVICES=""` approach:
+
 - Works with any CUDA program (Python, C++, etc.)
 - No code changes required in ROS nodes
 - Universal fallback mechanism supported by CUDA runtime
@@ -499,12 +521,14 @@ nixcuda python3 inference_node.py
 ### Verification Steps
 
 1. **Test version checker:**
+
    ```bash
    chmod +x software/scripts/cuda-version-check.sh
    ./software/scripts/cuda-version-check.sh
    ```
 
 2. **Test CUDA toggle:**
+
    ```bash
    chmod +x software/scripts/cuda-mode.sh
    source software/scripts/cuda-mode.sh status
@@ -515,6 +539,7 @@ nixcuda python3 inference_node.py
    ```
 
 3. **Test CPU-only autonomy:**
+
    ```bash
    source software/scripts/cuda-mode.sh disable
    ros2 launch autonomy perseus_mapping.launch.py
