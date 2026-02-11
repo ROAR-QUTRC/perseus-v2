@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 import cv2
+from cv_bridge import CvBridge
+import numpy as np
+import imutils.object_detection import non_max_suppression
 import rclpy
 from rclpy.node import Node
 
@@ -11,6 +14,13 @@ MODEL_PATH = "../model/frozen_east_text_detection.pb"
 CONFIDENCE_THRESHOLD = 0.5
 RESIZE_SIZE = 10
 HEIGHT_OVER_WIDTH_RATIO = 1.0
+
+# Overlay
+CELL_COLOR = (0, 255, 0)
+CELL_ALPHA = 0.8
+CELL_SIZE = 32
+
+BOUNDING_BOX_COLOR = (255, 0, 255)
 
 # Node name
 NODE_NAME = 'text_detector'
@@ -26,24 +36,34 @@ ANNOTATED_IMAGE = "/ocr/annotated_image"
 # Service
 ON_DEMAND_DETECT = "/ocr/detect_text"
 
-# Image holding
-IMAGE_GIVEN = 0
+# Image buffer
+IMAGE_BUFFER = 0
 
 
-def paint_cell(image, point, size, color, alpha):
+def paint_cell(image, point):
     overlay = image.copy()
     filled = -1
 
     cv2.rectangle(
         overlay,
         point,
-        (point[0] + size, point[1] + size),
-        color,
+        (point[0] + CELL_SIZE, point[1] + CELL_SIZE),
+        CELL_COLOR,
         filled
     )
 
     # make transparent
-    cv2.addWeighted(overlay, alpha, image, 1 - alpha, 0, image)
+    cv2.addWeighted(overlay, CELL_ALPHA, image, 1 - alpha, 0, image)
+
+
+def draw_box(image, start_x, start_y, end_x, end_y):
+    cv2.rectangle(
+        image,
+        (start_x, start_y),
+        (end_x, end_y),
+        BOUNDING_BOX_COLOR,
+        2
+    )
 
 
 def east_detect(image):
@@ -57,6 +77,8 @@ def east_detect(image):
 
     resize_ratio_height = original_height / float(new_height)
     resize_ratio_width = original_width / float(new_width)
+
+    resize_ratio = (resize_ratio_width, resize_ratio_height)
 
     image = cv2.resize(image, (new_width, new_height))
 
@@ -73,56 +95,87 @@ def east_detect(image):
 
     EAST.setInput(image_blob)
 
-    scores = EAST.forward("feature_fusion/Conv_7/Sigmoid")
+    (scores, geometry) = EAST.forward(
+        ["feature_fusion/Conv_7/Sigmoid", "feature_fusion/concat_3"])
 
     (number_of_rows, number_of_columns) = scores.shape[2:4]
 
     detected_points = []
 
+    rectangles = []
+    confidences = []
+
     for y in range(0, number_of_rows):
         scores_data = scores[0, 0, y]
+
+        rectangle_vertex_1 = geometry[0, 0, y]
+        rectangle_vertex_2 = geometry[0, 1, y]
+        rectangle_vertex_3 = geometry[0, 2, y]
+        rectangle_vertex_4 = geometry[0, 3, y]
+
+        rectangle_angle = geometry[0, 4, y]
 
         for x in range(0, number_of_columns):
             if scores_data[x] < CONFIDENCE_THRESHOLD:
                 continue
 
-            detected_points.append((x, y, scores_data[x].item()))
+            angle = rectangle_angle[x]
 
+            cosine = np.cos(angle)
+            sine = np.sin(angle)
+
+            (pixel_x, pixel_y) = map_to_pixel(resize_ratio, (x, y))
+
+            bounding_box_height = rectangle_vertex_1[x] + rectangle_vertex_3[x]
+            bounding_box_width = rectangle_vertex_2[x] + rectangle_vertex_4[x]
+
+            end_x = int(
+                pixel_x
+                + (cosine * rectangle_vertex_2[x])
+                + (sine * rectangle_vertex_3[x])
+            )
+            end_y = int(
+                pixel_y
+                - (sine * rectangle_vertex_2[x])
+                + (cosine * rectangle_vertex_3[x])
+            )
+            start_x = int(end_x - bounding_box_width)
+            start_y = int(end_y - bounding_box_height)
+
+            rectangles.append((start_x, start_y, end_x, end_y))
+            confidences.append(scores_data[x])
+
+            detected_points.append((pixel_x, pixel_y))
+
+            # feature maps are 4 times smaller than the input image
             paint_cell(
                 original,
                 (
-                    int(x * resize_ratio_width * 4),
-                    int(y * resize_ratio_height * 4)
+                    pixel_x,
+                    pixel_y
                 ),
-                32,
-                (0, 255, 0),
-                0.8
             )
 
-    return ((resize_ratio_width, resize_ratio_height), detected_points, original)
+    bounding_boxes = non_max_suppression(
+        np.array(rectangles), probs=confidences)
+
+    for (start_x, start_y, end_x, end_y) in bounding_boxes:
+        draw_box(original, start_x, start_y, end_x, end_y)
+
+    return (original, detected_points, bounding_boxes)
 
 
-def map_to_pixels(resize_factor, points):
+# Maps EAST model output to image pixel
+def map_to_pixel(resize_factor, point):
     resize_x = resize_factor[0]
     resize_y = resize_factor[1]
 
-    detected_pixels = []
+    x = point[0]
+    y = point[1]
 
-    for point in points:
-        x = point[0]
-        y = point[1]
-        score = point[2]
+    # feature maps are 4 times smaller than the input image
+    return (int(x * resize_x * 4), int(y * resize_y * 4))
 
-        # feature maps are 4 times smaller than the input image
-        detected_pixels.append(
-            (
-                int(x * resize_x * 4),
-                int(y * resize_y * 4),
-                score
-            )
-        )
-
-    return detected_pixels
 
 # TODO: Finish implementation
 def collect_blobs(points):
@@ -158,10 +211,15 @@ def collect_blobs(points):
 class TextDetectionService(Node):
     def __init__(self):
         super().__init__(NODE_NAME)
-        self.srv = self.create_service(
-            String, ON_DEMAND_DETECT, self.text_detection_service_callback)
+        self.bridge = CvBridge()
 
-        # TODO: get image from image message
+        self.service = self.create_service(
+            String,
+            ON_DEMAND_DETECT,
+            self.text_detection_service_callback
+        )
+
+        # TODO: get image from video feed: cv mat frame?
         self.raw_subscription = self.create_subscription(
             Image,
             CAMERA_INPUT_RAW,
@@ -169,7 +227,6 @@ class TextDetectionService(Node):
             10
         )
 
-        # TODO: handle compressed images stream
         self.compressed_subscription = self.create_subscription(
             CompressedImage,
             CAMERA_INPUT_COMPRESSED,
@@ -177,23 +234,49 @@ class TextDetectionService(Node):
             10
         )
 
-        self.text_publisher = self.create_publisher(String, DETECTION_OUTPUT, 10)
-        self.image_publisher = self.create_publisher(Image, ANNOTATED_IMAGE, 10)
+        self.text_publisher = self.create_publisher(
+            String,
+            DETECTION_OUTPUT,
+            10
+        )
+
+        self.image_publisher = self.create_publisher(
+            Image,
+            ANNOTATED_IMAGE,
+            10
+        )
 
     def camera_input_raw_subscription(self, image):
-        IMAGE_GIVEN = image
+        try:
+            IMAGE_BUFFER = self.bridge.imgmsg_to_cv2(image, "bgr8")
+        except Exception as e:
+            self.get_logger.error(f"Could not convert image: {e}")
 
-    # TODO: handle compression
     def camera_input_compressed_subscription(self, image):
-        IMAGE_GIVEN = image
+        try:
+            IMAGE_BUFFER = self.bridge.compressed_imgmsg_to_cv2(image, "bgr8")
+        except Exception as e:
+            self.get_logger.error(f"Could not convert image: {e}")
 
     def text_detection_service_callback(self, request, response):
+        output = east_detect(IMAGE_BUFFER)
+
+        annotated_image = output[0]
+
+        coordinates = output[1]
+        bounding_boxes = output[2]
+
+        # Publish coordinates and bounding boxes as string
+        text_message = String()
+        text_message.data = f"Coordinates: {str(coordinates)}; Bounding Boxes: {str(bounding_boxes)}"
+        text_publisher.publish(text_message)
+
+        # Publish annotated image
+        image_publisher.publish(self.bridge.cv2_to_imgmsg(
+            annotated_image, "passthrough", "Anntated image")
+        )
+
         # return response.detection = ...
-        output = east_detect(IMAGE_GIVEN)
-        # coordinates = map_to_pixels(output[0], collect_blobs(output[1]))
-        coordinates = map_to_pixels(output[0], output[1])
-        text_publisher.publish(coordinates) # TODO: proper string message
-        image_publisher.publish(output[2]) # TODO: proper image message
         return response
 
 
