@@ -1,0 +1,61 @@
+hud_overlay_node:
+  ros__parameters:
+    # Topics
+    camera_topic: "/image_raw"
+    output_topic: "/camera/image_hud"
+    odom_topic: "/odom"
+    odom_filtered_topic: "/odometry/filtered"
+    imu_topic: "/imu/data"
+    scan_topic: "/scan"
+    map_topic: "/map"
+    cmd_vel_topic: "/cmd_vel"
+
+    # TF frames
+    map_frame: "map"
+    base_frame: "base_link"
+
+    # Heading: "odom" (from /odometry/filtered) or "imu" (from /imu/data)
+    heading_source: "odom"
+
+    # Bearing compass
+    compass:
+      enabled: true
+      width: 400
+      height: 40
+      degrees_visible: 120
+      opacity: 0.7
+
+    # PIP map
+    pip_map:
+      enabled: true
+      size: 180
+      radius_m: 5.0
+      opacity: 0.8
+      margin: 10
+
+    # LiDAR proximity
+    lidar:
+      enabled: true
+      danger_dist: 0.5
+      warning_dist: 1.5
+      clear_dist: 3.0
+      bar_thickness: 8
+      opacity: 0.6
+      flash_rate_hz: 4.0
+
+    # Velocity gauge
+    velocity:
+      enabled: true
+      width: 60
+      height: 160
+      max_linear: 1.0
+      max_angular: 2.0
+      opacity: 0.7
+      margin: 10
+
+    # Odometer
+    odometer:
+      enabled: true
+      opacity: 0.8
+      digit_width: 28
+      digit_height: 40
