@@ -3,7 +3,7 @@
 import cv2
 from cv_bridge import CvBridge
 import numpy as np
-import imutils.object_detection import non_max_suppression
+from imutils.object_detection import non_max_suppression
 import rclpy
 from rclpy.node import Node
 
