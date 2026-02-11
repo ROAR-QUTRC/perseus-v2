@@ -6,6 +6,7 @@ project(
   VERSION 0.0.1
   LANGUAGES CXX)
 
+cmake_policy(SET CMP0167 NEW)
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
 set(default_build_type "Debug")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
