@@ -63,8 +63,8 @@ add_executable(
   src/hud_elements/velocity_gauge.cpp
   src/hud_elements/odometer.cpp)
 
-target_include_directories(
-  hud_overlay_node PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(hud_overlay_node
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 ament_target_dependencies(hud_overlay_node PUBLIC
                           ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -73,7 +73,10 @@ target_link_libraries(hud_overlay_node PUBLIC opencv_core opencv_imgproc)
 # INSTALL
 install(TARGETS hud_overlay_node DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME} OPTIONAL)
+install(
+  DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME}
+  OPTIONAL)
 
 # FINALISE
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})

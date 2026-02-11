@@ -1,20 +1,23 @@
 #pragma once
 
-#include "perseus_lite_hud/hud_element_base.hpp"
 #include <memory>
 #include <vector>
 
-namespace perseus_lite_hud {
+#include "perseus_lite_hud/hud_element_base.hpp"
 
-class HudRenderer {
-public:
-  HudRenderer() = default;
+namespace perseus_lite_hud
+{
 
-  void add_element(std::shared_ptr<HudElementBase> element);
-  void render_all(cv::Mat &frame);
+    class HudRenderer
+    {
+    public:
+        HudRenderer() = default;
 
-private:
-  std::vector<std::shared_ptr<HudElementBase>> elements_;
-};
+        void add_element(std::shared_ptr<HudElementBase> element);
+        void render_all(cv::Mat& frame);
 
-} // namespace perseus_lite_hud
+    private:
+        std::vector<std::shared_ptr<HudElementBase>> elements_;
+    };
+
+}  // namespace perseus_lite_hud

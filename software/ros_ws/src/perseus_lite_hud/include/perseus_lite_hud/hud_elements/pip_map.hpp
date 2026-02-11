@@ -1,41 +1,45 @@
 #pragma once
 
-#include "perseus_lite_hud/hud_element_base.hpp"
 #include <nav_msgs/msg/occupancy_grid.hpp>
 
-namespace perseus_lite_hud {
+#include "perseus_lite_hud/hud_element_base.hpp"
 
-struct PipMapConfig {
-  int size = 180;
-  double radius_m = 5.0;
-  double opacity = 0.8;
-  int margin = 10;
-};
+namespace perseus_lite_hud
+{
 
-class PipMap : public HudElementBase {
-public:
-  explicit PipMap(const PipMapConfig &cfg = {});
+    struct PipMapConfig
+    {
+        int size = 180;
+        double radius_m = 5.0;
+        double opacity = 0.8;
+        int margin = 10;
+    };
 
-  void render(cv::Mat &frame) override;
-  bool is_ready() const override;
+    class PipMap : public HudElementBase
+    {
+    public:
+        explicit PipMap(const PipMapConfig& cfg = {});
 
-  void set_map(nav_msgs::msg::OccupancyGrid::ConstSharedPtr map);
-  void set_robot_pose(double x, double y, double yaw);
+        void render(cv::Mat& frame) override;
+        bool is_ready() const override;
 
-private:
-  void _rebuild_map_image();
+        void set_map(nav_msgs::msg::OccupancyGrid::ConstSharedPtr map);
+        void set_robot_pose(double x, double y, double yaw);
 
-  PipMapConfig cfg_;
+    private:
+        void _rebuild_map_image();
 
-  nav_msgs::msg::OccupancyGrid::ConstSharedPtr map_;
-  cv::Mat map_image_;        // Full map as BGR
-  bool map_image_dirty_ = true;
+        PipMapConfig cfg_;
 
-  double robot_x_ = 0.0;
-  double robot_y_ = 0.0;
-  double robot_yaw_ = 0.0;
-  bool has_map_ = false;
-  bool has_pose_ = false;
-};
+        nav_msgs::msg::OccupancyGrid::ConstSharedPtr map_;
+        cv::Mat map_image_;  // Full map as BGR
+        bool map_image_dirty_ = true;
 
-} // namespace perseus_lite_hud
+        double robot_x_ = 0.0;
+        double robot_y_ = 0.0;
+        double robot_yaw_ = 0.0;
+        bool has_map_ = false;
+        bool has_pose_ = false;
+    };
+
+}  // namespace perseus_lite_hud

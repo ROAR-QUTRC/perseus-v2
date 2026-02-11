@@ -9,14 +9,11 @@ hud_overlay_node:
     scan_topic: "/scan"
     map_topic: "/map"
     cmd_vel_topic: "/cmd_vel"
-
     # TF frames
     map_frame: "map"
     base_frame: "base_link"
-
     # Heading: "odom" (from /odometry/filtered) or "imu" (from /imu/data)
     heading_source: "odom"
-
     # Bearing compass
     compass:
       enabled: true
@@ -24,7 +21,6 @@ hud_overlay_node:
       height: 40
       degrees_visible: 120
       opacity: 0.7
-
     # PIP map
     pip_map:
       enabled: true
@@ -32,7 +28,6 @@ hud_overlay_node:
       radius_m: 5.0
       opacity: 0.8
       margin: 10
-
     # LiDAR proximity
     lidar:
       enabled: true
@@ -42,7 +37,6 @@ hud_overlay_node:
       bar_thickness: 8
       opacity: 0.6
       flash_rate_hz: 4.0
-
     # Velocity gauge
     velocity:
       enabled: true
@@ -52,7 +46,6 @@ hud_overlay_node:
       max_angular: 2.0
       opacity: 0.7
       margin: 10
-
     # Odometer
     odometer:
       enabled: true
