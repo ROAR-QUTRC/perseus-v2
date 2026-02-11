@@ -227,17 +227,17 @@ global_costmap:
         mark_threshold: 0
         observation_sources: pointcloud
         combination_method: 1
-        # pointcloud: # no frame set, uses frame from message
-        #   topic: /livox/lidar
-        #   max_obstacle_height: 2.0
-        #   min_obstacle_height: 0.2
-        #   obstacle_max_range: 40.0
-        #   obstacle_min_range: 1.0
-        #   raytrace_max_range: 40.0
-        #   raytrace_min_range: 1.0 # to avoid detecting close noise at itself as obstacles
-        #   clearing: true
-        #   marking: true
-        #   data_type: "PointCloud2"
+        pointcloud: # no frame set, uses frame from message
+          topic: /livox/lidar
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.2
+          obstacle_max_range: 40.0
+          obstacle_min_range: 1.0
+          raytrace_max_range: 40.0
+          raytrace_min_range: 1.0 # to avoid detecting close noise at itself as obstacles
+          clearing: true
+          marking: true
+          data_type: "PointCloud2"
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: true
@@ -425,5 +425,4 @@ loopback_simulator:
     odom_frame_id: "odom"
     map_frame_id: "map"
     scan_frame_id: "livox_frame"
-    enable_stamped_cmd_vel: true
     update_duration: 0.02
