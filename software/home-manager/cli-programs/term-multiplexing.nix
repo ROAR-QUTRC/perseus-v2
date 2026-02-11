@@ -28,7 +28,7 @@
           "tmux"
         ];
       };
-      initExtra = lib.mkIf config.programs.zellij.enable ''
+      initContent = lib.mkIf config.programs.zellij.enable ''
         eval "$(zellij setup --generate-auto-start=zsh)"
       '';
     };

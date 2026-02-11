@@ -12,13 +12,12 @@ buildPythonPackage rec {
   pname = "colcon-clean";
   version = "0.2.1";
   pyproject = true;
+  build-system = [ setuptools ];
 
   src = fetchPypi {
     inherit pname version;
     hash = "sha256-8rvyck24SxIhhP9AKiR7h1jY9pLJ8yulOAH2nabc61Q=";
   };
-
-  build-system = [ setuptools ];
 
   dependencies = [
     colcon-core

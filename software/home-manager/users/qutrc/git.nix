@@ -1,7 +1,7 @@
 { ... }:
 {
   programs.git = {
-    userName = "ROAR Rover";
-    userEmail = "182080788+ROAR-Rover@users.noreply.github.com";
+    settings.user.name = "ROAR Rover";
+    settings.user.email = "182080788+ROAR-Rover@users.noreply.github.com";
   };
 }
