@@ -53,7 +53,6 @@ nvcc -o program program.cu
 # Run with host GPU libraries
 nixcuda ./program
 ```
-````
 
 ## Key Commands
 
@@ -130,8 +129,6 @@ ls -la /usr/local/cuda/lib64/ 2>/dev/null | head -5
 ```
 
 Report findings with recommendations for any mismatches.
-
-````
 
 ### 1.3 Add Version Check Script
 
