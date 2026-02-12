@@ -74,14 +74,13 @@ nixcuda ./program
 2. **Missing GPU libraries**: Use `nixcuda` wrapper, not direct execution
 3. **TF staleness**: Check robot_state_publisher is running
 4. **GPU not detected**: Ensure you're using `nixcuda` for CUDA programs
-
 ````
 
 ### 1.2 Add CUDA Diagnostics Skill
 
 Create `/home/dingo/perseus-v2/.claude/commands/cuda-check.md`:
 
-```markdown
+````markdown
 ---
 description: Run CUDA environment diagnostics
 ---
@@ -91,10 +90,12 @@ description: Run CUDA environment diagnostics
 Run the following diagnostic sequence:
 
 1. Check if in Nix dev shell:
+
 ```bash
 echo "CUDA_PATH: ${CUDA_PATH:-NOT SET}"
 echo "CUDA_HOME: ${CUDA_HOME:-NOT SET}"
 which nvcc || echo "nvcc not found"
+```
 ````
 
 2. Check Nix CUDA version:
@@ -264,7 +265,7 @@ if command -v nvidia-smi &>/dev/null; then
     echo -e "${CYAN}=== GPU Status ===${NC}"
     nvidia-smi --query-gpu=name,memory.total,compute_cap --format=csv,noheader 2>/dev/null || echo "GPU query failed"
 fi
-````
+```
 
 ---
 
