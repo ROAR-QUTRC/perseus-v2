@@ -235,8 +235,8 @@ private:
         auto time_since_feedback = (now - _last_feedback_time).seconds();
         // Active only if we have an active goal AND received feedback within last 2 seconds
         nav_info->navigation_active = (_active_goal != nullptr) || (time_since_feedback < 0.2);
-        RCLCPP_INFO(this->get_logger(), "Time since last feedback: %.2f seconds, active_goal: %s",
-                    time_since_feedback, (_active_goal != nullptr) ? "yes" : "no");
+        // RCLCPP_INFO(this->get_logger(), "Time since last feedback: %.2f seconds, active_goal: %s",
+        //             time_since_feedback, (_active_goal != nullptr) ? "yes" : "no");
         _nav_info_pub->publish(std::move(nav_info));
     }
 };
