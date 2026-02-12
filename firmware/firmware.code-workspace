@@ -5,6 +5,10 @@
             "path": "./components"
         },
         {
+            "name": "RSBL Firmware",
+            "path": "./RSBL85-driver"
+        },
+        {
             "name": "BMS Firmware",
             "path": "./battery-management-system"
         },
