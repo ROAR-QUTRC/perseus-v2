@@ -2,10 +2,7 @@
 {
   programs.neovim = {
     enable = true;
-  };
-
-  home.sessionVariables = {
-    EDITOR = "nvim";
+    defaultEditor = true;
   };
 
   home.shellAliases = {
