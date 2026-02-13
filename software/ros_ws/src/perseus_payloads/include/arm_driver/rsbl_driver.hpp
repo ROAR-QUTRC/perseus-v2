@@ -52,6 +52,9 @@ private:
             {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT,
              std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
                  hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT)},
+            {hi_can::addressing::post_landing::arm::control_board::group::ELBOW,
+             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
+                 hi_can::addressing::post_landing::arm::control_board::group::ELBOW)},
         };
 
     // Motor feedback

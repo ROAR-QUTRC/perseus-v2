@@ -154,6 +154,10 @@ hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time&, co
             {
                 joint_name = "shoulder_pan";
             }
+            else if (servo_id == static_cast<int>(group::ELBOW))
+            {
+                joint_name = "elbow";
+            }
 
             // Update state
             if (!joint_name.empty())
@@ -183,14 +187,16 @@ hardware_interface::return_type PerseusArmHardware::write(const rclcpp::Time&, c
     if (_rsbl_publisher)
     {
         actuator_msgs::msg::Actuators msg;
-        msg.position.resize(2);
-        msg.velocity.resize(2);
-        msg.normalized.resize(2, 0.0);
+        msg.position.resize(3);
+        msg.velocity.resize(3);
+        msg.normalized.resize(3, 0.0);
 
         double pan_cmd = 0.0;
         double tilt_cmd = 0.0;
+        double elbow_cmd = 0.0;
         double pan_vel_cmd = 0.0;
         double tilt_vel_cmd = 0.0;
+        double elbow_vel_cmd = 0.0;
 
         for (size_t i = 0; i < info_.joints.size(); ++i)
         {
@@ -206,15 +212,24 @@ hardware_interface::return_type PerseusArmHardware::write(const rclcpp::Time&, c
                 if (!std::isnan(_hw_commands_velocity[i]))
                     tilt_vel_cmd = _hw_commands_velocity[i];
             }
+            if (info_.joints[i].name == "elbow")
+            {
+                elbow_cmd = _hw_commands[i];
+                if (!std::isnan(_hw_commands_velocity[i]))
+                    elbow_vel_cmd = _hw_commands_velocity[i];
+            }
         }
 
         msg.position[0] = tilt_cmd;
         msg.position[1] = pan_cmd;
+        msg.position[2] = elbow_cmd;
 
         msg.velocity[0] = tilt_vel_cmd;
         msg.velocity[1] = pan_vel_cmd;
+        msg.velocity[2] = elbow_vel_cmd;
         msg.normalized[0] = 0.0;
         msg.normalized[1] = 0.0;
+        msg.normalized[2] = 0.0;
 
         _rsbl_publisher->publish(msg);
     }

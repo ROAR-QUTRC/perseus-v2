@@ -31,7 +31,7 @@ void setup()
     servo.begin(1000000, 18, 19, -1);
     delay(1000);
 
-    for (uint8_t id = 0; id <= 1; id++)  // Servo Setup - Configure both servos (IDs 0 and 1 for SHOULDER)
+    for (uint8_t id = 0; id <= 2; id++)  // Servo Setup - Configure all 3 servos (IDs 0, 1, 2)
     {
         servo.unLockEprom(id);
         servo.LockEprom(id);
@@ -45,9 +45,9 @@ void setup()
     Serial.println("CAN interface initialized");
 
     // Map servo index to group ID
-    group servo_groups[] = {group::SHOULDER_TILT, group::SHOULDER_PAN};
+    group servo_groups[] = {group::SHOULDER_TILT, group::SHOULDER_PAN, group::ELBOW};
 
-    for (uint8_t servo_idx = 0; servo_idx <= 1; servo_idx++)
+    for (uint8_t servo_idx = 0; servo_idx <= 2; servo_idx++)
     {
         group servo_group = servo_groups[servo_idx];
 
@@ -75,7 +75,7 @@ void setup()
                         uint8_t acceleration = data->acceleration;
 
                         // servo.MovetoAngle(servo_idx, position, speed, acceleration);
-                        servo.WritePosEx(servo_idx, position, speed, acceleration);  // could swap out to MovetoAngle
+                        servo.WritePosEx(servo_idx, position, speed, acceleration);  // could swap out with MovetoAngle
                         Serial.printf("SET_POS_EX: servo=%d, pos=%d, spd=%d, acc=%d\n",
                                       servo_idx, position, speed, acceleration);
                     }
