@@ -46,6 +46,7 @@ pkgs.mkShell {
           behaviortree-cpp
           boost
           builtin-interfaces
+          control-msgs
           controller-manager
           cv-bridge
           diff-drive-controller

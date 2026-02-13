@@ -3,10 +3,12 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  control-msgs,
   cv-bridge,
   geometry-msgs,
   image-transport,
   nav-msgs,
+  perseus-interfaces,
   rclcpp,
   sensor-msgs,
   std-msgs,
@@ -22,10 +24,12 @@ buildRosPackage rec {
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
+    control-msgs
     cv-bridge
     geometry-msgs
     image-transport
     nav-msgs
+    perseus-interfaces
     rclcpp
     sensor-msgs
     std-msgs
