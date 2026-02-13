@@ -206,7 +206,6 @@ class ConversationNode(Node):
                 return
 
             max_turns = self.get_parameter("max_turns").value
-            timeout = self.get_parameter("conversation_timeout").value
 
             # Conversation turns
             while self._conversation_active and self._turn_count < max_turns:
