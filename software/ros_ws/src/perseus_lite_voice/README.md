@@ -48,29 +48,29 @@ Any state ──(timeout / "goodbye")──→ IDLE
 
 ### LED Colors
 
-| State | Color | Mode |
-|-------|-------|------|
-| Idle | Off | - |
-| Listening (wake word) | Dim green | Solid |
-| Greeting | Blue | Solid |
-| Listening (user) | Bright blue | Solid |
-| Processing | Orange | Pulse |
-| Speaking | Green | Solid |
+| State                 | Color       | Mode  |
+| --------------------- | ----------- | ----- |
+| Idle                  | Off         | -     |
+| Listening (wake word) | Dim green   | Solid |
+| Greeting              | Blue        | Solid |
+| Listening (user)      | Bright blue | Solid |
+| Processing            | Orange      | Pulse |
+| Speaking              | Green       | Solid |
 
 ## Topics
 
-| Topic | Type | Direction | Description |
-|-------|------|-----------|-------------|
-| `/voice/wake_event` | `perseus_interfaces/VoiceEvent` | wake_word → conversation | Wake word detected |
-| `/voice/state` | `perseus_interfaces/VoiceState` | conversation → all | Current conversation state |
-| `/voice/led_command` | `perseus_interfaces/LEDCommand` | conversation → wake_word | LED color/mode control |
-| `/voice/user_transcript` | `std_msgs/String` | conversation → any | Transcribed user speech |
-| `/voice/response_text` | `std_msgs/String` | conversation → any | LLM response text |
-| `/voice/person_detected` | `std_msgs/Bool` | person_tracker → conversation | Person locked on |
-| `/voice/person_detection` | `perseus_interfaces/PersonDetection` | person_tracker → any | Detection details (angle, bbox area) |
-| `/voice/interaction_log` | `perseus_interfaces/VoiceInteraction` | conversation → any | Per-interaction timing and content record |
-| `/voice/interaction_summary` | `std_msgs/String` | conversation → any | JSON summary of last 50 interactions + aggregate stats |
-| `cmd_vel_voice` | `geometry_msgs/Twist` | person_tracker → cmd_vel_mux | Rotation commands |
+| Topic                        | Type                                  | Direction                     | Description                                            |
+| ---------------------------- | ------------------------------------- | ----------------------------- | ------------------------------------------------------ |
+| `/voice/wake_event`          | `perseus_interfaces/VoiceEvent`       | wake_word → conversation      | Wake word detected                                     |
+| `/voice/state`               | `perseus_interfaces/VoiceState`       | conversation → all            | Current conversation state                             |
+| `/voice/led_command`         | `perseus_interfaces/LEDCommand`       | conversation → wake_word      | LED color/mode control                                 |
+| `/voice/user_transcript`     | `std_msgs/String`                     | conversation → any            | Transcribed user speech                                |
+| `/voice/response_text`       | `std_msgs/String`                     | conversation → any            | LLM response text                                      |
+| `/voice/person_detected`     | `std_msgs/Bool`                       | person_tracker → conversation | Person locked on                                       |
+| `/voice/person_detection`    | `perseus_interfaces/PersonDetection`  | person_tracker → any          | Detection details (angle, bbox area)                   |
+| `/voice/interaction_log`     | `perseus_interfaces/VoiceInteraction` | conversation → any            | Per-interaction timing and content record              |
+| `/voice/interaction_summary` | `std_msgs/String`                     | conversation → any            | JSON summary of last 50 interactions + aggregate stats |
+| `cmd_vel_voice`              | `geometry_msgs/Twist`                 | person_tracker → cmd_vel_mux  | Rotation commands                                      |
 
 ## Hardware Requirements
 
@@ -175,72 +175,72 @@ All parameters are in `config/voice_params.yaml` and can be overridden at launch
 
 ### Wake Word Node
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `wake_word_model` | `hey_jarvis` | OpenWakeWord model name |
-| `confidence_threshold` | `0.5` | Detection confidence (0-1) |
-| `sample_rate` | `16000` | Audio sample rate (Hz) |
-| `chunk_size` | `1280` | Audio chunk size (80ms at 16kHz) |
-| `led_i2c_address` | `0x08` | PicoDev LED I2C address |
-| `led_i2c_bus` | `1` | I2C bus number |
-| `led_brightness` | `80` | Global LED brightness (0-255) |
-| `led_pulse_rate_hz` | `2.0` | Pulse animation speed |
+| Parameter              | Default      | Description                      |
+| ---------------------- | ------------ | -------------------------------- |
+| `wake_word_model`      | `hey_jarvis` | OpenWakeWord model name          |
+| `confidence_threshold` | `0.5`        | Detection confidence (0-1)       |
+| `sample_rate`          | `16000`      | Audio sample rate (Hz)           |
+| `chunk_size`           | `1280`       | Audio chunk size (80ms at 16kHz) |
+| `led_i2c_address`      | `0x08`       | PicoDev LED I2C address          |
+| `led_i2c_bus`          | `1`          | I2C bus number                   |
+| `led_brightness`       | `80`         | Global LED brightness (0-255)    |
+| `led_pulse_rate_hz`    | `2.0`        | Pulse animation speed            |
 
 ### Conversation Node
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `ollama_url` | `http://localhost:11434` | Ollama API endpoint |
-| `ollama_model` | `llama3.2:1b` | LLM model name |
-| `stt_model_size` | `tiny.en` | Faster-Whisper model |
-| `stt_device` | `auto` | STT device (`cuda`, `cpu`, `auto`) |
-| `piper_model_path` | `""` | Path to Piper `.onnx` voice model |
-| `piper_bin` | `piper` | Path to Piper binary |
-| `silence_threshold` | `500` | RMS threshold for silence detection |
-| `silence_duration` | `2.0` | Seconds of silence before stopping recording |
-| `max_listen_duration` | `30.0` | Max recording time per turn (seconds) |
-| `conversation_timeout` | `30.0` | End conversation after this much silence |
-| `max_turns` | `20` | Max conversation turns before ending |
-| `wait_for_person_lock` | `true` | Wait for person tracker before greeting |
-| `person_lock_timeout` | `5.0` | Max wait time for person lock (seconds) |
-| `interaction_log_path` | `~/.ros/voice_interaction_log.json` | Path to persist interaction history |
+| Parameter              | Default                             | Description                                  |
+| ---------------------- | ----------------------------------- | -------------------------------------------- |
+| `ollama_url`           | `http://localhost:11434`            | Ollama API endpoint                          |
+| `ollama_model`         | `llama3.2:1b`                       | LLM model name                               |
+| `stt_model_size`       | `tiny.en`                           | Faster-Whisper model                         |
+| `stt_device`           | `auto`                              | STT device (`cuda`, `cpu`, `auto`)           |
+| `piper_model_path`     | `""`                                | Path to Piper `.onnx` voice model            |
+| `piper_bin`            | `piper`                             | Path to Piper binary                         |
+| `silence_threshold`    | `500`                               | RMS threshold for silence detection          |
+| `silence_duration`     | `2.0`                               | Seconds of silence before stopping recording |
+| `max_listen_duration`  | `30.0`                              | Max recording time per turn (seconds)        |
+| `conversation_timeout` | `30.0`                              | End conversation after this much silence     |
+| `max_turns`            | `20`                                | Max conversation turns before ending         |
+| `wait_for_person_lock` | `true`                              | Wait for person tracker before greeting      |
+| `person_lock_timeout`  | `5.0`                               | Max wait time for person lock (seconds)      |
+| `interaction_log_path` | `~/.ros/voice_interaction_log.json` | Path to persist interaction history          |
 
 ### Person Tracker Node
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `camera_topic` | `/image_raw` | Camera image topic |
-| `camera_hfov_deg` | `70.0` | Camera horizontal field of view |
-| `yolo_model` | `yolov8n.pt` | YOLO model (auto-exports to TensorRT) |
-| `yolo_confidence` | `0.5` | Detection confidence threshold |
-| `detection_rate_hz` | `10.0` | YOLO inference rate |
-| `max_angular_vel` | `0.5` | Max rotation speed (rad/s) |
-| `angular_deadband_deg` | `5.0` | Stop rotating when within this angle |
-| `proportional_gain` | `1.5` | P-controller gain for rotation |
-| `search_timeout` | `5.0` | Give up searching after this long |
-| `cmd_vel_topic` | `cmd_vel_voice` | Output velocity topic |
+| Parameter              | Default         | Description                           |
+| ---------------------- | --------------- | ------------------------------------- |
+| `camera_topic`         | `/image_raw`    | Camera image topic                    |
+| `camera_hfov_deg`      | `70.0`          | Camera horizontal field of view       |
+| `yolo_model`           | `yolov8n.pt`    | YOLO model (auto-exports to TensorRT) |
+| `yolo_confidence`      | `0.5`           | Detection confidence threshold        |
+| `detection_rate_hz`    | `10.0`          | YOLO inference rate                   |
+| `max_angular_vel`      | `0.5`           | Max rotation speed (rad/s)            |
+| `angular_deadband_deg` | `5.0`           | Stop rotating when within this angle  |
+| `proportional_gain`    | `1.5`           | P-controller gain for rotation        |
+| `search_timeout`       | `5.0`           | Give up searching after this long     |
+| `cmd_vel_topic`        | `cmd_vel_voice` | Output velocity topic                 |
 
 ## cmd_vel_mux Integration
 
 The person tracker publishes rotation commands on `cmd_vel_voice`, which is registered in the velocity mux at priority 5:
 
-| Source | Topic | Priority |
-|--------|-------|----------|
-| Navigation (Nav2) | `cmd_vel_nav` | 1 (lowest) |
-| **Voice Person Tracking** | `cmd_vel_voice` | **5** |
-| Manual Controller | `/diff_base_controller/cmd_vel` | 10 (highest) |
+| Source                    | Topic                           | Priority     |
+| ------------------------- | ------------------------------- | ------------ |
+| Navigation (Nav2)         | `cmd_vel_nav`                   | 1 (lowest)   |
+| **Voice Person Tracking** | `cmd_vel_voice`                 | **5**        |
+| Manual Controller         | `/diff_base_controller/cmd_vel` | 10 (highest) |
 
 Manual control always overrides voice rotation. Voice rotation overrides autonomous navigation.
 
 ## Resource Usage (Jetson Orin Nano 8GB)
 
-| Component | Memory | Notes |
-|-----------|--------|-------|
-| OpenWakeWord | ~50MB RAM | Always-on, CPU |
+| Component                | Memory      | Notes                      |
+| ------------------------ | ----------- | -------------------------- |
+| OpenWakeWord             | ~50MB RAM   | Always-on, CPU             |
 | Faster-Whisper (tiny.en) | ~200MB VRAM | Loaded on first wake, CUDA |
-| YOLOv8n (TensorRT) | ~200MB VRAM | Loaded on first wake, GPU |
-| Ollama (llama3.2:1b) | ~1.5GB RAM | CPU/GPU split |
-| Piper TTS | ~100MB RAM | CPU only |
+| YOLOv8n (TensorRT)       | ~200MB VRAM | Loaded on first wake, GPU  |
+| Ollama (llama3.2:1b)     | ~1.5GB RAM  | CPU/GPU split              |
+| Piper TTS                | ~100MB RAM  | CPU only                   |
 
 YOLO and Whisper don't run simultaneously (YOLO during GREETING, Whisper during LISTENING), so peak VRAM usage is ~400MB.
 
@@ -291,13 +291,13 @@ The `end_reason` field indicates why the conversation ended: `"goodbye"`, `"time
 
 ## Custom Interfaces (in perseus_interfaces)
 
-| Message | Fields | Purpose |
-|---------|--------|---------|
-| `VoiceEvent` | stamp, wake_phrase, confidence | Wake word detection event |
-| `VoiceState` | stamp, state, current_transcript, current_response, turn_count | Conversation state (IDLE/LISTENING_WAKE/GREETING/LISTENING_USER/PROCESSING/SPEAKING) |
-| `LEDCommand` | red, green, blue, mode | LED control (SOLID/PULSE/OFF) |
-| `PersonDetection` | stamp, detected, angle_offset_rad, bounding_box_area, num_persons | Person detection result |
-| `VoiceInteraction` | start_time, end_time, wake_phrase, wake_confidence, person_detected, per-turn transcripts/timings, end_reason | Complete interaction record with timing |
+| Message            | Fields                                                                                                        | Purpose                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `VoiceEvent`       | stamp, wake_phrase, confidence                                                                                | Wake word detection event                                                            |
+| `VoiceState`       | stamp, state, current_transcript, current_response, turn_count                                                | Conversation state (IDLE/LISTENING_WAKE/GREETING/LISTENING_USER/PROCESSING/SPEAKING) |
+| `LEDCommand`       | red, green, blue, mode                                                                                        | LED control (SOLID/PULSE/OFF)                                                        |
+| `PersonDetection`  | stamp, detected, angle_offset_rad, bounding_box_area, num_persons                                             | Person detection result                                                              |
+| `VoiceInteraction` | start_time, end_time, wake_phrase, wake_confidence, person_detected, per-turn transcripts/timings, end_reason | Complete interaction record with timing                                              |
 
 ## Graceful Degradation
 

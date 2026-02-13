@@ -25,7 +25,16 @@ from .stt_engine import FasterWhisperSTT
 from .tts_engine import PiperTTS
 
 
-GOODBYE_PHRASES = {"goodbye", "bye", "see you", "that's all", "stop", "quit", "exit", "nevermind"}
+GOODBYE_PHRASES = {
+    "goodbye",
+    "bye",
+    "see you",
+    "that's all",
+    "stop",
+    "quit",
+    "exit",
+    "nevermind",
+}
 
 GREETING_TEXT = "Hey there! What can I help you with?"
 OLLAMA_ERROR_TEXT = (
@@ -55,12 +64,16 @@ class ConversationNode(Node):
         self.declare_parameter("max_turns", 20)
         self.declare_parameter("wait_for_person_lock", True)
         self.declare_parameter("person_lock_timeout", 5.0)
-        self.declare_parameter("interaction_log_path", "~/.ros/voice_interaction_log.json")
+        self.declare_parameter(
+            "interaction_log_path", "~/.ros/voice_interaction_log.json"
+        )
 
         # Publishers
         self._state_pub = self.create_publisher(VoiceState, "/voice/state", 10)
         self._led_pub = self.create_publisher(LEDCommand, "/voice/led_command", 10)
-        self._transcript_pub = self.create_publisher(String, "/voice/user_transcript", 10)
+        self._transcript_pub = self.create_publisher(
+            String, "/voice/user_transcript", 10
+        )
         self._response_pub = self.create_publisher(String, "/voice/response_text", 10)
 
         # Subscribers
@@ -89,9 +102,8 @@ class ConversationNode(Node):
 
         # Interaction logger
         import os
-        log_path = os.path.expanduser(
-            self.get_parameter("interaction_log_path").value
-        )
+
+        log_path = os.path.expanduser(self.get_parameter("interaction_log_path").value)
         self._interaction_logger = InteractionLogger(self, log_path=log_path)
 
         # Wake event data (stored for the conversation thread)
@@ -108,7 +120,9 @@ class ConversationNode(Node):
         if self._stt is None:
             stt_model = self.get_parameter("stt_model_size").value
             stt_device = self.get_parameter("stt_device").value
-            self.get_logger().info(f"Loading STT model: {stt_model} (device: {stt_device})")
+            self.get_logger().info(
+                f"Loading STT model: {stt_model} (device: {stt_device})"
+            )
             self._stt = FasterWhisperSTT(
                 model_size=stt_model,
                 device=stt_device,
@@ -122,7 +136,9 @@ class ConversationNode(Node):
                 piper_bin=piper_bin,
             )
             if not self._tts.available:
-                self.get_logger().warn("Piper TTS not available. Speech output disabled.")
+                self.get_logger().warn(
+                    "Piper TTS not available. Speech output disabled."
+                )
 
         if self._llm is None:
             ollama_url = self.get_parameter("ollama_url").value

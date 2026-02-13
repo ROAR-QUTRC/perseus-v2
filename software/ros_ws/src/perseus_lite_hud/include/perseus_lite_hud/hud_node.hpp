@@ -6,11 +6,11 @@
 #include <control_msgs/msg/dynamic_joint_state.hpp>
 #include <cv_bridge/cv_bridge.hpp>
 #include <geometry_msgs/msg/twist.hpp>
-#include <perseus_interfaces/msg/waypoint_status.hpp>
 #include <image_transport/image_transport.hpp>
 #include <mutex>
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <perseus_interfaces/msg/waypoint_status.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>

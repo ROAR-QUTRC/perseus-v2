@@ -9,7 +9,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from builtin_interfaces.msg import Time
 from rclpy.node import Node
@@ -103,7 +103,9 @@ class InteractionLogger:
         # Load existing records from disk
         self._load()
 
-    def start_interaction(self, wake_phrase: str, confidence: float) -> InteractionRecord:
+    def start_interaction(
+        self, wake_phrase: str, confidence: float
+    ) -> InteractionRecord:
         """Begin tracking a new interaction. Returns a record to fill in."""
         record = InteractionRecord(
             start_time=time.monotonic(),

@@ -4,60 +4,48 @@ wake_word_node:
     wake_word_model: "hey_jarvis"
     confidence_threshold: 0.5
     sample_rate: 16000
-    chunk_size: 1280  # 80ms at 16kHz — OpenWakeWord default
-
+    chunk_size: 1280 # 80ms at 16kHz — OpenWakeWord default
     # PicoDev 3x RGB LED
     led_i2c_address: 0x08
     led_i2c_bus: 1
     led_brightness: 80
     led_pulse_rate_hz: 2.0
-
 conversation_node:
   ros__parameters:
     # Ollama LLM
     ollama_url: "http://localhost:11434"
     ollama_model: "llama3.2:1b"
-
     # Faster-Whisper STT
     stt_model_size: "tiny.en"
     stt_device: "auto"
-
     # Piper TTS
-    piper_model_path: ""  # Empty = use piper default
+    piper_model_path: "" # Empty = use piper default
     piper_bin: "piper"
-
     # Audio recording
     silence_threshold: 500
     silence_duration: 2.0
     max_listen_duration: 30.0
-
     # Conversation limits
     conversation_timeout: 30.0
     max_turns: 20
-
     # Person tracking integration
     wait_for_person_lock: true
     person_lock_timeout: 5.0
-
     # Interaction logging
     interaction_log_path: "~/.ros/voice_interaction_log.json"
-
 person_tracker_node:
   ros__parameters:
     # Camera
     camera_topic: "/image_raw"
     camera_hfov_deg: 70.0
-
     # YOLO person detection
     yolo_model: "yolov8n.pt"
     yolo_confidence: 0.5
     detection_rate_hz: 10.0
-
     # Rotation control
     max_angular_vel: 0.5
     angular_deadband_deg: 5.0
     proportional_gain: 1.5
     search_timeout: 5.0
-
     # Output
     cmd_vel_topic: "cmd_vel_voice"

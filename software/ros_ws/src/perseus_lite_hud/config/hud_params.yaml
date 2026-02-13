@@ -52,7 +52,6 @@ hud_overlay_node:
       opacity: 0.8
       digit_width: 28
       digit_height: 40
-
     # Waypoint list
     waypoints:
       enabled: true
@@ -62,7 +61,6 @@ hud_overlay_node:
       opacity: 0.75
       margin: 10
       nav_info_topic: "/autonomy/waypoint_status"
-
     # Servo temperature (MechWarrior 2 style)
     servo_temperature:
       enabled: true
