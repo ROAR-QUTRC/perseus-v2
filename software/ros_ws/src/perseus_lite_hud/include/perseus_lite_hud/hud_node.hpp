@@ -3,8 +3,10 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#include <control_msgs/msg/dynamic_joint_state.hpp>
 #include <cv_bridge/cv_bridge.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <perseus_interfaces/msg/waypoint_status.hpp>
 #include <image_transport/image_transport.hpp>
 #include <mutex>
 #include <nav_msgs/msg/occupancy_grid.hpp>
@@ -18,7 +20,9 @@
 #include "perseus_lite_hud/hud_elements/lidar_proximity.hpp"
 #include "perseus_lite_hud/hud_elements/odometer.hpp"
 #include "perseus_lite_hud/hud_elements/pip_map.hpp"
+#include "perseus_lite_hud/hud_elements/servo_temperature.hpp"
 #include "perseus_lite_hud/hud_elements/velocity_gauge.hpp"
+#include "perseus_lite_hud/hud_elements/waypoint_list.hpp"
 #include "perseus_lite_hud/hud_renderer.hpp"
 
 namespace perseus_lite_hud
@@ -42,6 +46,10 @@ namespace perseus_lite_hud
         void _scan_callback(const sensor_msgs::msg::LaserScan::ConstSharedPtr& msg);
         void _map_callback(const nav_msgs::msg::OccupancyGrid::ConstSharedPtr& msg);
         void _cmd_vel_callback(const geometry_msgs::msg::Twist::ConstSharedPtr& msg);
+        void _waypoint_status_callback(
+            const perseus_interfaces::msg::WaypointStatus::ConstSharedPtr& msg);
+        void _dynamic_joint_state_callback(
+            const control_msgs::msg::DynamicJointState::ConstSharedPtr& msg);
 
         // Extract yaw from quaternion
         static double _yaw_from_quaternion(double x, double y, double z, double w);
@@ -57,6 +65,10 @@ namespace perseus_lite_hud
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
         rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
         rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+        rclcpp::Subscription<perseus_interfaces::msg::WaypointStatus>::SharedPtr
+            waypoint_status_sub_;
+        rclcpp::Subscription<control_msgs::msg::DynamicJointState>::SharedPtr
+            dynamic_joint_state_sub_;
 
         // TF
         std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
@@ -69,6 +81,8 @@ namespace perseus_lite_hud
         std::shared_ptr<LidarProximity> lidar_prox_;
         std::shared_ptr<VelocityGauge> velocity_gauge_;
         std::shared_ptr<Odometer> odometer_;
+        std::shared_ptr<WaypointList> waypoint_list_;
+        std::shared_ptr<ServoTemperature> servo_temp_;
 
         // Cached data (protected by mutex)
         std::mutex data_mutex_;
@@ -82,11 +96,18 @@ namespace perseus_lite_hud
         double odom_x_ = 0.0;
         double odom_y_ = 0.0;
         bool has_odom_ = false;
+        std::vector<WaypointEntry> cached_waypoints_;
+        uint32_t cached_wp_index_ = 0;
+        bool cached_wp_active_ = false;
+        bool has_waypoint_status_ = false;
+        std::array<double, 4> servo_temps_{};
+        bool has_servo_temps_ = false;
 
         // Parameters
         std::string map_frame_ = "map";
         std::string base_frame_ = "base_link";
         std::string heading_source_ = "odom";
+        std::vector<std::string> servo_joint_names_;
     };
 
 }  // namespace perseus_lite_hud

@@ -52,3 +52,32 @@ hud_overlay_node:
       opacity: 0.8
       digit_width: 28
       digit_height: 40
+
+    # Waypoint list
+    waypoints:
+      enabled: true
+      width: 180
+      row_height: 22
+      max_visible: 8
+      opacity: 0.75
+      margin: 10
+      nav_info_topic: "/autonomy/waypoint_status"
+
+    # Servo temperature (MechWarrior 2 style)
+    servo_temperature:
+      enabled: true
+      width: 200
+      height: 180
+      warning_temp: 50.0
+      danger_temp: 65.0
+      max_temp: 70.0
+      min_temp: 25.0
+      opacity: 0.75
+      margin: 10
+      flash_rate_hz: 3.0
+      topic: "/dynamic_joint_states"
+      joint_names:
+        - "front_left_wheel_joint"
+        - "front_right_wheel_joint"
+        - "rear_left_wheel_joint"
+        - "rear_right_wheel_joint"

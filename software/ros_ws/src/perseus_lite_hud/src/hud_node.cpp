@@ -60,12 +60,47 @@ namespace perseus_lite_hud
             this->declare_parameter("odometer.digit_height", 40);
         odometer_ = std::make_shared<Odometer>(odo_cfg);
 
+        WaypointListConfig wp_cfg;
+        wp_cfg.width = this->declare_parameter("waypoints.width", 180);
+        wp_cfg.row_height = this->declare_parameter("waypoints.row_height", 22);
+        wp_cfg.max_visible = this->declare_parameter("waypoints.max_visible", 8);
+        wp_cfg.opacity = this->declare_parameter("waypoints.opacity", 0.75);
+        wp_cfg.margin = this->declare_parameter("waypoints.margin", 10);
+        waypoint_list_ = std::make_shared<WaypointList>(wp_cfg);
+
+        ServoTemperatureConfig servo_cfg;
+        servo_cfg.width = this->declare_parameter("servo_temperature.width", 200);
+        servo_cfg.height = this->declare_parameter("servo_temperature.height", 180);
+        servo_cfg.warning_temp =
+            this->declare_parameter("servo_temperature.warning_temp", 50.0);
+        servo_cfg.danger_temp =
+            this->declare_parameter("servo_temperature.danger_temp", 65.0);
+        servo_cfg.max_temp =
+            this->declare_parameter("servo_temperature.max_temp", 70.0);
+        servo_cfg.min_temp =
+            this->declare_parameter("servo_temperature.min_temp", 25.0);
+        servo_cfg.opacity =
+            this->declare_parameter("servo_temperature.opacity", 0.75);
+        servo_cfg.margin = this->declare_parameter("servo_temperature.margin", 10);
+        servo_cfg.flash_rate_hz =
+            this->declare_parameter("servo_temperature.flash_rate_hz", 3.0);
+        servo_temp_ = std::make_shared<ServoTemperature>(servo_cfg);
+
+        servo_joint_names_ = this->declare_parameter(
+            "servo_temperature.joint_names",
+            std::vector<std::string>{"front_left_wheel_joint",
+                                     "front_right_wheel_joint",
+                                     "rear_left_wheel_joint",
+                                     "rear_right_wheel_joint"});
+
         // Register elements with renderer
         renderer_.add_element(compass_);
         renderer_.add_element(pip_map_);
         renderer_.add_element(lidar_prox_);
         renderer_.add_element(velocity_gauge_);
         renderer_.add_element(odometer_);
+        renderer_.add_element(waypoint_list_);
+        renderer_.add_element(servo_temp_);
 
         // Element enable flags
         compass_->set_enabled(this->declare_parameter("compass.enabled", true));
@@ -74,6 +109,10 @@ namespace perseus_lite_hud
         velocity_gauge_->set_enabled(
             this->declare_parameter("velocity.enabled", true));
         odometer_->set_enabled(this->declare_parameter("odometer.enabled", true));
+        waypoint_list_->set_enabled(
+            this->declare_parameter("waypoints.enabled", true));
+        servo_temp_->set_enabled(
+            this->declare_parameter("servo_temperature.enabled", true));
 
         // TF
         tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -161,6 +200,26 @@ namespace perseus_lite_hud
             cmd_vel_topic, rclcpp::QoS(10),
             std::bind(&HudOverlayNode::_cmd_vel_callback, this,
                       std::placeholders::_1));
+
+        // Waypoint status
+        auto wp_status_topic = this->declare_parameter(
+            "waypoints.nav_info_topic",
+            std::string("/autonomy/waypoint_status"));
+        waypoint_status_sub_ =
+            this->create_subscription<perseus_interfaces::msg::WaypointStatus>(
+                wp_status_topic, rclcpp::QoS(10),
+                std::bind(&HudOverlayNode::_waypoint_status_callback, this,
+                          std::placeholders::_1));
+
+        // Dynamic joint states (servo temperatures)
+        auto joint_state_topic = this->declare_parameter(
+            "servo_temperature.topic",
+            std::string("/dynamic_joint_states"));
+        dynamic_joint_state_sub_ =
+            this->create_subscription<control_msgs::msg::DynamicJointState>(
+                joint_state_topic, sensor_qos,
+                std::bind(&HudOverlayNode::_dynamic_joint_state_callback, this,
+                          std::placeholders::_1));
     }
 
     void HudOverlayNode::_image_callback(
@@ -197,6 +256,15 @@ namespace perseus_lite_hud
             if (has_odom_)
             {
                 odometer_->update_position(odom_x_, odom_y_);
+            }
+            if (has_waypoint_status_)
+            {
+                waypoint_list_->set_waypoints(cached_waypoints_, cached_wp_index_,
+                                              cached_wp_active_);
+            }
+            if (has_servo_temps_)
+            {
+                servo_temp_->set_temperatures(servo_temps_);
             }
         }
 
@@ -287,6 +355,66 @@ namespace perseus_lite_hud
         const nav_msgs::msg::OccupancyGrid::ConstSharedPtr& msg)
     {
         pip_map_->set_map(msg);
+    }
+
+    void HudOverlayNode::_waypoint_status_callback(
+        const perseus_interfaces::msg::WaypointStatus::ConstSharedPtr& msg)
+    {
+        std::lock_guard<std::mutex> lock(data_mutex_);
+
+        cached_waypoints_.clear();
+        cached_waypoints_.reserve(msg->waypoints.size());
+        for (const auto& wp : msg->waypoints)
+        {
+            WaypointEntry entry;
+            entry.name = wp.name;
+            entry.x = wp.x;
+            entry.y = wp.y;
+            cached_waypoints_.push_back(std::move(entry));
+        }
+        cached_wp_index_ = msg->current_index;
+        cached_wp_active_ = msg->active;
+        has_waypoint_status_ = true;
+    }
+
+    void HudOverlayNode::_dynamic_joint_state_callback(
+        const control_msgs::msg::DynamicJointState::ConstSharedPtr& msg)
+    {
+        std::lock_guard<std::mutex> lock(data_mutex_);
+
+        for (size_t i = 0; i < msg->joint_names.size(); ++i)
+        {
+            const auto& name = msg->joint_names[i];
+
+            // Find which wheel index this joint maps to
+            int wheel_idx = -1;
+            for (size_t j = 0; j < servo_joint_names_.size(); ++j)
+            {
+                if (name == servo_joint_names_[j])
+                {
+                    wheel_idx = static_cast<int>(j);
+                    break;
+                }
+            }
+            if (wheel_idx < 0)
+                continue;
+
+            // Find the "temperature" interface value
+            if (i < msg->interface_values.size())
+            {
+                const auto& iface = msg->interface_values[i];
+                for (size_t k = 0; k < iface.interface_names.size(); ++k)
+                {
+                    if (iface.interface_names[k] == "temperature" &&
+                        k < iface.values.size())
+                    {
+                        servo_temps_[wheel_idx] = iface.values[k];
+                        has_servo_temps_ = true;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     void HudOverlayNode::_cmd_vel_callback(

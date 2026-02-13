@@ -42,7 +42,9 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     cv_bridge
     image_transport
     tf2_ros
-    tf2_geometry_msgs)
+    tf2_geometry_msgs
+    perseus_interfaces
+    control_msgs)
 
 find_package(ament_cmake REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -61,7 +63,9 @@ add_executable(
   src/hud_elements/pip_map.cpp
   src/hud_elements/lidar_proximity.cpp
   src/hud_elements/velocity_gauge.cpp
-  src/hud_elements/odometer.cpp)
+  src/hud_elements/odometer.cpp
+  src/hud_elements/waypoint_list.cpp
+  src/hud_elements/servo_temperature.cpp)
 
 target_include_directories(hud_overlay_node
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
