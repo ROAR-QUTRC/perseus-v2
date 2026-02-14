@@ -1,4 +1,6 @@
+import glob
 import os
+
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
@@ -6,6 +8,8 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     GroupAction,
+    LogInfo,
+    OpaqueFunction,
     SetEnvironmentVariable,
 )
 from launch.conditions import IfCondition
@@ -429,6 +433,35 @@ def generate_launch_description():
     # NOTE: twist_mux is already launched by perseus_lite.launch.py
     # Do not launch cmd_vel_mux.launch.py here to avoid duplicates
 
+    # Auto-detect joystick and launch controller if connected
+    def _maybe_launch_controller(context):
+        """Launch controller nodes if a joystick device is detected."""
+        js_devices = glob.glob("/dev/input/js*")
+        if js_devices:
+            return [
+                LogInfo(
+                    msg="Joystick detected at {}, launching controller".format(
+                        js_devices[0]
+                    )
+                ),
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource(
+                        PathJoinSubstitution(
+                            [
+                                FindPackageShare("perseus_input"),
+                                "launch",
+                                "controller.launch.py",
+                            ]
+                        )
+                    ),
+                    launch_arguments={
+                        "type": "xbox",
+                        "wireless": "true",
+                    }.items(),
+                ),
+            ]
+        return [LogInfo(msg="No joystick detected, skipping controller launch")]
+
     launch_files = [
         stdout_linebuf_envvar,
         perseus_lite_launch,
@@ -436,6 +469,7 @@ def generate_launch_description():
         slam_toolbox,
         load_nav2_nodes,
         load_composable_nav2_nodes,
+        OpaqueFunction(function=_maybe_launch_controller),
     ]
 
     return LaunchDescription(arguments + launch_files)
