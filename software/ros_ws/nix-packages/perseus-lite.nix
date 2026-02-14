@@ -10,10 +10,13 @@
   nav2-common,
   navigation2,
   perseus-lite-hardware,
+  perseus-sensors,
   robot-localization,
   robot-state-publisher,
   ros2controlcli,
   ros2launch,
+  rosbridge-server,
+  rplidar-ros,
   rviz2,
   slam-toolbox,
   twist-mux,
@@ -35,10 +38,13 @@ buildRosPackage rec {
     nav2-common
     navigation2
     perseus-lite-hardware
+    perseus-sensors
     robot-localization
     robot-state-publisher
     ros2controlcli
     ros2launch
+    rosbridge-server
+    rplidar-ros
     rviz2
     slam-toolbox
     twist-mux

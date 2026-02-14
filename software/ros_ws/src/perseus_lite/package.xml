@@ -12,7 +12,14 @@
 
   <!-- base -->
   <exec_depend>perseus_lite_hardware</exec_depend>
- 
+
+  <!-- sensors -->
+  <exec_depend>rplidar_ros</exec_depend>
+  <exec_depend>perseus_sensors</exec_depend>
+
+  <!-- networking -->
+  <exec_depend>rosbridge_server</exec_depend>
+
   <!-- ros2 control -->
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>diff_drive_controller</exec_depend>

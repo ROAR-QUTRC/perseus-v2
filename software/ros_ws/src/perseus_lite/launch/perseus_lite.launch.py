@@ -119,7 +119,7 @@ def generate_launch_description():
                     [
                         FindPackageShare("rplidar_ros"),
                         "launch",
-                        "rplidar_c1_launch.py",
+                        "rplidar.launch.py",
                     ]
                 )
             ]
