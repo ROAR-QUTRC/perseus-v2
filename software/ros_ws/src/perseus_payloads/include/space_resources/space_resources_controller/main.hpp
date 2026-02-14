@@ -21,5 +21,4 @@ private:
 
     double _current_velocity;
     double _command_velocity;
-    
 };
