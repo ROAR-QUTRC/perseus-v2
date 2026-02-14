@@ -6,8 +6,7 @@ rosbag2_bagfile_information:
   starting_time:
     nanoseconds_since_epoch: 9223372036854775807
   message_count: 0
-  topics_with_message_count:
-    []
+  topics_with_message_count: []
   compression_format: zstd
   compression_mode: FILE
   relative_file_paths:

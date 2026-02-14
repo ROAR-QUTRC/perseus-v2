@@ -40,6 +40,7 @@ source install/setup.bash
 ## Key Environment Variables
 
 Set automatically in nix shell:
+
 - `ROS_DOMAIN_ID`: 51 (dev), 42 (production)
 - `RMW_IMPLEMENTATION`: rmw_cyclonedds_cpp
 - OpenGL apps (rviz2, Gazebo): Use `nixgl rviz2` on non-NixOS systems
@@ -75,6 +76,7 @@ Coordinate frames: `map → odom → base_link → chassis → sensors`
 ## Code Style
 
 **Naming**:
+
 - Variables/functions: `snake_case`
 - Classes: `PascalCase`
 - Constants: `SCREAMING_SNAKE_CASE` (prefer `constexpr`)
@@ -82,6 +84,7 @@ Coordinate frames: `map → odom → base_link → chassis → sensors`
 - Private class members: underscore prefix (`_member`)
 
 **C++ Specifics**:
+
 - Header guards: `#pragma once`
 - C++ includes: `<cstdint>` not `<stdint.h>`
 - Files: `.cpp`/`.hpp` (not `.cc`/`.h`)
@@ -90,6 +93,7 @@ Coordinate frames: `map → odom → base_link → chassis → sensors`
 - Functions: aim for <40 lines, refactor at 60
 
 **Formatting**:
+
 - C++: clang-format (Google style base, 4-space indent, Allman braces)
 - Python: Black + ruff
 - All other formats via treefmt
@@ -99,6 +103,7 @@ Coordinate frames: `map → odom → base_link → chassis → sensors`
 ## Configuration Files
 
 Key autonomy configs in `software/ros_ws/src/autonomy/config/`:
+
 - `slam_toolbox_params.yaml` - SLAM configuration (CUDA-accelerated on Jetson)
 - `ekf_params.yaml` - Extended Kalman Filter for odometry fusion
 - `twist_mux.yaml` - cmd_vel arbitration from multiple sources
@@ -106,6 +111,7 @@ Key autonomy configs in `software/ros_ws/src/autonomy/config/`:
 ## Documentation
 
 Standards documentation in `docs/source/standards/software/`:
+
 - `general.md` - Overall naming, design, documentation standards
 - `cpp.md` - Comprehensive C++ guidelines
 - `python.md` - Python (PEP 8 + extensions)

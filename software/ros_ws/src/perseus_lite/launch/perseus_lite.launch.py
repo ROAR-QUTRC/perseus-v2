@@ -117,15 +117,17 @@ def generate_launch_description():
         executable="rplidar_node",
         name="rplidar_node",
         output="screen",
-        parameters=[{
-            "channel_type": "serial",
-            "serial_port": "/dev/ttyUSB0",
-            "serial_baudrate": 460800,
-            "frame_id": "c1_lidar_frame",
-            "inverted": False,
-            "angle_compensate": True,
-            "scan_mode": "Standard",
-        }],
+        parameters=[
+            {
+                "channel_type": "serial",
+                "serial_port": "/dev/ttyUSB0",
+                "serial_baudrate": 460800,
+                "frame_id": "c1_lidar_frame",
+                "inverted": False,
+                "angle_compensate": True,
+                "scan_mode": "Standard",
+            }
+        ],
     )
 
     i2c_imu_launch = IncludeLaunchDescription(
