@@ -160,6 +160,22 @@ def generate_launch_description():
         remappings=[("/cmd_vel_out", "/cmd_vel")],
     )
 
+    # Logitech C920 USB camera
+    camera_node = Node(
+        package="v4l2_camera",
+        executable="v4l2_camera_node",
+        name="v4l2_camera",
+        output="screen",
+        parameters=[
+            {
+                "video_device": "/dev/video0",
+                "image_size": [640, 480],
+                "camera_frame_id": "camera_link",
+                "use_sim_time": use_sim_time,
+            }
+        ],
+    )
+
     # Rosbridge WebSocket server (for AndroidRViz / web UI connections on port 9090)
     rosbridge_launch = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(
@@ -183,6 +199,7 @@ def generate_launch_description():
         controllers_launch,
         rplidar_node,
         i2c_imu_launch,
+        camera_node,
         twist_mux_node,
         rosbridge_launch,
     ]

@@ -34,6 +34,9 @@
   <!-- GUI tools -->
   <exec_depend>rviz2</exec_depend>
 
+  <!-- camera -->
+  <exec_depend>v4l2_camera</exec_depend>
+
   <!-- SLAM and navigation -->
   <exec_depend>autonomy</exec_depend>
   <exec_depend>twist_mux</exec_depend>
