@@ -18,4 +18,8 @@ private:
     rclcpp::Client<perseus_interfaces::srv::Concentration>::SharedPtr _ilmenite_concentration_service;
     rclcpp::Publisher<actuator_msgs::msg::ActuatorsAngularVelocity>::SharedPtr _centrifuge_control_publisher;
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr _centrifuge_brake_publisher;
+
+    double _current_velocity;
+    double _command_velocity;
+    
 };

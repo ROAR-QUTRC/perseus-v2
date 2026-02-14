@@ -13,6 +13,13 @@ SpaceResourcesController::SpaceResourcesController(const rclcpp::NodeOptions& op
 
 void SpaceResourcesController::_speed_callback(const actuator_msgs::msg::ActuatorsAngularVelocity msg)
 {
+    _current_velocity = msg.velocity.at(0);
+    if (_current_velocity != _command_velocity)
+    {
+        actuator_msgs::msg::ActuatorsAngularVelocity velocity_message;
+        velocity_message.set__velocity({_command_velocity});
+        _centrifuge_control_publisher->publish(velocity_message);
+    }
 }
 
 int main(int argc, char* argv[])
