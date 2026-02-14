@@ -176,7 +176,7 @@ namespace perseus_lite_hardware
             double position{0.0};
             double velocity{0.0};
             double temperature{_ROOM_TEMPERATURE_CELSIUS};
-            rclcpp::Time last_update{0, 0, RCL_ROS_TIME};
+            rclcpp::Time last_update{0, 0, RCL_STEADY_TIME};
         };
         std::vector<ServoState> _servo_states;
 

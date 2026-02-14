@@ -77,7 +77,7 @@ namespace perseus_lite_hardware
         _servo_ids.reserve(joint_count);
 
         _servo_states.resize(joint_count);  // Initialize servo states vector
-        _last_update_times.resize(joint_count, rclcpp::Time(0, 0, RCL_ROS_TIME));
+        _last_update_times.resize(joint_count, rclcpp::Time(0, 0, RCL_STEADY_TIME));
 
         // Extract and validate servo IDs
         for (const auto& joint : params.hardware_info.joints)
@@ -646,7 +646,7 @@ namespace perseus_lite_hardware
             auto& state = _servo_states[index];
 
             // Update timestamp
-            state.last_update = rclcpp::Clock(RCL_ROS_TIME).now();
+            state.last_update = rclcpp::Clock(RCL_STEADY_TIME).now();
 
             // Process based on response type
             if (packet.size() > 0)
@@ -754,7 +754,7 @@ namespace perseus_lite_hardware
             }
 
             // Update the timestamp first
-            _last_update_times[index] = rclcpp::Clock(RCL_ROS_TIME).now();
+            _last_update_times[index] = rclcpp::Clock(RCL_STEADY_TIME).now();
 
             _current_positions[index] = 0.0;                   // Replace with actual position reading
             _current_velocities[index] = 0.0;                  // Replace with actual velocity reading

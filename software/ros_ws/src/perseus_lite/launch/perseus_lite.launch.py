@@ -112,24 +112,20 @@ def generate_launch_description():
         }.items(),
     )
 
-    rplidar_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                PathJoinSubstitution(
-                    [
-                        FindPackageShare("rplidar_ros"),
-                        "launch",
-                        "rplidar.launch.py",
-                    ]
-                )
-            ]
-        ),
-        launch_arguments={
-            "frame_id": "c1_lidar_frame",
+    rplidar_node = Node(
+        package="rplidar_ros",
+        executable="rplidar_node",
+        name="rplidar_node",
+        output="screen",
+        parameters=[{
+            "channel_type": "serial",
             "serial_port": "/dev/ttyUSB0",
-            "serial_baudrate": "460800",
-            "inverted": "false",
-        }.items(),
+            "serial_baudrate": 460800,
+            "frame_id": "c1_lidar_frame",
+            "inverted": False,
+            "angle_compensate": True,
+            "scan_mode": "Standard",
+        }],
     )
 
     i2c_imu_launch = IncludeLaunchDescription(
@@ -183,7 +179,7 @@ def generate_launch_description():
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
-        rplidar_launch,
+        rplidar_node,
         i2c_imu_launch,
         twist_mux_node,
         rosbridge_launch,

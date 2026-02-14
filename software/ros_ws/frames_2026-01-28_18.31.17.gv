@@ -1,0 +1,23 @@
+digraph G {
+"map" -> "odom"[label=" Broadcaster: default_authority\nAverage rate: 10.207\nBuffer length: 5.095\nMost recent transform: 1769589078.355771\nOldest transform: 1769589073.261098\n"];
+"chassis" -> "c1_lidar_frame"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"base_link" -> "chassis"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"odom" -> "base_link"[label=" Broadcaster: default_authority\nAverage rate: 30.18\nBuffer length: 5.07\nMost recent transform: 1769589077.960993\nOldest transform: 1769589072.891449\n"];
+"flange_bearing" -> "differential_bar"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "flange_bearing"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"left_rocker" -> "front_left_motor"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "left_rocker"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"right_rocker" -> "front_right_motor"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "right_rocker"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "imu_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"left_rocker" -> "rear_left_motor"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"right_rocker" -> "rear_right_motor"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"front_left_motor" -> "front_left_wheel"[label=" Broadcaster: default_authority\nAverage rate: 16.865\nBuffer length: 5.04\nMost recent transform: 1769589077.949243\nOldest transform: 1769589072.909247\n"];
+"front_right_motor" -> "front_right_wheel"[label=" Broadcaster: default_authority\nAverage rate: 16.865\nBuffer length: 5.04\nMost recent transform: 1769589077.949243\nOldest transform: 1769589072.909247\n"];
+"rear_left_motor" -> "rear_left_wheel"[label=" Broadcaster: default_authority\nAverage rate: 16.865\nBuffer length: 5.04\nMost recent transform: 1769589077.949243\nOldest transform: 1769589072.909247\n"];
+"rear_right_motor" -> "rear_right_wheel"[label=" Broadcaster: default_authority\nAverage rate: 16.865\nBuffer length: 5.04\nMost recent transform: 1769589077.949243\nOldest transform: 1769589072.909247\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1769589078.0001605"[ shape=plaintext ] ;
+}->"map";
+}

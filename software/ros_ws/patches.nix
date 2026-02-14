@@ -222,6 +222,18 @@ let
       };
     };
 
+    # Upgrade rplidar-ros to 2.1.5 for C1 lidar support
+    # The 2.1.0 version uses deprecated scan APIs that fail on the RPLIDAR C1
+    rplidar-ros = rosPrev.rplidar-ros.overrideAttrs {
+      version = "2.1.5";
+      src = final.fetchFromGitHub {
+        owner = "Slamtec";
+        repo = "rplidar_ros";
+        rev = "24cc9b6dea97e045bda1408eaa867ce730fd3fc3";
+        sha256 = "sha256-oNoDa+IqtQPe8bpfMjHFj2yx7jFUhfbIqaPRQCU/zMQ=";
+      };
+    };
+
     # CUDA-enabled slam_toolbox from fork
     # Note: CUDA build is disabled until CUDA/GCC intrinsic compatibility is resolved
     # The nvcc compiler has issues with GCC 12/13 x86 intrinsics (AVX512, CMPCCXADD, etc.)
