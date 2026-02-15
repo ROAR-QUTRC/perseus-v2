@@ -1,0 +1,3 @@
+# Logitech C920 HD Pro Webcam — stable symlink at /dev/c920
+# Install: sudo cp 99-c920-camera.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules && sudo udevadm trigger
+SUBSYSTEM=="video4linux", ATTR{index}=="0", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="08e5", SYMLINK+="c920", TAG+="uaccess"
