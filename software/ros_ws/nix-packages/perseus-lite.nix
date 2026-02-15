@@ -10,6 +10,7 @@
   nav2-common,
   navigation2,
   perseus-lite-hardware,
+  perseus-lite-hud,
   perseus-sensors,
   robot-localization,
   robot-state-publisher,
@@ -39,6 +40,7 @@ buildRosPackage rec {
     nav2-common
     navigation2
     perseus-lite-hardware
+    perseus-lite-hud
     perseus-sensors
     robot-localization
     robot-state-publisher
