@@ -47,12 +47,14 @@ pkgs.mkShell {
           boost
           builtin-interfaces
           controller-manager
+          cv-bridge
           diff-drive-controller
           geometry-msgs
           gz-ros2-control
           hardware-interface
           hi-can
           hi-can-raw
+          image-transport
           joint-state-broadcaster
           joint-state-publisher
           joint-state-publisher-gui
@@ -62,6 +64,7 @@ pkgs.mkShell {
           launch-ros
           mecanum-drive-controller
           message-filters
+          nav-msgs
           nav2-common
           nav2-msgs
           navigation2
