@@ -170,7 +170,7 @@ def generate_launch_description():
             {
                 "video_device": "/dev/video0",
                 "image_size": [640, 480],
-                "pixel_format": "MJPEG",
+                "pixel_format": "YUYV",
                 "camera_frame_id": "camera_link",
                 "use_sim_time": use_sim_time,
             }
