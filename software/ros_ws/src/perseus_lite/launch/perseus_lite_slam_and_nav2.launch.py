@@ -19,7 +19,12 @@ from launch.substitutions import (
     PythonExpression,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import ComposableNodeContainer, Node, LoadComposableNodes, SetParameter
+from launch_ros.actions import (
+    ComposableNodeContainer,
+    Node,
+    LoadComposableNodes,
+    SetParameter,
+)
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.descriptions import ComposableNode, ParameterFile
 from nav2_common.launch import RewrittenYaml
