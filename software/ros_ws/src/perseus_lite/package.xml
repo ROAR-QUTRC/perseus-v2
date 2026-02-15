@@ -36,6 +36,7 @@
 
   <!-- camera -->
   <exec_depend>v4l2_camera</exec_depend>
+  <exec_depend>perseus_lite_hud</exec_depend>
 
   <!-- SLAM and navigation -->
   <exec_depend>autonomy</exec_depend>

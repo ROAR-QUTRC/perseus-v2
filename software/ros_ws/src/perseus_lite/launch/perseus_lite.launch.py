@@ -181,6 +181,21 @@ def generate_launch_description():
         ],
     )
 
+    # Camera HUD overlay (compass, mini-map, LiDAR proximity, velocity, odometer)
+    hud_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus_lite_hud"),
+                        "launch",
+                        "hud.launch.py",
+                    ]
+                )
+            ]
+        ),
+    )
+
     # Rosbridge WebSocket server (for AndroidRViz / web UI connections on port 9090)
     rosbridge_launch = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(
@@ -205,6 +220,7 @@ def generate_launch_description():
         rplidar_node,
         i2c_imu_launch,
         camera_node,
+        hud_launch,
         twist_mux_node,
         rosbridge_launch,
     ]
