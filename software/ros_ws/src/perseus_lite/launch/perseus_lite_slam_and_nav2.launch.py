@@ -19,7 +19,7 @@ from launch.substitutions import (
     PythonExpression,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node, LoadComposableNodes, SetParameter
+from launch_ros.actions import ComposableNodeContainer, Node, LoadComposableNodes, SetParameter
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.descriptions import ComposableNode, ParameterFile
 from nav2_common.launch import RewrittenYaml
@@ -142,7 +142,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "use_composition",
             default_value="False",
-            description="Use composed bringup if True",
+            description="Use composed bringup if True (disabled: StaticLayer plugin fails to load in component container)",
         ),
         DeclareLaunchArgument(
             "container_name",
@@ -345,12 +345,19 @@ def generate_launch_description():
         ],
     )
 
-    # Nav2 composable nodes
+    # Nav2 composable nodes (single process — reduces CPU overhead significantly)
     # Note: map_server and amcl are NOT included here because SLAM Toolbox provides the map
     load_composable_nav2_nodes = GroupAction(
         condition=IfCondition(use_composition),
         actions=[
             SetParameter("use_sim_time", use_sim_time),
+            ComposableNodeContainer(
+                name=container_name,
+                namespace=namespace,
+                package="rclcpp_components",
+                executable="component_container_isolated",
+                output="screen",
+            ),
             LoadComposableNodes(
                 target_container=container_name_full,
                 composable_node_descriptions=[

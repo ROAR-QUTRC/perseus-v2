@@ -25,15 +25,15 @@ slam_toolbox:
     # map_start_pose: [0.0, 0.0, 0.0]
     #map_start_at_dock: true
     debug_logging: false
-    throttle_scans: 2 # Process every 2nd scan to reduce CPU load
-    transform_publish_period: 0.02 # Publish map->odom transform at 50Hz
+    throttle_scans: 3 # Process every 3rd scan to reduce CPU load
+    transform_publish_period: 0.05 # Publish map->odom transform at 20Hz (was 50Hz)
     # Multi-threading parameters
     enable_interactive_mode: true
-    publish_period: 0.1
-    map_update_interval: 0.2 # Reduced from 0.1 to lower CPU load
-    resolution: 0.05 # Larger cells absorb alignment errors
+    publish_period: 0.5 # Publish map less often (was 0.1)
+    map_update_interval: 0.5 # Update map every 0.5s (was 0.2) to lower CPU load
+    resolution: 0.10 # Coarser map cells for lower CPU (was 0.05)
     max_laser_range: 8.0 #for rastering images - reduced for indoor
-    minimum_time_interval: 0.2 # Increased from 0.1 to reduce processing frequency
+    minimum_time_interval: 0.5 # Process scans less often (was 0.2)
     transform_timeout: 1.0 # Increased from 0.5 for more tolerance
     tf_buffer_duration: 30.
     stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
@@ -43,9 +43,9 @@ slam_toolbox:
     use_imu: true # Helps reject scans when robot is tilted
     imu_topic: /imu/data
     use_cuda: false # Disabled - CUDA causes segfault on Jetson
-    minimum_travel_distance: 0.08 # Require more movement before updating
-    minimum_travel_heading: 0.1 # Add scans on smaller rotations (was 0.2)
-    scan_buffer_size: 40 # More scans for better matching context
+    minimum_travel_distance: 0.15 # Require more movement before updating (was 0.08)
+    minimum_travel_heading: 0.2 # Require more rotation before updating (was 0.1)
+    scan_buffer_size: 20 # Reduced from 40 for lower memory/CPU
     scan_buffer_maximum_scan_distance: 10.0
     link_match_minimum_response_fine: 0.4 # Stricter - reject more poorly matched scans
     link_scan_maximum_distance: 1.5
@@ -56,13 +56,13 @@ slam_toolbox:
     loop_match_minimum_response_coarse: 0.35
     loop_match_minimum_response_fine: 0.45
     # Correlation Parameters - Correlation Parameters
-    correlation_search_space_dimension: 0.6 # Larger search to find existing walls
-    correlation_search_space_resolution: 0.005 # Finer search precision
+    correlation_search_space_dimension: 0.5 # Reduced from 0.6 for lower CPU
+    correlation_search_space_resolution: 0.01 # Coarser search (was 0.005) - halves search work
     correlation_search_space_smear_deviation: 0.05 # Tighter correlation (was 0.1)
     # Correlation Parameters - Loop Closure Parameters
-    loop_search_space_dimension: 6.0 # Larger loop closure search
-    loop_search_space_resolution: 0.05
-    loop_search_space_smear_deviation: 0.03
+    loop_search_space_dimension: 4.0 # Reduced from 6.0 for lower CPU
+    loop_search_space_resolution: 0.05 # Keep original - must be <= smear_deviation
+    loop_search_space_smear_deviation: 0.06 # Must be >= resolution (was 0.03)
     # Scan Matcher Parameters
     distance_variance_penalty: 0.5
     angle_variance_penalty: 1.0

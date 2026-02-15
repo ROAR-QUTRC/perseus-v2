@@ -86,7 +86,7 @@ bt_navigator:
     groot_zmq_server_port: 1667
 controller_server:
   ros__parameters:
-    controller_frequency: 10.0
+    controller_frequency: 5.0 # Reduced from 10.0 for lower CPU
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
@@ -120,12 +120,12 @@ controller_server:
       decel_lim_x: -3.0 # Quicker stopping
       decel_lim_y: 0.0
       decel_lim_theta: -3.5 # Quicker rotation stop
-      vx_samples: 20 # Increased from 15 for better trajectory options
+      vx_samples: 10 # Reduced from 20 for lower CPU
       vy_samples: 0
-      vtheta_samples: 40 # Increased from 30 for better rotation options
-      sim_time: 1.5 # Increased from 1.0 for better lookahead
-      linear_granularity: 0.05 # Increased from 0.03 for computational efficiency
-      angular_granularity: 0.025
+      vtheta_samples: 20 # Reduced from 40 for lower CPU
+      sim_time: 1.2 # Reduced from 1.5 for lower CPU
+      linear_granularity: 0.10 # Coarser trajectory sim (was 0.05)
+      angular_granularity: 0.05 # Coarser trajectory sim (was 0.025)
       transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
       xy_goal_tolerance: 0.1 # Increased from 0.08
       trans_stopped_velocity: 0.2 # Reduced from 0.25
@@ -148,20 +148,20 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 5.0 # Increased from 3.0 for better responsiveness
-      publish_frequency: 2.0 # Increased from 1.0
+      update_frequency: 2.0 # Reduced from 5.0 for lower CPU
+      publish_frequency: 1.0 # Reduced from 2.0
       global_frame: odom
       robot_base_frame: base_link
       transform_tolerance: 1.0 # Match global costmap tolerance
       rolling_window: true
       width: 3
       height: 3
-      resolution: 0.05
+      resolution: 0.10 # Coarser costmap (was 0.05) - big CPU savings
       robot_radius: 0.15 # Matches actual footprint with wheels
       plugins: ["obstacle_layer", "inflation_layer"] # Removed voxel_layer to reduce computation
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.10 # Reduced for small robot
+        inflation_radius: 0.20 # Must be >= inscribed radius (0.157)
         cost_scaling_factor: 5.0 # Faster decay for more navigable free space
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -183,13 +183,13 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0 # Increased from 0.5 for better map updates
-      publish_frequency: 1.0 # Increased from 0.5
+      update_frequency: 0.5 # Reduced from 1.0 for lower CPU
+      publish_frequency: 0.5 # Reduced from 1.0
       global_frame: map
       robot_base_frame: base_link
       transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
       robot_radius: 0.15 # Matches actual footprint with wheels
-      resolution: 0.05
+      resolution: 0.10 # Coarser costmap (was 0.05) - big CPU savings
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
@@ -212,7 +212,7 @@ global_costmap:
         transform_tolerance: 0.1
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.10 # Reduced for small robot
+        inflation_radius: 0.20 # Must be >= inscribed radius (0.157)
         cost_scaling_factor: 5.0 # Faster decay for more navigable free space
       always_send_full_costmap: true
 map_server:
@@ -226,7 +226,7 @@ map_saver:
     map_subscribe_transient_local: True
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 10.0
+    expected_planner_frequency: 2.0 # Reduced from 10.0 - plan less often
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
@@ -239,7 +239,7 @@ smoother_server:
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
       tolerance: 1.0e-10
-      max_its: 1000
+      max_its: 500 # Reduced from 1000 for lower CPU
       do_refinement: True
 behavior_server:
   ros__parameters:
@@ -247,7 +247,7 @@ behavior_server:
     local_footprint_topic: local_costmap/published_footprint
     global_costmap_topic: global_costmap/costmap_raw
     global_footprint_topic: global_costmap/published_footprint
-    cycle_frequency: 10.0
+    cycle_frequency: 5.0 # Reduced from 10.0 for lower CPU
     behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
     spin:
       plugin: "nav2_behaviors::Spin"
@@ -270,7 +270,7 @@ behavior_server:
     enable_stamped_cmd_vel: true
 waypoint_follower:
   ros__parameters:
-    loop_rate: 20
+    loop_rate: 10 # Reduced from 20 for lower CPU
     stop_on_failure: false
     action_server_result_timeout: 900.0
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -280,7 +280,7 @@ waypoint_follower:
       waypoint_pause_duration: 200
 velocity_smoother:
   ros__parameters:
-    smoothing_frequency: 20.0 # Increased from 10.0 for smoother operation
+    smoothing_frequency: 10.0 # Reduced from 20.0 for lower CPU
     scale_velocities: false
     feedback: "OPEN_LOOP"
     max_velocity: [0.25, 0.0, 1.0] # Reduced max velocities for stability
@@ -329,7 +329,7 @@ collision_monitor:
       action_type: "approach"
       footprint_topic: "/local_costmap/published_footprint"
       time_before_collision: 2.0
-      simulation_time_step: 0.02
+      simulation_time_step: 0.05 # Coarser sim step (was 0.02) for lower CPU
       min_points: 6
       visualize: False
       enabled: true

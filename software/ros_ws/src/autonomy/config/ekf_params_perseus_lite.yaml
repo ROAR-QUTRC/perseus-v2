@@ -7,7 +7,7 @@ ekf_filter_node:
     # Note that the filter will not begin computation until it receives at least one message from
     # one of the inputs. It will then run continuously at the frequency specified here,
     # regardless of whether it receives more measurements.
-    frequency: 30.0
+    frequency: 15.0 # Reduced from 30.0 - plenty for a slow indoor rover
     # The period, in seconds, after which we consider a sensor to have timed out.
     # In this event, we carry out a predict cycle on the EKF without a correction step.
     sensor_timeout: 0.1
