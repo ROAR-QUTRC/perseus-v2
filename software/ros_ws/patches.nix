@@ -185,7 +185,7 @@ let
 
     nav2-mppi-controller =
       let
-        xtl-stable = prev.xtensor.overrideAttrs rec {
+        xtl-stable = prev.xtl.overrideAttrs rec {
           version = "0.7.5";
           src = prev.fetchFromGitHub {
             owner = "xtensor-stack";
@@ -222,23 +222,16 @@ let
       };
     };
 
-    gz-msgs-vendor =
-      let
-        protobuf_28 = prev.protobuf.override {
-          version = "28.3";
-          hash = "sha256-+bb5RxITzxuX50ItmpQhWEG1kMfvlizWTMJJzwlhhYM=";
-        };
-      in
-      rosPrev.gz-msgs-vendor.override {
-        protobuf = protobuf_28;
-        python3Packages = prev.python3Packages // {
-          protobuf = prev.python3Packages.protobuf.override {
-            protobuf = protobuf_28;
-          };
+    # Gazebo vendor patches
+    gz-msgs-vendor = rosPrev.gz-msgs-vendor.override {
+      protobuf = prev.protobuf_29;
+      python3Packages = prev.python3Packages // {
+        protobuf = prev.python3Packages.protobuf.override {
+          protobuf = prev.protobuf_29;
         };
       };
-
-    # Gazebo vendor patches
+    };
+    # Gazebo vendor version patches
     gz-physics-vendor = rosPrev.gz-physics-vendor.overrideAttrs (
       {
         patches ? [ ],
@@ -276,6 +269,16 @@ let
       }:
       {
         patches = patches ++ [ ./patches/gz-vendors/sim-version.patch ];
+      }
+    );
+
+    gz-common-vendor = rosPrev.gz-common-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-vendors/common-version.patch ];
       }
     );
   };
