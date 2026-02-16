@@ -71,6 +71,8 @@
         "*.onnx"
         # PCBs (KiCAD)
         "hardware/**"
+        # Neural Network Models
+        "*.pb"
       ];
     };
     formatter = {
