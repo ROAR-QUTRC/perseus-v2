@@ -1,13 +1,6 @@
 from launch import LaunchDescription
-from launch.substitutions import (
-    PathJoinSubstitution,
-    Command,
-    FindExecutable,
-    LaunchConfiguration,
-)
 
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
@@ -29,7 +22,7 @@ def generate_launch_description():
         package="perseus_text_detection",
         executable="text_detector",
         name="text detector",
-        output="screen"
+        output="screen",
     )
 
     nodes = [
