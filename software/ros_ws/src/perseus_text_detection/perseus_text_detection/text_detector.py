@@ -53,7 +53,7 @@ def paint_cell(image, point):
     )
 
     # make transparent
-    cv2.addWeighted(overlay, CELL_ALPHA, image, 1 - alpha, 0, image)
+    cv2.addWeighted(overlay, CELL_ALPHA, image, 1 - CELL_ALPHA, 0, image)
 
 
 def draw_box(image, start_x, start_y, end_x, end_y):
@@ -269,10 +269,10 @@ class TextDetectionService(Node):
         # Publish coordinates and bounding boxes as string
         text_message = String()
         text_message.data = f"Coordinates: {str(coordinates)}; Bounding Boxes: {str(bounding_boxes)}"
-        text_publisher.publish(text_message)
+        self.text_publisher.publish(text_message)
 
         # Publish annotated image
-        image_publisher.publish(self.bridge.cv2_to_imgmsg(
+        self.image_publisher.publish(self.bridge.cv2_to_imgmsg(
             annotated_image, "passthrough", "Anntated image")
         )
 
