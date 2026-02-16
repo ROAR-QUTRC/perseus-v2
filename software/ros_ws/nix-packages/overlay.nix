@@ -16,6 +16,7 @@ final: prev: {
   perseus-payloads = final.callPackage ./perseus-payloads.nix { };
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };
   perseus-simulation = final.callPackage ./perseus-simulation.nix { };
+  perseus-text-detection = final.callPackage ./perseus-text-detection.nix { };
   pointcloud-to-laserscan = final.callPackage ./pointcloud-to-laserscan.nix { };
   teleop-diagnostics = final.callPackage ./teleop-diagnostics.nix { };
 }
