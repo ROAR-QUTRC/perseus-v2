@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hi_can.hpp>
+
 #include "rover_thread.hpp"
 #include "sdkconfig.h"
 

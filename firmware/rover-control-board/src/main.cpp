@@ -106,11 +106,11 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
 
     try
     {
-        auto& canInterface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
-                                                        filter_t{
-                                                            .address = static_cast<flagged_address_t>(RCB_DEVICE_ADDRESS),
-                                                            .mask = DEVICE_MASK,
-                                                        });
+        auto& canInterface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
+                                                         filter_t{
+                                                             .address = static_cast<flagged_address_t>(RCB_DEVICE_ADDRESS),
+                                                             .mask = DEVICE_MASK,
+                                                         });
         packetManager.emplace(canInterface);
     }
     catch (const std::exception& e)
@@ -132,8 +132,8 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
         try
         {
             parameterGroups.emplace_back(power_bus.GetParameterGroup());
-            packetManager->addGroup(parameterGroups.back());
-            packetManager->setTransmissionConfig(
+            packetManager->add_group(parameterGroups.back());
+            packetManager->set_transmission_config(
                 flagged_address_t(standard_address_t(RCB_DEVICE_ADDRESS, static_cast<uint8_t>(id), static_cast<uint8_t>(hi_can::addressing::power::distribution::rover_control_board::power_bus::parameter::POWER_STATUS))),
                 power_bus.GetTransmissionConfig());
         }
@@ -146,16 +146,16 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
 
     timer = timerCreate(contactorTimerCb, 1000);
 
-    packetManager->setCallback(
+    packetManager->set_callback(
         filter_t{static_cast<flagged_address_t>(
             standard_address_t{power::distribution::rover_control_board::DEVICE_ID,
                                static_cast<uint8_t>(power::distribution::rover_control_board::group::CONTACTOR),
                                static_cast<uint8_t>(power::distribution::rover_control_board::contactor::parameter::SHUTDOWN)})},
-        {
-            .dataCallback = [&](hi_can::Packet packet)
+        PacketManager::callback_config_t{
+            .data_callback = [&](hi_can::Packet packet)
             {
                 hi_can::parameters::power::contactor::control_t data;
-                data.deserializeData(packet.getData());
+                data.deserialize_data(packet.get_data());
                 if (data.immediate_shutdown)
                 {
                     xTimerReset(timer, 0);
