@@ -69,6 +69,8 @@
         "*.3mf"
         # PCBs (KiCAD)
         "hardware/**"
+        # Neural Network Models
+        "*.pb"
       ];
     };
     formatter = {
