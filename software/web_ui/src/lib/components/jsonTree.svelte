@@ -39,7 +39,7 @@
             {@const collapsed = expandedMap[`${path}/${key}`] ?? (depth >= defaultDepth && (containsObject || isArray))}
             <button onclick={(e) => toggleExpand(e, path, key, collapsed, containsObject || isArray)}>
                 <div 
-                    class={`${!collapsed && (containsObject || isArray) ? 'flex-col' : 'flex-row'} ${containsObject || isArray ? '' : 'cursor-auto'} rounded-r-lg flex justify-start text-left ml-[3px] mr-[6px] pl-[8px] border-0 border-l hover:bg-border`} 
+                    class={`${!collapsed && (containsObject || isArray) ? 'flex-col' : 'flex-row'} ${containsObject || isArray ? '' : 'cursor-auto'} rounded-r-lg flex justify-start text-left ml-[3px] mr-[16px] pl-[8px] border-0 border-l hover:bg-border`} 
                     style:--tw-bg-opacity="0.3">
                     <p class="flex flex-row">
                         {#if containsObject || isArray}

@@ -287,7 +287,7 @@
 	});
 </script>
 
-<ScrollArea class="h-full pr-4 -m-2" orientation="vertical">
+<ScrollArea class="h-full -m-2" orientation="vertical">
 	<div class="relative h-full w-full">
 		<div
 			class="bg-card absolute left-0 top-0 flex h-full w-full items-center justify-center"
@@ -315,7 +315,7 @@
 								class="rounded-[10px] text-border py-1 px-4 transition-colors text-center w-fit mx-auto"
 								style:background-color={getColor(monitor.currentFrequency, monitor.targetFrequency)}
 							>
-								{monitor.currentFrequency.toFixed()}Hz
+								{monitor.currentFrequency.toFixed(1)}Hz
 							</p>
 							<p class="opacity-50 text-center">
 								Target: {monitor.targetFrequency}Hz (&PlusMinus;{((Number(settings.groups.general.maxErrorPercent.value) / 100 * monitor.targetFrequency) as number).toFixed(2)}Hz)
