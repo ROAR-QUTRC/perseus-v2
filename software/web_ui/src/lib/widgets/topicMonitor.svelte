@@ -56,7 +56,6 @@
 			lastData: object;
 			targetFrequency: number;
 			currentFrequency: number;
-			throttledValue: number;
 			lastMessage: number;
 			deadTime: number | null;
 		}[]
@@ -123,7 +122,6 @@
 		// update frequency
 		monitors[index].currentFrequency = 1000 / (Date.now() - monitors[index].lastMessage);
 		monitors[index].lastMessage = Date.now();
-		throttleValue(index);
 	};
 
 	const registerSettings = (
