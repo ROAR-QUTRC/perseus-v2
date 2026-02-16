@@ -1,5 +1,10 @@
 #include "kibisis_hardware/kibisis_system.hpp"
 
+#include <linux/i2c-dev.h>
+#include <linux/i2c.h>
+#include <sys/fcntl.h>
+#include <sys/ioctl.h>
+
 #include <chrono>
 #include <cmath>
 #include <limits>
@@ -13,9 +18,9 @@ namespace kibisis_hardware
 {
 
     hardware_interface::CallbackReturn KibisisSystemHardware::on_init(
-        const hardware_interface::HardwareInfo& info)
+        const hardware_interface::HardwareComponentInterfaceParams& params)
     {
-        if (hardware_interface::SystemInterface::on_init(info) !=
+        if (hardware_interface::SystemInterface::on_init(params) !=
             hardware_interface::CallbackReturn::SUCCESS)
         {
             return hardware_interface::CallbackReturn::ERROR;
@@ -35,36 +40,10 @@ namespace kibisis_hardware
             const auto& joint = info_.joints[i];
             joint_configs_[i].name = joint.name;
 
-            // Parse GPIO pin parameters if available
-            if (joint.parameters.count("gpio_pin_a"))
-            {
-                joint_configs_[i].gpio_pin_a =
-                    std::stoi(joint.parameters.at("gpio_pin_a"));
-            }
-            if (joint.parameters.count("gpio_pin_b"))
-            {
-                joint_configs_[i].gpio_pin_b =
-                    std::stoi(joint.parameters.at("gpio_pin_b"));
-            }
-            if (joint.parameters.count("encoder_pin_a"))
-            {
-                joint_configs_[i].encoder_pin_a =
-                    std::stoi(joint.parameters.at("encoder_pin_a"));
-            }
-            if (joint.parameters.count("encoder_pin_b"))
-            {
-                joint_configs_[i].encoder_pin_b =
-                    std::stoi(joint.parameters.at("encoder_pin_b"));
-            }
-
             RCLCPP_INFO(
                 rclcpp::get_logger("KibisisSystemHardware"),
-                "Joint '%s': GPIO pins [%d, %d], Encoder pins [%d, %d]",
-                joint_configs_[i].name.c_str(),
-                joint_configs_[i].gpio_pin_a,
-                joint_configs_[i].gpio_pin_b,
-                joint_configs_[i].encoder_pin_a,
-                joint_configs_[i].encoder_pin_b);
+                "Joint '%s'",
+                joint_configs_[i].name.c_str());
 
             // Verify command interfaces
             if (joint.command_interfaces.size() != 1)
@@ -161,7 +140,7 @@ namespace kibisis_hardware
         }
 
         // Initialize GPIO
-        if (!init_gpio())
+        if (!init_i2c())
         {
             RCLCPP_WARN(
                 rclcpp::get_logger("KibisisSystemHardware"),
@@ -182,7 +161,7 @@ namespace kibisis_hardware
             rclcpp::get_logger("KibisisSystemHardware"),
             "Cleaning up Kibisis hardware interface...");
 
-        cleanup_gpio();
+        cleanup_i2c();
 
         return hardware_interface::CallbackReturn::SUCCESS;
     }
@@ -258,26 +237,37 @@ namespace kibisis_hardware
         return hardware_interface::return_type::OK;
     }
 
-    bool KibisisSystemHardware::init_gpio()
+    bool KibisisSystemHardware::init_i2c()
     {
-        // TODO: Implement GPIO initialization for Raspberry Pi
-        // This will depend on the specific GPIO library being used
-        // (e.g., pigpio, wiringPi, or direct /sys/class/gpio access)
-
         RCLCPP_INFO(
             rclcpp::get_logger("KibisisSystemHardware"),
-            "GPIO initialization - placeholder implementation");
+            "I2c initialised");
 
-        // For now, return true to allow testing without actual hardware
-        return true;
+        _i2c_file = open(_i2c_filename.c_str(), O_RDWR, O_APPEND);
+        if (_i2c_file < 0)
+        {
+            RCLCPP_FATAL(this->get_logger(), "Failed to open i2c path");
+            return false;
+        }
+        else
+        {
+            RCLCPP_DEBUG(this->get_logger(), "Opened i2c bus at device: %s", _i2c_filename.c_str());
+            return true;
+        }
     }
 
-    void KibisisSystemHardware::cleanup_gpio()
+    void KibisisSystemHardware::cleanup_i2c()
     {
-        // TODO: Implement GPIO cleanup
+        if (_i2c_file >= 0)
+        {
+            if (close(_i2c_file) < 0)
+            {
+                RCLCPP_FATAL(this->get_logger(), "Failed to close i2c bus at device: %s", _i2c_filename.c_str());
+            }
+        }
         RCLCPP_INFO(
             rclcpp::get_logger("KibisisSystemHardware"),
-            "GPIO cleanup - placeholder implementation");
+            "I2c cleanup");
     }
 
     void KibisisSystemHardware::set_motor_velocity(
@@ -287,18 +277,32 @@ namespace kibisis_hardware
         {
             return;
         }
-
-        // TODO: Implement actual motor control via GPIO/motor controller board
-        // This will send PWM signals to the motor control board
-        // Velocity is in rad/s, convert to appropriate motor command
-
-        // For simulation/mock mode, we can directly mirror the command
-        // In a real implementation, this would:
-        // 1. Convert rad/s to motor PWM duty cycle
-        // 2. Set direction based on sign of velocity
-        // 3. Send PWM signal via GPIO
-
-        (void)velocity;  // Suppress unused warning in placeholder
+        // 0x00 = left forward
+        // 0x01 = left backward
+        // 0x02 = right forward
+        // 0x03 = right backward
+        uint8_t function = (joint_index * 2 + (velocity < 0));
+        // TODO: Calculate velocity PWM value
+        // Convert rad/s to motor PWM duty cycle
+        uint16_t velocity_pwm = static_cast<uint16_t>(velocity);
+        std::vector<uint8_t> send_buffer;
+        send_buffer.push_back(function);
+        send_buffer.push_back((velocity_pwm && 0xFF00) >> 8);
+        send_buffer.push_back(velocity_pwm && 0xFF);
+        i2c_msg message[] = {{
+            .addr = _PICO_ADDRESS,
+            .flags = 0,
+            .len = static_cast<uint16_t>(send_buffer.size()),
+            .buf = send_buffer.data(),
+        }};
+        i2c_rdwr_ioctl_data send_messages = {
+            .msgs = message,
+            .nmsgs = sizeof(message) / sizeof(message[0]),
+        };
+        if (ioctl(_i2c_file, I2C_RDWR, send_messages) < 0)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Error sending motor velocity data! Code: %x PWM Value: %x", function, velocity_pwm);
+        }
     }
 
     double KibisisSystemHardware::read_encoder(size_t joint_index)
@@ -307,15 +311,35 @@ namespace kibisis_hardware
         {
             return 0.0;
         }
-
-        // TODO: Implement actual encoder reading
-        // This will read quadrature encoder signals from GPIO pins
+        uint8_t* received_data = static_cast<uint8_t*>(malloc(2 * sizeof(uint8_t)));
+        i2c_msg messages[] = {{
+                                  .addr = _PICO_ADDRESS,
+                                  .flags = 0,
+                                  .len = 1,
+                                  .buf = &(joint_index ? _READ_ENCODER_LEFT : _READ_ENCODER_RIGHT),
+                              },
+                              {
+                                  .addr = _PICO_ADDRESS,
+                                  .flags = I2C_M_RD,
+                                  .len = 2,
+                                  .buf = received_data,
+                              }};
+        i2c_rdwr_ioctl_data send_messages = {
+            .msgs = messages,
+            .nmsgs = sizeof(messages) / sizeof(messages[0]),
+        };
+        if (ioctl(_i2c_file, I2C_RDWR, send_messages))
+        {
+            RCLCPP_ERROR(this->get_logger(), "Error reading encoder data! Joint index: %ld", joint_index);
+        }
+        // TODO: Implement actual encoder calculations
 
         // For simulation/mock mode, integrate commanded velocity
         // In a real implementation, this would:
         // 1. Read encoder pulse count
         // 2. Convert to radians based on encoder resolution
-
+        uint16_t encoder_reading = received_data[0] << 8 | received_data[1];
+        free(received_data);
         // Mock implementation: return current position (no change in simulation)
         return hw_positions_[joint_index];
     }

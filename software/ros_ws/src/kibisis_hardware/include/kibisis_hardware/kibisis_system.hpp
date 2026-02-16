@@ -40,7 +40,7 @@ namespace kibisis_hardware
 
         // ROS 2 Control lifecycle functions
         [[nodiscard]] hardware_interface::CallbackReturn on_init(
-            const hardware_interface::HardwareInfo& info) override;
+            const hardware_interface::HardwareComponentInterfaceParams& params) override;
 
         [[nodiscard]] std::vector<hardware_interface::StateInterface>
         export_state_interfaces() override;
@@ -93,16 +93,23 @@ namespace kibisis_hardware
         // Previous positions for velocity calculation
         std::vector<double> prev_positions_;
 
+        // i2c file descriptor for communicating with the pico
+        int _i2c_file = -1;
+        std::string _i2c_filename = "/dev/i2c-0";
+        const uint8_t _PICO_ADDRESS = 0x01;
+        uint8_t _READ_ENCODER_LEFT = 0x04;
+        uint8_t _READ_ENCODER_RIGHT = 0x05;
+
         /**
          * @brief Initialize GPIO pins for motor control
          * @return true if successful, false otherwise
          */
-        bool init_gpio();
+        bool init_i2c();
 
         /**
          * @brief Cleanup GPIO resources
          */
-        void cleanup_gpio();
+        void cleanup_i2c();
 
         /**
          * @brief Set motor speed for a joint
