@@ -231,56 +231,6 @@ let
         };
       };
     };
-    # Gazebo vendor version patches
-    gz-physics-vendor = rosPrev.gz-physics-vendor.overrideAttrs (
-      {
-        patches ? [ ],
-        ...
-      }:
-      {
-        patches = patches ++ [ ./patches/gz-vendors/physics-version.patch ];
-      }
-    );
-
-    gz-rendering-vendor = rosPrev.gz-rendering-vendor.overrideAttrs (
-      {
-        patches ? [ ],
-        ...
-      }:
-      {
-        patches = patches ++ [ ./patches/gz-vendors/rendering-version.patch ];
-      }
-    );
-
-    gz-transport-vendor = rosPrev.gz-transport-vendor.overrideAttrs (
-      {
-        patches ? [ ],
-        ...
-      }:
-      {
-        patches = patches ++ [ ./patches/gz-vendors/transport-version.patch ];
-      }
-    );
-
-    gz-sim-vendor = rosPrev.gz-sim-vendor.overrideAttrs (
-      {
-        patches ? [ ],
-        ...
-      }:
-      {
-        patches = patches ++ [ ./patches/gz-vendors/sim-version.patch ];
-      }
-    );
-
-    gz-common-vendor = rosPrev.gz-common-vendor.overrideAttrs (
-      {
-        patches ? [ ],
-        ...
-      }:
-      {
-        patches = patches ++ [ ./patches/gz-vendors/common-version.patch ];
-      }
-    );
   };
 
 in
