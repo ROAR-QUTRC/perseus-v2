@@ -304,6 +304,7 @@
         # rover development environment
         packages = {
           inherit default simulation docs;
+          inherit (pkgs) webui;
 
           # Output the entire package set to make certain debugging easier
           # Note that it needs to be a derivation though to make nix flake commands happy, so we just touch the output file
