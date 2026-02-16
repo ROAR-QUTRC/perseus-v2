@@ -20,9 +20,9 @@ TwaiPowerBusParameterGroup::TwaiPowerBusParameterGroup(addressing::power::distri
                                    static_cast<uint8_t>(bus),
                                    static_cast<uint8_t>(addressing::power::distribution::rover_control_board::power_bus::parameter::CONTROL_IMMEDIATE)))},
         PacketManager::callback_config_t{
-            .dataCallback = [&](const Packet& packet)
+            .data_callback = [&](const Packet& packet)
             {
-                _immediateStatus.deserializeData(packet.getData());
+                _immediateStatus.deserialize_data(packet.get_data());
                 if (_immediateStatus.clear_error && clearErrorHandler)
                 {
                     clearErrorHandler();
@@ -39,9 +39,9 @@ TwaiPowerBusParameterGroup::TwaiPowerBusParameterGroup(addressing::power::distri
                                    static_cast<uint8_t>(bus),
                                    static_cast<uint8_t>(addressing::power::distribution::rover_control_board::power_bus::parameter::CONTROL_SCHEDULED)))},
         PacketManager::callback_config_t{
-            .dataCallback = [this](const Packet& packet)
+            .data_callback = [this](const Packet& packet)
             {
-                _scheduledStatus.deserializeData(packet.getData());
+                _scheduledStatus.deserialize_data(packet.get_data());
                 _busOffTimer = _scheduledStatus.bus_off_time;
                 _busOnTimer = _scheduledStatus.bus_on_time;
             },
@@ -55,9 +55,9 @@ TwaiPowerBusParameterGroup::TwaiPowerBusParameterGroup(addressing::power::distri
                                    static_cast<uint8_t>(bus),
                                    static_cast<uint8_t>(addressing::power::distribution::rover_control_board::power_bus::parameter::CURRENT_LIMIT)))},
         PacketManager::callback_config_t{
-            .dataCallback = [this](const Packet& packet)
+            .data_callback = [this](const Packet& packet)
             {
-                memcpy(&_currentLimit, &(packet.getData()), sizeof(uint32_t));
+                memcpy(&_currentLimit, &(packet.get_data()), sizeof(uint32_t));
             },
         });
     _busStateHandler = busStateHandler;
@@ -71,17 +71,17 @@ void TwaiPowerBusParameterGroup::setBusStatus(parameters::power::distribution::p
     _currentStatus.status = status;
 }
 
-parameters::power::distribution::power_status TwaiPowerBusParameterGroup::getBusStatus(void)
+parameters::power::distribution::power_status TwaiPowerBusParameterGroup::getBusStatus()
 {
     return _currentStatus.status;
 }
 
-hi_can::parameters::power::distribution::status_t TwaiPowerBusParameterGroup::getStatus(void)
+hi_can::parameters::power::distribution::status_t TwaiPowerBusParameterGroup::getStatus()
 {
     return _currentStatus;
 }
 
-addressing::power::distribution::rover_control_board::group TwaiPowerBusParameterGroup::getId(void)
+addressing::power::distribution::rover_control_board::group TwaiPowerBusParameterGroup::getId()
 {
     return _busId;
 }
@@ -91,7 +91,7 @@ void TwaiPowerBusParameterGroup::setBusCurrent(uint32_t current)
     _currentStatus.current = current;
 }
 
-uint32_t TwaiPowerBusParameterGroup::getBusCurrent(void)
+uint32_t TwaiPowerBusParameterGroup::getBusCurrent()
 {
     return _currentStatus.current;
 }
@@ -101,12 +101,12 @@ void TwaiPowerBusParameterGroup::setBusVoltage(uint16_t voltage)
     _currentStatus.voltage = voltage;
 }
 
-uint16_t TwaiPowerBusParameterGroup::getBusVoltage(void)
+uint16_t TwaiPowerBusParameterGroup::getBusVoltage()
 {
     return _currentStatus.voltage;
 }
 
-uint32_t TwaiPowerBusParameterGroup::getLimitCurrent(void)
+uint32_t TwaiPowerBusParameterGroup::getLimitCurrent()
 {
     return _currentLimit;
 }

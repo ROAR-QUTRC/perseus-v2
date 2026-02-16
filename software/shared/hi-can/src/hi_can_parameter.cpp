@@ -22,9 +22,9 @@ namespace hi_can::parameters::power::distribution
                                        static_cast<uint8_t>(bus),
                                        static_cast<uint8_t>(addressing::legacy::power::control::power_bus::parameter::POWER_STATUS)))},
             PacketManager::callback_config_t{
-                .dataCallback = [this](const Packet& packet)
+                .data_callback = [this](const Packet& packet)
                 {
-                    _status.deserializeData(packet.getData());
+                    _status.deserialize_data(packet.get_data());
                 },
             });
     }

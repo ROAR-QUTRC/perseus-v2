@@ -61,7 +61,7 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
     hi_can::PacketManager::transmission_config_t _statusTransmissionConfig = {
         .generator = [&](void)
         {
-            return _canParameters.getStatus().serializeData();
+            return _canParameters.getStatus().serialize_data();
         },
         .interval = std::chrono::nanoseconds(100000000)};  // 100 milli seconds
 
