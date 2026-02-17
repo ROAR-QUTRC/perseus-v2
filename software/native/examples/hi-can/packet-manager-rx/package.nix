@@ -6,7 +6,7 @@
 }:
 
 stdenv.mkDerivation rec {
-  pname = "hi-can-common";
+  pname = "hi_can_packet_manager_rx";
   version = "0.0.1";
 
   src = cleanCmakeSource {

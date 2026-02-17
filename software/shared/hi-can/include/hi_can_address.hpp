@@ -163,7 +163,7 @@ namespace hi_can
             }
 
             /// @brief Check if address matches the filter
-            /// @param address Address to check
+            /// @param _address Address to check
             /// @return Whether the address matches the filter
             constexpr bool matches(const flagged_address_t& _address) const
             {

@@ -34,7 +34,7 @@
     };
     # home-manager (for device setup)
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # note: nix-gl-host works way better than NixGL on Nvidia hardware,
@@ -103,6 +103,7 @@
           # Gazebo makes use of Freeimage.
           # Freeimage is blocked by default since it has a whole bunch of CVEs.
           # This means we have to explicitly permit Freeimage to allow Gazebo to run.
+          # Freeimage is also abandoned, so we have to build it from source (see packages/freeimage/).
           config.permittedInsecurePackages = [ "freeimage-unstable-2021-11-01" ];
           config.allowUnfreePredicate =
             pkg:
@@ -139,7 +140,6 @@
         pkgs-unstable = import nixpkgs-unstable {
           inherit system;
           overlays = [
-            (import ./docs/nix/overlay.nix)
           ];
           config.allowUnfree = true; # needed for draw.io for the docs
         };
@@ -152,8 +152,8 @@
             groot2
             bashInteractive
             can-utils
-            nodejs_23
-            yarn
+            corepack_24
+            nodejs_24
             nixgl-script
             nixcuda-script
             ncurses
@@ -293,13 +293,12 @@
         treefmtEval = treefmt-nix.lib.evalModule pkgs-unstable ./treefmt.nix;
 
         # formatters package set for use in ROS workspaces
-        formatters =
-          {
-            # include treefmt wrapped with the config from ./treefmt.nix
-            treefmt = treefmtEval.config.build.wrapper;
-          }
-          # plus all of the individual formatter programs from said config
-          // treefmtEval.config.build.programs;
+        formatters = {
+          # include treefmt wrapped with the config from ./treefmt.nix
+          treefmt = treefmtEval.config.build.wrapper;
+        }
+        # plus all of the individual formatter programs from said config
+        // treefmtEval.config.build.programs;
       in
       {
         # rover development environment

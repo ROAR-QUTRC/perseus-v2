@@ -1,3 +1,4 @@
+#if !defined(DOXYGEN_SHOULD_SKIP_THIS)
 #include "type_demangle.hpp"
 
 #ifdef __GNUG__
@@ -28,3 +29,4 @@ std::string demangle(const char* name)
 }
 
 #endif
+#endif  // DOXYGEN_SHOULD_SKIP_THIS

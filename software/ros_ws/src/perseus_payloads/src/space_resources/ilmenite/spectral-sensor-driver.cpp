@@ -1,4 +1,4 @@
-#include "space_resources/ilmenite/main.hpp"
+#include "space_resources/ilmenite/spectral-sensor-driver.hpp"
 
 #include <memory>
 
