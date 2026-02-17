@@ -246,8 +246,6 @@
 	let interval: NodeJS.Timeout | null = null;
 	const MESSAGE_TIMEOUT_MS = 1000;
 
-	$inspect(monitors)
-
 	onMount(() => {
 		// add action for buttons
 		settings.groups.newMonitor.createMonitor.action = (): string => {

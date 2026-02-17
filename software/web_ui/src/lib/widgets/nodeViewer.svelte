@@ -18,7 +18,8 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import * as Select from '$lib/components/ui/select/index';
 	import { Reload } from 'svelte-radix';
-	import type ROSLIB from 'roslib';
+	import * as ROSLIB from 'roslib';
+	import JsonTree from '$lib/components/jsonTree.svelte';
 
 	let nodesList = $state<string[]>([]);
 	let nodeData = $state<{
@@ -39,29 +40,95 @@
 		);
 	};
 
+	let communicationsTree = $derived.by<{
+		publications: any; 
+		subscriptions: any; 
+		services: any;
+	}>(() => {
+		
+		const output = {
+			publications: {} as any,
+			subscriptions: {} as any,
+			services: {} as any
+		}
+		
+		if (!nodeData) return output;
+		
+		nodeData.publications.forEach((element) => {
+			let pointer = output.publications;
+			const parts = element.name.slice(1).split('/');
+			for (const part of parts) {
+				if (!pointer[part]) {
+					if (part === parts[parts.length - 1]) {
+						pointer[part] = element.type;
+					} else {
+						pointer[part] = {};
+					}
+				}
+				pointer = pointer[part];
+			}
+		});
+		
+		nodeData.subscriptions.forEach((elements) => {
+			let pointer = output.subscriptions;
+			const parts = elements.name.slice(1).split('/');
+			for (const part of parts) {
+				if (!pointer[part]) {
+					if (part === parts[parts.length - 1]) {
+						pointer[part] = elements.type;
+					} else {
+						pointer[part] = {};
+					}
+				}
+				pointer = pointer[part];
+			}
+		});
+		
+		nodeData.services.forEach((elements) => {
+			let pointer = output.services;
+			const parts = elements.name.slice(1).split('/');
+			for (const part of parts) {
+				if (!pointer[part]) {
+					if (part === parts[parts.length - 1]) {
+						pointer[part] = elements.type;
+					} else {
+						pointer[part] = {};
+					}
+				}
+				pointer = pointer[part];
+			}
+		});
+
+		return output
+	});
+
 	const changeSelectedNode = (value: string) => {
 		const ros = getRosConnection() as ROSLIB.Ros;
 
 		selectedNode = value;
+		nodeData = {
+			subscriptions: [],
+			publications: [],
+			services: []
+		};
 		ros.getNodeDetails(
 			value,
-			(subscriptions: string[], publications: string[], services: string[]) => {
-				let subList: { name: string; type: string }[] = [];
-				for (let i = 0; i < subscriptions.length; i++) {
-					subList.push({ name: subscriptions[i], type: '' });
+			(details) => {
+				for (let i = 0; i < details.subscribing.length; i++) {
+					ros.getTopicType(details.publishing[i], (type) => {
+						nodeData?.subscriptions.push({ name: details.subscribing[i], type })
+					})
 				}
-				for (let i = 0; i < publications.length; i++) {
-					ros.getTopicType(publications[i], (type) => {
-						nodeData?.publications.push({ name: publications[i], type: type });
+				for (let i = 0; i < details.publishing.length; i++) {
+					ros.getTopicType(details.publishing[i], (type) => {
+						nodeData?.publications.push({ name: details.publishing[i], type });
 					});
 				}
-				for (let i = 0; i < services.length; i++) {
-					ros.getServiceType(services[i], (type) => {
-						nodeData?.services.push({ name: services[i], type: type });
+				for (let i = 0; i < details.services.length; i++) {
+					ros.getServiceType(details.services[i], (type) => {
+						nodeData?.services.push({ name: details.services[i], type });
 					});
 				}
-
-				nodeData = { subscriptions: subList, publications: [], services: [] };
 			},
 			(error) => {
 				console.error(error);
@@ -93,38 +160,15 @@
 	</div>
 
 	<div class="mt-2 h-[calc(100%-40px-0.5rem)] w-full">
-		{#if nodeData}
+		{#if communicationsTree}
 			<ScrollArea orientation="both" class="mt-2 h-full p-3">
 				<div>
-					<strong>Publications:</strong>
-					<div class="ml-8">
-						{#each nodeData?.publications as pub}
-							<div class="mb-1 flex">
-								<p>{pub.name}</p>
-								<kbd class="ml-1 rounded-md border px-[2px]">{pub.type}</kbd>
-							</div>
-						{/each}
-					</div>
-					<strong>Subscriptions:</strong>
-					<div class="ml-8">
-						{#each nodeData?.subscriptions as sub}
-							<div class="mb-1 flex">
-								<p>{sub.name}</p>
-								{#if sub.type !== ''}
-									<kbd class="ml-1 rounded-md border px-[2px]">{sub.type}</kbd>
-								{/if}
-							</div>
-						{/each}
-					</div>
-					<strong>Services:</strong>
-					<div class="ml-8">
-						{#each nodeData?.services as serv}
-							<div class="mb-1 flex">
-								<p>{serv.name}</p>
-								<kbd class="ml-1 rounded-md border px-[2px]">{serv.type}</kbd>
-							</div>
-						{/each}
-					</div>
+					<strong class="text-xl" >Publications:</strong >
+					<JsonTree data={communicationsTree.publications} />
+					<strong class="text-xl" >Subscriptions:</strong >
+					<JsonTree data={communicationsTree.subscriptions} />
+					<strong class="text-xl" >Services:</strong >
+					<JsonTree data={communicationsTree.services} />
 				</div>
 			</ScrollArea>
 		{/if}
