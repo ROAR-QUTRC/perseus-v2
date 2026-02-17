@@ -1,2 +1,2 @@
 ---
-sensor_msgs/Illuminance[] illuminance_array
+sensor_msgs/Illuminance[] illuminance_data
