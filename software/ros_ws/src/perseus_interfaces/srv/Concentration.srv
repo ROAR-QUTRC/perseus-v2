@@ -1,3 +1,3 @@
 ---
-IlluminanceArray illuminance_data
+sensor_msgs/Illuminance[] illuminance_data
 float32 concentration
