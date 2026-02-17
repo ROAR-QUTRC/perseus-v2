@@ -18,7 +18,7 @@ generic_controller:
           threshold: -0.5
       turn:
         turbo: 2.5
-        axis: 3
+        axis: 2
         # Positive scaling: joystick left = positive angular.z = turn left (ROS convention)
         # Dual-stick: right stick X for turning
         scaling: 0.5
