@@ -142,12 +142,12 @@ To run the controller there are certain things to understand before that happens
 
 The launch file accepts the following parameters:
 
-| Argument     | Default   | Description                                                                                |
-| ------------ | --------- | ------------------------------------------------------------------------------------------ |
-| `type`       | `xbox`    | Controller type. Options: `xbox`, `8bitdo`, `logitech`.                                    |
-| `wireless`   | `true`    | Connection type. Set `true` for wireless, `false` for wired.                               |
+| Argument     | Default   | Description                                                                                 |
+| ------------ | --------- | ------------------------------------------------------------------------------------------- |
+| `type`       | `xbox`    | Controller type. Options: `xbox`, `8bitdo`, `logitech`.                                     |
+| `wireless`   | `true`    | Connection type. Set `true` for wireless, `false` for wired.                                |
 | `dual_stick` | `false`   | Use dual-stick driving for Xbox controllers (left stick forward/back, right stick turning). |
-| `config`     | _(empty)_ | Path to a custom YAML config file. If provided, this overrides both `type` and `wireless`. |
+| `config`     | _(empty)_ | Path to a custom YAML config file. If provided, this overrides both `type` and `wireless`.  |
 
 ::: {note}
 The logitech controller config file has been configured for a logitech wired F310, and the 8bitdo controller config file has been configured for an 8BitDo Ultimate 2C controller. These same configuration files might not work for other models.
@@ -214,12 +214,16 @@ The `dual_stick` option enables an alternative layout common in games and teleop
   **Wireless:**
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 11b0f8e9 (chore: Format and lint)
   | Control            | Button |
   | ------------------ | ------ |
   | Bucket lift (up)   | LB     |
   | Bucket lift (down) | RB     |
   | Bucket tilt (up)   | Y      |
   | Bucket tilt (down) | A      |
+<<<<<<< HEAD
 
   **Wired:**
 
@@ -246,6 +250,17 @@ The `dual_stick` option enables an alternative layout common in games and teleop
   | Bucket tilt (up)   | X    |
   | Bucket tilt (down) | B    |
 >>>>>>> 741a658f (docs: Add dual-stick driving mode to teleop guide)
+=======
+
+  **Wired:**
+
+  | Control            | Button |
+  | ------------------ | ------ |
+  | Bucket lift (up)   | Y      |
+  | Bucket lift (down) | A      |
+  | Bucket tilt (up)   | X      |
+  | Bucket tilt (down) | B      |
+>>>>>>> 11b0f8e9 (chore: Format and lint)
 
 All other controls (triggers for enable/turbo, jaws, rotate, magnet) remain unchanged.
 
