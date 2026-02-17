@@ -152,21 +152,13 @@
             groot2
             bashInteractive
             can-utils
-            corepack_24
-            nodejs_24
             nixgl-script
             nixcuda-script
+            corepack_24
+            nodejs_24
             ncurses
             glibcLocales
             yaml-cpp
-            libnice
-            ;
-          inherit (pkgs.gst_all_1)
-            gstreamer
-            gst-plugins-base
-            gst-plugins-good
-            gst-plugins-bad
-            gst-plugins-rs
             ;
           inherit (pkgs.ros)
             twist-stamper

@@ -3,9 +3,11 @@
   fetchYarnDeps,
   yarnConfigHook,
   yarnBuildHook,
-  nodejs,
+  nodejs_24,
   corepack_24,
   bash,
+  gst_all_1,
+  libnice,
   ...
 }:
 stdenv.mkDerivation rec {
@@ -19,9 +21,19 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     yarnConfigHook
     yarnBuildHook
-    nodejs
+    nodejs_24
   ];
-  propagatedBuildInputs = [ corepack_24 ];
+  propagatedBuildInputs = [
+    corepack_24
+    libnice
+  ]
+  ++ (with gst_all_1; [
+    gstreamer
+    gst-plugins-bad
+    gst-plugins-base
+    gst-plugins-good
+    gst-plugins-rs
+  ]);
 
   # yarnInstallPhase currently conflicts with how our project is set up,
   # so we define it directly, copying the entire build folder to the output
