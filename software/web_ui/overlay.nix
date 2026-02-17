@@ -1,3 +1,3 @@
 final: prev: {
-  webui = final.callPackage ./rover-ui.nix { };
+  rover-ui = final.callPackage ./rover-ui.nix { };
 }

@@ -1,6 +1,6 @@
 # nix stuff ignore
 .direnv/
-result
+result*
 
 # ROS
 log/
