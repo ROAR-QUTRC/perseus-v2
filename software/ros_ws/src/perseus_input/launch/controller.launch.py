@@ -14,6 +14,7 @@ def generate_launch_description():
     # ARGUMENTS
     controller_type = LaunchConfiguration("type")
     is_wireless = LaunchConfiguration("wireless")
+    dual_stick = LaunchConfiguration("dual_stick")
     config = LaunchConfiguration("config")
     timeout_enable = LaunchConfiguration("timeout_enable")
     debug = LaunchConfiguration("debug")
@@ -28,6 +29,11 @@ def generate_launch_description():
             "wireless",
             default_value="true",
             description="Is the controller connected wirelessly or with a cable?",
+        ),
+        DeclareLaunchArgument(
+            "dual_stick",
+            default_value="false",
+            description="Use dual-stick driving (left=forward/back, right=turning) for Xbox controllers",
         ),
         DeclareLaunchArgument(
             "config",
@@ -49,10 +55,19 @@ def generate_launch_description():
     # CONFIG + DATA FILES
     is_xbox = EqualsSubstitution(controller_type, "xbox")
     is_logitech = EqualsSubstitution(controller_type, "logitech")
+    is_dual_stick = EqualsSubstitution(dual_stick, "true")
     controller_configs = {
         "xbox": [
             "xbox_controller",
-            IfElseSubstitution(is_wireless, "_wireless.yaml", "_wired.yaml"),
+            IfElseSubstitution(
+                is_wireless,
+                IfElseSubstitution(
+                    is_dual_stick, "_wireless_dual_stick.yaml", "_wireless.yaml"
+                ),
+                IfElseSubstitution(
+                    is_dual_stick, "_wired_dual_stick.yaml", "_wired.yaml"
+                ),
+            ),
         ],
         "logitech": ["logitech_controller.yaml"],
         "8bitdo": ["8bitdo_controller.yaml"],
