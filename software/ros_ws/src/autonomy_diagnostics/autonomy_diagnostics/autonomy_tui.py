@@ -1834,7 +1834,7 @@ class AutonomyTUI:
                 max_y // 2, max_x // 2 - 10, "No events recorded",
                 curses.color_pair(self.COLOR_WARN) | curses.A_BOLD,
             )
-            footer = f" 0 events | v/Esc:close "
+            footer = " 0 events | v/Esc:close "
             self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
             return
 
@@ -2919,10 +2919,8 @@ class AutonomyTUI:
                             linear = math.sqrt(cv_lx ** 2 + cv_ly ** 2)
                             if abs(linear) < 0.001 and abs(cv_az) < 0.001:
                                 vel_str = "vel: stopped"
-                                vel_attr = curses.A_DIM | curses.A_REVERSE
                             else:
                                 vel_str = f"vel: {linear:.2f}m/s {cv_az:.2f}r/s"
-                                vel_attr = curses.color_pair(self.COLOR_OK) | curses.A_REVERSE
                             status += f" | {vel_str}"
 
                         # Joystick status in status bar
