@@ -1,7 +1,8 @@
 <CycloneDDS>
   <Domain>
     <General>
-      <AllowMulticast>false</AllowMulticast>
+      <!-- Avoid broadcasting data to all client  -->
+      <AllowMulticast>false</AllowMulticast> 
     </General>
 
     <Discovery>
