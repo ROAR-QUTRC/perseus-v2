@@ -335,6 +335,7 @@ class JoystickStatus:
     num_axes: int = 0
     num_buttons: int = 0
     last_msg_time: float = 0.0
+    connection_type: str = "none"  # "local", "remote", "idle", "none"
 
 
 @dataclass
@@ -571,6 +572,20 @@ class AutonomyDiagnosticsNode(Node):
             else:
                 self.joystick_status.device_path = ""
                 self.joystick_status.device_connected = False
+
+            # Determine connection type from local device + message flow
+            joy_active = self.joystick_status.last_msg_time > 0 and (
+                time.time() - self.joystick_status.last_msg_time
+                < self.stale_data_timeout
+            )
+            if self.joystick_status.device_connected and joy_active:
+                self.joystick_status.connection_type = "local"
+            elif not self.joystick_status.device_connected and joy_active:
+                self.joystick_status.connection_type = "remote"
+            elif self.joystick_status.device_connected and not joy_active:
+                self.joystick_status.connection_type = "idle"
+            else:
+                self.joystick_status.connection_type = "none"
 
     def _setup_tf_monitoring(self):
         """Initialize TF status tracking."""
@@ -871,6 +886,8 @@ class AutonomyTUI:
         """Get curses attribute for status string."""
         if status in ("OK", "active"):
             return curses.color_pair(self.COLOR_OK) | curses.A_BOLD
+        elif status == "INFO":
+            return curses.color_pair(self.COLOR_INFO) | curses.A_BOLD
         elif status in ("WARN", "inactive", "unconfigured"):
             return curses.color_pair(self.COLOR_WARN) | curses.A_BOLD
         elif status in (
@@ -2271,26 +2288,25 @@ class AutonomyTUI:
                     # Joystick status in status bar
                     with self.node._status_lock:
                         joy = self.node.joystick_status
-                        joy_device = joy.device_connected
                         joy_path = (
                             os.path.basename(joy.device_path) if joy.device_path else ""
                         )
                         joy_axes = joy.num_axes
                         joy_buttons = joy.num_buttons
-                        joy_active = joy.last_msg_time > 0 and (
-                            time.time() - joy.last_msg_time
-                            < self.node.stale_data_timeout
-                        )
+                        joy_conn = joy.connection_type
 
-                    if joy_device and joy_active:
-                        joy_str = f"{joy_path} {joy_axes}ax/{joy_buttons}btn"
+                    if joy_conn == "local":
+                        joy_str = f"{joy_path} (local) {joy_axes}ax/{joy_buttons}btn"
                         joy_status = "OK"
-                    elif joy_device:
+                    elif joy_conn == "remote":
+                        joy_str = f"remote {joy_axes}ax/{joy_buttons}btn"
+                        joy_status = "INFO"
+                    elif joy_conn == "idle":
                         joy_str = f"{joy_path} (idle)"
                         joy_status = "WARN"
                     else:
                         joy_str = "no device"
-                        joy_status = "NONE"
+                        joy_status = "CRIT"
 
                     status += f" | Joy: {joy_str} "
                     self.safe_addstr(
@@ -2478,15 +2494,20 @@ class AutonomyTUI:
 
                 # Joystick
                 print("\n[JOYSTICK]")
-                if joy.device_connected and joy.last_msg_time > 0:
+                if joy.connection_type == "local":
                     print(
-                        f"  Device: {joy.device_path}  "
+                        f"  Device: {joy.device_path} (LOCAL)  "
                         f"Axes: {joy.num_axes}  Buttons: {joy.num_buttons}  [OK]"
                     )
-                elif joy.device_connected:
+                elif joy.connection_type == "remote":
+                    print(
+                        f"  Remote joystick  "
+                        f"Axes: {joy.num_axes}  Buttons: {joy.num_buttons}  [REMOTE]"
+                    )
+                elif joy.connection_type == "idle":
                     print(f"  Device: {joy.device_path}  [IDLE - no messages]")
                 else:
-                    print("  No joystick device detected")
+                    print("  No joystick device detected  [NONE]")
 
                 print("\n" + "=" * 70)
                 domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
