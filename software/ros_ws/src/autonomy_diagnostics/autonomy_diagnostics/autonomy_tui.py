@@ -286,6 +286,7 @@ class TopicStatus:
     stale_data_timeout: float = STALE_DATA_TIMEOUT
     rate_warning_threshold: float = RATE_WARNING_THRESHOLD
     rate_critical_threshold: float = RATE_CRITICAL_THRESHOLD
+    bandwidth_bps: float = 0.0
 
     @property
     def status(self) -> str:
@@ -339,6 +340,35 @@ class JoystickStatus:
 
 
 @dataclass
+class ConfigFileStatus:
+    """Status of a config file existence check."""
+
+    path: str
+    description: str
+    exists: bool = False
+
+
+@dataclass
+class CmdVelStatus:
+    """Status of cmd_vel velocity."""
+
+    linear_x: float = 0.0
+    linear_y: float = 0.0
+    angular_z: float = 0.0
+    last_time: float = 0.0
+
+
+@dataclass
+class StatusEvent:
+    """A recorded status change event."""
+
+    timestamp: float
+    source: str
+    old_status: str
+    new_status: str
+
+
+@dataclass
 class LidarScanData:
     """Cached laser scan data for visualization."""
 
@@ -357,19 +387,31 @@ class LidarScanData:
 
 
 class RateCalculator:
-    """Calculate message rate from timestamps using sliding window."""
+    """Calculate message rate and bandwidth from timestamps using sliding window."""
 
     def __init__(self, window_size: int = RATE_WINDOW_SIZE):
         self.timestamps: deque = deque(maxlen=window_size)
+        self.sizes: deque = deque(maxlen=window_size)
 
-    def add_timestamp(self, ts: float) -> float:
+    def add_timestamp(self, ts: float, msg_size: int = 0) -> float:
         self.timestamps.append(ts)
+        self.sizes.append(msg_size)
         if len(self.timestamps) < 2:
             return 0.0
         duration = self.timestamps[-1] - self.timestamps[0]
         if duration <= 0:
             return 0.0
         return (len(self.timestamps) - 1) / duration
+
+    def get_bandwidth(self) -> float:
+        """Return estimated bandwidth in bytes per second."""
+        if len(self.timestamps) < 2:
+            return 0.0
+        duration = self.timestamps[-1] - self.timestamps[0]
+        if duration <= 0:
+            return 0.0
+        total_bytes = sum(self.sizes)
+        return total_bytes / duration
 
 
 # =============================================================================
@@ -414,6 +456,11 @@ class AutonomyDiagnosticsNode(Node):
         self.joystick_status = JoystickStatus()
         self.lidar_scan = LidarScanData()
         self.lidar_view_active = False  # Set by TUI to gate scan data storage
+        self.config_file_statuses: List[ConfigFileStatus] = []
+        self.cmd_vel_status = CmdVelStatus()
+        self.event_log: deque = deque(maxlen=200)
+        self._prev_statuses: Dict[str, str] = {}
+        self.last_messages: Dict[str, dict] = {}
 
         # Lifecycle service clients (created once, reused)
         self._lifecycle_clients: Dict[str, Any] = {}
@@ -434,6 +481,9 @@ class AutonomyDiagnosticsNode(Node):
 
         # Check joystick device at startup
         self._check_joystick_device()
+
+        # Check config file existence at startup
+        self._check_config_files()
 
         # Create timers for periodic checks
         self.tf_timer = self.create_timer(
@@ -491,25 +541,25 @@ class AutonomyDiagnosticsNode(Node):
                 )
             elif msg_type == "Imu":
                 self.create_subscription(
-                    Imu, topic, lambda msg, n=name: self._topic_callback(n), sensor_qos
+                    Imu, topic, lambda msg, n=name: self._topic_callback(n, msg), sensor_qos
                 )
             elif msg_type == "Odometry":
                 self.create_subscription(
                     Odometry,
                     topic,
-                    lambda msg, n=name: self._topic_callback(n),
+                    lambda msg, n=name: self._topic_callback(n, msg),
                     sensor_qos,
                 )
             elif msg_type == "OccupancyGrid":
                 self.create_subscription(
                     OccupancyGrid,
                     topic,
-                    lambda msg, n=name: self._topic_callback(n),
+                    lambda msg, n=name: self._topic_callback(n, msg),
                     10,
                 )
             elif msg_type == "Twist":
                 self.create_subscription(
-                    Twist, topic, lambda msg, n=name: self._topic_callback(n), 10
+                    Twist, topic, lambda msg, n=name: self._cmd_vel_callback(msg, n), 10
                 )
             elif msg_type == "Joy":
                 self.create_subscription(
@@ -522,18 +572,23 @@ class AutonomyDiagnosticsNode(Node):
                 self.create_subscription(
                     JointState,
                     topic,
-                    lambda msg, n=name: self._topic_callback(n),
+                    lambda msg, n=name: self._topic_callback(n, msg),
                     sensor_qos,
                 )
 
-    def _topic_callback(self, topic_name: str):
-        """Generic callback for topic monitoring."""
+    def _topic_callback(self, topic_name: str, msg=None):
+        """Generic callback for topic monitoring. Optionally stores message summary."""
         now = time.time()
+        msg_size = sys.getsizeof(msg) if msg is not None else 0
         with self._status_lock:
             status = self.topic_statuses[topic_name]
             status.last_msg_time = now
             status.msg_count += 1
-            status.actual_hz = self.rate_calculators[topic_name].add_timestamp(now)
+            calc = self.rate_calculators[topic_name]
+            status.actual_hz = calc.add_timestamp(now, msg_size)
+            status.bandwidth_bps = calc.get_bandwidth()
+            if msg is not None:
+                self._store_message_summary(topic_name, msg)
 
     def _joy_callback(self, msg, topic_name: str):
         """Callback for Joy topic - records rate and captures axes/buttons."""
@@ -542,6 +597,60 @@ class AutonomyDiagnosticsNode(Node):
             self.joystick_status.num_axes = len(msg.axes)
             self.joystick_status.num_buttons = len(msg.buttons)
             self.joystick_status.last_msg_time = time.time()
+            self.last_messages[topic_name] = {
+                "axes": [round(a, 3) for a in msg.axes],
+                "buttons": list(msg.buttons),
+            }
+
+    def _store_message_summary(self, topic_name: str, msg):
+        """Extract and store key fields from a message. Must be called under _status_lock."""
+        summary = {}
+        msg_type = type(msg).__name__
+        if msg_type == "Imu":
+            o = msg.orientation
+            summary["orientation"] = f"x={o.x:.3f} y={o.y:.3f} z={o.z:.3f} w={o.w:.3f}"
+            av = msg.angular_velocity
+            summary["angular_vel"] = f"x={av.x:.3f} y={av.y:.3f} z={av.z:.3f}"
+            la = msg.linear_acceleration
+            summary["linear_accel"] = f"x={la.x:.3f} y={la.y:.3f} z={la.z:.3f}"
+        elif msg_type == "Odometry":
+            p = msg.pose.pose.position
+            o = msg.pose.pose.orientation
+            summary["position"] = f"x={p.x:.3f} y={p.y:.3f} z={p.z:.3f}"
+            summary["orientation"] = f"x={o.x:.3f} y={o.y:.3f} z={o.z:.3f} w={o.w:.3f}"
+            tl = msg.twist.twist.linear
+            ta = msg.twist.twist.angular
+            summary["twist_linear"] = f"x={tl.x:.3f} y={tl.y:.3f} z={tl.z:.3f}"
+            summary["twist_angular"] = f"x={ta.x:.3f} y={ta.y:.3f} z={ta.z:.3f}"
+        elif msg_type == "OccupancyGrid":
+            info = msg.info
+            summary["width"] = info.width
+            summary["height"] = info.height
+            summary["resolution"] = f"{info.resolution:.4f}"
+            summary["origin"] = f"x={info.origin.position.x:.2f} y={info.origin.position.y:.2f}"
+        elif msg_type == "JointState":
+            summary["names"] = list(msg.name)[:8]
+            summary["position"] = [round(p, 3) for p in msg.position[:8]]
+            summary["velocity"] = [round(v, 3) for v in msg.velocity[:8]]
+            summary["effort"] = [round(e, 3) for e in msg.effort[:8]]
+        self.last_messages[topic_name] = summary
+
+    def _cmd_vel_callback(self, msg, topic_name: str):
+        """Callback for Twist (cmd_vel) topic - records rate and captures velocities."""
+        self._topic_callback(topic_name)
+        with self._status_lock:
+            self.cmd_vel_status.linear_x = msg.linear.x
+            self.cmd_vel_status.linear_y = msg.linear.y
+            self.cmd_vel_status.angular_z = msg.angular.z
+            self.cmd_vel_status.last_time = time.time()
+            self.last_messages[topic_name] = {
+                "linear.x": msg.linear.x,
+                "linear.y": msg.linear.y,
+                "linear.z": msg.linear.z,
+                "angular.x": msg.angular.x,
+                "angular.y": msg.angular.y,
+                "angular.z": msg.angular.z,
+            }
 
     def _scan_callback(self, msg, topic_name: str):
         """Callback for LaserScan topic - records rate and optionally stores scan data.
@@ -550,6 +659,15 @@ class AutonomyDiagnosticsNode(Node):
         reducing bandwidth and memory overhead during normal dashboard use.
         """
         self._topic_callback(topic_name)
+        with self._status_lock:
+            self.last_messages[topic_name] = {
+                "angle_min": f"{msg.angle_min:.4f}",
+                "angle_max": f"{msg.angle_max:.4f}",
+                "angle_increment": f"{msg.angle_increment:.6f}",
+                "range_min": f"{msg.range_min:.3f}",
+                "range_max": f"{msg.range_max:.3f}",
+                "num_ranges": len(msg.ranges),
+            }
         if not self.lidar_view_active:
             return
         with self._status_lock:
@@ -586,6 +704,69 @@ class AutonomyDiagnosticsNode(Node):
                 self.joystick_status.connection_type = "idle"
             else:
                 self.joystick_status.connection_type = "none"
+
+    def _check_transitions(self):
+        """Detect status transitions and log them as events."""
+        now = time.time()
+        with self._status_lock:
+            # Check topic statuses
+            for name, ts in self.topic_statuses.items():
+                key = f"topic:{name}"
+                current = ts.status
+                prev = self._prev_statuses.get(key)
+                if prev is not None and prev != current:
+                    self.event_log.append(StatusEvent(
+                        timestamp=now, source=name, old_status=prev, new_status=current,
+                    ))
+                self._prev_statuses[key] = current
+
+            # Check TF connected states
+            for tf in self.tf_statuses:
+                key = f"tf:{tf.parent}->{tf.child}"
+                current = "OK" if tf.connected else "FAIL"
+                prev = self._prev_statuses.get(key)
+                if prev is not None and prev != current:
+                    self.event_log.append(StatusEvent(
+                        timestamp=now, source=f"{tf.parent}->{tf.child}",
+                        old_status=prev, new_status=current,
+                    ))
+                self._prev_statuses[key] = current
+
+            # Check lifecycle states
+            for name, ls in self.lifecycle_statuses.items():
+                key = f"lifecycle:{name}"
+                current = ls.state
+                prev = self._prev_statuses.get(key)
+                if prev is not None and prev != current:
+                    self.event_log.append(StatusEvent(
+                        timestamp=now, source=name, old_status=prev, new_status=current,
+                    ))
+                self._prev_statuses[key] = current
+
+            # Check joystick connection type
+            key = "joy:connection"
+            current = self.joystick_status.connection_type
+            prev = self._prev_statuses.get(key)
+            if prev is not None and prev != current:
+                self.event_log.append(StatusEvent(
+                    timestamp=now, source="joystick", old_status=prev, new_status=current,
+                ))
+            self._prev_statuses[key] = current
+
+    def _check_config_files(self):
+        """Check existence of config files listed in the robot config."""
+        statuses = []
+        for cfg in self.config.get("config_files", []):
+            path = cfg.get("path", "")
+            desc = cfg.get("description", "")
+            full_path = os.path.join(self.ros_ws_src_path, path) if self.ros_ws_src_path else path
+            statuses.append(ConfigFileStatus(
+                path=path,
+                description=desc,
+                exists=os.path.exists(full_path),
+            ))
+        with self._status_lock:
+            self.config_file_statuses = statuses
 
     def _setup_tf_monitoring(self):
         """Initialize TF status tracking."""
@@ -652,6 +833,9 @@ class AutonomyDiagnosticsNode(Node):
 
         # Piggyback joystick device check on the TF timer
         self._check_joystick_device()
+
+        # Check for status transitions (event log)
+        self._check_transitions()
 
     def _build_tf_tree(self):
         """Build a hierarchical TF tree from the tf2 buffer.
@@ -845,6 +1029,27 @@ class AutonomyTUI:
         self._net_last_sel = -1  # Track selection changes to refresh neighbors
         self._net_neighbor_scroll = 0  # Scroll offset for neighbor list
 
+        # Event log overlay (Feature 4)
+        self.show_event_log = False
+        self._event_scroll = 0
+
+        # Audible alerts (Feature 5)
+        self.alerts_enabled = False
+        self._last_alert_idx = 0
+
+        # Panel scrolling (Feature 6)
+        self._focused_panel: int = -1  # -1=none, 0-3=topics/tf/lifecycle/tree
+        self._panel_scroll = [0, 0, 0, 0]
+
+        # Topic message preview (Feature 7)
+        self.show_msg_preview = False
+        self._preview_sel = 0
+        self._preview_scroll = 0
+
+        # Export snapshot (Feature 8)
+        self._status_msg = ""
+        self._status_msg_time = 0.0
+
         # UI refresh settings from config
         settings = node.config["settings"]
         self.refresh_ms = settings["refresh_ms"]
@@ -924,6 +1129,11 @@ class AutonomyTUI:
                 1 for d in self.node.tf_tree_data.values() if d["status"] == "OK"
             )
 
+            joy_conn = self.node.joystick_status.connection_type
+
+            cfg_ok = sum(1 for c in self.node.config_file_statuses if c.exists)
+            cfg_total = len(self.node.config_file_statuses)
+
         # Determine overall status
         all_ok = topics_ok == topics_total and tf_ok == tf_total
 
@@ -931,7 +1141,8 @@ class AutonomyTUI:
         summary += f" | TF {tf_ok}/{tf_total}"
         summary += f" | Lifecycle {lifecycle_active}/{lifecycle_total}"
         summary += f" | Tree {tf_tree_ok}/{tf_tree_total}"
-        summary += " "
+        if cfg_total > 0:
+            summary += f" | Cfg {cfg_ok}/{cfg_total}"
 
         attr = (
             curses.color_pair(self.COLOR_OK)
@@ -940,35 +1151,76 @@ class AutonomyTUI:
         )
         self.safe_addstr(y, 0, summary.ljust(max_x), attr | curses.A_BOLD)
 
+        # Append joystick status with its own color
+        joy_label = f" | Joy: {joy_conn.upper()} "
+        joy_x = len(summary)
+        if joy_conn == "local":
+            joy_attr = curses.color_pair(self.COLOR_OK) | curses.A_BOLD
+        elif joy_conn == "remote":
+            joy_attr = curses.color_pair(self.COLOR_INFO) | curses.A_BOLD
+        elif joy_conn == "idle":
+            joy_attr = curses.color_pair(self.COLOR_WARN) | curses.A_BOLD
+        else:
+            joy_attr = curses.color_pair(self.COLOR_CRIT) | curses.A_BOLD
+        self.safe_addstr(y, joy_x, joy_label, joy_attr)
+
     def draw_topics_panel(self, y: int, x: int, w: int, h: int):
         """Draw topics monitoring panel."""
-        self.draw_box(y, x, h, w, "TOPICS")
-
-        row = y + 1
-        # Header
-        header = f"{'Topic':<22} {'Rate':>8} {'Exp':>6} {'Status':>6}"
-        self.safe_addstr(row, x + 2, header, curses.A_BOLD)
-        row += 1
-        self.safe_addstr(row, x + 2, "-" * (w - 4))
-        row += 1
+        is_focused = self._focused_panel == 0
+        scroll = self._panel_scroll[0]
 
         # Thread-safe snapshot of topic statuses
         with self.node._status_lock:
             topic_items = list(self.node.topic_statuses.items())
 
-        for name, status in topic_items:
+        # Clamp scroll
+        max_items = h - 4  # border(2) + header + separator
+        max_scroll = max(0, len(topic_items) - max_items)
+        scroll = max(0, min(scroll, max_scroll))
+        self._panel_scroll[0] = scroll
+
+        # Title with scroll indicator
+        title = "TOPICS"
+        if max_scroll > 0:
+            start = scroll + 1
+            end = min(scroll + max_items, len(topic_items))
+            title = f"TOPICS ({start}-{end} of {len(topic_items)})"
+
+        border_attr = curses.color_pair(self.COLOR_INFO) if is_focused else 0
+        self.draw_box(y, x, h, w, title)
+        if is_focused:
+            # Redraw borders with focus color
+            self.safe_addstr(y, x, "+" + "-" * (w - 2) + "+", border_attr)
+            for i in range(1, h - 1):
+                self.safe_addstr(y + i, x, "|", border_attr)
+                self.safe_addstr(y + i, x + w - 1, "|", border_attr)
+            self.safe_addstr(y + h - 1, x, "+" + "-" * (w - 2) + "+", border_attr)
+            title_str = f" {title} "
+            self.safe_addstr(y, x + 2, title_str, curses.A_BOLD | border_attr)
+
+        row = y + 1
+        # Header
+        header = f"{'Topic':<18} {'Rate':>8} {'Exp':>6} {'BW':>5} {'Status':>6}"
+        self.safe_addstr(row, x + 2, header[:w - 4], curses.A_BOLD)
+        row += 1
+        self.safe_addstr(row, x + 2, "-" * (w - 4))
+        row += 1
+
+        visible_items = topic_items[scroll : scroll + max_items]
+        for name, status in visible_items:
             if row >= y + h - 1:
                 break
-            topic_short = status.topic[-20:] if len(status.topic) > 20 else status.topic
+            topic_short = status.topic[-16:] if len(status.topic) > 16 else status.topic
             rate_str = (
                 f"{status.actual_hz:>6.1f}Hz" if status.actual_hz > 0 else "   ---  "
             )
             exp_str = (
                 f"{status.expected_hz:>4.1f}Hz" if status.expected_hz > 0 else "  var"
             )
+            bw_str = self._fmt_bandwidth(status.bandwidth_bps)
 
-            line = f"{topic_short:<22} {rate_str} {exp_str}"
-            self.safe_addstr(row, x + 2, line)
+            line = f"{topic_short:<18} {rate_str} {exp_str} {bw_str:>5}"
+            self.safe_addstr(row, x + 2, line[:w - 10])
 
             # Status with color
             stat_attr = self.get_status_attr(status.status)
@@ -977,7 +1229,33 @@ class AutonomyTUI:
 
     def draw_tf_panel(self, y: int, x: int, w: int, h: int):
         """Draw TF frames panel."""
-        self.draw_box(y, x, h, w, "TF FRAMES")
+        is_focused = self._focused_panel == 1
+        scroll = self._panel_scroll[1]
+
+        # Thread-safe snapshot of TF statuses
+        with self.node._status_lock:
+            tf_items = list(self.node.tf_statuses)
+
+        max_items = h - 4
+        max_scroll = max(0, len(tf_items) - max_items)
+        scroll = max(0, min(scroll, max_scroll))
+        self._panel_scroll[1] = scroll
+
+        title = "TF FRAMES"
+        if max_scroll > 0:
+            start = scroll + 1
+            end = min(scroll + max_items, len(tf_items))
+            title = f"TF FRAMES ({start}-{end} of {len(tf_items)})"
+
+        self.draw_box(y, x, h, w, title)
+        if is_focused:
+            border_attr = curses.color_pair(self.COLOR_INFO)
+            self.safe_addstr(y, x, "+" + "-" * (w - 2) + "+", border_attr)
+            for i in range(1, h - 1):
+                self.safe_addstr(y + i, x, "|", border_attr)
+                self.safe_addstr(y + i, x + w - 1, "|", border_attr)
+            self.safe_addstr(y + h - 1, x, "+" + "-" * (w - 2) + "+", border_attr)
+            self.safe_addstr(y, x + 2, f" {title} ", curses.A_BOLD | border_attr)
 
         row = y + 1
         # Header
@@ -987,11 +1265,8 @@ class AutonomyTUI:
         self.safe_addstr(row, x + 2, "-" * (w - 4))
         row += 1
 
-        # Thread-safe snapshot of TF statuses
-        with self.node._status_lock:
-            tf_items = list(self.node.tf_statuses)
-
-        for tf_status in tf_items:
+        visible_items = tf_items[scroll : scroll + max_items]
+        for tf_status in visible_items:
             if row >= y + h - 1:
                 break
             transform = f"{tf_status.parent} -> {tf_status.child}"
@@ -1010,7 +1285,33 @@ class AutonomyTUI:
 
     def draw_lifecycle_panel(self, y: int, x: int, w: int, h: int):
         """Draw lifecycle nodes panel."""
-        self.draw_box(y, x, h, w, "LIFECYCLE NODES")
+        is_focused = self._focused_panel == 2
+        scroll = self._panel_scroll[2]
+
+        # Thread-safe snapshot of lifecycle statuses
+        with self.node._status_lock:
+            lifecycle_items = list(self.node.lifecycle_statuses.items())
+
+        max_items = h - 4
+        max_scroll = max(0, len(lifecycle_items) - max_items)
+        scroll = max(0, min(scroll, max_scroll))
+        self._panel_scroll[2] = scroll
+
+        title = "LIFECYCLE NODES"
+        if max_scroll > 0:
+            start = scroll + 1
+            end = min(scroll + max_items, len(lifecycle_items))
+            title = f"LIFECYCLE ({start}-{end} of {len(lifecycle_items)})"
+
+        self.draw_box(y, x, h, w, title)
+        if is_focused:
+            border_attr = curses.color_pair(self.COLOR_INFO)
+            self.safe_addstr(y, x, "+" + "-" * (w - 2) + "+", border_attr)
+            for i in range(1, h - 1):
+                self.safe_addstr(y + i, x, "|", border_attr)
+                self.safe_addstr(y + i, x + w - 1, "|", border_attr)
+            self.safe_addstr(y + h - 1, x, "+" + "-" * (w - 2) + "+", border_attr)
+            self.safe_addstr(y, x + 2, f" {title} ", curses.A_BOLD | border_attr)
 
         row = y + 1
         # Header
@@ -1020,11 +1321,8 @@ class AutonomyTUI:
         self.safe_addstr(row, x + 2, "-" * (w - 4))
         row += 1
 
-        # Thread-safe snapshot of lifecycle statuses
-        with self.node._status_lock:
-            lifecycle_items = list(self.node.lifecycle_statuses.items())
-
-        for name, status in lifecycle_items:
+        visible_items = lifecycle_items[scroll : scroll + max_items]
+        for name, status in visible_items:
             if row >= y + h - 1:
                 break
             node_short = name[:22]
@@ -1037,17 +1335,25 @@ class AutonomyTUI:
 
     def draw_tf_tree_panel(self, y: int, x: int, w: int, h: int):
         """Draw live TF tree panel showing frame hierarchy."""
-        self.draw_box(y, x, h, w, "TF TREE")
-
-        row = y + 1
+        is_focused = self._focused_panel == 3
+        scroll = self._panel_scroll[3]
 
         # Thread-safe snapshot
         with self.node._status_lock:
             tree = dict(self.node.tf_tree_data)
 
         if not tree:
+            self.draw_box(y, x, h, w, "TF TREE")
+            if is_focused:
+                border_attr = curses.color_pair(self.COLOR_INFO)
+                self.safe_addstr(y, x, "+" + "-" * (w - 2) + "+", border_attr)
+                for i in range(1, h - 1):
+                    self.safe_addstr(y + i, x, "|", border_attr)
+                    self.safe_addstr(y + i, x + w - 1, "|", border_attr)
+                self.safe_addstr(y + h - 1, x, "+" + "-" * (w - 2) + "+", border_attr)
+                self.safe_addstr(y, x + 2, " TF TREE ", curses.A_BOLD | border_attr)
             self.safe_addstr(
-                row, x + 2, "No TF frames detected", curses.color_pair(self.COLOR_WARN)
+                y + 1, x + 2, "No TF frames detected", curses.color_pair(self.COLOR_WARN)
             )
             return
 
@@ -1059,7 +1365,6 @@ class AutonomyTUI:
 
         def walk(frame: str, prefix: str, is_last: bool):
             data = tree.get(frame, {"children": [], "status": "OK"})
-            # Build connector
             if prefix == "":
                 connector = ""
             elif is_last:
@@ -1081,20 +1386,42 @@ class AutonomyTUI:
         for i, root in enumerate(roots):
             walk(root, "", i == len(roots) - 1)
 
+        # +1 for the frame count header line
+        max_items = h - 4
+        max_scroll = max(0, len(lines) - max_items)
+        scroll = max(0, min(scroll, max_scroll))
+        self._panel_scroll[3] = scroll
+
+        title = "TF TREE"
+        if max_scroll > 0:
+            start = scroll + 1
+            end = min(scroll + max_items, len(lines))
+            title = f"TF TREE ({start}-{end} of {len(lines)})"
+
+        self.draw_box(y, x, h, w, title)
+        if is_focused:
+            border_attr = curses.color_pair(self.COLOR_INFO)
+            self.safe_addstr(y, x, "+" + "-" * (w - 2) + "+", border_attr)
+            for i in range(1, h - 1):
+                self.safe_addstr(y + i, x, "|", border_attr)
+                self.safe_addstr(y + i, x + w - 1, "|", border_attr)
+            self.safe_addstr(y + h - 1, x, "+" + "-" * (w - 2) + "+", border_attr)
+            self.safe_addstr(y, x + 2, f" {title} ", curses.A_BOLD | border_attr)
+
+        row = y + 1
         # Frame count header
         self.safe_addstr(row, x + 2, f"{len(tree)} frames", curses.A_DIM)
         row += 1
 
-        for prefix_str, frame_name, status in lines:
+        visible_lines = lines[scroll : scroll + max_items]
+        for prefix_str, frame_name, status in visible_lines:
             if row >= y + h - 1:
                 break
-            # Draw tree prefix
             avail = w - 4
             display = prefix_str + frame_name
-            display = display[: avail - 7]  # leave room for status
+            display = display[: avail - 7]
             self.safe_addstr(row, x + 2, display)
 
-            # Status tag
             stat_attr = self.get_status_attr(status)
             status_col = x + w - 8
             self.safe_addstr(row, status_col, f"[{status:^4}]", stat_attr)
@@ -1114,6 +1441,11 @@ class AutonomyTUI:
             ("e", "Edit robot config YAML"),
             ("l", "LiDAR scan view (braille render)"),
             ("n", "Network view"),
+            ("v", "Event history log"),
+            ("p", "Topic message preview"),
+            ("a", "Toggle audible alerts"),
+            ("s", "Export state snapshot to file"),
+            ("Tab", "Cycle panel focus (for scrolling)"),
             ("+/=", "Increase refresh interval (slower)"),
             ("-/_", "Decrease refresh interval (faster)"),
         ]
@@ -1467,6 +1799,152 @@ class AutonomyTUI:
         # Footer
         count = len(self._net_neighbors)
         footer = f" {count} neighbor(s) | Up/Down:select interface  PgUp/PgDn:scroll neighbors  n/Esc:close "
+        self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
+
+    @staticmethod
+    def _fmt_bandwidth(bps: float) -> str:
+        """Format bandwidth in human-readable form."""
+        if bps <= 0:
+            return "  0B"
+        if bps < 1024:
+            return f"{bps:3.0f}B"
+        if bps < 1024 * 1024:
+            return f"{bps / 1024:.1f}K"
+        return f"{bps / (1024 * 1024):.1f}M"
+
+    def draw_event_log(self):
+        """Draw full-screen event history log overlay."""
+        if self.stdscr is None:
+            return
+        max_y, max_x = self.stdscr.getmaxyx()
+
+        # Title bar
+        title = " EVENT HISTORY LOG | Up/Down/PgUp/PgDn:scroll  v/Esc:close "
+        self.safe_addstr(0, 0, title.ljust(max_x), curses.A_REVERSE | curses.A_BOLD)
+
+        # Get events snapshot
+        with self.node._status_lock:
+            events = list(self.node.event_log)
+
+        # Show newest first
+        events.reverse()
+
+        if not events:
+            self.safe_addstr(
+                max_y // 2, max_x // 2 - 10, "No events recorded",
+                curses.color_pair(self.COLOR_WARN) | curses.A_BOLD,
+            )
+            footer = f" 0 events | v/Esc:close "
+            self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
+            return
+
+        # Header
+        row = 1
+        header = f"  {'Time':<12} {'Source':<24} {'Old':>10} -> {'New':<10}"
+        self.safe_addstr(row, 0, header[:max_x], curses.A_BOLD)
+        row += 1
+        self.safe_addstr(row, 0, "-" * min(max_x - 1, 70))
+        row += 1
+
+        # Scrollable area
+        area_h = max_y - 4  # title + header + separator + footer
+        max_scroll = max(0, len(events) - area_h)
+        self._event_scroll = max(0, min(self._event_scroll, max_scroll))
+
+        visible = events[self._event_scroll : self._event_scroll + area_h]
+        for evt in visible:
+            if row >= max_y - 1:
+                break
+            ts_str = time.strftime("%H:%M:%S", time.localtime(evt.timestamp))
+            line = f"  {ts_str:<12} {evt.source:<24} {evt.old_status:>10} -> {evt.new_status:<10}"
+            self.safe_addstr(row, 0, line[:max_x])
+            # Color the new_status
+            new_col = 2 + 12 + 24 + 10 + 4
+            attr = self.get_status_attr(evt.new_status)
+            self.safe_addstr(row, min(new_col, max_x - 11), evt.new_status[:10], attr)
+            row += 1
+
+        # Footer with scroll info
+        total = len(events)
+        showing_start = self._event_scroll + 1
+        showing_end = min(self._event_scroll + area_h, total)
+        footer = f" {total} events | showing {showing_start}-{showing_end} | Up/Down/PgUp/PgDn:scroll  v/Esc:close "
+        self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
+
+    def draw_msg_preview(self):
+        """Draw full-screen topic message preview overlay."""
+        if self.stdscr is None:
+            return
+        max_y, max_x = self.stdscr.getmaxyx()
+
+        # Title bar
+        title = " TOPIC MESSAGE PREVIEW | Up/Down:select  PgUp/PgDn:scroll  p/Esc:close "
+        self.safe_addstr(0, 0, title.ljust(max_x), curses.A_REVERSE | curses.A_BOLD)
+
+        # Get topic list and messages snapshot
+        with self.node._status_lock:
+            topic_names = list(self.node.topic_statuses.keys())
+            messages = dict(self.node.last_messages)
+
+        if not topic_names:
+            self.safe_addstr(max_y // 2, max_x // 2 - 8, "No topics", curses.color_pair(self.COLOR_WARN))
+            self.safe_addstr(max_y - 1, 0, " p/Esc:close ".ljust(max_x), curses.A_REVERSE)
+            return
+
+        # Clamp selection
+        self._preview_sel = max(0, min(self._preview_sel, len(topic_names) - 1))
+
+        # Layout: left list (1/3), right detail (2/3)
+        left_w = min(30, max_x // 3)
+        right_w = max_x - left_w
+
+        # Left panel: topic list
+        self.draw_box(1, 0, max_y - 2, left_w, "Topics")
+        row = 2
+        for idx, name in enumerate(topic_names):
+            if row >= max_y - 2:
+                break
+            is_sel = idx == self._preview_sel
+            marker = ">" if is_sel else " "
+            line_attr = curses.A_REVERSE if is_sel else 0
+            has_data = name in messages and messages[name]
+            indicator = "*" if has_data else " "
+            self.safe_addstr(row, 1, f"{marker}{indicator}{name[:left_w - 4]}", line_attr)
+            row += 1
+
+        # Right panel: message fields
+        sel_name = topic_names[self._preview_sel]
+        self.draw_box(1, left_w, max_y - 2, right_w, f"Message: {sel_name}")
+
+        msg_data = messages.get(sel_name, {})
+        if not msg_data:
+            self.safe_addstr(3, left_w + 2, "No message data received", curses.color_pair(self.COLOR_WARN))
+        else:
+            # Render fields as key: value pairs
+            lines = []
+            for key, val in msg_data.items():
+                lines.append(f"{key}: {val}")
+
+            area_h = max_y - 5
+            max_scroll = max(0, len(lines) - area_h)
+            self._preview_scroll = max(0, min(self._preview_scroll, max_scroll))
+
+            row = 2
+            for line in lines[self._preview_scroll : self._preview_scroll + area_h]:
+                if row >= max_y - 2:
+                    break
+                # Split key: value for coloring
+                colon = line.find(": ")
+                if colon >= 0:
+                    self.safe_addstr(row, left_w + 2, line[:colon + 1][:right_w - 4],
+                                     curses.color_pair(self.COLOR_INFO) | curses.A_BOLD)
+                    self.safe_addstr(row, left_w + 2 + colon + 2, str(line[colon + 2:])[:right_w - colon - 6])
+                else:
+                    self.safe_addstr(row, left_w + 2, line[:right_w - 4])
+                row += 1
+
+        # Footer
+        footer = f" {len(topic_names)} topics | Up/Down:select  PgUp/PgDn:scroll detail  p/Esc:close "
         self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
 
     def _draw_yaml_line(self, row: int, col: int, text: str, max_w: int):
@@ -2051,6 +2529,117 @@ class AutonomyTUI:
             self.stdscr.nodelay(True)
             self.stdscr.timeout(self.refresh_ms)
 
+    def export_snapshot(self):
+        """Export current state to a text file."""
+        try:
+            ts = time.strftime("%Y%m%d_%H%M%S")
+            filename = f"diagnostics_{ts}.txt"
+
+            with self.node._status_lock:
+                topic_items = list(self.node.topic_statuses.items())
+                tf_items = list(self.node.tf_statuses)
+                lifecycle_items = list(self.node.lifecycle_statuses.items())
+                tree = dict(self.node.tf_tree_data)
+                joy = JoystickStatus(
+                    device_path=self.node.joystick_status.device_path,
+                    device_connected=self.node.joystick_status.device_connected,
+                    num_axes=self.node.joystick_status.num_axes,
+                    num_buttons=self.node.joystick_status.num_buttons,
+                    last_msg_time=self.node.joystick_status.last_msg_time,
+                    connection_type=self.node.joystick_status.connection_type,
+                )
+                cv = CmdVelStatus(
+                    linear_x=self.node.cmd_vel_status.linear_x,
+                    linear_y=self.node.cmd_vel_status.linear_y,
+                    angular_z=self.node.cmd_vel_status.angular_z,
+                    last_time=self.node.cmd_vel_status.last_time,
+                )
+                config_files = list(self.node.config_file_statuses)
+                events = list(self.node.event_log)
+
+            lines = []
+            lines.append("=" * 70)
+            lines.append(f" AUTONOMY DIAGNOSTICS [{self.node.robot_name}] - Snapshot")
+            lines.append(f" Exported: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            lines.append("=" * 70)
+
+            lines.append("\n[TOPICS]")
+            for name, status in topic_items:
+                rate_str = f"{status.actual_hz:.1f}Hz" if status.actual_hz > 0 else "---"
+                bw_str = self._fmt_bandwidth(status.bandwidth_bps)
+                lines.append(f"  {status.topic:<25} {rate_str:>8} {bw_str:>5}  [{status.status}]")
+
+            lines.append("\n[TF FRAMES]")
+            for tf_status in tf_items:
+                status_str = "OK" if tf_status.connected else "FAIL"
+                lines.append(f"  {tf_status.parent} -> {tf_status.child:<15} [{status_str}] {tf_status.description}")
+
+            lines.append("\n[LIFECYCLE NODES]")
+            for name, status in lifecycle_items:
+                lines.append(f"  {name:<22} [{status.state}]")
+
+            lines.append("\n[TF TREE]")
+            if not tree:
+                lines.append("  No TF frames detected")
+            else:
+                roots = sorted(name for name, data in tree.items() if not data["parent"])
+                def fmt_tree(frame, prefix="", is_last=True):
+                    data = tree.get(frame, {"children": [], "status": "OK"})
+                    connector = prefix + ("\\-" if is_last else "|-")
+                    if not prefix:
+                        connector = ""
+                    lines.append(f"  {connector}{frame} [{data['status']}]")
+                    children = data.get("children", [])
+                    for i, child in enumerate(children):
+                        ext = "    " if is_last else "|   "
+                        child_prefix = prefix + ext if prefix else "  "
+                        fmt_tree(child, child_prefix, i == len(children) - 1)
+                for i, root in enumerate(roots):
+                    fmt_tree(root)
+
+            lines.append("\n[JOYSTICK]")
+            if joy.connection_type == "local":
+                lines.append(f"  Device: {joy.device_path} (LOCAL)  Axes: {joy.num_axes}  Buttons: {joy.num_buttons}  [OK]")
+            elif joy.connection_type == "remote":
+                lines.append(f"  Remote joystick  Axes: {joy.num_axes}  Buttons: {joy.num_buttons}  [REMOTE]")
+            elif joy.connection_type == "idle":
+                lines.append(f"  Device: {joy.device_path}  [IDLE - no messages]")
+            else:
+                lines.append("  No joystick device detected  [NONE]")
+
+            lines.append("\n[CMD_VEL]")
+            now_t = time.time()
+            if cv.last_time > 0 and (now_t - cv.last_time < self.node.stale_data_timeout):
+                lines.append(f"  linear: x={cv.linear_x:.3f} y={cv.linear_y:.3f}")
+                lines.append(f"  angular: z={cv.angular_z:.3f}")
+            else:
+                lines.append("  No recent cmd_vel data")
+
+            if config_files:
+                lines.append("\n[CONFIG FILES]")
+                for cf in config_files:
+                    status_str = "EXISTS" if cf.exists else "MISSING"
+                    lines.append(f"  {cf.path:<40} [{status_str}] {cf.description}")
+
+            if events:
+                lines.append("\n[EVENT LOG] (last 10)")
+                for evt in list(reversed(events))[:10]:
+                    ts_str = time.strftime("%H:%M:%S", time.localtime(evt.timestamp))
+                    lines.append(f"  {ts_str}  {evt.source:<24} {evt.old_status} -> {evt.new_status}")
+
+            lines.append("\n" + "=" * 70)
+            domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
+            lines.append(f"ROS_DOMAIN_ID: {domain_id}")
+
+            with open(filename, "w") as f:
+                f.write("\n".join(lines) + "\n")
+
+            self._status_msg = f"Snapshot saved to {filename}"
+            self._status_msg_time = time.time()
+        except Exception as e:
+            self._status_msg = f"Export failed: {e}"
+            self._status_msg_time = time.time()
+
     def prompt_domain_id(self) -> Optional[int]:
         """Show a popup prompt for entering a new ROS_DOMAIN_ID. Returns the ID or None."""
         if self.stdscr is None:
@@ -2208,16 +2797,35 @@ class AutonomyTUI:
                 stdscr.erase()
                 max_y, max_x = stdscr.getmaxyx()
 
+                # Check for audible alerts on critical transitions
+                if self.alerts_enabled:
+                    with self.node._status_lock:
+                        event_count = len(self.node.event_log)
+                    if event_count > self._last_alert_idx:
+                        with self.node._status_lock:
+                            new_events = list(self.node.event_log)[self._last_alert_idx:]
+                        critical_statuses = {"CRIT", "STALE", "FAIL", "not_found", "error", "none", "NONE"}
+                        for evt in new_events:
+                            if evt.new_status in critical_statuses:
+                                sys.stdout.write("\a")
+                                sys.stdout.flush()
+                                break
+                        self._last_alert_idx = event_count
+
                 if self.show_lidar:
                     # Full-screen LiDAR scan view
                     self.draw_lidar_view()
                 elif self.show_network:
                     # Full-screen network view
                     self.draw_network_dialog()
+                elif self.show_event_log:
+                    self.draw_event_log()
+                elif self.show_msg_preview:
+                    self.draw_msg_preview()
                 else:
                     # Normal dashboard view
                     # Title bar
-                    title = f" AUTONOMY DIAGNOSTICS [{self.node.robot_name}] - q:quit  r:robot  d:domain  e:edit  n:network  l:lidar  h:help "
+                    title = f" AUTONOMY DIAGNOSTICS [{self.node.robot_name}] - q:quit r:robot d:domain e:edit n:net l:lidar v:log p:preview a:alerts s:save h:help "
                     self.safe_addstr(
                         0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
                     )
@@ -2281,42 +2889,99 @@ class AutonomyTUI:
                         self.draw_help_dialog()
 
                     # Status bar
-                    status_time = time.strftime("%H:%M:%S")
-                    domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
-                    status = f" Time: {status_time} | ROS_DOMAIN_ID: {domain_id} | Refresh: {self.refresh_ms}ms"
-
-                    # Joystick status in status bar
-                    with self.node._status_lock:
-                        joy = self.node.joystick_status
-                        joy_path = (
-                            os.path.basename(joy.device_path) if joy.device_path else ""
+                    # Check for temporary status message (snapshot export etc.)
+                    now_t = time.time()
+                    if self._status_msg and (now_t - self._status_msg_time < 3.0):
+                        self.safe_addstr(
+                            max_y - 1, 0,
+                            f" {self._status_msg} ".ljust(max_x),
+                            curses.color_pair(self.COLOR_INFO) | curses.A_REVERSE | curses.A_BOLD,
                         )
-                        joy_axes = joy.num_axes
-                        joy_buttons = joy.num_buttons
-                        joy_conn = joy.connection_type
-
-                    if joy_conn == "local":
-                        joy_str = f"{joy_path} (local) {joy_axes}ax/{joy_buttons}btn"
-                        joy_status = "OK"
-                    elif joy_conn == "remote":
-                        joy_str = f"remote {joy_axes}ax/{joy_buttons}btn"
-                        joy_status = "INFO"
-                    elif joy_conn == "idle":
-                        joy_str = f"{joy_path} (idle)"
-                        joy_status = "WARN"
                     else:
-                        joy_str = "no device"
-                        joy_status = "CRIT"
+                        self._status_msg = ""
+                        status_time = time.strftime("%H:%M:%S")
+                        domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
+                        status = f" {status_time} | DOM:{domain_id} | {self.refresh_ms}ms"
 
-                    status += f" | Joy: {joy_str} "
-                    self.safe_addstr(
-                        max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE
-                    )
+                        # Alerts indicator
+                        if self.alerts_enabled:
+                            status += " | [alerts]"
 
-                    # Color the joy status portion
-                    joy_label_pos = status.find("Joy: ") + 5
-                    joy_attr = self.get_status_attr(joy_status) | curses.A_REVERSE
-                    self.safe_addstr(max_y - 1, joy_label_pos, joy_str, joy_attr)
+                        # cmd_vel velocity indicator
+                        with self.node._status_lock:
+                            cv = self.node.cmd_vel_status
+                            cv_lx = cv.linear_x
+                            cv_ly = cv.linear_y
+                            cv_az = cv.angular_z
+                            cv_time = cv.last_time
+
+                        if cv_time > 0 and (now_t - cv_time < self.node.stale_data_timeout):
+                            linear = math.sqrt(cv_lx ** 2 + cv_ly ** 2)
+                            if abs(linear) < 0.001 and abs(cv_az) < 0.001:
+                                vel_str = "vel: stopped"
+                                vel_attr = curses.A_DIM | curses.A_REVERSE
+                            else:
+                                vel_str = f"vel: {linear:.2f}m/s {cv_az:.2f}r/s"
+                                vel_attr = curses.color_pair(self.COLOR_OK) | curses.A_REVERSE
+                            status += f" | {vel_str}"
+
+                        # Joystick status in status bar
+                        with self.node._status_lock:
+                            joy = self.node.joystick_status
+                            joy_path = (
+                                os.path.basename(joy.device_path) if joy.device_path else ""
+                            )
+                            joy_axes = joy.num_axes
+                            joy_buttons = joy.num_buttons
+                            joy_conn = joy.connection_type
+
+                        if joy_conn == "local":
+                            joy_str = f"{joy_path} (local) {joy_axes}ax/{joy_buttons}btn"
+                            joy_status = "OK"
+                        elif joy_conn == "remote":
+                            joy_str = f"remote {joy_axes}ax/{joy_buttons}btn"
+                            joy_status = "INFO"
+                        elif joy_conn == "idle":
+                            joy_str = f"{joy_path} (idle)"
+                            joy_status = "WARN"
+                        else:
+                            joy_str = "no device"
+                            joy_status = "CRIT"
+
+                        status += f" | Joy: {joy_str} "
+                        self.safe_addstr(
+                            max_y - 1, 0, status.ljust(max_x), curses.A_REVERSE
+                        )
+
+                        # Color the alerts indicator
+                        if self.alerts_enabled:
+                            alerts_pos = status.find("[alerts]")
+                            if alerts_pos >= 0:
+                                self.safe_addstr(
+                                    max_y - 1, alerts_pos,
+                                    "[alerts]",
+                                    curses.color_pair(self.COLOR_INFO) | curses.A_REVERSE | curses.A_BOLD,
+                                )
+
+                        # Color the velocity portion
+                        vel_pos = status.find("vel: ")
+                        if vel_pos >= 0:
+                            vel_end = status.find(" |", vel_pos + 4)
+                            if vel_end < 0:
+                                vel_end = len(status)
+                            vel_text = status[vel_pos:vel_end]
+                            if "stopped" in vel_text:
+                                self.safe_addstr(max_y - 1, vel_pos, vel_text, curses.A_DIM | curses.A_REVERSE)
+                            else:
+                                self.safe_addstr(
+                                    max_y - 1, vel_pos, vel_text,
+                                    curses.color_pair(self.COLOR_OK) | curses.A_REVERSE,
+                                )
+
+                        # Color the joy status portion
+                        joy_label_pos = status.find("Joy: ") + 5
+                        joy_attr = self.get_status_attr(joy_status) | curses.A_REVERSE
+                        self.safe_addstr(max_y - 1, joy_label_pos, joy_str, joy_attr)
 
                 stdscr.refresh()
 
@@ -2380,6 +3045,36 @@ class AutonomyTUI:
                         # Reset zoom to sensor max
                         self._lidar_view_range = 0.0
                     continue
+                if self.show_event_log:
+                    if key in (ord("v"), ord("V"), 27):
+                        self.show_event_log = False
+                    elif key == ord("q") or key == ord("Q"):
+                        self.running = False
+                    elif key == curses.KEY_UP:
+                        self._event_scroll = max(0, self._event_scroll - 1)
+                    elif key == curses.KEY_DOWN:
+                        self._event_scroll += 1
+                    elif key == curses.KEY_PPAGE:
+                        self._event_scroll = max(0, self._event_scroll - (max_y - 4))
+                    elif key == curses.KEY_NPAGE:
+                        self._event_scroll += max_y - 4
+                    continue
+                if self.show_msg_preview:
+                    if key in (ord("p"), ord("P"), 27):
+                        self.show_msg_preview = False
+                    elif key == ord("q") or key == ord("Q"):
+                        self.running = False
+                    elif key == curses.KEY_UP:
+                        self._preview_sel = max(0, self._preview_sel - 1)
+                        self._preview_scroll = 0
+                    elif key == curses.KEY_DOWN:
+                        self._preview_sel += 1
+                        self._preview_scroll = 0
+                    elif key == curses.KEY_PPAGE:
+                        self._preview_scroll = max(0, self._preview_scroll - (max_y - 5))
+                    elif key == curses.KEY_NPAGE:
+                        self._preview_scroll += max_y - 5
+                    continue
                 if key == ord("q") or key == ord("Q"):
                     self.running = False
                 elif key == ord("h") or key == ord("H"):
@@ -2401,6 +3096,31 @@ class AutonomyTUI:
                 elif key == ord("l") or key == ord("L"):
                     self.show_lidar = True
                     self.node.lidar_view_active = True
+                elif key == ord("v") or key == ord("V"):
+                    self.show_event_log = True
+                    self._event_scroll = 0
+                elif key == ord("p") or key == ord("P"):
+                    self.show_msg_preview = True
+                    self._preview_scroll = 0
+                elif key == ord("a") or key == ord("A"):
+                    self.alerts_enabled = not self.alerts_enabled
+                    if self.alerts_enabled:
+                        with self.node._status_lock:
+                            self._last_alert_idx = len(self.node.event_log)
+                elif key == ord("s") or key == ord("S"):
+                    self.export_snapshot()
+                elif key == 9:  # Tab
+                    # Cycle: -1 -> 0 -> 1 -> 2 -> 3 -> -1
+                    if self._focused_panel >= 3:
+                        self._focused_panel = -1
+                    else:
+                        self._focused_panel += 1
+                elif self._focused_panel >= 0 and key == curses.KEY_UP:
+                    self._panel_scroll[self._focused_panel] = max(
+                        0, self._panel_scroll[self._focused_panel] - 1
+                    )
+                elif self._focused_panel >= 0 and key == curses.KEY_DOWN:
+                    self._panel_scroll[self._focused_panel] += 1
                 elif key == ord("+") or key == ord("="):
                     # Increase refresh rate (slower updates)
                     self.refresh_ms = min(
@@ -2445,7 +3165,16 @@ class AutonomyTUI:
                         num_axes=self.node.joystick_status.num_axes,
                         num_buttons=self.node.joystick_status.num_buttons,
                         last_msg_time=self.node.joystick_status.last_msg_time,
+                        connection_type=self.node.joystick_status.connection_type,
                     )
+                    cv = CmdVelStatus(
+                        linear_x=self.node.cmd_vel_status.linear_x,
+                        linear_y=self.node.cmd_vel_status.linear_y,
+                        angular_z=self.node.cmd_vel_status.angular_z,
+                        last_time=self.node.cmd_vel_status.last_time,
+                    )
+                    config_files = list(self.node.config_file_statuses)
+                    events = list(self.node.event_log)
 
                 # Topics
                 print("\n[TOPICS]")
@@ -2453,7 +3182,8 @@ class AutonomyTUI:
                     rate_str = (
                         f"{status.actual_hz:.1f}Hz" if status.actual_hz > 0 else "---"
                     )
-                    print(f"  {status.topic:<25} {rate_str:>8}  [{status.status}]")
+                    bw_str = self._fmt_bandwidth(status.bandwidth_bps)
+                    print(f"  {status.topic:<25} {rate_str:>8} {bw_str:>5}  [{status.status}]")
 
                 # TF Frames
                 print("\n[TF FRAMES]")
@@ -2509,6 +3239,29 @@ class AutonomyTUI:
                 else:
                     print("  No joystick device detected  [NONE]")
 
+                # cmd_vel
+                print("\n[CMD_VEL]")
+                now_t = time.time()
+                if cv.last_time > 0 and (now_t - cv.last_time < self.node.stale_data_timeout):
+                    linear = math.sqrt(cv.linear_x ** 2 + cv.linear_y ** 2)
+                    print(f"  linear: {linear:.3f}m/s  angular: {cv.angular_z:.3f}r/s")
+                else:
+                    print("  No recent cmd_vel data")
+
+                # Config files
+                if config_files:
+                    print("\n[CONFIG FILES]")
+                    for cf in config_files:
+                        status_str = "EXISTS" if cf.exists else "MISSING"
+                        print(f"  {cf.path:<40} [{status_str}] {cf.description}")
+
+                # Event log (last 10)
+                if events:
+                    print("\n[EVENT LOG] (last 10)")
+                    for evt in list(reversed(events))[:10]:
+                        ts_str = time.strftime("%H:%M:%S", time.localtime(evt.timestamp))
+                        print(f"  {ts_str}  {evt.source:<24} {evt.old_status} -> {evt.new_status}")
+
                 print("\n" + "=" * 70)
                 domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
                 print(
@@ -2562,9 +3315,119 @@ def parse_args() -> argparse.Namespace:
         help="Robot configuration to load (default: perseus-lite). "
         "Corresponds to config/<NAME>.yaml in the package.",
     )
+    parser.add_argument(
+        "--preflight",
+        action="store_true",
+        default=False,
+        help="Run preflight readiness check instead of TUI.",
+    )
+    parser.add_argument(
+        "--preflight-timeout",
+        type=int,
+        default=60,
+        metavar="SECS",
+        help="Timeout in seconds for preflight check (default: 60).",
+    )
     # Parse only known args so ROS args (e.g. --ros-args) pass through
     known, _ = parser.parse_known_args()
     return known
+
+
+def run_preflight(node: AutonomyDiagnosticsNode, timeout: int):
+    """Run a preflight readiness check, printing a live checklist.
+
+    Exits 0 when all critical items pass, exits 1 on timeout.
+    """
+    is_tty = os.isatty(sys.stdout.fileno())
+    start = time.time()
+
+    # Build checklist of critical items
+    critical_topics = [
+        (f"topic:{t.name}", t.topic)
+        for t in node.topic_statuses.values()
+        if t.critical
+    ]
+    critical_tf = [
+        (f"tf:{t.parent}->{t.child}", f"{t.parent} -> {t.child} ({t.description})")
+        for t in node.tf_statuses
+        if t.critical
+    ]
+    critical_lifecycle = [
+        (f"lifecycle:{name}", name)
+        for name in node.lifecycle_statuses
+    ]
+    config_checks = [
+        (f"config:{cf.path}", f"{cf.description} ({cf.path})")
+        for cf in node.config_file_statuses
+    ]
+
+    all_checks = critical_topics + critical_tf + critical_lifecycle + config_checks
+
+    print(f"PREFLIGHT CHECK [{node.robot_name}] - timeout {timeout}s")
+    print("=" * 60)
+
+    while time.time() - start < timeout:
+        passed = 0
+        total = len(all_checks)
+        lines = []
+
+        with node._status_lock:
+            for key, label in all_checks:
+                ok = False
+                if key.startswith("topic:"):
+                    name = key[6:]
+                    ts = node.topic_statuses.get(name)
+                    if ts and ts.status == "OK":
+                        ok = True
+                elif key.startswith("tf:"):
+                    parts = key[3:]
+                    for tf in node.tf_statuses:
+                        if f"{tf.parent}->{tf.child}" == parts:
+                            ok = tf.connected
+                            break
+                elif key.startswith("lifecycle:"):
+                    name = key[10:]
+                    ls = node.lifecycle_statuses.get(name)
+                    if ls and ls.state == "active":
+                        ok = True
+                elif key.startswith("config:"):
+                    path = key[7:]
+                    for cf in node.config_file_statuses:
+                        if cf.path == path:
+                            ok = cf.exists
+                            break
+
+                mark = "[OK]" if ok else "[  ]"
+                lines.append(f"  {mark} {label}")
+                if ok:
+                    passed += 1
+
+        elapsed = time.time() - start
+        if is_tty:
+            # Overwrite in-place
+            print(f"\033[{len(lines) + 3}A", end="")
+            print(f"PREFLIGHT CHECK [{node.robot_name}] - {elapsed:.0f}s / {timeout}s")
+            print("=" * 60)
+        for line in lines:
+            if is_tty:
+                print(f"\033[K{line}")
+            else:
+                print(line)
+
+        summary = f"{passed}/{total} checks passed"
+        if is_tty:
+            print(f"\033[K{summary}")
+        else:
+            print(summary)
+
+        if passed == total:
+            print("\nPREFLIGHT PASSED - all critical items ready")
+            sys.exit(0)
+
+        time.sleep(1.0)
+
+    print(f"\nPREFLIGHT FAILED - timed out after {timeout}s")
+    sys.exit(1)
 
 
 def main(args=None):
@@ -2578,6 +3441,27 @@ def main(args=None):
         os.environ["ROS_DOMAIN_ID"] = str(cli_args.domain_id)
 
     robot_name = cli_args.robot
+
+    if cli_args.preflight:
+        # Preflight mode - run readiness check and exit
+        rclpy.init(args=args)
+        node = AutonomyDiagnosticsNode(robot_name=robot_name)
+
+        executor = MultiThreadedExecutor()
+        executor.add_node(node)
+        spin_thread = threading.Thread(target=executor.spin, daemon=True)
+        spin_thread.start()
+
+        try:
+            run_preflight(node, cli_args.preflight_timeout)
+        except KeyboardInterrupt:
+            print("\nPreflight interrupted")
+            sys.exit(1)
+        finally:
+            executor.shutdown()
+            node.destroy_node()
+            rclpy.shutdown()
+        return
 
     while True:
         rclpy.init(args=args)
