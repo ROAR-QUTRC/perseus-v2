@@ -73,24 +73,24 @@ def get_ros_ws_src_path() -> str:
     """Get the ROS workspace src path dynamically.
 
     Attempts to find the path by:
-    1. Looking for a git repository root and finding ros_ws/src within it
+    1. Walking up from this file's location to find ros_ws/src
     2. Falling back to ~/perseus-v2/software/ros_ws/src
     """
-    try:
-        # Try to find git repo root
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        if result.returncode == 0:
-            git_root = result.stdout.strip()
-            ros_ws_src = os.path.join(git_root, "software", "ros_ws", "src")
-            if os.path.isdir(ros_ws_src):
-                return ros_ws_src
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        pass
+    # Walk up from this file to find the ros_ws/src directory
+    path = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(10):  # limit depth to avoid infinite loop
+        candidate = os.path.join(path, "software", "ros_ws", "src")
+        if os.path.isdir(candidate):
+            return candidate
+        # Also check if we're already inside ros_ws/src
+        if os.path.basename(path) == "src" and os.path.basename(
+            os.path.dirname(path)
+        ) == "ros_ws":
+            return path
+        parent = os.path.dirname(path)
+        if parent == path:
+            break
+        path = parent
 
     # Fallback to home directory based path
     home_path = os.path.expanduser("~/perseus-v2/software/ros_ws/src")
@@ -411,6 +411,7 @@ class AutonomyDiagnosticsNode(Node):
         ] = {}  # frame -> {parent, children, status}
         self.joystick_status = JoystickStatus()
         self.lidar_scan = LidarScanData()
+        self.lidar_view_active = False  # Set by TUI to gate scan data storage
 
         # Lifecycle service clients (created once, reused)
         self._lifecycle_clients: Dict[str, Any] = {}
@@ -541,8 +542,14 @@ class AutonomyDiagnosticsNode(Node):
             self.joystick_status.last_msg_time = time.time()
 
     def _scan_callback(self, msg, topic_name: str):
-        """Callback for LaserScan topic - records rate and stores scan data."""
+        """Callback for LaserScan topic - records rate and optionally stores scan data.
+
+        Scan data (ranges array) is only copied when the LiDAR view is active,
+        reducing bandwidth and memory overhead during normal dashboard use.
+        """
         self._topic_callback(topic_name)
+        if not self.lidar_view_active:
+            return
         with self._status_lock:
             self.lidar_scan.ranges = list(msg.ranges)
             self.lidar_scan.angle_min = msg.angle_min
@@ -815,6 +822,8 @@ class AutonomyTUI:
         self.show_lidar = False  # Toggle for LiDAR scan view
         self._lidar_view_range = 0.0  # 0 = auto-init to sensor range_max
         self._net_ifaces: List[Dict[str, str]] = []  # Cached interface list
+        self._net_ifaces_ts: float = 0.0  # Last refresh timestamp
+        self._net_cache_ttl: float = 2.0  # Seconds between network data refreshes
         self._net_sel = 0  # Currently selected interface index
         self._net_neighbors: List[Dict[str, str]] = []  # Cached neighbor list
         self._net_last_sel = -1  # Track selection changes to refresh neighbors
@@ -1276,8 +1285,11 @@ class AutonomyTUI:
             return
         max_y, max_x = self.stdscr.getmaxyx()
 
-        # Refresh interface list each frame (lightweight)
-        self._net_ifaces = self._get_network_interfaces()
+        # Refresh interface list with TTL to avoid per-frame subprocess calls
+        now = time.time()
+        if now - self._net_ifaces_ts > self._net_cache_ttl:
+            self._net_ifaces = self._get_network_interfaces()
+            self._net_ifaces_ts = now
 
         # Strip hostname entry for display separately
         hostname = ""
@@ -1799,6 +1811,9 @@ class AutonomyTUI:
         if not config_path or not os.path.isfile(config_path):
             return
 
+        # Check writability upfront and warn if read-only
+        read_only = not os.access(config_path, os.W_OK)
+
         # Load file content
         with open(config_path, "r") as f:
             lines = f.read().splitlines()
@@ -1810,7 +1825,7 @@ class AutonomyTUI:
         scroll_y = 0  # First visible line
         scroll_x = 0  # First visible column
         modified = False
-        status_msg = ""
+        status_msg = "READ-ONLY (installed config)" if read_only else ""
 
         # Switch to blocking input
         self.stdscr.nodelay(False)
@@ -1836,7 +1851,8 @@ class AutonomyTUI:
 
                 # Title bar
                 mod_indicator = " [modified]" if modified else ""
-                title = f" EDIT: {os.path.basename(config_path)}{mod_indicator} "
+                ro_indicator = " [READ-ONLY]" if read_only else ""
+                title = f" EDIT: {os.path.basename(config_path)}{mod_indicator}{ro_indicator} "
                 title += "| Ctrl-S/F2:save  Esc:close "
                 self.safe_addstr(
                     0, 0, title.ljust(max_x), curses.A_REVERSE | curses.A_BOLD
@@ -2320,12 +2336,14 @@ class AutonomyTUI:
                     elif key == curses.KEY_NPAGE:
                         self._net_neighbor_scroll += max_y - 6
                     elif key == ord("r") or key == ord("R"):
-                        # Force refresh neighbors
+                        # Force refresh interfaces and neighbors
+                        self._net_ifaces_ts = 0.0
                         self._net_last_sel = -1
                     continue
                 if self.show_lidar:
                     if key in (ord("l"), ord("L"), 27):
                         self.show_lidar = False
+                        self.node.lidar_view_active = False
                         self._lidar_view_range = 0.0  # Reset for next open
                     elif key == ord("q") or key == ord("Q"):
                         self.running = False
@@ -2365,6 +2383,7 @@ class AutonomyTUI:
                     self.show_network = True
                 elif key == ord("l") or key == ord("L"):
                     self.show_lidar = True
+                    self.node.lidar_view_active = True
                 elif key == ord("+") or key == ord("="):
                     # Increase refresh rate (slower updates)
                     self.refresh_ms = min(
@@ -2397,9 +2416,23 @@ class AutonomyTUI:
                 print(f" AUTONOMY DIAGNOSTICS [{self.node.robot_name}] - Simple Mode")
                 print("=" * 70)
 
+                # Snapshot all shared data under lock
+                with self.node._status_lock:
+                    topic_items = list(self.node.topic_statuses.items())
+                    tf_items = list(self.node.tf_statuses)
+                    lifecycle_items = list(self.node.lifecycle_statuses.items())
+                    tree = dict(self.node.tf_tree_data)
+                    joy = JoystickStatus(
+                        device_path=self.node.joystick_status.device_path,
+                        device_connected=self.node.joystick_status.device_connected,
+                        num_axes=self.node.joystick_status.num_axes,
+                        num_buttons=self.node.joystick_status.num_buttons,
+                        last_msg_time=self.node.joystick_status.last_msg_time,
+                    )
+
                 # Topics
                 print("\n[TOPICS]")
-                for name, status in self.node.topic_statuses.items():
+                for name, status in topic_items:
                     rate_str = (
                         f"{status.actual_hz:.1f}Hz" if status.actual_hz > 0 else "---"
                     )
@@ -2407,7 +2440,7 @@ class AutonomyTUI:
 
                 # TF Frames
                 print("\n[TF FRAMES]")
-                for tf_status in self.node.tf_statuses:
+                for tf_status in tf_items:
                     status_str = "OK" if tf_status.connected else "FAIL"
                     print(
                         f"  {tf_status.parent} -> {tf_status.child:<15} [{status_str}] {tf_status.description}"
@@ -2415,13 +2448,11 @@ class AutonomyTUI:
 
                 # Lifecycle Nodes
                 print("\n[LIFECYCLE NODES]")
-                for name, status in self.node.lifecycle_statuses.items():
+                for name, status in lifecycle_items:
                     print(f"  {name:<22} [{status.state}]")
 
                 # TF Tree
                 print("\n[TF TREE]")
-                with self.node._status_lock:
-                    tree = dict(self.node.tf_tree_data)
                 if not tree:
                     print("  No TF frames detected")
                 else:
@@ -2446,7 +2477,6 @@ class AutonomyTUI:
 
                 # Joystick
                 print("\n[JOYSTICK]")
-                joy = self.node.joystick_status
                 if joy.device_connected and joy.last_msg_time > 0:
                     print(
                         f"  Device: {joy.device_path}  "
