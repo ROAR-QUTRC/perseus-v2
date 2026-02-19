@@ -541,7 +541,10 @@ class AutonomyDiagnosticsNode(Node):
                 )
             elif msg_type == "Imu":
                 self.create_subscription(
-                    Imu, topic, lambda msg, n=name: self._topic_callback(n, msg), sensor_qos
+                    Imu,
+                    topic,
+                    lambda msg, n=name: self._topic_callback(n, msg),
+                    sensor_qos,
                 )
             elif msg_type == "Odometry":
                 self.create_subscription(
@@ -627,7 +630,9 @@ class AutonomyDiagnosticsNode(Node):
             summary["width"] = info.width
             summary["height"] = info.height
             summary["resolution"] = f"{info.resolution:.4f}"
-            summary["origin"] = f"x={info.origin.position.x:.2f} y={info.origin.position.y:.2f}"
+            summary["origin"] = (
+                f"x={info.origin.position.x:.2f} y={info.origin.position.y:.2f}"
+            )
         elif msg_type == "JointState":
             summary["names"] = list(msg.name)[:8]
             summary["position"] = [round(p, 3) for p in msg.position[:8]]
@@ -715,9 +720,14 @@ class AutonomyDiagnosticsNode(Node):
                 current = ts.status
                 prev = self._prev_statuses.get(key)
                 if prev is not None and prev != current:
-                    self.event_log.append(StatusEvent(
-                        timestamp=now, source=name, old_status=prev, new_status=current,
-                    ))
+                    self.event_log.append(
+                        StatusEvent(
+                            timestamp=now,
+                            source=name,
+                            old_status=prev,
+                            new_status=current,
+                        )
+                    )
                 self._prev_statuses[key] = current
 
             # Check TF connected states
@@ -726,10 +736,14 @@ class AutonomyDiagnosticsNode(Node):
                 current = "OK" if tf.connected else "FAIL"
                 prev = self._prev_statuses.get(key)
                 if prev is not None and prev != current:
-                    self.event_log.append(StatusEvent(
-                        timestamp=now, source=f"{tf.parent}->{tf.child}",
-                        old_status=prev, new_status=current,
-                    ))
+                    self.event_log.append(
+                        StatusEvent(
+                            timestamp=now,
+                            source=f"{tf.parent}->{tf.child}",
+                            old_status=prev,
+                            new_status=current,
+                        )
+                    )
                 self._prev_statuses[key] = current
 
             # Check lifecycle states
@@ -738,9 +752,14 @@ class AutonomyDiagnosticsNode(Node):
                 current = ls.state
                 prev = self._prev_statuses.get(key)
                 if prev is not None and prev != current:
-                    self.event_log.append(StatusEvent(
-                        timestamp=now, source=name, old_status=prev, new_status=current,
-                    ))
+                    self.event_log.append(
+                        StatusEvent(
+                            timestamp=now,
+                            source=name,
+                            old_status=prev,
+                            new_status=current,
+                        )
+                    )
                 self._prev_statuses[key] = current
 
             # Check joystick connection type
@@ -748,9 +767,14 @@ class AutonomyDiagnosticsNode(Node):
             current = self.joystick_status.connection_type
             prev = self._prev_statuses.get(key)
             if prev is not None and prev != current:
-                self.event_log.append(StatusEvent(
-                    timestamp=now, source="joystick", old_status=prev, new_status=current,
-                ))
+                self.event_log.append(
+                    StatusEvent(
+                        timestamp=now,
+                        source="joystick",
+                        old_status=prev,
+                        new_status=current,
+                    )
+                )
             self._prev_statuses[key] = current
 
     def _check_config_files(self):
@@ -759,12 +783,18 @@ class AutonomyDiagnosticsNode(Node):
         for cfg in self.config.get("config_files", []):
             path = cfg.get("path", "")
             desc = cfg.get("description", "")
-            full_path = os.path.join(self.ros_ws_src_path, path) if self.ros_ws_src_path else path
-            statuses.append(ConfigFileStatus(
-                path=path,
-                description=desc,
-                exists=os.path.exists(full_path),
-            ))
+            full_path = (
+                os.path.join(self.ros_ws_src_path, path)
+                if self.ros_ws_src_path
+                else path
+            )
+            statuses.append(
+                ConfigFileStatus(
+                    path=path,
+                    description=desc,
+                    exists=os.path.exists(full_path),
+                )
+            )
         with self._status_lock:
             self.config_file_statuses = statuses
 
@@ -1201,7 +1231,7 @@ class AutonomyTUI:
         row = y + 1
         # Header
         header = f"{'Topic':<18} {'Rate':>8} {'Exp':>6} {'BW':>5} {'Status':>6}"
-        self.safe_addstr(row, x + 2, header[:w - 4], curses.A_BOLD)
+        self.safe_addstr(row, x + 2, header[: w - 4], curses.A_BOLD)
         row += 1
         self.safe_addstr(row, x + 2, "-" * (w - 4))
         row += 1
@@ -1220,7 +1250,7 @@ class AutonomyTUI:
             bw_str = self._fmt_bandwidth(status.bandwidth_bps)
 
             line = f"{topic_short:<18} {rate_str} {exp_str} {bw_str:>5}"
-            self.safe_addstr(row, x + 2, line[:w - 10])
+            self.safe_addstr(row, x + 2, line[: w - 10])
 
             # Status with color
             stat_attr = self.get_status_attr(status.status)
@@ -1353,7 +1383,10 @@ class AutonomyTUI:
                 self.safe_addstr(y + h - 1, x, "+" + "-" * (w - 2) + "+", border_attr)
                 self.safe_addstr(y, x + 2, " TF TREE ", curses.A_BOLD | border_attr)
             self.safe_addstr(
-                y + 1, x + 2, "No TF frames detected", curses.color_pair(self.COLOR_WARN)
+                y + 1,
+                x + 2,
+                "No TF frames detected",
+                curses.color_pair(self.COLOR_WARN),
             )
             return
 
@@ -1831,7 +1864,9 @@ class AutonomyTUI:
 
         if not events:
             self.safe_addstr(
-                max_y // 2, max_x // 2 - 10, "No events recorded",
+                max_y // 2,
+                max_x // 2 - 10,
+                "No events recorded",
                 curses.color_pair(self.COLOR_WARN) | curses.A_BOLD,
             )
             footer = " 0 events | v/Esc:close "
@@ -1878,7 +1913,9 @@ class AutonomyTUI:
         max_y, max_x = self.stdscr.getmaxyx()
 
         # Title bar
-        title = " TOPIC MESSAGE PREVIEW | Up/Down:select  PgUp/PgDn:scroll  p/Esc:close "
+        title = (
+            " TOPIC MESSAGE PREVIEW | Up/Down:select  PgUp/PgDn:scroll  p/Esc:close "
+        )
         self.safe_addstr(0, 0, title.ljust(max_x), curses.A_REVERSE | curses.A_BOLD)
 
         # Get topic list and messages snapshot
@@ -1887,8 +1924,15 @@ class AutonomyTUI:
             messages = dict(self.node.last_messages)
 
         if not topic_names:
-            self.safe_addstr(max_y // 2, max_x // 2 - 8, "No topics", curses.color_pair(self.COLOR_WARN))
-            self.safe_addstr(max_y - 1, 0, " p/Esc:close ".ljust(max_x), curses.A_REVERSE)
+            self.safe_addstr(
+                max_y // 2,
+                max_x // 2 - 8,
+                "No topics",
+                curses.color_pair(self.COLOR_WARN),
+            )
+            self.safe_addstr(
+                max_y - 1, 0, " p/Esc:close ".ljust(max_x), curses.A_REVERSE
+            )
             return
 
         # Clamp selection
@@ -1909,7 +1953,9 @@ class AutonomyTUI:
             line_attr = curses.A_REVERSE if is_sel else 0
             has_data = name in messages and messages[name]
             indicator = "*" if has_data else " "
-            self.safe_addstr(row, 1, f"{marker}{indicator}{name[:left_w - 4]}", line_attr)
+            self.safe_addstr(
+                row, 1, f"{marker}{indicator}{name[: left_w - 4]}", line_attr
+            )
             row += 1
 
         # Right panel: message fields
@@ -1918,7 +1964,12 @@ class AutonomyTUI:
 
         msg_data = messages.get(sel_name, {})
         if not msg_data:
-            self.safe_addstr(3, left_w + 2, "No message data received", curses.color_pair(self.COLOR_WARN))
+            self.safe_addstr(
+                3,
+                left_w + 2,
+                "No message data received",
+                curses.color_pair(self.COLOR_WARN),
+            )
         else:
             # Render fields as key: value pairs
             lines = []
@@ -1936,11 +1987,19 @@ class AutonomyTUI:
                 # Split key: value for coloring
                 colon = line.find(": ")
                 if colon >= 0:
-                    self.safe_addstr(row, left_w + 2, line[:colon + 1][:right_w - 4],
-                                     curses.color_pair(self.COLOR_INFO) | curses.A_BOLD)
-                    self.safe_addstr(row, left_w + 2 + colon + 2, str(line[colon + 2:])[:right_w - colon - 6])
+                    self.safe_addstr(
+                        row,
+                        left_w + 2,
+                        line[: colon + 1][: right_w - 4],
+                        curses.color_pair(self.COLOR_INFO) | curses.A_BOLD,
+                    )
+                    self.safe_addstr(
+                        row,
+                        left_w + 2 + colon + 2,
+                        str(line[colon + 2 :])[: right_w - colon - 6],
+                    )
                 else:
-                    self.safe_addstr(row, left_w + 2, line[:right_w - 4])
+                    self.safe_addstr(row, left_w + 2, line[: right_w - 4])
                 row += 1
 
         # Footer
@@ -2565,14 +2624,20 @@ class AutonomyTUI:
 
             lines.append("\n[TOPICS]")
             for name, status in topic_items:
-                rate_str = f"{status.actual_hz:.1f}Hz" if status.actual_hz > 0 else "---"
+                rate_str = (
+                    f"{status.actual_hz:.1f}Hz" if status.actual_hz > 0 else "---"
+                )
                 bw_str = self._fmt_bandwidth(status.bandwidth_bps)
-                lines.append(f"  {status.topic:<25} {rate_str:>8} {bw_str:>5}  [{status.status}]")
+                lines.append(
+                    f"  {status.topic:<25} {rate_str:>8} {bw_str:>5}  [{status.status}]"
+                )
 
             lines.append("\n[TF FRAMES]")
             for tf_status in tf_items:
                 status_str = "OK" if tf_status.connected else "FAIL"
-                lines.append(f"  {tf_status.parent} -> {tf_status.child:<15} [{status_str}] {tf_status.description}")
+                lines.append(
+                    f"  {tf_status.parent} -> {tf_status.child:<15} [{status_str}] {tf_status.description}"
+                )
 
             lines.append("\n[LIFECYCLE NODES]")
             for name, status in lifecycle_items:
@@ -2582,7 +2647,10 @@ class AutonomyTUI:
             if not tree:
                 lines.append("  No TF frames detected")
             else:
-                roots = sorted(name for name, data in tree.items() if not data["parent"])
+                roots = sorted(
+                    name for name, data in tree.items() if not data["parent"]
+                )
+
                 def fmt_tree(frame, prefix="", is_last=True):
                     data = tree.get(frame, {"children": [], "status": "OK"})
                     connector = prefix + ("\\-" if is_last else "|-")
@@ -2594,14 +2662,19 @@ class AutonomyTUI:
                         ext = "    " if is_last else "|   "
                         child_prefix = prefix + ext if prefix else "  "
                         fmt_tree(child, child_prefix, i == len(children) - 1)
+
                 for i, root in enumerate(roots):
                     fmt_tree(root)
 
             lines.append("\n[JOYSTICK]")
             if joy.connection_type == "local":
-                lines.append(f"  Device: {joy.device_path} (LOCAL)  Axes: {joy.num_axes}  Buttons: {joy.num_buttons}  [OK]")
+                lines.append(
+                    f"  Device: {joy.device_path} (LOCAL)  Axes: {joy.num_axes}  Buttons: {joy.num_buttons}  [OK]"
+                )
             elif joy.connection_type == "remote":
-                lines.append(f"  Remote joystick  Axes: {joy.num_axes}  Buttons: {joy.num_buttons}  [REMOTE]")
+                lines.append(
+                    f"  Remote joystick  Axes: {joy.num_axes}  Buttons: {joy.num_buttons}  [REMOTE]"
+                )
             elif joy.connection_type == "idle":
                 lines.append(f"  Device: {joy.device_path}  [IDLE - no messages]")
             else:
@@ -2609,7 +2682,9 @@ class AutonomyTUI:
 
             lines.append("\n[CMD_VEL]")
             now_t = time.time()
-            if cv.last_time > 0 and (now_t - cv.last_time < self.node.stale_data_timeout):
+            if cv.last_time > 0 and (
+                now_t - cv.last_time < self.node.stale_data_timeout
+            ):
                 lines.append(f"  linear: x={cv.linear_x:.3f} y={cv.linear_y:.3f}")
                 lines.append(f"  angular: z={cv.angular_z:.3f}")
             else:
@@ -2625,7 +2700,9 @@ class AutonomyTUI:
                 lines.append("\n[EVENT LOG] (last 10)")
                 for evt in list(reversed(events))[:10]:
                     ts_str = time.strftime("%H:%M:%S", time.localtime(evt.timestamp))
-                    lines.append(f"  {ts_str}  {evt.source:<24} {evt.old_status} -> {evt.new_status}")
+                    lines.append(
+                        f"  {ts_str}  {evt.source:<24} {evt.old_status} -> {evt.new_status}"
+                    )
 
             lines.append("\n" + "=" * 70)
             domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
@@ -2803,8 +2880,18 @@ class AutonomyTUI:
                         event_count = len(self.node.event_log)
                     if event_count > self._last_alert_idx:
                         with self.node._status_lock:
-                            new_events = list(self.node.event_log)[self._last_alert_idx:]
-                        critical_statuses = {"CRIT", "STALE", "FAIL", "not_found", "error", "none", "NONE"}
+                            new_events = list(self.node.event_log)[
+                                self._last_alert_idx :
+                            ]
+                        critical_statuses = {
+                            "CRIT",
+                            "STALE",
+                            "FAIL",
+                            "not_found",
+                            "error",
+                            "none",
+                            "NONE",
+                        }
                         for evt in new_events:
                             if evt.new_status in critical_statuses:
                                 sys.stdout.write("\a")
@@ -2893,15 +2980,20 @@ class AutonomyTUI:
                     now_t = time.time()
                     if self._status_msg and (now_t - self._status_msg_time < 3.0):
                         self.safe_addstr(
-                            max_y - 1, 0,
+                            max_y - 1,
+                            0,
                             f" {self._status_msg} ".ljust(max_x),
-                            curses.color_pair(self.COLOR_INFO) | curses.A_REVERSE | curses.A_BOLD,
+                            curses.color_pair(self.COLOR_INFO)
+                            | curses.A_REVERSE
+                            | curses.A_BOLD,
                         )
                     else:
                         self._status_msg = ""
                         status_time = time.strftime("%H:%M:%S")
                         domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
-                        status = f" {status_time} | DOM:{domain_id} | {self.refresh_ms}ms"
+                        status = (
+                            f" {status_time} | DOM:{domain_id} | {self.refresh_ms}ms"
+                        )
 
                         # Alerts indicator
                         if self.alerts_enabled:
@@ -2915,8 +3007,10 @@ class AutonomyTUI:
                             cv_az = cv.angular_z
                             cv_time = cv.last_time
 
-                        if cv_time > 0 and (now_t - cv_time < self.node.stale_data_timeout):
-                            linear = math.sqrt(cv_lx ** 2 + cv_ly ** 2)
+                        if cv_time > 0 and (
+                            now_t - cv_time < self.node.stale_data_timeout
+                        ):
+                            linear = math.sqrt(cv_lx**2 + cv_ly**2)
                             if abs(linear) < 0.001 and abs(cv_az) < 0.001:
                                 vel_str = "vel: stopped"
                             else:
@@ -2927,14 +3021,18 @@ class AutonomyTUI:
                         with self.node._status_lock:
                             joy = self.node.joystick_status
                             joy_path = (
-                                os.path.basename(joy.device_path) if joy.device_path else ""
+                                os.path.basename(joy.device_path)
+                                if joy.device_path
+                                else ""
                             )
                             joy_axes = joy.num_axes
                             joy_buttons = joy.num_buttons
                             joy_conn = joy.connection_type
 
                         if joy_conn == "local":
-                            joy_str = f"{joy_path} (local) {joy_axes}ax/{joy_buttons}btn"
+                            joy_str = (
+                                f"{joy_path} (local) {joy_axes}ax/{joy_buttons}btn"
+                            )
                             joy_status = "OK"
                         elif joy_conn == "remote":
                             joy_str = f"remote {joy_axes}ax/{joy_buttons}btn"
@@ -2956,9 +3054,12 @@ class AutonomyTUI:
                             alerts_pos = status.find("[alerts]")
                             if alerts_pos >= 0:
                                 self.safe_addstr(
-                                    max_y - 1, alerts_pos,
+                                    max_y - 1,
+                                    alerts_pos,
                                     "[alerts]",
-                                    curses.color_pair(self.COLOR_INFO) | curses.A_REVERSE | curses.A_BOLD,
+                                    curses.color_pair(self.COLOR_INFO)
+                                    | curses.A_REVERSE
+                                    | curses.A_BOLD,
                                 )
 
                         # Color the velocity portion
@@ -2969,10 +3070,17 @@ class AutonomyTUI:
                                 vel_end = len(status)
                             vel_text = status[vel_pos:vel_end]
                             if "stopped" in vel_text:
-                                self.safe_addstr(max_y - 1, vel_pos, vel_text, curses.A_DIM | curses.A_REVERSE)
+                                self.safe_addstr(
+                                    max_y - 1,
+                                    vel_pos,
+                                    vel_text,
+                                    curses.A_DIM | curses.A_REVERSE,
+                                )
                             else:
                                 self.safe_addstr(
-                                    max_y - 1, vel_pos, vel_text,
+                                    max_y - 1,
+                                    vel_pos,
+                                    vel_text,
                                     curses.color_pair(self.COLOR_OK) | curses.A_REVERSE,
                                 )
 
@@ -3069,7 +3177,9 @@ class AutonomyTUI:
                         self._preview_sel += 1
                         self._preview_scroll = 0
                     elif key == curses.KEY_PPAGE:
-                        self._preview_scroll = max(0, self._preview_scroll - (max_y - 5))
+                        self._preview_scroll = max(
+                            0, self._preview_scroll - (max_y - 5)
+                        )
                     elif key == curses.KEY_NPAGE:
                         self._preview_scroll += max_y - 5
                     continue
@@ -3181,7 +3291,9 @@ class AutonomyTUI:
                         f"{status.actual_hz:.1f}Hz" if status.actual_hz > 0 else "---"
                     )
                     bw_str = self._fmt_bandwidth(status.bandwidth_bps)
-                    print(f"  {status.topic:<25} {rate_str:>8} {bw_str:>5}  [{status.status}]")
+                    print(
+                        f"  {status.topic:<25} {rate_str:>8} {bw_str:>5}  [{status.status}]"
+                    )
 
                 # TF Frames
                 print("\n[TF FRAMES]")
@@ -3240,8 +3352,10 @@ class AutonomyTUI:
                 # cmd_vel
                 print("\n[CMD_VEL]")
                 now_t = time.time()
-                if cv.last_time > 0 and (now_t - cv.last_time < self.node.stale_data_timeout):
-                    linear = math.sqrt(cv.linear_x ** 2 + cv.linear_y ** 2)
+                if cv.last_time > 0 and (
+                    now_t - cv.last_time < self.node.stale_data_timeout
+                ):
+                    linear = math.sqrt(cv.linear_x**2 + cv.linear_y**2)
                     print(f"  linear: {linear:.3f}m/s  angular: {cv.angular_z:.3f}r/s")
                 else:
                     print("  No recent cmd_vel data")
@@ -3257,8 +3371,12 @@ class AutonomyTUI:
                 if events:
                     print("\n[EVENT LOG] (last 10)")
                     for evt in list(reversed(events))[:10]:
-                        ts_str = time.strftime("%H:%M:%S", time.localtime(evt.timestamp))
-                        print(f"  {ts_str}  {evt.source:<24} {evt.old_status} -> {evt.new_status}")
+                        ts_str = time.strftime(
+                            "%H:%M:%S", time.localtime(evt.timestamp)
+                        )
+                        print(
+                            f"  {ts_str}  {evt.source:<24} {evt.old_status} -> {evt.new_status}"
+                        )
 
                 print("\n" + "=" * 70)
                 domain_id = os.environ.get("ROS_DOMAIN_ID", "0")
@@ -3341,9 +3459,7 @@ def run_preflight(node: AutonomyDiagnosticsNode, timeout: int):
 
     # Build checklist of critical items
     critical_topics = [
-        (f"topic:{t.name}", t.topic)
-        for t in node.topic_statuses.values()
-        if t.critical
+        (f"topic:{t.name}", t.topic) for t in node.topic_statuses.values() if t.critical
     ]
     critical_tf = [
         (f"tf:{t.parent}->{t.child}", f"{t.parent} -> {t.child} ({t.description})")
@@ -3351,8 +3467,7 @@ def run_preflight(node: AutonomyDiagnosticsNode, timeout: int):
         if t.critical
     ]
     critical_lifecycle = [
-        (f"lifecycle:{name}", name)
-        for name in node.lifecycle_statuses
+        (f"lifecycle:{name}", name) for name in node.lifecycle_statuses
     ]
     config_checks = [
         (f"config:{cf.path}", f"{cf.description} ({cf.path})")
