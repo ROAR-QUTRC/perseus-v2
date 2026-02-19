@@ -83,9 +83,10 @@ def get_ros_ws_src_path() -> str:
         if os.path.isdir(candidate):
             return candidate
         # Also check if we're already inside ros_ws/src
-        if os.path.basename(path) == "src" and os.path.basename(
-            os.path.dirname(path)
-        ) == "ros_ws":
+        if (
+            os.path.basename(path) == "src"
+            and os.path.basename(os.path.dirname(path)) == "ros_ws"
+        ):
             return path
         parent = os.path.dirname(path)
         if parent == path:
