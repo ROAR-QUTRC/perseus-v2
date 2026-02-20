@@ -225,7 +225,6 @@ class ReviewTui:
             return
 
         session = self._sessions[self._selected_session_idx]
-        sid = session['id']
         num_runs = len(self._runs)
 
         title = f"=== Session: {session.get('name', '')} ({num_runs} runs) ==="

@@ -121,7 +121,6 @@ class ParamManager:
             return {p: 0 for p, _, _, _ in PHASE_DEFS}
 
         allocation = {}
-        remaining = max_runs
 
         # First pass: proportional allocation
         for phase_num, _, default_count, weight in PHASE_DEFS:

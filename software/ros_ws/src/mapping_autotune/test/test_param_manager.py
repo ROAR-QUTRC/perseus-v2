@@ -58,8 +58,8 @@ class TestParamManager:
         assert len(runs) == 3
         # Should have imu_off, imu_on, imu_on_deadband
         labels = [r["run_label"] for r in runs]
-        assert any("off" in l.lower() for l in labels)
-        assert any("on" in l.lower() for l in labels)
+        assert any("off" in label.lower() for label in labels)
+        assert any("on" in label.lower() for label in labels)
 
     def test_phase2_returns_runs(self, pm):
         runs = pm.get_phase_runs(2, {})
