@@ -26,7 +26,7 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
                              gpio_num_t precharge, gpio_num_t mainSwitch,
                              gpio_num_t voltageFeedback, gpio_num_t currentFeedback)
     : _canParameters(busId, [&](bool on)
-                     { setBusOn(on); }, [&]()
+                     { setBusState(on); }, [&]()
                      { clearError(); }),
       _prechargePin(precharge),
       _switchPin(mainSwitch),
@@ -63,7 +63,7 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
         {
             return _canParameters.getStatus().serialize_data();
         },
-        .interval = std::chrono::nanoseconds(100000000)};  // 100 milli seconds
+        .interval = std::chrono::nanoseconds(100000000)};  // 100 milliseconds
 
     _canParameters.setBusStatus(power_status::OFF);
     _canParameters.setBusVoltage(0);
@@ -72,7 +72,7 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
 
 RoverPowerBus::~RoverPowerBus()
 {
-    setBusOn(false);
+    setBusState(false);
     gpio_reset_pin(_prechargePin);
     gpio_reset_pin(_switchPin);
     adcSetChannelEnabled(_voltageFeedback, false, true);
@@ -83,7 +83,7 @@ RoverPowerBus::~RoverPowerBus()
     gptimer_del_timer(_timer);
 }
 
-void RoverPowerBus::setBusOn(bool on)
+void RoverPowerBus::setBusState(bool on)
 {
     if (on)
     {

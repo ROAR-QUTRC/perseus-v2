@@ -211,10 +211,10 @@ void loop(void* args)
         if (computeBus.isBusOn())
         {
             INFO("Turning off buses");
-            driveBus.setBusOn(false);
-            auxBus.setBusOn(false);
-            spareBus.setBusOn(false);
-            computeBus.setBusOn(false);
+            driveBus.setBusState(false);
+            auxBus.setBusState(false);
+            spareBus.setBusState(false);
+            computeBus.setBusState(false);
         }
         else
         {
@@ -265,13 +265,13 @@ void loop(void* args)
         if (bus->isBusOn())
         {
             INFO("%s bus turning off", busName.c_str());
-            bus->setBusOn(false);
+            bus->setBusState(false);
         }
         else
         {
             INFO("%s bus turning on", busName.c_str());
             bus->clearError();
-            bus->setBusOn(true);
+            bus->setBusState(true);
         }
     }
 
