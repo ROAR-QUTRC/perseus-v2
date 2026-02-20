@@ -19,6 +19,15 @@
 // energy dump into the resistors in the event of a short is given by (t*V^2)/(2R)
 // which, for 25mS is 1.69J
 
+// SPARE
+// R17 = 1.323k R16 = 54.066k R18 = 2.087k
+// DRIVE
+// R17 = 1.312k R16 = 53.997k R18 = 2.053k
+// COMPUTE
+// R17 = 1.377k R16 = 54.065k R18 = 2.094k
+// AUX
+// R17 = 1.339k R16 = 54.026k R18 = 2.070k
+
 // if measuring above this voltage, switch is *definitely* outputting an error level
 #define RCB_BUS_CURRENT_SENSE_ERROR_VOLTAGE 3000
 // see dkILIS in switch datasheet - outputs 1mA on sense pin for 50000mA flowing through
@@ -30,7 +39,7 @@
 #define RCB_SWITCH_ERROR_DISABLE_MIN_VOLTAGE 2000
 #define RCB_SWITCH_ERROR_DISABLE_MAX_VOLTAGE 5000
 #define RCB_BUS_ON_VOLTAGE                   16000
-#define RCB_MAX_CURRENT                      100000UL  // max 100A per channel
+#define RCB_MAX_CURRENT                      50000UL  // max 50A per channel
 
 // 100k-10k voltage divider to measure bus vtg
 #define RCB_ADC_TO_BUS_VOLTAGE(_voltage) ROVER_ADC_DIVIDER_TO_SOURCE_VOLTAGE(_voltage, 100, 10)
@@ -60,13 +69,13 @@ public:
                   gpio_num_t precharge, gpio_num_t mainSwitch,
                   gpio_num_t voltageFeedback, gpio_num_t currentFeedback);
     ~RoverPowerBus();
-    void setBusOn(bool on);
+    void setBusState(bool on);
     void clearError();
     void handle();
     hi_can::PacketManager::transmission_config_t GetTransmissionConfig(void);
     TwaiPowerBusParameterGroup GetParameterGroup(void);
 
-    bool isBusOn() { return ((_state != bus_state::OFF) || (_state != bus_state::ERROR)); }
+    bool isBusOn() { return ((_state != bus_state::OFF) && (_state != bus_state::ERROR)); }
 
 private:
     const static gptimer_alarm_config_t _prechargeOffConfig;
