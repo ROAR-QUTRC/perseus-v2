@@ -1,6 +1,5 @@
 # Mapping Autotune — Default search ranges and scoring weights
 # These can be overridden by passing a custom config to the autotune node.
-
 # Scoring weights for composite map quality score (must sum to 1.0)
 weights:
   wall_straightness: 0.25
@@ -9,14 +8,12 @@ weights:
   symmetry_score: 0.15
   free_space_consistency: 0.10
   occupied_density_score: 0.10
-
 # Phase definitions — each phase varies one category of parameters
 phases:
   # Phase 0: IMU calibration (no runs, just data collection)
   imu_calibration:
     enabled: true
-    calibration_duration: 30.0  # seconds at rest
-
+    calibration_duration: 30.0 # seconds at rest
   # Phase 1: IMU integration mode
   imu_integration:
     enabled: true
@@ -30,8 +27,7 @@ phases:
         deadband: 0.0
       - name: imu_on_deadband
         ekf_imu_vyaw: true
-        deadband: auto  # uses calibrated value
-
+        deadband: auto # uses calibrated value
   # Phase 2: SLAM rotation parameters (highest impact)
   slam_rotation:
     enabled: true
@@ -40,7 +36,6 @@ phases:
       minimum_travel_heading: [0.05, 0.1, 0.2, 0.4]
       correlation_search_space_smear_deviation: [0.02, 0.05, 0.1]
       angle_variance_penalty: [0.5, 1.0, 2.0, 3.0]
-
   # Phase 3: Scan matching strictness
   scan_matching:
     enabled: true
@@ -49,7 +44,6 @@ phases:
       minimum_angle_penalty: [0.9, 0.95, 0.99]
       link_match_minimum_response_fine: [0.3, 0.4, 0.5, 0.6]
       minimum_distance_penalty: [0.5, 0.7, 0.9]
-
   # Phase 4: Timing parameters
   timing:
     enabled: true
@@ -58,7 +52,6 @@ phases:
       throttle_scans: [1, 2, 3, 5]
       minimum_time_interval: [0.1, 0.3, 0.5]
       transform_publish_period: [0.02, 0.05, 0.1]
-
   # Phase 5: Speed limits (maneuver params)
   speed:
     enabled: true
@@ -66,7 +59,6 @@ phases:
     parameters:
       rotation_speed: [0.2, 0.3, 0.5, 1.0]
       linear_speed: [0.1, 0.2, 0.3]
-
   # Phase 6: EKF process noise
   ekf_noise:
     enabled: true
@@ -74,13 +66,11 @@ phases:
     parameters:
       process_noise_yaw: [0.03, 0.06, 0.12]
       process_noise_vyaw: [0.01, 0.02, 0.04]
-
 # Default maneuver settings
 maneuver:
-  pattern: box_return  # box_return or corridor
-  linear_speed: 0.2    # m/s
-  rotation_speed: 0.5  # rad/s
-
+  pattern: box_return # box_return or corridor
+  linear_speed: 0.2 # m/s
+  rotation_speed: 0.5 # rad/s
 # Budget allocation — how to distribute max_runs across phases
 # Weights are relative; actual allocation is proportional
 budget_weights:

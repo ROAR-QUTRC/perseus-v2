@@ -36,14 +36,16 @@ class ParamManager:
         self._defaults = defaults
 
         # Extract the ros__parameters sections for easy access
-        self._slam_params = self._baseline_slam.get(
-            "slam_toolbox", {}
-        ).get("ros__parameters", {})
-        self._ekf_params = self._baseline_ekf.get(
-            "ekf_filter_node", {}
-        ).get("ros__parameters", {})
+        self._slam_params = self._baseline_slam.get("slam_toolbox", {}).get(
+            "ros__parameters", {}
+        )
+        self._ekf_params = self._baseline_ekf.get("ekf_filter_node", {}).get(
+            "ros__parameters", {}
+        )
 
-    def get_phase_runs(self, phase_number: int, best_params_so_far: dict = None) -> list:
+    def get_phase_runs(
+        self, phase_number: int, best_params_so_far: dict = None
+    ) -> list:
         """Return a list of parameter dicts for the given phase.
 
         Each dict contains all keys that differ from the baseline for this run,
@@ -91,7 +93,9 @@ class ParamManager:
         # Handle process_noise_covariance specially — allow partial updates
         if "process_noise_covariance_overrides" in ekf_overrides:
             pnc = list(merged.get("process_noise_covariance", [0.0] * 225))
-            for offset, value in ekf_overrides.pop("process_noise_covariance_overrides").items():
+            for offset, value in ekf_overrides.pop(
+                "process_noise_covariance_overrides"
+            ).items():
                 pnc[int(offset)] = value
             merged["process_noise_covariance"] = pnc
 
@@ -156,51 +160,81 @@ class ParamManager:
         runs = []
 
         # Run 1: IMU off (baseline — imu0_config all false)
-        runs.append({
-            "phase": 1,
-            "run_label": "imu_off",
-            "slam": {},
-            "ekf": {
-                "imu0_config": [
-                    False, False, False, False, False, False,
-                    False, False, False, False, False, False,
-                    False, False, False,
-                ],
-            },
-            "maneuver": {},
-        })
+        runs.append(
+            {
+                "phase": 1,
+                "run_label": "imu_off",
+                "slam": {},
+                "ekf": {
+                    "imu0_config": [
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                    ],
+                },
+                "maneuver": {},
+            }
+        )
 
         # Run 2: IMU on — enable vyaw (index 11) from IMU
         imu_on_config = [
-            False, False, False, False, False, False,
-            False, False, False, False, False, True,
-            False, False, False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            False,
+            True,
+            False,
+            False,
+            False,
         ]
-        runs.append({
-            "phase": 1,
-            "run_label": "imu_on",
-            "slam": {},
-            "ekf": {
-                "imu0_config": imu_on_config,
-            },
-            "maneuver": {},
-        })
+        runs.append(
+            {
+                "phase": 1,
+                "run_label": "imu_on",
+                "slam": {},
+                "ekf": {
+                    "imu0_config": imu_on_config,
+                },
+                "maneuver": {},
+            }
+        )
 
         # Run 3: IMU on + deadband filter
         deadband_threshold = self._defaults.get("imu_deadband_threshold", 0.01)
-        runs.append({
-            "phase": 1,
-            "run_label": "imu_on_deadband",
-            "slam": {},
-            "ekf": {
-                "imu0_config": imu_on_config,
-            },
-            "imu_filter": {
-                "deadband_threshold": deadband_threshold,
-                "enabled": True,
-            },
-            "maneuver": {},
-        })
+        runs.append(
+            {
+                "phase": 1,
+                "run_label": "imu_on_deadband",
+                "slam": {},
+                "ekf": {
+                    "imu0_config": imu_on_config,
+                },
+                "imu_filter": {
+                    "deadband_threshold": deadband_threshold,
+                    "enabled": True,
+                },
+                "maneuver": {},
+            }
+        )
 
         return runs
 
@@ -333,9 +367,13 @@ class ParamManager:
         for i, combo in enumerate(combos):
             pnc_overrides = {}
             if "process_noise_yaw" in combo:
-                pnc_overrides[_pnc_diag_offset(_PNC_YAW_IDX)] = combo["process_noise_yaw"]
+                pnc_overrides[_pnc_diag_offset(_PNC_YAW_IDX)] = combo[
+                    "process_noise_yaw"
+                ]
             if "process_noise_vyaw" in combo:
-                pnc_overrides[_pnc_diag_offset(_PNC_VYAW_IDX)] = combo["process_noise_vyaw"]
+                pnc_overrides[_pnc_diag_offset(_PNC_VYAW_IDX)] = combo[
+                    "process_noise_vyaw"
+                ]
 
             run = {
                 "phase": 6,

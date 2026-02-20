@@ -4,6 +4,7 @@
 Run on any machine with Python 3, sqlite3, and a terminal:
     python3 review_tui_standalone.py --db-path /srv/mapping_autotune/autotune.db
 """
+
 import argparse
 import curses
 import json
@@ -95,7 +96,9 @@ class StandaloneReviewTui:
         return curses.color_pair(2)
 
     def _draw_sessions(self, stdscr, h, w):
-        stdscr.addnstr(0, 0, "=== MAPPING AUTOTUNE REVIEW ===", w - 1, curses.color_pair(4))
+        stdscr.addnstr(
+            0, 0, "=== MAPPING AUTOTUNE REVIEW ===", w - 1, curses.color_pair(4)
+        )
         header = f"{'#':>3} | {'Name':<20} | {'Date':<10} | {'Runs':>4} | {'Best':>6} | Status"
         stdscr.addnstr(2, 0, header, w - 1, curses.color_pair(4) | curses.A_BOLD)
 
@@ -120,15 +123,22 @@ class StandaloneReviewTui:
             return
         sid = self._sessions[self._sel_session]["id"]
         sname = self._sessions[self._sel_session]["name"] or f"Session {sid}"
-        stdscr.addnstr(0, 0, f"=== {sname} ({len(self._runs)} runs) ===", w - 1,
-                        curses.color_pair(4))
+        stdscr.addnstr(
+            0,
+            0,
+            f"=== {sname} ({len(self._runs)} runs) ===",
+            w - 1,
+            curses.color_pair(4),
+        )
 
         header = (
             f"{'#':>3} | {'Score':>6} | {'Wall':>5} | {'Thick':>5} | "
             f"{'Ghost':>5} | {'Symm':>5} | {'Free':>5} | {'Dens':>5} | "
             f"{'Rate':>4} | Params"
         )
-        stdscr.addnstr(2, 0, header[:w - 1], w - 1, curses.color_pair(4) | curses.A_BOLD)
+        stdscr.addnstr(
+            2, 0, header[: w - 1], w - 1, curses.color_pair(4) | curses.A_BOLD
+        )
 
         max_rows = h - 5
         for i, r in enumerate(self._runs):
@@ -164,7 +174,7 @@ class StandaloneReviewTui:
 
             attr = curses.color_pair(5) if i == self._sel_run else 0
             prefix = "> " if i == self._sel_run else "  "
-            stdscr.addnstr(i + 3, 0, (prefix + line)[:w - 1], w - 1, attr)
+            stdscr.addnstr(i + 3, 0, (prefix + line)[: w - 1], w - 1, attr)
 
         keys = "Keys: Enter=detail, 1-5=rate, n=notes, e=export YAML, Esc=back, q=quit"
         stdscr.addnstr(h - 2, 0, keys, w - 1)
@@ -176,11 +186,16 @@ class StandaloneReviewTui:
         cs = r.get("composite_score")
         rating_str = f"{r['rating']}/5" if r.get("rating") else "--"
 
-        stdscr.addnstr(0, 0, f"=== Run #{r['run_number']} Detail ===", w - 1,
-                        curses.color_pair(4))
-        stdscr.addnstr(1, 0,
-                        f"Status: {r['status']} | Composite: {cs:.2f if cs else '--'} | "
-                        f"Rating: {rating_str}", w - 1)
+        stdscr.addnstr(
+            0, 0, f"=== Run #{r['run_number']} Detail ===", w - 1, curses.color_pair(4)
+        )
+        stdscr.addnstr(
+            1,
+            0,
+            f"Status: {r['status']} | Composite: {cs:.2f if cs else '--'} | "
+            f"Rating: {rating_str}",
+            w - 1,
+        )
 
         row = 3
         stdscr.addnstr(row, 0, "Parameters:", w - 1, curses.A_BOLD)
@@ -214,7 +229,7 @@ class StandaloneReviewTui:
                 filled = int(val * bar_width)
                 bar = "\u2588" * filled + "\u2591" * (bar_width - filled)
                 line = f"  {name:<22} [{bar}] {val:.2f}"
-                stdscr.addnstr(row, 0, line[:w - 1], w - 1, self._score_color(val))
+                stdscr.addnstr(row, 0, line[: w - 1], w - 1, self._score_color(val))
             else:
                 stdscr.addnstr(row, 0, f"  {name:<22} [no data]", w - 1)
             row += 1
@@ -258,7 +273,9 @@ class StandaloneReviewTui:
                 )
                 self._conn.commit()
                 self._runs[self._sel_run]["rating"] = rating
-                self._message = f"Rated run #{self._runs[self._sel_run]['run_number']}: {rating}/5"
+                self._message = (
+                    f"Rated run #{self._runs[self._sel_run]['run_number']}: {rating}/5"
+                )
 
         elif self._mode == "detail":
             if key == 27:  # Esc
@@ -281,8 +298,11 @@ class StandaloneReviewTui:
 
 def main():
     parser = argparse.ArgumentParser(description="Review mapping autotune results")
-    parser.add_argument("--db-path", default="/opt/mapping_autotune/autotune.db",
-                        help="Path to the SQLite database")
+    parser.add_argument(
+        "--db-path",
+        default="/opt/mapping_autotune/autotune.db",
+        help="Path to the SQLite database",
+    )
     args = parser.parse_args()
 
     if not os.path.exists(args.db_path):

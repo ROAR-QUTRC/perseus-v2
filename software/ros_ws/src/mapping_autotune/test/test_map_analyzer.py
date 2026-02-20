@@ -1,4 +1,5 @@
 """Tests for map_analyzer module using synthetic occupancy grids."""
+
 import numpy as np
 import pytest
 
@@ -52,9 +53,14 @@ class TestMapAnalyzer:
         grid = _make_room_grid()
         result = analyzer.analyze(grid, 100, 100, 0.05)
         expected_keys = {
-            "wall_straightness", "wall_thickness", "ghost_wall_score",
-            "symmetry_score", "free_space_consistency", "occupied_density_score",
-            "composite_score", "diagnostics",
+            "wall_straightness",
+            "wall_thickness",
+            "ghost_wall_score",
+            "symmetry_score",
+            "free_space_consistency",
+            "occupied_density_score",
+            "composite_score",
+            "diagnostics",
         }
         assert expected_keys.issubset(result.keys())
 
@@ -120,4 +126,6 @@ class TestMapAnalyzer:
             grid[y * 100 + x] = 100
         result = analyzer.analyze(grid, 100, 100, 0.05)
         clean_result = analyzer.analyze(_make_room_grid(100, 100), 100, 100, 0.05)
-        assert result["free_space_consistency"] <= clean_result["free_space_consistency"]
+        assert (
+            result["free_space_consistency"] <= clean_result["free_space_consistency"]
+        )

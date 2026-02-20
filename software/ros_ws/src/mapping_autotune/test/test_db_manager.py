@@ -1,4 +1,5 @@
 """Tests for db_manager module using a temporary in-memory database."""
+
 import json
 import os
 import tempfile
@@ -119,16 +120,19 @@ class TestDbManager:
     def test_get_best_run(self, db, session_id):
         for i, score in enumerate([0.5, 0.9, 0.7]):
             run_id = db.create_run(session_id, i + 1, "{}", "{}")
-            db.store_analysis(run_id, {
-                "wall_straightness": score,
-                "wall_thickness": score,
-                "ghost_wall_score": score,
-                "symmetry_score": score,
-                "free_space_consistency": score,
-                "occupied_density_score": score,
-                "composite_score": score,
-                "diagnostics": "{}",
-            })
+            db.store_analysis(
+                run_id,
+                {
+                    "wall_straightness": score,
+                    "wall_thickness": score,
+                    "ghost_wall_score": score,
+                    "symmetry_score": score,
+                    "free_space_consistency": score,
+                    "occupied_density_score": score,
+                    "composite_score": score,
+                    "diagnostics": "{}",
+                },
+            )
         best = db.get_best_run(session_id)
         assert best is not None
         assert best["composite_score"] == pytest.approx(0.9)
@@ -148,18 +152,22 @@ class TestDbManager:
         assert json.loads(run["odom_log"]) == [{"t": 0.0, "x": 0.0, "y": 0.0}]
 
     def test_export_session_report(self, db, session_id):
-        run_id = db.create_run(session_id, 1,
-                               json.dumps({"minimum_travel_heading": 0.1}), "{}")
-        db.store_analysis(run_id, {
-            "wall_straightness": 0.9,
-            "wall_thickness": 0.8,
-            "ghost_wall_score": 0.7,
-            "symmetry_score": 0.6,
-            "free_space_consistency": 0.5,
-            "occupied_density_score": 0.4,
-            "composite_score": 0.65,
-            "diagnostics": "{}",
-        })
+        run_id = db.create_run(
+            session_id, 1, json.dumps({"minimum_travel_heading": 0.1}), "{}"
+        )
+        db.store_analysis(
+            run_id,
+            {
+                "wall_straightness": 0.9,
+                "wall_thickness": 0.8,
+                "ghost_wall_score": 0.7,
+                "symmetry_score": 0.6,
+                "free_space_consistency": 0.5,
+                "occupied_density_score": 0.4,
+                "composite_score": 0.65,
+                "diagnostics": "{}",
+            },
+        )
         db.update_run_status(run_id, "completed")
 
         with tempfile.TemporaryDirectory() as tmpdir:

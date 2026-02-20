@@ -29,7 +29,7 @@ class ReviewTui:
 
         self._selected_session_idx = 0
         self._selected_run_idx = 0
-        self._mode = 'sessions'
+        self._mode = "sessions"
 
         # For side-by-side comparison
         self._compare_run_id = None
@@ -37,7 +37,7 @@ class ReviewTui:
         # Preload runs for each session
         self._session_runs = {}
         for session in self._sessions:
-            sid = session['id']
+            sid = session["id"]
             runs = self._db.get_runs(sid)
             self._session_runs[sid] = runs
 
@@ -70,13 +70,13 @@ class ReviewTui:
         while True:
             stdscr.erase()
 
-            if self._mode == 'sessions':
+            if self._mode == "sessions":
                 self._draw_sessions(stdscr)
-            elif self._mode == 'runs':
+            elif self._mode == "runs":
                 self._draw_runs(stdscr)
-            elif self._mode == 'detail':
+            elif self._mode == "detail":
                 self._draw_detail(stdscr)
-            elif self._mode == 'compare':
+            elif self._mode == "compare":
                 self._draw_compare(stdscr)
 
             stdscr.refresh()
@@ -94,16 +94,16 @@ class ReviewTui:
 
         Returns False when the TUI should exit.
         """
-        if key == ord('q'):
+        if key == ord("q"):
             return False
 
-        if self._mode == 'sessions':
+        if self._mode == "sessions":
             return self._handle_sessions_input(key, stdscr)
-        elif self._mode == 'runs':
+        elif self._mode == "runs":
             return self._handle_runs_input(key, stdscr)
-        elif self._mode == 'detail':
+        elif self._mode == "detail":
             return self._handle_detail_input(key, stdscr)
-        elif self._mode == 'compare':
+        elif self._mode == "compare":
             return self._handle_compare_input(key)
 
         return True
@@ -111,12 +111,15 @@ class ReviewTui:
     def _handle_sessions_input(self, key, stdscr):
         if key == curses.KEY_UP and self._selected_session_idx > 0:
             self._selected_session_idx -= 1
-        elif key == curses.KEY_DOWN and self._selected_session_idx < len(self._sessions) - 1:
+        elif (
+            key == curses.KEY_DOWN
+            and self._selected_session_idx < len(self._sessions) - 1
+        ):
             self._selected_session_idx += 1
         elif key in (curses.KEY_ENTER, 10, 13):
             if self._sessions:
                 self._enter_runs_mode()
-        elif key == ord('r'):
+        elif key == ord("r"):
             if self._sessions:
                 self._export_report(stdscr)
         return True
@@ -128,37 +131,37 @@ class ReviewTui:
             self._selected_run_idx += 1
         elif key in (curses.KEY_ENTER, 10, 13):
             if self._runs:
-                self._mode = 'detail'
-        elif key in (ord('1'), ord('2'), ord('3'), ord('4'), ord('5')):
+                self._mode = "detail"
+        elif key in (ord("1"), ord("2"), ord("3"), ord("4"), ord("5")):
             if self._runs:
-                self._rate_run(key - ord('0'))
-        elif key == ord('n'):
+                self._rate_run(key - ord("0"))
+        elif key == ord("n"):
             if self._runs:
                 self._add_notes(stdscr)
-        elif key == ord('c'):
+        elif key == ord("c"):
             if self._runs:
                 self._handle_compare_mark()
-        elif key == ord('e'):
+        elif key == ord("e"):
             self._export_best_yaml(stdscr)
         elif key == 27:  # Escape
-            self._mode = 'sessions'
+            self._mode = "sessions"
             self._compare_run_id = None
         return True
 
     def _handle_detail_input(self, key, stdscr):
-        if key in (ord('1'), ord('2'), ord('3'), ord('4'), ord('5')):
+        if key in (ord("1"), ord("2"), ord("3"), ord("4"), ord("5")):
             if self._runs:
-                self._rate_run(key - ord('0'))
-        elif key == ord('n'):
+                self._rate_run(key - ord("0"))
+        elif key == ord("n"):
             if self._runs:
                 self._add_notes(stdscr)
         elif key == 27:  # Escape
-            self._mode = 'runs'
+            self._mode = "runs"
         return True
 
     def _handle_compare_input(self, key):
         if key == 27:  # Escape
-            self._mode = 'runs'
+            self._mode = "runs"
             self._compare_run_id = None
         return True
 
@@ -170,8 +173,13 @@ class ReviewTui:
         max_y, max_x = stdscr.getmaxyx()
         row = 0
 
-        self._addstr_safe(stdscr, row, 0, "=== MAPPING AUTOTUNE REVIEW ===",
-                          curses.color_pair(4) | curses.A_BOLD)
+        self._addstr_safe(
+            stdscr,
+            row,
+            0,
+            "=== MAPPING AUTOTUNE REVIEW ===",
+            curses.color_pair(4) | curses.A_BOLD,
+        )
         row += 1
 
         self._addstr_safe(stdscr, row, 0, "Sessions:", curses.A_BOLD)
@@ -189,16 +197,20 @@ class ReviewTui:
             if row >= max_y - 2:
                 break
 
-            sid = session['id']
-            name = session.get('name', '')[:20]
-            date = (session.get('created_at') or '')[:19]
+            sid = session["id"]
+            name = session.get("name", "")[:20]
+            date = (session.get("created_at") or "")[:19]
             runs = self._session_runs.get(sid, [])
             num_runs = len(runs)
-            status = session.get('status', '')
+            status = session.get("status", "")
 
             # Find best score for this session
             best_run = self._db.get_best_run(sid)
-            best_score = f"{best_run['composite_score']:.2f}" if best_run and best_run.get('composite_score') is not None else "  --"
+            best_score = (
+                f"{best_run['composite_score']:.2f}"
+                if best_run and best_run.get("composite_score") is not None
+                else "  --"
+            )
 
             prefix = "> " if idx == self._selected_session_idx else "  "
             line = f"{prefix}{idx + 1:>3} | {name:<20} | {date:<19} | {num_runs:>4} | {best_score:>10} | {status:<10}"
@@ -208,9 +220,13 @@ class ReviewTui:
             row += 1
 
         row += 1
-        self._addstr_safe(stdscr, min(row, max_y - 1), 0,
-                          "Keys: Enter=view runs, r=export report, q=quit",
-                          curses.color_pair(3))
+        self._addstr_safe(
+            stdscr,
+            min(row, max_y - 1),
+            0,
+            "Keys: Enter=view runs, r=export report, q=quit",
+            curses.color_pair(3),
+        )
 
     # ------------------------------------------------------------------
     # Drawing: runs
@@ -228,13 +244,14 @@ class ReviewTui:
         num_runs = len(self._runs)
 
         title = f"=== Session: {session.get('name', '')} ({num_runs} runs) ==="
-        self._addstr_safe(stdscr, row, 0, title,
-                          curses.color_pair(4) | curses.A_BOLD)
+        self._addstr_safe(stdscr, row, 0, title, curses.color_pair(4) | curses.A_BOLD)
         row += 1
 
-        header = (f"  {'#':>3} | {'Composite':>9} | {'Wall':>5} | {'Thick':>5} | "
-                  f"{'Ghost':>5} | {'Symm':>5} | {'Free':>5} | {'Dens':>5} | "
-                  f"{'Rating':>6} | Params Changed")
+        header = (
+            f"  {'#':>3} | {'Composite':>9} | {'Wall':>5} | {'Thick':>5} | "
+            f"{'Ghost':>5} | {'Symm':>5} | {'Free':>5} | {'Dens':>5} | "
+            f"{'Rating':>6} | Params Changed"
+        )
         self._addstr_safe(stdscr, row, 0, header, curses.color_pair(4))
         row += 1
 
@@ -249,17 +266,17 @@ class ReviewTui:
             if row >= max_y - 2:
                 break
 
-            run_id = run['id']
+            run_id = run["id"]
             detail = self._get_detailed_run(run_id)
 
-            composite = detail.get('composite_score')
-            wall = detail.get('wall_straightness')
-            thick = detail.get('wall_thickness')
-            ghost = detail.get('ghost_wall_score')
-            symm = detail.get('symmetry_score')
-            free = detail.get('free_space_consistency')
-            dens = detail.get('occupied_density_score')
-            rating = detail.get('rating')
+            composite = detail.get("composite_score")
+            wall = detail.get("wall_straightness")
+            thick = detail.get("wall_thickness")
+            ghost = detail.get("ghost_wall_score")
+            symm = detail.get("symmetry_score")
+            free = detail.get("free_space_consistency")
+            dens = detail.get("occupied_density_score")
+            rating = detail.get("rating")
 
             rating_str = f"{rating}/5" if rating is not None else " --"
 
@@ -270,8 +287,13 @@ class ReviewTui:
 
             # Build the line piece by piece with coloring
             line_prefix = f"{prefix}{run.get('run_number', idx + 1):>3} | "
-            self._addstr_safe(stdscr, row, 0, line_prefix,
-                              curses.color_pair(5) if idx == self._selected_run_idx else 0)
+            self._addstr_safe(
+                stdscr,
+                row,
+                0,
+                line_prefix,
+                curses.color_pair(5) if idx == self._selected_run_idx else 0,
+            )
 
             col = len(line_prefix)
             for val in [composite, wall, thick, ghost, symm, free, dens]:
@@ -292,8 +314,13 @@ class ReviewTui:
                     self._addstr_safe(stdscr, row, col, f"{display} | ", color)
                     col += len(f"{display} | ")
 
-            self._addstr_safe(stdscr, row, col, f"{rating_str:>6} | {changed_str}",
-                              curses.color_pair(5) if idx == self._selected_run_idx else 0)
+            self._addstr_safe(
+                stdscr,
+                row,
+                col,
+                f"{rating_str:>6} | {changed_str}",
+                curses.color_pair(5) if idx == self._selected_run_idx else 0,
+            )
 
             row += 1
 
@@ -314,33 +341,35 @@ class ReviewTui:
             return
 
         run = self._runs[self._selected_run_idx]
-        run_id = run['id']
+        run_id = run["id"]
         detail = self._get_detailed_run(run_id)
-        run_num = run.get('run_number', self._selected_run_idx + 1)
+        run_num = run.get("run_number", self._selected_run_idx + 1)
 
-        composite = detail.get('composite_score')
-        rating = detail.get('rating')
-        status = detail.get('status', 'unknown')
+        composite = detail.get("composite_score")
+        rating = detail.get("rating")
+        status = detail.get("status", "unknown")
         rating_str = f"{rating}/5" if rating is not None else "--"
         composite_str = f"{composite:.2f}" if composite is not None else "--"
 
         title = f"=== Run #{run_num} Detail ==="
-        self._addstr_safe(stdscr, row, 0, title,
-                          curses.color_pair(4) | curses.A_BOLD)
+        self._addstr_safe(stdscr, row, 0, title, curses.color_pair(4) | curses.A_BOLD)
         row += 1
 
-        status_line = f"Status: {status} | Composite: {composite_str} | Rating: {rating_str}"
+        status_line = (
+            f"Status: {status} | Composite: {composite_str} | Rating: {rating_str}"
+        )
         self._addstr_safe(stdscr, row, 0, status_line)
         row += 2
 
         # Parameter diff from baseline
         session = self._sessions[self._selected_session_idx]
         base_slam, base_ekf = self._get_baseline_params(session)
-        run_slam = self._parse_json_safe(detail.get('slam_params', '{}'))
-        run_ekf = self._parse_json_safe(detail.get('ekf_params', '{}'))
+        run_slam = self._parse_json_safe(detail.get("slam_params", "{}"))
+        run_ekf = self._parse_json_safe(detail.get("ekf_params", "{}"))
 
-        self._addstr_safe(stdscr, row, 0, "Parameters (diff from baseline):",
-                          curses.A_BOLD)
+        self._addstr_safe(
+            stdscr, row, 0, "Parameters (diff from baseline):", curses.A_BOLD
+        )
         row += 1
 
         diff_found = False
@@ -375,12 +404,12 @@ class ReviewTui:
         row += 1
 
         metrics = [
-            ("Wall Straightness", detail.get('wall_straightness')),
-            ("Wall Thickness", detail.get('wall_thickness')),
-            ("Ghost Walls", detail.get('ghost_wall_score')),
-            ("Symmetry", detail.get('symmetry_score')),
-            ("Free Space", detail.get('free_space_consistency')),
-            ("Occupied Density", detail.get('occupied_density_score')),
+            ("Wall Straightness", detail.get("wall_straightness")),
+            ("Wall Thickness", detail.get("wall_thickness")),
+            ("Ghost Walls", detail.get("ghost_wall_score")),
+            ("Symmetry", detail.get("symmetry_score")),
+            ("Free Space", detail.get("free_space_consistency")),
+            ("Occupied Density", detail.get("occupied_density_score")),
         ]
 
         bar_width = 25
@@ -402,7 +431,7 @@ class ReviewTui:
         row += 1
 
         # Notes
-        notes = detail.get('rating_notes')
+        notes = detail.get("rating_notes")
         if notes:
             self._addstr_safe(stdscr, row, 0, "Notes:", curses.A_BOLD)
             row += 1
@@ -415,7 +444,7 @@ class ReviewTui:
         self._addstr_safe(stdscr, row, 0, "Map Preview:", curses.A_BOLD)
         row += 1
 
-        map_png = detail.get('map_png')
+        map_png = detail.get("map_png")
         if map_png and row < max_y - 3:
             ascii_lines = self._map_png_to_ascii(map_png, max_x - 4, max_y - row - 3)
             for line in ascii_lines:
@@ -428,9 +457,13 @@ class ReviewTui:
             row += 1
 
         row += 1
-        self._addstr_safe(stdscr, min(row, max_y - 1), 0,
-                          "Keys: 1-5=rate, n=notes, Esc=back",
-                          curses.color_pair(3))
+        self._addstr_safe(
+            stdscr,
+            min(row, max_y - 1),
+            0,
+            "Keys: 1-5=rate, n=notes, Esc=back",
+            curses.color_pair(3),
+        )
 
     # ------------------------------------------------------------------
     # Drawing: compare mode
@@ -441,19 +474,18 @@ class ReviewTui:
         row = 0
 
         run_a = self._runs[self._selected_run_idx]
-        detail_a = self._get_detailed_run(run_a['id'])
+        detail_a = self._get_detailed_run(run_a["id"])
         detail_b = self._get_detailed_run(self._compare_run_id)
 
         if detail_b is None:
             self._addstr_safe(stdscr, row, 0, "Compare run not found.")
             return
 
-        run_num_a = run_a.get('run_number', '?')
-        run_num_b = detail_b.get('run_number', '?')
+        run_num_a = run_a.get("run_number", "?")
+        run_num_b = detail_b.get("run_number", "?")
 
         title = f"=== Compare: Run #{run_num_a} vs Run #{run_num_b} ==="
-        self._addstr_safe(stdscr, row, 0, title,
-                          curses.color_pair(4) | curses.A_BOLD)
+        self._addstr_safe(stdscr, row, 0, title, curses.color_pair(4) | curses.A_BOLD)
         row += 2
 
         col_label = 2
@@ -470,13 +502,13 @@ class ReviewTui:
         row += 1
 
         metrics = [
-            ("Composite", 'composite_score'),
-            ("Wall Str", 'wall_straightness'),
-            ("Thickness", 'wall_thickness'),
-            ("Ghost", 'ghost_wall_score'),
-            ("Symmetry", 'symmetry_score'),
-            ("Free Space", 'free_space_consistency'),
-            ("Density", 'occupied_density_score'),
+            ("Composite", "composite_score"),
+            ("Wall Str", "wall_straightness"),
+            ("Thickness", "wall_thickness"),
+            ("Ghost", "ghost_wall_score"),
+            ("Symmetry", "symmetry_score"),
+            ("Free Space", "free_space_consistency"),
+            ("Density", "occupied_density_score"),
         ]
 
         bar_width = 8
@@ -514,26 +546,34 @@ class ReviewTui:
         row += 1
 
         # Rating comparison
-        rating_a = detail_a.get('rating')
-        rating_b = detail_b.get('rating')
+        rating_a = detail_a.get("rating")
+        rating_b = detail_b.get("rating")
         self._addstr_safe(stdscr, row, col_label, "Rating:", curses.A_BOLD)
-        self._addstr_safe(stdscr, row, col_a,
-                          f"{rating_a}/5" if rating_a is not None else "--")
-        self._addstr_safe(stdscr, row, col_b,
-                          f"{rating_b}/5" if rating_b is not None else "--")
+        self._addstr_safe(
+            stdscr, row, col_a, f"{rating_a}/5" if rating_a is not None else "--"
+        )
+        self._addstr_safe(
+            stdscr, row, col_b, f"{rating_b}/5" if rating_b is not None else "--"
+        )
         row += 2
 
         # Parameter diffs
         self._addstr_safe(stdscr, row, 0, "Param diffs:", curses.A_BOLD)
         row += 1
 
-        slam_a = self._parse_json_safe(detail_a.get('slam_params', '{}'))
-        slam_b = self._parse_json_safe(detail_b.get('slam_params', '{}'))
-        ekf_a = self._parse_json_safe(detail_a.get('ekf_params', '{}'))
-        ekf_b = self._parse_json_safe(detail_b.get('ekf_params', '{}'))
+        slam_a = self._parse_json_safe(detail_a.get("slam_params", "{}"))
+        slam_b = self._parse_json_safe(detail_b.get("slam_params", "{}"))
+        ekf_a = self._parse_json_safe(detail_a.get("ekf_params", "{}"))
+        ekf_b = self._parse_json_safe(detail_b.get("ekf_params", "{}"))
 
-        all_keys = sorted(set(list(slam_a.keys()) + list(slam_b.keys()) +
-                              list(ekf_a.keys()) + list(ekf_b.keys())))
+        all_keys = sorted(
+            set(
+                list(slam_a.keys())
+                + list(slam_b.keys())
+                + list(ekf_a.keys())
+                + list(ekf_b.keys())
+            )
+        )
 
         for key in all_keys:
             if row >= max_y - 2:
@@ -549,8 +589,9 @@ class ReviewTui:
                 row += 1
 
         row += 1
-        self._addstr_safe(stdscr, min(row, max_y - 1), 0,
-                          "Keys: Esc=back", curses.color_pair(3))
+        self._addstr_safe(
+            stdscr, min(row, max_y - 1), 0, "Keys: Esc=back", curses.color_pair(3)
+        )
 
     # ------------------------------------------------------------------
     # Actions
@@ -559,22 +600,22 @@ class ReviewTui:
     def _enter_runs_mode(self):
         """Transition from session list to run list for the selected session."""
         session = self._sessions[self._selected_session_idx]
-        sid = session['id']
+        sid = session["id"]
         self._runs = self._session_runs.get(sid, [])
         self._selected_run_idx = 0
         self._compare_run_id = None
-        self._mode = 'runs'
+        self._mode = "runs"
 
     def _rate_run(self, rating):
         """Store a rating for the currently selected run."""
         if not self._runs:
             return
         run = self._runs[self._selected_run_idx]
-        run_id = run['id']
+        run_id = run["id"]
 
         # Preserve existing notes
         existing = self._get_detailed_run(run_id)
-        notes = existing.get('rating_notes') if existing else None
+        notes = existing.get("rating_notes") if existing else None
 
         self._db.store_rating(run_id, rating, notes)
 
@@ -586,12 +627,12 @@ class ReviewTui:
         if not self._runs:
             return
         run = self._runs[self._selected_run_idx]
-        run_id = run['id']
+        run_id = run["id"]
 
         text = self._input_text(stdscr, "Notes: ")
         if text is not None:
             existing = self._get_detailed_run(run_id)
-            rating = existing.get('rating', 3) if existing else 3
+            rating = existing.get("rating", 3) if existing else 3
             self._db.store_rating(run_id, rating, text)
             self._detailed_runs.pop(run_id, None)
 
@@ -600,14 +641,14 @@ class ReviewTui:
         if not self._runs:
             return
         current_run = self._runs[self._selected_run_idx]
-        current_id = current_run['id']
+        current_id = current_run["id"]
 
         if self._compare_run_id is None:
             # First mark
             self._compare_run_id = current_id
         elif self._compare_run_id != current_id:
             # Second mark on a different run -- enter compare mode
-            self._mode = 'compare'
+            self._mode = "compare"
         else:
             # Same run pressed again -- deselect
             self._compare_run_id = None
@@ -618,29 +659,29 @@ class ReviewTui:
             return
 
         session = self._sessions[self._selected_session_idx]
-        sid = session['id']
+        sid = session["id"]
         best_run = self._db.get_best_run(sid)
         if best_run is None:
             self._show_message(stdscr, "No completed runs to export.")
             return
 
         base_slam, base_ekf = self._get_baseline_params(session)
-        run_slam = self._parse_json_safe(best_run.get('slam_params', '{}'))
-        run_ekf = self._parse_json_safe(best_run.get('ekf_params', '{}'))
+        run_slam = self._parse_json_safe(best_run.get("slam_params", "{}"))
+        run_ekf = self._parse_json_safe(best_run.get("ekf_params", "{}"))
 
         merged = {
-            'slam_toolbox': {
-                'ros__parameters': {**base_slam, **run_slam},
+            "slam_toolbox": {
+                "ros__parameters": {**base_slam, **run_slam},
             },
-            'ekf_filter_node': {
-                'ros__parameters': {**base_ekf, **run_ekf},
+            "ekf_filter_node": {
+                "ros__parameters": {**base_ekf, **run_ekf},
             },
         }
 
         filename = f"best_params_session_{sid}.yaml"
         filepath = os.path.join(os.getcwd(), filename)
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             yaml.dump(merged, f, default_flow_style=False, sort_keys=False)
 
         self._show_message(stdscr, f"Exported: {filepath}")
@@ -651,7 +692,7 @@ class ReviewTui:
             return
 
         session = self._sessions[self._selected_session_idx]
-        sid = session['id']
+        sid = session["id"]
 
         try:
             path = self._db.export_session_report(sid)
@@ -683,7 +724,7 @@ class ReviewTui:
             ch = stdscr.getch()
             if ch in (curses.KEY_ENTER, 10, 13):
                 curses.curs_set(0)
-                return ''.join(text)
+                return "".join(text)
             elif ch == 27:  # Escape
                 curses.curs_set(0)
                 return None
@@ -731,14 +772,14 @@ class ReviewTui:
 
     def _get_baseline_params(self, session):
         """Parse the baseline SLAM and EKF params from a session dict."""
-        base_slam = self._parse_json_safe(session.get('base_slam_config', '{}'))
-        base_ekf = self._parse_json_safe(session.get('base_ekf_config', '{}'))
+        base_slam = self._parse_json_safe(session.get("base_slam_config", "{}"))
+        base_ekf = self._parse_json_safe(session.get("base_ekf_config", "{}"))
         return base_slam, base_ekf
 
     def _get_changed_params_str(self, detail, base_slam, base_ekf):
         """Return a compact string describing which params changed from baseline."""
-        run_slam = self._parse_json_safe(detail.get('slam_params', '{}'))
-        run_ekf = self._parse_json_safe(detail.get('ekf_params', '{}'))
+        run_slam = self._parse_json_safe(detail.get("slam_params", "{}"))
+        run_ekf = self._parse_json_safe(detail.get("ekf_params", "{}"))
 
         changed = []
         for key, value in run_slam.items():
@@ -786,8 +827,10 @@ class ReviewTui:
         """
         try:
             import numpy as np
+
             nparr = np.frombuffer(png_bytes, np.uint8)
             import cv2
+
             img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
             if img is None:
                 return ["(failed to decode map image)"]
@@ -822,7 +865,7 @@ class ReviewTui:
                 char_idx = int(brightness / 255.0 * (num_chars - 1))
                 char_idx = min(char_idx, num_chars - 1)
                 line_chars.append(_ASCII_CHARS[char_idx])
-            lines.append(''.join(line_chars))
+            lines.append("".join(line_chars))
 
         return lines
 
@@ -851,14 +894,15 @@ class ReviewTui:
 # Entry point
 # ------------------------------------------------------------------
 
+
 def main(args=None):
     import sys
 
-    db_path = '/opt/mapping_autotune/autotune.db'
+    db_path = "/opt/mapping_autotune/autotune.db"
 
     # Check for --db-path command-line argument
     for i, arg in enumerate(sys.argv):
-        if arg == '--db-path' and i + 1 < len(sys.argv):
+        if arg == "--db-path" and i + 1 < len(sys.argv):
             db_path = sys.argv[i + 1]
 
     # Try to use ROS parameters if available
@@ -866,19 +910,19 @@ def main(args=None):
         rclpy.init(args=args)
         from rclpy.node import Node
 
-        node = Node('review_tui_node')
-        node.declare_parameter('db_path', db_path)
-        db_path = node.get_parameter('db_path').value
+        node = Node("review_tui_node")
+        node.declare_parameter("db_path", db_path)
+        db_path = node.get_parameter("db_path").value
 
-        node.declare_parameter('export_report', False)
-        export_only = node.get_parameter('export_report').value
+        node.declare_parameter("export_report", False)
+        export_only = node.get_parameter("export_report").value
 
         if export_only:
-            node.declare_parameter('session_id', 0)
-            sid = node.get_parameter('session_id').value
+            node.declare_parameter("session_id", 0)
+            sid = node.get_parameter("session_id").value
             db = DbManager(db_path)
             path = db.export_session_report(sid)
-            print(f'Report saved to: {path}')
+            print(f"Report saved to: {path}")
             node.destroy_node()
             rclpy.shutdown()
             return
@@ -892,5 +936,5 @@ def main(args=None):
     tui.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

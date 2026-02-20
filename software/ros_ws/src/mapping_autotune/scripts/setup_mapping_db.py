@@ -3,10 +3,10 @@
 
 No ROS dependency. Works on any system with Python 3 and sqlite3.
 """
+
 import argparse
 import json
 import os
-import shutil
 import sqlite3
 import subprocess
 import sys
@@ -88,9 +88,9 @@ def setup_local(db_dir):
     create_schema(db_path)
 
     print(f"\nDatabase ready at: {db_path}")
-    print(f"\nTo use with autotune_node:")
+    print("\nTo use with autotune_node:")
     print(f"  ros2 run mapping_autotune autotune_node --ros-args -p db_path:={db_path}")
-    print(f"\nTo use with review_tui:")
+    print("\nTo use with review_tui:")
     print(f"  ros2 run mapping_autotune review_tui --ros-args -p db_path:={db_path}")
 
 
@@ -102,7 +102,7 @@ def setup_server(db_dir):
     create_schema(db_path)
 
     print(f"Server database ready at: {db_path}")
-    print(f"\nTo review results on this server (no ROS needed):")
+    print("\nTo review results on this server (no ROS needed):")
     print(f"  python3 review_tui_standalone.py --db-path {db_path}")
 
 
@@ -116,9 +116,19 @@ def setup_remote(db_dir, ssh_host, ssh_user, ssh_key, remote_db_dir, sync_interv
     # Test SSH
     print(f"Testing SSH connection to {ssh_user}@{ssh_host}...")
     result = subprocess.run(
-        ["ssh", "-i", ssh_key, "-o", "ConnectTimeout=5", "-o", "BatchMode=yes",
-         f"{ssh_user}@{ssh_host}", "echo ok"],
-        capture_output=True, text=True,
+        [
+            "ssh",
+            "-i",
+            ssh_key,
+            "-o",
+            "ConnectTimeout=5",
+            "-o",
+            "BatchMode=yes",
+            f"{ssh_user}@{ssh_host}",
+            "echo ok",
+        ],
+        capture_output=True,
+        text=True,
     )
     if result.returncode != 0:
         print("  SSH connection: FAILED")
@@ -138,7 +148,7 @@ def setup_remote(db_dir, ssh_host, ssh_user, ssh_key, remote_db_dir, sync_interv
     with open(config_path, "w") as f:
         json.dump(sync_config, f, indent=4)
 
-    print(f"\nSync configured:")
+    print("\nSync configured:")
     print(f"  Local DB:    {db_path}")
     print(f"  Remote:      {ssh_user}@{ssh_host}:{remote_db_dir}/autotune.db")
     print(f"  Sync config: {config_path}")
@@ -146,29 +156,47 @@ def setup_remote(db_dir, ssh_host, ssh_user, ssh_key, remote_db_dir, sync_interv
 
 def main():
     parser = argparse.ArgumentParser(description="Setup mapping autotune database")
-    parser.add_argument("--db-dir", default="/opt/mapping_autotune",
-                        help="Database directory (default: /opt/mapping_autotune)")
-    parser.add_argument("--server", action="store_true",
-                        help="Server mode: create DB for remote review")
-    parser.add_argument("--remote-sync", action="store_true",
-                        help="Configure sync from robot to remote server")
+    parser.add_argument(
+        "--db-dir",
+        default="/opt/mapping_autotune",
+        help="Database directory (default: /opt/mapping_autotune)",
+    )
+    parser.add_argument(
+        "--server", action="store_true", help="Server mode: create DB for remote review"
+    )
+    parser.add_argument(
+        "--remote-sync",
+        action="store_true",
+        help="Configure sync from robot to remote server",
+    )
     parser.add_argument("--ssh-host", default="", help="SSH host for remote sync")
     parser.add_argument("--ssh-user", default="", help="SSH user for remote sync")
-    parser.add_argument("--ssh-key", default="~/.ssh/id_ed25519",
-                        help="SSH private key path")
-    parser.add_argument("--remote-db-dir", default="",
-                        help="Database directory on remote server")
-    parser.add_argument("--sync-interval", default="every_run",
-                        choices=["every_run", "end_of_session", "manual"],
-                        help="Sync frequency")
+    parser.add_argument(
+        "--ssh-key", default="~/.ssh/id_ed25519", help="SSH private key path"
+    )
+    parser.add_argument(
+        "--remote-db-dir", default="", help="Database directory on remote server"
+    )
+    parser.add_argument(
+        "--sync-interval",
+        default="every_run",
+        choices=["every_run", "end_of_session", "manual"],
+        help="Sync frequency",
+    )
     args = parser.parse_args()
 
     if args.remote_sync:
         if not args.ssh_host or not args.ssh_user:
             parser.error("--ssh-host and --ssh-user required for --remote-sync")
         remote_dir = args.remote_db_dir or args.db_dir
-        setup_remote(args.db_dir, args.ssh_host, args.ssh_user,
-                     os.path.expanduser(args.ssh_key), remote_dir, args.sync_interval)
+        setup_remote(
+            args.db_dir,
+            args.ssh_host,
+            args.ssh_user,
+            os.path.expanduser(args.ssh_key),
+            remote_dir,
+            args.sync_interval,
+        )
     elif args.server:
         setup_server(args.db_dir)
     else:

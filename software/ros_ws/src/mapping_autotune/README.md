@@ -92,15 +92,15 @@ The node runs a pre-flight check (database, SLAM, EKF, LIDAR, odometry, IMU), th
 
 Each phase uses the best result from the previous phase as its baseline:
 
-| Phase | Category | Runs | Parameters |
-|-------|----------|------|------------|
-| 0 | IMU Calibration | 0 | Gyro bias and deadband (stationary, 30s) |
-| 1 | IMU Integration | 3 | IMU off / on / on+deadband in EKF |
-| 2 | SLAM Rotation | 10 | `minimum_travel_heading`, `correlation_search_space_smear_deviation`, `angle_variance_penalty` |
-| 3 | Scan Matching | 6 | `minimum_angle_penalty`, `link_match_minimum_response_fine`, `minimum_distance_penalty` |
-| 4 | Timing | 4 | `throttle_scans`, `minimum_time_interval`, `transform_publish_period` |
-| 5 | Speed | 3 | Rotation and linear speed during maneuver |
-| 6 | EKF Noise | 3 | Process noise covariance for yaw and angular velocity |
+| Phase | Category        | Runs | Parameters                                                                                     |
+| ----- | --------------- | ---- | ---------------------------------------------------------------------------------------------- |
+| 0     | IMU Calibration | 0    | Gyro bias and deadband (stationary, 30s)                                                       |
+| 1     | IMU Integration | 3    | IMU off / on / on+deadband in EKF                                                              |
+| 2     | SLAM Rotation   | 10   | `minimum_travel_heading`, `correlation_search_space_smear_deviation`, `angle_variance_penalty` |
+| 3     | Scan Matching   | 6    | `minimum_angle_penalty`, `link_match_minimum_response_fine`, `minimum_distance_penalty`        |
+| 4     | Timing          | 4    | `throttle_scans`, `minimum_time_interval`, `transform_publish_period`                          |
+| 5     | Speed           | 3    | Rotation and linear speed during maneuver                                                      |
+| 6     | EKF Noise       | 3    | Process noise covariance for yaw and angular velocity                                          |
 
 When `max_runs` is less than the full plan, the system prioritizes phases 1-3 (highest impact on rotation smearing).
 
@@ -108,28 +108,28 @@ When `max_runs` is less than the full plan, the system prioritizes phases 1-3 (h
 
 All scores are 0.0-1.0 (higher is better):
 
-| Metric | Weight | What it measures |
-|--------|--------|------------------|
-| Wall Straightness | 25% | Deviation of occupied cells from Hough-detected lines |
-| Wall Thickness | 20% | How close wall thickness is to the ideal of 1 cell |
-| Ghost Walls | 20% | Parallel line pairs indicating doubled/smeared walls |
-| Symmetry | 15% | Structural symmetry via PCA and mirrored IoU |
-| Free Space | 10% | Spurious isolated occupied cells in free areas |
-| Occupied Density | 10% | Whether occupied cell ratio falls in the expected 2-10% range |
+| Metric            | Weight | What it measures                                              |
+| ----------------- | ------ | ------------------------------------------------------------- |
+| Wall Straightness | 25%    | Deviation of occupied cells from Hough-detected lines         |
+| Wall Thickness    | 20%    | How close wall thickness is to the ideal of 1 cell            |
+| Ghost Walls       | 20%    | Parallel line pairs indicating doubled/smeared walls          |
+| Symmetry          | 15%    | Structural symmetry via PCA and mirrored IoU                  |
+| Free Space        | 10%    | Spurious isolated occupied cells in free areas                |
+| Occupied Density  | 10%    | Whether occupied cell ratio falls in the expected 2-10% range |
 
 ## Autotune Node Parameters
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `db_path` | `/opt/mapping_autotune/autotune.db` | SQLite database path |
-| `max_runs` | `10` | Total runs across all phases |
-| `session_name` | auto-generated | Name for this session |
-| `session_description` | `""` | Optional description |
-| `settling_time` | `3.0` | Seconds to wait after SLAM restart |
-| `maneuver_pattern` | `box_return` | `box_return` or `corridor` |
-| `slam_config_path` | auto-detected | Baseline SLAM YAML |
-| `ekf_config_path` | auto-detected | Baseline EKF YAML |
-| `skip_preflight` | `false` | Skip pre-flight checks |
+| Parameter             | Default                             | Description                        |
+| --------------------- | ----------------------------------- | ---------------------------------- |
+| `db_path`             | `/opt/mapping_autotune/autotune.db` | SQLite database path               |
+| `max_runs`            | `10`                                | Total runs across all phases       |
+| `session_name`        | auto-generated                      | Name for this session              |
+| `session_description` | `""`                                | Optional description               |
+| `settling_time`       | `3.0`                               | Seconds to wait after SLAM restart |
+| `maneuver_pattern`    | `box_return`                        | `box_return` or `corridor`         |
+| `slam_config_path`    | auto-detected                       | Baseline SLAM YAML                 |
+| `ekf_config_path`     | auto-detected                       | Baseline EKF YAML                  |
+| `skip_preflight`      | `false`                             | Skip pre-flight checks             |
 
 ## Review TUI
 
@@ -142,16 +142,16 @@ The interactive terminal UI has four screens:
 
 Key bindings:
 
-| Key | Action |
-|-----|--------|
-| `Enter` | Open selected item |
-| `Esc` | Go back |
-| `1`-`5` | Rate the selected run |
-| `n` | Add notes to a run |
-| `c` | Compare two runs (press on first, then second) |
-| `e` | Export best parameters as YAML |
-| `r` | Export session report (markdown) |
-| `q` | Quit |
+| Key     | Action                                         |
+| ------- | ---------------------------------------------- |
+| `Enter` | Open selected item                             |
+| `Esc`   | Go back                                        |
+| `1`-`5` | Rate the selected run                          |
+| `n`     | Add notes to a run                             |
+| `c`     | Compare two runs (press on first, then second) |
+| `e`     | Export best parameters as YAML                 |
+| `r`     | Export session report (markdown)               |
+| `q`     | Quit                                           |
 
 ## Remote Server Setup
 

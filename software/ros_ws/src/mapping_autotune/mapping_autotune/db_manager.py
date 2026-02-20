@@ -1,6 +1,5 @@
 import json
 import sqlite3
-import zlib
 import subprocess
 import os
 import datetime
@@ -21,7 +20,9 @@ class DbManager:
 
         self.init_db()
 
-        sync_config_path = os.path.join(os.path.dirname(self._db_path), "sync_config.json")
+        sync_config_path = os.path.join(
+            os.path.dirname(self._db_path), "sync_config.json"
+        )
         if os.path.isfile(sync_config_path):
             try:
                 with open(sync_config_path, "r") as f:
@@ -198,20 +199,35 @@ class DbManager:
     # Run CRUD
     # ------------------------------------------------------------------
 
-    def create_run(self, session_id, run_number, slam_params, ekf_params,
-                   imu_params="{}", maneuver_params="{}"):
+    def create_run(
+        self,
+        session_id,
+        run_number,
+        slam_params,
+        ekf_params,
+        imu_params="{}",
+        maneuver_params="{}",
+    ):
         """Create a new run record and return its id."""
         conn = self._connect()
         try:
             cursor = conn.execute(
                 "INSERT INTO runs (session_id, run_number, slam_params, ekf_params, "
                 "imu_params, maneuver_params) VALUES (?, ?, ?, ?, ?, ?)",
-                (session_id, run_number, slam_params, ekf_params,
-                 imu_params, maneuver_params),
+                (
+                    session_id,
+                    run_number,
+                    slam_params,
+                    ekf_params,
+                    imu_params,
+                    maneuver_params,
+                ),
             )
             conn.commit()
             run_id = cursor.lastrowid
-            self._log_info(f"Created run {run_id} (session {session_id}, #{run_number})")
+            self._log_info(
+                f"Created run {run_id} (session {session_id}, #{run_number})"
+            )
             return run_id
         finally:
             conn.close()
@@ -234,8 +250,9 @@ class DbManager:
         finally:
             conn.close()
 
-    def store_map_data(self, run_id, map_data_compressed, width, height, resolution,
-                       map_png=None):
+    def store_map_data(
+        self, run_id, map_data_compressed, width, height, resolution, map_png=None
+    ):
         """Store pre-compressed map occupancy grid and optional PNG thumbnail."""
         conn = self._connect()
         try:
@@ -246,8 +263,7 @@ class DbManager:
             )
             conn.commit()
             self._log_info(
-                f"Stored map data for run {run_id} ({width}x{height}, "
-                f"res={resolution})"
+                f"Stored map data for run {run_id} ({width}x{height}, res={resolution})"
             )
         finally:
             conn.close()
@@ -419,7 +435,9 @@ class DbManager:
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             if result.returncode != 0:
-                self._log_warn(f"rsync failed (rc={result.returncode}): {result.stderr}")
+                self._log_warn(
+                    f"rsync failed (rc={result.returncode}): {result.stderr}"
+                )
             else:
                 self._log_info("Remote sync completed successfully")
         except subprocess.TimeoutExpired:
@@ -634,9 +652,7 @@ class DbManager:
             lines.append("|-----|--------|-------|")
             for dr in rated_runs:
                 notes = dr.get("rating_notes") or ""
-                lines.append(
-                    f"| #{dr['run_number']} | {dr['rating']}/5 | {notes} |"
-                )
+                lines.append(f"| #{dr['run_number']} | {dr['rating']}/5 | {notes} |")
             lines.append("")
         else:
             lines.append("No human ratings recorded.")

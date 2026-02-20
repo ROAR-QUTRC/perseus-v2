@@ -8,10 +8,8 @@ import json
 import os
 import signal
 import subprocess
-import tempfile
 import threading
 import time
-import zlib
 
 import rclpy
 import yaml
@@ -29,7 +27,6 @@ from rclpy.qos import (
 from sensor_msgs.msg import Imu, LaserScan
 
 from mapping_autotune.db_manager import DbManager
-from mapping_autotune.imu_filter_node import ImuFilterNode
 from mapping_autotune.maneuver_executor import ManeuverExecutor
 from mapping_autotune.map_analyzer import MapAnalyzer
 from mapping_autotune.param_manager import ParamManager
@@ -38,69 +35,69 @@ from mapping_autotune.param_manager import ParamManager
 class State:
     """State machine states for the autotune orchestrator."""
 
-    PREFLIGHT = 'preflight'
-    IDLE = 'idle'
-    CONFIGURING = 'configuring'
-    RESETTING_SLAM = 'resetting_slam'
-    SETTLING = 'settling'
-    RUNNING_MANEUVER = 'running_maneuver'
-    CAPTURING_MAP = 'capturing_map'
-    ANALYZING = 'analyzing'
-    COMPLETE = 'complete'
-    ERROR = 'error'
+    PREFLIGHT = "preflight"
+    IDLE = "idle"
+    CONFIGURING = "configuring"
+    RESETTING_SLAM = "resetting_slam"
+    SETTLING = "settling"
+    RUNNING_MANEUVER = "running_maneuver"
+    CAPTURING_MAP = "capturing_map"
+    ANALYZING = "analyzing"
+    COMPLETE = "complete"
+    ERROR = "error"
 
 
 class AutotuneNode(Node):
     """Orchestrator node that drives the mapping autotune state machine."""
 
     def __init__(self):
-        super().__init__('autotune_node')
+        super().__init__("autotune_node")
 
         # ── Declare ROS parameters ────────────────────────────────────
-        self.declare_parameter('db_path', '/opt/mapping_autotune/autotune.db')
-        self.declare_parameter('max_runs', 10)
-        self.declare_parameter('session_name', '')
-        self.declare_parameter('session_description', '')
-        self.declare_parameter('settling_time', 3.0)
-        self.declare_parameter('slam_config_path', '')
-        self.declare_parameter('ekf_config_path', '')
-        self.declare_parameter('maneuver_pattern', 'box_return')
-        self.declare_parameter('skip_preflight', False)
+        self.declare_parameter("db_path", "/opt/mapping_autotune/autotune.db")
+        self.declare_parameter("max_runs", 10)
+        self.declare_parameter("session_name", "")
+        self.declare_parameter("session_description", "")
+        self.declare_parameter("settling_time", 3.0)
+        self.declare_parameter("slam_config_path", "")
+        self.declare_parameter("ekf_config_path", "")
+        self.declare_parameter("maneuver_pattern", "box_return")
+        self.declare_parameter("skip_preflight", False)
 
         # ── Read parameter values ─────────────────────────────────────
-        self._db_path = self.get_parameter('db_path').value
-        self._max_runs = self.get_parameter('max_runs').value
-        self._session_name = self.get_parameter('session_name').value
-        self._session_description = self.get_parameter('session_description').value
-        self._settling_time = self.get_parameter('settling_time').value
-        self._slam_config_path = self.get_parameter('slam_config_path').value
-        self._ekf_config_path = self.get_parameter('ekf_config_path').value
-        self._maneuver_pattern = self.get_parameter('maneuver_pattern').value
-        self._skip_preflight = self.get_parameter('skip_preflight').value
+        self._db_path = self.get_parameter("db_path").value
+        self._max_runs = self.get_parameter("max_runs").value
+        self._session_name = self.get_parameter("session_name").value
+        self._session_description = self.get_parameter("session_description").value
+        self._settling_time = self.get_parameter("settling_time").value
+        self._slam_config_path = self.get_parameter("slam_config_path").value
+        self._ekf_config_path = self.get_parameter("ekf_config_path").value
+        self._maneuver_pattern = self.get_parameter("maneuver_pattern").value
+        self._skip_preflight = self.get_parameter("skip_preflight").value
 
         # ── Auto-detect config paths if not supplied ──────────────────
         if not self._slam_config_path:
             try:
-                autonomy_share = get_package_share_directory('autonomy')
+                autonomy_share = get_package_share_directory("autonomy")
                 self._slam_config_path = os.path.join(
-                    autonomy_share, 'config', 'slam_toolbox_params_perseus_lite.yaml'
+                    autonomy_share, "config", "slam_toolbox_params_perseus_lite.yaml"
                 )
             except Exception:
                 self.get_logger().warn(
-                    'Could not auto-detect SLAM config path. '
-                    'Set slam_config_path parameter explicitly.'
+                    "Could not auto-detect SLAM config path. "
+                    "Set slam_config_path parameter explicitly."
                 )
 
         if not self._ekf_config_path:
             try:
-                autonomy_share = get_package_share_directory('autonomy')
+                autonomy_share = get_package_share_directory("autonomy")
                 self._ekf_config_path = os.path.join(
-                    autonomy_share, 'config', 'ekf_params_perseus_lite.yaml'
+                    autonomy_share, "config", "ekf_params_perseus_lite.yaml"
                 )
             except Exception:
                 self.get_logger().warn(
-                    'Could not auto-detect EKF config path. '
-                    'Set ekf_config_path parameter explicitly.'
+                    "Could not auto-detect EKF config path. "
+                    "Set ekf_config_path parameter explicitly."
                 )
 
         # ── Load baseline configurations ──────────────────────────────
@@ -109,13 +106,13 @@ class AutotuneNode(Node):
 
         # ── Auto-generate session name if empty ───────────────────────
         if not self._session_name:
-            self._session_name = time.strftime('autotune_%Y%m%d_%H%M%S')
+            self._session_name = time.strftime("autotune_%Y%m%d_%H%M%S")
 
         # ── Initialize components ─────────────────────────────────────
         self._db = DbManager(db_path=self._db_path, logger=self.get_logger())
 
         defaults = {
-            'imu_deadband_threshold': 0.01,
+            "imu_deadband_threshold": 0.01,
         }
         self._param_mgr = ParamManager(
             baseline_slam=self._baseline_slam,
@@ -132,13 +129,13 @@ class AutotuneNode(Node):
             depth=1,
         )
         self._map_sub = self.create_subscription(
-            OccupancyGrid, '/map', self._map_callback, map_qos
+            OccupancyGrid, "/map", self._map_callback, map_qos
         )
         self._latest_map = None
 
         # ── State machine ─────────────────────────────────────────────
         self._state = State.PREFLIGHT if not self._skip_preflight else State.CONFIGURING
-        self._error_message = ''
+        self._error_message = ""
 
         # Session / run tracking
         self._current_session_id = None
@@ -183,8 +180,8 @@ class AutotuneNode(Node):
         )
 
         self.get_logger().info(
-            f'AutotuneNode initialized. Session: {self._session_name}, '
-            f'max_runs: {self._max_runs}'
+            f"AutotuneNode initialized. Session: {self._session_name}, "
+            f"max_runs: {self._max_runs}"
         )
 
     # ══════════════════════════════════════════════════════════════════
@@ -200,59 +197,61 @@ class AutotuneNode(Node):
         results = []
         warnings = []
 
-        self.get_logger().info('=== MAPPING AUTOTUNE PRE-FLIGHT ===')
+        self.get_logger().info("=== MAPPING AUTOTUNE PRE-FLIGHT ===")
 
         # 1. Database connection
         db_ok = self._db.check_connection()
-        results.append(('Database connection', self._db_path, db_ok))
+        results.append(("Database connection", self._db_path, db_ok))
 
         # 2. SLAM node alive
         node_names = self.get_node_names_and_namespaces()
-        slam_alive = any('slam_toolbox' in name for name, _ in node_names)
-        results.append(('SLAM node (slam_toolbox)', None, slam_alive))
+        slam_alive = any("slam_toolbox" in name for name, _ in node_names)
+        results.append(("SLAM node (slam_toolbox)", None, slam_alive))
 
         # 3. EKF node alive
-        ekf_alive = any('ekf_filter_node' in name for name, _ in node_names)
-        results.append(('EKF node (ekf_filter_node)', None, ekf_alive))
+        ekf_alive = any("ekf_filter_node" in name for name, _ in node_names)
+        results.append(("EKF node (ekf_filter_node)", None, ekf_alive))
 
         # 4. /map topic has publisher
-        map_pub_count = self.count_publishers('/map')
+        map_pub_count = self.count_publishers("/map")
         map_ok = map_pub_count > 0
-        results.append(('/map topic has publisher', f'{map_pub_count} publishers', map_ok))
+        results.append(
+            ("/map topic has publisher", f"{map_pub_count} publishers", map_ok)
+        )
 
         # 5. /scan topic receiving data
-        scan_msg = self._wait_for_topic_message('/scan', LaserScan, timeout=3.0)
+        scan_msg = self._wait_for_topic_message("/scan", LaserScan, timeout=3.0)
         scan_ok = scan_msg is not None
-        results.append(('/scan topic receiving', None, scan_ok))
+        results.append(("/scan topic receiving", None, scan_ok))
 
         # 6. Odometry active
         odom_msg = self._wait_for_topic_message(
-            '/diff_drive_base_controller/odom', Odometry, timeout=3.0
+            "/diff_drive_base_controller/odom", Odometry, timeout=3.0
         )
         odom_ok = odom_msg is not None
-        results.append(('/diff_drive_base_controller/odom active', None, odom_ok))
+        results.append(("/diff_drive_base_controller/odom active", None, odom_ok))
 
         # 7. IMU active (warning only)
-        imu_msg = self._wait_for_topic_message('/imu/data', Imu, timeout=3.0)
+        imu_msg = self._wait_for_topic_message("/imu/data", Imu, timeout=3.0)
         imu_ok = imu_msg is not None
         is_imu_warning = not imu_ok
         if is_imu_warning:
-            warnings.append('/imu/data not receiving - IMU phases may fail')
-        results.append(('/imu/data active', 'warning only', imu_ok))
+            warnings.append("/imu/data not receiving - IMU phases may fail")
+        results.append(("/imu/data active", "warning only", imu_ok))
 
         # 8. /joy_vel writable
         joy_vel_ok = True
         try:
-            pub = self.create_publisher(TwistStamped, '/joy_vel', 10)
+            pub = self.create_publisher(TwistStamped, "/joy_vel", 10)
             msg = TwistStamped()
             msg.header.stamp = self.get_clock().now().to_msg()
-            msg.header.frame_id = 'base_link'
+            msg.header.frame_id = "base_link"
             pub.publish(msg)
             self.destroy_publisher(pub)
         except Exception as e:
             joy_vel_ok = False
-            self.get_logger().error(f'/joy_vel publish test failed: {e}')
-        results.append(('/joy_vel writable', None, joy_vel_ok))
+            self.get_logger().error(f"/joy_vel publish test failed: {e}")
+        results.append(("/joy_vel writable", None, joy_vel_ok))
 
         # 9. Robot stationary
         stationary_ok = True
@@ -261,7 +260,7 @@ class AutotuneNode(Node):
             start = time.time()
             while time.time() - start < 1.0:
                 sample = self._wait_for_topic_message(
-                    '/diff_drive_base_controller/odom', Odometry, timeout=0.5
+                    "/diff_drive_base_controller/odom", Odometry, timeout=0.5
                 )
                 if sample is not None:
                     odom_samples.append(sample)
@@ -271,25 +270,25 @@ class AutotuneNode(Node):
                         stationary_ok = False
         else:
             stationary_ok = False
-        results.append(('Robot stationary', None, stationary_ok))
+        results.append(("Robot stationary", None, stationary_ok))
 
         # 10. Disk space
         disk_ok = True
-        disk_info = ''
+        disk_info = ""
         try:
             db_dir = os.path.dirname(self._db_path)
             if not os.path.isdir(db_dir):
                 os.makedirs(db_dir, exist_ok=True)
             stat = os.statvfs(db_dir)
             free_mb = (stat.f_bavail * stat.f_frsize) / (1024 * 1024)
-            disk_info = f'{free_mb:.0f} MB free'
+            disk_info = f"{free_mb:.0f} MB free"
             if free_mb < 100:
                 disk_ok = False
-                warnings.append(f'Low disk space: {free_mb:.0f} MB')
+                warnings.append(f"Low disk space: {free_mb:.0f} MB")
         except Exception as e:
             disk_ok = False
             disk_info = str(e)
-        results.append(('Disk space', disk_info, disk_ok))
+        results.append(("Disk space", disk_info, disk_ok))
 
         # Print results
         passed = 0
@@ -297,32 +296,31 @@ class AutotuneNode(Node):
         warn_count = 0
 
         for name, detail, ok in results:
-            detail_str = f' ({detail})' if detail else ''
+            detail_str = f" ({detail})" if detail else ""
             # The IMU check is a warning, not a failure
-            is_warning = (name == '/imu/data active' and not ok)
+            is_warning = name == "/imu/data active" and not ok
             if ok:
-                status = '[PASS]'
+                status = "[PASS]"
                 passed += 1
             elif is_warning:
-                status = '[WARN]'
+                status = "[WARN]"
                 warn_count += 1
             else:
-                status = '[FAIL]'
+                status = "[FAIL]"
                 failed += 1
-            self.get_logger().info(f'{status} {name}{detail_str}')
+            self.get_logger().info(f"{status} {name}{detail_str}")
 
         for w in warnings:
             self.get_logger().warn(w)
 
         self.get_logger().info(
-            f'Pre-flight: {passed}/{len(results)} passed, '
-            f'{warn_count} warning(s), {failed} failure(s)'
+            f"Pre-flight: {passed}/{len(results)} passed, "
+            f"{warn_count} warning(s), {failed} failure(s)"
         )
 
         # Critical checks exclude the IMU warning
         critical_failures = sum(
-            1 for name, _, ok in results
-            if not ok and name != '/imu/data active'
+            1 for name, _, ok in results if not ok and name != "/imu/data active"
         )
         return critical_failures == 0
 
@@ -354,7 +352,7 @@ class AutotuneNode(Node):
             elif self._state == State.ERROR:
                 self._handle_error()
         except Exception as e:
-            self.get_logger().error(f'State machine exception in {self._state}: {e}')
+            self.get_logger().error(f"State machine exception in {self._state}: {e}")
             self._error_message = str(e)
             self._state = State.ERROR
 
@@ -366,7 +364,7 @@ class AutotuneNode(Node):
             self._initialize_session()
             self._state = State.CONFIGURING
         else:
-            self._error_message = 'Pre-flight checks failed'
+            self._error_message = "Pre-flight checks failed"
             self._state = State.ERROR
 
     def _initialize_session(self):
@@ -378,12 +376,12 @@ class AutotuneNode(Node):
             base_ekf_config=json.dumps(self._baseline_ekf),
         )
         self.get_logger().info(
-            f'Created session {self._current_session_id}: {self._session_name}'
+            f"Created session {self._current_session_id}: {self._session_name}"
         )
 
         # Allocate runs across phases
         self._phase_allocation = ParamManager.allocate_runs(self._max_runs)
-        self.get_logger().info(f'Phase allocation: {self._phase_allocation}')
+        self.get_logger().info(f"Phase allocation: {self._phase_allocation}")
 
         # Find the first phase with allocated runs
         self._advance_to_next_phase(start_phase=1)
@@ -411,7 +409,7 @@ class AutotuneNode(Node):
                 self._phase_runs = self._phase_runs[:allocated]
                 self._phase_run_index = 0
                 self.get_logger().info(
-                    f'Phase {phase}: {len(self._phase_runs)} runs planned'
+                    f"Phase {phase}: {len(self._phase_runs)} runs planned"
                 )
                 return True
             phase += 1
@@ -433,7 +431,7 @@ class AutotuneNode(Node):
 
         # Check global run budget
         if self._runs_completed >= self._max_runs:
-            self.get_logger().info('Max runs reached.')
+            self.get_logger().info("Max runs reached.")
             self._state = State.COMPLETE
             return
 
@@ -441,20 +439,22 @@ class AutotuneNode(Node):
         self._current_run_params = self._phase_runs[self._phase_run_index]
         self._current_run_number += 1
 
-        run_label = self._current_run_params.get('run_label', f'run_{self._current_run_number}')
+        run_label = self._current_run_params.get(
+            "run_label", f"run_{self._current_run_number}"
+        )
         self.get_logger().info(
-            f'Configuring run {self._current_run_number} '
-            f'(phase {self._current_phase}, {run_label})'
+            f"Configuring run {self._current_run_number} "
+            f"(phase {self._current_phase}, {run_label})"
         )
 
         # Create DB run record
         self._current_run_id = self._db.create_run(
             session_id=self._current_session_id,
             run_number=self._current_run_number,
-            slam_params=json.dumps(self._current_run_params.get('slam', {})),
-            ekf_params=json.dumps(self._current_run_params.get('ekf', {})),
-            imu_params=json.dumps(self._current_run_params.get('imu_filter', {})),
-            maneuver_params=json.dumps(self._current_run_params.get('maneuver', {})),
+            slam_params=json.dumps(self._current_run_params.get("slam", {})),
+            ekf_params=json.dumps(self._current_run_params.get("ekf", {})),
+            imu_params=json.dumps(self._current_run_params.get("imu_filter", {})),
+            maneuver_params=json.dumps(self._current_run_params.get("maneuver", {})),
         )
 
         # Write temp config files
@@ -466,14 +466,16 @@ class AutotuneNode(Node):
         )
 
         # Determine if SLAM restart is needed
-        current_slam = self._current_run_params.get('slam', {})
-        slam_changed = (self._prev_slam_params is None or
-                        current_slam != self._prev_slam_params)
+        current_slam = self._current_run_params.get("slam", {})
+        slam_changed = (
+            self._prev_slam_params is None or current_slam != self._prev_slam_params
+        )
 
         # Determine if EKF restart is needed
-        current_ekf = self._current_run_params.get('ekf', {})
-        ekf_changed = (self._prev_ekf_params is None or
-                       current_ekf != self._prev_ekf_params)
+        current_ekf = self._current_run_params.get("ekf", {})
+        ekf_changed = (
+            self._prev_ekf_params is None or current_ekf != self._prev_ekf_params
+        )
 
         self._prev_slam_params = current_slam
         self._prev_ekf_params = current_ekf
@@ -491,24 +493,24 @@ class AutotuneNode(Node):
             self._reset_start_time = time.time()
 
             # Kill existing SLAM process
-            self.get_logger().info('Killing existing SLAM process...')
+            self.get_logger().info("Killing existing SLAM process...")
             try:
                 subprocess.run(
-                    ['pkill', '-f', 'async_slam_toolbox_node'],
-                    timeout=5, capture_output=True
+                    ["pkill", "-f", "async_slam_toolbox_node"],
+                    timeout=5,
+                    capture_output=True,
                 )
             except Exception as e:
-                self.get_logger().warn(f'pkill slam failed: {e}')
+                self.get_logger().warn(f"pkill slam failed: {e}")
 
             # Kill existing EKF process
-            self.get_logger().info('Killing existing EKF process...')
+            self.get_logger().info("Killing existing EKF process...")
             try:
                 subprocess.run(
-                    ['pkill', '-f', 'ekf_node'],
-                    timeout=5, capture_output=True
+                    ["pkill", "-f", "ekf_node"], timeout=5, capture_output=True
                 )
             except Exception as e:
-                self.get_logger().warn(f'pkill ekf failed: {e}')
+                self.get_logger().warn(f"pkill ekf failed: {e}")
 
             # Kill spawned process handles if we hold them
             self._terminate_process(self._slam_process)
@@ -522,65 +524,73 @@ class AutotuneNode(Node):
 
         # After 2 seconds, relaunch
         if elapsed >= 2.0 and self._slam_process is None:
-            self.get_logger().info('Relaunching SLAM with new parameters...')
+            self.get_logger().info("Relaunching SLAM with new parameters...")
             try:
                 self._slam_process = subprocess.Popen(
                     [
-                        'ros2', 'run', 'slam_toolbox', 'async_slam_toolbox_node',
-                        '--ros-args', '--params-file', self._current_slam_config_path,
+                        "ros2",
+                        "run",
+                        "slam_toolbox",
+                        "async_slam_toolbox_node",
+                        "--ros-args",
+                        "--params-file",
+                        self._current_slam_config_path,
                     ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
             except Exception as e:
-                self.get_logger().error(f'Failed to launch SLAM: {e}')
-                self._error_message = f'SLAM launch failed: {e}'
+                self.get_logger().error(f"Failed to launch SLAM: {e}")
+                self._error_message = f"SLAM launch failed: {e}"
                 self._state = State.ERROR
                 return
 
-            self.get_logger().info('Relaunching EKF with new parameters...')
+            self.get_logger().info("Relaunching EKF with new parameters...")
             try:
                 self._ekf_process = subprocess.Popen(
                     [
-                        'ros2', 'run', 'robot_localization', 'ekf_node',
-                        '--ros-args', '--params-file', self._current_ekf_config_path,
+                        "ros2",
+                        "run",
+                        "robot_localization",
+                        "ekf_node",
+                        "--ros-args",
+                        "--params-file",
+                        self._current_ekf_config_path,
                     ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
             except Exception as e:
-                self.get_logger().error(f'Failed to launch EKF: {e}')
-                self._error_message = f'EKF launch failed: {e}'
+                self.get_logger().error(f"Failed to launch EKF: {e}")
+                self._error_message = f"EKF launch failed: {e}"
                 self._state = State.ERROR
                 return
 
         # Wait for /map to have a publisher
         if elapsed >= 3.0 and self._slam_process is not None:
-            map_pubs = self.count_publishers('/map')
+            map_pubs = self.count_publishers("/map")
             if map_pubs > 0:
-                self.get_logger().info('/map publisher detected. Moving to settling.')
+                self.get_logger().info("/map publisher detected. Moving to settling.")
                 self._settling_start_time = None
                 self._state = State.SETTLING
                 return
 
         # Timeout
         if elapsed > 15.0:
-            self.get_logger().error('Timeout waiting for SLAM to start publishing /map')
-            self._error_message = 'SLAM restart timeout (no /map publisher after 15s)'
+            self.get_logger().error("Timeout waiting for SLAM to start publishing /map")
+            self._error_message = "SLAM restart timeout (no /map publisher after 15s)"
             self._state = State.ERROR
 
     def _handle_settling(self):
         """Wait for settling_time seconds after SLAM restart."""
         if self._settling_start_time is None:
             self._settling_start_time = time.time()
-            self.get_logger().info(
-                f'Settling for {self._settling_time:.1f}s...'
-            )
+            self.get_logger().info(f"Settling for {self._settling_time:.1f}s...")
             return
 
         elapsed = time.time() - self._settling_start_time
         if elapsed >= self._settling_time:
-            self._db.update_run_status(self._current_run_id, 'running')
+            self._db.update_run_status(self._current_run_id, "running")
             self._state = State.RUNNING_MANEUVER
 
     def _handle_running_maneuver(self):
@@ -590,13 +600,13 @@ class AutotuneNode(Node):
         subscriptions (map, odom) while this callback blocks.
         """
         run_label = self._current_run_params.get(
-            'run_label', f'run_{self._current_run_number}'
+            "run_label", f"run_{self._current_run_number}"
         )
-        self.get_logger().info(f'Starting maneuver for {run_label}...')
+        self.get_logger().info(f"Starting maneuver for {run_label}...")
 
         # Prepare maneuver params
-        maneuver_params = dict(self._current_run_params.get('maneuver', {}))
-        maneuver_params.setdefault('pattern', self._maneuver_pattern)
+        maneuver_params = dict(self._current_run_params.get("maneuver", {}))
+        maneuver_params.setdefault("pattern", self._maneuver_pattern)
 
         # Start sensor logging
         self._maneuver.start_logging()
@@ -609,11 +619,11 @@ class AutotuneNode(Node):
         self._db.store_sensor_logs(self._current_run_id, odom_json, imu_json)
 
         if not success:
-            self.get_logger().warn(f'Maneuver failed for {run_label}')
-            self._db.update_run_status(self._current_run_id, 'failed')
+            self.get_logger().warn(f"Maneuver failed for {run_label}")
+            self._db.update_run_status(self._current_run_id, "failed")
             # Still try to capture and analyze the map
         else:
-            self.get_logger().info(f'Maneuver completed for {run_label}')
+            self.get_logger().info(f"Maneuver completed for {run_label}")
 
         self._capture_start_time = None
         self._state = State.CAPTURING_MAP
@@ -629,8 +639,8 @@ class AutotuneNode(Node):
             return
 
         if self._latest_map is None:
-            self.get_logger().warn('No map data available for capture.')
-            self._db.update_run_status(self._current_run_id, 'failed')
+            self.get_logger().warn("No map data available for capture.")
+            self._db.update_run_status(self._current_run_id, "failed")
             self._phase_run_index += 1
             self._runs_completed += 1
             self._state = State.CONFIGURING
@@ -649,12 +659,16 @@ class AutotuneNode(Node):
         try:
             png_bytes = self._analyzer.map_to_png(raw_data, width, height)
         except Exception as e:
-            self.get_logger().warn(f'PNG generation failed: {e}')
+            self.get_logger().warn(f"PNG generation failed: {e}")
             png_bytes = None
 
         # Store in DB
         self._db.store_map_data(
-            self._current_run_id, compressed, width, height, resolution,
+            self._current_run_id,
+            compressed,
+            width,
+            height,
+            resolution,
             map_png=png_bytes,
         )
 
@@ -663,8 +677,8 @@ class AutotuneNode(Node):
     def _handle_analyzing(self):
         """Run map quality analysis and store results."""
         if self._latest_map is None:
-            self.get_logger().warn('No map data for analysis.')
-            self._db.update_run_status(self._current_run_id, 'failed')
+            self.get_logger().warn("No map data for analysis.")
+            self._db.update_run_status(self._current_run_id, "failed")
             self._phase_run_index += 1
             self._runs_completed += 1
             self._state = State.CONFIGURING
@@ -680,32 +694,32 @@ class AutotuneNode(Node):
         metrics = self._analyzer.analyze(raw_data, width, height, resolution)
 
         # Serialize diagnostics to JSON string for DB storage
-        diagnostics = metrics.pop('diagnostics', {})
-        metrics['diagnostics'] = json.dumps(diagnostics)
+        diagnostics = metrics.pop("diagnostics", {})
+        metrics["diagnostics"] = json.dumps(diagnostics)
 
         # Store analysis in DB
         self._db.store_analysis(self._current_run_id, metrics)
 
         # Update run status
-        completed_at = time.strftime('%Y-%m-%d %H:%M:%S')
+        completed_at = time.strftime("%Y-%m-%d %H:%M:%S")
         self._db.update_run_status(
-            self._current_run_id, 'completed', completed_at=completed_at
+            self._current_run_id, "completed", completed_at=completed_at
         )
 
         # Log results
         run_label = self._current_run_params.get(
-            'run_label', f'run_{self._current_run_number}'
+            "run_label", f"run_{self._current_run_number}"
         )
-        composite = metrics.get('composite_score', 0.0)
-        wall_str = metrics.get('wall_straightness', 0.0)
-        thickness = metrics.get('wall_thickness', 0.0)
-        ghost = metrics.get('ghost_wall_score', 0.0)
+        composite = metrics.get("composite_score", 0.0)
+        wall_str = metrics.get("wall_straightness", 0.0)
+        thickness = metrics.get("wall_thickness", 0.0)
+        ghost = metrics.get("ghost_wall_score", 0.0)
 
         self.get_logger().info(
-            f'Run {self._current_run_number} ({run_label}): '
-            f'composite_score={composite:.4f} '
-            f'(wall={wall_str:.4f}, thickness={thickness:.4f}, '
-            f'ghost={ghost:.4f})'
+            f"Run {self._current_run_number} ({run_label}): "
+            f"composite_score={composite:.4f} "
+            f"(wall={wall_str:.4f}, thickness={thickness:.4f}, "
+            f"ghost={ghost:.4f})"
         )
 
         # Advance counters
@@ -732,27 +746,27 @@ class AutotuneNode(Node):
         best_run = self._db.get_best_run(self._current_session_id)
         if best_run is not None:
             try:
-                best_slam = json.loads(best_run.get('slam_params', '{}'))
+                best_slam = json.loads(best_run.get("slam_params", "{}"))
             except (json.JSONDecodeError, TypeError):
                 best_slam = {}
             try:
-                best_ekf = json.loads(best_run.get('ekf_params', '{}'))
+                best_ekf = json.loads(best_run.get("ekf_params", "{}"))
             except (json.JSONDecodeError, TypeError):
                 best_ekf = {}
 
             self._best_params = {
-                'slam': best_slam,
-                'ekf': best_ekf,
+                "slam": best_slam,
+                "ekf": best_ekf,
             }
             self.get_logger().info(
-                f'Phase {self._current_phase} complete. '
-                f'Best composite: {best_run.get("composite_score", 0.0):.4f} '
-                f'from run {best_run.get("run_number", "?")}'
+                f"Phase {self._current_phase} complete. "
+                f"Best composite: {best_run.get('composite_score', 0.0):.4f} "
+                f"from run {best_run.get('run_number', '?')}"
             )
 
         # Check budget
         if self._runs_completed >= self._max_runs:
-            self.get_logger().info('Run budget exhausted.')
+            self.get_logger().info("Run budget exhausted.")
             return False
 
         # Try to advance to next phase
@@ -761,34 +775,34 @@ class AutotuneNode(Node):
     def _handle_complete(self):
         """Finalize the session: update status, sync, export, log summary."""
         if self._current_session_id is not None:
-            self._db.update_session_status(self._current_session_id, 'completed')
+            self._db.update_session_status(self._current_session_id, "completed")
 
             # Sync to remote
             try:
                 self._db.sync_to_remote()
             except Exception as e:
-                self.get_logger().warn(f'Remote sync failed: {e}')
+                self.get_logger().warn(f"Remote sync failed: {e}")
 
             # Export report
             try:
                 report_path = self._db.export_session_report(self._current_session_id)
-                self.get_logger().info(f'Report exported to {report_path}')
+                self.get_logger().info(f"Report exported to {report_path}")
             except Exception as e:
-                self.get_logger().warn(f'Report export failed: {e}')
+                self.get_logger().warn(f"Report export failed: {e}")
 
             # Log summary
             best_run = self._db.get_best_run(self._current_session_id)
             if best_run is not None:
                 self.get_logger().info(
-                    f'Session complete. Best composite score: '
-                    f'{best_run.get("composite_score", 0.0):.4f} '
-                    f'from run {best_run.get("run_number", "?")}'
+                    f"Session complete. Best composite score: "
+                    f"{best_run.get('composite_score', 0.0):.4f} "
+                    f"from run {best_run.get('run_number', '?')}"
                 )
             else:
-                self.get_logger().info('Session complete. No successful runs.')
+                self.get_logger().info("Session complete. No successful runs.")
 
             self.get_logger().info(
-                'Use `ros2 run mapping_autotune review_tui` to review results'
+                "Use `ros2 run mapping_autotune review_tui` to review results"
             )
 
         # Cancel the timer to stop ticking
@@ -797,17 +811,17 @@ class AutotuneNode(Node):
 
     def _handle_error(self):
         """Log the error, abort session, and stop."""
-        self.get_logger().error(f'Autotune error: {self._error_message}')
+        self.get_logger().error(f"Autotune error: {self._error_message}")
 
         if self._current_session_id is not None:
             try:
-                self._db.update_session_status(self._current_session_id, 'aborted')
+                self._db.update_session_status(self._current_session_id, "aborted")
             except Exception:
                 pass
 
         if self._current_run_id is not None:
             try:
-                self._db.update_run_status(self._current_run_id, 'failed')
+                self._db.update_run_status(self._current_run_id, "failed")
             except Exception:
                 pass
 
@@ -829,11 +843,11 @@ class AutotuneNode(Node):
         Returns:
             The received message, or None on timeout.
         """
-        received = {'msg': None}
+        received = {"msg": None}
         event = threading.Event()
 
         def _callback(msg):
-            received['msg'] = msg
+            received["msg"] = msg
             event.set()
 
         sub = self.create_subscription(msg_type, topic, _callback, 10)
@@ -842,7 +856,7 @@ class AutotuneNode(Node):
         finally:
             self.destroy_subscription(sub)
 
-        return received['msg']
+        return received["msg"]
 
     def _load_baseline_config(self, config_path) -> dict:
         """Load a YAML config file and return the full dict.
@@ -854,16 +868,16 @@ class AutotuneNode(Node):
             The parsed YAML dict, or an empty dict on failure.
         """
         if not config_path or not os.path.isfile(config_path):
-            self.get_logger().warn(f'Config file not found: {config_path}')
+            self.get_logger().warn(f"Config file not found: {config_path}")
             return {}
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 data = yaml.safe_load(f) or {}
-            self.get_logger().info(f'Loaded baseline config: {config_path}')
+            self.get_logger().info(f"Loaded baseline config: {config_path}")
             return data
         except Exception as e:
-            self.get_logger().error(f'Failed to load config {config_path}: {e}')
+            self.get_logger().error(f"Failed to load config {config_path}: {e}")
             return {}
 
     def _map_callback(self, msg):
@@ -892,7 +906,7 @@ class AutotuneNode(Node):
 
     def cleanup(self):
         """Kill any spawned SLAM/EKF/IMU filter processes gracefully."""
-        self.get_logger().info('Cleaning up spawned processes...')
+        self.get_logger().info("Cleaning up spawned processes...")
         self._terminate_process(self._slam_process)
         self._slam_process = None
         self._terminate_process(self._ekf_process)
@@ -924,5 +938,5 @@ def main(args=None):
         rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
 """Tests for param_manager module."""
-import json
+
 import os
 import yaml
 

@@ -101,12 +101,22 @@ class ImuFilterNode(Node):
         )
 
         # Update parameters with calibrated values
-        self.set_parameters([
-            rclpy.parameter.Parameter("gyro_bias_x", rclpy.Parameter.Type.DOUBLE, bias_x),
-            rclpy.parameter.Parameter("gyro_bias_y", rclpy.Parameter.Type.DOUBLE, bias_y),
-            rclpy.parameter.Parameter("gyro_bias_z", rclpy.Parameter.Type.DOUBLE, bias_z),
-            rclpy.parameter.Parameter("gyro_deadband", rclpy.Parameter.Type.DOUBLE, recommended_deadband),
-        ])
+        self.set_parameters(
+            [
+                rclpy.parameter.Parameter(
+                    "gyro_bias_x", rclpy.Parameter.Type.DOUBLE, bias_x
+                ),
+                rclpy.parameter.Parameter(
+                    "gyro_bias_y", rclpy.Parameter.Type.DOUBLE, bias_y
+                ),
+                rclpy.parameter.Parameter(
+                    "gyro_bias_z", rclpy.Parameter.Type.DOUBLE, bias_z
+                ),
+                rclpy.parameter.Parameter(
+                    "gyro_deadband", rclpy.Parameter.Type.DOUBLE, recommended_deadband
+                ),
+            ]
+        )
 
         # Store calibration results
         self._calibration_results = {
@@ -141,7 +151,7 @@ class ImuFilterNode(Node):
         corrected_z = msg.angular_velocity.z - bias_z
 
         # Apply deadband: if magnitude is below threshold, zero all components
-        magnitude = math.sqrt(corrected_x ** 2 + corrected_y ** 2 + corrected_z ** 2)
+        magnitude = math.sqrt(corrected_x**2 + corrected_y**2 + corrected_z**2)
 
         if magnitude < deadband:
             corrected_x = 0.0
@@ -173,17 +183,29 @@ class ImuFilterNode(Node):
 
     def set_bias(self, x: float, y: float, z: float):
         """Update gyro bias parameters dynamically."""
-        self.set_parameters([
-            rclpy.parameter.Parameter("gyro_bias_x", rclpy.Parameter.Type.DOUBLE, x),
-            rclpy.parameter.Parameter("gyro_bias_y", rclpy.Parameter.Type.DOUBLE, y),
-            rclpy.parameter.Parameter("gyro_bias_z", rclpy.Parameter.Type.DOUBLE, z),
-        ])
+        self.set_parameters(
+            [
+                rclpy.parameter.Parameter(
+                    "gyro_bias_x", rclpy.Parameter.Type.DOUBLE, x
+                ),
+                rclpy.parameter.Parameter(
+                    "gyro_bias_y", rclpy.Parameter.Type.DOUBLE, y
+                ),
+                rclpy.parameter.Parameter(
+                    "gyro_bias_z", rclpy.Parameter.Type.DOUBLE, z
+                ),
+            ]
+        )
 
     def set_deadband(self, value: float):
         """Update gyro deadband parameter dynamically."""
-        self.set_parameters([
-            rclpy.parameter.Parameter("gyro_deadband", rclpy.Parameter.Type.DOUBLE, value),
-        ])
+        self.set_parameters(
+            [
+                rclpy.parameter.Parameter(
+                    "gyro_deadband", rclpy.Parameter.Type.DOUBLE, value
+                ),
+            ]
+        )
 
 
 def main(args=None):

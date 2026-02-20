@@ -9,12 +9,12 @@ class MapAnalyzer:
     """Analyzes OccupancyGrid maps for quality metrics."""
 
     _DEFAULT_WEIGHTS = {
-        'wall_straightness': 0.25,
-        'wall_thickness': 0.20,
-        'ghost_wall_score': 0.20,
-        'symmetry_score': 0.15,
-        'free_space_consistency': 0.10,
-        'occupied_density_score': 0.10,
+        "wall_straightness": 0.25,
+        "wall_thickness": 0.20,
+        "ghost_wall_score": 0.20,
+        "symmetry_score": 0.15,
+        "free_space_consistency": 0.10,
+        "occupied_density_score": 0.10,
     }
 
     def __init__(self, weights=None):
@@ -40,17 +40,20 @@ class MapAnalyzer:
         binary_map = np.where(occupancy_grid == 100, 255, 0).astype(np.uint8)
 
         scores = {
-            'wall_straightness': self._wall_straightness(binary_map, resolution),
-            'wall_thickness': self._wall_thickness(binary_map, resolution),
-            'ghost_wall_score': self._ghost_wall_score(binary_map, resolution),
-            'symmetry_score': self._symmetry_score(occupancy_grid),
-            'free_space_consistency': self._free_space_consistency(binary_map, occupancy_grid),
-            'occupied_density_score': self._occupied_density_score(binary_map, occupancy_grid),
+            "wall_straightness": self._wall_straightness(binary_map, resolution),
+            "wall_thickness": self._wall_thickness(binary_map, resolution),
+            "ghost_wall_score": self._ghost_wall_score(binary_map, resolution),
+            "symmetry_score": self._symmetry_score(occupancy_grid),
+            "free_space_consistency": self._free_space_consistency(
+                binary_map, occupancy_grid
+            ),
+            "occupied_density_score": self._occupied_density_score(
+                binary_map, occupancy_grid
+            ),
         }
 
         composite = sum(
-            self._weights.get(key, 0.0) * value
-            for key, value in scores.items()
+            self._weights.get(key, 0.0) * value for key, value in scores.items()
         )
 
         total_occupied = int(np.count_nonzero(binary_map))
@@ -58,15 +61,15 @@ class MapAnalyzer:
         total_unknown = int(np.count_nonzero(occupancy_grid == -1))
 
         diagnostics = {
-            'total_occupied': total_occupied,
-            'total_known': total_known,
-            'total_unknown': total_unknown,
-            'width': width,
-            'height': height,
-            'resolution': resolution,
+            "total_occupied": total_occupied,
+            "total_known": total_known,
+            "total_unknown": total_unknown,
+            "width": width,
+            "height": height,
+            "resolution": resolution,
         }
 
-        return {**scores, 'composite_score': composite, 'diagnostics': diagnostics}
+        return {**scores, "composite_score": composite, "diagnostics": diagnostics}
 
     # ------------------------------------------------------------------
     # Metric methods
@@ -115,8 +118,7 @@ class MapAnalyzer:
             # Find occupied cells near this segment (within length/2 radius)
             radius = length / 2.0
             dists_to_mid = np.sqrt(
-                (occupied_points[:, 1] - mx) ** 2
-                + (occupied_points[:, 0] - my) ** 2
+                (occupied_points[:, 1] - mx) ** 2 + (occupied_points[:, 0] - my) ** 2
             )
             nearby_mask = dists_to_mid <= radius
             nearby = occupied_points[nearby_mask]
@@ -125,9 +127,7 @@ class MapAnalyzer:
                 continue
 
             # Perpendicular distance from each nearby point to the line
-            perp = np.abs(
-                nx * (nearby[:, 1] - x1) + ny * (nearby[:, 0] - y1)
-            )
+            perp = np.abs(nx * (nearby[:, 1] - x1) + ny * (nearby[:, 0] - y1))
             deviations.append(float(np.mean(perp)))
 
         if not deviations:
@@ -330,7 +330,7 @@ class MapAnalyzer:
         image[grid == 0] = 255
         image[grid == 100] = 0
 
-        success, encoded = cv2.imencode('.png', image)
+        success, encoded = cv2.imencode(".png", image)
         if not success:
             raise RuntimeError("Failed to encode map as PNG")
         return encoded.tobytes()

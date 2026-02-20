@@ -27,9 +27,7 @@ class ManeuverExecutor:
         self._node = node
 
         # Publisher for velocity commands
-        self._cmd_pub = self._node.create_publisher(
-            TwistStamped, "/joy_vel", 10
-        )
+        self._cmd_pub = self._node.create_publisher(TwistStamped, "/joy_vel", 10)
 
         # Subscriber for odometry feedback
         self._odom_sub = self._node.create_subscription(
@@ -79,29 +77,33 @@ class ManeuverExecutor:
 
         # Log if active
         if self._logging_active:
-            self._odom_log.append({
-                "timestamp": time.time(),
-                "x": self._current_x,
-                "y": self._current_y,
-                "yaw": self._current_yaw,
-                "vx": self._current_vx,
-                "vyaw": self._current_vyaw,
-            })
+            self._odom_log.append(
+                {
+                    "timestamp": time.time(),
+                    "x": self._current_x,
+                    "y": self._current_y,
+                    "yaw": self._current_yaw,
+                    "vx": self._current_vx,
+                    "vyaw": self._current_vyaw,
+                }
+            )
 
     # ── IMU callback ──────────────────────────────────────────────────
 
     def _imu_callback(self, msg):
         """Store IMU data when logging is active."""
         if self._logging_active:
-            self._imu_log.append({
-                "timestamp": time.time(),
-                "ax": msg.linear_acceleration.x,
-                "ay": msg.linear_acceleration.y,
-                "az": msg.linear_acceleration.z,
-                "gx": msg.angular_velocity.x,
-                "gy": msg.angular_velocity.y,
-                "gz": msg.angular_velocity.z,
-            })
+            self._imu_log.append(
+                {
+                    "timestamp": time.time(),
+                    "ax": msg.linear_acceleration.x,
+                    "ay": msg.linear_acceleration.y,
+                    "az": msg.linear_acceleration.z,
+                    "gx": msg.angular_velocity.x,
+                    "gy": msg.angular_velocity.y,
+                    "gz": msg.angular_velocity.z,
+                }
+            )
 
     # ── Main entry point ──────────────────────────────────────────────
 
@@ -388,9 +390,7 @@ class ManeuverExecutor:
                     10,
                 )
             except Exception as e:
-                self._node.get_logger().warn(
-                    f"Could not subscribe to /imu/data: {e}"
-                )
+                self._node.get_logger().warn(f"Could not subscribe to /imu/data: {e}")
 
     def stop_logging(self):
         """Stop recording and return logged data as JSON strings.
