@@ -3,7 +3,6 @@
 #include <rover_adc.hpp>
 #include <rover_core.hpp>
 #include <rover_io.hpp>
-#include <rover_log.hpp>
 #include <rover_thread.hpp>
 using namespace hi_can::parameters::power::distribution;
 
@@ -47,6 +46,8 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
         .intr_priority = 0,
         .flags = {
             .intr_shared = true,
+            .allow_pd = 0,
+            .backup_before_sleep = false,   // Deprecated, but we've set -Wmissing-field-initializers
         },
     };
 
@@ -98,13 +99,13 @@ void RoverPowerBus::clear_error()
 {
     if (_state == bus_state::ERROR)
     {
-        printf("Bus %d resetting error state!", _can_parameters.get_id());
+        printf("Bus %d resetting error state!", static_cast<int>(_can_parameters.get_id()));
         _next_state = bus_state::OFF;
         handle();
     }
     if (_retry_count >= CONFIG_PRECHARGE_RETRY_COUNT)
     {
-        printf("Bus %d resetting precharge retry counter - was %d", _can_parameters.get_id(), _retry_count.load());
+        printf("Bus %d resetting precharge retry counter - was %d", static_cast<int>(_can_parameters.get_id()), _retry_count.load());
         _retry_count = 0;
     }
 }
@@ -137,7 +138,7 @@ void RoverPowerBus::handle()
             _switch_error_counter++;
         if ((_switch_error_counter > CONFIG_SWITCH_ERROR_DEBOUNCE_TIME) && (_state != bus_state::ERROR))
         {
-            printf("Bus %d switch error!", _can_parameters.get_id());
+            printf("Bus %d switch error!", static_cast<int>(_can_parameters.get_id()));
             _switch_error_counter = CONFIG_SWITCH_ERROR_DEBOUNCE_TIME;
             _can_parameters.set_bus_current(0);
             _next_state = bus_state::ERROR;
@@ -156,7 +157,7 @@ void RoverPowerBus::handle()
         {
             if (_state != bus_state::ERROR)
             {
-                printf("Bus %d overload: %lumA/%lumA", _can_parameters.get_id(), bus_current, _can_parameters.get_limit_current());
+                printf("Bus %d overload: %lumA/%lumA", static_cast<int>(_can_parameters.get_id()), bus_current, _can_parameters.get_limit_current());
                 _next_state = bus_state::ERROR;
                 _error_code = bus_error::OVERLOAD;
             }
@@ -166,7 +167,7 @@ void RoverPowerBus::handle()
     {
         if (_state != bus_state::ERROR)
         {
-            printf("Bus %d switch fail: Bus voltage %ldmV/%ldmV", _can_parameters.get_id(), bus_voltage, RCB_BUS_ON_VOLTAGE);
+            printf("Bus %d switch fail: Bus voltage %ldmV/%ldmV", static_cast<int>(_can_parameters.get_id()), bus_voltage, RCB_BUS_ON_VOLTAGE);
             _next_state = bus_state::ERROR;
             _error_code = bus_error::SWITCH_FAIL;
         }
@@ -180,7 +181,7 @@ void RoverPowerBus::handle()
     {
     default:
     case bus_state::OFF:
-        printf("Bus %d now OFF", _can_parameters.get_id());
+        printf("Bus %d now OFF", static_cast<int>(_can_parameters.get_id()));
         _can_parameters.set_bus_status(power_status::OFF);
         _switch_off_time = core_get_uptime();
         _retry_count = 0;
@@ -190,7 +191,7 @@ void RoverPowerBus::handle()
         gpio_set_level(_switch_pin, 0);
         break;
     case bus_state::PRECHARGING:
-        printf("Bus %d precharging", _can_parameters.get_id());
+        printf("Bus %d precharging", static_cast<int>(_can_parameters.get_id()));
         _can_parameters.set_bus_status(power_status::PRECHARGING);
 
         // set gptimer timeout
@@ -202,12 +203,12 @@ void RoverPowerBus::handle()
         _switch_on_time = core_get_uptime();
         break;
     case bus_state::ON:
-        printf("Bus %d now ON", _can_parameters.get_id());
+        printf("Bus %d now ON", static_cast<int>(_can_parameters.get_id()));
         _retry_count = 0;
         _can_parameters.set_bus_status(power_status::ON);
         break;
     case bus_state::PRECHARGE_COOLDOWN:
-        printf("Bus %d precharge failed (%05ldmV/%05lumV) - waiting %ldms, retry #%d", _can_parameters.get_id(),
+        printf("Bus %d precharge failed (%05ldmV/%05lumV) - waiting %dms, retry #%d", static_cast<int>(_can_parameters.get_id()),
                bus_voltage, _precharge_voltage, CONFIG_PRECHARGE_RETRY_WAIT_TIME, _retry_count.load());
         _can_parameters.set_bus_status(power_status::PRECHARGING);
 
@@ -220,7 +221,7 @@ void RoverPowerBus::handle()
         gptimer_start(_timer);
         break;
     case bus_state::ERROR:
-        printf("Bus %d ERROR! Error code: %d", _can_parameters.get_id(), (int)_error_code.load());
+        printf("Bus %d ERROR! Error code: %d", static_cast<int>(_can_parameters.get_id()), (int)_error_code.load());
 
         if (_error_code == bus_error::PRECHARGE_FAIL)
             _can_parameters.set_bus_status(power_status::SHORT_CIRCUIT);

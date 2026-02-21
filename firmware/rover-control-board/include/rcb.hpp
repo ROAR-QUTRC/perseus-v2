@@ -22,22 +22,22 @@
 // SPARE
 // R17 = 1.323k R16 = 54.066k R18 = 2.087k
 const unsigned int SPARE_R17 = 1323;
-const unsigned int SPARE_R16 = 54066;
+const unsigned long SPARE_R16 = 54066;
 
 // DRIVE
 // R17 = 1.312k R16 = 53.997k R18 = 2.053k
 const unsigned int DRIVE_R17 = 1312;
-const unsigned int DRIVE_R16 = 53997;
+const unsigned long DRIVE_R16 = 53997;
 
 // COMPUTE
 // R17 = 1.377k R16 = 54.065k R18 = 2.094k
 const unsigned int COMPUTE_R17 = 1377;
-const unsigned int COMPUTE_R16 = 54065;
+const unsigned long COMPUTE_R16 = 54065;
 
 // AUX
 // R17 = 1.339k R16 = 54.026k R18 = 2.070k
 const unsigned int AUX_R17 = 1339;
-const unsigned int AUX_R16 = 54026;
+const unsigned long AUX_R16 = 54026;
 
 // if measuring above this voltage, switch is *definitely* outputting an error level
 const unsigned int RCB_BUS_CURRENT_SENSE_ERROR_VOLTAGE = 3000;
@@ -49,18 +49,18 @@ const unsigned int RCB_BUS_CURRENT_SENSE_RESISTOR = 1000;
 // disable switch error between these voltages (capacitors discharge slowly below 5V, and switch error turns off below 2V)
 const unsigned int RCB_SWITCH_ERROR_DISABLE_MIN_VOLTAGE = 2000;
 const unsigned int RCB_SWITCH_ERROR_DISABLE_MAX_VOLTAGE = 5000;
-const unsigned int RCB_BUS_ON_VOLTAGE = 16000;
+const unsigned long RCB_BUS_ON_VOLTAGE = 16000;
 const unsigned long RCB_MAX_CURRENT = 50000UL;  // max 50A per channel
 
 // 100k-10k voltage divider to measure bus voltage
 static long rcb_adc_to_bus_voltage(const long voltage)
 {
-    return ROVER_ADC_DIVIDER_TO_SOURCE_VOLTAGE(voltage, 100, 10);
+    return ((voltage * (100 + 10)) / 10);
 }
 // convert current feedback voltage to bus current
 static long rcb_adc_to_bus_current(const long voltage)
 {
-    return (((voltage)*RCB_BUS_CUR_SENSE_FACTOR) / RCB_BUS_CUR_SENSE_RESISTOR);
+    return (((voltage)*RCB_BUS_CURRENT_SENSE_FACTOR) / RCB_BUS_CURRENT_SENSE_RESISTOR);
 }
 
 class RoverPowerBus
