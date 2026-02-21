@@ -7,12 +7,7 @@
 
 // standard libraries
 #include <cstdio>
-
-// arc libraries
-// #include <rover_adc.hpp>
-// #include <canlib.hpp>
 #include <rover_io.hpp>
-#include <rover_log.hpp>
 #include <rover_thread.hpp>
 
 static bool initialised = false;
@@ -25,25 +20,22 @@ void core_init()
     // TODO: we need to track re-initialisation since we register an idle task for computing CPU usage
     if (initialised)
     {
-        CORE_ERROR("Core initialisation already completed!");
+        printf("Core initialisation already completed!");
         return;
     }
     DELAY_MS(100);  // allow UART TX buffer to flush
     // UART_0 is default initialised at 115200 baud for stdin/out/err, but we need to explicitly install the driver for normal uart i/o
     // also prevents buffer overflows
-    ioInitUart(UART_NUM_0, 115200);
+    initialize_uart(UART_NUM_0, 115200);
 
-    CORE_INFO("Begin core initialisation");
+    printf("Begin core initialisation");
 
-    ioInitNvs();
-    ioInitFiles();
-    // initWifi();
-    // initServer();
+    initialize_nvs();
 
     gpio_install_isr_service(0);  // enable per-pin ISRs on `*this core*
 
     initialised = true;
-    CORE_DEBUG("End core initialisation");
+    printf("End core initialisation");
 }
 
 int64_t core_get_uptime()

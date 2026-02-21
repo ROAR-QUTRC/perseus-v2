@@ -52,9 +52,16 @@ const unsigned int RCB_SWITCH_ERROR_DISABLE_MAX_VOLTAGE = 5000;
 const unsigned int RCB_BUS_ON_VOLTAGE = 16000;
 const unsigned long RCB_MAX_CURRENT = 50000UL;  // max 50A per channel
 
-// 100k-10k voltage divider to measure bus vtg
-#define RCB_ADC_TO_BUS_VOLTAGE(_voltage) ROVER_ADC_DIVIDER_TO_SOURCE_VOLTAGE(_voltage, 100, 10)
+// 100k-10k voltage divider to measure bus voltage
+static long rcb_adc_to_bus_voltage(const long voltage)
+{
+    return ROVER_ADC_DIVIDER_TO_SOURCE_VOLTAGE(voltage, 100, 10);
+}
 // convert current feedback voltage to bus current
+static long rcb_adc_to_bus_current(const long voltage)
+{
+    return (((voltage)*RCB_BUS_CUR_SENSE_FACTOR) / RCB_BUS_CUR_SENSE_RESISTOR);
+}
 
 class RoverPowerBus
 {
@@ -82,15 +89,15 @@ public:
     void set_bus_state(bool on);
     void clear_error();
     void handle();
-    hi_can::PacketManager::transmission_config_t GetTransmissionConfig(void);
-    TwaiPowerBusParameterGroup GetParameterGroup(void);
+    hi_can::PacketManager::transmission_config_t get_transmission_config(void);
+    TwaiPowerBusParameterGroup get_parameter_group(void);
 
     bool is_bus_on() { return ((_state != bus_state::OFF) && (_state != bus_state::ERROR)); }
 
 private:
     const static gptimer_alarm_config_t _precharge_off_config;
-    const static gptimer_alarm_config_t _prechargeOnConfig;
-    static bool _timerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
+    const static gptimer_alarm_config_t _precharge_on_config;
+    static bool _timer_callback(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 
     TwaiPowerBusParameterGroup _can_parameters;
     hi_can::PacketManager::transmission_config_t _status_transmission_config;
@@ -104,8 +111,8 @@ private:
 
     gptimer_handle_t _timer = NULL;
     bool _switch_had_error = false;
-    int64_t _switchOnTime = 0;
-    std::atomic<int64_t> _switchOffTime = 0;
+    int64_t _switch_on_time = 0;
+    std::atomic<int64_t> _switch_off_time = 0;
     int32_t _switch_error_counter = 0;
 
     std::atomic<bus_state> _state = bus_state::OFF;  // force a state change

@@ -54,16 +54,16 @@ bool button_state = true;
 
 RoverPowerBus spare_bus(hi_can::addressing::power::distribution::rover_control_board::group::SPARE_BUS,
                         CONFIG_PRECHARGE_VOLTAGE, RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN,
-                        ROVER_A2_PIN, ROVER_A1_PIN);
+                        ROVER_PIN::A2, ROVER_PIN::A1);
 RoverPowerBus drive_bus(hi_can::addressing::power::distribution::rover_control_board::group::DRIVE_BUS,
                         CONFIG_PRECHARGE_VOLTAGE, RCB_DRIVE_PRE_SWITCH_PIN, RCB_DRIVE_MAIN_SWITCH_PIN,
-                        ROVER_A4_PIN, ROVER_A3_PIN);
+                        ROVER_PIN::A4, ROVER_PIN::A3);
 RoverPowerBus compute_bus(hi_can::addressing::power::distribution::rover_control_board::group::COMPUTE_BUS,
                           CONFIG_COMPUTE_PRECHARGE_VOLTAGE, RCB_COMP_PRE_SWITCH_PIN, RCB_COMP_MAIN_SWITCH_PIN,
-                          ROVER_A6_PIN, ROVER_A5_PIN);
+                          ROVER_PIN::A6, ROVER_PIN::A5);
 RoverPowerBus aux_bus(hi_can::addressing::power::distribution::rover_control_board::group::AUX_BUS,
                       CONFIG_AUX_PRECHARGE_VOLTAGE, RCB_AUX_PRE_SWITCH_PIN, RCB_AUX_MAIN_SWITCH_PIN,
-                      ROVER_A8_PIN, ROVER_A7_PIN);
+                      ROVER_PIN::A8, ROVER_PIN::A7);
 
 const std::vector<std::tuple<std::string, power::distribution::rover_control_board::group, RoverPowerBus&>> BUS_GROUPS = {
     {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS, compute_bus},
@@ -79,7 +79,7 @@ constexpr standard_address_t RCB_DEVICE_ADDRESS{
     power::distribution::rover_control_board::DEVICE_ID,
 };
 
-IoDebouncedButton power_button(ROVER_A9_PIN, GPIO_FLOATING, true);
+IoDebouncedButton power_button(ROVER_PIN::A9, GPIO_FLOATING, true);
 
 TimerHandle_t timer = nullptr;
 
@@ -100,7 +100,6 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     gpio_set_level(RCB_POWER_LED_PIN, 1);
 
     fflush(stdout);
-    vt100ResetTerminal();
     printf("\r\n-----------------------------------------------------------------\r\n");
 
     core_init();
@@ -116,7 +115,7 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     }
     catch (const std::exception& e)
     {
-        ERROR("Error \"%s\" while initialising CAN", e.what());
+        printf("Error \"%s\" while initialising CAN", e.what());
         return;
     }
     try
@@ -125,22 +124,22 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     }
     catch (const std::exception& e)
     {
-        ERROR("Error \"%s\" while reserving space for parameter groups", e.what());
+        printf("Error \"%s\" while reserving space for parameter groups", e.what());
         return;
     }
     for (const auto& [name, id, power_bus] : BUS_GROUPS)
     {
         try
         {
-            parameter_groups.emplace_back(power_bus.GetParameterGroup());
+            parameter_groups.emplace_back(power_bus.get_parameter_group());
             packet_manager->add_group(parameter_groups.back());
             packet_manager->set_transmission_config(
                 flagged_address_t(standard_address_t(RCB_DEVICE_ADDRESS, static_cast<uint8_t>(id), static_cast<uint8_t>(hi_can::addressing::power::distribution::rover_control_board::power_bus::parameter::POWER_STATUS))),
-                power_bus.GetTransmissionConfig());
+                power_bus.get_transmission_config());
         }
         catch (const std::exception& e)
         {
-            ERROR("Error \"%s\" while setting parameter groups for %s", e.what(), name.c_str());
+            printf("Error \"%s\" while setting parameter groups for %s", e.what(), name.c_str());
             return;
         }
     }
@@ -160,7 +159,7 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
                 if (data.immediate_shutdown)
                 {
                     xTimerReset(timer, 0);
-                    WARN("Performing immediate shutdown in 100ms!");
+                    printf("Performing immediate shutdown in 100ms!");
                     fflush(stdout);
                     DELAY_MS(100);
                     gpio_set_level(RCB_CONTACTOR_PIN, 0);
@@ -176,7 +175,7 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     startup_time = core_get_uptime();
     power_button.clear_has_hold();
     power_button.clear_has_press();
-    INFO("Starting core 1 main loop");
+    printf("Starting core 1 main loop");
     thread_create([](void* args)
                   { while(true) loop(args); },
                   CORE_1, PRIORITY_HIGH, "loop", 8096);
@@ -211,7 +210,7 @@ void loop(void* args)
     {
         if (compute_bus.is_bus_on())
         {
-            INFO("Turning off buses");
+            printf("Turning off buses");
             drive_bus.set_bus_state(false);
             aux_bus.set_bus_state(false);
             spare_bus.set_bus_state(false);
@@ -219,7 +218,7 @@ void loop(void* args)
         }
         else
         {
-            INFO("Turning off contactor in 100ms");
+            printf("Turning off contactor in 100ms");
             fflush(stdout);
             DELAY_MS(100);
             gpio_set_level(RCB_CONTACTOR_PIN, 0);
@@ -265,12 +264,12 @@ void loop(void* args)
 
         if (bus->is_bus_on())
         {
-            INFO("%s bus turning off", bus_name.c_str());
+            printf("%s bus turning off", bus_name.c_str());
             bus->set_bus_state(false);
         }
         else
         {
-            INFO("%s bus turning on", bus_name.c_str());
+            printf("%s bus turning on", bus_name.c_str());
             bus->clear_error();
             bus->set_bus_state(true);
         }
@@ -292,7 +291,7 @@ static void contactor_timer_callback(TimerHandle_t timer)
         contactor_data.shutdown_timer--;
         if (contactor_data.shutdown_timer == 0)
         {
-            WARN("Performing scheduled shutdown in 100ms!");
+            printf("Performing scheduled shutdown in 100ms!");
             fflush(stdout);
             DELAY_MS(100);
             gpio_set_level(RCB_CONTACTOR_PIN, 0);  // shut down whole rover

@@ -14,12 +14,12 @@ public:
     void set_bus_status(hi_can::parameters::power::distribution::power_status status);
     hi_can::parameters::power::distribution::power_status get_bus_status(void);
     hi_can::parameters::power::distribution::status_t get_status(void);
-    hi_can::addressing::power::distribution::rover_control_board::group getId(void);
+    hi_can::addressing::power::distribution::rover_control_board::group get_id(void);
     uint16_t get_bus_voltage(void);
     void set_bus_voltage(uint16_t);
     uint32_t get_bus_current(void);
     void set_bus_current(uint32_t);
-    uint32_t getLimitCurrent(void);
+    uint32_t get_limit_current(void);
 
 private:
     hi_can::parameters::power::distribution::immediate_control_t _immediateStatus;

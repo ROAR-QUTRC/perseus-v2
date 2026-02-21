@@ -6,37 +6,30 @@
 // core
 #include <esp_err.h>
 
-#define ROVER_CORE_WIFI_STATION "QUTRC Perseus"
-#define ROVER_CORE_WIFI_PASSKEY "NASAtookartemis_Perseus-2024-1"
-
-#define ROVER_CORE_RET_ERR_CHECK(_errMsg, _code)             \
-    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK)      \
-    {                                                        \
-        CORE_ERROR(_errMsg " %s", esp_err_to_name(_tmpErr)); \
-        return;                                              \
+#define ROVER_CORE_RET_ERR_CHECK(_error_message, _code)         \
+    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK)         \
+    {                                                           \
+        printf(_error_message " %s", esp_err_to_name(_tmpErr)); \
+        return;                                                 \
     }
-#define ROVER_CORE_ERR_CHECK(_errMsg, _code)                 \
-    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK)      \
-    {                                                        \
-        CORE_ERROR(_errMsg " %s", esp_err_to_name(_tmpErr)); \
+#define ROVER_CORE_ERR_CHECK(_error_message, _code)             \
+    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK)         \
+    {                                                           \
+        printf(_error_message " %s", esp_err_to_name(_tmpErr)); \
     }
-#define ROVER_APP_RET_ERR_CHECK(_errMsg, _code)         \
-    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK) \
-    {                                                   \
-        ERROR(_errMsg " %s", esp_err_to_name(_tmpErr)); \
-        return;                                         \
+#define ROVER_APP_RET_ERR_CHECK(_error_message, _code)          \
+    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK)         \
+    {                                                           \
+        printf(_error_message " %s", esp_err_to_name(_tmpErr)); \
+        return;                                                 \
     }
-#define ROVER_APP_ERR_CHECK(_errMsg, _code)             \
-    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK) \
-    {                                                   \
-        ERROR(_errMsg " %s", esp_err_to_name(_tmpErr)); \
+#define ROVER_APP_ERR_CHECK(_error_message, _code)              \
+    if (esp_err_t _tmpErr = (_code); _tmpErr != ESP_OK)         \
+    {                                                           \
+        printf(_error_message " %s", esp_err_to_name(_tmpErr)); \
     }
 
 void core_init();
-void coreRestart();
 
 int64_t core_get_uptime();
 uint8_t core_get_usage();
-
-void coreStartWifi(const char* const hostname);
-void coreStopWifi();
