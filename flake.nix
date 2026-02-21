@@ -153,6 +153,7 @@
             bashInteractive
             can-utils
             corepack_24
+            nodejs_24
             nixgl-script
             nixcuda-script
             ncurses
