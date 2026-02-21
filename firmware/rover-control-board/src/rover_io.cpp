@@ -15,6 +15,7 @@ void initialize_uart(uart_port_t uart, int baudRate, int pinTx, int pinRx)
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
         .rx_flow_ctrl_thresh = 122,
         .source_clk = UART_SCLK_APB,
+        .flags = {},
     };
     int intr_alloc_flags = 0;
 

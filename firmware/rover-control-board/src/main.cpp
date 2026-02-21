@@ -18,27 +18,26 @@
 #include <rover_adc.hpp>
 #include <rover_core.hpp>
 #include <rover_io.hpp>
-#include <rover_log.hpp>
 #include <rover_thread.hpp>
 
 #include "power_parameters.hpp"
 #include "rcb.hpp"
 #include "rover_debounce.hpp"
 
-#define RCB_POWER_LED_PIN GPIO_NUM_12
-#define RCB_CONTACTOR_PIN GPIO_NUM_13
+const gpio_num_t RCB_POWER_LED_PIN = GPIO_NUM_12;
+const gpio_num_t RCB_CONTACTOR_PIN = GPIO_NUM_13;
 
-#define RCB_SPARE_PRE_SWITCH_PIN  GPIO_NUM_41
-#define RCB_SPARE_MAIN_SWITCH_PIN GPIO_NUM_40
+const gpio_num_t RCB_SPARE_PRE_SWITCH_PIN = GPIO_NUM_41;
+const gpio_num_t RCB_SPARE_MAIN_SWITCH_PIN = GPIO_NUM_40;
 
-#define RCB_DRIVE_PRE_SWITCH_PIN  GPIO_NUM_39
-#define RCB_DRIVE_MAIN_SWITCH_PIN GPIO_NUM_38
+const gpio_num_t RCB_DRIVE_PRE_SWITCH_PIN = GPIO_NUM_39;
+const gpio_num_t RCB_DRIVE_MAIN_SWITCH_PIN = GPIO_NUM_38;
 
-#define RCB_COMP_PRE_SWITCH_PIN  GPIO_NUM_37
-#define RCB_COMP_MAIN_SWITCH_PIN GPIO_NUM_45
+const gpio_num_t RCB_COMP_PRE_SWITCH_PIN = GPIO_NUM_37;
+const gpio_num_t RCB_COMP_MAIN_SWITCH_PIN = GPIO_NUM_45;
 
-#define RCB_AUX_PRE_SWITCH_PIN  GPIO_NUM_48
-#define RCB_AUX_MAIN_SWITCH_PIN GPIO_NUM_47
+const gpio_num_t RCB_AUX_PRE_SWITCH_PIN = GPIO_NUM_48;
+const gpio_num_t RCB_AUX_MAIN_SWITCH_PIN = GPIO_NUM_47;
 
 void loop(void* args);
 
@@ -54,16 +53,16 @@ bool button_state = true;
 
 RoverPowerBus spare_bus(hi_can::addressing::power::distribution::rover_control_board::group::SPARE_BUS,
                         CONFIG_PRECHARGE_VOLTAGE, RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN,
-                        ROVER_PIN::A2, ROVER_PIN::A1);
+                        static_cast<gpio_num_t>(ROVER_PIN::A2), static_cast<gpio_num_t>(ROVER_PIN::A1));
 RoverPowerBus drive_bus(hi_can::addressing::power::distribution::rover_control_board::group::DRIVE_BUS,
                         CONFIG_PRECHARGE_VOLTAGE, RCB_DRIVE_PRE_SWITCH_PIN, RCB_DRIVE_MAIN_SWITCH_PIN,
-                        ROVER_PIN::A4, ROVER_PIN::A3);
+                        static_cast<gpio_num_t>(ROVER_PIN::A4), static_cast<gpio_num_t>(ROVER_PIN::A3));
 RoverPowerBus compute_bus(hi_can::addressing::power::distribution::rover_control_board::group::COMPUTE_BUS,
                           CONFIG_COMPUTE_PRECHARGE_VOLTAGE, RCB_COMP_PRE_SWITCH_PIN, RCB_COMP_MAIN_SWITCH_PIN,
-                          ROVER_PIN::A6, ROVER_PIN::A5);
+                          static_cast<gpio_num_t>(ROVER_PIN::A6), static_cast<gpio_num_t>(ROVER_PIN::A5));
 RoverPowerBus aux_bus(hi_can::addressing::power::distribution::rover_control_board::group::AUX_BUS,
                       CONFIG_AUX_PRECHARGE_VOLTAGE, RCB_AUX_PRE_SWITCH_PIN, RCB_AUX_MAIN_SWITCH_PIN,
-                      ROVER_PIN::A8, ROVER_PIN::A7);
+                      static_cast<gpio_num_t>(ROVER_PIN::A8), static_cast<gpio_num_t>(ROVER_PIN::A7));
 
 const std::vector<std::tuple<std::string, power::distribution::rover_control_board::group, RoverPowerBus&>> BUS_GROUPS = {
     {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS, compute_bus},
@@ -79,7 +78,7 @@ constexpr standard_address_t RCB_DEVICE_ADDRESS{
     power::distribution::rover_control_board::DEVICE_ID,
 };
 
-IoDebouncedButton power_button(ROVER_PIN::A9, GPIO_FLOATING, true);
+IoDebouncedButton power_button(static_cast<gpio_num_t>(ROVER_PIN::A9), GPIO_FLOATING, true);
 
 TimerHandle_t timer = nullptr;
 
@@ -284,7 +283,7 @@ void loop(void* args)
     vTaskDelay(1);
 }
 
-static void contactor_timer_callback(TimerHandle_t timer)
+void contactor_timer_callback(TimerHandle_t timer)
 {
     if (contactor_data.shutdown_timer)
     {

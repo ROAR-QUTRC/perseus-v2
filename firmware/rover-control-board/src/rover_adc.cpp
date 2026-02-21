@@ -11,7 +11,6 @@
 
 // rover libs
 #include <rover_core.hpp>
-#include <rover_log.hpp>
 
 static const uint8_t ADC_MAX_CHANNELS = 10;
 static const uint8_t ADC_OVERSAMPLE_COUNT = 50;
