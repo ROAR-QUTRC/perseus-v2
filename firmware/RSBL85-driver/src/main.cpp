@@ -16,9 +16,10 @@ constexpr int PAN = 2;
 constexpr int ELBOW = 1;
 
 std::vector<int> past_positions(3, 0);
-std::vector<double> target_positions = { 25.0 * 0.0, 25.0 * 0.0, 25 * 0.0 };
+std::vector<double> target_positions = {25.0 * 0.0, 25.0 * 0.0, 25 * 0.0};
 
-void setup() {
+void setup()
+{
     Serial.begin(115200);
     Serial.println("RSBL85 CAN Bridge - Initializing");
 
@@ -44,19 +45,23 @@ void setup() {
 
 std::vector<double> positions(3, 0);
 std::vector<int16_t> full_rev_count(3, 0);
-void write_angle(int id, double angle) {
+void write_angle(int id, double angle)
+{
     target_positions[id] = angle;
 }
 
-const int ids [] = { TILT, PAN, ELBOW };
+const int ids[] = {TILT, PAN, ELBOW};
 
-void loop() {
-    for (unsigned i = 0; i < 3; i++) {
+void loop()
+{
+    for (unsigned i = 0; i < 3; i++)
+    {
         const int id = ids[i];
         const int read_pos = servo.ReadPos(id);
         const int diff = read_pos - past_positions[id];
 
-        if (abs(diff) > 2000) {  // If the jump is greater than half a revolution then the encoder has wrapped around
+        if (abs(diff) > 2000)
+        {  // If the jump is greater than half a revolution then the encoder has wrapped around
             bool clockwise = diff < 0;
             full_rev_count[id] += clockwise ? 1 : -1;
         }
@@ -71,28 +76,34 @@ void loop() {
         constexpr double MAX_SPEED = 30000.0;
         const double error = target_positions[id] - positions[id];
 
-        if (abs(error) <= 1) {
+        if (abs(error) <= 1)
+        {
             servo.WriteSpe(id, 0, 0);
-        } else if (abs(error) < 360) {  // Reduce speed when 1 revolution from target
+        }
+        else if (abs(error) < 360)
+        {  // Reduce speed when 1 revolution from target
             servo.WriteSpe(id, error / 360.0 * MAX_SPEED, 0);
-        } else
+        }
+        else
             servo.WriteSpe(id, error > 0 ? MAX_SPEED : -MAX_SPEED, 0);
 
         const int key = Serial.read();
-        if (key != -1) {
-            switch (key) {
-                case 'w':
-                    target_positions[ELBOW] += 5.0;
-                    break;
-                case 's':
-                    target_positions[ELBOW] -= 5.0;
-                    break;
-                case 'a':
-                    target_positions[TILT] -= 5.0;
-                    break;
-                case 'd':
-                    target_positions[TILT] += 5.0;
-                    break;
+        if (key != -1)
+        {
+            switch (key)
+            {
+            case 'w':
+                target_positions[ELBOW] += 5.0;
+                break;
+            case 's':
+                target_positions[ELBOW] -= 5.0;
+                break;
+            case 'a':
+                target_positions[TILT] -= 5.0;
+                break;
+            case 'd':
+                target_positions[TILT] += 5.0;
+                break;
             }
         }
     }
