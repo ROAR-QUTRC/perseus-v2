@@ -8,6 +8,8 @@
 	import { cn } from '$lib/utils';
 	import { repo } from 'remult';
 
+	const { gridXSize, gridYSize } = $props<{ gridXSize: number; gridYSize: number }>();
+
 	const activeLayout = $derived<Layout>(layouts.value[layouts.active]);
 
 	// on:change event handler triggers twice lol
@@ -35,7 +37,7 @@
 
 {#key layouts.active}
 	{#if layouts.value.length !== 0}
-		<Grid cols={10} rows={10} gap={5}>
+		<Grid cols={gridXSize} rows={gridYSize} gap={5}>
 			{#each activeWidgets.value as widgetData}
 				{#key activeWidgets.value.length}
 					<GridItem
