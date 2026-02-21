@@ -62,7 +62,7 @@ void ioStopFiles()
     // esp_vfs_littlefs_unregister("files");
 }
 
-void ioConfigInput(gpio_num_t gpio, gpio_pull_mode_t pull)
+void gpio_set_input(gpio_num_t gpio, gpio_pull_mode_t pull)
 {
     esp_rom_gpio_pad_select_gpio(gpio);
 
@@ -70,7 +70,7 @@ void ioConfigInput(gpio_num_t gpio, gpio_pull_mode_t pull)
     gpio_set_intr_type(gpio, GPIO_INTR_DISABLE);
     gpio_set_pull_mode(gpio, pull);
 }
-void ioConfigOutput(gpio_num_t gpio, bool openDrain)
+void gpio_set_output(gpio_num_t gpio, bool openDrain)
 {
     esp_rom_gpio_pad_select_gpio(gpio);
 

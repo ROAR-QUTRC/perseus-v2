@@ -16,9 +16,9 @@
 #define ROVER_ADC_DIVIDER_TO_SOURCE_VOLTAGE(_voltage, _r1, _r2) ((_voltage * (_r1 + _r2)) / _r2)
 
 // configureChannel will initialise the ADC when needed
-void adcSetChannelEnabled(gpio_num_t gpio, bool enable, bool delayedInit = false);
+void adc_set_channel_enabled(gpio_num_t gpio, bool enable, bool delayedInit = false);
 void adcSetErrorVoltage(gpio_num_t gpio, uint16_t errorVtg);
 void adcDeinit();
 
 bool adcHasNewReading(gpio_num_t gpio);
-int32_t adcGetVoltage(gpio_num_t gpio);
+int32_t adc_get_voltage(gpio_num_t gpio);

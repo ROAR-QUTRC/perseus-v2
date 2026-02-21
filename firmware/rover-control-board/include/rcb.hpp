@@ -21,30 +21,40 @@
 
 // SPARE
 // R17 = 1.323k R16 = 54.066k R18 = 2.087k
+const unsigned int SPARE_R17 = 1323;
+const unsigned int SPARE_R16 = 54066;
+
 // DRIVE
 // R17 = 1.312k R16 = 53.997k R18 = 2.053k
+const unsigned int DRIVE_R17 = 1312;
+const unsigned int DRIVE_R16 = 53997;
+
 // COMPUTE
 // R17 = 1.377k R16 = 54.065k R18 = 2.094k
+const unsigned int COMPUTE_R17 = 1377;
+const unsigned int COMPUTE_R16 = 54065;
+
 // AUX
 // R17 = 1.339k R16 = 54.026k R18 = 2.070k
+const unsigned int AUX_R17 = 1339;
+const unsigned int AUX_R16 = 54026;
 
 // if measuring above this voltage, switch is *definitely* outputting an error level
-#define RCB_BUS_CURRENT_SENSE_ERROR_VOLTAGE 3000
+const unsigned int RCB_BUS_CURRENT_SENSE_ERROR_VOLTAGE = 3000;
 // see dkILIS in switch datasheet - outputs 1mA on sense pin for 50000mA flowing through
-#define RCB_BUS_CURRENT_SENSE_FACTOR 50000UL
+const unsigned long RCB_BUS_CURRENT_SENSE_FACTOR = 50000UL;
 // 1k resistor to gnd from switch sense pin
-#define RCB_BUS_CURRENT_SENSE_RESISTOR 1000
+const unsigned int RCB_BUS_CURRENT_SENSE_RESISTOR = 1000;
 
 // disable switch error between these voltages (capacitors discharge slowly below 5V, and switch error turns off below 2V)
-#define RCB_SWITCH_ERROR_DISABLE_MIN_VOLTAGE 2000
-#define RCB_SWITCH_ERROR_DISABLE_MAX_VOLTAGE 5000
-#define RCB_BUS_ON_VOLTAGE                   16000
-#define RCB_MAX_CURRENT                      50000UL  // max 50A per channel
+const unsigned int RCB_SWITCH_ERROR_DISABLE_MIN_VOLTAGE = 2000;
+const unsigned int RCB_SWITCH_ERROR_DISABLE_MAX_VOLTAGE = 5000;
+const unsigned int RCB_BUS_ON_VOLTAGE = 16000;
+const unsigned long RCB_MAX_CURRENT = 50000UL;  // max 50A per channel
 
 // 100k-10k voltage divider to measure bus vtg
 #define RCB_ADC_TO_BUS_VOLTAGE(_voltage) ROVER_ADC_DIVIDER_TO_SOURCE_VOLTAGE(_voltage, 100, 10)
 // convert current feedback voltage to bus current
-#define RCB_ADC_TO_BUS_CURRENT(_voltage) (((_voltage) * RCB_BUS_CURRENT_SENSE_FACTOR) / RCB_BUS_CURRENT_SENSE_RESISTOR)
 
 class RoverPowerBus
 {
@@ -65,42 +75,42 @@ public:
         SWITCH_ERROR,
         OVERLOAD,
     };
-    RoverPowerBus(hi_can::addressing::power::distribution::rover_control_board::group busId, uint16_t prechargeVoltage,
-                  gpio_num_t precharge, gpio_num_t mainSwitch,
-                  gpio_num_t voltageFeedback, gpio_num_t currentFeedback);
+    RoverPowerBus(hi_can::addressing::power::distribution::rover_control_board::group bus_id, uint16_t precharge_voltage,
+                  gpio_num_t precharge, gpio_num_t main_switch,
+                  gpio_num_t voltage_feedback, gpio_num_t current_feedback);
     ~RoverPowerBus();
-    void setBusState(bool on);
-    void clearError();
+    void set_bus_state(bool on);
+    void clear_error();
     void handle();
     hi_can::PacketManager::transmission_config_t GetTransmissionConfig(void);
     TwaiPowerBusParameterGroup GetParameterGroup(void);
 
-    bool isBusOn() { return ((_state != bus_state::OFF) && (_state != bus_state::ERROR)); }
+    bool is_bus_on() { return ((_state != bus_state::OFF) && (_state != bus_state::ERROR)); }
 
 private:
-    const static gptimer_alarm_config_t _prechargeOffConfig;
+    const static gptimer_alarm_config_t _precharge_off_config;
     const static gptimer_alarm_config_t _prechargeOnConfig;
     static bool _timerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 
-    TwaiPowerBusParameterGroup _canParameters;
-    hi_can::PacketManager::transmission_config_t _statusTransmissionConfig;
+    TwaiPowerBusParameterGroup _can_parameters;
+    hi_can::PacketManager::transmission_config_t _status_transmission_config;
 
-    const gpio_num_t _prechargePin;
-    const gpio_num_t _switchPin;
-    const gpio_num_t _voltageFeedback;
-    const gpio_num_t _currentFeedback;
+    const gpio_num_t _precharge_pin;
+    const gpio_num_t _switch_pin;
+    const gpio_num_t _voltage_feedback;
+    const gpio_num_t _current_feedback;
 
-    const uint32_t _prechargeVoltage;
+    const uint32_t _precharge_voltage;
 
     gptimer_handle_t _timer = NULL;
-    bool _switchHadError = false;
+    bool _switch_had_error = false;
     int64_t _switchOnTime = 0;
     std::atomic<int64_t> _switchOffTime = 0;
-    int32_t _switchErrorCounter = 0;
+    int32_t _switch_error_counter = 0;
 
     std::atomic<bus_state> _state = bus_state::OFF;  // force a state change
     // we can't switch states in an ISR, so queue the change and handle it in the main loop
-    std::atomic<bus_state> _nextState = bus_state::OFF;
-    std::atomic<uint8_t> _retryCount = 0;
-    std::atomic<bus_error> _errorCode = bus_error::NONE;
+    std::atomic<bus_state> _next_state = bus_state::OFF;
+    std::atomic<uint8_t> _retry_count = 0;
+    std::atomic<bus_error> _error_code = bus_error::NONE;
 };

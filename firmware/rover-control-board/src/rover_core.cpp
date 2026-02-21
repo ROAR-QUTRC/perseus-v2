@@ -17,7 +17,7 @@
 
 static bool initialised = false;
 
-void coreInit()
+void core_init()
 {
     // if your code makes the ESP enter a boot loop,
     // give a window before running it to allow you to re-program the board.
@@ -46,12 +46,12 @@ void coreInit()
     CORE_DEBUG("End core initialisation");
 }
 
-int64_t coreGetUptime()
+int64_t core_get_uptime()
 {
     // this function returns time since boot in us, we want ms
     return (esp_timer_get_time() / 1000);
 }
-uint8_t coreGetUsage()
+uint8_t core_get_usage()
 {
     return 100;  // TODO: implement using idle task - surprisingly complicated
 }

@@ -7,7 +7,7 @@
 #include <rover_thread.hpp>
 using namespace hi_can::parameters::power::distribution;
 
-const gptimer_alarm_config_t RoverPowerBus::_prechargeOffConfig = {
+const gptimer_alarm_config_t RoverPowerBus::_precharge_off_config = {
     .alarm_count = CONFIG_PRECHARGE_TIME * 10,
     .reload_count = 0,
     .flags = {
@@ -22,25 +22,25 @@ const gptimer_alarm_config_t RoverPowerBus::_prechargeOnConfig = {
     },
 };
 
-RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_control_board::group busId, uint16_t prechargeVoltage,
-                             gpio_num_t precharge, gpio_num_t mainSwitch,
-                             gpio_num_t voltageFeedback, gpio_num_t currentFeedback)
-    : _canParameters(busId, [&](bool on)
-                     { setBusState(on); }, [&]()
-                     { clearError(); }),
-      _prechargePin(precharge),
-      _switchPin(mainSwitch),
-      _voltageFeedback(voltageFeedback),
-      _currentFeedback(currentFeedback),
-      _prechargeVoltage(prechargeVoltage)
+RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_control_board::group bus_id, uint16_t precharge_voltage,
+                             gpio_num_t precharge, gpio_num_t main_switch,
+                             gpio_num_t voltage_feedback, gpio_num_t current_feedback)
+    : _can_parameters(bus_id, [&](bool on)
+                      { set_bus_state(on); }, [&]()
+                      { clear_error(); }),
+      _precharge_pin(precharge),
+      _switch_pin(main_switch),
+      _voltage_feedback(voltage_feedback),
+      _current_feedback(current_feedback),
+      _precharge_voltage(precharge_voltage)
 {
-    ioConfigOutput(precharge);
-    ioConfigOutput(mainSwitch);
-    adcSetChannelEnabled(voltageFeedback, true, true);
-    adcSetChannelEnabled(currentFeedback, true, false);
-    adcSetErrorVoltage(currentFeedback, RCB_BUS_CURRENT_SENSE_ERROR_VOLTAGE);
+    gpio_set_output(precharge);
+    gpio_set_output(main_switch);
+    adc_set_channel_enabled(voltage_feedback, true, true);
+    adc_set_channel_enabled(current_feedback, true, false);
+    adcSetErrorVoltage(current_feedback, RCB_BUS_CURRENT_SENSE_ERROR_VOLTAGE);
 
-    gptimer_config_t timerConfig = {
+    gptimer_config_t timer_config = {
         .clk_src = GPTIMER_CLK_SRC_DEFAULT,
         .direction = GPTIMER_COUNT_UP,
         .resolution_hz = 10000,
@@ -50,191 +50,191 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
         },
     };
 
-    gptimer_new_timer(&timerConfig, &_timer);
-    gptimer_event_callbacks_t timerCallbacks = {
+    gptimer_new_timer(&timer_config, &_timer);
+    gptimer_event_callbacks_t timer_callbacks = {
         .on_alarm = _timerCallback,
     };
-    gptimer_register_event_callbacks(_timer, &timerCallbacks, this);
-    gptimer_set_alarm_action(_timer, &_prechargeOffConfig);
+    gptimer_register_event_callbacks(_timer, &timer_callbacks, this);
+    gptimer_set_alarm_action(_timer, &_precharge_off_config);
     gptimer_enable(_timer);
 
-    hi_can::PacketManager::transmission_config_t _statusTransmissionConfig = {
+    hi_can::PacketManager::transmission_config_t _status_transmission_config = {
         .generator = [&](void)
         {
-            return _canParameters.getStatus().serialize_data();
+            return _can_parameters.get_status().serialize_data();
         },
         .interval = std::chrono::nanoseconds(100000000)};  // 100 milliseconds
 
-    _canParameters.setBusStatus(power_status::OFF);
-    _canParameters.setBusVoltage(0);
-    _canParameters.setBusCurrent(0);
+    _can_parameters.set_bus_status(power_status::OFF);
+    _can_parameters.set_bus_voltage(0);
+    _can_parameters.set_bus_current(0);
 }
 
 RoverPowerBus::~RoverPowerBus()
 {
-    setBusState(false);
-    gpio_reset_pin(_prechargePin);
-    gpio_reset_pin(_switchPin);
-    adcSetChannelEnabled(_voltageFeedback, false, true);
-    adcSetChannelEnabled(_currentFeedback, false, false);
-    gpio_reset_pin(_voltageFeedback);
-    gpio_reset_pin(_currentFeedback);
+    set_bus_state(false);
+    gpio_reset_pin(_precharge_pin);
+    gpio_reset_pin(_switch_pin);
+    adc_set_channel_enabled(_voltage_feedback, false, true);
+    adc_set_channel_enabled(_current_feedback, false, false);
+    gpio_reset_pin(_voltage_feedback);
+    gpio_reset_pin(_current_feedback);
     gptimer_disable(_timer);
     gptimer_del_timer(_timer);
 }
 
-void RoverPowerBus::setBusState(bool on)
+void RoverPowerBus::set_bus_state(bool on)
 {
     if (on)
     {
         if (_state == bus_state::OFF)
-            _nextState = bus_state::PRECHARGING;
+            _next_state = bus_state::PRECHARGING;
     }
     else if (_state != bus_state::ERROR)
-        _nextState = bus_state::OFF;
+        _next_state = bus_state::OFF;
 }
 
-void RoverPowerBus::clearError()
+void RoverPowerBus::clear_error()
 {
     if (_state == bus_state::ERROR)
     {
-        WARN("Bus %d resetting error state!", _canParameters.getId());
-        _nextState = bus_state::OFF;
+        WARN("Bus %d resetting error state!", _can_parameters.getId());
+        _next_state = bus_state::OFF;
         handle();
     }
-    if (_retryCount >= CONFIG_PRECHARGE_RETRY_COUNT)
+    if (_retry_count >= CONFIG_PRECHARGE_RETRY_COUNT)
     {
-        WARN("Bus %d resetting precharge retry counter - was %d", _canParameters.getId(), _retryCount.load());
-        _retryCount = 0;
+        WARN("Bus %d resetting precharge retry counter - was %d", _can_parameters.getId(), _retry_count.load());
+        _retry_count = 0;
     }
 }
 
 void RoverPowerBus::handle()
 {
-    const int32_t bus_voltage = RCB_ADC_TO_BUS_VOLTAGE(adcGetVoltage(_voltageFeedback));
-    _canParameters.setBusVoltage(bus_voltage);
-    const int32_t curSenseVtg = adcGetVoltage(_currentFeedback);
-    const uint32_t busCurrent = RCB_ADC_TO_BUS_CURRENT(curSenseVtg);
+    const int32_t bus_voltage = RCB_ADC_TO_BUS_VOLTAGE(adc_get_voltage(_voltage_feedback));
+    _can_parameters.set_bus_voltage(bus_voltage);
+    const int32_t current_sense_voltage = adc_get_voltage(_current_feedback);
+    const uint32_t bus_current = RCB_ADC_TO_BUS_CURRENT(current_sense_voltage);
 
     // check software fusing
-    const bool switchErr = (curSenseVtg == ROVER_ADC_ERR_RETURN_VAL);
-    const bool disableSwitchErr = ((bus_voltage > RCB_SWITCH_ERROR_DISABLE_MIN_VOLTAGE) && (bus_voltage < RCB_SWITCH_ERROR_DISABLE_MAX_VOLTAGE));
-    // WARN("%d %d %05ld, %05ld", switchErr, disableSwitchErr, curSenseVtg, RCB_ADC_TO_BUS_VOLTAGE(adcGetVoltage(_voltageFeedback)));
+    const bool switch_error = (current_sense_voltage == ROVER_ADC_ERR_RETURN_VAL);
+    const bool disable_switch_error = ((bus_voltage > RCB_SWITCH_ERROR_DISABLE_MIN_VOLTAGE) && (bus_voltage < RCB_SWITCH_ERROR_DISABLE_MAX_VOLTAGE));
+    // WARN("%d %d %05ld, %05ld", switch_error, disable_switch_error, current_sense_voltage, RCB_ADC_TO_BUS_VOLTAGE(adc_get_voltage(_voltage_feedback)));
 
-    const int64_t now = coreGetUptime();
-    const int64_t busOnPeriod = now - _switchOnTime;
-    const int64_t busOffPeriod = now - _switchOffTime;
+    const int64_t now = core_get_uptime();
+    const int64_t bus_on_period = now - _switchOnTime;
+    const int64_t bus_off_period = now - _switchOffTime;
 
-    const bool busOverloaded = (busCurrent > _canParameters.getLimitCurrent());
-    const bool capacitorsDischarging = (busOffPeriod < CONFIG_BUS_CAP_DISCHARGE_TIME);
-    const bool inrushDone = (busOnPeriod > CONFIG_PRECHARGE_INRUSH_TIME);
-    const bool busShouldBeOn = (_state == bus_state::ON) || (_nextState == bus_state::ON);
-    const bool busIsOn = (bus_voltage > RCB_BUS_ON_VOLTAGE);
-    // WARN("%d %d %05ld", busShouldBeOn, busIsOn, bus_voltage);
-    if (switchErr)
+    const bool bus_overloaded = (bus_current > _can_parameters.getLimitCurrent());
+    const bool capacitors_discharging = (bus_off_period < CONFIG_BUS_CAP_DISCHARGE_TIME);
+    const bool inrush_done = (bus_on_period > CONFIG_PRECHARGE_INRUSH_TIME);
+    const bool bus_should_be_on = (_state == bus_state::ON) || (_next_state == bus_state::ON);
+    const bool bus_is_on = (bus_voltage > RCB_BUS_ON_VOLTAGE);
+    // WARN("%d %d %05ld", bus_should_be_on, bus_is_on, bus_voltage);
+    if (switch_error)
     {
-        _switchHadError = true;
-        if (!capacitorsDischarging && (_state != bus_state::PRECHARGING) && !disableSwitchErr)
-            _switchErrorCounter++;
-        if ((_switchErrorCounter > CONFIG_SWITCH_ERROR_DEBOUNCE_TIME) && (_state != bus_state::ERROR))
+        _switch_had_error = true;
+        if (!capacitors_discharging && (_state != bus_state::PRECHARGING) && !disable_switch_error)
+            _switch_error_counter++;
+        if ((_switch_error_counter > CONFIG_SWITCH_ERROR_DEBOUNCE_TIME) && (_state != bus_state::ERROR))
         {
-            ERROR("Bus %d switch error!", _canParameters.getId());
-            _switchErrorCounter = CONFIG_SWITCH_ERROR_DEBOUNCE_TIME;
-            _canParameters.setBusCurrent(0);
-            _nextState = bus_state::ERROR;
-            _errorCode = bus_error::SWITCH_ERROR;
+            ERROR("Bus %d switch error!", _can_parameters.getId());
+            _switch_error_counter = CONFIG_SWITCH_ERROR_DEBOUNCE_TIME;
+            _can_parameters.set_bus_current(0);
+            _next_state = bus_state::ERROR;
+            _error_code = bus_error::SWITCH_ERROR;
         }
     }
     else
     {
-        if (_switchErrorCounter)
-            _switchErrorCounter--;
-        _canParameters.setBusCurrent(busCurrent);
+        if (_switch_error_counter)
+            _switch_error_counter--;
+        _can_parameters.set_bus_current(bus_current);
 
-        if (_switchHadError)
-            _switchHadError = false;  // allow one cycle of delay for average to move
-        else if (busOverloaded && inrushDone && busShouldBeOn)
+        if (_switch_had_error)
+            _switch_had_error = false;  // allow one cycle of delay for average to move
+        else if (bus_overloaded && inrush_done && bus_should_be_on)
         {
             if (_state != bus_state::ERROR)
             {
-                ERROR("Bus %d overload: %lumA/%lumA", _canParameters.getId(), busCurrent, _canParameters.getLimitCurrent());
-                _nextState = bus_state::ERROR;
-                _errorCode = bus_error::OVERLOAD;
+                ERROR("Bus %d overload: %lumA/%lumA", _can_parameters.getId(), bus_current, _can_parameters.getLimitCurrent());
+                _next_state = bus_state::ERROR;
+                _error_code = bus_error::OVERLOAD;
             }
         }
     }
-    if (busShouldBeOn && !busIsOn && inrushDone)
+    if (bus_should_be_on && !bus_is_on && inrush_done)
     {
         if (_state != bus_state::ERROR)
         {
-            ERROR("Bus %d switch fail: Bus voltage %ldmV/%ldmV", _canParameters.getId(), bus_voltage, RCB_BUS_ON_VOLTAGE);
-            _nextState = bus_state::ERROR;
-            _errorCode = bus_error::SWITCH_FAIL;
+            ERROR("Bus %d switch fail: Bus voltage %ldmV/%ldmV", _can_parameters.getId(), bus_voltage, RCB_BUS_ON_VOLTAGE);
+            _next_state = bus_state::ERROR;
+            _error_code = bus_error::SWITCH_FAIL;
         }
     }
 
-    if (_nextState == _state)
+    if (_next_state == _state)
         return;  // only process if state has changed
 
-    _state = _nextState.load();
+    _state = _next_state.load();
     switch (_state)
     {
     default:
     case bus_state::OFF:
-        INFO("Bus %d now OFF", _canParameters.getId());
-        _canParameters.setBusStatus(power_status::OFF);
-        _switchOffTime = coreGetUptime();
-        _retryCount = 0;
+        INFO("Bus %d now OFF", _can_parameters.getId());
+        _can_parameters.set_bus_status(power_status::OFF);
+        _switchOffTime = core_get_uptime();
+        _retry_count = 0;
 
         gptimer_stop(_timer);
-        gpio_set_level(_prechargePin, 0);
-        gpio_set_level(_switchPin, 0);
+        gpio_set_level(_precharge_pin, 0);
+        gpio_set_level(_switch_pin, 0);
         break;
     case bus_state::PRECHARGING:
-        DEBUG("Bus %d precharging", _canParameters.getId());
-        _canParameters.setBusStatus(power_status::PRECHARGING);
+        DEBUG("Bus %d precharging", _can_parameters.getId());
+        _can_parameters.set_bus_status(power_status::PRECHARGING);
 
         // set gptimer timeout
-        gptimer_set_alarm_action(_timer, &_prechargeOffConfig);
+        gptimer_set_alarm_action(_timer, &_precharge_off_config);
 
-        gpio_set_level(_prechargePin, 1);
+        gpio_set_level(_precharge_pin, 1);
         gptimer_set_raw_count(_timer, 0);
         gptimer_start(_timer);
-        _switchOnTime = coreGetUptime();
+        _switchOnTime = core_get_uptime();
         break;
     case bus_state::ON:
-        INFO("Bus %d now ON", _canParameters.getId());
-        _retryCount = 0;
-        _canParameters.setBusStatus(power_status::ON);
+        INFO("Bus %d now ON", _can_parameters.getId());
+        _retry_count = 0;
+        _can_parameters.set_bus_status(power_status::ON);
         break;
     case bus_state::PRECHARGE_COOLDOWN:
-        WARN("Bus %d precharge failed (%05ldmV/%05lumV) - waiting %ldms, retry #%d", _canParameters.getId(),
-             bus_voltage, _prechargeVoltage, CONFIG_PRECHARGE_RETRY_WAIT_TIME, _retryCount.load());
-        _canParameters.setBusStatus(power_status::PRECHARGING);
+        WARN("Bus %d precharge failed (%05ldmV/%05lumV) - waiting %ldms, retry #%d", _can_parameters.getId(),
+             bus_voltage, _precharge_voltage, CONFIG_PRECHARGE_RETRY_WAIT_TIME, _retry_count.load());
+        _can_parameters.set_bus_status(power_status::PRECHARGING);
 
         // set gptimer timeout
         gptimer_set_alarm_action(_timer, &_prechargeOnConfig);
 
-        gpio_set_level(_prechargePin, 0);
-        gpio_set_level(_switchPin, 0);
+        gpio_set_level(_precharge_pin, 0);
+        gpio_set_level(_switch_pin, 0);
         gptimer_set_raw_count(_timer, 0);
         gptimer_start(_timer);
         break;
     case bus_state::ERROR:
-        ERROR("Bus %d ERROR! Error code: %d", _canParameters.getId(), (int)_errorCode.load());
+        ERROR("Bus %d ERROR! Error code: %d", _can_parameters.getId(), (int)_error_code.load());
 
-        if (_errorCode == bus_error::PRECHARGE_FAIL)
-            _canParameters.setBusStatus(power_status::SHORT_CIRCUIT);
-        else if (_errorCode == bus_error::SWITCH_FAIL)
-            _canParameters.setBusStatus(power_status::SWITCH_FAILED);
-        else if (_errorCode == bus_error::OVERLOAD)
-            _canParameters.setBusStatus(power_status::OVERLOAD);
+        if (_error_code == bus_error::PRECHARGE_FAIL)
+            _can_parameters.set_bus_status(power_status::SHORT_CIRCUIT);
+        else if (_error_code == bus_error::SWITCH_FAIL)
+            _can_parameters.set_bus_status(power_status::SWITCH_FAILED);
+        else if (_error_code == bus_error::OVERLOAD)
+            _can_parameters.set_bus_status(power_status::OVERLOAD);
         else
-            _canParameters.setBusStatus(power_status::FAULT);
+            _can_parameters.set_bus_status(power_status::FAULT);
 
         gptimer_stop(_timer);
-        gpio_set_level(_prechargePin, 0);
-        gpio_set_level(_switchPin, 0);
+        gpio_set_level(_precharge_pin, 0);
+        gpio_set_level(_switch_pin, 0);
         break;
     }
 }
@@ -242,44 +242,44 @@ void RoverPowerBus::handle()
 bool RoverPowerBus::_timerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx)
 {
     RoverPowerBus* source = (RoverPowerBus*)user_ctx;
-    gpio_set_level(source->_prechargePin, 0);
+    gpio_set_level(source->_precharge_pin, 0);
     gptimer_stop(timer);
 
     if (source->_state == bus_state::PRECHARGING)
     {
-        const uint32_t vtg = RCB_ADC_TO_BUS_VOLTAGE(adcGetVoltage(source->_voltageFeedback));
-        if (vtg > source->_prechargeVoltage)
+        const uint32_t vtg = RCB_ADC_TO_BUS_VOLTAGE(adc_get_voltage(source->_voltage_feedback));
+        if (vtg > source->_precharge_voltage)
         {
-            gpio_set_level(source->_switchPin, 1);
-            source->_nextState = bus_state::ON;
+            gpio_set_level(source->_switch_pin, 1);
+            source->_next_state = bus_state::ON;
         }
         else
         {
-            source->_retryCount++;
-            source->_switchOffTime = coreGetUptime();
-            if (source->_retryCount < CONFIG_PRECHARGE_RETRY_COUNT)
-                source->_nextState = bus_state::PRECHARGE_COOLDOWN;
+            source->_retry_count++;
+            source->_switchOffTime = core_get_uptime();
+            if (source->_retry_count < CONFIG_PRECHARGE_RETRY_COUNT)
+                source->_next_state = bus_state::PRECHARGE_COOLDOWN;
             else
             {
-                source->_nextState = bus_state::ERROR;
-                source->_errorCode = bus_error::PRECHARGE_FAIL;
+                source->_next_state = bus_state::ERROR;
+                source->_error_code = bus_error::PRECHARGE_FAIL;
             }
         }
     }
     else  // precharge cooldown (completed)
     {
         // retry precharging
-        source->_nextState = bus_state::PRECHARGING;
+        source->_next_state = bus_state::PRECHARGING;
     }
     return true;
 }
 
 hi_can::PacketManager::transmission_config_t RoverPowerBus::GetTransmissionConfig(void)
 {
-    return _statusTransmissionConfig;
+    return _status_transmission_config;
 }
 
 TwaiPowerBusParameterGroup RoverPowerBus::GetParameterGroup(void)
 {
-    return _canParameters;
+    return _can_parameters;
 }

@@ -10,15 +10,15 @@ class TwaiPowerBusParameterGroup : public hi_can::parameters::ParameterGroup
 public:
     TwaiPowerBusParameterGroup(hi_can::addressing::power::distribution::rover_control_board::group bus,
                                std::function<void(bool)> busStateHandler,
-                               std::function<void(void)> clearErrorHandler);
-    void setBusStatus(hi_can::parameters::power::distribution::power_status status);
-    hi_can::parameters::power::distribution::power_status getBusStatus(void);
-    hi_can::parameters::power::distribution::status_t getStatus(void);
+                               std::function<void(void)> clear_errorHandler);
+    void set_bus_status(hi_can::parameters::power::distribution::power_status status);
+    hi_can::parameters::power::distribution::power_status get_bus_status(void);
+    hi_can::parameters::power::distribution::status_t get_status(void);
     hi_can::addressing::power::distribution::rover_control_board::group getId(void);
-    uint16_t getBusVoltage(void);
-    void setBusVoltage(uint16_t);
-    uint32_t getBusCurrent(void);
-    void setBusCurrent(uint32_t);
+    uint16_t get_bus_voltage(void);
+    void set_bus_voltage(uint16_t);
+    uint32_t get_bus_current(void);
+    void set_bus_current(uint32_t);
     uint32_t getLimitCurrent(void);
 
 private:
@@ -28,7 +28,7 @@ private:
 
     uint8_t _busOffTimer = 0;
     uint8_t _busOnTimer = 0;
-    hi_can::addressing::power::distribution::rover_control_board::group _busId;
+    hi_can::addressing::power::distribution::rover_control_board::group _bus_id;
     const hi_can::addressing::standard_address_t _deviceAddress = hi_can::addressing::standard_address_t(
         hi_can::addressing::power::SYSTEM_ID,
         hi_can::addressing::power::distribution::SUBSYSTEM_ID,

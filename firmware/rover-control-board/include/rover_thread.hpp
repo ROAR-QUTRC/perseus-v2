@@ -30,8 +30,8 @@ enum task_priority
     PRIORITY_HIGHEST = 15
 };
 
-void threadCreate(void(task)(void*), const core_enum core = CORE_ANY, const task_priority priority = PRIORITY_MED,
-                  const char* taskName = NULL, const size_t stackSize = CONFIG_TASK_STACK_SIZE);
+void thread_create(void(task)(void*), const core_enum core = CORE_ANY, const task_priority priority = PRIORITY_MED,
+                   const char* taskName = NULL, const size_t stackSize = CONFIG_TASK_STACK_SIZE);
 
-TimerHandle_t timerCreate(void(callback)(TimerHandle_t), const uint32_t interval, const bool start = true, void* timerData = NULL, const char* timerName = NULL);
+TimerHandle_t timer_create(void(callback)(TimerHandle_t), const uint32_t interval, const bool start = true, void* timerData = NULL, const char* timerName = NULL);
 void timerDelete(TimerHandle_t timer);

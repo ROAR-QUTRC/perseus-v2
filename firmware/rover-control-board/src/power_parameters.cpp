@@ -9,8 +9,8 @@ using namespace hi_can::addressing;
 
 TwaiPowerBusParameterGroup::TwaiPowerBusParameterGroup(addressing::power::distribution::rover_control_board::group bus,
                                                        std::function<void(bool)> busStateHandler,
-                                                       std::function<void(void)> clearErrorHandler)
-    : _busId(bus)
+                                                       std::function<void(void)> clear_errorHandler)
+    : _bus_id(bus)
 {
     // Immediate control
     _callbacks.emplace_back(
@@ -23,9 +23,9 @@ TwaiPowerBusParameterGroup::TwaiPowerBusParameterGroup(addressing::power::distri
             .data_callback = [&](const Packet& packet)
             {
                 _immediateStatus.deserialize_data(packet.get_data());
-                if (_immediateStatus.clear_error && clearErrorHandler)
+                if (_immediateStatus.clear_error && clear_errorHandler)
                 {
-                    clearErrorHandler();
+                    clear_errorHandler();
                 }
                 busStateHandler(_immediateStatus.bus_target_state);
             },
@@ -62,46 +62,46 @@ TwaiPowerBusParameterGroup::TwaiPowerBusParameterGroup(addressing::power::distri
         });
     _busStateHandler = busStateHandler;
     // Timer for scheduled control
-    _oneSecondTimer = timerCreate(_oneSecondTimerCallback,
-                                  1000, true, this);
+    _oneSecondTimer = timer_create(_oneSecondTimerCallback,
+                                   1000, true, this);
 }
 
-void TwaiPowerBusParameterGroup::setBusStatus(parameters::power::distribution::power_status status)
+void TwaiPowerBusParameterGroup::set_bus_status(parameters::power::distribution::power_status status)
 {
     _currentStatus.status = status;
 }
 
-parameters::power::distribution::power_status TwaiPowerBusParameterGroup::getBusStatus()
+parameters::power::distribution::power_status TwaiPowerBusParameterGroup::get_bus_status()
 {
     return _currentStatus.status;
 }
 
-hi_can::parameters::power::distribution::status_t TwaiPowerBusParameterGroup::getStatus()
+hi_can::parameters::power::distribution::status_t TwaiPowerBusParameterGroup::get_status()
 {
     return _currentStatus;
 }
 
 addressing::power::distribution::rover_control_board::group TwaiPowerBusParameterGroup::getId()
 {
-    return _busId;
+    return _bus_id;
 }
 
-void TwaiPowerBusParameterGroup::setBusCurrent(uint32_t current)
+void TwaiPowerBusParameterGroup::set_bus_current(uint32_t current)
 {
     _currentStatus.current = current;
 }
 
-uint32_t TwaiPowerBusParameterGroup::getBusCurrent()
+uint32_t TwaiPowerBusParameterGroup::get_bus_current()
 {
     return _currentStatus.current;
 }
 
-void TwaiPowerBusParameterGroup::setBusVoltage(uint16_t voltage)
+void TwaiPowerBusParameterGroup::set_bus_voltage(uint16_t voltage)
 {
     _currentStatus.voltage = voltage;
 }
 
-uint16_t TwaiPowerBusParameterGroup::getBusVoltage()
+uint16_t TwaiPowerBusParameterGroup::get_bus_voltage()
 {
     return _currentStatus.voltage;
 }

@@ -143,7 +143,7 @@ void adcSetErrorVoltage(gpio_num_t gpio, uint16_t errorVtg)
     CORE_DEBUG("ADC channel %d error voltage now %u", idx, errorVtg);
     adcErrorLevels[idx] = errorVtg;
 }
-void adcSetChannelEnabled(gpio_num_t gpio, bool enable, bool delayedInit)
+void adc_set_channel_enabled(gpio_num_t gpio, bool enable, bool delayedInit)
 {
     static bool isInitialised[ADC_MAX_CHANNELS]{};
 
@@ -236,7 +236,7 @@ bool adcHasNewReading(gpio_num_t gpio)
         return false;
     return hasNewData[pinToIdx(gpio)].load();
 }
-int32_t adcGetVoltage(gpio_num_t gpio)
+int32_t adc_get_voltage(gpio_num_t gpio)
 {
     if (!isPinValidAdc(gpio, "Attempting to read ADC value for un-managed pin %d!"))
         return 0;

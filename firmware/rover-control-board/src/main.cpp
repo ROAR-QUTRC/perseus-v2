@@ -47,28 +47,29 @@ using namespace hi_can::addressing;
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-std::optional<PacketManager> packetManager;
-std::vector<TwaiPowerBusParameterGroup> parameterGroups;
+std::optional<PacketManager> packet_manager;
+std::vector<TwaiPowerBusParameterGroup> parameter_groups;
 
-bool buttonState = true;
+bool button_state = true;
 
-RoverPowerBus spareBus(hi_can::addressing::power::distribution::rover_control_board::group::SPARE_BUS,
-                       CONFIG_PRECHARGE_VOLTAGE, RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN,
-                       ROVER_A2_PIN, ROVER_A1_PIN);
-RoverPowerBus driveBus(hi_can::addressing::power::distribution::rover_control_board::group::DRIVE_BUS,
-                       CONFIG_PRECHARGE_VOLTAGE, RCB_DRIVE_PRE_SWITCH_PIN, RCB_DRIVE_MAIN_SWITCH_PIN,
-                       ROVER_A4_PIN, ROVER_A3_PIN);
-RoverPowerBus computeBus(hi_can::addressing::power::distribution::rover_control_board::group::COMPUTE_BUS,
-                         CONFIG_COMPUTE_PRECHARGE_VOLTAGE, RCB_COMP_PRE_SWITCH_PIN, RCB_COMP_MAIN_SWITCH_PIN,
-                         ROVER_A6_PIN, ROVER_A5_PIN);
-RoverPowerBus auxBus(hi_can::addressing::power::distribution::rover_control_board::group::AUX_BUS,
-                     CONFIG_AUX_PRECHARGE_VOLTAGE, RCB_AUX_PRE_SWITCH_PIN, RCB_AUX_MAIN_SWITCH_PIN,
-                     ROVER_A8_PIN, ROVER_A7_PIN);
+RoverPowerBus spare_bus(hi_can::addressing::power::distribution::rover_control_board::group::SPARE_BUS,
+                        CONFIG_PRECHARGE_VOLTAGE, RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN,
+                        ROVER_A2_PIN, ROVER_A1_PIN);
+RoverPowerBus drive_bus(hi_can::addressing::power::distribution::rover_control_board::group::DRIVE_BUS,
+                        CONFIG_PRECHARGE_VOLTAGE, RCB_DRIVE_PRE_SWITCH_PIN, RCB_DRIVE_MAIN_SWITCH_PIN,
+                        ROVER_A4_PIN, ROVER_A3_PIN);
+RoverPowerBus compute_bus(hi_can::addressing::power::distribution::rover_control_board::group::COMPUTE_BUS,
+                          CONFIG_COMPUTE_PRECHARGE_VOLTAGE, RCB_COMP_PRE_SWITCH_PIN, RCB_COMP_MAIN_SWITCH_PIN,
+                          ROVER_A6_PIN, ROVER_A5_PIN);
+RoverPowerBus aux_bus(hi_can::addressing::power::distribution::rover_control_board::group::AUX_BUS,
+                      CONFIG_AUX_PRECHARGE_VOLTAGE, RCB_AUX_PRE_SWITCH_PIN, RCB_AUX_MAIN_SWITCH_PIN,
+                      ROVER_A8_PIN, ROVER_A7_PIN);
+
 const std::vector<std::tuple<std::string, power::distribution::rover_control_board::group, RoverPowerBus&>> BUS_GROUPS = {
-    {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS, computeBus},
-    {"drive", power::distribution::rover_control_board::group::DRIVE_BUS, driveBus},
-    {"aux", power::distribution::rover_control_board::group::AUX_BUS, auxBus},
-    {"spare", power::distribution::rover_control_board::group::SPARE_BUS, spareBus},
+    {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS, compute_bus},
+    {"drive", power::distribution::rover_control_board::group::DRIVE_BUS, drive_bus},
+    {"aux", power::distribution::rover_control_board::group::AUX_BUS, aux_bus},
+    {"spare", power::distribution::rover_control_board::group::SPARE_BUS, spare_bus},
 };
 
 // New canbus
@@ -78,21 +79,21 @@ constexpr standard_address_t RCB_DEVICE_ADDRESS{
     power::distribution::rover_control_board::DEVICE_ID,
 };
 
-IoDebouncedButton powerButton(ROVER_A9_PIN, GPIO_FLOATING, true);
+IoDebouncedButton power_button(ROVER_A9_PIN, GPIO_FLOATING, true);
 
 TimerHandle_t timer = nullptr;
 
-uint64_t startupTime = 0;
+uint64_t startup_time = 0;
 
-hi_can::parameters::power::contactor::control_t contactorData;
+hi_can::parameters::power::contactor::control_t contactor_data;
 
-void contactorTimerCb(TimerHandle_t timer);
+void contactor_timer_callback(TimerHandle_t timer);
 extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
 {
     // the contactor power on MUST be the first thing to occur
     // this ensures that the board will self-power ASAP
-    ioConfigOutput(RCB_CONTACTOR_PIN);
-    ioConfigOutput(RCB_POWER_LED_PIN);
+    gpio_set_output(RCB_CONTACTOR_PIN);
+    gpio_set_output(RCB_POWER_LED_PIN);
 
     gpio_set_level(RCB_CONTACTOR_PIN, 1);
     // light up button so user knows to release button
@@ -102,16 +103,16 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     vt100ResetTerminal();
     printf("\r\n-----------------------------------------------------------------\r\n");
 
-    coreInit();
+    core_init();
 
     try
     {
-        auto& canInterface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
-                                                         filter_t{
-                                                             .address = static_cast<flagged_address_t>(RCB_DEVICE_ADDRESS),
-                                                             .mask = DEVICE_MASK,
-                                                         });
-        packetManager.emplace(canInterface);
+        auto& can_interface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
+                                                          filter_t{
+                                                              .address = static_cast<flagged_address_t>(RCB_DEVICE_ADDRESS),
+                                                              .mask = DEVICE_MASK,
+                                                          });
+        packet_manager.emplace(can_interface);
     }
     catch (const std::exception& e)
     {
@@ -120,7 +121,7 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     }
     try
     {
-        parameterGroups.reserve(4);
+        parameter_groups.reserve(4);
     }
     catch (const std::exception& e)
     {
@@ -131,9 +132,9 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
     {
         try
         {
-            parameterGroups.emplace_back(power_bus.GetParameterGroup());
-            packetManager->add_group(parameterGroups.back());
-            packetManager->set_transmission_config(
+            parameter_groups.emplace_back(power_bus.GetParameterGroup());
+            packet_manager->add_group(parameter_groups.back());
+            packet_manager->set_transmission_config(
                 flagged_address_t(standard_address_t(RCB_DEVICE_ADDRESS, static_cast<uint8_t>(id), static_cast<uint8_t>(hi_can::addressing::power::distribution::rover_control_board::power_bus::parameter::POWER_STATUS))),
                 power_bus.GetTransmissionConfig());
         }
@@ -144,9 +145,9 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
         }
     }
 
-    timer = timerCreate(contactorTimerCb, 1000);
+    timer = timer_create(contactor_timer_callback, 1000);
 
-    packetManager->set_callback(
+    packet_manager->set_callback(
         filter_t{static_cast<flagged_address_t>(
             standard_address_t{power::distribution::rover_control_board::DEVICE_ID,
                                static_cast<uint8_t>(power::distribution::rover_control_board::group::CONTACTOR),
@@ -166,55 +167,55 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
                 }
                 else
                 {
-                    contactorData.immediate_shutdown = data.immediate_shutdown;
-                    contactorData.shutdown_timer = data.shutdown_timer;
+                    contactor_data.immediate_shutdown = data.immediate_shutdown;
+                    contactor_data.shutdown_timer = data.shutdown_timer;
                 }
             },
         });
 
-    startupTime = coreGetUptime();
-    powerButton.clearHasHold();
-    powerButton.clearHasPress();
+    startup_time = core_get_uptime();
+    power_button.clear_has_hold();
+    power_button.clear_has_press();
     INFO("Starting core 1 main loop");
-    threadCreate([](void* args)
-                 { while(true) loop(args); },
-                 CORE_1, PRIORITY_HIGH, "loop", 8096);
+    thread_create([](void* args)
+                  { while(true) loop(args); },
+                  CORE_1, PRIORITY_HIGH, "loop", 8096);
 }
 
 void loop(void* args)
 {
-    static bool blinkState = true;
-    static uint64_t lastBlinkToggle = 0;
-    static uint64_t lastPress = 0;
-    static int lastRepeatCount = 0;
+    static bool blink_state = true;
+    static uint64_t last_blink_toggle = 0;
+    static uint64_t last_press = 0;
+    static int last_repeat_count = 0;
 
-    packetManager->handle();
+    packet_manager->handle();
 
-    if ((coreGetUptime() - lastBlinkToggle) >= 300)
+    if ((core_get_uptime() - last_blink_toggle) >= 300)
     {
-        blinkState = !blinkState;
-        lastBlinkToggle = coreGetUptime();
+        blink_state = !blink_state;
+        last_blink_toggle = core_get_uptime();
     }
 
-    if (!computeBus.isBusOn())
+    if (!compute_bus.is_bus_on())
     {
-        gpio_set_level(RCB_POWER_LED_PIN, blinkState);
+        gpio_set_level(RCB_POWER_LED_PIN, blink_state);
     }
     else
     {
         gpio_set_level(RCB_POWER_LED_PIN, true);
     }
-    powerButton.handle();
-    const uint64_t now = coreGetUptime();
-    if (powerButton.hasHold())
+    power_button.handle();
+    const uint64_t now = core_get_uptime();
+    if (power_button.has_hold())
     {
-        if (computeBus.isBusOn())
+        if (compute_bus.is_bus_on())
         {
             INFO("Turning off buses");
-            driveBus.setBusState(false);
-            auxBus.setBusState(false);
-            spareBus.setBusState(false);
-            computeBus.setBusState(false);
+            drive_bus.set_bus_state(false);
+            aux_bus.set_bus_state(false);
+            spare_bus.set_bus_state(false);
+            compute_bus.set_bus_state(false);
         }
         else
         {
@@ -224,72 +225,72 @@ void loop(void* args)
             gpio_set_level(RCB_CONTACTOR_PIN, 0);
         }
     }
-    else if (powerButton.hasPress())
+    else if (power_button.has_press())
     {
-        lastPress = now;
-        lastRepeatCount = powerButton.getRepeatPressCount();
+        last_press = now;
+        last_repeat_count = power_button.get_repeat_press_count();
         gpio_set_level(RCB_CONTACTOR_PIN, 1);
     }
 
-    if (lastPress && ((now - lastPress) > 500))
+    if (last_press && ((now - last_press) > 500))
     {
-        lastPress = 0;
+        last_press = 0;
         RoverPowerBus* bus = nullptr;
-        std::string busName = "#";
-        busName += (lastRepeatCount + 2);
-        switch (lastRepeatCount)
+        std::string bus_name = "#";
+        bus_name += (last_repeat_count + 2);
+        switch (last_repeat_count)
         {
         default:
         case 0:
-            if (!computeBus.isBusOn())
+            if (!compute_bus.is_bus_on())
             {
-                bus = &computeBus;
-                busName = "Compute";
+                bus = &compute_bus;
+                bus_name = "Compute";
             }
             else
             {
-                bus = &driveBus;
-                busName = "Drive";
+                bus = &drive_bus;
+                bus_name = "Drive";
             }
             break;
         case 1:
-            bus = &auxBus;
-            busName = "Aux";
+            bus = &aux_bus;
+            bus_name = "Aux";
             break;
         case 2:
-            bus = &spareBus;
-            busName = "Spare";
+            bus = &spare_bus;
+            bus_name = "Spare";
             break;
         }
 
-        if (bus->isBusOn())
+        if (bus->is_bus_on())
         {
-            INFO("%s bus turning off", busName.c_str());
-            bus->setBusState(false);
+            INFO("%s bus turning off", bus_name.c_str());
+            bus->set_bus_state(false);
         }
         else
         {
-            INFO("%s bus turning on", busName.c_str());
-            bus->clearError();
-            bus->setBusState(true);
+            INFO("%s bus turning on", bus_name.c_str());
+            bus->clear_error();
+            bus->set_bus_state(true);
         }
     }
 
-    spareBus.handle();
-    driveBus.handle();
-    computeBus.handle();
-    auxBus.handle();
+    spare_bus.handle();
+    drive_bus.handle();
+    compute_bus.handle();
+    aux_bus.handle();
 
     // let idle task run
     vTaskDelay(1);
 }
 
-void contactorTimerCb(TimerHandle_t timer)
+static void contactor_timer_callback(TimerHandle_t timer)
 {
-    if (contactorData.shutdown_timer)
+    if (contactor_data.shutdown_timer)
     {
-        contactorData.shutdown_timer--;
-        if (contactorData.shutdown_timer == 0)
+        contactor_data.shutdown_timer--;
+        if (contactor_data.shutdown_timer == 0)
         {
             WARN("Performing scheduled shutdown in 100ms!");
             fflush(stdout);
