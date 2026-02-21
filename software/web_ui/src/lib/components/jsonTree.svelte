@@ -15,6 +15,7 @@
 
 {#snippet renderValue(value: any)}
     {#if Array.isArray(value)}
+        <!-- render each array element with number -->
         <div style:color="mediumpurple" class="flex flex-col">
             {#each value as item, index}
                 <p class="ml-[10px]">
@@ -56,6 +57,7 @@
                     </p>
                     {#if !collapsed}
                         {#if containsObject}
+                            <!-- recursivly call to render the child object -->
                             {@render renderObject(value, depth + 1, `${path}/${key}`)}
                             <span style:color="mediumpurple" class="ml-[4px]">&rbrace;</span>
                         {:else if isArray}
