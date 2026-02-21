@@ -17,13 +17,13 @@ public:
 
     void handle();
 
-    bool hasPress();
-    bool hasHold();
+    bool has_press();
+    bool has_hold();
     bool isPressed();
     bool isHeld();
-    int getRepeatPressCount();
-    void clearHasPress();
-    void clearHasHold();
+    int get_repeat_press_count();
+    void clear_has_press();
+    void clear_has_hold();
 
 private:
     const bool _activeLevel;
@@ -32,8 +32,8 @@ private:
     int _repeatPressCount = 0;
     bool _isPressed = false;
     bool _isHeld = false;
-    bool _hasPress = false;
-    bool _hasHold = false;
-    uint64_t _lastPressTime = 0;
+    bool _has_press = false;
+    bool _has_hold = false;
+    uint64_t _last_pressTime = 0;
     uint64_t _lastReleaseTime = 0;
 };

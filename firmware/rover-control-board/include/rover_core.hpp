@@ -32,11 +32,11 @@
         ERROR(_errMsg " %s", esp_err_to_name(_tmpErr)); \
     }
 
-void coreInit();
+void core_init();
 void coreRestart();
 
-int64_t coreGetUptime();
-uint8_t coreGetUsage();
+int64_t core_get_uptime();
+uint8_t core_get_usage();
 
 void coreStartWifi(const char* const hostname);
 void coreStopWifi();

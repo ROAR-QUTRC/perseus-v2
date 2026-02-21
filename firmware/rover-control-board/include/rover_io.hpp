@@ -20,5 +20,5 @@ void ioInitNvs();
 void ioInitFiles();
 void ioStopFiles();
 
-void ioConfigInput(gpio_num_t gpio, gpio_pull_mode_t pull = GPIO_PULLDOWN_ONLY);
-void ioConfigOutput(gpio_num_t gpio, bool openDrain = false);
+void gpio_set_input(gpio_num_t gpio, gpio_pull_mode_t pull = GPIO_PULLDOWN_ONLY);
+void gpio_set_output(gpio_num_t gpio, bool openDrain = false);
