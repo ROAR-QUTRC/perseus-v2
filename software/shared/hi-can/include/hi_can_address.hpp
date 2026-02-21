@@ -521,48 +521,6 @@ namespace hi_can
                 }
             };
             // SYSTEMS
-            namespace power
-            {
-                constexpr uint8_t SYSTEM_ID = 0x01;
-                namespace control
-                {
-                    constexpr uint8_t SUBSYSTEM_ID = 0x00;
-                    enum class device
-                    {
-                        ROVER_CONTROL_BOARD = 0x00,
-                    };
-                    // DEVICES
-                    namespace rcb
-                    {
-                        enum class groups
-                        {
-                            CONTACTOR = 0x01,
-                            COMPUTE_BUS = 0x02,
-                            DRIVE_BUS = 0x03,
-                            AUX_BUS = 0x04,
-                            SPARE_BUS = 0x05,
-                        };
-                    }
-                    // PARAMETER GROUPS
-                    namespace contactor
-                    {
-                        enum class parameter
-                        {
-                            SHUTDOWN = 0x00
-                        };
-                    }
-                    namespace power_bus
-                    {
-                        enum class parameter
-                        {
-                            CONTROL_IMMEDIATE = 0x00,
-                            CONTROL_SCHEDULED = 0x01,
-                            CURRENT_LIMIT = 0x02,
-                            POWER_STATUS = 0x03,
-                        };
-                    }
-                }
-            }
             namespace drive
             {
                 constexpr uint8_t SYSTEM_ID = 0x02;
