@@ -57,7 +57,7 @@
                     </p>
                     {#if !collapsed}
                         {#if containsObject}
-                            <!-- recursivly call to render the child object -->
+                            <!-- recursively call to render the child object -->
                             {@render renderObject(value, depth + 1, `${path}/${key}`)}
                             <span style:color="mediumpurple" class="ml-[4px]">&rbrace;</span>
                         {:else if isArray}
