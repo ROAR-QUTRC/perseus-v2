@@ -20,8 +20,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Fa from 'svelte-fa';
-	import { faGaugeHigh, faRefresh, faTemperature0 } from '@fortawesome/free-solid-svg-icons';
-	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
+	import { faRefresh } from '@fortawesome/free-solid-svg-icons';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import type { RmdBrakeRequest, RmdCanIdResponse, RmdDataRequest, RMDStatusRequest, RMDStatusResponse, SuccessServiceResponse as SuccessResponse } from './rmdConfig/serviceTypes';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';

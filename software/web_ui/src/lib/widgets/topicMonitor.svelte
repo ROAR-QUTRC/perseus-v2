@@ -44,7 +44,6 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import * as ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
-	import _ from 'lodash';
 	import JsonTree from '$lib/components/jsonTree.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 
