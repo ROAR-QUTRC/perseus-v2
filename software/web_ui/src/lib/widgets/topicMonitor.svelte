@@ -44,47 +44,44 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import * as ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
-	import _ from 'lodash';
-	import JSONTree from 'svelte-json-tree'
+	import JsonTree from '$lib/components/jsonTree.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 
 	// Widget logic goes here
 	let monitors = $state<
 		{
 			topic: string;
-			listener: ROSLIB.Topic<any>;
+			topicFound: boolean;
+			listener: ROSLIB.Topic<object> | null;
 			lastData: object;
 			targetFrequency: number;
 			currentFrequency: number;
-			throttledValue: number;
 			lastMessage: number;
+			deadTime: number | null;
 		}[]
 	>([]);
 
-	let rosConnected = $state<boolean>(false);
 	$effect(() => {
 		if (!getRosConnection()) {
 			untrack(() => {
-				rosConnected = false;
 				settings.groups.newMonitor.topic.options = [];
 				monitors.forEach((monitor) => {
-					monitor.listener.unsubscribe();
+					monitor.listener?.unsubscribe();
 				});
 				monitors = [];
 			});
 		} else {
 			untrack(() => {
-				rosConnected = true;
 				innit();
 			});
 		}
 	});
 
 	const innit = () => {
-		if (!getRosConnection()) return;
-
-		const ros = getRosConnection() as ROSLIB.Ros;
-
+		const ros = getRosConnection()
+		if (!ros) return;
+		
 		settings.groups.newMonitor.topic.value = '';
 
 		ros.getTopics(
@@ -114,10 +111,6 @@
 		}
 	};
 
-	const throttleValue = _.throttle((index: number) => {
-		monitors[index].throttledValue = monitors[index].currentFrequency;
-	}, 100)
-
 	const onMessage = (message: object, topic: string) => {
 		const index = monitors.findIndex((monitor) => monitor.topic === topic);
 		if (index === -1) {
@@ -130,100 +123,131 @@
 		// update frequency
 		monitors[index].currentFrequency = 1000 / (Date.now() - monitors[index].lastMessage);
 		monitors[index].lastMessage = Date.now();
-		throttleValue(index);
 	};
 
-	const addMonitor = (topic: string | undefined, frequency: number, loadedFromConfig: boolean) => {
-		if (!getRosConnection()) return 'ROS not connected';
+	const registerSettings = (topic: string, listener: ROSLIB.Topic<object> | null, frequency: number, topicFound: boolean) => {
+		// add monitor to state
+		monitors.push({
+			topic: topic,
+			topicFound: topicFound,
+			listener: listener,
+			lastData: {},
+			targetFrequency: frequency,
+			currentFrequency: 0,
+			deadTime: null,
+			lastMessage: Date.now()
+		});
+
+		// create settings node for monitor
+		settings.groups[topic] = {
+			expectedFrequency: {
+				type: 'number',
+				value: String(frequency)
+			},
+			updateMonitor: {
+				type: 'button',
+				action: () => {
+					const frequency = settings.groups[topic].expectedFrequency.value;
+					if (frequency === '' || frequency === undefined) return 'Invalid frequency';
+					const index = monitors.findIndex((monitor) => monitor.topic === topic);
+					if (index === -1) {
+						console.error('How are we subscribed to a topic with no monitor?');
+						return 'Monitor not found';
+					}
+					monitors[index].targetFrequency = Number(frequency);
+
+					// update readonly config
+					const config = settings.groups.newMonitor.config.value!.split(',');
+					const topicIndex = config.findIndex((config) => config.split('@')[0] === topic);
+					if (topicIndex === -1) return 'Monitor not found in config';
+					config[topicIndex] = topic + '@' + frequency;
+					settings.groups.newMonitor.config.value = config.join(',');
+
+					return 'Monitor updated';
+				}
+			},
+			deleteMonitor: {
+				type: 'button',
+				action: () => {
+					// unsubscribe from topic
+					const index = monitors.findIndex((monitor) => monitor.topic === topic);
+					if (index === -1) {
+						console.error('How are we subscribed to a topic with no monitor?');
+						return 'Monitor not found';
+					}
+					monitors[index].listener?.unsubscribe();
+					monitors.splice(index, 1);
+					// remove settings node
+					delete settings.groups[topic];
+					// update readonly config
+					const config = settings.groups.newMonitor.config.value!.split(',');
+					const topicIndex = config.findIndex((config) => config.split('@')[0] === topic);
+					if (topicIndex === -1) return 'Monitor not found in config';
+					config.splice(topicIndex, 1);
+					settings.groups.newMonitor.config.value = config.join(',');
+
+					return `${topic} monitor deleted`;
+				}
+			}
+		};
+	}
+
+	const addMonitor = (topic: string | undefined, frequency: number, loadedFromConfig: boolean, shouldRegisterSettings: boolean = true) => {
+		const ros = getRosConnection();
+		if (!ros) return 'ROS not connected';
 
 		if (topic === '' || topic === undefined) return 'No topic selected';
 
-		// prevent duplicate monitors
-		for (const monitor of monitors) {
-			if (monitor.topic === topic) return 'Monitor already exists';
-		}
+		if (shouldRegisterSettings)
+			// prevent duplicate monitors
+			for (const monitor of monitors) {
+				if (monitor.topic === topic) return 'Monitor already exists';
+			}
 
-		const ros = getRosConnection() as ROSLIB.Ros;
+		let listener: ROSLIB.Topic<object> | null = null;
+
+		if (shouldRegisterSettings) {
+			const index = monitors.findIndex((monitor) => monitor.topic === topic);
+			if (index !== -1) {
+				monitors[index].listener?.removeAllListeners();
+				monitors[index].listener?.unsubscribe();
+			}
+		}
 
 		// Find the topic type
 		ros.getTopicType(
 			topic,
 			(topicType) => {
-				// subscribe to ros topic
-				const listener = new ROSLIB.Topic({
-					ros: ros,
-					name: topic,
-					messageType: topicType
-				});
-				listener.subscribe((message) => onMessage(message as object, topic));
+				if (topicType) {
+					// subscribe to ros topic
+					listener = new ROSLIB.Topic<object>({
+						ros: ros,
+						name: topic,
+						messageType: topicType
+					});
+
+					listener.removeAllListeners();
+					listener.unsubscribe();
+					listener.subscribe((message) => onMessage(message, topic));
+				}
 
 				// if this is a new monitor, add it to the config
-				if (!loadedFromConfig)
+				if (!loadedFromConfig) 
 					settings.groups.newMonitor.config.value += topic + '@' + frequency + ',';
 
-				// add monitor to state
-				monitors.push({
-					topic: topic,
-					listener: listener,
-					lastData: {},
-					targetFrequency: frequency,
-					currentFrequency: 0,
-					throttledValue: 0,
-					lastMessage: Date.now()
-				});
+				if (shouldRegisterSettings)
+					registerSettings(topic, listener, frequency, topicType !== '');
 
-				// create settings node for monitor
-				settings.groups[topic] = {
-					expectedFrequency: {
-						type: 'number',
-						value: String(frequency)
-					},
-					updateMonitor: {
-						type: 'button',
-						action: () => {
-							const frequency = settings.groups[topic].expectedFrequency.value;
-							if (frequency === '' || frequency === undefined) return 'Invalid frequency';
-							const index = monitors.findIndex((monitor) => monitor.topic === topic);
-							if (index === -1) {
-								console.error('How are we subscribed to a topic with no monitor?');
-								return 'Monitor not found';
-							}
-							monitors[index].targetFrequency = Number(frequency);
-
-							// update readonly config
-							const config = settings.groups.newMonitor.config.value!.split(',');
-							const topicIndex = config.findIndex((config) => config.split('@')[0] === topic);
-							if (topicIndex === -1) return 'Monitor not found in config';
-							config[topicIndex] = topic + '@' + frequency;
-							settings.groups.newMonitor.config.value = config.join(',');
-
-							return 'Monitor updated';
-						}
-					},
-					deleteMonitor: {
-						type: 'button',
-						action: () => {
-							// unsubscribe from topic
-							const index = monitors.findIndex((monitor) => monitor.topic === topic);
-							if (index === -1) {
-								console.error('How are we subscribed to a topic with no monitor?');
-								return 'Monitor not found';
-							}
-							monitors[index].listener.unsubscribe();
-							monitors.splice(index, 1);
-							// remove settings node
-							delete settings.groups[topic];
-							// update readonly config
-							const config = settings.groups.newMonitor.config.value!.split(',');
-							const topicIndex = config.findIndex((config) => config.split('@')[0] === topic);
-							if (topicIndex === -1) return 'Monitor not found in config';
-							config.splice(topicIndex, 1);
-							settings.groups.newMonitor.config.value = config.join(',');
-
-							return `${topic} monitor deleted`;
-						}
+				if (topicType !== '') {
+					// if we're loading from config, we need to register the settings after we've found the topic type
+					const index = monitors.findIndex((monitor) => monitor.topic === topic);
+					if (index === -1) {
+						console.error('How are we subscribed to a topic with no monitor?');
+						return 'Monitor not found';
 					}
-				};
+					monitors[index].topicFound = true;
+					monitors[index].listener = listener!;
+				}
 			},
 			(error) => {
 				console.error('Error getting topic type', error);
@@ -236,10 +260,13 @@
 	const getColor = (currentFrequency: number, targetFrequency: number) => {
 		const error = currentFrequency - targetFrequency;
 		if (error >= 0) return 'green' // on or above target frequency
-		const maxError = Number(settings.groups.general.maxFrequencyError.value);
+		const maxError = Number(settings.groups.general.maxErrorPercent.value);
 		if (Math.abs(error / targetFrequency) * 100 > maxError) return 'red'
 		else return 'green'
 	}
+
+	let interval: NodeJS.Timeout | null = null;
+	const MESSAGE_TIMEOUT_MS = 1000;
 
 	onMount(() => {
 		// add action for buttons
@@ -252,54 +279,71 @@
 			return 'Topics refreshed';
 		};
 
+		// Find dead monitors
+		interval = setInterval(() => {
+			const now = Date.now();
+			for (const monitor of monitors) {
+				if (now - monitor.lastMessage > MESSAGE_TIMEOUT_MS) {
+					monitor.currentFrequency = 0;
+					monitor.deadTime = now - monitor.lastMessage;
+				}
+				else {
+					monitor.deadTime = null;
+				}
+			}
+		}, 100)
+
 		return () => {
 			// Cleanup
 			settings.groups.newMonitor.topic.options = [];
 
+			if (interval)
+				clearInterval(interval);
+
 			for (const monitor of monitors) {
-				monitor.listener.unsubscribe();
+				monitor.listener?.unsubscribe();
 			}
 		};
 	});
 </script>
 
-<ScrollArea class="h-full pr-4" orientation="vertical">
+<ScrollArea class="h-full -m-2" orientation="vertical">
 	<div class="relative h-full w-full">
-		<div
-			class="bg-card absolute left-0 top-0 flex h-full w-full items-center justify-center"
-			class:hidden={rosConnected}
-		>
-			<div class="absolute left-[50%] top-[50%] w-[80%] -translate-x-[50%] -translate-y-[50%]">
-				<p class="text-center text-2xl">No ROS Connection found.</p>
-				<p class="text-center">Make sure the rosbridge is running and the client is connected.</p>
-			</div>
-		</div>
 		<table class="w-full table-auto">
 			<thead>
-				<tr class="border">
-					<th class="border p-2">Topic</th>
-					<th class="border p-2">Last Data</th>
-					<th class="min-w-[140px] border p-2">Frequency</th>
+				<tr class="border-b">
+					<th class="p-2 min-w-[200px]">Topic</th>
+					<th class="border-l p-2">Last Data</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each monitors as monitor}
-					<tr class="border">
-						<td class="border p-2">{monitor.topic}</td>
-						<td class="max-h-[200px] w-full overflow-hidden border p-2">
-							<!-- <ScrollArea orientation="horizontal"> -->
-							<!-- <ScrollArea class="" orientation="vertical">{@html monitor.lastData}</ScrollArea> -->
-							 	<JSONTree value={monitor.lastData}/>
-							<!-- </ScrollArea> -->
-						</td>
-						<td class="min-w-[160px] border p-2 text-black"
-							><p
-								class="rounded-[10px] py-2 px-2 transition-colors flex justify-between"
-								style:background-color={getColor(monitor.throttledValue, monitor.targetFrequency)}
+					<tr class="border border-l-0 border-x-0">
+						<td class="p-2 flex flex-col">
+							<p class="w-full text-center mb-2"><b>{monitor.topic}</b></p>
+						
+							<p
+								class="rounded-[10px] text-border py-1 px-4 transition-colors text-center w-fit mx-auto"
+								style:background-color={getColor(monitor.currentFrequency, monitor.targetFrequency)}
 							>
-								{monitor.throttledValue.toFixed()}Hz <span>/</span> {monitor.targetFrequency}Hz
-							</p></td
-						>
+								{monitor.currentFrequency.toFixed(1)}Hz
+							</p>
+							<p class="opacity-50 text-center">
+								Target: {monitor.targetFrequency}Hz (&PlusMinus;{((Number(settings.groups.general.maxErrorPercent.value) / 100 * monitor.targetFrequency) as number).toFixed(2)}Hz)
+							</p>
+							{#if !monitor.topicFound}
+								<p class="text-red-500 text-center">Topic not found</p>
+							{:else if monitor.deadTime !== null}
+								<p class="text-red-500 text-center">No message received for {(monitor.deadTime / 1000).toFixed(2)}s</p>
+							{/if}
+						</td>
+						<td class="max-h-[200px] w-full overflow-hidden border-l p-2">
+							{#if monitor.topicFound}
+								<JsonTree data={monitor.lastData}/>
+							{:else}
+								<Button class="ml-[50%] -translate-x-[50%]" onclick={() => addMonitor(monitor.topic, monitor.targetFrequency, true, false)}>Reconnect</Button>
+							{/if}
+						</td>
 					</tr>
 				{/each}
 			</tbody>
@@ -309,15 +353,3 @@
 		{/if}
 	</div>
 </ScrollArea>
-
-<style>
-	:root {
-		--json-tree-string-color: white;
-	}
-
-	:global(span .arrow, span .arrow) {
-		display: none !important;
-		margin-left: -40px !important;
-		margin-top: 20px !important;
-	}
-</style>

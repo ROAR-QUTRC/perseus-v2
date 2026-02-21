@@ -47,9 +47,6 @@
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "change-case": "^5.4.4",
     "chart.js": "^4.4.7",
-    "json-formatter-js": "^2.5.23",
-    "json-tree-viewer": "^0.0.2",
-    "lodash": "^4.17.23",
     "mode-watcher": "^0.5.0",
     "panzoom": "^9.4.3",
     "remult": "^0.27.24",
@@ -58,8 +55,8 @@
     "socket.io-client": "^4.8.1",
     "svelte-fa": "^4.0.3",
     "svelte-grid-extended": "^1.2.1",
-    "svelte-json-tree": "^2.2.0",
-    "svelte-radix": "^3.0.2"
+    "svelte-radix": "^3.0.2",
+    "tsx": "^4.21.0"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@4.12.0"
 }
