@@ -81,7 +81,7 @@ hi_can::parameters::power::distribution::status_t TwaiPowerBusParameterGroup::ge
     return _currentStatus;
 }
 
-addressing::power::distribution::rover_control_board::group TwaiPowerBusParameterGroup::getId()
+addressing::power::distribution::rover_control_board::group TwaiPowerBusParameterGroup::get_id()
 {
     return _bus_id;
 }
@@ -106,7 +106,7 @@ uint16_t TwaiPowerBusParameterGroup::get_bus_voltage()
     return _currentStatus.voltage;
 }
 
-uint32_t TwaiPowerBusParameterGroup::getLimitCurrent()
+uint32_t TwaiPowerBusParameterGroup::get_limit_current()
 {
     return _currentLimit;
 }

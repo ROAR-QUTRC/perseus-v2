@@ -19,8 +19,8 @@ public:
 
     bool has_press();
     bool has_hold();
-    bool isPressed();
-    bool isHeld();
+    bool is_pressed();
+    bool is_held();
     int get_repeat_press_count();
     void clear_has_press();
     void clear_has_hold();
@@ -29,11 +29,11 @@ private:
     const bool _activeLevel;
     const gpio_num_t _pin;
 
-    int _repeatPressCount = 0;
-    bool _isPressed = false;
-    bool _isHeld = false;
+    int _repeat_press_count = 0;
+    bool _is_pressed = false;
+    bool _is_held = false;
     bool _has_press = false;
     bool _has_hold = false;
-    uint64_t _last_pressTime = 0;
-    uint64_t _lastReleaseTime = 0;
+    uint64_t _last_press_time = 0;
+    uint64_t _last_release_time = 0;
 };

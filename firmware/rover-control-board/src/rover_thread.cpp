@@ -13,7 +13,7 @@ TimerHandle_t timer_create(void(callback)(TimerHandle_t), const uint32_t interva
         xTimerStart(handle, 0);
     return handle;
 }
-void timerDelete(TimerHandle_t timer)
+void timer_delete(TimerHandle_t timer)
 {
     xTimerDelete(timer, 0);
 }

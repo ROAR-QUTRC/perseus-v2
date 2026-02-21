@@ -1,12 +1,10 @@
 #include "rover_debounce.hpp"
 
-#include <rover_log.hpp>
-
 IoDebouncedButton::IoDebouncedButton(gpio_num_t pin, gpio_pull_mode_t pullMode, bool activeLevel)
     : _activeLevel(activeLevel),
       _pin(pin)
 {
-    _last_pressTime = 0;
+    _last_press_time = 0;
     gpio_set_input(pin, pullMode);
 }
 
@@ -17,49 +15,48 @@ void IoDebouncedButton::handle()
 
     if (pressed)
     {
-        if (_last_pressTime == 0)
+        if (_last_press_time == 0)
         {
-            // WARN("First press");
-            _last_pressTime = now;
+            _last_press_time = now;
         }
-        else if ((now - _last_pressTime) < DEBOUNCE_PRESS_TIME)  // capture if not past debounce time
+        else if ((now - _last_press_time) < DEBOUNCE_PRESS_TIME)  // capture if not past debounce time
             ;
-        else if (!_isPressed)
+        else if (!_is_pressed)
         {
-            if ((now - _lastReleaseTime) < DEBOUNCE_MULTI_PRESS_TIME)
+            if ((now - _last_release_time) < DEBOUNCE_MULTI_PRESS_TIME)
             {
-                _repeatPressCount++;
+                _repeat_press_count++;
             }
-            _isPressed = true;
+            _is_pressed = true;
         }
-        else if ((now - _last_pressTime) >= DEBOUNCE_HOLD_TIME)
+        else if ((now - _last_press_time) >= DEBOUNCE_HOLD_TIME)
         {
-            if (!_isHeld)
+            if (!_is_held)
             {
                 _has_hold = true;
             }
-            _isHeld = true;
+            _is_held = true;
         }
     }
     else
     {
-        if (_last_pressTime && ((now - _last_pressTime) >= DEBOUNCE_PRESS_TIME))
+        if (_last_press_time && ((now - _last_press_time) >= DEBOUNCE_PRESS_TIME))
         {
-            _last_pressTime = 0;
-            _lastReleaseTime = now;
-            if (!_isHeld && _isPressed)
+            _last_press_time = 0;
+            _last_release_time = now;
+            if (!_is_held && _is_pressed)
             {
                 _has_press = true;
             }
-            _isPressed = false;
-            _isHeld = false;
+            _is_pressed = false;
+            _is_held = false;
             clear_has_hold();
         }
-        else if (_repeatPressCount && (now - _lastReleaseTime) >= DEBOUNCE_MULTI_PRESS_TIME)
+        else if (_repeat_press_count && (now - _last_release_time) >= DEBOUNCE_MULTI_PRESS_TIME)
         {
-            _repeatPressCount = 0;
+            _repeat_press_count = 0;
         }
-        _last_pressTime = 0;
+        _last_press_time = 0;
     }
 }
 
@@ -81,17 +78,17 @@ bool IoDebouncedButton::has_hold()
     }
     return false;
 }
-bool IoDebouncedButton::isPressed()
+bool IoDebouncedButton::is_pressed()
 {
-    return _isPressed;
+    return _is_pressed;
 }
-bool IoDebouncedButton::isHeld()
+bool IoDebouncedButton::is_held()
 {
-    return _isHeld;
+    return _is_held;
 }
 int IoDebouncedButton::get_repeat_press_count()
 {
-    return _repeatPressCount;
+    return _repeat_press_count;
 }
 
 void IoDebouncedButton::clear_has_press()

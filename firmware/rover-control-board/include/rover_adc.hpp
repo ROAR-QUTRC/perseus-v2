@@ -17,8 +17,7 @@
 
 // configureChannel will initialise the ADC when needed
 void adc_set_channel_enabled(gpio_num_t gpio, bool enable, bool delayedInit = false);
-void adcSetErrorVoltage(gpio_num_t gpio, uint16_t errorVtg);
-void adcDeinit();
+void adc_set_error_voltage(gpio_num_t gpio, uint16_t errorVtg);
+void adc_deinitialize();
 
-bool adcHasNewReading(gpio_num_t gpio);
 int32_t adc_get_voltage(gpio_num_t gpio);
