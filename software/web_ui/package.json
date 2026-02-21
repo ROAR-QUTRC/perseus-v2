@@ -54,7 +54,6 @@
     "socket.io-client": "^4.8.1",
     "svelte-fa": "^4.0.3",
     "svelte-grid-extended": "^1.2.1",
-    "svelte-json-tree": "^2.2.0",
     "svelte-radix": "^3.0.2"
   },
   "packageManager": "yarn@4.12.0"
