@@ -20,7 +20,7 @@ namespace hi_can::parameters::power::distribution
                 .address = flagged_address_t(
                     standard_address_t(deviceAddress,
                                        static_cast<uint8_t>(bus),
-                                       static_cast<uint8_t>(addressing::legacy::power::control::power_bus::parameter::POWER_STATUS)))},
+                                       static_cast<uint8_t>(addressing::power::distribution::rover_control_board::power_bus::parameter::POWER_STATUS)))},
             PacketManager::callback_config_t{
                 .data_callback = [this](const Packet& packet)
                 {
@@ -341,27 +341,5 @@ namespace hi_can::parameters::legacy::drive::motors
                 true,
             });
         return packets;
-    }
-}
-namespace hi_can::parameters::legacy::power::control::power_bus
-{
-    PowerBusParameterGroup::PowerBusParameterGroup(const addressing::legacy::address_t& device_address,
-                                                   addressing::legacy::power::control::rcb::groups bus)
-        : _device_address(device_address)
-    {
-        using namespace hi_can::addressing::legacy;
-
-        _callbacks.emplace_back(
-            filter_t{
-                .address = static_cast<flagged_address_t>(
-                    address_t(device_address,
-                              static_cast<uint8_t>(bus),
-                              static_cast<uint8_t>(addressing::legacy::power::control::power_bus::parameter::POWER_STATUS)))},
-            PacketManager::callback_config_t{
-                .data_callback = [this](const Packet& packet)
-                {
-                    _status.deserialize_data(packet.get_data());
-                },
-            });
     }
 }

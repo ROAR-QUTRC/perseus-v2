@@ -7,6 +7,10 @@
 #include <thread>
 #include <vector>
 
+// THIS PROGRAM WILL NOT WORK
+// Due to an update to the hi-can library, references to hi_can::*::legacy::power will break.
+// These were removed on the basis that this code will be rewritten soon anyway
+
 /* Terminology:
 - Band refers to one of the transparent windows on the light tower
 - Ring refers to the concentric loop of LEDs inside, usually 2 or more loops of LED strip
