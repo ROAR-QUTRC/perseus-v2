@@ -4,7 +4,7 @@
   <name>teleop_diagnostics</name>
   <version>0.1.0</version>
   <description>TUI diagnostic tool for teleoperation debugging</description>
-  <maintainer email="roar@qut.edu.au">ROAR Team</maintainer>
+  <maintainer email="1388693+DingoOz@users.noreply.github.com">Nigel_H-S</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>
