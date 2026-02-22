@@ -2487,6 +2487,10 @@ class AutonomyTUI:
             self.safe_addstr(max_y - 1, 0, " ".ljust(max_x), curses.A_REVERSE)
             return
 
+        # Guard against malformed map with zero resolution
+        if resolution <= 0:
+            return
+
         # Compute map extent in world coordinates
         map_world_w = grid_w * resolution
         map_world_h = grid_h * resolution
@@ -2594,8 +2598,6 @@ class AutonomyTUI:
                 if robot_yaw is not None:
                     # Normalize to [0, 2pi)
                     yaw = robot_yaw % (2 * math.pi)
-                    if yaw < 0:
-                        yaw += 2 * math.pi
                     # 8 directions
                     if yaw < math.pi / 8 or yaw >= 15 * math.pi / 8:
                         marker = ">"  # east (0 rad = +x)
