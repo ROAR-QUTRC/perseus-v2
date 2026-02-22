@@ -7,10 +7,8 @@
 #include <freertos/timers.h>
 
 // standard libraries
-#include <cstdio>
-
-// New canbus
 #include <chrono>
+#include <cstdio>
 #include <hi_can_twai.hpp>
 #include <optional>
 
@@ -53,16 +51,20 @@ bool button_state = true;
 
 RoverPowerBus spare_bus(hi_can::addressing::power::distribution::rover_control_board::group::SPARE_BUS,
                         CONFIG_PRECHARGE_VOLTAGE, RCB_SPARE_PRE_SWITCH_PIN, RCB_SPARE_MAIN_SWITCH_PIN,
-                        static_cast<gpio_num_t>(ROVER_PIN::A2), static_cast<gpio_num_t>(ROVER_PIN::A1));
+                        static_cast<gpio_num_t>(ROVER_PIN::A2), static_cast<gpio_num_t>(ROVER_PIN::A1),
+                        SPARE_R16, SPARE_R17, SPARE_R19);
 RoverPowerBus drive_bus(hi_can::addressing::power::distribution::rover_control_board::group::DRIVE_BUS,
                         CONFIG_PRECHARGE_VOLTAGE, RCB_DRIVE_PRE_SWITCH_PIN, RCB_DRIVE_MAIN_SWITCH_PIN,
-                        static_cast<gpio_num_t>(ROVER_PIN::A4), static_cast<gpio_num_t>(ROVER_PIN::A3));
+                        static_cast<gpio_num_t>(ROVER_PIN::A4), static_cast<gpio_num_t>(ROVER_PIN::A3),
+                        DRIVE_R16, DRIVE_R17, DRIVE_R19);
 RoverPowerBus compute_bus(hi_can::addressing::power::distribution::rover_control_board::group::COMPUTE_BUS,
                           CONFIG_COMPUTE_PRECHARGE_VOLTAGE, RCB_COMP_PRE_SWITCH_PIN, RCB_COMP_MAIN_SWITCH_PIN,
-                          static_cast<gpio_num_t>(ROVER_PIN::A6), static_cast<gpio_num_t>(ROVER_PIN::A5));
+                          static_cast<gpio_num_t>(ROVER_PIN::A6), static_cast<gpio_num_t>(ROVER_PIN::A5),
+                          COMPUTE_R16, COMPUTE_R17, COMPUTE_R19);
 RoverPowerBus aux_bus(hi_can::addressing::power::distribution::rover_control_board::group::AUX_BUS,
                       CONFIG_AUX_PRECHARGE_VOLTAGE, RCB_AUX_PRE_SWITCH_PIN, RCB_AUX_MAIN_SWITCH_PIN,
-                      static_cast<gpio_num_t>(ROVER_PIN::A8), static_cast<gpio_num_t>(ROVER_PIN::A7));
+                      static_cast<gpio_num_t>(ROVER_PIN::A8), static_cast<gpio_num_t>(ROVER_PIN::A7),
+                      AUX_R16, AUX_R17, AUX_R19);
 
 const std::vector<std::tuple<std::string, power::distribution::rover_control_board::group, RoverPowerBus&>> BUS_GROUPS = {
     {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS, compute_bus},
@@ -71,7 +73,6 @@ const std::vector<std::tuple<std::string, power::distribution::rover_control_boa
     {"spare", power::distribution::rover_control_board::group::SPARE_BUS, spare_bus},
 };
 
-// New canbus
 constexpr standard_address_t RCB_DEVICE_ADDRESS{
     power::SYSTEM_ID,
     power::distribution::SUBSYSTEM_ID,
@@ -136,9 +137,9 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
                 flagged_address_t(standard_address_t(RCB_DEVICE_ADDRESS, static_cast<uint8_t>(id), static_cast<uint8_t>(hi_can::addressing::power::distribution::rover_control_board::power_bus::parameter::POWER_STATUS))),
                 power_bus.get_transmission_config());
         }
-        catch (const std::exception& e)
+        catch (const std::exception& error)
         {
-            printf("Error \"%s\" while setting parameter groups for %s", e.what(), name.c_str());
+            printf("Error \"%s\" while setting parameter groups for %s", error.what(), name.c_str());
             return;
         }
     }

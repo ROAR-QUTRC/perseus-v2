@@ -47,7 +47,7 @@ menu "Power Bus Configuration"
             Disable overload detection for this long after precharging (for inrush current)
 
             
-    config BUS_CAP_DISCHARGE_TIME
+    config BUS_CAPACITOR_DISCHARGE_TIME
         int "Capacitor discharge time (mS)"
         default "500"
         range "0" "10000"

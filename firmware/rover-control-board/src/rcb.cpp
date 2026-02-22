@@ -23,7 +23,7 @@ const gptimer_alarm_config_t RoverPowerBus::_precharge_on_config = {
 
 RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_control_board::group bus_id, uint16_t precharge_voltage,
                              gpio_num_t precharge, gpio_num_t main_switch,
-                             gpio_num_t voltage_feedback, gpio_num_t current_feedback)
+                             gpio_num_t voltage_feedback, gpio_num_t current_feedback, const int R16, const long R17, const int R19)
     : _can_parameters(bus_id, [&](bool on)
                       { set_bus_state(on); }, [&]()
                       { clear_error(); }),
@@ -31,7 +31,10 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
       _switch_pin(main_switch),
       _voltage_feedback(voltage_feedback),
       _current_feedback(current_feedback),
-      _precharge_voltage(precharge_voltage)
+      _precharge_voltage(precharge_voltage),
+      _R16(R16),
+      _R17(R17),
+      _R19(R19)
 {
     gpio_set_output(precharge);
     gpio_set_output(main_switch);
@@ -47,7 +50,7 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
         .flags = {
             .intr_shared = true,
             .allow_pd = 0,
-            .backup_before_sleep = false,   // Deprecated, but we've set -Wmissing-field-initializers
+            .backup_before_sleep = false,  // Deprecated, but we've set -Wmissing-field-initializers
         },
     };
 
@@ -112,10 +115,10 @@ void RoverPowerBus::clear_error()
 
 void RoverPowerBus::handle()
 {
-    const int32_t bus_voltage = rcb_adc_to_bus_voltage(adc_get_voltage(_voltage_feedback));
+    const int32_t bus_voltage = adc_to_bus_voltage(adc_get_voltage(_voltage_feedback));
     _can_parameters.set_bus_voltage(bus_voltage);
     const int32_t current_sense_voltage = adc_get_voltage(_current_feedback);
-    const uint32_t bus_current = rcb_adc_to_bus_current(current_sense_voltage);
+    const uint32_t bus_current = adc_to_bus_current(current_sense_voltage);
 
     // check software fusing
     const bool switch_error = (current_sense_voltage == ROVER_ADC_ERR_RETURN_VAL);
@@ -126,7 +129,7 @@ void RoverPowerBus::handle()
     const int64_t bus_off_period = now - _switch_off_time;
 
     const bool bus_overloaded = (bus_current > _can_parameters.get_limit_current());
-    const bool capacitors_discharging = (bus_off_period < CONFIG_BUS_CAP_DISCHARGE_TIME);
+    const bool capacitors_discharging = (bus_off_period < CONFIG_BUS_CAPACITOR_DISCHARGE_TIME);
     const bool inrush_done = (bus_on_period > CONFIG_PRECHARGE_INRUSH_TIME);
     const bool bus_should_be_on = (_state == bus_state::ON) || (_next_state == bus_state::ON);
     const bool bus_is_on = (bus_voltage > RCB_BUS_ON_VOLTAGE);
@@ -247,7 +250,7 @@ bool RoverPowerBus::_timer_callback(gptimer_handle_t timer, const gptimer_alarm_
 
     if (source->_state == bus_state::PRECHARGING)
     {
-        const uint32_t voltage = rcb_adc_to_bus_voltage(adc_get_voltage(source->_voltage_feedback));
+        const uint32_t voltage = adc_to_bus_voltage(adc_get_voltage(source->_voltage_feedback));
         if (voltage > source->_precharge_voltage)
         {
             gpio_set_level(source->_switch_pin, 1);

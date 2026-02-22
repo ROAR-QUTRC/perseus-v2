@@ -13,7 +13,7 @@
 class IoDebouncedButton
 {
 public:
-    IoDebouncedButton(gpio_num_t pin, gpio_pull_mode_t pullMode = GPIO_PULLDOWN_ONLY, bool activeLevel = false);
+    IoDebouncedButton(gpio_num_t pin, gpio_pull_mode_t pull_mode = GPIO_PULLDOWN_ONLY, bool active_level = false);
 
     void handle();
 
@@ -26,7 +26,7 @@ public:
     void clear_has_hold();
 
 private:
-    const bool _activeLevel;
+    const bool _active_level;
     const gpio_num_t _pin;
 
     int _repeat_press_count = 0;
