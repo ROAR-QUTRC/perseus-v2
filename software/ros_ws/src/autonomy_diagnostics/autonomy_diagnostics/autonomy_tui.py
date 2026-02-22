@@ -381,6 +381,20 @@ class LidarScanData:
     timestamp: float = 0.0
 
 
+@dataclass
+class MapGridData:
+    """Cached occupancy grid data for map visualization."""
+
+    width: int = 0
+    height: int = 0
+    resolution: float = 0.0
+    origin_x: float = 0.0
+    origin_y: float = 0.0
+    origin_yaw: float = 0.0
+    data: Optional[List[int]] = None
+    timestamp: float = 0.0
+
+
 # =============================================================================
 # Rate Calculator
 # =============================================================================
@@ -456,6 +470,8 @@ class AutonomyDiagnosticsNode(Node):
         self.joystick_status = JoystickStatus()
         self.lidar_scan = LidarScanData()
         self.lidar_view_active = False  # Set by TUI to gate scan data storage
+        self.map_grid = MapGridData()
+        self.map_view_active = False  # Set by TUI to gate grid data storage
         self.config_file_statuses: List[ConfigFileStatus] = []
         self.cmd_vel_status = CmdVelStatus()
         self.event_log: deque = deque(maxlen=200)
@@ -554,11 +570,16 @@ class AutonomyDiagnosticsNode(Node):
                     sensor_qos,
                 )
             elif msg_type == "OccupancyGrid":
+                map_qos = QoSProfile(
+                    reliability=ReliabilityPolicy.RELIABLE,
+                    durability=DurabilityPolicy.TRANSIENT_LOCAL,
+                    depth=1,
+                )
                 self.create_subscription(
                     OccupancyGrid,
                     topic,
-                    lambda msg, n=name: self._topic_callback(n, msg),
-                    10,
+                    lambda msg, n=name: self._map_callback(msg, n),
+                    map_qos,
                 )
             elif msg_type == "Twist":
                 self.create_subscription(
@@ -683,6 +704,30 @@ class AutonomyDiagnosticsNode(Node):
             self.lidar_scan.range_min = msg.range_min
             self.lidar_scan.range_max = msg.range_max
             self.lidar_scan.timestamp = time.time()
+
+    def _map_callback(self, msg, topic_name: str):
+        """Callback for OccupancyGrid topic - records rate and optionally stores grid data.
+
+        Grid data is only copied when the map view is active,
+        reducing memory overhead during normal dashboard use.
+        """
+        self._topic_callback(topic_name, msg)
+        if not self.map_view_active:
+            return
+        # Extract yaw from origin quaternion
+        q = msg.info.origin.orientation
+        siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+        cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+        origin_yaw = math.atan2(siny_cosp, cosy_cosp)
+        with self._status_lock:
+            self.map_grid.width = msg.info.width
+            self.map_grid.height = msg.info.height
+            self.map_grid.resolution = msg.info.resolution
+            self.map_grid.origin_x = msg.info.origin.position.x
+            self.map_grid.origin_y = msg.info.origin.position.y
+            self.map_grid.origin_yaw = origin_yaw
+            self.map_grid.data = list(msg.data)
+            self.map_grid.timestamp = time.time()
 
     def _check_joystick_device(self):
         """Check if a joystick device is physically connected."""
@@ -1040,6 +1085,10 @@ class AutonomyTUI:
     # Color pair indices — LiDAR view
     COLOR_LIDAR_SCAN = 11
     COLOR_LIDAR_GRID = 12
+    # Color pair indices — Map view
+    COLOR_MAP_OCCUPIED = 13
+    COLOR_MAP_UNKNOWN = 14
+    COLOR_MAP_ROBOT = 15
 
     def __init__(self, node: AutonomyDiagnosticsNode):
         self.node = node
@@ -1075,6 +1124,15 @@ class AutonomyTUI:
         self.show_msg_preview = False
         self._preview_sel = 0
         self._preview_scroll = 0
+
+        # Map overlay
+        self.show_map = False
+        self._map_view_range = 0.0  # 0 = auto-fit on first data
+        self._map_pan_x = 0.0
+        self._map_pan_y = 0.0
+        self._map_follow_robot = True
+        self._map_center_x = 0.0
+        self._map_center_y = 0.0
 
         # Export snapshot (Feature 8)
         self._status_msg = ""
@@ -1473,6 +1531,7 @@ class AutonomyTUI:
             ("d", "Change ROS_DOMAIN_ID"),
             ("e", "Edit robot config YAML"),
             ("l", "LiDAR scan view (braille render)"),
+            ("m", "Map overlay (braille occupancy grid)"),
             ("n", "Network view"),
             ("v", "Event history log"),
             ("p", "Topic message preview"),
@@ -2350,6 +2409,252 @@ class AutonomyTUI:
         )
         self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
 
+    def draw_map_view(self):
+        """Draw full-screen occupancy grid map visualization using braille characters."""
+        if self.stdscr is None:
+            return
+        max_y, max_x = self.stdscr.getmaxyx()
+
+        # Reserve: row 0 for title, row max_y-1 for footer
+        chart_h = max_y - 2
+        chart_w = max_x
+        if chart_h < 4 or chart_w < 10:
+            return
+
+        # Pixel resolution (braille gives 2x horizontal, 4x vertical)
+        px_w = chart_w * 2
+        px_h = chart_h * 4
+
+        # Thread-safe snapshot of map data
+        with self.node._status_lock:
+            mg = self.node.map_grid
+            if mg.data is None or mg.width == 0 or mg.height == 0:
+                has_data = False
+                grid_data = []
+                grid_w = grid_h = 0
+                resolution = 0.0
+                origin_x = origin_y = origin_yaw = 0.0
+                map_ts = 0.0
+            else:
+                has_data = True
+                grid_data = mg.data
+                grid_w = mg.width
+                grid_h = mg.height
+                resolution = mg.resolution
+                origin_x = mg.origin_x
+                origin_y = mg.origin_y
+                origin_yaw = mg.origin_yaw
+                map_ts = mg.timestamp
+
+        # Try TF lookup for robot position in map frame
+        robot_x = robot_y = robot_yaw = None
+        try:
+            transform = self.node.tf_buffer.lookup_transform(
+                "map", "base_link",
+                rclpy.time.Time(),
+                timeout=rclpy.duration.Duration(seconds=0.05),
+            )
+            robot_x = transform.transform.translation.x
+            robot_y = transform.transform.translation.y
+            q = transform.transform.rotation
+            siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+            cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+            robot_yaw = math.atan2(siny_cosp, cosy_cosp)
+        except Exception:
+            pass
+
+        # Title bar
+        mode_str = "follow" if self._map_follow_robot else "pan"
+        if has_data:
+            age = time.time() - map_ts
+            vr = self._map_view_range if self._map_view_range > 0 else (grid_w * resolution / 2.0)
+            title = (
+                f" MAP | {grid_w}x{grid_h} @ {resolution:.3f}m | "
+                f"view {vr:.1f}m | mode:{mode_str} | "
+                f"age {age:.1f}s | +/-:zoom  arrows:pan  f:follow  0:reset  m/Esc:close "
+            )
+        else:
+            title = " MAP | Waiting for /map data... | m/Esc:close "
+        self.safe_addstr(0, 0, title.ljust(max_x), curses.A_REVERSE | curses.A_BOLD)
+
+        if not has_data:
+            self.safe_addstr(
+                max_y // 2,
+                max_x // 2 - 12,
+                "No map data received",
+                curses.color_pair(self.COLOR_WARN) | curses.A_BOLD,
+            )
+            self.safe_addstr(max_y - 1, 0, " ".ljust(max_x), curses.A_REVERSE)
+            return
+
+        # Compute map extent in world coordinates
+        map_world_w = grid_w * resolution
+        map_world_h = grid_h * resolution
+
+        # Initialize view range to fit the map on first data
+        if self._map_view_range <= 0:
+            self._map_view_range = max(map_world_w, map_world_h) / 2.0
+            if self._map_view_range <= 0:
+                self._map_view_range = 10.0
+            # Center on map center
+            self._map_center_x = origin_x + map_world_w / 2.0
+            self._map_center_y = origin_y + map_world_h / 2.0
+
+        view_range = self._map_view_range
+
+        # Determine view center
+        if self._map_follow_robot and robot_x is not None:
+            center_x = robot_x
+            center_y = robot_y
+        else:
+            center_x = self._map_center_x + self._map_pan_x
+            center_y = self._map_center_y + self._map_pan_y
+
+        # Aspect ratio correction: compute separate x/y ranges
+        aspect = px_w / px_h if px_h > 0 else 1.0
+        if aspect >= 1.0:
+            view_range_y = view_range
+            view_range_x = view_range * aspect
+        else:
+            view_range_x = view_range
+            view_range_y = view_range / aspect
+
+        # World-space bounds of viewport
+        vp_left = center_x - view_range_x
+        vp_right = center_x + view_range_x
+        vp_bottom = center_y - view_range_y
+        vp_top = center_y + view_range_y
+
+        # Scale: pixels per meter
+        scale_x = px_w / (2.0 * view_range_x) if view_range_x > 0 else 1.0
+        scale_y = px_h / (2.0 * view_range_y) if view_range_y > 0 else 1.0
+
+        # Clip grid iteration to only cells within viewport
+        # Grid cell (gx, gy) maps to world (origin_x + gx*res, origin_y + gy*res)
+        gx_min = max(0, int((vp_left - origin_x) / resolution))
+        gx_max = min(grid_w, int((vp_right - origin_x) / resolution) + 1)
+        gy_min = max(0, int((vp_bottom - origin_y) / resolution))
+        gy_max = min(grid_h, int((vp_top - origin_y) / resolution) + 1)
+
+        # Initialize braille cell grids
+        occupied_cells = [[0] * chart_w for _ in range(chart_h)]
+        unknown_cells = [[0] * chart_w for _ in range(chart_h)]
+
+        # Plot map cells
+        for gy in range(gy_min, gy_max):
+            row_offset = gy * grid_w
+            world_y = origin_y + (gy + 0.5) * resolution
+            # Screen y: world up = screen up (invert y)
+            py = int((vp_top - world_y) * scale_y)
+            if py < 0 or py >= px_h:
+                continue
+            cell_y = py // 4
+            dot_y = py % 4
+            if cell_y >= chart_h:
+                continue
+            for gx in range(gx_min, gx_max):
+                val = grid_data[row_offset + gx]
+                if val == 0:
+                    continue  # Free space — don't render
+                world_x = origin_x + (gx + 0.5) * resolution
+                px = int((world_x - vp_left) * scale_x)
+                if px < 0 or px >= px_w:
+                    continue
+                cell_x = px // 2
+                dot_x = px % 2
+                if cell_x >= chart_w:
+                    continue
+                dot_bit = self._BRAILLE_DOT[dot_y][dot_x]
+                if val == -1:
+                    unknown_cells[cell_y][cell_x] |= dot_bit
+                elif val > 0:
+                    occupied_cells[cell_y][cell_x] |= dot_bit
+
+        # Render braille characters to screen
+        occ_attr = curses.color_pair(self.COLOR_MAP_OCCUPIED) | curses.A_BOLD
+        unk_attr = curses.color_pair(self.COLOR_MAP_UNKNOWN) | curses.A_DIM
+        for row in range(chart_h):
+            screen_row = row + 1
+            for col in range(chart_w):
+                occ_val = occupied_cells[row][col]
+                unk_val = unknown_cells[row][col]
+                if occ_val:
+                    self.safe_addstr(screen_row, col, chr(0x2800 + (occ_val | unk_val)), occ_attr)
+                elif unk_val:
+                    self.safe_addstr(screen_row, col, chr(0x2800 + unk_val), unk_attr)
+
+        # Robot marker
+        if robot_x is not None and robot_y is not None:
+            rpx = int((robot_x - vp_left) * scale_x)
+            rpy = int((vp_top - robot_y) * scale_y)
+            rcol = rpx // 2
+            rrow = rpy // 4 + 1  # +1 for title bar
+            if 1 <= rrow < max_y - 1 and 0 <= rcol < max_x:
+                # Direction char based on heading
+                if robot_yaw is not None:
+                    # Normalize to [0, 2pi)
+                    yaw = robot_yaw % (2 * math.pi)
+                    if yaw < 0:
+                        yaw += 2 * math.pi
+                    # 8 directions
+                    if yaw < math.pi / 8 or yaw >= 15 * math.pi / 8:
+                        marker = ">"  # east (0 rad = +x)
+                    elif yaw < 3 * math.pi / 8:
+                        marker = "^"  # north-east -> up
+                    elif yaw < 5 * math.pi / 8:
+                        marker = "^"  # north
+                    elif yaw < 7 * math.pi / 8:
+                        marker = "<"  # north-west
+                    elif yaw < 9 * math.pi / 8:
+                        marker = "<"  # west
+                    elif yaw < 11 * math.pi / 8:
+                        marker = "v"  # south-west
+                    elif yaw < 13 * math.pi / 8:
+                        marker = "v"  # south
+                    else:
+                        marker = ">"  # south-east
+                else:
+                    marker = "+"
+                self.safe_addstr(
+                    rrow, rcol, marker,
+                    curses.color_pair(self.COLOR_MAP_ROBOT) | curses.A_BOLD,
+                )
+
+        # Scale bar (bottom-left)
+        # Pick a nice scale bar length
+        bar_options = [0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0]
+        bar_meters = bar_options[0]
+        for opt in bar_options:
+            bar_px = opt * scale_x
+            bar_chars = int(bar_px / 2)
+            if 5 <= bar_chars <= chart_w // 4:
+                bar_meters = opt
+                break
+        bar_chars = max(2, int(bar_meters * scale_x / 2))
+        bar_row = max_y - 2
+        if bar_row > 1:
+            bar_str = "-" * bar_chars
+            if bar_meters >= 1.0:
+                label = f" {bar_meters:.0f}m"
+            else:
+                label = f" {bar_meters:.1f}m"
+            self.safe_addstr(bar_row, 1, bar_str + label, curses.A_BOLD)
+
+        # Footer
+        robot_info = ""
+        if robot_x is not None:
+            robot_info = f"robot: ({robot_x:.2f}, {robot_y:.2f})"
+            if robot_yaw is not None:
+                robot_info += f" {math.degrees(robot_yaw):.0f}deg"
+            robot_info += " | "
+        footer = (
+            f" {robot_info}"
+            f"view {view_range:.1f}m | "
+            f"res {resolution:.3f}m | "
+            f"+/-:zoom  arrows:pan  f:follow  0:reset  m/Esc:close "
+        )
+        self.safe_addstr(max_y - 1, 0, footer.ljust(max_x), curses.A_REVERSE)
+
     def _get_config_path(self) -> str:
         """Return path to the installed config YAML for the current robot."""
         try:
@@ -2866,6 +3171,10 @@ class AutonomyTUI:
         # LiDAR view colors
         curses.init_pair(self.COLOR_LIDAR_SCAN, curses.COLOR_GREEN, -1)
         curses.init_pair(self.COLOR_LIDAR_GRID, curses.COLOR_BLUE, -1)
+        # Map view colors
+        curses.init_pair(self.COLOR_MAP_OCCUPIED, curses.COLOR_WHITE, -1)
+        curses.init_pair(self.COLOR_MAP_UNKNOWN, curses.COLOR_BLUE, -1)
+        curses.init_pair(self.COLOR_MAP_ROBOT, curses.COLOR_RED, -1)
 
         while self.running:
             try:
@@ -2902,6 +3211,9 @@ class AutonomyTUI:
                 if self.show_lidar:
                     # Full-screen LiDAR scan view
                     self.draw_lidar_view()
+                elif self.show_map:
+                    # Full-screen map view
+                    self.draw_map_view()
                 elif self.show_network:
                     # Full-screen network view
                     self.draw_network_dialog()
@@ -2912,7 +3224,7 @@ class AutonomyTUI:
                 else:
                     # Normal dashboard view
                     # Title bar
-                    title = f" AUTONOMY DIAGNOSTICS [{self.node.robot_name}] - q:quit r:robot d:domain e:edit n:net l:lidar v:log p:preview a:alerts s:save h:help "
+                    title = f" AUTONOMY DIAGNOSTICS [{self.node.robot_name}] - q:quit r:robot d:domain e:edit n:net l:lidar m:map v:log p:preview a:alerts s:save h:help "
                     self.safe_addstr(
                         0, 0, title.center(max_x), curses.A_REVERSE | curses.A_BOLD
                     )
@@ -3151,6 +3463,49 @@ class AutonomyTUI:
                         # Reset zoom to sensor max
                         self._lidar_view_range = 0.0
                     continue
+                if self.show_map:
+                    if key in (ord("m"), ord("M"), 27):
+                        self.show_map = False
+                        self.node.map_view_active = False
+                        self._map_view_range = 0.0
+                        self._map_pan_x = 0.0
+                        self._map_pan_y = 0.0
+                        self._map_follow_robot = True
+                    elif key == ord("q") or key == ord("Q"):
+                        self.running = False
+                    elif key == ord("-") or key == ord("_"):
+                        if self._map_view_range > 0:
+                            self._map_view_range = min(
+                                2000.0, self._map_view_range * 1.25
+                            )
+                    elif key == ord("+") or key == ord("="):
+                        if self._map_view_range > 0:
+                            self._map_view_range = max(
+                                0.5, self._map_view_range / 1.25
+                            )
+                    elif key == ord("0"):
+                        self._map_view_range = 0.0
+                        self._map_pan_x = 0.0
+                        self._map_pan_y = 0.0
+                        self._map_follow_robot = True
+                    elif key == ord("f") or key == ord("F"):
+                        self._map_follow_robot = not self._map_follow_robot
+                        if self._map_follow_robot:
+                            self._map_pan_x = 0.0
+                            self._map_pan_y = 0.0
+                    elif key == curses.KEY_LEFT:
+                        self._map_follow_robot = False
+                        self._map_pan_x -= self._map_view_range * 0.1
+                    elif key == curses.KEY_RIGHT:
+                        self._map_follow_robot = False
+                        self._map_pan_x += self._map_view_range * 0.1
+                    elif key == curses.KEY_UP:
+                        self._map_follow_robot = False
+                        self._map_pan_y += self._map_view_range * 0.1
+                    elif key == curses.KEY_DOWN:
+                        self._map_follow_robot = False
+                        self._map_pan_y -= self._map_view_range * 0.1
+                    continue
                 if self.show_event_log:
                     if key in (ord("v"), ord("V"), 27):
                         self.show_event_log = False
@@ -3204,6 +3559,9 @@ class AutonomyTUI:
                 elif key == ord("l") or key == ord("L"):
                     self.show_lidar = True
                     self.node.lidar_view_active = True
+                elif key == ord("m") or key == ord("M"):
+                    self.show_map = True
+                    self.node.map_view_active = True
                 elif key == ord("v") or key == ord("V"):
                     self.show_event_log = True
                     self._event_scroll = 0
