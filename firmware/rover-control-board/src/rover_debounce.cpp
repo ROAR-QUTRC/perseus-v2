@@ -1,16 +1,16 @@
 #include "rover_debounce.hpp"
 
-IoDebouncedButton::IoDebouncedButton(gpio_num_t pin, gpio_pull_mode_t pullMode, bool activeLevel)
-    : _activeLevel(activeLevel),
+IoDebouncedButton::IoDebouncedButton(gpio_num_t pin, gpio_pull_mode_t pull_mode, bool active_level)
+    : _active_level(active_level),
       _pin(pin)
 {
     _last_press_time = 0;
-    gpio_set_input(pin, pullMode);
+    gpio_set_input(pin, pull_mode);
 }
 
 void IoDebouncedButton::handle()
 {
-    bool pressed = (gpio_get_level(_pin) == _activeLevel);
+    bool pressed = (gpio_get_level(_pin) == _active_level);
     const uint64_t now = core_get_uptime();
 
     if (pressed)
