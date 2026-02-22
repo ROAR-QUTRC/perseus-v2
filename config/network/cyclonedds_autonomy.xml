@@ -11,13 +11,14 @@
         <!-- qutrc@big-brain IP -->
         <Peer address="192.168.1.11"/> 
         <!-- qutrc@medium-brain IP -->
-        <Peer address="192.168.1.12"/>
+        <Peer address="192.168.1.86"/>
         <!-- qutrc@small-brain IP -->
         <Peer address="192.168.1.13"/>
 
         <!-- Base Station -->
-        <Peer address="192.168.0.20"/> 
-        <Peer address="192.168.0.20"/>
+         <!-- Kelvin's Machine -->
+        <Peer address="192.168.0.30"/> 
+
       </Peers>
     </Discovery>
   </Domain>
