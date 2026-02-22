@@ -1,0 +1,282 @@
+(footprint "SOT-323_SC-70"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "SOT-323, SC-70")
+	(tags "SOT-323 SC-70")
+	(property "Reference" "REF**"
+		(at 0 1.8 0)
+		(layer "F.SilkS")
+		(uuid "ace42b59-36c8-4ba7-b9f9-ae433f1cad94")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.14)
+			)
+		)
+	)
+	(property "Value" "BAT54SWF"
+		(at -0.05 2.05 0)
+		(layer "F.Fab")
+		(uuid "cc7dcac7-928b-4957-a9ab-18559eecb766")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" "https://assets.nexperia.com/documents/data-sheet/BAT54SW.pdf"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "2a6fd386-c795-4771-800c-d7052447636d")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "Vr 30V, If 200mA, Dual schottky barrier diode, in series, SOT-323"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "713eac08-2813-4d3b-bd5a-c9c559d6ca8a")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Supplier" "DigiKey"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "2cc15c85-c77e-4817-a9d3-9fc92d390ec1")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Supplier Part No" "1727-BAT54SWFCT-ND"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "e0ad42f7-1953-4e00-b62e-fa00d2bab764")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Supplier Link" "https://www.digikey.com.au/en/products/detail/nexperia-usa-inc/BAT54SWF/7495557"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "25a425d7-ebe1-400c-b610-65d29b460594")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -0.68 -1.16)
+		(end 0.73 -1.16)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "9bd4570d-c505-48ad-b321-0b2bdd9da79d")
+	)
+	(fp_line
+		(start -0.68 1.16)
+		(end 0.73 1.16)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "3c4ee7dd-0de2-4912-a21b-dc8fc1e07950")
+	)
+	(fp_line
+		(start 0.73 -1.16)
+		(end 0.73 -0.5)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "9566e6e3-ff6a-4939-b10c-4a3c0585c49b")
+	)
+	(fp_line
+		(start 0.73 0.5)
+		(end 0.73 1.16)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "70554d93-7f7d-481b-bcba-11c1cbc9367f")
+	)
+	(fp_poly
+		(pts
+			(xy -1.05 -1.14) (xy -1.29 -1.47) (xy -0.81 -1.47) (xy -1.05 -1.14)
+		)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.SilkS")
+		(uuid "cb64fecd-0ce3-43d9-bdbc-9a7cf0b25acb")
+	)
+	(fp_line
+		(start -1.7 -1.3)
+		(end 1.7 -1.3)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "889f2374-32ce-4cac-b695-dab52ca9463a")
+	)
+	(fp_line
+		(start -1.7 1.3)
+		(end -1.7 -1.3)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "adfa8df8-99a2-45e6-a71e-612250549633")
+	)
+	(fp_line
+		(start 1.7 -1.3)
+		(end 1.7 1.3)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "97b85a68-89df-4dcc-983d-d9c96d7ef39d")
+	)
+	(fp_line
+		(start 1.7 1.3)
+		(end -1.7 1.3)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "f49e3099-0483-4536-b239-eba49da94506")
+	)
+	(fp_line
+		(start -0.68 -0.6)
+		(end -0.68 1.1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "4b569c5c-0456-422b-a57d-e9a0f677c18d")
+	)
+	(fp_line
+		(start -0.18 -1.1)
+		(end -0.68 -0.6)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "f5a85b15-a78a-4c0b-a3ef-c39e2a15d7cb")
+	)
+	(fp_line
+		(start 0.67 -1.1)
+		(end -0.18 -1.1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "458c3a50-0f1c-40d8-9e38-ec50a42ff3fe")
+	)
+	(fp_line
+		(start 0.67 -1.1)
+		(end 0.67 1.1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "ade4b3b8-b595-4a4d-bfc6-c73d67ff1790")
+	)
+	(fp_line
+		(start 0.67 1.1)
+		(end -0.68 1.1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "86dd3f68-8b4c-40f8-8ab8-4e63e47805be")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 0 90)
+		(layer "F.Fab")
+		(uuid "6867844b-1944-4436-a7e7-f748a3386ec9")
+		(effects
+			(font
+				(size 0.5 0.5)
+				(thickness 0.075)
+			)
+		)
+	)
+	(pad "1" smd roundrect
+		(at -1 -0.65 270)
+		(size 0.45 0.7)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.25)
+		(uuid "082be8d0-8c57-4731-a439-cc9e95a4d08a")
+	)
+	(pad "2" smd roundrect
+		(at -1 0.65 270)
+		(size 0.45 0.7)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.25)
+		(uuid "badac894-946b-437d-a390-e24e8d08e28f")
+	)
+	(pad "3" smd roundrect
+		(at 1 0 270)
+		(size 0.45 0.7)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.25)
+		(uuid "de0cf916-0f4e-4332-b2ad-9c1183bcab07")
+	)
+	(embedded_fonts no)
+	(model "${KICAD9_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-323_SC-70.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

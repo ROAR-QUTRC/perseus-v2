@@ -7,4 +7,5 @@
   (lib (name "Manufacturer Connectors")(type "KiCad")(uri "${KIPRJMOD} /../libraries/Connectors.kicad_sym")(options "")(descr ""))
   (lib (name "PMIC, Load Switches & Drivers")(type "KiCad")(uri "${KIPRJMOD} /../libraries/PMIC_SwitchesDrivers.kicad_sym")(options "")(descr ""))
   (lib (name "Semiconductor_Diodes")(type "KiCad")(uri "${KIPRJMOD} /../libraries/Semiconductor_Diodes.kicad_sym")(options "")(descr ""))
+  (lib (name "Library")(type "KiCad")(uri "/Users/mauriceblake/Documents/working_directory.nosync/perseus-v2/hardware/light-tower-controlboard/control-board/Library.kicad_sym")(options "")(descr ""))
 )

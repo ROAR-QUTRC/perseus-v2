@@ -3,4 +3,5 @@
   (lib (name "Project PCB")(type "KiCad")(uri "${KIPRJMOD}/../libraries/Project_PCB.pretty")(options "")(descr ""))
   (lib (name "SMD")(type "KiCad")(uri "${KIPRJMOD}/../libraries/SMD.pretty")(options "")(descr ""))
   (lib (name "THT")(type "KiCad")(uri "${KIPRJMOD}/../libraries/THT.pretty")(options "")(descr ""))
+  (lib (name "Library")(type "KiCad")(uri "/Users/mauriceblake/Documents/working_directory.nosync/perseus-v2/hardware/light-tower-controlboard/control-board/Library.pretty")(options "")(descr ""))
 )
