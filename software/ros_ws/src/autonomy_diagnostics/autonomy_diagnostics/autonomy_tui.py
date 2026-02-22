@@ -2449,7 +2449,8 @@ class AutonomyTUI:
         robot_x = robot_y = robot_yaw = None
         try:
             transform = self.node.tf_buffer.lookup_transform(
-                "map", "base_link",
+                "map",
+                "base_link",
                 rclpy.time.Time(),
                 timeout=rclpy.duration.Duration(seconds=0.05),
             )
@@ -2466,7 +2467,11 @@ class AutonomyTUI:
         mode_str = "follow" if self._map_follow_robot else "pan"
         if has_data:
             age = time.time() - map_ts
-            vr = self._map_view_range if self._map_view_range > 0 else (grid_w * resolution / 2.0)
+            vr = (
+                self._map_view_range
+                if self._map_view_range > 0
+                else (grid_w * resolution / 2.0)
+            )
             title = (
                 f" MAP | {grid_w}x{grid_h} @ {resolution:.3f}m | "
                 f"view {vr:.1f}m | mode:{mode_str} | "
@@ -2582,7 +2587,9 @@ class AutonomyTUI:
                 occ_val = occupied_cells[row][col]
                 unk_val = unknown_cells[row][col]
                 if occ_val:
-                    self.safe_addstr(screen_row, col, chr(0x2800 + (occ_val | unk_val)), occ_attr)
+                    self.safe_addstr(
+                        screen_row, col, chr(0x2800 + (occ_val | unk_val)), occ_attr
+                    )
                 elif unk_val:
                     self.safe_addstr(screen_row, col, chr(0x2800 + unk_val), unk_attr)
 
@@ -2617,13 +2624,28 @@ class AutonomyTUI:
                 else:
                     marker = "+"
                 self.safe_addstr(
-                    rrow, rcol, marker,
+                    rrow,
+                    rcol,
+                    marker,
                     curses.color_pair(self.COLOR_MAP_ROBOT) | curses.A_BOLD,
                 )
 
         # Scale bar (bottom-left)
         # Pick a nice scale bar length
-        bar_options = [0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0]
+        bar_options = [
+            0.1,
+            0.2,
+            0.5,
+            1.0,
+            2.0,
+            5.0,
+            10.0,
+            20.0,
+            50.0,
+            100.0,
+            200.0,
+            500.0,
+        ]
         bar_meters = bar_options[0]
         for opt in bar_options:
             bar_px = opt * scale_x
@@ -3481,9 +3503,7 @@ class AutonomyTUI:
                             )
                     elif key == ord("+") or key == ord("="):
                         if self._map_view_range > 0:
-                            self._map_view_range = max(
-                                0.5, self._map_view_range / 1.25
-                            )
+                            self._map_view_range = max(0.5, self._map_view_range / 1.25)
                     elif key == ord("0"):
                         self._map_view_range = 0.0
                         self._map_pan_x = 0.0
