@@ -2433,7 +2433,7 @@ class AutonomyTUI:
                 grid_data = []
                 grid_w = grid_h = 0
                 resolution = 0.0
-                origin_x = origin_y = origin_yaw = 0.0
+                origin_x = origin_y = 0.0
                 map_ts = 0.0
             else:
                 has_data = True
@@ -2443,7 +2443,6 @@ class AutonomyTUI:
                 resolution = mg.resolution
                 origin_x = mg.origin_x
                 origin_y = mg.origin_y
-                origin_yaw = mg.origin_yaw
                 map_ts = mg.timestamp
 
         # Try TF lookup for robot position in map frame
