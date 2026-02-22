@@ -41,19 +41,18 @@
 	};
 
 	let communicationsTree = $derived.by<{
-		publications: any; 
-		subscriptions: any; 
+		publications: any;
+		subscriptions: any;
 		services: any;
 	}>(() => {
-		
 		const output = {
 			publications: {} as any,
 			subscriptions: {} as any,
 			services: {} as any
-		}
-		
+		};
+
 		if (!nodeData) return output;
-		
+
 		nodeData.publications.forEach((element) => {
 			let pointer = output.publications;
 			const parts = element.name.slice(1).split('/');
@@ -68,7 +67,7 @@
 				pointer = pointer[part];
 			}
 		});
-		
+
 		nodeData.subscriptions.forEach((elements) => {
 			let pointer = output.subscriptions;
 			const parts = elements.name.slice(1).split('/');
@@ -83,7 +82,7 @@
 				pointer = pointer[part];
 			}
 		});
-		
+
 		nodeData.services.forEach((elements) => {
 			let pointer = output.services;
 			const parts = elements.name.slice(1).split('/');
@@ -99,7 +98,7 @@
 			}
 		});
 
-		return output
+		return output;
 	});
 
 	const changeSelectedNode = (value: string) => {
@@ -115,9 +114,9 @@
 			value,
 			(details) => {
 				for (let i = 0; i < details.subscribing.length; i++) {
-					ros.getTopicType(details.publishing[i], (type) => {
-						nodeData?.subscriptions.push({ name: details.subscribing[i], type })
-					})
+					ros.getTopicType(details.subscribing[i], (type) => {
+						nodeData?.subscriptions.push({ name: details.subscribing[i], type });
+					});
 				}
 				for (let i = 0; i < details.publishing.length; i++) {
 					ros.getTopicType(details.publishing[i], (type) => {
@@ -160,17 +159,15 @@
 	</div>
 
 	<div class="mt-2 h-[calc(100%-40px-0.5rem)] w-full">
-		{#if communicationsTree}
-			<ScrollArea orientation="both" class="mt-2 h-full p-3">
-				<div>
-					<strong class="text-xl" >Publications:</strong >
-					<JsonTree data={communicationsTree.publications} />
-					<strong class="text-xl" >Subscriptions:</strong >
-					<JsonTree data={communicationsTree.subscriptions} />
-					<strong class="text-xl" >Services:</strong >
-					<JsonTree data={communicationsTree.services} />
-				</div>
-			</ScrollArea>
-		{/if}
+		<ScrollArea orientation="both" class="mt-2 h-full p-3">
+			<div>
+				<strong class="text-xl">Publications:</strong>
+				<JsonTree data={communicationsTree.publications} />
+				<strong class="text-xl">Subscriptions:</strong>
+				<JsonTree data={communicationsTree.subscriptions} />
+				<strong class="text-xl">Services:</strong>
+				<JsonTree data={communicationsTree.services} />
+			</div>
+		</ScrollArea>
 	</div>
 </div>
