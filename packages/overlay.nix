@@ -32,18 +32,4 @@ final: prev: {
     (final.callPackage ./freeimage { }).override {
       libjpeg = libjpeg-static;
     };
-  python312 = prev.python312.override {
-    packageOverrides = pyFinal: pyPrev: {
-      pyside2 = pyPrev.pyside2.overrideAttrs (
-        {
-          patches ? [ ],
-          ...
-        }:
-        {
-          # For some reason setting the CMake limited API option doesn't work, so patch it to remove the option altogether
-          patches = patches ++ [ ./pyside2/limited-api.patch ];
-        }
-      );
-    };
-  };
 }
