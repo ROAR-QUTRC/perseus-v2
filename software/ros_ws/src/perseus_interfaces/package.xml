@@ -20,6 +20,7 @@
   <!-- Message dependencies -->
   <depend>geometry_msgs</depend>
   <depend>builtin_interfaces</depend>
+  <depend>std_msgs</depend>
 
   <!-- Optional / utility -->
   <depend>backward_ros</depend>

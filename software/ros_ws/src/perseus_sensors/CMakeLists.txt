@@ -50,7 +50,10 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     tf2
     tf2_geometry_msgs
     OpenSSL
-    nlohmann_json)
+    nlohmann_json
+    perseus_interfaces
+    std_srvs
+    std_msgs)
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
 
@@ -105,13 +108,26 @@ target_include_directories(
 ament_target_dependencies(i2c_imu_node PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 target_link_libraries(i2c_imu_node PUBLIC fd_wrapper)
 
+# INA228 DC Power Monitor Driver
+add_executable(
+  ina228_node
+  ina228_driver/src/main.cpp ina228_driver/src/i2c_device.cpp
+  ina228_driver/src/ina228_node.cpp)
+
+target_include_directories(
+  ina228_node PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ina228_driver/include)
+
+ament_target_dependencies(ina228_node PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(ina228_node PUBLIC fd_wrapper)
+
 # Install ROS Executables
-install(TARGETS m2m2_lidar i2c_imu_node DESTINATION lib/${PROJECT_NAME})
+install(TARGETS m2m2_lidar i2c_imu_node ina228_node
+        DESTINATION lib/${PROJECT_NAME})
 
 # Install launch
 install(
   DIRECTORY launch config i2c_imu_driver/launch i2c_imu_driver/config
-            i2c_imu_driver/urdf
+            i2c_imu_driver/urdf ina228_driver/launch ina228_driver/config
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
