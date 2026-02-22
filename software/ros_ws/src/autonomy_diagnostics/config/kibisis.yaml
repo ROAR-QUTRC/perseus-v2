@@ -32,12 +32,12 @@ monitored_topics:
     topic: /odom
     type: Odometry
     expected_hz: 50.0
-    critical: true
+    critical: false
   - name: odom_filtered
     topic: /odometry/filtered
     type: Odometry
     expected_hz: 30.0
-    critical: true
+    critical: false
   - name: map
     topic: /map
     type: OccupancyGrid
@@ -66,11 +66,11 @@ tf_frames:
   - parent: map
     child: odom
     description: SLAM/AMCL
-    critical: true
+    critical: false
   - parent: odom
     child: base_link
     description: EKF
-    critical: true
+    critical: false
   - parent: base_link
     child: chassis
     description: URDF
