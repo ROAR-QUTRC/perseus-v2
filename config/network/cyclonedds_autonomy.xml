@@ -14,8 +14,10 @@
         <Peer address="192.168.1.86"/>
         <!-- qutrc@small-brain IP -->
         <Peer address="192.168.1.13"/>
-
-        <!-- Base Station -->
+        <!-- Livox MID-360 IP -->
+        <Peer address="192.168.1.21"/>
+        
+         <!-- Base Station -->
          <!-- Kelvin's Machine -->
         <Peer address="192.168.1.30"/> 
 
