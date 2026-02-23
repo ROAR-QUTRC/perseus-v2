@@ -116,5 +116,3 @@ Dynamically detects the message type of an input topic and republishes it at a l
 | `input_topic`         | string | -            | Topic to remap (required) |
 | `output_topic`        | string | `"remapped"` | Remapped output topic     |
 | `reduction_frequency` | double | `10.0`       | Output frequency in Hz    |
-
-
