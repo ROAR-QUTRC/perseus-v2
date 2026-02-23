@@ -28,7 +28,9 @@ reverse() {
   echo "Removing CycloneDDS SBC configuration..."
   rm -fv "$LOCALHOST_XML" "$BRIDGE_XML" "$ENV_SH"
   # Remove directory only if empty
-  rmdir "$CONFIG_DIR" 2>/dev/null && echo "Removed $CONFIG_DIR" || true
+  if rmdir "$CONFIG_DIR" 2>/dev/null; then
+    echo "Removed $CONFIG_DIR"
+  fi
   echo "Done! Remember to remove 'source ~/.config/cyclonedds/env.sh' from your shell profile."
 }
 

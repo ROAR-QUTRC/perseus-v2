@@ -114,8 +114,6 @@ class TopicRepublisher(Node):
 
         publisher = self.create_publisher(msg_class, topic_name, qos)
 
-        # Create subscription with ignore_local_publications to avoid loops
-        sub_options = rclpy.node.SubscriptionEventCallbacks()
         subscription = self.create_subscription(
             msg_class,
             topic_name,
