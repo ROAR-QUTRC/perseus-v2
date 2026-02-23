@@ -38,6 +38,7 @@ nix run .#autonomy-sbc-setup
 ```
 
 This creates:
+
 - `~/.config/cyclonedds/localhost.xml` — DDS restricted to loopback
 - `~/.config/cyclonedds/bridge.xml` — DDS on loopback + network
 - `~/.config/cyclonedds/env.sh` — exports `CYCLONEDDS_URI` for the localhost config
@@ -61,6 +62,7 @@ nix run .#perseus-autonomy-sbc
 ```
 
 This command:
+
 1. Checks that `CYCLONEDDS_URI` is set and points to the localhost config
 2. Launches the main SBC stack (SLAM + Nav2 + EKF + Livox + foxglove_bridge)
 3. After a 5-second delay, launches the topic republisher with the bridge CycloneDDS config
@@ -85,6 +87,7 @@ autonomy-sbc-monitor
 ```
 
 This shows:
+
 - CycloneDDS configuration status
 - Active ROS topics
 - Pointcloud topic bandwidth (should be localhost-only)

@@ -42,7 +42,7 @@ setup() {
   cp -v "$SRC_DIR/cyclonedds_localhost.xml" "$LOCALHOST_XML"
   cp -v "$SRC_DIR/cyclonedds_bridge.xml" "$BRIDGE_XML"
 
-  cat > "$ENV_SH" <<'ENVEOF'
+  cat >"$ENV_SH" <<'ENVEOF'
 # CycloneDDS SBC Topic Isolation
 # Source this file in your shell profile to restrict DDS to localhost.
 # The topic_republisher process uses a separate bridge config.

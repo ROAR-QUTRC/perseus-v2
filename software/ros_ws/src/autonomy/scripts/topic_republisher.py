@@ -29,7 +29,6 @@ from rclpy.qos import (
     QoSDurabilityPolicy,
     QoSHistoryPolicy,
 )
-from rclpy.serialization import deserialize_message, serialize_message
 
 
 class TopicRepublisher(Node):
@@ -37,7 +36,9 @@ class TopicRepublisher(Node):
         super().__init__("topic_republisher")
 
         self.declare_parameter("config_file", "")
-        config_file = self.get_parameter("config_file").get_parameter_value().string_value
+        config_file = (
+            self.get_parameter("config_file").get_parameter_value().string_value
+        )
 
         if not config_file:
             self.get_logger().fatal("config_file parameter is required")
@@ -77,9 +78,7 @@ class TopicRepublisher(Node):
         self._pending_topics -= newly_bridged
 
         if self._pending_topics:
-            self.get_logger().debug(
-                f"Waiting for topics: {self._pending_topics}"
-            )
+            self.get_logger().debug(f"Waiting for topics: {self._pending_topics}")
 
     def _create_bridge(self, topic_name: str, msg_type_str: str):
         """Create a subscription+publisher pair for a single topic."""
