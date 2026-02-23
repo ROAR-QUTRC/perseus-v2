@@ -1,15 +1,16 @@
 """
-Livox Sensor with Topic Remapper Launch File
+Livox Sensor Processing Launch File
 
 This launch file starts:
-1. The Livox sensor driver (IMU and LiDAR)
-2. The topic remapper for downsampling IMU data to lower frequency
+1. A topic remapper to throttle the raw 200Hz /livox/imu down to a configurable rate
+2. IMU bias estimation and removal pipeline (subscribes to throttled IMU)
+3. Pointcloud to LaserScan converter
 
 Usage:
-    ros2 launch perseus_sensors livox_remap.launch.py
+    ros2 launch perseus_sensors lidar_processing.launch.py
 
-    With custom remapping frequency:
-    ros2 launch perseus_sensors livox_remap.launch.py imu_frequency:=20.0
+    With custom IMU frequency:
+    ros2 launch perseus_sensors lidar_processing.launch.py imu_frequency:=20.0
 """
 
 from launch import LaunchDescription
@@ -46,12 +47,29 @@ def generate_launch_description():
     imu_frequency_arg = DeclareLaunchArgument(
         "imu_frequency",
         default_value="50.0",
-        description="Target output frequency for remapped IMU in Hz",
+        description="Target output frequency for throttled IMU in Hz",
     )
 
     scan_in = LaunchConfiguration("scan_in")
     scan_out = LaunchConfiguration("scan_out")
+    imu_frequency = LaunchConfiguration("imu_frequency")
 
+    # Throttle the raw 200Hz /livox/imu down to imu_frequency
+    imu_throttle_node = Node(
+        package="perseus_sensors",
+        executable="topic_remapper",
+        name="imu_throttle",
+        output="screen",
+        parameters=[
+            {
+                "input_topic": "/livox/imu",
+                "output_topic": "/livox/imu/throttled",
+                "reduction_frequency": imu_frequency,
+            }
+        ],
+    )
+
+    # Bias estimation and removal pipeline — subscribes to throttled IMU
     imu_bias_container = ComposableNodeContainer(
         name="imu_bias_container",
         namespace="",
@@ -63,13 +81,19 @@ def generate_launch_description():
                 package="perseus_sensors",
                 plugin="imu_processors::BiasEstimator",
                 name="imu_bias_estimator",
-                parameters=[str(lidar_processing_config_file)],
+                parameters=[
+                    str(lidar_processing_config_file),
+                    {"imu_in_topic": "/livox/imu/throttled"},
+                ],
             ),
             ComposableNode(
                 package="perseus_sensors",
                 plugin="imu_processors::BiasRemover",
                 name="imu_bias_remover",
-                parameters=[str(lidar_processing_config_file)],
+                parameters=[
+                    str(lidar_processing_config_file),
+                    {"imu_in_topic": "/livox/imu/throttled"},
+                ],
             ),
         ],
     )
@@ -96,6 +120,7 @@ def generate_launch_description():
     ld.add_action(imu_frequency_arg)
 
     # Add nodes
+    ld.add_action(imu_throttle_node)
     ld.add_action(pointcloud_to_laserscan_node)
     ld.add_action(imu_bias_container)
 
