@@ -1,0 +1,38 @@
+# SBC Topic Bridge Configuration
+#
+# Topics listed here are bridged between the SBC's localhost-only DDS domain
+# and the network-facing DDS domain by the topic_republisher node.
+#
+# HIGH-BANDWIDTH TOPICS LIKE /livox/lidar (~20-50 MB/s) ARE INTENTIONALLY
+# EXCLUDED to avoid saturating the WiFi network. Use foxglove_bridge
+# (WebSocket on :8765) for remote visualization instead.
+
+# Topics published on the SBC that should be forwarded to the network
+# (e.g., for the main rover PC's hardware controllers)
+outbound:
+  - /cmd_vel
+  - /tf
+  - /tf_static
+  - /map
+  - /odom
+  - /scan
+  - /robot_description
+  - /joint_states
+  - /plan
+  # Nav2 action topics
+  - /navigate_to_pose/_action/send_goal
+  - /navigate_to_pose/_action/cancel_goal
+  - /navigate_to_pose/_action/get_result
+  - /navigate_to_pose/_action/status
+  - /navigate_to_pose/_action/feedback
+  - /navigate_through_poses/_action/send_goal
+  - /navigate_through_poses/_action/cancel_goal
+  - /navigate_through_poses/_action/get_result
+  - /navigate_through_poses/_action/status
+  - /navigate_through_poses/_action/feedback
+
+# Topics published on the network that should be forwarded to the SBC
+# (e.g., joystick commands from the GCS, goal poses from remote operators)
+inbound:
+  - /goal_pose
+  - /cmd_vel_joy

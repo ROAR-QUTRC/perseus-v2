@@ -53,3 +53,11 @@ This script will update the nix flake packages to their latest version and then 
 ## vcan-setup.sh
 
 This script can be run if you need to test CAN software on your computer without booting up Perseus. It sets up a virtual CAN network, so instead of physically connecting into the CAN network like on the big-brain, you can run Perseus ROS2 scripts to make sure they work together.
+
+## autonomy-sbc-setup.sh
+
+Sets up CycloneDDS configuration for SBC topic isolation. Creates localhost-only and bridge DDS configs in `~/.config/cyclonedds/`, plus an `env.sh` file to source in your shell profile. Run with `--reverse` to remove all created files. See the [Autonomy SBC Operation](project:../../home/perseus-operation/autonomy-sbc.md) guide for full details.
+
+## autonomy-sbc-monitor.sh
+
+Diagnostic script for monitoring SBC topic isolation. Shows CycloneDDS configuration status, active ROS topics, pointcloud topic bandwidth, and bridge topic status. Must be run within the dev shell (needs `ros2` binary).

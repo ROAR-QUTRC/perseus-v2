@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CycloneDDS xmlns="https://cdds.io/config"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+  <Domain>
+    <General>
+      <Interfaces>
+        <!-- Listen on localhost to receive topics from the main SBC stack -->
+        <NetworkInterface autodetermine="false" name="lo"/>
+        <!-- Also listen on network interfaces to bridge topics to/from the rover PC -->
+        <NetworkInterface autodetermine="true"/>
+      </Interfaces>
+      <AllowMulticast>true</AllowMulticast>
+    </General>
+  </Domain>
+</CycloneDDS>

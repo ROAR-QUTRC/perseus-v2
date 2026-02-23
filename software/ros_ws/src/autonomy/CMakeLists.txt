@@ -66,5 +66,7 @@ install(
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
+install(PROGRAMS scripts/topic_republisher.py DESTINATION lib/${PROJECT_NAME})
+
 # ROS FINALISATION
 ament_package()

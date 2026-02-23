@@ -191,6 +191,8 @@
             nav2-util
             nav2-lifecycle-manager
             nav2-common
+            foxglove-bridge
+            topic-tools
             ;
         };
         # Packages which should be available only in the dev shell
@@ -370,6 +372,60 @@
             clean = {
               type = "app";
               program = "${pkgs.scripts.clean}/bin/clean";
+            };
+            perseus-autonomy-sbc =
+              let
+                script = pkgs.writeShellScriptBin "perseus-autonomy-sbc" ''
+                  # Verify CycloneDDS is configured for localhost isolation
+                  if [ -z "''${CYCLONEDDS_URI:-}" ]; then
+                    echo "ERROR: CYCLONEDDS_URI is not set."
+                    echo "Run 'autonomy-sbc-setup' first, then 'source ~/.config/cyclonedds/env.sh'"
+                    exit 1
+                  fi
+                  if ! echo "$CYCLONEDDS_URI" | grep -q "localhost"; then
+                    echo "WARNING: CYCLONEDDS_URI does not appear to point to the localhost config."
+                    echo "  Current value: $CYCLONEDDS_URI"
+                    echo "  Expected: file://\$HOME/.config/cyclonedds/localhost.xml"
+                  fi
+
+                  export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+                  BRIDGE_XML="$HOME/.config/cyclonedds/bridge.xml"
+                  BRIDGE_TOPICS="${default}/share/autonomy/config/sbc_bridge_topics.yaml"
+
+                  cleanup() {
+                    echo "Shutting down..."
+                    [ -n "''${REPUBLISHER_PID:-}" ] && kill "$REPUBLISHER_PID" 2>/dev/null || true
+                    wait 2>/dev/null || true
+                  }
+                  trap cleanup SIGINT SIGTERM EXIT
+
+                  # Launch main SBC stack (uses localhost CYCLONEDDS_URI from environment)
+                  echo "Starting SBC autonomy stack..."
+                  ${default}/bin/ros2 launch autonomy autonomy_sbc.launch.py "$@" &
+                  MAIN_PID=$!
+
+                  # Give the main stack time to start publishing topics
+                  sleep 5
+
+                  # Launch republisher with bridge CycloneDDS config (lo + network)
+                  echo "Starting topic republisher..."
+                  CYCLONEDDS_URI="file://$BRIDGE_XML" \
+                    ${default}/bin/ros2 run autonomy topic_republisher.py \
+                      --ros-args -p config_file:="$BRIDGE_TOPICS" &
+                  REPUBLISHER_PID=$!
+
+                  # Wait for the main stack to exit
+                  wait "$MAIN_PID"
+                '';
+              in
+              {
+                type = "app";
+                program = "${pkgs.lib.getExe script}";
+              };
+            autonomy-sbc-setup = {
+              type = "app";
+              program = "${pkgs.scripts.autonomy-sbc-setup}/bin/autonomy-sbc-setup";
             };
           };
         formatter = treefmtEval.config.build.wrapper;

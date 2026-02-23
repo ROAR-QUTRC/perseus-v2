@@ -44,5 +44,13 @@ in
         gnused
       ]
     );
+    autonomy-sbc-setup = build-wrapped-script "autonomy-sbc-setup" (
+      with prev;
+      [
+        coreutils
+        gnugrep
+      ]
+    );
+    autonomy-sbc-monitor = build-wrapped-script "autonomy-sbc-monitor" (with prev; [ iproute2 ]);
   };
 }
