@@ -36,7 +36,7 @@ def generate_launch_description():
                     {
                         "imu_in_topic": "/livox/imu",
                         "bias_in_topic": "/livox/gyro_bias",
-                        "imu_out_topic": "/livox/corrected",
+                        "imu_out_topic": "/livox/imu/corrected",
                         "output_rate_hz": 50.0,
                     }
                 ],
