@@ -182,7 +182,4 @@ in
       ];
     };
   };
-
-  # This needs to be fully overridden because nix still thinks qt6 is in there even if all of them are replaced with qt5
-  pcl = final.callPackage ./patches/pcl { };
 }
