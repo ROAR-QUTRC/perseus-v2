@@ -51,7 +51,9 @@ namespace imu_processors
             }
             last_output_pub_ = this->get_clock()->now();
 
-            pub_ = create_publisher<sensor_msgs::msg::Imu>(imu_out_topic_, rclcpp::SensorDataQoS());
+            // Use reliable QoS so robot_localization (reliable subscriber) can connect.
+            // Depth of 10 matches the EKF's imu0_queue_size.
+            pub_ = create_publisher<sensor_msgs::msg::Imu>(imu_out_topic_, rclcpp::QoS(10));
 
             bias_sub_ = create_subscription<geometry_msgs::msg::Vector3Stamped>(
                 bias_in_topic_, 10,
