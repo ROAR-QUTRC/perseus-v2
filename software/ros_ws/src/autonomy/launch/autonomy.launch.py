@@ -120,4 +120,17 @@ def generate_launch_description():
     ld.add_action(slam_launch)
     ld.add_action(nav_launch)
 
+    # Include network recovery launch
+    network_recovery_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("network_recovery"),
+                "launch",
+                "network_recovery.launch.py",
+            )
+        ),
+        launch_arguments={"use_sim_time": use_sim_time}.items(),
+    )
+    ld.add_action(network_recovery_launch)
+
     return ld

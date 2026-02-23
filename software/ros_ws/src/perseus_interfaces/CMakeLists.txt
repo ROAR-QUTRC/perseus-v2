@@ -58,10 +58,12 @@ rosidl_generate_interfaces(
   "msg/ObjectDetections.msg"
   "srv/DetectObjects.srv"
   "msg/NavigationData.msg"
+  "msg/NetworkRecoveryStatus.msg"
   "srv/RunWaypoints.srv"
   "msg/Waypoint.msg"
   DEPENDENCIES
-  geometry_msgs)
+  geometry_msgs
+  builtin_interfaces)
 
 ament_export_dependencies(rosidl_default_runtime)
 
