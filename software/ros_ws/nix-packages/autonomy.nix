@@ -5,10 +5,12 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
+  foxglove-bridge,
   navigation2,
   rclcpp,
   robot-localization,
   slam-toolbox,
+  topic-tools,
   xacro,
 }:
 buildRosPackage rec {
@@ -24,10 +26,12 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
+    foxglove-bridge
     navigation2
     rclcpp
     robot-localization
     slam-toolbox
+    topic-tools
     xacro
   ];
   nativeBuildInputs = [ ament-cmake ];

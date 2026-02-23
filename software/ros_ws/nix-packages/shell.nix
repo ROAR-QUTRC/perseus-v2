@@ -48,6 +48,7 @@ pkgs.mkShell {
           builtin-interfaces
           controller-manager
           diff-drive-controller
+          foxglove-bridge
           geometry-msgs
           gz-ros2-control
           hardware-interface
@@ -98,6 +99,7 @@ pkgs.mkShell {
           tf2-geometry-msgs
           tf2-ros
           tf2-sensor-msgs
+          topic-tools
           twist-mux
           urdf
           xacro
