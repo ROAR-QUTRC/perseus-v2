@@ -13,6 +13,10 @@
             "path": "./light-tower"
         },
         {
+            "name": "Legacy BMS Firmware",
+            "path": "./legacy-battery-management-system"
+        },
+        {
             "name": "Processing Plant Firmware",
             "path": "./processing-plant"
         },
