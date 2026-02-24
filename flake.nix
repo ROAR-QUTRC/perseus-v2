@@ -344,31 +344,25 @@
         apps =
           let
             mkRosLaunchScript =
-              name: package: launchFile:
-              pkgs.writeShellScriptBin name ''
-                ${default}/bin/ros2 launch ${package} ${launchFile} "$@"
-              '';
-            mkRosLaunchApp =
-              name: package: launchFile:
-              let
-                script = mkRosLaunchScript name package launchFile;
-              in
               {
-                type = "app";
-                program = "${pkgs.lib.getExe script}";
-              };
-            mkRosShellLaunchScript =
-              shell: name: package: launchFile:
+                shell ? "default",
+                name,
+                package,
+                launchFile,
+              }:
               pkgs.writeShellScriptBin name ''
                 ${self.packages.${system}.${shell}}/bin/ros2 launch ${package} ${launchFile} "$@"
               '';
-            mkRosShellLaunchApp =
-              shell: name: package: launchFile:
+            mkRosLaunchApp =
+              {
+                shell ? "default",
+                name,
+                package,
+                launchFile,
+              }@args:
               let
                 script = pkgs.writeShellScriptBin name ''
-                  nix develop .#${shell} --command sh -c "cd $(git rev-parse --show-toplevel)/software/ros_ws && colcon build && ${
-                    (mkRosShellLaunchScript shell name package launchFile).text
-                  }"
+                  nix develop .#${shell} --command sh -c "cd $(git rev-parse --show-toplevel)/software/ros_ws && colcon build && ${(mkRosLaunchScript args).text}"
                 '';
               in
               {
@@ -377,13 +371,28 @@
               };
           in
           {
-            perseus = mkRosLaunchApp "perseus" "perseus" "perseus.launch.py";
-            perseus-lite = mkRosLaunchApp "perseus-lite" "perseus_lite" "perseus_lite.launch.py";
             default = self.apps.${system}.perseus;
-            generic_controller = mkRosLaunchApp "generic_controller" "perseus_input" "controller.launch.py";
-            simulation =
-              mkRosShellLaunchApp "simulation" "perseus-sim" "perseus_simulation"
-                "perseus_sim.launch.py";
+            perseus = mkRosLaunchApp {
+              name = "perseus";
+              package = "perseus";
+              launchFile = "perseus.launch.py";
+            };
+            perseus-lite = mkRosLaunchApp {
+              name = "perseus-lite";
+              package = "perseus_lite";
+              launchFile = "perseus_lite.launch.py";
+            };
+            generic_controller = mkRosLaunchApp {
+              name = "generic_controller";
+              package = "perseus_input";
+              launchFile = "controller.launch.py";
+            };
+            simulation = mkRosLaunchApp {
+              shell = "simulation";
+              name = "perseus-sim";
+              package = "perseus_simulation";
+              launchFile = "perseus_sim.launch.py";
+            };
             ros2 = {
               type = "app";
               program = "${default}/bin/ros2";
