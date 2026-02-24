@@ -357,12 +357,31 @@
                 type = "app";
                 program = "${pkgs.lib.getExe script}";
               };
+              mkRosShellLaunchScript = 
+                shell: name: package: launchFile:
+                pkgs.writeShellScriptBin name ''
+                  ${self.packages.${system}.${shell}}/bin/ros2 launch ${package} ${launchFile} "$@"
+                '';
+            mkRosShellLaunchApp =
+              shell: name: package: launchFile:
+              let
+                script = pkgs.writeShellScriptBin name ''
+                  nix develop .#${shell} --command sh -c "cd $(git rev-parse --show-toplevel)/software/ros_ws && colcon build && ${(mkRosShellLaunchScript shell name package launchFile).text}"
+                  '';
+              in
+              {
+                type = "app";
+                program = "${pkgs.lib.getExe script}";
+              };
           in
           {
             perseus = mkRosLaunchApp "perseus" "perseus" "perseus.launch.py";
             perseus-lite = mkRosLaunchApp "perseus-lite" "perseus_lite" "perseus_lite.launch.py";
             default = self.apps.${system}.perseus;
             generic_controller = mkRosLaunchApp "generic_controller" "perseus_input" "controller.launch.py";
+            simulation =
+              mkRosShellLaunchApp "simulation" "perseus-sim" "perseus_simulation"
+                "perseus_sim.launch.py";
             ros2 = {
               type = "app";
               program = "${default}/bin/ros2";
