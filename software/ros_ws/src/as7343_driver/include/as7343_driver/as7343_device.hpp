@@ -14,10 +14,10 @@ namespace as7343_driver
 
     struct As7343Config
     {
-        uint8_t atime{29};        // Integration time multiplier (0-255)
-        uint16_t astep{599};      // Integration step period (0-65535)
+        uint8_t atime{29};    // Integration time multiplier (0-255)
+        uint16_t astep{599};  // Integration step period (0-65535)
         Gain gain{Gain::GAIN_256X};
-        uint8_t smux_mode{18};    // 6, 12, or 18 channel mode
+        uint8_t smux_mode{18};  // 6, 12, or 18 channel mode
         bool led_enabled{false};
         uint8_t led_current_ma{4};
         bool flicker_detection_enabled{true};

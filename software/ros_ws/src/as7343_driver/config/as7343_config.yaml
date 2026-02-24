@@ -8,36 +8,30 @@ as7343_node:
     frame_id: "as7343_link"
     required: false
     retry_count: 3
-
     # Publish rate in Hz
     # Note: in 18-channel mode with default integration time (~50ms per cycle,
     # ~150ms for all 3 cycles), the maximum useful rate is approximately 6 Hz.
     # Setting this higher than the sensor can deliver will result in repeated readings.
     publish_rate_hz: 5.0
-
     # Sensor Configuration
     # Gain: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048
     # Higher gain = more sensitivity but risk of saturation
     gain: 256
-
     # Integration time control
     # t_integration = (atime + 1) * (astep + 1) * 2.78 us
     # Default: (29+1) * (599+1) * 2.78us = 50.04 ms per cycle
     # In 18-channel mode this is repeated 3x = ~150 ms total
     atime: 29
     astep: 599
-
     # SMUX mode: 6, 12, or 18 channels
     # 6  = single cycle (FZ, FY, FXL, NIR, VIS, FD only)
     # 12 = two cycles (adds F2, F3, F4, F6)
     # 18 = all 14 unique channels (recommended)
     smux_mode: 18
-
     # On-board LED control (SparkFun/Adafruit breakout boards)
     # Useful for reflectance measurements
     led_enabled: false
-    led_current_ma: 4  # Range: 4-258 mA (even values only)
-
+    led_current_ma: 4 # Range: 4-258 mA (even values only)
     # Flicker detection
     # Detects 100Hz (50Hz mains) and 120Hz (60Hz mains) ambient light flicker
     flicker_detection_enabled: true

@@ -123,19 +123,32 @@ namespace as7343_driver
     {
         switch (multiplier)
         {
-            case 1: return Gain::GAIN_1X;
-            case 2: return Gain::GAIN_2X;
-            case 4: return Gain::GAIN_4X;
-            case 8: return Gain::GAIN_8X;
-            case 16: return Gain::GAIN_16X;
-            case 32: return Gain::GAIN_32X;
-            case 64: return Gain::GAIN_64X;
-            case 128: return Gain::GAIN_128X;
-            case 256: return Gain::GAIN_256X;
-            case 512: return Gain::GAIN_512X;
-            case 1024: return Gain::GAIN_1024X;
-            case 2048: return Gain::GAIN_2048X;
-            default: return Gain::GAIN_256X;
+        case 1:
+            return Gain::GAIN_1X;
+        case 2:
+            return Gain::GAIN_2X;
+        case 4:
+            return Gain::GAIN_4X;
+        case 8:
+            return Gain::GAIN_8X;
+        case 16:
+            return Gain::GAIN_16X;
+        case 32:
+            return Gain::GAIN_32X;
+        case 64:
+            return Gain::GAIN_64X;
+        case 128:
+            return Gain::GAIN_128X;
+        case 256:
+            return Gain::GAIN_256X;
+        case 512:
+            return Gain::GAIN_512X;
+        case 1024:
+            return Gain::GAIN_1024X;
+        case 2048:
+            return Gain::GAIN_2048X;
+        default:
+            return Gain::GAIN_256X;
         }
     }
 
@@ -144,20 +157,34 @@ namespace as7343_driver
     {
         switch (gain)
         {
-            case Gain::GAIN_0_5X: return 1;  // 0.5x reported as 1 for uint16
-            case Gain::GAIN_1X: return 1;
-            case Gain::GAIN_2X: return 2;
-            case Gain::GAIN_4X: return 4;
-            case Gain::GAIN_8X: return 8;
-            case Gain::GAIN_16X: return 16;
-            case Gain::GAIN_32X: return 32;
-            case Gain::GAIN_64X: return 64;
-            case Gain::GAIN_128X: return 128;
-            case Gain::GAIN_256X: return 256;
-            case Gain::GAIN_512X: return 512;
-            case Gain::GAIN_1024X: return 1024;
-            case Gain::GAIN_2048X: return 2048;
-            default: return 256;
+        case Gain::GAIN_0_5X:
+            return 1;  // 0.5x reported as 1 for uint16
+        case Gain::GAIN_1X:
+            return 1;
+        case Gain::GAIN_2X:
+            return 2;
+        case Gain::GAIN_4X:
+            return 4;
+        case Gain::GAIN_8X:
+            return 8;
+        case Gain::GAIN_16X:
+            return 16;
+        case Gain::GAIN_32X:
+            return 32;
+        case Gain::GAIN_64X:
+            return 64;
+        case Gain::GAIN_128X:
+            return 128;
+        case Gain::GAIN_256X:
+            return 256;
+        case Gain::GAIN_512X:
+            return 512;
+        case Gain::GAIN_1024X:
+            return 1024;
+        case Gain::GAIN_2048X:
+            return 2048;
+        default:
+            return 256;
         }
     }
 

@@ -2,12 +2,11 @@
 
 #include <atomic>
 #include <memory>
-#include <string>
-
-#include <rclcpp/rclcpp.hpp>
-#include <perseus_interfaces/msg/spectral_data.hpp>
 #include <perseus_interfaces/msg/flicker_status.hpp>
+#include <perseus_interfaces/msg/spectral_data.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64.hpp>
+#include <string>
 
 #include "as7343_driver/as7343_device.hpp"
 

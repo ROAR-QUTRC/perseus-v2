@@ -40,8 +40,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs std_msgs
-                                 perseus_interfaces)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs std_msgs perseus_interfaces)
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
 
@@ -65,12 +64,8 @@ endif()
 
 # COMPILE (Executables)
 
-add_executable(
-  as7343_node
-  src/main.cpp
-  src/i2c_device.cpp
-  src/as7343_device.cpp
-  src/as7343_node.cpp)
+add_executable(as7343_node src/main.cpp src/i2c_device.cpp
+                           src/as7343_device.cpp src/as7343_node.cpp)
 
 target_include_directories(as7343_node
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -82,7 +77,10 @@ target_link_libraries(as7343_node PUBLIC fd_wrapper)
 install(TARGETS as7343_node DESTINATION lib/${PROJECT_NAME})
 
 # Install launch and config
-install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME} OPTIONAL)
+install(
+  DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME}
+  OPTIONAL)
 
 # ROS LIBRARY POST-INSTALL
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})

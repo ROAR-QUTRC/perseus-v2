@@ -225,16 +225,16 @@ namespace as7343_driver
 
         switch (channels)
         {
-            case 6:
-                new_cfg20 |= CFG20_SMUX_6CH;
-                break;
-            case 12:
-                new_cfg20 |= CFG20_SMUX_12CH;
-                break;
-            case 18:
-            default:
-                new_cfg20 |= CFG20_SMUX_18CH;
-                break;
+        case 6:
+            new_cfg20 |= CFG20_SMUX_6CH;
+            break;
+        case 12:
+            new_cfg20 |= CFG20_SMUX_12CH;
+            break;
+        case 18:
+        default:
+            new_cfg20 |= CFG20_SMUX_18CH;
+            break;
         }
 
         if (!_i2c->write_register(REG_CFG20, new_cfg20))
@@ -440,10 +440,12 @@ namespace as7343_driver
         // Average clear and flicker channels across 3 cycles
         reading.vis_clear = static_cast<uint16_t>(
             (static_cast<uint32_t>(channels[IDX_VIS_1]) +
-             channels[IDX_VIS_2] + channels[IDX_VIS_3]) / 3);
+             channels[IDX_VIS_2] + channels[IDX_VIS_3]) /
+            3);
         reading.fd_flicker = static_cast<uint16_t>(
             (static_cast<uint32_t>(channels[IDX_FD_1]) +
-             channels[IDX_FD_2] + channels[IDX_FD_3]) / 3);
+             channels[IDX_FD_2] + channels[IDX_FD_3]) /
+            3);
 
         // Status flags
         if (status2.has_value())
