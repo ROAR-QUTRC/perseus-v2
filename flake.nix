@@ -357,17 +357,19 @@
                 type = "app";
                 program = "${pkgs.lib.getExe script}";
               };
-              mkRosShellLaunchScript = 
-                shell: name: package: launchFile:
-                pkgs.writeShellScriptBin name ''
-                  ${self.packages.${system}.${shell}}/bin/ros2 launch ${package} ${launchFile} "$@"
-                '';
+            mkRosShellLaunchScript =
+              shell: name: package: launchFile:
+              pkgs.writeShellScriptBin name ''
+                ${self.packages.${system}.${shell}}/bin/ros2 launch ${package} ${launchFile} "$@"
+              '';
             mkRosShellLaunchApp =
               shell: name: package: launchFile:
               let
                 script = pkgs.writeShellScriptBin name ''
-                  nix develop .#${shell} --command sh -c "cd $(git rev-parse --show-toplevel)/software/ros_ws && colcon build && ${(mkRosShellLaunchScript shell name package launchFile).text}"
-                  '';
+                  nix develop .#${shell} --command sh -c "cd $(git rev-parse --show-toplevel)/software/ros_ws && colcon build && ${
+                    (mkRosShellLaunchScript shell name package launchFile).text
+                  }"
+                '';
               in
               {
                 type = "app";
