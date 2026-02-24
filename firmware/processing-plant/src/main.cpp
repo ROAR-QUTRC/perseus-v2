@@ -53,10 +53,10 @@ void setup()
     Serial.println("Magnetometer Initialised.");
 
     auto& interface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
-                                                   filter_t{
-                                                       .address = static_cast<flagged_address_t>(DEVICE_ADDRESS),
-                                                       .mask = DEVICE_MASK,
-                                                   });
+                                                  filter_t{
+                                                      .address = static_cast<flagged_address_t>(DEVICE_ADDRESS),
+                                                      .mask = DEVICE_MASK,
+                                                  });
     packet_manager.emplace(interface);
 
     using namespace space_resources::controller::sensing;
@@ -180,7 +180,7 @@ bool readMagnetometer()
 
     if (Wire.available() == 9)
     {
-        Wire.read();  // status byte
+        Wire.read();                                              // status byte
         magnetometer_data[0] = (Wire.read() << 8) | Wire.read();  // x
         magnetometer_data[1] = (Wire.read() << 8) | Wire.read();  // y
         magnetometer_data[2] = (Wire.read() << 8) | Wire.read();  // z
