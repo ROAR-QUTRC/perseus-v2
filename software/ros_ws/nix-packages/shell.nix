@@ -62,6 +62,7 @@ pkgs.mkShell {
           launch-ros
           mecanum-drive-controller
           message-filters
+          nav-msgs
           nav2-msgs
           navigation2
           nlohmann_json
@@ -100,6 +101,7 @@ pkgs.mkShell {
           tf2-sensor-msgs
           twist-mux
           urdf
+          visualization-msgs
           xacro
           yaml-cpp-vendor
         ]
