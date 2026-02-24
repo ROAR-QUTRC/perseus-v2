@@ -319,6 +319,62 @@ namespace hi_can::parameters
             }
         }
     }
+    namespace space_resources
+    {
+        namespace controller
+        {
+            namespace sensing
+            {
+#pragma pack(push, 1)
+                struct _spectrum_1_t
+                {
+                    uint16_t blue_450nm = 0;
+                    uint16_t green_555nm = 0;
+                    uint16_t orange_600nm = 0;
+                    uint16_t nir_855nm = 0;
+                };
+                struct _spectrum_2_t
+                {
+                    uint16_t vis_1 = 0;
+                    uint16_t flicker_detection_1 = 0;
+                    uint16_t dark_blue_425nm = 0;
+                    uint16_t light_blue_475nm = 0;
+                };
+                struct _spectrum_3_t
+                {
+                    uint16_t blue_515nm = 0;
+                    uint16_t brown_640nm = 0;
+                    uint16_t vis_2 = 0;
+                    uint16_t flicker_detection_2 = 0;
+                };
+                struct _spectrum_4_t
+                {
+                    uint16_t purple_405nm = 0;
+                    uint16_t red_690nm = 0;
+                    uint16_t dark_red_745nm = 0;
+                    uint16_t green_550nm = 0;
+                };
+                struct _spectrum_5_t
+                {
+                    uint16_t vis_3 = 0;
+                    uint16_t flicker_detection_3 = 0;
+                };
+                struct _magnet_xyz_t
+                {
+                    int16_t x = 0;
+                    int16_t y = 0;
+                    int16_t z = 0;
+                };
+#pragma pack(pop)
+                typedef SimpleSerializable<_spectrum_1_t> spectrum_1_t;
+                typedef SimpleSerializable<_spectrum_2_t> spectrum_2_t;
+                typedef SimpleSerializable<_spectrum_3_t> spectrum_3_t;
+                typedef SimpleSerializable<_spectrum_4_t> spectrum_4_t;
+                typedef SimpleSerializable<_spectrum_5_t> spectrum_5_t;
+                typedef SimpleSerializable<_magnet_xyz_t> magnet_xyz_t;
+            }
+        }
+    }
     namespace shared
     {
         namespace elevator

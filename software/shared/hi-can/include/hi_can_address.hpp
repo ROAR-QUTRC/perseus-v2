@@ -421,6 +421,37 @@ namespace hi_can
         {
             /// @brief The space resources system ID
             constexpr uint8_t SYSTEM_ID = 0x05;
+            /// @brief Namespace containing all addresses in the controller subsystem
+            namespace controller
+            {
+                /// @brief The controller subsystem ID
+                constexpr uint8_t SUBSYSTEM_ID = 0x00;
+                /// @brief Namespace containing all addresses for the sensing device
+                namespace sensing
+                {
+                    /// @brief The sensing device ID
+                    constexpr uint8_t DEVICE_ID = 0x00;
+                    enum class group
+                    {
+                        SPECTRAL_SENSOR = 0x01,
+                        MAGNETOMETER = 0x02,
+                    };
+                    enum class spectral_sensor_parameter
+                    {
+                        START = 0x00,
+                        DATA1 = 0x01,
+                        DATA2 = 0x02,
+                        DATA3 = 0x03,
+                        DATA4 = 0x04,
+                        DATA5 = 0x05,
+                    };
+                    enum class magnetometer_sensor_parameter
+                    {
+                        START = 0x00,
+                        XYZ = 0x01,
+                    };
+                }
+            }
         }
         namespace shared
         {

@@ -1,18 +1,41 @@
+#include <Arduino.h>
 #include <Wire.h>
 
-#define spectral_address                 0x00  // Change this!
-#define spectral_enable_register_address 0x80
-#define spectral_enable_data             0b00001011
-#define spectral_data_N_L_register       0x95
+#include <hi_can_twai.hpp>
+#include <optional>
 
-#define magnetometer_address     0x00  // Change this!
-#define magnetometer_enable_data 0b00110000
-// #define magnetometer_enable_txyz 0b00001111
-#define magnetometer_enable_xyz 0b00000111
+#define SPECTRAL_ADDRESS                 0x00  // TODO: set correct I2C address
+#define SPECTRAL_ENABLE_REGISTER_ADDRESS 0x80
+#define SPECTRAL_ENABLE_DATA             0b00001011
+#define SPECTRAL_DATA_N_L_REGISTER       0x95
+#define SPECTRAL_NUM_CHANNELS            18
+#define SPECTRAL_READ_BYTES              (SPECTRAL_NUM_CHANNELS * 2)
+
+#define MAGNETOMETER_ADDRESS     0x00  // TODO: set correct I2C address
+#define MAGNETOMETER_ENABLE_DATA 0b00110000
+#define MAGNETOMETER_ENABLE_XYZ  0b00000111
 
 using namespace hi_can;
+using namespace hi_can::addressing;
+using namespace std::chrono_literals;
 
-PacketManager packetManager;
+// Sensor data buffers
+static uint16_t spectral_data[SPECTRAL_NUM_CHANNELS] = {};
+static int16_t magnetometer_data[3] = {};  // x, y, z
+
+std::optional<PacketManager> packet_manager;
+
+constexpr standard_address_t DEVICE_ADDRESS{
+    space_resources::SYSTEM_ID,
+    space_resources::controller::SUBSYSTEM_ID,
+    space_resources::controller::sensing::DEVICE_ID,
+};
+
+// Forward declarations
+void writeRegister(byte device, byte reg, byte val);
+void writeToMagnetometer(byte device, byte val);
+bool readSpectral();
+bool readMagnetometer();
 
 void setup()
 {
@@ -20,76 +43,90 @@ void setup()
     Wire.begin();
 
     Serial.println("Initialising sensors...");
-    writeRegister(spectral_address, spectral_enable_register_address, 0x01);
+    writeRegister(SPECTRAL_ADDRESS, SPECTRAL_ENABLE_REGISTER_ADDRESS, 0x01);
     delay(100);
-    writeRegister(spectral_address, spectral_enable_register_address, spectral_enable_data);
+    writeRegister(SPECTRAL_ADDRESS, SPECTRAL_ENABLE_REGISTER_ADDRESS, SPECTRAL_ENABLE_DATA);
     Serial.println("Spectral Sensor Initialised.");
 
-    writeToMagnetometer(magnetometer_address, 0b11110000);
+    writeToMagnetometer(MAGNETOMETER_ADDRESS, 0b11110000);
     delay(100);
     Serial.println("Magnetometer Initialised.");
 
-    auto& sensors_interface = TwaiInterface::getInstance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
-                                                         filter_t{
-                                                             .address = static_cast<flagged_address_t>(standard_address_t(space_resources::SYSTEM_ID, space_resources::controller::SUBSYSTEM_ID, space_resources::controller::sensing::DEVICE_ID)),
-                                                             .mask = DEVICE_MASK,
-                                                         });
-    packetManager.emplace(sensors_interface);
+    auto& interface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
+                                                   filter_t{
+                                                       .address = static_cast<flagged_address_t>(DEVICE_ADDRESS),
+                                                       .mask = DEVICE_MASK,
+                                                   });
+    packet_manager.emplace(interface);
 
-    // Callback for the spectral sensor
-    packetManager->setCallback(
-        addressing::filter_t{
-            .address = flagged_address_t(standard_address_t(space_resources::SYSTEM_ID, space_resources::controller::SUBSYSTEM_ID, space_resources::controller::sensing::DEVICE_ID, space_resources::controller::sensing::group::SPECTRAL_SENSOR, space_resources::controller::sensing::spectral_sensor_parameter::START))},
-        callback_config_t{
-            .datacallback = [&](const Packet)
+    using namespace space_resources::controller::sensing;
+    using namespace parameters::space_resources::controller::sensing;
+
+    // Callback for spectral sensor read request
+    packet_manager->set_callback(
+        filter_t{
+            .address = static_cast<flagged_address_t>(standard_address_t{DEVICE_ADDRESS,
+                                                                         static_cast<uint8_t>(group::SPECTRAL_SENSOR),
+                                                                         static_cast<uint8_t>(spectral_sensor_parameter::START)})},
+        {
+            .data_callback = [](const Packet&)
             {
-                start_reading_spectral();
-                uint16_t* data = get_spectral_readings();
-                // uint16_t data[18] = get_reading();
-                Packet data_1(flagged_address_t(standard_address_t(space_resources::SYSTEM_ID, space_resources::controller::SUBSYSTEM_ID, space_resources::controller::sensing::DEVICE_ID, space_resources::controller::sensing::group::SPECTRAL_SENSOR, space_resources::controller::sensing::spectral_sensor_parameter::DATA1)), parameters::space_resources::controller::sensing::spectrum_1_t {
-                        .blue_450nm = data[0];
-                        .green_555nm = data[1];
-                        .orange_600nm = data[2];
-                        .nir_855nm = data[3]; }.serializeData());
-                spectral_interface->transmit(data_1);
+                if (!readSpectral())
+                    return;
 
-                Packet data_2(flagged_address_t(standard_address_t(space_resources::SYSTEM_ID, space_resources::controller::SUBSYSTEM_ID, space_resources::controller::sensing::DEVICE_ID, space_resources::controller::sensing::group::SPECTRAL_SENSOR, space_resources::controller::sensing::spectral_sensor_parameter::DATA2)), parameters::space_resources::controller::sensing::spectrum_2_t {
-                        .vis_1 = data[4];
-                        .flicker_detection_1 = data[5];
-                        .dark_blue_425nm = data[6];
-                        .light_blue_475nm = data[7]; }.serializeData());
-                spectral_interface->transmit(data_2);
+                auto& iface = packet_manager->get_interface();
 
-                Packet data_3(flagged_address_t(standard_address_t(space_resources::SYSTEM_ID, space_resources::controller::SUBSYSTEM_ID, space_resources::controller::sensing::DEVICE_ID, space_resources::controller::sensing::group::SPECTRAL_SENSOR, space_resources::controller::sensing::spectral_sensor_parameter::DATA3)), parameters::space_resources::controller::sensing::spectrum_3_t {
-                        .blue_515nm = data[8];
-                        .brown_640nm = data[9];
-                        .vis_2 = data[10];
-                        .flicker_detection_2 = data[11]; }.serializeData());
-                spectral_interface->transmit(data_3);
+                iface.transmit(Packet(
+                    static_cast<flagged_address_t>(standard_address_t{DEVICE_ADDRESS,
+                                                                      static_cast<uint8_t>(group::SPECTRAL_SENSOR),
+                                                                      static_cast<uint8_t>(spectral_sensor_parameter::DATA1)}),
+                    spectrum_1_t{_spectrum_1_t{spectral_data[0], spectral_data[1], spectral_data[2], spectral_data[3]}}.serialize_data()));
 
-                Packet data_4(flagged_address_t(standard_address_t(space_resources::SYSTEM_ID, space_resources::controller::SUBSYSTEM_ID, space_resources::controller::sensing::DEVICE_ID, space_resources::controller::sensing::group::SPECTRAL_SENSOR, space_resources::controller::sensing::spectral_sensor_parameter::DATA4)), parameters::space_resources::controller::sensing::spectrum_4_t {
-                        .purple_405nm = data[12];
-                        .red_690nm = data[13];
-                        .dark_red_745nm = data[14];
-                        .green_550nm = data[15]; }.serializeData());
-                spectral_interface->transmit(data_4);
+                iface.transmit(Packet(
+                    static_cast<flagged_address_t>(standard_address_t{DEVICE_ADDRESS,
+                                                                      static_cast<uint8_t>(group::SPECTRAL_SENSOR),
+                                                                      static_cast<uint8_t>(spectral_sensor_parameter::DATA2)}),
+                    spectrum_2_t{_spectrum_2_t{spectral_data[4], spectral_data[5], spectral_data[6], spectral_data[7]}}.serialize_data()));
 
-                Packet data_5(flagged_address_t(standard_address_t(space_resources::SYSTEM_ID, space_resources::controller::SUBSYSTEM_ID, space_resources::controller::sensing::DEVICE_ID, space_resources::controller::sensing::group::SPECTRAL_SENSOR, space_resources::controller::sensing::spectral_sensor_parameter::DATA5)), parameters::space_resources::controller::sensing::spectrum_5_t {
-                        .vis_3 = data[16];
-                        .flicker_detection_3 = data[17]; }.serializeData());
-                spectral_interface->transmit(data_5);
-            }});
-    packetManager->setCallback(addressing::filter_t{.address = flagged_address_t(standard_address_t(space_resources::SYSTEM_ID, space_resources::controller::SUBSYSTEM_ID, space_resources::controller::sensing::DEVICE_ID, space_resources::controller::sensing::group::MAGNETOMETER, space_resources::controller::sensing::magnetometer_sensor_parameter::START))}, callback_config_t{.datacallback = [&](const Packet)
-                                                                                                                                                                                                                                                                                                                                                                                        {
-                                                                                                                                                                                                                                                                                                                                                                                            start_reading_magnetometer();
-                                                                                                                                                                                                                                                                                                                                                                                            uint16_t* data = get_magnetometer_readings();
-                                                                                                                                                                                                                                                                                                                                                                                            // uint16_t data[18] = get_reading();
-                                                                                                                                                                                                                                                                                                                                                                                            Packet xyz(flagged_address_t(standard_address_t(space_resources::SYSTEM_ID, space_resources::controller::SUBSYSTEM_ID, space_resources::controller::sensing::DEVICE_ID, space_resources::controller::sensing::group::MAGNETOMETER, space_resources::controller::sensing::magnetometer_sensor_parameter::XYZ)), parameters::space_resources::controller::sensing::magnet_t {
-                        .x = PLACEHOLDER;
-                        .y = PLACEHOLDER;
-                        .z = PLACEHOLDER; }.serializeData());
-                                                                                                                                                                                                                                                                                                                                                                                            spectral_interface->transmit(xyz);
-                                                                                                                                                                                                                                                                                                                                                                                        }})
+                iface.transmit(Packet(
+                    static_cast<flagged_address_t>(standard_address_t{DEVICE_ADDRESS,
+                                                                      static_cast<uint8_t>(group::SPECTRAL_SENSOR),
+                                                                      static_cast<uint8_t>(spectral_sensor_parameter::DATA3)}),
+                    spectrum_3_t{_spectrum_3_t{spectral_data[8], spectral_data[9], spectral_data[10], spectral_data[11]}}.serialize_data()));
+
+                iface.transmit(Packet(
+                    static_cast<flagged_address_t>(standard_address_t{DEVICE_ADDRESS,
+                                                                      static_cast<uint8_t>(group::SPECTRAL_SENSOR),
+                                                                      static_cast<uint8_t>(spectral_sensor_parameter::DATA4)}),
+                    spectrum_4_t{_spectrum_4_t{spectral_data[12], spectral_data[13], spectral_data[14], spectral_data[15]}}.serialize_data()));
+
+                iface.transmit(Packet(
+                    static_cast<flagged_address_t>(standard_address_t{DEVICE_ADDRESS,
+                                                                      static_cast<uint8_t>(group::SPECTRAL_SENSOR),
+                                                                      static_cast<uint8_t>(spectral_sensor_parameter::DATA5)}),
+                    spectrum_5_t{_spectrum_5_t{spectral_data[16], spectral_data[17]}}.serialize_data()));
+            },
+        });
+
+    // Callback for magnetometer read request
+    packet_manager->set_callback(
+        filter_t{
+            .address = static_cast<flagged_address_t>(standard_address_t{DEVICE_ADDRESS,
+                                                                         static_cast<uint8_t>(group::MAGNETOMETER),
+                                                                         static_cast<uint8_t>(magnetometer_sensor_parameter::START)})},
+        {
+            .data_callback = [](const Packet&)
+            {
+                if (!readMagnetometer())
+                    return;
+
+                packet_manager->get_interface().transmit(Packet(
+                    static_cast<flagged_address_t>(standard_address_t{DEVICE_ADDRESS,
+                                                                      static_cast<uint8_t>(group::MAGNETOMETER),
+                                                                      static_cast<uint8_t>(magnetometer_sensor_parameter::XYZ)}),
+                    magnet_xyz_t{_magnet_xyz_t{magnetometer_data[0], magnetometer_data[1], magnetometer_data[2]}}.serialize_data()));
+            },
+        });
 }
 
 void writeRegister(byte device, byte reg, byte val)
@@ -109,69 +146,55 @@ void writeToMagnetometer(byte device, byte val)
     delay(100);
 }
 
-void readSpectral()
+bool readSpectral()
 {
-    Wire.beginTransmission(spectral_address);
-    Wire.write(spectral_data_N_L_register);
+    Wire.beginTransmission(SPECTRAL_ADDRESS);
+    Wire.write(SPECTRAL_DATA_N_L_REGISTER);
     Wire.endTransmission();
 
-    int bytesToRead = 36;
-    Wire.requestFrom(spectral_address, bytesToRead);
+    Wire.requestFrom(SPECTRAL_ADDRESS, SPECTRAL_READ_BYTES);
 
-    if (Wire.available == bytesToRead)
+    if (Wire.available() == SPECTRAL_READ_BYTES)
     {
-        for (int i = 0; i < 18; i++)
+        for (int i = 0; i < SPECTRAL_NUM_CHANNELS; i++)
         {
             uint16_t low = Wire.read();
             uint16_t high = Wire.read();
-            uint16_t value = (high << 8) | low;
-
-            Serial.print("Channel");
-            Serial.print(i);
-            Serial.print(": ");
-            Serial.print(value);
-            Serial.print("\t");
+            spectral_data[i] = (high << 8) | low;
         }
-        Serial.println();
+        return true;
     }
     else
     {
         Serial.println("Error reading spectral sensor");
+        return false;
     }
 }
 
-void readMagnetometer()
+bool readMagnetometer()
 {
-    // writeToMagnetometer(magnetometer_address, 0b00111111)
-    writeToMagnetometer(magnetometer_address, 0b00111111);
-    writeToMagnetometer(magnetometer_address, (magnetometer_enable_data | magnetometer_enable_xyz));
+    writeToMagnetometer(MAGNETOMETER_ADDRESS, 0b00111111);
+    writeToMagnetometer(MAGNETOMETER_ADDRESS, (MAGNETOMETER_ENABLE_DATA | MAGNETOMETER_ENABLE_XYZ));
 
-    Wire.requestFrom(magnetometer_address, 9);
+    Wire.requestFrom(MAGNETOMETER_ADDRESS, 9);
 
     if (Wire.available() == 9)
     {
-        byte status = Wire.read();
-        // int16_t temp = (Wire.read() << 8) | Wire.read();
-        int16_t x = (Wire.read() << 8) | Wire.read();
-        int16_t y = (Wire.read() << 8) | Wire.read();
-        int16_t z = (Wire.read() << 8) | Wire.read();
-        Serial.print("X: ");
-        Serial.print(x);
-        Serial.print(" | Y: ");
-        Serial.print(y);
-        Serial.print(" | Z: ");
-        Serial.println(z);
+        Wire.read();  // status byte
+        magnetometer_data[0] = (Wire.read() << 8) | Wire.read();  // x
+        magnetometer_data[1] = (Wire.read() << 8) | Wire.read();  // y
+        magnetometer_data[2] = (Wire.read() << 8) | Wire.read();  // z
+        return true;
     }
     else
     {
         Serial.println("Error reading magnetometer.");
+        return false;
     }
 }
 
 void loop()
 {
     packet_manager->handle();
-
-    readSpectral();
-    readMagnetometer();
+    delay(1);
 }
