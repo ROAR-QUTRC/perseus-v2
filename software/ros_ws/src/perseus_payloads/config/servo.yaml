@@ -7,10 +7,9 @@ scale:
   rotational: 0.8
   joint: 0.5
 # Frame configuration
-# Frame configuration
 move_group_name: arm
 planning_frame: plate
-ee_frame_name: forearm_tip
+ee_frame_name: end_effector
 robot_link_command_frame: plate
 # Topics
 joint_command_in_topic: "~/delta_joint_cmds"
@@ -35,11 +34,14 @@ collision_check_rate: 10.0
 self_collision_proximity_threshold: 0.02
 scene_collision_proximity_threshold: 0.05
 # Singularity handling
-lower_singularity_threshold: 30.0
-hard_stop_singularity_threshold: 60.0
-leaving_singularity_threshold_multiplier: 2.0
+# Lower threshold: servo slows as it approaches singularity
+# Hard stop: servo halts within singularity but can still leave
+# Leaving multiplier: much easier to escape once inside a singularity
+lower_singularity_threshold: 17.0
+hard_stop_singularity_threshold: 30.0
+leaving_singularity_threshold_multiplier: 5.0
 # Joint limit margins
-joint_limit_margins: [0.1, 0.1, 0.1]
+joint_limit_margins: [0.1, 0.1, 0.1, 0.1, 0.1, 0.05]
 # Smoothing
 smoothing_filter_plugin_name: "online_signal_smoothing::ButterworthFilterPlugin"
 low_pass_filter_coeff: 2.0

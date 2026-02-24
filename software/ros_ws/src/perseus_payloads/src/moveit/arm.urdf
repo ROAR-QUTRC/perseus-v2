@@ -223,6 +223,34 @@
     <dynamics damping="0.05" friction="0.02"/>
   </joint>
 
+  <link name="fake_dof_link">
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.001"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.000001" ixy="0.0" ixz="0.0" iyy="0.000001" iyz="0.0" izz="0.000001"/>
+    </inertial>
+  </link>
+
+  <joint name="fake_dof" type="revolute">
+    <parent link="wrist_roll_link"/>
+    <child link="fake_dof_link"/>
+    <origin xyz="0 0 0.028" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-0.5" upper="0.5" effort="1.0" velocity="1.0"/>
+    <dynamics damping="0.01" friction="0.0"/>
+  </joint>
+
   <link name="end_effector">
     <visual>
       <geometry>
@@ -243,10 +271,10 @@
       <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001"/>
     </inertial>
   </link>
-  
+
   <joint name="end_effector_mount" type="fixed">
-    <parent link="wrist_roll_link"/>
+    <parent link="fake_dof_link"/>
     <child link="end_effector"/>
-    <origin xyz="0 0 0.028" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 </robot>

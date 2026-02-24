@@ -119,6 +119,9 @@ hardware_interface::CallbackReturn PerseusArmHardware::on_deactivate(const rclcp
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
+
+// TODO: wrist pitch and roll need to be added, and fake joint.
+
 hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time&, const rclcpp::Duration&)
 {
     // created internal node to handle subscriptions and publishers
@@ -171,6 +174,18 @@ hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time&, co
                     }
                 }
             }
+        }
+    }
+
+    // fake_dof has no physical hardware — mirror the command as state feedback.
+    for (size_t i = 0; i < info_.joints.size(); ++i)
+    {
+        if (info_.joints[i].name == "fake_dof")
+        {
+            if (!std::isnan(_hw_commands[i]))
+                _hw_states_position[i] = _hw_commands[i];
+            _hw_states_velocity[i] = 0.0;
+            break;
         }
     }
 

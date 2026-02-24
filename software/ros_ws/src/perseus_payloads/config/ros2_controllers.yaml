@@ -19,6 +19,7 @@ arm_controller:
       - elbow
       - wrist_pitch
       - wrist_roll
+      - fake_dof
     command_interfaces:
       - position
       - velocity
@@ -34,6 +35,7 @@ servo_controller:
       - elbow
       - wrist_pitch
       - wrist_roll
+      - fake_dof
     command_interfaces:
       - position
       - velocity

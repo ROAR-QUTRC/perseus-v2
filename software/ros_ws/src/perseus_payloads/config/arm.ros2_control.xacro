@@ -52,6 +52,14 @@
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
+            <joint name="fake_dof">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['fake_dof']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
         </ros2_control>
     </xacro:macro>
 </robot>

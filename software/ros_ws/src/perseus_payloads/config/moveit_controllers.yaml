@@ -10,3 +10,4 @@ servo_controller:
     - elbow
     - wrist_pitch
     - wrist_roll
+    - fake_dof
