@@ -88,6 +88,8 @@ namespace ina228_driver
     void Ina228Node::_initialize_publishers()
     {
         _publisher = create_publisher<perseus_interfaces::msg::DCPowerData>("power_monitor/data", 10);
+        _battery_state_publisher =
+            create_publisher<sensor_msgs::msg::BatteryState>("power_monitor/battery_state", 10);
     }
 
     void Ina228Node::_initialize_services()
@@ -185,6 +187,20 @@ namespace ina228_driver
             msg.die_temperature = _read_die_temperature();
 
             _publisher->publish(msg);
+
+            sensor_msgs::msg::BatteryState battery_msg;
+            battery_msg.header.stamp = msg.header.stamp;
+            battery_msg.voltage = static_cast<float>(msg.bus_voltage);
+            battery_msg.current = static_cast<float>(msg.current);
+            battery_msg.charge = static_cast<float>(msg.charge);
+            battery_msg.power_supply_status =
+                sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_UNKNOWN;
+            battery_msg.power_supply_health =
+                sensor_msgs::msg::BatteryState::POWER_SUPPLY_HEALTH_UNKNOWN;
+            battery_msg.power_supply_technology =
+                sensor_msgs::msg::BatteryState::POWER_SUPPLY_TECHNOLOGY_UNKNOWN;
+            battery_msg.present = true;
+            _battery_state_publisher->publish(battery_msg);
         }
         catch (const std::exception& e)
         {
