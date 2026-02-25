@@ -110,9 +110,8 @@ target_link_libraries(i2c_imu_node PUBLIC fd_wrapper)
 
 # INA228 DC Power Monitor Driver
 add_executable(
-  ina228_node
-  ina228_driver/src/main.cpp ina228_driver/src/i2c_device.cpp
-  ina228_driver/src/ina228_node.cpp)
+  ina228_node ina228_driver/src/main.cpp ina228_driver/src/i2c_device.cpp
+              ina228_driver/src/ina228_node.cpp)
 
 target_include_directories(
   ina228_node PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ina228_driver/include)
@@ -126,8 +125,13 @@ install(TARGETS m2m2_lidar i2c_imu_node ina228_node
 
 # Install launch
 install(
-  DIRECTORY launch config i2c_imu_driver/launch i2c_imu_driver/config
-            i2c_imu_driver/urdf ina228_driver/launch ina228_driver/config
+  DIRECTORY launch
+            config
+            i2c_imu_driver/launch
+            i2c_imu_driver/config
+            i2c_imu_driver/urdf
+            ina228_driver/launch
+            ina228_driver/config
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 

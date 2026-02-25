@@ -1,10 +1,10 @@
 #include "ina228_driver/ina228_node.hpp"
 
-#include "ina228_driver/ina228_registers.hpp"
-
 #include <cmath>
 #include <stdexcept>
 #include <thread>
+
+#include "ina228_driver/ina228_registers.hpp"
 
 namespace ina228_driver
 {
