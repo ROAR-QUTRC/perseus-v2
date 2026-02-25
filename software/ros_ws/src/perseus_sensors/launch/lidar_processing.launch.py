@@ -84,13 +84,19 @@ def generate_launch_description():
                 package="perseus_sensors",
                 plugin="imu_processors::BiasEstimator",
                 name="imu_bias_estimator",
-                parameters=[str(lidar_processing_config_file), {"use_sim_time": use_sim_time}],
+                parameters=[
+                    str(lidar_processing_config_file),
+                    {"use_sim_time": use_sim_time},
+                ],
             ),
             ComposableNode(
                 package="perseus_sensors",
                 plugin="imu_processors::BiasRemover",
                 name="imu_bias_remover",
-                parameters=[str(lidar_processing_config_file), {"use_sim_time": use_sim_time}],
+                parameters=[
+                    str(lidar_processing_config_file),
+                    {"use_sim_time": use_sim_time},
+                ],
             ),
         ],
     )
@@ -103,7 +109,10 @@ def generate_launch_description():
             ("cloud_in", scan_in),
             ("scan_out", scan_out),
         ],
-        parameters=[pointcloud_to_laserscan_config_file, {"use_sim_time": use_sim_time}],
+        parameters=[
+            pointcloud_to_laserscan_config_file,
+            {"use_sim_time": use_sim_time},
+        ],
         name="pointcloud_to_laserscan",
         output="screen",
     )
