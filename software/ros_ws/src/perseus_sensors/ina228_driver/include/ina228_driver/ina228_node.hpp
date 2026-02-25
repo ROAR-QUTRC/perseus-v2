@@ -3,6 +3,7 @@
 #include <atomic>
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/battery_state.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <string>
 
@@ -60,6 +61,7 @@ namespace ina228_driver
         // ROS2 components
         std::unique_ptr<I2cDevice> _i2c_device;
         rclcpp::Publisher<perseus_interfaces::msg::DCPowerData>::SharedPtr _publisher;
+        rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr _battery_state_publisher;
         rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr _reset_service;
         rclcpp::TimerBase::SharedPtr _timer;
 
