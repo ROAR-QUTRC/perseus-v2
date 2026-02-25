@@ -283,9 +283,57 @@ namespace hi_can::parameters
     {
         namespace bms
         {
-            struct pack_status
+#pragma pack(push, 1)
+            struct _bms_information  // These are all transmitted from the BMS in big-endian, but converted to little-endian in the ESP32 firmware
             {
+                uint16_t voltage;                          // 10mV
+                int16_t current;                           // 10mA
+                uint16_t current_capacity;                 // 10mAh
+                uint16_t nominal_capacity;                 // 10mAh
+                uint16_t cycles;                           // I'm guessing number of charge cycles?
+                uint32_t balance_status;                   // Whether each cell is being balanced (1) or not (0) - bit by bit
+                enum class protection_status_t : uint16_t  // Bitwise OR of each of the following statuses
+                {
+                    CELL_OVER_VOLTAGE = 1 << 0,
+                    CELL_UNDER_VOLTAGE = 1 << 1,
+                    BATTERY_OVER_VOLTAGE = 1 << 2,
+                    BATTERY_UNDER_VOLTAGE = 1 << 3,
+                    CHARGING_OVER_TEMP = 1 << 4,
+                    CHARGING_UNDER_TEMP = 1 << 5,
+                    DISCHARGING_OVER_TEMP = 1 << 6,
+                    DISCHARGING_UNDER_TEMP = 1 << 7,
+                    CHARGING_OVER_CURRENT = 1 << 8,
+                    DISCHARGING_OVER_CURRENT = 1 << 9,
+                    SHORT_CIRCUIT = 1 << 10,
+                    IC_ERROR = 1 << 11,
+                    MOSFET_LOCK = 1 << 12,
+                };
+                protection_status_t protection_status;
+                uint8_t percent_remaining;            // current_capacity/nominal_capacity as a percent
+                enum class mosfet_status_t : uint8_t  // Whether the charging (bit 0) and discharging (bit 1) mosfets are on (1) or off (0)
+                {
+                    CHARGING = 1 << 0,
+                    DISCHARGING = 1 << 1,
+                };
+                mosfet_status_t mosfet_status;
+                uint8_t amount_of_cells;            // The number of cells in series
+                uint8_t amount_of_NTCs;             // The number of NTC temperature sensors
+                std::vector<uint16_t> temperature;  // The temperature of each NTC sensor
             };
+            struct _mosfet_control
+            {
+                enum class control_command_t : uint8_t
+                {
+                    OPEN = 0x00,
+                    DISCHARGE = 0x01,
+                    CHARGE = 0x02,
+                    SHUTDOWN = 0x03,
+                };
+                control_command_t control_command;
+            };
+#pragma pack(pop)
+            typedef SimpleSerializable<_bms_information> bms_information;
+            typedef SimpleSerializable<_mosfet_control> mosfet_control;
         }
         namespace distribution
         {
