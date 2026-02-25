@@ -147,6 +147,21 @@ def generate_launch_description():
         }.items(),
     )
 
+    # INA228 DC power monitor (battery voltage, current, power)
+    ina228_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus_sensors"),
+                        "launch",
+                        "ina228.launch.py",
+                    ]
+                )
+            ]
+        ),
+    )
+
     # twist_mux to arbitrate between joystick and navigation cmd_vel sources
     twist_mux_config = PathJoinSubstitution(
         [FindPackageShare("autonomy"), "config", "twist_mux.yaml"]
@@ -219,6 +234,7 @@ def generate_launch_description():
         controllers_launch,
         rplidar_node,
         i2c_imu_launch,
+        ina228_launch,
         camera_node,
         hud_launch,
         twist_mux_node,
