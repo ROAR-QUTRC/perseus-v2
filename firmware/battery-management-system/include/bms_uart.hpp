@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "driver/uart.h"
 
 class BmsUartDriver
@@ -7,7 +9,7 @@ public:
     ~BmsUartDriver();
 
 private:
-    int convertToTwosComplement(int number);
+    int convert_to_twos_complement(int number);
     const int BUFFER_SIZE = 1024;
     uart_port_t _uart_port_number;
     uart_config_t _uart_config = {
@@ -18,4 +20,6 @@ private:
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
         .rx_flow_ctrl_thresh = 0,
     };
+    const std::chrono::steady_clock::duration _voltage_interval = std::chrono::milliseconds(100);
+    const std::chrono::steady_clock::duration _information_interval = std::chrono::milliseconds(100);
 };
