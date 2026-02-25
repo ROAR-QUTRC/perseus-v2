@@ -74,7 +74,7 @@ void setup()
                         uint16_t speed = data->duration_ms;  // Note: driver sends speed in this field
                         uint8_t acceleration = data->acceleration;
 
-                        // servo.MovetoAngle(servo_idx, position, speed, acceleration);
+                        // servo.MovetoAngle(servo_idx, position, speed, acceleration); // SWAPPED
                         servo.WritePosEx(servo_idx, position, speed, acceleration);  // could swap out with MovetoAngle
                         Serial.printf("SET_POS_EX: servo=%d, pos=%d, spd=%d, acc=%d\n",
                                       servo_idx, position, speed, acceleration);

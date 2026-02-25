@@ -54,19 +54,19 @@ void RsblDriver::_handle_arm_control(const actuator_msgs::msg::Actuators::Shared
 
     if (msg->position.size() >= 3)
     {
-        int16_t pos_tilt = static_cast<int16_t>((msg->position[0] * (4096.0 / (2.0 * M_PI))));
-        int16_t pos_pan = static_cast<int16_t>((msg->position[1] * (4096.0 / (2.0 * M_PI))));
-        int16_t pos_elbow = static_cast<int16_t>((msg->position[2] * (4096.0 / (2.0 * M_PI))));
+        int16_t pos_tilt  = static_cast<int16_t>(msg->position[0]);
+        int16_t pos_pan   = static_cast<int16_t>(msg->position[1]);
+        int16_t pos_elbow = static_cast<int16_t>(msg->position[2]);
 
-        uint16_t speed_tilt = 0;
-        uint16_t speed_pan = 0;
+        uint16_t speed_tilt  = 0;
+        uint16_t speed_pan   = 0;
         uint16_t speed_elbow = 0;
 
         if (msg->velocity.size() >= 3)
         {
-            speed_tilt = static_cast<uint16_t>(std::abs(msg->velocity[0] * (4096.0 / (2.0 * M_PI))));
-            speed_pan = static_cast<uint16_t>(std::abs(msg->velocity[1] * (4096.0 / (2.0 * M_PI))));
-            speed_elbow = static_cast<uint16_t>(std::abs(msg->velocity[2] * (4096.0 / (2.0 * M_PI))));
+            speed_tilt  = static_cast<uint16_t>(msg->velocity[0]);
+            speed_pan   = static_cast<uint16_t>(msg->velocity[1]);
+            speed_elbow = static_cast<uint16_t>(msg->velocity[2]);
         }
 
         using namespace hi_can::addressing;

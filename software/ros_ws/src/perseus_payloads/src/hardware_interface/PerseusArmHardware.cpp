@@ -20,7 +20,7 @@ hardware_interface::CallbackReturn PerseusArmHardware::on_init(const hardware_in
     // Initialize storage
     _hw_states_position.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     _hw_states_velocity.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-    _hw_commands.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+    _hw_commands.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN()); 
     _hw_commands_velocity.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
     for (const hardware_interface::ComponentInfo& joint : info_.joints)
@@ -37,7 +37,7 @@ hardware_interface::CallbackReturn PerseusArmHardware::on_init(const hardware_in
                 has_position = true;
         }
 
-        if (!has_position)
+        if (!has_position)  
         {
             RCLCPP_FATAL(rclcpp::get_logger("PerseusArmHardware"), "Joint '%s' missing 'position' state interface.", joint.name.c_str());
             return hardware_interface::CallbackReturn::ERROR;
@@ -130,10 +130,22 @@ hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time&, co
         rclcpp::spin_some(_node);
     }
 
+    // If no hardware data has been received yet mirror commands to states 
+    if (_latest_rsbl_status.empty())
+    {
+        for (size_t i = 0; i < info_.joints.size(); ++i)
+        {
+            if (!std::isnan(_hw_commands[i]))
+            _hw_states_position[i] = _hw_commands[i];
+            _hw_states_velocity[i] = 0.0;
+        }
+        return hardware_interface::return_type::OK;
+    }
+
     using namespace hi_can::addressing::post_landing::arm::control_board;
     const size_t STATUS_BLOCK_SIZE = 8;  // [id, error, pos, speed, temp, volt, curr, load]
 
-    if (!_latest_rsbl_status.empty() && _latest_rsbl_status.size() % STATUS_BLOCK_SIZE == 0)
+    if (_latest_rsbl_status.size() % STATUS_BLOCK_SIZE == 0)
     {
         for (size_t offset = 0; offset < _latest_rsbl_status.size(); offset += STATUS_BLOCK_SIZE)
         {
@@ -141,9 +153,7 @@ hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time&, co
             int servo_id = static_cast<int>(_latest_rsbl_status[offset]);
             double servo_pos_steps = _latest_rsbl_status[offset + 2];  // Status 1 position
 
-            // TODO: Change this, have rsbl driver send radians instead of steps
-            // Convert to radians: steps 0-4096 -> 0-2PI
-            // Assuming 2048 is 0 rads, scaling factor 4096 / 2pi
+            // Convert servo steps to radians: steps 0-4096 -> 0-2PI
             double pos_rad = servo_pos_steps / (4096.0 / (2.0 * M_PI));
 
             std::string joint_name = "";
@@ -177,7 +187,7 @@ hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time&, co
         }
     }
 
-    // fake_dof has no physical hardware — mirror the command as state feedback.
+    // fake_dof has no physical hardware always mirror command as state feedback.
     for (size_t i = 0; i < info_.joints.size(); ++i)
     {
         if (info_.joints[i].name == "fake_dof")
@@ -199,6 +209,10 @@ void PerseusArmHardware::_rsbl_status_callback(const std_msgs::msg::Float64Multi
 
 hardware_interface::return_type PerseusArmHardware::write(const rclcpp::Time&, const rclcpp::Duration&)
 {
+    // TODO: 
+    // Change elbow to the big motors
+    // add wrist pitch and roll
+    // add fake_dof
     if (_rsbl_publisher)
     {
         actuator_msgs::msg::Actuators msg;
@@ -235,13 +249,16 @@ hardware_interface::return_type PerseusArmHardware::write(const rclcpp::Time&, c
             }
         }
 
-        msg.position[0] = tilt_cmd;
-        msg.position[1] = pan_cmd;
-        msg.position[2] = elbow_cmd;
+        // Convert rad → steps for the RSBL servo protocol 
+        constexpr double RAD_TO_STEPS = 4096.0 / (2.0 * M_PI);
 
-        msg.velocity[0] = tilt_vel_cmd;
-        msg.velocity[1] = pan_vel_cmd;
-        msg.velocity[2] = elbow_vel_cmd;
+        msg.position[0] = tilt_cmd  * RAD_TO_STEPS;  // steps
+        msg.position[1] = pan_cmd   * RAD_TO_STEPS;
+        msg.position[2] = elbow_cmd * RAD_TO_STEPS;
+
+        msg.velocity[0] = std::abs(tilt_vel_cmd)  * RAD_TO_STEPS;  
+        msg.velocity[1] = std::abs(pan_vel_cmd)   * RAD_TO_STEPS;
+        msg.velocity[2] = std::abs(elbow_vel_cmd) * RAD_TO_STEPS;
         msg.normalized[0] = 0.0;
         msg.normalized[1] = 0.0;
         msg.normalized[2] = 0.0;
