@@ -40,7 +40,9 @@ bool BmsUartDriver::receive(BmsUartMessage& message)
     // TODO: Implement receiving messages
 }
 
-BmsUartMessage::BmsUartMessage(command_byte_t command, std::vector<uint8_t>& data) : _command_byte(command), _data(data)
+BmsUartMessage::BmsUartMessage(command_byte_t command, std::vector<uint8_t>& data)
+    : _command_byte(command),
+      _data(data)
 {
     if (command == command_byte_t::MOSFET_CONTROL)
     {
