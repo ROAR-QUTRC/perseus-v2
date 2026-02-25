@@ -127,11 +127,17 @@
     <material>Gazebo/Grey</material>
     <sensor name="${prefix}lidar_imu" type="imu">
         <always_on>1</always_on>
-        <update_rate>10</update_rate>
-        <visualize>true</visualize>
+        <update_rate>50</update_rate>
         <topic>scan_3d/imu</topic>
-        <!-- Add frame id to imu sensor (achieving correct frame association)-->
         <gz_frame_id>${prefix}livox_frame</gz_frame_id>
+        <plugin name="imu_ros" filename="libgazebo_ros_imu.so">
+          <ros>
+            <namespace>/livox</namespace>
+            <remapping>imu:=imu</remapping>
+          </ros>
+          <update_rate>50</update_rate>
+          <gaussian_noise>0.0</gaussian_noise>
+        </plugin>
     </sensor>
 </gazebo>
 

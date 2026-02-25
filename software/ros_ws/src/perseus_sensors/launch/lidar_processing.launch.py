@@ -1,19 +1,27 @@
 """
-Livox Sensor with Topic Remapper Launch File
+lidar_processing.launch.py - Livox Sensor with IMU Bias Correction and Topic Remapper
 
 This launch file starts:
 1. The Livox sensor driver (IMU and LiDAR)
-2. The topic remapper for downsampling IMU data to lower frequency
+2. The IMU Bias Estimator and Bias Remover composable nodes
+3. The Pointcloud-to-Laserscan converter node
 
 Usage:
-    ros2 launch perseus_sensors livox_remap.launch.py
+    # Launch with default settings
+    ros2 launch perseus_sensors lidar_processing.launch.py
 
-    With custom remapping frequency:
-    ros2 launch perseus_sensors livox_remap.launch.py imu_frequency:=20.0
+    # Launch with custom IMU remap frequency
+    ros2 launch perseus_sensors lidar_processing.launch.py imu_frequency:=20.0
+
+Launch Arguments:
+    scan_in        : Input LiDAR topic (default: /livox/lidar)
+    scan_out       : Output LaserScan topic (default: /livox/scan)
+    imu_frequency  : Target output frequency for remapped IMU in Hz (default: 50.0)
 """
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import UnlessCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
@@ -33,6 +41,11 @@ def generate_launch_description():
         "config",
         "pcl_conv.yaml",
     )
+    livox_launch_file = os.path.join(
+        get_package_share_directory("perseus_sensors"),
+        "launch",
+        "livox.launch.py",
+    )
 
     # Declare Arguments
     declare_publisher_name = DeclareLaunchArgument(
@@ -49,8 +62,15 @@ def generate_launch_description():
         description="Target output frequency for remapped IMU in Hz",
     )
 
+    use_sim_time_arg = DeclareLaunchArgument(
+        "use_sim_time",
+        default_value="false",
+        description="Use simulated time if true",
+    )
+
     scan_in = LaunchConfiguration("scan_in")
     scan_out = LaunchConfiguration("scan_out")
+    use_sim_time = LaunchConfiguration("use_sim_time")
 
     imu_bias_container = ComposableNodeContainer(
         name="imu_bias_container",
@@ -58,18 +78,19 @@ def generate_launch_description():
         package="rclcpp_components",
         executable="component_container_mt",
         output="screen",
+        parameters=[{"use_sim_time": use_sim_time}],
         composable_node_descriptions=[
             ComposableNode(
                 package="perseus_sensors",
                 plugin="imu_processors::BiasEstimator",
                 name="imu_bias_estimator",
-                parameters=[str(lidar_processing_config_file)],
+                parameters=[str(lidar_processing_config_file), {"use_sim_time": use_sim_time}],
             ),
             ComposableNode(
                 package="perseus_sensors",
                 plugin="imu_processors::BiasRemover",
                 name="imu_bias_remover",
-                parameters=[str(lidar_processing_config_file)],
+                parameters=[str(lidar_processing_config_file), {"use_sim_time": use_sim_time}],
             ),
         ],
     )
@@ -82,9 +103,15 @@ def generate_launch_description():
             ("cloud_in", scan_in),
             ("scan_out", scan_out),
         ],
-        parameters=[pointcloud_to_laserscan_config_file],
+        parameters=[pointcloud_to_laserscan_config_file, {"use_sim_time": use_sim_time}],
         name="pointcloud_to_laserscan",
         output="screen",
+    )
+
+    # Conditionally launch livox driver when not using sim time
+    livox_launch = IncludeLaunchDescription(
+        livox_launch_file,
+        condition=UnlessCondition(use_sim_time),
     )
 
     # Create launch description and populate
@@ -94,9 +121,11 @@ def generate_launch_description():
     ld.add_action(declare_publisher_name)
     ld.add_action(declare_subscriber_name)
     ld.add_action(imu_frequency_arg)
+    ld.add_action(use_sim_time_arg)
 
     # Add nodes
     ld.add_action(pointcloud_to_laserscan_node)
     ld.add_action(imu_bias_container)
+    ld.add_action(livox_launch)
 
     return ld
