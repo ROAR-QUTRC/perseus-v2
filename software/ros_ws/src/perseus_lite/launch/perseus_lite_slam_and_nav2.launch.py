@@ -469,6 +469,7 @@ def generate_launch_description():
                     launch_arguments={
                         "type": "xbox",
                         "wireless": "true",
+                        "dual_stick": "true",
                     }.items(),
                 ),
             ]

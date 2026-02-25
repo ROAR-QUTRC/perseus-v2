@@ -371,6 +371,13 @@
               type = "app";
               program = "${pkgs.scripts.clean}/bin/clean";
             };
+            autonomy_diagnostics = {
+              type = "app";
+              program = "${pkgs.writeShellScriptBin "autonomy_diagnostics" ''
+                ${default}/bin/ros2 run autonomy_diagnostics autonomy_tui "$@"
+              ''}/bin/autonomy_diagnostics";
+            };
+            autonomy_diag = self.apps.${system}.autonomy_diagnostics;
           };
         formatter = treefmtEval.config.build.wrapper;
         checks = {
