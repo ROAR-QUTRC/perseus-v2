@@ -2,6 +2,7 @@
 
 #include <hi_can_twai.hpp>
 
+#include "bms_uart.hpp"
 #include "freertos/task.h"
 #include "freertos/timers.h"
 
@@ -12,6 +13,7 @@ const int STACK_SIZE = 8096;
 const int LOOP_PRIORITY = 5;
 const int LOOP_CORE = 1;
 std::optional<PacketManager> packet_manager;
+BmsUartDriver uart_driver(UART_NUM_2);
 
 void loop();
 extern "C" void app_main()
@@ -40,17 +42,32 @@ extern "C" void app_main()
                 parameters::power::bms::mosfet_control command;
                 command.deserialize_data(packet.get_data());
                 // TODO: Send mosfet command to the bms
+                return;
             }});
     packet_manager->set_transmission_config(static_cast<flagged_address_t>(standard_address_t(power::SYSTEM_ID, power::battery::SUBSYSTEM_ID, static_cast<uint8_t>(power::battery::device::BMS), 0x00, static_cast<uint8_t>(power::battery::bms_parameter::INFO))), PacketManager::transmission_config_t{.generator = [&]()
                                                                                                                                                                                                                                                                                                          {
-                                                                                                                                                                                                                                                                                                             // TODO: Get information data from the bms
+                                                                                                                                                                                                                                                                                                             // TODO: Read information data from UART
+                                                                                                                                                                                                                                                                                                             std::vector<uint8_t> data{};
+                                                                                                                                                                                                                                                                                                             BmsUartMessage information_message(BmsUartMessage::command_byte_t::INFORMATION, data);
+                                                                                                                                                                                                                                                                                                             if (uart_driver.transmit(information_message))
+                                                                                                                                                                                                                                                                                                             {
+                                                                                                                                                                                                                                                                                                                 printf("Error while transmitting information request message!!!\n");
+                                                                                                                                                                                                                                                                                                             }
+                                                                                                                                                                                                                                                                                                             return std::vector<uint8_t>{0};
                                                                                                                                                                                                                                                                                                          },
-                                                                                                                                                                                                                                                                                                         .interval = _information_interval});
+                                                                                                                                                                                                                                                                                                         .interval = uart_driver.get_information_interval()});
     packet_manager->set_transmission_config(static_cast<flagged_address_t>(standard_address_t(power::SYSTEM_ID, power::battery::SUBSYSTEM_ID, static_cast<uint8_t>(power::battery::device::BMS), 0x00, static_cast<uint8_t>(power::battery::bms_parameter::VOLTAGE))), PacketManager::transmission_config_t{.generator = [&]()
                                                                                                                                                                                                                                                                                                             {
-                                                                                                                                                                                                                                                                                                                // TODO: Get voltage data from the bms
+                                                                                                                                                                                                                                                                                                                std::vector<uint8_t> data{};
+                                                                                                                                                                                                                                                                                                                BmsUartMessage voltage_message(BmsUartMessage::command_byte_t::VOLTAGE, data);
+                                                                                                                                                                                                                                                                                                                if (uart_driver.transmit(voltage_message))
+                                                                                                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                                                                                                    printf("Error while transmitting voltage request message!!!\n");
+                                                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                                                // TODO: Read voltage data from UART
+                                                                                                                                                                                                                                                                                                                return std::vector<uint8_t>{0};
                                                                                                                                                                                                                                                                                                             },
-                                                                                                                                                                                                                                                                                                            .interval = _voltage_interval});
+                                                                                                                                                                                                                                                                                                            .interval = uart_driver.get_voltage_interval()});
 
     xTaskCreatePinnedToCore([](void*)
                             {
