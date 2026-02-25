@@ -1,0 +1,11 @@
+ina228_node:
+  ros__parameters:
+    # I2C Configuration
+    i2c_bus: "/dev/i2c-7"
+    device_address: 0x40
+    update_rate: 10.0
+    # Shunt resistor configuration
+    shunt_resistance: 0.015 # 15 milliohm (Adafruit INA228 stock shunt)
+    max_current: 10.0 # Maximum expected current in amps
+    # Hardware requirement
+    required: false # Set true if power monitoring is critical
