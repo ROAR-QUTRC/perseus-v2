@@ -160,12 +160,10 @@ If `capture_image = true`, the node will:
 
 1. Create the directory `img_save_path` (via `mkdir -p`)
 2. Save an annotated PNG image:
-
    - Filename includes detected marker IDs: `aruco_<id1>_<id2>...png`
    - If no markers: `aruco_no_markers.png`
 
 3. Overlay text on the image:
-
    - Human-readable timestamp (system clock)
    - Marker coordinate summary (`X, Y, Z` derived from `tvec` conversion)
 
@@ -194,7 +192,6 @@ aruco_detector:
 **Bounding box filtering details**
 
 - For each detected marker’s 4 corner points, the node computes:
-
   - `min_x, max_x, min_y, max_y`
   - area = `(max_x - min_x) * (max_y - min_y)`
 
@@ -286,15 +283,12 @@ If enabled, incoming `CameraInfo` replaces intrinsics.
    ```
 
 4. Clear cached detections and update timestamp:
-
    - `latest_ids_`, `latest_poses_`
    - `latest_timestamp_ = header.stamp`
 
 5. If markers exist:
-
    - draw marker borders
    - for each marker:
-
      - estimate pose via `cv::solvePnP` using 3D marker corner points and detected 2D image points
      - compute bbox area in pixels
      - apply `min_bounding_box_area` filter
@@ -304,7 +298,6 @@ If enabled, incoming `CameraInfo` replaces intrinsics.
      - optionally publish TF transform
 
 6. Cache annotated frame:
-
    - `latest_frame_ = annotated_frame.clone()`
    - `latest_marker_coords_` stores marker positions (in the camera-converted XYZ convention used for display)
 
@@ -372,7 +365,6 @@ ros2 service call /detect_objects perseus_interfaces/srv/DetectObjects \
 - `dictionary_id` must match the marker dictionary used to generate/print the tags.
 - `marker_length` must match the real marker size in meters.
 - Filtering by `min_bounding_box_area` is in **pixels²**, so thresholds depend on:
-
   - camera resolution
   - distance to marker
   - FOV and lens
