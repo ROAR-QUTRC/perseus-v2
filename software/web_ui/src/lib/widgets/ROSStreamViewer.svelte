@@ -127,6 +127,7 @@
 
 	<div class="min-h-0 flex-1 overflow-hidden rounded-xl border bg-black/30">
 		{#if imgSrc}
+		<!-- svelte-ignore a11y_img_redundant_alt -->
 			<img
 				src={imgSrc}
 				alt="ROS image stream"
