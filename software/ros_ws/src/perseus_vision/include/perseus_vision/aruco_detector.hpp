@@ -37,7 +37,7 @@ namespace perseus_vision
     /// @brief ROS2 node for detecting ArUco markers and estimating their 6-DoF poses.
     ///
     /// Subscribes to raw or compressed camera images, detects ArUco markers using OpenCV,
-    /// estimates marker poses via cv::solveOnP, and optionally publishes TF transforms,
+    /// estimates marker poses via cv::solvePnP, and optionally publishes TF transforms,
     /// detection messages, annotated debug images, and rviz visualization markers.
     /// Also provides a service interface for on-demand detection queries and image capture.
     class ArucoDetector : public rclcpp::Node
