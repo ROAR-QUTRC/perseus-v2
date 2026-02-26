@@ -1,6 +1,5 @@
 #pragma once
 
-<<<<<<< HEAD
 /// @file aruco_detector.hpp
 /// @brief ArUco marker detection and 6-DoF pose estimation ROS2 node.
 
@@ -22,6 +21,7 @@
 #include "sensor_msgs/msg/compressed_image.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include "std_msgs/msg/header.hpp"
+#include "tf2/LinearMath/Matrix3x3.h"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2_ros/buffer.h"
@@ -29,21 +29,30 @@
 #include "tf2_ros/transform_listener.h"
 #include "visualization_msgs/msg/marker_array.hpp"
 
-// ---- custom interfaces ----
 #include "perseus_interfaces/msg/object_detections.hpp"
 #include "perseus_interfaces/srv/detect_objects.hpp"
 
 namespace perseus_vision
 {
 
+    /// @brief ROS2 node for detecting ArUco markers and estimating their 6-DoF poses.
+    ///
+    /// Subscribes to raw or compressed camera images, detects ArUco markers using OpenCV,
+    /// estimates marker poses via cv::solvePnP, and optionally publishes TF transforms,
+    /// detection messages, annotated debug images, and rviz visualization markers.
+    /// Also provides a service interface for on-demand detection queries and image capture.
     class ArucoDetector : public rclcpp::Node
     {
     public:
         using DetectObjects = perseus_interfaces::srv::DetectObjects;
 
+        /// @brief Constructs the node, declaring parameters and setting up
+        ///        subscribers, publishers, and the detection service.
         ArucoDetector();
 
     private:
+        static constexpr int kQosDepth = 10;
+
         // Callbacks
         void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
         void compressedImageCallback(const sensor_msgs::msg::CompressedImage::SharedPtr msg);
@@ -57,11 +66,8 @@ namespace perseus_vision
             const cv::Vec3d& rvec,
             const cv::Vec3d& tvec);
 
-        // Helpers
-        tf2::Quaternion rotationMatrixToQuaternion(const cv::Mat& rotation_matrix);
-
         // Service
-        void handle_request(
+        void handleRequest(
             const std::shared_ptr<DetectObjects::Request> request,
             std::shared_ptr<DetectObjects::Response> response);
 
@@ -79,11 +85,11 @@ namespace perseus_vision
         std::string input_img_{"/camera/camera/color/image_raw"};
         std::string output_img_{"/detection/aruco/image"};
 
-        bool publish_tf_{true};
-        bool publish_img_{true};
-        bool compressed_io_{false};
-        bool use_camera_info_{false};
-        bool publish_output_{false};
+        bool should_publish_tf_{true};
+        bool should_publish_img_{true};
+        bool is_compressed_io_{false};
+        bool should_use_camera_info_{false};
+        bool should_publish_output_{false};
         std::string output_topic_{"/detection/aruco/detections"};
         std::string camera_info_topic_{"/camera/camera/color/camera_info"};
 
@@ -118,8 +124,8 @@ namespace perseus_vision
         rclcpp::Time latest_timestamp_{0, 0, RCL_ROS_TIME};
         std::vector<int> latest_ids_;
         std::vector<geometry_msgs::msg::Pose> latest_poses_;
-        cv::Mat latest_frame_;                                           // Store latest annotated frame for capture
-        std::vector<std::pair<int, cv::Point3d>> latest_marker_coords_;  // Store marker coordinates for annotation
+        cv::Mat latest_frame_;
+        std::vector<std::pair<int, cv::Point3d>> latest_marker_coords_;
 
         // Camera calibration synchronization
         std::mutex camera_matrix_mutex_;
