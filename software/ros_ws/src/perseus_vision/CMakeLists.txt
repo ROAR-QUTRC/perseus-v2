@@ -64,8 +64,9 @@ ament_target_dependencies(
   perseus_interfaces)
 
 target_include_directories(
-  aruco_detector_node PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                             $<INSTALL_INTERFACE:include>)
+  aruco_detector_node
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:include>)
 
 install(TARGETS aruco_detector_node DESTINATION lib/${PROJECT_NAME})
 
