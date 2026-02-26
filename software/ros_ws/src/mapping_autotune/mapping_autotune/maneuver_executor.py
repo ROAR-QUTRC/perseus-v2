@@ -126,10 +126,16 @@ class ManeuverExecutor:
         rotation_speed = maneuver_params.get("rotation_speed", 0.5)
         pattern = maneuver_params.get("pattern", "box_return")
 
-        if pattern == "corridor":
-            return self._execute_corridor(linear_speed, rotation_speed)
-        else:
-            return self._execute_box_return(linear_speed, rotation_speed)
+        dispatch = {
+            "box_return": self._execute_box_return,
+            "corridor": self._execute_corridor,
+            "straight": self._execute_straight,
+            "small_turn": self._execute_small_turn,
+            "big_turn": self._execute_big_turn,
+        }
+
+        executor = dispatch.get(pattern, self._execute_box_return)
+        return executor(linear_speed, rotation_speed)
 
     # ── Maneuver patterns ─────────────────────────────────────────────
 
@@ -189,6 +195,103 @@ class ManeuverExecutor:
 
         return self._run_step_sequence(steps)
 
+    def _execute_straight(self, linear_speed, rotation_speed):
+        """Drive forward, 180-degree turn, drive back to start, 180-degree turn.
+
+        Simplest pattern — tests pure linear SLAM with no lateral movement.
+
+        Sequence:
+            1. Drive forward 1.0m
+            2. Pause 1.0s
+            3. Rotate 180 degrees
+            4. Pause 1.0s
+            5. Drive forward 1.0m (back to start)
+            6. Pause 1.0s
+            7. Rotate 180 degrees (return to start heading)
+
+        Returns:
+            True if all steps completed, False on any failure.
+        """
+        steps = [
+            ("drive", 1.0, linear_speed),
+            ("pause", 1.0, None),
+            ("rotate", math.pi, rotation_speed),
+            ("pause", 1.0, None),
+            ("drive", 1.0, linear_speed),
+            ("pause", 1.0, None),
+            ("rotate", math.pi, rotation_speed),
+        ]
+
+        return self._run_step_sequence(steps)
+
+    def _execute_small_turn(self, linear_speed, rotation_speed):
+        """Drive forward, 45-degree turn, short drive, then reverse the path.
+
+        Tests gentle rotation handling in SLAM.
+
+        Sequence:
+            1. Drive forward 1.0m
+            2. Pause 1.0s
+            3. Rotate 45 degrees
+            4. Drive forward 0.5m
+            5. Pause 1.0s
+            6. Rotate -45 degrees (undo turn)
+            7. Drive backward (forward 1.0m toward start after 180)
+            8. Rotate 180 degrees
+
+        Returns:
+            True if all steps completed, False on any failure.
+        """
+        quarter_pi = math.pi / 4.0
+        steps = [
+            ("drive", 1.0, linear_speed),
+            ("pause", 1.0, None),
+            ("rotate", quarter_pi, rotation_speed),
+            ("drive", 0.5, linear_speed),
+            ("pause", 1.0, None),
+            ("rotate", -quarter_pi, rotation_speed),
+            ("pause", 0.5, None),
+            ("drive", 1.0, linear_speed),
+            ("pause", 1.0, None),
+            ("rotate", math.pi, rotation_speed),
+        ]
+
+        return self._run_step_sequence(steps)
+
+    def _execute_big_turn(self, linear_speed, rotation_speed):
+        """Drive forward, 90-degree turn, drive, then reverse the path.
+
+        Tests moderate rotation — between small_turn and box_return.
+
+        Sequence:
+            1. Drive forward 1.0m
+            2. Pause 1.0s
+            3. Rotate 90 degrees
+            4. Drive forward 1.0m
+            5. Pause 1.0s
+            6. Rotate -90 degrees (undo turn)
+            7. Drive forward 1.0m (back toward start)
+            8. Rotate 180 degrees
+
+        Returns:
+            True if all steps completed, False on any failure.
+        """
+        half_pi = math.pi / 2.0
+        steps = [
+            ("drive", 1.0, linear_speed),
+            ("pause", 1.0, None),
+            ("rotate", half_pi, rotation_speed),
+            ("drive", 1.0, linear_speed),
+            ("pause", 1.0, None),
+            ("rotate", -half_pi, rotation_speed),
+            ("pause", 0.5, None),
+            ("drive", 1.0, linear_speed),
+            ("pause", 1.0, None),
+            ("rotate", math.pi, rotation_speed),
+        ]
+
+        return self._run_step_sequence(steps)
+
     def _run_step_sequence(self, steps):
         """Execute a sequence of drive/rotate/pause steps.
 
@@ -217,112 +320,72 @@ class ManeuverExecutor:
     # ── Control methods ───────────────────────────────────────────────
 
     def _drive_distance(self, distance, speed):
-        """Drive forward a specified distance using closed-loop P control.
+        """Drive forward for distance/speed seconds at constant speed.
+
+        Uses time-based control because the wheel odometry may not be
+        accurately calibrated.  The robot drives at *speed* for
+        ``distance / speed`` seconds, then ramps down and stops.
 
         Args:
-            distance: Distance to travel in meters (positive = forward).
-            speed: Maximum forward speed in m/s.
+            distance: Nominal distance in meters (used to compute drive time).
+            speed: Forward speed in m/s.
 
         Returns:
-            True if target distance reached within tolerance, False on timeout.
+            True when the timed drive completes.
         """
-        start_x = self._current_x
-        start_y = self._current_y
-
-        kp = 2.0
-        timeout_sec = (distance / speed) * 3.0
+        drive_time = distance / speed
+        period = 1.0 / self._publish_rate
         start_time = time.time()
 
-        rate = self._node.create_rate(self._publish_rate)
+        self._node.get_logger().info(
+            f"Drive: speed={speed:.2f} m/s for {drive_time:.1f}s "
+            f"(~{distance:.2f}m)"
+        )
 
         while rclpy.ok():
-            # Check timeout
             elapsed = time.time() - start_time
-            if elapsed > timeout_sec:
-                self._node.get_logger().warn(
-                    f"Drive distance timeout after {elapsed:.1f}s "
-                    f"(target: {distance:.2f}m)"
-                )
-                self._stop()
-                return False
-
-            # Compute distance traveled
-            dx = self._current_x - start_x
-            dy = self._current_y - start_y
-            traveled = math.sqrt(dx * dx + dy * dy)
-
-            remaining = distance - traveled
-
-            # Check if we reached the target
-            if remaining <= self._position_tolerance:
-                self._stop()
-                return True
-
-            # P-controller: command proportional to remaining distance
-            cmd_speed = min(speed, kp * remaining)
-            self._publish_twist(cmd_speed, 0.0)
-
-            rate.sleep()
+            if elapsed >= drive_time:
+                break
+            self._publish_twist(speed, 0.0)
+            time.sleep(period)
 
         self._stop()
-        return False
+        self._node.get_logger().info(f"Drive complete ({elapsed:.1f}s)")
+        return True
 
     def _rotate_angle(self, angle_rad, speed):
-        """Rotate by a specified angle using closed-loop P control.
+        """Rotate for angle/speed seconds at constant angular speed.
+
+        Uses time-based control because the wheel odometry may not be
+        accurately calibrated.
 
         Args:
             angle_rad: Angle to rotate in radians (positive = CCW).
-            speed: Maximum rotation speed in rad/s.
+            speed: Rotation speed in rad/s.
 
         Returns:
-            True if target angle reached within tolerance, False on timeout.
+            True when the timed rotation completes.
         """
-        start_yaw = self._current_yaw
-        cumulative_angle = 0.0
-        prev_yaw = start_yaw
-
         sign = 1.0 if angle_rad >= 0 else -1.0
-        target_angle = abs(angle_rad)
-        kp = 3.0
-        min_cmd = 0.08  # Minimum command to overcome static friction
-
-        timeout_sec = (abs(angle_rad) / speed) * 3.0
+        rotate_time = abs(angle_rad) / speed
+        period = 1.0 / self._publish_rate
         start_time = time.time()
 
-        rate = self._node.create_rate(self._publish_rate)
+        self._node.get_logger().info(
+            f"Rotate: {math.degrees(angle_rad):.0f} deg at "
+            f"{math.degrees(speed):.0f} deg/s for {rotate_time:.1f}s"
+        )
 
         while rclpy.ok():
-            # Check timeout
             elapsed = time.time() - start_time
-            if elapsed > timeout_sec:
-                self._node.get_logger().warn(
-                    f"Rotate angle timeout after {elapsed:.1f}s "
-                    f"(target: {math.degrees(angle_rad):.1f} deg)"
-                )
-                self._stop()
-                return False
-
-            # Track cumulative angle change with wraparound handling
-            delta_yaw = self._normalize_angle(self._current_yaw - prev_yaw)
-            cumulative_angle += delta_yaw
-            prev_yaw = self._current_yaw
-
-            remaining = target_angle - abs(cumulative_angle)
-
-            # Check if we reached the target
-            if remaining <= self._angle_tolerance:
-                self._stop()
-                return True
-
-            # P-controller with deadband compensation
-            cmd_speed = min(speed, kp * abs(remaining))
-            cmd_speed = max(cmd_speed, min_cmd)
-            self._publish_twist(0.0, sign * cmd_speed)
-
-            rate.sleep()
+            if elapsed >= rotate_time:
+                break
+            self._publish_twist(0.0, sign * speed)
+            time.sleep(period)
 
         self._stop()
-        return False
+        self._node.get_logger().info(f"Rotate complete ({elapsed:.1f}s)")
+        return True
 
     def _pause(self, duration_sec):
         """Publish zero velocity for a specified duration.
@@ -330,14 +393,14 @@ class ManeuverExecutor:
         Args:
             duration_sec: Duration to pause in seconds.
         """
-        rate = self._node.create_rate(self._publish_rate)
+        period = 1.0 / self._publish_rate
         iterations = int(duration_sec * self._publish_rate)
 
         for _ in range(iterations):
             if not rclpy.ok():
                 break
             self._publish_twist(0.0, 0.0)
-            rate.sleep()
+            time.sleep(period)
 
     def _publish_twist(self, linear_x, angular_z):
         """Publish a TwistStamped message.

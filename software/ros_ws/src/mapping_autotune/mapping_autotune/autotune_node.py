@@ -35,6 +35,7 @@ from mapping_autotune.param_manager import ParamManager
 class State:
     """State machine states for the autotune orchestrator."""
 
+    WAITING_FOR_TUI = "waiting_for_tui"
     PREFLIGHT = "preflight"
     IDLE = "idle"
     CONFIGURING = "configuring"
@@ -54,7 +55,7 @@ class AutotuneNode(Node):
         super().__init__("autotune_node")
 
         # ── Declare ROS parameters ────────────────────────────────────
-        self.declare_parameter("db_path", "/opt/mapping_autotune/autotune.db")
+        self.declare_parameter("db_path", "~/.local/share/mapping_autotune/autotune.db")
         self.declare_parameter("max_runs", 10)
         self.declare_parameter("session_name", "")
         self.declare_parameter("session_description", "")
@@ -62,10 +63,14 @@ class AutotuneNode(Node):
         self.declare_parameter("slam_config_path", "")
         self.declare_parameter("ekf_config_path", "")
         self.declare_parameter("maneuver_pattern", "box_return")
+        self.declare_parameter("linear_speed", 0.2)
+        self.declare_parameter("rotation_speed", 0.5)
+        self.declare_parameter("enabled_phases", "")
+        self.declare_parameter("interactive", False)
         self.declare_parameter("skip_preflight", False)
 
         # ── Read parameter values ─────────────────────────────────────
-        self._db_path = self.get_parameter("db_path").value
+        self._db_path = os.path.expanduser(self.get_parameter("db_path").value)
         self._max_runs = self.get_parameter("max_runs").value
         self._session_name = self.get_parameter("session_name").value
         self._session_description = self.get_parameter("session_description").value
@@ -73,7 +78,14 @@ class AutotuneNode(Node):
         self._slam_config_path = self.get_parameter("slam_config_path").value
         self._ekf_config_path = self.get_parameter("ekf_config_path").value
         self._maneuver_pattern = self.get_parameter("maneuver_pattern").value
+        self._linear_speed = self.get_parameter("linear_speed").value
+        self._rotation_speed = self.get_parameter("rotation_speed").value
+        self._enabled_phases_str = self.get_parameter("enabled_phases").value
+        self._interactive = self.get_parameter("interactive").value
         self._skip_preflight = self.get_parameter("skip_preflight").value
+
+        # Parse enabled_phases from comma-separated string
+        self._enabled_phases = self._parse_enabled_phases(self._enabled_phases_str)
 
         # ── Auto-detect config paths if not supplied ──────────────────
         if not self._slam_config_path:
@@ -134,7 +146,12 @@ class AutotuneNode(Node):
         self._latest_map = None
 
         # ── State machine ─────────────────────────────────────────────
-        self._state = State.PREFLIGHT if not self._skip_preflight else State.CONFIGURING
+        if self._interactive:
+            self._state = State.WAITING_FOR_TUI
+        elif self._skip_preflight:
+            self._state = State.CONFIGURING
+        else:
+            self._state = State.PREFLIGHT
         self._error_message = ""
 
         # Session / run tracking
@@ -149,9 +166,12 @@ class AutotuneNode(Node):
         # Best params accumulated across phases
         self._best_params = {}
 
-        # Previous run params for restart detection
-        self._prev_slam_params = None
-        self._prev_ekf_params = None
+        # Previous run params for restart detection (empty dict = baseline,
+        # so the first run won't restart unless params actually differ)
+        self._prev_slam_params = {}
+        self._prev_ekf_params = {}
+        self._restart_slam = False
+        self._restart_ekf = False
 
         # Process handles for spawned nodes
         self._slam_process = None
@@ -172,6 +192,11 @@ class AutotuneNode(Node):
 
         # Run allocation across phases
         self._phase_allocation = {}
+
+        # Guard against re-entrant timer ticks (the maneuver handler blocks
+        # for the full drive duration; without this lock the ReentrantCallbackGroup
+        # allows the 1 Hz timer to fire again, spawning duplicate maneuvers).
+        self._tick_lock = threading.Lock()
 
         # Callback group for the state machine timer
         self._cb_group = ReentrantCallbackGroup()
@@ -329,9 +354,19 @@ class AutotuneNode(Node):
     # ══════════════════════════════════════════════════════════════════
 
     def _state_machine_tick(self):
-        """Called at 1 Hz by the timer. Drives the state machine forward."""
+        """Called at 1 Hz by the timer. Drives the state machine forward.
+
+        Uses a non-blocking lock so that long-running handlers (preflight,
+        maneuver execution) prevent the timer from re-entering and spawning
+        duplicate work.
+        """
+        if not self._tick_lock.acquire(blocking=False):
+            return  # Previous tick still running
+
         try:
-            if self._state == State.PREFLIGHT:
+            if self._state == State.WAITING_FOR_TUI:
+                pass  # Blocked in main() until TUI completes
+            elif self._state == State.PREFLIGHT:
                 self._handle_preflight()
             elif self._state == State.IDLE:
                 pass
@@ -355,6 +390,8 @@ class AutotuneNode(Node):
             self.get_logger().error(f"State machine exception in {self._state}: {e}")
             self._error_message = str(e)
             self._state = State.ERROR
+        finally:
+            self._tick_lock.release()
 
     # ── State handlers ────────────────────────────────────────────────
 
@@ -380,7 +417,9 @@ class AutotuneNode(Node):
         )
 
         # Allocate runs across phases
-        self._phase_allocation = ParamManager.allocate_runs(self._max_runs)
+        self._phase_allocation = ParamManager.allocate_runs(
+            self._max_runs, enabled_phases=self._enabled_phases
+        )
         self.get_logger().info(f"Phase allocation: {self._phase_allocation}")
 
         # Find the first phase with allocated runs
@@ -465,22 +504,17 @@ class AutotuneNode(Node):
             self._current_run_params
         )
 
-        # Determine if SLAM restart is needed
+        # Determine which processes need a restart
         current_slam = self._current_run_params.get("slam", {})
-        slam_changed = (
-            self._prev_slam_params is None or current_slam != self._prev_slam_params
-        )
-
-        # Determine if EKF restart is needed
         current_ekf = self._current_run_params.get("ekf", {})
-        ekf_changed = (
-            self._prev_ekf_params is None or current_ekf != self._prev_ekf_params
-        )
+
+        self._restart_slam = current_slam != self._prev_slam_params
+        self._restart_ekf = current_ekf != self._prev_ekf_params
 
         self._prev_slam_params = current_slam
         self._prev_ekf_params = current_ekf
 
-        if slam_changed or ekf_changed:
+        if self._restart_slam or self._restart_ekf:
             self._reset_start_time = None
             self._state = State.RESETTING_SLAM
         else:
@@ -488,42 +522,41 @@ class AutotuneNode(Node):
             self._state = State.SETTLING
 
     def _handle_resetting_slam(self):
-        """Kill and relaunch SLAM (and optionally EKF) processes."""
+        """Kill and relaunch only the processes whose params changed."""
         if self._reset_start_time is None:
             self._reset_start_time = time.time()
 
-            # Kill existing SLAM process
-            self.get_logger().info("Killing existing SLAM process...")
-            try:
-                subprocess.run(
-                    ["pkill", "-f", "async_slam_toolbox_node"],
-                    timeout=5,
-                    capture_output=True,
-                )
-            except Exception as e:
-                self.get_logger().warn(f"pkill slam failed: {e}")
+            if self._restart_slam:
+                self.get_logger().info("Killing existing SLAM process...")
+                try:
+                    subprocess.run(
+                        ["pkill", "-f", "async_slam_toolbox_node"],
+                        timeout=5,
+                        capture_output=True,
+                    )
+                except Exception as e:
+                    self.get_logger().warn(f"pkill slam failed: {e}")
+                self._terminate_process(self._slam_process)
+                self._slam_process = None
 
-            # Kill existing EKF process
-            self.get_logger().info("Killing existing EKF process...")
-            try:
-                subprocess.run(
-                    ["pkill", "-f", "ekf_node"], timeout=5, capture_output=True
-                )
-            except Exception as e:
-                self.get_logger().warn(f"pkill ekf failed: {e}")
-
-            # Kill spawned process handles if we hold them
-            self._terminate_process(self._slam_process)
-            self._slam_process = None
-            self._terminate_process(self._ekf_process)
-            self._ekf_process = None
+            if self._restart_ekf:
+                self.get_logger().info("Killing existing EKF process...")
+                try:
+                    subprocess.run(
+                        ["pkill", "-f", "ekf_node"], timeout=5, capture_output=True
+                    )
+                except Exception as e:
+                    self.get_logger().warn(f"pkill ekf failed: {e}")
+                self._terminate_process(self._ekf_process)
+                self._ekf_process = None
 
             return  # Wait one tick for cleanup
 
         elapsed = time.time() - self._reset_start_time
+        relaunch_ready = elapsed >= 2.0
 
-        # After 2 seconds, relaunch
-        if elapsed >= 2.0 and self._slam_process is None:
+        # Relaunch SLAM if needed
+        if relaunch_ready and self._restart_slam and self._slam_process is None:
             self.get_logger().info("Relaunching SLAM with new parameters...")
             try:
                 self._slam_process = subprocess.Popen(
@@ -533,6 +566,10 @@ class AutotuneNode(Node):
                         "slam_toolbox",
                         "async_slam_toolbox_node",
                         "--ros-args",
+                        "-r",
+                        "__node:=slam_toolbox",
+                        "-r",
+                        "__ns:=/",
                         "--params-file",
                         self._current_slam_config_path,
                     ],
@@ -545,6 +582,8 @@ class AutotuneNode(Node):
                 self._state = State.ERROR
                 return
 
+        # Relaunch EKF if needed
+        if relaunch_ready and self._restart_ekf and self._ekf_process is None:
             self.get_logger().info("Relaunching EKF with new parameters...")
             try:
                 self._ekf_process = subprocess.Popen(
@@ -554,6 +593,8 @@ class AutotuneNode(Node):
                         "robot_localization",
                         "ekf_node",
                         "--ros-args",
+                        "-r",
+                        "__node:=ekf_filter_node",
                         "--params-file",
                         self._current_ekf_config_path,
                     ],
@@ -566,8 +607,8 @@ class AutotuneNode(Node):
                 self._state = State.ERROR
                 return
 
-        # Wait for /map to have a publisher
-        if elapsed >= 3.0 and self._slam_process is not None:
+        # Wait for /map to have a publisher (either the original or relaunched)
+        if elapsed >= 3.0:
             map_pubs = self.count_publishers("/map")
             if map_pubs > 0:
                 self.get_logger().info("/map publisher detected. Moving to settling.")
@@ -604,9 +645,11 @@ class AutotuneNode(Node):
         )
         self.get_logger().info(f"Starting maneuver for {run_label}...")
 
-        # Prepare maneuver params
+        # Prepare maneuver params — use node-level defaults, allow per-run overrides
         maneuver_params = dict(self._current_run_params.get("maneuver", {}))
         maneuver_params.setdefault("pattern", self._maneuver_pattern)
+        maneuver_params.setdefault("linear_speed", self._linear_speed)
+        maneuver_params.setdefault("rotation_speed", self._rotation_speed)
 
         # Start sensor logging
         self._maneuver.start_logging()
@@ -904,6 +947,49 @@ class AutotuneNode(Node):
         except Exception:
             pass
 
+    @staticmethod
+    def _parse_enabled_phases(phases_str):
+        """Parse a comma-separated string of phase numbers.
+
+        Args:
+            phases_str: Comma-separated phase numbers (e.g. "1,2,3,4").
+                Empty string means all phases.
+
+        Returns:
+            List of phase ints, or None if empty (meaning all phases).
+        """
+        if not phases_str or not phases_str.strip():
+            return None
+        try:
+            return [int(p.strip()) for p in phases_str.split(",") if p.strip()]
+        except ValueError:
+            return None
+
+    def apply_tui_config(self, config):
+        """Apply configuration from the setup TUI to node parameters.
+
+        Args:
+            config: Dict returned by SetupTUI.run().
+        """
+        self._session_name = config.get("session_name", self._session_name)
+        self._max_runs = config.get("max_runs", self._max_runs)
+        self._settling_time = config.get("settling_time", self._settling_time)
+        self._maneuver_pattern = config.get("maneuver_pattern", self._maneuver_pattern)
+        self._linear_speed = config.get("linear_speed", self._linear_speed)
+        self._rotation_speed = config.get("rotation_speed", self._rotation_speed)
+
+        enabled = config.get("enabled_phases")
+        if enabled:
+            self._enabled_phases = enabled
+        else:
+            self._enabled_phases = None
+
+        self.get_logger().info(
+            f"TUI config applied: session={self._session_name}, "
+            f"max_runs={self._max_runs}, pattern={self._maneuver_pattern}, "
+            f"linear={self._linear_speed}, rotation={self._rotation_speed}"
+        )
+
     def cleanup(self):
         """Kill any spawned SLAM/EKF/IMU filter processes gracefully."""
         self.get_logger().info("Cleaning up spawned processes...")
@@ -926,6 +1012,37 @@ class AutotuneNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = AutotuneNode()
+
+    # If interactive mode, run the setup TUI before spinning
+    if node._interactive:
+        from mapping_autotune.setup_tui import SetupTUI
+
+        defaults = {
+            "session_name": node._session_name,
+            "max_runs": node._max_runs,
+            "settling_time": node._settling_time,
+            "maneuver_pattern": node._maneuver_pattern,
+            "linear_speed": node._linear_speed,
+            "rotation_speed": node._rotation_speed,
+        }
+
+        tui = SetupTUI(defaults=defaults)
+        config = tui.run()
+
+        if config is None:
+            node.get_logger().info("Setup cancelled by user.")
+            node.destroy_node()
+            rclpy.shutdown()
+            return
+
+        node.apply_tui_config(config)
+
+        # Transition past WAITING_FOR_TUI
+        if node._skip_preflight:
+            node._state = State.CONFIGURING
+        else:
+            node._state = State.PREFLIGHT
+
     executor = MultiThreadedExecutor()
     executor.add_node(node)
     try:

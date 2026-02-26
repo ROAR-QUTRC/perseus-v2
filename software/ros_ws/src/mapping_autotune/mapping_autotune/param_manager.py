@@ -79,6 +79,11 @@ class ParamManager:
         slam_overrides = params_dict.get("slam", {})
         merged.update(slam_overrides)
 
+        # Ensure standalone launch settings are always present (the launch
+        # file normally injects these via a second params file).
+        merged.setdefault("use_lifecycle_manager", False)
+        merged.setdefault("use_sim_time", False)
+
         config = {"slam_toolbox": {"ros__parameters": merged}}
         return self._write_temp_yaml(config, prefix="slam_")
 
@@ -101,6 +106,9 @@ class ParamManager:
 
         merged.update(ekf_overrides)
 
+        # Ensure standalone launch settings are always present.
+        merged.setdefault("use_sim_time", False)
+
         config = {"ekf_filter_node": {"ros__parameters": merged}}
         return self._write_temp_yaml(config, prefix="ekf_")
 
@@ -114,23 +122,35 @@ class ParamManager:
         return diff
 
     @staticmethod
-    def allocate_runs(max_runs: int) -> dict:
+    def allocate_runs(max_runs: int, enabled_phases: list = None) -> dict:
         """Allocate run counts per phase given a total budget.
 
         Priority goes to phases 1-3, then 4-6.
+
+        Args:
+            max_runs: Total budget of runs to allocate.
+            enabled_phases: Optional list of phase numbers to include.
+                If None or empty, all phases with weight > 0 are enabled.
         """
         # Phase 0 always gets 0 runs (calibration only)
-        total_weight = sum(w for _, _, _, w in PHASE_DEFS if w > 0)
+        active_defs = [
+            (p, name, count, w)
+            for p, name, count, w in PHASE_DEFS
+            if w > 0 and (enabled_phases is None or p in enabled_phases)
+        ]
+
+        total_weight = sum(w for _, _, _, w in active_defs)
         if total_weight == 0:
             return {p: 0 for p, _, _, _ in PHASE_DEFS}
 
         allocation = {}
 
-        # First pass: proportional allocation
-        for phase_num, _, default_count, weight in PHASE_DEFS:
-            if weight == 0:
-                allocation[phase_num] = 0
-                continue
+        # Disabled phases get 0
+        for phase_num, _, _, _ in PHASE_DEFS:
+            allocation[phase_num] = 0
+
+        # First pass: proportional allocation for enabled phases
+        for phase_num, _, default_count, weight in active_defs:
             allocated = max(1, round(max_runs * weight / total_weight))
             # Don't exceed the phase's designed run count
             allocated = min(allocated, default_count)
@@ -159,31 +179,13 @@ class ParamManager:
         """IMU integration: imu_off, imu_on, imu_on+deadband."""
         runs = []
 
-        # Run 1: IMU off (baseline — imu0_config all false)
+        # Run 1: IMU off — use baseline as-is (already has imu0_config all false)
         runs.append(
             {
                 "phase": 1,
                 "run_label": "imu_off",
                 "slam": {},
-                "ekf": {
-                    "imu0_config": [
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                        False,
-                    ],
-                },
+                "ekf": {},
                 "maneuver": {},
             }
         )

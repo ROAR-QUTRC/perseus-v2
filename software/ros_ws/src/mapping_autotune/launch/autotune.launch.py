@@ -17,11 +17,14 @@ def generate_launch_description():
     maneuver_pattern = LaunchConfiguration("maneuver_pattern")
     settling_time = LaunchConfiguration("settling_time")
     auto_calibrate_imu = LaunchConfiguration("auto_calibrate_imu")
+    interactive = LaunchConfiguration("interactive")
+    linear_speed = LaunchConfiguration("linear_speed")
+    rotation_speed = LaunchConfiguration("rotation_speed")
 
     arguments = [
         DeclareLaunchArgument(
             "db_path",
-            default_value="/opt/mapping_autotune/autotune.db",
+            default_value="~/.local/share/mapping_autotune/autotune.db",
             description="Path to the SQLite database file",
         ),
         DeclareLaunchArgument(
@@ -48,6 +51,21 @@ def generate_launch_description():
             "auto_calibrate_imu",
             default_value="true",
             description="Auto-calibrate IMU gyro bias on startup",
+        ),
+        DeclareLaunchArgument(
+            "interactive",
+            default_value="true",
+            description="Show setup TUI before starting autotune",
+        ),
+        DeclareLaunchArgument(
+            "linear_speed",
+            default_value="0.2",
+            description="Default linear speed for maneuvers (m/s)",
+        ),
+        DeclareLaunchArgument(
+            "rotation_speed",
+            default_value="0.5",
+            description="Default rotation speed for maneuvers (rad/s)",
         ),
     ]
 
@@ -79,6 +97,9 @@ def generate_launch_description():
                 "session_name": session_name,
                 "maneuver_pattern": maneuver_pattern,
                 "settling_time": settling_time,
+                "interactive": interactive,
+                "linear_speed": linear_speed,
+                "rotation_speed": rotation_speed,
                 "slam_config_path": os.path.join(
                     autonomy_share, "config", "slam_toolbox_params_perseus_lite.yaml"
                 ),

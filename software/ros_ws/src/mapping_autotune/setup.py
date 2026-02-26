@@ -25,6 +25,7 @@ setup(
     entry_points={
         "console_scripts": [
             "autotune_node = mapping_autotune.autotune_node:main",
+            "autotune_setup = mapping_autotune.setup_tui:main",
             "review_tui = mapping_autotune.review_tui:main",
             "imu_filter_node = mapping_autotune.imu_filter_node:main",
             "export_report = mapping_autotune.db_manager:export_report_cli",

@@ -341,4 +341,5 @@ class MapAnalyzer:
         Returns:
             Compressed bytes.
         """
-        return zlib.compress(bytes(map_data))
+        raw = np.array(map_data, dtype=np.int8).tobytes()
+        return zlib.compress(raw)

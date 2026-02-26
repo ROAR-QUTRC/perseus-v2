@@ -13,8 +13,8 @@ class DbManager:
     export.
     """
 
-    def __init__(self, db_path="/opt/mapping_autotune/autotune.db", logger=None):
-        self._db_path = db_path
+    def __init__(self, db_path="~/.local/share/mapping_autotune/autotune.db", logger=None):
+        self._db_path = os.path.expanduser(db_path)
         self._logger = logger
         self._sync_config = None
 
@@ -731,7 +731,7 @@ def export_report_cli():
     parser = argparse.ArgumentParser(description="Export autotune session report")
     parser.add_argument(
         "--db-path",
-        default="/opt/mapping_autotune/autotune.db",
+        default="~/.local/share/mapping_autotune/autotune.db",
         help="Path to the autotune SQLite database",
     )
     parser.add_argument(
