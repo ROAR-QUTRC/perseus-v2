@@ -292,15 +292,10 @@ If enabled, incoming `CameraInfo` replaces intrinsics.
 
 5. If markers exist:
 
-   - estimate pose:
-
-     ```cpp
-     estimatePoseSingleMarkers(corners, marker_length_, camera_matrix_, dist_coeffs_, rvecs, tvecs);
-     ```
-
    - draw marker borders
    - for each marker:
 
+     - estimate pose via `cv::solvePnP` using 3D marker corner points and detected 2D image points
      - compute bbox area in pixels
      - apply `min_bounding_box_area` filter
      - draw axes
