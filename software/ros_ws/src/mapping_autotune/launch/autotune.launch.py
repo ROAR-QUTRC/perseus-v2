@@ -20,6 +20,9 @@ def generate_launch_description():
     interactive = LaunchConfiguration("interactive")
     linear_speed = LaunchConfiguration("linear_speed")
     rotation_speed = LaunchConfiguration("rotation_speed")
+    enabled_phases = LaunchConfiguration("enabled_phases")
+    wheel_radius = LaunchConfiguration("wheel_radius")
+    wheel_separation = LaunchConfiguration("wheel_separation")
 
     arguments = [
         DeclareLaunchArgument(
@@ -67,6 +70,21 @@ def generate_launch_description():
             default_value="0.5",
             description="Default rotation speed for maneuvers (rad/s)",
         ),
+        DeclareLaunchArgument(
+            "enabled_phases",
+            default_value="",
+            description="Comma-separated phase numbers to run (empty = all phases)",
+        ),
+        DeclareLaunchArgument(
+            "wheel_radius",
+            default_value="0.075",
+            description="Current wheel_radius from controller config (m)",
+        ),
+        DeclareLaunchArgument(
+            "wheel_separation",
+            default_value="0.40",
+            description="Current wheel_separation from controller config (m)",
+        ),
     ]
 
     # IMU filter node — relays /imu/data to /imu/data_filtered with bias/deadband
@@ -100,6 +118,9 @@ def generate_launch_description():
                 "interactive": interactive,
                 "linear_speed": linear_speed,
                 "rotation_speed": rotation_speed,
+                "enabled_phases": enabled_phases,
+                "wheel_radius": wheel_radius,
+                "wheel_separation": wheel_separation,
                 "slam_config_path": os.path.join(
                     autonomy_share, "config", "slam_toolbox_params_perseus_lite.yaml"
                 ),

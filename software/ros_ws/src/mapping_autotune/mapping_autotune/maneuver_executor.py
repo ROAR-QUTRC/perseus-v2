@@ -338,8 +338,7 @@ class ManeuverExecutor:
         start_time = time.time()
 
         self._node.get_logger().info(
-            f"Drive: speed={speed:.2f} m/s for {drive_time:.1f}s "
-            f"(~{distance:.2f}m)"
+            f"Drive: speed={speed:.2f} m/s for {drive_time:.1f}s (~{distance:.2f}m)"
         )
 
         while rclpy.ok():
@@ -434,6 +433,235 @@ class ManeuverExecutor:
         while angle < -math.pi:
             angle += 2.0 * math.pi
         return angle
+
+    # ── TF2 setup for SLAM pose lookups ──────────────────────────────
+
+    def setup_tf(self):
+        """Initialize TF buffer and listener for SLAM pose lookups.
+
+        Called lazily before Phase 0 calibration to avoid overhead when
+        calibration is not needed.
+        """
+        from tf2_ros import Buffer, TransformListener
+
+        self._tf_buffer = Buffer()
+        self._tf_listener = TransformListener(self._tf_buffer, self._node)
+
+    def _get_slam_pose(self):
+        """Get current SLAM pose via TF lookup (map -> base_link).
+
+        Returns:
+            Tuple of (x, y, yaw) or None on failure.
+        """
+        try:
+            t = self._tf_buffer.lookup_transform("map", "base_link", rclpy.time.Time())
+            x = t.transform.translation.x
+            y = t.transform.translation.y
+            q = t.transform.rotation
+            siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+            cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+            yaw = math.atan2(siny_cosp, cosy_cosp)
+            return (x, y, yaw)
+        except Exception as e:
+            self._node.get_logger().warn(f"TF lookup failed: {e}")
+            return None
+
+    # ── Odometry calibration ─────────────────────────────────────────
+
+    def calibration_drive(
+        self,
+        linear_speed,
+        rotation_speed,
+        current_wheel_radius,
+        current_wheel_separation,
+    ):
+        """Drive a calibration pattern comparing odom vs SLAM ground truth.
+
+        Drives straight for 5s then rotates 360 deg, recording odom and
+        SLAM poses to compute wheel radius and separation correction factors.
+
+        Args:
+            linear_speed: Forward speed in m/s.
+            rotation_speed: Rotation speed in rad/s.
+            current_wheel_radius: Current wheel_radius from controller config.
+            current_wheel_separation: Current wheel_separation from controller config.
+
+        Returns:
+            Dict with calibration results, or None on failure.
+        """
+        logger = self._node.get_logger()
+
+        # Wait for initial odom and SLAM poses
+        if not self._wait_for_odom(timeout=5.0):
+            logger.error("Calibration: no odom data received")
+            return None
+
+        slam_start = self._get_slam_pose()
+        if slam_start is None:
+            logger.error("Calibration: could not get starting SLAM pose")
+            return None
+
+        odom_start_x = self._current_x
+        odom_start_y = self._current_y
+
+        logger.info(
+            f"Calibration: start odom=({odom_start_x:.3f}, {odom_start_y:.3f}), "
+            f"SLAM=({slam_start[0]:.3f}, {slam_start[1]:.3f})"
+        )
+
+        # ── Phase A: Drive straight for 5s ─────────────────────────
+        drive_time = 5.0
+        period = 1.0 / self._publish_rate
+        start_time = time.time()
+
+        logger.info(
+            f"Calibration: driving straight at {linear_speed:.2f} m/s "
+            f"for {drive_time:.1f}s"
+        )
+
+        while rclpy.ok() and (time.time() - start_time) < drive_time:
+            self._publish_twist(linear_speed, 0.0)
+            time.sleep(period)
+        self._stop()
+
+        # Record ending poses after linear drive
+        time.sleep(0.5)  # Brief settle
+        odom_end_x = self._current_x
+        odom_end_y = self._current_y
+
+        slam_end_linear = self._get_slam_pose()
+        if slam_end_linear is None:
+            logger.error("Calibration: could not get SLAM pose after linear drive")
+            return None
+
+        odom_linear_dist = math.sqrt(
+            (odom_end_x - odom_start_x) ** 2 + (odom_end_y - odom_start_y) ** 2
+        )
+        slam_linear_dist = math.sqrt(
+            (slam_end_linear[0] - slam_start[0]) ** 2
+            + (slam_end_linear[1] - slam_start[1]) ** 2
+        )
+
+        logger.info(
+            f"Calibration: linear drive done. "
+            f"odom={odom_linear_dist:.3f}m, SLAM={slam_linear_dist:.3f}m"
+        )
+
+        # ── Pause 2s ───────────────────────────────────────────────
+        self._pause(2.0)
+
+        # ── Phase B: Rotate 360 deg ────────────────────────────────
+        slam_rot_start = self._get_slam_pose()
+        if slam_rot_start is None:
+            logger.error("Calibration: could not get SLAM pose before rotation")
+            return None
+
+        rotate_time = (2.0 * math.pi) / rotation_speed
+        start_time = time.time()
+
+        logger.info(
+            f"Calibration: rotating 360 deg at {math.degrees(rotation_speed):.0f} "
+            f"deg/s for {rotate_time:.1f}s"
+        )
+
+        while rclpy.ok() and (time.time() - start_time) < rotate_time:
+            self._publish_twist(0.0, rotation_speed)
+            time.sleep(period)
+        self._stop()
+
+        # Record ending SLAM pose after rotation
+        time.sleep(0.5)  # Brief settle
+        slam_rot_end = self._get_slam_pose()
+        if slam_rot_end is None:
+            logger.error("Calibration: could not get SLAM pose after rotation")
+            return None
+
+        # Compute rotation angles.
+        # For odom: use commanded time * speed since odom snapshots wrap at +-pi.
+        odom_rotation_angle = rotation_speed * rotate_time
+
+        # For SLAM: the normalized delta wraps near 0 for a full 360.
+        # Pick the interpretation closest to the commanded 2pi.
+        slam_raw_delta = self._normalize_angle(slam_rot_end[2] - slam_rot_start[2])
+        slam_abs_delta = abs(slam_raw_delta)
+        if slam_abs_delta < math.pi:
+            slam_rotation_angle = 2.0 * math.pi - slam_abs_delta
+        else:
+            slam_rotation_angle = slam_abs_delta
+
+        logger.info(
+            f"Calibration: rotation done. "
+            f"odom_angle={math.degrees(odom_rotation_angle):.1f} deg, "
+            f"SLAM_angle={math.degrees(slam_rotation_angle):.1f} deg"
+        )
+
+        # ── Compute corrections ────────────────────────────────────
+        if odom_linear_dist < 0.01:
+            logger.error("Calibration: odom linear distance too small")
+            return None
+
+        if slam_rotation_angle < 0.1:
+            logger.error("Calibration: SLAM rotation angle too small")
+            return None
+
+        radius_correction = slam_linear_dist / odom_linear_dist
+        separation_correction = odom_rotation_angle / slam_rotation_angle
+
+        corrected_wheel_radius = current_wheel_radius * radius_correction
+        corrected_wheel_separation = current_wheel_separation * separation_correction
+
+        results = {
+            "odom_linear_distance": odom_linear_dist,
+            "slam_linear_distance": slam_linear_dist,
+            "odom_rotation_angle": odom_rotation_angle,
+            "slam_rotation_angle": slam_rotation_angle,
+            "radius_correction": radius_correction,
+            "separation_correction": separation_correction,
+            "corrected_wheel_radius": corrected_wheel_radius,
+            "corrected_wheel_separation": corrected_wheel_separation,
+        }
+
+        # Log results prominently
+        logger.info("=" * 60)
+        logger.info("ODOMETRY CALIBRATION RESULTS")
+        logger.info("=" * 60)
+        logger.info(
+            f"  Linear:  odom={odom_linear_dist:.3f}m  "
+            f"SLAM={slam_linear_dist:.3f}m  "
+            f"ratio={radius_correction:.4f}"
+        )
+        logger.info(
+            f"  Rotation: odom={math.degrees(odom_rotation_angle):.1f} deg  "
+            f"SLAM={math.degrees(slam_rotation_angle):.1f} deg  "
+            f"ratio={separation_correction:.4f}"
+        )
+        logger.info(f"  Current  wheel_radius: {current_wheel_radius}")
+        logger.info(f"  Corrected wheel_radius: {corrected_wheel_radius:.6f}")
+        logger.info(f"  Current  wheel_separation: {current_wheel_separation}")
+        logger.info(f"  Corrected wheel_separation: {corrected_wheel_separation:.6f}")
+        logger.info("")
+        logger.info("  Update perseus_lite_controllers.yaml with:")
+        logger.info(f"    wheel_radius: {corrected_wheel_radius:.6f}")
+        logger.info(f"    wheel_separation: {corrected_wheel_separation:.6f}")
+        logger.info("=" * 60)
+
+        return results
+
+    def _wait_for_odom(self, timeout=5.0):
+        """Wait until at least one odom message has been received.
+
+        Args:
+            timeout: Maximum seconds to wait.
+
+        Returns:
+            True if odom data is available, False on timeout.
+        """
+        start = time.time()
+        while not self._odom_received and rclpy.ok():
+            if time.time() - start > timeout:
+                return False
+            time.sleep(0.1)
+        return self._odom_received
 
     # ── Sensor logging ────────────────────────────────────────────────
 

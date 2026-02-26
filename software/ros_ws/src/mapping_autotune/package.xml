@@ -15,6 +15,7 @@
   <depend>slam_toolbox</depend>
   <depend>robot_localization</depend>
   <depend>cv_bridge</depend>
+  <depend>tf2_ros</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

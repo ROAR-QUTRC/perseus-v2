@@ -9,7 +9,7 @@ import yaml
 
 # Phase definitions: (phase_number, name, default_run_count, priority_weight)
 PHASE_DEFS = [
-    (0, "imu_calibration", 0, 0),
+    (0, "odom_calibration", 1, 0),
     (1, "imu_integration", 3, 3),
     (2, "slam_rotation", 10, 3),
     (3, "scan_matching", 6, 3),
@@ -126,13 +126,20 @@ class ParamManager:
         """Allocate run counts per phase given a total budget.
 
         Priority goes to phases 1-3, then 4-6.
+        Phase 0 (odom calibration) gets exactly 1 run when enabled and does
+        NOT count against the max_runs budget.
 
         Args:
             max_runs: Total budget of runs to allocate.
             enabled_phases: Optional list of phase numbers to include.
-                If None or empty, all phases with weight > 0 are enabled.
+                If None or empty, all phases with weight > 0 are enabled,
+                plus Phase 0 (calibration) is included by default.
         """
-        # Phase 0 always gets 0 runs (calibration only)
+        # Determine if Phase 0 (calibration) should be included.
+        # It runs when explicitly listed in enabled_phases, or when
+        # enabled_phases is None (all phases enabled).
+        phase0_enabled = enabled_phases is None or 0 in enabled_phases
+
         active_defs = [
             (p, name, count, w)
             for p, name, count, w in PHASE_DEFS
@@ -140,14 +147,19 @@ class ParamManager:
         ]
 
         total_weight = sum(w for _, _, _, w in active_defs)
-        if total_weight == 0:
-            return {p: 0 for p, _, _, _ in PHASE_DEFS}
 
         allocation = {}
 
-        # Disabled phases get 0
+        # All phases start at 0
         for phase_num, _, _, _ in PHASE_DEFS:
             allocation[phase_num] = 0
+
+        # Phase 0 gets 1 run if enabled (does not count against max_runs)
+        if phase0_enabled:
+            allocation[0] = 1
+
+        if total_weight == 0:
+            return allocation
 
         # First pass: proportional allocation for enabled phases
         for phase_num, _, default_count, weight in active_defs:
@@ -156,11 +168,11 @@ class ParamManager:
             allocated = min(allocated, default_count)
             allocation[phase_num] = allocated
 
-        # Adjust to fit within max_runs
-        total_allocated = sum(allocation.values())
+        # Adjust to fit within max_runs (Phase 0 excluded from budget)
+        total_allocated = sum(v for k, v in allocation.items() if k != 0)
         if total_allocated > max_runs:
             # Trim from lowest priority phases first, allowing reduction to 0
-            for phase_num in reversed([p for p, _, _, _ in PHASE_DEFS]):
+            for phase_num in reversed([p for p, _, _, _ in PHASE_DEFS if p != 0]):
                 if total_allocated <= max_runs:
                     break
                 excess = total_allocated - max_runs
@@ -173,7 +185,17 @@ class ParamManager:
     # ── Phase generators ──────────────────────────────────────────────
 
     def _phase0_runs(self, best: dict) -> list:
-        return []
+        """Odometry calibration: single run that compares odom vs SLAM."""
+        return [
+            {
+                "phase": 0,
+                "run_label": "odom_calibration",
+                "slam": {},
+                "ekf": {},
+                "maneuver": {},
+                "calibration": True,
+            }
+        ]
 
     def _phase1_runs(self, best: dict) -> list:
         """IMU integration: imu_off, imu_on, imu_on+deadband."""

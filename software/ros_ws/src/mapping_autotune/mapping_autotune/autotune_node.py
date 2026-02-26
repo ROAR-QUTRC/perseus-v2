@@ -68,6 +68,8 @@ class AutotuneNode(Node):
         self.declare_parameter("enabled_phases", "")
         self.declare_parameter("interactive", False)
         self.declare_parameter("skip_preflight", False)
+        self.declare_parameter("wheel_radius", 0.075)
+        self.declare_parameter("wheel_separation", 0.40)
 
         # ── Read parameter values ─────────────────────────────────────
         self._db_path = os.path.expanduser(self.get_parameter("db_path").value)
@@ -83,6 +85,8 @@ class AutotuneNode(Node):
         self._enabled_phases_str = self.get_parameter("enabled_phases").value
         self._interactive = self.get_parameter("interactive").value
         self._skip_preflight = self.get_parameter("skip_preflight").value
+        self._wheel_radius = self.get_parameter("wheel_radius").value
+        self._wheel_separation = self.get_parameter("wheel_separation").value
 
         # Parse enabled_phases from comma-separated string
         self._enabled_phases = self._parse_enabled_phases(self._enabled_phases_str)
@@ -422,8 +426,8 @@ class AutotuneNode(Node):
         )
         self.get_logger().info(f"Phase allocation: {self._phase_allocation}")
 
-        # Find the first phase with allocated runs
-        self._advance_to_next_phase(start_phase=1)
+        # Find the first phase with allocated runs (starting from 0 for calibration)
+        self._advance_to_next_phase(start_phase=0)
 
     def _advance_to_next_phase(self, start_phase=None):
         """Move to the next phase that has allocated runs.
@@ -468,8 +472,9 @@ class AutotuneNode(Node):
                 self._state = State.COMPLETE
                 return
 
-        # Check global run budget
-        if self._runs_completed >= self._max_runs:
+        # Check global run budget (Phase 0 calibration doesn't count)
+        is_calibration = self._current_phase == 0
+        if not is_calibration and self._runs_completed >= self._max_runs:
             self.get_logger().info("Max runs reached.")
             self._state = State.COMPLETE
             return
@@ -639,10 +644,61 @@ class AutotuneNode(Node):
 
         The MultiThreadedExecutor ensures the node remains responsive to
         subscriptions (map, odom) while this callback blocks.
+
+        For Phase 0 calibration runs, calls calibration_drive() instead
+        of the normal maneuver, then skips map capture/analysis.
         """
         run_label = self._current_run_params.get(
             "run_label", f"run_{self._current_run_number}"
         )
+
+        # ── Phase 0 calibration path ──────────────────────────────
+        if self._current_run_params.get("calibration"):
+            self.get_logger().info("Starting odometry calibration drive...")
+
+            # Lazily set up TF listener
+            self._maneuver.setup_tf()
+
+            # Run calibration
+            results = self._maneuver.calibration_drive(
+                linear_speed=self._linear_speed,
+                rotation_speed=self._rotation_speed,
+                current_wheel_radius=self._wheel_radius,
+                current_wheel_separation=self._wheel_separation,
+            )
+
+            if results is None:
+                self.get_logger().error("Odometry calibration failed")
+                self._db.update_run_status(self._current_run_id, "failed")
+            else:
+                # Store calibration results in the run's slam_params field
+                self._db.update_run_status(
+                    self._current_run_id,
+                    "completed",
+                    completed_at=time.strftime("%Y-%m-%d %H:%M:%S"),
+                )
+                # Overwrite slam_params with calibration results JSON
+                conn = self._db._connect()
+                try:
+                    conn.execute(
+                        "UPDATE runs SET slam_params = ? WHERE id = ?",
+                        (json.dumps(results), self._current_run_id),
+                    )
+                    conn.commit()
+                finally:
+                    conn.close()
+
+            # Advance past this run — skip map capture/analysis
+            self._phase_run_index += 1
+
+            # Phase 0 complete — advance to next phase
+            if not self._advance_to_next_phase():
+                self._state = State.COMPLETE
+            else:
+                self._state = State.CONFIGURING
+            return
+
+        # ── Normal maneuver path ──────────────────────────────────
         self.get_logger().info(f"Starting maneuver for {run_label}...")
 
         # Prepare maneuver params — use node-level defaults, allow per-run overrides
@@ -785,6 +841,14 @@ class AutotuneNode(Node):
         Returns:
             True if a new phase was started, False if all phases done.
         """
+        # Phase 0 (calibration) has no analysis scores — skip best-run logic
+        if self._current_phase == 0:
+            self.get_logger().info("Phase 0 (calibration) complete.")
+            if self._runs_completed >= self._max_runs:
+                self.get_logger().info("Run budget exhausted.")
+                return False
+            return self._advance_to_next_phase()
+
         # Find best run from current session
         best_run = self._db.get_best_run(self._current_session_id)
         if best_run is not None:
