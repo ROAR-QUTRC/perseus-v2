@@ -1,9 +1,9 @@
 { ... }:
 {
   programs.git = {
-    userName = "James N";
-    userEmail = "59348282+RandomSpaceship@users.noreply.github.com";
-    extraConfig = {
+    settings.user.name = "James N";
+    settings.user.email = "59348282+RandomSpaceship@users.noreply.github.com";
+    settings = {
       pull.rebase = false;
     };
     aliases = {
