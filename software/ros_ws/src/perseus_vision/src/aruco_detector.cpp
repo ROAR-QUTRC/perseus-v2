@@ -228,7 +228,7 @@ namespace perseus_vision
                     cv::Vec3d rvec, tvec;
                     std::vector<cv::Point2f> image_points(corners[i].begin(), corners[i].end());
 
-                    cv::solveOnP(marker_obj_points, image_points, local_camera_matrix, local_dist_coeffs, rvec, tvec);
+                    cv::solvePnP(marker_obj_points, image_points, local_camera_matrix, local_dist_coeffs, rvec, tvec);
                     rvecs.push_back(rvec);
                     tvecs.push_back(tvec);
 
