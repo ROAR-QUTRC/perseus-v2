@@ -16,6 +16,8 @@
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "perseus_interfaces/msg/object_detections.hpp"
+#include "perseus_interfaces/srv/detect_objects.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/compressed_image.hpp"
@@ -29,16 +31,13 @@
 #include "tf2_ros/transform_listener.h"
 #include "visualization_msgs/msg/marker_array.hpp"
 
-#include "perseus_interfaces/msg/object_detections.hpp"
-#include "perseus_interfaces/srv/detect_objects.hpp"
-
 namespace perseus_vision
 {
 
     /// @brief ROS2 node for detecting ArUco markers and estimating their 6-DoF poses.
     ///
     /// Subscribes to raw or compressed camera images, detects ArUco markers using OpenCV,
-    /// estimates marker poses via cv::solvePnP, and optionally publishes TF transforms,
+    /// estimates marker poses via cv::solveOnP, and optionally publishes TF transforms,
     /// detection messages, annotated debug images, and rviz visualization markers.
     /// Also provides a service interface for on-demand detection queries and image capture.
     class ArucoDetector : public rclcpp::Node
