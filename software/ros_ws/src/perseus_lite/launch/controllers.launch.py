@@ -1,7 +1,4 @@
 from launch import LaunchDescription
-
-# from launch.actions import RegisterEventHandler
-# from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
@@ -33,7 +30,6 @@ def generate_launch_description():
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[controller_config, use_sim_time_param],
-        # arguments=["--ros-args", "--log-level", "debug"],
         output="both",  # output to both screen and log file
         remappings=[],
         condition=IfCondition(launch_controller_manager),
@@ -41,12 +37,7 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=[
-            "joint_state_broadcaster",
-            # "--ros-args",
-            # "--log-level",
-            # "debug",
-        ],
+        arguments=["joint_state_broadcaster"],
         parameters=[use_sim_time_param],
     )
     base_controller_spawner = Node(
@@ -58,37 +49,15 @@ def generate_launch_description():
             "controller_manager",
             "--controller-ros-args",
             ["--remap /diff_drive_base_controller/cmd_vel:=", cmd_vel_topic],
-            # "--ros-args",
-            # "--log-level",
-            # "debug",
         ],
         output="screen",
         parameters=[use_sim_time_param],
     )
 
-    # NOTE: There was a comment in one of the ROS2 Control examples
-    # about launching the controllers *after* the controller manager
-    # to help with "flaky tests" (ie, using RegisterEventHandler with OnProcessExit)
-    # to launch them in sequence
     nodes = [
         controller_manager,
         base_controller_spawner,
         joint_state_broadcaster_spawner,
     ]
 
-    # EVENT HANDLERS
-    handlers = [
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=gz_spawn_entity, # after gz spawn or after CM launch
-        #         on_exit=[joint_state_broadcaster_spawner],
-        #     )
-        # ),
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=joint_state_broadcaster_spawner,
-        #         on_exit=[base_controller_spawner],
-        #     )
-        # ),
-    ]
-    return LaunchDescription(arguments + nodes + handlers)
+    return LaunchDescription(arguments + nodes)

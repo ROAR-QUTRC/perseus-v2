@@ -63,7 +63,7 @@ diff_drive_base_controller:
     write_op_modes: ["velocity"]
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
-    open_loop: false  # Use encoder feedback for accurate odometry
+    open_loop: false # Use encoder feedback for accurate odometry
     # ROS I/O configuration
     publish_rate: 50.0
     odom_frame_id: odom

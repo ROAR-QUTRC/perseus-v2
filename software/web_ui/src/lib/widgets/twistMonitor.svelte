@@ -42,8 +42,8 @@
 </script>
 
 <script lang="ts">
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte';
-	import ROSLIB from 'roslib';
+	import { getRosConnection } from '$lib/scripts/rosBridge.svelte';
+	import * as ROSLIB from 'roslib';
 	import { onMount } from 'svelte';
 
 	let canvas = $state<HTMLCanvasElement | null>(null);

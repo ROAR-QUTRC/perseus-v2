@@ -47,7 +47,7 @@
         # config
         "*.rviz"
         "setup.cfg"
-        # ros stuff
+        # ROS stuff
         "software/ros_ws/src/**/resource/**"
         # non-formattable file types
         "*.drawio"
@@ -61,6 +61,12 @@
         "*.ico"
         "*.pdf"
         "*sdkconfig*"
+        # meshes
+        "software/ros_ws/src/**/meshes/**"
+        "*.dae"
+        "*.stl"
+        "*.step"
+        "*.3mf"
         # PCBs (KiCAD)
         "hardware/**"
       ];
@@ -71,6 +77,11 @@
           "CMakeLists.txt"
           "**/CMakeLists.txt"
           "**/*.cmake"
+        ];
+      };
+      typos = {
+        excludes = [
+          "typos.toml"
         ];
       };
     };

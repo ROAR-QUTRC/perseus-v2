@@ -21,7 +21,7 @@ If you're curious as to what this documentation uses, check out the list of them
 
 Code (API) documentation is provided with Doxygen through the use of [Breathe](inv:breathe#index), which acts as a bridge from the output Doxygen provides to ReST for Sphinx.
 Although it's not leveraged much in this documentation, you can reference specific [files](inv:breathe#file), [classes](inv:breathe#class), or [methods](inv:breathe#function), and [more](inv:breathe#directives) using Breathe.
-Next is the [Exhale](inv:exhale#index) extension, which provides the Doxygen-style namespace, class, and file [lists](project:/generated/index.rst).
+Next is the [Exhale](inv:exhale#index) extension, which provides the Doxygen-style namespace, class, and file [lists](project:/generated/exhale/index.rst).
 It's also set up to automatically run Doxygen, so there's no need for a standard configuration `Doxyfile` - the modifications to the standard configuration are provided with [configuration](inv:exhale#*exhaleDoxygenStdin) options on top of Exhale's [defaults](inv:exhale#*DEFAULT_DOXYGEN_STDIN_BASE).
 
 #### Theming
@@ -59,7 +59,7 @@ This is detailed more in the next section, but they're built using the tool's co
 :align: center
 ```
 
-#### Themeing
+#### Theming
 
 If you switch between the light and dark themes, you'll notice that the diagram automatically switches themes too - there's a bit of JavaScript running which automatically switches in the correct image URL based on the currently selected theme, which you can observe if you wish in `_static/js/dark-opt-images.js`.
 This is done using JQuery, which as was previously mentioned is installed with a Sphinx extension.
@@ -98,7 +98,7 @@ Finally, the aforementioned script does one thing - it takes in a source file pa
 
 ### Deployment
 
-As detailed in the [CI/CD Architecture](project:ci-cd.md) document, this entire project uses Nix for everything - and that extends to building in the CI/CD pipeline.
+As detailed in the [CI/CD Systems](project:ci-cd.md) document, this entire project uses Nix for everything - and that extends to building in the CI/CD pipeline.
 However, that only covers the CI part of CI/CD - deployment needs its own handling.
 
 The built documentation is currently hosted using [GitHub Pages](https://pages.github.com/), and as such requires a backing repository containing the contents which is located [here](https://github.com/ROAR-QUTRC/roar-qutrc.github.io).
@@ -163,7 +163,7 @@ The equivalent _inline_ code (standard markdown image insertion, with extension 
 :::{note}
 References in Sphinx without a leading slash are relative to the current directory!
 To reference relative to the project root (in the repo, `docs/source`), you need to make it an _absolute_ path and start it with a slash.
-Not doing so makes it relative to the current directory of _this document_ (`docs/source/architecture/`).
+Not doing so makes it relative to the current directory of _this document_ (`docs/source/systems/`).
 :::
 
 #### `docs.compressed`

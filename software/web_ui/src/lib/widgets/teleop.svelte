@@ -31,8 +31,8 @@
 </script>
 
 <script lang="ts">
-	import { getRosConnection } from '$lib/scripts/ros-bridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
-	import ROSLIB from 'roslib';
+	import { getRosConnection } from '$lib/scripts/rosBridge.svelte'; // ROSLIBJS docs here: https://robotwebtools.github.io/roslibjs/Service.html
+	import * as ROSLIB from 'roslib';
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 

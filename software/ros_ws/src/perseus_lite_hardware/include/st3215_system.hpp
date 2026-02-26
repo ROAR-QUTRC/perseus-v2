@@ -1,9 +1,11 @@
 #pragma once
 
 #include <boost/asio.hpp>
+#include <hardware_interface/hardware_component_interface.hpp>
 #include <hardware_interface/system_interface.hpp>
 #include <iomanip>
 #include <mutex>
+#include <numbers>
 #include <queue>
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <span>
@@ -11,7 +13,6 @@
 #include <string_view>
 #include <vector>
 
-// Replace #define directives with enum classes
 namespace perseus_lite_hardware
 {
     // EPROM registers
@@ -92,7 +93,7 @@ namespace perseus_lite_hardware
 
         // ROS 2 Control Functions
         [[nodiscard]] hardware_interface::CallbackReturn on_init(
-            const hardware_interface::HardwareInfo& info) override;
+            const hardware_interface::HardwareComponentInterfaceParams& params) override;
 
         [[nodiscard]] std::vector<hardware_interface::StateInterface>
         export_state_interfaces() override;
@@ -120,44 +121,44 @@ namespace perseus_lite_hardware
 
     private:
         // Constants for ST3215 servo specifications
-        static constexpr double MAX_RPM = 7.5;                                               // RPM scaling factor (lower value = higher speed output)
-        static constexpr int16_t MAX_VELOCITY_RPM = 1000;                                    // Maximum velocity value in protocol
-        static constexpr int16_t MIN_VELOCITY_RPM = -1000;                                   // Minimum velocity value in protocol
-        static constexpr size_t BUFFER_SIZE = 256;                                           // Buffer size for serial communication
-        static constexpr uint16_t ENCODER_TICKS_PER_REVOLUTION = 4096;                       // Encoder resolution
-        static constexpr double RADIANS_PER_REVOLUTION = 2.0 * M_PI;                         // Radians in one revolution
-        static constexpr double SECONDS_PER_MINUTE = 60.0;                                   // For RPM to rad/s conversion
-        static constexpr double RPM_TO_RAD_S = RADIANS_PER_REVOLUTION / SECONDS_PER_MINUTE;  // Conversion factor
-        static constexpr double RAD_S_TO_RPM = SECONDS_PER_MINUTE / RADIANS_PER_REVOLUTION;  // Inverse conversion
+        static constexpr double _RPM_SCALE_FACTOR = 7.5;                                        // RPM scaling factor (lower value = higher speed output)
+        static constexpr int16_t _MAX_VELOCITY_RPM = 1000;                                      // Maximum velocity value in protocol
+        static constexpr int16_t _MIN_VELOCITY_RPM = -1000;                                     // Minimum velocity value in protocol
+        static constexpr size_t _BUFFER_SIZE = 256;                                             // Buffer size for serial communication
+        static constexpr uint16_t _ENCODER_TICKS_PER_REVOLUTION = 4096;                         // Encoder resolution
+        static constexpr double _RADIANS_PER_REVOLUTION = 2.0 * std::numbers::pi;               // Radians in one revolution
+        static constexpr double _SECONDS_PER_MINUTE = 60.0;                                     // For RPM to rad/s conversion
+        static constexpr double _RPM_TO_RAD_S = _RADIANS_PER_REVOLUTION / _SECONDS_PER_MINUTE;  // Conversion factor
+        static constexpr double _RAD_S_TO_RPM = _SECONDS_PER_MINUTE / _RADIANS_PER_REVOLUTION;  // Inverse conversion
 
         // Protocol constants
-        static constexpr uint8_t PACKET_HEADER_BYTE = 0xFF;     // Packet header byte
-        static constexpr size_t PACKET_HEADER_SIZE = 2;         // Two FF bytes in header
-        static constexpr size_t PACKET_ID_INDEX = 2;            // Position of ID byte in packet
-        static constexpr size_t PACKET_LENGTH_INDEX = 3;        // Position of length byte in packet
-        static constexpr size_t PACKET_MIN_SIZE = 4;            // Minimum valid packet size
-        static constexpr uint8_t WHEEL_MODE_VALUE = 1;          // Value for wheel mode setting
-        static constexpr uint8_t TORQUE_ENABLE_VALUE = 1;       // Value to enable torque
-        static constexpr uint8_t PRESENT_POSITION_REG = 0x38;   // Present position register
-        static constexpr size_t STATUS_PACKET_DATA_SIZE = 8;    // Expected size of status data
-        static constexpr uint16_t SIGN_BIT_MASK = 1 << 15;      // Mask for sign bit in position/velocity
-        static constexpr size_t ROOM_TEMPERATURE_CELSIUS = 25;  // Default room temperature
+        static constexpr uint8_t _PACKET_HEADER_BYTE = 0xFF;     // Packet header byte
+        static constexpr size_t _PACKET_HEADER_SIZE = 2;         // Two FF bytes in header
+        static constexpr size_t _PACKET_ID_INDEX = 2;            // Position of ID byte in packet
+        static constexpr size_t _PACKET_LENGTH_INDEX = 3;        // Position of length byte in packet
+        static constexpr size_t _PACKET_MIN_SIZE = 4;            // Minimum valid packet size
+        static constexpr uint8_t _WHEEL_MODE_VALUE = 1;          // Value for wheel mode setting
+        static constexpr uint8_t _TORQUE_ENABLE_VALUE = 1;       // Value to enable torque
+        static constexpr uint8_t _PRESENT_POSITION_REG = 0x38;   // Present position register
+        static constexpr size_t _STATUS_PACKET_DATA_SIZE = 8;    // Expected size of status data
+        static constexpr uint16_t _SIGN_BIT_MASK = 1 << 15;      // Mask for sign bit in position/velocity
+        static constexpr size_t _ROOM_TEMPERATURE_CELSIUS = 25;  // Default room temperature
 
         // Communication timing constants
-        static constexpr auto READ_TIMEOUT = std::chrono::milliseconds(10);
-        static constexpr auto WRITE_TIMEOUT = std::chrono::milliseconds(1);
-        static constexpr auto SERVO_TIMEOUT = std::chrono::seconds(1);
-        static constexpr auto COMMAND_DELAY = std::chrono::milliseconds(10);
-        static constexpr auto COMMUNICATION_CYCLE_DELAY = std::chrono::milliseconds(20);
-        static constexpr auto RESPONSE_TIMEOUT = std::chrono::milliseconds(50);
+        static constexpr auto _READ_TIMEOUT = std::chrono::milliseconds(10);
+        static constexpr auto _WRITE_TIMEOUT = std::chrono::milliseconds(1);
+        static constexpr auto _SERVO_TIMEOUT = std::chrono::seconds(1);
+        static constexpr auto _COMMAND_DELAY = std::chrono::milliseconds(10);
+        static constexpr auto _COMMUNICATION_CYCLE_DELAY = std::chrono::milliseconds(20);
+        static constexpr auto _RESPONSE_TIMEOUT = std::chrono::milliseconds(50);
 
         // Servo packet indices (relative to data portion)
-        static constexpr size_t ERROR_BYTE_INDEX = 0;
-        static constexpr size_t POSITION_LOW_BYTE_INDEX = 1;
-        static constexpr size_t POSITION_HIGH_BYTE_INDEX = 2;
-        static constexpr size_t VELOCITY_LOW_BYTE_INDEX = 3;
-        static constexpr size_t VELOCITY_HIGH_BYTE_INDEX = 4;
-        static constexpr size_t TEMPERATURE_BYTE_INDEX = 7;
+        static constexpr size_t _ERROR_BYTE_INDEX = 0;
+        static constexpr size_t _POSITION_LOW_BYTE_INDEX = 1;
+        static constexpr size_t _POSITION_HIGH_BYTE_INDEX = 2;
+        static constexpr size_t _VELOCITY_LOW_BYTE_INDEX = 3;
+        static constexpr size_t _VELOCITY_HIGH_BYTE_INDEX = 4;
+        static constexpr size_t _TEMPERATURE_BYTE_INDEX = 7;
 
         // Communication thread control
         std::atomic<bool> _comm_thread_running{false};
@@ -171,7 +172,7 @@ namespace perseus_lite_hardware
         {
             double position{0.0};
             double velocity{0.0};
-            double temperature{ROOM_TEMPERATURE_CELSIUS};
+            double temperature{_ROOM_TEMPERATURE_CELSIUS};
             rclcpp::Time last_update{0, 0, RCL_ROS_TIME};
         };
         std::vector<ServoState> _servo_states;
@@ -182,14 +183,7 @@ namespace perseus_lite_hardware
          * @details Runs in a separate thread to handle asynchronous communication with servos.
          *          Reads position, velocity, and temperature data from all configured servos.
          */
-        void communicationThread() noexcept;
-
-        /**
-         * @brief Updates the internal servo state data structures
-         * @details Processes received servo data and updates position, velocity, and temperature
-         *          values for all servos. Thread-safe operation using state mutex.
-         */
-        void updateServoStates() noexcept;
+        void communication_thread() noexcept;
 
         // Communication timestamping and timeout
         std::vector<rclcpp::Time> _last_update_times;
@@ -202,13 +196,13 @@ namespace perseus_lite_hardware
          * @return true if the command was sent successfully, false otherwise
          * @details Constructs and transmits a properly formatted ST3215 protocol packet
          */
-        bool sendServoCommand(uint8_t id, ServoCommand cmd, std::span<const uint8_t> data) noexcept;
+        bool send_servo_command(uint8_t id, ServoCommand cmd, std::span<const uint8_t> data) noexcept;
         /**
          * @brief Processes a response packet received from a servo
          * @param response The raw response data received from the servo
          * @details Parses the response packet and extracts position, velocity, and temperature data
          */
-        void processResponse(std::span<const uint8_t> response) noexcept;
+        void process_response(std::span<const uint8_t> response) noexcept;
         /**
          * @brief Updates servo state data for a specific servo
          * @param id The servo ID to update
@@ -216,30 +210,7 @@ namespace perseus_lite_hardware
          * @return true if the update was successful, false otherwise
          * @details Updates position, velocity, and temperature for the specified servo
          */
-        [[nodiscard]] bool updateServoStates(uint8_t id, size_t index) noexcept;
-        /**
-         * @brief Starts an asynchronous read operation from the serial port
-         * @details Initiates non-blocking read of servo response data
-         */
-        void startAsyncRead() noexcept;
-
-        /**
-         * @brief Starts an asynchronous write operation to the serial port
-         * @details Initiates non-blocking write of command data to servos
-         */
-        void startAsyncWrite() noexcept;
-
-        /**
-         * @brief Schedules the next read operation using a timer
-         * @details Sets up timing for the next servo data read cycle
-         */
-        void scheduleNextRead() noexcept;
-
-        /**
-         * @brief Schedules the next write operation using a timer
-         * @details Sets up timing for the next command transmission cycle
-         */
-        void scheduleNextWrite() noexcept;
+        [[nodiscard]] bool update_servo_states(uint8_t id, size_t index) noexcept;
         /**
          * @brief Verifies that required command interfaces are available for a joint
          * @param joint_info Information about the joint configuration
@@ -247,7 +218,7 @@ namespace perseus_lite_hardware
          * @return true if all required interfaces are present, false otherwise
          * @details Checks that velocity command interface is configured for the joint
          */
-        [[nodiscard]] bool verifyCommandInterfaces(
+        [[nodiscard]] bool verify_command_interfaces(
             const hardware_interface::ComponentInfo& joint_info,
             const rclcpp::Logger& logger) const;
 
@@ -262,11 +233,7 @@ namespace perseus_lite_hardware
         mutable std::mutex _serial_mutex;
         boost::asio::io_context _io_context;
         boost::asio::serial_port _serial_port{_io_context};
-        boost::asio::steady_timer _read_timer{_io_context};
-        boost::asio::steady_timer _write_timer{_io_context};
         std::thread _io_thread;
-        mutable std::queue<std::vector<uint8_t>> _write_queue;
-        std::array<uint8_t, BUFFER_SIZE> _read_buffer;
     };
 
 }  // namespace perseus_lite_hardware

@@ -13,12 +13,7 @@
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
-  <build_depend>boost</build_depend>
-
-  <depend>libboost-system-dev</depend>  <!-- Added Boost system dependency -->
-  
-
-  <exec_depend>boost</exec_depend>
+  <depend>boost</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

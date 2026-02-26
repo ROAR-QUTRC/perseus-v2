@@ -28,18 +28,17 @@ let
       ${configAttrName} = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
-        modules =
-          [
-            (
-              { ... }:
-              {
-                nixpkgs.overlays = [ (final: prev: { unstable = pkgs-unstable; }) ];
-              }
-            )
-            ./home.nix
-          ]
-          ++ pkgs.lib.lists.optional ((hostname != "") && (builtins.pathExists machineConfig)) machineConfig
-          ++ pkgs.lib.lists.optional (builtins.pathExists userConfig) userConfig;
+        modules = [
+          (
+            { ... }:
+            {
+              nixpkgs.overlays = [ (final: prev: { unstable = pkgs-unstable; }) ];
+            }
+          )
+          ./home.nix
+        ]
+        ++ pkgs.lib.lists.optional ((hostname != "") && (builtins.pathExists machineConfig)) machineConfig
+        ++ pkgs.lib.lists.optional (builtins.pathExists userConfig) userConfig;
         extraSpecialArgs = {
           inherit
             inputs

@@ -59,13 +59,11 @@ Perseus should automatically connect to the QUTRC-ROAR network. Verify the conne
 #### Network Troubleshooting
 
 1. Physical Connectivity
-
    - Confirm Unifi UX is powered and fully booted (screen shows device count)
    - Verify power LED indicators are lit
    - Check E-Stop position as it affects system power
 
 2. Laptop Connectivity
-
    - Verify connection to "QUTRC-ROAR" network
    - Check signal strength (maintain line of sight with Unifi UX if possible)
    - Confirm IP address allocation using `ip addr`
@@ -110,6 +108,12 @@ Execute the following command on Perseus:
 nix run .#perseus
 ```
 
+You can run the bucket nodes at the same time using:
+
+```console
+nix run .#perseus -- payload:=bucket
+```
+
 :::{warning}
 Requires Internet access to complete this command, unless all necessary files have been previously downloaded to this specific device.
 :::
@@ -127,17 +131,109 @@ nix run .#ros2 -- run teleop_twist_keyboard teleop_twist_keyboard
 
 Note: Control messages are only sent when the terminal has focus and receives keystrokes ({keys}`k` to stop).
 
-#### Xbox Controller
+#### Generic Controller
 
 :::{note}
-Make sure that the Xbox controller connects to your laptop!
+Make sure that the Xbox controller connects to your laptop!  
 Sometimes you may need to re-pair, even if you've paired to it before.
 :::
 
+To run the controller there are certain things to understand before that happens.
+
+The launch file accepts the following parameters:
+
+| Argument     | Default   | Description                                                                                 |
+| ------------ | --------- | ------------------------------------------------------------------------------------------- |
+| `type`       | `xbox`    | Controller type. Options: `xbox`, `8bitdo`, `logitech`.                                     |
+| `wireless`   | `true`    | Connection type. Set `true` for wireless, `false` for wired.                                |
+| `dual_stick` | `false`   | Use dual-stick driving for Xbox controllers (left stick forward/back, right stick turning). |
+| `config`     | _(empty)_ | Path to a custom YAML config file. If provided, this overrides both `type` and `wireless`.  |
+
+::: {note}
+The logitech controller config file has been configured for a logitech wired F310, and the 8bitdo controller config file has been configured for an 8BitDo Ultimate 2C controller. These same configuration files might not work for other models.
+:::
+
+Some example runs:
+
+Default: Xbox controller, wireless
+
 ```console
-cd perseus-v2
-nix run .#xbox_controller
+nix run .#generic_controller
 ```
+
+Xbox controller, wired
+
+```console
+nix run .#generic_controller -- type:=xbox wireless:=false
+```
+
+8BitDo controller, wireless
+
+```console
+nix run .#generic_controller -- type:=8bitdo wireless:=true
+```
+
+Logitech controller, wired
+
+```console
+nix run .#generic_controller -- type:=logitech wireless:=false
+```
+
+Xbox controller, dual-stick driving (wireless)
+
+```console
+nix run .#generic_controller -- dual_stick:=true
+```
+
+Xbox controller, dual-stick driving (wired)
+
+```console
+nix run .#generic_controller -- dual_stick:=true wireless:=false
+```
+
+Use a custom config file
+
+```console
+# Absolute path
+nix run .#generic_controller -- config:=/absolute/path/to/my_controller.yaml
+
+# Alternative: Relative path (from current working directory)
+nix run .#generic_controller -- config:=./relative/path/to/my_controller.yaml
+```
+
+#### Dual-Stick Driving Mode
+
+By default, the Xbox controller uses a single-stick layout where the left stick controls both forward/backward movement and turning, while the right stick controls bucket actuators (lift and tilt).
+
+The `dual_stick` option enables an alternative layout common in games and teleoperation:
+
+- **Left stick Y-axis**: Forward / backward
+- **Right stick X-axis**: Turning
+- **Bucket controls** are remapped to buttons since the right stick is used for driving:
+
+  **Wireless:**
+
+  | Control            | Button |
+  | ------------------ | ------ |
+  | Bucket lift (up)   | LB     |
+  | Bucket lift (down) | RB     |
+  | Bucket tilt (up)   | Y      |
+  | Bucket tilt (down) | A      |
+
+  **Wired:**
+
+  | Control            | Button |
+  | ------------------ | ------ |
+  | Bucket lift (up)   | Y      |
+  | Bucket lift (down) | A      |
+  | Bucket tilt (up)   | X      |
+  | Bucket tilt (down) | B      |
+
+All other controls (triggers for enable/turbo, jaws, rotate, magnet) remain unchanged.
+
+:::{note}
+The `dual_stick` parameter only affects Xbox controllers. It is ignored for `8bitdo` and `logitech` controller types.
+:::
 
 ### Safe Operation
 

@@ -113,7 +113,7 @@ This is particularly useful to select the latest version from `nixpkgs-unstable`
 :::
 ::::
 
-Every [architecture](project:/architecture.md) document contains a "Nix outputs" section if applicable detailing the available outputs to use.
+Every [systems](project:/systems-index.md) document contains a "Nix outputs" section if applicable detailing the available outputs to use.
 
 :::{tip}
 You can override the default search behaviour of the commands if you wish.

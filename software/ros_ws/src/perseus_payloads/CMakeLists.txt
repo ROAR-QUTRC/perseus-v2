@@ -27,7 +27,7 @@ endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow)
 endif()
 # Add -Werror flag for release builds
 if(CMAKE_BUILD_TYPE MATCHES "Rel.*")
@@ -98,5 +98,10 @@ target_link_libraries(bucket_driver PUBLIC hi_can_raw)
 install(TARGETS arm_driver DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_controller DESTINATION lib/${PROJECT_NAME})
 install(TARGETS bucket_driver DESTINATION lib/${PROJECT_NAME})
+
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+  OPTIONAL)
 
 ament_package()

@@ -16,6 +16,7 @@
   <!-- Make some exec_depends into full depends since they're needed at build time -->
   <depend>urdf</depend>
   <depend>xacro</depend>
+  <depend>perseus_description</depend>
   
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>

@@ -5,6 +5,28 @@ Whilst this page will get you started, it is strongly recommended that you read 
 
 ## First-time Setup
 
+If you're on a Debian-based distro (like Ubuntu), you can run the `member-setup.sh` script, which will automatically set everything up for you. If you're not or you just want to, you can go through the steps manually (but you'll have to adjust the apt commands to suit your distro).
+
+### Curl script
+
+First, make sure you have `curl` installed:
+
+```console
+sudo apt-get update
+sudo apt-get install curl
+```
+
+Then, you can run this command (it will prompt you for sudo permissions):
+
+```console
+curl https://raw.githubusercontent.com/ROAR-QUTRC/perseus-v2/refs/heads/main/software/scripts/member-setup.sh | bash
+```
+
+Which automates the manual process described below. After you run this command, you may need to restart your shell to ensure `direnv` loads properly.
+The script clones the repo into your home directory (~), so if you want it installed elsewhere, you should do it manually.
+
+### Manual
+
 1. Install the [GitHub CLI](https://github.com/cli/cli/blob/trunk/docs/install_linux.md).
 2. Run the following shell commands to install `curl` and `direnv` (this assumes a Debian-based distro like Ubuntu):
 
@@ -14,25 +36,33 @@ sudo apt-get install -y gh git curl direnv
 ```
 
 3. Log into GitHub: `gh auth login -w -p https`
-4. Clone the repo (into `~/perseus-v2`) and `cd` into it:
+4. Clone (means to download a copy from the server to your machine) the repository (often referred to as repo) into `~/perseus-v2` and `cd` (change directory) into it:
 
 ```{code-block} console
 cd ~
-gh repo clone ROAR-QUTRC/perseus-v2 # download the repository
+gh repo clone ROAR-QUTRC/perseus-v2
 cd perseus-v2
 ```
 
 5. Run the setup script (it will prompt you for sudo permissions):
 
 ```{code-block} console
-`./software/scripts/nix-setup.sh`
+./software/scripts/nix-setup.sh
 ```
 
-6. Restart your shell
-7. Run `cd ~/perseus-v2`
-8. Accept all config options when prompted with `y`
-9. Wait for the downloads (and potentially builds)
-10. Run `nix build` - this will attempt to build the workspace. If this succeeds, you're done, and the built workspace is now available under the `./result` folder!
+6. Skip this step if it ran without errors. If the script failed to run and suggests running with `--no-confirm`, try again like this:
+
+```{code-block} console
+./software/scripts/nix-setup.sh --no-confirm
+```
+
+7. Accept all config options when prompted by typing `y`, then press enter
+8. Restart your shell
+9. Run `cd ~/perseus-v2`
+10. Wait for the downloads (and potentially builds)
+11. If asked, accept all config options with `y`
+12. Run `nix build` - this will attempt to build the workspace. If this succeeds, you're done, and the built workspace is now available under the `./result` folder!
+13. If asked, accept all config options with `y`
 
 ### IDE Setup
 
@@ -103,8 +133,8 @@ To the experienced ROS2 developers - you may notice the lack of a `--symlink-ins
 ### Before you start
 
 However, before you start writing code, there's a few things you need to read through first.
-The most important one is the software [architecture](project:/architecture/software.md), which goes over how all the software links together and how it's laid out.
-The other document is the software [standards](project:/standards/software.md), which details the standards to which your software is expected to be written.
+The most important one is the software [systems](project:/systems/software-index.md), which goes over how all the software links together and how it's laid out.
+The other document is the software [standards](project:/standards/software-index.md), which details the standards to which your software is expected to be written.
 If your software _doesn't_ meet these standards, we unfortunately won't be able to merge your changes until you fix the issues - if code standards aren't enforced, the code **will** quickly become an un-maintainable mess, leading to another rewrite.
 
 ## Debugging

@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <optional>
@@ -16,86 +17,87 @@ namespace i2c_imu_driver
 {
     namespace
     {
-        // LSM6DSOX detection constants
-        const uint8_t LSM6DSOX_WHO_AM_I_REGISTER = 0x0F;
-        const uint8_t LSM6DSOX_WHO_AM_I_VALUE = 0x6C;
+        /**
+         * @brief Validate I2C bus path
+         *
+         * Ensures path points to a valid I2C device file.
+         * Valid formats: /dev/i2c-N where N is 0-255
+         *
+         * @param path Path to validate
+         * @return true if valid I2C device path, false otherwise
+         */
+        bool is_valid_i2c_path(const std::string& path)
+        {
+            // Must start with /dev/i2c-
+            const std::string prefix = "/dev/i2c-";
+            if (path.rfind(prefix, 0) != 0)
+            {
+                return false;
+            }
+
+            // Extract and validate bus number
+            std::string bus_num = path.substr(prefix.length());
+
+            // Must be digits only
+            if (bus_num.empty() || !std::all_of(bus_num.begin(), bus_num.end(), ::isdigit))
+            {
+                return false;
+            }
+
+            // Bus number should be reasonable (0-255)
+            try
+            {
+                int num = std::stoi(bus_num);
+                return num >= 0 && num <= 255;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
     }  // anonymous namespace
 
     I2cDevice::I2cDevice(const std::string& bus_path, uint8_t device_address)
         : _bus_path(bus_path),
-          _device_address(device_address)
+          _device_address(device_address),
+          _i2c_fd(
+              [this]() -> int
+              {
+                  // Validate I2C bus path before attempting to open
+                  if (!is_valid_i2c_path(_bus_path))
+                  {
+                      throw std::invalid_argument("Invalid I2C bus path: " + _bus_path +
+                                                  ". Must be /dev/i2c-N where N is 0-255");
+                  }
+                  return open(_bus_path.c_str(), O_RDWR);
+              },
+              [this](int fd)
+              {
+                  if (ioctl(fd, I2C_SLAVE, _device_address) < 0)
+                  {
+                      throw std::runtime_error("Failed to set I2C slave address: " +
+                                               std::string(strerror(errno)));
+                  }
+              })
     {
+        // Device detection is handled by sensor-specific initialization code
+        // which can check device-specific WHO_AM_I registers
     }
 
-    bool I2cDevice::initialize()
+    bool I2cDevice::is_connected() const
     {
-        if (_is_initialized)
-        {
-            return true;
-        }
-
-        // First try to open the file descriptor directly
-        int fd = open(_bus_path.c_str(), O_RDWR);
-        if (fd < 0)
-        {
-            return false;
-        }
-
-        // Set slave address
-        if (ioctl(fd, I2C_SLAVE, _device_address) < 0)
-        {
-            close(fd);
-            return false;
-        }
-
-        // Now create the FdWrapper with the already-opened file descriptor
-        try
-        {
-            _i2c_fd = FdWrapper(
-                [fd]() -> int
-                { return fd; },
-                nullptr,
-                [](int fd)
-                { close(fd); });
-        }
-        catch (const std::exception& e)
-        {
-            close(fd);
-            return false;
-        }
-
-        // Check if the file descriptor is valid
-        if (_i2c_fd.get() < 0)
-        {
-            return false;
-        }
-
-        // Perform device detection
-        if (!_performDeviceDetection())
-        {
-            // Skip device detection for now
-            // return false;
-        }
-
-        _is_initialized = true;
-        return true;
+        return _i2c_fd.get() >= 0;
     }
 
-    bool I2cDevice::isConnected() const
+    std::optional<uint8_t> I2cDevice::read_register(uint8_t reg_address)
     {
-        return _is_initialized && _i2c_fd.get() >= 0;
-    }
-
-    std::optional<uint8_t> I2cDevice::readRegister(uint8_t reg_address,
-                                                   std::chrono::milliseconds timeout_ms)
-    {
-        if (!isConnected())
+        if (!is_connected())
         {
             return std::nullopt;
         }
 
         uint8_t buffer[1];
-        if (!readRegisters(reg_address, buffer, 1, timeout_ms))
+        if (!read_registers(reg_address, buffer, 1))
         {
             return std::nullopt;
         }
@@ -103,21 +105,22 @@ namespace i2c_imu_driver
         return buffer[0];
     }
 
-    bool I2cDevice::writeRegister(uint8_t reg_address, uint8_t value,
-                                  std::chrono::milliseconds timeout_ms)
+    bool I2cDevice::write_register(uint8_t reg_address, uint8_t value)
     {
-        if (!isConnected())
+        if (!is_connected())
         {
             return false;
         }
 
-        return writeRegisters(reg_address, &value, 1, timeout_ms);
+        return write_registers(reg_address, &value, 1);
     }
 
-    bool I2cDevice::readRegisters(uint8_t reg_address, uint8_t* buffer, size_t length,
-                                  std::chrono::milliseconds /* timeout_ms */)
+    bool I2cDevice::read_registers(uint8_t reg_address, uint8_t* buffer, size_t length)
     {
-        if (!isConnected() || buffer == nullptr || length == 0)
+        // Maximum I2C transaction size (conservative limit for compatibility)
+        constexpr size_t MAX_I2C_TRANSACTION_SIZE = 255;
+
+        if (!is_connected() || buffer == nullptr || length == 0 || length > MAX_I2C_TRANSACTION_SIZE)
         {
             return false;
         }
@@ -150,10 +153,12 @@ namespace i2c_imu_driver
         return true;
     }
 
-    bool I2cDevice::writeRegisters(uint8_t reg_address, const uint8_t* buffer, size_t length,
-                                   std::chrono::milliseconds /* timeout_ms */)
+    bool I2cDevice::write_registers(uint8_t reg_address, const uint8_t* buffer, size_t length)
     {
-        if (!isConnected() || buffer == nullptr || length == 0)
+        // Maximum I2C transaction size (conservative limit for compatibility)
+        constexpr size_t MAX_I2C_TRANSACTION_SIZE = 255;
+
+        if (!is_connected() || buffer == nullptr || length == 0 || length > MAX_I2C_TRANSACTION_SIZE)
         {
             return false;
         }
@@ -177,66 +182,6 @@ namespace i2c_imu_driver
 
         // Perform the I2C transaction
         if (ioctl(_i2c_fd.get(), I2C_RDWR, &msgset) < 0)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    bool I2cDevice::_performDeviceDetection()
-    {
-        if (_i2c_fd.get() < 0)
-        {
-            return false;
-        }
-
-        // Try to read from WHO_AM_I register for LSM6DSOX
-        struct i2c_msg msgs[2];
-        struct i2c_rdwr_ioctl_data msgset;
-        uint8_t reg_addr = LSM6DSOX_WHO_AM_I_REGISTER;
-        uint8_t who_am_i = 0;
-
-        // First message: write register address
-        msgs[0].addr = _device_address;
-        msgs[0].flags = 0;
-        msgs[0].len = 1;
-        msgs[0].buf = &reg_addr;
-
-        // Second message: read data
-        msgs[1].addr = _device_address;
-        msgs[1].flags = I2C_M_RD;
-        msgs[1].len = 1;
-        msgs[1].buf = &who_am_i;
-
-        msgset.msgs = msgs;
-        msgset.nmsgs = 2;
-
-        // Perform the I2C transaction
-        if (ioctl(_i2c_fd.get(), I2C_RDWR, &msgset) < 0)
-        {
-            // Debug: I2C transaction failed
-            return false;
-        }
-
-        // Check if it's a valid LSM6DSOX device
-        if (who_am_i != LSM6DSOX_WHO_AM_I_VALUE)
-        {
-            // Debug: Invalid WHO_AM_I value
-            return false;
-        }
-
-        return true;
-    }
-
-    bool I2cDevice::_setSlaveAddress()
-    {
-        if (_i2c_fd.get() < 0)
-        {
-            return false;
-        }
-
-        if (ioctl(_i2c_fd.get(), I2C_SLAVE, _device_address) < 0)
         {
             return false;
         }

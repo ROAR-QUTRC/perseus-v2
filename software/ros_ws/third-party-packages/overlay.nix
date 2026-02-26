@@ -1,8 +1,7 @@
 final: prev:
 let
-  individualPackages = prev: final: {
-    ortools = final.callPackage ./ortools { };
-    livox-ros-driver2 = final.callPackage ./livox-ros-driver2 { };
+  individualPackages = individualFinal: individualPrev: {
+    livox-ros-driver2 = individualFinal.callPackage ./livox-ros-driver2 { };
   };
 in
 prev.lib.composeManyExtensions [

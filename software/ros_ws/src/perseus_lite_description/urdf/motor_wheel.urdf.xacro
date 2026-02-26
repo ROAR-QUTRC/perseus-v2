@@ -14,7 +14,7 @@
       <visual>
         <origin xyz="-0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
         <geometry>
-          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_lite_description)/meshes/gearbox.dae"/>
+          <mesh scale="0.05 0.05 0.05" filename="file://$(find perseus_description)/meshes/gearbox.dae"/>
         </geometry>
         <!-- <material name="white"/> -->
       </visual>

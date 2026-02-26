@@ -49,11 +49,34 @@ The RPLidar typically appears as `/dev/ttyUSB0` or similar.
 ls -la /dev/ttyUSB0
 ```
 
-If you don't have read/write permissions, fix them:
+If you don't have read/write permissions, you can temporarily fix them:
 
 ```console
 sudo chmod 666 /dev/ttyUSB0
 ```
+
+For a permanent solution, add your user to the `dialout` group:
+
+```console
+sudo usermod -a -G dialout $USER
+```
+
+Then log out and log back in for the changes to take effect. To apply the group change immediately without logging out, use:
+
+```console
+newgrp dialout
+```
+
+Alternatively, create a udev rule for persistent permissions:
+
+```console
+echo 'KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE="0666"' | sudo tee /etc/udev/rules.d/99-rplidar.rules
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+:::{warning}
+`MODE="0666"` grants read/write permissions to all users on the system (owner, group, and others). This is convenient but may be a security concern in multi-user environments. For better security, use `MODE="0660", GROUP="dialout"` instead and ensure your user is in the dialout group.
+:::
 
 ## RPLidar Driver Testing
 
