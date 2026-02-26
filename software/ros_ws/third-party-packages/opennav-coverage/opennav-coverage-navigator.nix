@@ -11,6 +11,7 @@
   nav2-behavior-tree,
   nav2-core,
   nav2-msgs,
+  nav2-ros-common,
   nav2-util,
   opennav-coverage,
   opennav-coverage-bt,
@@ -25,8 +26,8 @@ buildRosPackage rec {
   src = fetchFromGitHub {
     owner = "open-navigation";
     repo = "opennav_coverage";
-    rev = "194250501889ce8896c5ee8b80a4d1317750be0e";
-    sha256 = "0nqi8d99qs9cqb22x66kzzf9zgylayji0ibpg0ff47plwx32zs0l";
+    rev = "d8ddc24064d294be07011d8200dfe2dbe17aeded";
+    sha256 = "0gnlhn4hldkq6vl2vid124bkz0zz3g6f671wb7l5ycf3y51phvxx";
   };
 
   buildType = "ament_cmake";
@@ -44,6 +45,7 @@ buildRosPackage rec {
     nav2-behavior-tree
     nav2-core
     nav2-msgs
+    nav2-ros-common
     nav2-util
     opennav-coverage
     opennav-coverage-bt
