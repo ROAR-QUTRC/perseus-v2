@@ -1,4 +1,5 @@
 node_modules
+.yarn
 ./db/*
 ./db
 db
