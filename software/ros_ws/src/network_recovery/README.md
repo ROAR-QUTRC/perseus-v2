@@ -29,24 +29,24 @@ MONITORING ──> SIGNAL_DEGRADED ──> SIGNAL_LEASH ──> SIGNAL_LOST_WAIT
      +──────────────────── RECOVERY_FAILED ────────────────────────────── (all options exhausted)
 ```
 
-| State | What happens |
-|---|---|
-| `MONITORING` | Normal operation. Records breadcrumbs, builds heatmap. No interference with navigation. |
-| `SIGNAL_DEGRADED` | RSSI below warning threshold but still connected. Informational only. |
-| `SIGNAL_LEASH` | Signal trend is consistently degrading in a weak area. Publishes warning; optionally pauses the robot. |
-| `SIGNAL_LOST_WAITING` | Ping failed. Counts down the timeout (default 30s). Returns to MONITORING if signal comes back. |
-| `RECOVERING` | Runs three-phase recovery. Checks connectivity between each phase. |
-| `RECOVERY_SUCCEEDED` | Signal reacquired. Holds 3s then returns to MONITORING. Clears regular breadcrumbs, keeps pinned. |
-| `RECOVERY_FAILED` | All recovery options exhausted. Robot stops. Waits for operator or natural signal return. |
+| State                 | What happens                                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `MONITORING`          | Normal operation. Records breadcrumbs, builds heatmap. No interference with navigation.                |
+| `SIGNAL_DEGRADED`     | RSSI below warning threshold but still connected. Informational only.                                  |
+| `SIGNAL_LEASH`        | Signal trend is consistently degrading in a weak area. Publishes warning; optionally pauses the robot. |
+| `SIGNAL_LOST_WAITING` | Ping failed. Counts down the timeout (default 30s). Returns to MONITORING if signal comes back.        |
+| `RECOVERING`          | Runs three-phase recovery. Checks connectivity between each phase.                                     |
+| `RECOVERY_SUCCEEDED`  | Signal reacquired. Holds 3s then returns to MONITORING. Clears regular breadcrumbs, keeps pinned.      |
+| `RECOVERY_FAILED`     | All recovery options exhausted. Robot stops. Waits for operator or natural signal return.              |
 
 ## Topics
 
-| Topic | Type | Direction | Description |
-|---|---|---|---|
-| `/network_recovery/status` | `perseus_interfaces/NetworkRecoveryStatus` | Publish | Current state, RSSI, latency, trend, breadcrumb count, human-readable status message |
-| `/network_recovery/heatmap` | `visualization_msgs/MarkerArray` | Publish | Colour-coded grid of signal strength for RViz |
-| `/network_recovery/breadcrumb_trail` | `nav_msgs/Path` | Publish | Current breadcrumb trail for RViz |
-| `/navigate_through_poses` | `nav2_msgs/NavigateThroughPoses` | Action client | Used during recovery to navigate with obstacle avoidance |
+| Topic                                | Type                                       | Direction     | Description                                                                          |
+| ------------------------------------ | ------------------------------------------ | ------------- | ------------------------------------------------------------------------------------ |
+| `/network_recovery/status`           | `perseus_interfaces/NetworkRecoveryStatus` | Publish       | Current state, RSSI, latency, trend, breadcrumb count, human-readable status message |
+| `/network_recovery/heatmap`          | `visualization_msgs/MarkerArray`           | Publish       | Colour-coded grid of signal strength for RViz                                        |
+| `/network_recovery/breadcrumb_trail` | `nav_msgs/Path`                            | Publish       | Current breadcrumb trail for RViz                                                    |
+| `/navigate_through_poses`            | `nav2_msgs/NavigateThroughPoses`           | Action client | Used during recovery to navigate with obstacle avoidance                             |
 
 All publishers use transient local QoS so late-joining subscribers (e.g. RViz opened after the node starts) receive the latest data.
 
@@ -63,6 +63,7 @@ colcon build --packages-select network_recovery
 ## Running
 
 Standalone:
+
 ```bash
 ros2 launch network_recovery network_recovery.launch.py
 ```
@@ -73,17 +74,17 @@ The node is also included automatically in `autonomy.launch.py` when launching t
 
 All parameters are in `config/network_recovery_params.yaml`. Key parameters to tune for your environment:
 
-| Parameter | Default | Description |
-|---|---|---|
-| `ping_target` | `""` (auto-detect gateway) | IP to ping for connectivity checks |
-| `signal_loss_timeout_s` | `30.0` | Seconds of no connectivity before recovery starts |
-| `recovery_enabled` | `true` | Set `false` to disable recovery but keep heatmap and leash |
-| `leash_enabled` | `true` | Enable proactive signal degradation warning |
-| `leash_pause_robot` | `false` | If `true`, cancel Nav2 goals when leash triggers |
-| `breadcrumb_max_count` | `500` | Max regular breadcrumbs (sized for 40+ min missions) |
-| `retreat_distance_m` | `3.0` | Phase 1 retreat distance before checking signal |
-| `heatmap_save_on_shutdown` | `true` | Save heatmap JSON on node shutdown |
-| `heatmap_save_directory` | `~/.ros/network_recovery` | Where to save heatmap JSON files |
+| Parameter                  | Default                    | Description                                                |
+| -------------------------- | -------------------------- | ---------------------------------------------------------- |
+| `ping_target`              | `""` (auto-detect gateway) | IP to ping for connectivity checks                         |
+| `signal_loss_timeout_s`    | `30.0`                     | Seconds of no connectivity before recovery starts          |
+| `recovery_enabled`         | `true`                     | Set `false` to disable recovery but keep heatmap and leash |
+| `leash_enabled`            | `true`                     | Enable proactive signal degradation warning                |
+| `leash_pause_robot`        | `false`                    | If `true`, cancel Nav2 goals when leash triggers           |
+| `breadcrumb_max_count`     | `500`                      | Max regular breadcrumbs (sized for 40+ min missions)       |
+| `retreat_distance_m`       | `3.0`                      | Phase 1 retreat distance before checking signal            |
+| `heatmap_save_on_shutdown` | `true`                     | Save heatmap JSON on node shutdown                         |
+| `heatmap_save_directory`   | `~/.ros/network_recovery`  | Where to save heatmap JSON files                           |
 
 Auto-detection: if `ping_target` is empty, the node reads `/proc/net/route` to find the default gateway. If `wifi_interface` is empty, it reads `/proc/net/wireless` to find the active WiFi interface.
 

@@ -1,63 +1,53 @@
 network_recovery:
   ros__parameters:
     # ── Network monitoring ──
-    ping_target: ""                       # Empty = auto-detect default gateway
-    ping_interval_s: 2.0                  # Seconds between pings
-    ping_timeout_s: 1.5                   # Timeout for each ping attempt
-    wifi_interface: ""                    # Empty = auto-detect from /proc/net/wireless
-
+    ping_target: "" # Empty = auto-detect default gateway
+    ping_interval_s: 2.0 # Seconds between pings
+    ping_timeout_s: 1.5 # Timeout for each ping attempt
+    wifi_interface: "" # Empty = auto-detect from /proc/net/wireless
     # ── Signal thresholds ──
-    rssi_warning_threshold: -70           # dBm — below this, state = SIGNAL_DEGRADED
-    rssi_critical_threshold: -85          # dBm — informational (heatmap colour boundary)
-
+    rssi_warning_threshold: -70 # dBm — below this, state = SIGNAL_DEGRADED
+    rssi_critical_threshold: -85 # dBm — informational (heatmap colour boundary)
     # ── Signal trend detection ──
-    trend_window_size: 10                 # Number of RSSI samples in sliding window
-    trend_threshold: 1.0                  # dBm/sample — slope beyond +/- this = IMPROVING/DEGRADING
-
+    trend_window_size: 10 # Number of RSSI samples in sliding window
+    trend_threshold: 1.0 # dBm/sample — slope beyond +/- this = IMPROVING/DEGRADING
     # ── Signal leash (proactive warning) ──
-    leash_enabled: true                   # Enable proactive signal leash feature
-    leash_rssi_threshold: -70             # dBm — leash only activates below this RSSI
-    leash_min_samples: 5                  # Consecutive DEGRADING samples before triggering
-    leash_pause_robot: false              # If true, cancel Nav2 goals to stop robot during leash
-    leash_timeout_s: 60.0                 # Seconds in SIGNAL_LEASH before escalating
-
+    leash_enabled: true # Enable proactive signal leash feature
+    leash_rssi_threshold: -70 # dBm — leash only activates below this RSSI
+    leash_min_samples: 5 # Consecutive DEGRADING samples before triggering
+    leash_pause_robot: false # If true, cancel Nav2 goals to stop robot during leash
+    leash_timeout_s: 60.0 # Seconds in SIGNAL_LEASH before escalating
     # ── Recovery trigger ──
-    signal_loss_timeout_s: 30.0           # Seconds of no connectivity before entering RECOVERING
-    recovery_enabled: true                # Set false to disable autonomous recovery (heatmap + leash still work)
-
+    signal_loss_timeout_s: 30.0 # Seconds of no connectivity before entering RECOVERING
+    recovery_enabled: true # Set false to disable autonomous recovery (heatmap + leash still work)
     # ── Breadcrumbs ──
-    breadcrumb_max_count: 500             # Max regular breadcrumbs (FIFO eviction)
-    breadcrumb_min_distance_m: 0.5        # Default min distance between breadcrumbs
-    breadcrumb_interval_s: 5.0            # Sampling interval
-    breadcrumb_pin_rssi_threshold: -55    # dBm — breadcrumbs above this RSSI are pinned
-    pinned_breadcrumb_max_count: 50       # Max pinned breadcrumbs
-    breadcrumb_strong_signal_threshold: -55   # dBm — above this, use wider spacing
-    breadcrumb_strong_distance_m: 2.0     # Spacing when signal is strong
-    breadcrumb_weak_signal_threshold: -70  # dBm — below this, use tighter spacing
-    breadcrumb_weak_distance_m: 0.3       # Spacing when signal is weak/degrading
-
+    breadcrumb_max_count: 500 # Max regular breadcrumbs (FIFO eviction)
+    breadcrumb_min_distance_m: 0.5 # Default min distance between breadcrumbs
+    breadcrumb_interval_s: 5.0 # Sampling interval
+    breadcrumb_pin_rssi_threshold: -55 # dBm — breadcrumbs above this RSSI are pinned
+    pinned_breadcrumb_max_count: 50 # Max pinned breadcrumbs
+    breadcrumb_strong_signal_threshold: -55 # dBm — above this, use wider spacing
+    breadcrumb_strong_distance_m: 2.0 # Spacing when signal is strong
+    breadcrumb_weak_signal_threshold: -70 # dBm — below this, use tighter spacing
+    breadcrumb_weak_distance_m: 0.3 # Spacing when signal is weak/degrading
     # ── Heatmap ──
-    heatmap_cell_size_m: 0.5              # Grid cell size in metres
-    heatmap_publish_rate_hz: 0.5          # How often to publish MarkerArray
-    heatmap_marker_height: 0.1            # Z-height of heatmap cubes
-    heatmap_marker_z: 0.05                # Z-position of heatmap cubes (ground level)
-    heatmap_marker_alpha: 0.6             # Transparency (0.0-1.0)
-    heatmap_good_signal_threshold: -55    # dBm — RSSI above this is "good signal" for recovery
-
+    heatmap_cell_size_m: 0.5 # Grid cell size in metres
+    heatmap_publish_rate_hz: 0.5 # How often to publish MarkerArray
+    heatmap_marker_height: 0.1 # Z-height of heatmap cubes
+    heatmap_marker_z: 0.05 # Z-position of heatmap cubes (ground level)
+    heatmap_marker_alpha: 0.6 # Transparency (0.0-1.0)
+    heatmap_good_signal_threshold: -55 # dBm — RSSI above this is "good signal" for recovery
     # ── Heatmap export ──
-    heatmap_save_on_shutdown: true        # Save heatmap to disk when node shuts down
-    heatmap_save_directory: "~/.ros/network_recovery"  # Directory for saved heatmaps
-
+    heatmap_save_on_shutdown: true # Save heatmap to disk when node shuts down
+    heatmap_save_directory: "~/.ros/network_recovery" # Directory for saved heatmaps
     # ── Recovery navigation ──
-    recovery_batch_size: 3                # Breadcrumbs per Nav2 goal (for batched backtrack)
-    retreat_distance_m: 3.0               # Phase 1: distance to retreat before checking signal
+    recovery_batch_size: 3 # Breadcrumbs per Nav2 goal (for batched backtrack)
+    retreat_distance_m: 3.0 # Phase 1: distance to retreat before checking signal
     nav2_action_name: "/navigate_through_poses"
-
     # ── Timer rates ──
-    pose_sample_rate_hz: 2.0              # How often to sample pose + signal for heatmap
-    status_publish_rate_hz: 1.0           # How often to publish status message
-    state_machine_rate_hz: 2.0            # How often to tick the state machine
-
+    pose_sample_rate_hz: 2.0 # How often to sample pose + signal for heatmap
+    status_publish_rate_hz: 1.0 # How often to publish status message
+    state_machine_rate_hz: 2.0 # How often to tick the state machine
     # ── Frames ──
     map_frame: "map"
     base_frame: "base_link"

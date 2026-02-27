@@ -20,17 +20,16 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(perseus_interfaces REQUIRED)
 
-add_executable(network_recovery_node
-  src/network_recovery_node.cpp
-  src/network_monitor.cpp
-  src/heatmap.cpp
-  src/recovery_navigator.cpp
-)
+add_executable(
+  network_recovery_node src/network_recovery_node.cpp src/network_monitor.cpp
+                        src/heatmap.cpp src/recovery_navigator.cpp)
 
-target_include_directories(network_recovery_node
+target_include_directories(
+  network_recovery_node
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
-ament_target_dependencies(network_recovery_node
+ament_target_dependencies(
+  network_recovery_node
   rclcpp
   rclcpp_action
   nav2_msgs
@@ -40,13 +39,10 @@ ament_target_dependencies(network_recovery_node
   builtin_interfaces
   tf2_ros
   tf2
-  perseus_interfaces
-)
+  perseus_interfaces)
 
-install(TARGETS network_recovery_node
-  DESTINATION lib/${PROJECT_NAME})
+install(TARGETS network_recovery_node DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY launch config
-  DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})
 
 ament_package()
