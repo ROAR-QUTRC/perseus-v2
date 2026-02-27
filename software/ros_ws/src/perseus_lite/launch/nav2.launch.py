@@ -105,7 +105,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "ekf_params_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("autonomy"), "config", "ekf_params.yaml"]
+                [FindPackageShare("autonomy"), "config", "ekf_params_perseus_lite.yaml"]
             ),
             description="Full path to the ROS2 parameters file for robot_localization EKF",
         ),
@@ -121,7 +121,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "nav_params_file",
             default_value=os.path.join(
-                bringup_dir, "config", "perseus_nav_params.yaml"
+                bringup_dir, "config", "nav_params_perseus_lite.yaml"
             ),
             description="Full path to the ROS2 parameters file to use for all launched nodes",
         ),

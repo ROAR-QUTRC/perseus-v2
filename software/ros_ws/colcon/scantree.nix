@@ -15,7 +15,7 @@ buildPythonPackage rec {
   pname = "scantree";
   version = "0.0.1";
   pyproject = true;
-  build-system = [ setuptools ];
+
   src = fetchPypi {
     inherit pname version;
     # hash = "sha256-Fb1cskSDsE2yxwZTYE6Oo1IumAh9t+OKuEgvBTmEwKw="; # 0.0.4
@@ -23,13 +23,17 @@ buildPythonPackage rec {
     hash = "sha256-KosWPeDksvnk83+Mrz8LJlFyu/F0ER4b68eVVYGJWzk=";
   };
 
-  propagatedBuildInputs = [
+  build-system = [
+    setuptools
     versioneer
+  ];
+
+  dependencies = [
     pathspec
     attrs
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     six
     pytest
     pytest-cov

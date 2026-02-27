@@ -360,7 +360,7 @@
           in
           {
             perseus = mkRosLaunchApp "perseus" "perseus" "perseus.launch.py";
-            perseus-lite = mkRosLaunchApp "perseus-lite" "perseus_lite" "perseus_lite.launch.py";
+            perseus-lite = mkRosLaunchApp "perseus-lite" "perseus_lite" "perseus_lite_slam_and_nav2.launch.py";
             default = self.apps.${system}.perseus;
             generic_controller = mkRosLaunchApp "generic_controller" "perseus_input" "controller.launch.py";
             ros2 = {
@@ -371,6 +371,13 @@
               type = "app";
               program = "${pkgs.scripts.clean}/bin/clean";
             };
+            autonomy_diagnostics = {
+              type = "app";
+              program = "${pkgs.writeShellScriptBin "autonomy_diagnostics" ''
+                ${default}/bin/ros2 run autonomy_diagnostics autonomy_tui "$@"
+              ''}/bin/autonomy_diagnostics";
+            };
+            autonomy_diag = self.apps.${system}.autonomy_diagnostics;
           };
         formatter = treefmtEval.config.build.wrapper;
         checks = {

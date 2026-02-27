@@ -9,8 +9,12 @@ from launch.substitutions import (
     LaunchConfiguration,
 )
 from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import (
+    PythonLaunchDescriptionSource,
+    AnyLaunchDescriptionSource,
+)
 
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -108,24 +112,22 @@ def generate_launch_description():
         }.items(),
     )
 
-    rplidar_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                PathJoinSubstitution(
-                    [
-                        FindPackageShare("rplidar_ros"),
-                        "launch",
-                        "rplidar_c1_launch.py",
-                    ]
-                )
-            ]
-        ),
-        launch_arguments={
-            "frame_id": "c1_lidar_frame",
-            "serial_port": "/dev/ttyUSB0",
-            "serial_baudrate": "460800",
-            "inverted": "false",
-        }.items(),
+    rplidar_node = Node(
+        package="rplidar_ros",
+        executable="rplidar_node",
+        name="rplidar_node",
+        output="screen",
+        parameters=[
+            {
+                "channel_type": "serial",
+                "serial_port": "/dev/ttyUSB0",
+                "serial_baudrate": 460800,
+                "frame_id": "c1_lidar_frame",
+                "inverted": False,
+                "angle_compensate": True,
+                "scan_mode": "Standard",
+            }
+        ],
     )
 
     i2c_imu_launch = IncludeLaunchDescription(
@@ -145,11 +147,98 @@ def generate_launch_description():
         }.items(),
     )
 
+    # INA228 DC power monitor (battery voltage, current, power)
+    ina228_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus_sensors"),
+                        "launch",
+                        "ina228.launch.py",
+                    ]
+                )
+            ]
+        ),
+    )
+
+    # twist_mux to arbitrate between joystick and navigation cmd_vel sources
+    twist_mux_config = PathJoinSubstitution(
+        [FindPackageShare("autonomy"), "config", "twist_mux.yaml"]
+    )
+    twist_mux_node = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        name="twist_mux",
+        output="screen",
+        parameters=[twist_mux_config, {"use_sim_time": use_sim_time}],
+        remappings=[("/cmd_vel_out", "/cmd_vel")],
+    )
+
+    # Logitech C920 USB camera
+    # Uses /dev/c920 symlink from udev rule (config/99-c920-camera.rules).
+    # Falls back to /dev/video0 if the symlink is missing.
+    camera_node = Node(
+        package="v4l2_camera",
+        executable="v4l2_camera_node",
+        name="v4l2_camera",
+        output="screen",
+        respawn=True,
+        respawn_delay=3.0,
+        parameters=[
+            {
+                "video_device": "/dev/c920",
+                "image_size": [640, 480],
+                "pixel_format": "YUYV",
+                "camera_frame_id": "camera_link",
+                "use_sim_time": use_sim_time,
+            }
+        ],
+    )
+
+    # Camera HUD overlay (compass, mini-map, LiDAR proximity, velocity, odometer)
+    hud_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus_lite_hud"),
+                        "launch",
+                        "hud.launch.py",
+                    ]
+                )
+            ]
+        ),
+    )
+
+    # Rosbridge WebSocket server (for AndroidRViz / web UI connections on port 9090)
+    rosbridge_launch = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("rosbridge_server"),
+                        "launch",
+                        "rosbridge_websocket_launch.xml",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
     launch_files = [
         OpaqueFunction(function=robot_state_publisher),
         controllers_launch,
-        rplidar_launch,
+        rplidar_node,
         i2c_imu_launch,
+        ina228_launch,
+        camera_node,
+        hud_launch,
+        twist_mux_node,
+        rosbridge_launch,
     ]
 
     return LaunchDescription(arguments + launch_files)

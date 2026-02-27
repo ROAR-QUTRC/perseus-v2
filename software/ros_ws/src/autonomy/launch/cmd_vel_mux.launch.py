@@ -12,9 +12,9 @@ def generate_launch_description():
     declare_params_file = DeclareLaunchArgument(
         "params_file",
         default_value=PathJoinSubstitution(
-            [FindPackageShare("autonomy"), "config", "cmd_vel_mux.yaml"]
+            [FindPackageShare("autonomy"), "config", "twist_mux.yaml"]
         ),
-        description="Full path to the ROS2 parameters file for cmd_vel multiplexer",
+        description="Full path to the ROS2 parameters file for twist_mux",
     )
 
     declare_use_sim_time = DeclareLaunchArgument(
@@ -24,11 +24,12 @@ def generate_launch_description():
     )
 
     mux_node = Node(
-        package="topic_tools",
-        executable="mux",
-        name="cmd_vel_mux",
+        package="twist_mux",
+        executable="twist_mux",
+        name="twist_mux",
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}, params_file],
+        parameters=[params_file, {"use_sim_time": use_sim_time}],
+        remappings=[("cmd_vel_out", "/cmd_vel")],
     )
 
     return LaunchDescription([declare_use_sim_time, declare_params_file, mux_node])

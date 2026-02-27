@@ -1,5 +1,6 @@
 final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
+  autonomy-diagnostics = final.callPackage ./autonomy-diagnostics.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   network-recovery = final.callPackage ./network-recovery.nix { };
   perseus = final.callPackage ./perseus.nix { };
@@ -14,6 +15,7 @@ final: prev: {
   perseus-lite = final.callPackage ./perseus-lite.nix { };
   perseus-lite-description = final.callPackage ./perseus-lite-description.nix { };
   perseus-lite-hardware = final.callPackage ./perseus-lite-hardware.nix { };
+  perseus-lite-hud = final.callPackage ./perseus-lite-hud.nix { };
   perseus-payloads = final.callPackage ./perseus-payloads.nix { };
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };
   perseus-simulation = final.callPackage ./perseus-simulation.nix { };

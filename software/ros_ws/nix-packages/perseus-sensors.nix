@@ -8,6 +8,7 @@
   hardware-interface,
   nlohmann_json,
   openssl,
+  perseus-interfaces,
   rclcpp,
   rclcpp-lifecycle,
   realsense2-camera,
@@ -15,6 +16,8 @@
   rplidar-ros,
   sensor-msgs,
   simple-networking,
+  std-msgs,
+  std-srvs,
   tf2,
   tf2-geometry-msgs,
 }:
@@ -32,6 +35,7 @@ buildRosPackage rec {
     hardware-interface
     nlohmann_json
     openssl
+    perseus-interfaces
     rclcpp
     rclcpp-lifecycle
     realsense2-camera
@@ -39,6 +43,8 @@ buildRosPackage rec {
     rplidar-ros
     sensor-msgs
     simple-networking
+    std-msgs
+    std-srvs
     tf2
     tf2-geometry-msgs
   ];

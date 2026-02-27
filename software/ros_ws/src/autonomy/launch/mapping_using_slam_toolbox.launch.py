@@ -4,6 +4,7 @@ from launch.actions import (
     ExecuteProcess,
     IncludeLaunchDescription,
 )
+from launch.conditions import IfCondition
 from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -14,6 +15,7 @@ def generate_launch_description():
     # Arguments
     use_sim_time = LaunchConfiguration("use_sim_time")
     slam_params_file = LaunchConfiguration("slam_params_file")
+    launch_bringup = LaunchConfiguration("launch_bringup")
 
     declare_args = [
         DeclareLaunchArgument(
@@ -27,6 +29,11 @@ def generate_launch_description():
                 [FindPackageShare("autonomy"), "config", "slam_toolbox_params.yaml"]
             ),
             description="Full path to the ROS2 parameters file for SLAM Toolbox",
+        ),
+        DeclareLaunchArgument(
+            "launch_bringup",
+            default_value="true",
+            description="Launch robot bringup (set to false if already running)",
         ),
     ]
 
@@ -42,6 +49,7 @@ def generate_launch_description():
         launch_arguments={
             "use_sim_time": use_sim_time,
         }.items(),
+        condition=IfCondition(launch_bringup),
     )
 
     # SLAM nodes

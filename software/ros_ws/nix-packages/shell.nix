@@ -47,12 +47,14 @@ pkgs.mkShell {
           boost
           builtin-interfaces
           controller-manager
+          cv-bridge
           diff-drive-controller
           geometry-msgs
           gz-ros2-control
           hardware-interface
           hi-can
           hi-can-raw
+          image-transport
           joint-state-broadcaster
           joint-state-publisher
           joint-state-publisher-gui
@@ -60,9 +62,11 @@ pkgs.mkShell {
           laser-geometry
           launch
           launch-ros
+          lifecycle-msgs
           mecanum-drive-controller
           message-filters
           nav-msgs
+          nav2-common
           nav2-msgs
           navigation2
           nlohmann_json
@@ -70,6 +74,7 @@ pkgs.mkShell {
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
+          python3Packages.pyyaml
           rclcpp
           rclcpp-action
           rclcpp-components
@@ -85,6 +90,7 @@ pkgs.mkShell {
           ros-gz-sim
           ros2controlcli
           ros2launch
+          rosbridge-server
           rosidl-default-generators
           rosidl-default-runtime
           rplidar-ros
@@ -93,14 +99,17 @@ pkgs.mkShell {
           simple-networking
           slam-toolbox
           std-msgs
+          std-srvs
           teleop-twist-joy
           teleop-twist-keyboard
           tf2
           tf2-geometry-msgs
+          tf2-msgs
           tf2-ros
           tf2-sensor-msgs
           twist-mux
           urdf
+          v4l2-camera
           visualization-msgs
           xacro
           yaml-cpp-vendor
