@@ -27,7 +27,9 @@ def generate_launch_description():
         output="screen",
     )
 
-    return LaunchDescription([
-        declare_use_sim_time,
-        network_recovery_node,
-    ])
+    return LaunchDescription(
+        [
+            declare_use_sim_time,
+            network_recovery_node,
+        ]
+    )
