@@ -1,10 +1,14 @@
+---
+orphan: true
+---
+
 # Software
 
 The software on the rover is split into the core software (mainly ROS2 code), the web control UI, and firmware.
 Since the web UI runs on a completely different stack to the rest of the rover code, it just made more sense to separate it out and treat it separately.
 Firmware is compiled completely separately to the rest of the stack, so also needs to be split out (although it does share some libraries with the core software).
 :::{tip}
-If you want to read through project usage, that'll be documented either in the source code (particularly for libraries) and as such be visible in the [generated documentation](project:/generated/index.rst), or in a README file in the project's directory.
+If you want to read through project usage, that'll be documented either in the source code (particularly for libraries) and as such be visible in the generated documentation, or in a README file in the project's directory.
 :::
 
 ## CMake Build Infrastructure
@@ -20,13 +24,13 @@ The other major change is related to the [build type](https://cmake.org/cmake/he
 When you run CMake manually, there is by default no `CMAKE_BUILD_TYPE` specified.
 In this instance, the projects have some additional config in their `CMakeLists.txt` files to default to the `Debug` release type.
 Nix builds, by contrast, _specify_ the `Release` build type.
-The reason this is important is because these projects add the `-Werror` to the GCC build flags for `Release` builds, thus enforcing the [no warnings](project:/standards/software.md#warnings-are-not-acceptable) section of the software standards.
+The reason this is important is because these projects add the `-Werror` to the GCC build flags for `Release` builds, thus enforcing the [no warnings](project:/standards/software/general.md#warnings-are-not-acceptable) section of the software standards.
 
 If you're curious as to what all this looks like in practice, check out the `software/templates/` directory.
 
 :::{note}
 Under the hood, Nix's [`stdenv.mkDerivation`](https://nixos.org/manual/nixpkgs/stable/#sec-using-stdenv) automatically detects and uses CMake for these projects.
-More on that here: <project:nix.md>.
+More on that here: <project:/home/nix-basics.md>.
 :::
 
 ### Testing
@@ -41,14 +45,14 @@ It works well enough that we're also using it for unit testing the shared and na
 
 This is mostly ROS code, and is located in `software/ros_ws/src/`.
 Since it's a ROS2 project, it's comprised of code in two languages - C++ and Python.
-Although, as detailed in the [standards](project:/standards/software.md), we try to keep all the software to C++, there are some cases for which Python just makes more sense (such as input handling - see the `input_devices` package).
+Although, as detailed in the [standards](project:/standards/software/general.md), we try to keep all the software to C++, there are some cases for which Python just makes more sense (such as input handling - see the `input_devices` package).
 The C++ code is all built using [CMake](https://cmake.org/) since that's what ROS2 uses by default, and extending that to non-ROS code allows easy interoperability, as you'll see shortly.
 
 Internally, the code is split into several sections:
 
-- [`software/native/`](project:#dir_native): Programs which run natively, independent of ROS
-- [`software/ros_ws/`](project:#dir_ros_ws): Workspace containing ROS2 code
-- [`software/shared/`](project:#dir_shared): Shared libraries between native and ROS2 code, and sometimes firmware too
+- `software/native/`: Programs which run natively, independent of ROS
+- `software/ros_ws/`: Workspace containing ROS2 code
+- `software/shared/`: Shared libraries between native and ROS2 code, and sometimes firmware too
 
 ### Native Programs
 
@@ -102,7 +106,7 @@ Shared libraries can be made available to your ROS2 package and nodes by includi
 
 #### Hi-CAN
 
-Abbreviated from "hierarchical CAN", Hi-CAN is the library implementing the standards laid out [here](project:/architecture/can-bus.md), and is shared across ROS and native code, as well as firmware.
+Abbreviated from "hierarchical CAN", Hi-CAN is the library implementing the standards laid out [here](project:/systems/can-bus.md), and is shared across ROS and native code, as well as firmware.
 The main library contains the code defining the main interfaces with which code will interact with the library, as well as all of the devices on the bus and their parameters.
 :::{warning}
 Since this particular library is shared between both the ROS code _and_ the firmware, it needs to be written in pure C++ (no external dependencies).
@@ -180,7 +184,7 @@ SvelteKit provides a number of methods of assisting with server communication, h
 
 To begin developing a widget run the command: `./create-widget.sh <file-name>`. The `file-name` argument is just the name of the file that contains the widget and **NOT** the widget name. This should generate a new file `/src/lib/widgets<file-name>.svelte` with this template contents:
 
-```svelte
+```html
 <script lang="ts" module>
 	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
 
@@ -319,9 +323,9 @@ ROS2 core executable from the `default` package.
 
 #### `clean`
 
-Convenience alias of [`scripts.clean`](#scripts-clean)
+Convenience alias of [`scripts.clean`](#arch-scripts-clean)
 
-(scripts-clean)=
+(arch-scripts-clean)=
 
 #### `scripts.clean`
 
