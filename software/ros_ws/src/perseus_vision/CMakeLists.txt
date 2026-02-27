@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 cmake_minimum_required(VERSION 3.10)
-=======
-cmake_minimum_required(VERSION 3.8)
->>>>>>> 22261573 (feat: add ArUco detection capabilities with configuration and node setup)
 project(perseus_vision)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
