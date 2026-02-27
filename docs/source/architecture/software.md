@@ -186,17 +186,17 @@ To begin developing a widget run the command: `./create-widget.sh <file-name>`. 
 
 ```html
 <script lang="ts" module>
-	import type { WidgetSettingsType } from '$lib/scripts/state.svelte';
+  import type { WidgetSettingsType } from "$lib/scripts/state.svelte";
 
-	export const name = 'New Widget';
+  export const name = "New Widget";
 
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
-		groups: {}
-	});
+  export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
+    groups: {},
+  });
 </script>
 
 <script lang="ts">
-	// Widget logic goes here
+  // Widget logic goes here
 </script>
 
 <p>New component</p>
