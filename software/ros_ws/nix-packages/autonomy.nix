@@ -5,6 +5,7 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
+  domain-bridge,
   navigation2,
   rclcpp,
   robot-localization,
@@ -24,6 +25,7 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
+    domain-bridge
     navigation2
     rclcpp
     robot-localization

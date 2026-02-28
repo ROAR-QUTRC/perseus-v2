@@ -48,6 +48,7 @@ pkgs.mkShell {
           builtin-interfaces
           controller-manager
           diff-drive-controller
+          domain-bridge
           geometry-msgs
           gz-ros2-control
           hardware-interface
