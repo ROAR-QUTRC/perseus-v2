@@ -250,7 +250,6 @@ def draw(stdscr, reader: SerialReader):
                 stdscr.addstr("RSSI: ", CYAN)
                 stdscr.addstr(f"{rssi:4d} dBm  ", 0)
                 stdscr.addstr(rssi_bar(rssi), GREEN if rssi > -70 else YELLOW if rssi > -90 else RED)
-            pad = BOX_W - 1 - len(stdscr.instr(row, 0).decode("utf-8", errors="replace").rstrip())
             stdscr.addstr(row, BOX_W - 1, "\u2502")
         except curses.error:
             pass
