@@ -420,8 +420,9 @@ namespace hi_can
                     {
                         SHOULDER_TILT = 0x01,
                         SHOULDER_PAN = 0x02,
-                        PWM_1 = 0x03,
-                        PWM_2 = 0x04,
+                        ELBOW = 0x03,
+                        PWM_1 = 0x04,
+                        PWM_2 = 0x05,
                     };
                     enum class pwm_parameters
                     {
