@@ -1,6 +1,7 @@
 excludes = [
     "build/**",
     "result/**",
+    ".cache/**",
     "generated/**",
     "treefmt.toml",
     "docs/figures-source/**",
