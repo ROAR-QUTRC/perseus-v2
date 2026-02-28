@@ -2,10 +2,9 @@
 #include <math.h>
 
 #include <chrono>
+#include <hi_can_twai.hpp>
 #include <optional>
 #include <vector>
-#include <chrono>
-#include <hi_can_twai.hpp>
 
 #include "RSB.h"
 
@@ -54,7 +53,7 @@ void setup()
     past_positions[TILT] = servo.ReadPos(TILT);
     past_positions[PAN] = servo.ReadPos(PAN);
     past_positions[ELBOW] = servo.ReadPos(ELBOW);
-    
+
     auto& interface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
                                                   filter_t{
                                                       .address = static_cast<flagged_address_t>(BASE_ADDRESS),
@@ -91,7 +90,7 @@ void loop()
         Serial.println("Error handling CAN packet: " + String(e.what()));
     }
 
-    #pragma region Handle motor control
+#pragma region Handle motor control
 
     for (unsigned i = 0; i < 3; i++)
     {
@@ -124,13 +123,13 @@ void loop()
         {  // Reduce speed when 1 revolution from target
             servo.WriteSpe(id, error / 360.0 * MAX_SPEED, 0);
         }
-        else 
+        else
         {
             servo.WriteSpe(id, error > 0 ? MAX_SPEED : -MAX_SPEED, 0);
         }
     }
 
-    #pragma endregion Handle motor control
+#pragma endregion Handle motor control
 }
 
 #pragma region RSBL Servo
@@ -143,7 +142,8 @@ void handle_rsbl_servo_command(const Packet& packet)
     {
         // get target device group from address
         uint8_t group_id = static_cast<standard_address_t>(
-                packet.get_address().address).group;
+                               packet.get_address().address)
+                               .group;
         // Get the command type from the parameter ID
         control_board::rsbl_parameters command_type = static_cast<control_board::rsbl_parameters>(
             static_cast<standard_address_t>(
@@ -158,7 +158,7 @@ void handle_rsbl_servo_command(const Packet& packet)
         case rsbl_parameters::SET_POS_EX:
         {
             const position_control_t position_control_cmd = position_control_t{packet.get_data()};
-            if (group_id > 2) 
+            if (group_id > 2)
             {
                 Serial.printf("Received RSBL command for invalid group %d\n", group_id);
                 return;
