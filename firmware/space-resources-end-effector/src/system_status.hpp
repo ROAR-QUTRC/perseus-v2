@@ -18,4 +18,6 @@ struct SystemStatus
     uint32_t tx_telem_count;   // total telemetry frames sent
     uint32_t rx_invalid_count; // corrupted/invalid frames
     uint8_t last_cmd_type;     // last command type byte
+    uint8_t last_bad_frame[16]; // last invalid RX frame (debug)
+    uint8_t last_bad_len;       // length of last bad frame
 };

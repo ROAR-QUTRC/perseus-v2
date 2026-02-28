@@ -29,7 +29,8 @@ namespace transceiver
     Transceiver::Transceiver(i2c_inst_t* i2c, uint8_t address)
         : _i2c(i2c),
           _address(address),
-          _connected(false)
+          _connected(false),
+          _last_rssi(0)
     {
     }
 
@@ -125,28 +126,40 @@ namespace transceiver
             return 0;
         }
 
-        // Read payload in chunks
-        uint8_t read_total = 0;
-        while (read_total < length)
+        // ATtiny prepends 3 metadata bytes (RSSI + 2-byte sender address)
+        // to the payload buffer (see PiicoDev MicroPython reference driver)
+        constexpr uint8_t METADATA_SIZE = 3;
+        uint8_t total = length + METADATA_SIZE;
+        uint8_t raw[64];
+
+        sleep_ms(5);  // Allow ATtiny to prepare payload buffer
+
+        // Read full buffer (metadata + payload) in chunks
+        uint8_t offset = 0;
+        while (offset < total)
         {
-            uint8_t chunk_size = (length - read_total > I2C_CHUNK_SIZE)
-                                     ? I2C_CHUNK_SIZE
-                                     : (length - read_total);
-            uint8_t reg = REG_PAYLOAD_R;
-            int ret = i2c_write_blocking(_i2c, _address, &reg, 1, true);
+            uint8_t chunk =
+                (total - offset > I2C_CHUNK_SIZE) ? I2C_CHUNK_SIZE : (total - offset);
+            int ret = read_block(REG_PAYLOAD_R, raw + offset, chunk);
             if (ret < 0)
             {
                 _connected = false;
                 return 0;
             }
-            ret = i2c_read_blocking(_i2c, _address, buf + read_total, chunk_size,
-                                    false);
-            if (ret < 0)
+            offset += chunk;
+            if (offset < total)
             {
-                _connected = false;
-                return 0;
+                sleep_ms(5);
             }
-            read_total += chunk_size;
+        }
+
+        // Extract RSSI from metadata byte 0
+        _last_rssi = static_cast<int8_t>(raw[0]) - 164;
+
+        // Copy actual payload (skip metadata prefix)
+        for (uint8_t i = 0; i < length; i++)
+        {
+            buf[i] = raw[METADATA_SIZE + i];
         }
 
         return length;
@@ -154,8 +167,7 @@ namespace transceiver
 
     int8_t Transceiver::read_rssi()
     {
-        uint8_t raw = read_reg_u8(REG_RSSI);
-        return static_cast<int8_t>(raw);
+        return static_cast<int8_t>(_last_rssi);
     }
 
     bool Transceiver::write_reg_u8(uint8_t reg, uint8_t value)
@@ -179,6 +191,16 @@ namespace transceiver
         i2c_write_blocking(_i2c, _address, &reg, 1, true);
         i2c_read_blocking(_i2c, _address, buf, 2, false);
         return (static_cast<uint16_t>(buf[0]) << 8) | buf[1];
+    }
+
+    int Transceiver::read_block(uint8_t reg, uint8_t* buf, uint8_t length)
+    {
+        int ret = i2c_write_blocking(_i2c, _address, &reg, 1, true);
+        if (ret < 0)
+        {
+            return ret;
+        }
+        return i2c_read_blocking(_i2c, _address, buf, length, false);
     }
 
     bool Transceiver::wait_ready(uint32_t timeout_ms)

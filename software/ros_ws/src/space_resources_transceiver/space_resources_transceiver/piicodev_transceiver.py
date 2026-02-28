@@ -53,6 +53,7 @@ class PiicoDevTransceiver:
         self._bus = None
         self._lock = threading.Lock()
         self._connected = False
+        self._last_rssi = 0
 
     def connect(self) -> bool:
         """Open I2C bus and verify WHOAMI. Returns True on success."""
@@ -167,9 +168,14 @@ class PiicoDevTransceiver:
                 if length == 0 or length > 61:
                     return None
 
-                # Read payload in chunks
+                # ATtiny prepends 3 metadata bytes (RSSI + 2-byte sender)
+                # to the payload buffer (see PiicoDev MicroPython reference)
+                _METADATA_SIZE = 3
+                total = length + _METADATA_SIZE
+
+                # Read full buffer (metadata + payload) in chunks
                 payload = []
-                remaining = length
+                remaining = total
                 while remaining > 0:
                     chunk_size = min(remaining, _I2C_CHUNK_SIZE)
                     chunk = self._bus.read_i2c_block_data(
@@ -178,7 +184,11 @@ class PiicoDevTransceiver:
                     payload.extend(chunk)
                     remaining -= chunk_size
 
-                return bytes(payload[:length])
+                # Extract RSSI from metadata
+                self._last_rssi = payload[0] - 164
+
+                # Return only the user payload (skip metadata prefix)
+                return bytes(payload[_METADATA_SIZE : _METADATA_SIZE + length])
 
             except OSError as e:
                 logger.error("Receive failed: %s", e)
@@ -186,14 +196,8 @@ class PiicoDevTransceiver:
                 return None
 
     def read_rssi(self) -> int:
-        """Read last received signal strength in dBm."""
-        with self._lock:
-            try:
-                raw = self._read_u8(_REG_RSSI)
-                # RSSI is returned as unsigned, convert to signed dBm
-                return raw if raw < 128 else raw - 256
-            except OSError:
-                return 0
+        """Read last received signal strength in dBm (from last received packet)."""
+        return self._last_rssi
 
     # --- Low-level I2C helpers (caller must hold self._lock) ---
 

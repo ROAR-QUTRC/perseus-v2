@@ -35,10 +35,12 @@ namespace transceiver
         i2c_inst_t* _i2c;
         uint8_t _address;
         bool _connected;
+        int16_t _last_rssi;
 
         bool write_reg_u8(uint8_t reg, uint8_t value);
         uint8_t read_reg_u8(uint8_t reg);
         uint16_t read_reg_u16(uint8_t reg);
+        int read_block(uint8_t reg, uint8_t* buf, uint8_t length);
         bool wait_ready(uint32_t timeout_ms = 100);
     };
 

@@ -154,6 +154,12 @@ int main()
                 else
                 {
                     rx_invalid_count++;
+                    // Store last bad frame for debug command
+                    sys_status.last_bad_len = rx_len < 16 ? rx_len : 16;
+                    for (uint8_t i = 0; i < sys_status.last_bad_len; i++)
+                    {
+                        sys_status.last_bad_frame[i] = rx_buf[i];
+                    }
                 }
             }
         }

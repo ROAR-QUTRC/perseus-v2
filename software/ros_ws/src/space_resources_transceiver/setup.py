@@ -31,6 +31,7 @@ setup(
     entry_points={
         "console_scripts": [
             "transceiver_node = space_resources_transceiver.transceiver_node:main",
+            "end_effector_tui = space_resources_transceiver.end_effector_tui:main",
         ],
     },
 )

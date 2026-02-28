@@ -122,6 +122,26 @@ namespace usb_repl
         {
             cmd_status();
         }
+        else if (strcmp(line, "dump") == 0)
+        {
+            if (_status.last_bad_len > 0)
+            {
+                printf("Last bad RX [%u bytes]:", _status.last_bad_len);
+                for (uint8_t i = 0; i < _status.last_bad_len; i++)
+                {
+                    printf(" %02X", _status.last_bad_frame[i]);
+                }
+                printf("\n");
+                // Also show what decode expects
+                printf("  marker=%s len_ok=%s\n",
+                       _status.last_bad_frame[0] == 0xAA ? "OK" : "BAD",
+                       _status.last_bad_len >= 4 ? "yes" : "no");
+            }
+            else
+            {
+                printf("No bad frames captured yet.\n");
+            }
+        }
         else if (strcmp(line, "scan") == 0)
         {
             cmd_scan();
