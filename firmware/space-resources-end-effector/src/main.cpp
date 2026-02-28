@@ -1,10 +1,9 @@
 #include <cstdio>
 
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
-
 #include "current_sensor.hpp"
+#include "hardware/i2c.h"
 #include "heater_control.hpp"
+#include "pico/stdlib.h"
 #include "protocol.hpp"
 #include "servo_driver.hpp"
 #include "transceiver.hpp"
@@ -19,9 +18,9 @@ constexpr uint8_t HEATER_GPIO = 15;
 constexpr uint8_t CURRENT_ADC_PIN = 26;
 
 // Radio configuration
-constexpr uint8_t RADIO_NODE_ID = 2;       // Pico is node 2
+constexpr uint8_t RADIO_NODE_ID = 2;  // Pico is node 2
 constexpr uint8_t RADIO_NETWORK_ID = 100;
-constexpr uint8_t RADIO_DEST_NODE = 1;     // Orin is node 1
+constexpr uint8_t RADIO_DEST_NODE = 1;  // Orin is node 1
 constexpr uint8_t RADIO_TX_POWER = 13;
 
 // Timing
@@ -50,10 +49,13 @@ int main()
     heater.init();
 
     bool radio_ok = radio.init(TRANSCEIVER_SDA, TRANSCEIVER_SCL);
-    if (radio_ok) {
+    if (radio_ok)
+    {
         radio.configure(RADIO_NODE_ID, RADIO_NETWORK_ID, RADIO_DEST_NODE,
                         RADIO_TX_POWER);
-    } else {
+    }
+    else
+    {
         printf("WARNING: Radio init failed, USB REPL only\n");
     }
 
@@ -66,7 +68,8 @@ int main()
     sleep_ms(10);
 
     bool servo_ok = servo.init();
-    if (!servo_ok) {
+    if (!servo_ok)
+    {
         printf("WARNING: Servo driver init failed\n");
     }
 
@@ -83,54 +86,59 @@ int main()
     bool watchdog_tripped = false;
 
     // Main loop (cooperative, no RTOS)
-    while (true) {
+    while (true)
+    {
         uint32_t now = to_ms_since_boot(get_absolute_time());
 
         // 1. Check radio for incoming commands
-        if (radio.is_connected()) {
+        if (radio.is_connected())
+        {
             uint8_t rx_buf[64];
             uint8_t rx_len = radio.receive(rx_buf, sizeof(rx_buf));
-            if (rx_len > 0) {
+            if (rx_len > 0)
+            {
                 protocol::Command cmd =
                     protocol::decode_command(rx_buf, rx_len);
-                if (cmd.valid) {
+                if (cmd.valid)
+                {
                     last_command_time = now;
                     watchdog_tripped = false;
 
-                    switch (cmd.type) {
-                        case protocol::CMD_SET_SERVO:
-                            current_servo_speed = cmd.servo_speed;
-                            servo.set_speed(SERVO_CHANNEL,
-                                            cmd.servo_speed / 1000.0f);
-                            break;
+                    switch (cmd.type)
+                    {
+                    case protocol::CMD_SET_SERVO:
+                        current_servo_speed = cmd.servo_speed;
+                        servo.set_speed(SERVO_CHANNEL,
+                                        cmd.servo_speed / 1000.0f);
+                        break;
 
-                        case protocol::CMD_SET_HEATER:
-                            current_heater_duty = cmd.heater_duty;
-                            heater.set_duty(cmd.heater_duty);
-                            break;
+                    case protocol::CMD_SET_HEATER:
+                        current_heater_duty = cmd.heater_duty;
+                        heater.set_duty(cmd.heater_duty);
+                        break;
 
-                        case protocol::CMD_SET_ALL:
-                            current_servo_speed = cmd.servo_speed;
-                            current_heater_duty = cmd.heater_duty;
-                            servo.set_speed(SERVO_CHANNEL,
-                                            cmd.servo_speed / 1000.0f);
-                            heater.set_duty(cmd.heater_duty);
-                            break;
+                    case protocol::CMD_SET_ALL:
+                        current_servo_speed = cmd.servo_speed;
+                        current_heater_duty = cmd.heater_duty;
+                        servo.set_speed(SERVO_CHANNEL,
+                                        cmd.servo_speed / 1000.0f);
+                        heater.set_duty(cmd.heater_duty);
+                        break;
 
-                        case protocol::CMD_STOP_ALL:
-                            current_servo_speed = 0;
-                            current_heater_duty = 0;
-                            servo.stop_all();
-                            heater.off();
-                            break;
+                    case protocol::CMD_STOP_ALL:
+                        current_servo_speed = 0;
+                        current_heater_duty = 0;
+                        servo.stop_all();
+                        heater.off();
+                        break;
 
-                        case protocol::CMD_GET_STATUS:
-                        case protocol::CMD_HEARTBEAT:
-                            // Just resets watchdog
-                            break;
+                    case protocol::CMD_GET_STATUS:
+                    case protocol::CMD_HEARTBEAT:
+                        // Just resets watchdog
+                        break;
 
-                        default:
-                            break;
+                    default:
+                        break;
                     }
                 }
             }
@@ -140,22 +148,27 @@ int main()
         repl.poll();
 
         // 3. Send telemetry at 5 Hz
-        if (radio.is_connected() && (now - last_telemetry_time) >= TELEMETRY_INTERVAL_MS) {
+        if (radio.is_connected() && (now - last_telemetry_time) >= TELEMETRY_INTERVAL_MS)
+        {
             last_telemetry_time = now;
 
             uint16_t current_ma = sensor.read_current_ma();
 
             uint8_t error_flags = 0;
-            if (current_ma > 10000) {
+            if (current_ma > 10000)
+            {
                 error_flags |= protocol::ERR_OVERCURRENT;
             }
-            if (watchdog_tripped) {
+            if (watchdog_tripped)
+            {
                 error_flags |= protocol::ERR_COMM_TIMEOUT;
             }
-            if (!servo.is_ok()) {
+            if (!servo.is_ok())
+            {
                 error_flags |= protocol::ERR_SERVO_FAULT;
             }
-            if (!radio.is_connected()) {
+            if (!radio.is_connected())
+            {
                 error_flags |= protocol::ERR_TRANSCEIVER_FAULT;
             }
 
@@ -168,7 +181,8 @@ int main()
 
         // 4. Watchdog: stop all if no command in 500ms
         if (last_command_time > 0 &&
-            (now - last_command_time) > WATCHDOG_TIMEOUT_MS && !watchdog_tripped) {
+            (now - last_command_time) > WATCHDOG_TIMEOUT_MS && !watchdog_tripped)
+        {
             watchdog_tripped = true;
             current_servo_speed = 0;
             current_heater_duty = 0;

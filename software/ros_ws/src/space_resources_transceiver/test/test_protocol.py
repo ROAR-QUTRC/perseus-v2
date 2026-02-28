@@ -134,7 +134,7 @@ class TestTelemetry:
         assert decode_telemetry(bad_frame) is None
 
     def test_too_short(self):
-        assert decode_telemetry(b"\xBB\x80") is None
+        assert decode_telemetry(b"\xbb\x80") is None
         assert decode_telemetry(b"") is None
 
     def test_zero_current(self):

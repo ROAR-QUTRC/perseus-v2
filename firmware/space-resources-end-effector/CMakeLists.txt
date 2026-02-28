@@ -9,24 +9,20 @@ set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
 
-add_executable(${PROJECT_NAME}
-    src/main.cpp
-    src/protocol.cpp
-    src/transceiver.cpp
-    src/servo_driver.cpp
-    src/current_sensor.cpp
-    src/heater_control.cpp
-    src/usb_repl.cpp
-)
+add_executable(
+  ${PROJECT_NAME}
+  src/main.cpp
+  src/protocol.cpp
+  src/transceiver.cpp
+  src/servo_driver.cpp
+  src/current_sensor.cpp
+  src/heater_control.cpp
+  src/usb_repl.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
-target_link_libraries(${PROJECT_NAME}
-    pico_stdlib
-    hardware_i2c
-    hardware_adc
-    hardware_pwm
-)
+target_link_libraries(${PROJECT_NAME} pico_stdlib hardware_i2c hardware_adc
+                      hardware_pwm)
 
 # Enable USB output, disable UART output
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
