@@ -357,5 +357,9 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# LSP files
+.cache/
+.ccls-cache/
+
 # Temporary Fast-LIO package
 /software/ros_ws/src/spark-fast-lio
