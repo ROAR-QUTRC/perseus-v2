@@ -1,0 +1,10 @@
+transceiver_node:
+  ros__parameters:
+    i2c_bus: 1
+    i2c_address: 0x1A
+    node_id: 1
+    remote_node_id: 2
+    network_id: 100
+    tx_power_dbm: 13
+    command_rate_hz: 10.0
+    telemetry_poll_rate_hz: 20.0

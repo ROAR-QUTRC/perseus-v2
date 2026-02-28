@@ -17,5 +17,6 @@ final: prev: {
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };
   perseus-simulation = final.callPackage ./perseus-simulation.nix { };
   pointcloud-to-laserscan = final.callPackage ./pointcloud-to-laserscan.nix { };
+  space-resources-transceiver = final.callPackage ./space-resources-transceiver.nix { };
   teleop-diagnostics = final.callPackage ./teleop-diagnostics.nix { };
 }
