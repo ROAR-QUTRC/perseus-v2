@@ -28,12 +28,12 @@ def generate_launch_description():
     # Declare Arguments
     source_domain_arg = DeclareLaunchArgument(
         "source_domain",
-        default_value="51",
+        default_value="42",
         description="Source DDS domain ID",
     )
     target_domain_arg = DeclareLaunchArgument(
         "target_domain",
-        default_value="42",
+        default_value="10",
         description="Target DDS domain ID",
     )
     use_sim_time_arg = DeclareLaunchArgument(

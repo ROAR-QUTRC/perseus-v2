@@ -15,7 +15,6 @@
   <depend>navigation2</depend>
   <depend>xacro</depend>
   <depend>robot_localization</depend>
-  <depend>domain_bridge</depend>
   
 
   <test_depend>ament_lint_auto</test_depend>

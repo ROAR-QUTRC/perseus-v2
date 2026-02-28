@@ -1,0 +1,17 @@
+# Domain Bridge Configuration
+# This file defines the topics to be bridged between DDS domains
+
+---
+topics:
+  # Example: Bridge cmd_vel from domain 42 to domain 10
+  - name: "cmd_vel"
+    types:
+      - "geometry_msgs/msg/Twist"
+
+  # Example: Bridge sensor data
+  - name: "sensor_data"
+    types:
+      - "sensor_msgs/msg/Imu"
+      - "sensor_msgs/msg/PointCloud2"
+
+# Note: Domain IDs can be overridden at launch time using --from and --to flags
