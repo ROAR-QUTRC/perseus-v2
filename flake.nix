@@ -201,6 +201,13 @@
             stdmanpages
             nix-gl-host
             ;
+        };
+        # Packages needed to run the simulation
+        # Note: May not be needed, most needed packages should
+        # already be brought in as deps of the simulation workspace packages
+        simPkgs = { };
+
+        cudaPkgs = {
           inherit (pkgs.cudaPackages)
             cuda_nvcc
             cuda_cudart
@@ -216,11 +223,6 @@
           # ONNX Runtime with CUDA support
           onnxruntime-cuda = pkgs.onnxruntime.override { cudaSupport = true; };
         };
-        # Packages needed to run the simulation
-        # Note: May not be needed, most needed packages should
-        # already be brought in as deps of the simulation workspace packages
-        simPkgs = { };
-
         # --- ROS WORKSPACES ---
         # function to build a ROS workspace which modifies the dev shell hook to set up environment variables
         mkWorkspace =
@@ -229,12 +231,14 @@
             name ? "ROAR",
             additionalDevPkgs ? { },
             additionalPkgs ? { },
+            additionalPrebuiltPkgs ? { },
+            additionalPostShellHook ? "",
           }:
           ros.callPackage ros.buildROSWorkspace {
             inherit name;
             devPackages = devPackages // additionalDevPkgs;
             prebuiltPackages = standardPkgs // additionalPkgs;
-            prebuiltShellPackages = devShellPkgs // formatters;
+            prebuiltShellPackages = devShellPkgs // formatters // additionalPrebuiltPkgs;
             releaseDomainId = productionDomainId;
             environmentDomainId = devDomainId;
             forceReleaseDomainId = true;
@@ -246,13 +250,8 @@
               export RCUTILS_COLORIZED_OUTPUT=1
               # fix locale issues
               export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
-              # CUDA environment setup
-              export CUDA_PATH="${pkgs.cudaPackages.cuda_nvcc}"
-              export CUDA_HOME="${pkgs.cudaPackages.cuda_nvcc}"
-              export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc}/bin"
-              # ONNX Runtime with CUDA support
-              export ORT_LIB_LOCATION="${devShellPkgs.onnxruntime-cuda}/lib"
-            '';
+            ''
+            + additionalPostShellHook;
           };
 
         # Actually build the workspaces
@@ -265,6 +264,19 @@
           name = "ROAR Simulation";
           additionalPkgs = simPkgs;
           additionalDevPkgs = pkgs.ros.simDevPackages;
+        };
+        machineLearning = mkWorkspace {
+          inherit (pkgs) ros;
+          name = "ROAR machine learning";
+          additionalPrebuiltPkgs = cudaPkgs;
+          additionalPostShellHook = ''
+            # CUDA environment setup
+            export CUDA_PATH="${pkgs.cudaPackages.cuda_nvcc}"
+            export CUDA_HOME="${pkgs.cudaPackages.cuda_nvcc}"
+            export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc}/bin"
+            # ONNX Runtime with CUDA support
+            export ORT_LIB_LOCATION="${cudaPkgs.onnxruntime-cuda}/lib"
+          '';
         };
 
         # --- PYTHON (UV) WORKSPACES ---
@@ -303,7 +315,12 @@
       {
         # rover development environment
         packages = {
-          inherit default simulation docs;
+          inherit
+            default
+            simulation
+            docs
+            machineLearning
+            ;
 
           # Output the entire package set to make certain debugging easier
           # Note that it needs to be a derivation though to make nix flake commands happy, so we just touch the output file
@@ -337,6 +354,7 @@
         devShells = {
           default = default.env;
           simulation = simulation.env;
+          machineLearning = machineLearning.env;
 
           docs = docs.shell;
         };

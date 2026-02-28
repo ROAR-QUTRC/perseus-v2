@@ -191,13 +191,4 @@ in
     # so that they propagate properly
     ${rosDistro} = prev.rosPackages.${rosDistro}.overrideScope rosOverlay;
   };
-
-  gst_all_1 = prev.gst_all_1 // {
-    gst-plugins-rs = prev.gst_all_1.gst-plugins-rs.override {
-      plugins = [
-        "rtp"
-        "webrtc"
-      ];
-    };
-  };
 }
