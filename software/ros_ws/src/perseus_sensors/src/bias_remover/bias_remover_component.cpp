@@ -51,9 +51,7 @@ namespace imu_processors
             }
             last_output_pub_ = this->get_clock()->now();
 
-            // Use reliable QoS so robot_localization (reliable subscriber) can connect.
-            // Depth of 10 matches the EKF's imu0_queue_size.
-            pub_ = create_publisher<sensor_msgs::msg::Imu>(imu_out_topic_, rclcpp::QoS(10));
+            pub_ = create_publisher<sensor_msgs::msg::Imu>(imu_out_topic_, rclcpp::SensorDataQoS());
 
             bias_sub_ = create_subscription<geometry_msgs::msg::Vector3Stamped>(
                 bias_in_topic_, 10,
@@ -62,6 +60,9 @@ namespace imu_processors
             imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
                 imu_in_topic_, rclcpp::SensorDataQoS(),
                 std::bind(&BiasRemover::imu_cb, this, std::placeholders::_1));
+
+            // Log successful initialization
+            RCLCPP_INFO(this->get_logger(), "\033[92m BiasRemover Node Successfully Initialised!\033[0m");
         }
 
     private:

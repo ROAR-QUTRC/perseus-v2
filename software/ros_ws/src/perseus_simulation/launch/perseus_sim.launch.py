@@ -86,6 +86,10 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
+    controllers_launch_delayed = TimerAction(
+        period=10.0,
+        actions=[controllers_launch],
+    )
     rviz_config = PathJoinSubstitution(
         [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
     )
@@ -167,7 +171,7 @@ def generate_launch_description():
     launch_files = [
         gz_launch,
         rsp_launch,
-        controllers_launch,
+        controllers_launch_delayed,
         ekf_delayed,
         rosbridge_launch,
         twist_mux_launch,
