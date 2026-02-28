@@ -10,9 +10,9 @@
 #include "transceiver.hpp"
 #include "usb_repl.hpp"
 
-// Pin assignments
-constexpr uint8_t TRANSCEIVER_SDA = 0;
-constexpr uint8_t TRANSCEIVER_SCL = 1;
+// Pin assignments (PiicoDev Pico Adapter uses GP8/GP9 for I2C0)
+constexpr uint8_t TRANSCEIVER_SDA = 8;
+constexpr uint8_t TRANSCEIVER_SCL = 9;
 constexpr uint8_t SERVO_SDA = 2;
 constexpr uint8_t SERVO_SCL = 3;
 constexpr uint8_t HEATER_GPIO = 15;

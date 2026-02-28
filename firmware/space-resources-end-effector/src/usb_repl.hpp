@@ -40,6 +40,7 @@ namespace usb_repl
         void cmd_stop();
         void cmd_status();
         void cmd_stream();
+        void cmd_scan();
         void cmd_help();
         void emit_stream_json();
     };

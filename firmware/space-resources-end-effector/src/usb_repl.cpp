@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "hardware/i2c.h"
 #include "pico/stdlib.h"
 #include "protocol.hpp"
 
@@ -121,6 +122,10 @@ namespace usb_repl
         {
             cmd_status();
         }
+        else if (strcmp(line, "scan") == 0)
+        {
+            cmd_scan();
+        }
         else if (strcmp(line, "help") == 0)
         {
             cmd_help();
@@ -188,6 +193,21 @@ namespace usb_repl
         printf("Streaming JSON at 5 Hz. Type 'stop' to end.\n");
     }
 
+    void UsbRepl::cmd_scan()
+    {
+        printf("Scanning I2C0 bus (0x08-0x77)...\n");
+        for (uint8_t addr = 0x08; addr < 0x78; addr++)
+        {
+            uint8_t dummy;
+            int ret = i2c_read_blocking(i2c0, addr, &dummy, 1, false);
+            if (ret >= 0)
+            {
+                printf("  Found device at 0x%02X (%u)\n", addr, addr);
+            }
+        }
+        printf("Scan complete.\n");
+    }
+
     void UsbRepl::cmd_help()
     {
         printf("Commands:\n");
@@ -196,6 +216,7 @@ namespace usb_repl
         printf("  stop           — Emergency stop\n");
         printf("  status         — Print telemetry\n");
         printf("  stream         — Stream JSON status at 5 Hz\n");
+        printf("  scan           — Scan I2C0 bus for devices\n");
         printf("  help           — Show this message\n");
     }
 
