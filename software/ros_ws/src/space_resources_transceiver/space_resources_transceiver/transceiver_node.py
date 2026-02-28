@@ -78,7 +78,7 @@ class TransceiverNode(Node):
         self._connect_timer = self.create_timer(2.0, self._try_connect)
 
         self.get_logger().info(
-            "Transceiver node starting (bus=%d addr=0x%02X)", i2c_bus, i2c_address
+            f"Transceiver node starting (bus={i2c_bus} addr=0x{i2c_address:02X})"
         )
         # Attempt initial connection
         self._try_connect()
