@@ -9,7 +9,10 @@ Included nodes:
 3. **TopicRemapper** – dynamically detects a topic type and republishes it at a lower frequency.
 
 ---
-
+> ⚠️ **Open-Source Attribution:**  
+> The **BiasEstimator** and **BiasRemover** ROS2 nodes in this package are adapted from the 
+> [ros-perception/imu_pipeline](https://github.com/ros-perception/imu_pipeline/tree/ros2) project.  
+> In particular, the bias removal logic is based on the implementation in  `imu_processors/src/imu_bias_remover.cpp` from that repository, with extensions for stationary detection, configurable parameters, and composable node support in the Perseus platform.
 ## 1. BiasEstimator Node
 
 **Node Name:** `imu_bias_estimator`
