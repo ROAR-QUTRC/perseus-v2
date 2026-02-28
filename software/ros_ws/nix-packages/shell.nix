@@ -68,6 +68,7 @@ pkgs.mkShell {
           openssl
           pluginlib
           python3Packages.pygame
+          python3Packages.pyserial
           python3Packages.pytest
           rclcpp
           rclcpp-action
