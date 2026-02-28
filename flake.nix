@@ -76,57 +76,16 @@
         # --- NIX PACKAGES IMPORT AND OVERLAYS ---
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [
-            nixgl.overlay
-            # TODO: Look into fixing nix-gl-host? Doesn't work on Intel hardware
-            nix-gl-host.overlays.default
-            # get the ros packages
-            nix-ros-overlay.overlays.default
-            # fix colcon (silence warnings, add extensions)
-            (import ./software/ros_ws/colcon/overlay.nix)
-            # add ros workspace functionality
-            nix-ros-workspace.overlays.default
-            # import ros workspace packages + fixes
-            (import ./software/overlay.nix rosDistro)
-            (import ./packages/overlay.nix)
-            (final: prev: {
-              inherit self; # add self access for hacks like nixGL
-              # alias the output to pkgs.ros to make it easier to use
-              ros = final.rosPackages.${rosDistro};
-              # and add pkgs.unstable access
-              unstable = pkgs-unstable;
-            })
-          ];
-          config.allowUnfreePredicate =
-            pkg:
-            builtins.elem (pkgs.lib.getName pkg) [
-              "drawio"
-              # CUDA packages
-              "cuda_cudart"
-              "cuda_nvcc"
-              "cuda_cccl"
-              "libcublas"
-              "libcufft"
-              "libcurand"
-              "libcusolver"
-              "libcusparse"
-              "libnpp"
-              "cuda_nvrtc"
-              "cuda_nvml_dev"
-              "cuda_profiler_api"
-              "cudatoolkit"
-              "libnvjitlink"
-              "cuda_cuobjdump"
-              "cuda_gdb"
-              "cuda_cuxxfilt"
-              "cuda_nvdisasm"
-              "cuda_nvprune"
-              "cuda_sanitizer_api"
-              "cuda_nvtx"
-              # ONNX Runtime CUDA dependencies
-              "cudnn"
-              "cudnn-frontend"
-            ];
+          # These are imports from ./nix to reduce the amount of clutter in the flake
+          overlays = import ./nix/nixpkgs-overlays.nix {
+            inherit
+              inputs
+              pkgs-unstable
+              rosDistro
+              self
+              ;
+          };
+          config = import ./nix/nixpkgs-config.nix;
         };
         # we don't need to apply overlays here since pkgs-unstable is only for pure python stuff
         pkgs-unstable = import nixpkgs-unstable {
@@ -198,6 +157,7 @@
                 mkdir $out
               '';
         }
+        # Include the ROS workspaces from ./nix/workspaces.nix
         // rosWorkspaces;
 
         devShells = {
