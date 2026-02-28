@@ -1,7 +1,6 @@
 rosDistro: final: prev:
 let
   rosOverlay = rosFinal: rosPrev: {
-    # --- GUI patches ---
     fields2cover =
       let
         nlohmann_json = final.nlohmann_json.overrideAttrs {
