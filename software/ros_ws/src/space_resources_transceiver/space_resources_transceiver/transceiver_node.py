@@ -22,7 +22,7 @@ class TransceiverNode(Node):
         super().__init__("transceiver_node")
 
         # Declare parameters
-        self.declare_parameter("i2c_bus", 1)
+        self.declare_parameter("i2c_bus", 7)
         self.declare_parameter("i2c_address", 0x1A)
         self.declare_parameter("node_id", 1)
         self.declare_parameter("remote_node_id", 2)
