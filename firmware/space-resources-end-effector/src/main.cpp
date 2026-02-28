@@ -6,6 +6,7 @@
 #include "pico/stdlib.h"
 #include "protocol.hpp"
 #include "servo_driver.hpp"
+#include "system_status.hpp"
 #include "transceiver.hpp"
 #include "usb_repl.hpp"
 
@@ -73,8 +74,11 @@ int main()
         printf("WARNING: Servo driver init failed\n");
     }
 
+    // Shared system status for streaming
+    SystemStatus sys_status = {};
+
     // USB REPL for testing
-    usb_repl::UsbRepl repl(servo, heater, sensor);
+    usb_repl::UsbRepl repl(servo, heater, sensor, sys_status, radio);
     printf("USB REPL ready. Type 'help' for commands.\n> ");
 
     // State
@@ -84,6 +88,10 @@ int main()
     uint32_t last_command_time = 0;
     uint32_t last_telemetry_time = 0;
     bool watchdog_tripped = false;
+    uint32_t rx_cmd_count = 0;
+    uint32_t tx_telem_count = 0;
+    uint32_t rx_invalid_count = 0;
+    uint8_t last_cmd_type = 0;
 
     // Main loop (cooperative, no RTOS)
     while (true)
@@ -103,6 +111,8 @@ int main()
                 {
                     last_command_time = now;
                     watchdog_tripped = false;
+                    rx_cmd_count++;
+                    last_cmd_type = cmd.type;
 
                     switch (cmd.type)
                     {
@@ -141,21 +151,39 @@ int main()
                         break;
                     }
                 }
+                else
+                {
+                    rx_invalid_count++;
+                }
             }
         }
 
-        // 2. Check USB serial for REPL commands
+        // 2. Update shared system status
+        sys_status.radio_connected = radio.is_connected();
+        sys_status.rssi_dbm = radio.is_connected() ? radio.read_rssi() : 0;
+        sys_status.current_ma = sensor.read_current_ma();
+        sys_status.servo_speed = current_servo_speed;
+        sys_status.heater_duty = current_heater_duty;
+        sys_status.servo_ok = servo.is_ok();
+        sys_status.watchdog_tripped = watchdog_tripped;
+        sys_status.uptime_ms = now;
+        sys_status.last_cmd_age_ms =
+            (last_command_time > 0) ? (now - last_command_time) : 0xFFFFFFFF;
+        sys_status.rx_cmd_count = rx_cmd_count;
+        sys_status.tx_telem_count = tx_telem_count;
+        sys_status.rx_invalid_count = rx_invalid_count;
+        sys_status.last_cmd_type = last_cmd_type;
+
+        // 3. Check USB serial for REPL commands
         repl.poll();
 
-        // 3. Send telemetry at 5 Hz
+        // 4. Send telemetry at 5 Hz
         if (radio.is_connected() && (now - last_telemetry_time) >= TELEMETRY_INTERVAL_MS)
         {
             last_telemetry_time = now;
 
-            uint16_t current_ma = sensor.read_current_ma();
-
             uint8_t error_flags = 0;
-            if (current_ma > 10000)
+            if (sys_status.current_ma > 10000)
             {
                 error_flags |= protocol::ERR_OVERCURRENT;
             }
@@ -174,12 +202,13 @@ int main()
 
             uint8_t tx_buf[16];
             uint8_t tx_len = protocol::encode_telemetry(
-                tx_buf, telemetry_seq++, current_ma, current_servo_speed,
-                current_heater_duty, error_flags);
+                tx_buf, telemetry_seq++, sys_status.current_ma,
+                current_servo_speed, current_heater_duty, error_flags);
             radio.send(tx_buf, tx_len);
+            tx_telem_count++;
         }
 
-        // 4. Watchdog: stop all if no command in 500ms
+        // 5. Watchdog: stop all if no command in 500ms
         if (last_command_time > 0 &&
             (now - last_command_time) > WATCHDOG_TIMEOUT_MS && !watchdog_tripped)
         {

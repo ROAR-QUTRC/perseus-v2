@@ -112,4 +112,25 @@ namespace protocol
         return TELEMETRY_FRAME_SIZE;
     }
 
+    const char* cmd_type_name(uint8_t type)
+    {
+        switch (type)
+        {
+        case CMD_SET_SERVO:
+            return "SET_SERVO";
+        case CMD_SET_HEATER:
+            return "SET_HEATER";
+        case CMD_SET_ALL:
+            return "SET_ALL";
+        case CMD_GET_STATUS:
+            return "GET_STATUS";
+        case CMD_STOP_ALL:
+            return "STOP_ALL";
+        case CMD_HEARTBEAT:
+            return "HEARTBEAT";
+        default:
+            return "UNKNOWN";
+        }
+    }
+
 }  // namespace protocol

@@ -51,4 +51,7 @@ namespace protocol
                              int16_t servo_speed, uint8_t heater_duty,
                              uint8_t error_flags);
 
+    /// Human-readable name for a command type byte
+    const char* cmd_type_name(uint8_t type);
+
 }  // namespace protocol
