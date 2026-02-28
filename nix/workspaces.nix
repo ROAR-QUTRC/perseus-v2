@@ -84,7 +84,7 @@ let
   };
   # formatters package set for use in ROS workspaces
   formatters = {
-    # include treefmt wrapped with the config from ./treefmt.nix
+    # include treefmt wrapped with the config from ../treefmt.nix
     treefmt = treefmtEval.config.build.wrapper;
   }
   # plus all of the individual formatter programs from said config
@@ -136,7 +136,7 @@ in
   };
   machineLearning = mkWorkspace {
     inherit (pkgs) ros;
-    name = "ROAR machine learning";
+    name = "ROAR Machine Learning";
     additionalPrebuiltPkgs = cudaPkgs;
     additionalPostShellHook = ''
       # CUDA environment setup
