@@ -11,7 +11,6 @@ Requirements: pyserial  (pip install pyserial)
 import argparse
 import curses
 import json
-import sys
 import threading
 import time
 
@@ -30,8 +29,12 @@ CMD_NAMES = {
 
 def parse_args():
     p = argparse.ArgumentParser(description="Pico USB Monitor TUI")
-    p.add_argument("--port", default="/dev/ttyACM0", help="Serial port (default: /dev/ttyACM0)")
-    p.add_argument("--baud", type=int, default=115200, help="Baud rate (default: 115200)")
+    p.add_argument(
+        "--port", default="/dev/ttyACM0", help="Serial port (default: /dev/ttyACM0)"
+    )
+    p.add_argument(
+        "--baud", type=int, default=115200, help="Baud rate (default: 115200)"
+    )
     return p.parse_args()
 
 
@@ -46,7 +49,7 @@ class SerialReader:
         self.connected = False
         self.error = ""
         self.hz = 0.0
-        self._ser: serial.Serial | None = None
+        self._set: serial.Serial | None = None
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._timestamps: list[float] = []
@@ -56,14 +59,14 @@ class SerialReader:
 
     def stop(self):
         self._stop.set()
-        if self._ser and self._ser.is_open:
+        if self._set and self._set.is_open:
             try:
-                self._ser.write(b"stop\n")
-                self._ser.flush()
+                self._set.write(b"stop\n")
+                self._set.flush()
             except Exception:
                 pass
             try:
-                self._ser.close()
+                self._set.close()
             except Exception:
                 pass
 
@@ -74,17 +77,17 @@ class SerialReader:
     def _run(self):
         while not self._stop.is_set():
             try:
-                self._ser = serial.Serial(self.port, self.baud, timeout=1)
+                self._set = serial.Serial(self.port, self.baud, timeout=1)
                 with self.lock:
                     self.connected = True
                     self.error = ""
                 # Send stream command
                 time.sleep(0.2)
-                self._ser.write(b"stream\n")
-                self._ser.flush()
+                self._set.write(b"stream\n")
+                self._set.flush()
 
                 while not self._stop.is_set():
-                    line = self._ser.readline()
+                    line = self._set.readline()
                     if not line:
                         continue
                     line = line.decode("utf-8", errors="replace").strip()
@@ -104,7 +107,9 @@ class SerialReader:
                         self._timestamps = [t for t in self._timestamps if t > cutoff]
                         if len(self._timestamps) >= 2:
                             span = self._timestamps[-1] - self._timestamps[0]
-                            self.hz = (len(self._timestamps) - 1) / span if span > 0 else 0
+                            self.hz = (
+                                (len(self._timestamps) - 1) / span if span > 0 else 0
+                            )
                         else:
                             self.hz = 0.0
 
@@ -156,10 +161,10 @@ def draw(stdscr, reader: SerialReader):
     # Set up colors
     curses.start_color()
     curses.use_default_colors()
-    curses.init_pair(1, curses.COLOR_GREEN, -1)   # OK / connected
-    curses.init_pair(2, curses.COLOR_RED, -1)      # fault / disconnected
-    curses.init_pair(3, curses.COLOR_YELLOW, -1)   # warning
-    curses.init_pair(4, curses.COLOR_CYAN, -1)     # labels
+    curses.init_pair(1, curses.COLOR_GREEN, -1)  # OK / connected
+    curses.init_pair(2, curses.COLOR_RED, -1)  # fault / disconnected
+    curses.init_pair(3, curses.COLOR_YELLOW, -1)  # warning
+    curses.init_pair(4, curses.COLOR_CYAN, -1)  # labels
 
     GREEN = curses.color_pair(1)
     RED = curses.color_pair(2)
@@ -249,7 +254,10 @@ def draw(stdscr, reader: SerialReader):
             if radio:
                 stdscr.addstr("RSSI: ", CYAN)
                 stdscr.addstr(f"{rssi:4d} dBm  ", 0)
-                stdscr.addstr(rssi_bar(rssi), GREEN if rssi > -70 else YELLOW if rssi > -90 else RED)
+                stdscr.addstr(
+                    rssi_bar(rssi),
+                    GREEN if rssi > -70 else YELLOW if rssi > -90 else RED,
+                )
             stdscr.addstr(row, BOX_W - 1, "\u2502")
         except curses.error:
             pass
@@ -270,9 +278,15 @@ def draw(stdscr, reader: SerialReader):
         current_a = current_ma / 1000.0
         bar_w = 26
 
-        row = mline(row, f"Servo Speed: {servo_f:+6.3f}  {bar(abs(servo_f), 1.0, bar_w)}")
-        row = mline(row, f"Heater Duty:   {heater_pct:4.0f}%  {bar(heater_pct, 100, bar_w)}")
-        row = mline(row, f"Current:     {current_a:5.2f} A {bar(current_a, 5.0, bar_w)}")
+        row = mline(
+            row, f"Servo Speed: {servo_f:+6.3f}  {bar(abs(servo_f), 1.0, bar_w)}"
+        )
+        row = mline(
+            row, f"Heater Duty:   {heater_pct:4.0f}%  {bar(heater_pct, 100, bar_w)}"
+        )
+        row = mline(
+            row, f"Current:     {current_a:5.2f} A {bar(current_a, 5.0, bar_w)}"
+        )
         row = bline(row)
 
         # --- Faults box ---

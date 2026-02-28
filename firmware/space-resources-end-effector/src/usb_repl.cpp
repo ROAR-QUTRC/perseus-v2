@@ -242,23 +242,24 @@ namespace usb_repl
 
     void UsbRepl::emit_stream_json()
     {
-        printf("{\"radio\":%s,\"rssi\":%d,\"ma\":%u,\"servo\":%d,"
-               "\"heater\":%u,\"servo_ok\":%s,\"wd\":%s,"
-               "\"up\":%lu,\"cmd_age\":%lu,"
-               "\"rx\":%lu,\"tx\":%lu,\"bad\":%lu,\"last_cmd\":%u}\n",
-               _status.radio_connected ? "true" : "false",
-               _status.rssi_dbm,
-               _status.current_ma,
-               _status.servo_speed,
-               _status.heater_duty,
-               _status.servo_ok ? "true" : "false",
-               _status.watchdog_tripped ? "true" : "false",
-               (unsigned long)_status.uptime_ms,
-               (unsigned long)_status.last_cmd_age_ms,
-               (unsigned long)_status.rx_cmd_count,
-               (unsigned long)_status.tx_telem_count,
-               (unsigned long)_status.rx_invalid_count,
-               _status.last_cmd_type);
+        printf(
+            "{\"radio\":%s,\"rssi\":%d,\"ma\":%u,\"servo\":%d,"
+            "\"heater\":%u,\"servo_ok\":%s,\"wd\":%s,"
+            "\"up\":%lu,\"cmd_age\":%lu,"
+            "\"rx\":%lu,\"tx\":%lu,\"bad\":%lu,\"last_cmd\":%u}\n",
+            _status.radio_connected ? "true" : "false",
+            _status.rssi_dbm,
+            _status.current_ma,
+            _status.servo_speed,
+            _status.heater_duty,
+            _status.servo_ok ? "true" : "false",
+            _status.watchdog_tripped ? "true" : "false",
+            (unsigned long)_status.uptime_ms,
+            (unsigned long)_status.last_cmd_age_ms,
+            (unsigned long)_status.rx_cmd_count,
+            (unsigned long)_status.tx_telem_count,
+            (unsigned long)_status.rx_invalid_count,
+            _status.last_cmd_type);
     }
 
 }  // namespace usb_repl
