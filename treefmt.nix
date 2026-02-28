@@ -35,6 +35,7 @@
         # build dirs
         "build/**"
         "result/**"
+        ".cache/**"
         # generated stuff
         "generated/**"
         "treefmt.toml"
