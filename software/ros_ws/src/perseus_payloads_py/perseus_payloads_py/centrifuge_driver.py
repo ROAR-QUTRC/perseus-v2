@@ -29,7 +29,7 @@ def crc16(data: bytes):
 
 def send_vesc_packet(serial_port, payload: bytes):
     # build and send VESC serial packet
-    
+
     packet = bytearray()
     packet.append(0x02)
     packet.append(len(payload))
@@ -75,7 +75,9 @@ class CentrifugeDriver(Node):
             self.serial_port = serial.Serial(port, baud, timeout=0.1)
         except serial.SerialException:
             self.serial_port = None
-            self.get_logger().warn(f"Couldn't find serial port {port}; running simulation instead")
+            self.get_logger().warn(
+                f"Couldn't find serial port {port}; running simulation instead"
+            )
         # end
 
         self.current_duty = 0.0
@@ -96,9 +98,13 @@ class CentrifugeDriver(Node):
 
     def control_loop(self):
         if self.current_duty < self.target_duty:
-            self.current_duty = min(self.current_duty + DUTY_RAMP_RATE, self.target_duty)
+            self.current_duty = min(
+                self.current_duty + DUTY_RAMP_RATE, self.target_duty
+            )
         elif self.current_duty > self.target_duty:
-            self.current_duty = max(self.current_duty - DUTY_RAMP_RATE, self.target_duty)
+            self.current_duty = max(
+                self.current_duty - DUTY_RAMP_RATE, self.target_duty
+            )
 
         set_duty_cycle(self.serial_port, self.current_duty)
 
