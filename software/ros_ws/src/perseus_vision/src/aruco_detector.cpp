@@ -335,7 +335,7 @@ namespace perseus_vision
     }
 
     void ArucoDetector::transform_and_publish_marker(const std_msgs::msg::Header& header, int marker_id,
-                                                  const cv::Vec3d& rvec, const cv::Vec3d& tvec)
+                                                     const cv::Vec3d& rvec, const cv::Vec3d& tvec)
     {
         try
         {
@@ -404,7 +404,7 @@ namespace perseus_vision
     }
 
     void ArucoDetector::handle_request(const std::shared_ptr<DetectObjects::Request> request,
-                                      std::shared_ptr<DetectObjects::Response> response)
+                                       std::shared_ptr<DetectObjects::Response> response)
     {
         // Get data snapshot while holding lock, then release before I/O
         cv::Mat frame_to_save;
