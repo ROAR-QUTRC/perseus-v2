@@ -53,20 +53,20 @@ namespace perseus_vision
         static constexpr int kQosDepth = 10;
 
         // Callbacks
-        void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
-        void compressedImageCallback(const sensor_msgs::msg::CompressedImage::SharedPtr msg);
-        void cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
+        void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
+        void compressed_image_callback(const sensor_msgs::msg::CompressedImage::SharedPtr msg);
+        void camera_info_callback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
 
         // Core
-        void processImage(const cv::Mat& frame, const std_msgs::msg::Header& header);
-        void transformAndPublishMarker(
+        void process_image(const cv::Mat& frame, const std_msgs::msg::Header& header);
+        void transform_and_publish_marker(
             const std_msgs::msg::Header& header,
             int32_t marker_id,
             const cv::Vec3d& rvec,
             const cv::Vec3d& tvec);
 
         // Service
-        void handleRequest(
+        void handle_request(
             const std::shared_ptr<DetectObjects::Request> request,
             std::shared_ptr<DetectObjects::Response> response);
 
