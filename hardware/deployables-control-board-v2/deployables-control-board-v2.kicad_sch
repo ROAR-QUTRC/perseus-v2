@@ -1,0 +1,20 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "7272290a-e574-4606-8a9c-64b791474779")
+	(paper "A4")
+	(title_block
+		(title "Deployables Control Board")
+		(date "2026-01-20")
+		(rev "2.0")
+		(company "QUT R.O.A.R.")
+	)
+	(lib_symbols)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)
