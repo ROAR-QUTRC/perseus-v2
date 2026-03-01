@@ -138,6 +138,7 @@ in
     inherit (pkgs) ros;
     name = "ROAR Machine Learning";
     additionalPrebuiltPkgs = cudaPkgs;
+    additionalDevPkgs = pkgs.ros.simDevPackages;
     additionalPostShellHook = ''
       # CUDA environment setup
       export CUDA_PATH="${pkgs.cudaPackages.cuda_nvcc}"
