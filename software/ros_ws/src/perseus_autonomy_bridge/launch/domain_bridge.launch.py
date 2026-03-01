@@ -67,3 +67,4 @@ def generate_launch_description():
     # Add arguments
     ld.add_action(from_domain_arg)
     ld.add_action(to_domain_arg)
+    ld.add_action(domain_bridge_node)
