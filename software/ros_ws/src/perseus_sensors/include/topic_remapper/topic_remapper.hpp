@@ -51,24 +51,24 @@ private:
     void generic_message_callback(std::shared_ptr<rclcpp::SerializedMessage> msg);
 
     // ROS parameters
-    std::string input_topic_name_;
-    std::string output_topic_name_;
-    double reduction_frequency_;  // Target output frequency in Hz
-    std::string message_type_;    // Detected message type
+    std::string _input_topic_name;
+    std::string _output_topic_name;
+    double _reduction_frequency;  // Target output frequency in Hz
+    std::string _message_type;    // Detected message type
 
     // ROS components
-    std::shared_ptr<rclcpp::GenericSubscription> subscription_;
-    std::shared_ptr<rclcpp::GenericPublisher> publisher_;
-    rclcpp::TimerBase::SharedPtr detection_timer_;
+    std::shared_ptr<rclcpp::GenericSubscription> _subscription;
+    std::shared_ptr<rclcpp::GenericPublisher> _publisher;
+    rclcpp::TimerBase::SharedPtr _detection_timer;
 
     // Timing for frequency reduction
-    std::chrono::steady_clock::time_point last_publish_time_;
-    std::chrono::milliseconds publish_interval_;
+    std::chrono::steady_clock::time_point _last_publish_time;
+    std::chrono::milliseconds _publish_interval;
 
     // Retry tracking
-    int detection_attempts_;
+    int _detection_attempts;
     static constexpr int MAX_DETECTION_ATTEMPTS = 50;  // ~5 seconds at 100ms intervals
 
     // Flag to track if we've detected and set up the publisher
-    bool is_setup_complete_;
+    bool _is_setup_complete;
 };
