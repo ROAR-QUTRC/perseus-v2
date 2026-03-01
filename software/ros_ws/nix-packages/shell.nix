@@ -67,6 +67,8 @@ pkgs.mkShell {
           navigation2
           nlohmann_json
           openssl
+          pcl-conversions
+          pcl-ros
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
@@ -88,6 +90,11 @@ pkgs.mkShell {
           rosidl-default-generators
           rosidl-default-runtime
           rplidar-ros
+          rtabmap-odom
+          rtabmap-rviz-plugins
+          rtabmap-slam
+          rtabmap-util
+          rtabmap-viz
           rviz2
           sensor-msgs
           simple-networking

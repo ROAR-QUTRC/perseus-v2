@@ -5,10 +5,16 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
-  domain-bridge,
   navigation2,
+  pcl-conversions,
+  pcl-ros,
   rclcpp,
   robot-localization,
+  rtabmap-odom,
+  rtabmap-rviz-plugins,
+  rtabmap-slam,
+  rtabmap-util,
+  rtabmap-viz,
   slam-toolbox,
   xacro,
 }:
@@ -25,10 +31,16 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
-    domain-bridge
     navigation2
+    pcl-conversions
+    pcl-ros
     rclcpp
     robot-localization
+    rtabmap-odom
+    rtabmap-rviz-plugins
+    rtabmap-slam
+    rtabmap-util
+    rtabmap-viz
     slam-toolbox
     xacro
   ];

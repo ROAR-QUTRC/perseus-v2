@@ -5,6 +5,7 @@
   ament-cmake,
   ament-lint-auto,
   ament-lint-common,
+  domain-bridge,
   geometry-msgs,
   nav2-msgs,
   perseus-interfaces,
@@ -24,6 +25,7 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
+    domain-bridge
     geometry-msgs
     nav2-msgs
     perseus-interfaces
