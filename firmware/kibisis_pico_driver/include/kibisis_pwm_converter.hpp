@@ -16,18 +16,19 @@
 //      whenever fresh counts are available.
 // ─────────────────────────────────────────────────────────────────────────────
 
-namespace kibisis {
+namespace kibisis
+{
 
-// Initialise PWM outputs and register the I2C slave handler.
-// i2c_init() must have been called on I2C_INSTANCE before this.
-void pwm_converter_init();
+    // Initialise PWM outputs and register the I2C slave handler.
+    // i2c_init() must have been called on I2C_INSTANCE before this.
+    void pwm_converter_init();
 
-// Apply any PWM target updates queued by the I2C ISR.
-// Call once per main loop iteration.
-void pwm_converter_apply_updates();
+    // Apply any PWM target updates queued by the I2C ISR.
+    // Call once per main loop iteration.
+    void pwm_converter_apply_updates();
 
-// Update the encoder counts that will be returned to the Pi 5 on read requests.
-// Call this from your encoder module with fresh ADC/quadrature readings.
-void pwm_converter_set_encoder(uint16_t left_count, uint16_t right_count);
+    // Update the encoder counts that will be returned to the Pi 5 on read requests.
+    // Call this from your encoder module with fresh ADC/quadrature readings.
+    void pwm_converter_set_encoder(uint16_t left_count, uint16_t right_count);
 
-} // namespace kibisis
+}  // namespace kibisis

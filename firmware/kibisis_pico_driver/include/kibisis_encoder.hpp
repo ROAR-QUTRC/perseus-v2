@@ -21,23 +21,24 @@
 //   3. Optionally read counts directly with encoder_get_left/right().
 // ─────────────────────────────────────────────────────────────────────────────
 
-namespace kibisis {
+namespace kibisis
+{
 
-// Initialise the PIO state machines for both encoders.
-// Must be called before encoder_update().
-void encoder_init();
+    // Initialise the PIO state machines for both encoders.
+    // Must be called before encoder_update().
+    void encoder_init();
 
-void encoder_init();
+    void encoder_init();
 
-// Drain PIO FIFOs, update running counts, and push latest values to
-// pwm_converter_set_encoder() so the Pi 5 can read them back over I2C.
-// Call once per main loop iteration.
-void encoder_update();
+    // Drain PIO FIFOs, update running counts, and push latest values to
+    // pwm_converter_set_encoder() so the Pi 5 can read them back over I2C.
+    // Call once per main loop iteration.
+    void encoder_update();
 
-// Direct count accessors (positive = forward, negative = backward).
-// Sign depends on physical motor wiring – flip ENCODER_x_REVERSED in
-// config.hpp if a motor counts backwards.
-int32_t encoder_get_left();
-int32_t encoder_get_right();
+    // Direct count accessors (positive = forward, negative = backward).
+    // Sign depends on physical motor wiring – flip ENCODER_x_REVERSED in
+    // config.hpp if a motor counts backwards.
+    int32_t encoder_get_left();
+    int32_t encoder_get_right();
 
-} // namespace kibisis
+}  // namespace kibisis
