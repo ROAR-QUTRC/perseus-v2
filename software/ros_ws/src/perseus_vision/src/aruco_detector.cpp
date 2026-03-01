@@ -67,7 +67,7 @@ namespace perseus_vision
         {
             compressed_sub_ = this->create_subscription<sensor_msgs::msg::CompressedImage>(
                 input_img_ + "/compressed", kQosDepth,
-                std::bind(&ArucoDetector::compressedImageCallback, this, std::placeholders::_1));
+                std::bind(&ArucoDetector::compressed_image_callback, this, std::placeholders::_1));
             compressed_pub_ = this->create_publisher<sensor_msgs::msg::CompressedImage>(
                 output_img_ + "/compressed", kQosDepth);
         }
@@ -75,7 +75,7 @@ namespace perseus_vision
         {
             sub_ = this->create_subscription<sensor_msgs::msg::Image>(
                 input_img_, kQosDepth,
-                std::bind(&ArucoDetector::imageCallback, this, std::placeholders::_1));
+                std::bind(&ArucoDetector::image_callback, this, std::placeholders::_1));
             pub_ = this->create_publisher<sensor_msgs::msg::Image>(
                 output_img_, kQosDepth);
         }
@@ -86,14 +86,14 @@ namespace perseus_vision
             camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
                 camera_info_topic_,
                 rclcpp::SensorDataQoS(),
-                std::bind(&ArucoDetector::cameraInfoCallback, this, std::placeholders::_1));
+                std::bind(&ArucoDetector::camera_info_callback, this, std::placeholders::_1));
 
             RCLCPP_INFO(this->get_logger(), "Subscribing to camera_info from topic: %s", camera_info_topic_.c_str());
         }
 
         service_ = this->create_service<DetectObjects>(
             "detect_objects",
-            std::bind(&ArucoDetector::handleRequest, this,
+            std::bind(&ArucoDetector::handle_request, this,
                       std::placeholders::_1,
                       std::placeholders::_2));
         if (should_publish_output_)
@@ -109,7 +109,7 @@ namespace perseus_vision
         RCLCPP_INFO(this->get_logger(), "Perseus' ArucoDetector node started.");
     }
 
-    void ArucoDetector::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
+    void ArucoDetector::image_callback(const sensor_msgs::msg::Image::SharedPtr msg)
     {
         cv::Mat frame;
         try
@@ -122,7 +122,7 @@ namespace perseus_vision
             return;
         }
 
-        processImage(frame, msg->header);
+        process_image(frame, msg->header);
 
         if (should_publish_img_)
         {
@@ -132,7 +132,7 @@ namespace perseus_vision
         }
     }
 
-    void ArucoDetector::compressedImageCallback(const sensor_msgs::msg::CompressedImage::SharedPtr msg)
+    void ArucoDetector::compressed_image_callback(const sensor_msgs::msg::CompressedImage::SharedPtr msg)
     {
         cv::Mat frame;
         try
@@ -150,7 +150,7 @@ namespace perseus_vision
             return;
         }
 
-        processImage(frame, msg->header);
+        process_image(frame, msg->header);
 
         if (should_publish_img_)
         {
@@ -170,7 +170,7 @@ namespace perseus_vision
         }
     }
 
-    void ArucoDetector::processImage(const cv::Mat& frame, const std_msgs::msg::Header& header)
+    void ArucoDetector::process_image(const cv::Mat& frame, const std_msgs::msg::Header& header)
     {
         std::vector<int> ids;
         std::vector<std::vector<cv::Point2f>> corners;
@@ -266,7 +266,7 @@ namespace perseus_vision
                     cv::Point3d pos(tvecs[i][2], -tvecs[i][0], -tvecs[i][1]);
                     marker_coords.push_back({ids[i], pos});
 
-                    transformAndPublishMarker(header, ids[i], rvecs[i], tvecs[i]);
+                    transform_and_publish_marker(header, ids[i], rvecs[i], tvecs[i]);
                 }
             }
             else
@@ -334,7 +334,7 @@ namespace perseus_vision
         }
     }
 
-    void ArucoDetector::transformAndPublishMarker(const std_msgs::msg::Header& header, int marker_id,
+    void ArucoDetector::transform_and_publish_marker(const std_msgs::msg::Header& header, int marker_id,
                                                   const cv::Vec3d& rvec, const cv::Vec3d& tvec)
     {
         try
@@ -403,7 +403,7 @@ namespace perseus_vision
         }
     }
 
-    void ArucoDetector::handleRequest(const std::shared_ptr<DetectObjects::Request> request,
+    void ArucoDetector::handle_request(const std::shared_ptr<DetectObjects::Request> request,
                                       std::shared_ptr<DetectObjects::Response> response)
     {
         // Get data snapshot while holding lock, then release before I/O
@@ -526,7 +526,7 @@ namespace perseus_vision
         }
     }
 
-    void ArucoDetector::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg)
+    void ArucoDetector::camera_info_callback(const sensor_msgs::msg::CameraInfo::SharedPtr msg)
     {
         std::lock_guard<std::mutex> lock(camera_matrix_mutex_);
 
