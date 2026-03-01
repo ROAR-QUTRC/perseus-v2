@@ -23,7 +23,7 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     """Generate launch description for domain bridge."""
-    
+
     # Declare Arguments
     from_domain_arg = DeclareLaunchArgument(
         "from_domain",
