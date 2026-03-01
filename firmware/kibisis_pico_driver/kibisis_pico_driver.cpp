@@ -1,12 +1,11 @@
 #include <cstdio>
 
+#include "config.hpp"
 #include "hardware/i2c.h"
 #include "hardware/watchdog.h"
-#include "pico/stdlib.h"
-
-#include "config.hpp"
 #include "kibisis_encoder.hpp"
 #include "kibisis_pwm_converter.hpp"
+#include "pico/stdlib.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // kibisis_pico_driver.cpp
@@ -16,11 +15,13 @@
 // This file contains no hardware logic – it only orchestrates.
 // ─────────────────────────────────────────────────────────────────────────────
 
-int main() {
+int main()
+{
     stdio_init_all();
 
     // ── Watchdog ──────────────────────────────────────────────────────────────
-    if (watchdog_caused_reboot()) {
+    if (watchdog_caused_reboot())
+    {
         printf("Rebooted by watchdog!\n");
         // Add any post-watchdog-reboot recovery logic here
     }
@@ -35,10 +36,11 @@ int main() {
     kibisis::encoder_init();
 
     // ── Main loop ─────────────────────────────────────────────────────────────
-    while (true) {
+    while (true)
+    {
         watchdog_update();
 
-        kibisis::encoder_update();        // drains PIO FIFOs + calls set_encoder()
+        kibisis::encoder_update();  // drains PIO FIFOs + calls set_encoder()
         kibisis::pwm_converter_apply_updates();
 
         sleep_us(500);

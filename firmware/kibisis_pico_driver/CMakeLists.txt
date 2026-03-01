@@ -11,19 +11,21 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
-    set(USERHOME $ENV{USERPROFILE})
+  set(USERHOME $ENV{USERPROFILE})
 else()
-    set(USERHOME $ENV{HOME})
+  set(USERHOME $ENV{HOME})
 endif()
 set(sdkVersion 2.2.0)
 set(toolchainVersion 14_2_Rel1)
 set(picotoolVersion 2.2.0-a4)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
-if (EXISTS ${picoVscode})
-    include(${picoVscode})
+if(EXISTS ${picoVscode})
+  include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico2 CACHE STRING "Board type")
+set(PICO_BOARD
+    pico2
+    CACHE STRING "Board type")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -51,11 +53,9 @@ pico_sdk_init()
 #
 # ─────────────────────────────────────────────────────────────────────────────
 
-add_executable(kibisis_pico_driver
-    kibisis_pico_driver.cpp
-    src/kibisis_pwm_converter.cpp
-    src/kibisis_encoder.cpp
-)
+add_executable(
+  kibisis_pico_driver kibisis_pico_driver.cpp src/kibisis_pwm_converter.cpp
+                      src/kibisis_encoder.cpp)
 
 pico_set_program_name(kibisis_pico_driver "kibisis_pico_driver")
 pico_set_program_version(kibisis_pico_driver "0.1")
@@ -65,28 +65,24 @@ pico_enable_stdio_usb(kibisis_pico_driver 1)
 
 # Generate the quadrature_encoder.pio.h header from the .pio source
 pico_generate_pio_header(kibisis_pico_driver
-    ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio
-)
+                         ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
 
 # Add the standard library to the build
-target_link_libraries(kibisis_pico_driver
-    pico_stdlib
-)
+target_link_libraries(kibisis_pico_driver pico_stdlib)
 
-target_include_directories(kibisis_pico_driver PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/include
-)
+target_include_directories(
+  kibisis_pico_driver PRIVATE ${CMAKE_CURRENT_LIST_DIR}
+                              ${CMAKE_CURRENT_LIST_DIR}/include)
 
 # Add any user requested libraries
-target_link_libraries(kibisis_pico_driver
-    hardware_i2c
-    hardware_pwm
-    hardware_gpio
-    hardware_watchdog
-    hardware_pio               # PIO for quadrature encoder
-    hardware_adc
-    pico_i2c_slave
-)
+target_link_libraries(
+  kibisis_pico_driver
+  hardware_i2c
+  hardware_pwm
+  hardware_gpio
+  hardware_watchdog
+  hardware_pio # PIO for quadrature encoder
+  hardware_adc
+  pico_i2c_slave)
 
 pico_add_extra_outputs(kibisis_pico_driver)
