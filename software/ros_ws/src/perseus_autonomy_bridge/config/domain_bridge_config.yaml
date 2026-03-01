@@ -1,17 +1,16 @@
-# Domain Bridge Configuration
-# This file defines the topics to be bridged between DDS domains
-
----
+# Name of the domain bridge, used for node naming and logging
+name: autonomy_ros_bridge
+from_domain: 2
+to_domain: 3
 topics:
-  # Example: Bridge cmd_vel from domain 42 to domain 10
-  - name: "cmd_vel"
-    types:
-      - "geometry_msgs/msg/Twist"
-
-  # Example: Bridge sensor data
-  - name: "sensor_data"
-    types:
-      - "sensor_msgs/msg/Imu"
-      - "sensor_msgs/msg/PointCloud2"
-
-# Note: Domain IDs can be overridden at launch time using --from and --to flags
+  # Bridge "/clock" topic from doman ID 2 to domain ID 3
+  clock:
+    type: rosgraph_msgs/msg/Clock
+  # Bridge "/chatter" topic from doman ID 2 to domain ID 3
+  chatter:
+    type: example_interfaces/msg/String
+    # Override QoS reliablity setting to be best effort
+    # This affects the domain bridge subscription and publisher
+    # This does NOT affect the other "chatter" bridge below, which is for a different domain
+    qos:
+      reliability: best_effort

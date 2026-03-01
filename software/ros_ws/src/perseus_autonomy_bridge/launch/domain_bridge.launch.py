@@ -5,69 +5,65 @@ This launch file starts the domain bridge node to bridge traffic between
 different ROS 2 DDS domains.
 
 Usage:
-    ros2 launch autonomy domain_bridge.launch.py
+    ros2 launch perseus_autonomy_bridge domain_bridge.launch.py
 
     # With custom domains
-    ros2 launch autonomy domain_bridge.launch.py source_domain:=0 target_domain:=1
+    ros2 launch perseus_autonomy_bridge domain_bridge.launch.py from_domain:=42 to_domain:=10
 
 Launch Arguments:
-    source_domain  : Source DDS domain ID (default: 0)
-    target_domain  : Target DDS domain ID (default: 1)
-    use_sim_time   : Use simulated time (default: false)
+    from_domain    : Source DDS domain ID (default: 42)
+    to_domain      : Target DDS domain ID (default: 10)
 """
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
     """Generate launch description for domain bridge."""
-
+    
     # Declare Arguments
-    source_domain_arg = DeclareLaunchArgument(
-        "source_domain",
+    from_domain_arg = DeclareLaunchArgument(
+        "from_domain",
         default_value="42",
         description="Source DDS domain ID",
     )
-    target_domain_arg = DeclareLaunchArgument(
-        "target_domain",
+    to_domain_arg = DeclareLaunchArgument(
+        "to_domain",
         default_value="10",
         description="Target DDS domain ID",
     )
-    use_sim_time_arg = DeclareLaunchArgument(
-        "use_sim_time",
-        default_value="false",
-        description="Use simulated time if true",
+
+    from_domain = LaunchConfiguration("from_domain")
+    to_domain = LaunchConfiguration("to_domain")
+
+    # Get the config file path
+    config_file = PathJoinSubstitution(
+        [
+            FindPackageShare("perseus_autonomy_bridge"),
+            "config",
+            "domain_bridge_config.yaml",
+        ]
     )
 
-    source_domain = LaunchConfiguration("source_domain")
-    target_domain = LaunchConfiguration("target_domain")
-    use_sim_time = LaunchConfiguration("use_sim_time")
-
-    # Domain bridge node
-    domain_bridge_node = Node(
-        package="domain_bridge",
-        executable="domain_bridge",
-        name="domain_bridge",
-        output="screen",
-        parameters=[
-            {"source_domain": source_domain},
-            {"target_domain": target_domain},
-            {"use_sim_time": use_sim_time},
+    # Domain bridge executable
+    domain_bridge_node = ExecuteProcess(
+        cmd=[
+            "domain_bridge",
+            config_file,
+            "--from",
+            from_domain,
+            "--to",
+            to_domain,
         ],
+        output="screen",
     )
 
     # Create launch description and populate
     ld = LaunchDescription()
 
     # Add arguments
-    ld.add_action(source_domain_arg)
-    ld.add_action(target_domain_arg)
-    ld.add_action(use_sim_time_arg)
-
-    # Add nodes
-    ld.add_action(domain_bridge_node)
-
-    return ld
+    ld.add_action(from_domain_arg)
+    ld.add_action(to_domain_arg)
