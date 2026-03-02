@@ -1,17 +1,14 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
+#include <actuator_msgs/msg/actuators_angular_velocity.hpp>
 
-namespace space_resources
+
+class CentrifugeDriver : public rclcpp::Node
 {
+public:
+    explicit CentrifugeDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
-    class CentrifugeDriver : public rclcpp::Node
-    {
-    public:
-        explicit CentrifugeDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
-
-    private:
-        // publishers, subscribers, params
-    };
-
-}
+private:
+    rclcpp::Publisher<actuator_msgs::msg::ActuatorsAngularVelocity>::SharedPtr _centrifuge_speed_publisher;
+};
