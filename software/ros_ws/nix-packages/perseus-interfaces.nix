@@ -8,9 +8,9 @@
   backward-ros,
   builtin-interfaces,
   geometry-msgs,
-  std-msgs,
   rosidl-default-generators,
   rosidl-default-runtime,
+  std-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-interfaces";
@@ -31,8 +31,8 @@ buildRosPackage rec {
     backward-ros
     builtin-interfaces
     geometry-msgs
-    std-msgs
     rosidl-default-runtime
+    std-msgs
   ];
   nativeBuildInputs = [
     ament-cmake
