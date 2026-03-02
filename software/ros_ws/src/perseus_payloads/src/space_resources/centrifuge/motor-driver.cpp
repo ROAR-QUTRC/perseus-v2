@@ -6,7 +6,7 @@ CentrifugeDriver::CentrifugeDriver(const rclcpp::NodeOptions& options)
     _centrifuge_speed_publisher = this->create_publisher<actuator_msgs::msg::ActuatorsAngularVelocity>("/centrifuge/speed", 10);
     RCLCPP_INFO(this->get_logger(), "Centrifuge driver node started");
 
-    //example datat to test webui
+    // example datat to test webui
     auto msg = actuator_msgs::msg::ActuatorsAngularVelocity([10.5]);
     // msg.header.stamp = this->now();
     // msg.header.frame_id = "base_link";
