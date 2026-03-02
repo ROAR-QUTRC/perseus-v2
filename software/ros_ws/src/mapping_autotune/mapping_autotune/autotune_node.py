@@ -533,16 +533,21 @@ class AutotuneNode(Node):
 
             if self._restart_slam:
                 self.get_logger().info("Killing existing SLAM process...")
+                self._terminate_process(self._slam_process)
+                self._slam_process = None
                 try:
                     subprocess.run(
                         ["pkill", "-f", "async_slam_toolbox_node"],
                         timeout=5,
                         capture_output=True,
                     )
+                    subprocess.run(
+                        ["pkill", "-f", "online_async_launch"],
+                        timeout=5,
+                        capture_output=True,
+                    )
                 except Exception as e:
                     self.get_logger().warn(f"pkill slam failed: {e}")
-                self._terminate_process(self._slam_process)
-                self._slam_process = None
 
             if self._restart_ekf:
                 self.get_logger().info("Killing existing EKF process...")
@@ -560,26 +565,25 @@ class AutotuneNode(Node):
         elapsed = time.time() - self._reset_start_time
         relaunch_ready = elapsed >= 2.0
 
-        # Relaunch SLAM if needed
+        # Relaunch SLAM if needed (must use ros2 launch, not ros2 run,
+        # because async_slam_toolbox_node is a LifecycleNode that needs
+        # configure + activate transitions to start publishing /map)
         if relaunch_ready and self._restart_slam and self._slam_process is None:
             self.get_logger().info("Relaunching SLAM with new parameters...")
             try:
                 self._slam_process = subprocess.Popen(
                     [
                         "ros2",
-                        "run",
+                        "launch",
                         "slam_toolbox",
-                        "async_slam_toolbox_node",
-                        "--ros-args",
-                        "-r",
-                        "__node:=slam_toolbox",
-                        "-r",
-                        "__ns:=/",
-                        "--params-file",
-                        self._current_slam_config_path,
+                        "online_async_launch.py",
+                        f"slam_params_file:={self._current_slam_config_path}",
+                        "use_sim_time:=false",
+                        "autostart:=true",
+                        "use_lifecycle_manager:=false",
                     ],
                     stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE,
                 )
             except Exception as e:
                 self.get_logger().error(f"Failed to launch SLAM: {e}")
@@ -624,6 +628,13 @@ class AutotuneNode(Node):
         # Timeout
         if elapsed > 15.0:
             self.get_logger().error("Timeout waiting for SLAM to start publishing /map")
+            if self._slam_process and self._slam_process.stderr:
+                try:
+                    stderr_out = self._slam_process.stderr.read1(4096).decode(errors="replace")
+                    if stderr_out.strip():
+                        self.get_logger().error(f"SLAM stderr: {stderr_out.strip()}")
+                except Exception:
+                    pass
             self._error_message = "SLAM restart timeout (no /map publisher after 15s)"
             self._state = State.ERROR
 
@@ -770,6 +781,24 @@ class AutotuneNode(Node):
             resolution,
             map_png=png_bytes,
         )
+
+        # Save PNG to disk alongside the database
+        if png_bytes:
+            run_label = self._current_run_params.get(
+                "run_label", f"run_{self._current_run_number}"
+            )
+            maps_dir = os.path.join(
+                os.path.dirname(self._db_path), self._session_name, "maps"
+            )
+            os.makedirs(maps_dir, exist_ok=True)
+            filename = f"run{self._current_run_number:02d}_{run_label}.png"
+            filepath = os.path.join(maps_dir, filename)
+            try:
+                with open(filepath, "wb") as f:
+                    f.write(png_bytes)
+                self.get_logger().info(f"Saved map to {filepath}")
+            except Exception as e:
+                self.get_logger().warn(f"Failed to save map file: {e}")
 
         self._state = State.ANALYZING
 

@@ -140,16 +140,12 @@ class ManeuverExecutor:
     # ── Maneuver patterns ─────────────────────────────────────────────
 
     def _execute_box_return(self, linear_speed, rotation_speed):
-        """Drive forward, 180-degree turn, drive back, 180-degree turn.
+        """Drive forward 1m, pause, then reverse 1m back to start.
 
         Sequence:
             1. Drive forward 1.0m
             2. Pause 1.0s
-            3. Rotate 180 degrees
-            4. Pause 1.0s
-            5. Drive forward 1.0m
-            6. Pause 1.0s
-            7. Rotate 180 degrees (return to start heading)
+            3. Drive backward 1.0m
 
         Returns:
             True if all steps completed, False on any failure.
@@ -157,11 +153,7 @@ class ManeuverExecutor:
         steps = [
             ("drive", 1.0, linear_speed),
             ("pause", 1.0, None),
-            ("rotate", math.pi, rotation_speed),
-            ("pause", 1.0, None),
-            ("drive", 1.0, linear_speed),
-            ("pause", 1.0, None),
-            ("rotate", math.pi, rotation_speed),
+            ("drive", -1.0, linear_speed),
         ]
 
         return self._run_step_sequence(steps)
@@ -333,19 +325,20 @@ class ManeuverExecutor:
         Returns:
             True when the timed drive completes.
         """
-        drive_time = distance / speed
+        sign = 1.0 if distance >= 0 else -1.0
+        drive_time = abs(distance) / speed
         period = 1.0 / self._publish_rate
         start_time = time.time()
 
         self._node.get_logger().info(
-            f"Drive: speed={speed:.2f} m/s for {drive_time:.1f}s (~{distance:.2f}m)"
+            f"Drive: speed={sign * speed:.2f} m/s for {drive_time:.1f}s (~{distance:.2f}m)"
         )
 
         while rclpy.ok():
             elapsed = time.time() - start_time
             if elapsed >= drive_time:
                 break
-            self._publish_twist(speed, 0.0)
+            self._publish_twist(sign * speed, 0.0)
             time.sleep(period)
 
         self._stop()

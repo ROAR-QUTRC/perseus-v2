@@ -898,7 +898,7 @@ class ReviewTui:
 def main(args=None):
     import sys
 
-    db_path = "/opt/mapping_autotune/autotune.db"
+    db_path = os.path.expanduser("~/.local/share/mapping_autotune/autotune.db")
 
     # Check for --db-path command-line argument
     for i, arg in enumerate(sys.argv):
