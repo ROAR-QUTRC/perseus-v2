@@ -1,8 +1,7 @@
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
 #include <actuator_msgs/msg/actuators_angular_velocity.hpp>
-
+#include <rclcpp/rclcpp.hpp>
 
 class CentrifugeDriver : public rclcpp::Node
 {
