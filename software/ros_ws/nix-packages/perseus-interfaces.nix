@@ -8,6 +8,7 @@
   backward-ros,
   builtin-interfaces,
   geometry-msgs,
+  std-msgs,
   rosidl-default-generators,
   rosidl-default-runtime,
 }:
@@ -30,6 +31,7 @@ buildRosPackage rec {
     backward-ros
     builtin-interfaces
     geometry-msgs
+    std-msgs
     rosidl-default-runtime
   ];
   nativeBuildInputs = [
