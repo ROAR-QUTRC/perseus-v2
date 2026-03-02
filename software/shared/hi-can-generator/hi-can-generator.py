@@ -11,30 +11,30 @@ def parse_enum_class(enum_class, key):
             # Get rid of leading whitespace and trailing commas
             stripped_line = line.lstrip().split(",")[0]
             # The name and ID are split by an equals sign
-            name, id_str = stripped_line.split(" = ")
-            id_num = int(id_str, 0)
+            name, id_string = stripped_line.split(" = ")
+            id_number = int(id_string, 0)
             # Add the pair to a dict
-            parsed_dict.update({id_num: {key: name}})
+            parsed_dict.update({id_number: {key: name}})
     return parsed_dict
 
 
 def get_enum_class(token, name):
-    enum_str = (  # Get everything after the enum class
+    enum_string = (  # Get everything after the enum class
         token.split(f"enum class {name}")[1]
         # Get everything after the first '{'
         .split("{")[1]
         # Get everything before the first '}'
         .split("}")[0]
     )
-    return enum_str
+    return enum_string
 
 
 # This is converted from string to int to ensure that hex values are shown
 # properly even though it will get converted back to a string when converting
-# the dict to a json **Cries in inefficiency**
+# the dict to a json **Cries in inefficiency of strings**
 def get_id(token, name):
-    id_num = int(token.split(f" {name}_ID = ")[1].split(";")[0], 0)
-    return id_num
+    id_number = int(token.split(f" {name}_ID = ")[1].split(";")[0], 0)
+    return id_number
 
 
 arguments = sys.argv
@@ -59,6 +59,7 @@ except Exception as err:
         " error is: ",
         err,
     )
+    quit
 
 if hi_can_address_content == "":
     raise Exception("ERROR hi_can_address.hpp file is empty")
@@ -106,13 +107,13 @@ for token in hi_can_address_tokenized:
             system[system_id][subsystem_id][device_id].update(groups)
             parameters_for_groups = {}
             if token.split("enum class group")[1].find("enum class ") != -1:
-                for param_enum in token.split("enum class group")[1].split(
+                for parameter_enum in token.split("enum class group")[1].split(
                     "enum class "
                 )[1:]:
                     parameters = parse_enum_class(
-                        param_enum.split("{")[1].split("}")[0], "PARAMETER_NAME"
+                        parameter_enum.split("{")[1].split("}")[0], "PARAMETER_NAME"
                     )
-                    parameter_name = param_enum.split()[0]
+                    parameter_name = parameter_enum.split()[0]
                     parameters_for_groups[parameter_name.upper().split("_")[0]] = (
                         parameters
                     )
@@ -169,5 +170,24 @@ for token in hi_can_address_tokenized:
         system_name = token.split()[0]
         system_id = get_id(token, "SYSTEM")
         system = {system_id: {"SYSTEM_NAME": system_name}}
+    else:
+        if token.find(" SYSTEM_ADDRESS_BITS") != -1:
+            system_address_bits = token.split("SYSTEM_ADDRESS_BITS = ")[1].split(";")[0]
+            systems.update({"SYSTEM_ADDRESS_BITS": system_address_bits})
+
+        if token.find(" SUBSYSTEM_ADDRESS_BITS") != -1:
+            system_address_bits = token.split("SUBSYSTEM_ADDRESS_BITS = ")[1].split(
+                ";"
+            )[0]
+            systems.update({"SUBSYSTEM_ADDRESS_BITS": system_address_bits})
+        if token.find("DEVICE_ADDRESS_BITS") != -1:
+            system_address_bits = token.split("DEVICE_ADDRESS_BITS = ")[1].split(";")[0]
+            systems.update({"DEVICE_ADDRESS_BITS": system_address_bits})
+        if token.find("GROUP_ADDRESS_BITS") != -1:
+            system_address_bits = token.split("GROUP_ADDRESS_BITS = ")[1].split(";")[0]
+            systems.update({"GROUP_ADDRESS_BITS": system_address_bits})
+        if token.find("PARAM_ADDRESS_BITS") != -1:
+            system_address_bits = token.split("PARAM_ADDRESS_BITS = ")[1].split(";")[0]
+            systems.update({"PARAMETER_ADDRESS_BITS": system_address_bits})
 systems_json = json.dumps(systems)
 print(systems_json)
