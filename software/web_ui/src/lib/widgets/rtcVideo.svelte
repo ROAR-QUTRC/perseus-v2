@@ -57,6 +57,7 @@
 			resolution?: { width: number; height: number };
 			transform?: videoTransformType;
 			forceRestart?: boolean;
+			file?: string;
 		};
 	}
 
@@ -67,6 +68,7 @@
 			height: number;
 		};
 		transform: videoTransformType;
+		file: string | null;
 	}
 </script>
 
@@ -82,6 +84,7 @@
 		ws
 	} from './webrtc/signalHandler.svelte';
 	import VideoWrapper from './webrtc/videoWrapper.svelte';
+	import { dev } from '$app/environment';
 
 	let socket: Socket = io();
 
@@ -157,7 +160,8 @@
 							data: {
 								devices: [device],
 								resolution: config[device].resolution,
-								transform: config[device].transform
+								transform: config[device].transform,
+								file: config[device].file
 							}
 						} as CameraEventType);
 					}
@@ -211,7 +215,8 @@
 			config[values.device.value] = {
 				name: values.name.value,
 				resolution: { width: 320, height: 240 }, // Default resolution
-				transform: 'none' // Default transform
+				transform: 'none', // Default transform
+				file: null
 			};
 
 			// Update settings config field
@@ -224,7 +229,8 @@
 				data: {
 					devices: [values.device.value],
 					resolution: config[values.device.value].resolution,
-					transform: config[values.device.value].transform
+					transform: config[values.device.value].transform,
+					file: config[values.device.value].file
 				}
 			} as CameraEventType);
 
@@ -286,7 +292,8 @@
 			data: {
 				devices: [device],
 				resolution: newConfig.resolution,
-				transform: newConfig.transform
+				transform: newConfig.transform,
+				file: newConfig.file
 			}
 		} as CameraEventType);
 	};
@@ -299,6 +306,7 @@
 				devices: [device],
 				resolution: config[device].resolution,
 				transform: config[device].transform,
+				file: config[device].file,
 				forceRestart: true
 			}
 		} as CameraEventType);
@@ -319,7 +327,7 @@
 	{/if}
 	<div class="flex flex-row flex-wrap">
 		{#each Object.keys(peerConnections) as peer}
-			<div class="relative m-2 min-h-[160px] min-w-[240px] overflow-hidden rounded-lg border">
+			<div class="relative m-2 min-h-[320px] min-w-[480px] overflow-hidden rounded-lg border">
 				<VideoWrapper
 					device={peer}
 					config={config[peer]}
