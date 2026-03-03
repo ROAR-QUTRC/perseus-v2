@@ -246,8 +246,8 @@ def generate_launch_description():
         # General
         DeclareLaunchArgument('namespace',        default_value='rtabmap',           description='Namespace for RTAB-Map nodes.'),
         DeclareLaunchArgument('database_path',    default_value='~/.ros/rtabmap.db', description='Where the map is saved/loaded.'),
-        DeclareLaunchArgument('topic_queue_size', default_value='10',                description='Queue size of individual topic subscribers.'),
-        DeclareLaunchArgument('queue_size',       default_value='10',                description='Backward compatibility, use "sync_queue_size" instead.'),
+        DeclareLaunchArgument('topic_queue_size', default_value='5',                description='Queue size of individual topic subscribers.'),
+        DeclareLaunchArgument('queue_size',       default_value='5',                description='Backward compatibility, use "sync_queue_size" instead.'),
         DeclareLaunchArgument('qos',              default_value='0',                 description='General QoS: 0=system default, 1=Reliable, 2=Best Effort.'),
         DeclareLaunchArgument('wait_for_transform', default_value='0.2',             description='Wait for transform timeout (seconds).'),
         DeclareLaunchArgument('rtabmap_args',     default_value='',                  description='Extra RTAB-Map arguments (e.g., --delete_db_on_start).'),
@@ -264,12 +264,12 @@ def generate_launch_description():
 
         # Synchronization
         DeclareLaunchArgument('approx_sync',              default_value='true', description='Use approximate time synchronization policy.'),
-        DeclareLaunchArgument('approx_sync_max_interval', default_value='0.0',  description='Max interval (sec) for approx_sync. 0 = infinite.'),
+        DeclareLaunchArgument('approx_sync_max_interval', default_value='0.08',  description='Max interval (sec) for approx_sync. 0 = infinite.'),
 
         # RGB-D topics
-        DeclareLaunchArgument('rgb_topic',         default_value='/camera/camera/color/image_raw',                    description='RGB image topic.'),
-        DeclareLaunchArgument('depth_topic',       default_value='/camera/camera/aligned_depth_to_color/image_raw',   description='Depth image topic.'),
-        DeclareLaunchArgument('camera_info_topic', default_value='/camera/camera/color/camera_info',                  description='Camera info topic.'),
+        DeclareLaunchArgument('rgb_topic',           default_value='/camera/camera/color/image_raw',       description=''),
+        DeclareLaunchArgument('depth_topic',         default_value='/camera/camera/depth/image_rect_raw', description=''),
+        DeclareLaunchArgument('camera_info_topic',   default_value='/camera/camera/color/camera_info',            description=''),
 
         # Stereo topics
         DeclareLaunchArgument('stereo_namespace',        default_value='/stereo_camera',                                               description='Stereo camera namespace.'),
