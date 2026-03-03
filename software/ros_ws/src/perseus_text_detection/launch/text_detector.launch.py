@@ -1,5 +1,4 @@
 from launch import LaunchDescription
-
 from launch_ros.actions import Node
 
 
@@ -21,7 +20,7 @@ def generate_launch_description():
     text_detector = Node(
         package="perseus_text_detection",
         executable="text_detector",
-        name="text detector",
+        name="text_detector",
         output="screen",
     )
 

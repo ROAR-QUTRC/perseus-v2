@@ -5,6 +5,7 @@
   ament-copyright,
   ament-flake8,
   ament-pep257,
+  imutils,
   python3Packages,
   rclpy,
   sensor-msgs,
@@ -24,6 +25,7 @@ buildRosPackage rec {
     python3Packages.pytest
   ];
   propagatedBuildInputs = [
+    imutils
     rclpy
     sensor-msgs
     std-msgs

@@ -11,7 +11,7 @@ setup(
         ("share/" + package_name, ["package.xml"]),
         ("share/" + package_name + "/launch/", ["launch/text_detector.launch.py"]),
     ],
-    install_requires=["setuptools"],
+    install_requires=["setuptools", "imutils", "opencv-python", "cv-bridge"],
     zip_safe=True,
     maintainer="Lachlan Ikeguchi",
     maintainer_email="lachlan_ikeguchi@proton.me",
@@ -20,7 +20,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "service = perseus_text_detection.service_member_function:main",
+            "text_detector = perseus_text_detection.text_detector:main",
         ],
     },
 )
