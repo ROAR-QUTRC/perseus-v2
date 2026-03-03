@@ -169,10 +169,10 @@ def generate_launch_description():
         }.items(),
     )
     launch_files = [
-        gz_launch,
+        # gz_launch,
         rsp_launch,
         controllers_launch_delayed,
-        ekf_delayed,
+        # ekf_delayed,
         rosbridge_launch,
         twist_mux_launch,
         rviz,

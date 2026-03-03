@@ -64,9 +64,9 @@
     <ambient>1 1 1 1</ambient>
     <background>1 1 1 1</background>
     
-    <!-- <include>
+    <include>
       <uri>model://perseus_arc_world</uri>
-    </include>  -->
+    </include> 
     <include>
       <uri>model://perseus_arc_world/aruco_markers1</uri>
       <pose>6 11.5 0.5 0 0 3.14</pose>
@@ -93,9 +93,9 @@
     </include>
 
     <!-- Lunar Ground -->
-    <!-- <include>
+    <include>
       <uri>model://Moon_DEM</uri>
-    </include> -->
+    </include>
 
     <!-- Falling Rock 1 (3x) -->
     <include>
@@ -158,9 +158,9 @@
 
 
     <!-- Flat Ground -->
-    <include>
+    <!-- <include>
       <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
-    </include> 
+    </include>  -->
 
   </world>
 </sdf>

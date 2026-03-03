@@ -478,7 +478,7 @@ def generate_launch_description():
         DeclareLaunchArgument('right_camera_info_topic', default_value=[LaunchConfiguration('stereo_namespace'), '/right/camera_info'], description=''),
 
         # Use Pre-sync RGBDImage format
-        DeclareLaunchArgument('rgbd_sync',        default_value='false',      description='Pre-sync rgb_topic, depth_topic, camera_info_topic.'),
+        DeclareLaunchArgument('rgbd_sync',        default_value='true',      description='Pre-sync rgb_topic, depth_topic, camera_info_topic.'),
         DeclareLaunchArgument('approx_rgbd_sync', default_value='true',       description='false=exact synchronization.'),
         DeclareLaunchArgument('subscribe_rgbd',   default_value=LaunchConfiguration('rgbd_sync'), description='Already synchronized RGB-D related topic, e.g., with rtabmap_sync/rgbd_sync nodelet.'),
         DeclareLaunchArgument('rgbd_topic',       default_value='rgbd_image', description=''),

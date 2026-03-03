@@ -1,20 +1,11 @@
-#
-# To avoid log buffering:
-# "stdbuf -o L ros2 launch rtabmap_launch rtabmap.launch.py ..."
-#
-
-import os
-
 from launch import LaunchDescription, Substitution, LaunchContext
-from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable, LogInfo, OpaqueFunction
-from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir, PythonExpression
-from launch.conditions import IfCondition, UnlessCondition
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.conditions import IfCondition
 from launch_ros.actions import Node
 from launch_ros.actions import SetParameter
 from typing import Text
-from ament_index_python.packages import get_package_share_directory
 
-#Based on https://answers.ros.org/question/363763/ros2-how-best-to-conditionally-include-a-prefix-in-a-launchpy-file/
 class ConditionalText(Substitution):
     def __init__(self, text_if, text_else, condition):
         self.text_if = text_if
@@ -27,33 +18,12 @@ class ConditionalText(Substitution):
         else:
             return self.text_else
             
-class ConditionalBool(Substitution):
-    def __init__(self, text_if, text_else, condition):
-        self.text_if = text_if
-        self.text_else = text_else
-        self.condition = condition
-
-    def perform(self, context: 'LaunchContext') -> bool:
-        if self.condition:
-            return self.text_if
-        else:
-            return self.text_else
-            
 def launch_setup(context, *args, **kwargs):      
-
-    rtabmap_viz_odometry_node_name = "rgbd_odometry"
-    use_icp_odometry = LaunchConfiguration('icp_odometry').perform(context)
-    use_icp_odometry = use_icp_odometry == 'true' or use_icp_odometry == 'True'
-    use_stereo_odometry = LaunchConfiguration('stereo').perform(context)
-    use_stereo_odometry = use_stereo_odometry == 'true' or use_stereo_odometry == 'True'
-    if use_icp_odometry:
-        rtabmap_viz_odometry_node_name = "icp_odometry"
-    elif use_stereo_odometry:
-        rtabmap_viz_odometry_node_name = "stereo_odometry"
 
     return [
         DeclareLaunchArgument('depth', default_value=ConditionalText('false', 'true', IfCondition(PythonExpression(["'", LaunchConfiguration('stereo'), "' == 'true'"]))._predicate_func(context)), description=''),
         DeclareLaunchArgument('subscribe_rgb', default_value=LaunchConfiguration('depth'), description=''),
+        DeclareLaunchArgument('rtabmap_args',   default_value='--delete_db_on_start',                   description='Backward compatibility, use "args" instead.'),
         DeclareLaunchArgument('args',  default_value=LaunchConfiguration('rtabmap_args'), description='Can be used to pass RTAB-Map\'s parameters or other flags like --udebug and --delete_db_on_start/-d'),
         DeclareLaunchArgument('sync_queue_size',  default_value=LaunchConfiguration('queue_size'), description='Queue size of topic synchronizers.'),
         DeclareLaunchArgument('qos_image',       default_value=LaunchConfiguration('qos'), description='Specific QoS used for image input data: 0=system default, 1=Reliable, 2=Best Effort.'),
@@ -64,7 +34,6 @@ def launch_setup(context, *args, **kwargs):
         DeclareLaunchArgument('qos_imu',         default_value=LaunchConfiguration('qos'), description='Specific QoS used for imu input data: 0=system default, 1=Reliable, 2=Best Effort.'),
         DeclareLaunchArgument('qos_gps',         default_value=LaunchConfiguration('qos'), description='Specific QoS used for gps input data: 0=system default, 1=Reliable, 2=Best Effort.'),
         DeclareLaunchArgument('qos_env_sensor',         default_value=LaunchConfiguration('qos'), description='Specific QoS used for env sensor input data: 0=system default, 1=Reliable, 2=Best Effort.'),
-        
         DeclareLaunchArgument('odom_log_level',  default_value=LaunchConfiguration('log_level'), description='Specific ROS logger level for odometry node.'),
         
         #These arguments should not be modified directly, see referred topics without "_relay" suffix above
@@ -198,7 +167,8 @@ def launch_setup(context, *args, **kwargs):
                 "guess_frame_id": LaunchConfiguration('odom_guess_frame_id').perform(context),
                 "guess_min_translation": LaunchConfiguration('odom_guess_min_translation'),
                 "guess_min_rotation": LaunchConfiguration('odom_guess_min_rotation'),
-                "always_process_most_recent_frame": LaunchConfiguration('odom_always_process_most_recent_frame')}],
+                "always_process_most_recent_frame": LaunchConfiguration('odom_always_process_most_recent_frame'),
+                "rgbd_odometry_image_downscale": LaunchConfiguration('rgbd_odometry_image_downscale')}],
             remappings=[
                 ("rgb/image", LaunchConfiguration('rgb_topic_relay')),
                 ("depth/image", LaunchConfiguration('depth_topic_relay')),
@@ -282,191 +252,39 @@ def launch_setup(context, *args, **kwargs):
             prefix=LaunchConfiguration('launch_prefix'),
             namespace=LaunchConfiguration('namespace')),
 
-        Node(
-            package='rtabmap_slam', executable='rtabmap', name="rtabmap", output="screen",
-            emulate_tty=True,
-            parameters=[{
-                "subscribe_depth": LaunchConfiguration('depth'),
-                "subscribe_rgbd": LaunchConfiguration('subscribe_rgbd'),
-                "subscribe_rgb": LaunchConfiguration('subscribe_rgb'),
-                "subscribe_stereo": LaunchConfiguration('stereo'),
-                "subscribe_scan": LaunchConfiguration('subscribe_scan'),
-                "subscribe_scan_cloud": LaunchConfiguration('subscribe_scan_cloud'),
-                "subscribe_user_data": LaunchConfiguration('subscribe_user_data'),
-                "subscribe_odom_info": ConditionalBool(True, False, IfCondition(PythonExpression(["'", LaunchConfiguration('icp_odometry'), "' == 'true' or '", LaunchConfiguration('visual_odometry'), "' == 'true'"]))._predicate_func(context)).perform(context),
-                "frame_id": LaunchConfiguration('frame_id'),
-                "map_frame_id": LaunchConfiguration('map_frame_id'),
-                "odom_frame_id": LaunchConfiguration('odom_frame_id').perform(context),
-                "publish_tf": LaunchConfiguration('publish_tf_map'),
-                "initial_pose": LaunchConfiguration('initial_pose'),
-                "use_action_for_goal": LaunchConfiguration('use_action_for_goal'),
-                "ground_truth_frame_id": LaunchConfiguration('ground_truth_frame_id').perform(context),
-                "ground_truth_base_frame_id": LaunchConfiguration('ground_truth_base_frame_id').perform(context),
-                "odom_tf_angular_variance": LaunchConfiguration('odom_tf_angular_variance'),
-                "odom_tf_linear_variance": LaunchConfiguration('odom_tf_linear_variance'),
-                "odom_sensor_sync": LaunchConfiguration('odom_sensor_sync'),
-                "wait_for_transform": LaunchConfiguration('wait_for_transform'),
-                "database_path": LaunchConfiguration('database_path'),
-                "approx_sync": LaunchConfiguration('approx_sync'),
-                "config_path": LaunchConfiguration('cfg').perform(context),
-                "topic_queue_size": LaunchConfiguration('topic_queue_size'),
-                "sync_queue_size": LaunchConfiguration('sync_queue_size'),
-                "qos_image": LaunchConfiguration('qos_image'),
-                "qos_scan": LaunchConfiguration('qos_scan'),
-                "qos_odom": LaunchConfiguration('qos_odom'),
-                "qos_camera_info": LaunchConfiguration('qos_camera_info'),
-                "qos_imu": LaunchConfiguration('qos_imu'),
-                "qos_gps": LaunchConfiguration('qos_gps'),
-                "qos_env_sensor": LaunchConfiguration('qos_env_sensor'),
-                "qos_user_data": LaunchConfiguration('qos_user_data'),
-                "scan_normal_k": LaunchConfiguration('scan_normal_k'),
-                "landmark_linear_variance": LaunchConfiguration('tag_linear_variance'),
-                "landmark_angular_variance": LaunchConfiguration('tag_angular_variance'),
-                "Mem/IncrementalMemory": ConditionalText("true", "false", IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'true'"]))._predicate_func(context)).perform(context),
-                "Mem/InitWMWithAllNodes": ConditionalText("true", "false", IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'true'"]))._predicate_func(context)).perform(context)
-            }],
-            remappings=[
-                ("map", LaunchConfiguration('map_topic')),
-                ("rgb/image", LaunchConfiguration('rgb_topic_relay')),
-                ("depth/image", LaunchConfiguration('depth_topic_relay')),
-                ("rgb/camera_info", LaunchConfiguration('camera_info_topic')),
-                ("rgbd_image", LaunchConfiguration('rgbd_topic_relay')),
-                ("left/image_rect", LaunchConfiguration('left_image_topic_relay')),
-                ("right/image_rect", LaunchConfiguration('right_image_topic_relay')),
-                ("left/camera_info", LaunchConfiguration('left_camera_info_topic')),
-                ("right/camera_info", LaunchConfiguration('right_camera_info_topic')),
-                ("scan", LaunchConfiguration('scan_topic')),
-                ("scan_cloud", LaunchConfiguration('scan_cloud_topic')),
-                ("user_data", LaunchConfiguration('user_data_topic')),
-                ("user_data_async", LaunchConfiguration('user_data_async_topic')),
-                ("gps/fix", LaunchConfiguration('gps_topic')),
-                ("tag_detections", LaunchConfiguration('tag_topic')),
-                ("fiducial_transforms", LaunchConfiguration('fiducial_topic')),
-                ("env_sensor", LaunchConfiguration('env_sensor_topic')),
-                ("odom", LaunchConfiguration('odom_topic')),
-                ("imu", LaunchConfiguration('imu_topic')),
-                ("goal_out", LaunchConfiguration('output_goal_topic'))],
-            arguments=[LaunchConfiguration("args"), "--ros-args", "--log-level", [LaunchConfiguration('namespace'), '.rtabmap:=', LaunchConfiguration('log_level')], "--log-level", ['rtabmap:=', LaunchConfiguration('log_level')]],
-            prefix=LaunchConfiguration('launch_prefix'),
-            namespace=LaunchConfiguration('namespace')),
 
-        Node(
-            package='rtabmap_viz', executable='rtabmap_viz', name="rtabmap_viz", output='screen',
-            emulate_tty=True,
-            parameters=[{
-                "subscribe_depth": LaunchConfiguration('depth'),
-                "subscribe_rgbd": LaunchConfiguration('subscribe_rgbd'),
-                "subscribe_rgb": LaunchConfiguration('subscribe_rgb'),
-                "subscribe_stereo": LaunchConfiguration('stereo'),
-                "subscribe_scan": LaunchConfiguration('subscribe_scan'),
-                "subscribe_scan_cloud": LaunchConfiguration('subscribe_scan_cloud'),
-                "subscribe_user_data": LaunchConfiguration('subscribe_user_data'),
-                "subscribe_odom_info": ConditionalBool(True, False, IfCondition(PythonExpression(["'", LaunchConfiguration('icp_odometry'), "' == 'true' or '", LaunchConfiguration('visual_odometry'), "' == 'true'"]))._predicate_func(context)).perform(context),
-                "frame_id": LaunchConfiguration('frame_id'),
-                "odom_frame_id": LaunchConfiguration('odom_frame_id').perform(context),
-                "wait_for_transform": LaunchConfiguration('wait_for_transform'),
-                "approx_sync": LaunchConfiguration('approx_sync'),
-                "topic_queue_size": LaunchConfiguration('topic_queue_size'),
-                "sync_queue_size": LaunchConfiguration('sync_queue_size'),
-                "qos_image": LaunchConfiguration('qos_image'),
-                "qos_scan": LaunchConfiguration('qos_scan'),
-                "qos_odom": LaunchConfiguration('qos_odom'),
-                "qos_camera_info": LaunchConfiguration('qos_camera_info'),
-                "qos_user_data": LaunchConfiguration('qos_user_data'),
-                "odometry_node_name": rtabmap_viz_odometry_node_name
-            }],
-            remappings=[
-                ("rgb/image", LaunchConfiguration('rgb_topic_relay')),
-                ("depth/image", LaunchConfiguration('depth_topic_relay')),
-                ("rgb/camera_info", LaunchConfiguration('camera_info_topic')),
-                ("rgbd_image", LaunchConfiguration('rgbd_topic_relay')),
-                ("left/image_rect", LaunchConfiguration('left_image_topic_relay')),
-                ("right/image_rect", LaunchConfiguration('right_image_topic_relay')),
-                ("left/camera_info", LaunchConfiguration('left_camera_info_topic')),
-                ("right/camera_info", LaunchConfiguration('right_camera_info_topic')),
-                ("scan", LaunchConfiguration('scan_topic')),
-                ("scan_cloud", LaunchConfiguration('scan_cloud_topic')),
-                ("odom", LaunchConfiguration('odom_topic'))],
-            condition=IfCondition(LaunchConfiguration("rtabmap_viz")),
-            arguments=[LaunchConfiguration("gui_cfg"), "--ros-args", "--log-level", [LaunchConfiguration('namespace'), '.rtabmap_viz:=', LaunchConfiguration('log_level')], "--log-level", ['rtabmap_viz:=', LaunchConfiguration('log_level')]],
-            prefix=LaunchConfiguration('launch_prefix'),
-            namespace=LaunchConfiguration('namespace')),
-        Node(
-            package='rviz2', executable='rviz2', name="rviz2", output='screen',
-            condition=IfCondition(LaunchConfiguration("rviz")),
-            arguments=[["-d"], [LaunchConfiguration("rviz_cfg")]]),
-        Node(
-            package='rtabmap_util', executable='point_cloud_xyzrgb', name="point_cloud_xyzrgb", output='screen',
-            emulate_tty=True,
-            condition=IfCondition(LaunchConfiguration("rviz")),
-            parameters=[{
-                "decimation": 4,
-                "voxel_size": 0.0,
-                "approx_sync": LaunchConfiguration('approx_sync'),
-                "approx_sync_max_interval": LaunchConfiguration('approx_sync_max_interval'),
-                "qos": LaunchConfiguration('qos_image'),
-                "qos_camera_info": LaunchConfiguration('qos_camera_info')
-            }],
-            remappings=[
-                ('left/image', LaunchConfiguration('left_image_topic_relay')),
-                ('right/image', LaunchConfiguration('right_image_topic_relay')),
-                ('left/camera_info', LaunchConfiguration('left_camera_info_topic')),
-                ('right/camera_info', LaunchConfiguration('right_camera_info_topic')),
-                ('rgb/image', LaunchConfiguration('rgb_topic_relay')),
-                ('depth/image', LaunchConfiguration('depth_topic_relay')),
-                ('rgb/camera_info', LaunchConfiguration('camera_info_topic')),
-                ('rgbd_image', LaunchConfiguration('rgbd_topic_relay')),
-                ('cloud', 'voxel_cloud')]),
         ]
 
 def generate_launch_description():
     
-    # config_rviz = os.path.join(
-    #     get_package_share_directory('rtabmap_launch'), 'launch', 'config', 'rgbd.rviz'
-    # )
     
     return LaunchDescription([
         
         # Arguments
         DeclareLaunchArgument('stereo', default_value='false', description='Use stereo input instead of RGB-D.'),
 
-        DeclareLaunchArgument('localization', default_value='false', description='Launch in localization mode.'),
-        DeclareLaunchArgument('rtabmap_viz',  default_value='true',  description='Launch RTAB-Map UI (optional).'),
-        DeclareLaunchArgument('rviz',         default_value='false', description='Launch RVIZ (optional).'),
-
         DeclareLaunchArgument('use_sim_time', default_value='false', description='Use simulation (Gazebo) clock if true'),
 
-        DeclareLaunchArgument('log_level',    default_value='info', description="ROS logging level (debug, info, warn, error). For RTAB-Map\'s logger level, use \"args\" argument."),
+        DeclareLaunchArgument('log_level',    default_value='info', description="ROS logging level (debug, info, warn, error)."),
 
         # Config files
-        DeclareLaunchArgument('cfg',      default_value='',                        description='To change RTAB-Map\'s parameters, set the path of config file (*.ini) generated by the standalone app.'),
-        DeclareLaunchArgument('gui_cfg',  default_value='~/.ros/rtabmap_gui.ini',  description='Configuration path of rtabmap_viz.'),
-        # DeclareLaunchArgument('rviz_cfg', default_value=config_rviz,               description='Configuration path of rviz2.'),
+        DeclareLaunchArgument('cfg',      default_value='',                        description='Path to odometry config file (*.ini).'),
 
-        DeclareLaunchArgument('frame_id',       default_value='base_link',          description='Fixed frame id of the robot (base frame), you may set "base_link" or "base_footprint" if they are published. For camera-only config, this could be "camera_link".'),
+        DeclareLaunchArgument('frame_id',       default_value='base_link',          description='Fixed frame id of the robot (base frame).'),
         DeclareLaunchArgument('odom_frame_id',  default_value='',                   description='If set, TF is used to get odometry instead of the topic.'),
-        DeclareLaunchArgument('map_frame_id',   default_value='map',                description='Output map frame id (TF).'),
-        DeclareLaunchArgument('map_topic',      default_value='map',                description='Map topic name.'),
-        DeclareLaunchArgument('publish_tf_map', default_value='true',               description='Publish TF between map and odomerty.'),
-        DeclareLaunchArgument('namespace',      default_value='rtabmap',            description=''),
-        DeclareLaunchArgument('database_path',  default_value='~/.ros/rtabmap.db',  description='Where is the map saved/loaded.'),
+        DeclareLaunchArgument('namespace',      default_value='rtabmap',            description='Namespace for odometry nodes.'),
         DeclareLaunchArgument('topic_queue_size', default_value='10',               description='Queue size of individual topic subscribers.'),
         DeclareLaunchArgument('queue_size',     default_value='10',                 description='Backward compatibility, use "sync_queue_size" instead.'),
         DeclareLaunchArgument('qos',            default_value='0',                  description='General QoS used for sensor input data: 0=system default, 1=Reliable, 2=Best Effort.'),
-        DeclareLaunchArgument('wait_for_transform', default_value='0.2',            description=''),
-        DeclareLaunchArgument('rtabmap_args',   default_value='',                   description='Backward compatibility, use "args" instead.'),
+        DeclareLaunchArgument('wait_for_transform', default_value='0.2',            description='Wait for transform timeout.'),
         DeclareLaunchArgument('launch_prefix',  default_value='',                   description='For debugging purpose, it fills prefix tag of the nodes, e.g., "xterm -e gdb -ex run --args"'),
         DeclareLaunchArgument('output',         default_value='screen',             description='Control node output (screen or log).'),
-        DeclareLaunchArgument('initial_pose',   default_value='',                   description='Set an initial pose (only in localization mode). Format: "x y z roll pitch yaw" or "x y z qx qy qz qw". Default: see "RGBD/StartAtOrigin" doc'),
-        
-        DeclareLaunchArgument('output_goal_topic', default_value='/goal_pose',      description='Output goal topic (can be connected to nav2).'),
-        DeclareLaunchArgument('use_action_for_goal', default_value='false',         description='Connect to nav2\'s navigate_to_pose action server instead of publishing the output goal topic.'),
 
         DeclareLaunchArgument('ground_truth_frame_id',      default_value='', description='e.g., "world"'),
-        DeclareLaunchArgument('ground_truth_base_frame_id', default_value='', description='e.g., "tracker", a fake frame matching the frame "frame_id" (but on different TF tree)'),
+        DeclareLaunchArgument('ground_truth_base_frame_id', default_value='', description='e.g., "tracker"'),
         
         DeclareLaunchArgument('approx_sync',  default_value='false',            description='If timestamps of the input topics should be synchronized using approximate or exact time policy.'),
-        DeclareLaunchArgument('approx_sync_max_interval',  default_value='0.0', description='(sec) 0 means infinite interval duration (used with approx_sync=true)'),
+        DeclareLaunchArgument('approx_sync_max_interval',  default_value='0.005', description='(sec) 0 means infinite interval duration (used with approx_sync=true)'),
 
         # RGB-D related topics
         DeclareLaunchArgument('rgb_topic',           default_value='/camera/camera/color/image_raw',       description=''),
@@ -481,22 +299,22 @@ def generate_launch_description():
         DeclareLaunchArgument('right_camera_info_topic', default_value=[LaunchConfiguration('stereo_namespace'), '/right/camera_info'], description=''),
         
         # Use Pre-sync RGBDImage format
-        DeclareLaunchArgument('rgbd_sync',        default_value='false',      description='Pre-sync rgb_topic, depth_topic, camera_info_topic.'),
+        DeclareLaunchArgument('rgbd_sync',        default_value='true',      description='Pre-sync rgb_topic, depth_topic, camera_info_topic.'),
         DeclareLaunchArgument('approx_rgbd_sync', default_value='true',       description='false=exact synchronization.'),
-        DeclareLaunchArgument('subscribe_rgbd',   default_value=LaunchConfiguration('rgbd_sync'), description='Already synchronized RGB-D related topic, e.g., with rtabmap_sync/rgbd_sync nodelet.'),
+        DeclareLaunchArgument('subscribe_rgbd',   default_value=LaunchConfiguration('rgbd_sync'), description='Already synchronized RGB-D related topic.'),
         DeclareLaunchArgument('rgbd_topic',       default_value='rgbd_image', description=''),
         DeclareLaunchArgument('depth_scale',      default_value='1.0',        description=''),
-        
+        DeclareLaunchArgument('rgbd_odometry_image_downscale', default_value='4'),
         # Image topic compression
         DeclareLaunchArgument('compressed',            default_value='false', description='If you want to subscribe to compressed image topics'),
-        DeclareLaunchArgument('rgb_image_transport',   default_value='compressed', description='Common types: compressed, theora (see "rosrun image_transport list_transports")'),
-        DeclareLaunchArgument('depth_image_transport', default_value='compressedDepth', description='Depth compatible types: compressedDepth (see "rosrun image_transport list_transports")'),
+        DeclareLaunchArgument('rgb_image_transport',   default_value='compressed', description='Common types: compressed, theora'),
+        DeclareLaunchArgument('depth_image_transport', default_value='compressedDepth', description='Depth compatible types: compressedDepth'),
        
         # LiDAR
-        DeclareLaunchArgument('subscribe_scan',       default_value='false',       description=''),
-        DeclareLaunchArgument('scan_topic',           default_value='/scan',       description=''),
-        DeclareLaunchArgument('subscribe_scan_cloud', default_value='false',       description=''),
-        DeclareLaunchArgument('scan_cloud_topic',     default_value='/scan_cloud', description=''),
+        DeclareLaunchArgument('subscribe_scan',       default_value='false',       description='Subscribe to laser scan topic.'),
+        DeclareLaunchArgument('scan_topic',           default_value='/scan',       description='Laser scan topic name.'),
+        DeclareLaunchArgument('subscribe_scan_cloud', default_value='false',       description='Subscribe to point cloud topic.'),
+        DeclareLaunchArgument('scan_cloud_topic',     default_value='/scan_cloud', description='Point cloud topic name.'),
         DeclareLaunchArgument('scan_normal_k',        default_value='0',           description=''),
         
         # Odometry
@@ -504,35 +322,20 @@ def generate_launch_description():
         DeclareLaunchArgument('icp_odometry',               default_value='false', description='Launch rtabmap icp odometry node.'),
         DeclareLaunchArgument('odom_topic',                 default_value='odom',  description='Odometry topic name.'),
         DeclareLaunchArgument('vo_frame_id',                default_value=LaunchConfiguration('odom_topic'), description='Visual/Icp odometry frame ID for TF.'),
-        DeclareLaunchArgument('publish_tf_odom',            default_value='true',  description=''),
+        DeclareLaunchArgument('publish_tf_odom',            default_value='true',  description='Publish TF frames for odometry.'),
         DeclareLaunchArgument('odom_tf_angular_variance',   default_value='0.01',    description='If TF is used to get odometry, this is the default angular variance'),
         DeclareLaunchArgument('odom_tf_linear_variance',    default_value='0.001',   description='If TF is used to get odometry, this is the default linear variance'),
-        DeclareLaunchArgument('odom_args',                  default_value='',      description='More arguments for odometry (overwrite same parameters in rtabmap_args).'),
-        DeclareLaunchArgument('odom_sensor_sync',           default_value='false', description=''),
-        DeclareLaunchArgument('odom_guess_frame_id',        default_value='',      description=''),
-        DeclareLaunchArgument('odom_guess_min_translation', default_value='0.0',   description=''),
-        DeclareLaunchArgument('odom_guess_min_rotation',    default_value='0.0',   description=''),
-        DeclareLaunchArgument('odom_always_process_most_recent_frame', default_value='true', description='Odometry: always process latest frame to reduce delay, skipping frames in case odometry is slower than camera frame rate. In case you want to make sure to process all frames (e.g., from a rosbag/dataset) and you don\'t care about delay, set this to false.'),
+        DeclareLaunchArgument('odom_args',                  default_value='',      description='More arguments for odometry.'),
+        DeclareLaunchArgument('odom_sensor_sync',           default_value='false', description='Sensor sync for odometry.'),
+        DeclareLaunchArgument('odom_guess_frame_id',        default_value='',      description='Frame id for odometry guess.'),
+        DeclareLaunchArgument('odom_guess_min_translation', default_value='0.0',   description='Minimum translation for odometry guess.'),
+        DeclareLaunchArgument('odom_guess_min_rotation',    default_value='0.0',   description='Minimum rotation for odometry guess.'),
+        DeclareLaunchArgument('odom_always_process_most_recent_frame', default_value='true', description='Odometry: always process latest frame to reduce delay.'),
+        DeclareLaunchArgument('odom_log_level',  default_value=LaunchConfiguration('log_level'), description='Specific ROS logger level for odometry node.'),
 
         # imu
-        DeclareLaunchArgument('imu_topic',        default_value='/imu/data', description='Used with VIO approaches and for SLAM graph optimization (gravity constraints).'),
-        DeclareLaunchArgument('wait_imu_to_init', default_value='false',     description=''),
-        DeclareLaunchArgument('always_check_imu_tf', default_value='true',     description='The odometry node will always check if TF between IMU frame and base frame has changed. If false, it is checked till a valid transform is initialized.'),
-
-        # User Data
-        DeclareLaunchArgument('subscribe_user_data',   default_value='false',            description='User data synchronized subscription.'),
-        DeclareLaunchArgument('user_data_topic',       default_value='/user_data',       description=''),
-        DeclareLaunchArgument('user_data_async_topic', default_value='/user_data_async', description='User data async subscription (rate should be lower than map update rate).'),
-        
-        #GPS
-        DeclareLaunchArgument('gps_topic',  default_value='/gps/fix', description='GPS async subscription. This is used for SLAM graph optimization and loop closure candidates selection.'),
-
-        # Tag/Landmark
-        DeclareLaunchArgument('tag_topic',            default_value='/detections', description='AprilTag topic async subscription. This is used for SLAM graph optimization and loop closure detection. Landmark poses are also published accordingly to current optimized map. Required: Remove optional frame name parameters from apriltag\'s cfg file so that TF frame can be deducted from topic\'s family and id.'),
-        DeclareLaunchArgument('tag_linear_variance',  default_value='0.0001',          description=''),
-        DeclareLaunchArgument('tag_angular_variance', default_value='9999.0',            description='>=9999 means rotation is ignored in optimization, when rotation estimation of the tag is not reliable or not computed.'),
-        DeclareLaunchArgument('fiducial_topic',       default_value='/fiducial_transforms', description='aruco_detect async subscription, use tag_linear_variance and tag_angular_variance to set covariance.'),
-        
-        DeclareLaunchArgument('env_sensor_topic',     default_value='/env_sensor', description='A rtabmap_msgs/EnvSensor topic.'),
+        DeclareLaunchArgument('imu_topic',        default_value='/imu/data', description='IMU topic for odometry.'),
+        DeclareLaunchArgument('wait_imu_to_init', default_value='false',     description='Wait for IMU to initialize.'),
+        DeclareLaunchArgument('always_check_imu_tf', default_value='true',     description='Always check if TF between IMU frame and base frame has changed.'),
         OpaqueFunction(function=launch_setup)
     ])

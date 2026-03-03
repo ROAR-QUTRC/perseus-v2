@@ -58,7 +58,7 @@ def generate_launch_description():
     # Declare launch arguments
     imu_frequency_arg = DeclareLaunchArgument(
         "imu_frequency",
-        default_value="50.0",
+        default_value="30.0",
         description="Target output frequency for remapped IMU in Hz",
     )
 

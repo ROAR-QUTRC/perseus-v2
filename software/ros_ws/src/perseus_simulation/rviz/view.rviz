@@ -4,7 +4,6 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Converted Livox Scan1/Status1
         - /Converted Livox Scan1/Topic1
         - /Fused Odometry1/Covariance1/Position1
       Splitter Ratio: 0.5
@@ -26,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: Converted Livox Scan
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -116,10 +115,6 @@ Visualization Manager:
           Value: true
         livox_frame:
           Value: true
-        map:
-          Value: true
-        odom:
-          Value: true
         rear_left_motor:
           Value: true
         rear_left_wheel:
@@ -136,36 +131,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        map:
-          odom:
-            base_link:
-              base_footprint:
-                {}
-              chassis:
-                camera_link:
-                  camera_link_optical:
-                    {}
-                flange_bearing:
-                  differential_bar:
-                    {}
-                laser_2d_frame:
-                  {}
-                left_rocker:
-                  front_left_motor:
-                    front_left_wheel:
-                      {}
-                  rear_left_motor:
-                    rear_left_wheel:
-                      {}
-                livox_frame:
-                  {}
-                right_rocker:
-                  front_right_motor:
-                    front_right_wheel:
-                      {}
-                  rear_right_motor:
-                    rear_right_wheel:
-                      {}
+        {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -321,10 +287,6 @@ Visualization Manager:
           Value: true
         livox_frame:
           Value: true
-        map:
-          Value: true
-        odom:
-          Value: true
         rear_left_motor:
           Value: true
         rear_left_wheel:
@@ -341,36 +303,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        map:
-          odom:
-            base_link:
-              base_footprint:
-                {}
-              chassis:
-                camera_link:
-                  camera_link_optical:
-                    {}
-                flange_bearing:
-                  differential_bar:
-                    {}
-                laser_2d_frame:
-                  {}
-                left_rocker:
-                  front_left_motor:
-                    front_left_wheel:
-                      {}
-                  rear_left_motor:
-                    rear_left_wheel:
-                      {}
-                livox_frame:
-                  {}
-                right_rocker:
-                  front_right_motor:
-                    front_right_wheel:
-                      {}
-                  rear_right_motor:
-                    rear_right_wheel:
-                      {}
+        {}
       Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/Image
@@ -631,21 +564,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 1.5700000524520874
-      Class: rviz_default_plugins/TopDownOrtho
+      Class: rviz_default_plugins/Orbit
+      Distance: 14.818815231323242
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: 0.9489628672599792
+        Y: -0.012010151520371437
+        Z: -0.00029680956504307687
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: -65
+      Pitch: 0.47479626536369324
       Target Frame: <Fixed Frame>
-      Value: TopDownOrtho (rviz_default_plugins)
-      X: 3.469463586807251
-      Y: 2.5535531044006348
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 5.267388820648193
     Saved: ~
 Window Geometry:
   Displays:
@@ -665,5 +603,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 3840
-  X: 2928
-  Y: 64
+  X: 3408
+  Y: 224
