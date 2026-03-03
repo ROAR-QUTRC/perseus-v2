@@ -29,6 +29,7 @@ excludes = [
     "*.3mf",
     "*.onnx",
     "hardware/**",
+    "*.pb",
     "*.lock",
     "*.patch",
     "package-lock.json",
