@@ -85,11 +85,11 @@ def generate_launch_description():
         ),
         # Color stream parameters
         DeclareLaunchArgument(
-            "enable_color", default_value="false", description="enable color stream"
+            "enable_color", default_value="true", description="enable color stream"
         ),
         DeclareLaunchArgument(
             "rgb_camera.color_profile",
-            default_value="640,480,15",
+            default_value="640,480,30",
             description="color stream profile",
         ),
         DeclareLaunchArgument(
@@ -104,20 +104,20 @@ def generate_launch_description():
         ),
         # Depth stream parameters
         DeclareLaunchArgument(
-            "enable_depth", default_value="false", description="enable depth stream"
+            "enable_depth", default_value="true", description="enable depth stream"
         ),
         DeclareLaunchArgument(
             "enable_infra", default_value="false", description="enable infra0 stream"
         ),
         DeclareLaunchArgument(
-            "enable_infra1", default_value="true", description="enable infra1 stream"
+            "enable_infra1", default_value="false", description="enable infra1 stream"
         ),
         DeclareLaunchArgument(
-            "enable_infra2", default_value="true", description="enable infra2 stream"
+            "enable_infra2", default_value="false", description="enable infra2 stream"
         ),
         DeclareLaunchArgument(
             "depth_module.depth_profile",
-            default_value="640,480,15",
+            default_value="640,480,30",
             description="depth stream profile",
         ),
         DeclareLaunchArgument(

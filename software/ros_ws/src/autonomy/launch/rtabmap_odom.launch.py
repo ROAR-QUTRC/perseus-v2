@@ -284,7 +284,7 @@ def generate_launch_description():
         DeclareLaunchArgument('ground_truth_base_frame_id', default_value='', description='e.g., "tracker"'),
         
         DeclareLaunchArgument('approx_sync',  default_value='true',            description='If timestamps of the input topics should be synchronized using approximate or exact time policy.'),
-        DeclareLaunchArgument('approx_sync_max_interval',  default_value='0.04', description='(sec) 0 means infinite interval duration (used with approx_sync=true)'),
+        DeclareLaunchArgument('approx_sync_max_interval',  default_value='0.08', description='(sec) 0 means infinite interval duration (used with approx_sync=true)'),
 
         # RGB-D related topics
         DeclareLaunchArgument('rgb_topic',           default_value='/camera/camera/color/image_raw',       description=''),
@@ -304,7 +304,7 @@ def generate_launch_description():
         DeclareLaunchArgument('subscribe_rgbd',   default_value=LaunchConfiguration('rgbd_sync'), description='Already synchronized RGB-D related topic.'),
         DeclareLaunchArgument('rgbd_topic',       default_value='rgbd_image', description=''),
         DeclareLaunchArgument('depth_scale',      default_value='1.0',        description=''),
-        DeclareLaunchArgument('rgbd_odometry_image_downscale', default_value='4'),
+        DeclareLaunchArgument('rgbd_odometry_image_downscale', default_value='8'),
         # Image topic compression
         DeclareLaunchArgument('compressed',            default_value='false', description='If you want to subscribe to compressed image topics'),
         DeclareLaunchArgument('rgb_image_transport',   default_value='compressed', description='Common types: compressed, theora'),
