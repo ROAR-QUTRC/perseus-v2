@@ -8,8 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "node ./src/server/server.js",
-    "camera": "npx --offline tsx pi-server/index.ts",
-    "camera-online": "npx tsx pi-server/index.ts"
+    "camera": "npx --offline tsx pi-server/index.ts"
   },
   "devDependencies": {
     "@internationalized/date": "^3.10.0",
@@ -30,8 +29,8 @@
     "paneforge": "^1.0.0-next.2",
     "postcss": "^8.1.0",
     "prettier": "^3.3.2",
-    "prettier-plugin-svelte": "^3.2.6",
-    "prettier-plugin-tailwindcss": "^0.6.5",
+    "prettier-plugin-svelte": "^3.4.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "svelte-sonner": "^0.3.28",
@@ -47,9 +46,12 @@
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "change-case": "^5.4.4",
     "chart.js": "^4.4.7",
+<<<<<<< HEAD
     "json-formatter-js": "^2.5.23",
     "json-tree-viewer": "^0.0.2",
     "lodash": "^4.17.23",
+=======
+>>>>>>> origin/main
     "mode-watcher": "^0.5.0",
     "panzoom": "^9.4.3",
     "remult": "^0.27.24",
@@ -58,8 +60,14 @@
     "socket.io-client": "^4.8.1",
     "svelte-fa": "^4.0.3",
     "svelte-grid-extended": "^1.2.1",
+<<<<<<< HEAD
     "svelte-json-tree": "^2.2.0",
     "svelte-radix": "^3.0.2"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+=======
+    "svelte-radix": "^3.0.2"
+  },
+  "packageManager": "yarn@4.12.0"
+>>>>>>> origin/main
 }

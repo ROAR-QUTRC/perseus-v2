@@ -7,7 +7,7 @@
 	export const group = 'CAN Bus';
 	export const isRosDependent = true;
 
-	export const settings: WidgetSettingsType = $state<WidgetSettingsType>({
+	export const settings = $state<WidgetSettingsType>({
 		groups: {}
 	});
 </script>
@@ -101,7 +101,11 @@
 				<AlertDialog.Trigger>
 					<Fa
 						icon={faPowerOff}
+<<<<<<< HEAD
 						class="cursor-pointer mx-auto my-4"
+=======
+						class="mx-auto my-4 cursor-pointer"
+>>>>>>> origin/main
 						color={busState[bus].status !== 1 ? 'red' : 'green'}
 						scale={3}
 					/>
@@ -126,6 +130,7 @@
 		<p>Waiting for power bus data</p>
 	{/each}
 </div>
+<<<<<<< HEAD
 <p class="ml-2 opacity-35">Note: FAULT on the drive bus likely indicates the drive stop is engaged.</p>
 
 <style>
@@ -135,3 +140,8 @@
 		margin: auto;
 	}
 </style>
+=======
+<p class="ml-2 opacity-35">
+	Note: FAULT on the drive bus likely indicates the drive stop is engaged.
+</p>
+>>>>>>> origin/main

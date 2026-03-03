@@ -46,7 +46,11 @@
 	import * as ROSLIB from 'roslib';
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+<<<<<<< HEAD
 	import type { ActuatorsMessage } from '$lib/scripts/rosTypes';
+=======
+	import type { ActuatorsMessageType } from '$lib/scripts/rosTypes';
+>>>>>>> origin/main
 
 	const CALLBACK_INTERVAL = 100; // 10Hz
 	const INACTIVE_TIMEOUT = 10000; // 10 seconds
@@ -54,7 +58,11 @@
 
 	let intervalHandle: NodeJS.Timeout | null = null;
 	let lockingTimeoutHandle: NodeJS.Timeout | null = null;
+<<<<<<< HEAD
 	let topic: ROSLIB.Topic<ActuatorsMessage> | null = null;
+=======
+	let topic: ROSLIB.Topic<ActuatorsMessageType> | null = null;
+>>>>>>> origin/main
 	let magnet = $state<boolean>(false);
 	const handles = $state<
 		Record<string, { parent: HTMLDivElement | null; active: boolean; value: number }>
@@ -103,8 +111,13 @@
 				Number(settings.groups.general.masterSpeedMultiplier.value)
 		];
 
+<<<<<<< HEAD
 		const message = {
+=======
+		const message: ActuatorsMessageType = {
+>>>>>>> origin/main
 			header: {}, // Leaving this empty forces ROS bridge to fill in the timestamp.
+			position: [],
 			velocity: velocities,
 			normalized: [magnet ? 1 : 0]
 		};

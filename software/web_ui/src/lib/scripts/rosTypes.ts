@@ -6,8 +6,13 @@ export interface Float64MultiArrayType {
 // actuator_msgs types
 export interface ActuatorsMessageType {
   header: {
+<<<<<<< HEAD
     stamp: object; // filled by rosbridge
     frame_id: string;
+=======
+    stamp?: object; // filled by rosbridge
+    frame_id?: string;
+>>>>>>> origin/main
   };
   position: Array<number>; // float64
   velocity: Array<number>; // float64
