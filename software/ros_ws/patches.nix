@@ -164,6 +164,25 @@ let
         propagatedBuildInputs = final.lib.remove rosFinal.perseus-input-config propagatedBuildInputs;
       }
     );
+    fast-lio = rosPrev.fast-lio.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        # The CMake file needs the ROS_DISTRO environment variable
+        ROS_DISTRO = rosDistro;
+        # We need to have submodules, so we can't use fetchFromGitHub
+        src = builtins.fetchGit {
+          url = "https://github.com/hku-mars/FAST_LIO";
+          ref = "ROS2";
+          rev = "a4743b095409588842a5b30ddfa27e29d2f99164";
+          submodules = true;
+        };
+        # Fast-LIO sets the cpp standard to 14, but jazzy needs version 17
+        patches = patches ++ [ ./patches/fast_lio/cpp_version_17.patch ];
+      }
+    );
   };
 
 in
