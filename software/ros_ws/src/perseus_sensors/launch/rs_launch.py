@@ -89,7 +89,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "rgb_camera.color_profile",
-            default_value="640,480,30",
+            default_value="640,480,15",
             description="color stream profile",
         ),
         DeclareLaunchArgument(
@@ -117,7 +117,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "depth_module.depth_profile",
-            default_value="640,480,30",
+            default_value="640,480,15",
             description="depth stream profile",
         ),
         DeclareLaunchArgument(

@@ -211,7 +211,7 @@ local_costmap:
       plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.5
+        inflation_radius: 1.3
         cost_scaling_factor: 5.0
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -303,8 +303,8 @@ global_costmap:
         transform_tolerance: 0.1
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.5
-        cost_scaling_factor: 5.0
+        inflation_radius: 1.3
+        cost_scaling_factor: 1.0
       always_send_full_costmap: true
 planner_server:
   ros__parameters:
@@ -457,8 +457,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.3, 0.0, 0.5] # [x, y, theta]
-    min_velocity: [-0.3, 0.0, -0.5]
+    max_velocity: [0.3, 0.0, 0.4] # [x, y, theta]
+    min_velocity: [-0.3, 0.0, -0.4]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]
