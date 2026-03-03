@@ -130,6 +130,7 @@ This sets the state directly.
 
 - The first time you run the simulation, Gazebo may download the lunar landscape model, which can take up to 20 minutes
 - Ensure you have an internet connection for the initial setup
+- If the system has a firewall, the network must be set to trusted to download assets needed for the simulation
 - The simulation requires significant system resources and may perform better with hardware acceleration
 - If the rover doesn't move, make sure the drive controller is activated (step 6)
 
