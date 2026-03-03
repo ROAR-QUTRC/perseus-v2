@@ -17,107 +17,107 @@ pkgs.mkShell {
         pkgs.colcon
         pkgs.rosPackages.${rosDistro}.ros-core
 
-          # Work around https://github.com/lopsided98/nix-ros-overlay/pull/624
-          pkgs.rosPackages.${rosDistro}.ament-cmake-core
-          pkgs.rosPackages.${rosDistro}.python-cmake-module
+        # Work around https://github.com/lopsided98/nix-ros-overlay/pull/624
+        pkgs.rosPackages.${rosDistro}.ament-cmake-core
+        pkgs.rosPackages.${rosDistro}.python-cmake-module
+      ]
+      ++ (
+        with pkgs;
+        with pkgs.rosPackages.${rosDistro};
+        with extraPkgs;
+        [
+          # Dependencies from package.xml files
+          actuator-msgs
+          ament-cmake
+          ament-cmake-cppcheck
+          ament-cmake-cpplint
+          ament-cmake-flake8
+          ament-cmake-gtest
+          ament-cmake-lint-cmake
+          ament-cmake-pep257
+          ament-cmake-uncrustify
+          ament-cmake-xmllint
+          ament-copyright
+          ament-flake8
+          ament-lint-auto
+          ament-lint-common
+          ament-pep257
+          backward-ros
+          behaviortree-cpp
+          boost
+          builtin-interfaces
+          controller-manager
+          cv-bridge
+          diff-drive-controller
+          domain-bridge
+          geometry-msgs
+          gz-ros2-control
+          hardware-interface
+          hi-can
+          hi-can-raw
+          joint-state-broadcaster
+          joint-state-publisher
+          joint-state-publisher-gui
+          joy
+          laser-geometry
+          launch
+          launch-ros
+          mecanum-drive-controller
+          message-filters
+          nav2-msgs
+          navigation2
+          nlohmann_json
+          opencv
+          openssl
+          pcl-conversions
+          pcl-ros
+          pluginlib
+          python3Packages.pygame
+          python3Packages.pytest
+          rclcpp
+          rclcpp-action
+          rclcpp-components
+          rclcpp-lifecycle
+          rclpy
+          realsense2-camera
+          realsense2-description
+          robot-localization
+          robot-state-publisher
+          ros-gz-bridge
+          ros-gz-image
+          ros-gz-interfaces
+          ros-gz-sim
+          ros2controlcli
+          ros2launch
+          rosidl-default-generators
+          rosidl-default-runtime
+          rplidar-ros
+          rtabmap-odom
+          rtabmap-rviz-plugins
+          rtabmap-slam
+          rtabmap-util
+          rtabmap-viz
+          rviz2
+          sensor-msgs
+          simple-networking
+          slam-toolbox
+          std-msgs
+          teleop-twist-joy
+          teleop-twist-keyboard
+          tf2
+          tf2-geometry-msgs
+          tf2-ros
+          tf2-sensor-msgs
+          twist-mux
+          urdf
+          visualization-msgs
+          xacro
+          yaml-cpp-vendor
         ]
-        ++ (
-          with pkgs;
-          with pkgs.rosPackages.${rosDistro};
-          with extraPkgs;
-          [
-            # Dependencies from package.xml files
-            actuator-msgs
-            ament-cmake
-            ament-cmake-cppcheck
-            ament-cmake-cpplint
-            ament-cmake-flake8
-            ament-cmake-gtest
-            ament-cmake-lint-cmake
-            ament-cmake-pep257
-            ament-cmake-uncrustify
-            ament-cmake-xmllint
-            ament-copyright
-            ament-flake8
-            ament-lint-auto
-            ament-lint-common
-            ament-pep257
-            backward-ros
-            behaviortree-cpp
-            boost
-            builtin-interfaces
-            controller-manager
-            cv-bridge
-            diff-drive-controller
-            domain-bridge
-            geometry-msgs
-            gz-ros2-control
-            hardware-interface
-            hi-can
-            hi-can-raw
-            joint-state-broadcaster
-            joint-state-publisher
-            joint-state-publisher-gui
-            joy
-            laser-geometry
-            launch
-            launch-ros
-            mecanum-drive-controller
-            message-filters
-            nav2-msgs
-            navigation2
-            nlohmann_json
-            opencv
-            pcl-conversions
-            pcl-ros
-            openssl
-            pluginlib
-            python3Packages.pygame
-            python3Packages.pytest
-            rclcpp
-            rclcpp-action
-            rclcpp-components
-            rclcpp-lifecycle
-            rclpy
-            realsense2-camera
-            realsense2-description
-            robot-localization
-            robot-state-publisher
-            ros-gz-bridge
-            ros-gz-image
-            ros-gz-interfaces
-            ros-gz-sim
-            ros2controlcli
-            ros2launch
-            rosidl-default-generators
-            rosidl-default-runtime
-            rplidar-ros
-            rtabmap-odom
-            rtabmap-rviz-plugins
-            rtabmap-slam
-            rtabmap-util
-            rtabmap-viz
-            rviz2
-            sensor-msgs
-            simple-networking
-            slam-toolbox
-            std-msgs
-            teleop-twist-joy
-            teleop-twist-keyboard
-            tf2
-            tf2-geometry-msgs
-            tf2-ros
-            tf2-sensor-msgs
-            twist-mux
-            urdf
-            visualization-msgs
-            xacro
-            yaml-cpp-vendor
-          ]
-        )
-        ++ builtins.attrValues extraPkgs
-        ++ extraPaths
-        ++ withPackages (pkgs // pkgs.rosPackages.${rosDistro});
+      )
+      ++ builtins.attrValues extraPkgs
+      ++ extraPaths
+      ++ withPackages (pkgs // pkgs.rosPackages.${rosDistro});
     })
   ];
   shellHook = ''
