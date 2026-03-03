@@ -13,7 +13,7 @@ class ConditionalText(Substitution):
         self.condition = condition
 
     def perform(self, context: 'LaunchContext') -> Text:
-        if self.condition == True or self.condition == 'true' or self.condition == 'True':
+        if self.condition is True or self.condition in ('true', 'True'):
             return self.text_if
         else:
             return self.text_else
