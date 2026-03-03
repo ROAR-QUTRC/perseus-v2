@@ -54,6 +54,7 @@ pkgs.mkShell {
             hardware-interface
             hi-can
             hi-can-raw
+            imutils
             joint-state-broadcaster
             joint-state-publisher
             joint-state-publisher-gui
