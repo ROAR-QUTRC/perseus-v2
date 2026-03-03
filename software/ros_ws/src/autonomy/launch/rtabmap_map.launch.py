@@ -17,7 +17,7 @@ class ConditionalText(Substitution):
         self.condition = condition
 
     def perform(self, context: 'LaunchContext') -> Text:
-        if self.condition == True or self.condition == 'true' or self.condition == 'True':
+        if self.condition is True or self.condition in ('true', 'True'):
             return self.text_if
         else:
             return self.text_else
@@ -38,15 +38,18 @@ class ConditionalBool(Substitution):
 
 def launch_setup(context, *args, **kwargs):
 
-    rtabmap_viz_odometry_node_name = "rgbd_odometry"
+    # Comment out cuz we are not using viz
+    # rtabmap_viz_odometry_node_name = "rgbd_odometry"
     use_icp_odometry = LaunchConfiguration('icp_odometry').perform(context)
     use_icp_odometry = use_icp_odometry == 'true' or use_icp_odometry == 'True'
     use_stereo_odometry = LaunchConfiguration('stereo').perform(context)
     use_stereo_odometry = use_stereo_odometry == 'true' or use_stereo_odometry == 'True'
-    if use_icp_odometry:
-        rtabmap_viz_odometry_node_name = "icp_odometry"
-    elif use_stereo_odometry:
-        rtabmap_viz_odometry_node_name = "stereo_odometry"
+
+    # Comment out cuz we are not using viz
+    # if use_icp_odometry:
+    #     rtabmap_viz_odometry_node_name = "icp_odometry"
+    # elif use_stereo_odometry:
+    #     rtabmap_viz_odometry_node_name = "stereo_odometry"
 
     return [
         DeclareLaunchArgument('depth', default_value=ConditionalText('false', 'true', IfCondition(PythonExpression(["'", LaunchConfiguration('stereo'), "' == 'true'"]))._predicate_func(context)), description=''),

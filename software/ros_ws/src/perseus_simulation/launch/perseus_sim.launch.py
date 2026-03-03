@@ -35,23 +35,23 @@ def generate_launch_description():
             description="If true, launch the EKF filter node",
         ),
     ]
-    # IMPORTED LAUNCH FILES
-    gz_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                PathJoinSubstitution(
-                    [
-                        FindPackageShare("perseus_simulation"),
-                        "launch",
-                        "gazebo.launch.py",
-                    ]
-                )
-            ]
-        ),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-        }.items(),
-    )
+    # # IMPORTED LAUNCH FILES
+    # gz_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         [
+    #             PathJoinSubstitution(
+    #                 [
+    #                     FindPackageShare("perseus_simulation"),
+    #                     "launch",
+    #                     "gazebo.launch.py",
+    #                 ]
+    #             )
+    #         ]
+    #     ),
+    #     launch_arguments={
+    #         "use_sim_time": use_sim_time,
+    #     }.items(),
+    # )
     rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -172,7 +172,7 @@ def generate_launch_description():
         # gz_launch,
         rsp_launch,
         controllers_launch_delayed,
-        # ekf_delayed,
+        ekf_delayed,
         rosbridge_launch,
         twist_mux_launch,
         rviz,
