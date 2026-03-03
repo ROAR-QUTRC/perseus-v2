@@ -176,7 +176,7 @@ def launch_setup(context, *args, **kwargs):
                 ("rgbd_image", LaunchConfiguration('rgbd_topic_relay')),
                 ("odom", LaunchConfiguration('odom_topic')),
                 ("imu", LaunchConfiguration('imu_topic'))],
-            arguments=[LaunchConfiguration("args"), LaunchConfiguration("odom_args"), "--ros-args", "--log-level", [LaunchConfiguration('namespace'), '.rgbd_odometry:=', LaunchConfiguration('odom_log_level')], "--log-level", ['rgbd_odometry:=', LaunchConfiguration('odom_log_level')]],
+            arguments=[LaunchConfiguration("args"), LaunchConfiguration("odom_args"), "--Vis/MinDepth", LaunchConfiguration('odom_min_depth'), "--ros-args", "--log-level", [LaunchConfiguration('namespace'), '.rgbd_odometry:=', LaunchConfiguration('odom_log_level')], "--log-level", ['rgbd_odometry:=', LaunchConfiguration('odom_log_level')]],
             prefix=LaunchConfiguration('launch_prefix'),
             namespace=LaunchConfiguration('namespace')),
         
@@ -273,8 +273,8 @@ def generate_launch_description():
         DeclareLaunchArgument('frame_id',       default_value='base_link',          description='Fixed frame id of the robot (base frame).'),
         DeclareLaunchArgument('odom_frame_id',  default_value='',                   description='If set, TF is used to get odometry instead of the topic.'),
         DeclareLaunchArgument('namespace',      default_value='rtabmap',            description='Namespace for odometry nodes.'),
-        DeclareLaunchArgument('topic_queue_size', default_value='10',               description='Queue size of individual topic subscribers.'),
-        DeclareLaunchArgument('queue_size',     default_value='10',                 description='Backward compatibility, use "sync_queue_size" instead.'),
+        DeclareLaunchArgument('topic_queue_size', default_value='5',               description='Queue size of individual topic subscribers.'),
+        DeclareLaunchArgument('queue_size',     default_value='5',                 description='Backward compatibility, use "sync_queue_size" instead.'),
         DeclareLaunchArgument('qos',            default_value='0',                  description='General QoS used for sensor input data: 0=system default, 1=Reliable, 2=Best Effort.'),
         DeclareLaunchArgument('wait_for_transform', default_value='0.2',            description='Wait for transform timeout.'),
         DeclareLaunchArgument('launch_prefix',  default_value='',                   description='For debugging purpose, it fills prefix tag of the nodes, e.g., "xterm -e gdb -ex run --args"'),
@@ -283,12 +283,12 @@ def generate_launch_description():
         DeclareLaunchArgument('ground_truth_frame_id',      default_value='', description='e.g., "world"'),
         DeclareLaunchArgument('ground_truth_base_frame_id', default_value='', description='e.g., "tracker"'),
         
-        DeclareLaunchArgument('approx_sync',  default_value='false',            description='If timestamps of the input topics should be synchronized using approximate or exact time policy.'),
-        DeclareLaunchArgument('approx_sync_max_interval',  default_value='0.005', description='(sec) 0 means infinite interval duration (used with approx_sync=true)'),
+        DeclareLaunchArgument('approx_sync',  default_value='true',            description='If timestamps of the input topics should be synchronized using approximate or exact time policy.'),
+        DeclareLaunchArgument('approx_sync_max_interval',  default_value='0.04', description='(sec) 0 means infinite interval duration (used with approx_sync=true)'),
 
         # RGB-D related topics
         DeclareLaunchArgument('rgb_topic',           default_value='/camera/camera/color/image_raw',       description=''),
-        DeclareLaunchArgument('depth_topic',         default_value='/camera/camera/aligned_depth_to_color/image_raw', description=''),
+        DeclareLaunchArgument('depth_topic',         default_value='/camera/camera/depth/image_rect_raw', description=''),
         DeclareLaunchArgument('camera_info_topic',   default_value='/camera/camera/color/camera_info',            description=''),
      
         # Stereo related topics
@@ -326,6 +326,7 @@ def generate_launch_description():
         DeclareLaunchArgument('odom_tf_angular_variance',   default_value='0.01',    description='If TF is used to get odometry, this is the default angular variance'),
         DeclareLaunchArgument('odom_tf_linear_variance',    default_value='0.001',   description='If TF is used to get odometry, this is the default linear variance'),
         DeclareLaunchArgument('odom_args',                  default_value='',      description='More arguments for odometry.'),
+        DeclareLaunchArgument('odom_min_depth',             default_value='0.2',   description='Minimum depth in meters to use (0=disabled). Filters out closer objects.'),
         DeclareLaunchArgument('odom_sensor_sync',           default_value='false', description='Sensor sync for odometry.'),
         DeclareLaunchArgument('odom_guess_frame_id',        default_value='',      description='Frame id for odometry guess.'),
         DeclareLaunchArgument('odom_guess_min_translation', default_value='0.0',   description='Minimum translation for odometry guess.'),

@@ -85,7 +85,7 @@ def generate_launch_description():
         ),
         # Color stream parameters
         DeclareLaunchArgument(
-            "enable_color", default_value="true", description="enable color stream"
+            "enable_color", default_value="false", description="enable color stream"
         ),
         DeclareLaunchArgument(
             "rgb_camera.color_profile",
@@ -104,20 +104,20 @@ def generate_launch_description():
         ),
         # Depth stream parameters
         DeclareLaunchArgument(
-            "enable_depth", default_value="true", description="enable depth stream"
+            "enable_depth", default_value="false", description="enable depth stream"
         ),
         DeclareLaunchArgument(
             "enable_infra", default_value="false", description="enable infra0 stream"
         ),
         DeclareLaunchArgument(
-            "enable_infra1", default_value="false", description="enable infra1 stream"
+            "enable_infra1", default_value="true", description="enable infra1 stream"
         ),
         DeclareLaunchArgument(
-            "enable_infra2", default_value="false", description="enable infra2 stream"
+            "enable_infra2", default_value="true", description="enable infra2 stream"
         ),
         DeclareLaunchArgument(
             "depth_module.depth_profile",
-            default_value="0,0,0",
+            default_value="640,480,15",
             description="depth stream profile",
         ),
         DeclareLaunchArgument(
@@ -127,7 +127,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "depth_module.infra_profile",
-            default_value="0,0,0",
+            default_value="640,480,15",
             description="infra streams (0/1/2) profile",
         ),
         DeclareLaunchArgument(
@@ -392,7 +392,7 @@ def generate_launch_description():
         # ---- Added: compression controls ----
         DeclareLaunchArgument(
             "enable_image_compression",
-            default_value="true",
+            default_value="false",
             description="If true, start image_transport republishers to create /compressed and /compressedDepth topics",
         ),
         DeclareLaunchArgument(
