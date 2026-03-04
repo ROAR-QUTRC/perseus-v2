@@ -2,7 +2,12 @@
 
 #include <driver/uart.h>
 
+#include <iterator>
 #include <stdexcept>
+
+#include "freertos/FreeRTOS.h"
+
+TickType_t ticks_to_wait_receive = 100;
 
 UartDriver::UartDriver(const unsigned int port_number, const unsigned int baud_rate, const unsigned int buffer_size)
 {
@@ -25,4 +30,16 @@ UartDriver::~UartDriver()
 void UartDriver::transmit(raw_uart_message_t& message)
 {
     uart_write_bytes(static_cast<uart_port_t>(_uart_port), static_cast<std::vector<uint8_t>>(message).data(), static_cast<std::vector<uint8_t>>(message).size());
+}
+
+void UartDriver::receive(raw_uart_message_t& message, unsigned int bytes_to_read)
+{
+    size_t bytes_available = 0;
+    while (bytes_available < bytes_to_read)
+    {
+        ESP_ERROR_CHECK(uart_get_buffered_data_len(static_cast<uart_port_t>(_uart_port), &bytes_available));
+    }
+    uint8_t received_data[bytes_to_read] = {};
+    uart_read_bytes(static_cast<uart_port_t>(_uart_port), received_data, bytes_to_read, ticks_to_wait_receive);
+    std::copy(received_data, received_data + bytes_to_read, std::back_inserter(message));
 }
