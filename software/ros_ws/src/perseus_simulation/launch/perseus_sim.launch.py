@@ -36,22 +36,22 @@ def generate_launch_description():
         ),
     ]
     # # IMPORTED LAUNCH FILES
-    # gz_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         [
-    #             PathJoinSubstitution(
-    #                 [
-    #                     FindPackageShare("perseus_simulation"),
-    #                     "launch",
-    #                     "gazebo.launch.py",
-    #                 ]
-    #             )
-    #         ]
-    #     ),
-    #     launch_arguments={
-    #         "use_sim_time": use_sim_time,
-    #     }.items(),
-    # )
+    gz_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus_simulation"),
+                        "launch",
+                        "gazebo.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
     rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -169,11 +169,11 @@ def generate_launch_description():
         }.items(),
     )
     launch_files = [
-        # gz_launch,
+        gz_launch,
         rsp_launch,
         controllers_launch_delayed,
         ekf_delayed,
-        rosbridge_launch,
+        # rosbridge_launch,
         twist_mux_launch,
         rviz,
     ]
