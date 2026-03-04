@@ -278,6 +278,21 @@
             ;
         };
 
+        firmware = (
+          pkgs.buildFHSEnv (
+            pkgs.appimageTools.defaultFhsEnvArgs
+            // {
+              name = "ROAR Firmware";
+              targetPkgs =
+                pkgs:
+                (with pkgs; [
+                  platformio-core
+                ]);
+              # runScript = "env LD_LIBRARY_PATH= bash";
+            }
+          )
+        );
+
         # --- SCRIPTS ---
         treefmt-write-config = pkgs.writeShellScriptBin "treefmt-write-config" ''
           cd "$(git rev-parse --show-toplevel)"
@@ -303,7 +318,12 @@
       {
         # rover development environment
         packages = {
-          inherit default simulation docs;
+          inherit
+            default
+            simulation
+            docs
+            firmware
+            ;
 
           # Output the entire package set to make certain debugging easier
           # Note that it needs to be a derivation though to make nix flake commands happy, so we just touch the output file
@@ -337,7 +357,7 @@
         devShells = {
           default = default.env;
           simulation = simulation.env;
-
+          firmware = firmware.env;
           docs = docs.shell;
         };
 
