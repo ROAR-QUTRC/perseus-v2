@@ -8,6 +8,7 @@ public:
     UartDriver(const unsigned int port_number, const unsigned int baud_rate, const unsigned int buffer_size = DEFAULT_BUFFER_SIZE);
     ~UartDriver();
     void transmit(raw_uart_message_t& message);
+    void receive(raw_uart_message_t& message, unsigned int bytes_to_read);
 
 private:
     unsigned int _uart_port;
