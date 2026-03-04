@@ -170,9 +170,7 @@ let
         ...
       }:
       {
-        # The CMake file needs the ROS_DISTRO environment variable
-        ROS_DISTRO = rosDistro;
-        # We need to have submodules, so we can't use fetchFromGitHub
+        # We need to have submodules, so we should use fetchGit instead
         src = builtins.fetchGit {
           url = "https://github.com/hku-mars/FAST_LIO";
           ref = "ROS2";
