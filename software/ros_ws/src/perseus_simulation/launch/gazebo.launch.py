@@ -67,7 +67,7 @@ def generate_launch_description():
         )
         gz_launch = ExecuteProcess(
             cmd=[
-                "nixGL",
+                "nixgl",
                 "ros2",
                 "launch",
                 "ros_gz_sim",
