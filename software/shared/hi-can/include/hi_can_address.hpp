@@ -470,6 +470,28 @@ namespace hi_can
                     }
                 };
             }
+            namespace status
+            {
+                constexpr uint8_t SUBSYSTEM_ID = 0x01;
+                namespace light_ring
+                {
+                    constexpr uint8_t DEVICE_ID = 0x00;
+                    enum class group : uint8_t
+                    {
+                        WHITE = 1 << 0,
+                        BLUE = 1 << 1,
+                        CYAN = 1 << 2,
+                        GREEN = 1 << 3,
+                        YELLOW = 1 << 4,
+                        RED = 1 << 5,
+                    };
+                    enum class parameter
+                    {
+                        SET_ON = 0x00,
+                        SET_OFF = 0x01,
+                    };
+                }
+            }
         }
         // legacy addresses for old hardware
         /// @brief Namespace containing all addresses in the legacy system
