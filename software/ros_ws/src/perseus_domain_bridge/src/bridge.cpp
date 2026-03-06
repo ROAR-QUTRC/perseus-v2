@@ -20,12 +20,12 @@ int main(int argc, char ** argv)
 {
   // We manage our own per-domain rclcpp contexts, so we don't call
   // rclcpp::init() globally here. We only need the rclcpp logger.
-  rclcpp::Logger logger = rclcpp::get_logger("throttled_bridge");
+  rclcpp::Logger logger = rclcpp::get_logger("bridge");
 
   if (argc < 2) {
     RCLCPP_FATAL(
       logger,
-      "Usage: throttled_bridge <path/to/config.yaml>");
+      "Usage: bridge <path/to/config.yaml>");
     return 1;
   }
 

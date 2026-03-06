@@ -1,0 +1,20 @@
+# ============================================================
+# Test config: talker/listener bridge test
+#
+# Source:  test_talker  → domain 0 @ 60 Hz on /chatter
+# Bridge:  domain 0 → domain 1, throttled to 30 Hz
+# Sink:    test_listener → domain 1 on /chatter
+#
+# Expected output on the listener:
+#   ~30 msg/s  (not 60)
+# ============================================================
+
+from_domain: 0
+to_domain: 1
+
+topics:
+
+  /chatter:
+    type: std_msgs/msg/String
+    max_rate: 30.0      # throttle: 60 Hz in, 30 Hz out
+    qos: best_effort

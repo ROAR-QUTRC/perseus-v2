@@ -31,18 +31,21 @@ def generate_launch_description():
 
         if not config:
             from ament_index_python.packages import get_package_share_directory
-            pkg_share = get_package_share_directory("domain_bridge_throttled")
-            config = os.path.join(pkg_share, "config", "bridge_config.yaml")
+            pkg_share = get_package_share_directory("perseus_domain_bridge")
+            config = os.path.join(pkg_share, "config", "talker_listener.yaml")
 
         return [
             Node(
-                package="domain_bridge_throttled",
-                executable="throttled_bridge",
-                name="throttled_domain_bridge",
+                package="perseus_domain_bridge",
+                executable="bridge",
+                name="bridge",
                 output="screen",
                 arguments=[config],
                 # Disable rclcpp global init – the node manages its own contexts
-                additional_env={"RCUTILS_LOGGING_BUFFERED_STREAM": "1"},
+                additional_env={
+                    "RCUTILS_LOGGING_BUFFERED_STREAM": "1",
+                    "RCUTILS_LOGGING_SEVERITIES": "rmw_cyclonedds_cpp:ERROR"
+                },
             )
         ]
 

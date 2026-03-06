@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 project(perseus_domain_bridge)
 
 if(NOT CMAKE_CXX_STANDARD)
@@ -44,8 +44,26 @@ ament_target_dependencies(bridge
 
 target_link_libraries(bridge yaml-cpp)
 
+# ── Test nodes (talker + listener) ──────────────────────────────────────────
+add_executable(test_talker
+  src/test/test_talker.cpp
+)
+target_include_directories(test_talker
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+ament_target_dependencies(test_talker rclcpp std_msgs)
+
+add_executable(test_listener
+  src/test/test_listener.cpp
+)
+target_include_directories(test_listener
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+ament_target_dependencies(test_listener rclcpp std_msgs)
+
 # ── Install ─────────────────────────────────────────────────────────────
-install(TARGETS bridge
+install(TARGETS 
+  bridge
+  test_talker
+  test_listener
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -60,7 +78,6 @@ install(DIRECTORY launch/
 install(DIRECTORY config/
   DESTINATION share/${PROJECT_NAME}/config
 )
-
 
 # ── Tests ─────────────────────────────────────────────────────────────
 if(BUILD_TESTING)

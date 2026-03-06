@@ -1,0 +1,23 @@
+<CycloneDDS>
+  <Domain>
+    <General>
+      <Interfaces>
+        <!-- Let CycloneDDS pick the right interface automatically -->
+        <NetworkInterface autodetermine="true" multicast="true" priority="default"/>
+      </Interfaces>
+      <AllowMulticast>true</AllowMulticast>
+    </General>
+
+    <Discovery>
+      <ParticipantIndex>auto</ParticipantIndex>
+      <MaxAutoParticipantIndex>50</MaxAutoParticipantIndex>
+    </Discovery>
+
+    <Internal>
+      <Watermarks>
+        <WhcHigh>8MB</WhcHigh>
+        <WhcLow>1MB</WhcLow>
+      </Watermarks>
+    </Internal>
+  </Domain>
+</CycloneDDS>
