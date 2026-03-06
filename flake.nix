@@ -191,6 +191,7 @@
             nav2-util
             nav2-lifecycle-manager
             nav2-common
+            domain-bridge
             ;
         };
         # Packages which should be available only in the dev shell

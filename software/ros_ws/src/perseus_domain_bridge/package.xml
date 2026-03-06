@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>perseus_domain_bridge</name>
+  <version>0.0.0</version>
+  <description>
+    Extends ros2/domain_bridge with per-topic Hz rate-limiting.
+    Topics can be bridged from one ROS 2 DDS domain to another at a
+    configurable maximum rate, reducing bandwidth without requiring
+    separate throttle nodes.
+  </description>
+  <maintainer email="jdbretherton12@gmail.com">dan</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>domain_bridge</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>libyaml-cpp-dev</depend>
+
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
