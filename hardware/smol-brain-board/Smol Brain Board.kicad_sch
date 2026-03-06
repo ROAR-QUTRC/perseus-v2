@@ -6884,7 +6884,7 @@
 	)
 	(wire
 		(pts
-			(xy 359.41 45.72) (xy 345.44 45.72)
+			(xy 359.41 48.26) (xy 345.44 48.26)
 		)
 		(stroke
 			(width 0)
@@ -7254,6 +7254,16 @@
 	)
 	(wire
 		(pts
+			(xy 322.58 45.72) (xy 336.55 45.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "339bf1a5-0cee-4a50-a076-f7d12b1cf90a")
+	)
+	(wire
+		(pts
 			(xy 228.6 185.42) (xy 228.6 187.96)
 		)
 		(stroke
@@ -7311,16 +7321,6 @@
 			(type default)
 		)
 		(uuid "399f768d-d6ff-48df-a1e7-a23ff05ff3cf")
-	)
-	(wire
-		(pts
-			(xy 322.58 45.72) (xy 337.82 45.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3b2ba9ae-47cf-4b4f-bec8-7f98a8242fa0")
 	)
 	(wire
 		(pts
@@ -8014,7 +8014,7 @@
 	)
 	(wire
 		(pts
-			(xy 359.41 48.26) (xy 345.44 48.26)
+			(xy 359.41 45.72) (xy 345.44 45.72)
 		)
 		(stroke
 			(width 0)
@@ -8411,6 +8411,16 @@
 			(type default)
 		)
 		(uuid "ad5a895c-5fa3-4883-aeaf-3ea97ac063df")
+	)
+	(wire
+		(pts
+			(xy 322.58 48.26) (xy 336.55 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ad65a470-e2ce-42ef-a5a3-8756fe0a4f7f")
 	)
 	(wire
 		(pts
@@ -9134,16 +9144,6 @@
 	)
 	(wire
 		(pts
-			(xy 322.58 48.26) (xy 337.82 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f83f5be7-43ad-4bcb-94b6-3cad1d726557")
-	)
-	(wire
-		(pts
 			(xy 64.77 180.34) (xy 77.47 180.34)
 		)
 		(stroke
@@ -9213,7 +9213,7 @@
 		(uuid "049f38ab-7f3e-4e54-89af-f23e037bde8d")
 	)
 	(label "USB_D_N"
-		(at 359.41 48.26 180)
+		(at 359.41 45.72 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -9223,7 +9223,7 @@
 		)
 		(uuid "064b6c4f-16cd-4976-b086-f56b99895cfc")
 		(property "Netclass" "USB_DIFF"
-			(at 359.41 49.53 0)
+			(at 359.41 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9365,7 +9365,7 @@
 		(uuid "205c179b-5aa0-48c5-9b55-4fb7806523a5")
 	)
 	(label "uC_USB_D_P"
-		(at 336.55 45.72 180)
+		(at 336.55 48.26 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9374,7 +9374,7 @@
 		)
 		(uuid "22a64946-6282-48da-9815-a7f83de3a456")
 		(property "Netclass" "USB_DIFF"
-			(at 337.058 42.672 0)
+			(at 337.058 51.308 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9617,7 +9617,7 @@
 		(uuid "5897830e-2786-4dec-9640-97e2332212a8")
 	)
 	(label "USB_D_P"
-		(at 359.41 45.72 180)
+		(at 359.41 48.26 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -9719,7 +9719,7 @@
 		(uuid "6ea7161d-521f-4d62-85a4-111891bb783d")
 	)
 	(label "uC_USB_D_N"
-		(at 336.55 48.26 180)
+		(at 336.55 45.72 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -9729,7 +9729,7 @@
 		)
 		(uuid "6eb90f40-9abc-439f-88f8-7d9d3019f101")
 		(property "Netclass" "USB_DIFF"
-			(at 336.55 49.53 0)
+			(at 336.55 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13721,7 +13721,8 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Bridged")
-		(at 341.63 48.26 0)
+		(at 341.63 45.72 0)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom no)
@@ -13729,7 +13730,7 @@
 		(dnp no)
 		(uuid "6141143d-a591-4402-9d54-9bb267812ebd")
 		(property "Reference" "JP2"
-			(at 344.424 47.244 0)
+			(at 344.424 46.736 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13737,7 +13738,7 @@
 			)
 		)
 		(property "Value" "SolderJumper_2_Bridged"
-			(at 341.63 44.45 0)
+			(at 341.63 49.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13746,7 +13747,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm"
-			(at 341.63 48.26 0)
+			(at 341.63 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13755,7 +13756,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 341.63 48.26 0)
+			(at 341.63 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13764,7 +13765,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
-			(at 341.63 48.26 0)
+			(at 341.63 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13773,7 +13774,7 @@
 			)
 		)
 		(property "manufacturer" "~"
-			(at 341.63 48.26 0)
+			(at 341.63 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13782,7 +13783,7 @@
 			)
 		)
 		(property "distributors part number" "~"
-			(at 341.63 48.26 0)
+			(at 341.63 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13791,7 +13792,7 @@
 			)
 		)
 		(property "manufactuer part number" "~"
-			(at 341.63 48.26 0)
+			(at 341.63 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16216,7 +16217,8 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Bridged")
-		(at 341.63 45.72 0)
+		(at 341.63 48.26 0)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom no)
@@ -16224,7 +16226,7 @@
 		(dnp no)
 		(uuid "9937dccf-0479-4129-8838-717985a9645e")
 		(property "Reference" "JP1"
-			(at 344.424 43.942 0)
+			(at 344.424 50.038 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16232,7 +16234,7 @@
 			)
 		)
 		(property "Value" "SolderJumper_2_Bridged"
-			(at 341.63 41.91 0)
+			(at 341.63 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16241,7 +16243,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm"
-			(at 341.63 45.72 0)
+			(at 341.63 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16250,7 +16252,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 341.63 45.72 0)
+			(at 341.63 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16259,7 +16261,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
-			(at 341.63 45.72 0)
+			(at 341.63 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16268,7 +16270,7 @@
 			)
 		)
 		(property "manufacturer" "~"
-			(at 341.63 45.72 0)
+			(at 341.63 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16277,7 +16279,7 @@
 			)
 		)
 		(property "distributors part number" "~"
-			(at 341.63 45.72 0)
+			(at 341.63 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16286,7 +16288,7 @@
 			)
 		)
 		(property "manufactuer part number" "~"
-			(at 341.63 45.72 0)
+			(at 341.63 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
