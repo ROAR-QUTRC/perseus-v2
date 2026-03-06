@@ -174,6 +174,7 @@ let
         src = builtins.fetchGit {
           url = "https://github.com/hku-mars/FAST_LIO";
           ref = "ROS2";
+          narHash = "sha256-0cslk11hskmdclbpkargk198p13fcgmb9l0bfnm601sjimc9r203";
           rev = "a4743b095409588842a5b30ddfa27e29d2f99164";
           submodules = true;
         };
