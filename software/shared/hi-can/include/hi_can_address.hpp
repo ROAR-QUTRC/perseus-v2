@@ -328,12 +328,16 @@ namespace hi_can
                     BATTERY_8 = 7,
                     BMS = 8,  // This is the only ID currently used, the rest are here for legacy purposes for legacy-battery-management-system
                 };
-                enum class bms_parameter : uint8_t
+                namespace bms
                 {
-                    INFO = 0x03,
-                    VOLTAGE = 0x04,
-                    MOSFET_CONTROL = 0xE1,
-                };
+                    constexpr uint8_t GROUP_ID = 0x00;
+                    enum class bms_parameter : uint8_t
+                    {
+                        INFO = 0x03,
+                        VOLTAGE = 0x04,
+                        MOSFET_CONTROL = 0xE1,
+                    };
+                }
             }
             /// @brief Namespace containing all addresses in the power distribution subsystem
             namespace distribution

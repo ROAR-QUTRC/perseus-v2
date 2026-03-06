@@ -2,8 +2,11 @@
 
 #include <driver/uart.h>
 
+#include <chrono>
+#include <cstdint>
 #include <iterator>
 #include <stdexcept>
+#include <vector>
 
 #include "freertos/FreeRTOS.h"
 
@@ -27,19 +30,72 @@ UartDriver::~UartDriver()
     ESP_ERROR_CHECK(uart_driver_delete(static_cast<uart_port_t>(_uart_port)));
 }
 
-void UartDriver::transmit(raw_uart_message_t& message)
+void UartDriver::transmit(raw_uart_message_t message)
 {
+    uart_flush(static_cast<uart_port_t>(_uart_port));
     uart_write_bytes(static_cast<uart_port_t>(_uart_port), static_cast<std::vector<uint8_t>>(message).data(), static_cast<std::vector<uint8_t>>(message).size());
 }
 
-void UartDriver::receive(raw_uart_message_t& message, unsigned int bytes_to_read)
+int UartDriver::receive(raw_uart_message_t& message, unsigned int bytes_to_read)
 {
+    if (bytes_to_read == 0)
+    {
+        return 0;
+    }
     size_t bytes_available = 0;
+    std::chrono::time_point start_of_receive = std::chrono::steady_clock::now();
     while (bytes_available < bytes_to_read)
     {
         ESP_ERROR_CHECK(uart_get_buffered_data_len(static_cast<uart_port_t>(_uart_port), &bytes_available));
+        if ((start_of_receive - std::chrono::steady_clock::now()) > std::chrono::milliseconds(500))
+        {
+            return -1;
+        }
     }
     uint8_t received_data[bytes_to_read] = {};
     uart_read_bytes(static_cast<uart_port_t>(_uart_port), received_data, bytes_to_read, ticks_to_wait_receive);
     std::copy(received_data, received_data + bytes_to_read, std::back_inserter(message));
+    return 0;
+}
+
+int UartDriver::receive_flagged(raw_uart_message_t& message, unsigned int header_length, unsigned int trailer_length, flagged_uart_message_t::crc_creator_t crc_creator, unsigned int footer_length)
+{
+    raw_uart_message_t header = {};
+    raw_uart_message_t data = {};
+    raw_uart_message_t trailer = {};
+    raw_uart_message_t footer = {};
+
+    if (receive(header, header_length + 1) == -1)
+    {
+        return -1;
+    }
+    if (receive(data, header.back()) == -1)
+    {
+        return -1;
+    }
+    if (receive(trailer, trailer_length) == -1)
+    {
+        return -1;
+    }
+    std::vector<uint8_t> expected_crc = crc_creator.value()(data);
+    std::vector<uint8_t> actual_crc = {};
+    if (receive(actual_crc, expected_crc.size()) == -1)
+    {
+        return -1;
+    }
+    if (expected_crc != actual_crc)
+    {
+        return -1;
+    }
+    if (receive(footer, footer_length) == -1)
+    {
+        return -1;
+    }
+    message = {};
+    message.insert(header.begin(), header.end(), message.end());
+    message.insert(data.begin(), data.end(), message.end());
+    message.insert(trailer.begin(), trailer.end(), message.end());
+    message.insert(actual_crc.begin(), actual_crc.end(), message.end());
+    message.insert(footer.begin(), footer.end(), message.end());
+    return 0;
 }

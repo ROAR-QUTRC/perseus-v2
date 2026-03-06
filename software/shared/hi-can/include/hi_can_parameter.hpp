@@ -290,7 +290,7 @@ namespace hi_can::parameters
                 int16_t current;                           // 10mA
                 uint16_t current_capacity;                 // 10mAh
                 uint16_t nominal_capacity;                 // 10mAh
-                uint16_t cycles;                           // I'm guessing number of charge cycles?
+                uint16_t cycles;                           // I'm guessing number of charge cycles of the batteries?
                 uint32_t balance_status;                   // Whether each cell is being balanced (1) or not (0) - bit by bit
                 enum class protection_status_t : uint16_t  // Bitwise OR of each of the following statuses
                 {
@@ -316,9 +316,9 @@ namespace hi_can::parameters
                     DISCHARGING = 1 << 1,
                 };
                 mosfet_status_t mosfet_status;
-                uint8_t amount_of_cells;            // The number of cells in series
-                uint8_t amount_of_NTCs;             // The number of NTC temperature sensors
-                std::vector<uint16_t> temperature;  // The temperature of each NTC sensor
+                uint8_t amount_of_cells;             // The number of cells in series
+                uint8_t amount_of_NTCs;              // The number of NTC temperature sensors
+                std::vector<uint16_t> temperatures;  // The temperature of each NTC sensor, 0.1 Kelvin
             };
             struct _mosfet_control
             {
@@ -332,8 +332,9 @@ namespace hi_can::parameters
                 control_command_t control_command;
             };
 #pragma pack(pop)
-            typedef SimpleSerializable<_bms_information> bms_information;
-            typedef SimpleSerializable<_mosfet_control> mosfet_control;
+            typedef SimpleSerializable<_bms_information> bms_information_t;
+            typedef SimpleSerializable<std::vector<uint16_t>> cell_voltage_t;
+            typedef SimpleSerializable<_mosfet_control> mosfet_control_t;
         }
         namespace distribution
         {
