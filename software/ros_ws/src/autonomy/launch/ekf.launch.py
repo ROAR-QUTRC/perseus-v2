@@ -26,7 +26,7 @@ def generate_launch_description():
 
     declare_imu_topic = DeclareLaunchArgument(
         "imu_topic",
-        default_value="/livox/imu/corrected",
+        default_value="/livox/imu",
         description="IMU topic name",
     )
 

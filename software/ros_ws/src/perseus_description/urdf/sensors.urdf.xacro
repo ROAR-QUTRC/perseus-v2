@@ -57,7 +57,7 @@
   </material>
   <sensor name="${prefix}lidar_sensor" type="gpu_lidar">
     <topic>scan_3d</topic>
-    <update_rate>50</update_rate>
+    <update_rate>10</update_rate>
     <always_on>false</always_on>
     <visualize>false</visualize>
     <ray>
