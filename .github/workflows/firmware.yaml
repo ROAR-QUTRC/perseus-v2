@@ -17,6 +17,7 @@ jobs:
       bms: ${{ steps.filter.outputs.bms }}
       light-tower: ${{ steps.filter.outputs.light-tower }}
       processing-plant: ${{ steps.filter.outputs.processing-plant }}
+      rover-control-board: ${{ steps.filter.outputs.rover-control-board }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
