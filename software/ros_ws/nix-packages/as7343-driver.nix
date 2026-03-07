@@ -6,6 +6,7 @@
   ament-lint-auto,
   ament-lint-common,
   backward-ros,
+  fd-wrapper,
   perseus-interfaces,
   rclcpp,
   sensor-msgs,
@@ -25,6 +26,7 @@ buildRosPackage rec {
   ];
   propagatedBuildInputs = [
     backward-ros
+    fd-wrapper
     perseus-interfaces
     rclcpp
     sensor-msgs
