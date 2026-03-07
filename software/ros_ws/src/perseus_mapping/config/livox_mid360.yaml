@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
-    feature_extract_enable: false
+    feature_extract_enable: true
     point_filter_num: 3
     max_iteration: 3
     filter_size_surf: 0.5
@@ -32,7 +32,7 @@
       extrinsic_R: [1., 0., 0., 0., 1., 0., 0., 0., 1.]
     publish:
       path_en: true # true: publish Path
-      effect_map_en: false # true: publish Effects
+      effect_map_en: true # true: publish Effects
       map_en: true # true: publish Map cloud
       scan_publish_en: true # false: close all the point cloud output
       dense_publish_en: false # false: low down the points number in a global-frame point clouds scan.
