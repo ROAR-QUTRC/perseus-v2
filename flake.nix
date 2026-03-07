@@ -201,7 +201,7 @@
             autonomy_diagnostics = {
               type = "app";
               program = "${pkgs.writeShellScriptBin "autonomy_diagnostics" ''
-                ${default}/bin/ros2 run autonomy_diagnostics autonomy_tui "$@"
+                ${rosWorkspaces.default}/bin/ros2 run autonomy_diagnostics autonomy_tui "$@"
               ''}/bin/autonomy_diagnostics";
             };
           };
