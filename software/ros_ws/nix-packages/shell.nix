@@ -49,6 +49,7 @@ pkgs.mkShell {
           controller-manager
           cv-bridge
           diff-drive-controller
+          fd-wrapper
           geometry-msgs
           gz-ros2-control
           hardware-interface
