@@ -57,6 +57,8 @@
 			resolution?: { width: number; height: number };
 			transform?: videoTransformType;
 			forceRestart?: boolean;
+			file?: string;
+			convertFromJpeg?: boolean;
 		};
 	}
 
@@ -67,6 +69,8 @@
 			height: number;
 		};
 		transform: videoTransformType;
+		file: string | null;
+		convertFromJpeg: boolean;
 	}
 </script>
 
@@ -90,9 +94,8 @@
 		JSON.parse(settings.groups.setupCamera.config.value!) || {}
 	);
 
-	// Helper functions
+	// Do not modify without updating in the camera server aswell
 	const formatDeviceName = (device: string): string =>
-		// @ts-ignore
 		device.replace('-video-index0', '').replace('usb-', '').replaceAll('_', ' ');
 
 	const updateAvailableDevices = (device: string, addingNewDevice: boolean) => {
@@ -157,7 +160,9 @@
 							data: {
 								devices: [device],
 								resolution: config[device].resolution,
-								transform: config[device].transform
+								transform: config[device].transform,
+								file: config[device].file,
+								convertFromJpeg: config[device].convertFromJpeg
 							}
 						} as CameraEventType);
 					}
@@ -211,7 +216,9 @@
 			config[values.device.value] = {
 				name: values.name.value,
 				resolution: { width: 320, height: 240 }, // Default resolution
-				transform: 'none' // Default transform
+				transform: 'none', // Default transform
+				file: null,
+				convertFromJpeg: false
 			};
 
 			// Update settings config field
@@ -224,7 +231,9 @@
 				data: {
 					devices: [values.device.value],
 					resolution: config[values.device.value].resolution,
-					transform: config[values.device.value].transform
+					transform: config[values.device.value].transform,
+					file: config[values.device.value].file,
+					convertFromJpeg: config[values.device.value].convertFromJpeg
 				}
 			} as CameraEventType);
 
@@ -286,7 +295,9 @@
 			data: {
 				devices: [device],
 				resolution: newConfig.resolution,
-				transform: newConfig.transform
+				transform: newConfig.transform,
+				file: newConfig.file,
+				convertFromJpeg: newConfig.convertFromJpeg
 			}
 		} as CameraEventType);
 	};
@@ -299,6 +310,8 @@
 				devices: [device],
 				resolution: config[device].resolution,
 				transform: config[device].transform,
+				file: config[device].file,
+				convertFromJpeg: config[device].convertFromJpeg,
 				forceRestart: true
 			}
 		} as CameraEventType);
@@ -306,7 +319,7 @@
 </script>
 
 <ScrollArea orientation="vertical" class="relative flex h-full w-full">
-	<p class="bg-card absolute bottom-1 left-1 rounded-[4px] bg-opacity-60 px-2 py-1">
+	<p class="absolute bottom-1 left-1 rounded-[4px] bg-card bg-opacity-60 px-2 py-1">
 		Session ID: {getPeerId()}
 	</p>
 	{#if Object.keys(peerConnections).length === 0}
@@ -319,7 +332,7 @@
 	{/if}
 	<div class="flex flex-row flex-wrap">
 		{#each Object.keys(peerConnections) as peer}
-			<div class="relative m-2 min-h-[160px] min-w-[240px] overflow-hidden rounded-lg border">
+			<div class="relative m-2 min-h-[320px] min-w-[480px] overflow-hidden rounded-lg border">
 				<VideoWrapper
 					device={peer}
 					config={config[peer]}

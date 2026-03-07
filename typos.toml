@@ -28,6 +28,8 @@ area_sizez = "area_sizez"
 sizez = "sizez"
 FoV = "FoV"
 substituters = "substituters"
+# Perspective-n-Point (computer vision algorithm, e.g. cv::solvePnP)
+Pn = "Pn"
 
 # unfortunately we need to use American spelling in code
 [type.cpp]

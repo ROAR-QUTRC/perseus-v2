@@ -5,6 +5,9 @@
 	import { peerConnections } from './signalHandler.svelte';
 	import type { ConfigType, videoTransformType } from '../rtcVideo.svelte';
 	import * as Select from '$lib/components/ui/select/index';
+	import Input from '$lib/components/ui/input/input.svelte';
+	import Switch from '$lib/components/ui/switch/switch.svelte';
+	import Label from '$lib/components/ui/label/label.svelte';
 
 	let {
 		device,
@@ -22,6 +25,8 @@
 	let video = $state<HTMLVideoElement | null>(null);
 
 	let isSettingsOpen = $state<boolean>(false);
+	let fileName = $state<string | undefined | null>();
+	let recording = $state(false);
 
 	$effect(() => {
 		if (video) {
@@ -33,11 +38,13 @@
 		isSettingsOpen = !isSettingsOpen;
 	};
 
-	let resolution = $state<string>(
+	let resolution = $derived<string>(
 		`${config.resolution.width}x${config.resolution.height}` || '320x240'
 	);
 
-	let transform = $state<string>(config.transform || 'none');
+	let jpegMode = $derived<boolean>(config.convertFromJpeg ?? false);
+
+	let transform = $derived<string>(config.transform || 'none');
 
 	const onValueChange = () => {
 		isSettingsOpen = false;
@@ -46,7 +53,9 @@
 		const newConfig: ConfigType = {
 			name: config.name,
 			resolution: { width, height },
-			transform: transform as videoTransformType
+			transform: transform as videoTransformType,
+			file: fileName ?? null,
+			convertFromJpeg: jpegMode
 		};
 		onVideoSettingsChange(device, newConfig);
 	};
@@ -54,6 +63,23 @@
 	const closeButtonHandler = () => {
 		onVideoClose(device);
 		isSettingsOpen = false;
+	};
+
+	const saveToFile = () => {
+		recording = true;
+		onValueChange();
+	};
+
+	const stopRecording = () => {
+		recording = false;
+		fileName = undefined;
+		onValueChange();
+	};
+
+	const changeJpegMode = (e: Event) => {
+		e.preventDefault();
+		e.stopPropagation();
+		onValueChange();
 	};
 </script>
 
@@ -70,12 +96,13 @@
 	{/if}
 	{#if isSettingsOpen}
 		<div
-			class="bg-card absolute left-0 top-0 flex h-full w-full flex-col items-center justify-center bg-opacity-80"
+			class="absolute left-0 top-0 flex h-full w-full flex-col items-center justify-center bg-card bg-opacity-80"
 		>
 			<Select.Root type="single" bind:value={resolution} {onValueChange}>
 				<Select.Trigger class="mb-2 w-fit"><p class="pr-2">{resolution}</p></Select.Trigger>
 				<Select.Content>
 					<Select.Item value="320x240">320x240</Select.Item>
+					<Select.Item value="640x360">640x360 - Kibi Only</Select.Item>
 					<Select.Item value="640x480">640x480</Select.Item>
 					<Select.Item value="1280x720">1280x720</Select.Item>
 					<Select.Item value="1920x1080">1920x1080</Select.Item>
@@ -95,20 +122,43 @@
 					<Select.Item value="automatic">automatic</Select.Item>
 				</Select.Content>
 			</Select.Root>
+			<form class="mb-2 flex gap-2">
+				{#if !recording}
+					<Input id="File name" bind:value={fileName} onsubmit={saveToFile} />
+					<Button
+						class="w-[60px]"
+						placeholder="File name"
+						variant="default"
+						size="icon"
+						type="button"
+						onclick={saveToFile}
+					>
+						Save
+					</Button>
+				{:else}
+					<Button onclick={stopRecording}>Stop Recording</Button>
+				{/if}
+			</form>
+
+			<Label class="mb-2" onclick={changeJpegMode}>
+				<Switch bind:checked={jpegMode} />
+				JPEG Mode (Kibi Only)
+			</Label>
+
 			<div>
-				<Button size="sm" variant="outline" class="mr-2" onclick={() => onVideoRestart(device)}
-					>Restart</Button
-				>
+				<Button size="sm" variant="outline" class="mr-2" onclick={() => onVideoRestart(device)}>
+					Restart
+				</Button>
 				<Button size="sm" onclick={closeButtonHandler}>Close</Button>
 			</div>
 		</div>
 	{/if}
-	<p class="bg-card absolute left-1 top-1 rounded-[4px] bg-opacity-60 px-2 py-1">
+	<p class="absolute left-1 top-1 rounded-[4px] bg-card bg-opacity-60 px-2 py-1">
 		{peerConnections[device].name}
 	</p>
 	<button
 		onclick={openSettings}
-		class="bg-card absolute right-1 top-1 h-[32px] rounded-[4px] bg-opacity-60"
+		class="absolute right-1 top-1 h-[32px] rounded-[4px] bg-card bg-opacity-60"
 	>
 		<Fa icon={faEllipsis} class="cursor-pointer px-2 text-[20px]" />
 	</button>
