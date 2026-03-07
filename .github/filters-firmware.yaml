@@ -7,9 +7,9 @@ common: &common
 bms:
   - *common
   - "firmware/battery-management-system/**"
-light-tower:
+status-ring:
   - *common
-  - "firmware/light-tower/**"
+  - "firmware/status-ring/**"
 processing-plant:
   - *common
   - "firmware/processing-plant/**"
