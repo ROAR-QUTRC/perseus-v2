@@ -55,11 +55,8 @@ endforeach()
 # Resolve fd_wrapper from shared directory
 find_package(fd_wrapper QUIET)
 if(NOT fd_wrapper_FOUND)
-  find_package(simple_networking QUIET)
-  if(NOT simple_networking_FOUND)
-    message(STATUS "simple_networking not found, adding subdirectory...")
-    add_subdirectory(../../../shared/simple-networking simple-networking)
-  endif()
+  message(STATUS "fd_wrapper not found, adding subdirectory...")
+  add_subdirectory(../../../shared/fd-wrapper fd-wrapper)
 endif()
 
 # COMPILE (Executables)
