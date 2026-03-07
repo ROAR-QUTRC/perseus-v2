@@ -22,7 +22,6 @@ Optional overrides:
   topic:=/chatter      Topic name           (default /chatter)
 """
 
-import os
 import tempfile
 
 from launch import LaunchDescription
@@ -39,19 +38,29 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # ── Launch arguments ──────────────────────────────────────────────────
     args = [
-        DeclareLaunchArgument("talker_hz",   default_value="60",       description="Talker publish rate (Hz)"),
-        DeclareLaunchArgument("bridge_hz",   default_value="30",       description="Bridge throttle rate (Hz)"),
-        DeclareLaunchArgument("from_domain", default_value="0",        description="Source DDS domain ID"),
-        DeclareLaunchArgument("to_domain",   default_value="1",        description="Destination DDS domain ID"),
-        DeclareLaunchArgument("topic",       default_value="/chatter", description="Topic name"),
+        DeclareLaunchArgument(
+            "talker_hz", default_value="60", description="Talker publish rate (Hz)"
+        ),
+        DeclareLaunchArgument(
+            "bridge_hz", default_value="30", description="Bridge throttle rate (Hz)"
+        ),
+        DeclareLaunchArgument(
+            "from_domain", default_value="0", description="Source DDS domain ID"
+        ),
+        DeclareLaunchArgument(
+            "to_domain", default_value="1", description="Destination DDS domain ID"
+        ),
+        DeclareLaunchArgument(
+            "topic", default_value="/chatter", description="Topic name"
+        ),
     ]
 
     def launch_setup(context, *args, **kwargs):
-        talker_hz   = LaunchConfiguration("talker_hz").perform(context)
-        bridge_hz   = LaunchConfiguration("bridge_hz").perform(context)
+        talker_hz = LaunchConfiguration("talker_hz").perform(context)
+        bridge_hz = LaunchConfiguration("bridge_hz").perform(context)
         from_domain = LaunchConfiguration("from_domain").perform(context)
-        to_domain   = LaunchConfiguration("to_domain").perform(context)
-        topic       = LaunchConfiguration("topic").perform(context)
+        to_domain = LaunchConfiguration("to_domain").perform(context)
+        topic = LaunchConfiguration("topic").perform(context)
 
         # ── Write a temporary bridge config from the launch args ──────────
         config_content = f"""\

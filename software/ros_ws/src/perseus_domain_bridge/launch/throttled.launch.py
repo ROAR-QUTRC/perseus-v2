@@ -31,6 +31,7 @@ def generate_launch_description():
 
         if not config:
             from ament_index_python.packages import get_package_share_directory
+
             pkg_share = get_package_share_directory("perseus_domain_bridge")
             config = os.path.join(pkg_share, "config", "test.yaml")
 
@@ -44,12 +45,14 @@ def generate_launch_description():
                 # Disable rclcpp global init – the node manages its own contexts
                 additional_env={
                     "RCUTILS_LOGGING_BUFFERED_STREAM": "1",
-                    "RCUTILS_LOGGING_SEVERITIES": "rmw_cyclonedds_cpp:ERROR"
+                    "RCUTILS_LOGGING_SEVERITIES": "rmw_cyclonedds_cpp:ERROR",
                 },
             )
         ]
 
-    return LaunchDescription([
-        config_arg,
-        OpaqueFunction(function=launch_setup),
-    ])
+    return LaunchDescription(
+        [
+            config_arg,
+            OpaqueFunction(function=launch_setup),
+        ]
+    )

@@ -1,23 +1,19 @@
 from_domain: 42
-to_domain:   51
-
+to_domain: 51
 topics:
-
   # --- Lidar ------------------------------------------------------------------
   # Livox driver publishes best_effort; SLAM toolbox and costmap subscribe
   # reliable → split QoS required.
   /livox/scan:
     type: sensor_msgs/msg/LaserScan
-    sub_qos: best_effort   # Livox driver source
-    pub_qos: reliable      # SLAM toolbox / costmap destination
+    sub_qos: best_effort # Livox driver source
+    pub_qos: reliable # SLAM toolbox / costmap destination
     max_rate: 10.0
-
   /livox/lidar:
     type: sensor_msgs/msg/PointCloud2
-    sub_qos: best_effort   # Livox driver source
-    pub_qos: reliable      # costmap / pointcloud consumer destination
+    sub_qos: best_effort # Livox driver source
+    pub_qos: reliable # costmap / pointcloud consumer destination
     max_rate: 10.0
-
   /livox/imu:
     type: sensor_msgs/msg/Imu
     qos: best_effort

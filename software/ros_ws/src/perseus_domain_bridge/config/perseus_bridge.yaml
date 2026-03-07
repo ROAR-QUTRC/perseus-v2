@@ -17,13 +17,9 @@
 #   domain, but Nav2 / SLAM subscribe to them as reliable on the nav domain.
 #   Setting sub_qos: best_effort + pub_qos: reliable bridges the gap.
 # ==============================================================================
-
 from_domain: 42
-to_domain:   51
-
-
+to_domain: 51
 topics:
-
   # ============================================================================
   # ROBOT → NAV
   # ============================================================================
@@ -32,195 +28,162 @@ topics:
   /odom:
     type: nav_msgs/msg/Odometry
     qos: reliable
-
   /odometry/filtered:
     type: nav_msgs/msg/Odometry
     qos: reliable
-
   # --- Transforms -------------------------------------------------------------
   # /tf:       robot domain publishes best_effort; Nav2 tf2 listener subscribes
   #            reliable → use split QoS.
   # /tf_static: latched on both ends → transient_local on both.
   /tf:
     type: tf2_msgs/msg/TFMessage
-    sub_qos: best_effort   # match the tf2 broadcaster (source)
-    pub_qos: reliable      # satisfy Nav2 tf2 listener (destination)
-
+    sub_qos: best_effort # match the tf2 broadcaster (source)
+    pub_qos: reliable # satisfy Nav2 tf2 listener (destination)
   /tf_static:
     type: tf2_msgs/msg/TFMessage
-    qos: transient_local   # latched on both sides
-
+    qos: transient_local # latched on both sides
   # --- Joint states -----------------------------------------------------------
   /joint_states:
     type: sensor_msgs/msg/JointState
     qos: best_effort
     max_rate: 50.0
-
   /dynamic_joint_states:
     type: control_msgs/msg/DynamicJointState
     qos: best_effort
     max_rate: 50.0
-
   # --- Lidar ------------------------------------------------------------------
   # Livox driver publishes best_effort; SLAM toolbox and costmap subscribe
   # reliable → split QoS required.
   /livox/scan:
     type: sensor_msgs/msg/LaserScan
-    sub_qos: best_effort   # Livox driver source
-    pub_qos: reliable      # SLAM toolbox / costmap destination
+    sub_qos: best_effort # Livox driver source
+    pub_qos: reliable # SLAM toolbox / costmap destination
     max_rate: 10.0
-
   /livox/lidar:
     type: sensor_msgs/msg/PointCloud2
-    sub_qos: best_effort   # Livox driver source
-    pub_qos: reliable      # costmap / pointcloud consumer destination
+    sub_qos: best_effort # Livox driver source
+    pub_qos: reliable # costmap / pointcloud consumer destination
     max_rate: 10.0
-
   /livox/imu:
     type: sensor_msgs/msg/Imu
     qos: best_effort
     max_rate: 100.0
-
   # --- Robot description ------------------------------------------------------
   # Latched on both sides – transient_local required.
   /robot_description:
     type: std_msgs/msg/String
     qos: transient_local
-
   # --- Velocity feedback ------------------------------------------------------
   # Controller publishes best_effort; nav monitoring nodes may subscribe reliable.
   /cmd_vel_out:
     type: geometry_msgs/msg/Twist
-    sub_qos: best_effort   # controller source
-    pub_qos: reliable      # monitoring / nav destination
+    sub_qos: best_effort # controller source
+    pub_qos: reliable # monitoring / nav destination
     max_rate: 20.0
-
   # --- Battery / diagnostics --------------------------------------------------
   /battery_state:
     type: sensor_msgs/msg/BatteryState
     qos: best_effort
     max_rate: 1.0
-
   /diagnostics:
     type: diagnostic_msgs/msg/DiagnosticArray
     qos: best_effort
     max_rate: 1.0
-
-
   # ============================================================================
   # NAV → ROBOT
   # ============================================================================
-
   /cmd_vel:
     type: geometry_msgs/msg/Twist
     qos: reliable
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /cmd_vel_nav:
     type: geometry_msgs/msg/Twist
     qos: reliable
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /cmd_vel_nav_stamped:
     type: geometry_msgs/msg/TwistStamped
     qos: reliable
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /cmd_vel_smoothed:
     type: geometry_msgs/msg/Twist
     qos: reliable
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /cmd_vel_teleop:
     type: geometry_msgs/msg/Twist
     qos: best_effort
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /joy_vel:
     type: geometry_msgs/msg/Twist
     qos: best_effort
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /key_vel:
     type: geometry_msgs/msg/Twist
     qos: best_effort
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /web_vel:
     type: geometry_msgs/msg/Twist
     qos: best_effort
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /preempt_teleop:
     type: std_msgs/msg/Bool
     qos: reliable
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /goal_pose:
     type: geometry_msgs/msg/PoseStamped
     qos: reliable
     from_domain: 51
-    to_domain:   42
-
+    to_domain: 42
   /speed_limit:
     type: nav2_msgs/msg/SpeedLimit
     qos: reliable
     from_domain: 51
-    to_domain:   42
-
-
+    to_domain: 42
   # ============================================================================
   # NAV → ROBOT  (optional visibility of nav outputs on robot domain)
   # ============================================================================
-
   /pose:
     type: geometry_msgs/msg/PoseWithCovarianceStamped
     qos: best_effort
     from_domain: 51
-    to_domain:   42
+    to_domain: 42
     max_rate: 20.0
-
   # /map is published transient_local by Nav2 map_server and SLAM toolbox.
   /map:
     type: nav_msgs/msg/OccupancyGrid
     qos: transient_local
     from_domain: 51
-    to_domain:   42
+    to_domain: 42
     max_rate: 0.2
-
   /map_metadata:
     type: nav_msgs/msg/MapMetaData
     qos: transient_local
     from_domain: 51
-    to_domain:   42
+    to_domain: 42
     max_rate: 0.2
-
   /plan:
     type: nav_msgs/msg/Path
     qos: reliable
     from_domain: 51
-    to_domain:   42
+    to_domain: 42
     max_rate: 2.0
-
   /plan_smoothed:
     type: nav_msgs/msg/Path
     qos: reliable
     from_domain: 51
-    to_domain:   42
+    to_domain: 42
     max_rate: 2.0
-
   /collision_monitor_state:
     type: nav2_msgs/msg/CollisionMonitorState
     qos: best_effort
     from_domain: 51
-    to_domain:   42
+    to_domain: 42
     max_rate: 5.0
