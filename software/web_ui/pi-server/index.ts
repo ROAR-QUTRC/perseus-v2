@@ -29,6 +29,7 @@ interface CameraEventType {
     resolution?: { width: number; height: number };
     transform?: videoTransformType;
     file?: string | null;
+    convertFromJpeg?: boolean;
     forceRestart?: boolean;
   };
 }
@@ -135,6 +136,7 @@ let gstInstances: {
   resolution?: { width: number; height: number };
   transform?: videoTransformType;
   file: string | null;
+  convertFromJpeg?: boolean;
   instance: ChildProcessWithoutNullStreams;
 }[] = [];
 
@@ -143,6 +145,7 @@ const startStream = (
   resolution: { width: number; height: number },
   transform: videoTransformType,
   file: string | null,
+  convertFromJpeg: boolean = false,
 ) => {
   let gstArgs = [
     "webrtcsink",
@@ -153,6 +156,9 @@ const startStream = (
   ];
   if (device === "test") gstArgs.push("videotestsrc");
   else gstArgs.push("v4l2src", `device=/dev/v4l/by-id/${device}`);
+  if (convertFromJpeg) {
+    gstArgs.push("!", "jpegdec");
+  }
   gstArgs.push(
     "!",
     `video/x-raw,width=${resolution.width},height=${resolution.height}`,
@@ -189,6 +195,7 @@ const startStream = (
     resolution: resolution,
     transform: transform,
     file: file,
+    convertFromJpeg: convertFromJpeg,
     instance: spawn("gst-launch-1.0", gstArgs),
   });
 
@@ -230,7 +237,11 @@ socket.on("camera-event", (event: CameraEventType) => {
       if (index !== -1) {
         if (!gstInstances[index]) {
           gstInstances.splice(index, 1);
-        } else if (event.data.resolution && event.data.transform) {
+        } else if (
+          event.data.resolution &&
+          event.data.transform &&
+          event.data.convertFromJpeg !== undefined
+        ) {
           // If the stream is already running, check if we need to restart it
           if (
             event.data.resolution.width !==
@@ -238,6 +249,8 @@ socket.on("camera-event", (event: CameraEventType) => {
             event.data.resolution.height !==
               gstInstances[index].resolution?.height ||
             event.data.transform !== gstInstances[index].transform ||
+            event.data.convertFromJpeg !==
+              gstInstances[index].convertFromJpeg ||
             event.data.file !== gstInstances[index].file
           ) {
             // Restart the stream with new preferences
@@ -255,6 +268,8 @@ socket.on("camera-event", (event: CameraEventType) => {
       if (shouldStartStream) {
         // Validate arguments
         if (!event.data.transform) event.data.transform = "none";
+        if (event.data.convertFromJpeg === undefined)
+          event.data.convertFromJpeg = false;
         if (!event.data.resolution)
           event.data.resolution = { width: 320, height: 240 };
         startStream(
@@ -262,6 +277,7 @@ socket.on("camera-event", (event: CameraEventType) => {
           event.data.resolution,
           event.data.transform,
           event.data.file ?? null,
+          event.data.convertFromJpeg,
         );
       }
 
