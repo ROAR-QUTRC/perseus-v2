@@ -49,6 +49,7 @@ pkgs.mkShell {
           controller-manager
           cv-bridge
           diff-drive-controller
+          fast-lio
           geometry-msgs
           gz-ros2-control
           hardware-interface
