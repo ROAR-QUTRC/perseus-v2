@@ -47,6 +47,7 @@ pkgs.mkShell {
           boost
           builtin-interfaces
           controller-manager
+          cv-bridge
           diff-drive-controller
           geometry-msgs
           gz-ros2-control
@@ -66,6 +67,7 @@ pkgs.mkShell {
           nav2-msgs
           navigation2
           nlohmann_json
+          opencv
           openssl
           pluginlib
           python3Packages.pygame
@@ -102,6 +104,7 @@ pkgs.mkShell {
           twist-mux
           urdf
           v4l2-camera
+          visualization-msgs
           xacro
           yaml-cpp-vendor
         ]
