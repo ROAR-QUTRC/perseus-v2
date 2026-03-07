@@ -163,6 +163,24 @@ let
         propagatedBuildInputs = final.lib.remove rosFinal.perseus-input-config propagatedBuildInputs;
       }
     );
+    fast-lio = rosPrev.fast-lio.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        # We need to have submodules, so we should use fetchGit instead
+        src = builtins.fetchGit {
+          url = "https://github.com/hku-mars/FAST_LIO";
+          ref = "ROS2";
+          narHash = "sha256-chnAIRkSQjoXqg9K9s1JVOrNdFtEzFztOFUYnbXkZyI=";
+          rev = "a4743b095409588842a5b30ddfa27e29d2f99164";
+          submodules = true;
+        };
+        # Fast-LIO sets the cpp standard to 14, but jazzy needs version 17
+        patches = patches ++ [ ./patches/fast_lio/cpp_version_17.patch ];
+      }
+    );
   };
 
 in
