@@ -6,6 +6,8 @@
 #include <rover_thread.hpp>
 using namespace hi_can::parameters::power::distribution;
 
+constexpr unsigned long dk_ILIS = 50000;
+
 const gptimer_alarm_config_t RoverPowerBus::_precharge_off_config = {
     .alarm_count = CONFIG_PRECHARGE_TIME * 10,
     .reload_count = 0,
@@ -250,7 +252,7 @@ bool RoverPowerBus::_timer_callback(gptimer_handle_t timer, const gptimer_alarm_
 
     if (source->_state == bus_state::PRECHARGING)
     {
-        const uint32_t voltage = adc_to_bus_voltage(adc_get_voltage(source->_voltage_feedback));
+        const uint32_t voltage = source->adc_to_bus_voltage(adc_get_voltage(source->_voltage_feedback));
         if (voltage > source->_precharge_voltage)
         {
             gpio_set_level(source->_switch_pin, 1);
@@ -275,6 +277,25 @@ bool RoverPowerBus::_timer_callback(gptimer_handle_t timer, const gptimer_alarm_
         source->_next_state = bus_state::PRECHARGING;
     }
     return true;
+}
+
+// I_IS = I_L/dkILIS + I_IS0
+// Assuming I_IS0 is negligible
+// I_IS = I_L/dk_ILIS
+// Also
+// V_CUR_SENSE = I_IS*R_IS
+// I_IS = V_CUR_SENSE/R_IS
+// So
+// V_CUR_SENSE/R_IS = I_L/dk_ILIS
+// I_L = V_CUR_SENSE*dk_ILIS/R_IS
+unsigned long RoverPowerBus::adc_to_bus_current(const unsigned long voltage)
+{
+    return voltage * dk_ILIS / _R19;
+}
+
+unsigned long RoverPowerBus::adc_to_bus_voltage(const unsigned long voltage)
+{
+    return voltage * (_R17 / (_R16 * _R17));
 }
 
 hi_can::PacketManager::transmission_config_t RoverPowerBus::get_transmission_config(void)

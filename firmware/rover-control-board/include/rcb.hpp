@@ -23,25 +23,25 @@
 // R17 = 1.323k R16 = 54.066k R18 = 2.087k
 const unsigned long SPARE_R16 = 54066;
 const unsigned int SPARE_R17 = 1323;
-const unsigned int SPARE_R19 = 0;
+const unsigned int SPARE_R19 = 950;
 
 // DRIVE
 // R17 = 1.312k R16 = 53.997k R18 = 2.053k
 const unsigned long DRIVE_R16 = 53997;
 const unsigned int DRIVE_R17 = 1312;
-const unsigned int DRIVE_R19 = 0;
+const unsigned int DRIVE_R19 = 950;
 
 // COMPUTE
 // R17 = 1.377k R16 = 54.065k R18 = 2.094k
 const unsigned long COMPUTE_R16 = 54065;
 const unsigned int COMPUTE_R17 = 1377;
-const unsigned int COMPUTE_R19 = 0;
+const unsigned int COMPUTE_R19 = 950;
 
 // AUX
 // R17 = 1.339k R16 = 54.026k R18 = 2.070k
 const unsigned long AUX_R16 = 54026;
 const unsigned int AUX_R17 = 1339;
-const unsigned int AUX_R19 = 0;
+const unsigned int AUX_R19 = 950;
 
 // if measuring above this voltage, switch is *definitely* outputting an error level
 const unsigned int RCB_BUS_CURRENT_SENSE_ERROR_VOLTAGE = 3000;
