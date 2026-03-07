@@ -45,7 +45,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     rclcpp
     sensor_msgs
     actuator_msgs
-    perseus_msgs
     perseus_interfaces
     std_msgs
     std_srvs
@@ -102,9 +101,9 @@ target_include_directories(bucket_driver
 
 # Add dependencies for the executables
 # ament_target_dependencies(rmd_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
-#                           sensor_msgs actuator_msgs perseus_msgs perseus_interfaces)
+#                           sensor_msgs actuator_msgs perseus_interfaces)
 ament_target_dependencies(rsbl_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
-                          sensor_msgs actuator_msgs perseus_msgs perseus_interfaces)
+                          sensor_msgs actuator_msgs perseus_interfaces)
 ament_target_dependencies(arm_controller PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           actuator_msgs)
 ament_target_dependencies(

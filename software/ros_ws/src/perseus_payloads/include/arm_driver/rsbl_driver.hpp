@@ -2,6 +2,8 @@
 
 #include <actuator_msgs/msg/actuators.hpp>
 #include <chrono>
+#include <cstdint>
+#include <unordered_map>
 #include <hi_can_raw.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
@@ -37,7 +39,7 @@ private:
         hi_can::addressing::post_landing::arm::control_board::DEVICE_ID};
 
     // CAN handling
-    constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(100);
+    constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(10);
     rclcpp::TimerBase::SharedPtr _packet_timer;
     std::optional<hi_can::RawCanInterface> _can_interface;
     std::optional<hi_can::PacketManager> _packet_manager;
@@ -57,11 +59,11 @@ private:
                  hi_can::addressing::post_landing::arm::control_board::group::ELBOW)},
         };
 
-    // Motor feedback
-    constexpr static auto POSITION_PUBLISH_MS = std::chrono::milliseconds(100);
-    constexpr static auto STATUS_REQUEST_MS = std::chrono::milliseconds(500);
+    // Motor feedback (10ms = 100Hz to match MoveIt Servo control loop)
+    constexpr static auto POSITION_PUBLISH_MS = std::chrono::milliseconds(10);
+    constexpr static auto STATUS_REQUEST_MS = std::chrono::milliseconds(10);
     std::vector<hi_can::addressing::post_landing::arm::control_board::group> _available_servos;
-    uint16_t _status_message_ms = 500;
+    uint16_t _status_message_ms = 10;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _status_publisher;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _motor_position_publisher;
     rclcpp::TimerBase::SharedPtr _status_timer;
@@ -69,4 +71,9 @@ private:
 
     // Subscriber
     rclcpp::Subscription<actuator_msgs::msg::Actuators>::SharedPtr _arm_control_subscriber;
+
+    using servo_group = hi_can::addressing::post_landing::arm::control_board::group;
+    std::unordered_map<servo_group, int32_t> _accumulated_steps;
+    std::unordered_map<servo_group, int16_t> _last_raw_pos;
+    std::unordered_map<servo_group, bool>    _first_read;
 };

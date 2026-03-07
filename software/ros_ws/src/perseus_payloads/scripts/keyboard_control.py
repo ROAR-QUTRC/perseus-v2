@@ -29,7 +29,7 @@ class KeyboardTeleop(Node):
         
         qos_profile = QoSProfile(
             depth=10,
-            reliability=ReliabilityPolicy.BEST_EFFORT
+            reliability=ReliabilityPolicy.RELIABLE
         )
         
         # Publisher

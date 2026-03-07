@@ -42,8 +42,8 @@ private:
     std::vector<double> _hw_states_position;
     std::vector<double> _hw_states_velocity;
 
-    // Mapping for easier access
     std::map<std::string, size_t> _joint_index_map;
+    std::map<std::string, int32_t> _last_motor_steps;
 
     rclcpp::Node::SharedPtr _node;
 
@@ -55,6 +55,7 @@ private:
     std::shared_ptr<rclcpp::Subscription<std_msgs::msg::Float64MultiArray>> _rsbl_position_subscriber;
 
     std::vector<double> _latest_rsbl_status;
+    bool _rsbl_ever_received = false;
 
     void _rsbl_status_callback(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
 };

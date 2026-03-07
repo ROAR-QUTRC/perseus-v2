@@ -20,7 +20,7 @@ hardware_interface::CallbackReturn PerseusArmHardware::on_init(const hardware_in
     // Initialize storage
     _hw_states_position.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     _hw_states_velocity.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-    _hw_commands.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN()); 
+    _hw_commands.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     _hw_commands_velocity.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
     for (const hardware_interface::ComponentInfo& joint : info_.joints)
@@ -37,7 +37,7 @@ hardware_interface::CallbackReturn PerseusArmHardware::on_init(const hardware_in
                 has_position = true;
         }
 
-        if (!has_position)  
+        if (!has_position)
         {
             RCLCPP_FATAL(rclcpp::get_logger("PerseusArmHardware"), "Joint '%s' missing 'position' state interface.", joint.name.c_str());
             return hardware_interface::CallbackReturn::ERROR;
@@ -49,11 +49,11 @@ hardware_interface::CallbackReturn PerseusArmHardware::on_init(const hardware_in
 
 hardware_interface::CallbackReturn PerseusArmHardware::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-    // Reset values
     std::fill(_hw_states_position.begin(), _hw_states_position.end(), 0.0);
     std::fill(_hw_states_velocity.begin(), _hw_states_velocity.end(), 0.0);
     std::fill(_hw_commands.begin(), _hw_commands.end(), 0.0);
     std::fill(_hw_commands_velocity.begin(), _hw_commands_velocity.end(), 0.0);
+    _last_motor_steps.clear();
 
     RCLCPP_INFO(rclcpp::get_logger("PerseusArmHardware"), "Perseus Arm Hardware Configured");
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -119,83 +119,66 @@ hardware_interface::CallbackReturn PerseusArmHardware::on_deactivate(const rclcp
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-
 // TODO: wrist pitch and roll need to be added, and fake joint.
 
 hardware_interface::return_type PerseusArmHardware::read(const rclcpp::Time&, const rclcpp::Duration&)
 {
-    // created internal node to handle subscriptions and publishers
     if (_node)
     {
         rclcpp::spin_some(_node);
     }
 
-    // If no hardware data has been received yet mirror commands to states 
-    if (_latest_rsbl_status.empty())
+    if (!_latest_rsbl_status.empty())
     {
-        for (size_t i = 0; i < info_.joints.size(); ++i)
+        _rsbl_ever_received = true;
+
+        using namespace hi_can::addressing::post_landing::arm::control_board;
+        const size_t STATUS_BLOCK_SIZE = 8;
+        
+        if (_latest_rsbl_status.size() % STATUS_BLOCK_SIZE == 0)
         {
-            if (!std::isnan(_hw_commands[i]))
-            _hw_states_position[i] = _hw_commands[i];
-            _hw_states_velocity[i] = 0.0;
-        }
-        return hardware_interface::return_type::OK;
-    }
-
-    using namespace hi_can::addressing::post_landing::arm::control_board;
-    const size_t STATUS_BLOCK_SIZE = 8;  // [id, error, pos, speed, temp, volt, curr, load]
-
-    if (_latest_rsbl_status.size() % STATUS_BLOCK_SIZE == 0)
-    {
-        for (size_t offset = 0; offset < _latest_rsbl_status.size(); offset += STATUS_BLOCK_SIZE)
-        {
-            // ID is the first element of the block
-            int servo_id = static_cast<int>(_latest_rsbl_status[offset]);
-            double servo_pos_steps = _latest_rsbl_status[offset + 2];  // Status 1 position
-
-            // Convert servo steps to radians: steps 0-4096 -> 0-2PI
-            double pos_rad = servo_pos_steps / (4096.0 / (2.0 * M_PI));
-
-            std::string joint_name = "";
-
-            // Map ID to joint name
-            if (servo_id == static_cast<int>(group::SHOULDER_TILT))
+            for (size_t offset = 0; offset < _latest_rsbl_status.size(); offset += STATUS_BLOCK_SIZE)
             {
-                joint_name = "shoulder_tilt";
-            }
-            else if (servo_id == static_cast<int>(group::SHOULDER_PAN))
-            {
-                joint_name = "shoulder_pan";
-            }
-            else if (servo_id == static_cast<int>(group::ELBOW))
-            {
-                joint_name = "elbow";
-            }
+                int servo_id = static_cast<int>(_latest_rsbl_status[offset]);
+                double servo_pos_steps = _latest_rsbl_status[offset + 2];
+                double servo_speed_steps = _latest_rsbl_status[offset + 3]; 
+                
+                constexpr double GEARBOX_RATIO = 25.0;
+                constexpr double MOTOR_STEPS_TO_JOINT_RAD = (2.0 * M_PI) / (GEARBOX_RATIO * 4096.0);
+                double pos_rad = servo_pos_steps * MOTOR_STEPS_TO_JOINT_RAD;
+                double vel_rad = servo_speed_steps * MOTOR_STEPS_TO_JOINT_RAD; 
 
-            // Update state
-            if (!joint_name.empty())
-            {
-                for (size_t i = 0; i < info_.joints.size(); ++i)
+                std::string joint_name = "";
+                if (servo_id == static_cast<int>(group::SHOULDER_TILT)) joint_name = "shoulder_tilt";
+                else if (servo_id == static_cast<int>(group::SHOULDER_PAN)) joint_name = "shoulder_pan";
+                else if (servo_id == static_cast<int>(group::ELBOW)) joint_name = "elbow";
+
+                if (!joint_name.empty())
                 {
-                    if (info_.joints[i].name == joint_name)
+                    for (size_t i = 0; i < info_.joints.size(); ++i)
                     {
-                        _hw_states_position[i] = pos_rad;
-                        break;
+                        if (info_.joints[i].name == joint_name)
+                        {
+                            _hw_states_position[i] = pos_rad;
+                            _hw_states_velocity[i] = vel_rad;
+                            break;
+                        }
                     }
                 }
             }
         }
     }
 
-    // fake_dof has no physical hardware always mirror command as state feedback.
+    // Mirror command as state for non-RSBL joints only (wrist, fake_dof)
     for (size_t i = 0; i < info_.joints.size(); ++i)
     {
-        if (info_.joints[i].name == "fake_dof")
+        if (info_.joints[i].name != "shoulder_tilt" && 
+            info_.joints[i].name != "shoulder_pan" && 
+            info_.joints[i].name != "elbow")
         {
             if (!std::isnan(_hw_commands[i]))
                 _hw_states_position[i] = _hw_commands[i];
             _hw_states_velocity[i] = 0.0;
-            break;
         }
     }
 
@@ -209,7 +192,7 @@ void PerseusArmHardware::_rsbl_status_callback(const std_msgs::msg::Float64Multi
 
 hardware_interface::return_type PerseusArmHardware::write(const rclcpp::Time&, const rclcpp::Duration&)
 {
-    // TODO: 
+    // TODO:
     // Change elbow to the big motors
     // add wrist pitch and roll
     // add fake_dof
@@ -220,48 +203,64 @@ hardware_interface::return_type PerseusArmHardware::write(const rclcpp::Time&, c
         msg.velocity.resize(3);
         msg.normalized.resize(3, 0.0);
 
-        double pan_cmd = 0.0;
-        double tilt_cmd = 0.0;
-        double elbow_cmd = 0.0;
-        double pan_vel_cmd = 0.0;
-        double tilt_vel_cmd = 0.0;
-        double elbow_vel_cmd = 0.0;
+        // Gearbox motor steps to joint radians
+        constexpr double GEARBOX_RATIO = 25.0;
+        constexpr double JOINT_RAD_TO_MOTOR_STEPS = GEARBOX_RATIO * 4096.0 / (2.0 * M_PI);
 
-        for (size_t i = 0; i < info_.joints.size(); ++i)
+        const std::array<std::string, 3> joint_order = {"shoulder_tilt", "shoulder_pan", "elbow"};
+
+        for (size_t j = 0; j < joint_order.size(); ++j)
         {
-            if (info_.joints[i].name == "shoulder_pan")
+            const std::string& name = joint_order[j];
+            double vel_rad = 0.0;
+            double cmd_rad = 0.0;
+
+            for (size_t i = 0; i < info_.joints.size(); ++i)
             {
-                pan_cmd = _hw_commands[i];
-                if (!std::isnan(_hw_commands_velocity[i]))
-                    pan_vel_cmd = _hw_commands_velocity[i];
+                if (info_.joints[i].name == name)
+                {
+                    if (!std::isnan(_hw_commands[i]))
+                        cmd_rad = _hw_commands[i];
+                    if (!std::isnan(_hw_commands_velocity[i]))
+                        vel_rad = _hw_commands_velocity[i];
+                    break;
+                }
             }
-            if (info_.joints[i].name == "shoulder_tilt")
+
+            // Compute target in motor steps (int32 to avoid overflow)
+            int32_t target_steps = static_cast<int32_t>(cmd_rad * JOINT_RAD_TO_MOTOR_STEPS);
+
+            // Get last known sent position. If first time, initialize from current hardware state!
+            int32_t last = 0;
+            if (_last_motor_steps.count(name))
             {
-                tilt_cmd = _hw_commands[i];
-                if (!std::isnan(_hw_commands_velocity[i]))
-                    tilt_vel_cmd = _hw_commands_velocity[i];
+                last = _last_motor_steps[name];
             }
-            if (info_.joints[i].name == "elbow")
+            else
             {
-                elbow_cmd = _hw_commands[i];
-                if (!std::isnan(_hw_commands_velocity[i]))
-                    elbow_vel_cmd = _hw_commands_velocity[i];
+                // Find current state for this joint to initialize
+                for (size_t i = 0; i < info_.joints.size(); ++i)
+                {
+                    if (info_.joints[i].name == name)
+                    {
+                        last = static_cast<int32_t>(_hw_states_position[i] * JOINT_RAD_TO_MOTOR_STEPS);
+                        break;
+                    }
+                }
             }
+
+            // Delta = how far to move from last sent position
+            int32_t delta = target_steps - last;
+
+            // Clamp to int16_t range to prevent CAN overflow
+            if (delta > 32767) delta = 32767;
+            if (delta < -32768) delta = -32768;
+
+            _last_motor_steps[name] = last + delta;
+
+            msg.position[j] = static_cast<double>(static_cast<int16_t>(delta));
+            msg.velocity[j] = std::abs(vel_rad) * JOINT_RAD_TO_MOTOR_STEPS;
         }
-
-        // Convert rad → steps for the RSBL servo protocol 
-        constexpr double RAD_TO_STEPS = 4096.0 / (2.0 * M_PI);
-
-        msg.position[0] = tilt_cmd  * RAD_TO_STEPS;  // steps
-        msg.position[1] = pan_cmd   * RAD_TO_STEPS;
-        msg.position[2] = elbow_cmd * RAD_TO_STEPS;
-
-        msg.velocity[0] = std::abs(tilt_vel_cmd)  * RAD_TO_STEPS;  
-        msg.velocity[1] = std::abs(pan_vel_cmd)   * RAD_TO_STEPS;
-        msg.velocity[2] = std::abs(elbow_vel_cmd) * RAD_TO_STEPS;
-        msg.normalized[0] = 0.0;
-        msg.normalized[1] = 0.0;
-        msg.normalized[2] = 0.0;
 
         _rsbl_publisher->publish(msg);
     }

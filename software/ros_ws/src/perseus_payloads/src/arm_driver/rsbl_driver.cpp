@@ -117,9 +117,27 @@ void RsblDriver::_publish_status_messages()
 
             const status_1_t& status1 = parameter_group->get_status_1();
             const status_2_t& status2 = parameter_group->get_status_2();
+
+            int16_t raw_pos = status1.position;
+            // Rollover 
+            if (_first_read.find(servo_id) == _first_read.end() || _first_read[servo_id])
+            {
+                _accumulated_steps[servo_id] = raw_pos;
+                _last_raw_pos[servo_id]      = raw_pos;
+                _first_read[servo_id]        = false;
+            }
+            else
+            {
+                int32_t delta = static_cast<int32_t>(raw_pos) - static_cast<int32_t>(_last_raw_pos[servo_id]); // rollover for 16 bit integer 
+                if (delta >  32768 ) delta -= 65536;
+                if (delta < -32768 ) delta += 65536;
+                _accumulated_steps[servo_id] += delta;
+                _last_raw_pos[servo_id]       = raw_pos;
+            }
+
             status_msg.data.emplace_back(static_cast<double>(servo_id));
-            status_msg.data.emplace_back(-1);  // no error code available
-            status_msg.data.emplace_back(static_cast<double>(status1.position));
+            status_msg.data.emplace_back(-1);  // no error code
+            status_msg.data.emplace_back(static_cast<double>(_accumulated_steps[servo_id]));  // full int32 as double
             status_msg.data.emplace_back(static_cast<double>(status1.speed));
             status_msg.data.emplace_back(static_cast<double>(status2.temperature));
             status_msg.data.emplace_back(static_cast<double>(status2.voltage));

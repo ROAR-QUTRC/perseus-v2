@@ -15,7 +15,6 @@
   <depend>sensor_msgs</depend>
   <depend>hi_can_raw</depend>
   <depend>std_msgs</depend>
-  <depend>perseus_msgs</depend>
   <depend>perseus_interfaces</depend>
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
