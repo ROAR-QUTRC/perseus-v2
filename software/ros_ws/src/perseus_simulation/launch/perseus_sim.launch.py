@@ -173,7 +173,7 @@ def generate_launch_description():
         rsp_launch,
         controllers_launch_delayed,
         ekf_delayed,
-        # rosbridge_launch,
+        rosbridge_launch,
         twist_mux_launch,
         rviz,
     ]

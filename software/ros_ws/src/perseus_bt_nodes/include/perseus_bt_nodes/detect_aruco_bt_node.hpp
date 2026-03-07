@@ -64,7 +64,7 @@ public:
 
   BT::NodeStatus onRunning() override
   {
-    double timeout_sec = 0.2;
+    double timeout_sec = 0.5;
     getInput("timeout_sec", timeout_sec);
 
     // Spin the internal node a little to process the future
