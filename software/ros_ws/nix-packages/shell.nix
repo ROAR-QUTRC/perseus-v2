@@ -48,6 +48,7 @@ pkgs.mkShell {
           builtin-interfaces
           controller-manager
           diff-drive-controller
+          fast-lio
           geometry-msgs
           gz-ros2-control
           hardware-interface
