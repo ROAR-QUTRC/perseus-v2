@@ -3,21 +3,27 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  ament-lint-auto,
+  ament-lint-common,
   fast-lio,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-mapping";
-  version = "0.0.1";
+  version = "0.0.0";
 
   src = ./../src/perseus_mapping;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
+  checkInputs = [
+    ament-lint-auto
+    ament-lint-common
+  ];
   propagatedBuildInputs = [ fast-lio ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "Config files for Perseus 3D mapping nodes and launch files";
-    license = with lib.licenses; [ mit ];
+    description = "TODO: Package description";
+    license = with lib.licenses; [ "TODO-License-declaration" ];
   };
 }
