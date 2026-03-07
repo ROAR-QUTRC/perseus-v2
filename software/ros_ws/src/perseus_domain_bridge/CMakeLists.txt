@@ -21,63 +21,44 @@ find_package(std_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 # ── Bridge Node ─────────────────────────────────────────────────────────────
-add_executable(bridge
-  src/bridge.cpp
-  src/throttled_bridge.cpp
-)
+add_executable(bridge src/bridge.cpp src/throttled_bridge.cpp)
 
-target_include_directories(bridge
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
+target_include_directories(
+  bridge PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                $<INSTALL_INTERFACE:include>)
 
-ament_target_dependencies(bridge
+ament_target_dependencies(
+  bridge
   rclcpp
   rclcpp_components
   domain_bridge
   sensor_msgs
   nav_msgs
   tf2_msgs
-  std_msgs
-)
+  std_msgs)
 
 target_link_libraries(bridge yaml-cpp)
 
 # ── Test nodes (talker + listener) ──────────────────────────────────────────
-add_executable(test_talker
-  src/test/test_talker.cpp
-)
-target_include_directories(test_talker
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+add_executable(test_talker src/test/test_talker.cpp)
+target_include_directories(
+  test_talker PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 ament_target_dependencies(test_talker rclcpp std_msgs)
 
-add_executable(test_listener
-  src/test/test_listener.cpp
-)
-target_include_directories(test_listener
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+add_executable(test_listener src/test/test_listener.cpp)
+target_include_directories(
+  test_listener PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 ament_target_dependencies(test_listener rclcpp std_msgs)
 
 # ── Install ─────────────────────────────────────────────────────────────
-install(TARGETS 
-  bridge
-  test_talker
-  test_listener
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(TARGETS bridge test_talker test_listener
+        DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY include/
-  DESTINATION include
-)
+install(DIRECTORY include/ DESTINATION include)
 
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
-)
+install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
 
-install(DIRECTORY config/
-  DESTINATION share/${PROJECT_NAME}/config
-)
+install(DIRECTORY config/ DESTINATION share/${PROJECT_NAME}/config)
 
 # ── Tests ─────────────────────────────────────────────────────────────
 if(BUILD_TESTING)

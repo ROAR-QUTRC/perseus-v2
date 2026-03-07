@@ -1,61 +1,51 @@
 # ============================================================
 # domain_bridge_throttled – example configuration
 # ============================================================
-
 # Global domain defaults (can be overridden per-topic)
 from_domain: 0
 to_domain: 1
-
 topics:
-
   # --- Camera: source publishes 60 Hz, bridge forwards at 30 Hz ---
   /camera/image_raw:
     type: sensor_msgs/msg/Image
-    max_rate: 30.0          # Hz  (0 or omit = no rate limit)
-    qos: best_effort        # best_effort | reliable
-
+    max_rate: 30.0 # Hz  (0 or omit = no rate limit)
+    qos: best_effort # best_effort | reliable
   # --- Camera info: keep in sync with throttled image ---
   /camera/camera_info:
     type: sensor_msgs/msg/CameraInfo
     max_rate: 30.0
     qos: reliable
-
   # --- Depth: heavy topic, only 15 Hz needed ---
   /camera/depth/image_rect_raw:
     type: sensor_msgs/msg/Image
     max_rate: 15.0
     qos: best_effort
-
   # --- Remap the topic name in the destination domain ---
   /camera/color/image_raw:
     type: sensor_msgs/msg/Image
     max_rate: 30.0
     qos: best_effort
-    remap: /robot/camera/image   # published under this name on domain 1
-
+    remap: /robot/camera/image # published under this name on domain 1
   # --- Laser scan: moderate throttle ---
   /scan:
     type: sensor_msgs/msg/LaserScan
     max_rate: 10.0
     qos: best_effort
-
   # --- Odometry: full rate passthrough (no max_rate key) ---
   /odom:
     type: nav_msgs/msg/Odometry
     qos: reliable
-
   # --- TF: full rate ---
   /tf:
     type: tf2_msgs/msg/TFMessage
     qos: best_effort
-
   /tf_static:
     type: tf2_msgs/msg/TFMessage
     qos: reliable
 
-  # --- Per-topic domain override example ---
-  # /special_sensor:
-  #   type: sensor_msgs/msg/Imu
-  #   from_domain: 5    # read from domain 5 instead of global from_domain
-  #   to_domain: 1      # write to domain 1
-  #   max_rate: 50.0
+# --- Per-topic domain override example ---
+# /special_sensor:
+#   type: sensor_msgs/msg/Imu
+#   from_domain: 5    # read from domain 5 instead of global from_domain
+#   to_domain: 1      # write to domain 1
+#   max_rate: 50.0

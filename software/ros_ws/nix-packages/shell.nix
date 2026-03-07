@@ -48,6 +48,7 @@ pkgs.mkShell {
           builtin-interfaces
           controller-manager
           diff-drive-controller
+          domain-bridge
           geometry-msgs
           gz-ros2-control
           hardware-interface
@@ -60,8 +61,10 @@ pkgs.mkShell {
           laser-geometry
           launch
           launch-ros
+          libyaml-cpp-dev
           mecanum-drive-controller
           message-filters
+          nav-msgs
           nav2-msgs
           navigation2
           nlohmann_json
@@ -96,6 +99,7 @@ pkgs.mkShell {
           teleop-twist-keyboard
           tf2
           tf2-geometry-msgs
+          tf2-msgs
           tf2-ros
           tf2-sensor-msgs
           twist-mux

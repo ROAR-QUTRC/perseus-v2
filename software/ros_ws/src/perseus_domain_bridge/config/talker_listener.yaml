@@ -8,13 +8,10 @@
 # Expected output on the listener:
 #   ~30 msg/s  (not 60)
 # ============================================================
-
 from_domain: 0
 to_domain: 1
-
 topics:
-
   /chatter:
     type: std_msgs/msg/String
-    max_rate: 30.0      # throttle: 60 Hz in, 30 Hz out
+    max_rate: 30.0 # throttle: 60 Hz in, 30 Hz out
     qos: best_effort
