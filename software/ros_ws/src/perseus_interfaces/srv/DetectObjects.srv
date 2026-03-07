@@ -1,6 +1,8 @@
 # Request
-# Empty request: calling this service asks the node to return
-# the latest detected ArUco marker poses in the target frame.
+# Calling this service asks the node to return the latest detected ArUco marker
+# poses in the target frame. Optionally, capture and save an annotated image.
+bool capture_image
+string img_save_path
 ---
 # Response
 # Time at which the detections are valid (e.g. camera header.stamp)
