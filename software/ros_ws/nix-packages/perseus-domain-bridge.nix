@@ -8,13 +8,13 @@
   domain-bridge,
   launch,
   launch-ros,
-  libyaml-cpp-dev,
   nav-msgs,
   rclcpp,
   rclcpp-components,
   sensor-msgs,
   std-msgs,
   tf2-msgs,
+  yaml-cpp,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-domain-bridge";
@@ -32,13 +32,13 @@ buildRosPackage rec {
     domain-bridge
     launch
     launch-ros
-    libyaml-cpp-dev
     nav-msgs
     rclcpp
     rclcpp-components
     sensor-msgs
     std-msgs
     tf2-msgs
+    yaml-cpp
   ];
   nativeBuildInputs = [ ament-cmake ];
 
