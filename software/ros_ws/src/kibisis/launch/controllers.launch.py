@@ -62,8 +62,9 @@ def generate_launch_description():
         output="screen",
         parameters=[use_sim_time_param],
         remappings=[
-            ("/diff_drive_base_controller/cmd_vel", ["/kibisis",cmd_vel_topic])
-        ]
+            ("/diff_drive_base_controller/cmd_vel", ["/kibisis",cmd_vel_topic]),
+            ("/robot_description", "/kibisis/robot_description"),
+        ],
     )
 
     # Launch controller_manager and joint_state_broadcaster first
