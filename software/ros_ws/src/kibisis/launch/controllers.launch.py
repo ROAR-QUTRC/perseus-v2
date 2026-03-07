@@ -33,7 +33,9 @@ def generate_launch_description():
         executable="ros2_control_node",
         parameters=[controller_config, use_sim_time_param],
         output="both",
-        remappings=[],
+        remappings=[
+            ("/robot_description", "/kibisis/robot_description"),
+        ],
         condition=IfCondition(launch_controller_manager),
     )
     joint_state_broadcaster_spawner = Node(
@@ -56,10 +58,12 @@ def generate_launch_description():
             "--controller-manager-timeout",
             "30",
             "--controller-ros-args",
-            ["--remap /diff_drive_base_controller/cmd_vel:=", cmd_vel_topic],
         ],
         output="screen",
         parameters=[use_sim_time_param],
+        remappings=[
+            ("/diff_drive_base_controller/cmd_vel", "/kibisis" + cmd_vel_topic)
+        ]
     )
 
     # Launch controller_manager and joint_state_broadcaster first

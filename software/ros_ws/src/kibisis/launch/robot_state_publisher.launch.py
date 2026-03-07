@@ -45,6 +45,9 @@ def generate_launch_description():
             }
         ],
         output="both",
+        remappings=[
+            ("/joint_states", "/kibisis/joint_states")
+        ],
     )
 
     return LaunchDescription(
