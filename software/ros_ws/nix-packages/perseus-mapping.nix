@@ -23,7 +23,7 @@ buildRosPackage rec {
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "TODO: Package description";
-    license = with lib.licenses; [ "TODO-License-declaration" ];
+    description = "Perseus package for 3D mapping and odometry using the Livox MID360 Lidar";
+    license = with lib.licenses; [ mit ];
   };
 }
