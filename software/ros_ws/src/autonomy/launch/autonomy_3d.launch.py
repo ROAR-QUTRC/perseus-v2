@@ -100,16 +100,16 @@ def generate_launch_description():
     )
 
     # EKF Node for sensor fusion and localization
-    # ekf_node = Node(
-    #     package="robot_localization",
-    #     executable="ekf_node",
-    #     name="ekf_filter_node",
-    #     output="screen",
-    #     parameters=[
-    #         ekf_config_file,
-    #         {"use_sim_time": use_sim_time},
-    #     ],
-    # )
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[
+            ekf_config_file,
+            {"use_sim_time": use_sim_time},
+        ],
+    )
 
     rtabmap_odom_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -134,7 +134,7 @@ def generate_launch_description():
     ld.add_action(declare_ekf_config_file_cmd)
 
     # Include launch files and nodes
-    # ld.add_action(ekf_node)
+    ld.add_action(ekf_node)
     ld.add_action(slam_launch)
     ld.add_action(nav_launch)
     ld.add_action(waypoints_bridge_launch)
