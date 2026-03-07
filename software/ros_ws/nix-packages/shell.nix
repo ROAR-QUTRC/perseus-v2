@@ -61,7 +61,6 @@ pkgs.mkShell {
           laser-geometry
           launch
           launch-ros
-          libyaml-cpp-dev
           mecanum-drive-controller
           message-filters
           nav-msgs
@@ -105,6 +104,7 @@ pkgs.mkShell {
           twist-mux
           urdf
           xacro
+          yaml-cpp
           yaml-cpp-vendor
         ]
       )
