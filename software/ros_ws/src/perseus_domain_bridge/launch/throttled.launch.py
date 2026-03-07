@@ -32,7 +32,7 @@ def generate_launch_description():
         if not config:
             from ament_index_python.packages import get_package_share_directory
             pkg_share = get_package_share_directory("perseus_domain_bridge")
-            config = os.path.join(pkg_share, "config", "talker_listener.yaml")
+            config = os.path.join(pkg_share, "config", "test.yaml")
 
         return [
             Node(

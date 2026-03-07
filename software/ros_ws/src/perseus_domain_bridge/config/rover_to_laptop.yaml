@@ -1,0 +1,16 @@
+domain_bridge:
+  from_domain: 42
+  to_domain: 0
+  topics:
+    /odom:
+      type: nav_msgs/msg/Odometry
+    /tf:
+      type: tf2_msgs/msg/TFMessage
+    /tf_static:
+      type: tf2_msgs/msg/TFMessage
+    /diagnostics:
+      type: diagnostic_msgs/msg/DiagnosticArray
+    /robot_state:
+      type: std_msgs/msg/String
+    /lidar/scan:
+      type: sensor_msgs/msg/LaserScan

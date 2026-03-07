@@ -101,8 +101,8 @@ topics:
             actions=[
                 Node(
                     package="perseus_domain_bridge",
-                    executable="throttled_bridge",
-                    name="throttled_bridge",
+                    executable="bridge",
+                    name="bridge",
                     output="screen",
                     arguments=[cfg_path],
                 )

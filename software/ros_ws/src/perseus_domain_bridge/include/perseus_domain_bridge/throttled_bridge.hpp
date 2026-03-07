@@ -23,7 +23,21 @@ struct TopicConfig
   std::string topic;        ///< Source topic name
   std::string type;         ///< ROS message type, e.g. "sensor_msgs/msg/Image"
   std::string remap;        ///< Destination topic name (empty = same as source)
-  std::string qos;          ///< "reliable" | "best_effort"
+
+  /// QoS for both subscriber and publisher when sub_qos/pub_qos are not set.
+  /// Values: "reliable" | "best_effort" | "transient_local"
+  std::string qos{"best_effort"};
+
+  /// Optional: QoS to use only for the subscriber (source domain).
+  /// When empty, falls back to `qos`.
+  /// Use this when the source publishes best_effort but the destination
+  /// consumers require reliable – set sub_qos: best_effort, pub_qos: reliable.
+  std::string sub_qos;
+
+  /// Optional: QoS to use only for the publisher (destination domain).
+  /// When empty, falls back to `qos`.
+  std::string pub_qos;
+
   double max_rate{0.0};     ///< Hz limit (0 = unlimited / full passthrough)
   int from_domain{-1};      ///< -1 = use global default
   int to_domain{-1};        ///< -1 = use global default
@@ -45,8 +59,12 @@ struct BridgeConfig
 //   • A rclcpp::GenericPublisher   on `to_domain`
 //
 // The subscriber callback gates publication via a wall-clock interval check
-// (monotonic_clock), dropping messages that arrive too soon.  No queue,
+// (steady_clock), dropping messages that arrive too soon.  No queue,
 // no timer – minimal latency overhead.
+//
+// sub_qos and pub_qos can differ, allowing the bridge to subscribe to a
+// best_effort source while publishing as reliable to satisfy downstream
+// consumers (e.g. Nav2 subscribing to /tf as reliable).
 // ──────────────────────────────────────────────────────────────────────────
 class ThrottledGenericBridge
 {
@@ -62,17 +80,13 @@ private:
   rclcpp::GenericPublisher::SharedPtr publisher_;
   rclcpp::GenericSubscription::SharedPtr subscription_;
 
-  std::chrono::duration<double> min_interval_{0};   ///< 1/max_rate seconds
+  std::chrono::duration<double> min_interval_{0};
   std::chrono::steady_clock::time_point last_pub_{};
   std::mutex mutex_;
 };
 
 // ──────────────────────────────────────────────────────────────────────────
 // ThrottledDomainBridge
-//
-// Orchestrates N ThrottledGenericBridge instances.
-// One rclcpp::Node per unique domain_id; each node is spun by its own
-// rclcpp::executors::MultiThreadedExecutor on a dedicated std::thread.
 // ──────────────────────────────────────────────────────────────────────────
 class ThrottledDomainBridge
 {
@@ -80,16 +94,13 @@ public:
   explicit ThrottledDomainBridge(const std::string & config_path);
   ~ThrottledDomainBridge();
 
-  /// Build subscriptions/publishers from config, then block until shutdown.
   void run();
 
 private:
-  /// Return (creating if necessary) the Node for the given domain.
   rclcpp::Node::SharedPtr get_or_create_node(int domain_id);
 
   BridgeConfig config_;
 
-  // domain_id  →  context + node + executor + thread
   struct DomainContext
   {
     rclcpp::Context::SharedPtr context;

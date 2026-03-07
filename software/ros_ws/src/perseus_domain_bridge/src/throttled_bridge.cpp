@@ -26,12 +26,8 @@ BridgeConfig load_config(const std::string & path)
 
   BridgeConfig cfg;
 
-  if (root["from_domain"]) {
-    cfg.global_from_domain = root["from_domain"].as<int>();
-  }
-  if (root["to_domain"]) {
-    cfg.global_to_domain = root["to_domain"].as<int>();
-  }
+  if (root["from_domain"]) {cfg.global_from_domain = root["from_domain"].as<int>();}
+  if (root["to_domain"])   {cfg.global_to_domain   = root["to_domain"].as<int>();}
 
   const auto & topics_node = root["topics"];
   if (!topics_node || !topics_node.IsMap()) {
@@ -44,25 +40,24 @@ BridgeConfig load_config(const std::string & path)
 
     const auto & opts = kv.second;
     if (!opts.IsMap()) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("load_config"),
+      RCLCPP_WARN(rclcpp::get_logger("load_config"),
         "Skipping malformed topic entry: %s", tc.topic.c_str());
       continue;
     }
-
     if (!opts["type"]) {
-      RCLCPP_WARN(
-        rclcpp::get_logger("load_config"),
+      RCLCPP_WARN(rclcpp::get_logger("load_config"),
         "No 'type' for topic %s, skipping.", tc.topic.c_str());
       continue;
     }
 
     tc.type        = opts["type"].as<std::string>();
-    tc.max_rate    = opts["max_rate"]    ? opts["max_rate"].as<double>() : 0.0;
-    tc.qos         = opts["qos"]         ? opts["qos"].as<std::string>()  : "best_effort";
-    tc.remap       = opts["remap"]       ? opts["remap"].as<std::string>() : "";
-    tc.from_domain = opts["from_domain"] ? opts["from_domain"].as<int>()  : -1;
-    tc.to_domain   = opts["to_domain"]   ? opts["to_domain"].as<int>()    : -1;
+    tc.max_rate    = opts["max_rate"]    ? opts["max_rate"].as<double>()    : 0.0;
+    tc.qos         = opts["qos"]         ? opts["qos"].as<std::string>()    : "best_effort";
+    tc.sub_qos     = opts["sub_qos"]     ? opts["sub_qos"].as<std::string>(): "";
+    tc.pub_qos     = opts["pub_qos"]     ? opts["pub_qos"].as<std::string>(): "";
+    tc.remap       = opts["remap"]       ? opts["remap"].as<std::string>()  : "";
+    tc.from_domain = opts["from_domain"] ? opts["from_domain"].as<int>()    : -1;
+    tc.to_domain   = opts["to_domain"]   ? opts["to_domain"].as<int>()      : -1;
 
     cfg.topics.push_back(std::move(tc));
   }
@@ -71,16 +66,28 @@ BridgeConfig load_config(const std::string & path)
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Helpers
+// QoS helper
 // ══════════════════════════════════════════════════════════════════════════
 
 static rclcpp::QoS make_qos(const std::string & qos_str, int depth = 10)
 {
+  // "transient_local" = reliable + transient_local durability.
+  // Required for latched topics: /tf_static, /robot_description, /map.
+  if (qos_str == "transient_local") {
+    rclcpp::QoS qos(depth);
+    qos.reliable();
+    qos.transient_local();
+    return qos;
+  }
+
   rclcpp::QoS qos(depth);
   if (qos_str == "reliable") {
     qos.reliable();
+    qos.durability_volatile();
   } else {
+    // default: best_effort + volatile
     qos.best_effort();
+    qos.durability_volatile();
   }
   return qos;
 }
@@ -96,36 +103,35 @@ ThrottledGenericBridge::ThrottledGenericBridge(
 {
   const std::string dst_topic = cfg.remap.empty() ? cfg.topic : cfg.remap;
 
-  // Set throttle interval
   if (cfg.max_rate > 0.0) {
     min_interval_ = std::chrono::duration<double>(1.0 / cfg.max_rate);
   }
-
-  // Initialise last_pub_ far enough in the past so the first message always goes through
   last_pub_ = std::chrono::steady_clock::now() - std::chrono::hours(1);
 
-  auto qos = make_qos(cfg.qos);
+  // Resolve sub/pub QoS independently.
+  // sub_qos / pub_qos override the shared `qos` field when set.
+  const std::string sub_qos_str = cfg.sub_qos.empty() ? cfg.qos : cfg.sub_qos;
+  const std::string pub_qos_str = cfg.pub_qos.empty() ? cfg.qos : cfg.pub_qos;
 
-  // Publisher on destination node
-  publisher_ = dst_node->create_generic_publisher(dst_topic, cfg.type, qos);
+  auto sub_qos = make_qos(sub_qos_str);
+  auto pub_qos = make_qos(pub_qos_str);
 
-  // Subscriber on source node – captures publisher_ + throttle state
+  const std::string rate_info =
+    (cfg.max_rate > 0.0) ? (std::to_string(static_cast<int>(cfg.max_rate)) + " Hz") : "unlimited";
+
+  RCLCPP_INFO(src_node->get_logger(),
+    "[Bridge] %s → %s  |  sub_qos: %s  pub_qos: %s  |  rate: %s",
+    cfg.topic.c_str(), dst_topic.c_str(),
+    sub_qos_str.c_str(), pub_qos_str.c_str(),
+    rate_info.c_str());
+
+  publisher_ = dst_node->create_generic_publisher(dst_topic, cfg.type, pub_qos);
+
   subscription_ = src_node->create_generic_subscription(
-    cfg.topic,
-    cfg.type,
-    qos,
+    cfg.topic, cfg.type, sub_qos,
     [this](std::shared_ptr<rclcpp::SerializedMessage> msg) {
       this->on_message(std::move(msg));
     });
-
-  const std::string rate_info =
-    (cfg.max_rate > 0.0) ? (std::to_string(cfg.max_rate) + " Hz") : "unlimited";
-
-  src_node->get_logger();  // ensure logger is initialised
-  RCLCPP_INFO(
-    src_node->get_logger(),
-    "[ThrottledBridge] %s → %s  |  rate: %s  |  qos: %s",
-    cfg.topic.c_str(), dst_topic.c_str(), rate_info.c_str(), cfg.qos.c_str());
 }
 
 void ThrottledGenericBridge::on_message(std::shared_ptr<rclcpp::SerializedMessage> msg)
@@ -133,9 +139,7 @@ void ThrottledGenericBridge::on_message(std::shared_ptr<rclcpp::SerializedMessag
   if (min_interval_.count() > 0.0) {
     auto now = std::chrono::steady_clock::now();
     std::lock_guard<std::mutex> lock(mutex_);
-    if ((now - last_pub_) < min_interval_) {
-      return;  // drop – too soon
-    }
+    if ((now - last_pub_) < min_interval_) {return;}
     last_pub_ = now;
   }
   publisher_->publish(*msg);
@@ -146,38 +150,23 @@ void ThrottledGenericBridge::on_message(std::shared_ptr<rclcpp::SerializedMessag
 // ══════════════════════════════════════════════════════════════════════════
 
 ThrottledDomainBridge::ThrottledDomainBridge(const std::string & config_path)
-: config_(load_config(config_path))
-{
-}
+: config_(load_config(config_path)) {}
 
 ThrottledDomainBridge::~ThrottledDomainBridge()
 {
-  // Signal all executors to stop
+  for (auto & [id, dc] : domains_) {dc.executor->cancel();}
   for (auto & [id, dc] : domains_) {
-    dc.executor->cancel();
+    if (dc.spin_thread.joinable()) {dc.spin_thread.join();}
   }
-  // Join threads
-  for (auto & [id, dc] : domains_) {
-    if (dc.spin_thread.joinable()) {
-      dc.spin_thread.join();
-    }
-  }
-  // Shutdown contexts
-  for (auto & [id, dc] : domains_) {
-    rclcpp::shutdown(dc.context);
-  }
+  for (auto & [id, dc] : domains_) {rclcpp::shutdown(dc.context);}
 }
 
 rclcpp::Node::SharedPtr ThrottledDomainBridge::get_or_create_node(int domain_id)
 {
   auto it = domains_.find(domain_id);
-  if (it != domains_.end()) {
-    return it->second.node;
-  }
+  if (it != domains_.end()) {return it->second.node;}
 
-  // New domain – create context, node, executor, thread
   DomainContext dc;
-
   rclcpp::InitOptions init_opts;
   init_opts.set_domain_id(static_cast<size_t>(domain_id));
 
@@ -195,11 +184,10 @@ rclcpp::Node::SharedPtr ThrottledDomainBridge::get_or_create_node(int domain_id)
   dc.executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>(exec_opts);
   dc.executor->add_node(dc.node);
 
-  RCLCPP_INFO(
-    dc.node->get_logger(),
+  RCLCPP_INFO(dc.node->get_logger(),
     "Created node '%s' on domain %d", node_name.c_str(), domain_id);
 
-  dc.spin_thread = std::thread([exec = dc.executor]() { exec->spin(); });
+  dc.spin_thread = std::thread([exec = dc.executor]() {exec->spin();});
 
   domains_.emplace(domain_id, std::move(dc));
   return domains_.at(domain_id).node;
@@ -207,7 +195,6 @@ rclcpp::Node::SharedPtr ThrottledDomainBridge::get_or_create_node(int domain_id)
 
 void ThrottledDomainBridge::run()
 {
-  // Pre-create all required domain nodes
   for (const auto & tc : config_.topics) {
     const int from = (tc.from_domain >= 0) ? tc.from_domain : config_.global_from_domain;
     const int to   = (tc.to_domain   >= 0) ? tc.to_domain   : config_.global_to_domain;
@@ -215,40 +202,26 @@ void ThrottledDomainBridge::run()
     get_or_create_node(to);
   }
 
-  // Wire up bridges
   for (const auto & tc : config_.topics) {
     const int from = (tc.from_domain >= 0) ? tc.from_domain : config_.global_from_domain;
     const int to   = (tc.to_domain   >= 0) ? tc.to_domain   : config_.global_to_domain;
-
-    auto src_node = domains_.at(from).node;
-    auto dst_node = domains_.at(to).node;
-
-    bridges_.push_back(
-      std::make_shared<ThrottledGenericBridge>(src_node, dst_node, tc));
+    bridges_.push_back(std::make_shared<ThrottledGenericBridge>(
+      domains_.at(from).node, domains_.at(to).node, tc));
   }
 
-  RCLCPP_INFO(
-    rclcpp::get_logger("ThrottledDomainBridge"),
+  RCLCPP_INFO(rclcpp::get_logger("ThrottledDomainBridge"),
     "Running %zu topic bridge(s). Press Ctrl-C to stop.", bridges_.size());
 
-  // Block main thread until SIGINT
   rclcpp::on_shutdown([]() {
     RCLCPP_INFO(rclcpp::get_logger("ThrottledDomainBridge"), "Shutting down.");
   });
 
-  // Spin a sentinel context so rclcpp::ok() is meaningful on the main thread
   while (true) {
-    // Check if all domain contexts are still valid
     bool all_ok = true;
     for (auto & [id, dc] : domains_) {
-      if (!dc.context->is_valid()) {
-        all_ok = false;
-        break;
-      }
+      if (!dc.context->is_valid()) {all_ok = false; break;}
     }
-    if (!all_ok) {
-      break;
-    }
+    if (!all_ok) {break;}
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }

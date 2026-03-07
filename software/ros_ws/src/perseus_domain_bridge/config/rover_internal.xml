@@ -1,10 +1,11 @@
 <CycloneDDS>
-  <Domain>
+  <Domain id="42">
     <General>
       <Interfaces>
-        <NetworkInterface name="eth0" multicast="true" priority="default"/>
+        <NetworkInterface name="eth0" multicast="false" priority="default"/>
+        <NetworkInterface name="lo" multicast="false" priority="default"/>
       </Interfaces>
-      <AllowMulticast>true</AllowMulticast>
+      <AllowMulticast>false</AllowMulticast>
       <MaxMessageSize>65500B</MaxMessageSize>
     </General>
     <Discovery>
@@ -12,10 +13,7 @@
       <MaxAutoParticipantIndex>50</MaxAutoParticipantIndex>
     </Discovery>
     <Internal>
-      <Watermarks>
-        <WhcHigh>4MB</WhcHigh>
-        <WhcLow>1MB</WhcLow>
-      </Watermarks>
+      <SocketReceiveBufferSize min="426000"/>
     </Internal>
   </Domain>
 </CycloneDDS>

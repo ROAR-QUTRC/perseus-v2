@@ -1,5 +1,5 @@
 <CycloneDDS>
-  <Domain>
+  <Domain id="0">
     <General>
       <Interfaces>
         <NetworkInterface name="eth0" multicast="true" priority="default"/>
@@ -11,11 +11,5 @@
       <ParticipantIndex>auto</ParticipantIndex>
       <MaxAutoParticipantIndex>50</MaxAutoParticipantIndex>
     </Discovery>
-    <Internal>
-      <Watermarks>
-        <WhcHigh>4MB</WhcHigh>
-        <WhcLow>1MB</WhcLow>
-      </Watermarks>
-    </Internal>
   </Domain>
 </CycloneDDS>
