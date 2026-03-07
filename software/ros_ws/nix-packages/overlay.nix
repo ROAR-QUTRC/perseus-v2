@@ -6,6 +6,7 @@ final: prev: {
   perseus-bt-nodes = final.callPackage ./perseus-bt-nodes.nix { };
   perseus-can-if = final.callPackage ./perseus-can-if.nix { };
   perseus-description = final.callPackage ./perseus-description.nix { };
+  perseus-domain-bridge = final.callPackage ./perseus-domain-bridge.nix { };
   perseus-hardware = final.callPackage ./perseus-hardware.nix { };
   perseus-input = final.callPackage ./perseus-input.nix { };
   perseus-input-config = final.callPackage ./perseus-input-config.nix { };
