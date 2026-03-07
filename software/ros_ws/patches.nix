@@ -178,7 +178,10 @@ let
           submodules = true;
         };
         # Fast-LIO sets the cpp standard to 14, but jazzy needs version 17
-        patches = patches ++ [ ./patches/fast_lio/cpp_version_17.patch ./patches/fast_lio/frame_id_fix.patch ];
+        patches = patches ++ [
+          ./patches/fast_lio/cpp_version_17.patch
+          ./patches/fast_lio/frame_id_fix.patch
+        ];
       }
     );
   };
