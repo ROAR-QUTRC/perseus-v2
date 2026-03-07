@@ -1,7 +1,6 @@
 rosDistro: final: prev:
 let
   rosOverlay = rosFinal: rosPrev: {
-    # --- GUI patches ---
     fields2cover =
       let
         nlohmann_json = final.nlohmann_json.overrideAttrs {
@@ -174,6 +173,24 @@ let
         sha256 = "sha256-oNoDa+IqtQPe8bpfMjHFj2yx7jFUhfbIqaPRQCU/zMQ=";
       };
     });
+    fast-lio = rosPrev.fast-lio.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        # We need to have submodules, so we should use fetchGit instead
+        src = builtins.fetchGit {
+          url = "https://github.com/hku-mars/FAST_LIO";
+          ref = "ROS2";
+          narHash = "sha256-chnAIRkSQjoXqg9K9s1JVOrNdFtEzFztOFUYnbXkZyI=";
+          rev = "a4743b095409588842a5b30ddfa27e29d2f99164";
+          submodules = true;
+        };
+        # Fast-LIO sets the cpp standard to 14, but jazzy needs version 17
+        patches = patches ++ [ ./patches/fast_lio/cpp_version_17.patch ];
+      }
+    );
   };
 
 in
@@ -182,14 +199,5 @@ in
     # we need to use overrideScope and an overlay to apply the changes
     # so that they propagate properly
     ${rosDistro} = prev.rosPackages.${rosDistro}.overrideScope rosOverlay;
-  };
-
-  gst_all_1 = prev.gst_all_1 // {
-    gst-plugins-rs = prev.gst_all_1.gst-plugins-rs.override {
-      plugins = [
-        "rtp"
-        "webrtc"
-      ];
-    };
   };
 }
