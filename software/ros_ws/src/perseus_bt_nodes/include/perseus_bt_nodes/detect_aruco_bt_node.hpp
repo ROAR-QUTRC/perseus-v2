@@ -42,10 +42,11 @@ namespace perseus_bt_nodes
             std::string service_name;
             getInput("service_name", service_name);
 
-    if (!client_ || service_name_ != service_name) {
-      service_name_ = service_name;
-      client_ = node_->create_client<perseus_interfaces::srv::DetectObjects>(service_name_);
-    }
+            if (!client_ || service_name_ != service_name)
+            {
+                service_name_ = service_name;
+                client_ = node_->create_client<perseus_interfaces::srv::DetectObjects>(service_name_);
+            }
 
             // Wait briefly for service
             if (!client_->wait_for_service(200ms))
@@ -54,16 +55,16 @@ namespace perseus_bt_nodes
                 return BT::NodeStatus::FAILURE;
             }
 
-    // Send async request
-    auto req = std::make_shared<perseus_interfaces::srv::DetectObjects::Request>();
-    req->capture_image = true;
-    req->img_save_path = "/aruco_images";
-    auto far = client_->async_send_request(req);
-    future_ = far.future.share();
-    start_time_ = node_->now();
-    RCLCPP_INFO(node_->get_logger(), "DetectAruco: calling /detect_objects");
-    return BT::NodeStatus::RUNNING;
-  }
+            // Send async request
+            auto req = std::make_shared<perseus_interfaces::srv::DetectObjects::Request>();
+            req->capture_image = true;
+            req->img_save_path = "/aruco_images";
+            auto far = client_->async_send_request(req);
+            future_ = far.future.share();
+            start_time_ = node_->now();
+            RCLCPP_INFO(node_->get_logger(), "DetectAruco: calling /detect_objects");
+            return BT::NodeStatus::RUNNING;
+        }
 
         BT::NodeStatus onRunning() override
         {
@@ -132,12 +133,12 @@ namespace perseus_bt_nodes
             // Nothing special
         }
 
-private:
-  rclcpp::Node::SharedPtr node_;
-  rclcpp::Client<perseus_interfaces::srv::DetectObjects>::SharedPtr client_;
-  std::string service_name_;
+    private:
+        rclcpp::Node::SharedPtr node_;
+        rclcpp::Client<perseus_interfaces::srv::DetectObjects>::SharedPtr client_;
+        std::string service_name_;
 
-  rclcpp::Time start_time_;
-  rclcpp::Client<perseus_interfaces::srv::DetectObjects>::SharedFuture future_;
-};
+        rclcpp::Time start_time_;
+        rclcpp::Client<perseus_interfaces::srv::DetectObjects>::SharedFuture future_;
+    };
 }  // namespace perseus_bt_nodes
