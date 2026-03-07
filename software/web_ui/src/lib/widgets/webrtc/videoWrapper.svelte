@@ -42,7 +42,7 @@
 		`${config.resolution.width}x${config.resolution.height}` || '320x240'
 	);
 
-	let jpegMode = $derived<boolean>(config.convertFromJpeg);
+	let jpegMode = $derived<boolean>(config.convertFromJpeg ?? false);
 
 	let transform = $derived<string>(config.transform || 'none');
 
