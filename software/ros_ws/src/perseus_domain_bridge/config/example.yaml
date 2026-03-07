@@ -42,7 +42,6 @@ topics:
   /tf_static:
     type: tf2_msgs/msg/TFMessage
     qos: reliable
-
 # --- Per-topic domain override example ---
 # /special_sensor:
 #   type: sensor_msgs/msg/Imu
