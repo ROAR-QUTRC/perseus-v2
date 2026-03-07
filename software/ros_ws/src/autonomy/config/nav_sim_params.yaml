@@ -51,7 +51,6 @@ amcl:
     initial_cov_aa: 10.0
 bt_navigator:
   ros__parameters:
-    
     global_frame: map
     robot_base_frame: base_footprint
     transform_tolerance: 0.5
@@ -86,7 +85,6 @@ bt_navigator:
       - perseus_bt_nodes
 docking_server:
   ros__parameters:
-    
     dock_plugins: ["nova_carter_dock"]
     nova_carter_dock:
       plugin: "opennav_docking::SimpleChargingDock"
@@ -106,7 +104,6 @@ docking_server:
     enable_stamped_cmd_vel: true
 controller_server:
   ros__parameters:
-    
     controller_frequency: 10.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.001
@@ -198,7 +195,6 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: odom
@@ -249,7 +245,6 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      
       update_frequency: 1.0
       publish_frequency: 1.0
       global_frame: map
@@ -325,7 +320,6 @@ planner_server:
       cost_travel_multiplier: 2.0
 behavior_server:
   ros__parameters:
-    
     local_costmap_topic: local_costmap/costmap_raw
     local_footprint_topic: local_costmap/published_footprint
     global_costmap_topic: global_costmap/costmap_raw
@@ -353,7 +347,6 @@ behavior_server:
     enable_stamped_cmd_vel: true
 waypoint_follower:
   ros__parameters:
-    
     loop_rate: 20
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -363,7 +356,6 @@ waypoint_follower:
       waypoint_pause_duration: 200
 collision_monitor:
   ros__parameters:
-    
     base_frame_id: "base_footprint"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
@@ -453,7 +445,6 @@ collision_monitor:
       enabled: true
 velocity_smoother:
   ros__parameters:
-    
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
