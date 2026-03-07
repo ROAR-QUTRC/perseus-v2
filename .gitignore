@@ -360,6 +360,7 @@ Temporary Items
 # LSP files
 .cache/
 .ccls-cache/
+compile_commands.json
 
 # Temporary Fast-LIO package
 /software/ros_ws/src/spark-fast-lio
