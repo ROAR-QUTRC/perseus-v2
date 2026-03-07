@@ -46,7 +46,9 @@ def generate_launch_description():
         ],
         output="both",
         remappings=[
-            ("/joint_states", "/kibisis/joint_states")
+            ("/joint_states", "/kibisis/joint_states"),
+            ("/robot_description", "/kibisis/robot_description"),
+
         ],
     )
 
