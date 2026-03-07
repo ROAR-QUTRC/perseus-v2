@@ -192,6 +192,9 @@
             nav2-lifecycle-manager
             nav2-common
             domain-bridge
+	    iceoryx-hoofs
+            iceoryx-posh
+            iceoryx-binding-c
             ;
         };
         # Packages which should be available only in the dev shell
