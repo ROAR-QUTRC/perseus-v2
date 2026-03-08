@@ -24,8 +24,25 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  DIRECTORY config launch maps rviz urdf worlds
+  DIRECTORY config launch maps rviz urdf worlds src
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
+
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+add_executable(sim_pointcloud_filter src/sim_pointcloud_filter.cpp)
+ament_target_dependencies(sim_pointcloud_filter
+  rclcpp
+  sensor_msgs
+)
+
+install(TARGETS sim_pointcloud_filter
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS sim_pointcloud_filter
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()

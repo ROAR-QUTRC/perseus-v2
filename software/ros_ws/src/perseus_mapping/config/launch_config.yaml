@@ -1,0 +1,3 @@
+use_sim_time: true # set to false when running on perseus
+rviz: false
+sim: true  # set to false when running on perseus
