@@ -26,6 +26,12 @@ class ManeuverExecutor:
         """
         self._node = node
 
+        # Read servo_max_rpm from the node's parameters if available
+        try:
+            self._servo_max_rpm = node.get_parameter("servo_max_rpm").value
+        except rclpy.exceptions.ParameterNotDeclaredException:
+            self._servo_max_rpm = 62.0
+
         # Publisher for velocity commands
         self._cmd_pub = self._node.create_publisher(TwistStamped, "/joy_vel", 10)
 
@@ -465,22 +471,20 @@ class ManeuverExecutor:
         self,
         linear_speed,
         rotation_speed,
-        current_wheel_radius,
-        current_wheel_separation,
     ):
-        """Drive a calibration pattern comparing odom vs SLAM ground truth.
+        """Drive a diagnostic pattern comparing odom vs SLAM ground truth.
 
         Drives straight for 5s then rotates 360 deg, recording odom and
-        SLAM poses to compute wheel radius and separation correction factors.
+        SLAM poses to measure odometry accuracy.  Reports error percentages
+        but does not compute corrected wheel parameters — those are physical
+        measurements that should be set from a tape measure.
 
         Args:
             linear_speed: Forward speed in m/s.
             rotation_speed: Rotation speed in rad/s.
-            current_wheel_radius: Current wheel_radius from controller config.
-            current_wheel_separation: Current wheel_separation from controller config.
 
         Returns:
-            Dict with calibration results, or None on failure.
+            Dict with diagnostic results, or None on failure.
         """
         logger = self._node.get_logger()
 
@@ -588,7 +592,7 @@ class ManeuverExecutor:
             f"SLAM_angle={math.degrees(slam_rotation_angle):.1f} deg"
         )
 
-        # ── Compute corrections ────────────────────────────────────
+        # ── Compute accuracy metrics ──────────────────────────────
         if odom_linear_dist < 0.01:
             logger.error("Calibration: odom linear distance too small")
             return None
@@ -597,45 +601,60 @@ class ManeuverExecutor:
             logger.error("Calibration: SLAM rotation angle too small")
             return None
 
-        radius_correction = slam_linear_dist / odom_linear_dist
-        separation_correction = odom_rotation_angle / slam_rotation_angle
-
-        corrected_wheel_radius = current_wheel_radius * radius_correction
-        corrected_wheel_separation = current_wheel_separation * separation_correction
+        linear_error = slam_linear_dist - odom_linear_dist
+        linear_error_pct = (linear_error / slam_linear_dist) * 100.0
+        rotation_error = slam_rotation_angle - odom_rotation_angle
+        rotation_error_pct = (rotation_error / slam_rotation_angle) * 100.0
 
         results = {
             "odom_linear_distance": odom_linear_dist,
             "slam_linear_distance": slam_linear_dist,
+            "linear_error_m": linear_error,
+            "linear_error_pct": linear_error_pct,
             "odom_rotation_angle": odom_rotation_angle,
             "slam_rotation_angle": slam_rotation_angle,
-            "radius_correction": radius_correction,
-            "separation_correction": separation_correction,
-            "corrected_wheel_radius": corrected_wheel_radius,
-            "corrected_wheel_separation": corrected_wheel_separation,
+            "rotation_error_deg": math.degrees(rotation_error),
+            "rotation_error_pct": rotation_error_pct,
         }
 
-        # Log results prominently
         logger.info("=" * 60)
-        logger.info("ODOMETRY CALIBRATION RESULTS")
+        logger.info("ODOMETRY VERIFICATION RESULTS")
         logger.info("=" * 60)
         logger.info(
-            f"  Linear:  odom={odom_linear_dist:.3f}m  "
+            f"  Linear:   odom={odom_linear_dist:.3f}m  "
             f"SLAM={slam_linear_dist:.3f}m  "
-            f"ratio={radius_correction:.4f}"
+            f"error={linear_error:+.3f}m ({linear_error_pct:+.1f}%)"
         )
         logger.info(
             f"  Rotation: odom={math.degrees(odom_rotation_angle):.1f} deg  "
             f"SLAM={math.degrees(slam_rotation_angle):.1f} deg  "
-            f"ratio={separation_correction:.4f}"
+            f"error={math.degrees(rotation_error):+.1f} deg ({rotation_error_pct:+.1f}%)"
         )
-        logger.info(f"  Current  wheel_radius: {current_wheel_radius}")
-        logger.info(f"  Corrected wheel_radius: {corrected_wheel_radius:.6f}")
-        logger.info(f"  Current  wheel_separation: {current_wheel_separation}")
-        logger.info(f"  Corrected wheel_separation: {corrected_wheel_separation:.6f}")
-        logger.info("")
-        logger.info("  Update perseus_lite_controllers.yaml with:")
-        logger.info(f"    wheel_radius: {corrected_wheel_radius:.6f}")
-        logger.info(f"    wheel_separation: {corrected_wheel_separation:.6f}")
+        if abs(linear_error_pct) > 5.0:
+            # Compute suggested servo_max_rpm from SLAM/odom ratio
+            if odom_linear_dist > 0.01:
+                suggested_rpm = self._servo_max_rpm * (slam_linear_dist / odom_linear_dist)
+                results["suggested_servo_max_rpm"] = suggested_rpm
+                logger.warning(
+                    f"  Linear error exceeds 5%. Current servo_max_rpm={self._servo_max_rpm:.1f}"
+                )
+                logger.warning(
+                    f"  Suggested servo_max_rpm={suggested_rpm:.1f} "
+                    f"(based on SLAM/odom ratio {slam_linear_dist / odom_linear_dist:.3f})"
+                )
+                logger.warning(
+                    "  Set servo_max_rpm:=%.1f in your launch command to correct velocity scaling.",
+                    suggested_rpm,
+                )
+
+        if abs(rotation_error_pct) > 5.0:
+            logger.warning(
+                "  Rotation error exceeds 5%.  Verify that wheel_separation in "
+                "perseus_lite_controllers.yaml matches tape-measure readings."
+            )
+
+        if abs(linear_error_pct) <= 5.0 and abs(rotation_error_pct) <= 5.0:
+            logger.info("  Odometry accuracy is within 5% — OK.")
         logger.info("=" * 60)
 
         return results

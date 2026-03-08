@@ -102,6 +102,7 @@ def generate_launch_description():
             ekf_config_file,
             {"use_sim_time": use_sim_time, "imu0": LaunchConfiguration("imu_topic")},
         ],
+        remappings=[("/odometry/filtered", "/odom")],
     )
 
     # Create launch description

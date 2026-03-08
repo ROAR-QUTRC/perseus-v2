@@ -68,8 +68,9 @@ class AutotuneNode(Node):
         self.declare_parameter("enabled_phases", "")
         self.declare_parameter("interactive", False)
         self.declare_parameter("skip_preflight", False)
-        self.declare_parameter("wheel_radius", 0.075)
-        self.declare_parameter("wheel_separation", 0.40)
+        self.declare_parameter("servo_max_rpm", 62.0)
+        # wheel_radius and wheel_separation are fixed physical measurements
+        # set in perseus_lite_controllers.yaml — not tunable parameters.
 
         # ── Read parameter values ─────────────────────────────────────
         self._db_path = os.path.expanduser(self.get_parameter("db_path").value)
@@ -85,8 +86,6 @@ class AutotuneNode(Node):
         self._enabled_phases_str = self.get_parameter("enabled_phases").value
         self._interactive = self.get_parameter("interactive").value
         self._skip_preflight = self.get_parameter("skip_preflight").value
-        self._wheel_radius = self.get_parameter("wheel_radius").value
-        self._wheel_separation = self.get_parameter("wheel_separation").value
 
         # Parse enabled_phases from comma-separated string
         self._enabled_phases = self._parse_enabled_phases(self._enabled_phases_str)
@@ -676,8 +675,6 @@ class AutotuneNode(Node):
             results = self._maneuver.calibration_drive(
                 linear_speed=self._linear_speed,
                 rotation_speed=self._rotation_speed,
-                current_wheel_radius=self._wheel_radius,
-                current_wheel_separation=self._wheel_separation,
             )
 
             if results is None:

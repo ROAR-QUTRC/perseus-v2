@@ -25,6 +25,7 @@ def generate_launch_description():
     hardware_plugin = LaunchConfiguration("hardware_plugin")
     serial_port = LaunchConfiguration("serial_port")
     baud_rate = LaunchConfiguration("baud_rate")
+    servo_max_rpm = LaunchConfiguration("servo_max_rpm")
     cmd_vel_topic = LaunchConfiguration("cmd_vel_topic")
 
     arguments = [
@@ -59,6 +60,11 @@ def generate_launch_description():
             description="Baud rate for ST3215 servos",
         ),
         DeclareLaunchArgument(
+            "servo_max_rpm",
+            default_value="112.8",
+            description="Max RPM of STS3215 servos (62 at 7.4V, ~113 at 12V)",
+        ),
+        DeclareLaunchArgument(
             "cmd_vel_topic",
             default_value="/cmd_vel",
             description="Topic name for cmd_vel commands (use /joy_vel for xbox controller compatibility)",
@@ -90,6 +96,7 @@ def generate_launch_description():
                 "hardware_plugin": final_hardware_plugin,
                 "serial_port": serial_port,
                 "baud_rate": baud_rate,
+                "servo_max_rpm": servo_max_rpm,
             }.items(),
         )
         return [rsp_launch]

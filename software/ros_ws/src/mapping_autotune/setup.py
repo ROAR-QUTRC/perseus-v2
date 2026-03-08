@@ -29,6 +29,7 @@ setup(
             "review_tui = mapping_autotune.review_tui:main",
             "imu_filter_node = mapping_autotune.imu_filter_node:main",
             "export_report = mapping_autotune.db_manager:export_report_cli",
+            "calibrate_odom = mapping_autotune.calibration_node:main",
         ],
     },
 )
