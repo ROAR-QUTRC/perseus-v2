@@ -6,15 +6,8 @@
   ament-lint-auto,
   ament-lint-common,
   navigation2,
-  pcl-conversions,
-  pcl-ros,
   rclcpp,
   robot-localization,
-  rtabmap-odom,
-  rtabmap-rviz-plugins,
-  rtabmap-slam,
-  rtabmap-util,
-  rtabmap-viz,
   slam-toolbox,
   xacro,
 }:
@@ -32,15 +25,8 @@ buildRosPackage rec {
   ];
   propagatedBuildInputs = [
     navigation2
-    pcl-conversions
-    pcl-ros
     rclcpp
     robot-localization
-    rtabmap-odom
-    rtabmap-rviz-plugins
-    rtabmap-slam
-    rtabmap-util
-    rtabmap-viz
     slam-toolbox
     xacro
   ];
