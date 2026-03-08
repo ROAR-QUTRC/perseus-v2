@@ -24,6 +24,8 @@ namespace perseus_bt_nodes
                 BT::InputPort<std::string>("service_name", "/detect_objects"),
                 BT::InputPort<double>("timeout_sec", 0.2, "Service call timeout (s)"),
                 BT::InputPort<double>("max_age_sec", 0.5, "Max allowed age of detections (s)"),
+                BT::InputPort<std::string>("img_save_path", "/aruco_images", "Path to save captured images"),
+                BT::InputPort<bool>("capture_image", true, "Whether to capture an image for detection"),
                 BT::InputPort<int>("min_count", 1, "Minimum number of detections required for SUCCESS"),
                 BT::OutputPort<std::vector<int>>("ids"),
                 BT::OutputPort<std::vector<geometry_msgs::msg::Pose>>("poses"),
@@ -57,8 +59,8 @@ namespace perseus_bt_nodes
 
             // Send async request
             auto req = std::make_shared<perseus_interfaces::srv::DetectObjects::Request>();
-            req->capture_image = true;
-            req->img_save_path = "/aruco_images";
+            req->capture_image = getInput<bool>("capture_image").value_or(true);
+            req->img_save_path = getInput<std::string>("img_save_path").value_or("/aruco_images");
             auto far = client_->async_send_request(req);
             future_ = far.future.share();
             start_time_ = node_->now();

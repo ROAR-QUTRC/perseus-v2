@@ -265,8 +265,8 @@ namespace perseus_vision
                     // Store marker position for display
                     cv::Point3d pos(tvecs[i][2], -tvecs[i][0], -tvecs[i][1]);
                     marker_coords.push_back({ids[i], pos});
-
                     transform_and_publish_marker(header, ids[i], rvecs[i], tvecs[i]);
+                    
                 }
             }
             else
@@ -365,7 +365,12 @@ namespace perseus_vision
             marker_pose_camera.pose.orientation.w = quat.w();
 
             geometry_msgs::msg::PoseStamped marker_pose_out;
-            tf_buffer_->transform(marker_pose_camera, marker_pose_out, tf_output_frame_);
+            tf_buffer_->transform(
+                marker_pose_camera,
+                marker_pose_out,
+                tf_output_frame_,
+                tf2::durationFromSec(0.1)   // wait up to 100 ms
+            );
 
             // Cache this detection for service requests
             {
