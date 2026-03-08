@@ -69,6 +69,7 @@ pkgs.mkShell {
           nav2-msgs
           navigation2
           nlohmann_json
+          opencv
           openssl
           pluginlib
           python3Packages.pygame
@@ -104,6 +105,7 @@ pkgs.mkShell {
           tf2-sensor-msgs
           twist-mux
           urdf
+          visualization-msgs
           xacro
           yaml-cpp-vendor
         ]
