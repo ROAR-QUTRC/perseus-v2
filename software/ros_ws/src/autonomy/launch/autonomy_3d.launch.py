@@ -31,11 +31,6 @@ def generate_launch_description():
         description="Use simulation/Gazebo clock",
     )
 
-    declare_imu_topic = DeclareLaunchArgument(
-        "imu_topic",
-        default_value="/livox/imu",
-        description="IMU topic for robot_localization ekf (imu0)",
-    )
     declare_autostart_cmd = DeclareLaunchArgument(
         "autostart",
         default_value="true",
@@ -51,13 +46,13 @@ def generate_launch_description():
 
     declare_nav_params_file_cmd = DeclareLaunchArgument(
         "nav_params_file",
-        default_value=os.path.join(autonomy_dir, "config", "nav_sim_params.yaml"),
+        default_value=os.path.join(autonomy_dir, "config", "nav_sim_params_3d.yaml"),
         description="Full path to the ROS2 parameters file for Nav2",
     )
 
     declare_ekf_config_file_cmd = DeclareLaunchArgument(
         "ekf_config_file",
-        default_value=os.path.join(autonomy_dir, "config", "ekf_config.yaml"),
+        default_value=os.path.join(autonomy_dir, "config", "ekf_config_3d.yaml"),
         description="Full path to the ROS2 parameters file for EKF",
     )
 
@@ -90,8 +85,6 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Include Keepout Filter launch (optional)
-
     # Include nav2_waypoints_bridge launch
     waypoints_bridge_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -114,8 +107,19 @@ def generate_launch_description():
         output="screen",
         parameters=[
             ekf_config_file,
-            {"use_sim_time": use_sim_time, "imu0": LaunchConfiguration("imu_topic")},
+            {"use_sim_time": use_sim_time},
         ],
+    )
+
+    rtabmap_odom_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(autonomy_dir, "launch", "rtabmap_odom.launch.py")
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "autostart": autostart,
+            "publish_tf_odom": "true",
+        }.items(),
     )
 
     # Create launch description
@@ -124,7 +128,6 @@ def generate_launch_description():
     # Declare arguments
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_autostart_cmd)
-    ld.add_action(declare_imu_topic)
     ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_nav_params_file_cmd)
     ld.add_action(declare_ekf_config_file_cmd)
@@ -134,5 +137,5 @@ def generate_launch_description():
     ld.add_action(slam_launch)
     ld.add_action(nav_launch)
     ld.add_action(waypoints_bridge_launch)
-
+    ld.add_action(rtabmap_odom_launch)
     return ld

@@ -4,7 +4,7 @@ project(perseus_bt_nodes)
 find_package(ament_cmake REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
-
+find_package(perseus_interfaces REQUIRED)
 include_directories(include)
 
 add_library(${PROJECT_NAME} SHARED src/register_nodes.cpp)
@@ -13,7 +13,7 @@ find_package(rclcpp REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 
 ament_target_dependencies(${PROJECT_NAME} behaviortree_cpp geometry_msgs
-                          builtin_interfaces rclcpp)
+                          builtin_interfaces rclcpp perseus_interfaces)
 
 install(
   TARGETS ${PROJECT_NAME}
