@@ -28,17 +28,20 @@
 	import { getRosConnection as getRosConnection } from '$lib/scripts/rosBridge.svelte';
     import { Slider } from '$lib/components/ui/slider/index';
 	import Speedometer from "svelte-speedometer";
+	import type { AngularVelocityMessageType } from '$lib/scripts/rosTypes';
 
-	type rosStringMessage = { data: string };
+	type rosBooleanMessage = { data: boolean };
 
 	//may need to change the message type
-	let speedTopic: ROSLIB.Topic<rosStringMessage> | null = null;
-	let controlTopic: ROSLIB.Topic<rosStringMessage> | null = null;
-	let brakeTopic: ROSLIB.Topic<Boolean> | null = null;
+	let speedTopic: ROSLIB.Topic<AngularVelocityMessageType> | null = null;
+	let controlTopic: ROSLIB.Topic<AngularVelocityMessageType> | null = null;
+	let brakeTopic: ROSLIB.Topic<rosBooleanMessage> | null = null;
 
     const minVelocity = 0;
     const maxVelocity = 100;
 	let currentVelocity = $state<number>();
+	let waterConcentration = $state<number>();
+	let ilmeniteConcentration = $state<number>();
 
     let sliderValue = $state<number>(25);
     let inputValue = $state<string>('25');
@@ -48,7 +51,7 @@
     function handleSliderChange(next: number) {
         sliderValue = next;
         inputValue = String(next);
-		//controlSpeed(number);
+		controlSpeed(next);
     }
 
     function handleInput(e: Event) {
@@ -72,20 +75,37 @@
 
     function stopCentrifuge() {
     	if (brakeTopic) {
-			brakeTopic.publish(true);
+			brakeTopic.publish({data: true});
 		}
 		else {
 			new Error('ROS not connected');
 		};
     }
 
-	// function controlSpeed(speed) {
-	// 	if (controlTopic) {
-	// 		controlTopic.publish(speed);
+	function controlSpeed(speed: number) {
+		if (controlTopic) {
+			const message: AngularVelocityMessageType = {
+				velocity: [speed]
+			};
+
+			controlTopic.publish(message);
+		}
+		else {
+			new Error('ROS not connected');
+		};
+	}
+
+	// const takeReading = (type: string) => {
+	// 	if (getConcentration) {
+	// 		getConcentration.callService({type}, (response) => {
+	// 			if (type = "water") {
+	// 				waterConcentration = response.data;
+	// 			}
+	// 			else if(type = "ilminite") {
+	// 				ilmeniteConcentration = response.data;
+	// 			}
+	// 		})
 	// 	}
-	// 	else {
-	// 		new Error('ROS not connected');
-	// 	};
 	// }
 
 	$effect(() => {
@@ -117,31 +137,33 @@
 	});
 
 	//update spedometer with current velocity
-	const onResponseMessage = (message: rosStringMessage) => {
-		const response: any = JSON.parse(message.data);
+	const onResponseMessage = (message: ActuatorsMessageType) => {
+		let response = message.velocity;
 		console.log(response);
-		currentVelocity = response;
+		currentVelocity = response[0];
 	}
 </script>
 
 <div class="widget-shell">
     <div class="widget-content" style="width:100%">
-        <button type="button" class="danger btn" onclick={stopCentrifuge} style="width:200px; height:100px; background-color:red; font-weight: bolder;">
-            STOP CENTRIFUGE
-        </button>
+		<div style="display:flex; flex-direction: row; width:100%; justify-content: space-around; align-items:center">
+			<button type="button" class="danger btn" onclick={stopCentrifuge} style="width:250px; height:150px; background-color:red; font-weight: bolder;">
+				STOP CENTRIFUGE
+			</button>
 
-		<div style="margin-top:30px">
-			<h1>Current Velocity</h1>
-			<br>
-			<Speedometer 
-				maxValue={maxVelocity}
-				value={sliderValue}
-				needleColor="violet"
-				startColor="tomato"
-				endColor="lightgreen"
-				segments={10}
-				needleTransitionDuration={100}
-			/>
+			<div style="margin-top:30px; height:250px">
+				<h1>Current Velocity</h1>
+				<br>
+				<Speedometer 
+					maxValue={maxVelocity}
+					value={currentVelocity}
+					needleColor="violet"
+					startColor="tomato"
+					endColor="lightgreen"
+					segments={10}
+					needleTransitionDuration={100}
+				/>
+			</div>
 		</div>
 
 		<div>
@@ -169,6 +191,41 @@
 						if (e.key === 'Enter') commitInput();
 					}}
 					aria-label="Enter value"
+				/>
+			</div>
+
+			
+		</div>
+		<div style="display:flex; flex-direction: row; width:100%; justify-content: space-around; align-items:center">
+			<div style="margin-top:30px">
+				<h1>Water Concentration (%)</h1>
+				<button type="button" class="btn" onclick={stopCentrifuge} style="margin-top:10px; margin-bottom:20px; background-color:violet;">
+					Take Water Reading
+				</button>
+				<Speedometer 
+					maxValue={100}
+					value={currentVelocity}
+					needleColor="violet"
+					startColor="tomato"
+					endColor="lightgreen"
+					segments={10}
+					needleTransitionDuration={100}
+				/>
+			</div>
+
+			<div style="margin-top:30px">
+				<h1>Ilmenite Concentration (%)</h1>
+				<button type="button" class="btn" onclick={stopCentrifuge} style="margin-top:10px; margin-bottom:20px; background-color:violet;">
+					Take Ilmenite Reading
+				</button>
+				<Speedometer 
+					maxValue={100}
+					value={currentVelocity}
+					needleColor="violet"
+					startColor="tomato"
+					endColor="lightgreen"
+					segments={10}
+					needleTransitionDuration={100}
 				/>
 			</div>
 		</div>
