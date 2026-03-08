@@ -191,7 +191,7 @@ let
             owner = "xtensor-stack";
             repo = "xtl";
             tag = version;
-            hash = "sha256-B5CaOuNSJqyME2uJExE/P0VnmFKjAPHJHHxP6HkAHjU=";
+            hash = "sha256-f8qYh8ibC/ToHsUv3OF1ujzt3fUe7kW9cNpGyLqsgqw=";
           };
         };
 
