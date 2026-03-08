@@ -14,6 +14,11 @@ export interface ActuatorsMessageType {
   normalized: Array<number>; // float64
 }
 
+// actuator_msgs/ActuatorsAngularVelocity types
+export interface AngularVelocityMessageType {
+  velocity: Array<number>; // float64
+}
+
 // Service types
 export interface EmptyRequestType {}
 
