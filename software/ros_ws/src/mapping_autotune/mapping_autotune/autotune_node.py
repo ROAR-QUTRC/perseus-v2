@@ -630,7 +630,9 @@ class AutotuneNode(Node):
             self.get_logger().error("Timeout waiting for SLAM to start publishing /map")
             if self._slam_process and self._slam_process.stderr:
                 try:
-                    stderr_out = self._slam_process.stderr.read1(4096).decode(errors="replace")
+                    stderr_out = self._slam_process.stderr.read1(4096).decode(
+                        errors="replace"
+                    )
                     if stderr_out.strip():
                         self.get_logger().error(f"SLAM stderr: {stderr_out.strip()}")
                 except Exception:

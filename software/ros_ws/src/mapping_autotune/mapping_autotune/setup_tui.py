@@ -8,7 +8,7 @@ begins driving the robot.
 import curses
 import time
 
-from mapping_autotune.param_manager import PHASE_DEFS, ParamManager
+from mapping_autotune.param_manager import ParamManager
 
 
 # Maneuver pattern definitions: (key, display_name, description)
@@ -151,7 +151,10 @@ class SetupTUI:
 
         # ── Session settings ──────────────────────────────────────────
         self._addstr_safe(
-            stdscr, row, 2, "\u2500\u2500 Session Settings \u2500" * 2,
+            stdscr,
+            row,
+            2,
+            "\u2500\u2500 Session Settings \u2500" * 2,
             curses.color_pair(4),
         )
         row += 1
@@ -183,7 +186,10 @@ class SetupTUI:
 
         # ── Maneuver pattern ──────────────────────────────────────────
         self._addstr_safe(
-            stdscr, row, 2, "\u2500\u2500 Maneuver Pattern \u2500" * 2,
+            stdscr,
+            row,
+            2,
+            "\u2500\u2500 Maneuver Pattern \u2500" * 2,
             curses.color_pair(4),
         )
         row += 1
@@ -209,7 +215,10 @@ class SetupTUI:
 
         # ── Speeds ────────────────────────────────────────────────────
         self._addstr_safe(
-            stdscr, row, 2, "\u2500\u2500 Speeds \u2500" * 4,
+            stdscr,
+            row,
+            2,
+            "\u2500\u2500 Speeds \u2500" * 4,
             curses.color_pair(4),
         )
         row += 1
@@ -238,7 +247,10 @@ class SetupTUI:
 
         # ── Phases ────────────────────────────────────────────────────
         self._addstr_safe(
-            stdscr, row, 2, "\u2500\u2500 Phases \u2500" * 4,
+            stdscr,
+            row,
+            2,
+            "\u2500\u2500 Phases \u2500" * 4,
             curses.color_pair(4),
         )
         row += 1
@@ -275,7 +287,11 @@ class SetupTUI:
         row += 1
 
         # ── Total summary ─────────────────────────────────────────────
-        total_runs = sum(allocation.get(p, 0) for p in self._phase_enabled if self._phase_enabled.get(p))
+        total_runs = sum(
+            allocation.get(p, 0)
+            for p in self._phase_enabled
+            if self._phase_enabled.get(p)
+        )
         self._addstr_safe(
             stdscr,
             row,
@@ -288,16 +304,18 @@ class SetupTUI:
         # ── Confirm button ────────────────────────────────────────────
         is_cursor = self._cursor == field_idx
         confirm_text = "[ Confirm & Start ]"
-        attr = curses.color_pair(5) | curses.A_BOLD if is_cursor else curses.color_pair(1)
+        attr = (
+            curses.color_pair(5) | curses.A_BOLD if is_cursor else curses.color_pair(1)
+        )
         prefix = "> " if is_cursor else "  "
-        self._addstr_safe(stdscr, min(row, max_y - 4), 2, f"{prefix}{confirm_text}", attr)
+        self._addstr_safe(
+            stdscr, min(row, max_y - 4), 2, f"{prefix}{confirm_text}", attr
+        )
         row += 2
 
         # ── Key hints ─────────────────────────────────────────────────
         hints = "[Enter] Confirm  [q] Quit  [\u2191\u2193] Navigate  [Space] Toggle  [\u2190\u2192] Adjust"
-        self._addstr_safe(
-            stdscr, min(row, max_y - 1), 1, hints, curses.color_pair(3)
-        )
+        self._addstr_safe(stdscr, min(row, max_y - 1), 1, hints, curses.color_pair(3))
 
     def _draw_field(self, stdscr, row, field_idx, label, value, adjustable=False):
         """Draw a labeled field with cursor highlight.
@@ -384,13 +402,19 @@ class SetupTUI:
         if field_type == "max_runs":
             self._max_runs = max(1, min(100, self._max_runs + direction))
         elif field_type == "settling_time":
-            self._settling_time = max(0.5, min(30.0, self._settling_time + direction * 0.5))
+            self._settling_time = max(
+                0.5, min(30.0, self._settling_time + direction * 0.5)
+            )
             self._settling_time = round(self._settling_time * 2) / 2  # snap to 0.5
         elif field_type == "linear_speed":
-            self._linear_speed = max(0.05, min(0.5, self._linear_speed + direction * 0.05))
+            self._linear_speed = max(
+                0.05, min(0.5, self._linear_speed + direction * 0.05)
+            )
             self._linear_speed = round(self._linear_speed * 20) / 20  # snap to 0.05
         elif field_type == "rotation_speed":
-            self._rotation_speed = max(0.1, min(1.5, self._rotation_speed + direction * 0.1))
+            self._rotation_speed = max(
+                0.1, min(1.5, self._rotation_speed + direction * 0.1)
+            )
             self._rotation_speed = round(self._rotation_speed * 10) / 10  # snap to 0.1
 
     # ── Session name editing ───────────────────────────────────────────

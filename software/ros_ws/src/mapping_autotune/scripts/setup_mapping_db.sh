@@ -195,9 +195,11 @@ setup_server() {
   echo "Server database ready at: $DB_PATH"
   echo ""
   echo "Robot sync command:"
+  # shellcheck disable=SC1003
   echo '  ./setup_mapping_db.sh --remote-sync \'
   echo "    --ssh-host $(hostname -I | awk '{print $1}') \\"
   echo "    --ssh-user $(whoami) \\"
+  # shellcheck disable=SC1003
   echo '    --ssh-key ~/.ssh/id_ed25519 \'
   echo "    --remote-db-dir $DB_DIR"
   echo ""

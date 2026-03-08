@@ -205,7 +205,9 @@
               ''}/bin/autonomy_diagnostics";
             };
             autonomy_diag = self.apps.${system}.autonomy_diagnostics;
-            perseus-lite-map-autotune = mkRosLaunchApp "perseus-lite-map-autotune" "mapping_autotune" "autotune.launch.py";
+            perseus-lite-map-autotune =
+              mkRosLaunchApp "perseus-lite-map-autotune" "mapping_autotune"
+                "autotune.launch.py";
           };
         formatter = treefmtEval.config.build.wrapper;
       }

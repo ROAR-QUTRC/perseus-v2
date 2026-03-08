@@ -13,7 +13,9 @@ class DbManager:
     export.
     """
 
-    def __init__(self, db_path="~/.local/share/mapping_autotune/autotune.db", logger=None):
+    def __init__(
+        self, db_path="~/.local/share/mapping_autotune/autotune.db", logger=None
+    ):
         self._db_path = os.path.expanduser(db_path)
         self._logger = logger
         self._sync_config = None
