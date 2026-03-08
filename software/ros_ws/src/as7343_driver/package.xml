@@ -15,6 +15,7 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>perseus_interfaces</depend>
+  <depend>fd_wrapper</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
