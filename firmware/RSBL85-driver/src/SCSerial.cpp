@@ -53,7 +53,7 @@ void SCSerial::setRxMode()
 bool SCSerial::begin(int baudRate, int8_t rxPin, int8_t txPin, int8_t dirPin)
 {
     // Use Serial2 by default on ESP32
-    pSerial = &Serial2;
+    pSerial = &Serial1;
     ownSerial = false;
     return begin(pSerial, baudRate, rxPin, txPin, dirPin);
 }
