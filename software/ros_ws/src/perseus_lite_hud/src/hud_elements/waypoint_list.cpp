@@ -9,6 +9,15 @@ namespace perseus_lite_hud
     {
     }
 
+    void WaypointList::set_waypoints(const std::vector<WaypointEntry>& waypoints,
+                                     uint32_t current_index, bool active)
+    {
+        waypoints_ = waypoints;
+        current_index_ = current_index;
+        active_ = active;
+        has_data_ = true;
+    }
+
     void WaypointList::render(cv::Mat& /*frame*/)
     {
         // TODO: Implement waypoint list rendering
@@ -16,7 +25,7 @@ namespace perseus_lite_hud
 
     bool WaypointList::is_ready() const
     {
-        return false;
+        return has_data_;
     }
 
 }  // namespace perseus_lite_hud
