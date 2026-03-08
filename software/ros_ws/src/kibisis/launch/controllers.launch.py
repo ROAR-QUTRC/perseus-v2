@@ -37,6 +37,7 @@ def generate_launch_description():
             ("/robot_description", "/kibisis/robot_description"),
         ],
         condition=IfCondition(launch_controller_manager),
+        name="kibisis_control_manager",
     )
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
