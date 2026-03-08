@@ -67,6 +67,7 @@ pkgs.mkShell {
           navigation2
           nlohmann_json
           openssl
+          pcl-conversions
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
