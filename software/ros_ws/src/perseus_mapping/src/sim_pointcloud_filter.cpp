@@ -1,13 +1,14 @@
+#include <cmath>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
-#include <cmath>
 #include <vector>
 
 class SimPointcloudFilter : public rclcpp::Node
 {
 public:
-    SimPointcloudFilter() : Node("sim_pointcloud_filter")
+    SimPointcloudFilter()
+        : Node("sim_pointcloud_filter")
     {
         sub_ = create_subscription<sensor_msgs::msg::PointCloud2>(
             "/livox/lidar", 10,
@@ -29,11 +30,12 @@ private:
 
         const uint8_t* data_ptr = msg->data.data();
 
-        for (size_t i = 0; i < msg->width * msg->height; ++i, ++iter_x, ++iter_y, ++iter_z) {
+        for (size_t i = 0; i < msg->width * msg->height; ++i, ++iter_x, ++iter_y, ++iter_z)
+        {
             float x = *iter_x, y = *iter_y, z = *iter_z;
             if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z))
                 continue;
-            float dist = std::sqrt(x*x + y*y + z*z);
+            float dist = std::sqrt(x * x + y * y + z * z);
             if (dist < 0.1f)
                 continue;
             const uint8_t* point = data_ptr + i * point_step;
@@ -57,7 +59,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_;
 };
 
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<SimPointcloudFilter>());

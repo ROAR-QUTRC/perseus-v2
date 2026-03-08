@@ -9,7 +9,7 @@
     runtime_pos_log_enable: false
     map_file_path: "/perseus_v2/software/ros_ws/src/perseus_mapping/maps/test.pcd"
     common:
-      lid_topic: "/livox/lidar_filtered" # this is for simulation, the simulated lidar can produce NaN and Inf values which cause errors with the algorithm, this takes data from the filter node instead 
+      lid_topic: "/livox/lidar_filtered" # this is for simulation, the simulated lidar can produce NaN and Inf values which cause errors with the algorithm, this takes data from the filter node instead
       # lid_topic: "/livox/lidar" # this is for when running on perseus
       imu_topic: "/livox/imu"
       map_frame: "lidar_map"
