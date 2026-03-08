@@ -8,6 +8,8 @@
   hardware-interface,
   nlohmann_json,
   openssl,
+  pcl-conversions,
+  pcl-ros,
   rclcpp,
   rclcpp-lifecycle,
   realsense2-camera,
@@ -32,6 +34,8 @@ buildRosPackage rec {
     hardware-interface
     nlohmann_json
     openssl
+    pcl-conversions
+    pcl-ros
     rclcpp
     rclcpp-lifecycle
     realsense2-camera

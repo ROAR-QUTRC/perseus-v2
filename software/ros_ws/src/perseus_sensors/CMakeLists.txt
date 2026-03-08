@@ -37,7 +37,9 @@ endif()
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+find_package(pcl_conversions REQUIRED)
+find_package(PCL REQUIRED)
+find_package(pcl_ros REQUIRED)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
@@ -51,7 +53,10 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     nav_msgs
     tf2_geometry_msgs
     OpenSSL
-    nlohmann_json)
+    nlohmann_json
+    pcl_conversions
+    PCL
+    pcl_ros)
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
 
@@ -84,8 +89,27 @@ file(GLOB_RECURSE M2M2_LIDAR_CODE_SOURCES src/m2m2_lidar/*.cpp)
 
 # Add exec target
 add_executable(m2m2_lidar ${M2M2_LIDAR_CODE_SOURCES})
+add_executable(lidar_segmentation
+  src/lidar_segmentation/lidar_segmentation.cpp
+  src/lidar_segmentation/lidar_segmentation_node.cpp
+)
+include_directories(
+  include
+  ${PCL_INCLUDE_DIRS}
+)
 
+ament_target_dependencies(lidar_segmentation
+  rclcpp
+  sensor_msgs
+  pcl_conversions
+  pcl_ros
+)
+target_link_libraries(lidar_segmentation ${PCL_LIBRARIES})
 # Add include dirs for exec
+install(TARGETS
+  lidar_segmentation
+  DESTINATION lib/${PROJECT_NAME}
+)
 target_include_directories(m2m2_lidar
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
