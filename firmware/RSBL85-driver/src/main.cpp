@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
-
 #include <math.h>
 
 #include <chrono>
@@ -18,9 +17,10 @@ constexpr int PAN = 2;
 constexpr int ELBOW = 1;
 
 std::vector<int> past_positions(3, 0);
-std::vector<double> target_positions = { 25.0 * 0.0, 25.0 * 0.0, 25 * 0.0 };
+std::vector<double> target_positions = {25.0 * 0.0, 25.0 * 0.0, 25 * 0.0};
 
-void setup() {
+void setup()
+{
     Serial.begin(115200);
     Serial.println("RSBL85 CAN Bridge - Initializing");
 
@@ -49,48 +49,54 @@ void setup() {
 
 std::vector<double> positions(3, 0);
 std::vector<int16_t> full_rev_count(3, 0);
-void write_angle(int id, double angle, double speed) {
+void write_angle(int id, double angle, double speed)
+{
     target_positions[id] = angle;
     // TODO: set max speed
 }
 
-const int ids [] = { TILT, PAN, ELBOW };
+const int ids[] = {TILT, PAN, ELBOW};
 
 /*
 UART Protocol:
 - Start character: <
 - End character: >
-- Packet label: 
+- Packet label:
     a -> current angles -> <a,tilt_angle,pan_angle,elbow_angle>
     t -> target angles  -> <t,id,target_angle,speed>
 - all values are doubles except for id which is a uint8_t
 */
 
-void loop() {
-
+void loop()
+{
     std::vector<uint8_t> data;
-    
+
     bool start_byte_found = false;
     bool frame_started = false;
 
     String s = "";
-    
-    while (Serial2.available() > 0) {
+
+    while (Serial2.available() > 0)
+    {
         uint8_t byte = Serial2.read();
         if (byte == '<')
-        { // Start byte so reset the string
+        {  // Start byte so reset the string
             s = "";
         }
         else if (byte == '>')
         {
             // message complete so parse it
-            if (!s.isEmpty() && s[0] == 't') {
+            if (!s.isEmpty() && s[0] == 't')
+            {
                 // target angle command
                 int id_end = s.indexOf(',', 2);
                 int angle_end = s.indexOf(',', id_end + 1);
-                if (id_end == -1 || angle_end == -1) {
+                if (id_end == -1 || angle_end == -1)
+                {
                     Serial.println("Invalid command format");
-                } else {
+                }
+                else
+                {
                     uint8_t id = s.substring(2, id_end).toInt();
                     double target_angle = s.substring(id_end + 1, angle_end).toDouble();
                     double speed = s.substring(angle_end + 1).toDouble();
@@ -100,17 +106,19 @@ void loop() {
         }
         else
         {
-            s += (char) byte;
+            s += (char)byte;
         }
     }
     Serial2.print("<a," + String(positions[TILT]) + "," + String(positions[PAN]) + "," + String(positions[ELBOW]) + ">");
 
-    for (unsigned i = 0; i < 3; i++) {
+    for (unsigned i = 0; i < 3; i++)
+    {
         const int id = ids[i];
         const int read_pos = servo.ReadPos(id);
         const int diff = read_pos - past_positions[id];
 
-        if (abs(diff) > 2000) {  // If the jump is greater than half a revolution then the encoder has wrapped around
+        if (abs(diff) > 2000)
+        {  // If the jump is greater than half a revolution then the encoder has wrapped around
             bool clockwise = diff < 0;
             full_rev_count[id] += clockwise ? 1 : -1;
         }
@@ -125,11 +133,15 @@ void loop() {
         constexpr double MAX_SPEED = 30000.0;
         const double error = target_positions[id] - positions[id];
 
-        if (abs(error) <= 1) {
+        if (abs(error) <= 1)
+        {
             servo.WriteSpe(id, 0, 0);
-        } else if (abs(error) < 360) {  // Reduce speed when 1 revolution from target
+        }
+        else if (abs(error) < 360)
+        {  // Reduce speed when 1 revolution from target
             servo.WriteSpe(id, error / 360.0 * MAX_SPEED, 0);
-        } else
+        }
+        else
             servo.WriteSpe(id, error > 0 ? MAX_SPEED : -MAX_SPEED, 0);
     }
 

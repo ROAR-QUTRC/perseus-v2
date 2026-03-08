@@ -1,18 +1,20 @@
+#include <driver/gpio.h>
 #include <math.h>
+
 #include <chrono>
 #include <hi_can_twai.hpp>
 #include <optional>
-#include <vector>
 #include <string>
-#include <driver/gpio.h>
+#include <vector>
+
+#include "driver/uart.h"
+#include "esp_err.h"
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/uart.h"
-#include "esp_log.h"
-#include "esp_err.h"
 #include "stdio.h"
 
-#define DELAY(x) vTaskDelay(x); 
+#define DELAY(x) vTaskDelay(x);
 
 #define TXD_PIN (GPIO_NUM_17)
 #define RXD_PIN (GPIO_NUM_16)
@@ -49,19 +51,21 @@ int write_to_motor(uint8_t id, double position, double speed);
 
 extern "C" void app_main()
 {
-    
     init_uart();
 
-    try {
+    try
+    {
         auto& interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_5, GPIO_NUM_4), 0,
                                                       filter_t{
                                                           .address = static_cast<flagged_address_t>(BASE_ADDRESS),
                                                           .mask = DEVICE_MASK,
                                                       });
-    
+
         packet_manager.emplace(interface);
         printf("CAN interface initialized\n");
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         printf("Error initializing CAN interface: %s\n", e.what());
     }
 
@@ -89,21 +93,20 @@ extern "C" void app_main()
         }
         DELAY(1);
     }
-
 }
 
 /*
 UART Protocol:
 - Start character: <
 - End character: >
-- Packet label: 
+- Packet label:
     a -> current angles -> <a,tilt_angle,pan_angle,elbow_angle>
     t -> target angles  -> <t,id,target_angle,speed>
 - all values are doubles except for id which is a uint8_t
 */
-void handle_uart(void* args) 
+void handle_uart(void* args)
 {
-    uint8_t* buffer = (uint8_t*) malloc(RX_BUF_SIZE);
+    uint8_t* buffer = (uint8_t*)malloc(RX_BUF_SIZE);
     while (true)
     {
         int len = uart_read_bytes(UART_NUM, buffer, RX_BUF_SIZE, 0);
@@ -116,18 +119,22 @@ void handle_uart(void* args)
             {
                 uint8_t byte = buffer[i];
                 if (byte == '<')
-                { // Start byte so reset the string
+                {  // Start byte so reset the string
                     s = "";
                 }
                 else if (byte == '>')
                 {
                     // parse angle message
-                    if (!s.empty() && s[0] == 'a') {
+                    if (!s.empty() && s[0] == 'a')
+                    {
                         int tilt_end = s.find(',', 2);
                         int pan_end = s.find(',', tilt_end + 1);
-                        if (tilt_end == std::string::npos || pan_end == std::string::npos) {
+                        if (tilt_end == std::string::npos || pan_end == std::string::npos)
+                        {
                             printf("Invalid message format: %s\n", s.c_str());
-                        } else {
+                        }
+                        else
+                        {
                             double tilt_angle = std::stod(s.substr(2, tilt_end - 2));
                             double pan_angle = std::stod(s.substr(tilt_end + 1, pan_end - tilt_end - 1));
                             double elbow_angle = std::stod(s.substr(pan_end + 1));
@@ -139,7 +146,7 @@ void handle_uart(void* args)
                 }
                 else
                 {
-                    s += (char) byte;
+                    s += (char)byte;
                 }
             }
         }
@@ -150,7 +157,7 @@ void handle_uart(void* args)
 
 #pragma region UART
 
-void init_uart(void) 
+void init_uart(void)
 {
     const uart_config_t uart_config = {
         .baud_rate = 115200,
@@ -167,7 +174,7 @@ void init_uart(void)
     uart_set_pin(UART_NUM, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
-int write_to_motor(uint8_t id, double position, double speed) 
+int write_to_motor(uint8_t id, double position, double speed)
 {
     std::string data = "<t," + std::to_string(id) + "," + std::to_string(position) + "," + std::to_string(speed) + ">";
     printf("<t,%s,%s,%s>", std::to_string(id).c_str(), std::to_string(position).c_str(), std::to_string(speed).c_str());
@@ -268,9 +275,9 @@ void register_rsbl_servo(const control_board::group& group)
                                              {
                                                  status_1_t status{};  // TODO: get actual position
                                                  status.position = static_cast<int16_t>(current_positions[ID]);
-                                                //  status.speed = static_cast<int16_t>(servo.ReadSpeed(ID));
-                                                //  status.load = static_cast<int16_t>(servo.ReadLoad(ID));
-                                                //  status.position = static_cast<int16_t>(123);
+                                                 //  status.speed = static_cast<int16_t>(servo.ReadSpeed(ID));
+                                                 //  status.load = static_cast<int16_t>(servo.ReadLoad(ID));
+                                                 //  status.position = static_cast<int16_t>(123);
                                                  status.speed = static_cast<int16_t>(345);
                                                  status.load = static_cast<int16_t>(567);
                                                  return status.serialize_data();
@@ -286,10 +293,10 @@ void register_rsbl_servo(const control_board::group& group)
                                                  status.temperature = static_cast<int8_t>(345);
                                                  status.current = static_cast<uint16_t>(456);
                                                  status.moving = static_cast<uint8_t>(567);
-                                                //  status.voltage = static_cast<uint16_t>(servo.ReadVoltage(ID));
-                                                //  status.temperature = static_cast<int8_t>(servo.ReadTemper(ID));
-                                                //  status.current = static_cast<uint16_t>(servo.ReadCurrent(ID));
-                                                //  status.moving = static_cast<uint8_t>(servo.ReadMove(ID));
+                                                 //  status.voltage = static_cast<uint16_t>(servo.ReadVoltage(ID));
+                                                 //  status.temperature = static_cast<int8_t>(servo.ReadTemper(ID));
+                                                 //  status.current = static_cast<uint16_t>(servo.ReadCurrent(ID));
+                                                 //  status.moving = static_cast<uint8_t>(servo.ReadMove(ID));
                                                  return status.serialize_data();
                                              },
                                              .interval = 1000ms});
