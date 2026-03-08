@@ -1,12 +1,26 @@
-#include <Arduino.h>
 #include <math.h>
-
 #include <chrono>
 #include <hi_can_twai.hpp>
 #include <optional>
 #include <vector>
+#include <string>
+#include <driver/gpio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/uart.h"
+#include "esp_log.h"
+#include "esp_err.h"
+#include "stdio.h"
 
-#include "RSB.h"
+#define DELAY(x) vTaskDelay(x); 
+
+#define TXD_PIN (GPIO_NUM_17)
+#define RXD_PIN (GPIO_NUM_16)
+
+#define UART_NUM UART_NUM_2
+
+static const int RX_BUF_SIZE = 512;
+static const int TX_BUF_SIZE = 512;
 
 using namespace std::chrono_literals;
 
@@ -16,17 +30,8 @@ using namespace hi_can::addressing::post_landing;
 using namespace hi_can::addressing::post_landing::arm;
 using namespace hi_can::parameters::post_landing::arm::control_board;
 
-#define MAX_ENCODER_COUNT 4095
-
-SMS_STS servo;
-
-const int TILT = static_cast<int>(control_board::group::SHOULDER_TILT);
-const int PAN = static_cast<int>(control_board::group::SHOULDER_PAN);
-const int ELBOW = static_cast<int>(control_board::group::ELBOW);
-
-std::vector<int> past_positions(3, 0);
-std::vector<double> target_positions = {25.0 * 0.0, 25.0 * 0.0, 25 * 0.0};
 std::optional<hi_can::PacketManager> packet_manager;
+std::vector<double> current_positions(3, 0);
 
 const addressing::standard_address_t BASE_ADDRESS{
     SYSTEM_ID,
@@ -38,99 +43,138 @@ void handle_pwm_data(const Packet& packet);
 void register_rsbl_servo(const control_board::group& group);
 void handle_rsbl_servo_command(const Packet& packet);
 
-void setup()
+void handle_uart(void* args);
+void init_uart();
+int write_to_motor(uint8_t id, double position, double speed);
+
+extern "C" void app_main()
 {
-    Serial.begin(115200);
-    Serial.println("RSBL85 CAN Bridge - Initializing");
+    
+    init_uart();
 
-    servo.begin(1000000, 18, 19, -1);
-    delay(1000);
-
-    Serial.println("Motor 1 online: " + String(TILT == servo.Ping(TILT) ? "true" : "false"));
-    Serial.println("Motor 2 online: " + String(PAN == servo.Ping(PAN) ? "true" : "false"));
-    Serial.println("Motor 3 online: " + String(ELBOW == servo.Ping(ELBOW) ? "true" : "false"));
-
-    past_positions[TILT] = servo.ReadPos(TILT);
-    past_positions[PAN] = servo.ReadPos(PAN);
-    past_positions[ELBOW] = servo.ReadPos(ELBOW);
-
-    auto& interface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
-                                                  filter_t{
-                                                      .address = static_cast<flagged_address_t>(BASE_ADDRESS),
-                                                      .mask = DEVICE_MASK,
-                                                  });
-
-    packet_manager.emplace(interface);
-    Serial.println("CAN interface initialized");
+    try {
+        auto& interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_5, GPIO_NUM_4), 0,
+                                                      filter_t{
+                                                          .address = static_cast<flagged_address_t>(BASE_ADDRESS),
+                                                          .mask = DEVICE_MASK,
+                                                      });
+    
+        packet_manager.emplace(interface);
+        printf("CAN interface initialized\n");
+    } catch (const std::exception& e) {
+        printf("Error initializing CAN interface: %s\n", e.what());
+    }
 
     register_pwm_device(control_board::group::PWM_1);
     register_pwm_device(control_board::group::PWM_2);
     register_rsbl_servo(control_board::group::SHOULDER_TILT);
     register_rsbl_servo(control_board::group::SHOULDER_PAN);
     register_rsbl_servo(control_board::group::ELBOW);
-}
 
-std::vector<double> positions(3, 0);
-std::vector<int16_t> full_rev_count(3, 0);
-void write_angle(int id, double angle)
-{
-    target_positions[id] = angle;
-}
+    printf("Setup complete, entering main loop\n");
 
-const int ids[] = {TILT, PAN, ELBOW};
+    // Start tasks
+    // xTaskCreate(handle_can, "CAN", 4096, nullptr, configMAX_PRIORITIES - 1, nullptr);
+    xTaskCreate(handle_uart, "UART", 4096, nullptr, configMAX_PRIORITIES - 2, nullptr);
 
-void loop()
-{
-    try
+    while (1)
     {
-        packet_manager->handle();
-    }
-    catch (const std::exception& e)
-    {
-        Serial.println("Error handling CAN packet: " + String(e.what()));
-    }
-
-#pragma region Handle motor control
-
-    for (unsigned i = 0; i < 3; i++)
-    {
-        const int id = ids[i];
-        const int read_pos = servo.ReadPos(id);
-        const int diff = read_pos - past_positions[id];
-
-        if (abs(diff) > 2000)
-        {  // If the jump is greater than half a revolution then the encoder has wrapped around
-            bool clockwise = diff < 0;
-            full_rev_count[id] += clockwise ? 1 : -1;
-        }
-
-        past_positions[id] = read_pos;
-
-        const bool negative = full_rev_count[id] < 0;
-        const int raw_angle = MAX_ENCODER_COUNT * ((negative ? 1 : 0) + full_rev_count[id]) + (negative ? (MAX_ENCODER_COUNT - read_pos) * -1 : read_pos);
-        positions[id] = ((double)raw_angle / (double)MAX_ENCODER_COUNT);
-        positions[id] *= 360.0;  // degrees
-        // positions[id] *= PI * 2.0; // radians
-
-        constexpr double MAX_SPEED = 30000.0;
-        const double error = target_positions[id] - positions[id];
-
-        if (abs(error) <= 1)
+        try
         {
-            servo.WriteSpe(id, 0, 0);
+            packet_manager->handle();
         }
-        else if (abs(error) < 360)
-        {  // Reduce speed when 1 revolution from target
-            servo.WriteSpe(id, error / 360.0 * MAX_SPEED, 0);
-        }
-        else
+        catch (const std::exception& e)
         {
-            servo.WriteSpe(id, error > 0 ? MAX_SPEED : -MAX_SPEED, 0);
+            printf("Error handling CAN packet: %s\n", e.what());
         }
+        DELAY(1);
     }
 
-#pragma endregion Handle motor control
 }
+
+/*
+UART Protocol:
+- Start character: <
+- End character: >
+- Packet label: 
+    a -> current angles -> <a,tilt_angle,pan_angle,elbow_angle>
+    t -> target angles  -> <t,id,target_angle,speed>
+- all values are doubles except for id which is a uint8_t
+*/
+void handle_uart(void* args) 
+{
+    uint8_t* buffer = (uint8_t*) malloc(RX_BUF_SIZE);
+    while (true)
+    {
+        int len = uart_read_bytes(UART_NUM, buffer, RX_BUF_SIZE, 0);
+
+        std::string s = "";
+
+        if (len > 0)
+        {
+            for (int i = 0; i < len; i++)
+            {
+                uint8_t byte = buffer[i];
+                if (byte == '<')
+                { // Start byte so reset the string
+                    s = "";
+                }
+                else if (byte == '>')
+                {
+                    // parse angle message
+                    if (!s.empty() && s[0] == 'a') {
+                        int tilt_end = s.find(',', 2);
+                        int pan_end = s.find(',', tilt_end + 1);
+                        if (tilt_end == std::string::npos || pan_end == std::string::npos) {
+                            printf("Invalid message format: %s\n", s.c_str());
+                        } else {
+                            double tilt_angle = std::stod(s.substr(2, tilt_end - 2));
+                            double pan_angle = std::stod(s.substr(tilt_end + 1, pan_end - tilt_end - 1));
+                            double elbow_angle = std::stod(s.substr(pan_end + 1));
+                            current_positions[0] = tilt_angle;
+                            current_positions[1] = pan_angle;
+                            current_positions[2] = elbow_angle;
+                        }
+                    }
+                }
+                else
+                {
+                    s += (char) byte;
+                }
+            }
+        }
+        DELAY(1);
+    }
+    free(buffer);
+}
+
+#pragma region UART
+
+void init_uart(void) 
+{
+    const uart_config_t uart_config = {
+        .baud_rate = 115200,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
+
+    // We won't use a buffer for sending data.
+    uart_driver_install(UART_NUM, RX_BUF_SIZE * 2, TX_BUF_SIZE, 0, NULL, 0);
+    uart_param_config(UART_NUM, &uart_config);
+    uart_set_pin(UART_NUM, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+}
+
+int write_to_motor(uint8_t id, double position, double speed) 
+{
+    std::string data = "<t," + std::to_string(id) + "," + std::to_string(position) + "," + std::to_string(speed) + ">";
+    printf("<t,%s,%s,%s>", std::to_string(id).c_str(), std::to_string(position).c_str(), std::to_string(speed).c_str());
+    return uart_write_bytes(UART_NUM, data.c_str(), strlen(data.c_str()));
+}
+
+#pragma endregion UART
 
 #pragma region RSBL Servo
 
@@ -150,7 +194,8 @@ void handle_rsbl_servo_command(const Packet& packet)
                 packet.get_address().address)
                 .parameter);
 
-        Serial.printf("Target device group: %d\n", group_id);
+        printf("Target device group: %d\n", group_id);
+        printf("command: %d\n", static_cast<uint8_t>(command_type));
 
         // action command
         switch (command_type)
@@ -160,32 +205,32 @@ void handle_rsbl_servo_command(const Packet& packet)
             const position_control_t position_control_cmd = position_control_t{packet.get_data()};
             if (group_id > 2)
             {
-                Serial.printf("Received RSBL command for invalid group %d\n", group_id);
+                printf("Received RSBL command for invalid group %d\n", group_id);
                 return;
             }
-            target_positions[group_id] = position_control_cmd.position;
-            Serial.printf("Target position: %d, speed: %d, acceleration: %d\n",
-                          position_control_cmd.position,
-                          position_control_cmd.duration_ms,
-                          position_control_cmd.acceleration);
+            write_to_motor(group_id, position_control_cmd.position, position_control_cmd.acceleration);
+            // printf("Target position: %d, speed: %d, acceleration: %d\n",
+            //               position_control_cmd.position,
+            //               position_control_cmd.duration_ms,
+            //               position_control_cmd.acceleration);
             break;
         }
         case rsbl_parameters::SET_POSITION_SINGLE:
         {
             const int16_t position_cmd = position_t{packet.get_data()}.value;
-            Serial.printf("SET_POSITION_SINGLE command not implemented. Target position: %d\n", position_cmd);
+            printf("SET_POSITION_SINGLE command not implemented. Target position: %d\n", position_cmd);
             break;
         }
         case rsbl_parameters::SET_SPEED:
         {
             const uint16_t speed_cmd = speed_t{packet.get_data()}.value;
-            Serial.printf("SET_SPEED command not implemented. Target speed: %d\n", speed_cmd);
+            printf("SET_SPEED command not implemented. Target speed: %d\n", speed_cmd);
             break;
         }
         case rsbl_parameters::SET_TORQUE_ENABLE:
         {
             const bool torque_enable = torque_enable_t{packet.get_data()}.value;
-            Serial.printf("SET_TORQUE_ENABLE command not implemented. Target: %d\n", torque_enable);
+            printf("SET_TORQUE_ENABLE command not implemented. Target: %d\n", torque_enable);
             break;
         }
         case rsbl_parameters::STATUS_1:
@@ -193,13 +238,13 @@ void handle_rsbl_servo_command(const Packet& packet)
             // Not a command we handle
             break;
         default:
-            Serial.printf("Unknown RSBL command type: %d\n", static_cast<uint8_t>(command_type));
+            printf("Unknown RSBL command type: %d\n", static_cast<uint8_t>(command_type));
             break;
         }
     }
     catch (const std::exception& e)
     {
-        Serial.printf("Failed to parse RSBL servo packet: %s\n", e.what());
+        printf("Failed to parse RSBL servo packet: %s\n", e.what());
     }
 }
 
@@ -222,9 +267,12 @@ void register_rsbl_servo(const control_board::group& group)
                                             {.generator = [=]()
                                              {
                                                  status_1_t status{};  // TODO: get actual position
-                                                 status.position = static_cast<int16_t>(positions[ID]);
-                                                 status.speed = static_cast<int16_t>(servo.ReadSpeed(ID));
-                                                 status.load = static_cast<int16_t>(servo.ReadLoad(ID));
+                                                 status.position = static_cast<int16_t>(current_positions[ID]);
+                                                //  status.speed = static_cast<int16_t>(servo.ReadSpeed(ID));
+                                                //  status.load = static_cast<int16_t>(servo.ReadLoad(ID));
+                                                //  status.position = static_cast<int16_t>(123);
+                                                 status.speed = static_cast<int16_t>(345);
+                                                 status.load = static_cast<int16_t>(567);
                                                  return status.serialize_data();
                                              },
                                              .interval = 100ms});
@@ -234,10 +282,14 @@ void register_rsbl_servo(const control_board::group& group)
                                             {.generator = [=]()
                                              {
                                                  status_2_t status{};  // TODO: get actual data
-                                                 status.voltage = static_cast<uint16_t>(servo.ReadVoltage(ID));
-                                                 status.temperature = static_cast<int8_t>(servo.ReadTemper(ID));
-                                                 status.current = static_cast<uint16_t>(servo.ReadCurrent(ID));
-                                                 status.moving = static_cast<uint8_t>(servo.ReadMove(ID));
+                                                 status.voltage = static_cast<uint16_t>(123);
+                                                 status.temperature = static_cast<int8_t>(345);
+                                                 status.current = static_cast<uint16_t>(456);
+                                                 status.moving = static_cast<uint8_t>(567);
+                                                //  status.voltage = static_cast<uint16_t>(servo.ReadVoltage(ID));
+                                                //  status.temperature = static_cast<int8_t>(servo.ReadTemper(ID));
+                                                //  status.current = static_cast<uint16_t>(servo.ReadCurrent(ID));
+                                                //  status.moving = static_cast<uint8_t>(servo.ReadMove(ID));
                                                  return status.serialize_data();
                                              },
                                              .interval = 1000ms});
@@ -260,16 +312,16 @@ void handle_pwm_data(const Packet& packet)
         // set pwm value
         if (group_id == control_board::group::PWM_1)
         {
-            Serial.printf("Received PWM_1 command: %d\n", pwm_value);
+            printf("Received PWM_1 command: %d\n", pwm_value);
         }
         else if (group_id == control_board::group::PWM_2)
         {
-            Serial.printf("Received PWM_2 command: %d\n", pwm_value);
+            printf("Received PWM_2 command: %d\n", pwm_value);
         }
     }
     catch (const std::exception& e)
     {
-        Serial.printf("Failed to parse PWM packet: %s\n", e.what());
+        printf("Failed to parse PWM packet: %s\n", e.what());
     }
 }
 
