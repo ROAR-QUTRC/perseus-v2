@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+<<<<<<< HEAD
 # Initialise pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
 
@@ -14,11 +15,19 @@ if(WIN32)
   set(USERHOME $ENV{USERPROFILE})
 else()
   set(USERHOME $ENV{HOME})
+=======
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+if(WIN32)
+    set(USERHOME $ENV{USERPROFILE})
+else()
+    set(USERHOME $ENV{HOME})
+>>>>>>> add936bf (feat(kibisis_firmware): pico i2c slave implementation)
 endif()
 set(sdkVersion 2.2.0)
 set(toolchainVersion 14_2_Rel1)
 set(picotoolVersion 2.2.0-a4)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
+<<<<<<< HEAD
 if(EXISTS ${picoVscode})
   include(${picoVscode})
 endif()
@@ -26,6 +35,13 @@ endif()
 set(PICO_BOARD
     pico2
     CACHE STRING "Board type")
+=======
+if (EXISTS ${picoVscode})
+    include(${picoVscode})
+endif()
+# ====================================================================================
+set(PICO_BOARD pico2 CACHE STRING "Board type")
+>>>>>>> add936bf (feat(kibisis_firmware): pico i2c slave implementation)
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -35,6 +51,7 @@ project(kibisis_pico_driver C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+<<<<<<< HEAD
 # ── pico_i2c_slave ────────────────────────────────────────────────────────────
 #
 # The vmilea/pico_i2c_slave library was upstreamed into the Pico SDK as of
@@ -56,10 +73,19 @@ pico_sdk_init()
 add_executable(
   kibisis_pico_driver kibisis_pico_driver.cpp src/kibisis_pwm_converter.cpp
                       src/kibisis_encoder.cpp)
+=======
+# Our modules
+add_subdirectory(i2c_slave)
+add_subdirectory(drive_motors)
+add_subdirectory(space_resources_motor)
+
+add_executable(kibisis_pico_driver kibisis_pico_driver.cpp)
+>>>>>>> add936bf (feat(kibisis_firmware): pico i2c slave implementation)
 
 pico_set_program_name(kibisis_pico_driver "kibisis_pico_driver")
 pico_set_program_version(kibisis_pico_driver "0.1")
 
+<<<<<<< HEAD
 pico_enable_stdio_uart(kibisis_pico_driver 0)
 pico_enable_stdio_usb(kibisis_pico_driver 1)
 
@@ -84,5 +110,22 @@ target_link_libraries(
   hardware_pio # PIO for quadrature encoder
   hardware_adc
   pico_i2c_slave)
+=======
+# Enable USB for debug output, disable UART
+pico_enable_stdio_uart(kibisis_pico_driver 0)
+pico_enable_stdio_usb(kibisis_pico_driver 1)
+
+target_link_libraries(kibisis_pico_driver
+    pico_stdlib
+    hardware_i2c
+    i2c_slave_lib
+    drive_motors_lib
+    space_resources_motor_lib
+)
+
+target_include_directories(kibisis_pico_driver PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+)
+>>>>>>> add936bf (feat(kibisis_firmware): pico i2c slave implementation)
 
 pico_add_extra_outputs(kibisis_pico_driver)

@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "recommendations": [
     "marus25.cortex-debug",
     "ms-vscode.cpptools",
@@ -7,3 +8,13 @@
     "raspberry-pi.raspberry-pi-pico"
   ]
 }
+=======
+    "recommendations": [
+        "marus25.cortex-debug",
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.vscode-serial-monitor",
+        "raspberry-pi.raspberry-pi-pico"
+    ]
+}
+>>>>>>> add936bf (feat(kibisis_firmware): pico i2c slave implementation)
