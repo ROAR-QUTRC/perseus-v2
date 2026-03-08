@@ -1,0 +1,5 @@
+builtin_interfaces/Time stamp
+bool detected
+float32 angle_offset_rad
+float32 bounding_box_area
+uint32 num_persons

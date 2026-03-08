@@ -1,0 +1,11 @@
+builtin_interfaces/Time stamp
+uint8 state
+uint8 IDLE=0
+uint8 LISTENING_WAKE=1
+uint8 GREETING=2
+uint8 LISTENING_USER=3
+uint8 PROCESSING=4
+uint8 SPEAKING=5
+string current_transcript
+string current_response
+uint32 turn_count
