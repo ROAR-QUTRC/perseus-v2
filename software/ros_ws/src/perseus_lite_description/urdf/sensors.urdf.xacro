@@ -27,7 +27,8 @@
     <joint name="${prefix}c1_lidar_joint" type="fixed">
         <parent link="${prefix}chassis"/>
         <child link="${prefix}c1_lidar_frame"/>
-        <origin xyz="0.0 0.22 0.0" rpy="0 0 0"/>
+        <!-- Lidar mounted at center of chassis, underneath, flipped upside down -->
+        <origin xyz="0.0 0.0 -0.04" rpy="${pi} 0 0"/>
     </joint>
 
     <gazebo reference="${prefix}c1_lidar_frame">
@@ -136,5 +137,44 @@
             </imu>
         </sensor>
     </gazebo>
+    <!-- Camera (Logitech C920) -->
+    <link name="${prefix}camera_link">
+        <inertial>
+            <mass value="0.162"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0" ixz="0"
+                     iyy="0.0001" iyz="0"
+                     izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.03 0.094 0.024"/>
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.03 0.094 0.024"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="${prefix}camera_joint" type="fixed">
+        <parent link="${prefix}chassis"/>
+        <child link="${prefix}camera_link"/>
+        <!-- Mounted on top of chassis, front-facing -->
+        <origin xyz="0.08 0.0 0.04" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${prefix}camera_optical_frame"/>
+
+    <joint name="${prefix}camera_optical_joint" type="fixed">
+        <parent link="${prefix}camera_link"/>
+        <child link="${prefix}camera_optical_frame"/>
+        <!-- Rotate to optical frame convention: Z-forward, X-right, Y-down -->
+        <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
   </xacro:macro>
 </robot>

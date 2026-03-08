@@ -68,11 +68,10 @@ diff_drive_base_controller:
     publish_rate: 50.0
     odom_frame_id: odom
     base_frame_id: base_link
-    enable_odom_tf: true
+    enable_odom_tf: false # EKF publishes odom->base_link transform
     cmd_vel_timeout: 0.5
     #publish_limited_velocity: true
-    #use_stamped_vel: false
-
+    use_stamped_vel: true # Must match twist_mux use_stamped setting
     # Kinematic limits
     linear.x.max_velocity: 2.0
     linear.x.max_acceleration: 10.0

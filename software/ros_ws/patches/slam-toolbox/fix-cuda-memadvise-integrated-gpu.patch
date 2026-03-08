@@ -1,0 +1,28 @@
+diff --git a/lib/karto_sdk/src/cuda/CudaMemoryManager.cu b/lib/karto_sdk/src/cuda/CudaMemoryManager.cu
+--- a/lib/karto_sdk/src/cuda/CudaMemoryManager.cu
++++ b/lib/karto_sdk/src/cuda/CudaMemoryManager.cu
+@@ -1,6 +1,9 @@
+ // Fix for integrated GPUs (Jetson): cudaMemAdviseSetAccessedBy with device 0
+ // fails with "invalid device ordinal" on integrated GPUs where memory is
+ // already shared. Only call SetAccessedBy on discrete GPUs.
++//
++// On integrated GPUs, unified memory is inherently shared, so SetAccessedBy
++// hints are unnecessary and cause errors.
+
+ // In the allocateUnified function, modify the cudaMemAdvise calls:
+ //
+@@ -8,10 +11,13 @@
+ //     if (m_isIntegrated) {
+ //         // Set preferred location to CPU for better performance on integrated GPUs
+ //         CUDA_CHECK(cudaMemAdvise(ptr, size, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId));
+-//         CUDA_CHECK(cudaMemAdvise(ptr, size, cudaMemAdviseSetAccessedBy, m_deviceId));
++//         // Skip SetAccessedBy on integrated GPUs - memory is already shared
++//         // and this call returns "invalid device ordinal" on Jetson
+ //     }
++//     // For discrete GPUs, SetAccessedBy is valid and helpful
++//     else {
++//         CUDA_CHECK(cudaMemAdvise(ptr, size, cudaMemAdviseSetAccessedBy, m_deviceId));
++//     }
+ //
+ // This prevents the "invalid device ordinal" error on Jetson Orin and other
+ // integrated GPU platforms.

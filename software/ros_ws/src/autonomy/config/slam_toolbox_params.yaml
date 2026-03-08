@@ -11,7 +11,7 @@ slam_toolbox:
     odom_frame: odom
     map_frame: map
     base_frame: base_footprint
-    scan_topic: /livox/scan
+    scan_topic: /scan
     use_map_saver: true
     mode: mapping #localization
     # if you'd like to immediately start continuing a map at a given pose
@@ -22,21 +22,25 @@ slam_toolbox:
     #map_start_at_dock: true
     debug_logging: false
     throttle_scans: 1
-    transform_publish_period: 0.01 #if 0 never publishes odometry
-    map_update_interval: 5.0
-    resolution: 0.2
-    max_laser_range: 40.0 # increased from 20.0 to get wider coverage
-    minimum_time_interval: 0.5
-    transform_timeout: 0.2
-    tf_buffer_duration: 30.0
-    stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
+    transform_publish_period: 0.02 # Publish map->odom transform at 50Hz
+    # Multi-threading parameters
     enable_interactive_mode: true
+    publish_period: 0.1
+    map_update_interval: 0.3
+    resolution: 0.02
+    max_laser_range: 8.0 #for rastering images - reduced for indoor
+    minimum_time_interval: 0.3 #faster updates for indoor mapping
+    transform_timeout: 0.5
+    tf_buffer_duration: 30.
+    stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
     # General Parameters
     use_scan_matching: true
     use_scan_barycenter: true
-    minimum_travel_distance: 0.5
-    minimum_travel_heading: 0.5
-    scan_buffer_size: 10
+    use_imu: false
+    use_cuda: false # Disabled - CUDA causes segfault on Jetson
+    minimum_travel_distance: 0.1
+    minimum_travel_heading: 0.2
+    scan_buffer_size: 50
     scan_buffer_maximum_scan_distance: 10.0
     link_match_minimum_response_fine: 0.1
     link_scan_maximum_distance: 1.5

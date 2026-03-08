@@ -1,4 +1,6 @@
+import glob
 import os
+
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
@@ -6,25 +8,25 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     GroupAction,
-    SetEnvironmentVariable,
-    EmitEvent,
     LogInfo,
-    RegisterEventHandler,
+    OpaqueFunction,
+    SetEnvironmentVariable,
 )
 from launch.conditions import IfCondition
-from launch.events import matches_action
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
     PythonExpression,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node, LoadComposableNodes, SetParameter, LifecycleNode
+from launch_ros.actions import (
+    ComposableNodeContainer,
+    Node,
+    LoadComposableNodes,
+    SetParameter,
+)
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.descriptions import ComposableNode, ParameterFile
-from launch_ros.event_handlers import OnStateTransition
-from launch_ros.events.lifecycle import ChangeState
-from lifecycle_msgs.msg import Transition
 from nav2_common.launch import RewrittenYaml
 
 
@@ -56,7 +58,7 @@ def generate_launch_description():
     use_respawn = LaunchConfiguration("use_respawn")
     log_level = LaunchConfiguration("log_level")
 
-    # Nav2 lifecycle nodes
+    # Nav2 lifecycle nodes (no map_server or amcl needed for SLAM mode - SLAM Toolbox provides the map)
     lifecycle_nodes = [
         "controller_server",
         "smoother_server",
@@ -67,8 +69,6 @@ def generate_launch_description():
         "bt_navigator",
         "waypoint_follower",
         "docking_server",
-        "map_server",
-        "amcl",
     ]
 
     arguments = [
@@ -105,14 +105,18 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "cmd_vel_topic",
-            default_value="/joy_vel",
-            description="Topic name for cmd_vel commands (use /joy_vel for xbox controller compatibility)",
+            default_value="/cmd_vel",
+            description="Topic name for cmd_vel commands (mux output)",
         ),
         # SLAM arguments
         DeclareLaunchArgument(
             "slam_params_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("autonomy"), "config", "slam_toolbox_params.yaml"]
+                [
+                    FindPackageShare("autonomy"),
+                    "config",
+                    "slam_toolbox_params_perseus_lite.yaml",
+                ]
             ),
             description="Full path to the ROS2 parameters file for SLAM Toolbox",
         ),
@@ -120,7 +124,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "ekf_params_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("autonomy"), "config", "ekf_params.yaml"]
+                [FindPackageShare("autonomy"), "config", "ekf_params_perseus_lite.yaml"]
             ),
             description="Full path to the ROS2 parameters file for robot_localization EKF",
         ),
@@ -136,14 +140,14 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "nav_params_file",
             default_value=os.path.join(
-                bringup_dir, "config", "perseus_nav_params.yaml"
+                bringup_dir, "config", "nav_params_perseus_lite.yaml"
             ),
             description="Full path to the ROS2 parameters file to use for all launched nodes",
         ),
         DeclareLaunchArgument(
             "use_composition",
             default_value="False",
-            description="Use composed bringup if True",
+            description="Use composed bringup if True (disabled: StaticLayer plugin fails to load in component container)",
         ),
         DeclareLaunchArgument(
             "container_name",
@@ -195,44 +199,19 @@ def generate_launch_description():
         ],
     )
 
-    # SLAM Toolbox node (as LifecycleNode)
-    slam_toolbox = LifecycleNode(
-        package="slam_toolbox",
-        executable="async_slam_toolbox_node",
-        name="slam_toolbox",
-        output="screen",
-        namespace="",
-        parameters=[slam_params_file, {"use_sim_time": use_sim_time}],
-        remappings=[
-            ("imu", "/imu/data"),
-        ],
-    )
-
-    # SLAM Toolbox lifecycle management
-    configure_slam_event = EmitEvent(
-        event=ChangeState(
-            lifecycle_node_matcher=matches_action(slam_toolbox),
-            transition_id=Transition.TRANSITION_CONFIGURE,
+    # SLAM Toolbox (use_cuda disabled in slam_toolbox_params.yaml to avoid Jetson CUDA crash)
+    slam_toolbox = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("slam_toolbox"), "launch", "online_async_launch.py"]
+            )
         ),
-        condition=IfCondition(autostart),
-    )
-
-    activate_slam_event = RegisterEventHandler(
-        OnStateTransition(
-            target_lifecycle_node=slam_toolbox,
-            start_state="configuring",
-            goal_state="inactive",
-            entities=[
-                LogInfo(msg="[LifecycleLaunch] Slamtoolbox node is activating."),
-                EmitEvent(
-                    event=ChangeState(
-                        lifecycle_node_matcher=matches_action(slam_toolbox),
-                        transition_id=Transition.TRANSITION_ACTIVATE,
-                    )
-                ),
-            ],
-        ),
-        condition=IfCondition(autostart),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "slam_params_file": slam_params_file,
+            "autostart": "true",
+            "use_lifecycle_manager": "false",
+        }.items(),
     )
 
     # Nav2 remappings
@@ -257,32 +236,11 @@ def generate_launch_description():
     )
 
     # Nav2 nodes (non-composable)
+    # Note: map_server and amcl are NOT included here because SLAM Toolbox provides the map
     load_nav2_nodes = GroupAction(
         condition=IfCondition(PythonExpression(["not ", use_composition])),
         actions=[
             SetParameter("use_sim_time", use_sim_time),
-            Node(
-                package="nav2_map_server",
-                executable="map_server",
-                name="map_server",
-                output="screen",
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
-            ),
-            Node(
-                package="nav2_amcl",
-                executable="amcl",
-                name="amcl",
-                output="screen",
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
-            ),
             Node(
                 package="nav2_controller",
                 executable="controller_server",
@@ -392,28 +350,22 @@ def generate_launch_description():
         ],
     )
 
-    # Nav2 composable nodes
+    # Nav2 composable nodes (single process — reduces CPU overhead significantly)
+    # Note: map_server and amcl are NOT included here because SLAM Toolbox provides the map
     load_composable_nav2_nodes = GroupAction(
         condition=IfCondition(use_composition),
         actions=[
             SetParameter("use_sim_time", use_sim_time),
+            ComposableNodeContainer(
+                name=container_name,
+                namespace=namespace,
+                package="rclcpp_components",
+                executable="component_container_isolated",
+                output="screen",
+            ),
             LoadComposableNodes(
                 target_container=container_name_full,
                 composable_node_descriptions=[
-                    ComposableNode(
-                        package="nav2_map_server",
-                        plugin="nav2_map_server::MapServer",
-                        name="map_server",
-                        parameters=[configured_params],
-                        remappings=remappings,
-                    ),
-                    ComposableNode(
-                        package="nav2_amcl",
-                        plugin="nav2_amcl::AmclNode",
-                        name="amcl",
-                        parameters=[configured_params],
-                        remappings=remappings,
-                    ),
                     ComposableNode(
                         package="nav2_controller",
                         plugin="nav2_controller::ControllerServer",
@@ -490,15 +442,46 @@ def generate_launch_description():
         ],
     )
 
+    # NOTE: twist_mux is already launched by perseus_lite.launch.py
+    # Do not launch cmd_vel_mux.launch.py here to avoid duplicates
+
+    # Auto-detect joystick and launch controller if connected
+    def _maybe_launch_controller(context):
+        """Launch controller nodes if a joystick device is detected."""
+        js_devices = glob.glob("/dev/input/js*")
+        if js_devices:
+            return [
+                LogInfo(
+                    msg="Joystick detected at {}, launching controller".format(
+                        js_devices[0]
+                    )
+                ),
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource(
+                        PathJoinSubstitution(
+                            [
+                                FindPackageShare("perseus_input"),
+                                "launch",
+                                "controller.launch.py",
+                            ]
+                        )
+                    ),
+                    launch_arguments={
+                        "type": "xbox",
+                        "wireless": "true",
+                    }.items(),
+                ),
+            ]
+        return [LogInfo(msg="No joystick detected, skipping controller launch")]
+
     launch_files = [
         stdout_linebuf_envvar,
         perseus_lite_launch,
         ekf_node,
         slam_toolbox,
-        configure_slam_event,
-        activate_slam_event,
         load_nav2_nodes,
         load_composable_nav2_nodes,
+        OpaqueFunction(function=_maybe_launch_controller),
     ]
 
     return LaunchDescription(arguments + launch_files)

@@ -3,14 +3,25 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  autonomy,
   controller-manager,
   diff-drive-controller,
   joint-state-broadcaster,
+  nav2-common,
+  navigation2,
   perseus-lite-hardware,
+  perseus-lite-hud,
+  perseus-sensors,
+  robot-localization,
   robot-state-publisher,
   ros2controlcli,
   ros2launch,
+  rosbridge-server,
+  rplidar-ros,
   rviz2,
+  slam-toolbox,
+  twist-mux,
+  v4l2-camera,
   xacro,
 }:
 buildRosPackage rec {
@@ -22,14 +33,25 @@ buildRosPackage rec {
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
+    autonomy
     controller-manager
     diff-drive-controller
     joint-state-broadcaster
+    nav2-common
+    navigation2
     perseus-lite-hardware
+    perseus-lite-hud
+    perseus-sensors
+    robot-localization
     robot-state-publisher
     ros2controlcli
     ros2launch
+    rosbridge-server
+    rplidar-ros
     rviz2
+    slam-toolbox
+    twist-mux
+    v4l2-camera
     xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
