@@ -18,7 +18,7 @@ diff_drive_base_controller:
     right_wheel_names: ["front_right_wheel_joint", "rear_right_wheel_joint"]
     wheel_separation: 0.68
     wheels_per_side: 2
-    wheel_radius: 0.14
+    wheel_radius: 0.145
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     open_loop: false
