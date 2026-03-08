@@ -216,51 +216,54 @@ The `dual_stick` option enables an alternative layout common in games and teleop
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
->>>>>>> 11b0f8e9 (chore: Format and lint)
-  | Control            | Button |
-  | ------------------ | ------ |
-  | Bucket lift (up)   | LB     |
-  | Bucket lift (down) | RB     |
-  | Bucket tilt (up)   | Y      |
-  | Bucket tilt (down) | A      |
-<<<<<<< HEAD
 
-  **Wired:**
+> > > > > > > 11b0f8e9 (chore: Format and lint)
+> > > > > > > | Control | Button |
+> > > > > > > | ------------------ | ------ |
+> > > > > > > | Bucket lift (up) | LB |
+> > > > > > > | Bucket lift (down) | RB |
+> > > > > > > | Bucket tilt (up) | Y |
+> > > > > > > | Bucket tilt (down) | A |
+> > > > > > > <<<<<<< HEAD
 
-  | Control            | Button |
-  | ------------------ | ------ |
-  | Bucket lift (up)   | Y      |
-  | Bucket lift (down) | A      |
-  | Bucket tilt (up)   | X      |
-  | Bucket tilt (down) | B      |
+**Wired:**
+
+| Control            | Button |
+| ------------------ | ------ |
+| Bucket lift (up)   | Y      |
+| Bucket lift (down) | A      |
+| Bucket tilt (up)   | X      |
+| Bucket tilt (down) | B      |
+
 =======
-  | Control    | Button       |
-  | ---------- | ------------ |
-  | Bucket lift (up)   | LB   |
-  | Bucket lift (down) | RB   |
-  | Bucket tilt (up)   | Y    |
-  | Bucket tilt (down) | A    |
+| Control | Button |
+| ---------- | ------------ |
+| Bucket lift (up) | LB |
+| Bucket lift (down) | RB |
+| Bucket tilt (up) | Y |
+| Bucket tilt (down) | A |
 
-  **Wired:**
+**Wired:**
 
-  | Control    | Button       |
-  | ---------- | ------------ |
-  | Bucket lift (up)   | Y    |
-  | Bucket lift (down) | A    |
-  | Bucket tilt (up)   | X    |
-  | Bucket tilt (down) | B    |
->>>>>>> 741a658f (docs: Add dual-stick driving mode to teleop guide)
-=======
+| Control            | Button |
+| ------------------ | ------ |
+| Bucket lift (up)   | Y      |
+| Bucket lift (down) | A      |
+| Bucket tilt (up)   | X      |
+| Bucket tilt (down) | B      |
 
-  **Wired:**
+> > > > > > > # 741a658f (docs: Add dual-stick driving mode to teleop guide)
 
-  | Control            | Button |
-  | ------------------ | ------ |
-  | Bucket lift (up)   | Y      |
-  | Bucket lift (down) | A      |
-  | Bucket tilt (up)   | X      |
-  | Bucket tilt (down) | B      |
->>>>>>> 11b0f8e9 (chore: Format and lint)
+**Wired:**
+
+| Control            | Button |
+| ------------------ | ------ |
+| Bucket lift (up)   | Y      |
+| Bucket lift (down) | A      |
+| Bucket tilt (up)   | X      |
+| Bucket tilt (down) | B      |
+
+> > > > > > > 11b0f8e9 (chore: Format and lint)
 
 All other controls (triggers for enable/turbo, jaws, rotate, magnet) remain unchanged.
 
