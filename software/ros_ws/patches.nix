@@ -181,6 +181,120 @@ let
         patches = patches ++ [ ./patches/fast_lio/cpp_version_17.patch ];
       }
     );
+
+    nav2-mppi-controller =
+      let
+        xtl-stable = prev.xtl.overrideAttrs rec {
+          version = "0.7.7";
+
+          src = prev.fetchFromGitHub {
+            owner = "xtensor-stack";
+            repo = "xtl";
+            tag = version;
+            hash = "sha256-B5CaOuNSJqyME2uJExE/P0VnmFKjAPHJHHxP6HkAHjU=";
+          };
+        };
+
+        xtensor-stable =
+          (prev.xtensor.override {
+            xtl = xtl-stable;
+          }).overrideAttrs
+            rec {
+              version = "0.25.0";
+
+              src = prev.fetchFromGitHub {
+                owner = "xtensor-stack";
+                repo = "xtensor";
+                tag = version;
+                hash = "sha256-hVfdtYcJ6mzqj0AUu6QF9aVKQGYKd45RngY6UN3yOH4=";
+              };
+            };
+      in
+      rosPrev.nav2-mppi-controller.override {
+        xtensor = xtensor-stable;
+      };
+
+    ros-gz-sim = rosPrev.ros-gz-sim.overrideAttrs {
+      version = "1.0.17-r1";
+      src = prev.fetchurl {
+        url = "https://github.com/ros2-gbp/ros_ign-release/archive/release/jazzy/ros_gz_sim/1.0.17-1.tar.gz";
+        name = "1.0.17-1.tar.gz";
+        sha256 = "sha256-+iszAtEbbNhflq/bgBNe9RugiHkmCCmP3Ywzt22R2FA=";
+      };
+    };
+
+    # CUDA-enabled slam_toolbox from fork
+    # Note: CUDA build is disabled until CUDA/GCC intrinsic compatibility is resolved
+    # The nvcc compiler has issues with GCC 12/13 x86 intrinsics (AVX512, CMPCCXADD, etc.)
+    # For now, use the upstream non-CUDA version with just the message-filters dependency
+    slam-toolbox = rosPrev.slam-toolbox.overrideAttrs (
+      {
+        propagatedBuildInputs ? [ ],
+        ...
+      }:
+      {
+        propagatedBuildInputs = propagatedBuildInputs ++ [
+          rosFinal.message-filters
+        ];
+      }
+    );
+
+    gz-msgs-vendor =
+      let
+        protobuf_28 = prev.protobuf.override {
+          version = "28.3";
+          hash = "sha256-+bb5RxITzxuX50ItmpQhWEG1kMfvlizWTMJJzwlhhYM=";
+        };
+      in
+      rosPrev.gz-msgs-vendor.override {
+        protobuf = protobuf_28;
+        python3Packages = prev.python3Packages // {
+          protobuf = prev.python3Packages.protobuf.override {
+            protobuf = protobuf_28;
+          };
+        };
+      };
+
+    # Gazebo vendor patches
+    gz-physics-vendor = rosPrev.gz-physics-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-vendors/physics-version.patch ];
+      }
+    );
+
+    gz-rendering-vendor = rosPrev.gz-rendering-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-vendors/rendering-version.patch ];
+      }
+    );
+
+    gz-transport-vendor = rosPrev.gz-transport-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-vendors/transport-version.patch ];
+      }
+    );
+
+    gz-sim-vendor = rosPrev.gz-sim-vendor.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/gz-vendors/sim-version.patch ];
+      }
+    );
   };
 
 in
