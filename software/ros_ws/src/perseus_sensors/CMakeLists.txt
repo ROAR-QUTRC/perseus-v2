@@ -89,27 +89,16 @@ file(GLOB_RECURSE M2M2_LIDAR_CODE_SOURCES src/m2m2_lidar/*.cpp)
 
 # Add exec target
 add_executable(m2m2_lidar ${M2M2_LIDAR_CODE_SOURCES})
-add_executable(lidar_segmentation
-  src/lidar_segmentation/lidar_segmentation.cpp
-  src/lidar_segmentation/lidar_segmentation_node.cpp
-)
-include_directories(
-  include
-  ${PCL_INCLUDE_DIRS}
-)
+add_executable(
+  lidar_segmentation src/lidar_segmentation/lidar_segmentation.cpp
+                     src/lidar_segmentation/lidar_segmentation_node.cpp)
+include_directories(include ${PCL_INCLUDE_DIRS})
 
-ament_target_dependencies(lidar_segmentation
-  rclcpp
-  sensor_msgs
-  pcl_conversions
-  pcl_ros
-)
+ament_target_dependencies(lidar_segmentation rclcpp sensor_msgs pcl_conversions
+                          pcl_ros)
 target_link_libraries(lidar_segmentation ${PCL_LIBRARIES})
 # Add include dirs for exec
-install(TARGETS
-  lidar_segmentation
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(TARGETS lidar_segmentation DESTINATION lib/${PROJECT_NAME})
 target_include_directories(m2m2_lidar
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
