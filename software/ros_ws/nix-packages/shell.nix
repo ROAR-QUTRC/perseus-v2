@@ -69,6 +69,7 @@ pkgs.mkShell {
           nlohmann_json
           opencv
           openssl
+          pcl-conversions
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
