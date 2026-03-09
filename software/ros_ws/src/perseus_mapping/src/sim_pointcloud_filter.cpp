@@ -9,11 +9,14 @@ class SimPointcloudFilter : public rclcpp::Node
 public:
     SimPointcloudFilter() : Node("sim_pointcloud_filter")
     {
+        auto sub_qos = rclcpp::QoS(rclcpp::KeepLast(10)).reliable();
+        auto pub_qos = rclcpp::QoS(rclcpp::KeepLast(5)).best_effort();
+
         sub_ = create_subscription<sensor_msgs::msg::PointCloud2>(
-            "/livox/lidar", 10,
+            "/livox/lidar", sub_qos,
             std::bind(&SimPointcloudFilter::callback, this, std::placeholders::_1));
         pub_ = create_publisher<sensor_msgs::msg::PointCloud2>(
-            "/livox/lidar_filtered", 10);
+            "/livox/lidar_filtered", pub_qos);
     }
 
 private:
@@ -26,7 +29,6 @@ private:
         std::vector<uint8_t> filtered_data;
         uint32_t count = 0;
         uint32_t point_step = msg->point_step;
-
         const uint8_t* data_ptr = msg->data.data();
 
         for (size_t i = 0; i < msg->width * msg->height; ++i, ++iter_x, ++iter_y, ++iter_z) {
