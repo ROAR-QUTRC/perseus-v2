@@ -6884,7 +6884,7 @@
 	)
 	(wire
 		(pts
-			(xy 359.41 48.26) (xy 345.44 48.26)
+			(xy 358.14 48.26) (xy 344.17 48.26)
 		)
 		(stroke
 			(width 0)
@@ -8014,7 +8014,7 @@
 	)
 	(wire
 		(pts
-			(xy 359.41 45.72) (xy 345.44 45.72)
+			(xy 358.14 45.72) (xy 344.17 45.72)
 		)
 		(stroke
 			(width 0)
@@ -9213,7 +9213,7 @@
 		(uuid "049f38ab-7f3e-4e54-89af-f23e037bde8d")
 	)
 	(label "USB_D_N"
-		(at 359.41 45.72 180)
+		(at 358.14 45.72 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -9223,7 +9223,7 @@
 		)
 		(uuid "064b6c4f-16cd-4976-b086-f56b99895cfc")
 		(property "Netclass" "USB_DIFF"
-			(at 359.41 44.45 0)
+			(at 358.14 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9617,7 +9617,7 @@
 		(uuid "5897830e-2786-4dec-9640-97e2332212a8")
 	)
 	(label "USB_D_P"
-		(at 359.41 48.26 180)
+		(at 358.14 48.26 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -9627,7 +9627,7 @@
 		)
 		(uuid "5a9353ed-0228-44b4-86a9-ff18bb8d9e1d")
 		(property "Netclass" "USB_DIFF"
-			(at 359.41 46.99 0)
+			(at 358.14 46.99 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13721,7 +13721,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Bridged")
-		(at 341.63 45.72 0)
+		(at 340.36 45.72 0)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
@@ -13730,7 +13730,7 @@
 		(dnp no)
 		(uuid "6141143d-a591-4402-9d54-9bb267812ebd")
 		(property "Reference" "JP2"
-			(at 344.424 46.736 0)
+			(at 343.154 46.736 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13738,7 +13738,7 @@
 			)
 		)
 		(property "Value" "SolderJumper_2_Bridged"
-			(at 341.63 49.53 0)
+			(at 340.36 49.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13747,7 +13747,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm"
-			(at 341.63 45.72 0)
+			(at 340.36 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13756,7 +13756,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 341.63 45.72 0)
+			(at 340.36 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13765,7 +13765,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
-			(at 341.63 45.72 0)
+			(at 340.36 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13774,7 +13774,7 @@
 			)
 		)
 		(property "manufacturer" "~"
-			(at 341.63 45.72 0)
+			(at 340.36 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13783,7 +13783,7 @@
 			)
 		)
 		(property "distributors part number" "~"
-			(at 341.63 45.72 0)
+			(at 340.36 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13792,7 +13792,7 @@
 			)
 		)
 		(property "manufactuer part number" "~"
-			(at 341.63 45.72 0)
+			(at 340.36 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16217,7 +16217,7 @@
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Bridged")
-		(at 341.63 48.26 0)
+		(at 340.36 48.26 0)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
@@ -16226,7 +16226,7 @@
 		(dnp no)
 		(uuid "9937dccf-0479-4129-8838-717985a9645e")
 		(property "Reference" "JP1"
-			(at 344.424 50.038 0)
+			(at 343.154 50.038 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16234,7 +16234,7 @@
 			)
 		)
 		(property "Value" "SolderJumper_2_Bridged"
-			(at 341.63 52.07 0)
+			(at 340.36 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16243,7 +16243,7 @@
 			)
 		)
 		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm"
-			(at 341.63 48.26 0)
+			(at 340.36 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16252,7 +16252,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 341.63 48.26 0)
+			(at 340.36 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16261,7 +16261,7 @@
 			)
 		)
 		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
-			(at 341.63 48.26 0)
+			(at 340.36 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16270,7 +16270,7 @@
 			)
 		)
 		(property "manufacturer" "~"
-			(at 341.63 48.26 0)
+			(at 340.36 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16279,7 +16279,7 @@
 			)
 		)
 		(property "distributors part number" "~"
-			(at 341.63 48.26 0)
+			(at 340.36 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16288,7 +16288,7 @@
 			)
 		)
 		(property "manufactuer part number" "~"
-			(at 341.63 48.26 0)
+			(at 340.36 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17340,7 +17340,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "Connector_USB:USB_C_Receptacle_Amphenol_12401548E4-2A"
+		(property "Footprint" "Connector_USB:USB_C_Receptacle_Amphenol_12401610E4-2A"
 			(at 147.32 63.5 0)
 			(effects
 				(font
@@ -19195,7 +19195,8 @@
 	)
 	(symbol
 		(lib_id "Power_Protection:RCLAMP0502B")
-		(at 189.23 63.5 90)
+		(at 189.23 63.5 270)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -19203,7 +19204,7 @@
 		(dnp no)
 		(uuid "fb85a60d-5710-4690-b04b-f8494fd13d7b")
 		(property "Reference" "D6"
-			(at 181.356 64.516 90)
+			(at 197.104 64.516 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19212,7 +19213,7 @@
 			)
 		)
 		(property "Value" "ESDA5V3L"
-			(at 183.388 62.23 90)
+			(at 195.072 62.23 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19221,7 +19222,7 @@
 			)
 		)
 		(property "Footprint" "Package_TO_SOT_SMD:SOT-416"
-			(at 196.85 63.5 0)
+			(at 181.61 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19230,7 +19231,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.semtech.com/products/circuit-protection/low-capacitance/rclamp0502b"
-			(at 186.69 62.23 0)
+			(at 191.77 62.23 0)
 			(effects
 				(font
 					(size 1.27 1.27)
