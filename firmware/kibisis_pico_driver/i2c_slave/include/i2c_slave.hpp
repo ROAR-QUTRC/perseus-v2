@@ -1,6 +1,11 @@
 #pragma once
 #include "hardware/i2c.h"
+#include "pico/time.h"
 #include <cstdint>
+
+// Safety: if no motor command is received within this window, all motors
+// are stopped by the main loop. 500ms = 5x a typical 10Hz command rate.
+static constexpr uint32_t COMMS_TIMEOUT_MS = 500;
 
 // I2C configuration
 static constexpr uint    I2C_PORT_NUM = 0;
@@ -27,8 +32,17 @@ namespace Reg {
     static constexpr uint8_t ENC_B_COUNT_2 = 0x16;
     static constexpr uint8_t ENC_B_COUNT_3 = 0x17;
 
-    static constexpr uint8_t STATUS        = 0x20;  // status/heartbeat byte
-    static constexpr uint8_t REG_COUNT     = 0x21;
+    static constexpr uint8_t STATUS           = 0x20;  // status/heartbeat byte
+
+    // Moisture sensor (on-demand sampling)
+    // Pi writes any value to MOISTURE_SAMPLE to trigger a reading.
+    // Pico clears it back to 0 after sampling.
+    // Pi then reads the result from MOISTURE_VALUE_0/1.
+    static constexpr uint8_t MOISTURE_SAMPLE  = 0x30;  // write: trigger sample
+    static constexpr uint8_t MOISTURE_VALUE_0 = 0x31;  // read: low byte  } uint16_t LE
+    static constexpr uint8_t MOISTURE_VALUE_1 = 0x32;  // read: high byte }
+
+    static constexpr uint8_t REG_COUNT        = 0x33;
 }
 
 class I2CSlave {
@@ -41,8 +55,18 @@ public:
     // Safe to call at any time - interrupts are briefly disabled during commit.
     void setEncoderA(int32_t count);
     void setEncoderB(int32_t count);
+    void setMoistureValue(uint16_t value);  // write last sample into shadow regs
     void setStatus(uint8_t status);
     void commitRegisters();  // atomically copies shadow -> live
+
+    // Returns true if Pi has written to MOISTURE_SAMPLE register.
+    // Main loop should call sample(), then clearMoistureSample().
+    bool getMoistureSampleRequested() const;
+    void clearMoistureSample();  // resets MOISTURE_SAMPLE register to 0
+
+    // Returns true if no motor speed command has been received within
+    // COMMS_TIMEOUT_MS. Main loop should zero all motors when this is true.
+    bool hasCommandTimedOut() const;
 
     // Called from main loop to retrieve what Pi 5 wrote
     int8_t getMotorASpeed() const;
@@ -62,4 +86,8 @@ private:
 
     uint8_t reg_addr_      = 0;
     bool    addr_received_ = false;
+
+    // Timestamp of last motor speed write from Pi (microseconds, from time_us_64())
+    // Volatile because it's written by the IRQ and read by the main loop.
+    volatile uint64_t last_write_time_us_ = 0;
 };

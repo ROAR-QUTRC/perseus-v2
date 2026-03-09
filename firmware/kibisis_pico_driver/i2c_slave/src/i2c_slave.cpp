@@ -1,5 +1,6 @@
 #include "i2c_slave.hpp"
 #include "pico/stdlib.h"
+#include "pico/time.h"
 #include "hardware/irq.h"
 #include "hardware/structs/i2c.h"
 #include "hardware/sync.h"
@@ -61,7 +62,13 @@ void I2CSlave::handleIrq() {
             // Written directly to live_regs_ since motor speeds are single bytes
             // (no multi-byte consistency issue)
             if (reg_addr_ < Reg::REG_COUNT) {
-                live_regs_[reg_addr_++] = byte;
+                live_regs_[reg_addr_] = byte;
+                // Track last time a motor command register was written so the
+                // main loop can detect Pi comms timeout
+                if (reg_addr_ <= Reg::SPACE_MOTOR_SPEED) {
+                    last_write_time_us_ = time_us_64();
+                }
+                reg_addr_++;
             }
         }
     }
@@ -95,6 +102,22 @@ void I2CSlave::setEncoderB(int32_t count) {
     memcpy(&shadow_regs_[Reg::ENC_B_COUNT_0], &count, sizeof(count));
 }
 
+void I2CSlave::setMoistureValue(uint16_t value) {
+    memcpy(&shadow_regs_[Reg::MOISTURE_VALUE_0], &value, sizeof(value));
+}
+
+bool I2CSlave::getMoistureSampleRequested() const {
+    return live_regs_[Reg::MOISTURE_SAMPLE] != 0;
+}
+
+void I2CSlave::clearMoistureSample() {
+    // Clear in both live and shadow so the Pi sees it reset on next read
+    uint32_t saved = save_and_disable_interrupts();
+    live_regs_[Reg::MOISTURE_SAMPLE]   = 0;
+    shadow_regs_[Reg::MOISTURE_SAMPLE] = 0;
+    restore_interrupts(saved);
+}
+
 void I2CSlave::setStatus(uint8_t status) {
     shadow_regs_[Reg::STATUS] = status;
 }
@@ -110,6 +133,13 @@ void I2CSlave::commitRegisters() {
            &shadow_regs_[Reg::ENC_A_COUNT_0],
            Reg::REG_COUNT - Reg::ENC_A_COUNT_0);
     restore_interrupts(saved);
+}
+
+bool I2CSlave::hasCommandTimedOut() const {
+    // Never timed out if we haven't received even one command yet
+    if (last_write_time_us_ == 0) return false;
+    uint64_t elapsed_us = time_us_64() - last_write_time_us_;
+    return elapsed_us > (static_cast<uint64_t>(COMMS_TIMEOUT_MS) * 1000ULL);
 }
 
 int8_t I2CSlave::getMotorASpeed() const {
