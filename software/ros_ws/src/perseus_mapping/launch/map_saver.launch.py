@@ -23,6 +23,7 @@ def generate_launch_description():
         ros_config = yaml.safe_load(f)
 
     map_file_path = ros_config["/**"]["ros__parameters"]["map_file_path"]
+    map_file_path = os.path.expanduser(map_file_path)  # resolves ~ or $HOME
 
     map_saver_node = Node(
         package="perseus_mapping",

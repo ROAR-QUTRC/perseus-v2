@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/trigger.hpp>
+#include <cstdlib>
 
 class MapSaver : public rclcpp::Node
 {
@@ -11,7 +12,10 @@ public:
         : Node("map_saver")
     {
         this->declare_parameter<double>("save_interval_sec", 30.0);
-        this->declare_parameter<std::string>("map_file_path", "/maps/scan.pcd");
+
+        const char* home = std::getenv("HOME");
+        std::string default_map_path = std::string(home ? home : "") + "/maps/scan.pcd";
+        this->declare_parameter<std::string>("map_file_path", default_map_path);
 
         save_interval_ = this->get_parameter("save_interval_sec").as_double();
         map_file_path_ = this->get_parameter("map_file_path").as_string();
