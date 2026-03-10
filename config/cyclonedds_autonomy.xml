@@ -1,0 +1,27 @@
+<CycloneDDS>
+  <Domain>
+    <General>
+      <!-- Avoid broadcasting data to all client  -->
+      <AllowMulticast>false</AllowMulticast> 
+    </General>
+
+    <Discovery>
+      <Peers>
+        <!-- Robot PC -->
+        <!-- qutrc@big-brain IP -->
+        <Peer address="192.168.1.11"/> 
+        <!-- qutrc@medium-brain IP -->
+        <Peer address="192.168.2.86"/>
+        <!-- qutrc@small-brain IP -->
+        <!-- <Peer address="192.168.1.13"/> -->
+        <!-- Livox MID-360 IP -->
+        <!-- <Peer address="192.168.1.21"/> -->
+
+         <!-- Base Station -->
+         <!-- Kelvin's Machine -->
+        <Peer address="192.168.1.30"/> 
+
+      </Peers>
+    </Discovery>
+  </Domain>
+</CycloneDDS>

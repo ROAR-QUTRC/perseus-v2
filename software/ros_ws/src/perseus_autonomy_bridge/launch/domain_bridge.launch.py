@@ -8,17 +8,18 @@ Usage:
     ros2 launch perseus_autonomy_bridge domain_bridge.launch.py
 
     # With custom domains
-    ros2 launch perseus_autonomy_bridge domain_bridge.launch.py from_domain:=42 to_domain:=10
+    ros2 launch perseus_autonomy_bridge domain_bridge.launch.py from_domain:=51 to_domain:=42
 
 Launch Arguments:
-    from_domain    : Source DDS domain ID (default: 42)
-    to_domain      : Target DDS domain ID (default: 10)
+    from_domain    : Source DDS domain ID (default: 51)
+    to_domain      : Target DDS domain ID (default: 42)
 """
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -27,12 +28,12 @@ def generate_launch_description():
     # Declare Arguments
     from_domain_arg = DeclareLaunchArgument(
         "from_domain",
-        default_value="42",
+        default_value="51",
         description="Source DDS domain ID",
     )
     to_domain_arg = DeclareLaunchArgument(
         "to_domain",
-        default_value="10",
+        default_value="42",
         description="Target DDS domain ID",
     )
 
@@ -48,10 +49,10 @@ def generate_launch_description():
         ]
     )
 
-    # Domain bridge executable
-    domain_bridge_node = ExecuteProcess(
-        cmd=[
-            "domain_bridge",
+    domain_bridge_node = Node(
+        package="domain_bridge",
+        executable="domain_bridge",
+        arguments=[
             config_file,
             "--from",
             from_domain,
@@ -68,3 +69,5 @@ def generate_launch_description():
     ld.add_action(from_domain_arg)
     ld.add_action(to_domain_arg)
     ld.add_action(domain_bridge_node)
+
+    return ld

@@ -52,7 +52,9 @@ def generate_launch_description():
         "scan_out", default_value="/livox/scan", description="Publisher topic name"
     )
     declare_subscriber_name = DeclareLaunchArgument(
-        "scan_in", default_value="/livox/lidar", description="Subscriber topic name"
+        "scan_in",
+        default_value="/livox/lidar/nonground",
+        description="Subscriber topic name",
     )
 
     # Declare launch arguments

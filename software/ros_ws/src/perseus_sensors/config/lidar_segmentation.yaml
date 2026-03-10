@@ -4,9 +4,9 @@ lidar_segmentation_node:
     ground_cloud_topic: "/livox/lidar/ground"
     non_ground_cloud_topic: "/livox/lidar/nonground"
     ransac_max_iterations: 100
-    ransac_distance_threshold: 0.35
+    ransac_distance_threshold: 0.20
     model_type: 1 # 0 = PLANE, 1 = PERPENDICULAR_PLANE
     axis_x: 0.0
     axis_y: 0.0
     axis_z: 1.0
-    eps_angle_deg: 15.0
+    eps_angle_deg: 2.0

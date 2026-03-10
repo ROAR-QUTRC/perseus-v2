@@ -74,7 +74,7 @@ namespace pointcloud_to_laserscan
         range_max_ = this->declare_parameter("range_max", std::numeric_limits<double>::max());
         inf_epsilon_ = this->declare_parameter("inf_epsilon", 1.0);
         use_inf_ = this->declare_parameter("use_inf", true);
-        cloud_in_ = this->declare_parameter("cloud_in", "/livox/lidar");
+        cloud_in_ = this->declare_parameter("cloud_in", "/livox/lidar/nonground");
         scan_out_ = this->declare_parameter("scan_out", "/livox/scan");
         pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(scan_out_, rclcpp::SensorDataQoS());
 

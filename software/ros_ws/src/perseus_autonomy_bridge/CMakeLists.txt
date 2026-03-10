@@ -14,6 +14,6 @@ ament_target_dependencies(nav2_waypoints_bridge rclcpp rclcpp_action nav2_msgs
 
 install(TARGETS nav2_waypoints_bridge DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})
 
 ament_package()

@@ -1,16 +1,82 @@
 # Name of the domain bridge, used for node naming and logging
 name: autonomy_ros_bridge
-from_domain: 2
-to_domain: 3
+from_domain: 51 # ID for Rover domain
+to_domain: 42 # ID for Base Station domain
 topics:
-  # Bridge "/clock" topic from domain ID 2 to domain ID 3
+  # Bridge "/clock" topic from domain ID 51 to domain ID 42
   clock:
     type: rosgraph_msgs/msg/Clock
-  # Bridge "/chatter" topic from domain ID 2 to domain ID 3
-  chatter:
-    type: example_interfaces/msg/String
-    # Override QoS reliability setting to be best effort
-    # This affects the domain bridge subscription and publisher
-    # This does NOT affect the other "chatter" bridge below, which is for a different domain
+  # Livox sensor topics
+  # livox/imu:
+  #   type: sensor_msgs/msg/Imu
+  #   qos:
+  #     reliability: best_effort
+  # livox/lidar:
+  #   type: sensor_msgs/msg/PointCloud2
+  #   qos:
+  #     reliability: best_effort
+  # livox/lidar/ground:
+  #   type: sensor_msgs/msg/PointCloud2
+  #   qos:
+  #     reliability: reliable
+  # livox/lidar/nonground:
+  #   type: sensor_msgs/msg/PointCloud2
+  #   qos:
+  #     reliability: reliable
+  livox/scan:
+    type: sensor_msgs/msg/LaserScan
     qos:
       reliability: best_effort
+  # Navigation topics
+  cmd_vel_out:
+    type: geometry_msgs/msg/TwistStamped
+    qos:
+      reliability: reliable
+  odometry/filtered:
+    type: nav_msgs/msg/Odometry
+    qos:
+      reliability: reliable
+  plan:
+    type: nav_msgs/msg/Path
+    qos:
+      reliability: reliable
+  # Map topics
+  map:
+    type: nav_msgs/msg/OccupancyGrid
+    qos:
+      reliability: reliable
+  map_updates:
+    type: map_msgs/msg/OccupancyGridUpdate
+    qos:
+      reliability: reliable
+  global_costmap/costmap:
+    type: nav_msgs/msg/OccupancyGrid
+    qos:
+      reliability: reliable
+  global_costmap/costmap_updates:
+    type: map_msgs/msg/OccupancyGridUpdate
+    qos:
+      reliability: reliable
+  # Camera and sensor topics
+  rgbd_camera/points:
+    type: sensor_msgs/msg/PointCloud2
+    qos:
+      reliability: best_effort
+  robot_description:
+    type: std_msgs/msg/String
+    qos:
+      reliability: reliable
+  # System topics
+  parameter_events:
+    type: rcl_interfaces/msg/ParameterEvent
+    qos:
+      reliability: reliable
+  # Transform topics
+  tf:
+    type: tf2_msgs/msg/TFMessage
+    qos:
+      reliability: reliable
+  tf_static:
+    type: tf2_msgs/msg/TFMessage
+    qos:
+      reliability: reliable

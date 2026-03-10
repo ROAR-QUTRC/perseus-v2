@@ -108,6 +108,7 @@ pkgs.mkShell {
           visualization-msgs
           xacro
           yaml-cpp-vendor
+          zenoh-bridge-dds
         ]
       )
       ++ builtins.attrValues extraPkgs
