@@ -10,8 +10,8 @@ public:
     MapSaver()
         : Node("map_saver")
     {
-        this->declare_parameter<double>("save_interval_sec", 120.0);
-        this->declare_parameter<std::string>("map_file_path", "/home/user/maps/scan.pcd");
+        this->declare_parameter<double>("save_interval_sec", 30.0);
+        this->declare_parameter<std::string>("map_file_path", "/maps/scan.pcd");
 
         save_interval_ = this->get_parameter("save_interval_sec").as_double();
         map_file_path_ = this->get_parameter("map_file_path").as_string();

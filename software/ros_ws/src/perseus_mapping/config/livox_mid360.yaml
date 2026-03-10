@@ -7,7 +7,7 @@
     filter_size_map: 0.5
     cube_side_length: 1000.0
     runtime_pos_log_enable: false
-    map_file_path: "/home/luca-lubrano/maps/scan.pcd" # luca personal file path
+    map_file_path: "/maps/scan.pcd" 
     # map_file_path: "" # perseus file path
     common:
       lid_topic: "/livox/lidar_filtered" # this is for simulation, the simulated lidar can produce NaN and Inf values which cause errors with the algorithm, this takes data from the filter node instead
