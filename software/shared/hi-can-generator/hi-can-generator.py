@@ -1,6 +1,7 @@
 import sys
 import json
 
+
 def parse_enum_class(enum_class, key):
     parsed_dict = {}
     # Split the lines apart
@@ -240,7 +241,6 @@ for sys_id, sys_val in systems.items():
                         | par_id
                     )
 
-
                     flat_lut[f"0x{can_id:08x}"] = {
                         "system": sys_name,
                         "subsystem": sub_name,
@@ -249,7 +249,9 @@ for sys_id, sys_val in systems.items():
                         "parameter": par_name,
                     }
 
-                if not has_parameter: # Sometimes there are no parameters? K watevrrrr just ignore em
+                if (
+                    not has_parameter
+                ):  # Sometimes there are no parameters? K watevrrrr just ignore em
                     can_id = (
                         (sys_id << (sub_bits + dev_bits + grp_bits + par_bits))
                         | (sub_id << (dev_bits + grp_bits + par_bits))
