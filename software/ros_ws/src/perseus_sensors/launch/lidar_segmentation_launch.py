@@ -4,7 +4,6 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 
-
 def generate_launch_description():
 
     # Correct path to YAML config
