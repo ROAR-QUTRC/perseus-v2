@@ -8,6 +8,7 @@
   fast-lio,
   pcl-conversions,
   sensor-msgs,
+  std-srvs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-mapping";
@@ -25,6 +26,7 @@ buildRosPackage rec {
     fast-lio
     pcl-conversions
     sensor-msgs
+    std-srvs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
