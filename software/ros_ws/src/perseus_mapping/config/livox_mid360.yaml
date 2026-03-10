@@ -7,7 +7,7 @@
     filter_size_map: 0.5
     cube_side_length: 1000.0
     runtime_pos_log_enable: false
-    map_file_path: "/home/luca-lubrano/maps/scan" # luca personal file path
+    map_file_path: "/home/luca-lubrano/maps/scan.pcd" # luca personal file path
     # map_file_path: "" # perseus file path
     common:
       lid_topic: "/livox/lidar_filtered" # this is for simulation, the simulated lidar can produce NaN and Inf values which cause errors with the algorithm, this takes data from the filter node instead
@@ -44,5 +44,5 @@
       scan_bodyframe_pub_en: true # true: output the point cloud scans in IMU-body-frame
     pcd_save:
       pcd_save_en: true
-      interval: 2 # how many LiDAR frames saved in each pcd file;
+      interval: -1 # how many LiDAR frames saved in each pcd file;
       # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.

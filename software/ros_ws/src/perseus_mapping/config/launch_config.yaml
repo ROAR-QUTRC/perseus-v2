@@ -1,3 +1,5 @@
 use_sim_time: true # set to false when running on perseus
 rviz: false
 sim: true # set to false when running on perseus
+map_save_interval_sec: 30.0 # save every 30 seconds
+map_file_path: "/home/luca-lubrano/maps/scan.pcd"

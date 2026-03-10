@@ -7,9 +7,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(std_srvs REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -39,9 +37,19 @@ find_package(sensor_msgs REQUIRED)
 
 add_executable(sim_pointcloud_filter src/sim_pointcloud_filter.cpp)
 ament_target_dependencies(sim_pointcloud_filter rclcpp sensor_msgs)
+add_executable(map_saver src/map_saver.cpp)
+ament_target_dependencies(map_saver
+  rclcpp
+  std_srvs
+  sensor_msgs
+)
 
 install(TARGETS sim_pointcloud_filter DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS sim_pointcloud_filter DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS map_saver
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
