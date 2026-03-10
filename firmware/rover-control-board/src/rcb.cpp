@@ -6,8 +6,6 @@
 #include <rover_thread.hpp>
 using namespace hi_can::parameters::power::distribution;
 
-constexpr unsigned long dk_ILIS = 50000;
-
 const gptimer_alarm_config_t RoverPowerBus::_precharge_off_config = {
     .alarm_count = CONFIG_PRECHARGE_TIME * 10,
     .reload_count = 0,
@@ -25,7 +23,7 @@ const gptimer_alarm_config_t RoverPowerBus::_precharge_on_config = {
 
 RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_control_board::group bus_id, uint16_t precharge_voltage,
                              gpio_num_t precharge, gpio_num_t main_switch,
-                             gpio_num_t voltage_feedback, gpio_num_t current_feedback, const int R16, const long R17, const int R19)
+                             gpio_num_t voltage_feedback, gpio_num_t current_feedback, const int VOLTAGE_DIVIDER_HIGH_RESISTOR, const long VOLTAGE_DIVIDER_LOW_RESISTOR, const int CURRENT_SENSE_RESISTOR)
     : _can_parameters(bus_id, [&](bool on)
                       { set_bus_state(on); }, [&]()
                       { clear_error(); }),
@@ -34,9 +32,9 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
       _voltage_feedback(voltage_feedback),
       _current_feedback(current_feedback),
       _precharge_voltage(precharge_voltage),
-      _R16(R16),
-      _R17(R17),
-      _R19(R19)
+      _VOLTAGE_DIVIDER_HIGH_RESISTOR(VOLTAGE_DIVIDER_HIGH_RESISTOR),
+      _VOLTAGE_DIVIDER_LOW_RESISTOR(VOLTAGE_DIVIDER_LOW_RESISTOR),
+      _CURRENT_SENSE_RESISTOR(CURRENT_SENSE_RESISTOR)
 {
     gpio_set_output(precharge);
     gpio_set_output(main_switch);
@@ -244,6 +242,7 @@ void RoverPowerBus::handle()
     }
 }
 
+// Precharge timer callback
 bool RoverPowerBus::_timer_callback(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx)
 {
     RoverPowerBus* source = (RoverPowerBus*)user_ctx;
@@ -279,23 +278,28 @@ bool RoverPowerBus::_timer_callback(gptimer_handle_t timer, const gptimer_alarm_
     return true;
 }
 
-// I_IS = I_L/dkILIS + I_IS0
-// Assuming I_IS0 is negligible
-// I_IS = I_L/dk_ILIS
-// Also
-// V_CUR_SENSE = I_IS*R_IS
-// I_IS = V_CUR_SENSE/R_IS
-// So
-// V_CUR_SENSE/R_IS = I_L/dk_ILIS
-// I_L = V_CUR_SENSE*dk_ILIS/R_IS
+/*
+ * I_IS = I_L/dkILIS + I_IS0
+ * Assuming I_IS0 is negligible
+ * I_IS = I_L/dk_ILIS
+ * Also
+ * V_CUR_SENSE = I_IS*R_IS
+ * I_IS = V_CUR_SENSE/R_IS
+ * So
+ * V_CUR_SENSE/R_IS = I_L/dk_ILIS
+ * I_L = V_CUR_SENSE*dk_ILIS/R_IS
+ */
 unsigned long RoverPowerBus::adc_to_bus_current(const unsigned long voltage)
 {
-    return voltage * dk_ILIS / _R19;
+    return voltage * RCB_BUS_CURRENT_SENSE_FACTOR / _CURRENT_SENSE_RESISTOR;
 }
 
+/*
+ * V_bus = V_adc * (R_16 + R_17) / R_17
+ */
 unsigned long RoverPowerBus::adc_to_bus_voltage(const unsigned long voltage)
 {
-    return voltage * (_R17 / (_R16 * _R17));
+    return voltage * (_VOLTAGE_DIVIDER_LOW_RESISTOR * _VOLTAGE_DIVIDER_HIGH_RESISTOR) / (_VOLTAGE_DIVIDER_LOW_RESISTOR);
 }
 
 hi_can::PacketManager::transmission_config_t RoverPowerBus::get_transmission_config(void)

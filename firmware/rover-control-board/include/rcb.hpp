@@ -20,52 +20,41 @@
 // which, for 25mS is 1.69J
 
 // SPARE
-// R17 = 1.323k R16 = 54.066k R18 = 2.087k
-const unsigned long SPARE_R16 = 54066;
-const unsigned int SPARE_R17 = 1323;
-const unsigned int SPARE_R19 = 950;
+// R17 = 1.323k R16 = 54.066k
+const unsigned long SPARE_VOLTAGE_DIVIDER_HIGH_RESISTOR = 54066;
+const unsigned int SPARE_VOLTAGE_DIVIDER_LOW_RESISTOR = 1323;
+const unsigned int SPARE_CURRENT_SENSE_RESISTOR = 950;
 
 // DRIVE
-// R17 = 1.312k R16 = 53.997k R18 = 2.053k
-const unsigned long DRIVE_R16 = 53997;
-const unsigned int DRIVE_R17 = 1312;
-const unsigned int DRIVE_R19 = 950;
+// R17 = 1.312k R16 = 53.997k
+const unsigned long DRIVE_VOLTAGE_DIVIDER_HIGH_RESISTOR = 53997;
+const unsigned int DRIVE_VOLTAGE_DIVIDER_LOW_RESISTOR = 1312;
+const unsigned int DRIVE_CURRENT_SENSE_RESISTOR = 950;
 
 // COMPUTE
-// R17 = 1.377k R16 = 54.065k R18 = 2.094k
-const unsigned long COMPUTE_R16 = 54065;
-const unsigned int COMPUTE_R17 = 1377;
-const unsigned int COMPUTE_R19 = 950;
+// R17 = 1.377k R16 = 54.065k
+const unsigned long COMPUTE_VOLTAGE_DIVIDER_HIGH_RESISTOR = 54065;
+const unsigned int COMPUTE_VOLTAGE_DIVIDER_LOW_RESISTOR = 1377;
+const unsigned int COMPUTE_CURRENT_SENSE_RESISTOR = 950;
 
 // AUX
-// R17 = 1.339k R16 = 54.026k R18 = 2.070k
-const unsigned long AUX_R16 = 54026;
-const unsigned int AUX_R17 = 1339;
-const unsigned int AUX_R19 = 950;
+// R17 = 1.339k R16 = 54.026k
+const unsigned long AUX_VOLTAGE_DIVIDER_HIGH_RESISTOR = 54026;
+const unsigned int AUX_VOLTAGE_DIVIDER_LOW_RESISTOR = 1339;
+const unsigned int AUX_CURRENT_SENSE_RESISTOR = 950;
 
 // if measuring above this voltage, switch is *definitely* outputting an error level
 const unsigned int RCB_BUS_CURRENT_SENSE_ERROR_VOLTAGE = 3000;
 // see dkILIS in switch datasheet - outputs 1mA on sense pin for 50000mA flowing through
 const unsigned long RCB_BUS_CURRENT_SENSE_FACTOR = 50000UL;
 // 1k resistor to gnd from switch sense pin
-const unsigned int RCB_BUS_CURRENT_SENSE_RESISTOR = 1000;
+const unsigned int CURRENT_SENSE_RESISTOR = 1000;
 
 // disable switch error between these voltages (capacitors discharge slowly below 5V, and switch error turns off below 2V)
 const unsigned int RCB_SWITCH_ERROR_DISABLE_MIN_VOLTAGE = 2000;
 const unsigned int RCB_SWITCH_ERROR_DISABLE_MAX_VOLTAGE = 5000;
 const unsigned long RCB_BUS_ON_VOLTAGE = 16000;
 const unsigned long RCB_MAX_CURRENT = 50000UL;  // max 50A per channel
-
-// 100k-10k voltage divider to measure bus voltage
-// static long rcb_adc_to_bus_voltage(const long voltage)
-// {
-//     return ((voltage * (100 + 10)) / 10);
-// }
-// // convert current feedback voltage to bus current
-// static long rcb_adc_to_bus_current(const long voltage)
-// {
-//     return (((voltage)*RCB_BUS_CURRENT_SENSE_FACTOR) / RCB_BUS_CURRENT_SENSE_RESISTOR);
-// }
 
 class RoverPowerBus
 {
@@ -88,7 +77,7 @@ public:
     };
     RoverPowerBus(hi_can::addressing::power::distribution::rover_control_board::group bus_id, uint16_t precharge_voltage,
                   gpio_num_t precharge, gpio_num_t main_switch,
-                  gpio_num_t voltage_feedback, gpio_num_t current_feedback, const int R16, const long R17, const int R19);
+                  gpio_num_t voltage_feedback, gpio_num_t current_feedback, const int VOLTAGE_DIVIDER_LOW_RESISTOR, const long VOLTAGE_DIVIDER_HIGH_RESISTOR, const int CURRENT_SENSE_RESISTOR);
     ~RoverPowerBus();
     void set_bus_state(bool on);
     void clear_error();
@@ -115,9 +104,9 @@ private:
 
     const uint32_t _precharge_voltage;
 
-    unsigned long _R16;
-    unsigned int _R17;
-    unsigned int _R19;
+    unsigned int _VOLTAGE_DIVIDER_HIGH_RESISTOR;
+    unsigned long _VOLTAGE_DIVIDER_LOW_RESISTOR;
+    unsigned int _CURRENT_SENSE_RESISTOR;
 
     gptimer_handle_t _timer = NULL;
     bool _switch_had_error = false;
