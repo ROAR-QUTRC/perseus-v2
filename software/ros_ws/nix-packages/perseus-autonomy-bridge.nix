@@ -11,7 +11,6 @@
   perseus-interfaces,
   rclcpp,
   rclcpp-action,
-  zenoh-bridge-dds,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-autonomy-bridge";
@@ -32,7 +31,6 @@ buildRosPackage rec {
     perseus-interfaces
     rclcpp
     rclcpp-action
-    zenoh-bridge-dds
   ];
   nativeBuildInputs = [ ament-cmake ];
 
