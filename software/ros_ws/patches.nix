@@ -1,7 +1,6 @@
 rosDistro: final: prev:
 let
   rosOverlay = rosFinal: rosPrev: {
-    # --- GUI patches ---
     fields2cover =
       let
         nlohmann_json = final.nlohmann_json.overrideAttrs {
@@ -193,14 +192,5 @@ in
     # we need to use overrideScope and an overlay to apply the changes
     # so that they propagate properly
     ${rosDistro} = prev.rosPackages.${rosDistro}.overrideScope rosOverlay;
-  };
-
-  gst_all_1 = prev.gst_all_1 // {
-    gst-plugins-rs = prev.gst_all_1.gst-plugins-rs.override {
-      plugins = [
-        "rtp"
-        "webrtc"
-      ];
-    };
   };
 }
