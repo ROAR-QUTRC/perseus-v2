@@ -47,7 +47,7 @@
 #include <thread>
 
 #include "message_filters/subscriber.h"
-#include "pointcloud_to_laserscan/visibility_control.h"
+#include "pcl_to_lsr/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
