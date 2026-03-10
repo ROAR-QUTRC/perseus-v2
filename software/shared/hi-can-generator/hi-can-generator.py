@@ -1,7 +1,6 @@
 import sys
 import json
 
-
 def parse_enum_class(enum_class, key):
     parsed_dict = {}
     # Split the lines apart
@@ -79,8 +78,7 @@ subsystem_id = 0
 device_id = 0
 
 for token in hi_can_address_tokenized:
-    # Implementing legacy will be a pain, because it has different sizes for
-    # the address sections. I'm skipping it for now
+    # Legacy is a bitch and a half to parse so imma ignore it 🖕
     if token.find("legacy") != -1:
         break
     elif token.find(" GROUP_ID") != -1:
@@ -189,5 +187,87 @@ for token in hi_can_address_tokenized:
         if token.find("PARAM_ADDRESS_BITS") != -1:
             system_address_bits = token.split("PARAM_ADDRESS_BITS = ")[1].split(";")[0]
             systems.update({"PARAMETER_ADDRESS_BITS": system_address_bits})
-systems_json = json.dumps(systems)
+
+
+flat_lut = {}
+sys_bits = int(systems["SYSTEM_ADDRESS_BITS"])
+sub_bits = int(systems["SUBSYSTEM_ADDRESS_BITS"])
+dev_bits = int(systems["DEVICE_ADDRESS_BITS"])
+grp_bits = int(systems["GROUP_ADDRESS_BITS"])
+par_bits = int(systems["PARAMETER_ADDRESS_BITS"])
+
+
+for sys_id, sys_val in systems.items():
+    if not isinstance(sys_id, int):
+        continue
+    sys_name = sys_val["SYSTEM_NAME"]
+    is_legacy_sys = "legacy" in sys_name.lower()
+
+    for sub_id, sub_val in sys_val.items():
+        if not isinstance(sub_id, int):
+            continue
+        sub_name = sub_val["SUBSYSTEM_NAME"]
+
+        for dev_id, dev_val in sub_val.items():
+            if not isinstance(dev_id, int):
+                continue
+            dev_name = dev_val.get("DEVICE_NAME") or dev_val.get("DEVICES")
+            if dev_name is None:
+                continue
+
+            for grp_id, grp_val in dev_val.items():
+                if not isinstance(grp_id, int):
+                    continue
+                grp_name = grp_val["GROUP_NAME"]
+
+                has_parameter = False
+
+                for par_id, par_val in grp_val.items():
+                    if not isinstance(par_id, int):
+                        continue
+                    if not isinstance(par_val, dict):
+                        continue
+                    par_name = par_val.get("PARAMETER_NAME")
+                    if par_name is None:
+                        continue
+                    has_parameter = True
+
+                    can_id = (
+                        (sys_id << (sub_bits + dev_bits + grp_bits + par_bits))
+                        | (sub_id << (dev_bits + grp_bits + par_bits))
+                        | (dev_id << (grp_bits + par_bits))
+                        | (grp_id << par_bits)
+                        | par_id
+                    )
+
+
+                    flat_lut[f"0x{can_id:08x}"] = {
+                        "system": sys_name,
+                        "subsystem": sub_name,
+                        "device": dev_name,
+                        "group": grp_name,
+                        "parameter": par_name,
+                    }
+
+                if not has_parameter: # Sometimes there are no parameters? K watevrrrr just ignore em
+                    can_id = (
+                        (sys_id << (sub_bits + dev_bits + grp_bits + par_bits))
+                        | (sub_id << (dev_bits + grp_bits + par_bits))
+                        | (dev_id << (grp_bits + par_bits))
+                        | (grp_id << par_bits)
+                    )
+                    constructor = (
+                        f"{'legacy::address_t' if is_legacy_sys else 'standard_address_t'}"
+                        f"({sys_id}, {sub_id}, {dev_id}, {grp_id}, 0)"
+                    )
+
+                    flat_lut[f"0x{can_id:08x}"] = {
+                        "system": sys_name,
+                        "subsystem": sub_name,
+                        "device": dev_name,
+                        "group": grp_name,
+                        "parameter": None,
+                    }
+
+systems_json = json.dumps(flat_lut, indent=2)
 print(systems_json)
