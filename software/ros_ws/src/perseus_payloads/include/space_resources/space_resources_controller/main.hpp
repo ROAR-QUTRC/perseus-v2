@@ -11,6 +11,7 @@ class SpaceResourcesController : public rclcpp::Node
 {
 public:
     explicit SpaceResourcesController(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+
 private:
     // Handles /water/reading and /ilmenite/reading service calls from WebUI
     void _handle_water_reading_request(

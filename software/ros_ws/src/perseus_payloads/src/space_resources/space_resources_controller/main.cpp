@@ -1,10 +1,11 @@
 #include "space_resources/space_resources_controller/main.hpp"
+
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <memory>
 #include <sstream>
-//  
+//
 static std::string iso_timestamp()
 {
     auto now = std::chrono::system_clock::now();
@@ -23,16 +24,15 @@ SpaceResourcesController::SpaceResourcesController(const rclcpp::NodeOptions& op
     _ilmenite_concentration_service =
         this->create_client<perseus_interfaces::srv::Concentration>("/ilmenite/concentration");
 
-
     _water_reading_service = this->create_service<perseus_interfaces::srv::Concentration>(
-    "/water/reading",
-    std::bind(&SpaceResourcesController::_handle_water_reading_request, this,
-          std::placeholders::_1, std::placeholders::_2));
+        "/water/reading",
+        std::bind(&SpaceResourcesController::_handle_water_reading_request, this,
+                  std::placeholders::_1, std::placeholders::_2));
 
     _ilmenite_reading_service = this->create_service<perseus_interfaces::srv::Concentration>(
-    "/ilmenite/reading",
-    std::bind(&SpaceResourcesController::_handle_ilmenite_reading_request, this,
-          std::placeholders::_1, std::placeholders::_2));
+        "/ilmenite/reading",
+        std::bind(&SpaceResourcesController::_handle_ilmenite_reading_request, this,
+                  std::placeholders::_1, std::placeholders::_2));
 
     // Publisher to send concentration results to WebUI
     _concentration_result_pub = this->create_publisher<std_msgs::msg::Float64>(
@@ -57,7 +57,7 @@ SpaceResourcesController::SpaceResourcesController(const rclcpp::NodeOptions& op
 //     const std::shared_ptr<perseus_interfaces::srv::Concentration::Request> request,
 //     std::shared_ptr<perseus_interfaces::srv::Concentration::Response> response)
 // {
-//     // read a sensor, calculate concentration 
+//     // read a sensor, calculate concentration
 //     response->concentration = 0.42;  // placeholder for the response
 // }
 
@@ -97,8 +97,8 @@ void SpaceResourcesController::_call_concentration_service(
             auto response = future.get();
 
             // Store raw sensor data on the controller for later processing/conversion to JSON
-            auto raw_sensor_data = response->illuminance_data;            
-            _raw_sensor_data = raw_sensor_data; 
+            auto raw_sensor_data = response->illuminance_data;
+            _raw_sensor_data = raw_sensor_data;
 
             // Extract concentration and forward to WebUI via topic
             double concentration = response->concentration;
