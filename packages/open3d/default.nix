@@ -142,7 +142,12 @@ stdenv.mkDerivation rec {
     python3Packages.numpy
   ];
 
-  passthru.pythonDeps = ps: with ps; [ numpy plotly dash ];
+  passthru.pythonDeps =
+    ps: with ps; [
+      numpy
+      plotly
+      dash
+    ];
 
   # Patch download URLs to use pre-fetched local files from the Nix store
   preConfigure = ''
