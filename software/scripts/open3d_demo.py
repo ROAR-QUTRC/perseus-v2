@@ -19,16 +19,18 @@ def make_helix_point_cloud(n_points=5000, turns=5, radius=1.0, height=4.0):
     y2 = radius * np.sin(t + np.pi)
     z2 = z1.copy()
 
-    points = np.vstack([
-        np.column_stack([x1, y1, z1]),
-        np.column_stack([x2, y2, z2]),
-    ])
+    points = np.vstack(
+        [
+            np.column_stack([x1, y1, z1]),
+            np.column_stack([x2, y2, z2]),
+        ]
+    )
 
     # Colour by height: blue at bottom → red at top
     heights = points[:, 2] / height
     colors = np.zeros((len(points), 3))
-    colors[:, 0] = heights          # red increases with height
-    colors[:, 2] = 1.0 - heights    # blue decreases with height
+    colors[:, 0] = heights  # red increases with height
+    colors[:, 2] = 1.0 - heights  # blue decreases with height
     colors[:, 1] = 0.3 * np.sin(heights * np.pi)  # a touch of green in the middle
 
     pcd = o3d.geometry.PointCloud()
@@ -62,9 +64,13 @@ def mesh_to_plotly(mesh, name, color):
     verts = np.asarray(mesh.vertices)
     tris = np.asarray(mesh.triangles)
     return go.Mesh3d(
-        x=verts[:, 0], y=verts[:, 1], z=verts[:, 2],
-        i=tris[:, 0], j=tris[:, 1], k=tris[:, 2],
-        color=f"rgb({int(color[0]*255)},{int(color[1]*255)},{int(color[2]*255)})",
+        x=verts[:, 0],
+        y=verts[:, 1],
+        z=verts[:, 2],
+        i=tris[:, 0],
+        j=tris[:, 1],
+        k=tris[:, 2],
+        color=f"rgb({int(color[0] * 255)},{int(color[1] * 255)},{int(color[2] * 255)})",
         opacity=0.9,
         name=name,
         flatshading=True,
@@ -88,22 +94,33 @@ def main():
     bbox_max = pts.max(axis=0)
 
     print(f"Double-helix point cloud: {len(pcd.points)} points")
-    print(f"  Bounding box min: [{bbox_min[0]:.2f}, {bbox_min[1]:.2f}, {bbox_min[2]:.2f}]")
-    print(f"  Bounding box max: [{bbox_max[0]:.2f}, {bbox_max[1]:.2f}, {bbox_max[2]:.2f}]")
-    print(f"Primitive meshes : {len(meshes)} objects, {total_triangles} triangles, {total_vertices} vertices")
+    print(
+        f"  Bounding box min: [{bbox_min[0]:.2f}, {bbox_min[1]:.2f}, {bbox_min[2]:.2f}]"
+    )
+    print(
+        f"  Bounding box max: [{bbox_max[0]:.2f}, {bbox_max[1]:.2f}, {bbox_max[2]:.2f}]"
+    )
+    print(
+        f"Primitive meshes : {len(meshes)} objects, {total_triangles} triangles, {total_vertices} vertices"
+    )
 
     # --- Build plotly figure ---
     fig = go.Figure()
 
     # Point cloud as scatter3d
-    rgb_strings = [f"rgb({int(r*255)},{int(g*255)},{int(b*255)})"
-                   for r, g, b in cols]
-    fig.add_trace(go.Scatter3d(
-        x=pts[:, 0], y=pts[:, 1], z=pts[:, 2],
-        mode="markers",
-        marker=dict(size=1.5, color=rgb_strings),
-        name=f"Helix ({len(pts)} pts)",
-    ))
+    rgb_strings = [
+        f"rgb({int(r * 255)},{int(g * 255)},{int(b * 255)})" for r, g, b in cols
+    ]
+    fig.add_trace(
+        go.Scatter3d(
+            x=pts[:, 0],
+            y=pts[:, 1],
+            z=pts[:, 2],
+            mode="markers",
+            marker=dict(size=1.5, color=rgb_strings),
+            name=f"Helix ({len(pts)} pts)",
+        )
+    )
 
     # Meshes
     mesh_info = [
@@ -119,15 +136,19 @@ def main():
     for axis, color, label in [(0, "red", "X"), (1, "green", "Y"), (2, "blue", "Z")]:
         end = [0, 0, 0]
         end[axis] = axis_len
-        fig.add_trace(go.Scatter3d(
-            x=[0, end[0]], y=[0, end[1]], z=[0, end[2]],
-            mode="lines+text",
-            line=dict(color=color, width=5),
-            text=["", label],
-            textposition="top center",
-            textfont=dict(size=14, color=color),
-            showlegend=False,
-        ))
+        fig.add_trace(
+            go.Scatter3d(
+                x=[0, end[0]],
+                y=[0, end[1]],
+                z=[0, end[2]],
+                mode="lines+text",
+                line=dict(color=color, width=5),
+                text=["", label],
+                textposition="top center",
+                textfont=dict(size=14, color=color),
+                showlegend=False,
+            )
+        )
 
     # --- Stats overlay annotation ---
     stats_text = (
@@ -150,9 +171,12 @@ def main():
         annotations=[
             dict(
                 text=stats_text,
-                xref="paper", yref="paper",
-                x=0.01, y=0.99,
-                xanchor="left", yanchor="top",
+                xref="paper",
+                yref="paper",
+                x=0.01,
+                y=0.99,
+                xanchor="left",
+                yanchor="top",
                 showarrow=False,
                 font=dict(family="monospace", size=13, color="white"),
                 bgcolor="rgba(30,30,30,0.85)",
