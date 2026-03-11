@@ -91,6 +91,10 @@ let
   # plus all of the individual formatter programs from said config
   // treefmtEval.config.build.programs;
 
+  # Python environment containing Open3D's Python runtime dependencies (plotly, dash, etc.)
+  # Used to construct PYTHONPATH in the shell hook so `import open3d` works
+  open3dPythonDeps = pkgs.python3.withPackages (ps: with ps; [ numpy plotly dash ]);
+
   # --- ROS WORKSPACES ---
   # function to build a ROS workspace which modifies the dev shell hook to set up environment variables
   mkWorkspace =
@@ -118,8 +122,8 @@ let
         export RCUTILS_COLORIZED_OUTPUT=1
         # fix locale issues
         export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
-        # Open3D Python module
-        export PYTHONPATH="${pkgs.open3d}/lib/python${pkgs.python3.pythonVersion}/site-packages''${PYTHONPATH:+:$PYTHONPATH}"
+        # Open3D Python module and its Python dependencies (plotly, dash, etc.)
+        export PYTHONPATH="${pkgs.open3d}/lib/python${pkgs.python3.pythonVersion}/site-packages:${open3dPythonDeps}/lib/python${pkgs.python3.pythonVersion}/site-packages''${PYTHONPATH:+:$PYTHONPATH}"
       ''
       + additionalPostShellHook;
     };

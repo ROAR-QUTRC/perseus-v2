@@ -141,6 +141,8 @@ stdenv.mkDerivation rec {
 
   propagatedBuildInputs = [
     python3Packages.numpy
+    python3Packages.plotly
+    python3Packages.dash
   ];
 
   # Patch download URLs to use pre-fetched local files from the Nix store
