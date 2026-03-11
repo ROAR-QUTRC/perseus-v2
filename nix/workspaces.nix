@@ -19,6 +19,7 @@ let
       glibcLocales
       yaml-cpp
       libnice
+      open3d
       ;
     inherit (pkgs.gst_all_1)
       gstreamer
@@ -117,6 +118,8 @@ let
         export RCUTILS_COLORIZED_OUTPUT=1
         # fix locale issues
         export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+        # Open3D Python module
+        export PYTHONPATH="${pkgs.open3d}/lib/python${pkgs.python3.pythonVersion}/site-packages''${PYTHONPATH:+:$PYTHONPATH}"
       ''
       + additionalPostShellHook;
     };
