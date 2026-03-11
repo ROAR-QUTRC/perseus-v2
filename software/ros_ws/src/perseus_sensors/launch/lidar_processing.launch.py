@@ -40,8 +40,8 @@ def generate_launch_description():
         get_package_share_directory("perseus_sensors"),
         "config",
         "pcl_conv.yaml",
-    )    
-    
+    )
+
     config_file = os.path.join(
         get_package_share_directory("perseus_sensors"),
         "config",
