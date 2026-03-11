@@ -130,7 +130,6 @@ stdenv.mkDerivation rec {
     vtk
     minizip
     python3Packages.pybind11
-    python3Packages.numpy
     xorg.libX11
     xorg.libXrandr
     xorg.libXinerama
@@ -141,9 +140,9 @@ stdenv.mkDerivation rec {
 
   propagatedBuildInputs = [
     python3Packages.numpy
-    python3Packages.plotly
-    python3Packages.dash
   ];
+
+  passthru.pythonDeps = ps: with ps; [ numpy plotly dash ];
 
   # Patch download URLs to use pre-fetched local files from the Nix store
   preConfigure = ''
@@ -264,26 +263,13 @@ stdenv.mkDerivation rec {
     # Install the assembled Python package to site-packages
     local pydir="$out/lib/python${pythonVersion}/site-packages"
     mkdir -p "$pydir"
-    local pkgdir
-    for d in lib/python_package lib/python_package/open3d; do
-      if [ -d "$d" ] && [ -f "$d/setup.py" -o -f "$d/__init__.py" -o -d "$d/open3d" ]; then
-        pkgdir="$d"
-        break
-      fi
-    done
-    if [ -n "$pkgdir" ] && [ -d "$pkgdir/open3d" ]; then
-      cp -r "$pkgdir/open3d" "$pydir/open3d"
-    elif [ -d "lib/python_package" ]; then
-      # Fallback: copy everything from python_package
-      cp -r lib/python_package/open3d "$pydir/" 2>/dev/null || \
-        cp -r lib/python_package/* "$pydir/"
-    fi
+    cp -r lib/python_package/open3d "$pydir/open3d"
   '';
 
   meta = with lib; {
     description = "Open3D: A Modern Library for 3D Data Processing";
     homepage = "https://www.open3d.org/";
     license = licenses.mit;
-    platforms = platforms.linux;
+    platforms = [ "x86_64-linux" ];
   };
 }
