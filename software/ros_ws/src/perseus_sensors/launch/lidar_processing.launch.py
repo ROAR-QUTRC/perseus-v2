@@ -40,7 +40,17 @@ def generate_launch_description():
         get_package_share_directory("perseus_sensors"),
         "config",
         "pcl_conv.yaml",
+    )    
+    
+    config_file = os.path.join(
+        get_package_share_directory("perseus_sensors"),
+        "config",
+        "lidar_segmentation.yaml",
+        get_package_share_directory("perseus_sensors"),
+        "config",
+        "lidar_segmentation.yaml",
     )
+
     livox_launch_file = os.path.join(
         get_package_share_directory("perseus_sensors"),
         "launch",
@@ -118,6 +128,13 @@ def generate_launch_description():
         name="pointcloud_to_laserscan",
         output="screen",
     )
+    lidar_node = Node(
+        package="perseus_sensors",
+        executable="lidar_segmentation",
+        name="lidar_segmentation_node",  # <-- must match YAML
+        output="screen",
+        parameters=[config_file],
+    )
 
     # Conditionally launch livox driver when not using sim time
     livox_launch = IncludeLaunchDescription(
@@ -133,6 +150,7 @@ def generate_launch_description():
     ld.add_action(declare_subscriber_name)
     ld.add_action(imu_frequency_arg)
     ld.add_action(use_sim_time_arg)
+    ld.add_action(lidar_node)
 
     # Add nodes
     ld.add_action(pointcloud_to_laserscan_node)
