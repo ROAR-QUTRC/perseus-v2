@@ -93,7 +93,13 @@ let
 
   # Python environment containing Open3D's Python runtime dependencies (plotly, dash, etc.)
   # Used to construct PYTHONPATH in the shell hook so `import open3d` works
-  open3dPythonDeps = pkgs.python3.withPackages (ps: with ps; [ numpy plotly dash ]);
+  open3dPythonDeps = pkgs.python3.withPackages (
+    ps: with ps; [
+      numpy
+      plotly
+      dash
+    ]
+  );
 
   # --- ROS WORKSPACES ---
   # function to build a ROS workspace which modifies the dev shell hook to set up environment variables
