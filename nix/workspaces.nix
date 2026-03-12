@@ -1,5 +1,7 @@
 { pkgs, treefmtEval, ... }:
 let
+  inherit (pkgs.stdenv.hostPlatform) isx86_64;
+
   productionDomainId = 42;
   devDomainId = 51;
 
@@ -19,7 +21,6 @@ let
       glibcLocales
       yaml-cpp
       libnice
-      open3d
       ;
     inherit (pkgs.gst_all_1)
       gstreamer
@@ -52,7 +53,9 @@ let
       nav2-lifecycle-manager
       nav2-common
       ;
-  };
+  }
+  # Open3D is x86_64-linux only (uses Intel MKL/IPP)
+  // pkgs.lib.optionalAttrs isx86_64 { inherit (pkgs) open3d; };
   # Packages which should be available only in the dev shell
   devShellPkgs = {
     inherit (pkgs)
@@ -92,8 +95,10 @@ let
   // treefmtEval.config.build.programs;
 
   # Python environment containing Open3D's Python runtime dependencies (plotly, dash, etc.)
-  # Used to construct PYTHONPATH in the shell hook so `import open3d` works
-  open3dPythonDeps = pkgs.python3.withPackages pkgs.open3d.pythonDeps;
+  # Used to construct PYTHONPATH in the shell hook so `import open3d` works (x86_64 only)
+  open3dPythonDeps = pkgs.lib.optionalAttrs isx86_64 {
+    env = pkgs.python3.withPackages pkgs.open3d.pythonDeps;
+  };
 
   # --- ROS WORKSPACES ---
   # function to build a ROS workspace which modifies the dev shell hook to set up environment variables
@@ -122,8 +127,10 @@ let
         export RCUTILS_COLORIZED_OUTPUT=1
         # fix locale issues
         export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+        ${pkgs.lib.optionalString isx86_64 ''
         # Open3D Python module and its Python dependencies (plotly, dash, etc.)
-        export PYTHONPATH="${pkgs.open3d}/lib/python${pkgs.python3.pythonVersion}/site-packages:${open3dPythonDeps}/lib/python${pkgs.python3.pythonVersion}/site-packages''${PYTHONPATH:+:$PYTHONPATH}"
+        export PYTHONPATH="${pkgs.open3d}/lib/python${pkgs.python3.pythonVersion}/site-packages:${open3dPythonDeps.env}/lib/python${pkgs.python3.pythonVersion}/site-packages''${PYTHONPATH:+:$PYTHONPATH}"
+        ''}
       ''
       + additionalPostShellHook;
     };
