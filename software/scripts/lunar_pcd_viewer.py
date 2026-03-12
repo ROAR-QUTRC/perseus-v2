@@ -343,7 +343,7 @@ def compute_comms_coverage(xg, yg, zg, base_pos, antenna_height=1.0):
     max_dist = float(np.sqrt((x_max - x_min) ** 2 + (y_max - y_min) ** 2))
 
     # Cast 720 rays (0.5-deg spacing) outward from the base
-    n_rays = 720
+    n_rays = 360
     n_steps = int(max_dist / step_size) + 1
     angles = np.linspace(0, 2 * np.pi, n_rays, endpoint=False)
     cos_a = np.cos(angles)
@@ -599,8 +599,8 @@ def find_path(sparse_graph, cost_grid, xg, yg, start_xy, end_xy):
     path_nodes.reverse()
 
     path_coords = []
-    for and in path_nodes:
-        r, c = divmod(and, cols)
+    for node_id in path_nodes:
+        r, c = divmod(node_id, cols)
         path_coords.append((float(xg[r, c]), float(yg[r, c])))
 
     return path_coords, float(total_cost)
@@ -1617,45 +1617,48 @@ def fig_battery_range(
     wp_cost=None,
     charge_pct=100.0,
     theme="dark",
+    hazard_bg=None,
 ):
     """Battery range heatmap with lander, waypoints, and planned route."""
     t = _t(theme)
 
-    # Clamp display range to [0, 100] for colour mapping
-    display_z = np.clip(range_pct, 0, 100)
-    # Grey out unreachable cells
-    display_z[~reachable] = np.nan
+    has_lander = lander_pos is not None
 
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=display_z,
-                colorscale=RANGE_CS,
-                zmin=0,
-                zmax=100,
-                colorbar=_colorbar("Batt %", t),
-                hovertemplate=(
-                    "X: %{x:.2f}m  Y: %{y:.2f}m<br>"
-                    "Return battery: %{z:.0f}%<extra></extra>"
-                ),
-            )
-        ]
-    )
+    if has_lander:
+        # Clamp display range to [0, 100] for colour mapping
+        display_z = np.clip(range_pct, 0, 100).copy()
+        display_z[~reachable] = np.nan
 
-    # Unreachable overlay (semi-transparent dark)
-    unreachable_z = np.where(reachable, np.nan, 0.0)
-    if np.any(~reachable):
-        fig.add_trace(
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=unreachable_z,
+        fig = go.Figure(data=[go.Heatmap(
+            x=xg[0, :], y=yg[:, 0], z=display_z,
+            colorscale=RANGE_CS, zmin=0, zmax=100,
+            colorbar=_colorbar("Batt %", t),
+            hovertemplate=(
+                "X: %{x:.2f}m  Y: %{y:.2f}m<br>"
+                "Return battery: %{z:.0f}%<extra></extra>"
+            ),
+        )])
+
+        # Unreachable overlay (semi-transparent dark)
+        if np.any(~reachable):
+            unreachable_z = np.where(reachable, np.nan, 0.0)
+            fig.add_trace(go.Heatmap(
+                x=xg[0, :], y=yg[:, 0], z=unreachable_z,
                 colorscale=[[0, "rgba(30,0,0,0.6)"], [1, "rgba(30,0,0,0.6)"]],
-                showscale=False,
-                hoverinfo="skip",
-            )
+                showscale=False, hoverinfo="skip",
+            ))
+    else:
+        # No lander — show terrain hazard as clickable background
+        bg = hazard_bg if hazard_bg is not None else np.zeros_like(xg)
+        fig = go.Figure(data=[go.Heatmap(
+            x=xg[0, :], y=yg[:, 0], z=bg,
+            colorscale=HAZARD_CS, showscale=False, opacity=0.5,
+            hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Click to place lander<extra></extra>",
+        )])
+        fig.add_annotation(
+            text="CLICK MAP TO PLACE LANDER",
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+            font=dict(size=18, color=t["accent"], family="Courier New"),
         )
 
     # Lander marker
@@ -1883,13 +1886,13 @@ def create_app(pcd_path: str):
     n = len(points)
     print(f"[PERSEUS] Loaded {n:,} points")
 
-    max_3d = 50_000
+    max_3d = 30_000
     sub = max(1, n // max_3d)
     if sub > 1:
         print(f"[PERSEUS] Subsampling 3D view: 1/{sub} ({n // sub:,} points)")
 
     print("[PERSEUS] Interpolating terrain grid...")
-    xg, yg, zg = make_terrain_grid(points, resolution=150)
+    xg, yg, zg = make_terrain_grid(points, resolution=120)
 
     now = datetime.now(timezone.utc)
     sun0 = compute_sun_direction(now)
@@ -2026,6 +2029,7 @@ def create_app(pcd_path: str):
                 np.zeros_like(zg, dtype=bool),
                 None,
                 theme=theme,
+                hazard_bg=hazard,
             ),
         }
         fig = builders[key]()
@@ -3062,18 +3066,12 @@ def create_app(pcd_path: str):
                 )
             return (
                 fig_battery_range(
-                    xg,
-                    yg,
-                    np.full_like(zg, np.nan),
-                    np.zeros_like(zg, dtype=bool),
-                    None,
-                    charge_pct=charge_pct,
-                    theme=theme,
+                    xg, yg, np.full_like(zg, np.nan),
+                    np.zeros_like(zg, dtype=bool), None,
+                    charge_pct=charge_pct, theme=theme,
+                    hazard_bg=hazard,
                 ),
-                None,
-                [],
-                "Lander: not placed",
-                "Waypoints: 0",
+                None, [], "Lander: not placed", "Waypoints: 0",
             )
 
         # Handle battery slider change (no click)
@@ -3179,19 +3177,13 @@ def create_app(pcd_path: str):
                 )
             else:
                 fig = fig_battery_range(
-                    xg,
-                    yg,
-                    np.full_like(zg, np.nan),
-                    np.zeros_like(zg, dtype=bool),
-                    None,
-                    waypoints,
-                    charge_pct=charge_pct,
-                    theme=theme,
+                    xg, yg, np.full_like(zg, np.nan),
+                    np.zeros_like(zg, dtype=bool), None,
+                    waypoints, charge_pct=charge_pct,
+                    theme=theme, hazard_bg=hazard,
                 )
                 return (
-                    fig,
-                    None,
-                    waypoints,
+                    fig, None, waypoints,
                     "Lander: not placed",
                     f"Waypoints: {len(waypoints)}",
                 )
