@@ -467,14 +467,25 @@ def compute_lunar_cycle_illumination(
 
 
 def compute_traversal_cost(slope_deg, hazard, solar_uptime, comms_coverage):
-    """Per-cell traversal cost.  Slope > 15 deg is impassable."""
+    """Per-cell traversal cost.
+
+    Impassable if slope > 15 deg OR in a comms dead zone (coverage < 0.1).
+    Cells with weak signal (< 0.3) receive a heavy penalty so the planner
+    strongly prefers routes that maintain radio contact with the lander.
+    """
     cost = np.full_like(slope_deg, np.inf, dtype=np.float64)
-    passable = slope_deg <= 15.0
+    passable = (slope_deg <= 15.0) & (comms_coverage >= 0.1)
+    # Heavy penalty for weak comms: 1/coverage blows up near zero
+    comms_penalty = np.where(
+        comms_coverage[passable] > 0.1,
+        (1.0 / (comms_coverage[passable] + 0.05)) * 2.0,
+        50.0,
+    )
     cost[passable] = np.clip(
         np.exp(slope_deg[passable] / 10.0)
         + hazard[passable] * 5.0
         - solar_uptime[passable] * 2.0
-        + (1.0 - comms_coverage[passable]) * 3.0,
+        + comms_penalty,
         0.1,
         None,
     )
@@ -1820,8 +1831,10 @@ LAYER_INFO = {
     "path": (
         "PATH PLANNER",
         "Click two points on the map to compute the safest route between them "
-        "using shortest-path optimisation. The route avoids steep slopes and "
-        "hazardous terrain. Total traversal cost is shown.",
+        "using shortest-path optimisation. The route avoids steep slopes, "
+        "hazardous terrain, and comms dead zones — it will not plan through "
+        "areas with no radio line-of-sight to the lander, and strongly "
+        "prefers paths that maintain strong signal coverage.",
     ),
     "comms": (
         "LINE-OF-SIGHT COMMS",
