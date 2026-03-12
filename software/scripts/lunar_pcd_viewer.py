@@ -970,23 +970,51 @@ def fig_resources(xg, yg, ice_prob, drill_sites, theme="dark"):
 def fig_comms(xg, yg, comms_coverage, base_pos, rover_pos=None,
               los_data=None, theme="dark"):
     t = _t(theme)
+    # Build custom hover data: coverage %, distance from base
+    dx = xg - base_pos[0]
+    dy = yg - base_pos[1]
+    dist_from_base = np.sqrt(dx**2 + dy**2)
+    custom = np.stack([comms_coverage * 100, dist_from_base], axis=-1)
+
     fig = go.Figure(data=[go.Heatmap(
         x=xg[0, :], y=yg[:, 0], z=comms_coverage, colorscale=COMMS_CS,
         colorbar=_colorbar("Signal", t),
-        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Signal: %{z:.2f}<extra></extra>",
+        customdata=custom,
+        hovertemplate=(
+            "X: %{x:.2f}m<br>Y: %{y:.2f}m<br>"
+            "LOS: %{customdata[0]:.0f}%<br>"
+            "Range: %{customdata[1]:.1f}m<extra></extra>"
+        ),
     )])
-    fig.add_trace(go.Scatter(
-        x=[base_pos[0]], y=[base_pos[1]], mode="markers",
-        marker=dict(symbol="diamond", size=14, color=t["accent"],
-                    line=dict(width=1, color="#ffffff")),
-        name="Base",
-        hovertemplate="BASE<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+
+    # Shadow boundary contour — highlights edges of comms dead zones
+    fig.add_trace(go.Contour(
+        x=xg[0, :], y=yg[:, 0], z=comms_coverage,
+        contours=dict(start=0.5, end=0.5, size=0.1,
+                      coloring="none", showlabels=False),
+        line=dict(width=2, color="#ff4400", dash="dot"),
+        showscale=False, hoverinfo="skip", name="Shadow Edge",
     ))
+
+    # Base station marker + label
+    fig.add_trace(go.Scatter(
+        x=[base_pos[0]], y=[base_pos[1]], mode="markers+text",
+        marker=dict(symbol="diamond", size=16, color=t["accent"],
+                    line=dict(width=2, color="#ffffff")),
+        text=["BASE"], textposition="top center",
+        textfont=dict(size=12, color=t["accent"], family="Courier New"),
+        name="Base",
+        hovertemplate="BASE STATION<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+    ))
+
     if rover_pos is not None:
         fig.add_trace(go.Scatter(
-            x=[rover_pos[0]], y=[rover_pos[1]], mode="markers",
+            x=[rover_pos[0]], y=[rover_pos[1]], mode="markers+text",
             marker=dict(symbol="circle", size=12, color=t["font_color"],
                         line=dict(width=1, color="#ffffff")),
+            text=["ROVER"], textposition="top center",
+            textfont=dict(size=10, color=t["font_color"],
+                          family="Courier New"),
             name="Rover",
             hovertemplate="ROVER<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
         ))
@@ -1327,9 +1355,10 @@ LAYER_INFO = {
     ),
     "comms": (
         "LINE-OF-SIGHT COMMS",
-        "Radio communication coverage from the base station. Green = clear "
-        "line-of-sight, dark = blocked by terrain. Click to move the base "
-        "station and recalculate coverage.",
+        "Radio comms coverage with RF shadow mapping. Green = clear LOS, "
+        "red = blocked by terrain. Dotted contours show shadow boundaries. "
+        "Use sidebar to switch between placing the base station or checking "
+        "rover LOS. Moving the base recomputes the full coverage map.",
     ),
     "resources": (
         "RESOURCE OVERLAY",
@@ -1560,6 +1589,8 @@ def create_app(pcd_path: str):
         dcc.Store(id="lander-pos", data=None),
         dcc.Store(id="range-waypoints", data=[]),
         dcc.Store(id="range-click-mode", data="lander"),
+        # Comms base station store
+        dcc.Store(id="comms-base-pos", data=list(default_base)),
         # Cycle playback store
         dcc.Store(id="cycle-frame", data=0),
         # 3D figure store for rotation
@@ -1675,6 +1706,36 @@ def create_app(pcd_path: str):
                             marks={d: {"label": f"{d}", "style": {"fontSize": "8px"}}
                                    for d in range(0, 360, 90)},
                             tooltip={"placement": "bottom"}),
+                html.Hr(style={"margin": "8px 0"}),
+                html.Div("COMMS / LOS", style={
+                    "fontWeight": "bold", "fontSize": "11px",
+                    "letterSpacing": "2px", "marginBottom": "4px",
+                }),
+                html.Label("Click mode:", style={"fontSize": "10px"}),
+                dcc.RadioItems(
+                    id="comms-mode",
+                    options=[
+                        {"label": " Move Base Station", "value": "base"},
+                        {"label": " Check Rover LOS", "value": "rover"},
+                    ],
+                    value="base",
+                    style={"fontSize": "10px", "marginBottom": "4px"},
+                    inputStyle={"marginRight": "3px"},
+                    labelStyle={"display": "block", "padding": "1px 0"},
+                ),
+                html.Div(id="comms-info", style={
+                    "fontSize": "9px", "lineHeight": "1.5",
+                    "marginTop": "4px", "padding": "4px",
+                    "border": "1px solid var(--grid-clr)",
+                    "borderRadius": "3px",
+                    "backgroundColor": "var(--page-bg)",
+                }, children=[
+                    html.Div(id="comms-base-info",
+                             children=f"Base: ({default_base[0]:.1f}, "
+                                      f"{default_base[1]:.1f})"),
+                    html.Div(id="comms-rover-info",
+                             children="Rover: click map"),
+                ]),
                 html.Hr(style={"margin": "8px 0"}),
                 html.Div("BATTERY RANGE", style={
                     "fontWeight": "bold", "fontSize": "11px",
@@ -2073,14 +2134,19 @@ def create_app(pcd_path: str):
                                   theme=theme),
                     [px, py], None)
 
-    # 8. Comms LOS — click to place rover
+    # 8. Comms LOS — click to place base or rover
     @app.callback(
         Output("comms-map", "figure"),
+        Output("comms-base-pos", "data"),
+        Output("comms-base-info", "children"),
+        Output("comms-rover-info", "children"),
         Input("comms-map", "clickData"),
+        State("comms-mode", "value"),
+        State("comms-base-pos", "data"),
         State("theme-store", "data"),
         prevent_initial_call=True,
     )
-    def comms_click(click, theme):
+    def comms_click(click, mode, base_stored, theme):
         if not click or "points" not in click:
             raise PreventUpdate
         pt = click["points"][0]
@@ -2088,10 +2154,28 @@ def create_app(pcd_path: str):
         if px is None or py is None:
             raise PreventUpdate
 
-        rover_pos = (px, py)
-        los_data = compute_line_of_sight(xg, yg, zg, default_base, rover_pos)
-        return fig_comms(xg, yg, comms_coverage, default_base,
-                          rover_pos, los_data, theme)
+        base_pos = tuple(base_stored) if base_stored else default_base
+
+        if mode == "base":
+            # Relocate base station and recompute coverage
+            base_pos = (px, py)
+            new_coverage = compute_comms_coverage(xg, yg, zg, base_pos)
+            fig = fig_comms(xg, yg, new_coverage, base_pos, theme=theme)
+            return (fig, list(base_pos),
+                    f"Base: ({px:.1f}, {py:.1f})",
+                    "Rover: click map")
+        else:
+            # Place rover and show LOS trace
+            rover_pos = (px, py)
+            cur_coverage = compute_comms_coverage(xg, yg, zg, base_pos)
+            los_data = compute_line_of_sight(xg, yg, zg, base_pos,
+                                              rover_pos)
+            fig = fig_comms(xg, yg, cur_coverage, base_pos,
+                             rover_pos, los_data, theme)
+            status = "CLEAR" if los_data["visible"] else "BLOCKED"
+            return (fig, list(base_pos),
+                    f"Base: ({base_pos[0]:.1f}, {base_pos[1]:.1f})",
+                    f"Rover: ({px:.1f}, {py:.1f}) [{status}]")
 
     # 9. Rover sim — click to place, slider for heading
     @app.callback(
