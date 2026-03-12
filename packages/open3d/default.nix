@@ -89,7 +89,7 @@ let
     hash = "sha256-UfM/1b9QEenq4OA05cxwp8CsC6k9aj9m/X4UXPGl4ws=";
   };
 
-  pythonVersion = python3.pythonVersion; # e.g. "3.13"
+  inherit (python3) pythonVersion; # e.g. "3.13"
 
 in
 stdenv.mkDerivation rec {
