@@ -588,8 +588,8 @@ def find_path(sparse_graph, cost_grid, xg, yg, start_xy, end_xy):
     path_nodes.reverse()
 
     path_coords = []
-    for and in path_nodes:
-        r, c = divmod(and, cols)
+    for nd in path_nodes:
+        r, c = divmod(nd, cols)
         path_coords.append((float(xg[r, c]), float(yg[r, c])))
 
     return path_coords, float(total_cost)
