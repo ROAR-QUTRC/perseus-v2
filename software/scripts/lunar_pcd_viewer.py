@@ -418,17 +418,17 @@ def compute_lunar_cycle_illumination(
 ):
     """Compute shadow maps and solar radiation across a full 28-day lunar day.
 
-    For each timestep, computes both the binary illumination mask AND the
-    irradiance received by each cell (cos of incidence angle between sun
-    direction and surface normal, clamped to zero when in shadow or facing
-    away from the sun).
+    For each timestep the irradiance on a horizontal surface is
+    ``solar_constant * sin(sun_elevation)`` (i.e. ``sun_dir[2]``), gated by
+    the binary shadow mask.  This gives a smooth heatmap driven entirely by
+    how long each cell is illuminated and how high the sun is at the time,
+    without noisy per-cell surface-normal effects.
 
     Returns
     -------
     illum_stack : (n_steps, rows, cols) float32  — binary illumination per step
     timestamps : list of datetime
-    solar_radiation : (rows, cols) float64 — cumulative solar radiation in
-        relative units (Wh/m² proportional) over the full 28-day cycle
+    solar_radiation : (rows, cols) float64 — cumulative radiation (Wh/m²)
     psr_mask : (rows, cols) bool — permanently shadowed regions (never lit)
     """
     rows, cols = zg.shape
@@ -437,17 +437,6 @@ def compute_lunar_cycle_illumination(
 
     illum_stack = np.zeros((n_steps, rows, cols), dtype=np.float32)
     timestamps = []
-
-    # Surface normals from terrain gradients (computed once)
-    dx = float(xg[0, 1] - xg[0, 0]) if cols > 1 else 1.0
-    dy = float(yg[1, 0] - yg[0, 0]) if rows > 1 else 1.0
-    dzdx = np.gradient(zg, dx, axis=1)
-    dzdy = np.gradient(zg, dy, axis=0)
-    # Surface normal: (-dzdx, -dzdy, 1), normalised
-    norm_mag = np.sqrt(dzdx**2 + dzdy**2 + 1.0)
-    nx = -dzdx / norm_mag
-    ny = -dzdy / norm_mag
-    nz = 1.0 / norm_mag
 
     # Solar constant at lunar surface ~1361 W/m²
     SOLAR_CONSTANT = 1361.0
@@ -462,12 +451,11 @@ def compute_lunar_cycle_illumination(
         shadow = compute_shadow_map(xg, yg, zg, sun_dir)
         illum_stack[i] = shadow
 
-        # Irradiance = solar_constant * cos(incidence_angle) * shadow_mask
-        # cos(incidence) = dot(surface_normal, sun_direction)
-        cos_inc = nx * sun_dir[0] + ny * sun_dir[1] + nz * sun_dir[2]
-        cos_inc = np.clip(cos_inc, 0.0, 1.0)  # facing away = 0
-        irradiance = SOLAR_CONSTANT * cos_inc * shadow  # W/m²
-        solar_radiation += irradiance * hours_per_step  # Wh/m²
+        # Irradiance on a horizontal surface = solar_constant * sin(elevation)
+        # sun_dir[2] = sin(elevation); clamp to 0 when sun is below horizon
+        sin_elev = max(0.0, float(sun_dir[2]))
+        irradiance = SOLAR_CONSTANT * sin_elev  # W/m² (scalar)
+        solar_radiation += irradiance * shadow * hours_per_step  # Wh/m²
 
         if (i + 1) % 7 == 0 or i == 0:
             print(f"[PERSEUS]        Shadow map {i + 1}/{n_steps}")
