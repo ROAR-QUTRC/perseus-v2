@@ -26,6 +26,7 @@
   vtk,
   minizip,
   xorg,
+  librealsense,
   libGL,
   unzip,
 }:
@@ -135,6 +136,7 @@ stdenv.mkDerivation rec {
     xorg.libXinerama
     xorg.libXcursor
     xorg.libXi
+    librealsense
     libGL
   ];
 
@@ -222,6 +224,10 @@ stdenv.mkDerivation rec {
     "-DBUILD_EXAMPLES=OFF"
     "-DBUILD_UNIT_TESTS=OFF"
     "-DBUILD_BENCHMARKS=OFF"
+
+    # LibRealSense support
+    "-DBUILD_LIBREALSENSE=ON"
+    "-DUSE_SYSTEM_LIBREALSENSE=ON"
 
     # Use system dependencies where compatible
     "-DUSE_SYSTEM_EIGEN3=ON"
