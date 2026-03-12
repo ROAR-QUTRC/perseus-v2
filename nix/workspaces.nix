@@ -50,6 +50,11 @@ let
       nav2-util
       nav2-lifecycle-manager
       nav2-common
+      rtabmap-odom
+      rtabmap-slam
+      rtabmap-util
+      rtabmap-rviz-plugins
+      rtabmap-viz
       ;
   };
   # Packages which should be available only in the dev shell
