@@ -40,14 +40,13 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import dijkstra as sp_dijkstra
 
 import plotly.graph_objects as go
-from dash import Dash, html, dcc, Input, Output, State, no_update, ctx
+from dash import Dash, html, dcc, Input, Output, State, no_update, ALL, ctx
 from dash.exceptions import PreventUpdate
 
 
 # ---------------------------------------------------------------------------
 # PCD loader (numpy-fast path for binary float32 PCD v0.7)
 # ---------------------------------------------------------------------------
-
 
 def load_pcd(path: str):
     """Return (N,3) float32 XYZ and (N,) float32 intensity from a .pcd file."""
@@ -71,9 +70,7 @@ def load_pcd(path: str):
 
         if data_type == "binary":
             dt = np.dtype([(fields[i], np.float32) for i in range(len(fields))])
-            arr = np.frombuffer(
-                f.read(n_points * dt.itemsize), dtype=dt, count=n_points
-            )
+            arr = np.frombuffer(f.read(n_points * dt.itemsize), dtype=dt, count=n_points)
             points = np.column_stack([arr["x"], arr["y"], arr["z"]]).astype(np.float32)
             intensity = (
                 arr["intensity"].astype(np.float32)
@@ -99,7 +96,6 @@ def load_pcd(path: str):
 # Terrain grid interpolation
 # ---------------------------------------------------------------------------
 
-
 def make_terrain_grid(points, resolution=250):
     """Interpolate point cloud onto a regular grid for contour / surface plots."""
     x, y, z = points[:, 0], points[:, 1], points[:, 2]
@@ -121,13 +117,12 @@ def make_terrain_grid(points, resolution=250):
 # ---------------------------------------------------------------------------
 
 # Default: Shackleton Crater rim, lunar South Pole
-DEFAULT_LAT = -89.9  # degrees selenographic latitude
-DEFAULT_LON = 0.0  # degrees selenographic longitude
+DEFAULT_LAT = -89.9   # degrees selenographic latitude
+DEFAULT_LON = 0.0     # degrees selenographic longitude
 
 
-def compute_sun_direction(
-    dt: datetime, lat_deg: float = DEFAULT_LAT, lon_deg: float = DEFAULT_LON
-) -> np.ndarray:
+def compute_sun_direction(dt: datetime, lat_deg: float = DEFAULT_LAT,
+                          lon_deg: float = DEFAULT_LON) -> np.ndarray:
     """Sun direction as a unit vector [east, north, up] in a local tangent frame."""
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
@@ -150,28 +145,23 @@ def compute_sun_direction(
     ss_lon = math.radians(subsolar_lon)
 
     dlon = ss_lon - obs_lon
-    cos_c = math.sin(obs_lat) * math.sin(ss_lat) + math.cos(obs_lat) * math.cos(
-        ss_lat
-    ) * math.cos(dlon)
+    cos_c = (math.sin(obs_lat) * math.sin(ss_lat) +
+             math.cos(obs_lat) * math.cos(ss_lat) * math.cos(dlon))
     cos_c = max(-1.0, min(1.0, cos_c))
 
     elevation = math.asin(cos_c)
 
     sin_c = math.sqrt(1 - cos_c * cos_c) + 1e-12
-    cos_az = (math.sin(ss_lat) - math.sin(obs_lat) * cos_c) / (
-        math.cos(obs_lat) * sin_c + 1e-12
-    )
+    cos_az = (math.sin(ss_lat) - math.sin(obs_lat) * cos_c) / (math.cos(obs_lat) * sin_c + 1e-12)
     sin_az = math.cos(ss_lat) * math.sin(dlon) / sin_c
     azimuth = math.atan2(sin_az, cos_az)
 
     ce = math.cos(elevation)
-    return np.array(
-        [
-            ce * math.sin(azimuth),
-            ce * math.cos(azimuth),
-            math.sin(elevation),
-        ]
-    )
+    return np.array([
+        ce * math.sin(azimuth),
+        ce * math.cos(azimuth),
+        math.sin(elevation),
+    ])
 
 
 def compute_shadow_map(x_grid, y_grid, z_grid, sun_dir):
@@ -211,7 +201,6 @@ def compute_shadow_map(x_grid, y_grid, z_grid, sun_dir):
 # Terrain analysis — slope, hazard, resources, comms, rover, mission score
 # ---------------------------------------------------------------------------
 
-
 def compute_slope_map(xg, yg, zg):
     """Compute slope angle (degrees) and local elevation variance."""
     dx = xg[0, 1] - xg[0, 0] if xg.shape[1] > 1 else 1.0
@@ -223,8 +212,8 @@ def compute_slope_map(xg, yg, zg):
     slope_rad = np.arctan(np.sqrt(dzdx**2 + dzdy**2))
     slope_deg = np.degrees(slope_rad)
 
-    mean_z = uniform_filter(zg, size=5, mode="nearest")
-    mean_z2 = uniform_filter(zg**2, size=5, mode="nearest")
+    mean_z = uniform_filter(zg, size=5, mode='nearest')
+    mean_z2 = uniform_filter(zg**2, size=5, mode='nearest')
     variance = np.maximum(mean_z2 - mean_z**2, 0.0)
 
     return slope_deg, variance
@@ -255,9 +244,8 @@ def generate_ice_deposits(xg, yg, zg, illum):
     is_peak = (ice_prob == local_max) & (ice_prob > threshold)
 
     peak_rows, peak_cols = np.where(is_peak)
-    drill_sites = [
-        (float(xg[r, c]), float(yg[r, c])) for r, c in zip(peak_rows, peak_cols)
-    ]
+    drill_sites = [(float(xg[r, c]), float(yg[r, c]))
+                   for r, c in zip(peak_rows, peak_cols)]
 
     return ice_prob, drill_sites
 
@@ -282,12 +270,10 @@ def _bilinear_interp(zg, xg, yg, x, y):
     dc = col_f - c0
     dr = row_f - r0
 
-    result = (
-        zg[r0, c0] * (1 - dr) * (1 - dc)
-        + zg[r0, c1] * (1 - dr) * dc
-        + zg[r1, c0] * dr * (1 - dc)
-        + zg[r1, c1] * dr * dc
-    )
+    result = (zg[r0, c0] * (1 - dr) * (1 - dc) +
+              zg[r0, c1] * (1 - dr) * dc +
+              zg[r1, c0] * dr * (1 - dc) +
+              zg[r1, c1] * dr * dc)
 
     return float(result[0]) if is_scalar else result
 
@@ -299,7 +285,7 @@ def compute_line_of_sight(xg, yg, zg, p1, p2, antenna_height=1.0):
     xs = p1[0] + t * (p2[0] - p1[0])
     ys = p1[1] + t * (p2[1] - p1[1])
 
-    profile_dist = np.sqrt((xs - p1[0]) ** 2 + (ys - p1[1]) ** 2)
+    profile_dist = np.sqrt((xs - p1[0])**2 + (ys - p1[1])**2)
     profile_z = _bilinear_interp(zg, xg, yg, xs, ys)
 
     z_start = profile_z[0] + antenna_height
@@ -311,11 +297,11 @@ def compute_line_of_sight(xg, yg, zg, p1, p2, antenna_height=1.0):
     blocked_mask[-1] = False
 
     return {
-        "visible": not np.any(blocked_mask),
-        "profile_dist": profile_dist,
-        "profile_z": profile_z,
-        "los_z": los_z,
-        "blocked_mask": blocked_mask,
+        'visible': not np.any(blocked_mask),
+        'profile_dist': profile_dist,
+        'profile_z': profile_z,
+        'los_z': los_z,
+        'blocked_mask': blocked_mask,
     }
 
 
@@ -337,10 +323,9 @@ def compute_comms_coverage(xg, yg, zg, base_pos, antenna_height=1.0):
     cell_dy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
     step_size = min(cell_dx, cell_dy) * 0.5  # half-cell steps for accuracy
 
-    base_z = (
-        float(_bilinear_interp(zg, xg, yg, base_pos[0], base_pos[1])) + antenna_height
-    )
-    max_dist = float(np.sqrt((x_max - x_min) ** 2 + (y_max - y_min) ** 2))
+    base_z = float(_bilinear_interp(
+        zg, xg, yg, base_pos[0], base_pos[1])) + antenna_height
+    max_dist = float(np.sqrt((x_max - x_min)**2 + (y_max - y_min)**2))
 
     # Cast 720 rays (0.5-deg spacing) outward from the base
     n_rays = 720
@@ -360,12 +345,14 @@ def compute_comms_coverage(xg, yg, zg, base_pos, antenna_height=1.0):
         rx = base_pos[0] + r * cos_a
         ry = base_pos[1] + r * sin_a
 
-        in_bounds = (rx >= x_min) & (rx <= x_max) & (ry >= y_min) & (ry <= y_max)
+        in_bounds = ((rx >= x_min) & (rx <= x_max) &
+                     (ry >= y_min) & (ry <= y_max))
         if not in_bounds.any():
             break
 
         # Terrain height at each ray sample
-        rz = np.asarray(_bilinear_interp(zg, xg, yg, rx, ry), dtype=np.float64)
+        rz = np.asarray(
+            _bilinear_interp(zg, xg, yg, rx, ry), dtype=np.float64)
 
         # Elevation angle from base antenna to terrain surface
         elev = np.arctan2(rz - base_z, r)
@@ -382,15 +369,11 @@ def compute_comms_coverage(xg, yg, zg, base_pos, antenna_height=1.0):
 
         # Map world coords → grid indices
         ci = np.clip(
-            np.round((rx - x_min) / (x_max - x_min + 1e-12) * (cols - 1)).astype(int),
-            0,
-            cols - 1,
-        )
+            np.round((rx - x_min) / (x_max - x_min + 1e-12)
+                     * (cols - 1)).astype(int), 0, cols - 1)
         ri = np.clip(
-            np.round((ry - y_min) / (y_max - y_min + 1e-12) * (rows - 1)).astype(int),
-            0,
-            rows - 1,
-        )
+            np.round((ry - y_min) / (y_max - y_min + 1e-12)
+                     * (rows - 1)).astype(int), 0, rows - 1)
 
         # Scatter-write: keep max signal at each cell (if LOS from any ray)
         ib = np.where(in_bounds)[0]
@@ -413,28 +396,68 @@ def compute_comms_coverage(xg, yg, zg, base_pos, antenna_height=1.0):
     return coverage
 
 
-def compute_lunar_cycle_illumination(
-    xg, yg, zg, start_dt, lat_deg, lon_deg, n_steps=56
-):
-    """Compute shadow maps across a full 28-Earth-day lunar day."""
+def compute_lunar_cycle_illumination(xg, yg, zg, start_dt, lat_deg, lon_deg,
+                                     n_steps=56):
+    """Compute shadow maps and solar radiation across a full 28-day lunar day.
+
+    For each timestep, computes both the binary illumination mask AND the
+    irradiance received by each cell (cos of incidence angle between sun
+    direction and surface normal, clamped to zero when in shadow or facing
+    away from the sun).
+
+    Returns
+    -------
+    illum_stack : (n_steps, rows, cols) float32  — binary illumination per step
+    timestamps : list of datetime
+    solar_radiation : (rows, cols) float64 — cumulative solar radiation in
+        relative units (Wh/m² proportional) over the full 28-day cycle
+    psr_mask : (rows, cols) bool — permanently shadowed regions (never lit)
+    """
     rows, cols = zg.shape
     dt_step = timedelta(days=28.0 / n_steps)
+    hours_per_step = 28.0 * 24.0 / n_steps  # hours each step represents
 
     illum_stack = np.zeros((n_steps, rows, cols), dtype=np.float32)
     timestamps = []
+
+    # Surface normals from terrain gradients (computed once)
+    dx = float(xg[0, 1] - xg[0, 0]) if cols > 1 else 1.0
+    dy = float(yg[1, 0] - yg[0, 0]) if rows > 1 else 1.0
+    dzdx = np.gradient(zg, dx, axis=1)
+    dzdy = np.gradient(zg, dy, axis=0)
+    # Surface normal: (-dzdx, -dzdy, 1), normalised
+    norm_mag = np.sqrt(dzdx**2 + dzdy**2 + 1.0)
+    nx = -dzdx / norm_mag
+    ny = -dzdy / norm_mag
+    nz = 1.0 / norm_mag
+
+    # Solar constant at lunar surface ~1361 W/m²
+    SOLAR_CONSTANT = 1361.0
+
+    # Accumulate total radiation (W·h/m²)
+    solar_radiation = np.zeros((rows, cols), dtype=np.float64)
 
     for i in range(n_steps):
         t = start_dt + i * dt_step
         timestamps.append(t)
         sun_dir = compute_sun_direction(t, lat_deg, lon_deg)
-        illum_stack[i] = compute_shadow_map(xg, yg, zg, sun_dir)
+        shadow = compute_shadow_map(xg, yg, zg, sun_dir)
+        illum_stack[i] = shadow
+
+        # Irradiance = solar_constant * cos(incidence_angle) * shadow_mask
+        # cos(incidence) = dot(surface_normal, sun_direction)
+        cos_inc = nx * sun_dir[0] + ny * sun_dir[1] + nz * sun_dir[2]
+        cos_inc = np.clip(cos_inc, 0.0, 1.0)  # facing away = 0
+        irradiance = SOLAR_CONSTANT * cos_inc * shadow  # W/m²
+        solar_radiation += irradiance * hours_per_step  # Wh/m²
+
         if (i + 1) % 7 == 0 or i == 0:
-            print(f"[PERSEUS]        Shadow map {i + 1}/{n_steps}")
+            print(f"[PERSEUS]        Shadow map {i+1}/{n_steps}")
 
     solar_uptime = np.mean(illum_stack, axis=0)
     psr_mask = solar_uptime == 0.0
 
-    return illum_stack, timestamps, solar_uptime, psr_mask
+    return illum_stack, timestamps, solar_uptime, solar_radiation, psr_mask
 
 
 def compute_traversal_cost(slope_deg, hazard, solar_uptime, comms_coverage):
@@ -442,13 +465,11 @@ def compute_traversal_cost(slope_deg, hazard, solar_uptime, comms_coverage):
     cost = np.full_like(slope_deg, np.inf, dtype=np.float64)
     passable = slope_deg <= 15.0
     cost[passable] = np.clip(
-        np.exp(slope_deg[passable] / 10.0)
-        + hazard[passable] * 5.0
-        - solar_uptime[passable] * 2.0
-        + (1.0 - comms_coverage[passable]) * 3.0,
-        0.1,
-        None,
-    )
+        np.exp(slope_deg[passable] / 10.0) +
+        hazard[passable] * 5.0 -
+        solar_uptime[passable] * 2.0 +
+        (1.0 - comms_coverage[passable]) * 3.0,
+        0.1, None)
     return cost
 
 
@@ -486,13 +507,13 @@ def build_sparse_graph(cost_grid, xg, yg):
         for dc in (-1, 0, 1):
             if dr == 0 and dc == 0:
                 continue
-            dist = np.sqrt((dr * cell_dy) ** 2 + (dc * cell_dx) ** 2)
+            dist = np.sqrt((dr * cell_dy)**2 + (dc * cell_dx)**2)
             offsets.append((dr, dc, dist))
 
     # Vectorised edge construction
     r_idx = np.arange(rows)
     c_idx = np.arange(cols)
-    rr, cc = np.meshgrid(r_idx, c_idx, indexing="ij")
+    rr, cc = np.meshgrid(r_idx, c_idx, indexing='ij')
     rr_flat = rr.ravel()
     cc_flat = cc.ravel()
 
@@ -536,12 +557,8 @@ def find_path(sparse_graph, cost_grid, xg, yg, start_xy, end_xy):
     dst_node = goal[0] * cols + goal[1]
 
     dist_matrix, predecessors = sp_dijkstra(
-        sparse_graph,
-        directed=True,
-        indices=src_node,
-        return_predecessors=True,
-        limit=np.inf,
-    )
+        sparse_graph, directed=True, indices=src_node,
+        return_predecessors=True, limit=np.inf)
 
     total_cost = dist_matrix[dst_node]
     if np.isinf(total_cost):
@@ -559,23 +576,16 @@ def find_path(sparse_graph, cost_grid, xg, yg, start_xy, end_xy):
     path_nodes.reverse()
 
     path_coords = []
-    for and in path_nodes:
-        r, c = divmod(and, cols)
+    for nd in path_nodes:
+        r, c = divmod(nd, cols)
         path_coords.append((float(xg[r, c]), float(yg[r, c])))
 
     return path_coords, float(total_cost)
 
 
-def compute_rover_footprint(
-    xg,
-    yg,
-    zg,
-    rover_pos,
-    rover_heading=0,
-    wheelbase=0.6,
-    track_width=0.5,
-    ground_clearance=0.15,
-):
+def compute_rover_footprint(xg, yg, zg, rover_pos, rover_heading=0,
+                            wheelbase=0.6, track_width=0.5,
+                            ground_clearance=0.15):
     """Compute rover wheel positions, tilt, and ground clearance at a pose."""
     heading_rad = np.radians(rover_heading)
     cos_h, sin_h = np.cos(heading_rad), np.sin(heading_rad)
@@ -585,10 +595,8 @@ def compute_rover_footprint(
 
     half_wb, half_tw = wheelbase / 2.0, track_width / 2.0
     wheel_offsets = [
-        (half_wb, half_tw),
-        (half_wb, -half_tw),
-        (-half_wb, half_tw),
-        (-half_wb, -half_tw),
+        (half_wb, half_tw), (half_wb, -half_tw),
+        (-half_wb, half_tw), (-half_wb, -half_tw),
     ]
 
     wheel_positions = np.zeros((4, 3))
@@ -607,8 +615,10 @@ def compute_rover_footprint(
         A_mat = np.column_stack([pts[:, 0], pts[:, 1], np.ones(len(pts))])
         plane_coeffs, _, _, _ = np.linalg.lstsq(A_mat, pts[:, 2], rcond=None)
         a, b, _ = plane_coeffs
-        tilt_pitch = float(np.degrees(np.arctan2(a * cos_h + b * sin_h, 1.0)))
-        tilt_roll = float(np.degrees(np.arctan2(-a * sin_h + b * cos_h, 1.0)))
+        tilt_pitch = float(np.degrees(np.arctan2(
+            a * cos_h + b * sin_h, 1.0)))
+        tilt_roll = float(np.degrees(np.arctan2(
+            -a * sin_h + b * cos_h, 1.0)))
     else:
         tilt_pitch = tilt_roll = 0.0
 
@@ -624,32 +634,24 @@ def compute_rover_footprint(
         for u in np.linspace(-half_wb, half_wb, 5):
             for v in np.linspace(-half_tw, half_tw, 5):
                 dx, dy = rotate(u, v)
-                bz = _bilinear_interp(zg, xg, yg, rover_pos[0] + dx, rover_pos[1] + dy)
+                bz = _bilinear_interp(zg, xg, yg,
+                                       rover_pos[0] + dx, rover_pos[1] + dy)
                 min_clearance = min(min_clearance, chassis_z - float(bz))
     else:
         min_clearance = ground_clearance
 
     return {
-        "wheel_positions": wheel_positions,
-        "contact_ok": contact_ok,
-        "min_clearance": float(min_clearance),
-        "tilt_pitch": tilt_pitch,
-        "tilt_roll": tilt_roll,
-        "body_corners": body_corners,
+        'wheel_positions': wheel_positions,
+        'contact_ok': contact_ok,
+        'min_clearance': float(min_clearance),
+        'tilt_pitch': tilt_pitch,
+        'tilt_roll': tilt_roll,
+        'body_corners': body_corners,
     }
 
 
-def compute_mission_score(
-    xg,
-    yg,
-    zg,
-    slope_deg,
-    solar_uptime,
-    comms_coverage,
-    hazard,
-    ice_prob,
-    cell_size=0.25,
-):
+def compute_mission_score(xg, yg, zg, slope_deg, solar_uptime, comms_coverage,
+                          hazard, ice_prob, cell_size=0.25):
     """Divide terrain into cell_size x cell_size cells and score each.
 
     Uses scipy.ndimage.zoom to downsample each metric to the score grid
@@ -662,40 +664,39 @@ def compute_mission_score(
     score_cols = max(1, int(np.floor((x_max - x_min) / cell_size)))
     score_rows = max(1, int(np.floor((y_max - y_min) / cell_size)))
 
-    score_xi = np.linspace(
-        x_min + cell_size / 2, x_min + (score_cols - 0.5) * cell_size, score_cols
-    )
-    score_yi = np.linspace(
-        y_min + cell_size / 2, y_min + (score_rows - 0.5) * cell_size, score_rows
-    )
+    score_xi = np.linspace(x_min + cell_size / 2,
+                           x_min + (score_cols - 0.5) * cell_size, score_cols)
+    score_yi = np.linspace(y_min + cell_size / 2,
+                           y_min + (score_rows - 0.5) * cell_size, score_rows)
     score_xg_out, score_yg_out = np.meshgrid(score_xi, score_yi)
 
     # Downsample each metric via zoom (acts as block averaging with order=1)
     def _resample(arr):
-        return zoom(
-            arr.astype(np.float64), (score_rows / rows, score_cols / cols), order=1
-        )
+        return zoom(arr.astype(np.float64),
+                    (score_rows / rows, score_cols / cols), order=1)
 
     solar_sc = np.clip(_resample(solar_uptime), 0, 1)
     slope_sc = np.clip(1.0 - _resample(slope_deg) / 30.0, 0, 1)
     rough_sc = np.clip(1.0 - _resample(hazard), 0, 1)
     comms_sc = np.clip(_resample(comms_coverage), 0, 1)
 
-    score_grid = solar_sc * 25.0 + slope_sc * 25.0 + rough_sc * 25.0 + comms_sc * 25.0
+    score_grid = (solar_sc * 25.0 + slope_sc * 25.0 +
+                  rough_sc * 25.0 + comms_sc * 25.0)
 
     best_idx = np.unravel_index(np.argmax(score_grid), score_grid.shape)
     summary = {
-        "mean_score": float(np.mean(score_grid)),
-        "max_score": float(np.max(score_grid)),
-        "best_location": (float(score_xg_out[best_idx]), float(score_yg_out[best_idx])),
-        "coverage_above_70": float(np.mean(score_grid > 70.0) * 100.0),
+        'mean_score': float(np.mean(score_grid)),
+        'max_score': float(np.max(score_grid)),
+        'best_location': (float(score_xg_out[best_idx]),
+                          float(score_yg_out[best_idx])),
+        'coverage_above_70': float(np.mean(score_grid > 70.0) * 100.0),
     }
 
     components = {
-        "solar": solar_sc * 25.0,
-        "slope": slope_sc * 25.0,
-        "clearance": rough_sc * 25.0,
-        "comms": comms_sc * 25.0,
+        'solar': solar_sc * 25.0,
+        'slope': slope_sc * 25.0,
+        'clearance': rough_sc * 25.0,
+        'comms': comms_sc * 25.0,
     }
 
     return score_xg_out, score_yg_out, score_grid, components, summary
@@ -706,13 +707,13 @@ def compute_mission_score(
 # ---------------------------------------------------------------------------
 
 # Rover electrical specs
-BATTERY_VOLTAGE = 24.0  # V
-BATTERY_CAPACITY = 50.0  # Ah
+BATTERY_VOLTAGE = 24.0    # V
+BATTERY_CAPACITY = 50.0   # Ah
 BATTERY_ENERGY_WH = BATTERY_VOLTAGE * BATTERY_CAPACITY  # 1200 Wh total
 
-CURRENT_IDLE = 0.5  # A — stationary
-CURRENT_FLAT = 4.0  # A — driving on flat ground
-CURRENT_MAX = 40.0  # A — max draw in rough/steep terrain
+CURRENT_IDLE = 0.5   # A — stationary
+CURRENT_FLAT = 4.0   # A — driving on flat ground
+CURRENT_MAX = 40.0   # A — max draw in rough/steep terrain
 
 # Rover speed assumption for energy-per-metre calculation
 ROVER_SPEED_MS = 0.3  # m/s typical lunar rover crawl
@@ -733,7 +734,8 @@ def compute_energy_cost_grid(slope_deg, hazard):
         Energy cost in Wh per metre of travel.  np.inf for impassable.
     """
     # Terrain difficulty factor [0, 1]: 0 = easy flat, 1 = worst passable
-    difficulty = np.clip(np.maximum(slope_deg / 15.0, hazard), 0.0, 1.0)
+    difficulty = np.clip(
+        np.maximum(slope_deg / 15.0, hazard), 0.0, 1.0)
 
     # Current draw: linear interpolation from flat to max
     current = CURRENT_FLAT + difficulty * (CURRENT_MAX - CURRENT_FLAT)
@@ -748,9 +750,8 @@ def compute_energy_cost_grid(slope_deg, hazard):
     return wh_per_metre
 
 
-def compute_battery_range(
-    energy_graph, rows, cols, xg, yg, lander_pos, charge_pct=100.0
-):
+def compute_battery_range(energy_graph, rows, cols, xg, yg, lander_pos,
+                          charge_pct=100.0):
     """Dijkstra from lander using scipy.sparse.csgraph for C-speed.
 
     Parameters
@@ -806,86 +807,56 @@ def compute_battery_range(
 # ---------------------------------------------------------------------------
 
 LUNAR_CS = [
-    [0.0, "#1a1a2e"],
-    [0.15, "#2d2d44"],
-    [0.3, "#4a4a5a"],
-    [0.5, "#6b6b7b"],
-    [0.7, "#8a8a96"],
-    [0.85, "#a8a8b0"],
-    [1.0, "#c8c8cc"],
+    [0.0, "#1a1a2e"], [0.15, "#2d2d44"], [0.3, "#4a4a5a"],
+    [0.5, "#6b6b7b"], [0.7, "#8a8a96"], [0.85, "#a8a8b0"], [1.0, "#c8c8cc"],
 ]
 
 TOPO_CS = [
-    [0.0, "#000033"],
-    [0.1, "#000066"],
-    [0.2, "#003399"],
-    [0.3, "#0066cc"],
-    [0.4, "#3399cc"],
-    [0.5, "#66cc99"],
-    [0.6, "#99cc66"],
-    [0.7, "#cccc33"],
-    [0.8, "#cc9933"],
-    [0.9, "#cc6633"],
-    [1.0, "#cc3333"],
+    [0.0, "#000033"], [0.1, "#000066"], [0.2, "#003399"], [0.3, "#0066cc"],
+    [0.4, "#3399cc"], [0.5, "#66cc99"], [0.6, "#99cc66"], [0.7, "#cccc33"],
+    [0.8, "#cc9933"], [0.9, "#cc6633"], [1.0, "#cc3333"],
 ]
 
 SHADOW_CS = [
-    [0.0, "#000011"],
-    [0.2, "#0a0a33"],
-    [0.4, "#333355"],
-    [0.6, "#888899"],
-    [0.8, "#bbbbcc"],
-    [1.0, "#eeeef5"],
+    [0.0, "#000011"], [0.2, "#0a0a33"], [0.4, "#333355"],
+    [0.6, "#888899"], [0.8, "#bbbbcc"], [1.0, "#eeeef5"],
 ]
 
 HAZARD_CS = [
-    [0.0, "#00ff88"],
-    [0.3, "#66cc44"],
-    [0.5, "#ccaa00"],
-    [0.7, "#ff8800"],
-    [0.85, "#ff4400"],
-    [1.0, "#cc0000"],
+    [0.0, "#00ff88"], [0.3, "#66cc44"], [0.5, "#ccaa00"],
+    [0.7, "#ff8800"], [0.85, "#ff4400"], [1.0, "#cc0000"],
 ]
 
 COMMS_CS = [
-    [0.0, "#cc0000"],
-    [0.25, "#ff4400"],
-    [0.5, "#ccaa00"],
-    [0.75, "#66cc44"],
-    [1.0, "#00ff88"],
+    [0.0, "#cc0000"], [0.25, "#ff4400"], [0.5, "#ccaa00"],
+    [0.75, "#66cc44"], [1.0, "#00ff88"],
 ]
 
 ICE_CS = [
-    [0.0, "#000033"],
-    [0.25, "#001166"],
-    [0.5, "#006688"],
-    [0.75, "#00ccdd"],
-    [1.0, "#eeffff"],
+    [0.0, "#000033"], [0.25, "#001166"], [0.5, "#006688"],
+    [0.75, "#00ccdd"], [1.0, "#eeffff"],
 ]
 
 SCORE_CS = [
-    [0.0, "#cc0000"],
-    [0.25, "#ff4400"],
-    [0.5, "#ccaa00"],
-    [0.75, "#66cc44"],
-    [1.0, "#00ff88"],
+    [0.0, "#cc0000"], [0.25, "#ff4400"], [0.5, "#ccaa00"],
+    [0.75, "#66cc44"], [1.0, "#00ff88"],
 ]
 
 PSR_CS = [
-    [0.0, "#000000"],
-    [0.25, "#1a0033"],
-    [0.5, "#330066"],
-    [0.75, "#660088"],
-    [1.0, "#cc00ff"],
+    [0.0, "#000000"], [0.25, "#1a0033"], [0.5, "#330066"],
+    [0.75, "#660088"], [1.0, "#cc00ff"],
+]
+
+# Solar radiation: black (none) → dark red → orange → yellow → white (peak)
+SOLAR_RAD_CS = [
+    [0.0, "#000000"], [0.1, "#1a0000"], [0.2, "#660000"],
+    [0.35, "#cc2200"], [0.5, "#ee6600"], [0.65, "#ffaa00"],
+    [0.8, "#ffdd44"], [0.9, "#ffee99"], [1.0, "#ffffff"],
 ]
 
 RANGE_CS = [
-    [0.0, "#cc0000"],
-    [0.25, "#ff4400"],
-    [0.35, "#ff8800"],
-    [0.5, "#ccaa00"],
-    [0.65, "#88cc00"],
-    [0.8, "#44dd44"],
+    [0.0, "#cc0000"], [0.25, "#ff4400"], [0.35, "#ff8800"],
+    [0.5, "#ccaa00"], [0.65, "#88cc00"], [0.8, "#44dd44"],
     [1.0, "#00ff88"],
 ]
 
@@ -935,29 +906,19 @@ def _layout_base(t):
 
 
 def _xaxis(t):
-    return dict(
-        title="X (m)",
-        scaleanchor="y",
-        gridcolor=t["grid_color"],
-        color=t["font_color"],
-        zerolinecolor=t["grid_color"],
-    )
+    return dict(title="X (m)", scaleanchor="y", gridcolor=t["grid_color"],
+                color=t["font_color"], zerolinecolor=t["grid_color"])
 
 
 def _yaxis(t):
-    return dict(
-        title="Y (m)",
-        gridcolor=t["grid_color"],
-        color=t["font_color"],
-        zerolinecolor=t["grid_color"],
-    )
+    return dict(title="Y (m)", gridcolor=t["grid_color"],
+                color=t["font_color"], zerolinecolor=t["grid_color"])
 
 
 def _colorbar(title_text, t):
     return dict(
         title=dict(text=title_text, font=dict(color=t["font_color"], size=11)),
-        len=0.45,
-        thickness=12,
+        len=0.45, thickness=12,
         tickfont=dict(color=t["font_color"], size=10),
     )
 
@@ -966,7 +927,6 @@ def _colorbar(title_text, t):
 # Figure builders (pure functions — return go.Figure)
 # ---------------------------------------------------------------------------
 
-
 def fig_3d(points, intensity, subsample, camera_eye, theme="dark"):
     """Build the 3D scatter terrain figure."""
     t = _t(theme)
@@ -974,61 +934,34 @@ def fig_3d(points, intensity, subsample, camera_eye, theme="dark"):
     z = pts[:, 2]
 
     fig = go.Figure(
-        data=[
-            go.Scatter3d(
-                x=pts[:, 0],
-                y=pts[:, 1],
-                z=pts[:, 2],
-                mode="markers",
-                marker=dict(
-                    size=1.2,
-                    color=z,
-                    colorscale=LUNAR_CS,
-                    opacity=0.85,
-                    colorbar=dict(
-                        title=dict(
-                            text="Elev (m)", font=dict(color=t["font_color"], size=11)
-                        ),
-                        len=0.5,
-                        thickness=12,
-                        x=0.98,
-                        tickfont=dict(color=t["font_color"], size=10),
-                    ),
+        data=[go.Scatter3d(
+            x=pts[:, 0], y=pts[:, 1], z=pts[:, 2],
+            mode="markers",
+            marker=dict(
+                size=1.2, color=z, colorscale=LUNAR_CS, opacity=0.85,
+                colorbar=dict(
+                    title=dict(text="Elev (m)", font=dict(color=t["font_color"], size=11)),
+                    len=0.5, thickness=12, x=0.98,
+                    tickfont=dict(color=t["font_color"], size=10),
                 ),
-                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Z: %{z:.2f}m<extra></extra>",
-            )
-        ]
+            ),
+            hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Z: %{z:.2f}m<extra></extra>",
+        )]
     )
     fig.update_layout(
         **_layout_base(t),
         scene=dict(
-            xaxis=dict(
-                title="X (m)",
-                gridcolor=t["grid_color"],
-                showbackground=True,
-                backgroundcolor=t["panel_bg"],
-                color=t["font_color"],
-                zerolinecolor=t["grid_color"],
-            ),
-            yaxis=dict(
-                title="Y (m)",
-                gridcolor=t["grid_color"],
-                showbackground=True,
-                backgroundcolor=t["panel_bg"],
-                color=t["font_color"],
-                zerolinecolor=t["grid_color"],
-            ),
-            zaxis=dict(
-                title="Z (m)",
-                gridcolor=t["grid_color"],
-                showbackground=True,
-                backgroundcolor=t["panel_bg"],
-                color=t["font_color"],
-                zerolinecolor=t["grid_color"],
-            ),
-            camera=dict(
-                eye=camera_eye, center=dict(x=0, y=0, z=0), up=dict(x=0, y=0, z=1)
-            ),
+            xaxis=dict(title="X (m)", gridcolor=t["grid_color"], showbackground=True,
+                       backgroundcolor=t["panel_bg"], color=t["font_color"],
+                       zerolinecolor=t["grid_color"]),
+            yaxis=dict(title="Y (m)", gridcolor=t["grid_color"], showbackground=True,
+                       backgroundcolor=t["panel_bg"], color=t["font_color"],
+                       zerolinecolor=t["grid_color"]),
+            zaxis=dict(title="Z (m)", gridcolor=t["grid_color"], showbackground=True,
+                       backgroundcolor=t["panel_bg"], color=t["font_color"],
+                       zerolinecolor=t["grid_color"]),
+            camera=dict(eye=camera_eye, center=dict(x=0, y=0, z=0),
+                        up=dict(x=0, y=0, z=1)),
             aspectmode="data",
         ),
         uirevision="terrain",
@@ -1038,46 +971,27 @@ def fig_3d(points, intensity, subsample, camera_eye, theme="dark"):
 
 def fig_heatmap(xg, yg, zg, theme="dark"):
     t = _t(theme)
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=zg,
-                colorscale=TOPO_CS,
-                colorbar=_colorbar("Elev (m)", t),
-                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Elev: %{z:.2f}m<extra></extra>",
-            )
-        ]
-    )
+    fig = go.Figure(data=[go.Heatmap(
+        x=xg[0, :], y=yg[:, 0], z=zg, colorscale=TOPO_CS,
+        colorbar=_colorbar("Elev (m)", t),
+        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Elev: %{z:.2f}m<extra></extra>",
+    )])
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
     return fig
 
 
 def fig_contour(xg, yg, zg, n_contours=20, theme="dark"):
     t = _t(theme)
-    fig = go.Figure(
-        data=[
-            go.Contour(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=zg,
-                ncontours=n_contours,
-                contours=dict(
-                    showlabels=True,
-                    labelfont=dict(size=9, color=t["accent"]),
-                    coloring="heatmap",
-                ),
-                colorscale=TOPO_CS,
-                colorbar=_colorbar("Elev (m)", t),
-                line=dict(
-                    width=1.5,
-                    color=f"rgba({','.join(str(int(t['accent'].lstrip('#')[i : i + 2], 16)) for i in (0, 2, 4))},0.5)",
-                ),
-                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Elev: %{z:.2f}m<extra></extra>",
-            )
-        ]
-    )
+    fig = go.Figure(data=[go.Contour(
+        x=xg[0, :], y=yg[:, 0], z=zg, ncontours=n_contours,
+        contours=dict(showlabels=True,
+                      labelfont=dict(size=9, color=t["accent"]),
+                      coloring="heatmap"),
+        colorscale=TOPO_CS,
+        colorbar=_colorbar("Elev (m)", t),
+        line=dict(width=1.5, color=f"rgba({','.join(str(int(t['accent'].lstrip('#')[i:i+2], 16)) for i in (0,2,4))},0.5)"),
+        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Elev: %{z:.2f}m<extra></extra>",
+    )])
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
     return fig
 
@@ -1086,18 +1000,10 @@ def fig_shadow(xg, yg, zg, illum, theme="dark"):
     t = _t(theme)
     z_norm = (zg - zg.min()) / (zg.max() - zg.min() + 1e-9)
     shaded = z_norm * (0.3 + 0.7 * illum)
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=shaded,
-                colorscale=SHADOW_CS,
-                showscale=False,
-                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
-            )
-        ]
-    )
+    fig = go.Figure(data=[go.Heatmap(
+        x=xg[0, :], y=yg[:, 0], z=shaded, colorscale=SHADOW_CS, showscale=False,
+        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+    )])
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
     return fig
 
@@ -1105,65 +1011,42 @@ def fig_shadow(xg, yg, zg, illum, theme="dark"):
 def fig_hazard(xg, yg, hazard, slope_deg, theme="dark"):
     t = _t(theme)
     custom = np.stack([slope_deg, hazard], axis=-1)
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=hazard,
-                colorscale=HAZARD_CS,
-                colorbar=_colorbar("Hazard", t),
-                customdata=custom,
-                hovertemplate=(
-                    "X: %{x:.2f}m<br>Y: %{y:.2f}m<br>"
-                    "Slope: %{customdata[0]:.1f} deg<br>"
-                    "Hazard: %{customdata[1]:.2f}<extra></extra>"
-                ),
-            )
-        ]
-    )
+    fig = go.Figure(data=[go.Heatmap(
+        x=xg[0, :], y=yg[:, 0], z=hazard, colorscale=HAZARD_CS,
+        colorbar=_colorbar("Hazard", t),
+        customdata=custom,
+        hovertemplate=(
+            "X: %{x:.2f}m<br>Y: %{y:.2f}m<br>"
+            "Slope: %{customdata[0]:.1f} deg<br>"
+            "Hazard: %{customdata[1]:.2f}<extra></extra>"
+        ),
+    )])
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
     return fig
 
 
 def fig_resources(xg, yg, ice_prob, drill_sites, theme="dark"):
     t = _t(theme)
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=ice_prob * 100,
-                colorscale=ICE_CS,
-                colorbar=_colorbar("Ice %", t),
-                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Ice: %{z:.1f}%<extra></extra>",
-            )
-        ]
-    )
+    fig = go.Figure(data=[go.Heatmap(
+        x=xg[0, :], y=yg[:, 0], z=ice_prob * 100, colorscale=ICE_CS,
+        colorbar=_colorbar("Ice %", t),
+        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Ice: %{z:.1f}%<extra></extra>",
+    )])
     if drill_sites and len(drill_sites) > 0:
         ds = np.asarray(drill_sites)
-        fig.add_trace(
-            go.Scatter(
-                x=ds[:, 0],
-                y=ds[:, 1],
-                mode="markers",
-                marker=dict(
-                    symbol="star",
-                    size=14,
-                    color="#ff00ff",
-                    line=dict(width=1, color="#ffffff"),
-                ),
-                name="Drill Sites",
-                hovertemplate="DRILL SITE<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
-            )
-        )
+        fig.add_trace(go.Scatter(
+            x=ds[:, 0], y=ds[:, 1], mode="markers",
+            marker=dict(symbol="star", size=14, color="#ff00ff",
+                        line=dict(width=1, color="#ffffff")),
+            name="Drill Sites",
+            hovertemplate="DRILL SITE<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+        ))
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
     return fig
 
 
-def fig_comms(
-    xg, yg, comms_coverage, base_pos, rover_pos=None, los_data=None, theme="dark"
-):
+def fig_comms(xg, yg, comms_coverage, base_pos, rover_pos=None,
+              los_data=None, theme="dark"):
     t = _t(theme)
     # Build custom hover data: coverage %, distance from base
     dx = xg - base_pos[0]
@@ -1171,79 +1054,48 @@ def fig_comms(
     dist_from_base = np.sqrt(dx**2 + dy**2)
     custom = np.stack([comms_coverage * 100, dist_from_base], axis=-1)
 
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=comms_coverage,
-                colorscale=COMMS_CS,
-                colorbar=_colorbar("Signal", t),
-                customdata=custom,
-                hovertemplate=(
-                    "X: %{x:.2f}m<br>Y: %{y:.2f}m<br>"
-                    "LOS: %{customdata[0]:.0f}%<br>"
-                    "Range: %{customdata[1]:.1f}m<extra></extra>"
-                ),
-            )
-        ]
-    )
+    fig = go.Figure(data=[go.Heatmap(
+        x=xg[0, :], y=yg[:, 0], z=comms_coverage, colorscale=COMMS_CS,
+        colorbar=_colorbar("Signal", t),
+        customdata=custom,
+        hovertemplate=(
+            "X: %{x:.2f}m<br>Y: %{y:.2f}m<br>"
+            "LOS: %{customdata[0]:.0f}%<br>"
+            "Range: %{customdata[1]:.1f}m<extra></extra>"
+        ),
+    )])
 
     # Shadow boundary contour — outlines where signal drops into shadow
-    fig.add_trace(
-        go.Contour(
-            x=xg[0, :],
-            y=yg[:, 0],
-            z=comms_coverage,
-            contours=dict(
-                start=0.15, end=0.15, size=0.1, coloring="none", showlabels=False
-            ),
-            line=dict(width=2, color="#ff4400", dash="dot"),
-            showscale=False,
-            hoverinfo="skip",
-            name="Shadow Edge",
-        )
-    )
+    fig.add_trace(go.Contour(
+        x=xg[0, :], y=yg[:, 0], z=comms_coverage,
+        contours=dict(start=0.15, end=0.15, size=0.1,
+                      coloring="none", showlabels=False),
+        line=dict(width=2, color="#ff4400", dash="dot"),
+        showscale=False, hoverinfo="skip", name="Shadow Edge",
+    ))
 
     # Base station marker + label
-    fig.add_trace(
-        go.Scatter(
-            x=[base_pos[0]],
-            y=[base_pos[1]],
-            mode="markers+text",
-            marker=dict(
-                symbol="diamond",
-                size=16,
-                color=t["accent"],
-                line=dict(width=2, color="#ffffff"),
-            ),
-            text=["BASE"],
-            textposition="top center",
-            textfont=dict(size=12, color=t["accent"], family="Courier New"),
-            name="Base",
-            hovertemplate="BASE STATION<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
-        )
-    )
+    fig.add_trace(go.Scatter(
+        x=[base_pos[0]], y=[base_pos[1]], mode="markers+text",
+        marker=dict(symbol="diamond", size=16, color=t["accent"],
+                    line=dict(width=2, color="#ffffff")),
+        text=["BASE"], textposition="top center",
+        textfont=dict(size=12, color=t["accent"], family="Courier New"),
+        name="Base",
+        hovertemplate="BASE STATION<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+    ))
 
     if rover_pos is not None:
-        fig.add_trace(
-            go.Scatter(
-                x=[rover_pos[0]],
-                y=[rover_pos[1]],
-                mode="markers+text",
-                marker=dict(
-                    symbol="circle",
-                    size=12,
-                    color=t["font_color"],
-                    line=dict(width=1, color="#ffffff"),
-                ),
-                text=["ROVER"],
-                textposition="top center",
-                textfont=dict(size=10, color=t["font_color"], family="Courier New"),
-                name="Rover",
-                hovertemplate="ROVER<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
-            )
-        )
+        fig.add_trace(go.Scatter(
+            x=[rover_pos[0]], y=[rover_pos[1]], mode="markers+text",
+            marker=dict(symbol="circle", size=12, color=t["font_color"],
+                        line=dict(width=1, color="#ffffff")),
+            text=["ROVER"], textposition="top center",
+            textfont=dict(size=10, color=t["font_color"],
+                          family="Courier New"),
+            name="Rover",
+            hovertemplate="ROVER<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+        ))
         if los_data is not None and "blocked_mask" in los_data:
             bm = los_data["blocked_mask"]
             n_seg = len(bm)
@@ -1252,107 +1104,56 @@ def fig_comms(
             for i in range(0, n_seg, 3):
                 seg_color = "#cc0000" if bm[i] else "#00ff88"
                 end = min(i + 4, n_seg)
-                fig.add_trace(
-                    go.Scatter(
-                        x=[lx[i], lx[end]],
-                        y=[ly[i], ly[end]],
-                        mode="lines",
-                        line=dict(width=3, color=seg_color),
-                        showlegend=False,
-                        hoverinfo="skip",
-                    )
-                )
+                fig.add_trace(go.Scatter(
+                    x=[lx[i], lx[end]], y=[ly[i], ly[end]],
+                    mode="lines", line=dict(width=3, color=seg_color),
+                    showlegend=False, hoverinfo="skip",
+                ))
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
     return fig
 
 
-def fig_path_plan(
-    xg,
-    yg,
-    hazard,
-    path_coords=None,
-    start_xy=None,
-    end_xy=None,
-    energy_cost=None,
-    theme="dark",
-):
+def fig_path_plan(xg, yg, hazard, path_coords=None, start_xy=None,
+                  end_xy=None, energy_cost=None, theme="dark"):
     t = _t(theme)
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=hazard,
-                colorscale=HAZARD_CS,
-                opacity=0.4,
-                showscale=False,
-                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Hazard: %{z:.2f}<extra></extra>",
-            )
-        ]
-    )
+    fig = go.Figure(data=[go.Heatmap(
+        x=xg[0, :], y=yg[:, 0], z=hazard, colorscale=HAZARD_CS,
+        opacity=0.4, showscale=False,
+        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Hazard: %{z:.2f}<extra></extra>",
+    )])
     if path_coords is not None and len(path_coords) > 0:
         pc = np.asarray(path_coords)
-        fig.add_trace(
-            go.Scatter(
-                x=pc[:, 0],
-                y=pc[:, 1],
-                mode="lines",
-                line=dict(width=3, color=t["accent"]),
-                name="Path",
-                hovertemplate="Path<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
-            )
-        )
+        fig.add_trace(go.Scatter(
+            x=pc[:, 0], y=pc[:, 1], mode="lines",
+            line=dict(width=3, color=t["accent"]),
+            name="Path",
+            hovertemplate="Path<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+        ))
     if start_xy is not None:
-        fig.add_trace(
-            go.Scatter(
-                x=[start_xy[0]],
-                y=[start_xy[1]],
-                mode="markers",
-                marker=dict(
-                    symbol="circle",
-                    size=14,
-                    color="#00ff88",
-                    line=dict(width=2, color="#ffffff"),
-                ),
-                name="Start",
-            )
-        )
+        fig.add_trace(go.Scatter(
+            x=[start_xy[0]], y=[start_xy[1]], mode="markers",
+            marker=dict(symbol="circle", size=14, color="#00ff88",
+                        line=dict(width=2, color="#ffffff")),
+            name="Start",
+        ))
     if end_xy is not None:
-        fig.add_trace(
-            go.Scatter(
-                x=[end_xy[0]],
-                y=[end_xy[1]],
-                mode="markers",
-                marker=dict(
-                    symbol="circle",
-                    size=14,
-                    color="#cc0000",
-                    line=dict(width=2, color="#ffffff"),
-                ),
-                name="End",
-            )
-        )
+        fig.add_trace(go.Scatter(
+            x=[end_xy[0]], y=[end_xy[1]], mode="markers",
+            marker=dict(symbol="circle", size=14, color="#cc0000",
+                        line=dict(width=2, color="#ffffff")),
+            name="End",
+        ))
     if energy_cost is not None:
         fig.add_annotation(
             text=f"ENERGY: {energy_cost:.1f}",
-            xref="paper",
-            yref="paper",
-            x=0.98,
-            y=0.98,
-            showarrow=False,
+            xref="paper", yref="paper", x=0.98, y=0.98, showarrow=False,
             font=dict(size=13, color=t["accent"], family="Courier New, monospace"),
-            bgcolor=t["panel_bg"],
-            bordercolor=t["accent"],
-            borderwidth=1,
+            bgcolor=t["panel_bg"], bordercolor=t["accent"], borderwidth=1,
         )
     elif path_coords is None:
         fig.add_annotation(
             text="CLICK TO SET WAYPOINTS",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
             font=dict(size=16, color=t["accent"], family="Courier New, monospace"),
         )
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
@@ -1361,126 +1162,100 @@ def fig_path_plan(
 
 def fig_rover(xg, yg, zg, slope_deg, rover_data=None, theme="dark"):
     t = _t(theme)
-    fig = go.Figure(
-        data=[
-            go.Contour(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=slope_deg,
-                contours=dict(
-                    showlabels=True,
-                    labelfont=dict(size=9, color=t["font_color"]),
-                    coloring="heatmap",
-                ),
-                colorscale=HAZARD_CS,
-                showscale=False,
-                line=dict(width=1, color="rgba(0,255,170,0.3)"),
-                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Slope: %{z:.1f} deg<extra></extra>",
-            )
-        ]
-    )
+    fig = go.Figure(data=[go.Contour(
+        x=xg[0, :], y=yg[:, 0], z=slope_deg,
+        contours=dict(showlabels=True,
+                      labelfont=dict(size=9, color=t["font_color"]),
+                      coloring="heatmap"),
+        colorscale=HAZARD_CS, showscale=False,
+        line=dict(width=1, color="rgba(0,255,170,0.3)"),
+        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Slope: %{z:.1f} deg<extra></extra>",
+    )])
     if rover_data is not None:
         bc = np.asarray(rover_data["body_corners"])
         bx = list(bc[:, 0]) + [bc[0, 0]]
         by = list(bc[:, 1]) + [bc[0, 1]]
-        fig.add_trace(
-            go.Scatter(
-                x=bx,
-                y=by,
-                mode="lines",
-                fill="toself",
-                fillcolor="rgba(0,204,255,0.25)",
-                line=dict(width=2, color=t["accent"]),
-                name="Body",
-                hoverinfo="skip",
-            )
-        )
+        fig.add_trace(go.Scatter(
+            x=bx, y=by, mode="lines", fill="toself",
+            fillcolor="rgba(0,204,255,0.25)",
+            line=dict(width=2, color=t["accent"]),
+            name="Body", hoverinfo="skip",
+        ))
         wp = np.asarray(rover_data["wheel_positions"])
         contact = rover_data["contact_ok"]
         w_colors = ["#00ff88" if c else "#cc0000" for c in contact]
-        fig.add_trace(
-            go.Scatter(
-                x=wp[:, 0],
-                y=wp[:, 1],
-                mode="markers",
-                marker=dict(
-                    symbol="circle",
-                    size=10,
-                    color=w_colors,
-                    line=dict(width=1, color="#ffffff"),
-                ),
-                name="Wheels",
-            )
-        )
+        fig.add_trace(go.Scatter(
+            x=wp[:, 0], y=wp[:, 1], mode="markers",
+            marker=dict(symbol="circle", size=10, color=w_colors,
+                        line=dict(width=1, color="#ffffff")),
+            name="Wheels",
+        ))
         cx = float(np.mean(bc[:, 0]))
         cy = float(np.mean(bc[:, 1]))
-        clr = rover_data["min_clearance"]
+        clr = rover_data['min_clearance']
         clr_color = "#00ff88" if clr > 0.05 else "#ffaa00" if clr > 0 else "#cc0000"
         fig.add_annotation(
             text=f"CLR: {clr:.2f}m | P: {rover_data['tilt_pitch']:.1f} deg "
-            f"R: {rover_data['tilt_roll']:.1f} deg",
-            x=cx,
-            y=cy,
-            showarrow=False,
+                 f"R: {rover_data['tilt_roll']:.1f} deg",
+            x=cx, y=cy, showarrow=False,
             font=dict(size=10, color=clr_color, family="Courier New, monospace"),
-            yshift=22,
-            bgcolor=t["panel_bg"],
-            bordercolor=clr_color,
-            borderwidth=1,
+            yshift=22, bgcolor=t["panel_bg"], bordercolor=clr_color, borderwidth=1,
         )
     else:
         fig.add_annotation(
             text="CLICK TO PLACE ROVER",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
             font=dict(size=16, color=t["accent"], family="Courier New, monospace"),
         )
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
     return fig
 
 
-def fig_psr(xg, yg, solar_uptime, psr_mask, theme="dark"):
+def fig_psr(xg, yg, solar_radiation, psr_mask, theme="dark"):
+    """Solar radiation heatmap over a full lunar day (28 Earth days).
+
+    Shows cumulative solar energy received per grid cell in kWh/m²,
+    accounting for sun elevation, surface slope, and terrain shadowing.
+    """
     t = _t(theme)
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=solar_uptime * 100,
-                colorscale=PSR_CS,
-                colorbar=_colorbar("Solar %", t),
-                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Solar: %{z:.1f}%<extra></extra>",
-            )
-        ]
-    )
+    rad_kwh = solar_radiation / 1000.0  # Wh/m² → kWh/m²
+    rad_max = float(np.max(rad_kwh)) if np.any(rad_kwh > 0) else 1.0
+
+    custom = np.stack([
+        solar_radiation,  # Wh/m²
+        (solar_radiation / (rad_max * 1000.0 + 1e-9)) * 100,  # % of max
+    ], axis=-1)
+
+    fig = go.Figure(data=[go.Heatmap(
+        x=xg[0, :], y=yg[:, 0], z=rad_kwh,
+        colorscale=SOLAR_RAD_CS,
+        colorbar=_colorbar("kWh/m²", t),
+        customdata=custom,
+        hovertemplate=(
+            "X: %{x:.2f}m<br>Y: %{y:.2f}m<br>"
+            "Radiation: %{z:.1f} kWh/m²<br>"
+            "%{customdata[1]:.0f}% of peak<extra></extra>"
+        ),
+    )])
+
+    # PSR boundary contour
     psr_float = psr_mask.astype(np.float32)
-    fig.add_trace(
-        go.Contour(
-            x=xg[0, :],
-            y=yg[:, 0],
-            z=psr_float,
-            contours=dict(start=0.5, end=0.5, size=1, coloring="none"),
-            line=dict(width=2, color="#ff00ff"),
-            showscale=False,
-            hoverinfo="skip",
-            name="PSR Boundary",
-        )
-    )
+    fig.add_trace(go.Contour(
+        x=xg[0, :], y=yg[:, 0], z=psr_float,
+        contours=dict(start=0.5, end=0.5, size=1, coloring="none"),
+        line=dict(width=2, color="#ff00ff"),
+        showscale=False, hoverinfo="skip", name="PSR Boundary",
+    ))
+
     psr_count = int(np.sum(psr_mask))
+    psr_pct = psr_count / (xg.shape[0] * xg.shape[1]) * 100
     fig.add_annotation(
-        text=f"PSR CELLS: {psr_count:,}",
-        xref="paper",
-        yref="paper",
-        x=0.98,
-        y=0.98,
-        showarrow=False,
-        font=dict(size=12, color="#ff00ff", family="Courier New, monospace"),
-        bgcolor=t["panel_bg"],
-        bordercolor="#ff00ff",
-        borderwidth=1,
+        text=(f"PSR: {psr_count:,} cells ({psr_pct:.1f}%) | "
+              f"Peak: {rad_max:.0f} kWh/m² | "
+              f"Mean: {float(np.mean(rad_kwh)):.0f} kWh/m²"),
+        xref="paper", yref="paper", x=0.98, y=0.98, showarrow=False,
+        font=dict(size=11, color="#ff00ff", family="Courier New, monospace"),
+        bgcolor=t["panel_bg"], bordercolor="#ff00ff", borderwidth=1,
     )
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
     return fig
@@ -1488,54 +1263,31 @@ def fig_psr(xg, yg, solar_uptime, psr_mask, theme="dark"):
 
 def fig_mission_score(score_xg, score_yg, score_grid, components, theme="dark"):
     t = _t(theme)
-    custom = np.stack(
-        [
-            components["solar"],
-            components["slope"],
-            components["clearance"],
-            components["comms"],
-            score_grid,
-        ],
-        axis=-1,
-    )
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=score_xg[0, :],
-                y=score_yg[:, 0],
-                z=score_grid,
-                colorscale=SCORE_CS,
-                zmin=0,
-                zmax=100,
-                colorbar=_colorbar("Score", t),
-                customdata=custom,
-                hovertemplate=(
-                    "X: %{x:.2f}m  Y: %{y:.2f}m<br>"
-                    "Solar: %{customdata[0]:.0f}/25 | "
-                    "Slope: %{customdata[1]:.0f}/25<br>"
-                    "Clear: %{customdata[2]:.0f}/25 | "
-                    "Comms: %{customdata[3]:.0f}/25<br>"
-                    "TOTAL: %{customdata[4]:.0f}/100<extra></extra>"
-                ),
-            )
-        ]
-    )
+    custom = np.stack([
+        components["solar"], components["slope"],
+        components["clearance"], components["comms"], score_grid,
+    ], axis=-1)
+    fig = go.Figure(data=[go.Heatmap(
+        x=score_xg[0, :], y=score_yg[:, 0], z=score_grid,
+        colorscale=SCORE_CS, zmin=0, zmax=100,
+        colorbar=_colorbar("Score", t),
+        customdata=custom,
+        hovertemplate=(
+            "X: %{x:.2f}m  Y: %{y:.2f}m<br>"
+            "Solar: %{customdata[0]:.0f}/25 | "
+            "Slope: %{customdata[1]:.0f}/25<br>"
+            "Clear: %{customdata[2]:.0f}/25 | "
+            "Comms: %{customdata[3]:.0f}/25<br>"
+            "TOTAL: %{customdata[4]:.0f}/100<extra></extra>"
+        ),
+    )])
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
     return fig
 
 
-def fig_battery_range(
-    xg,
-    yg,
-    range_pct,
-    reachable,
-    lander_pos,
-    waypoints=None,
-    wp_path=None,
-    wp_cost=None,
-    charge_pct=100.0,
-    theme="dark",
-):
+def fig_battery_range(xg, yg, range_pct, reachable, lander_pos,
+                      waypoints=None, wp_path=None, wp_cost=None,
+                      charge_pct=100.0, theme="dark"):
     """Battery range heatmap with lander, waypoints, and planned route."""
     t = _t(theme)
 
@@ -1544,133 +1296,85 @@ def fig_battery_range(
     # Grey out unreachable cells
     display_z[~reachable] = np.nan
 
-    fig = go.Figure(
-        data=[
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=display_z,
-                colorscale=RANGE_CS,
-                zmin=0,
-                zmax=100,
-                colorbar=_colorbar("Batt %", t),
-                hovertemplate=(
-                    "X: %{x:.2f}m  Y: %{y:.2f}m<br>"
-                    "Return battery: %{z:.0f}%<extra></extra>"
-                ),
-            )
-        ]
-    )
+    fig = go.Figure(data=[go.Heatmap(
+        x=xg[0, :], y=yg[:, 0], z=display_z,
+        colorscale=RANGE_CS, zmin=0, zmax=100,
+        colorbar=_colorbar("Batt %", t),
+        hovertemplate=(
+            "X: %{x:.2f}m  Y: %{y:.2f}m<br>"
+            "Return battery: %{z:.0f}%<extra></extra>"
+        ),
+    )])
 
     # Unreachable overlay (semi-transparent dark)
     unreachable_z = np.where(reachable, np.nan, 0.0)
     if np.any(~reachable):
-        fig.add_trace(
-            go.Heatmap(
-                x=xg[0, :],
-                y=yg[:, 0],
-                z=unreachable_z,
-                colorscale=[[0, "rgba(30,0,0,0.6)"], [1, "rgba(30,0,0,0.6)"]],
-                showscale=False,
-                hoverinfo="skip",
-            )
-        )
+        fig.add_trace(go.Heatmap(
+            x=xg[0, :], y=yg[:, 0], z=unreachable_z,
+            colorscale=[[0, "rgba(30,0,0,0.6)"], [1, "rgba(30,0,0,0.6)"]],
+            showscale=False, hoverinfo="skip",
+        ))
 
     # Lander marker
     if lander_pos is not None:
-        fig.add_trace(
-            go.Scatter(
-                x=[lander_pos[0]],
-                y=[lander_pos[1]],
-                mode="markers+text",
-                marker=dict(
-                    symbol="diamond",
-                    size=18,
-                    color="#ffaa00",
-                    line=dict(width=2, color="#ffffff"),
-                ),
-                text=["LANDER"],
-                textposition="top center",
-                textfont=dict(size=10, color="#ffaa00", family="Courier New"),
-                name="Lander",
-                showlegend=False,
-                hovertemplate="LANDER<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
-            )
-        )
+        fig.add_trace(go.Scatter(
+            x=[lander_pos[0]], y=[lander_pos[1]], mode="markers+text",
+            marker=dict(symbol="diamond", size=18, color="#ffaa00",
+                        line=dict(width=2, color="#ffffff")),
+            text=["LANDER"], textposition="top center",
+            textfont=dict(size=10, color="#ffaa00", family="Courier New"),
+            name="Lander", showlegend=False,
+            hovertemplate="LANDER<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+        ))
 
     # Waypoints
     if waypoints and len(waypoints) > 0:
         wp = np.asarray(waypoints)
-        labels = [f"WP{i + 1}" for i in range(len(wp))]
-        fig.add_trace(
-            go.Scatter(
-                x=wp[:, 0],
-                y=wp[:, 1],
-                mode="markers+text",
-                marker=dict(
-                    symbol="circle",
-                    size=12,
-                    color=t["accent"],
-                    line=dict(width=2, color="#ffffff"),
-                ),
-                text=labels,
-                textposition="top center",
-                textfont=dict(size=9, color=t["accent"], family="Courier New"),
-                name="Waypoints",
-                showlegend=False,
-                hovertemplate="Waypoint<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
-            )
-        )
+        labels = [f"WP{i+1}" for i in range(len(wp))]
+        fig.add_trace(go.Scatter(
+            x=wp[:, 0], y=wp[:, 1], mode="markers+text",
+            marker=dict(symbol="circle", size=12, color=t["accent"],
+                        line=dict(width=2, color="#ffffff")),
+            text=labels, textposition="top center",
+            textfont=dict(size=9, color=t["accent"], family="Courier New"),
+            name="Waypoints", showlegend=False,
+            hovertemplate="Waypoint<br>X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+        ))
 
     # Planned path through waypoints
     if wp_path is not None and len(wp_path) > 0:
         pp = np.asarray(wp_path)
-        fig.add_trace(
-            go.Scatter(
-                x=pp[:, 0],
-                y=pp[:, 1],
-                mode="lines",
-                line=dict(width=3, color=t["accent"], dash="solid"),
-                name="Route",
-                showlegend=False,
-                hoverinfo="skip",
-            )
-        )
+        fig.add_trace(go.Scatter(
+            x=pp[:, 0], y=pp[:, 1], mode="lines",
+            line=dict(width=3, color=t["accent"], dash="solid"),
+            name="Route", showlegend=False, hoverinfo="skip",
+        ))
         if wp_cost is not None:
             fig.add_annotation(
                 text=f"ROUTE: {wp_cost:.1f} Wh",
-                xref="paper",
-                yref="paper",
-                x=0.98,
-                y=0.02,
+                xref="paper", yref="paper", x=0.98, y=0.02,
                 showarrow=False,
-                font=dict(size=12, color=t["accent"], family="Courier New, monospace"),
-                bgcolor=t["panel_bg"],
-                bordercolor=t["accent"],
-                borderwidth=1,
+                font=dict(size=12, color=t["accent"],
+                          family="Courier New, monospace"),
+                bgcolor=t["panel_bg"], bordercolor=t["accent"], borderwidth=1,
             )
 
     # Battery info annotation
     fig.add_annotation(
         text=f"CHARGE: {charge_pct:.0f}% ({BATTERY_ENERGY_WH * charge_pct / 100:.0f} Wh) | "
-        f"RESERVE: 25% ({BATTERY_ENERGY_WH * 0.25:.0f} Wh)",
-        xref="paper",
-        yref="paper",
-        x=0.5,
-        y=1.02,
+             f"RESERVE: 25% ({BATTERY_ENERGY_WH * 0.25:.0f} Wh)",
+        xref="paper", yref="paper", x=0.5, y=1.02,
         showarrow=False,
-        font=dict(size=10, color=t["font_color"], family="Courier New, monospace"),
+        font=dict(size=10, color=t["font_color"],
+                  family="Courier New, monospace"),
     )
 
     if lander_pos is None:
         fig.add_annotation(
             text="CLICK TO PLACE LANDER",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=16, color="#ffaa00", family="Courier New, monospace"),
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+            font=dict(size=16, color="#ffaa00",
+                      family="Courier New, monospace"),
         )
 
     fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
@@ -1702,18 +1406,18 @@ function(n, fig) {
 
 # All layer definitions: (id_key, label)
 ALL_LAYERS = [
-    ("3d", "3D TERRAIN"),
+    ("3d",        "3D TERRAIN"),
     ("elevation", "ELEVATION MAP"),
-    ("contour", "CONTOUR MAP"),
-    ("solar", "SOLAR / SHADOW"),
-    ("hazard", "HAZARD MAP"),
-    ("path", "PATH PLANNER"),
-    ("comms", "COMMS / LOS"),
+    ("contour",   "CONTOUR MAP"),
+    ("solar",     "SOLAR / SHADOW"),
+    ("hazard",    "HAZARD MAP"),
+    ("path",      "PATH PLANNER"),
+    ("comms",     "COMMS / LOS"),
     ("resources", "RESOURCES / ICE"),
-    ("rover", "ROVER SIM"),
-    ("psr", "SOLAR UPTIME / PSR"),
-    ("score", "MISSION SCORE"),
-    ("range", "BATTERY RANGE"),
+    ("rover",     "ROVER SIM"),
+    ("psr",       "SOLAR RADIATION"),
+    ("score",     "MISSION SCORE"),
+    ("range",     "BATTERY RANGE"),
 ]
 
 # Mode descriptions — purpose and key features for each layer
@@ -1772,10 +1476,11 @@ LAYER_INFO = {
         "Use the heading slider in the sidebar to rotate.",
     ),
     "psr": (
-        "SOLAR UPTIME / PSR",
-        "Solar uptime percentage across the 28-day lunar cycle. Bright = "
-        "consistently illuminated, dark = permanently shadowed regions (PSRs) "
-        "that never receive sunlight.",
+        "SOLAR RADIATION / PSR",
+        "Cumulative solar radiation received over a full 28-day lunar day "
+        "(kWh/m²). Accounts for sun elevation angle, surface slope, and "
+        "terrain shadowing. Black = permanently shadowed regions (PSRs). "
+        "Magenta contour outlines PSR boundaries.",
     ),
     "score": (
         "MISSION SUITABILITY SCORE",
@@ -1820,13 +1525,11 @@ def create_app(pcd_path: str):
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t0:.1f}s)")
 
     _t1 = _time.monotonic()
-    print(
-        "[PERSEUS] [2/8] Precomputing 28-day lunar illumination cycle "
-        "(28 shadow maps)..."
-    )
-    illum_stack, cycle_ts, solar_uptime, psr_mask = compute_lunar_cycle_illumination(
-        xg, yg, zg, now, DEFAULT_LAT, DEFAULT_LON, n_steps=28
-    )
+    print("[PERSEUS] [2/8] Precomputing 28-day lunar illumination cycle "
+          "(28 shadow maps)...")
+    illum_stack, cycle_ts, solar_uptime, solar_radiation, psr_mask = \
+        compute_lunar_cycle_illumination(xg, yg, zg, now,
+                                         DEFAULT_LAT, DEFAULT_LON, n_steps=28)
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t1:.1f}s)")
 
     _t2 = _time.monotonic()
@@ -1835,10 +1538,8 @@ def create_app(pcd_path: str):
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t2:.1f}s)")
 
     # Comms: default base at terrain centre
-    default_base = (
-        (float(xg[0, 0]) + float(xg[0, -1])) / 2,
-        (float(yg[0, 0]) + float(yg[-1, 0])) / 2,
-    )
+    default_base = ((float(xg[0, 0]) + float(xg[0, -1])) / 2,
+                    (float(yg[0, 0]) + float(yg[-1, 0])) / 2)
     _t3 = _time.monotonic()
     print("[PERSEUS] [4/8] Computing comms radial viewshed...")
     comms_coverage = compute_comms_coverage(xg, yg, zg, default_base)
@@ -1846,22 +1547,15 @@ def create_app(pcd_path: str):
 
     _t4 = _time.monotonic()
     print("[PERSEUS] [5/8] Computing traversal cost grid...")
-    cost_grid = compute_traversal_cost(slope_deg, hazard, solar_uptime, comms_coverage)
+    cost_grid = compute_traversal_cost(slope_deg, hazard, solar_uptime,
+                                        comms_coverage)
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t4:.1f}s)")
 
     _t5 = _time.monotonic()
     print("[PERSEUS] [6/8] Computing mission scores (0.25m grid)...")
-    score_xg, score_yg, score_grid, score_comp, score_summary = compute_mission_score(
-        xg,
-        yg,
-        zg,
-        slope_deg,
-        solar_uptime,
-        comms_coverage,
-        hazard,
-        ice_prob,
-        cell_size=0.25,
-    )
+    score_xg, score_yg, score_grid, score_comp, score_summary = \
+        compute_mission_score(xg, yg, zg, slope_deg, solar_uptime,
+                              comms_coverage, hazard, ice_prob, cell_size=0.25)
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t5:.1f}s)")
     print("[PERSEUS] [7/8] Computing energy cost grid...")
     energy_cost_grid = compute_energy_cost_grid(slope_deg, hazard)
@@ -1893,10 +1587,8 @@ def create_app(pcd_path: str):
     elev0 = math.degrees(math.asin(np.clip(sun0[2], -1, 1)))
     az0 = math.degrees(math.atan2(sun0[0], sun0[1])) % 360
     status0 = "ABOVE HORIZON" if sun0[2] > 0 else "BELOW HORIZON"
-    info0 = (
-        f"Sun Az: {az0:.1f} | Elev: {elev0:.2f} | {status0} | "
-        f"{np.mean(illum0) * 100:.0f}% illuminated"
-    )
+    info0 = (f"Sun Az: {az0:.1f} | Elev: {elev0:.2f} | {status0} | "
+             f"{np.mean(illum0)*100:.0f}% illuminated")
 
     # Build initial figures — only the default panel; others built on demand
     init_eye = dict(
@@ -1917,29 +1609,25 @@ def create_app(pcd_path: str):
         if key not in _no_cache_keys and cache_key in _fig_cache:
             return _fig_cache[cache_key]
         builders = {
-            "3d": lambda: fig_3d(points, intensity, sub, init_eye, theme),
+            "3d":        lambda: fig_3d(points, intensity, sub, init_eye, theme),
             "elevation": lambda: fig_heatmap(xg, yg, zg, theme),
-            "contour": lambda: fig_contour(xg, yg, zg, theme=theme),
-            "solar": lambda: fig_shadow(xg, yg, zg, illum0, theme),
-            "hazard": lambda: fig_hazard(xg, yg, hazard, slope_deg, theme),
-            "path": lambda: fig_path_plan(xg, yg, hazard, theme=theme),
-            "comms": lambda: fig_comms(
-                xg, yg, comms_coverage, default_base, theme=theme
-            ),
-            "resources": lambda: fig_resources(xg, yg, ice_prob, drill_sites, theme),
-            "rover": lambda: fig_rover(xg, yg, zg, slope_deg, theme=theme),
-            "psr": lambda: fig_psr(xg, yg, solar_uptime, psr_mask, theme),
-            "score": lambda: fig_mission_score(
-                score_xg, score_yg, score_grid, score_comp, theme
-            ),
-            "range": lambda: fig_battery_range(
-                xg,
-                yg,
-                np.full_like(zg, np.nan),
-                np.zeros_like(zg, dtype=bool),
-                None,
-                theme=theme,
-            ),
+            "contour":   lambda: fig_contour(xg, yg, zg, theme=theme),
+            "solar":     lambda: fig_shadow(xg, yg, zg, illum0, theme),
+            "hazard":    lambda: fig_hazard(xg, yg, hazard, slope_deg, theme),
+            "path":      lambda: fig_path_plan(xg, yg, hazard, theme=theme),
+            "comms":     lambda: fig_comms(xg, yg, comms_coverage, default_base,
+                                            theme=theme),
+            "resources": lambda: fig_resources(xg, yg, ice_prob, drill_sites,
+                                                theme),
+            "rover":     lambda: fig_rover(xg, yg, zg, slope_deg, theme=theme),
+            "psr":       lambda: fig_psr(xg, yg, solar_radiation, psr_mask, theme),
+            "score":     lambda: fig_mission_score(score_xg, score_yg,
+                                                    score_grid, score_comp,
+                                                    theme),
+            "range":     lambda: fig_battery_range(xg, yg,
+                                                    np.full_like(zg, np.nan),
+                                                    np.zeros_like(zg, dtype=bool),
+                                                    None, theme=theme),
         }
         fig = builders[key]()
         if key not in _no_cache_keys:
@@ -1952,8 +1640,7 @@ def create_app(pcd_path: str):
     _empty_fig.update_layout(
         paper_bgcolor=THEMES["dark"]["panel_bg"],
         plot_bgcolor=THEMES["dark"]["panel_bg"],
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
+        xaxis=dict(visible=False), yaxis=dict(visible=False),
     )
 
     print("[PERSEUS] Building dashboard...")
@@ -1964,51 +1651,25 @@ def create_app(pcd_path: str):
     # --- Layout helper ---
     def _panel(label, graph_id, figure, extra_children=None):
         children = [
-            html.Div(
-                label,
-                style={
-                    "position": "absolute",
-                    "top": "4px",
-                    "left": "10px",
-                    "fontSize": "10px",
-                    "letterSpacing": "2px",
-                    "zIndex": 10,
-                },
-                className="panel-label",
-            ),
-            dcc.Graph(
-                id=graph_id,
-                figure=figure,
-                style={"height": "100%"},
-                config={"displayModeBar": True, "scrollZoom": True},
-            ),
+            html.Div(label, style={
+                "position": "absolute", "top": "4px", "left": "10px",
+                "fontSize": "10px", "letterSpacing": "2px", "zIndex": 10,
+            }, className="panel-label"),
+            dcc.Graph(id=graph_id, figure=figure, style={"height": "100%"},
+                      config={"displayModeBar": True, "scrollZoom": True}),
         ]
         if extra_children:
             children.extend(extra_children)
-        return html.Div(
-            className="panel-box",
-            style={
-                "borderRadius": "4px",
-                "position": "relative",
-                "overflow": "hidden",
-            },
-            children=children,
-        )
+        return html.Div(className="panel-box", style={
+            "borderRadius": "4px", "position": "relative", "overflow": "hidden",
+        }, children=children)
 
     # Graph IDs mapping
     graph_ids = {
-        "3d": "terrain-3d",
-        "elevation": "topo-heatmap",
-        "contour": "contour-map",
-        "solar": "shadow-map",
-        "hazard": "hazard-map",
-        "path": "path-plan",
-        "comms": "comms-map",
-        "resources": "resource-map",
-        "rover": "rover-map",
-        "psr": "psr-map",
-        "score": "score-map",
-        "range": "range-map",
+        "3d": "terrain-3d", "elevation": "topo-heatmap", "contour": "contour-map",
+        "solar": "shadow-map", "hazard": "hazard-map", "path": "path-plan",
+        "comms": "comms-map", "resources": "resource-map", "rover": "rover-map",
+        "psr": "psr-map", "score": "score-map", "range": "range-map",
     }
 
     # Score summary text
@@ -2020,579 +1681,328 @@ def create_app(pcd_path: str):
     )
 
     # --- Main layout ---
-    app.layout = html.Div(
-        id="main-container",
-        children=[
-            # Theme store
-            dcc.Store(id="theme-store", data="dark"),
-            # Path planning stores
-            dcc.Store(id="path-start", data=None),
-            dcc.Store(id="path-end", data=None),
-            # Rover heading store
-            dcc.Store(id="rover-heading-store", data=0),
-            # Battery range stores
-            dcc.Store(id="lander-pos", data=None),
-            dcc.Store(id="range-waypoints", data=[]),
-            dcc.Store(id="range-click-mode", data="lander"),
-            # Comms base station store
-            dcc.Store(id="comms-base-pos", data=list(default_base)),
-            # Cycle playback store
-            dcc.Store(id="cycle-frame", data=0),
-            # 3D figure store for rotation
-            dcc.Store(id="fig3d-store", data=_get_fig("3d").to_dict()),
-            # ── Header ──
-            html.Div(
-                id="header-bar",
-                children=[
-                    html.Div(
-                        style={
-                            "display": "flex",
-                            "justifyContent": "space-between",
-                            "alignItems": "center",
-                        },
-                        children=[
-                            html.H1(
-                                "PERSEUS LUNAR TERRAIN MONITOR",
-                                id="main-title",
-                                style={
-                                    "margin": "0",
-                                    "fontSize": "22px",
-                                    "letterSpacing": "4px",
-                                },
-                            ),
-                            html.Button(
-                                "LIGHT MODE",
-                                id="theme-btn",
-                                n_clicks=0,
-                                style={
-                                    "padding": "4px 12px",
-                                    "cursor": "pointer",
-                                    "fontFamily": "Courier New, monospace",
-                                    "fontSize": "11px",
-                                    "fontWeight": "bold",
-                                    "borderRadius": "3px",
-                                },
-                            ),
-                        ],
-                    ),
-                    html.Div(
-                        id="header-stats",
-                        children=[
-                            html.Span(
-                                "SHACKLETON CRATER",
-                                style={"fontSize": "12px", "marginRight": "20px"},
-                            ),
-                            html.Span(
-                                f"PTS: {n:,}",
-                                style={"fontSize": "12px", "marginRight": "20px"},
-                            ),
-                            html.Span(
-                                f"AREA: {xs:.1f}x{ys:.1f}m",
-                                style={"fontSize": "12px", "marginRight": "20px"},
-                            ),
-                            html.Span(f"ELEV: {zs:.1f}m", style={"fontSize": "12px"}),
-                        ],
-                    ),
-                ],
+    app.layout = html.Div(id="main-container", children=[
+        # Theme store
+        dcc.Store(id="theme-store", data="dark"),
+        # Path planning stores
+        dcc.Store(id="path-start", data=None),
+        dcc.Store(id="path-end", data=None),
+        # Rover heading store
+        dcc.Store(id="rover-heading-store", data=0),
+        # Battery range stores
+        dcc.Store(id="lander-pos", data=None),
+        dcc.Store(id="range-waypoints", data=[]),
+        dcc.Store(id="range-click-mode", data="lander"),
+        # Comms base station store
+        dcc.Store(id="comms-base-pos", data=list(default_base)),
+        # Cycle playback store
+        dcc.Store(id="cycle-frame", data=0),
+        # 3D figure store for rotation
+        dcc.Store(id="fig3d-store", data=_get_fig("3d").to_dict()),
+
+        # ── Header ──
+        html.Div(id="header-bar", children=[
+            html.Div(style={
+                "display": "flex", "justifyContent": "space-between",
+                "alignItems": "center",
+            }, children=[
+                html.H1("PERSEUS LUNAR TERRAIN MONITOR", id="main-title",
+                         style={"margin": "0", "fontSize": "22px",
+                                "letterSpacing": "4px"}),
+                html.Button("LIGHT MODE", id="theme-btn", n_clicks=0,
+                             style={
+                    "padding": "4px 12px", "cursor": "pointer",
+                    "fontFamily": "Courier New, monospace", "fontSize": "11px",
+                    "fontWeight": "bold", "borderRadius": "3px",
+                }),
+            ]),
+            html.Div(id="header-stats", children=[
+                html.Span(f"SHACKLETON CRATER",
+                           style={"fontSize": "12px", "marginRight": "20px"}),
+                html.Span(f"PTS: {n:,}",
+                           style={"fontSize": "12px", "marginRight": "20px"}),
+                html.Span(f"AREA: {xs:.1f}x{ys:.1f}m",
+                           style={"fontSize": "12px", "marginRight": "20px"}),
+                html.Span(f"ELEV: {zs:.1f}m",
+                           style={"fontSize": "12px"}),
+            ]),
+        ]),
+
+        # ── Sun / Cycle control bar ──
+        html.Div(id="sun-bar", style={
+            "display": "flex", "alignItems": "center", "justifyContent": "center",
+            "gap": "10px", "padding": "6px 8px", "borderRadius": "4px",
+            "marginBottom": "8px", "flexWrap": "wrap",
+        }, children=[
+            html.Label("SUN", style={"fontWeight": "bold", "fontSize": "12px"}),
+            html.Label("Lat:", style={"fontSize": "11px"}),
+            dcc.Input(id="moon-lat", type="number", value=DEFAULT_LAT, step=0.1,
+                      style={"width": "70px", "fontSize": "11px",
+                             "fontFamily": "Courier New, monospace",
+                             "padding": "3px 5px"}),
+            html.Label("Lon:", style={"fontSize": "11px"}),
+            dcc.Input(id="moon-lon", type="number", value=DEFAULT_LON, step=0.1,
+                      style={"width": "70px", "fontSize": "11px",
+                             "fontFamily": "Courier New, monospace",
+                             "padding": "3px 5px"}),
+            html.Label("Date:", style={"fontSize": "11px"}),
+            dcc.Input(id="sun-date", type="date",
+                      value=now.strftime("%Y-%m-%d"),
+                      style={"fontSize": "11px",
+                             "fontFamily": "Courier New, monospace",
+                             "padding": "3px 5px"}),
+            html.Label("Hour:", style={"fontSize": "11px"}),
+            dcc.Slider(
+                id="sun-hour", min=0, max=23, step=1, value=now.hour,
+                marks={h: {"label": f"{h:02d}", "style": {"fontSize": "9px"}}
+                       for h in range(0, 24, 6)},
+                tooltip={"placement": "bottom", "always_visible": False},
             ),
-            # ── Sun / Cycle control bar ──
-            html.Div(
-                id="sun-bar",
-                style={
-                    "display": "flex",
-                    "alignItems": "center",
-                    "justifyContent": "center",
-                    "gap": "10px",
-                    "padding": "6px 8px",
+            html.Button("UPDATE", id="sun-btn", style={
+                "padding": "4px 12px", "cursor": "pointer",
+                "fontFamily": "Courier New, monospace", "fontSize": "11px",
+                "fontWeight": "bold",
+            }),
+            html.Span("|", style={"fontSize": "14px"}),
+            html.Button("PLAY CYCLE", id="cycle-play-btn", n_clicks=0,
+                         style={
+                "padding": "4px 12px", "cursor": "pointer",
+                "fontFamily": "Courier New, monospace", "fontSize": "11px",
+                "fontWeight": "bold",
+            }),
+            html.Span(id="sun-info", children=info0,
+                       style={"fontSize": "10px", "minWidth": "180px"}),
+            dcc.Interval(id="cycle-tick", interval=400, disabled=True,
+                          n_intervals=0),
+        ]),
+
+        # ── Body: sidebar + panels ──
+        html.Div(style={
+            "display": "flex", "height": "calc(100vh - 160px)", "gap": "8px",
+        }, children=[
+            # Sidebar
+            html.Div(id="sidebar", style={
+                "width": "200px", "minWidth": "200px", "borderRadius": "4px",
+                "padding": "8px", "overflowY": "auto",
+            }, children=[
+                html.Div("LAYERS", style={
+                    "fontWeight": "bold", "fontSize": "12px",
+                    "letterSpacing": "2px", "marginBottom": "6px",
+                }),
+                dcc.RadioItems(
+                    id="layer-toggles",
+                    options=[{"label": f" {lbl}", "value": key}
+                             for key, lbl in ALL_LAYERS],
+                    value=_default_layer,
+                    style={"fontSize": "11px"},
+                    inputStyle={"marginRight": "4px"},
+                    labelStyle={"display": "block", "padding": "3px 0",
+                                "cursor": "pointer"},
+                ),
+                html.Hr(style={"margin": "8px 0"}),
+                html.Div("ROVER", style={
+                    "fontWeight": "bold", "fontSize": "11px",
+                    "letterSpacing": "2px", "marginBottom": "4px",
+                }),
+                html.Label("Heading:", style={"fontSize": "10px"}),
+                dcc.Slider(id="rover-heading", min=0, max=350, step=10,
+                            value=0,
+                            marks={d: {"label": f"{d}", "style": {"fontSize": "8px"}}
+                                   for d in range(0, 360, 90)},
+                            tooltip={"placement": "bottom"}),
+                html.Hr(style={"margin": "8px 0"}),
+                html.Div("COMMS / LOS", style={
+                    "fontWeight": "bold", "fontSize": "11px",
+                    "letterSpacing": "2px", "marginBottom": "4px",
+                }),
+                html.Label("Click mode:", style={"fontSize": "10px"}),
+                dcc.RadioItems(
+                    id="comms-mode",
+                    options=[
+                        {"label": " Move Base Station", "value": "base"},
+                        {"label": " Check Rover LOS", "value": "rover"},
+                    ],
+                    value="base",
+                    style={"fontSize": "10px", "marginBottom": "4px"},
+                    inputStyle={"marginRight": "3px"},
+                    labelStyle={"display": "block", "padding": "1px 0"},
+                ),
+                html.Div(id="comms-info", style={
+                    "fontSize": "9px", "lineHeight": "1.5",
+                    "marginTop": "4px", "padding": "4px",
+                    "border": "1px solid var(--grid-clr)",
+                    "borderRadius": "3px",
+                    "backgroundColor": "var(--page-bg)",
+                }, children=[
+                    html.Div(id="comms-base-info",
+                             children=f"Base: ({default_base[0]:.1f}, "
+                                      f"{default_base[1]:.1f})"),
+                    html.Div(id="comms-rover-info",
+                             children="Rover: click map"),
+                ]),
+                html.Hr(style={"margin": "8px 0"}),
+                html.Div("BATTERY RANGE", style={
+                    "fontWeight": "bold", "fontSize": "11px",
+                    "letterSpacing": "2px", "marginBottom": "4px",
+                }),
+                html.Label("Click mode:", style={"fontSize": "10px"}),
+                dcc.RadioItems(
+                    id="range-mode",
+                    options=[
+                        {"label": " Place Lander", "value": "lander"},
+                        {"label": " Add Waypoint", "value": "waypoint"},
+                    ],
+                    value="lander",
+                    style={"fontSize": "10px", "marginBottom": "4px"},
+                    inputStyle={"marginRight": "3px"},
+                    labelStyle={"display": "block", "padding": "1px 0"},
+                ),
+                html.Label("Battery charge %:", style={"fontSize": "10px"}),
+                dcc.Slider(id="battery-charge", min=10, max=100, step=5,
+                            value=100,
+                            marks={v: {"label": f"{v}%",
+                                       "style": {"fontSize": "8px"}}
+                                   for v in (25, 50, 75, 100)},
+                            tooltip={"placement": "bottom"}),
+                html.Div(id="range-info", style={
+                    "fontSize": "9px", "lineHeight": "1.5",
+                    "marginTop": "4px", "padding": "4px",
+                    "border": "1px solid var(--grid-clr)",
+                    "borderRadius": "3px",
+                    "backgroundColor": "var(--page-bg)",
+                }, children=[
+                    html.Div("24V 50Ah (1200Wh)",
+                             style={"color": "var(--accent)"}),
+                    html.Div("Idle: 0.5A | Flat: 4A | Max: 40A"),
+                    html.Div("Reserve: 25% (300Wh)"),
+                    html.Div(id="range-lander-info",
+                             children="Lander: not placed"),
+                    html.Div(id="range-wp-info",
+                             children="Waypoints: 0"),
+                ]),
+                html.Button("CLEAR WAYPOINTS", id="range-clear-btn",
+                             n_clicks=0, style={
+                    "width": "100%", "padding": "3px", "marginTop": "4px",
+                    "cursor": "pointer",
+                    "fontFamily": "Courier New, monospace",
+                    "fontSize": "10px",
+                    "backgroundColor": "var(--btn-bg)",
+                    "color": "var(--font-clr)",
+                    "border": "1px solid var(--font-clr)",
+                }),
+                html.Hr(style={"margin": "8px 0"}),
+                html.Div("MISSION SCORE", style={
+                    "fontWeight": "bold", "fontSize": "11px",
+                    "letterSpacing": "2px", "marginBottom": "6px",
+                }),
+                # Live readout panel — updates on hover over score map
+                html.Div(id="score-live-panel", style={
+                    "fontSize": "10px", "lineHeight": "1.7",
+                    "padding": "6px", "borderRadius": "3px",
+                    "border": "1px solid var(--grid-clr)",
+                    "backgroundColor": "var(--page-bg)",
+                }, children=[
+                    html.Div(id="score-live-title",
+                             children="HOVER OVER MAP",
+                             style={"fontWeight": "bold",
+                                    "marginBottom": "4px",
+                                    "color": "var(--accent)"}),
+                    html.Div([
+                        html.Div(id="score-live-coords",
+                                 children="X: --  Y: --"),
+                        html.Div(id="score-live-latlon",
+                                 children=f"Lat: {DEFAULT_LAT:.4f}  "
+                                          f"Lon: {DEFAULT_LON:.4f}"),
+                    ], style={"marginBottom": "4px"}),
+                    html.Table(style={"width": "100%", "fontSize": "10px"},
+                               children=[
+                        html.Tr([html.Td("Solar:"),
+                                 html.Td(id="score-live-solar",
+                                         children="--/25",
+                                         style={"textAlign": "right"})]),
+                        html.Tr([html.Td("Slope:"),
+                                 html.Td(id="score-live-slope",
+                                         children="--/25",
+                                         style={"textAlign": "right"})]),
+                        html.Tr([html.Td("Clearance:"),
+                                 html.Td(id="score-live-clear",
+                                         children="--/25",
+                                         style={"textAlign": "right"})]),
+                        html.Tr([html.Td("Comms:"),
+                                 html.Td(id="score-live-comms",
+                                         children="--/25",
+                                         style={"textAlign": "right"})]),
+                        html.Tr(style={"fontWeight": "bold",
+                                       "borderTop": "1px solid var(--grid-clr)"},
+                                children=[
+                            html.Td("TOTAL:"),
+                            html.Td(id="score-live-total",
+                                    children="--/100",
+                                    style={"textAlign": "right"}),
+                        ]),
+                    ]),
+                ]),
+                html.Div(style={"marginTop": "6px", "fontSize": "10px"},
+                          children=[
+                    html.Div(id="score-summary", children=score_text),
+                    html.Div(
+                        f"Best: ({sc_sum['best_location'][0]:.1f}, "
+                        f"{sc_sum['best_location'][1]:.1f})")
+                ]),
+            ]),
+
+            # Panel column: mode description + map
+            html.Div(style={
+                "flex": "1", "display": "flex", "flexDirection": "column",
+                "overflow": "hidden",
+            }, children=[
+                # Mode description box
+                html.Div(id="mode-desc-box", style={
+                    "padding": "10px 14px", "marginBottom": "6px",
                     "borderRadius": "4px",
-                    "marginBottom": "8px",
-                    "flexWrap": "wrap",
-                },
-                children=[
-                    html.Label("SUN", style={"fontWeight": "bold", "fontSize": "12px"}),
-                    html.Label("Lat:", style={"fontSize": "11px"}),
-                    dcc.Input(
-                        id="moon-lat",
-                        type="number",
-                        value=DEFAULT_LAT,
-                        step=0.1,
-                        style={
-                            "width": "70px",
-                            "fontSize": "11px",
-                            "fontFamily": "Courier New, monospace",
-                            "padding": "3px 5px",
-                        },
-                    ),
-                    html.Label("Lon:", style={"fontSize": "11px"}),
-                    dcc.Input(
-                        id="moon-lon",
-                        type="number",
-                        value=DEFAULT_LON,
-                        step=0.1,
-                        style={
-                            "width": "70px",
-                            "fontSize": "11px",
-                            "fontFamily": "Courier New, monospace",
-                            "padding": "3px 5px",
-                        },
-                    ),
-                    html.Label("Date:", style={"fontSize": "11px"}),
-                    dcc.Input(
-                        id="sun-date",
-                        type="date",
-                        value=now.strftime("%Y-%m-%d"),
-                        style={
-                            "fontSize": "11px",
-                            "fontFamily": "Courier New, monospace",
-                            "padding": "3px 5px",
-                        },
-                    ),
-                    html.Label("Hour:", style={"fontSize": "11px"}),
-                    dcc.Slider(
-                        id="sun-hour",
-                        min=0,
-                        max=23,
-                        step=1,
-                        value=now.hour,
-                        marks={
-                            h: {"label": f"{h:02d}", "style": {"fontSize": "9px"}}
-                            for h in range(0, 24, 6)
-                        },
-                        tooltip={"placement": "bottom", "always_visible": False},
-                    ),
-                    html.Button(
-                        "UPDATE",
-                        id="sun-btn",
-                        style={
-                            "padding": "4px 12px",
-                            "cursor": "pointer",
-                            "fontFamily": "Courier New, monospace",
-                            "fontSize": "11px",
-                            "fontWeight": "bold",
-                        },
-                    ),
-                    html.Span("|", style={"fontSize": "14px"}),
-                    html.Button(
-                        "PLAY CYCLE",
-                        id="cycle-play-btn",
-                        n_clicks=0,
-                        style={
-                            "padding": "4px 12px",
-                            "cursor": "pointer",
-                            "fontFamily": "Courier New, monospace",
-                            "fontSize": "11px",
-                            "fontWeight": "bold",
-                        },
-                    ),
-                    html.Span(
-                        id="sun-info",
-                        children=info0,
-                        style={"fontSize": "10px", "minWidth": "180px"},
-                    ),
-                    dcc.Interval(
-                        id="cycle-tick", interval=400, disabled=True, n_intervals=0
-                    ),
-                ],
-            ),
-            # ── Body: sidebar + panels ──
-            html.Div(
-                style={
-                    "display": "flex",
-                    "height": "calc(100vh - 160px)",
-                    "gap": "8px",
-                },
-                children=[
-                    # Sidebar
-                    html.Div(
-                        id="sidebar",
-                        style={
-                            "width": "200px",
-                            "minWidth": "200px",
-                            "borderRadius": "4px",
-                            "padding": "8px",
-                            "overflowY": "auto",
-                        },
-                        children=[
-                            html.Div(
-                                "LAYERS",
-                                style={
-                                    "fontWeight": "bold",
-                                    "fontSize": "12px",
-                                    "letterSpacing": "2px",
-                                    "marginBottom": "6px",
-                                },
-                            ),
-                            dcc.RadioItems(
-                                id="layer-toggles",
-                                options=[
-                                    {"label": f" {lbl}", "value": key}
-                                    for key, lbl in ALL_LAYERS
-                                ],
-                                value=_default_layer,
-                                style={"fontSize": "11px"},
-                                inputStyle={"marginRight": "4px"},
-                                labelStyle={
-                                    "display": "block",
-                                    "padding": "3px 0",
-                                    "cursor": "pointer",
-                                },
-                            ),
-                            html.Hr(style={"margin": "8px 0"}),
-                            html.Div(
-                                "ROVER",
-                                style={
-                                    "fontWeight": "bold",
-                                    "fontSize": "11px",
-                                    "letterSpacing": "2px",
-                                    "marginBottom": "4px",
-                                },
-                            ),
-                            html.Label("Heading:", style={"fontSize": "10px"}),
-                            dcc.Slider(
-                                id="rover-heading",
-                                min=0,
-                                max=350,
-                                step=10,
-                                value=0,
-                                marks={
-                                    d: {"label": f"{d}", "style": {"fontSize": "8px"}}
-                                    for d in range(0, 360, 90)
-                                },
-                                tooltip={"placement": "bottom"},
-                            ),
-                            html.Hr(style={"margin": "8px 0"}),
-                            html.Div(
-                                "COMMS / LOS",
-                                style={
-                                    "fontWeight": "bold",
-                                    "fontSize": "11px",
-                                    "letterSpacing": "2px",
-                                    "marginBottom": "4px",
-                                },
-                            ),
-                            html.Label("Click mode:", style={"fontSize": "10px"}),
-                            dcc.RadioItems(
-                                id="comms-mode",
-                                options=[
-                                    {"label": " Move Base Station", "value": "base"},
-                                    {"label": " Check Rover LOS", "value": "rover"},
-                                ],
-                                value="base",
-                                style={"fontSize": "10px", "marginBottom": "4px"},
-                                inputStyle={"marginRight": "3px"},
-                                labelStyle={"display": "block", "padding": "1px 0"},
-                            ),
-                            html.Div(
-                                id="comms-info",
-                                style={
-                                    "fontSize": "9px",
-                                    "lineHeight": "1.5",
-                                    "marginTop": "4px",
-                                    "padding": "4px",
-                                    "border": "1px solid var(--grid-clr)",
-                                    "borderRadius": "3px",
-                                    "backgroundColor": "var(--page-bg)",
-                                },
-                                children=[
-                                    html.Div(
-                                        id="comms-base-info",
-                                        children=f"Base: ({default_base[0]:.1f}, "
-                                        f"{default_base[1]:.1f})",
-                                    ),
-                                    html.Div(
-                                        id="comms-rover-info",
-                                        children="Rover: click map",
-                                    ),
-                                ],
-                            ),
-                            html.Hr(style={"margin": "8px 0"}),
-                            html.Div(
-                                "BATTERY RANGE",
-                                style={
-                                    "fontWeight": "bold",
-                                    "fontSize": "11px",
-                                    "letterSpacing": "2px",
-                                    "marginBottom": "4px",
-                                },
-                            ),
-                            html.Label("Click mode:", style={"fontSize": "10px"}),
-                            dcc.RadioItems(
-                                id="range-mode",
-                                options=[
-                                    {"label": " Place Lander", "value": "lander"},
-                                    {"label": " Add Waypoint", "value": "waypoint"},
-                                ],
-                                value="lander",
-                                style={"fontSize": "10px", "marginBottom": "4px"},
-                                inputStyle={"marginRight": "3px"},
-                                labelStyle={"display": "block", "padding": "1px 0"},
-                            ),
-                            html.Label("Battery charge %:", style={"fontSize": "10px"}),
-                            dcc.Slider(
-                                id="battery-charge",
-                                min=10,
-                                max=100,
-                                step=5,
-                                value=100,
-                                marks={
-                                    v: {"label": f"{v}%", "style": {"fontSize": "8px"}}
-                                    for v in (25, 50, 75, 100)
-                                },
-                                tooltip={"placement": "bottom"},
-                            ),
-                            html.Div(
-                                id="range-info",
-                                style={
-                                    "fontSize": "9px",
-                                    "lineHeight": "1.5",
-                                    "marginTop": "4px",
-                                    "padding": "4px",
-                                    "border": "1px solid var(--grid-clr)",
-                                    "borderRadius": "3px",
-                                    "backgroundColor": "var(--page-bg)",
-                                },
-                                children=[
-                                    html.Div(
-                                        "24V 50Ah (1200Wh)",
-                                        style={"color": "var(--accent)"},
-                                    ),
-                                    html.Div("Idle: 0.5A | Flat: 4A | Max: 40A"),
-                                    html.Div("Reserve: 25% (300Wh)"),
-                                    html.Div(
-                                        id="range-lander-info",
-                                        children="Lander: not placed",
-                                    ),
-                                    html.Div(
-                                        id="range-wp-info", children="Waypoints: 0"
-                                    ),
-                                ],
-                            ),
-                            html.Button(
-                                "CLEAR WAYPOINTS",
-                                id="range-clear-btn",
-                                n_clicks=0,
-                                style={
-                                    "width": "100%",
-                                    "padding": "3px",
-                                    "marginTop": "4px",
-                                    "cursor": "pointer",
-                                    "fontFamily": "Courier New, monospace",
-                                    "fontSize": "10px",
-                                    "backgroundColor": "var(--btn-bg)",
-                                    "color": "var(--font-clr)",
-                                    "border": "1px solid var(--font-clr)",
-                                },
-                            ),
-                            html.Hr(style={"margin": "8px 0"}),
-                            html.Div(
-                                "MISSION SCORE",
-                                style={
-                                    "fontWeight": "bold",
-                                    "fontSize": "11px",
-                                    "letterSpacing": "2px",
-                                    "marginBottom": "6px",
-                                },
-                            ),
-                            # Live readout panel — updates on hover over score map
-                            html.Div(
-                                id="score-live-panel",
-                                style={
-                                    "fontSize": "10px",
-                                    "lineHeight": "1.7",
-                                    "padding": "6px",
-                                    "borderRadius": "3px",
-                                    "border": "1px solid var(--grid-clr)",
-                                    "backgroundColor": "var(--page-bg)",
-                                },
-                                children=[
-                                    html.Div(
-                                        id="score-live-title",
-                                        children="HOVER OVER MAP",
-                                        style={
-                                            "fontWeight": "bold",
-                                            "marginBottom": "4px",
-                                            "color": "var(--accent)",
-                                        },
-                                    ),
-                                    html.Div(
-                                        [
-                                            html.Div(
-                                                id="score-live-coords",
-                                                children="X: --  Y: --",
-                                            ),
-                                            html.Div(
-                                                id="score-live-latlon",
-                                                children=f"Lat: {DEFAULT_LAT:.4f}  "
-                                                f"Lon: {DEFAULT_LON:.4f}",
-                                            ),
-                                        ],
-                                        style={"marginBottom": "4px"},
-                                    ),
-                                    html.Table(
-                                        style={"width": "100%", "fontSize": "10px"},
-                                        children=[
-                                            html.Tr(
-                                                [
-                                                    html.Td("Solar:"),
-                                                    html.Td(
-                                                        id="score-live-solar",
-                                                        children="--/25",
-                                                        style={"textAlign": "right"},
-                                                    ),
-                                                ]
-                                            ),
-                                            html.Tr(
-                                                [
-                                                    html.Td("Slope:"),
-                                                    html.Td(
-                                                        id="score-live-slope",
-                                                        children="--/25",
-                                                        style={"textAlign": "right"},
-                                                    ),
-                                                ]
-                                            ),
-                                            html.Tr(
-                                                [
-                                                    html.Td("Clearance:"),
-                                                    html.Td(
-                                                        id="score-live-clear",
-                                                        children="--/25",
-                                                        style={"textAlign": "right"},
-                                                    ),
-                                                ]
-                                            ),
-                                            html.Tr(
-                                                [
-                                                    html.Td("Comms:"),
-                                                    html.Td(
-                                                        id="score-live-comms",
-                                                        children="--/25",
-                                                        style={"textAlign": "right"},
-                                                    ),
-                                                ]
-                                            ),
-                                            html.Tr(
-                                                style={
-                                                    "fontWeight": "bold",
-                                                    "borderTop": "1px solid var(--grid-clr)",
-                                                },
-                                                children=[
-                                                    html.Td("TOTAL:"),
-                                                    html.Td(
-                                                        id="score-live-total",
-                                                        children="--/100",
-                                                        style={"textAlign": "right"},
-                                                    ),
-                                                ],
-                                            ),
-                                        ],
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                style={"marginTop": "6px", "fontSize": "10px"},
-                                children=[
-                                    html.Div(id="score-summary", children=score_text),
-                                    html.Div(
-                                        f"Best: ({sc_sum['best_location'][0]:.1f}, "
-                                        f"{sc_sum['best_location'][1]:.1f})"
-                                    ),
-                                ],
-                            ),
-                        ],
-                    ),
-                    # Panel column: mode description + map
-                    html.Div(
-                        style={
-                            "flex": "1",
-                            "display": "flex",
-                            "flexDirection": "column",
-                            "overflow": "hidden",
-                        },
-                        children=[
-                            # Mode description box
-                            html.Div(
-                                id="mode-desc-box",
-                                style={
-                                    "padding": "10px 14px",
-                                    "marginBottom": "6px",
-                                    "borderRadius": "4px",
-                                    "border": "1px solid var(--accent)",
-                                    "backgroundColor": "var(--panel-bg)",
-                                    "minHeight": "50px",
-                                },
-                                children=[
-                                    html.Div(
-                                        id="mode-desc-title",
-                                        children=LAYER_INFO[_default_layer][0],
-                                        style={
-                                            "fontSize": "24px",
-                                            "fontWeight": "bold",
-                                            "letterSpacing": "3px",
-                                            "color": "var(--accent)",
-                                            "marginBottom": "4px",
-                                        },
-                                    ),
-                                    html.Div(
-                                        id="mode-desc-text",
-                                        children=LAYER_INFO[_default_layer][1],
-                                        style={
-                                            "fontSize": "16px",
-                                            "lineHeight": "1.4",
-                                            "color": "var(--font-clr)",
-                                        },
-                                    ),
-                                ],
-                            ),
-                            # Single full-size panel
-                            html.Div(
-                                id="panel-area",
-                                style={
-                                    "flex": "1",
-                                    "position": "relative",
-                                },
-                                children=[
-                                    html.Div(
-                                        id=f"panel-wrap-{key}",
-                                        children=[
-                                            _panel(
-                                                lbl,
-                                                graph_ids[key],
-                                                _get_fig(key)
-                                                if key == _default_layer
-                                                else _empty_fig,
-                                                extra_children=(
-                                                    [
-                                                        dcc.Interval(
-                                                            id="rot-tick",
-                                                            interval=100,
-                                                            n_intervals=0,
-                                                        )
-                                                    ]
-                                                    if key == "3d"
-                                                    else None
-                                                ),
-                                            )
-                                        ],
-                                        style={
-                                            "display": "block"
-                                            if key == _default_layer
-                                            else "none",
-                                            "height": "100%",
-                                        },
-                                    )
-                                    for key, lbl in ALL_LAYERS
-                                ],
-                            ),
-                        ],
-                    ),
-                ],
-            ),
-        ],
-    )
+                    "border": "1px solid var(--accent)",
+                    "backgroundColor": "var(--panel-bg)",
+                    "minHeight": "50px",
+                }, children=[
+                    html.Div(id="mode-desc-title",
+                             children=LAYER_INFO[_default_layer][0],
+                             style={
+                                 "fontSize": "24px", "fontWeight": "bold",
+                                 "letterSpacing": "3px",
+                                 "color": "var(--accent)",
+                                 "marginBottom": "4px",
+                             }),
+                    html.Div(id="mode-desc-text",
+                             children=LAYER_INFO[_default_layer][1],
+                             style={
+                                 "fontSize": "16px", "lineHeight": "1.4",
+                                 "color": "var(--font-clr)",
+                             }),
+                ]),
+                # Single full-size panel
+                html.Div(id="panel-area", style={
+                    "flex": "1", "position": "relative",
+                }, children=[
+                    html.Div(id=f"panel-wrap-{key}", children=[
+                        _panel(lbl, graph_ids[key],
+                               _get_fig(key) if key == _default_layer
+                               else _empty_fig,
+                               extra_children=(
+                                   [dcc.Interval(id="rot-tick", interval=100,
+                                                 n_intervals=0)]
+                                   if key == "3d" else None
+                               ))
+                    ], style={"display": "block" if key == _default_layer
+                               else "none",
+                               "height": "100%"})
+                    for key, lbl in ALL_LAYERS
+                ]),
+            ]),
+        ]),
+    ])
 
     # ── CSS injection for theming ──
-    app.index_string = """
+    app.index_string = '''
     <!DOCTYPE html>
     <html>
     <head>
@@ -2649,7 +2059,7 @@ def create_app(pcd_path: str):
         <footer>{%config%}{%scripts%}{%renderer%}</footer>
     </body>
     </html>
-    """
+    '''
 
     # ── Callbacks ──
 
@@ -2669,17 +2079,15 @@ def create_app(pcd_path: str):
         return f"theme-{new}", btn_text, new
 
     # 2. Layer toggle — show one panel at a time, build figure on demand
-    _layer_style_outputs = [
-        Output(f"panel-wrap-{key}", "style") for key, _ in ALL_LAYERS
-    ]
-    _layer_fig_outputs = [
-        Output(graph_ids[key], "figure", allow_duplicate=True) for key, _ in ALL_LAYERS
-    ]
+    _layer_style_outputs = [Output(f"panel-wrap-{key}", "style")
+                            for key, _ in ALL_LAYERS]
+    _layer_fig_outputs = [Output(graph_ids[key], "figure", allow_duplicate=True)
+                          for key, _ in ALL_LAYERS]
 
     @app.callback(
-        _layer_style_outputs
-        + _layer_fig_outputs
-        + [Output("mode-desc-title", "children"), Output("mode-desc-text", "children")],
+        _layer_style_outputs + _layer_fig_outputs +
+        [Output("mode-desc-title", "children"),
+         Output("mode-desc-text", "children")],
         Input("layer-toggles", "value"),
         State("theme-store", "data"),
         prevent_initial_call=True,
@@ -2720,8 +2128,7 @@ def create_app(pcd_path: str):
     def update_shadow(_, date_str, hour, lat, lon, theme):
         try:
             dt = datetime.strptime(date_str, "%Y-%m-%d").replace(
-                hour=int(hour), tzinfo=timezone.utc
-            )
+                hour=int(hour), tzinfo=timezone.utc)
         except Exception:
             dt = now
 
@@ -2735,10 +2142,8 @@ def create_app(pcd_path: str):
         el = math.degrees(math.asin(np.clip(sd[2], -1, 1)))
         az = math.degrees(math.atan2(sd[0], sd[1])) % 360
         st = "ABOVE HORIZON" if sd[2] > 0 else "BELOW HORIZON"
-        info = (
-            f"Pos: {lat_v:.1f}N {lon_v:.1f}E | "
-            f"Sun Az: {az:.1f} | Elev: {el:.2f} | {st} | {pct:.0f}% lit"
-        )
+        info = (f"Pos: {lat_v:.1f}N {lon_v:.1f}E | "
+                f"Sun Az: {az:.1f} | Elev: {el:.2f} | {st} | {pct:.0f}% lit")
 
         return fig_shadow(xg, yg, zg, il, theme), info
 
@@ -2769,24 +2174,15 @@ def create_app(pcd_path: str):
         frame = (frame + 1) % len(illum_stack)
         ts = cycle_ts[frame]
         pct = float(np.mean(illum_stack[frame]) * 100)
-        info = (
-            f"CYCLE DAY {frame * 28.0 / len(illum_stack):.1f}/28 | "
-            f"{ts.strftime('%Y-%m-%d %H:%M')} UTC | {pct:.0f}% lit"
-        )
+        info = (f"CYCLE DAY {frame * 28.0 / len(illum_stack):.1f}/28 | "
+                f"{ts.strftime('%Y-%m-%d %H:%M')} UTC | {pct:.0f}% lit")
         # Use precomputed shaded data — only rebuild figure with cached z
         t = _t(theme)
-        fig = go.Figure(
-            data=[
-                go.Heatmap(
-                    x=xg[0, :],
-                    y=yg[:, 0],
-                    z=shaded_stack[frame],
-                    colorscale=SHADOW_CS,
-                    showscale=False,
-                    hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
-                )
-            ]
-        )
+        fig = go.Figure(data=[go.Heatmap(
+            x=xg[0, :], y=yg[:, 0], z=shaded_stack[frame],
+            colorscale=SHADOW_CS, showscale=False,
+            hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+        )])
         fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
         return fig, info, frame
 
@@ -2811,49 +2207,36 @@ def create_app(pcd_path: str):
 
         if start is None:
             # Set start
-            return (
-                fig_path_plan(xg, yg, hazard, start_xy=(px, py), theme=theme),
-                [px, py],
-                None,
-            )
+            return (fig_path_plan(xg, yg, hazard, start_xy=(px, py),
+                                  theme=theme),
+                    [px, py], None)
         elif end is None:
             # Set end and compute path
             start_xy = tuple(start)
             end_xy = (px, py)
-            path_coords, total_cost = find_path(
-                traversal_graph, cost_grid, xg, yg, start_xy, end_xy
-            )
+            path_coords, total_cost = find_path(traversal_graph,
+                                                 cost_grid, xg, yg,
+                                                 start_xy, end_xy)
             if path_coords is None:
                 # No path found — show annotation
-                f = fig_path_plan(
-                    xg, yg, hazard, start_xy=start_xy, end_xy=end_xy, theme=theme
-                )
+                f = fig_path_plan(xg, yg, hazard, start_xy=start_xy,
+                                   end_xy=end_xy, theme=theme)
                 f.add_annotation(
                     text="NO SAFE PATH FOUND",
-                    xref="paper",
-                    yref="paper",
-                    x=0.5,
-                    y=0.5,
+                    xref="paper", yref="paper", x=0.5, y=0.5,
                     showarrow=False,
-                    font=dict(
-                        size=18, color="#cc0000", family="Courier New, monospace"
-                    ),
+                    font=dict(size=18, color="#cc0000",
+                              family="Courier New, monospace"),
                 )
                 return f, list(start), [px, py]
-            return (
-                fig_path_plan(
-                    xg, yg, hazard, path_coords, start_xy, end_xy, total_cost, theme
-                ),
-                list(start),
-                [px, py],
-            )
+            return (fig_path_plan(xg, yg, hazard, path_coords, start_xy,
+                                  end_xy, total_cost, theme),
+                    list(start), [px, py])
         else:
             # Reset — new start
-            return (
-                fig_path_plan(xg, yg, hazard, start_xy=(px, py), theme=theme),
-                [px, py],
-                None,
-            )
+            return (fig_path_plan(xg, yg, hazard, start_xy=(px, py),
+                                  theme=theme),
+                    [px, py], None)
 
     # 8. Comms LOS — click to place base or rover
     @app.callback(
@@ -2882,25 +2265,21 @@ def create_app(pcd_path: str):
             base_pos = (px, py)
             new_coverage = compute_comms_coverage(xg, yg, zg, base_pos)
             fig = fig_comms(xg, yg, new_coverage, base_pos, theme=theme)
-            return (
-                fig,
-                list(base_pos),
-                f"Base: ({px:.1f}, {py:.1f})",
-                "Rover: click map",
-            )
+            return (fig, list(base_pos),
+                    f"Base: ({px:.1f}, {py:.1f})",
+                    "Rover: click map")
         else:
             # Place rover and show LOS trace
             rover_pos = (px, py)
             cur_coverage = compute_comms_coverage(xg, yg, zg, base_pos)
-            los_data = compute_line_of_sight(xg, yg, zg, base_pos, rover_pos)
-            fig = fig_comms(xg, yg, cur_coverage, base_pos, rover_pos, los_data, theme)
+            los_data = compute_line_of_sight(xg, yg, zg, base_pos,
+                                              rover_pos)
+            fig = fig_comms(xg, yg, cur_coverage, base_pos,
+                             rover_pos, los_data, theme)
             status = "CLEAR" if los_data["visible"] else "BLOCKED"
-            return (
-                fig,
-                list(base_pos),
-                f"Base: ({base_pos[0]:.1f}, {base_pos[1]:.1f})",
-                f"Rover: ({px:.1f}, {py:.1f}) [{status}]",
-            )
+            return (fig, list(base_pos),
+                    f"Base: ({base_pos[0]:.1f}, {base_pos[1]:.1f})",
+                    f"Rover: ({px:.1f}, {py:.1f}) [{status}]")
 
     # 9. Rover sim — click to place, slider for heading
     @app.callback(
@@ -2941,7 +2320,8 @@ def create_app(pcd_path: str):
         State("theme-store", "data"),
         prevent_initial_call=True,
     )
-    def range_click(click, charge_pct, clear_n, mode, lander, waypoints, theme):
+    def range_click(click, charge_pct, clear_n, mode, lander,
+                    waypoints, theme):
         triggered = ctx.triggered_id
         charge_pct = charge_pct or 100
 
@@ -2952,8 +2332,7 @@ def create_app(pcd_path: str):
             if cache_key in _range_cache:
                 return _range_cache[cache_key]
             result = compute_battery_range(
-                energy_graph, grid_rows, grid_cols, xg, yg, lp, pct
-            )
+                energy_graph, grid_rows, grid_cols, xg, yg, lp, pct)
             _range_cache[cache_key] = result
             return result
 
@@ -2963,31 +2342,17 @@ def create_app(pcd_path: str):
             if lander is not None:
                 lp = tuple(lander)
                 _, reachable, range_pct = _cached_range(lp, charge_pct)
-                fig = fig_battery_range(
-                    xg, yg, range_pct, reachable, lp, charge_pct=charge_pct, theme=theme
-                )
-                return (
-                    fig,
-                    lander,
-                    [],
-                    f"Lander: ({lp[0]:.1f}, {lp[1]:.1f})",
-                    "Waypoints: 0",
-                )
-            return (
-                fig_battery_range(
-                    xg,
-                    yg,
-                    np.full_like(zg, np.nan),
-                    np.zeros_like(zg, dtype=bool),
-                    None,
-                    charge_pct=charge_pct,
-                    theme=theme,
-                ),
-                None,
-                [],
-                "Lander: not placed",
-                "Waypoints: 0",
-            )
+                fig = fig_battery_range(xg, yg, range_pct, reachable,
+                                         lp, charge_pct=charge_pct,
+                                         theme=theme)
+                return (fig, lander, [],
+                        f"Lander: ({lp[0]:.1f}, {lp[1]:.1f})",
+                        "Waypoints: 0")
+            return (fig_battery_range(xg, yg, np.full_like(zg, np.nan),
+                                       np.zeros_like(zg, dtype=bool),
+                                       None, charge_pct=charge_pct,
+                                       theme=theme),
+                    None, [], "Lander: not placed", "Waypoints: 0")
 
         # Handle battery slider change (no click)
         if triggered == "battery-charge":
@@ -2998,27 +2363,14 @@ def create_app(pcd_path: str):
                 wp_cost = None
                 if waypoints and len(waypoints) > 0:
                     wp_path, wp_cost = _compute_wp_route(
-                        lp, waypoints, traversal_graph, cost_grid, xg, yg
-                    )
-                fig = fig_battery_range(
-                    xg,
-                    yg,
-                    range_pct,
-                    reachable,
-                    lp,
-                    waypoints,
-                    wp_path,
-                    wp_cost,
-                    charge_pct,
-                    theme,
-                )
-                return (
-                    fig,
-                    lander,
-                    waypoints or [],
-                    f"Lander: ({lp[0]:.1f}, {lp[1]:.1f})",
-                    f"Waypoints: {len(waypoints or [])}",
-                )
+                        lp, waypoints, traversal_graph,
+                        cost_grid, xg, yg)
+                fig = fig_battery_range(xg, yg, range_pct, reachable,
+                                         lp, waypoints, wp_path, wp_cost,
+                                         charge_pct, theme)
+                return (fig, lander, waypoints or [],
+                        f"Lander: ({lp[0]:.1f}, {lp[1]:.1f})",
+                        f"Waypoints: {len(waypoints or [])}")
             raise PreventUpdate
 
         # Handle map click
@@ -3041,27 +2393,13 @@ def create_app(pcd_path: str):
             wp_cost = None
             if waypoints and len(waypoints) > 0:
                 wp_path, wp_cost = _compute_wp_route(
-                    lp, waypoints, traversal_graph, cost_grid, xg, yg
-                )
-            fig = fig_battery_range(
-                xg,
-                yg,
-                range_pct,
-                reachable,
-                lp,
-                waypoints,
-                wp_path,
-                wp_cost,
-                charge_pct,
-                theme,
-            )
-            return (
-                fig,
-                lander,
-                waypoints,
-                f"Lander: ({px:.1f}, {py:.1f})",
-                f"Waypoints: {len(waypoints)}",
-            )
+                    lp, waypoints, traversal_graph, cost_grid, xg, yg)
+            fig = fig_battery_range(xg, yg, range_pct, reachable, lp,
+                                     waypoints, wp_path, wp_cost,
+                                     charge_pct, theme)
+            return (fig, lander, waypoints,
+                    f"Lander: ({px:.1f}, {py:.1f})",
+                    f"Waypoints: {len(waypoints)}")
         else:
             # Add waypoint
             waypoints = waypoints + [[px, py]]
@@ -3069,45 +2407,22 @@ def create_app(pcd_path: str):
                 lp = tuple(lander)
                 _, reachable, range_pct = _cached_range(lp, charge_pct)
                 wp_path, wp_cost = _compute_wp_route(
-                    lp, waypoints, traversal_graph, cost_grid, xg, yg
-                )
-                fig = fig_battery_range(
-                    xg,
-                    yg,
-                    range_pct,
-                    reachable,
-                    lp,
-                    waypoints,
-                    wp_path,
-                    wp_cost,
-                    charge_pct,
-                    theme,
-                )
-                return (
-                    fig,
-                    lander,
-                    waypoints,
-                    f"Lander: ({lp[0]:.1f}, {lp[1]:.1f})",
-                    f"Waypoints: {len(waypoints)}",
-                )
+                    lp, waypoints, traversal_graph, cost_grid, xg, yg)
+                fig = fig_battery_range(xg, yg, range_pct, reachable,
+                                         lp, waypoints, wp_path, wp_cost,
+                                         charge_pct, theme)
+                return (fig, lander, waypoints,
+                        f"Lander: ({lp[0]:.1f}, {lp[1]:.1f})",
+                        f"Waypoints: {len(waypoints)}")
             else:
-                fig = fig_battery_range(
-                    xg,
-                    yg,
-                    np.full_like(zg, np.nan),
-                    np.zeros_like(zg, dtype=bool),
-                    None,
-                    waypoints,
-                    charge_pct=charge_pct,
-                    theme=theme,
-                )
-                return (
-                    fig,
-                    None,
-                    waypoints,
-                    "Lander: not placed",
-                    f"Waypoints: {len(waypoints)}",
-                )
+                fig = fig_battery_range(xg, yg, np.full_like(zg, np.nan),
+                                         np.zeros_like(zg, dtype=bool),
+                                         None, waypoints,
+                                         charge_pct=charge_pct,
+                                         theme=theme)
+                return (fig, None, waypoints,
+                        "Lander: not placed",
+                        f"Waypoints: {len(waypoints)}")
 
     def _compute_wp_route(lander_pos, waypoints, graph, cost_g, xg_, yg_):
         """Compute route: lander -> WP1 -> WP2 -> ... -> lander."""
@@ -3120,8 +2435,7 @@ def create_app(pcd_path: str):
         total_cost = 0.0
         for i in range(len(all_points) - 1):
             seg_path, seg_cost = find_path(
-                graph, cost_g, xg_, yg_, all_points[i], all_points[i + 1]
-            )
+                graph, cost_g, xg_, yg_, all_points[i], all_points[i + 1])
             if seg_path is None:
                 return None, None
             if full_path:
@@ -3190,9 +2504,9 @@ def create_app(pcd_path: str):
         )
 
     # 11. Theme change — clear cache, rebuild active panel
-    _theme_all_outputs = [
-        Output(graph_ids[key], "figure", allow_duplicate=True) for key, _ in ALL_LAYERS
-    ] + [Output("fig3d-store", "data", allow_duplicate=True)]
+    _theme_all_outputs = ([Output(graph_ids[key], "figure", allow_duplicate=True)
+                           for key, _ in ALL_LAYERS] +
+                          [Output("fig3d-store", "data", allow_duplicate=True)])
 
     @app.callback(
         _theme_all_outputs,
@@ -3219,7 +2533,6 @@ def create_app(pcd_path: str):
 # CLI entry point
 # ---------------------------------------------------------------------------
 
-
 def main():
     parser = argparse.ArgumentParser(description="Perseus Lunar PCD Viewer")
     parser.add_argument("pcd_file", help="Path to a .pcd point cloud file")
@@ -3230,11 +2543,11 @@ def main():
 
     app = create_app(args.pcd_file)
 
-    print(f"\n{'=' * 60}")
-    print("  PERSEUS LUNAR TERRAIN MONITOR")
-    print("  Shackleton Crater — South Pole")
+    print(f"\n{'='*60}")
+    print(f"  PERSEUS LUNAR TERRAIN MONITOR")
+    print(f"  Shackleton Crater — South Pole")
     print(f"  Dashboard: http://localhost:{args.port}")
-    print(f"{'=' * 60}\n")
+    print(f"{'='*60}\n")
 
     app.run(host=args.host, port=args.port, debug=args.debug)
 
