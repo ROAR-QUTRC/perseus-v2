@@ -26,12 +26,12 @@ from scipy.ndimage import gaussian_filter
 
 import plotly.graph_objects as go
 from dash import Dash, html, dcc, Input, Output, State
-from dash.exceptions import PreventUpdate
 
 
 # ---------------------------------------------------------------------------
 # PCD loader (numpy-fast path for binary float32 PCD v0.7)
 # ---------------------------------------------------------------------------
+
 
 def load_pcd(path: str):
     """Return (N,3) float32 XYZ and (N,) float32 intensity from a .pcd file."""
@@ -55,7 +55,9 @@ def load_pcd(path: str):
 
         if data_type == "binary":
             dt = np.dtype([(fields[i], np.float32) for i in range(len(fields))])
-            arr = np.frombuffer(f.read(n_points * dt.itemsize), dtype=dt, count=n_points)
+            arr = np.frombuffer(
+                f.read(n_points * dt.itemsize), dtype=dt, count=n_points
+            )
             points = np.column_stack([arr["x"], arr["y"], arr["z"]]).astype(np.float32)
             intensity = (
                 arr["intensity"].astype(np.float32)
@@ -81,6 +83,7 @@ def load_pcd(path: str):
 # Terrain grid interpolation
 # ---------------------------------------------------------------------------
 
+
 def make_terrain_grid(points, resolution=250):
     """Interpolate point cloud onto a regular grid for contour / surface plots."""
     x, y, z = points[:, 0], points[:, 1], points[:, 2]
@@ -102,12 +105,13 @@ def make_terrain_grid(points, resolution=250):
 # ---------------------------------------------------------------------------
 
 # Default: Shackleton Crater rim, lunar South Pole
-DEFAULT_LAT = -89.9   # degrees selenographic latitude
-DEFAULT_LON = 0.0     # degrees selenographic longitude
+DEFAULT_LAT = -89.9  # degrees selenographic latitude
+DEFAULT_LON = 0.0  # degrees selenographic longitude
 
 
-def compute_sun_direction(dt: datetime, lat_deg: float = DEFAULT_LAT,
-                          lon_deg: float = DEFAULT_LON) -> np.ndarray:
+def compute_sun_direction(
+    dt: datetime, lat_deg: float = DEFAULT_LAT, lon_deg: float = DEFAULT_LON
+) -> np.ndarray:
     """Sun direction as a unit vector [east, north, up] in a local tangent frame
     at the given selenographic (lat, lon) position on the Moon.
 
@@ -143,8 +147,9 @@ def compute_sun_direction(dt: datetime, lat_deg: float = DEFAULT_LAT,
 
     # Angular distance (great-circle) between observer and sub-solar point
     dlon = ss_lon - obs_lon
-    cos_c = (math.sin(obs_lat) * math.sin(ss_lat) +
-             math.cos(obs_lat) * math.cos(ss_lat) * math.cos(dlon))
+    cos_c = math.sin(obs_lat) * math.sin(ss_lat) + math.cos(obs_lat) * math.cos(
+        ss_lat
+    ) * math.cos(dlon)
     cos_c = max(-1.0, min(1.0, cos_c))
 
     # Sun elevation = 90 - angular_distance  (sun is at zenith at sub-solar point)
@@ -152,17 +157,21 @@ def compute_sun_direction(dt: datetime, lat_deg: float = DEFAULT_LAT,
 
     # Azimuth of the sun from observer (measured from north, clockwise)
     sin_c = math.sqrt(1 - cos_c * cos_c) + 1e-12
-    cos_az = (math.sin(ss_lat) - math.sin(obs_lat) * cos_c) / (math.cos(obs_lat) * sin_c + 1e-12)
+    cos_az = (math.sin(ss_lat) - math.sin(obs_lat) * cos_c) / (
+        math.cos(obs_lat) * sin_c + 1e-12
+    )
     sin_az = math.cos(ss_lat) * math.sin(dlon) / sin_c
     azimuth = math.atan2(sin_az, cos_az)
 
     # Convert to ENU unit vector
     ce = math.cos(elevation)
-    return np.array([
-        ce * math.sin(azimuth),   # East
-        ce * math.cos(azimuth),   # North
-        math.sin(elevation),      # Up
-    ])
+    return np.array(
+        [
+            ce * math.sin(azimuth),  # East
+            ce * math.cos(azimuth),  # North
+            math.sin(elevation),  # Up
+        ]
+    )
 
 
 def compute_shadow_map(x_grid, y_grid, z_grid, sun_dir):
@@ -203,19 +212,36 @@ def compute_shadow_map(x_grid, y_grid, z_grid, sun_dir):
 # ---------------------------------------------------------------------------
 
 LUNAR_CS = [
-    [0.0, "#1a1a2e"], [0.15, "#2d2d44"], [0.3, "#4a4a5a"],
-    [0.5, "#6b6b7b"], [0.7, "#8a8a96"], [0.85, "#a8a8b0"], [1.0, "#c8c8cc"],
+    [0.0, "#1a1a2e"],
+    [0.15, "#2d2d44"],
+    [0.3, "#4a4a5a"],
+    [0.5, "#6b6b7b"],
+    [0.7, "#8a8a96"],
+    [0.85, "#a8a8b0"],
+    [1.0, "#c8c8cc"],
 ]
 
 TOPO_CS = [
-    [0.0, "#000033"], [0.1, "#000066"], [0.2, "#003399"], [0.3, "#0066cc"],
-    [0.4, "#3399cc"], [0.5, "#66cc99"], [0.6, "#99cc66"], [0.7, "#cccc33"],
-    [0.8, "#cc9933"], [0.9, "#cc6633"], [1.0, "#cc3333"],
+    [0.0, "#000033"],
+    [0.1, "#000066"],
+    [0.2, "#003399"],
+    [0.3, "#0066cc"],
+    [0.4, "#3399cc"],
+    [0.5, "#66cc99"],
+    [0.6, "#99cc66"],
+    [0.7, "#cccc33"],
+    [0.8, "#cc9933"],
+    [0.9, "#cc6633"],
+    [1.0, "#cc3333"],
 ]
 
 SHADOW_CS = [
-    [0.0, "#000011"], [0.2, "#0a0a33"], [0.4, "#333355"],
-    [0.6, "#888899"], [0.8, "#bbbbcc"], [1.0, "#eeeef5"],
+    [0.0, "#000011"],
+    [0.2, "#0a0a33"],
+    [0.4, "#333355"],
+    [0.6, "#888899"],
+    [0.8, "#bbbbcc"],
+    [1.0, "#eeeef5"],
 ]
 
 
@@ -241,36 +267,66 @@ LAYOUT_BASE = dict(
 # Figure builders (pure functions — no Dash dependency)
 # ---------------------------------------------------------------------------
 
+
 def fig_3d(points, intensity, subsample, camera_eye):
     """Build the 3D scatter terrain figure."""
     pts = points[::subsample]
     z = pts[:, 2]
 
     fig = go.Figure(
-        data=[go.Scatter3d(
-            x=pts[:, 0], y=pts[:, 1], z=pts[:, 2],
-            mode="markers",
-            marker=dict(
-                size=1.2, color=z, colorscale=LUNAR_CS, opacity=0.85,
-                colorbar=dict(
-                    title=dict(text="Elev (m)", font=dict(color=TEXT_CLR, size=11)),
-                    len=0.5, thickness=12, x=0.98,
-                    tickfont=dict(color=TEXT_CLR, size=10),
+        data=[
+            go.Scatter3d(
+                x=pts[:, 0],
+                y=pts[:, 1],
+                z=pts[:, 2],
+                mode="markers",
+                marker=dict(
+                    size=1.2,
+                    color=z,
+                    colorscale=LUNAR_CS,
+                    opacity=0.85,
+                    colorbar=dict(
+                        title=dict(text="Elev (m)", font=dict(color=TEXT_CLR, size=11)),
+                        len=0.5,
+                        thickness=12,
+                        x=0.98,
+                        tickfont=dict(color=TEXT_CLR, size=10),
+                    ),
                 ),
-            ),
-            hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Z: %{z:.2f}m<extra></extra>",
-        )]
+                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Z: %{z:.2f}m<extra></extra>",
+            )
+        ]
     )
     fig.update_layout(
         **LAYOUT_BASE,
         scene=dict(
-            xaxis=dict(title="X (m)", gridcolor=GRID_CLR, showbackground=True,
-                       backgroundcolor=PANEL_BG, color=TEXT_CLR, zerolinecolor=GRID_CLR),
-            yaxis=dict(title="Y (m)", gridcolor=GRID_CLR, showbackground=True,
-                       backgroundcolor=PANEL_BG, color=TEXT_CLR, zerolinecolor=GRID_CLR),
-            zaxis=dict(title="Z (m)", gridcolor=GRID_CLR, showbackground=True,
-                       backgroundcolor=PANEL_BG, color=TEXT_CLR, zerolinecolor=GRID_CLR),
-            camera=dict(eye=camera_eye, center=dict(x=0, y=0, z=0), up=dict(x=0, y=0, z=1)),
+            xaxis=dict(
+                title="X (m)",
+                gridcolor=GRID_CLR,
+                showbackground=True,
+                backgroundcolor=PANEL_BG,
+                color=TEXT_CLR,
+                zerolinecolor=GRID_CLR,
+            ),
+            yaxis=dict(
+                title="Y (m)",
+                gridcolor=GRID_CLR,
+                showbackground=True,
+                backgroundcolor=PANEL_BG,
+                color=TEXT_CLR,
+                zerolinecolor=GRID_CLR,
+            ),
+            zaxis=dict(
+                title="Z (m)",
+                gridcolor=GRID_CLR,
+                showbackground=True,
+                backgroundcolor=PANEL_BG,
+                color=TEXT_CLR,
+                zerolinecolor=GRID_CLR,
+            ),
+            camera=dict(
+                eye=camera_eye, center=dict(x=0, y=0, z=0), up=dict(x=0, y=0, z=1)
+            ),
             aspectmode="data",
         ),
         uirevision="terrain",  # preserves user camera across data updates
@@ -279,36 +335,76 @@ def fig_3d(points, intensity, subsample, camera_eye):
 
 
 def fig_heatmap(xg, yg, zg):
-    fig = go.Figure(data=[go.Heatmap(
-        x=xg[0, :], y=yg[:, 0], z=zg, colorscale=TOPO_CS,
-        colorbar=dict(title=dict(text="Elev (m)", font=dict(color=TEXT_CLR, size=11)),
-                      len=0.45, thickness=12,
-                      tickfont=dict(color=TEXT_CLR, size=10)),
-        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Elev: %{z:.2f}m<extra></extra>",
-    )])
+    fig = go.Figure(
+        data=[
+            go.Heatmap(
+                x=xg[0, :],
+                y=yg[:, 0],
+                z=zg,
+                colorscale=TOPO_CS,
+                colorbar=dict(
+                    title=dict(text="Elev (m)", font=dict(color=TEXT_CLR, size=11)),
+                    len=0.45,
+                    thickness=12,
+                    tickfont=dict(color=TEXT_CLR, size=10),
+                ),
+                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Elev: %{z:.2f}m<extra></extra>",
+            )
+        ]
+    )
     fig.update_layout(
         **LAYOUT_BASE,
-        xaxis=dict(title="X (m)", scaleanchor="y", gridcolor=GRID_CLR, color=TEXT_CLR, zerolinecolor=GRID_CLR),
-        yaxis=dict(title="Y (m)", gridcolor=GRID_CLR, color=TEXT_CLR, zerolinecolor=GRID_CLR),
+        xaxis=dict(
+            title="X (m)",
+            scaleanchor="y",
+            gridcolor=GRID_CLR,
+            color=TEXT_CLR,
+            zerolinecolor=GRID_CLR,
+        ),
+        yaxis=dict(
+            title="Y (m)", gridcolor=GRID_CLR, color=TEXT_CLR, zerolinecolor=GRID_CLR
+        ),
     )
     return fig
 
 
 def fig_contour(xg, yg, zg, n_contours=20):
-    fig = go.Figure(data=[go.Contour(
-        x=xg[0, :], y=yg[:, 0], z=zg, ncontours=n_contours,
-        contours=dict(showlabels=True, labelfont=dict(size=9, color="#00ffaa"), coloring="heatmap"),
-        colorscale=TOPO_CS,
-        colorbar=dict(title=dict(text="Elev (m)", font=dict(color=TEXT_CLR, size=11)),
-                      len=0.45, thickness=12,
-                      tickfont=dict(color=TEXT_CLR, size=10)),
-        line=dict(width=1.5, color="rgba(0,255,170,0.5)"),
-        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Elev: %{z:.2f}m<extra></extra>",
-    )])
+    fig = go.Figure(
+        data=[
+            go.Contour(
+                x=xg[0, :],
+                y=yg[:, 0],
+                z=zg,
+                ncontours=n_contours,
+                contours=dict(
+                    showlabels=True,
+                    labelfont=dict(size=9, color="#00ffaa"),
+                    coloring="heatmap",
+                ),
+                colorscale=TOPO_CS,
+                colorbar=dict(
+                    title=dict(text="Elev (m)", font=dict(color=TEXT_CLR, size=11)),
+                    len=0.45,
+                    thickness=12,
+                    tickfont=dict(color=TEXT_CLR, size=10),
+                ),
+                line=dict(width=1.5, color="rgba(0,255,170,0.5)"),
+                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Elev: %{z:.2f}m<extra></extra>",
+            )
+        ]
+    )
     fig.update_layout(
         **LAYOUT_BASE,
-        xaxis=dict(title="X (m)", scaleanchor="y", gridcolor=GRID_CLR, color=TEXT_CLR, zerolinecolor=GRID_CLR),
-        yaxis=dict(title="Y (m)", gridcolor=GRID_CLR, color=TEXT_CLR, zerolinecolor=GRID_CLR),
+        xaxis=dict(
+            title="X (m)",
+            scaleanchor="y",
+            gridcolor=GRID_CLR,
+            color=TEXT_CLR,
+            zerolinecolor=GRID_CLR,
+        ),
+        yaxis=dict(
+            title="Y (m)", gridcolor=GRID_CLR, color=TEXT_CLR, zerolinecolor=GRID_CLR
+        ),
     )
     return fig
 
@@ -316,14 +412,30 @@ def fig_contour(xg, yg, zg, n_contours=20):
 def fig_shadow(xg, yg, zg, illum):
     z_norm = (zg - zg.min()) / (zg.max() - zg.min() + 1e-9)
     shaded = z_norm * (0.3 + 0.7 * illum)
-    fig = go.Figure(data=[go.Heatmap(
-        x=xg[0, :], y=yg[:, 0], z=shaded, colorscale=SHADOW_CS, showscale=False,
-        hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
-    )])
+    fig = go.Figure(
+        data=[
+            go.Heatmap(
+                x=xg[0, :],
+                y=yg[:, 0],
+                z=shaded,
+                colorscale=SHADOW_CS,
+                showscale=False,
+                hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+            )
+        ]
+    )
     fig.update_layout(
         **LAYOUT_BASE,
-        xaxis=dict(title="X (m)", scaleanchor="y", gridcolor=GRID_CLR, color=TEXT_CLR, zerolinecolor=GRID_CLR),
-        yaxis=dict(title="Y (m)", gridcolor=GRID_CLR, color=TEXT_CLR, zerolinecolor=GRID_CLR),
+        xaxis=dict(
+            title="X (m)",
+            scaleanchor="y",
+            gridcolor=GRID_CLR,
+            color=TEXT_CLR,
+            zerolinecolor=GRID_CLR,
+        ),
+        yaxis=dict(
+            title="Y (m)", gridcolor=GRID_CLR, color=TEXT_CLR, zerolinecolor=GRID_CLR
+        ),
     )
     return fig
 
@@ -394,14 +506,18 @@ def create_app(pcd_path: str):
     elev0 = math.degrees(math.asin(np.clip(sun0[2], -1, 1)))
     az0 = math.degrees(math.atan2(sun0[0], sun0[1])) % 360
     status0 = "ABOVE HORIZON" if sun0[2] > 0 else "BELOW HORIZON"
-    info0 = f"Sun Az: {az0:.1f} | Elev: {elev0:.2f} | {status0} | {np.mean(illum0)*100:.0f}% illuminated"
+    info0 = f"Sun Az: {az0:.1f} | Elev: {elev0:.2f} | {status0} | {np.mean(illum0) * 100:.0f}% illuminated"
 
     print("[PERSEUS] Building dashboard...")
 
     _input_style = {
-        "backgroundColor": "#1a1a2e", "color": TEXT_CLR,
-        "border": f"1px solid {GRID_CLR}", "padding": "4px 8px",
-        "fontFamily": "Courier New, monospace", "fontSize": "12px", "width": "90px",
+        "backgroundColor": "#1a1a2e",
+        "color": TEXT_CLR,
+        "border": f"1px solid {GRID_CLR}",
+        "padding": "4px 8px",
+        "fontFamily": "Courier New, monospace",
+        "fontSize": "12px",
+        "width": "90px",
     }
 
     app = Dash(__name__)
@@ -409,89 +525,201 @@ def create_app(pcd_path: str):
 
     def _panel(label, graph_id, figure, extra_children=None):
         children = [
-            html.Div(label, style={
-                "position": "absolute", "top": "4px", "left": "10px",
-                "fontSize": "10px", "color": ACCENT, "zIndex": 10, "letterSpacing": "2px",
-            }),
-            dcc.Graph(id=graph_id, figure=figure, style={"height": "100%"},
-                      config={"displayModeBar": True, "scrollZoom": True}),
+            html.Div(
+                label,
+                style={
+                    "position": "absolute",
+                    "top": "4px",
+                    "left": "10px",
+                    "fontSize": "10px",
+                    "color": ACCENT,
+                    "zIndex": 10,
+                    "letterSpacing": "2px",
+                },
+            ),
+            dcc.Graph(
+                id=graph_id,
+                figure=figure,
+                style={"height": "100%"},
+                config={"displayModeBar": True, "scrollZoom": True},
+            ),
         ]
         if extra_children:
             children.extend(extra_children)
-        return html.Div(style={
-            "border": f"1px solid {GRID_CLR}", "borderRadius": "4px", "position": "relative",
-        }, children=children)
+        return html.Div(
+            style={
+                "border": f"1px solid {GRID_CLR}",
+                "borderRadius": "4px",
+                "position": "relative",
+            },
+            children=children,
+        )
 
-    app.layout = html.Div(style={
-        "backgroundColor": DARK_BG, "minHeight": "100vh", "padding": "10px",
-        "fontFamily": "Courier New, monospace", "color": TEXT_CLR,
-    }, children=[
-        # ── Header ──
-        html.Div(style={
-            "textAlign": "center", "borderBottom": f"1px solid {ACCENT}",
-            "paddingBottom": "8px", "marginBottom": "10px",
-        }, children=[
-            html.H1("PERSEUS LUNAR TERRAIN MONITOR", style={
-                "color": ACCENT, "margin": "0", "fontSize": "22px", "letterSpacing": "4px",
-            }),
-            html.Div([
-                html.Span(f"SHACKLETON CRATER — SOUTH POLE",
-                           style={"fontSize": "12px", "marginRight": "30px"}),
-                html.Span(f"POINTS: {n:,}", style={"fontSize": "12px", "marginRight": "30px"}),
-                html.Span(f"AREA: {xs:.1f}m x {ys:.1f}m", style={"fontSize": "12px", "marginRight": "30px"}),
-                html.Span(f"ELEV RANGE: {zs:.1f}m", style={"fontSize": "12px"}),
-            ]),
-        ]),
-
-        # ── Sun control bar ──
-        html.Div(style={
-            "display": "flex", "alignItems": "center", "justifyContent": "center",
-            "gap": "12px", "padding": "8px", "backgroundColor": PANEL_BG,
-            "border": f"1px solid {GRID_CLR}", "borderRadius": "4px", "marginBottom": "10px",
-            "flexWrap": "wrap",
-        }, children=[
-            html.Label("SUN SIMULATION", style={"color": ACCENT, "fontWeight": "bold", "fontSize": "13px"}),
-            html.Label("Lat:", style={"fontSize": "12px"}),
-            dcc.Input(id="moon-lat", type="number", value=DEFAULT_LAT, step=0.1,
-                      style=_input_style, placeholder="Lat (-90..90)"),
-            html.Label("Lon:", style={"fontSize": "12px"}),
-            dcc.Input(id="moon-lon", type="number", value=DEFAULT_LON, step=0.1,
-                      style=_input_style, placeholder="Lon (-180..180)"),
-            html.Label("Date:", style={"fontSize": "12px"}),
-            dcc.Input(id="sun-date", type="date", value=now.strftime("%Y-%m-%d"),
-                      style=_input_style),
-            html.Label("UTC Hour:", style={"fontSize": "12px"}),
-            dcc.Slider(
-                id="sun-hour", min=0, max=23, step=1, value=now.hour,
-                marks={h: {"label": f"{h:02d}", "style": {"color": TEXT_CLR, "fontSize": "9px"}}
-                       for h in range(0, 24, 3)},
-                tooltip={"placement": "bottom", "always_visible": False},
+    app.layout = html.Div(
+        style={
+            "backgroundColor": DARK_BG,
+            "minHeight": "100vh",
+            "padding": "10px",
+            "fontFamily": "Courier New, monospace",
+            "color": TEXT_CLR,
+        },
+        children=[
+            # ── Header ──
+            html.Div(
+                style={
+                    "textAlign": "center",
+                    "borderBottom": f"1px solid {ACCENT}",
+                    "paddingBottom": "8px",
+                    "marginBottom": "10px",
+                },
+                children=[
+                    html.H1(
+                        "PERSEUS LUNAR TERRAIN MONITOR",
+                        style={
+                            "color": ACCENT,
+                            "margin": "0",
+                            "fontSize": "22px",
+                            "letterSpacing": "4px",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.Span(
+                                "SHACKLETON CRATER — SOUTH POLE",
+                                style={"fontSize": "12px", "marginRight": "30px"},
+                            ),
+                            html.Span(
+                                f"POINTS: {n:,}",
+                                style={"fontSize": "12px", "marginRight": "30px"},
+                            ),
+                            html.Span(
+                                f"AREA: {xs:.1f}m x {ys:.1f}m",
+                                style={"fontSize": "12px", "marginRight": "30px"},
+                            ),
+                            html.Span(
+                                f"ELEV RANGE: {zs:.1f}m", style={"fontSize": "12px"}
+                            ),
+                        ]
+                    ),
+                ],
             ),
-            html.Button("UPDATE SUN", id="sun-btn", style={
-                "backgroundColor": "#1a3322", "color": TEXT_CLR,
-                "border": f"1px solid {TEXT_CLR}", "padding": "6px 16px", "cursor": "pointer",
-                "fontFamily": "Courier New, monospace", "fontSize": "12px", "fontWeight": "bold",
-            }),
-            html.Span(id="sun-info", children=info0,
-                       style={"fontSize": "11px", "color": "#aaa", "minWidth": "220px"}),
-        ]),
-
-        # ── 2x2 panel grid ──
-        html.Div(style={
-            "display": "grid", "gridTemplateColumns": "1fr 1fr",
-            "gridTemplateRows": "1fr 1fr", "gap": "8px", "height": "calc(100vh - 180px)",
-        }, children=[
-            _panel("3D TERRAIN — 35 DEG OBLIQUE VIEW  [drag to orbit]", "terrain-3d", fig3d_init,
-                   extra_children=[dcc.Interval(id="rot-tick", interval=100, n_intervals=0)]),
-            _panel("ELEVATION MAP — TOP-DOWN", "topo-heatmap", fig_hm),
-            _panel("TOPOGRAPHIC CONTOUR MAP", "contour-map", fig_ct),
-            _panel("SOLAR ILLUMINATION MAP", "shadow-map", fig_sh),
-        ]),
-
-        # Hidden store for base 3D figure (data-only, no camera) so the
-        # client-side callback can animate camera without re-fetching data.
-        dcc.Store(id="fig3d-store", data=fig3d_init.to_dict()),
-    ])
+            # ── Sun control bar ──
+            html.Div(
+                style={
+                    "display": "flex",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "gap": "12px",
+                    "padding": "8px",
+                    "backgroundColor": PANEL_BG,
+                    "border": f"1px solid {GRID_CLR}",
+                    "borderRadius": "4px",
+                    "marginBottom": "10px",
+                    "flexWrap": "wrap",
+                },
+                children=[
+                    html.Label(
+                        "SUN SIMULATION",
+                        style={
+                            "color": ACCENT,
+                            "fontWeight": "bold",
+                            "fontSize": "13px",
+                        },
+                    ),
+                    html.Label("Lat:", style={"fontSize": "12px"}),
+                    dcc.Input(
+                        id="moon-lat",
+                        type="number",
+                        value=DEFAULT_LAT,
+                        step=0.1,
+                        style=_input_style,
+                        placeholder="Lat (-90..90)",
+                    ),
+                    html.Label("Lon:", style={"fontSize": "12px"}),
+                    dcc.Input(
+                        id="moon-lon",
+                        type="number",
+                        value=DEFAULT_LON,
+                        step=0.1,
+                        style=_input_style,
+                        placeholder="Lon (-180..180)",
+                    ),
+                    html.Label("Date:", style={"fontSize": "12px"}),
+                    dcc.Input(
+                        id="sun-date",
+                        type="date",
+                        value=now.strftime("%Y-%m-%d"),
+                        style=_input_style,
+                    ),
+                    html.Label("UTC Hour:", style={"fontSize": "12px"}),
+                    dcc.Slider(
+                        id="sun-hour",
+                        min=0,
+                        max=23,
+                        step=1,
+                        value=now.hour,
+                        marks={
+                            h: {
+                                "label": f"{h:02d}",
+                                "style": {"color": TEXT_CLR, "fontSize": "9px"},
+                            }
+                            for h in range(0, 24, 3)
+                        },
+                        tooltip={"placement": "bottom", "always_visible": False},
+                    ),
+                    html.Button(
+                        "UPDATE SUN",
+                        id="sun-btn",
+                        style={
+                            "backgroundColor": "#1a3322",
+                            "color": TEXT_CLR,
+                            "border": f"1px solid {TEXT_CLR}",
+                            "padding": "6px 16px",
+                            "cursor": "pointer",
+                            "fontFamily": "Courier New, monospace",
+                            "fontSize": "12px",
+                            "fontWeight": "bold",
+                        },
+                    ),
+                    html.Span(
+                        id="sun-info",
+                        children=info0,
+                        style={
+                            "fontSize": "11px",
+                            "color": "#aaa",
+                            "minWidth": "220px",
+                        },
+                    ),
+                ],
+            ),
+            # ── 2x2 panel grid ──
+            html.Div(
+                style={
+                    "display": "grid",
+                    "gridTemplateColumns": "1fr 1fr",
+                    "gridTemplateRows": "1fr 1fr",
+                    "gap": "8px",
+                    "height": "calc(100vh - 180px)",
+                },
+                children=[
+                    _panel(
+                        "3D TERRAIN — 35 DEG OBLIQUE VIEW  [drag to orbit]",
+                        "terrain-3d",
+                        fig3d_init,
+                        extra_children=[
+                            dcc.Interval(id="rot-tick", interval=100, n_intervals=0)
+                        ],
+                    ),
+                    _panel("ELEVATION MAP — TOP-DOWN", "topo-heatmap", fig_hm),
+                    _panel("TOPOGRAPHIC CONTOUR MAP", "contour-map", fig_ct),
+                    _panel("SOLAR ILLUMINATION MAP", "shadow-map", fig_sh),
+                ],
+            ),
+            # Hidden store for base 3D figure (data-only, no camera) so the
+            # client-side callback can animate camera without re-fetching data.
+            dcc.Store(id="fig3d-store", data=fig3d_init.to_dict()),
+        ],
+    )
 
     # ── Client-side rotation callback (no server round-trip) ──
     app.clientside_callback(
@@ -515,7 +743,8 @@ def create_app(pcd_path: str):
     def update_shadow(_, date_str, hour, lat, lon):
         try:
             dt = datetime.strptime(date_str, "%Y-%m-%d").replace(
-                hour=int(hour), tzinfo=timezone.utc,
+                hour=int(hour),
+                tzinfo=timezone.utc,
             )
         except Exception:
             dt = now
@@ -546,6 +775,7 @@ def create_app(pcd_path: str):
 # CLI entry point
 # ---------------------------------------------------------------------------
 
+
 def main():
     parser = argparse.ArgumentParser(description="Perseus Lunar PCD Viewer")
     parser.add_argument("pcd_file", help="Path to a .pcd point cloud file")
@@ -556,11 +786,11 @@ def main():
 
     app = create_app(args.pcd_file)
 
-    print(f"\n{'='*60}")
-    print(f"  PERSEUS LUNAR TERRAIN MONITOR")
-    print(f"  Shackleton Crater — South Pole")
+    print(f"\n{'=' * 60}")
+    print("  PERSEUS LUNAR TERRAIN MONITOR")
+    print("  Shackleton Crater — South Pole")
     print(f"  Dashboard: http://localhost:{args.port}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     app.run(host=args.host, port=args.port, debug=args.debug)
 
