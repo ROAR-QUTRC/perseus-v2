@@ -306,63 +306,93 @@ def compute_line_of_sight(xg, yg, zg, p1, p2, antenna_height=1.0):
 
 
 def compute_comms_coverage(xg, yg, zg, base_pos, antenna_height=1.0):
-    """Compute radio line-of-sight coverage map from a base station.
+    """Radial viewshed with RF shadow propagation from a base station.
 
-    Uses vectorised ray casting on a downsampled grid for speed.
+    Casts rays radially outward from the base in all directions.  Along each
+    ray the maximum terrain elevation angle is tracked; any cell whose
+    elevation angle falls below the running maximum is in RF shadow.
+
+    Signal strength attenuates with distance (bright near base, dimmer far
+    away) and drops to zero behind terrain obstructions, producing clearly
+    visible shadow cones that extend outward from obstacles.
     """
     rows, cols = zg.shape
-    step = 6
-    xg_ds = xg[::step, ::step]
-    yg_ds = yg[::step, ::step]
-    zg_ds = zg[::step, ::step]
-    ds_rows, ds_cols = zg_ds.shape
+    x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
+    y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
+    cell_dx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
+    cell_dy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
+    step_size = min(cell_dx, cell_dy) * 0.5  # half-cell steps for accuracy
 
-    base_z = float(_bilinear_interp(zg_ds, xg_ds, yg_ds,
-                                     base_pos[0], base_pos[1])) + antenna_height
+    base_z = float(_bilinear_interp(
+        zg, xg, yg, base_pos[0], base_pos[1])) + antenna_height
+    max_dist = float(np.sqrt((x_max - x_min)**2 + (y_max - y_min)**2))
 
-    # Flatten target grid for vectorised processing
-    target_x = xg_ds.ravel()
-    target_y = yg_ds.ravel()
-    target_z = zg_ds.ravel()
-    n_targets = len(target_x)
+    # Cast 720 rays (0.5-deg spacing) outward from the base
+    n_rays = 720
+    n_steps = int(max_dist / step_size) + 1
+    angles = np.linspace(0, 2 * np.pi, n_rays, endpoint=False)
+    cos_a = np.cos(angles)
+    sin_a = np.sin(angles)
 
-    n_ray = 30
-    t_vals = np.linspace(0.0, 1.0, n_ray)  # (n_ray,)
+    # coverage stores best signal seen at each cell (-1 = not yet visited)
+    coverage = np.full((rows, cols), -1.0, dtype=np.float64)
+    max_elev = np.full(n_rays, -np.inf)
 
-    # Broadcast: (n_targets, n_ray) arrays
-    ray_x = base_pos[0] + np.outer(target_x - base_pos[0], t_vals)
-    ray_y = base_pos[1] + np.outer(target_y - base_pos[1], t_vals)
+    for si in range(1, n_steps):
+        r = si * step_size
 
-    # Bilinear interp on the downsampled grid for all rays at once
-    x_min, x_max = float(xg_ds[0, 0]), float(xg_ds[0, -1])
-    y_min, y_max = float(yg_ds[0, 0]), float(yg_ds[-1, 0])
+        # Ray sample positions for all rays at this radius
+        rx = base_pos[0] + r * cos_a
+        ry = base_pos[1] + r * sin_a
 
-    col_f = np.clip((ray_x - x_min) / (x_max - x_min + 1e-12) * (ds_cols - 1),
-                    0, ds_cols - 1.001)
-    row_f = np.clip((ray_y - y_min) / (y_max - y_min + 1e-12) * (ds_rows - 1),
-                    0, ds_rows - 1.001)
+        in_bounds = ((rx >= x_min) & (rx <= x_max) &
+                     (ry >= y_min) & (ry <= y_max))
+        if not in_bounds.any():
+            break
 
-    c0 = np.floor(col_f).astype(np.int32)
-    r0 = np.floor(row_f).astype(np.int32)
-    c1 = np.minimum(c0 + 1, ds_cols - 1)
-    r1 = np.minimum(r0 + 1, ds_rows - 1)
-    dc = col_f - c0
-    dr = row_f - r0
+        # Terrain height at each ray sample
+        rz = np.asarray(
+            _bilinear_interp(zg, xg, yg, rx, ry), dtype=np.float64)
 
-    terrain_z = (zg_ds[r0, c0] * (1 - dr) * (1 - dc) +
-                 zg_ds[r0, c1] * (1 - dr) * dc +
-                 zg_ds[r1, c0] * dr * (1 - dc) +
-                 zg_ds[r1, c1] * dr * dc)
+        # Elevation angle from base antenna to terrain surface
+        elev = np.arctan2(rz - base_z, r)
 
-    los_z = base_z + np.outer(target_z - base_z, t_vals)
+        # A cell is in LOS if its elevation angle >= max seen along this ray
+        in_los = elev >= max_elev
 
-    # Check interior samples only (skip endpoints)
-    blocked = np.any(terrain_z[:, 1:-1] > los_z[:, 1:-1], axis=1)
-    coverage_ds = (~blocked).astype(np.float32).reshape(ds_rows, ds_cols)
+        # Only update max_elev for rays still inside the grid
+        max_elev = np.where(in_bounds, np.maximum(max_elev, elev), max_elev)
 
-    zoom_r = rows / ds_rows
-    zoom_c = cols / ds_cols
-    coverage = np.clip(zoom(coverage_ds, (zoom_r, zoom_c), order=1), 0.0, 1.0)
+        # Signal model: distance-attenuated for LOS, zero for shadow
+        dist_atten = 1.0 - 0.5 * (r / max_dist)
+        signal = np.where(in_los & in_bounds, dist_atten, 0.0)
+
+        # Map world coords → grid indices
+        ci = np.clip(
+            np.round((rx - x_min) / (x_max - x_min + 1e-12)
+                     * (cols - 1)).astype(int), 0, cols - 1)
+        ri = np.clip(
+            np.round((ry - y_min) / (y_max - y_min + 1e-12)
+                     * (rows - 1)).astype(int), 0, rows - 1)
+
+        # Scatter-write: keep max signal at each cell (if LOS from any ray)
+        ib = np.where(in_bounds)[0]
+        flat_idx = ri[ib] * cols + ci[ib]
+        np.maximum.at(coverage.ravel(), flat_idx, signal[ib])
+
+    # Cells never hit by any ray → zero coverage
+    gaps = coverage < 0
+    coverage[gaps] = 0.0
+
+    # Fill sparse gaps at grid edges via Gaussian blur of neighbours
+    if gaps.any():
+        blurred = gaussian_filter(coverage, sigma=1.5)
+        coverage[gaps] = blurred[gaps]
+
+    # Base station cell = full signal
+    br, bc = _world_to_grid(base_pos, xg, yg)
+    coverage[br, bc] = 1.0
+
     return coverage
 
 
@@ -987,10 +1017,10 @@ def fig_comms(xg, yg, comms_coverage, base_pos, rover_pos=None,
         ),
     )])
 
-    # Shadow boundary contour — highlights edges of comms dead zones
+    # Shadow boundary contour — outlines where signal drops into shadow
     fig.add_trace(go.Contour(
         x=xg[0, :], y=yg[:, 0], z=comms_coverage,
-        contours=dict(start=0.5, end=0.5, size=0.1,
+        contours=dict(start=0.15, end=0.15, size=0.1,
                       coloring="none", showlabels=False),
         line=dict(width=2, color="#ff4400", dash="dot"),
         showscale=False, hoverinfo="skip", name="Shadow Edge",
@@ -1415,13 +1445,13 @@ def create_app(pcd_path: str):
     import time as _time
 
     _t0 = _time.monotonic()
-    print("[PERSEUS] [1/7] Computing slope and hazard maps...")
+    print("[PERSEUS] [1/8] Computing slope and hazard maps...")
     slope_deg, variance = compute_slope_map(xg, yg, zg)
     hazard = compute_hazard_map(slope_deg, variance)
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t0:.1f}s)")
 
     _t1 = _time.monotonic()
-    print("[PERSEUS] [2/7] Precomputing 28-day lunar illumination cycle "
+    print("[PERSEUS] [2/8] Precomputing 28-day lunar illumination cycle "
           "(28 shadow maps)...")
     illum_stack, cycle_ts, solar_uptime, psr_mask = \
         compute_lunar_cycle_illumination(xg, yg, zg, now,
@@ -1429,7 +1459,7 @@ def create_app(pcd_path: str):
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t1:.1f}s)")
 
     _t2 = _time.monotonic()
-    print("[PERSEUS] [3/7] Generating ice deposits and drill sites...")
+    print("[PERSEUS] [3/8] Generating ice deposits and drill sites...")
     ice_prob, drill_sites = generate_ice_deposits(xg, yg, zg, illum0)
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t2:.1f}s)")
 
@@ -1437,18 +1467,18 @@ def create_app(pcd_path: str):
     default_base = ((float(xg[0, 0]) + float(xg[0, -1])) / 2,
                     (float(yg[0, 0]) + float(yg[-1, 0])) / 2)
     _t3 = _time.monotonic()
-    print("[PERSEUS] [4/7] Computing comms LOS coverage (vectorised)...")
+    print("[PERSEUS] [4/8] Computing comms radial viewshed...")
     comms_coverage = compute_comms_coverage(xg, yg, zg, default_base)
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t3:.1f}s)")
 
     _t4 = _time.monotonic()
-    print("[PERSEUS] [5/7] Computing traversal cost grid...")
+    print("[PERSEUS] [5/8] Computing traversal cost grid...")
     cost_grid = compute_traversal_cost(slope_deg, hazard, solar_uptime,
                                         comms_coverage)
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t4:.1f}s)")
 
     _t5 = _time.monotonic()
-    print("[PERSEUS] [6/7] Computing mission scores (0.25m grid)...")
+    print("[PERSEUS] [6/8] Computing mission scores (0.25m grid)...")
     score_xg, score_yg, score_grid, score_comp, score_summary = \
         compute_mission_score(xg, yg, zg, slope_deg, solar_uptime,
                               comms_coverage, hazard, ice_prob, cell_size=0.25)
