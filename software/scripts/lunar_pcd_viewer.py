@@ -30,13 +30,14 @@ Usage:
 """
 
 import argparse
-import heapq
 import math
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
 from scipy.interpolate import griddata
 from scipy.ndimage import gaussian_filter, maximum_filter, uniform_filter, zoom
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import dijkstra as sp_dijkstra
 
 import plotly.graph_objects as go
 from dash import Dash, html, dcc, Input, Output, State, no_update, ALL, ctx
@@ -401,80 +402,114 @@ def compute_traversal_cost(slope_deg, hazard, solar_uptime, comms_coverage):
     return cost
 
 
-def find_path(cost_grid, xg, yg, start_xy, end_xy):
-    """A* pathfinding on the cost grid with 8-connected neighbours."""
+def _world_to_grid(xy, xg, yg):
+    """Convert world (x,y) to grid (row, col)."""
+    rows, cols = xg.shape
+    x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
+    y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
+    c = int(round((xy[0] - x_min) / (x_max - x_min + 1e-12) * (cols - 1)))
+    r = int(round((xy[1] - y_min) / (y_max - y_min + 1e-12) * (rows - 1)))
+    return (int(np.clip(r, 0, rows - 1)), int(np.clip(c, 0, cols - 1)))
+
+
+def build_sparse_graph(cost_grid, xg, yg):
+    """Build a CSR sparse adjacency matrix for 8-connected grid.
+
+    Edge weight from node i to neighbour j = cost_grid[j] * distance.
+    Uses scipy.sparse for C-speed Dijkstra later.
+
+    Returns
+    -------
+    graph : csr_matrix (N x N) where N = rows * cols
+    """
     rows, cols = cost_grid.shape
     x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
     y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
-
-    def world_to_grid(xy):
-        c = int(round((xy[0] - x_min) / (x_max - x_min + 1e-12) * (cols - 1)))
-        r = int(round((xy[1] - y_min) / (y_max - y_min + 1e-12) * (rows - 1)))
-        return (np.clip(r, 0, rows - 1), np.clip(c, 0, cols - 1))
-
-    start = world_to_grid(start_xy)
-    goal = world_to_grid(end_xy)
-
-    if np.isinf(cost_grid[start[0], start[1]]) or np.isinf(cost_grid[goal[0], goal[1]]):
-        return None, None
-
     cell_dx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
     cell_dy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
 
-    neighbours = []
+    N = rows * cols
+
+    # Pre-compute neighbour offsets and distances
+    offsets = []
     for dr in (-1, 0, 1):
         for dc in (-1, 0, 1):
             if dr == 0 and dc == 0:
                 continue
             dist = np.sqrt((dr * cell_dy)**2 + (dc * cell_dx)**2)
-            neighbours.append((dr, dc, dist))
+            offsets.append((dr, dc, dist))
 
-    def heuristic(node):
-        dr = (node[0] - goal[0]) * cell_dy
-        dc = (node[1] - goal[1]) * cell_dx
-        return np.sqrt(dr**2 + dc**2)
+    # Vectorised edge construction
+    r_idx = np.arange(rows)
+    c_idx = np.arange(cols)
+    rr, cc = np.meshgrid(r_idx, c_idx, indexing='ij')
+    rr_flat = rr.ravel()
+    cc_flat = cc.ravel()
 
-    open_set = [(heuristic(start), 0.0, start)]
-    g_score = {start: 0.0}
-    came_from = {}
-    closed = set()
+    src_list = []
+    dst_list = []
+    wt_list = []
 
-    while open_set:
-        f, g, current = heapq.heappop(open_set)
+    for dr, dc, dist in offsets:
+        nr = rr_flat + dr
+        nc = cc_flat + dc
+        valid = (nr >= 0) & (nr < rows) & (nc >= 0) & (nc < cols)
+        nr_v = nr[valid]
+        nc_v = nc[valid]
+        src_v = rr_flat[valid] * cols + cc_flat[valid]
+        dst_v = nr_v * cols + nc_v
+        # Edge weight = destination cost * distance
+        dest_cost = cost_grid[nr_v, nc_v]
+        finite_mask = np.isfinite(dest_cost)
+        src_list.append(src_v[finite_mask])
+        dst_list.append(dst_v[finite_mask])
+        wt_list.append(dest_cost[finite_mask] * dist)
 
-        if current == goal:
-            path_indices = [current]
-            while current in came_from:
-                current = came_from[current]
-                path_indices.append(current)
-            path_indices.reverse()
-            path_coords = [(float(xg[r, c]), float(yg[r, c]))
-                           for r, c in path_indices]
-            return path_coords, g
+    src_all = np.concatenate(src_list)
+    dst_all = np.concatenate(dst_list)
+    wt_all = np.concatenate(wt_list)
 
-        if current in closed:
-            continue
-        closed.add(current)
+    graph = csr_matrix((wt_all, (src_all, dst_all)), shape=(N, N))
+    return graph
 
-        for dr, dc, move_dist in neighbours:
-            nr, nc = current[0] + dr, current[1] + dc
-            if nr < 0 or nr >= rows or nc < 0 or nc >= cols:
-                continue
-            neighbour = (nr, nc)
-            if neighbour in closed:
-                continue
-            cell_cost = cost_grid[nr, nc]
-            if np.isinf(cell_cost):
-                continue
-            tentative_g = g + cell_cost * move_dist
-            if tentative_g < g_score.get(neighbour, np.inf):
-                g_score[neighbour] = tentative_g
-                came_from[neighbour] = current
-                heapq.heappush(open_set,
-                               (tentative_g + heuristic(neighbour),
-                                tentative_g, neighbour))
 
-    return None, None
+def find_path(sparse_graph, cost_grid, xg, yg, start_xy, end_xy):
+    """Shortest path using scipy.sparse.csgraph.dijkstra with predecessors."""
+    rows, cols = cost_grid.shape
+    start = _world_to_grid(start_xy, xg, yg)
+    goal = _world_to_grid(end_xy, xg, yg)
+
+    if np.isinf(cost_grid[start[0], start[1]]) or np.isinf(cost_grid[goal[0], goal[1]]):
+        return None, None
+
+    src_node = start[0] * cols + start[1]
+    dst_node = goal[0] * cols + goal[1]
+
+    dist_matrix, predecessors = sp_dijkstra(
+        sparse_graph, directed=True, indices=src_node,
+        return_predecessors=True, limit=np.inf)
+
+    total_cost = dist_matrix[dst_node]
+    if np.isinf(total_cost):
+        return None, None
+
+    # Trace path from goal back to start via predecessors
+    path_nodes = []
+    node = dst_node
+    while node != src_node and node >= 0:
+        path_nodes.append(node)
+        node = predecessors[node]
+    if node < 0:
+        return None, None
+    path_nodes.append(src_node)
+    path_nodes.reverse()
+
+    path_coords = []
+    for nd in path_nodes:
+        r, c = divmod(nd, cols)
+        path_coords.append((float(xg[r, c]), float(yg[r, c])))
+
+    return path_coords, float(total_cost)
 
 
 def compute_rover_footprint(xg, yg, zg, rover_pos, rover_heading=0,
@@ -644,16 +679,16 @@ def compute_energy_cost_grid(slope_deg, hazard):
     return wh_per_metre
 
 
-def compute_battery_range(wh_per_metre, xg, yg, lander_pos, charge_pct=100.0):
-    """Dijkstra from lander to find energy cost to reach every cell.
-
-    Returns a reachability map: for each cell, whether the rover can drive
-    there AND return to the lander with at least 25% battery remaining.
+def compute_battery_range(energy_graph, rows, cols, xg, yg, lander_pos,
+                          charge_pct=100.0):
+    """Dijkstra from lander using scipy.sparse.csgraph for C-speed.
 
     Parameters
     ----------
-    wh_per_metre : ndarray (rows, cols)
-        Energy cost per metre of travel.
+    energy_graph : csr_matrix (N x N)
+        Pre-built sparse graph with energy cost weights (Wh).
+    rows, cols : int
+        Grid dimensions.
     xg, yg : ndarray (rows, cols)
         Meshgrid coordinate arrays.
     lander_pos : tuple (x, y)
@@ -670,59 +705,16 @@ def compute_battery_range(wh_per_metre, xg, yg, lander_pos, charge_pct=100.0):
     range_pct : ndarray (rows, cols)
         Remaining battery % after round-trip to each cell.  Negative = out of range.
     """
-    rows, cols = wh_per_metre.shape
-    x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
-    y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
-    cell_dx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
-    cell_dy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
-
-    # Lander grid position
-    lc = int(round((lander_pos[0] - x_min) / (x_max - x_min + 1e-12) * (cols - 1)))
-    lr = int(round((lander_pos[1] - y_min) / (y_max - y_min + 1e-12) * (rows - 1)))
-    lc = np.clip(lc, 0, cols - 1)
-    lr = np.clip(lr, 0, rows - 1)
+    lr, lc = _world_to_grid(lander_pos, xg, yg)
+    src_node = lr * cols + lc
 
     # Available energy (Wh)
     total_wh = BATTERY_ENERGY_WH * (charge_pct / 100.0)
-    reserve_wh = BATTERY_ENERGY_WH * 0.25  # 25% of full capacity always reserved
+    reserve_wh = BATTERY_ENERGY_WH * 0.25
 
-    # 8-connected neighbour offsets with distances
-    neighbours = []
-    for dr in (-1, 0, 1):
-        for dc in (-1, 0, 1):
-            if dr == 0 and dc == 0:
-                continue
-            dist = np.sqrt((dr * cell_dy)**2 + (dc * cell_dx)**2)
-            neighbours.append((dr, dc, dist))
-
-    # Dijkstra from lander
-    cost_to_reach = np.full((rows, cols), np.inf, dtype=np.float64)
-    cost_to_reach[lr, lc] = 0.0
-    visited = np.zeros((rows, cols), dtype=bool)
-
-    pq = [(0.0, lr, lc)]
-
-    while pq:
-        cost, r, c = heapq.heappop(pq)
-        if visited[r, c]:
-            continue
-        visited[r, c] = True
-
-        for dr, dc, dist in neighbours:
-            nr, nc = r + dr, c + dc
-            if nr < 0 or nr >= rows or nc < 0 or nc >= cols:
-                continue
-            if visited[nr, nc]:
-                continue
-
-            edge_wh = wh_per_metre[nr, nc] * dist
-            if np.isinf(edge_wh):
-                continue
-
-            new_cost = cost + edge_wh
-            if new_cost < cost_to_reach[nr, nc]:
-                cost_to_reach[nr, nc] = new_cost
-                heapq.heappush(pq, (new_cost, nr, nc))
+    # C-speed Dijkstra — single source, all destinations
+    dist_flat = sp_dijkstra(energy_graph, directed=True, indices=src_node)
+    cost_to_reach = dist_flat.reshape(rows, cols)
 
     # Round trip: approximate return cost = same as outbound (symmetric terrain)
     round_trip_wh = cost_to_reach * 2.0
@@ -1297,6 +1289,80 @@ ALL_LAYERS = [
     ("range",     "BATTERY RANGE"),
 ]
 
+# Mode descriptions — purpose and key features for each layer
+LAYER_INFO = {
+    "3d": (
+        "3D TERRAIN VIEW",
+        "Interactive 3D surface model of the lunar terrain built from LiDAR "
+        "point cloud data. Rotate, pan and zoom to inspect surface features. "
+        "Colour intensity shows surface reflectance.",
+    ),
+    "elevation": (
+        "ELEVATION HEAT MAP",
+        "Top-down colour-coded elevation map. Blue = low terrain, red = high "
+        "terrain. Use this to identify craters, ridges and slopes at a glance.",
+    ),
+    "contour": (
+        "TOPOGRAPHIC CONTOURS",
+        "Elevation contour lines overlaid on the terrain. Closely spaced lines "
+        "indicate steep slopes. Annotated contour values show height in metres.",
+    ),
+    "solar": (
+        "SOLAR ILLUMINATION",
+        "Shadow map showing which areas are sunlit vs in shadow at a given "
+        "date/time. Adjust lat/lon and date above, or play the 28-day lunar "
+        "cycle to see how illumination changes.",
+    ),
+    "hazard": (
+        "TERRAIN HAZARD MAP",
+        "Risk assessment combining slope steepness and surface roughness. "
+        "Green = safe traversal, orange = caution, red = dangerous or "
+        "impassable (slope > 15 deg).",
+    ),
+    "path": (
+        "PATH PLANNER",
+        "Click two points on the map to compute the safest route between them "
+        "using shortest-path optimisation. The route avoids steep slopes and "
+        "hazardous terrain. Total traversal cost is shown.",
+    ),
+    "comms": (
+        "LINE-OF-SIGHT COMMS",
+        "Radio communication coverage from the base station. Green = clear "
+        "line-of-sight, dark = blocked by terrain. Click to move the base "
+        "station and recalculate coverage.",
+    ),
+    "resources": (
+        "RESOURCE OVERLAY",
+        "Predicted water-ice deposit probability based on permanently shadowed "
+        "regions and low elevation. Diamond markers show optimal drill sites "
+        "ranked by ice concentration.",
+    ),
+    "rover": (
+        "ROVER FOOTPRINT SIM",
+        "Click any point to simulate rover placement. Shows wheel contact "
+        "positions, body outline, pitch/roll angles, and ground clearance. "
+        "Use the heading slider in the sidebar to rotate.",
+    ),
+    "psr": (
+        "SOLAR UPTIME / PSR",
+        "Solar uptime percentage across the 28-day lunar cycle. Bright = "
+        "consistently illuminated, dark = permanently shadowed regions (PSRs) "
+        "that never receive sunlight.",
+    ),
+    "score": (
+        "MISSION SUITABILITY SCORE",
+        "Composite site score (0-100) on a 0.25m grid. Combines solar "
+        "exposure, slope safety, rover clearance, and comms coverage. "
+        "Hover to see component breakdown in the sidebar.",
+    ),
+    "range": (
+        "BATTERY RANGE PLANNER",
+        "Place a lander base station and waypoints to visualise reachable "
+        "area with the rover's 24V 50Ah battery. Heatmap shows remaining "
+        "battery after round-trip. Adjust charge % with the slider.",
+    ),
+}
+
 
 def create_app(pcd_path: str):
     print(f"[PERSEUS] Loading point cloud: {pcd_path}")
@@ -1358,9 +1424,23 @@ def create_app(pcd_path: str):
         compute_mission_score(xg, yg, zg, slope_deg, solar_uptime,
                               comms_coverage, hazard, ice_prob, cell_size=0.25)
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t5:.1f}s)")
-    print("[PERSEUS] [7/7] Computing energy cost grid...")
+    print("[PERSEUS] [7/8] Computing energy cost grid...")
     energy_cost_grid = compute_energy_cost_grid(slope_deg, hazard)
     print(f"[PERSEUS]        Done ({_time.monotonic() - _t5:.1f}s)")
+
+    _t6 = _time.monotonic()
+    print("[PERSEUS] [8/8] Building sparse graphs for pathfinding...")
+    grid_rows, grid_cols = cost_grid.shape
+    traversal_graph = build_sparse_graph(cost_grid, xg, yg)
+    energy_graph = build_sparse_graph(energy_cost_grid, xg, yg)
+    print(f"[PERSEUS]        Done ({_time.monotonic() - _t6:.1f}s)")
+
+    # Cache for Dijkstra results keyed by lander grid position
+    _range_cache = {}
+
+    # Precompute shaded z-data for all cycle frames (avoids rebuilding figures)
+    z_norm = (zg - zg.min()) / (zg.max() - zg.min() + 1e-9)
+    shaded_stack = [z_norm * (0.3 + 0.7 * il) for il in illum_stack]
 
     print(f"[PERSEUS] Total precomputation: {_time.monotonic() - _t0:.1f}s")
 
@@ -1706,23 +1786,52 @@ def create_app(pcd_path: str):
                 ]),
             ]),
 
-            # Single full-size panel
-            html.Div(id="panel-area", style={
-                "flex": "1", "position": "relative",
+            # Panel column: mode description + map
+            html.Div(style={
+                "flex": "1", "display": "flex", "flexDirection": "column",
+                "overflow": "hidden",
             }, children=[
-                html.Div(id=f"panel-wrap-{key}", children=[
-                    _panel(lbl, graph_ids[key],
-                           _get_fig(key) if key == _default_layer
-                           else _empty_fig,
-                           extra_children=(
-                               [dcc.Interval(id="rot-tick", interval=100,
-                                             n_intervals=0)]
-                               if key == "3d" else None
-                           ))
-                ], style={"display": "block" if key == _default_layer
-                           else "none",
-                           "height": "100%"})
-                for key, lbl in ALL_LAYERS
+                # Mode description box
+                html.Div(id="mode-desc-box", style={
+                    "padding": "10px 14px", "marginBottom": "6px",
+                    "borderRadius": "4px",
+                    "border": "1px solid var(--accent)",
+                    "backgroundColor": "var(--panel-bg)",
+                    "minHeight": "50px",
+                }, children=[
+                    html.Div(id="mode-desc-title",
+                             children=LAYER_INFO[_default_layer][0],
+                             style={
+                                 "fontSize": "24px", "fontWeight": "bold",
+                                 "letterSpacing": "3px",
+                                 "color": "var(--accent)",
+                                 "marginBottom": "4px",
+                             }),
+                    html.Div(id="mode-desc-text",
+                             children=LAYER_INFO[_default_layer][1],
+                             style={
+                                 "fontSize": "16px", "lineHeight": "1.4",
+                                 "color": "var(--font-clr)",
+                             }),
+                ]),
+                # Single full-size panel
+                html.Div(id="panel-area", style={
+                    "flex": "1", "position": "relative",
+                }, children=[
+                    html.Div(id=f"panel-wrap-{key}", children=[
+                        _panel(lbl, graph_ids[key],
+                               _get_fig(key) if key == _default_layer
+                               else _empty_fig,
+                               extra_children=(
+                                   [dcc.Interval(id="rot-tick", interval=100,
+                                                 n_intervals=0)]
+                                   if key == "3d" else None
+                               ))
+                    ], style={"display": "block" if key == _default_layer
+                               else "none",
+                               "height": "100%"})
+                    for key, lbl in ALL_LAYERS
+                ]),
             ]),
         ]),
     ])
@@ -1811,7 +1920,9 @@ def create_app(pcd_path: str):
                           for key, _ in ALL_LAYERS]
 
     @app.callback(
-        _layer_style_outputs + _layer_fig_outputs,
+        _layer_style_outputs + _layer_fig_outputs +
+        [Output("mode-desc-title", "children"),
+         Output("mode-desc-text", "children")],
         Input("layer-toggles", "value"),
         State("theme-store", "data"),
         prevent_initial_call=True,
@@ -1826,7 +1937,8 @@ def create_app(pcd_path: str):
             else:
                 styles.append({"display": "none"})
                 figs.append(no_update)
-        return styles + figs
+        title, desc = LAYER_INFO.get(selected, ("", ""))
+        return styles + figs + [title, desc]
 
     # 3. Client-side 3D rotation
     app.clientside_callback(
@@ -1895,12 +2007,19 @@ def create_app(pcd_path: str):
     )
     def cycle_tick(_, frame, theme):
         frame = (frame + 1) % len(illum_stack)
-        il = illum_stack[frame]
         ts = cycle_ts[frame]
-        pct = float(np.mean(il) * 100)
+        pct = float(np.mean(illum_stack[frame]) * 100)
         info = (f"CYCLE DAY {frame * 28.0 / len(illum_stack):.1f}/28 | "
                 f"{ts.strftime('%Y-%m-%d %H:%M')} UTC | {pct:.0f}% lit")
-        return fig_shadow(xg, yg, zg, il, theme), info, frame
+        # Use precomputed shaded data — only rebuild figure with cached z
+        t = _t(theme)
+        fig = go.Figure(data=[go.Heatmap(
+            x=xg[0, :], y=yg[:, 0], z=shaded_stack[frame],
+            colorscale=SHADOW_CS, showscale=False,
+            hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<extra></extra>",
+        )])
+        fig.update_layout(**_layout_base(t), xaxis=_xaxis(t), yaxis=_yaxis(t))
+        return fig, info, frame
 
     # 7. Path planning — click to set start/end
     @app.callback(
@@ -1930,7 +2049,8 @@ def create_app(pcd_path: str):
             # Set end and compute path
             start_xy = tuple(start)
             end_xy = (px, py)
-            path_coords, total_cost = find_path(cost_grid, xg, yg,
+            path_coords, total_cost = find_path(traversal_graph,
+                                                 cost_grid, xg, yg,
                                                  start_xy, end_xy)
             if path_coords is None:
                 # No path found — show annotation
@@ -2017,13 +2137,23 @@ def create_app(pcd_path: str):
         triggered = ctx.triggered_id
         charge_pct = charge_pct or 100
 
+        def _cached_range(lp, pct):
+            """Run Dijkstra with caching by lander grid position."""
+            grid_pos = _world_to_grid(lp, xg, yg)
+            cache_key = (grid_pos, pct)
+            if cache_key in _range_cache:
+                return _range_cache[cache_key]
+            result = compute_battery_range(
+                energy_graph, grid_rows, grid_cols, xg, yg, lp, pct)
+            _range_cache[cache_key] = result
+            return result
+
         # Handle clear button
         if triggered == "range-clear-btn":
             waypoints = []
             if lander is not None:
                 lp = tuple(lander)
-                _, reachable, range_pct = compute_battery_range(
-                    energy_cost_grid, xg, yg, lp, charge_pct)
+                _, reachable, range_pct = _cached_range(lp, charge_pct)
                 fig = fig_battery_range(xg, yg, range_pct, reachable,
                                          lp, charge_pct=charge_pct,
                                          theme=theme)
@@ -2040,14 +2170,13 @@ def create_app(pcd_path: str):
         if triggered == "battery-charge":
             if lander is not None:
                 lp = tuple(lander)
-                _, reachable, range_pct = compute_battery_range(
-                    energy_cost_grid, xg, yg, lp, charge_pct)
-                # Recompute waypoint route if we have waypoints
+                _, reachable, range_pct = _cached_range(lp, charge_pct)
                 wp_path = None
                 wp_cost = None
                 if waypoints and len(waypoints) > 0:
                     wp_path, wp_cost = _compute_wp_route(
-                        lp, waypoints, cost_grid, xg, yg)
+                        lp, waypoints, traversal_graph,
+                        cost_grid, xg, yg)
                 fig = fig_battery_range(xg, yg, range_pct, reachable,
                                          lp, waypoints, wp_path, wp_cost,
                                          charge_pct, theme)
@@ -2070,13 +2199,13 @@ def create_app(pcd_path: str):
         if mode == "lander":
             lander = [px, py]
             lp = (px, py)
-            _, reachable, range_pct = compute_battery_range(
-                energy_cost_grid, xg, yg, lp, charge_pct)
+            _range_cache.clear()  # new lander = invalidate cache
+            _, reachable, range_pct = _cached_range(lp, charge_pct)
             wp_path = None
             wp_cost = None
             if waypoints and len(waypoints) > 0:
                 wp_path, wp_cost = _compute_wp_route(
-                    lp, waypoints, cost_grid, xg, yg)
+                    lp, waypoints, traversal_graph, cost_grid, xg, yg)
             fig = fig_battery_range(xg, yg, range_pct, reachable, lp,
                                      waypoints, wp_path, wp_cost,
                                      charge_pct, theme)
@@ -2088,10 +2217,9 @@ def create_app(pcd_path: str):
             waypoints = waypoints + [[px, py]]
             if lander is not None:
                 lp = tuple(lander)
-                _, reachable, range_pct = compute_battery_range(
-                    energy_cost_grid, xg, yg, lp, charge_pct)
+                _, reachable, range_pct = _cached_range(lp, charge_pct)
                 wp_path, wp_cost = _compute_wp_route(
-                    lp, waypoints, cost_grid, xg, yg)
+                    lp, waypoints, traversal_graph, cost_grid, xg, yg)
                 fig = fig_battery_range(xg, yg, range_pct, reachable,
                                          lp, waypoints, wp_path, wp_cost,
                                          charge_pct, theme)
@@ -2108,8 +2236,8 @@ def create_app(pcd_path: str):
                         "Lander: not placed",
                         f"Waypoints: {len(waypoints)}")
 
-    def _compute_wp_route(lander_pos, waypoints, cost_g, xg_, yg_):
-        """Compute A* route: lander -> WP1 -> WP2 -> ... -> lander."""
+    def _compute_wp_route(lander_pos, waypoints, graph, cost_g, xg_, yg_):
+        """Compute route: lander -> WP1 -> WP2 -> ... -> lander."""
         all_points = [tuple(lander_pos)]
         for wp in waypoints:
             all_points.append(tuple(wp))
@@ -2119,7 +2247,7 @@ def create_app(pcd_path: str):
         total_cost = 0.0
         for i in range(len(all_points) - 1):
             seg_path, seg_cost = find_path(
-                cost_g, xg_, yg_, all_points[i], all_points[i + 1])
+                graph, cost_g, xg_, yg_, all_points[i], all_points[i + 1])
             if seg_path is None:
                 return None, None
             if full_path:
