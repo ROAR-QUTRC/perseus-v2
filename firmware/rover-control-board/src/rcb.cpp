@@ -62,7 +62,7 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
     gptimer_set_alarm_action(_timer, &_precharge_off_config);
     gptimer_enable(_timer);
 
-    hi_can::PacketManager::transmission_config_t _status_transmission_config = {
+    _status_transmission_config = {
         .generator = [&](void)
         {
             return _can_parameters.get_status().serialize_data();
@@ -299,7 +299,7 @@ unsigned long RoverPowerBus::adc_to_bus_current(const unsigned long voltage)
  */
 unsigned long RoverPowerBus::adc_to_bus_voltage(const unsigned long voltage)
 {
-    return voltage * (_VOLTAGE_DIVIDER_LOW_RESISTOR * _VOLTAGE_DIVIDER_HIGH_RESISTOR) / (_VOLTAGE_DIVIDER_LOW_RESISTOR);
+    return voltage * (_VOLTAGE_DIVIDER_LOW_RESISTOR + _VOLTAGE_DIVIDER_HIGH_RESISTOR) / (_VOLTAGE_DIVIDER_LOW_RESISTOR);
 }
 
 hi_can::PacketManager::transmission_config_t RoverPowerBus::get_transmission_config(void)

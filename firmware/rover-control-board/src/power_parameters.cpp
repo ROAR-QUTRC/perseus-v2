@@ -20,7 +20,7 @@ TwaiPowerBusParameterGroup::TwaiPowerBusParameterGroup(addressing::power::distri
                                    static_cast<uint8_t>(bus),
                                    static_cast<uint8_t>(addressing::power::distribution::rover_control_board::power_bus::parameter::CONTROL_IMMEDIATE)))},
         PacketManager::callback_config_t{
-            .data_callback = [&](const Packet& packet)
+            .data_callback = [this, busStateHandler, clear_errorHandler](const Packet& packet)
             {
                 _immediateStatus.deserialize_data(packet.get_data());
                 if (_immediateStatus.clear_error && clear_errorHandler)
@@ -57,7 +57,7 @@ TwaiPowerBusParameterGroup::TwaiPowerBusParameterGroup(addressing::power::distri
         PacketManager::callback_config_t{
             .data_callback = [this](const Packet& packet)
             {
-                memcpy(&_currentLimit, &(packet.get_data()), sizeof(uint32_t));
+                memcpy(&_currentLimit, (packet.get_data().data()), sizeof(uint32_t));
             },
         });
     _busStateHandler = busStateHandler;
