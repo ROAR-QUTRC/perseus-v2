@@ -1629,35 +1629,60 @@ def fig_battery_range(
         display_z = np.clip(range_pct, 0, 100).copy()
         display_z[~reachable] = np.nan
 
-        fig = go.Figure(data=[go.Heatmap(
-            x=xg[0, :], y=yg[:, 0], z=display_z,
-            colorscale=RANGE_CS, zmin=0, zmax=100,
-            colorbar=_colorbar("Batt %", t),
-            hovertemplate=(
-                "X: %{x:.2f}m  Y: %{y:.2f}m<br>"
-                "Return battery: %{z:.0f}%<extra></extra>"
-            ),
-        )])
+        fig = go.Figure(
+            data=[
+                go.Heatmap(
+                    x=xg[0, :],
+                    y=yg[:, 0],
+                    z=display_z,
+                    colorscale=RANGE_CS,
+                    zmin=0,
+                    zmax=100,
+                    colorbar=_colorbar("Batt %", t),
+                    hovertemplate=(
+                        "X: %{x:.2f}m  Y: %{y:.2f}m<br>"
+                        "Return battery: %{z:.0f}%<extra></extra>"
+                    ),
+                )
+            ]
+        )
 
         # Unreachable overlay (semi-transparent dark)
         if np.any(~reachable):
             unreachable_z = np.where(reachable, np.nan, 0.0)
-            fig.add_trace(go.Heatmap(
-                x=xg[0, :], y=yg[:, 0], z=unreachable_z,
-                colorscale=[[0, "rgba(30,0,0,0.6)"], [1, "rgba(30,0,0,0.6)"]],
-                showscale=False, hoverinfo="skip",
-            ))
+            fig.add_trace(
+                go.Heatmap(
+                    x=xg[0, :],
+                    y=yg[:, 0],
+                    z=unreachable_z,
+                    colorscale=[[0, "rgba(30,0,0,0.6)"], [1, "rgba(30,0,0,0.6)"]],
+                    showscale=False,
+                    hoverinfo="skip",
+                )
+            )
     else:
         # No lander — show terrain hazard as clickable background
         bg = hazard_bg if hazard_bg is not None else np.zeros_like(xg)
-        fig = go.Figure(data=[go.Heatmap(
-            x=xg[0, :], y=yg[:, 0], z=bg,
-            colorscale=HAZARD_CS, showscale=False, opacity=0.5,
-            hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Click to place lander<extra></extra>",
-        )])
+        fig = go.Figure(
+            data=[
+                go.Heatmap(
+                    x=xg[0, :],
+                    y=yg[:, 0],
+                    z=bg,
+                    colorscale=HAZARD_CS,
+                    showscale=False,
+                    opacity=0.5,
+                    hovertemplate="X: %{x:.2f}m<br>Y: %{y:.2f}m<br>Click to place lander<extra></extra>",
+                )
+            ]
+        )
         fig.add_annotation(
             text="CLICK MAP TO PLACE LANDER",
-            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
             font=dict(size=18, color=t["accent"], family="Courier New"),
         )
 
@@ -3066,12 +3091,19 @@ def create_app(pcd_path: str):
                 )
             return (
                 fig_battery_range(
-                    xg, yg, np.full_like(zg, np.nan),
-                    np.zeros_like(zg, dtype=bool), None,
-                    charge_pct=charge_pct, theme=theme,
+                    xg,
+                    yg,
+                    np.full_like(zg, np.nan),
+                    np.zeros_like(zg, dtype=bool),
+                    None,
+                    charge_pct=charge_pct,
+                    theme=theme,
                     hazard_bg=hazard,
                 ),
-                None, [], "Lander: not placed", "Waypoints: 0",
+                None,
+                [],
+                "Lander: not placed",
+                "Waypoints: 0",
             )
 
         # Handle battery slider change (no click)
@@ -3177,13 +3209,20 @@ def create_app(pcd_path: str):
                 )
             else:
                 fig = fig_battery_range(
-                    xg, yg, np.full_like(zg, np.nan),
-                    np.zeros_like(zg, dtype=bool), None,
-                    waypoints, charge_pct=charge_pct,
-                    theme=theme, hazard_bg=hazard,
+                    xg,
+                    yg,
+                    np.full_like(zg, np.nan),
+                    np.zeros_like(zg, dtype=bool),
+                    None,
+                    waypoints,
+                    charge_pct=charge_pct,
+                    theme=theme,
+                    hazard_bg=hazard,
                 )
                 return (
-                    fig, None, waypoints,
+                    fig,
+                    None,
+                    waypoints,
                     "Lander: not placed",
                     f"Waypoints: {len(waypoints)}",
                 )
