@@ -4,7 +4,7 @@
   <name>autonomy_diagnostics</name>
   <version>0.1.0</version>
   <description>TUI diagnostic tool for autonomy system monitoring</description>
-  <maintainer email="1388693+DingoOz@users.noreply.github.com">Nigel_H-S</maintainer>
+  <maintainer email="roar@qutroboticsclub.com">Nigel_H-S</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>

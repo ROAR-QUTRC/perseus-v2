@@ -17,7 +17,7 @@ setup(
     install_requires=["setuptools"],
     zip_safe=True,
     maintainer="Nigel_H-S",
-    maintainer_email="1388693+DingoOz@users.noreply.github.com",
+    maintainer_email="roar@qutroboticsclub.com",
     description="TUI diagnostic tool for autonomy system monitoring",
     license="MIT",
     tests_require=["pytest"],
