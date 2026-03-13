@@ -41,12 +41,6 @@ def generate_launch_description():
         "config",
         "pcl_conv.yaml",
     )
-    livox_launch_file = os.path.join(
-        get_package_share_directory("perseus_sensors"),
-        "launch",
-        "livox.launch.py",
-    )
-
     # Declare Arguments
     declare_publisher_name = DeclareLaunchArgument(
         "scan_out", default_value="/livox/scan", description="Publisher topic name"
@@ -117,11 +111,6 @@ def generate_launch_description():
         output="screen",
     )
 
-    # Conditionally launch livox driver when not using sim time
-    livox_launch = IncludeLaunchDescription(
-        livox_launch_file,
-        condition=UnlessCondition(use_sim_time),
-    )
 
     # Create launch description and populate
     ld = LaunchDescription()
@@ -135,6 +124,5 @@ def generate_launch_description():
     # Add nodes
     ld.add_action(pointcloud_to_laserscan_node)
     ld.add_action(imu_bias_container)
-    ld.add_action(livox_launch)
 
     return ld
