@@ -6,25 +6,38 @@
         <plugin>${hardware_plugin}</plugin>
       </hardware>
 
+      <!-- Drive wheel joints -->
       <joint name="${prefix}left_wheel_joint">
         <command_interface name="velocity"/>
         <state_interface name="position"/>
         <state_interface name="velocity"/>
-        <param name="gpio_pin_a">17</param>
-        <param name="gpio_pin_b">27</param>
-        <param name="encoder_pin_a">5</param>
-        <param name="encoder_pin_b">6</param>
       </joint>
 
       <joint name="${prefix}right_wheel_joint">
         <command_interface name="velocity"/>
         <state_interface name="position"/>
         <state_interface name="velocity"/>
-        <param name="gpio_pin_a">22</param>
-        <param name="gpio_pin_b">23</param>
-        <param name="encoder_pin_a">12</param>
-        <param name="encoder_pin_b">13</param>
       </joint>
+
+      <!--
+        Space motor GPIO command interface.
+        kibisis_sensors node writes to space_motor/velocity (-100..100).
+        Forwarded via space_motor_controller (ForwardCommandController).
+      -->
+      <gpio name="space_motor">
+        <command_interface name="velocity"/>
+      </gpio>
+
+      <!--
+        Moisture sensor GPIO interfaces.
+        kibisis_sensors node writes 1.0 to moisture_sensor/trigger to sample.
+        kibisis_sensors node reads moisture_sensor/adc_raw (0-4095) for result.
+      -->
+      <gpio name="moisture_sensor">
+        <command_interface name="trigger"/>
+        <state_interface name="adc_raw"/>
+      </gpio>
+
     </ros2_control>
   </xacro:macro>
 </robot>
