@@ -147,10 +147,10 @@ void loop()
             servo.WriteSpe(id, error > 0 ? MAX_SPEED : -MAX_SPEED, 0);
     }
 
-    Serial.printf("online: [%s, %s, %s], Target angles [%f, %f, %f], Motor loads -> Tilt: %d, Pan: %d, Elbow: %d\n", 
-        servo.Ping(TILT) == TILT ? "true" : "false",
-        servo.Ping(PAN) == PAN ? "true" : "false",
-        servo.Ping(ELBOW) == ELBOW ? "true" : "false",
-        target_positions[TILT - 1], target_positions[PAN - 1], target_positions[ELBOW - 1],
-        servo.ReadLoad(TILT), servo.ReadLoad(PAN), servo.ReadLoad(ELBOW));
+    Serial.printf("online: [%s, %s, %s], Target angles [%f, %f, %f], Motor loads -> Tilt: %d, Pan: %d, Elbow: %d\n",
+                  servo.Ping(TILT) == TILT ? "true" : "false",
+                  servo.Ping(PAN) == PAN ? "true" : "false",
+                  servo.Ping(ELBOW) == ELBOW ? "true" : "false",
+                  target_positions[TILT - 1], target_positions[PAN - 1], target_positions[ELBOW - 1],
+                  servo.ReadLoad(TILT), servo.ReadLoad(PAN), servo.ReadLoad(ELBOW));
 }

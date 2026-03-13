@@ -96,27 +96,29 @@ extern "C" void app_main()
         constexpr int ELBOW = 3;
 
         const int c = getchar();
-        if (c != -1) {
-            switch (c) {
-                case 'w':
-                    write_to_motor(ELBOW, current_positions[ELBOW] + 5.0, 100.0);
-                    break;
-                case 's':
-                    write_to_motor(ELBOW, current_positions[ELBOW] - 5.0, 100.0);
-                    break;
-                case 'a':
-                    write_to_motor(TILT, current_positions[TILT] - 5.0, 100.0);
-                    break;
-                case 'd':
-                    write_to_motor(TILT, current_positions[TILT] + 5.0, 100.0);
-                    break;
+        if (c != -1)
+        {
+            switch (c)
+            {
+            case 'w':
+                write_to_motor(ELBOW, current_positions[ELBOW] + 5.0, 100.0);
+                break;
+            case 's':
+                write_to_motor(ELBOW, current_positions[ELBOW] - 5.0, 100.0);
+                break;
+            case 'a':
+                write_to_motor(TILT, current_positions[TILT] - 5.0, 100.0);
+                break;
+            case 'd':
+                write_to_motor(TILT, current_positions[TILT] + 5.0, 100.0);
+                break;
 
-                case 'q':
-                    write_to_motor(PAN, current_positions[PAN] - 5.0, 100.0);
-                    break;
-                case 'e':
-                    write_to_motor(PAN, current_positions[PAN] + 5.0, 100.0);
-                    break;
+            case 'q':
+                write_to_motor(PAN, current_positions[PAN] - 5.0, 100.0);
+                break;
+            case 'e':
+                write_to_motor(PAN, current_positions[PAN] + 5.0, 100.0);
+                break;
             }
         }
 
