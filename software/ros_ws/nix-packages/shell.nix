@@ -49,6 +49,7 @@ pkgs.mkShell {
           controller-manager
           cv-bridge
           diff-drive-controller
+          domain-bridge
           fast-lio
           geometry-msgs
           gz-ros2-control
@@ -70,6 +71,7 @@ pkgs.mkShell {
           opencv
           openssl
           pcl-conversions
+          pcl-ros
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
