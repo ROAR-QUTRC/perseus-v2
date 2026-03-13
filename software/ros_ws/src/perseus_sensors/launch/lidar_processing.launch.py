@@ -20,8 +20,7 @@ Launch Arguments:
 """
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import UnlessCondition
+from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
@@ -110,7 +109,6 @@ def generate_launch_description():
         name="pointcloud_to_laserscan",
         output="screen",
     )
-
 
     # Create launch description and populate
     ld = LaunchDescription()
