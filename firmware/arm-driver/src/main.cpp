@@ -78,7 +78,6 @@ extern "C" void app_main()
     printf("Setup complete, entering main loop\n");
 
     // Start tasks
-    // xTaskCreate(handle_can, "CAN", 4096, nullptr, configMAX_PRIORITIES - 1, nullptr);
     xTaskCreate(handle_uart, "UART", 4096, nullptr, configMAX_PRIORITIES - 2, nullptr);
 
     while (1)
@@ -91,9 +90,41 @@ extern "C" void app_main()
         {
             printf("Error handling CAN packet: %s\n", e.what());
         }
+
+        constexpr int TILT = 1;
+        constexpr int PAN = 2;
+        constexpr int ELBOW = 3;
+
+        const int c = getchar();
+        if (c != -1) {
+            switch (c) {
+                case 'w':
+                    write_to_motor(ELBOW, current_positions[ELBOW] + 5.0, 100.0);
+                    break;
+                case 's':
+                    write_to_motor(ELBOW, current_positions[ELBOW] - 5.0, 100.0);
+                    break;
+                case 'a':
+                    write_to_motor(TILT, current_positions[TILT] - 5.0, 100.0);
+                    break;
+                case 'd':
+                    write_to_motor(TILT, current_positions[TILT] + 5.0, 100.0);
+                    break;
+
+                case 'q':
+                    write_to_motor(PAN, current_positions[PAN] - 5.0, 100.0);
+                    break;
+                case 'e':
+                    write_to_motor(PAN, current_positions[PAN] + 5.0, 100.0);
+                    break;
+            }
+        }
+
         DELAY(1);
     }
 }
+
+#pragma region UART
 
 /*
 UART Protocol:
@@ -104,6 +135,24 @@ UART Protocol:
     t -> target angles  -> <t,id,target_angle,speed>
 - all values are doubles except for id which is a uint8_t
 */
+
+void init_uart(void)
+{
+    const uart_config_t uart_config = {
+        .baud_rate = 115200,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
+
+    // We won't use a buffer for sending data.
+    uart_driver_install(UART_NUM, RX_BUF_SIZE * 2, TX_BUF_SIZE, 0, NULL, 0);
+    uart_param_config(UART_NUM, &uart_config);
+    uart_set_pin(UART_NUM, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+}
+
 void handle_uart(void* args)
 {
     uint8_t* buffer = (uint8_t*)malloc(RX_BUF_SIZE);
@@ -155,29 +204,10 @@ void handle_uart(void* args)
     free(buffer);
 }
 
-#pragma region UART
-
-void init_uart(void)
-{
-    const uart_config_t uart_config = {
-        .baud_rate = 115200,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-        .source_clk = UART_SCLK_DEFAULT,
-    };
-
-    // We won't use a buffer for sending data.
-    uart_driver_install(UART_NUM, RX_BUF_SIZE * 2, TX_BUF_SIZE, 0, NULL, 0);
-    uart_param_config(UART_NUM, &uart_config);
-    uart_set_pin(UART_NUM, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-}
-
 int write_to_motor(uint8_t id, double position, double speed)
 {
     std::string data = "<t," + std::to_string(id) + "," + std::to_string(position) + "," + std::to_string(speed) + ">";
-    printf("<t,%s,%s,%s>", std::to_string(id).c_str(), std::to_string(position).c_str(), std::to_string(speed).c_str());
+    printf("<t,%s,%s,%s>\n", std::to_string(id).c_str(), std::to_string(position).c_str(), std::to_string(speed).c_str());
     return uart_write_bytes(UART_NUM, data.c_str(), strlen(data.c_str()));
 }
 
