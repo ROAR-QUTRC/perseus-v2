@@ -23,10 +23,10 @@
   tf2-sensor-msgs,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-pointcloud-to-laserscan";
+  pname = "ros-jazzy-pcl-to-lsr";
   version = "2.0.2";
 
-  src = ./../src/pointcloud_to_laserscan;
+  src = ./../src/pcl_to_lsr;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
