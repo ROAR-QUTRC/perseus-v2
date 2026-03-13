@@ -50,6 +50,7 @@ pkgs.mkShell {
           cv-bridge
           diff-drive-controller
           fast-lio
+          fd-wrapper
           geometry-msgs
           gz-ros2-control
           hardware-interface
