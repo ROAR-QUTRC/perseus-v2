@@ -38,7 +38,7 @@
  * Author: Paul Bovbel
  */
 
-#include "pointcloud_to_laserscan/pointcloud_to_laserscan_node.hpp"
+#include "pcl_to_lsr/pointcloud_to_laserscan_node.hpp"
 
 #include <chrono>
 #include <functional>

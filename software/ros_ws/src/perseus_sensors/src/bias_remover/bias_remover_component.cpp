@@ -60,9 +60,6 @@ namespace imu_processors
             imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
                 imu_in_topic_, rclcpp::SensorDataQoS(),
                 std::bind(&BiasRemover::imu_cb, this, std::placeholders::_1));
-
-            // Log successful initialization
-            RCLCPP_INFO(this->get_logger(), "\033[92m BiasRemover Node Successfully Initialised!\033[0m");
         }
 
     private:

@@ -49,7 +49,7 @@ pkgs.mkShell {
           controller-manager
           cv-bridge
           diff-drive-controller
-          domain-bridge
+          fast-lio
           geometry-msgs
           gz-ros2-control
           hardware-interface
@@ -70,7 +70,6 @@ pkgs.mkShell {
           opencv
           openssl
           pcl-conversions
-          pcl-ros
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
@@ -97,6 +96,7 @@ pkgs.mkShell {
           simple-networking
           slam-toolbox
           std-msgs
+          std-srvs
           teleop-twist-joy
           teleop-twist-keyboard
           tf2

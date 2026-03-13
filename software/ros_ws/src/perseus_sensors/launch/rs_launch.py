@@ -117,7 +117,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "depth_module.depth_profile",
-            default_value="640,480,15",
+            default_value="0,0,0",
             description="depth stream profile",
         ),
         DeclareLaunchArgument(
@@ -127,7 +127,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "depth_module.infra_profile",
-            default_value="640,480,15",
+            default_value="0,0,0",
             description="infra streams (0/1/2) profile",
         ),
         DeclareLaunchArgument(
@@ -392,7 +392,7 @@ def generate_launch_description():
         # ---- Added: compression controls ----
         DeclareLaunchArgument(
             "enable_image_compression",
-            default_value="false",
+            default_value="true",
             description="If true, start image_transport republishers to create /compressed and /compressedDepth topics",
         ),
         DeclareLaunchArgument(

@@ -24,7 +24,7 @@ def generate_launch_description():
                         "imu_in_topic": "/livox/imu",
                         "odom_topic": "/odom",
                         "bias_out_topic": "/livox/gyro_bias",
-                        "estimator_rate_hz": 100.0,
+                        "estimator_rate_hz": 50.0,
                     }
                 ],
             ),
@@ -36,8 +36,8 @@ def generate_launch_description():
                     {
                         "imu_in_topic": "/livox/imu",
                         "bias_in_topic": "/livox/gyro_bias",
-                        "imu_out_topic": "/livox/imu/corrected",
-                        "output_rate_hz": 100.0,
+                        "imu_out_topic": "/livox/corrected",
+                        "output_rate_hz": 50.0,
                     }
                 ],
             ),
