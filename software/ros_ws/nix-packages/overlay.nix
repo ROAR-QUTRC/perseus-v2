@@ -2,6 +2,7 @@ final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
   autonomy-diagnostics = final.callPackage ./autonomy-diagnostics.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
+  pcl-to-lsr = final.callPackage ./pcl-to-lsr.nix { };
   perseus = final.callPackage ./perseus.nix { };
   perseus-autonomy-bridge = final.callPackage ./perseus-autonomy-bridge.nix { };
   perseus-bt-nodes = final.callPackage ./perseus-bt-nodes.nix { };
@@ -15,10 +16,10 @@ final: prev: {
   perseus-lite-description = final.callPackage ./perseus-lite-description.nix { };
   perseus-lite-hardware = final.callPackage ./perseus-lite-hardware.nix { };
   perseus-lite-hud = final.callPackage ./perseus-lite-hud.nix { };
+  perseus-mapping = final.callPackage ./perseus-mapping.nix { };
   perseus-payloads = final.callPackage ./perseus-payloads.nix { };
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };
   perseus-simulation = final.callPackage ./perseus-simulation.nix { };
   perseus-vision = final.callPackage ./perseus-vision.nix { };
-  pointcloud-to-laserscan = final.callPackage ./pointcloud-to-laserscan.nix { };
   teleop-diagnostics = final.callPackage ./teleop-diagnostics.nix { };
 }
