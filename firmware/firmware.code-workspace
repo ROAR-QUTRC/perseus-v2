@@ -9,8 +9,8 @@
             "path": "./battery-management-system"
         },
         {
-            "name": "Light Tower Firmware",
-            "path": "./light-tower"
+            "name": "Status Ring Firmware",
+            "path": "./status-ring"
         },
         {
             "name": "Processing Plant Firmware",
