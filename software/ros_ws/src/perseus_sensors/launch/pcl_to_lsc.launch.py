@@ -8,9 +8,9 @@ import os
 
 def generate_launch_description():
     config_file = os.path.join(
-        get_package_share_directory("pointcloud_to_laserscan"),
+        get_package_share_directory("perseus_sensors"),
         "config",
-        "pointcloud_to_laserscan.yaml",
+        "pcl_conv.yaml",
     )
 
     # Declare Arguments
