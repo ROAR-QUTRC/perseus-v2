@@ -12,12 +12,12 @@
 
 SMS_STS servo;
 
-constexpr int TILT = 0;
+constexpr int TILT = 1;
 constexpr int PAN = 2;
-constexpr int ELBOW = 1;
+constexpr int ELBOW = 3;
 
 std::vector<int> past_positions(3, 0);
-std::vector<double> target_positions = {25.0 * 0.0, 25.0 * 0.0, 25 * 0.0};
+std::vector<double> target_positions(3, 0.0);
 
 void setup()
 {
@@ -34,24 +34,24 @@ void setup()
     Serial.println("Motor 2 online: " + String(PAN == servo.Ping(PAN) ? "true" : "false"));
     Serial.println("Motor 3 online: " + String(ELBOW == servo.Ping(ELBOW) ? "true" : "false"));
 
-    past_positions[TILT] = servo.ReadPos(TILT);
-    past_positions[PAN] = servo.ReadPos(PAN);
-    past_positions[ELBOW] = servo.ReadPos(ELBOW);
+    past_positions[TILT - 1] = servo.ReadPos(TILT);
+    past_positions[PAN - 1] = servo.ReadPos(PAN);
+    past_positions[ELBOW - 1] = servo.ReadPos(ELBOW);
 
     double tilt_target = 0.0;
     double pan_target = 0.0;
     double elbow_target = 0.0;
 
-    target_positions[TILT] = 25.0 * tilt_target;
-    target_positions[PAN] = 25.0 * pan_target;
-    target_positions[ELBOW] = 25.0 * elbow_target;
+    target_positions[TILT - 1] = 25.0 * tilt_target;
+    target_positions[PAN - 1] = 25.0 * pan_target;
+    target_positions[ELBOW - 1] = 25.0 * elbow_target;
 }
 
 std::vector<double> positions(3, 0);
 std::vector<int16_t> full_rev_count(3, 0);
 void write_angle(int id, double angle, double speed)
 {
-    target_positions[id] = angle;
+    target_positions[id - 1] = angle;
     // TODO: set max speed
 }
 
@@ -101,6 +101,7 @@ void loop()
                     double target_angle = s.substring(id_end + 1, angle_end).toDouble();
                     double speed = s.substring(angle_end + 1).toDouble();
                     write_angle(id, target_angle, speed);
+                    Serial.println("Received command: id=" + String(id) + ", target_angle=" + String(target_angle) + ", speed=" + String(speed));
                 }
             }
         }
@@ -109,11 +110,12 @@ void loop()
             s += (char)byte;
         }
     }
-    Serial2.print("<a," + String(positions[TILT]) + "," + String(positions[PAN]) + "," + String(positions[ELBOW]) + ">");
+    Serial2.print("<a," + String(positions[TILT - 1]) + "," + String(positions[PAN - 1]) + "," + String(positions[ELBOW - 1]) + ">");
 
     for (unsigned i = 0; i < 3; i++)
     {
-        const int id = ids[i];
+        // id starts at 1 but vector index starts at 0
+        const int id = ids[i] - 1;
         const int read_pos = servo.ReadPos(id);
         const int diff = read_pos - past_positions[id];
 
@@ -145,5 +147,10 @@ void loop()
             servo.WriteSpe(id, error > 0 ? MAX_SPEED : -MAX_SPEED, 0);
     }
 
-    // Serial.printf("Target angles [%f, %f, %f], Motor loads -> Tilt: %d, Pan: %d, Elbow: %d\n", target_positions[TILT], target_positions[PAN], target_positions[ELBOW], servo.ReadLoad(TILT), servo.ReadLoad(PAN), servo.ReadLoad(ELBOW));
+    Serial.printf("online: [%s, %s, %s], Target angles [%f, %f, %f], Motor loads -> Tilt: %d, Pan: %d, Elbow: %d\n", 
+        servo.Ping(TILT) == TILT ? "true" : "false",
+        servo.Ping(PAN) == PAN ? "true" : "false",
+        servo.Ping(ELBOW) == ELBOW ? "true" : "false",
+        target_positions[TILT - 1], target_positions[PAN - 1], target_positions[ELBOW - 1],
+        servo.ReadLoad(TILT), servo.ReadLoad(PAN), servo.ReadLoad(ELBOW));
 }

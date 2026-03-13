@@ -394,7 +394,6 @@ namespace hi_can
                         ALL = 0x00,
                         WRIST_TILT = 0x01,
                         WRIST_PAN = 0x02,
-                        ELBOW = 0x03,
                     };
                     struct servo_address_t : public flagged_address_t
                     {
