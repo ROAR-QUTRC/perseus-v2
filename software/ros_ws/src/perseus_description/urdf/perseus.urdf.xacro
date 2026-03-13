@@ -70,7 +70,7 @@
     <xacro:include filename="$(find perseus_description)/urdf/motor_wheel.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/rocker.urdf.xacro"/>
     <xacro:include filename="$(find perseus_description)/urdf/sensors.urdf.xacro"/>
-    <xacro:include filename="$(find perseus_description)/urdf/camera_depth.urdf.xacro" />
+    <xacro:include filename="$(find perseus_description)/urdf/camera_d455_gazebo.xacro"/>
     <xacro:include filename="$(find realsense2_description)/urdf/_d455.urdf.xacro"/>
 
     <!-- An empty base_link to attach everything to -->
@@ -113,9 +113,10 @@
       <origin xyz="-0.15 0 0.25" rpy="0 0 0"/>
     </joint>
 
+  
   <xacro:sensor_d455 parent="${prefix}chassis" use_nominal_extrinsics="true">
     <origin xyz="0.055 0.0 0.184" rpy="0 0 0"/>
   </xacro:sensor_d455>
-
+  <xacro:camera_d455_gazebo prefix="${prefix}"/>
   </xacro:macro>
 </robot>
