@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(pointcloud_to_laserscan)
+project(pcl_to_lsr)
 
 find_package(ament_cmake REQUIRED)
 
