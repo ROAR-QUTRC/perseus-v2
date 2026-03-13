@@ -12,11 +12,9 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time", default=False)
     hardware_plugin = LaunchConfiguration("hardware_plugin")
 
-    # XACRO FILES
     robot_description_xacro = PathJoinSubstitution(
         [FindPackageShare("kibisis"), "urdf", "kibisis.urdf.xacro"]
     )
@@ -32,27 +30,24 @@ def generate_launch_description():
         ]
     )
 
-    # NODES
+    # Namespaced under /kibisis — robot_description published on
+    # /kibisis/robot_description, joint_states on /kibisis/joint_states
     robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
+        namespace="kibisis",
+        name="robot_state_publisher",
         parameters=[
             {
                 "robot_description": ParameterValue(
                     robot_description_content, value_type=str
                 ),
                 "use_sim_time": use_sim_time,
+                # Publish tf under kibisis/ prefix to avoid clashing with perseus
+                "frame_prefix": "kibisis/",
             }
         ],
         output="both",
-        remappings=[
-            ("/joint_states", "/kibisis/joint_states"),
-            ("/robot_description", "/kibisis/robot_description"),
-        ],
     )
 
-    return LaunchDescription(
-        [
-            robot_state_publisher,
-        ]
-    )
+    return LaunchDescription([robot_state_publisher])
