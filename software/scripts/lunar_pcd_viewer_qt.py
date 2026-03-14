@@ -17,6 +17,26 @@ import time
 from datetime import datetime, timedelta, timezone
 from functools import partial
 
+# ---------------------------------------------------------------------------
+# PyOpenGL context fix — must be applied before any OpenGL imports.
+# PyOpenGL's contextdata.getContext() cannot detect QOpenGLWidget contexts,
+# causing "no valid context" errors on every GL call that stores pointers.
+# Patching it to return a fallback context ID fixes rendering.
+# ---------------------------------------------------------------------------
+from OpenGL import contextdata as _ctxdata
+
+_orig_getContext = _ctxdata.getContext
+
+
+def _patched_getContext(context=None):
+    try:
+        return _orig_getContext(context)
+    except Exception:
+        return 0
+
+
+_ctxdata.getContext = _patched_getContext
+
 import numpy as np
 
 from PyQt5.QtCore import (
