@@ -1,0 +1,1433 @@
+#!/usr/bin/env python3
+"""
+Perseus Lunar PCD Viewer — Native Qt Desktop Application
+
+PyQt5 + pyqtgraph desktop viewer for lunar LiDAR point cloud data.
+All computation reuses lunar_pcd_compute.py (shared with the Dash browser viewer).
+
+Usage:
+    nixgl python3 lunar_pcd_viewer_qt.py <path_to.pcd>
+    nixgl python3 lunar_pcd_viewer_qt.py scan_1.pcd
+"""
+
+import argparse
+import math
+import sys
+import time
+from datetime import datetime, timedelta, timezone
+from functools import partial
+
+import numpy as np
+
+from PyQt5.QtCore import (
+    QObject,
+    Qt,
+    QThread,
+    QTimer,
+    pyqtSignal,
+)
+from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtWidgets import (
+    QApplication,
+    QButtonGroup,
+    QFrame,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QMainWindow,
+    QPushButton,
+    QRadioButton,
+    QScrollArea,
+    QSlider,
+    QSpinBox,
+    QSplitter,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
+
+import pyqtgraph as pg
+import pyqtgraph.opengl as gl
+
+from lunar_pcd_compute import (
+    ALL_LAYERS,
+    BATTERY_ENERGY_WH,
+    COMMS_CS,
+    DEFAULT_LAT,
+    DEFAULT_LON,
+    HAZARD_CS,
+    ICE_CS,
+    LAYER_INFO,
+    LUNAR_CS,
+    RANGE_CS,
+    SCORE_CS,
+    SHADOW_CS,
+    SOLAR_RAD_CS,
+    THEMES,
+    TOPO_CS,
+    build_sparse_graph,
+    colorscale_to_lut,
+    compute_battery_range,
+    compute_comms_coverage,
+    compute_energy_cost_grid,
+    compute_hazard_map,
+    compute_line_of_sight,
+    compute_lunar_cycle_illumination,
+    compute_mission_score,
+    compute_rover_footprint,
+    compute_shadow_map,
+    compute_slope_map,
+    compute_sun_direction,
+    compute_traversal_cost,
+    compute_wp_route,
+    find_path,
+    generate_ice_deposits,
+    load_pcd,
+    make_terrain_grid,
+    _world_to_grid,
+)
+
+
+# ---------------------------------------------------------------------------
+# Pre-build LUTs for all colour scales
+# ---------------------------------------------------------------------------
+
+LUTS = {
+    "lunar": colorscale_to_lut(LUNAR_CS),
+    "topo": colorscale_to_lut(TOPO_CS),
+    "shadow": colorscale_to_lut(SHADOW_CS),
+    "hazard": colorscale_to_lut(HAZARD_CS),
+    "comms": colorscale_to_lut(COMMS_CS),
+    "ice": colorscale_to_lut(ICE_CS),
+    "score": colorscale_to_lut(SCORE_CS),
+    "solar_rad": colorscale_to_lut(SOLAR_RAD_CS),
+    "range": colorscale_to_lut(RANGE_CS),
+}
+
+
+# ---------------------------------------------------------------------------
+# Theme helper
+# ---------------------------------------------------------------------------
+
+
+def _theme(name):
+    return THEMES.get(name, THEMES["dark"])
+
+
+def _stylesheet(t):
+    """Build a QSS stylesheet from a theme dict."""
+    return f"""
+    QMainWindow, QWidget {{
+        background-color: {t['page_bg']};
+        color: {t['font_color']};
+        font-family: "Courier New", monospace;
+        font-size: 11px;
+    }}
+    QLabel {{
+        color: {t['font_color']};
+    }}
+    QListWidget {{
+        background-color: {t['sidebar_bg']};
+        color: {t['font_color']};
+        border: 1px solid {t['grid_color']};
+        outline: none;
+    }}
+    QListWidget::item {{
+        padding: 4px 6px;
+    }}
+    QListWidget::item:selected {{
+        background-color: {t['btn_bg']};
+        color: {t['accent']};
+    }}
+    QPushButton {{
+        background-color: {t['btn_bg']};
+        color: {t['font_color']};
+        border: 1px solid {t['grid_color']};
+        padding: 4px 10px;
+        font-family: "Courier New", monospace;
+    }}
+    QPushButton:hover {{
+        border-color: {t['accent']};
+    }}
+    QGroupBox {{
+        border: 1px solid {t['grid_color']};
+        margin-top: 8px;
+        padding-top: 12px;
+        font-weight: bold;
+        color: {t['accent']};
+    }}
+    QGroupBox::title {{
+        subcontrol-origin: margin;
+        left: 6px;
+        padding: 0 4px;
+    }}
+    QSlider::groove:horizontal {{
+        height: 4px;
+        background: {t['grid_color']};
+    }}
+    QSlider::handle:horizontal {{
+        background: {t['accent']};
+        width: 12px;
+        margin: -4px 0;
+    }}
+    QSpinBox {{
+        background-color: {t['input_bg']};
+        color: {t['font_color']};
+        border: 1px solid {t['grid_color']};
+        padding: 2px;
+    }}
+    QRadioButton {{
+        color: {t['font_color']};
+    }}
+    QScrollArea {{
+        border: none;
+    }}
+    """
+
+
+# ---------------------------------------------------------------------------
+# Background worker for heavy computation
+# ---------------------------------------------------------------------------
+
+
+class ComputeWorker(QObject):
+    finished = pyqtSignal(dict)
+    progress = pyqtSignal(str)
+
+    def __init__(self, func, kwargs=None):
+        super().__init__()
+        self._func = func
+        self._kwargs = kwargs or {}
+
+    def run(self):
+        result = self._func(**self._kwargs)
+        self.finished.emit(result)
+
+
+# ---------------------------------------------------------------------------
+# Main window
+# ---------------------------------------------------------------------------
+
+
+class LunarPCDViewer(QMainWindow):
+    def __init__(self, pcd_path: str):
+        super().__init__()
+        self._pcd_path = pcd_path
+        self._theme_name = "dark"
+        self._current_layer = "3d"
+
+        # Interactive state
+        self._path_start = None
+        self._path_end = None
+        self._path_coords = None
+        self._path_cost = None
+        self._comms_mode = "base"  # "base" or "los"
+        self._base_pos = None
+        self._rover_pos_comms = None
+        self._los_data = None
+        self._rover_pos = None
+        self._rover_heading = 0
+        self._rover_data = None
+        self._lander_pos = None
+        self._battery_mode = "lander"  # "lander" or "wp"
+        self._waypoints = []
+        self._charge_pct = 100.0
+        self._wp_path = None
+        self._wp_cost = None
+        self._cycle_frame = 0
+        self._cycle_playing = False
+        self._range_cache = {}
+
+        # Computed data (filled during init)
+        self._points = None
+        self._intensity = None
+        self._xg = self._yg = self._zg = None
+        self._slope_deg = self._variance = None
+        self._hazard = None
+        self._illum0 = None
+        self._illum_stack = None
+        self._cycle_ts = None
+        self._solar_uptime = None
+        self._solar_radiation = None
+        self._psr_mask = None
+        self._ice_prob = None
+        self._drill_sites = None
+        self._comms_coverage = None
+        self._cost_grid = None
+        self._traversal_graph = None
+        self._energy_cost_grid = None
+        self._energy_graph = None
+        self._score_xg = self._score_yg = self._score_grid = None
+        self._score_comp = self._score_summary = None
+        self._shaded_stack = None
+        self._z_norm = None
+
+        # Sun controls state
+        self._sun_lat = DEFAULT_LAT
+        self._sun_lon = DEFAULT_LON
+        self._sun_date = datetime.now(timezone.utc)
+        self._sun_hour = self._sun_date.hour
+
+        self._build_ui()
+        self._load_data()
+
+    # -----------------------------------------------------------------------
+    # UI construction
+    # -----------------------------------------------------------------------
+
+    def _build_ui(self):
+        self.setWindowTitle("PERSEUS — Lunar PCD Viewer")
+        self.resize(1400, 900)
+
+        central = QWidget()
+        self.setCentralWidget(central)
+        root_layout = QVBoxLayout(central)
+        root_layout.setContentsMargins(4, 4, 4, 4)
+        root_layout.setSpacing(2)
+
+        # Header
+        self._header = QLabel("PERSEUS LUNAR PCD VIEWER — Loading...")
+        self._header.setAlignment(Qt.AlignCenter)
+        hdr_font = QFont("Courier New", 12, QFont.Bold)
+        self._header.setFont(hdr_font)
+        root_layout.addWidget(self._header)
+
+        # Stats bar
+        self._stats_label = QLabel("")
+        self._stats_label.setAlignment(Qt.AlignCenter)
+        root_layout.addWidget(self._stats_label)
+
+        # Splitter: sidebar | main view
+        splitter = QSplitter(Qt.Horizontal)
+        root_layout.addWidget(splitter, stretch=1)
+
+        # --- Sidebar ---
+        sidebar_scroll = QScrollArea()
+        sidebar_scroll.setWidgetResizable(True)
+        sidebar_scroll.setMinimumWidth(240)
+        sidebar_scroll.setMaximumWidth(300)
+        sidebar_widget = QWidget()
+        self._sidebar_layout = QVBoxLayout(sidebar_widget)
+        self._sidebar_layout.setContentsMargins(4, 4, 4, 4)
+        self._sidebar_layout.setSpacing(4)
+
+        # Layer selector
+        lbl = QLabel("LAYERS")
+        lbl.setFont(QFont("Courier New", 10, QFont.Bold))
+        self._sidebar_layout.addWidget(lbl)
+
+        self._layer_list = QListWidget()
+        for key, label in ALL_LAYERS:
+            item = QListWidgetItem(label)
+            item.setData(Qt.UserRole, key)
+            self._layer_list.addItem(item)
+        self._layer_list.setCurrentRow(0)
+        self._layer_list.currentRowChanged.connect(self._on_layer_changed)
+        self._layer_list.setMaximumHeight(250)
+        self._sidebar_layout.addWidget(self._layer_list)
+
+        # Sun controls group
+        self._sun_group = QGroupBox("SUN CONTROLS")
+        sun_lay = QVBoxLayout(self._sun_group)
+
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Lat:"))
+        self._spin_lat = QSpinBox()
+        self._spin_lat.setRange(-90, 90)
+        self._spin_lat.setValue(int(DEFAULT_LAT))
+        row.addWidget(self._spin_lat)
+        row.addWidget(QLabel("Lon:"))
+        self._spin_lon = QSpinBox()
+        self._spin_lon.setRange(-180, 180)
+        self._spin_lon.setValue(int(DEFAULT_LON))
+        row.addWidget(self._spin_lon)
+        sun_lay.addLayout(row)
+
+        row2 = QHBoxLayout()
+        row2.addWidget(QLabel("Hour:"))
+        self._slider_hour = QSlider(Qt.Horizontal)
+        self._slider_hour.setRange(0, 23)
+        self._slider_hour.setValue(self._sun_hour)
+        self._hour_label = QLabel(f"{self._sun_hour:02d}:00")
+        self._slider_hour.valueChanged.connect(
+            lambda v: self._hour_label.setText(f"{v:02d}:00")
+        )
+        row2.addWidget(self._slider_hour)
+        row2.addWidget(self._hour_label)
+        sun_lay.addLayout(row2)
+
+        self._btn_update_sun = QPushButton("Update Sun")
+        self._btn_update_sun.clicked.connect(self._on_update_sun)
+        sun_lay.addWidget(self._btn_update_sun)
+
+        self._sidebar_layout.addWidget(self._sun_group)
+
+        # Cycle playback
+        self._cycle_group = QGroupBox("LUNAR CYCLE")
+        cyc_lay = QVBoxLayout(self._cycle_group)
+        self._btn_cycle = QPushButton("Play Cycle")
+        self._btn_cycle.clicked.connect(self._toggle_cycle)
+        cyc_lay.addWidget(self._btn_cycle)
+        self._cycle_label = QLabel("Frame: 0/0")
+        cyc_lay.addWidget(self._cycle_label)
+        self._sidebar_layout.addWidget(self._cycle_group)
+
+        # Rover heading
+        self._rover_group = QGroupBox("ROVER HEADING")
+        rov_lay = QVBoxLayout(self._rover_group)
+        self._slider_heading = QSlider(Qt.Horizontal)
+        self._slider_heading.setRange(0, 359)
+        self._slider_heading.setValue(0)
+        self._heading_label = QLabel("0 deg")
+        self._slider_heading.valueChanged.connect(self._on_heading_changed)
+        rov_lay.addWidget(self._slider_heading)
+        rov_lay.addWidget(self._heading_label)
+        self._sidebar_layout.addWidget(self._rover_group)
+
+        # Comms mode
+        self._comms_group = QGroupBox("COMMS MODE")
+        comms_lay = QVBoxLayout(self._comms_group)
+        self._radio_base = QRadioButton("Move Base Station")
+        self._radio_los = QRadioButton("Check Rover LOS")
+        self._radio_base.setChecked(True)
+        bg = QButtonGroup(self)
+        bg.addButton(self._radio_base)
+        bg.addButton(self._radio_los)
+        self._radio_base.toggled.connect(
+            lambda checked: setattr(self, "_comms_mode", "base" if checked else "los")
+        )
+        comms_lay.addWidget(self._radio_base)
+        comms_lay.addWidget(self._radio_los)
+        self._sidebar_layout.addWidget(self._comms_group)
+
+        # Battery controls
+        self._battery_group = QGroupBox("BATTERY / RANGE")
+        bat_lay = QVBoxLayout(self._battery_group)
+        self._radio_lander = QRadioButton("Place Lander")
+        self._radio_wp = QRadioButton("Add Waypoint")
+        self._radio_lander.setChecked(True)
+        bg2 = QButtonGroup(self)
+        bg2.addButton(self._radio_lander)
+        bg2.addButton(self._radio_wp)
+        self._radio_lander.toggled.connect(
+            lambda checked: setattr(
+                self, "_battery_mode", "lander" if checked else "wp"
+            )
+        )
+        bat_lay.addWidget(self._radio_lander)
+        bat_lay.addWidget(self._radio_wp)
+
+        row3 = QHBoxLayout()
+        row3.addWidget(QLabel("Charge:"))
+        self._slider_charge = QSlider(Qt.Horizontal)
+        self._slider_charge.setRange(10, 100)
+        self._slider_charge.setValue(100)
+        self._charge_label = QLabel("100%")
+        self._slider_charge.valueChanged.connect(self._on_charge_changed)
+        row3.addWidget(self._slider_charge)
+        row3.addWidget(self._charge_label)
+        bat_lay.addLayout(row3)
+
+        self._btn_clear_wps = QPushButton("Clear Waypoints")
+        self._btn_clear_wps.clicked.connect(self._on_clear_waypoints)
+        bat_lay.addWidget(self._btn_clear_wps)
+        self._sidebar_layout.addWidget(self._battery_group)
+
+        # Theme toggle
+        self._btn_theme = QPushButton("Toggle Light/Dark")
+        self._btn_theme.clicked.connect(self._toggle_theme)
+        self._sidebar_layout.addWidget(self._btn_theme)
+
+        # Info panel
+        self._info_title = QLabel("")
+        self._info_title.setFont(QFont("Courier New", 10, QFont.Bold))
+        self._info_title.setWordWrap(True)
+        self._sidebar_layout.addWidget(self._info_title)
+
+        self._info_desc = QLabel("")
+        self._info_desc.setWordWrap(True)
+        self._sidebar_layout.addWidget(self._info_desc)
+
+        self._info_detail = QLabel("")
+        self._info_detail.setWordWrap(True)
+        self._sidebar_layout.addWidget(self._info_detail)
+
+        self._sidebar_layout.addStretch()
+        sidebar_scroll.setWidget(sidebar_widget)
+        splitter.addWidget(sidebar_scroll)
+
+        # --- Main view stack ---
+        self._stack = QStackedWidget()
+
+        # 3D view — lazy-created on first use to avoid OpenGL context errors
+        # when running without nixgl or on Wayland without EGL.
+        self._gl_view = None  # created in _ensure_gl_view()
+        self._gl_placeholder = QLabel("Loading 3D view...")
+        self._gl_placeholder.setAlignment(Qt.AlignCenter)
+        self._stack.addWidget(self._gl_placeholder)  # index 0 = placeholder/GL
+
+        # 2D view
+        self._plot_widget = pg.PlotWidget()
+        self._plot_widget.setAspectLocked(True)
+        self._plot_widget.showGrid(x=True, y=True, alpha=0.15)
+        self._plot_widget.getPlotItem().getAxis("bottom").setLabel("X (m)")
+        self._plot_widget.getPlotItem().getAxis("left").setLabel("Y (m)")
+        self._image_item = pg.ImageItem()
+        self._plot_widget.addItem(self._image_item)
+        self._plot_widget.scene().sigMouseClicked.connect(self._on_plot_clicked)
+        self._stack.addWidget(self._plot_widget)
+
+        splitter.addWidget(self._stack)
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 1)
+
+        # Overlay items (reused across layers)
+        self._overlay_items = []
+
+        # Cycle timer
+        self._cycle_timer = QTimer(self)
+        self._cycle_timer.setInterval(300)
+        self._cycle_timer.timeout.connect(self._cycle_step)
+
+        # Apply initial theme
+        self._apply_theme()
+
+    # -----------------------------------------------------------------------
+    # Theme
+    # -----------------------------------------------------------------------
+
+    def _apply_theme(self):
+        t = _theme(self._theme_name)
+        self.setStyleSheet(_stylesheet(t))
+        self._plot_widget.setBackground(t["panel_bg"])
+        if self._gl_view is not None:
+            self._gl_view.setBackgroundColor(t["panel_bg"])
+        # Update axis colors
+        for axis_name in ("bottom", "left"):
+            ax = self._plot_widget.getPlotItem().getAxis(axis_name)
+            ax.setPen(pg.mkPen(t["font_color"]))
+            ax.setTextPen(pg.mkPen(t["font_color"]))
+        self._header.setStyleSheet(f"color: {t['accent']};")
+
+    def _toggle_theme(self):
+        self._theme_name = "light" if self._theme_name == "dark" else "dark"
+        self._apply_theme()
+        self._show_layer(self._current_layer)
+
+    # -----------------------------------------------------------------------
+    # Data loading
+    # -----------------------------------------------------------------------
+
+    def _load_data(self):
+        """Load PCD and precompute all analysis layers."""
+        self._header.setText("PERSEUS — Loading point cloud...")
+        QApplication.processEvents()
+
+        t0 = time.monotonic()
+        print(f"[PERSEUS] Loading point cloud: {self._pcd_path}")
+        self._points, self._intensity = load_pcd(self._pcd_path)
+        n = len(self._points)
+        print(f"[PERSEUS] Loaded {n:,} points")
+
+        print("[PERSEUS] Interpolating terrain grid...")
+        self._xg, self._yg, self._zg = make_terrain_grid(self._points, resolution=120)
+        xg, yg, zg = self._xg, self._yg, self._zg
+
+        now = datetime.now(timezone.utc)
+        self._sun_date = now
+        sun0 = compute_sun_direction(now)
+        self._illum0 = compute_shadow_map(xg, yg, zg, sun0)
+
+        self._header.setText("PERSEUS — Computing analysis layers...")
+        QApplication.processEvents()
+
+        print("[PERSEUS] [1/8] Slope and hazard...")
+        self._slope_deg, self._variance = compute_slope_map(xg, yg, zg)
+        self._hazard = compute_hazard_map(self._slope_deg, self._variance)
+
+        print("[PERSEUS] [2/8] 28-day lunar illumination cycle...")
+        (
+            self._illum_stack,
+            self._cycle_ts,
+            self._solar_uptime,
+            self._solar_radiation,
+            self._psr_mask,
+        ) = compute_lunar_cycle_illumination(
+            xg, yg, zg, now, DEFAULT_LAT, DEFAULT_LON, n_steps=28
+        )
+
+        print("[PERSEUS] [3/8] Ice deposits...")
+        self._ice_prob, self._drill_sites = generate_ice_deposits(
+            xg, yg, zg, self._illum0
+        )
+
+        self._base_pos = (
+            (float(xg[0, 0]) + float(xg[0, -1])) / 2,
+            (float(yg[0, 0]) + float(yg[-1, 0])) / 2,
+        )
+
+        print("[PERSEUS] [4/8] Comms coverage...")
+        self._comms_coverage = compute_comms_coverage(xg, yg, zg, self._base_pos)
+
+        print("[PERSEUS] [5/8] Traversal cost grid...")
+        self._cost_grid = compute_traversal_cost(
+            self._slope_deg, self._hazard, self._solar_uptime, self._comms_coverage
+        )
+
+        print("[PERSEUS] [6/8] Mission scores...")
+        (
+            self._score_xg,
+            self._score_yg,
+            self._score_grid,
+            self._score_comp,
+            self._score_summary,
+        ) = compute_mission_score(
+            xg,
+            yg,
+            zg,
+            self._slope_deg,
+            self._solar_uptime,
+            self._comms_coverage,
+            self._hazard,
+            self._ice_prob,
+            cell_size=0.25,
+        )
+
+        print("[PERSEUS] [7/8] Energy cost grid...")
+        self._energy_cost_grid = compute_energy_cost_grid(
+            self._slope_deg, self._hazard
+        )
+
+        print("[PERSEUS] [8/8] Sparse graphs...")
+        self._traversal_graph = build_sparse_graph(self._cost_grid, xg, yg)
+        self._energy_graph = build_sparse_graph(self._energy_cost_grid, xg, yg)
+
+        # Precompute shaded stack for cycle playback
+        self._z_norm = (zg - zg.min()) / (zg.max() - zg.min() + 1e-9)
+        self._shaded_stack = [
+            self._z_norm * (0.3 + 0.7 * il) for il in self._illum_stack
+        ]
+
+        elapsed = time.monotonic() - t0
+        print(f"[PERSEUS] Total precomputation: {elapsed:.1f}s")
+
+        # Update header with stats
+        pts = self._points
+        xr = float(pts[:, 0].max()) - float(pts[:, 0].min())
+        yr = float(pts[:, 1].max()) - float(pts[:, 1].min())
+        zr = float(pts[:, 2].max()) - float(pts[:, 2].min())
+        self._header.setText(f"PERSEUS — {self._pcd_path}")
+        self._stats_label.setText(
+            f"{n:,} points | {xr:.1f} x {yr:.1f} x {zr:.1f} m | "
+            f"Grid: {xg.shape[0]}x{xg.shape[1]}"
+        )
+
+        # Show initial layer (elevation avoids OpenGL requirement on startup)
+        self._layer_list.setCurrentRow(1)  # "elevation"
+        self._current_layer = "elevation"
+        self._show_layer("elevation")
+        self._update_info("elevation")
+        self._update_sidebar_visibility("elevation")
+
+    # -----------------------------------------------------------------------
+    # Layer switching
+    # -----------------------------------------------------------------------
+
+    def _on_layer_changed(self, row):
+        if row < 0:
+            return
+        item = self._layer_list.item(row)
+        key = item.data(Qt.UserRole)
+        self._current_layer = key
+        self._show_layer(key)
+        self._update_info(key)
+        self._update_sidebar_visibility(key)
+
+    def _update_sidebar_visibility(self, layer):
+        """Show/hide sidebar groups depending on active layer."""
+        self._sun_group.setVisible(layer == "solar")
+        self._cycle_group.setVisible(layer == "solar")
+        self._rover_group.setVisible(layer == "rover")
+        self._comms_group.setVisible(layer == "comms")
+        self._battery_group.setVisible(layer == "range")
+
+    def _update_info(self, layer):
+        title, desc = LAYER_INFO.get(layer, ("", ""))
+        t = _theme(self._theme_name)
+        self._info_title.setText(title)
+        self._info_title.setStyleSheet(f"color: {t['accent']};")
+        self._info_desc.setText(desc)
+
+    def _ensure_gl_view(self):
+        """Lazy-create the GLViewWidget, replacing the placeholder at index 0."""
+        if self._gl_view is not None:
+            return True
+        try:
+            view = gl.GLViewWidget()
+            view.setCameraPosition(distance=5, elevation=30, azimuth=45)
+            t = _theme(self._theme_name)
+            view.setBackgroundColor(t["panel_bg"])
+            # Replace placeholder with GL widget
+            self._stack.removeWidget(self._gl_placeholder)
+            self._gl_placeholder.deleteLater()
+            self._stack.insertWidget(0, view)
+            self._gl_view = view
+            return True
+        except Exception as e:
+            print(f"[PERSEUS] OpenGL unavailable: {e}")
+            self._gl_placeholder.setText(
+                "3D view unavailable — run with nixgl for OpenGL support"
+            )
+            return False
+
+    def _show_layer(self, layer):
+        """Render the selected layer."""
+        self._clear_overlays()
+
+        if layer == "3d":
+            if self._ensure_gl_view():
+                self._stack.setCurrentIndex(0)
+                self._render_3d()
+            else:
+                self._stack.setCurrentIndex(0)  # show error placeholder
+        else:
+            self._stack.setCurrentIndex(1)
+            if layer == "elevation":
+                self._render_elevation()
+            elif layer == "contour":
+                self._render_contour()
+            elif layer == "solar":
+                self._render_solar()
+            elif layer == "hazard":
+                self._render_hazard()
+            elif layer == "path":
+                self._render_path()
+            elif layer == "comms":
+                self._render_comms()
+            elif layer == "resources":
+                self._render_resources()
+            elif layer == "rover":
+                self._render_rover()
+            elif layer == "psr":
+                self._render_psr()
+            elif layer == "score":
+                self._render_score()
+            elif layer == "range":
+                self._render_range()
+
+    # -----------------------------------------------------------------------
+    # Overlay management
+    # -----------------------------------------------------------------------
+
+    def _clear_overlays(self):
+        for item in self._overlay_items:
+            self._plot_widget.removeItem(item)
+        self._overlay_items.clear()
+
+    def _add_overlay(self, item):
+        self._plot_widget.addItem(item)
+        self._overlay_items.append(item)
+
+    # -----------------------------------------------------------------------
+    # Image rendering helper
+    # -----------------------------------------------------------------------
+
+    def _show_image(self, data, lut_key, zmin=None, zmax=None, xg=None, yg=None):
+        """Display a 2D grid as an ImageItem with the given LUT."""
+        if xg is None:
+            xg = self._xg
+        if yg is None:
+            yg = self._yg
+
+        lut = LUTS[lut_key]
+
+        if zmin is None:
+            zmin = float(np.nanmin(data))
+        if zmax is None:
+            zmax = float(np.nanmax(data))
+
+        rng = zmax - zmin
+        if rng < 1e-12:
+            rng = 1.0
+
+        normed = np.clip((data - zmin) / rng, 0.0, 1.0)
+        # Handle NaN as transparent
+        nan_mask = np.isnan(data)
+        idx = (normed * 255).astype(np.uint8)
+        rgba = lut[idx]  # (rows, cols, 4)
+        if nan_mask.any():
+            rgba[nan_mask, 3] = 0
+
+        # pyqtgraph ImageItem expects (cols, rows) for display with
+        # origin at bottom-left, but our data is (rows, cols) with row 0 = y_min.
+        # Transpose so axis 0 = x, axis 1 = y.
+        self._image_item.setImage(np.transpose(rgba, (1, 0, 2)), levels=None)
+
+        x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
+        y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
+        cols, rows = data.shape[1], data.shape[0]
+        # setRect(x, y, w, h) in scene/world coordinates
+        from PyQt5.QtCore import QRectF
+
+        self._image_item.setRect(QRectF(x_min, y_min, x_max - x_min, y_max - y_min))
+        self._plot_widget.setRange(
+            xRange=(x_min, x_max), yRange=(y_min, y_max), padding=0.02
+        )
+
+    # -----------------------------------------------------------------------
+    # Layer renderers
+    # -----------------------------------------------------------------------
+
+    def _render_3d(self):
+        """3D point cloud scatter plot."""
+        self._gl_view.clear()
+        pts = self._points
+        n = len(pts)
+        sub = max(1, n // 30000)
+        pts_s = pts[::sub]
+        z = pts_s[:, 2]
+
+        # Colour by elevation using lunar LUT
+        z_norm = (z - z.min()) / (z.max() - z.min() + 1e-9)
+        lut = LUTS["lunar"]
+        idx = (z_norm * 255).astype(np.uint8)
+        colors = lut[idx].astype(np.float32) / 255.0
+
+        scatter = gl.GLScatterPlotItem(
+            pos=pts_s, color=colors, size=1.5, pxMode=True
+        )
+        self._gl_view.addItem(scatter)
+
+        # Add grid
+        grid = gl.GLGridItem()
+        grid.setSize(
+            x=float(np.ptp(pts[:, 0])),
+            y=float(np.ptp(pts[:, 1])),
+        )
+        grid.translate(
+            float(np.mean(pts[:, 0])),
+            float(np.mean(pts[:, 1])),
+            float(np.min(pts[:, 2])),
+        )
+        self._gl_view.addItem(grid)
+
+    def _render_elevation(self):
+        self._show_image(self._zg, "topo")
+
+    def _render_contour(self):
+        self._show_image(self._zg, "topo")
+        # Overlay contour lines using IsocurveItem
+        zg = self._zg
+        z_min, z_max = float(zg.min()), float(zg.max())
+        n_levels = 15
+        levels = np.linspace(z_min, z_max, n_levels + 2)[1:-1]
+        t = _theme(self._theme_name)
+        accent_color = QColor(t["accent"])
+        accent_color.setAlpha(140)
+
+        xg, yg = self._xg, self._yg
+        x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
+        y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
+        rows, cols = zg.shape
+
+        for level in levels:
+            iso = pg.IsocurveItem(
+                data=zg, level=float(level), pen=pg.mkPen(accent_color, width=1)
+            )
+            # Scale isocurve from data coords (col, row) to world coords
+            from PyQt5.QtGui import QTransform
+
+            sx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
+            sy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
+            transform = QTransform()
+            transform.translate(x_min, y_min)
+            transform.scale(sx, sy)
+            iso.setTransform(transform)
+            self._add_overlay(iso)
+
+    def _render_solar(self):
+        if self._cycle_playing and self._shaded_stack:
+            frame = self._cycle_frame % len(self._shaded_stack)
+            self._show_image(self._shaded_stack[frame], "shadow", zmin=0.0, zmax=1.0)
+        else:
+            z_norm = self._z_norm
+            shaded = z_norm * (0.3 + 0.7 * self._illum0)
+            self._show_image(shaded, "shadow", zmin=0.0, zmax=1.0)
+
+    def _render_hazard(self):
+        self._show_image(self._hazard, "hazard", zmin=0.0, zmax=1.0)
+
+    def _render_path(self):
+        self._show_image(self._hazard, "hazard", zmin=0.0, zmax=1.0)
+        t = _theme(self._theme_name)
+        # Draw path
+        if self._path_coords and len(self._path_coords) > 0:
+            pc = np.asarray(self._path_coords)
+            line = pg.PlotDataItem(
+                pc[:, 0], pc[:, 1], pen=pg.mkPen(t["accent"], width=3)
+            )
+            self._add_overlay(line)
+        # Start marker
+        if self._path_start:
+            s = pg.ScatterPlotItem(
+                [self._path_start[0]],
+                [self._path_start[1]],
+                symbol="o",
+                size=14,
+                brush=pg.mkBrush("#00ff88"),
+                pen=pg.mkPen("w", width=2),
+            )
+            self._add_overlay(s)
+        # End marker
+        if self._path_end:
+            s = pg.ScatterPlotItem(
+                [self._path_end[0]],
+                [self._path_end[1]],
+                symbol="o",
+                size=14,
+                brush=pg.mkBrush("#cc0000"),
+                pen=pg.mkPen("w", width=2),
+            )
+            self._add_overlay(s)
+        # Cost annotation
+        if self._path_cost is not None:
+            self._info_detail.setText(f"Path cost: {self._path_cost:.1f}")
+        elif self._path_start is None:
+            self._info_detail.setText("Click to set START point")
+        elif self._path_end is None:
+            self._info_detail.setText("Click to set END point")
+
+    def _render_comms(self):
+        if self._comms_coverage is None:
+            return
+        self._show_image(self._comms_coverage, "comms", zmin=0.0, zmax=1.0)
+        t = _theme(self._theme_name)
+
+        # Shadow boundary contour at 0.15
+        xg, yg = self._xg, self._yg
+        x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
+        y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
+        rows, cols = self._comms_coverage.shape
+        iso = pg.IsocurveItem(
+            data=self._comms_coverage,
+            level=0.15,
+            pen=pg.mkPen("#ff4400", width=2, style=Qt.DotLine),
+        )
+        from PyQt5.QtGui import QTransform
+
+        sx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
+        sy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
+        transform = QTransform()
+        transform.translate(x_min, y_min)
+        transform.scale(sx, sy)
+        iso.setTransform(transform)
+        self._add_overlay(iso)
+
+        # Base marker
+        if self._base_pos:
+            s = pg.ScatterPlotItem(
+                [self._base_pos[0]],
+                [self._base_pos[1]],
+                symbol="d",
+                size=16,
+                brush=pg.mkBrush(t["accent"]),
+                pen=pg.mkPen("w", width=2),
+            )
+            self._add_overlay(s)
+            # Label
+            txt = pg.TextItem("BASE", color=t["accent"], anchor=(0.5, 1.2))
+            txt.setPos(self._base_pos[0], self._base_pos[1])
+            self._add_overlay(txt)
+
+        # Rover marker and LOS lines
+        if self._rover_pos_comms:
+            s = pg.ScatterPlotItem(
+                [self._rover_pos_comms[0]],
+                [self._rover_pos_comms[1]],
+                symbol="o",
+                size=12,
+                brush=pg.mkBrush(t["font_color"]),
+                pen=pg.mkPen("w", width=1),
+            )
+            self._add_overlay(s)
+            txt = pg.TextItem("ROVER", color=t["font_color"], anchor=(0.5, 1.2))
+            txt.setPos(self._rover_pos_comms[0], self._rover_pos_comms[1])
+            self._add_overlay(txt)
+
+            if self._los_data and self._base_pos:
+                bm = self._los_data["blocked_mask"]
+                n_seg = len(bm)
+                lx = np.linspace(
+                    self._base_pos[0], self._rover_pos_comms[0], n_seg + 1
+                )
+                ly = np.linspace(
+                    self._base_pos[1], self._rover_pos_comms[1], n_seg + 1
+                )
+                for i in range(0, n_seg, 3):
+                    color = "#cc0000" if bm[i] else "#00ff88"
+                    end = min(i + 4, n_seg)
+                    seg = pg.PlotDataItem(
+                        [lx[i], lx[end]],
+                        [ly[i], ly[end]],
+                        pen=pg.mkPen(color, width=3),
+                    )
+                    self._add_overlay(seg)
+
+                vis = "CLEAR" if self._los_data["visible"] else "BLOCKED"
+                self._info_detail.setText(f"LOS: {vis}")
+
+    def _render_resources(self):
+        self._show_image(self._ice_prob * 100, "ice", zmin=0.0, zmax=100.0)
+        # Drill site markers
+        if self._drill_sites:
+            ds = np.asarray(self._drill_sites)
+            s = pg.ScatterPlotItem(
+                ds[:, 0],
+                ds[:, 1],
+                symbol="star",
+                size=14,
+                brush=pg.mkBrush("#ff00ff"),
+                pen=pg.mkPen("w", width=1),
+            )
+            self._add_overlay(s)
+
+    def _render_rover(self):
+        self._show_image(self._slope_deg, "hazard")
+        t = _theme(self._theme_name)
+
+        # Contour lines on slope
+        xg, yg = self._xg, self._yg
+        x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
+        y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
+        rows, cols = self._slope_deg.shape
+        from PyQt5.QtGui import QTransform
+
+        sx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
+        sy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
+
+        for level in [5, 10, 15]:
+            iso = pg.IsocurveItem(
+                data=self._slope_deg,
+                level=float(level),
+                pen=pg.mkPen("rgba(0,255,170,80)", width=1),
+            )
+            transform = QTransform()
+            transform.translate(x_min, y_min)
+            transform.scale(sx, sy)
+            iso.setTransform(transform)
+            self._add_overlay(iso)
+
+        if self._rover_data:
+            # Body outline
+            bc = np.asarray(self._rover_data["body_corners"])
+            bx = list(bc[:, 0]) + [bc[0, 0]]
+            by = list(bc[:, 1]) + [bc[0, 1]]
+            body = pg.PlotDataItem(
+                bx, by, pen=pg.mkPen(t["accent"], width=2),
+                fillLevel=0, fillBrush=pg.mkBrush(0, 204, 255, 60),
+            )
+            self._add_overlay(body)
+
+            # Wheel markers
+            wp = np.asarray(self._rover_data["wheel_positions"])
+            contact = self._rover_data["contact_ok"]
+            colors = [
+                pg.mkBrush("#00ff88") if c else pg.mkBrush("#cc0000")
+                for c in contact
+            ]
+            for i in range(4):
+                s = pg.ScatterPlotItem(
+                    [wp[i, 0]],
+                    [wp[i, 1]],
+                    symbol="o",
+                    size=10,
+                    brush=colors[i],
+                    pen=pg.mkPen("w", width=1),
+                )
+                self._add_overlay(s)
+
+            # Info text
+            clr = self._rover_data["min_clearance"]
+            self._info_detail.setText(
+                f"Clearance: {clr:.2f}m | "
+                f"Pitch: {self._rover_data['tilt_pitch']:.1f} deg | "
+                f"Roll: {self._rover_data['tilt_roll']:.1f} deg"
+            )
+        else:
+            self._info_detail.setText("Click to place rover")
+
+    def _render_psr(self):
+        rad_kwh = self._solar_radiation / 1000.0
+        self._show_image(rad_kwh, "solar_rad")
+
+        # PSR boundary contour
+        xg, yg = self._xg, self._yg
+        x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
+        y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
+        rows, cols = self._psr_mask.shape
+        psr_float = self._psr_mask.astype(np.float32)
+        iso = pg.IsocurveItem(
+            data=psr_float, level=0.5, pen=pg.mkPen("#ff00ff", width=2)
+        )
+        from PyQt5.QtGui import QTransform
+
+        sx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
+        sy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
+        transform = QTransform()
+        transform.translate(x_min, y_min)
+        transform.scale(sx, sy)
+        iso.setTransform(transform)
+        self._add_overlay(iso)
+
+        # Stats
+        psr_count = int(np.sum(self._psr_mask))
+        total = self._psr_mask.size
+        psr_pct = psr_count / total * 100
+        rad_max = float(np.max(rad_kwh)) if np.any(rad_kwh > 0) else 0
+        self._info_detail.setText(
+            f"PSR: {psr_count:,} cells ({psr_pct:.1f}%)\n"
+            f"Peak: {rad_max:.0f} kWh/m^2 | Mean: {float(np.mean(rad_kwh)):.0f} kWh/m^2"
+        )
+
+    def _render_score(self):
+        self._show_image(
+            self._score_grid,
+            "score",
+            zmin=0.0,
+            zmax=100.0,
+            xg=self._score_xg,
+            yg=self._score_yg,
+        )
+        s = self._score_summary
+        self._info_detail.setText(
+            f"Mean: {s['mean_score']:.0f}/100 | Max: {s['max_score']:.0f}/100\n"
+            f"Best: ({s['best_location'][0]:.1f}, {s['best_location'][1]:.1f})\n"
+            f"Cells >70: {s['coverage_above_70']:.1f}%"
+        )
+
+    def _render_range(self):
+        t = _theme(self._theme_name)
+
+        if self._lander_pos is None:
+            # Show hazard background as placeholder
+            self._show_image(self._hazard, "hazard", zmin=0.0, zmax=1.0)
+            self._info_detail.setText("Click to place lander")
+            return
+
+        # Compute battery range
+        lander_key = (
+            round(self._lander_pos[0], 2),
+            round(self._lander_pos[1], 2),
+            round(self._charge_pct, 0),
+        )
+        if lander_key in self._range_cache:
+            cost_to_reach, reachable, range_pct = self._range_cache[lander_key]
+        else:
+            rows, cols = self._energy_cost_grid.shape
+            cost_to_reach, reachable, range_pct = compute_battery_range(
+                self._energy_graph,
+                rows,
+                cols,
+                self._xg,
+                self._yg,
+                self._lander_pos,
+                self._charge_pct,
+            )
+            self._range_cache[lander_key] = (cost_to_reach, reachable, range_pct)
+
+        display = np.clip(range_pct, 0, 100).copy()
+        display[~reachable] = np.nan
+        self._show_image(display, "range", zmin=0.0, zmax=100.0)
+
+        # Lander marker
+        s = pg.ScatterPlotItem(
+            [self._lander_pos[0]],
+            [self._lander_pos[1]],
+            symbol="d",
+            size=18,
+            brush=pg.mkBrush("#ffaa00"),
+            pen=pg.mkPen("w", width=2),
+        )
+        self._add_overlay(s)
+        txt = pg.TextItem("LANDER", color="#ffaa00", anchor=(0.5, 1.2))
+        txt.setPos(self._lander_pos[0], self._lander_pos[1])
+        self._add_overlay(txt)
+
+        # Waypoints
+        if self._waypoints:
+            wp = np.asarray(self._waypoints)
+            for i in range(len(wp)):
+                ws = pg.ScatterPlotItem(
+                    [wp[i, 0]],
+                    [wp[i, 1]],
+                    symbol="o",
+                    size=12,
+                    brush=pg.mkBrush(t["accent"]),
+                    pen=pg.mkPen("w", width=2),
+                )
+                self._add_overlay(ws)
+                wt = pg.TextItem(
+                    f"WP{i + 1}", color=t["accent"], anchor=(0.5, 1.2)
+                )
+                wt.setPos(wp[i, 0], wp[i, 1])
+                self._add_overlay(wt)
+
+        # Waypoint route
+        if self._wp_path and len(self._wp_path) > 0:
+            pp = np.asarray(self._wp_path)
+            line = pg.PlotDataItem(
+                pp[:, 0], pp[:, 1], pen=pg.mkPen(t["accent"], width=3)
+            )
+            self._add_overlay(line)
+
+        # Info
+        info = (
+            f"Charge: {self._charge_pct:.0f}% "
+            f"({BATTERY_ENERGY_WH * self._charge_pct / 100:.0f} Wh) | "
+            f"Reserve: 25% ({BATTERY_ENERGY_WH * 0.25:.0f} Wh)"
+        )
+        if self._wp_cost is not None:
+            info += f"\nRoute: {self._wp_cost:.1f} Wh"
+        self._info_detail.setText(info)
+
+    # -----------------------------------------------------------------------
+    # Click handling
+    # -----------------------------------------------------------------------
+
+    def _on_plot_clicked(self, event):
+        """Handle mouse clicks on the 2D plot view."""
+        if self._xg is None:
+            return
+
+        # Map scene coordinates to data coordinates
+        pos = event.scenePos()
+        vb = self._plot_widget.getPlotItem().getViewBox()
+        mouse_point = vb.mapSceneToView(pos)
+        wx, wy = float(mouse_point.x()), float(mouse_point.y())
+
+        # Check bounds
+        x_min = float(self._xg[0, 0])
+        x_max = float(self._xg[0, -1])
+        y_min = float(self._yg[0, 0])
+        y_max = float(self._yg[-1, 0])
+        if not (x_min <= wx <= x_max and y_min <= wy <= y_max):
+            return
+
+        layer = self._current_layer
+        if layer == "path":
+            self._handle_path_click(wx, wy)
+        elif layer == "comms":
+            self._handle_comms_click(wx, wy)
+        elif layer == "rover":
+            self._handle_rover_click(wx, wy)
+        elif layer == "range":
+            self._handle_range_click(wx, wy)
+
+    def _handle_path_click(self, wx, wy):
+        if self._path_start is None:
+            self._path_start = (wx, wy)
+            self._path_end = None
+            self._path_coords = None
+            self._path_cost = None
+            self._info_detail.setText(
+                f"Start: ({wx:.2f}, {wy:.2f}) — click for END"
+            )
+        elif self._path_end is None:
+            self._path_end = (wx, wy)
+            self._info_detail.setText("Computing path...")
+            QApplication.processEvents()
+
+            path_coords, cost = find_path(
+                self._traversal_graph,
+                self._cost_grid,
+                self._xg,
+                self._yg,
+                self._path_start,
+                self._path_end,
+            )
+            if path_coords:
+                self._path_coords = path_coords
+                self._path_cost = cost
+            else:
+                self._info_detail.setText("No path found!")
+            # Reset for next click pair
+            self._path_start_next = True
+        else:
+            # Reset
+            self._path_start = (wx, wy)
+            self._path_end = None
+            self._path_coords = None
+            self._path_cost = None
+        self._show_layer("path")
+
+    def _handle_comms_click(self, wx, wy):
+        if self._comms_mode == "base":
+            self._base_pos = (wx, wy)
+            self._info_detail.setText("Recomputing coverage...")
+            QApplication.processEvents()
+            self._comms_coverage = compute_comms_coverage(
+                self._xg, self._yg, self._zg, self._base_pos
+            )
+            # Recompute dependent layers
+            self._cost_grid = compute_traversal_cost(
+                self._slope_deg,
+                self._hazard,
+                self._solar_uptime,
+                self._comms_coverage,
+            )
+            self._traversal_graph = build_sparse_graph(
+                self._cost_grid, self._xg, self._yg
+            )
+            self._rover_pos_comms = None
+            self._los_data = None
+        else:
+            self._rover_pos_comms = (wx, wy)
+            if self._base_pos:
+                self._los_data = compute_line_of_sight(
+                    self._xg,
+                    self._yg,
+                    self._zg,
+                    self._base_pos,
+                    self._rover_pos_comms,
+                )
+        self._show_layer("comms")
+
+    def _handle_rover_click(self, wx, wy):
+        self._rover_pos = (wx, wy)
+        self._rover_data = compute_rover_footprint(
+            self._xg,
+            self._yg,
+            self._zg,
+            self._rover_pos,
+            rover_heading=self._rover_heading,
+        )
+        self._show_layer("rover")
+
+    def _handle_range_click(self, wx, wy):
+        if self._battery_mode == "lander":
+            self._lander_pos = (wx, wy)
+            self._waypoints.clear()
+            self._wp_path = None
+            self._wp_cost = None
+            self._range_cache.clear()
+        else:
+            if self._lander_pos is None:
+                self._info_detail.setText("Place lander first!")
+                return
+            self._waypoints.append((wx, wy))
+            # Recompute route through waypoints
+            if len(self._waypoints) >= 1:
+                wp_path, wp_cost = compute_wp_route(
+                    self._lander_pos,
+                    self._waypoints,
+                    self._traversal_graph,
+                    self._cost_grid,
+                    self._xg,
+                    self._yg,
+                )
+                self._wp_path = wp_path
+                self._wp_cost = wp_cost
+        self._show_layer("range")
+
+    # -----------------------------------------------------------------------
+    # Sidebar control handlers
+    # -----------------------------------------------------------------------
+
+    def _on_update_sun(self):
+        self._sun_lat = self._spin_lat.value()
+        self._sun_lon = self._spin_lon.value()
+        hour = self._slider_hour.value()
+        self._sun_date = self._sun_date.replace(hour=hour)
+        sun_dir = compute_sun_direction(self._sun_date, self._sun_lat, self._sun_lon)
+        self._illum0 = compute_shadow_map(self._xg, self._yg, self._zg, sun_dir)
+
+        elev = math.degrees(math.asin(np.clip(sun_dir[2], -1, 1)))
+        az = math.degrees(math.atan2(sun_dir[0], sun_dir[1])) % 360
+        status = "ABOVE" if sun_dir[2] > 0 else "BELOW"
+        pct = float(np.mean(self._illum0) * 100)
+        self._info_detail.setText(
+            f"Sun Az: {az:.1f} | Elev: {elev:.2f} | {status} | {pct:.0f}% lit"
+        )
+
+        if self._current_layer == "solar":
+            self._show_layer("solar")
+
+    def _toggle_cycle(self):
+        if self._cycle_playing:
+            self._cycle_playing = False
+            self._cycle_timer.stop()
+            self._btn_cycle.setText("Play Cycle")
+        else:
+            self._cycle_playing = True
+            self._cycle_frame = 0
+            self._btn_cycle.setText("Stop Cycle")
+            self._cycle_timer.start()
+
+    def _cycle_step(self):
+        if not self._shaded_stack:
+            return
+        n = len(self._shaded_stack)
+        self._cycle_frame = (self._cycle_frame + 1) % n
+        self._cycle_label.setText(f"Frame: {self._cycle_frame + 1}/{n}")
+
+        if self._current_layer == "solar":
+            self._show_image(
+                self._shaded_stack[self._cycle_frame], "shadow", zmin=0.0, zmax=1.0
+            )
+            # Update timestamp in info
+            if self._cycle_ts:
+                ts = self._cycle_ts[self._cycle_frame]
+                self._info_detail.setText(ts.strftime("Day %d %H:%M UTC"))
+
+    def _on_heading_changed(self, value):
+        self._rover_heading = value
+        self._heading_label.setText(f"{value} deg")
+        if self._rover_pos and self._current_layer == "rover":
+            self._rover_data = compute_rover_footprint(
+                self._xg,
+                self._yg,
+                self._zg,
+                self._rover_pos,
+                rover_heading=value,
+            )
+            self._show_layer("rover")
+
+    def _on_charge_changed(self, value):
+        self._charge_pct = float(value)
+        self._charge_label.setText(f"{value}%")
+        if self._lander_pos and self._current_layer == "range":
+            self._show_layer("range")
+
+    def _on_clear_waypoints(self):
+        self._waypoints.clear()
+        self._wp_path = None
+        self._wp_cost = None
+        if self._current_layer == "range":
+            self._show_layer("range")
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Perseus Lunar PCD Viewer (Qt Desktop)"
+    )
+    parser.add_argument("pcd_file", help="Path to .pcd file")
+    args = parser.parse_args()
+
+    app = QApplication(sys.argv)
+    app.setApplicationName("Perseus Lunar PCD Viewer")
+
+    viewer = LunarPCDViewer(args.pcd_file)
+    viewer.show()
+
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
