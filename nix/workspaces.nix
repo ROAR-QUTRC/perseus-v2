@@ -123,6 +123,8 @@ let
       postShellHook = ''
         # use CycloneDDS ROS middleware
         export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+        # Use our custom cyclonedds config
+        export CYCLONEDDS_URI="$(git rev-parse --show-toplevel)/software/dds/config/cyclonedds.xml"
         # enable coloured ros2 launch output
         export RCUTILS_COLORIZED_OUTPUT=1
         # fix locale issues
