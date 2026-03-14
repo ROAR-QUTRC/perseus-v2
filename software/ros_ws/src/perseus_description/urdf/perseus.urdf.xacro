@@ -113,10 +113,11 @@
       <origin xyz="-0.15 0 0.25" rpy="0 0 0"/>
     </joint>
 
-  
-  <xacro:sensor_d455 parent="${prefix}chassis" use_nominal_extrinsics="true">
-    <origin xyz="0.055 0.0 0.184" rpy="0 0 0"/>
-  </xacro:sensor_d455>
-  <xacro:camera_d455_gazebo prefix="${prefix}"/>
+    <xacro:sensor_d455 parent="${prefix}chassis" name="camera" use_nominal_extrinsics="true"></xacro:sensor_d455>
+      <origin xyz="0.055 0.0 0.184" rpy="0 0 0"/>
+    </xacro:sensor_d455>
+    <xacro:camera_d455_gazebo name="camera"/>
+
   </xacro:macro>
+  
 </robot>
