@@ -48,12 +48,6 @@
     <xacro:property name="bar_width" value="0.03"/>
     <xacro:property name="bar_height" value="0.03"/>
 
-    <!-- Depth Camera Properties -->
-    <xacro:property name="camera_mass" value="0.1"/>
-    <xacro:property name="camera_width" value="0.12"/>
-    <xacro:property name="camera_height" value="0.03"/>
-    <xacro:property name="camera_depth" value="0.025"/>
-
     <!-- 2D and 3D LIDAR Properties -->
     <xacro:property name="laser_2d_mass" value="0.1"/>
     <xacro:property name="laser_2d_radius" value="0.04"/>
@@ -113,7 +107,7 @@
       <origin xyz="-0.15 0 0.25" rpy="0 0 0"/>
     </joint>
 
-    <xacro:sensor_d455 parent="${prefix}chassis" name="camera" use_nominal_extrinsics="true"></xacro:sensor_d455>
+    <xacro:sensor_d455 parent="${prefix}chassis" name="camera" use_nominal_extrinsics="true">
       <origin xyz="0.055 0.0 0.184" rpy="0 0 0"/>
     </xacro:sensor_d455>
     <xacro:camera_d455_gazebo name="camera"/>

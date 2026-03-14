@@ -4,11 +4,12 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Converted Livox Scan1/Status1
+        - /Global Options1
         - /Converted Livox Scan1/Topic1
+        - /Depth Camera Point Cloud1/Autocompute Value Bounds1
         - /Fused Odometry1/Covariance1/Position1
       Splitter Ratio: 0.5
-    Tree Height: 715
+    Tree Height: 289
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -26,7 +27,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: Converted Livox Scan
+    SyncSource: Depth Camera Point Cloud
 Visualization Manager:
   Class: ""
   Displays:
@@ -92,9 +93,35 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
-        camera_link:
+        camera_accel_frame:
           Value: true
-        camera_link_optical:
+        camera_accel_optical_frame:
+          Value: true
+        camera_bottom_screw_frame:
+          Value: true
+        camera_color_frame:
+          Value: true
+        camera_color_optical_frame:
+          Value: true
+        camera_depth_frame:
+          Value: true
+        camera_depth_optical_frame:
+          Value: true
+        camera_gyro_frame:
+          Value: true
+        camera_gyro_optical_frame:
+          Value: true
+        camera_imu_optical_frame:
+          Value: true
+        camera_infra1_frame:
+          Value: true
+        camera_infra1_optical_frame:
+          Value: true
+        camera_infra2_frame:
+          Value: true
+        camera_infra2_optical_frame:
+          Value: true
+        camera_link:
           Value: true
         chassis:
           Value: true
@@ -116,10 +143,6 @@ Visualization Manager:
           Value: true
         livox_frame:
           Value: true
-        map:
-          Value: true
-        odom:
-          Value: true
         rear_left_motor:
           Value: true
         rear_left_wheel:
@@ -136,36 +159,52 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        map:
-          odom:
-            base_link:
-              base_footprint:
+        base_link:
+          base_footprint:
+            {}
+          chassis:
+            camera_bottom_screw_frame:
+              camera_link:
+                camera_accel_frame:
+                  camera_accel_optical_frame:
+                    {}
+                camera_color_frame:
+                  camera_color_optical_frame:
+                    {}
+                camera_depth_frame:
+                  camera_depth_optical_frame:
+                    {}
+                camera_gyro_frame:
+                  camera_gyro_optical_frame:
+                    camera_imu_optical_frame:
+                      {}
+                camera_infra1_frame:
+                  camera_infra1_optical_frame:
+                    {}
+                camera_infra2_frame:
+                  camera_infra2_optical_frame:
+                    {}
+            flange_bearing:
+              differential_bar:
                 {}
-              chassis:
-                camera_link:
-                  camera_link_optical:
-                    {}
-                flange_bearing:
-                  differential_bar:
-                    {}
-                laser_2d_frame:
+            laser_2d_frame:
+              {}
+            left_rocker:
+              front_left_motor:
+                front_left_wheel:
                   {}
-                left_rocker:
-                  front_left_motor:
-                    front_left_wheel:
-                      {}
-                  rear_left_motor:
-                    rear_left_wheel:
-                      {}
-                livox_frame:
+              rear_left_motor:
+                rear_left_wheel:
                   {}
-                right_rocker:
-                  front_right_motor:
-                    front_right_wheel:
-                      {}
-                  rear_right_motor:
-                    rear_right_wheel:
-                      {}
+            livox_frame:
+              {}
+            right_rocker:
+              front_right_motor:
+                front_right_wheel:
+                  {}
+              rear_right_motor:
+                rear_right_wheel:
+                  {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -194,15 +233,67 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        camera_accel_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_accel_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_bottom_screw_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_color_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_color_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_depth_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_depth_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_gyro_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_gyro_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_imu_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_infra1_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_infra1_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_infra2_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_infra2_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         camera_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        camera_link_optical:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         chassis:
           Alpha: 1
           Show Axes: false
@@ -297,9 +388,35 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
-        camera_link:
+        camera_accel_frame:
           Value: true
-        camera_link_optical:
+        camera_accel_optical_frame:
+          Value: true
+        camera_bottom_screw_frame:
+          Value: true
+        camera_color_frame:
+          Value: true
+        camera_color_optical_frame:
+          Value: true
+        camera_depth_frame:
+          Value: true
+        camera_depth_optical_frame:
+          Value: true
+        camera_gyro_frame:
+          Value: true
+        camera_gyro_optical_frame:
+          Value: true
+        camera_imu_optical_frame:
+          Value: true
+        camera_infra1_frame:
+          Value: true
+        camera_infra1_optical_frame:
+          Value: true
+        camera_infra2_frame:
+          Value: true
+        camera_infra2_optical_frame:
+          Value: true
+        camera_link:
           Value: true
         chassis:
           Value: true
@@ -321,10 +438,6 @@ Visualization Manager:
           Value: true
         livox_frame:
           Value: true
-        map:
-          Value: true
-        odom:
-          Value: true
         rear_left_motor:
           Value: true
         rear_left_wheel:
@@ -341,36 +454,52 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        map:
-          odom:
-            base_link:
-              base_footprint:
+        base_link:
+          base_footprint:
+            {}
+          chassis:
+            camera_bottom_screw_frame:
+              camera_link:
+                camera_accel_frame:
+                  camera_accel_optical_frame:
+                    {}
+                camera_color_frame:
+                  camera_color_optical_frame:
+                    {}
+                camera_depth_frame:
+                  camera_depth_optical_frame:
+                    {}
+                camera_gyro_frame:
+                  camera_gyro_optical_frame:
+                    camera_imu_optical_frame:
+                      {}
+                camera_infra1_frame:
+                  camera_infra1_optical_frame:
+                    {}
+                camera_infra2_frame:
+                  camera_infra2_optical_frame:
+                    {}
+            flange_bearing:
+              differential_bar:
                 {}
-              chassis:
-                camera_link:
-                  camera_link_optical:
-                    {}
-                flange_bearing:
-                  differential_bar:
-                    {}
-                laser_2d_frame:
+            laser_2d_frame:
+              {}
+            left_rocker:
+              front_left_motor:
+                front_left_wheel:
                   {}
-                left_rocker:
-                  front_left_motor:
-                    front_left_wheel:
-                      {}
-                  rear_left_motor:
-                    rear_left_wheel:
-                      {}
-                livox_frame:
+              rear_left_motor:
+                rear_left_wheel:
                   {}
-                right_rocker:
-                  front_right_motor:
-                    front_right_wheel:
-                      {}
-                  rear_right_motor:
-                    rear_right_wheel:
-                      {}
+            livox_frame:
+              {}
+            right_rocker:
+              front_right_motor:
+                front_right_wheel:
+                  {}
+              rear_right_motor:
+                rear_right_wheel:
+                  {}
       Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/Image
@@ -450,7 +579,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rgbd_camera/points
+        Value: /camera/camera/depth/color/points
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -589,7 +718,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: map
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -631,7 +760,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 1.5700000524520874
+      Angle: 1.4750028848648071
       Class: rviz_default_plugins/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -641,21 +770,21 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: -65
+      Scale: -237.69175720214844
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
-      X: 3.469463586807251
-      Y: 2.5535531044006348
+      X: 0.6811956763267517
+      Y: 0.008449001237750053
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 2022
+  Height: 1011
   Hide Left Dock: false
   Hide Right Dock: false
   Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000043d00000666fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b000000b200fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000700000033d0000018600fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006501000003b90000031d0000002800ffffff000000010000015d00000666fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730100000070000006660000013800fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000f00000000d4fc0100000002fb0000000800540069006d0065010000000000000f000000047a00fffffffb0000000800540069006d006501000000000000045000000000000000000000094e0000066600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001b7000002bbfc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005d00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003f00000161000000cc00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006501000001a6000001540000001700ffffff000000010000015d000002bbfc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003f000002bb000000a900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000780000000d4fc0100000002fb0000000800540069006d00650100000000000007800000026f00fffffffb0000000800540069006d0065010000000000000450000000000000000000000460000002bb00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -664,6 +793,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 3840
-  X: 2928
-  Y: 64
+  Width: 1920
+  X: 1920
+  Y: 299
