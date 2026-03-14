@@ -300,7 +300,7 @@ behavior_server:
     transform_timeout: 0.2 # Increased from 0.1 for timing tolerance
     simulate_ahead_time: 2.0
     max_rotational_vel: 0.5 # # Reduced from 1.0 for smoother rotation for EFK
-    min_rotational_vel: 0.2 # Reduced from 0.
+    min_rotational_vel: 0.27 # Reduced from 0.5 to ensure it can still rotate at low speeds without stopping
     rotational_acc_lim: 3.2 # increased from 2.0 for better responsiveness
     enable_stamped_cmd_vel: true
 waypoint_follower:
@@ -318,8 +318,8 @@ velocity_smoother:
     smoothing_frequency: 20.0 # Increased from 10.0 for smoother operation
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.15, 0.0, 0.2] # [x, y, theta], Reduced max velocities for stability
-    min_velocity: [-0.15, 0.0, -0.2]
+    max_velocity: [0.25, 0.0, 0.35] # [x, y, theta], Reduced max velocities for stability
+    min_velocity: [-0.25, 0.0, -0.35]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]
