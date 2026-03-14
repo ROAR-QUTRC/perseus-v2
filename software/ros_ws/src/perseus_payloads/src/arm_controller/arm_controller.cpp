@@ -118,7 +118,8 @@ void ArmController::_receive_rsbl_status(const std_msgs::msg::Float64MultiArray:
 void ArmController::_handle_arm_control(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
 {
     // RCLCPP_INFO(this->get_logger(), "Received arm control message with %zu positions: [%f, %f, %f, %f, %f]", msg->data.size(), msg->data[0], msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
-    if (msg->data.size() < 5) {
+    if (msg->data.size() < 5)
+    {
         RCLCPP_WARN(this->get_logger(), "Received arm control message with insufficient positions");
         return;
     }
@@ -152,9 +153,9 @@ void ArmController::_handle_arm_control(const std_msgs::msg::Float64MultiArray::
 
     // Prepare RSBL control message
     actuator_msgs::msg::Actuators rsbl_msg;
-    rsbl_msg.position = { msg->data[2], msg->data[3], msg->data[4] };
+    rsbl_msg.position = {msg->data[2], msg->data[3], msg->data[4]};
     // rsbl_msg.velocity = { velocities[3], velocities[4], velocities[5] };
-    rsbl_msg.velocity = { VEL, VEL, VEL };
+    rsbl_msg.velocity = {VEL, VEL, VEL};
     _rsbl_control_publisher->publish(rsbl_msg);
 
     // RCLCPP_INFO(this->get_logger(), "Published:\nRMD -> [1: %f, 2: %f]\nRSBL -> [3: %f, 4: %f, 5: %f]", wrist_pos_a, wrist_pos_b, msg->data[2], msg->data[3], msg->data[4]);
