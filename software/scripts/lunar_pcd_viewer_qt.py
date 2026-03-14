@@ -1046,9 +1046,8 @@ class LunarPCDViewer(QMainWindow):
         z_min, z_max = float(zg.min()), float(zg.max())
         n_levels = 12
         levels = np.linspace(z_min, z_max, n_levels + 2)[1:-1]
-        t = _theme(self._theme_name)
-        accent_color = QColor(t["accent"])
-        accent_color.setAlpha(160)
+        contour_color = QColor("#000000")
+        contour_color.setAlpha(200)
 
         xg, yg = self._xg, self._yg
         x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
@@ -1060,7 +1059,7 @@ class LunarPCDViewer(QMainWindow):
         for level in levels:
             iso = pg.IsocurveItem(
                 data=zg, level=float(level),
-                pen=pg.mkPen(accent_color, width=1.5),
+                pen=pg.mkPen(contour_color, width=1.5),
             )
             transform = QTransform()
             transform.translate(x_min, y_min)
@@ -1081,7 +1080,7 @@ class LunarPCDViewer(QMainWindow):
                 ly = y_min + lr * sy
                 txt = pg.TextItem(
                     f"{level:.2f}m",
-                    color=t["accent"],
+                    color="#000000",
                     anchor=(0.5, 0.5),
                 )
                 txt.setFont(QFont("Courier New", 8))
