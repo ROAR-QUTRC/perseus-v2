@@ -330,6 +330,29 @@ class LunarPCDViewer(QMainWindow):
         self._stats_label.setAlignment(Qt.AlignCenter)
         root_layout.addWidget(self._stats_label)
 
+        # Global lunar lat/long settings bar
+        loc_bar = QHBoxLayout()
+        loc_bar.addWidget(QLabel("Lunar Lat:"))
+        self._global_lat = QSpinBox()
+        self._global_lat.setRange(-90, 90)
+        self._global_lat.setValue(int(DEFAULT_LAT))
+        self._global_lat.setSuffix(" deg")
+        loc_bar.addWidget(self._global_lat)
+        loc_bar.addWidget(QLabel("Lon:"))
+        self._global_lon = QSpinBox()
+        self._global_lon.setRange(-180, 180)
+        self._global_lon.setValue(int(DEFAULT_LON))
+        self._global_lon.setSuffix(" deg")
+        loc_bar.addWidget(self._global_lon)
+        self._btn_apply_location = QPushButton("Apply Location")
+        self._btn_apply_location.clicked.connect(self._on_apply_location)
+        loc_bar.addWidget(self._btn_apply_location)
+        self._location_info = QLabel(f"Lat {int(DEFAULT_LAT)} Lon {int(DEFAULT_LON)}")
+        self._location_info.setFont(QFont("Courier New", 9))
+        loc_bar.addWidget(self._location_info)
+        loc_bar.addStretch()
+        root_layout.addLayout(loc_bar)
+
         # Layer description banner — spans full width above the main content
         self._desc_bar = QLabel("")
         self._desc_bar.setObjectName("descBar")
@@ -568,21 +591,15 @@ class LunarPCDViewer(QMainWindow):
         splitter.addWidget(sidebar_scroll)
 
         # --- Main view container ---
-        # Use a plain container with show/hide instead of QStackedWidget,
-        # because QStackedWidget destroys the GL context when hiding.
+        # Use a stacked layout with manual switching instead of
+        # QStackedWidget, because QStackedWidget destroys GL contexts.
+        from PyQt5.QtWidgets import QStackedLayout
+
         self._view_container = QWidget()
-        self._view_layout = QVBoxLayout(self._view_container)
-        self._view_layout.setContentsMargins(0, 0, 0, 0)
+        self._view_stack = QStackedLayout(self._view_container)
+        self._view_stack.setStackingMode(QStackedLayout.StackAll)
 
-        # 3D view — lazy-created on first use
-        self._gl_view = None
-        self._gl_ok = False
-        self._gl_placeholder = QLabel(
-            "3D view — click '3D TERRAIN' layer to activate"
-        )
-        self._gl_placeholder.setAlignment(Qt.AlignCenter)
-
-        # 2D view
+        # 2D view (index 0)
         self._plot_widget = pg.PlotWidget()
         self._plot_widget.setAspectLocked(True)
         self._plot_widget.showGrid(x=True, y=True, alpha=0.15)
@@ -591,15 +608,16 @@ class LunarPCDViewer(QMainWindow):
         self._image_item = pg.ImageItem()
         self._plot_widget.addItem(self._image_item)
         self._plot_widget.scene().sigMouseClicked.connect(self._on_plot_clicked)
-        # Enable mouse move tracking for hover readout
         self._hover_proxy = pg.SignalProxy(
             self._plot_widget.scene().sigMouseMoved,
             rateLimit=30,
             slot=self._on_plot_hover,
         )
+        self._view_stack.addWidget(self._plot_widget)
 
-        self._view_layout.addWidget(self._plot_widget)
-        # Placeholder and GL view are added/removed dynamically
+        # 3D view — lazy-created on first use
+        self._gl_view = None
+        self._gl_ok = False
 
         splitter.addWidget(self._view_container)
         splitter.setStretchFactor(0, 0)
@@ -836,8 +854,7 @@ class LunarPCDViewer(QMainWindow):
             view.setCameraPosition(distance=5, elevation=30, azimuth=45)
             t = _theme(self._theme_name)
             view.setBackgroundColor(t["panel_bg"])
-            self._view_layout.addWidget(view)
-            view.hide()  # start hidden; _show_layer will show it
+            self._view_stack.addWidget(view)  # index 1
             self._gl_view = view
             self._gl_ok = True
             return True
@@ -852,17 +869,19 @@ class LunarPCDViewer(QMainWindow):
 
         if layer == "3d":
             if self._ensure_gl_view():
-                self._plot_widget.hide()
-                self._gl_view.show()
+                self._gl_view.raise_()
+                self._gl_view.setVisible(True)
+                self._plot_widget.setVisible(False)
                 self._render_3d()
             else:
                 self._info_detail.setText(
                     "3D unavailable — run with nixgl"
                 )
         else:
+            self._plot_widget.raise_()
+            self._plot_widget.setVisible(True)
             if self._gl_view is not None:
-                self._gl_view.hide()
-            self._plot_widget.show()
+                self._gl_view.setVisible(False)
             if layer == "elevation":
                 self._render_elevation()
             elif layer == "contour":
@@ -1703,6 +1722,59 @@ class LunarPCDViewer(QMainWindow):
     # -----------------------------------------------------------------------
     # Sidebar control handlers
     # -----------------------------------------------------------------------
+
+    def _on_apply_location(self):
+        """Recompute all solar-dependent layers with the new lat/lon."""
+        lat = self._global_lat.value()
+        lon = self._global_lon.value()
+        self._sun_lat = lat
+        self._sun_lon = lon
+        # Sync the sun controls spinboxes too
+        self._spin_lat.setValue(lat)
+        self._spin_lon.setValue(lon)
+
+        self._location_info.setText(f"Recomputing for Lat {lat} Lon {lon}...")
+        QApplication.processEvents()
+
+        # Recompute current shadow
+        sun_dir = compute_sun_direction(self._sun_date, lat, lon)
+        self._illum0 = compute_shadow_map(self._xg, self._yg, self._zg, sun_dir)
+
+        # Recompute full lunar cycle
+        (
+            self._illum_stack,
+            self._cycle_ts,
+            self._solar_uptime,
+            self._solar_radiation,
+            self._psr_mask,
+        ) = compute_lunar_cycle_illumination(
+            self._xg, self._yg, self._zg, self._sun_date,
+            lat, lon, n_steps=28,
+        )
+        self._z_norm = (self._zg - self._zg.min()) / (
+            self._zg.max() - self._zg.min() + 1e-9
+        )
+        self._shaded_stack = [
+            self._z_norm * (0.3 + 0.7 * il) for il in self._illum_stack
+        ]
+
+        # Recompute ice deposits (depends on illumination)
+        self._ice_prob, self._drill_sites = generate_ice_deposits(
+            self._xg, self._yg, self._zg, self._illum0,
+        )
+
+        # Recompute mission scores
+        (
+            self._score_xg, self._score_yg, self._score_grid,
+            self._score_comp, self._score_summary,
+        ) = compute_mission_score(
+            self._xg, self._yg, self._zg, self._slope_deg,
+            self._solar_uptime, self._comms_coverage,
+            self._hazard, self._ice_prob, cell_size=0.25,
+        )
+
+        self._location_info.setText(f"Lat {lat} Lon {lon}")
+        self._show_layer(self._current_layer)
 
     def _on_update_sun(self):
         self._sun_lat = self._spin_lat.value()
