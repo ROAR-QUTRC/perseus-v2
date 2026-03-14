@@ -626,7 +626,7 @@ class LunarPCDViewer(QMainWindow):
 
         # 3D view — lazy-created on first use
         self._gl_view = None
-        self._gl_ok = False
+        self._gl_ok = None  # None = not yet tried, True/False = result
 
         splitter.addWidget(self._view_container)
         splitter.setStretchFactor(0, 0)
@@ -857,7 +857,7 @@ class LunarPCDViewer(QMainWindow):
         if self._gl_view is not None:
             return True
         if self._gl_ok is False:
-            return False  # already tried and failed
+            return False  # already tried and failed (not None)
         try:
             view = gl.GLViewWidget()
             view.setCameraPosition(distance=5, elevation=30, azimuth=45)
@@ -878,10 +878,15 @@ class LunarPCDViewer(QMainWindow):
 
         if layer == "3d":
             if self._ensure_gl_view():
-                self._gl_view.raise_()
-                self._gl_view.setVisible(True)
                 self._plot_widget.setVisible(False)
+                self._gl_view.setVisible(True)
+                self._gl_view.raise_()
+                QApplication.processEvents()
                 self._render_3d()
+                print(
+                    f"[PERSEUS] 3D: size={self._gl_view.width()}x"
+                    f"{self._gl_view.height()}, items={len(self._gl_view.items)}"
+                )
             else:
                 self._info_detail.setText(
                     "3D unavailable — run with nixgl"
