@@ -117,12 +117,11 @@ void ArmController::_receive_rsbl_status(const std_msgs::msg::Float64MultiArray:
 
 void ArmController::_handle_arm_control(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
 {
-    RCLCPP_INFO(this->get_logger(), "Received arm control message with %zu positions", msg->data.size());
-    RCLCPP_INFO(this->get_logger(), "Data [%f, %f, %f, %f, %f]", msg->data[0], msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
-    // if (msg->data.size() < 5) {
-    //     RCLCPP_WARN(this->get_logger(), "Received arm control message with insufficient positions");
-    //     return;
-    // }
+    // RCLCPP_INFO(this->get_logger(), "Received arm control message with %zu positions: [%f, %f, %f, %f, %f]", msg->data.size(), msg->data[0], msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
+    if (msg->data.size() < 5) {
+        RCLCPP_WARN(this->get_logger(), "Received arm control message with insufficient positions");
+        return;
+    }
 
     // double target_ms = 3000.0;  // Default time to reach target in ms
     // std::vector<double> velocities;
@@ -138,36 +137,27 @@ void ArmController::_handle_arm_control(const std_msgs::msg::Float64MultiArray::
 
     const uint8_t WRIST_PAN_ID = static_cast<size_t>(motor_id_t::WRIST_PAN) - 1;  // index starts at zero but id's start at 1
     const uint8_t WRIST_TILT_ID = static_cast<size_t>(motor_id_t::WRIST_TILT) - 1;
-    RCLCPP_INFO(this->get_logger(), "IDs: Pan %d, Tilt %d", WRIST_PAN_ID, WRIST_TILT_ID);
-    const double wrist_pan_target = msg->data[WRIST_PAN_ID];
-    const double wrist_tilt_target = msg->data[WRIST_TILT_ID];
-    RCLCPP_INFO(this->get_logger(), "Arm control targets - Pan: %.2f, Tilt: %.2f", wrist_pan_target, wrist_tilt_target);
 
-    double wrist_pos_a = wrist_pan_target + wrist_tilt_target;
-    double wrist_pos_b = wrist_pan_target - wrist_tilt_target;
-    RCLCPP_INFO(this->get_logger(), "Calculated wrist positions - A: %.2f, B: %.2f", wrist_pos_a, wrist_pos_b);
+    double wrist_pos_a = msg->data[WRIST_PAN_ID] + msg->data[WRIST_TILT_ID];
+    double wrist_pos_b = msg->data[WRIST_PAN_ID] - msg->data[WRIST_TILT_ID];
 
     // Prepare RMD control message
     actuator_msgs::msg::Actuators rmd_msg;
-    // rmd_msg.position.reserve(2);
     rmd_msg.position.push_back(wrist_pos_a);  // Ensure we have 2 positions for the 2 RMD servos
     rmd_msg.position.push_back(wrist_pos_b);
-    // rmd_msg.position[WRIST_PAN_ID] = wrist_pos_a;
-    // rmd_msg.position[WRIST_TILT_ID] = wrist_pos_b;
     constexpr double VEL = UINT16_MAX * 0.5;
-    // rmd_msg.velocity = { VEL, VEL };
     rmd_msg.velocity.push_back(VEL);
     rmd_msg.velocity.push_back(VEL);
-    // rmd_msg.velocity = {velocities[0], velocities[1], velocities[2]};
     _rmd_control_publisher->publish(rmd_msg);
-    RCLCPP_INFO(this->get_logger(), "Published RMD control message");
 
-    // // Prepare RSBL control message
-    // actuator_msgs::msg::Actuators rsbl_msg;
-    // rsbl_msg.position = { msg->data[3], msg->data[4] };
-    // rsbl_msg.velocity = { velocities[3], velocities[4] };
-    // rsbl_msg.normalized = { target_ms, 0.0 };
-    // _rsbl_control_publisher->publish(rsbl_msg);
+    // Prepare RSBL control message
+    actuator_msgs::msg::Actuators rsbl_msg;
+    rsbl_msg.position = { msg->data[2], msg->data[3], msg->data[4] };
+    // rsbl_msg.velocity = { velocities[3], velocities[4], velocities[5] };
+    rsbl_msg.velocity = { VEL, VEL, VEL };
+    _rsbl_control_publisher->publish(rsbl_msg);
+
+    // RCLCPP_INFO(this->get_logger(), "Published:\nRMD -> [1: %f, 2: %f]\nRSBL -> [3: %f, 4: %f, 5: %f]", wrist_pos_a, wrist_pos_b, msg->data[2], msg->data[3], msg->data[4]);
 }
 
 void ArmController::cleanup()
