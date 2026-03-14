@@ -227,7 +227,7 @@ class LunarPCDViewer(QMainWindow):
         super().__init__()
         self._pcd_path = pcd_path
         self._theme_name = "dark"
-        self._current_layer = "3d"
+        self._current_layer = "elevation"
 
         # Interactive state
         self._path_start = None
@@ -343,7 +343,8 @@ class LunarPCDViewer(QMainWindow):
             item = QListWidgetItem(label)
             item.setData(Qt.UserRole, key)
             self._layer_list.addItem(item)
-        self._layer_list.setCurrentRow(0)
+        # Connect AFTER population to avoid triggering _on_layer_changed
+        # before data is loaded
         self._layer_list.currentRowChanged.connect(self._on_layer_changed)
         self._layer_list.setMaximumHeight(250)
         self._sidebar_layout.addWidget(self._layer_list)
@@ -560,6 +561,7 @@ class LunarPCDViewer(QMainWindow):
             slot=self._on_plot_hover,
         )
         self._stack.addWidget(self._plot_widget)
+        self._stack.setCurrentIndex(1)  # show 2D view during loading
 
         splitter.addWidget(self._stack)
         splitter.setStretchFactor(0, 0)
