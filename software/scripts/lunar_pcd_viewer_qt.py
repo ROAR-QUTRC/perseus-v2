@@ -365,9 +365,9 @@ class LunarPCDViewer(QMainWindow):
         self._desc_bar.setObjectName("descBar")
         self._desc_bar.setWordWrap(True)
         self._desc_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self._desc_bar.setFont(QFont("Courier New", 10))
-        self._desc_bar.setMinimumHeight(40)
-        self._desc_bar.setContentsMargins(8, 4, 8, 4)
+        self._desc_bar.setFont(QFont("Courier New", 14))
+        self._desc_bar.setMinimumHeight(70)
+        self._desc_bar.setContentsMargins(12, 8, 12, 8)
         root_layout.addWidget(self._desc_bar)
 
         # Splitter: sidebar | main view
@@ -389,16 +389,25 @@ class LunarPCDViewer(QMainWindow):
         lbl.setFont(QFont("Courier New", 10, QFont.Bold))
         self._sidebar_layout.addWidget(lbl)
 
+        # Layer list — contour is merged into elevation as a toggle
+        self._viewer_layers = [
+            (k, l) for k, l in ALL_LAYERS if k != "contour"
+        ]
         self._layer_list = QListWidget()
-        for key, label in ALL_LAYERS:
+        for key, label in self._viewer_layers:
             item = QListWidgetItem(label)
             item.setData(Qt.UserRole, key)
             self._layer_list.addItem(item)
-        # Connect AFTER population to avoid triggering _on_layer_changed
-        # before data is loaded
         self._layer_list.currentRowChanged.connect(self._on_layer_changed)
-        self._layer_list.setMaximumHeight(250)
+        self._layer_list.setMaximumHeight(230)
         self._sidebar_layout.addWidget(self._layer_list)
+
+        # Contour overlay toggle (applies to elevation layer)
+        from PyQt5.QtWidgets import QCheckBox
+        self._chk_contours = QCheckBox("Show contour lines")
+        self._chk_contours.setChecked(True)
+        self._chk_contours.toggled.connect(self._on_contour_toggled)
+        self._sidebar_layout.addWidget(self._chk_contours)
 
         # ── MISSION SETUP — always visible ──
         setup_group = QGroupBox("MISSION SETUP")
@@ -709,7 +718,7 @@ class LunarPCDViewer(QMainWindow):
             self._solar_radiation,
             self._psr_mask,
         ) = compute_lunar_cycle_illumination(
-            xg, yg, zg, now, DEFAULT_LAT, DEFAULT_LON, n_steps=28
+            xg, yg, zg, now, DEFAULT_LAT, DEFAULT_LON, n_steps=112
         )
 
         print("[PERSEUS] [3/8] Ice deposits...")
@@ -759,10 +768,13 @@ class LunarPCDViewer(QMainWindow):
         self._traversal_graph = build_sparse_graph(self._cost_grid, xg, yg)
         self._energy_graph = build_sparse_graph(self._energy_cost_grid, xg, yg)
 
-        # Precompute shaded stack for cycle playback
+        # Precompute shaded stack for cycle playback with anti-aliased shadows
+        from scipy.ndimage import gaussian_filter as _gf
+
         self._z_norm = (zg - zg.min()) / (zg.max() - zg.min() + 1e-9)
         self._shaded_stack = [
-            self._z_norm * (0.3 + 0.7 * il) for il in self._illum_stack
+            self._z_norm * (0.3 + 0.7 * _gf(il.astype(np.float64), sigma=1.2))
+            for il in self._illum_stack
         ]
 
         elapsed = time.monotonic() - t0
@@ -847,7 +859,9 @@ class LunarPCDViewer(QMainWindow):
         title, desc = LAYER_INFO.get(layer, ("", ""))
         t = _theme(self._theme_name)
         self._desc_bar.setText(
-            f"<b style='color:{t['accent']}'>{title}</b> &mdash; {desc}"
+            f"<span style='font-size:16pt; color:{t['accent']}; font-weight:bold'>"
+            f"{title}</span><br>"
+            f"<span style='font-size:12pt'>{desc}</span>"
         )
         self._info_detail.setText("")
         self._hover_label.setText("Move cursor over terrain...")
@@ -898,8 +912,6 @@ class LunarPCDViewer(QMainWindow):
                 self._gl_view.setVisible(False)
             if layer == "elevation":
                 self._render_elevation()
-            elif layer == "contour":
-                self._render_contour()
             elif layer == "solar":
                 self._render_solar()
             elif layer == "hazard":
@@ -1020,45 +1032,73 @@ class LunarPCDViewer(QMainWindow):
 
     def _render_elevation(self):
         self._show_image(self._zg, "topo")
+        if self._chk_contours.isChecked():
+            self._draw_contour_lines()
 
-    def _render_contour(self):
-        self._show_image(self._zg, "topo")
-        # Overlay contour lines using IsocurveItem
+    def _on_contour_toggled(self, checked):
+        if self._current_layer == "elevation":
+            self._show_layer("elevation")
+
+    def _draw_contour_lines(self):
+        """Overlay contour isolines with height labels on the current view."""
+        from PyQt5.QtGui import QTransform
+
         zg = self._zg
         z_min, z_max = float(zg.min()), float(zg.max())
-        n_levels = 15
+        n_levels = 12
         levels = np.linspace(z_min, z_max, n_levels + 2)[1:-1]
         t = _theme(self._theme_name)
         accent_color = QColor(t["accent"])
-        accent_color.setAlpha(140)
+        accent_color.setAlpha(160)
 
         xg, yg = self._xg, self._yg
         x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
         y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
         rows, cols = zg.shape
+        sx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
+        sy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
 
         for level in levels:
             iso = pg.IsocurveItem(
-                data=zg, level=float(level), pen=pg.mkPen(accent_color, width=1)
+                data=zg, level=float(level),
+                pen=pg.mkPen(accent_color, width=1.5),
             )
-            # Scale isocurve from data coords (col, row) to world coords
-            from PyQt5.QtGui import QTransform
-
-            sx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
-            sy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
             transform = QTransform()
             transform.translate(x_min, y_min)
             transform.scale(sx, sy)
             iso.setTransform(transform)
             self._add_overlay(iso)
 
+            # Place a height label near the middle of the contour
+            # Find a grid cell close to this level near the centre
+            diff = np.abs(zg - level)
+            # Search in the middle third of the grid
+            r3, c3 = rows // 3, cols // 3
+            sub = diff[r3:2*r3, c3:2*c3]
+            if sub.size > 0:
+                idx = np.unravel_index(np.argmin(sub), sub.shape)
+                lr, lc = idx[0] + r3, idx[1] + c3
+                lx = x_min + lc * sx
+                ly = y_min + lr * sy
+                txt = pg.TextItem(
+                    f"{level:.2f}m",
+                    color=t["accent"],
+                    anchor=(0.5, 0.5),
+                )
+                txt.setFont(QFont("Courier New", 8))
+                txt.setPos(lx, ly)
+                self._add_overlay(txt)
+
     def _render_solar(self):
+        from scipy.ndimage import gaussian_filter as _gf
+
         if self._cycle_playing and self._shaded_stack:
             frame = self._cycle_frame % len(self._shaded_stack)
             self._show_image(self._shaded_stack[frame], "shadow", zmin=0.0, zmax=1.0)
         else:
             z_norm = self._z_norm
-            shaded = z_norm * (0.3 + 0.7 * self._illum0)
+            illum_smooth = _gf(self._illum0.astype(np.float64), sigma=1.2)
+            shaded = z_norm * (0.3 + 0.7 * illum_smooth)
             self._show_image(shaded, "shadow", zmin=0.0, zmax=1.0)
 
     def _render_hazard(self):
@@ -1763,13 +1803,16 @@ class LunarPCDViewer(QMainWindow):
             self._psr_mask,
         ) = compute_lunar_cycle_illumination(
             self._xg, self._yg, self._zg, self._sun_date,
-            lat, lon, n_steps=28,
+            lat, lon, n_steps=112,
         )
+        from scipy.ndimage import gaussian_filter as _gf
+
         self._z_norm = (self._zg - self._zg.min()) / (
             self._zg.max() - self._zg.min() + 1e-9
         )
         self._shaded_stack = [
-            self._z_norm * (0.3 + 0.7 * il) for il in self._illum_stack
+            self._z_norm * (0.3 + 0.7 * _gf(il.astype(np.float64), sigma=1.2))
+            for il in self._illum_stack
         ]
 
         # Recompute ice deposits (depends on illumination)
@@ -1825,8 +1868,8 @@ class LunarPCDViewer(QMainWindow):
             self._cycle_playing = True
             self._cycle_frame = 0
             self._btn_cycle.setText("Stop")
-            # 28 frames over 20 seconds = ~714ms per frame
-            n = len(self._shaded_stack) if self._shaded_stack else 28
+            # 112 frames over 20 seconds = ~178ms per frame
+            n = len(self._shaded_stack) if self._shaded_stack else 112
             interval = max(50, int(20000 / n))
             self._cycle_timer.setInterval(interval)
             self._cycle_timer.start()
