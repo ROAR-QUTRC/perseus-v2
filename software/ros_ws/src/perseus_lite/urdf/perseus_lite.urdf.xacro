@@ -4,7 +4,7 @@
   <xacro:arg name="hardware_plugin" default="perseus_lite_hardware/ST3215SystemHardware" />
   <xacro:arg name="serial_port" default="/dev/ttyACM0" />
   <xacro:arg name="baud_rate" default="1000000" />
-  <xacro:arg name="servo_max_rpm" default="112.8" />
+  <xacro:arg name="servo_max_rpm" default="485.1" />
 
   <!-- Import URDF description -->
   <xacro:include filename="$(find perseus_lite_description)/urdf/perseus_lite.urdf.xacro" />

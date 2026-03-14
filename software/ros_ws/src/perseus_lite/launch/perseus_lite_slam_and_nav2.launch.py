@@ -106,7 +106,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "servo_max_rpm",
-            default_value="112.8",
+            default_value="485.1",
             description="Max RPM of STS3215 servos (62 at 7.4V, ~115 at 12V)",
         ),
         DeclareLaunchArgument(
