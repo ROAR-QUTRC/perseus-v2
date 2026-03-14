@@ -1878,14 +1878,9 @@ class LunarPCDViewer(QMainWindow):
         n = len(self._shaded_stack)
         self._cycle_frame = self._cycle_frame + 1
 
-        # Stop at end of cycle
+        # Loop back to start
         if self._cycle_frame >= n:
             self._cycle_frame = 0
-            self._cycle_playing = False
-            self._cycle_timer.stop()
-            self._btn_cycle.setText("Play Lunar Day (20s)")
-            self._cycle_label.setText("Cycle complete")
-            return
 
         # Update display
         day_frac = self._cycle_frame / n * 28.0
