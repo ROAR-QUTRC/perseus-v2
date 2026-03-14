@@ -18,9 +18,10 @@ diff_drive_base_controller:
     # The rocker-bogie's passive wheels resist lateral slip, making the
     # effective turning radius wider. Tune this value (try 0.85–1.05)
     # until a 180° commanded turn produces a real 180°.
-    wheel_separation: 0.95
+    wheel_separation: 0.714
     wheels_per_side: 2
     wheel_radius: 0.147
+    wheel_separation_multiplier: 0.8
     open_loop: false
     # EKF is handling transforms, keep this off
     enable_odom_tf: false
