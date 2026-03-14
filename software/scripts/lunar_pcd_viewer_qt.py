@@ -869,37 +869,41 @@ class LunarPCDViewer(QMainWindow):
     # -----------------------------------------------------------------------
 
     def _render_3d(self):
-        """3D point cloud scatter plot."""
+        """3D terrain surface from the interpolated grid."""
         self._gl_view.clear()
-        pts = self._points
-        n = len(pts)
-        sub = max(1, n // 30000)
-        pts_s = pts[::sub]
-        z = pts_s[:, 2]
+        xg, yg, zg = self._xg, self._yg, self._zg
 
-        # Colour by elevation using lunar LUT
-        z_norm = (z - z.min()) / (z.max() - z.min() + 1e-9)
+        # Build colour map from elevation
+        z_norm = (zg - zg.min()) / (zg.max() - zg.min() + 1e-9)
         lut = LUTS["lunar"]
         idx = (z_norm * 255).astype(np.uint8)
-        colors = lut[idx].astype(np.float32) / 255.0
+        colors_rc = lut[idx].astype(np.float32) / 255.0  # (rows, cols, 4)
 
-        scatter = gl.GLScatterPlotItem(
-            pos=pts_s, color=colors, size=1.5, pxMode=True
+        # GLSurfacePlotItem expects z as (len_x, len_y) and colors as
+        # (len_x, len_y, 4).  Our grid is (rows=len_y, cols=len_x), so
+        # transpose z and colors.
+        surface = gl.GLSurfacePlotItem(
+            x=xg[0, :].astype(np.float64),
+            y=yg[:, 0].astype(np.float64),
+            z=zg.T.astype(np.float64),
+            colors=np.ascontiguousarray(colors_rc.transpose(1, 0, 2)),
+            shader=None,
+            smooth=False,
+            computeNormals=False,
         )
-        self._gl_view.addItem(scatter)
+        self._gl_view.addItem(surface)
 
-        # Add grid
-        grid = gl.GLGridItem()
-        grid.setSize(
-            x=float(np.ptp(pts[:, 0])),
-            y=float(np.ptp(pts[:, 1])),
+        # Centre camera on terrain
+        cx = float(np.mean(xg[0, :]))
+        cy = float(np.mean(yg[:, 0]))
+        cz = float(np.mean(zg))
+        span = max(float(np.ptp(xg)), float(np.ptp(yg)))
+        self._gl_view.setCameraPosition(
+            pos=pg.Vector(cx, cy, cz),
+            distance=span * 1.5,
+            elevation=30,
+            azimuth=45,
         )
-        grid.translate(
-            float(np.mean(pts[:, 0])),
-            float(np.mean(pts[:, 1])),
-            float(np.min(pts[:, 2])),
-        )
-        self._gl_view.addItem(grid)
 
     def _render_elevation(self):
         self._show_image(self._zg, "topo")
