@@ -4,6 +4,7 @@
   <xacro:arg name="hardware_plugin" default="perseus_lite_hardware/ST3215SystemHardware" />
   <xacro:arg name="serial_port" default="/dev/ttyACM0" />
   <xacro:arg name="baud_rate" default="1000000" />
+  <xacro:arg name="servo_max_rpm" default="485.1" />
 
   <!-- Import URDF description -->
   <xacro:include filename="$(find perseus_lite_description)/urdf/perseus_lite.urdf.xacro" />
@@ -14,10 +15,11 @@
 
   <!-- Instantiate the description and the ROS2 control information -->
   <xacro:perseus_lite prefix="$(arg prefix)" />
-  <xacro:perseus_lite_ros2_control 
-    name="Perseus_Lite" 
-    prefix="$(arg prefix)" 
+  <xacro:perseus_lite_ros2_control
+    name="Perseus_Lite"
+    prefix="$(arg prefix)"
     hardware_plugin="$(arg hardware_plugin)"
     serial_port="$(arg serial_port)"
-    baud_rate="$(arg baud_rate)"/>
+    baud_rate="$(arg baud_rate)"
+    servo_max_rpm="$(arg servo_max_rpm)"/>
 </robot>

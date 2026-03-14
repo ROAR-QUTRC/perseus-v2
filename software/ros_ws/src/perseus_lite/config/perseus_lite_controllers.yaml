@@ -57,13 +57,14 @@ diff_drive_base_controller:
     # Hardware configuration
     left_wheel_names: ["front_left_wheel_joint", "rear_left_wheel_joint"]
     right_wheel_names: ["front_right_wheel_joint", "rear_right_wheel_joint"]
-    wheel_separation: 0.40
+    wheel_separation: 0.8286
     wheels_per_side: 2
-    wheel_radius: 0.075
+    wheel_radius: 0.0725
     write_op_modes: ["velocity"]
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     open_loop: false # Use encoder feedback for accurate odometry
+    position_feedback: false # Use velocity state interface directly (requires calibrated servo_max_rpm)
     # ROS I/O configuration
     publish_rate: 50.0
     odom_frame_id: odom

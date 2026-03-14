@@ -122,9 +122,9 @@ namespace perseus_lite_hardware
     private:
         // Constants for ST3215 servo specifications
         // The STS3215 protocol uses 15-bit magnitude + sign bit for wheel speed.
-        // _SERVO_MAX_RPM is the approximate physical max RPM (~62 at 7.4V, higher at 12V).
-        // The ratio _MAX_VELOCITY_PROTOCOL / _SERVO_MAX_RPM converts RPM to protocol units.
-        static constexpr double _SERVO_MAX_RPM = 62.0;                                          // Approximate max RPM of STS3215
+        // _servo_max_rpm is the physical max RPM (~62 at 7.4V, ~115 at 12V).
+        // Loaded from the 'servo_max_rpm' hardware parameter at init time.
+        // The ratio _MAX_VELOCITY_PROTOCOL / _servo_max_rpm converts RPM to protocol units.
         static constexpr int16_t _MAX_VELOCITY_PROTOCOL = 32767;                                // Maximum velocity value in protocol (15-bit)
         static constexpr int16_t _MIN_VELOCITY_PROTOCOL = -32767;                               // Minimum velocity value in protocol
         static constexpr size_t _BUFFER_SIZE = 256;                                             // Buffer size for serial communication
@@ -224,6 +224,9 @@ namespace perseus_lite_hardware
         [[nodiscard]] bool verify_command_interfaces(
             const hardware_interface::ComponentInfo& joint_info,
             const rclcpp::Logger& logger) const;
+
+        // Servo max RPM — loaded from 'servo_max_rpm' hardware parameter (default 62.0)
+        double _servo_max_rpm{62.0};
 
         // Hardware state storage
         std::vector<double> _command_speeds;      // Only velocity commands

@@ -40,6 +40,7 @@ def generate_launch_description():
     hardware_plugin = LaunchConfiguration("hardware_plugin")
     serial_port = LaunchConfiguration("serial_port")
     baud_rate = LaunchConfiguration("baud_rate")
+    servo_max_rpm = LaunchConfiguration("servo_max_rpm")
     cmd_vel_topic = LaunchConfiguration("cmd_vel_topic")
 
     # SLAM arguments
@@ -102,6 +103,11 @@ def generate_launch_description():
             "baud_rate",
             default_value="1000000",
             description="Baud rate for ST3215 servos",
+        ),
+        DeclareLaunchArgument(
+            "servo_max_rpm",
+            default_value="485.1",
+            description="Max RPM of STS3215 servos (62 at 7.4V, ~115 at 12V)",
         ),
         DeclareLaunchArgument(
             "cmd_vel_topic",
@@ -183,6 +189,7 @@ def generate_launch_description():
             "hardware_plugin": hardware_plugin,
             "serial_port": serial_port,
             "baud_rate": baud_rate,
+            "servo_max_rpm": servo_max_rpm,
             "cmd_vel_topic": cmd_vel_topic,
         }.items(),
     )
@@ -195,7 +202,7 @@ def generate_launch_description():
         output="screen",
         parameters=[ekf_params_file, {"use_sim_time": use_sim_time}],
         remappings=[
-            ("odometry/filtered", "odometry/filtered"),
+            ("/odometry/filtered", "/odom"),
         ],
     )
 

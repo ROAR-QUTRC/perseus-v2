@@ -64,6 +64,25 @@ namespace perseus_lite_hardware
             return hardware_interface::CallbackReturn::ERROR;
         }
 
+        // Load optional servo_max_rpm parameter (default 62.0 RPM)
+        if (has_parameter(params.hardware_info.hardware_parameters, "servo_max_rpm"))
+        {
+            try
+            {
+                _servo_max_rpm = std::stod(params.hardware_info.hardware_parameters.at("servo_max_rpm"));
+                RCLCPP_INFO(logger, "Using servo_max_rpm: %.1f (from hardware parameter)", _servo_max_rpm);
+            }
+            catch (const std::exception& e)
+            {
+                RCLCPP_ERROR(logger, "Failed to parse servo_max_rpm: %s", e.what());
+                return hardware_interface::CallbackReturn::ERROR;
+            }
+        }
+        else
+        {
+            RCLCPP_INFO(logger, "Using default servo_max_rpm: %.1f", _servo_max_rpm);
+        }
+
         RCLCPP_DEBUG(logger, "Serial configuration - Port: %s, Baud Rate: %s",
                      params.hardware_info.hardware_parameters.at("serial_port").c_str(),
                      params.hardware_info.hardware_parameters.at("baud_rate").c_str());
@@ -451,7 +470,7 @@ namespace perseus_lite_hardware
                              _servo_ids[i], rpm);
 
                 // Scale RPM to protocol units: protocol = RPM * (MAX_PROTOCOL / MAX_RPM)
-                double scaled_velocity = rpm * (static_cast<double>(_MAX_VELOCITY_PROTOCOL) / _SERVO_MAX_RPM);
+                double scaled_velocity = rpm * (static_cast<double>(_MAX_VELOCITY_PROTOCOL) / _servo_max_rpm);
                 double clamped_velocity = std::clamp(scaled_velocity,
                                                      static_cast<double>(_MIN_VELOCITY_PROTOCOL),
                                                      static_cast<double>(_MAX_VELOCITY_PROTOCOL));
@@ -716,7 +735,7 @@ namespace perseus_lite_hardware
                             raw_vel = -(raw_vel & ~_SIGN_BIT_MASK);
                         }
                         // Convert protocol units to RPM: RPM = protocol * (MAX_RPM / MAX_PROTOCOL)
-                        const double rpm = raw_vel * (_SERVO_MAX_RPM / static_cast<double>(_MAX_VELOCITY_PROTOCOL));
+                        const double rpm = raw_vel * (_servo_max_rpm / static_cast<double>(_MAX_VELOCITY_PROTOCOL));
                         double velocity_rad_s = rpm * _RPM_TO_RAD_S;
 
                         state.velocity = velocity_rad_s;

@@ -17,6 +17,7 @@ def generate_launch_description():
     hardware_plugin = LaunchConfiguration("hardware_plugin")
     serial_port = LaunchConfiguration("serial_port", default="")
     baud_rate = LaunchConfiguration("baud_rate", default="")
+    servo_max_rpm = LaunchConfiguration("servo_max_rpm", default="62.0")
 
     # XACRO FILES
     robot_description_xacro = PathJoinSubstitution(
@@ -35,6 +36,8 @@ def generate_launch_description():
             serial_port,
             " baud_rate:=",
             baud_rate,
+            " servo_max_rpm:=",
+            servo_max_rpm,
         ]
     )
 
