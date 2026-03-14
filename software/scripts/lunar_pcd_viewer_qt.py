@@ -1010,13 +1010,11 @@ class LunarPCDViewer(QMainWindow):
         self._gl_view.clear()
         xg, yg, zg = self._xg, self._yg, self._zg
 
-        # pyqtgraph GL uses Z-up, which matches our data convention
-        # Negate Z so that higher elevation = higher in the view
-        # (pyqtgraph's camera with positive elevation looks from above)
+        # pyqtgraph GL uses Z-up, matching our data convention
         pos = np.column_stack([
             xg.ravel(),
             yg.ravel(),
-            -zg.ravel(),
+            zg.ravel(),
         ]).astype(np.float32)
 
         # Colour by elevation using lunar LUT (use original zg for colours)
@@ -1034,11 +1032,11 @@ class LunarPCDViewer(QMainWindow):
         # Centre camera on terrain
         cx = float(np.mean(xg))
         cy = float(np.mean(yg))
-        cz = float(-np.mean(zg))
+        cz = float(np.mean(zg))
         span = max(float(np.ptp(xg)), float(np.ptp(yg)))
         self._gl_view.opts["center"] = pg.Vector(cx, cy, cz)
         self._gl_view.opts["distance"] = span * 1.5
-        self._gl_view.opts["elevation"] = 30
+        self._gl_view.opts["elevation"] = -30
         self._gl_view.opts["azimuth"] = 45
         self._gl_view.update()
 
