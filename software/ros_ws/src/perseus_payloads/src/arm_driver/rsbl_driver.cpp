@@ -78,8 +78,7 @@ void RsblDriver::_handle_arm_control(const actuator_msgs::msg::Actuators::Shared
                 static_cast<flagged_address_t>(standard_address_t(this->baseAddress,
                                                                   static_cast<uint8_t>(servo_id),
                                                                   static_cast<uint8_t>(rsbl_parameters::SET_POS_EX))),
-                position_control.serialize_data()
-            });
+                position_control.serialize_data()});
         }
 
         // position_control.position = pos_pan;
