@@ -1036,7 +1036,7 @@ class LunarPCDViewer(QMainWindow):
         span = max(float(np.ptp(xg)), float(np.ptp(yg)))
         self._gl_view.opts["center"] = pg.Vector(cx, cy, cz)
         self._gl_view.opts["distance"] = span * 1.5
-        self._gl_view.opts["elevation"] = -30
+        self._gl_view.opts["elevation"] = 30
         self._gl_view.opts["azimuth"] = 45
         self._gl_view.update()
 
@@ -1064,12 +1064,17 @@ class LunarPCDViewer(QMainWindow):
         x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
         y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
         rows, cols = zg.shape
+
+        # IsocurveItem treats data axis 0 as x and axis 1 as y,
+        # but our zg is (rows=y, cols=x). Transpose so contours
+        # align with the ImageItem.
+        zg_t = zg.T  # now (cols=x, rows=y)
         sx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
         sy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
 
         for level in levels:
             iso = pg.IsocurveItem(
-                data=zg, level=float(level),
+                data=zg_t, level=float(level),
                 pen=pg.mkPen(contour_color, width=1.5),
             )
             transform = QTransform()
@@ -1079,9 +1084,7 @@ class LunarPCDViewer(QMainWindow):
             self._add_overlay(iso)
 
             # Place a height label near the middle of the contour
-            # Find a grid cell close to this level near the centre
             diff = np.abs(zg - level)
-            # Search in the middle third of the grid
             r3, c3 = rows // 3, cols // 3
             sub = diff[r3:2*r3, c3:2*c3]
             if sub.size > 0:
@@ -1165,7 +1168,7 @@ class LunarPCDViewer(QMainWindow):
         y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
         rows, cols = self._comms_coverage.shape
         iso = pg.IsocurveItem(
-            data=self._comms_coverage,
+            data=self._comms_coverage.T,
             level=0.15,
             pen=pg.mkPen("#ff4400", width=2, style=Qt.DotLine),
         )
@@ -1263,7 +1266,7 @@ class LunarPCDViewer(QMainWindow):
 
         for level in [5, 10, 15]:
             iso = pg.IsocurveItem(
-                data=self._slope_deg,
+                data=self._slope_deg.T,
                 level=float(level),
                 pen=pg.mkPen("rgba(0,255,170,80)", width=1),
             )
@@ -1323,7 +1326,7 @@ class LunarPCDViewer(QMainWindow):
         rows, cols = self._psr_mask.shape
         psr_float = self._psr_mask.astype(np.float32)
         iso = pg.IsocurveItem(
-            data=psr_float, level=0.5, pen=pg.mkPen("#ff00ff", width=2)
+            data=psr_float.T, level=0.5, pen=pg.mkPen("#ff00ff", width=2)
         )
         from PyQt5.QtGui import QTransform
 
