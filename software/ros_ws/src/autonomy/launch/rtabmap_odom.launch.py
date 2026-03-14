@@ -99,9 +99,7 @@ def launch_setup(context, *args, **kwargs):
             default_value=LaunchConfiguration("log_level"),
             description="Specific ROS logger level for odometry node.",
         ),
-
         SetParameter(name="use_sim_time", value=LaunchConfiguration("use_sim_time")),
-
         Node(
             package="rtabmap_odom",
             executable="stereo_odometry",
@@ -200,83 +198,67 @@ def generate_launch_description():
                 default_value="0.2",
                 description="Wait for transform timeout.",
             ),
-
             DeclareLaunchArgument(
-                "stereo_namespace",
-                default_value="/camera/camera",
-                description=""
+                "stereo_namespace", default_value="/camera/camera", description=""
             ),
-
             DeclareLaunchArgument(
                 "left_image_topic",
                 default_value="/camera/camera/infra2/image_raw",
                 description="",
             ),
-
             DeclareLaunchArgument(
                 "right_image_topic",
                 default_value="/camera/camera/infra1/image_raw",
                 description="Use grayscale image for efficiency",
             ),
-
             DeclareLaunchArgument(
                 "left_camera_info_topic",
                 default_value="/camera/camera/infra2/camera_info",
                 description="",
             ),
-
             DeclareLaunchArgument(
                 "right_camera_info_topic",
                 default_value="/camera/camera/infra1/camera_info",
                 description="",
             ),
-
             DeclareLaunchArgument(
                 "visual_odometry",
                 default_value="true",
                 description="Launch rtabmap visual odometry node.",
             ),
-
             DeclareLaunchArgument(
                 "icp_odometry",
                 default_value="false",
                 description="Launch rtabmap icp odometry node.",
             ),
-
             DeclareLaunchArgument(
                 "odom_topic", default_value="odom", description="Odometry topic name."
             ),
-
             DeclareLaunchArgument(
                 "vo_frame_id",
                 default_value=LaunchConfiguration("odom_topic"),
                 description="Visual/Icp odometry frame ID for TF.",
             ),
-
             DeclareLaunchArgument(
                 "publish_tf_odom",
                 default_value="true",
                 description="Publish TF frames for odometry.",
             ),
-
             DeclareLaunchArgument(
                 "imu_topic",
                 default_value="/imu/data",
                 description="IMU topic for odometry.",
             ),
-
             DeclareLaunchArgument(
                 "approx_sync",
                 default_value="true",
                 description="Approximate synchronization of sensor topics.",
             ),
-
             DeclareLaunchArgument(
                 "approx_sync_max_interval",
                 default_value="0.0",
                 description="Maximum interval for approximate synchronization.",
             ),
-
             OpaqueFunction(function=launch_setup),
         ]
     )
