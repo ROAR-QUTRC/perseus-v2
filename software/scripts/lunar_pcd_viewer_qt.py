@@ -879,18 +879,24 @@ class LunarPCDViewer(QMainWindow):
         idx = (z_norm * 255).astype(np.uint8)
         colors_rc = lut[idx].astype(np.float32) / 255.0  # (rows, cols, 4)
 
-        # GLSurfacePlotItem expects z as (len_x, len_y) and colors as
-        # (len_x, len_y, 4).  Our grid is (rows=len_y, cols=len_x), so
-        # transpose z and colors.
+        # GLSurfacePlotItem: z shape is (len_x, len_y), our grid is
+        # (rows=len_y, cols=len_x), so transpose.  Colors must be
+        # flattened to (n_vertices, 4) for MeshData.setVertexColors.
+        z_t = zg.T.astype(np.float64)
+        colors_t = colors_rc.transpose(1, 0, 2)  # (cols, rows, 4)
+        colors_flat = colors_t.reshape(-1, 4).copy()
+
         surface = gl.GLSurfacePlotItem(
             x=xg[0, :].astype(np.float64),
             y=yg[:, 0].astype(np.float64),
-            z=zg.T.astype(np.float64),
-            colors=np.ascontiguousarray(colors_rc.transpose(1, 0, 2)),
+            z=z_t,
             shader=None,
             smooth=False,
             computeNormals=False,
         )
+        # Set colors after construction so we can flatten properly
+        surface._meshdata.setVertexColors(colors_flat)
+        surface.meshDataChanged()
         self._gl_view.addItem(surface)
 
         # Centre camera on terrain
