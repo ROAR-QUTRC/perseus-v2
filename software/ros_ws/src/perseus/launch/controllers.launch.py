@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 
-from launch.actions import RegisterEventHandler
+from launch.actions import RegisterEventHandler, LogInfo
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -55,6 +55,19 @@ def generate_launch_description():
         parameters=[use_sim_time_param],
     )
 
+    log_wheel_separation = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=base_controller_spawner,
+            on_exit=[
+                LogInfo(msg=[
+                    "[perseus_controllers] Active wheel_separation: ",
+                    # Reads the live value directly from the controller node
+                    "run `ros2 param get /diff_drive_base_controller wheel_separation` to confirm active value",
+                ]),
+            ],
+        )
+    )
+
     # NOTE: There was a comment in one of the ROS2 Control examples
     # about launching the controllers *after* the controller manager
     # to help with "flaky tests" (ie, using RegisterEventHandler with OnProcessExit)
@@ -80,5 +93,6 @@ def generate_launch_description():
                 on_exit=[base_controller_spawner],
             )
         ),
+        log_wheel_separation,
     ]
     return LaunchDescription(arguments + nodes + handlers)
