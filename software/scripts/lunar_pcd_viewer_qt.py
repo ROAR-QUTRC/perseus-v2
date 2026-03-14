@@ -401,6 +401,43 @@ class LunarPCDViewer(QMainWindow):
         row_c.addWidget(self._charge_label)
         setup_lay.addLayout(row_c)
 
+        # Power consumption model sliders
+        # Flat current (A) — draw on easy terrain
+        row_flat = QHBoxLayout()
+        row_flat.addWidget(QLabel("Flat I:"))
+        self._slider_current_flat = QSlider(Qt.Horizontal)
+        self._slider_current_flat.setRange(10, 200)  # 1.0 – 20.0 A (x10)
+        self._slider_current_flat.setValue(40)  # 4.0 A default
+        self._current_flat_label = QLabel("4.0 A")
+        self._slider_current_flat.valueChanged.connect(self._on_power_model_changed)
+        row_flat.addWidget(self._slider_current_flat)
+        row_flat.addWidget(self._current_flat_label)
+        setup_lay.addLayout(row_flat)
+
+        # Max current (A) — draw on steep/hazardous terrain
+        row_max = QHBoxLayout()
+        row_max.addWidget(QLabel("Max I:"))
+        self._slider_current_max = QSlider(Qt.Horizontal)
+        self._slider_current_max.setRange(50, 800)  # 5.0 – 80.0 A (x10)
+        self._slider_current_max.setValue(400)  # 40.0 A default
+        self._current_max_label = QLabel("40.0 A")
+        self._slider_current_max.valueChanged.connect(self._on_power_model_changed)
+        row_max.addWidget(self._slider_current_max)
+        row_max.addWidget(self._current_max_label)
+        setup_lay.addLayout(row_max)
+
+        # Rover speed (m/s)
+        row_spd = QHBoxLayout()
+        row_spd.addWidget(QLabel("Speed:"))
+        self._slider_speed = QSlider(Qt.Horizontal)
+        self._slider_speed.setRange(5, 100)  # 0.05 – 1.00 m/s (x100)
+        self._slider_speed.setValue(30)  # 0.30 m/s default
+        self._speed_label = QLabel("0.30 m/s")
+        self._slider_speed.valueChanged.connect(self._on_power_model_changed)
+        row_spd.addWidget(self._slider_speed)
+        row_spd.addWidget(self._speed_label)
+        setup_lay.addLayout(row_spd)
+
         # Waypoints
         self._btn_add_wp = QPushButton("Add Waypoint")
         self._btn_add_wp.setCheckable(True)
@@ -1408,6 +1445,12 @@ class LunarPCDViewer(QMainWindow):
             cv = float(self._cost_grid[ri, ci])
             cost_str = "IMPASSABLE" if np.isinf(cv) else f"{cv:.1f}"
 
+        # Energy cost per metre
+        energy_str = ""
+        if self._energy_cost_grid is not None:
+            ev = float(self._energy_cost_grid[ri, ci])
+            energy_str = "IMPASSABLE" if np.isinf(ev) else f"{ev:.4f} Wh/m"
+
         # Build HTML readout
         lines = [
             f"<b style='color:{ac}'>POSITION</b>",
@@ -1436,6 +1479,7 @@ class LunarPCDViewer(QMainWindow):
             f"  Score:     {score_str}",
             "",
             f"<b style='color:{ac}'>BATTERY</b>",
+            f"  Energy:    {energy_str}",
             f"  Range:     {range_str}",
         ]
         self._hover_label.setText("<pre>" + "\n".join(lines) + "</pre>")
@@ -1687,6 +1731,45 @@ class LunarPCDViewer(QMainWindow):
         self._charge_pct = float(value)
         self._charge_label.setText(f"{value}%")
         self._range_cache.clear()
+        if self._lander_pos:
+            self._show_layer(self._current_layer)
+
+    def _on_power_model_changed(self):
+        """Recompute energy cost grid when power consumption sliders change."""
+        current_flat = self._slider_current_flat.value() / 10.0
+        current_max = self._slider_current_max.value() / 10.0
+        speed = self._slider_speed.value() / 100.0
+
+        # Update labels
+        self._current_flat_label.setText(f"{current_flat:.1f} A")
+        self._current_max_label.setText(f"{current_max:.1f} A")
+        self._speed_label.setText(f"{speed:.2f} m/s")
+
+        # Ensure flat <= max
+        if current_flat > current_max:
+            current_flat = current_max
+
+        # Recompute energy cost grid with custom parameters
+        from lunar_pcd_compute import BATTERY_VOLTAGE
+
+        difficulty = np.clip(
+            np.maximum(self._slope_deg / 15.0, self._hazard), 0.0, 1.0
+        )
+        current = current_flat + difficulty * (current_max - current_flat)
+        power_w = BATTERY_VOLTAGE * current
+        wh_per_metre = power_w / speed / 3600.0
+        wh_per_metre[self._slope_deg > 20.0] = np.inf
+        self._energy_cost_grid = wh_per_metre
+
+        # Rebuild energy graph
+        self._energy_graph = build_sparse_graph(
+            self._energy_cost_grid, self._xg, self._yg
+        )
+        self._range_cache.clear()
+
+        self._info_detail.setText(
+            f"Power model: {current_flat:.1f}-{current_max:.1f} A @ {speed:.2f} m/s"
+        )
         if self._lander_pos:
             self._show_layer(self._current_layer)
 
