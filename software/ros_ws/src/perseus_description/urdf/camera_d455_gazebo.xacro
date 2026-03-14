@@ -22,8 +22,7 @@
             <far>100</far>
           </clip>
         </camera>
-        <topic>/camera/camera/color/</topic>DingoOz2 hours ago
-        Gazebo's camera sensor type auto-appends /image and /camera_info to whatever you set in . Since the RGB topic is set to /camera/camera/color/image_raw, camera_info will actually publish at /camera/camera/color/image_raw/camera_info. gz_bridge.yaml:47 expects it at /camera/camera/color/camera_info. Same issue applies to all sensor entries in this file (depth, infra1, infra2). Consider setting topics to the base path (e.g. /camera/camera/color) and letting Gazebo append the suffixes, then update the bridge image mappings to match
+        <topic>/camera/camera/color/image_raw</topic>
         <gz_frame_id>${name}_color_optical_frame</gz_frame_id>
       </sensor>
     </gazebo>
