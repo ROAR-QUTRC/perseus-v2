@@ -184,6 +184,14 @@ def _stylesheet(t):
     QScrollArea {{
         border: none;
     }}
+    QGroupBox#infoGroup {{
+        border: 1px solid {t['accent']};
+        background-color: {t['sidebar_bg']};
+        padding: 10px;
+    }}
+    QFrame[frameShape="4"] {{
+        color: {t['grid_color']};
+    }}
     """
 
 
@@ -440,19 +448,36 @@ class LunarPCDViewer(QMainWindow):
         self._btn_theme.clicked.connect(self._toggle_theme)
         self._sidebar_layout.addWidget(self._btn_theme)
 
-        # Info panel
+        # Info panel — large description box for the active layer
+        self._info_group = QGroupBox("LAYER INFO")
+        self._info_group.setObjectName("infoGroup")
+        info_lay = QVBoxLayout(self._info_group)
+        info_lay.setContentsMargins(8, 14, 8, 8)
+        info_lay.setSpacing(6)
+
         self._info_title = QLabel("")
-        self._info_title.setFont(QFont("Courier New", 10, QFont.Bold))
+        self._info_title.setFont(QFont("Courier New", 11, QFont.Bold))
         self._info_title.setWordWrap(True)
-        self._sidebar_layout.addWidget(self._info_title)
+        info_lay.addWidget(self._info_title)
 
         self._info_desc = QLabel("")
         self._info_desc.setWordWrap(True)
-        self._sidebar_layout.addWidget(self._info_desc)
+        self._info_desc.setFont(QFont("Courier New", 10))
+        self._info_desc.setMinimumHeight(80)
+        info_lay.addWidget(self._info_desc)
+
+        # Separator line
+        sep = QFrame()
+        sep.setFrameShape(QFrame.HLine)
+        sep.setFrameShadow(QFrame.Sunken)
+        info_lay.addWidget(sep)
 
         self._info_detail = QLabel("")
         self._info_detail.setWordWrap(True)
-        self._sidebar_layout.addWidget(self._info_detail)
+        self._info_detail.setFont(QFont("Courier New", 10))
+        info_lay.addWidget(self._info_detail)
+
+        self._sidebar_layout.addWidget(self._info_group, stretch=1)
 
         self._sidebar_layout.addStretch()
         sidebar_scroll.setWidget(sidebar_widget)
@@ -659,6 +684,7 @@ class LunarPCDViewer(QMainWindow):
         self._info_title.setText(title)
         self._info_title.setStyleSheet(f"color: {t['accent']};")
         self._info_desc.setText(desc)
+        self._info_detail.setText("")
 
     def _ensure_gl_view(self):
         """Lazy-create the GLViewWidget, replacing the placeholder at index 0."""
