@@ -52,6 +52,11 @@ let
       nav2-util
       nav2-lifecycle-manager
       nav2-common
+      rtabmap-odom
+      rtabmap-slam
+      rtabmap-util
+      rtabmap-rviz-plugins
+      rtabmap-viz
       ;
   }
   # Open3D is x86_64-linux only (uses Intel MKL/IPP)
