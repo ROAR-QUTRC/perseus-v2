@@ -30,6 +30,7 @@ from PyQt5.QtGui import QColor, QFont
 from PyQt5.QtWidgets import (
     QApplication,
     QButtonGroup,
+    QDateEdit,
     QFrame,
     QGroupBox,
     QHBoxLayout,
@@ -47,6 +48,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from PyQt5.QtCore import QDate
 
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
@@ -457,10 +459,11 @@ class LunarPCDViewer(QMainWindow):
 
         # ── LAYER-SPECIFIC CONTROLS ──
 
-        # Sun controls group
-        self._sun_group = QGroupBox("SUN CONTROLS")
+        # Sun / shadow controls group
+        self._sun_group = QGroupBox("SUN / SHADOW")
         sun_lay = QVBoxLayout(self._sun_group)
 
+        # Lat / Lon
         row = QHBoxLayout()
         row.addWidget(QLabel("Lat:"))
         self._spin_lat = QSpinBox()
@@ -474,8 +477,20 @@ class LunarPCDViewer(QMainWindow):
         row.addWidget(self._spin_lon)
         sun_lay.addLayout(row)
 
-        row2 = QHBoxLayout()
-        row2.addWidget(QLabel("Hour:"))
+        # Date picker
+        row_date = QHBoxLayout()
+        row_date.addWidget(QLabel("Date:"))
+        self._date_edit = QDateEdit()
+        now = datetime.now(timezone.utc)
+        self._date_edit.setDate(QDate(now.year, now.month, now.day))
+        self._date_edit.setCalendarPopup(True)
+        self._date_edit.setDisplayFormat("yyyy-MM-dd")
+        row_date.addWidget(self._date_edit)
+        sun_lay.addLayout(row_date)
+
+        # Hour slider
+        row_hour = QHBoxLayout()
+        row_hour.addWidget(QLabel("Hour:"))
         self._slider_hour = QSlider(Qt.Horizontal)
         self._slider_hour.setRange(0, 23)
         self._slider_hour.setValue(self._sun_hour)
@@ -483,25 +498,24 @@ class LunarPCDViewer(QMainWindow):
         self._slider_hour.valueChanged.connect(
             lambda v: self._hour_label.setText(f"{v:02d}:00")
         )
-        row2.addWidget(self._slider_hour)
-        row2.addWidget(self._hour_label)
-        sun_lay.addLayout(row2)
+        row_hour.addWidget(self._slider_hour)
+        row_hour.addWidget(self._hour_label)
+        sun_lay.addLayout(row_hour)
 
-        self._btn_update_sun = QPushButton("Update Sun")
+        self._btn_update_sun = QPushButton("Update Shadow Map")
         self._btn_update_sun.clicked.connect(self._on_update_sun)
         sun_lay.addWidget(self._btn_update_sun)
 
-        self._sidebar_layout.addWidget(self._sun_group)
-
-        # Cycle playback
-        self._cycle_group = QGroupBox("LUNAR CYCLE")
-        cyc_lay = QVBoxLayout(self._cycle_group)
-        self._btn_cycle = QPushButton("Play Cycle")
+        # Lunar day/night cycle animation (28 Earth days in ~20 seconds)
+        self._btn_cycle = QPushButton("Play Lunar Day (20s)")
         self._btn_cycle.clicked.connect(self._toggle_cycle)
-        cyc_lay.addWidget(self._btn_cycle)
-        self._cycle_label = QLabel("Frame: 0/0")
-        cyc_lay.addWidget(self._cycle_label)
-        self._sidebar_layout.addWidget(self._cycle_group)
+        sun_lay.addWidget(self._btn_cycle)
+        self._cycle_label = QLabel("")
+        self._cycle_label.setFont(QFont("Courier New", 9))
+        self._cycle_label.setWordWrap(True)
+        sun_lay.addWidget(self._cycle_label)
+
+        self._sidebar_layout.addWidget(self._sun_group)
 
         # Theme toggle
         self._btn_theme = QPushButton("Toggle Light/Dark")
@@ -739,7 +753,6 @@ class LunarPCDViewer(QMainWindow):
     def _update_sidebar_visibility(self, layer):
         """Show/hide layer-specific sidebar groups."""
         self._sun_group.setVisible(layer == "solar")
-        self._cycle_group.setVisible(layer == "solar")
 
     def _set_click_mode(self, mode):
         """Set what a map click does: 'lander', 'rover', 'wp', or None."""
@@ -824,6 +837,10 @@ class LunarPCDViewer(QMainWindow):
         if layer == "3d":
             if self._ensure_gl_view():
                 self._stack.setCurrentIndex(0)
+                # QStackedWidget destroys the GL context when hiding;
+                # restore it before rendering
+                QApplication.processEvents()
+                self._gl_view.makeCurrent()
                 self._render_3d()
             else:
                 self._stack.setCurrentIndex(0)  # show error placeholder
@@ -1674,7 +1691,10 @@ class LunarPCDViewer(QMainWindow):
         self._sun_lat = self._spin_lat.value()
         self._sun_lon = self._spin_lon.value()
         hour = self._slider_hour.value()
-        self._sun_date = self._sun_date.replace(hour=hour)
+        qd = self._date_edit.date()
+        self._sun_date = datetime(
+            qd.year(), qd.month(), qd.day(), hour, tzinfo=timezone.utc
+        )
         sun_dir = compute_sun_direction(self._sun_date, self._sun_lat, self._sun_lon)
         self._illum0 = compute_shadow_map(self._xg, self._yg, self._zg, sun_dir)
 
@@ -1685,6 +1705,9 @@ class LunarPCDViewer(QMainWindow):
         self._info_detail.setText(
             f"Sun Az: {az:.1f} | Elev: {elev:.2f} | {status} | {pct:.0f}% lit"
         )
+        self._cycle_label.setText(
+            f"{self._sun_date.strftime('%Y-%m-%d %H:%M')} UTC"
+        )
 
         if self._current_layer == "solar":
             self._show_layer("solar")
@@ -1693,28 +1716,51 @@ class LunarPCDViewer(QMainWindow):
         if self._cycle_playing:
             self._cycle_playing = False
             self._cycle_timer.stop()
-            self._btn_cycle.setText("Play Cycle")
+            self._btn_cycle.setText("Play Lunar Day (20s)")
+            self._cycle_label.setText("")
         else:
             self._cycle_playing = True
             self._cycle_frame = 0
-            self._btn_cycle.setText("Stop Cycle")
+            self._btn_cycle.setText("Stop")
+            # 28 frames over 20 seconds = ~714ms per frame
+            n = len(self._shaded_stack) if self._shaded_stack else 28
+            interval = max(50, int(20000 / n))
+            self._cycle_timer.setInterval(interval)
             self._cycle_timer.start()
 
     def _cycle_step(self):
         if not self._shaded_stack:
             return
         n = len(self._shaded_stack)
-        self._cycle_frame = (self._cycle_frame + 1) % n
-        self._cycle_label.setText(f"Frame: {self._cycle_frame + 1}/{n}")
+        self._cycle_frame = self._cycle_frame + 1
+
+        # Stop at end of cycle
+        if self._cycle_frame >= n:
+            self._cycle_frame = 0
+            self._cycle_playing = False
+            self._cycle_timer.stop()
+            self._btn_cycle.setText("Play Lunar Day (20s)")
+            self._cycle_label.setText("Cycle complete")
+            return
+
+        # Update display
+        day_frac = self._cycle_frame / n * 28.0
+        day_num = int(day_frac) + 1
+        hour_frac = (day_frac % 1.0) * 24.0
+        pct = float(np.mean(self._shaded_stack[self._cycle_frame]) * 100)
+        self._cycle_label.setText(
+            f"Day {day_num}/28 ({hour_frac:.0f}h) | {pct:.0f}% sunlit"
+        )
 
         if self._current_layer == "solar":
             self._show_image(
                 self._shaded_stack[self._cycle_frame], "shadow", zmin=0.0, zmax=1.0
             )
-            # Update timestamp in info
             if self._cycle_ts:
                 ts = self._cycle_ts[self._cycle_frame]
-                self._info_detail.setText(ts.strftime("Day %d %H:%M UTC"))
+                self._info_detail.setText(
+                    ts.strftime("%Y-%m-%d %H:%M UTC") + f" | {pct:.0f}% sunlit"
+                )
 
     def _on_heading_changed(self, value):
         self._rover_heading = value
