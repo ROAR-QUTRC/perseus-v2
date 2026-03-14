@@ -389,9 +389,9 @@ class LunarPCDViewer(QMainWindow):
         lbl.setFont(QFont("Courier New", 10, QFont.Bold))
         self._sidebar_layout.addWidget(lbl)
 
-        # Layer list — contour is merged into elevation as a toggle
+        # Layer list — contour merged into elevation, rover sim removed
         self._viewer_layers = [
-            (k, l) for k, l in ALL_LAYERS if k != "contour"
+            (k, l) for k, l in ALL_LAYERS if k not in ("contour", "rover")
         ]
         self._layer_list = QListWidget()
         for key, label in self._viewer_layers:
@@ -1018,17 +1018,16 @@ class LunarPCDViewer(QMainWindow):
         )
         self._gl_view.addItem(scatter)
 
-        # Centre camera on terrain
+        # Centre camera on terrain, looking down at an angle
         cx = float(np.mean(xg))
         cy = float(np.mean(yg))
         cz = float(np.mean(zg))
         span = max(float(np.ptp(xg)), float(np.ptp(yg)))
-        self._gl_view.setCameraPosition(
-            pos=pg.Vector(cx, cy, cz),
-            distance=span * 1.5,
-            elevation=30,
-            azimuth=45,
-        )
+        self._gl_view.opts["center"] = pg.Vector(cx, cy, cz)
+        self._gl_view.opts["distance"] = span * 1.5
+        self._gl_view.opts["elevation"] = -30
+        self._gl_view.opts["azimuth"] = 45
+        self._gl_view.update()
 
     def _render_elevation(self):
         self._show_image(self._zg, "topo")
