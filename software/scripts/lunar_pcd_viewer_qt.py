@@ -234,7 +234,7 @@ class LunarPCDViewer(QMainWindow):
         self._path_end = None
         self._path_coords = None
         self._path_cost = None
-        self._comms_mode = "base"  # "base" or "los"
+        self._click_mode = None  # "lander", "rover", "wp", or None
         self._base_pos = None
         self._rover_pos_comms = None
         self._los_data = None
@@ -242,7 +242,6 @@ class LunarPCDViewer(QMainWindow):
         self._rover_heading = 0
         self._rover_data = None
         self._lander_pos = None
-        self._battery_mode = "lander"  # "lander" or "wp"
         self._waypoints = []
         self._charge_pct = 100.0
         self._wp_path = None
@@ -349,6 +348,77 @@ class LunarPCDViewer(QMainWindow):
         self._layer_list.setMaximumHeight(250)
         self._sidebar_layout.addWidget(self._layer_list)
 
+        # ── MISSION SETUP — always visible ──
+        setup_group = QGroupBox("MISSION SETUP")
+        setup_lay = QVBoxLayout(setup_group)
+        setup_lay.setSpacing(4)
+
+        # Lander / comms base
+        self._btn_place_lander = QPushButton("Place Lander / Base")
+        self._btn_place_lander.setCheckable(True)
+        self._btn_place_lander.clicked.connect(
+            lambda: self._set_click_mode("lander")
+        )
+        setup_lay.addWidget(self._btn_place_lander)
+        self._lander_label = QLabel("Lander: not placed")
+        self._lander_label.setFont(QFont("Courier New", 9))
+        self._lander_label.setWordWrap(True)
+        setup_lay.addWidget(self._lander_label)
+
+        # Rover
+        self._btn_place_rover = QPushButton("Place Rover")
+        self._btn_place_rover.setCheckable(True)
+        self._btn_place_rover.clicked.connect(
+            lambda: self._set_click_mode("rover")
+        )
+        setup_lay.addWidget(self._btn_place_rover)
+        self._rover_label = QLabel("Rover: not placed")
+        self._rover_label.setFont(QFont("Courier New", 9))
+        self._rover_label.setWordWrap(True)
+        setup_lay.addWidget(self._rover_label)
+
+        # Rover heading
+        row_h = QHBoxLayout()
+        row_h.addWidget(QLabel("Heading:"))
+        self._slider_heading = QSlider(Qt.Horizontal)
+        self._slider_heading.setRange(0, 359)
+        self._slider_heading.setValue(0)
+        self._heading_label = QLabel("0 deg")
+        self._slider_heading.valueChanged.connect(self._on_heading_changed)
+        row_h.addWidget(self._slider_heading)
+        row_h.addWidget(self._heading_label)
+        setup_lay.addLayout(row_h)
+
+        # Battery charge
+        row_c = QHBoxLayout()
+        row_c.addWidget(QLabel("Battery:"))
+        self._slider_charge = QSlider(Qt.Horizontal)
+        self._slider_charge.setRange(10, 100)
+        self._slider_charge.setValue(100)
+        self._charge_label = QLabel("100%")
+        self._slider_charge.valueChanged.connect(self._on_charge_changed)
+        row_c.addWidget(self._slider_charge)
+        row_c.addWidget(self._charge_label)
+        setup_lay.addLayout(row_c)
+
+        # Waypoints
+        self._btn_add_wp = QPushButton("Add Waypoint")
+        self._btn_add_wp.setCheckable(True)
+        self._btn_add_wp.clicked.connect(
+            lambda: self._set_click_mode("wp")
+        )
+        setup_lay.addWidget(self._btn_add_wp)
+        self._wp_label = QLabel("Waypoints: 0")
+        self._wp_label.setFont(QFont("Courier New", 9))
+        setup_lay.addWidget(self._wp_label)
+        self._btn_clear_wps = QPushButton("Clear Waypoints")
+        self._btn_clear_wps.clicked.connect(self._on_clear_waypoints)
+        setup_lay.addWidget(self._btn_clear_wps)
+
+        self._sidebar_layout.addWidget(setup_group)
+
+        # ── LAYER-SPECIFIC CONTROLS ──
+
         # Sun controls group
         self._sun_group = QGroupBox("SUN CONTROLS")
         sun_lay = QVBoxLayout(self._sun_group)
@@ -394,67 +464,6 @@ class LunarPCDViewer(QMainWindow):
         self._cycle_label = QLabel("Frame: 0/0")
         cyc_lay.addWidget(self._cycle_label)
         self._sidebar_layout.addWidget(self._cycle_group)
-
-        # Rover heading
-        self._rover_group = QGroupBox("ROVER HEADING")
-        rov_lay = QVBoxLayout(self._rover_group)
-        self._slider_heading = QSlider(Qt.Horizontal)
-        self._slider_heading.setRange(0, 359)
-        self._slider_heading.setValue(0)
-        self._heading_label = QLabel("0 deg")
-        self._slider_heading.valueChanged.connect(self._on_heading_changed)
-        rov_lay.addWidget(self._slider_heading)
-        rov_lay.addWidget(self._heading_label)
-        self._sidebar_layout.addWidget(self._rover_group)
-
-        # Comms mode
-        self._comms_group = QGroupBox("COMMS MODE")
-        comms_lay = QVBoxLayout(self._comms_group)
-        self._radio_base = QRadioButton("Move Base Station")
-        self._radio_los = QRadioButton("Check Rover LOS")
-        self._radio_base.setChecked(True)
-        bg = QButtonGroup(self)
-        bg.addButton(self._radio_base)
-        bg.addButton(self._radio_los)
-        self._radio_base.toggled.connect(
-            lambda checked: setattr(self, "_comms_mode", "base" if checked else "los")
-        )
-        comms_lay.addWidget(self._radio_base)
-        comms_lay.addWidget(self._radio_los)
-        self._sidebar_layout.addWidget(self._comms_group)
-
-        # Battery controls
-        self._battery_group = QGroupBox("BATTERY / RANGE")
-        bat_lay = QVBoxLayout(self._battery_group)
-        self._radio_lander = QRadioButton("Place Lander")
-        self._radio_wp = QRadioButton("Add Waypoint")
-        self._radio_lander.setChecked(True)
-        bg2 = QButtonGroup(self)
-        bg2.addButton(self._radio_lander)
-        bg2.addButton(self._radio_wp)
-        self._radio_lander.toggled.connect(
-            lambda checked: setattr(
-                self, "_battery_mode", "lander" if checked else "wp"
-            )
-        )
-        bat_lay.addWidget(self._radio_lander)
-        bat_lay.addWidget(self._radio_wp)
-
-        row3 = QHBoxLayout()
-        row3.addWidget(QLabel("Charge:"))
-        self._slider_charge = QSlider(Qt.Horizontal)
-        self._slider_charge.setRange(10, 100)
-        self._slider_charge.setValue(100)
-        self._charge_label = QLabel("100%")
-        self._slider_charge.valueChanged.connect(self._on_charge_changed)
-        row3.addWidget(self._slider_charge)
-        row3.addWidget(self._charge_label)
-        bat_lay.addLayout(row3)
-
-        self._btn_clear_wps = QPushButton("Clear Waypoints")
-        self._btn_clear_wps.clicked.connect(self._on_clear_waypoints)
-        bat_lay.addWidget(self._btn_clear_wps)
-        self._sidebar_layout.addWidget(self._battery_group)
 
         # Theme toggle
         self._btn_theme = QPushButton("Toggle Light/Dark")
@@ -607,6 +616,7 @@ class LunarPCDViewer(QMainWindow):
             (float(xg[0, 0]) + float(xg[0, -1])) / 2,
             (float(yg[0, 0]) + float(yg[-1, 0])) / 2,
         )
+        self._lander_pos = self._base_pos
 
         print("[PERSEUS] [4/8] Comms coverage...")
         self._comms_coverage = compute_comms_coverage(xg, yg, zg, self._base_pos)
@@ -665,6 +675,7 @@ class LunarPCDViewer(QMainWindow):
         )
 
         # Show initial layer (elevation avoids OpenGL requirement on startup)
+        self._update_position_labels()
         self._layer_list.setCurrentRow(1)  # "elevation"
         self._current_layer = "elevation"
         self._show_layer("elevation")
@@ -686,12 +697,47 @@ class LunarPCDViewer(QMainWindow):
         self._update_sidebar_visibility(key)
 
     def _update_sidebar_visibility(self, layer):
-        """Show/hide sidebar groups depending on active layer."""
+        """Show/hide layer-specific sidebar groups."""
         self._sun_group.setVisible(layer == "solar")
         self._cycle_group.setVisible(layer == "solar")
-        self._rover_group.setVisible(layer == "rover")
-        self._comms_group.setVisible(layer == "comms")
-        self._battery_group.setVisible(layer == "range")
+
+    def _set_click_mode(self, mode):
+        """Set what a map click does: 'lander', 'rover', 'wp', or None."""
+        # Toggle off if same button pressed again
+        if self._click_mode == mode:
+            self._click_mode = None
+        else:
+            self._click_mode = mode
+
+        # Update button checked states
+        self._btn_place_lander.setChecked(self._click_mode == "lander")
+        self._btn_place_rover.setChecked(self._click_mode == "rover")
+        self._btn_add_wp.setChecked(self._click_mode == "wp")
+
+        mode_text = {
+            "lander": "Click map to place lander/base station",
+            "rover": "Click map to place rover",
+            "wp": "Click map to add waypoint",
+        }
+        self._info_detail.setText(mode_text.get(self._click_mode, ""))
+
+    def _update_position_labels(self):
+        """Refresh the lander/rover/WP position labels in the sidebar."""
+        if self._base_pos:
+            self._lander_label.setText(
+                f"Lander: ({self._base_pos[0]:.2f}, {self._base_pos[1]:.2f})"
+            )
+        else:
+            self._lander_label.setText("Lander: not placed")
+
+        if self._rover_pos:
+            self._rover_label.setText(
+                f"Rover: ({self._rover_pos[0]:.2f}, {self._rover_pos[1]:.2f})"
+            )
+        else:
+            self._rover_label.setText("Rover: not placed")
+
+        self._wp_label.setText(f"Waypoints: {len(self._waypoints)}")
 
     def _update_info(self, layer):
         title, desc = LAYER_INFO.get(layer, ("", ""))
@@ -1402,6 +1448,18 @@ class LunarPCDViewer(QMainWindow):
         if not (x_min <= wx <= x_max and y_min <= wy <= y_max):
             return
 
+        # Sidebar click mode takes priority over layer-specific clicks
+        if self._click_mode == "lander":
+            self._place_lander(wx, wy)
+            return
+        elif self._click_mode == "rover":
+            self._place_rover(wx, wy)
+            return
+        elif self._click_mode == "wp":
+            self._place_waypoint(wx, wy)
+            return
+
+        # Layer-specific click behaviour
         layer = self._current_layer
         if layer == "path":
             self._handle_path_click(wx, wy)
@@ -1450,73 +1508,106 @@ class LunarPCDViewer(QMainWindow):
         self._show_layer("path")
 
     def _handle_comms_click(self, wx, wy):
-        if self._comms_mode == "base":
-            self._base_pos = (wx, wy)
-            self._info_detail.setText("Recomputing coverage...")
-            QApplication.processEvents()
-            self._comms_coverage = compute_comms_coverage(
-                self._xg, self._yg, self._zg, self._base_pos
+        # On comms layer, direct clicks check LOS from base to clicked point
+        self._rover_pos_comms = (wx, wy)
+        self._rover_pos = (wx, wy)
+        if self._base_pos:
+            self._los_data = compute_line_of_sight(
+                self._xg, self._yg, self._zg,
+                self._base_pos, self._rover_pos_comms,
             )
-            # Recompute dependent layers
-            self._cost_grid = compute_traversal_cost(
-                self._slope_deg,
-                self._hazard,
-                self._solar_uptime,
-                self._comms_coverage,
-            )
-            self._traversal_graph = build_sparse_graph(
-                self._cost_grid, self._xg, self._yg
-            )
-            self._rover_pos_comms = None
-            self._los_data = None
-        else:
-            self._rover_pos_comms = (wx, wy)
-            if self._base_pos:
-                self._los_data = compute_line_of_sight(
-                    self._xg,
-                    self._yg,
-                    self._zg,
-                    self._base_pos,
-                    self._rover_pos_comms,
-                )
+        self._update_position_labels()
         self._show_layer("comms")
 
     def _handle_rover_click(self, wx, wy):
-        self._rover_pos = (wx, wy)
-        self._rover_data = compute_rover_footprint(
-            self._xg,
-            self._yg,
-            self._zg,
-            self._rover_pos,
-            rover_heading=self._rover_heading,
-        )
-        self._show_layer("rover")
+        self._place_rover(wx, wy)
 
     def _handle_range_click(self, wx, wy):
-        if self._battery_mode == "lander":
-            self._lander_pos = (wx, wy)
-            self._waypoints.clear()
-            self._wp_path = None
-            self._wp_cost = None
-            self._range_cache.clear()
-        else:
-            if self._lander_pos is None:
-                self._info_detail.setText("Place lander first!")
-                return
-            self._waypoints.append((wx, wy))
-            # Recompute route through waypoints
-            if len(self._waypoints) >= 1:
-                wp_path, wp_cost = compute_wp_route(
-                    self._lander_pos,
-                    self._waypoints,
-                    self._traversal_graph,
-                    self._cost_grid,
-                    self._xg,
-                    self._yg,
-                )
-                self._wp_path = wp_path
-                self._wp_cost = wp_cost
-        self._show_layer("range")
+        self._place_waypoint(wx, wy)
+
+    # -----------------------------------------------------------------------
+    # Unified placement handlers (sidebar buttons, work on any layer)
+    # -----------------------------------------------------------------------
+
+    def _place_lander(self, wx, wy):
+        """Place lander/base station — shared by comms and battery layers."""
+        self._base_pos = (wx, wy)
+        self._lander_pos = (wx, wy)
+        self._range_cache.clear()
+        self._waypoints.clear()
+        self._wp_path = None
+        self._wp_cost = None
+
+        # Recompute comms coverage from new base position
+        self._info_detail.setText("Recomputing coverage...")
+        QApplication.processEvents()
+        self._comms_coverage = compute_comms_coverage(
+            self._xg, self._yg, self._zg, self._base_pos
+        )
+        self._cost_grid = compute_traversal_cost(
+            self._slope_deg, self._hazard, self._solar_uptime, self._comms_coverage
+        )
+        self._traversal_graph = build_sparse_graph(
+            self._cost_grid, self._xg, self._yg
+        )
+        # Recompute scores with new comms
+        (
+            self._score_xg,
+            self._score_yg,
+            self._score_grid,
+            self._score_comp,
+            self._score_summary,
+        ) = compute_mission_score(
+            self._xg, self._yg, self._zg,
+            self._slope_deg, self._solar_uptime, self._comms_coverage,
+            self._hazard, self._ice_prob, cell_size=0.25,
+        )
+
+        self._update_position_labels()
+        self._info_detail.setText(
+            f"Lander placed at ({wx:.2f}, {wy:.2f})"
+        )
+        self._show_layer(self._current_layer)
+
+    def _place_rover(self, wx, wy):
+        """Place rover — updates footprint on any layer."""
+        self._rover_pos = (wx, wy)
+        self._rover_pos_comms = (wx, wy)
+        self._rover_data = compute_rover_footprint(
+            self._xg, self._yg, self._zg,
+            self._rover_pos, rover_heading=self._rover_heading,
+        )
+        # Compute LOS from base to rover
+        if self._base_pos:
+            self._los_data = compute_line_of_sight(
+                self._xg, self._yg, self._zg,
+                self._base_pos, self._rover_pos,
+            )
+        self._update_position_labels()
+        self._info_detail.setText(
+            f"Rover placed at ({wx:.2f}, {wy:.2f})"
+        )
+        self._show_layer(self._current_layer)
+
+    def _place_waypoint(self, wx, wy):
+        """Add a battery range waypoint."""
+        if self._lander_pos is None:
+            self._info_detail.setText("Place lander first!")
+            return
+        self._waypoints.append((wx, wy))
+        # Recompute route
+        wp_path, wp_cost = compute_wp_route(
+            self._lander_pos, self._waypoints,
+            self._traversal_graph, self._cost_grid,
+            self._xg, self._yg,
+        )
+        self._wp_path = wp_path
+        self._wp_cost = wp_cost
+        self._update_position_labels()
+        self._info_detail.setText(
+            f"WP{len(self._waypoints)} at ({wx:.2f}, {wy:.2f})"
+        )
+        self._show_layer(self._current_layer)
 
     # -----------------------------------------------------------------------
     # Sidebar control handlers
@@ -1571,7 +1662,7 @@ class LunarPCDViewer(QMainWindow):
     def _on_heading_changed(self, value):
         self._rover_heading = value
         self._heading_label.setText(f"{value} deg")
-        if self._rover_pos and self._current_layer == "rover":
+        if self._rover_pos:
             self._rover_data = compute_rover_footprint(
                 self._xg,
                 self._yg,
@@ -1579,20 +1670,21 @@ class LunarPCDViewer(QMainWindow):
                 self._rover_pos,
                 rover_heading=value,
             )
-            self._show_layer("rover")
+            self._show_layer(self._current_layer)
 
     def _on_charge_changed(self, value):
         self._charge_pct = float(value)
         self._charge_label.setText(f"{value}%")
-        if self._lander_pos and self._current_layer == "range":
-            self._show_layer("range")
+        self._range_cache.clear()
+        if self._lander_pos:
+            self._show_layer(self._current_layer)
 
     def _on_clear_waypoints(self):
         self._waypoints.clear()
         self._wp_path = None
         self._wp_cost = None
-        if self._current_layer == "range":
-            self._show_layer("range")
+        self._update_position_labels()
+        self._show_layer(self._current_layer)
 
 
 # ---------------------------------------------------------------------------
