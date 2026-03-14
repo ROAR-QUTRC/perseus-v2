@@ -59,11 +59,13 @@ def generate_launch_description():
         event_handler=OnProcessExit(
             target_action=base_controller_spawner,
             on_exit=[
-                LogInfo(msg=[
-                    "[perseus_controllers] Active wheel_separation: ",
-                    # Reads the live value directly from the controller node
-                    "run `ros2 param get /diff_drive_base_controller wheel_separation` to confirm active value",
-                ]),
+                LogInfo(
+                    msg=[
+                        "[perseus_controllers] Active wheel_separation: ",
+                        # Reads the live value directly from the controller node
+                        "run `ros2 param get /diff_drive_base_controller wheel_separation` to confirm active value",
+                    ]
+                ),
             ],
         )
     )
