@@ -633,7 +633,9 @@ class ManeuverExecutor:
         if abs(linear_error_pct) > 5.0:
             # Compute suggested servo_max_rpm from SLAM/odom ratio
             if odom_linear_dist > 0.01:
-                suggested_rpm = self._servo_max_rpm * (slam_linear_dist / odom_linear_dist)
+                suggested_rpm = self._servo_max_rpm * (
+                    slam_linear_dist / odom_linear_dist
+                )
                 results["suggested_servo_max_rpm"] = suggested_rpm
                 logger.warning(
                     f"  Linear error exceeds 5%. Current servo_max_rpm={self._servo_max_rpm:.1f}"

@@ -70,6 +70,7 @@ _CONTROLLERS_REL_PATH = "perseus_lite/config/perseus_lite_controllers.yaml"
 
 # ── Source directory detection ──────────────────────────────────
 
+
 def _find_src_dir(explicit_path=None):
     """Find the ROS workspace src directory.
 
@@ -87,7 +88,9 @@ def _find_src_dir(explicit_path=None):
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode == 0:
             repo_root = result.stdout.strip()
@@ -131,7 +134,7 @@ def _read_wheel_separation_from_source(src_dir):
     try:
         with open(yaml_path, "r") as f:
             content = f.read()
-        match = re.search(r'wheel_separation:\s*([0-9]+\.?[0-9]*)', content)
+        match = re.search(r"wheel_separation:\s*([0-9]+\.?[0-9]*)", content)
         if match:
             return float(match.group(1))
     except (ValueError, OSError):
@@ -222,6 +225,7 @@ class CalibrationNode(Node):
 
 # ── Input helpers ───────────────────────────────────────────────
 
+
 def _prompt_float(prompt_text):
     while True:
         try:
@@ -240,6 +244,7 @@ def _prompt_choice(prompt_text, valid):
 
 # ── File updaters ───────────────────────────────────────────────
 
+
 def _update_servo_max_rpm_defaults(src_dir, new_rpm):
     """Update servo_max_rpm default_value in launch files and xacro."""
     if src_dir is None:
@@ -254,7 +259,7 @@ def _update_servo_max_rpm_defaults(src_dir, new_rpm):
         with open(filepath, "r") as f:
             content = f.read()
         pattern = r'("servo_max_rpm",\s*\n\s*default_value=")[^"]*(")'
-        new_content, count = re.subn(pattern, rf'\g<1>{new_rpm:.1f}\2', content)
+        new_content, count = re.subn(pattern, rf"\g<1>{new_rpm:.1f}\2", content)
         if count > 0:
             with open(filepath, "w") as f:
                 f.write(new_content)
@@ -265,7 +270,7 @@ def _update_servo_max_rpm_defaults(src_dir, new_rpm):
         with open(xacro_path, "r") as f:
             content = f.read()
         pattern = r'(<xacro:arg\s+name="servo_max_rpm"\s+default=")[^"]*(")'
-        new_content, count = re.subn(pattern, rf'\g<1>{new_rpm:.1f}\2', content)
+        new_content, count = re.subn(pattern, rf"\g<1>{new_rpm:.1f}\2", content)
         if count > 0:
             with open(xacro_path, "w") as f:
                 f.write(new_content)
@@ -286,8 +291,8 @@ def _update_wheel_separation(src_dir, new_separation):
     with open(yaml_path, "r") as f:
         content = f.read()
 
-    pattern = r'(wheel_separation:\s*)[0-9]+\.?[0-9]*'
-    new_content, count = re.subn(pattern, rf'\g<1>{new_separation:.4f}', content)
+    pattern = r"(wheel_separation:\s*)[0-9]+\.?[0-9]*"
+    new_content, count = re.subn(pattern, rf"\g<1>{new_separation:.4f}", content)
     if count > 0:
         with open(yaml_path, "w") as f:
             f.write(new_content)
@@ -296,6 +301,7 @@ def _update_wheel_separation(src_dir, new_separation):
 
 
 # ── Linear calibration (servo_max_rpm) ──────────────────────────
+
 
 def run_linear_calibration(node):
     """Drive 1 m, measure actual distance, compute corrected servo_max_rpm."""
@@ -308,8 +314,10 @@ def run_linear_calibration(node):
 
     drive_time = COMMANDED_DISTANCE / LINEAR_SPEED
 
-    print(f"\n  Commanding {COMMANDED_DISTANCE:.1f} m forward "
-          f"({LINEAR_SPEED} m/s for {drive_time:.1f} s)")
+    print(
+        f"\n  Commanding {COMMANDED_DISTANCE:.1f} m forward "
+        f"({LINEAR_SPEED} m/s for {drive_time:.1f} s)"
+    )
     input("  Press ENTER when ready to drive...")
 
     node.drive_timed(LINEAR_SPEED, drive_time)
@@ -365,7 +373,9 @@ def run_linear_calibration(node):
             print("  Warning: could not find source files to update.")
             if node._src_dir is None:
                 print("  Pass -p src_dir:=/path/to/ros_ws/src to fix this.")
-            print(f"\n  To apply manually, set servo_max_rpm default to {corrected_rpm:.1f} in:")
+            print(
+                f"\n  To apply manually, set servo_max_rpm default to {corrected_rpm:.1f} in:"
+            )
             for p in _LAUNCH_REL_PATHS + [_XACRO_REL_PATH]:
                 print(f"    {p}")
     else:
@@ -387,6 +397,7 @@ def run_linear_calibration(node):
 
 # ── Rotation calibration (wheel_separation) ─────────────────────
 
+
 def run_rotation_calibration(node, current_separation):
     """Command a full rotation, measure actual angle, compute corrected wheel_separation."""
     commanded_deg = COMMANDED_ANGLE
@@ -407,8 +418,10 @@ def run_rotation_calibration(node, current_separation):
 
     rotate_time = commanded_rad / ROTATION_SPEED
 
-    print(f"\n  Commanding {commanded_deg:.0f} deg rotation "
-          f"({math.degrees(ROTATION_SPEED):.0f} deg/s for {rotate_time:.1f} s)")
+    print(
+        f"\n  Commanding {commanded_deg:.0f} deg rotation "
+        f"({math.degrees(ROTATION_SPEED):.0f} deg/s for {rotate_time:.1f} s)"
+    )
     input("  Press ENTER when ready to rotate...")
 
     node.rotate_timed(ROTATION_SPEED, rotate_time)
@@ -449,7 +462,9 @@ def run_rotation_calibration(node, current_separation):
     # If under-rotates, effective track is wider -> increase it.
     corrected_sep = current_separation * (commanded_deg / measured_deg)
 
-    print(f"\n  FAIL — rotation error exceeds {ACCEPTABLE_ROTATION_ERROR:.0f} deg tolerance.")
+    print(
+        f"\n  FAIL — rotation error exceeds {ACCEPTABLE_ROTATION_ERROR:.0f} deg tolerance."
+    )
     print(f"  Current wheel_separation:   {current_separation:.4f} m")
     print(f"  Corrected wheel_separation: {corrected_sep:.4f} m")
     if error_deg > 0:
@@ -495,6 +510,7 @@ def run_rotation_calibration(node, current_separation):
 
 
 # ── Main ────────────────────────────────────────────────────────
+
 
 def main():
     rclpy.init()
@@ -552,7 +568,7 @@ def main():
         # Fall back to reading from source files
         ctrl_separation = _read_wheel_separation_from_source(node._src_dir)
         if ctrl_separation is not None:
-            print(f"  Could not read from controller. Using source file values.")
+            print("  Could not read from controller. Using source file values.")
             print(f"  wheel_separation: {ctrl_separation:.4f} m  (from source)")
         else:
             print("  Could not read from controller or source files.")
@@ -582,18 +598,32 @@ def main():
 
         any_updated = False
         if linear_result:
-            status = "PASS" if abs(linear_result["error_m"]) <= ACCEPTABLE_LINEAR_ERROR else "CORRECTED"
-            print(f"  Linear:   {status}  {linear_result['error_pct']:+.1f}% error "
-                  f"({linear_result['error_m']:+.3f} m)")
+            status = (
+                "PASS"
+                if abs(linear_result["error_m"]) <= ACCEPTABLE_LINEAR_ERROR
+                else "CORRECTED"
+            )
+            print(
+                f"  Linear:   {status}  {linear_result['error_pct']:+.1f}% error "
+                f"({linear_result['error_m']:+.3f} m)"
+            )
             print(f"            servo_max_rpm = {linear_result['servo_max_rpm']:.1f}")
             if linear_result["updated_files"]:
                 any_updated = True
 
         if rotation_result:
-            status = "PASS" if abs(rotation_result["error_deg"]) <= ACCEPTABLE_ROTATION_ERROR else "CORRECTED"
-            print(f"  Rotation: {status}  {rotation_result['error_pct']:+.1f}% error "
-                  f"({rotation_result['error_deg']:+.1f} deg)")
-            print(f"            wheel_separation = {rotation_result['wheel_separation']:.4f} m")
+            status = (
+                "PASS"
+                if abs(rotation_result["error_deg"]) <= ACCEPTABLE_ROTATION_ERROR
+                else "CORRECTED"
+            )
+            print(
+                f"  Rotation: {status}  {rotation_result['error_pct']:+.1f}% error "
+                f"({rotation_result['error_deg']:+.1f} deg)"
+            )
+            print(
+                f"            wheel_separation = {rotation_result['wheel_separation']:.4f} m"
+            )
             if rotation_result["updated_files"]:
                 any_updated = True
 

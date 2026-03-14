@@ -22,7 +22,6 @@ def generate_launch_description():
     rotation_speed = LaunchConfiguration("rotation_speed")
     enabled_phases = LaunchConfiguration("enabled_phases")
 
-
     arguments = [
         DeclareLaunchArgument(
             "db_path",
