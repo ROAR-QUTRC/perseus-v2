@@ -750,33 +750,16 @@ class LunarPCDViewer(QMainWindow):
         self._hover_label.setText("Move cursor over terrain...")
 
     def _ensure_gl_view(self):
-        """Lazy-create the GLViewWidget, replacing the placeholder at index 0.
-
-        Tests that an OpenGL context can actually be created — on NixOS
-        without nixgl, the widget constructs fine but painting fails.
-        """
+        """Lazy-create the GLViewWidget, replacing the placeholder at index 0."""
         if self._gl_view is not None:
-            return self._gl_ok
+            return True
+        if self._gl_ok is False:
+            return False  # already tried and failed
         try:
-            from OpenGL.GL import glGetString, GL_VERSION
-
             view = gl.GLViewWidget()
             view.setCameraPosition(distance=5, elevation=30, azimuth=45)
             t = _theme(self._theme_name)
             view.setBackgroundColor(t["panel_bg"])
-
-            # Force context creation and test it actually works
-            view.show()
-            view.makeCurrent()
-            version = glGetString(GL_VERSION)
-            view.doneCurrent()
-            view.hide()
-
-            if version is None:
-                raise RuntimeError("OpenGL context created but glGetString returned None")
-
-            print(f"[PERSEUS] OpenGL OK: {version.decode() if isinstance(version, bytes) else version}")
-
             # Replace placeholder with GL widget
             self._stack.removeWidget(self._gl_placeholder)
             self._gl_placeholder.deleteLater()
@@ -792,7 +775,6 @@ class LunarPCDViewer(QMainWindow):
                 "  nixgl python3 lunar_pcd_viewer_qt.py <file.pcd>"
             )
             self._gl_placeholder.setAlignment(Qt.AlignCenter)
-            self._gl_view = None
             self._gl_ok = False
             return False
 
@@ -895,39 +877,32 @@ class LunarPCDViewer(QMainWindow):
     # -----------------------------------------------------------------------
 
     def _render_3d(self):
-        """3D terrain surface from the interpolated grid."""
+        """3D terrain as a dense scatter plot from the interpolated grid."""
         self._gl_view.clear()
         xg, yg, zg = self._xg, self._yg, self._zg
 
-        # Build colour map from elevation
-        z_norm = (zg - zg.min()) / (zg.max() - zg.min() + 1e-9)
+        # Flatten grid to point array
+        pos = np.column_stack([
+            xg.ravel(),
+            yg.ravel(),
+            zg.ravel(),
+        ]).astype(np.float32)
+
+        # Colour by elevation using lunar LUT
+        z_flat = zg.ravel()
+        z_norm = (z_flat - z_flat.min()) / (z_flat.max() - z_flat.min() + 1e-9)
         lut = LUTS["lunar"]
         idx = (z_norm * 255).astype(np.uint8)
-        colors_rc = lut[idx].astype(np.float32) / 255.0  # (rows, cols, 4)
+        colors = lut[idx].astype(np.float32) / 255.0
 
-        # GLSurfacePlotItem: z shape is (len_x, len_y), our grid is
-        # (rows=len_y, cols=len_x), so transpose.  Colors must be
-        # flattened to (n_vertices, 4) for MeshData.setVertexColors.
-        z_t = zg.T.astype(np.float64)
-        colors_t = colors_rc.transpose(1, 0, 2)  # (cols, rows, 4)
-        colors_flat = colors_t.reshape(-1, 4).copy()
-
-        surface = gl.GLSurfacePlotItem(
-            x=xg[0, :].astype(np.float64),
-            y=yg[:, 0].astype(np.float64),
-            z=z_t,
-            shader=None,
-            smooth=False,
-            computeNormals=False,
+        scatter = gl.GLScatterPlotItem(
+            pos=pos, color=colors, size=2.0, pxMode=True
         )
-        # Set colors after construction so we can flatten properly
-        surface._meshdata.setVertexColors(colors_flat)
-        surface.meshDataChanged()
-        self._gl_view.addItem(surface)
+        self._gl_view.addItem(scatter)
 
         # Centre camera on terrain
-        cx = float(np.mean(xg[0, :]))
-        cy = float(np.mean(yg[:, 0]))
+        cx = float(np.mean(xg))
+        cy = float(np.mean(yg))
         cz = float(np.mean(zg))
         span = max(float(np.ptp(xg)), float(np.ptp(yg)))
         self._gl_view.setCameraPosition(
