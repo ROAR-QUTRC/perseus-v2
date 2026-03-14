@@ -51,6 +51,7 @@ from PyQt5.QtWidgets import (
     QApplication,
     QButtonGroup,
     QDateEdit,
+    QDoubleSpinBox,
     QFrame,
     QGroupBox,
     QHBoxLayout,
@@ -333,21 +334,27 @@ class LunarPCDViewer(QMainWindow):
         # Global lunar lat/long settings bar
         loc_bar = QHBoxLayout()
         loc_bar.addWidget(QLabel("Lunar Lat:"))
-        self._global_lat = QSpinBox()
-        self._global_lat.setRange(-90, 90)
-        self._global_lat.setValue(int(DEFAULT_LAT))
+        self._global_lat = QDoubleSpinBox()
+        self._global_lat.setRange(-90.0, 90.0)
+        self._global_lat.setDecimals(1)
+        self._global_lat.setSingleStep(0.1)
+        self._global_lat.setValue(DEFAULT_LAT)
         self._global_lat.setSuffix(" deg")
         loc_bar.addWidget(self._global_lat)
         loc_bar.addWidget(QLabel("Lon:"))
-        self._global_lon = QSpinBox()
-        self._global_lon.setRange(-180, 180)
-        self._global_lon.setValue(int(DEFAULT_LON))
+        self._global_lon = QDoubleSpinBox()
+        self._global_lon.setRange(-180.0, 180.0)
+        self._global_lon.setDecimals(1)
+        self._global_lon.setSingleStep(0.1)
+        self._global_lon.setValue(DEFAULT_LON)
         self._global_lon.setSuffix(" deg")
         loc_bar.addWidget(self._global_lon)
         self._btn_apply_location = QPushButton("Apply Location")
         self._btn_apply_location.clicked.connect(self._on_apply_location)
         loc_bar.addWidget(self._btn_apply_location)
-        self._location_info = QLabel(f"Lat {int(DEFAULT_LAT)} Lon {int(DEFAULT_LON)}")
+        self._location_info = QLabel(
+            f"Shackleton Crater ({DEFAULT_LAT}, {DEFAULT_LON})"
+        )
         self._location_info.setFont(QFont("Courier New", 9))
         loc_bar.addWidget(self._location_info)
         loc_bar.addStretch()
@@ -508,14 +515,16 @@ class LunarPCDViewer(QMainWindow):
         # Lat / Lon
         row = QHBoxLayout()
         row.addWidget(QLabel("Lat:"))
-        self._spin_lat = QSpinBox()
-        self._spin_lat.setRange(-90, 90)
-        self._spin_lat.setValue(int(DEFAULT_LAT))
+        self._spin_lat = QDoubleSpinBox()
+        self._spin_lat.setRange(-90.0, 90.0)
+        self._spin_lat.setDecimals(1)
+        self._spin_lat.setValue(DEFAULT_LAT)
         row.addWidget(self._spin_lat)
         row.addWidget(QLabel("Lon:"))
-        self._spin_lon = QSpinBox()
-        self._spin_lon.setRange(-180, 180)
-        self._spin_lon.setValue(int(DEFAULT_LON))
+        self._spin_lon = QDoubleSpinBox()
+        self._spin_lon.setRange(-180.0, 180.0)
+        self._spin_lon.setDecimals(1)
+        self._spin_lon.setValue(DEFAULT_LON)
         row.addWidget(self._spin_lon)
         sun_lay.addLayout(row)
 
@@ -1733,7 +1742,7 @@ class LunarPCDViewer(QMainWindow):
         self._spin_lat.setValue(lat)
         self._spin_lon.setValue(lon)
 
-        self._location_info.setText(f"Recomputing for Lat {lat} Lon {lon}...")
+        self._location_info.setText(f"Recomputing for ({lat:.1f}, {lon:.1f})...")
         QApplication.processEvents()
 
         # Recompute current shadow
@@ -1773,7 +1782,7 @@ class LunarPCDViewer(QMainWindow):
             self._hazard, self._ice_prob, cell_size=0.25,
         )
 
-        self._location_info.setText(f"Lat {lat} Lon {lon}")
+        self._location_info.setText(f"({lat:.1f}, {lon:.1f})")
         self._show_layer(self._current_layer)
 
     def _on_update_sun(self):
