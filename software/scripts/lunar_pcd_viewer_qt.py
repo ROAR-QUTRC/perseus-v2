@@ -64,7 +64,6 @@ from PyQt5.QtWidgets import (
     QSlider,
     QSpinBox,
     QSplitter,
-    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -568,16 +567,20 @@ class LunarPCDViewer(QMainWindow):
         sidebar_scroll.setWidget(sidebar_widget)
         splitter.addWidget(sidebar_scroll)
 
-        # --- Main view stack ---
-        self._stack = QStackedWidget()
+        # --- Main view container ---
+        # Use a plain container with show/hide instead of QStackedWidget,
+        # because QStackedWidget destroys the GL context when hiding.
+        self._view_container = QWidget()
+        self._view_layout = QVBoxLayout(self._view_container)
+        self._view_layout.setContentsMargins(0, 0, 0, 0)
 
-        # 3D view — lazy-created on first use to avoid OpenGL context errors
-        # when running without nixgl or on Wayland without EGL.
-        self._gl_view = None  # created in _ensure_gl_view()
+        # 3D view — lazy-created on first use
+        self._gl_view = None
         self._gl_ok = False
-        self._gl_placeholder = QLabel("Loading 3D view...")
+        self._gl_placeholder = QLabel(
+            "3D view — click '3D TERRAIN' layer to activate"
+        )
         self._gl_placeholder.setAlignment(Qt.AlignCenter)
-        self._stack.addWidget(self._gl_placeholder)  # index 0 = placeholder/GL
 
         # 2D view
         self._plot_widget = pg.PlotWidget()
@@ -594,10 +597,11 @@ class LunarPCDViewer(QMainWindow):
             rateLimit=30,
             slot=self._on_plot_hover,
         )
-        self._stack.addWidget(self._plot_widget)
-        self._stack.setCurrentIndex(1)  # show 2D view during loading
 
-        splitter.addWidget(self._stack)
+        self._view_layout.addWidget(self._plot_widget)
+        # Placeholder and GL view are added/removed dynamically
+
+        splitter.addWidget(self._view_container)
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
 
@@ -822,7 +826,7 @@ class LunarPCDViewer(QMainWindow):
         self._hover_label.setText("Move cursor over terrain...")
 
     def _ensure_gl_view(self):
-        """Lazy-create the GLViewWidget, replacing the placeholder at index 0."""
+        """Lazy-create the GLViewWidget on first use."""
         if self._gl_view is not None:
             return True
         if self._gl_ok is False:
@@ -832,21 +836,13 @@ class LunarPCDViewer(QMainWindow):
             view.setCameraPosition(distance=5, elevation=30, azimuth=45)
             t = _theme(self._theme_name)
             view.setBackgroundColor(t["panel_bg"])
-            # Replace placeholder with GL widget
-            self._stack.removeWidget(self._gl_placeholder)
-            self._gl_placeholder.deleteLater()
-            self._stack.insertWidget(0, view)
+            self._view_layout.addWidget(view)
+            view.hide()  # start hidden; _show_layer will show it
             self._gl_view = view
             self._gl_ok = True
             return True
         except Exception as e:
             print(f"[PERSEUS] OpenGL unavailable: {e}")
-            self._gl_placeholder.setText(
-                "3D view unavailable\n\n"
-                "Run with nixgl for OpenGL support:\n"
-                "  nixgl python3 lunar_pcd_viewer_qt.py <file.pcd>"
-            )
-            self._gl_placeholder.setAlignment(Qt.AlignCenter)
             self._gl_ok = False
             return False
 
@@ -856,16 +852,17 @@ class LunarPCDViewer(QMainWindow):
 
         if layer == "3d":
             if self._ensure_gl_view():
-                self._stack.setCurrentIndex(0)
-                # QStackedWidget destroys the GL context when hiding;
-                # restore it before rendering
-                QApplication.processEvents()
-                self._gl_view.makeCurrent()
+                self._plot_widget.hide()
+                self._gl_view.show()
                 self._render_3d()
             else:
-                self._stack.setCurrentIndex(0)  # show error placeholder
+                self._info_detail.setText(
+                    "3D unavailable — run with nixgl"
+                )
         else:
-            self._stack.setCurrentIndex(1)
+            if self._gl_view is not None:
+                self._gl_view.hide()
+            self._plot_widget.show()
             if layer == "elevation":
                 self._render_elevation()
             elif layer == "contour":
