@@ -768,14 +768,25 @@ class LunarPCDViewer(QMainWindow):
         self._traversal_graph = build_sparse_graph(self._cost_grid, xg, yg)
         self._energy_graph = build_sparse_graph(self._energy_cost_grid, xg, yg)
 
-        # Precompute shaded stack for cycle playback with anti-aliased shadows
+        # Precompute shaded stack — only daylight frames (sun above horizon)
         from scipy.ndimage import gaussian_filter as _gf
 
         self._z_norm = (zg - zg.min()) / (zg.max() - zg.min() + 1e-9)
-        self._shaded_stack = [
-            self._z_norm * (0.3 + 0.7 * _gf(il.astype(np.float64), sigma=1.2))
-            for il in self._illum_stack
-        ]
+        self._shaded_stack = []
+        self._shaded_ts = []
+        for i, il in enumerate(self._illum_stack):
+            if float(np.mean(il)) > 0.01:  # sun is up somewhere
+                smooth = _gf(il.astype(np.float64), sigma=1.2)
+                self._shaded_stack.append(self._z_norm * (0.3 + 0.7 * smooth))
+                if self._cycle_ts:
+                    self._shaded_ts.append(self._cycle_ts[i])
+        if not self._shaded_stack:
+            # Fallback: use all frames if no daylight found
+            self._shaded_stack = [
+                self._z_norm * (0.3 + 0.7 * _gf(il.astype(np.float64), sigma=1.2))
+                for il in self._illum_stack
+            ]
+            self._shaded_ts = list(self._cycle_ts) if self._cycle_ts else []
 
         elapsed = time.monotonic() - t0
         print(f"[PERSEUS] Total precomputation: {elapsed:.1f}s")
@@ -1808,10 +1819,20 @@ class LunarPCDViewer(QMainWindow):
         self._z_norm = (self._zg - self._zg.min()) / (
             self._zg.max() - self._zg.min() + 1e-9
         )
-        self._shaded_stack = [
-            self._z_norm * (0.3 + 0.7 * _gf(il.astype(np.float64), sigma=1.2))
-            for il in self._illum_stack
-        ]
+        self._shaded_stack = []
+        self._shaded_ts = []
+        for i, il in enumerate(self._illum_stack):
+            if float(np.mean(il)) > 0.01:
+                smooth = _gf(il.astype(np.float64), sigma=1.2)
+                self._shaded_stack.append(self._z_norm * (0.3 + 0.7 * smooth))
+                if self._cycle_ts:
+                    self._shaded_ts.append(self._cycle_ts[i])
+        if not self._shaded_stack:
+            self._shaded_stack = [
+                self._z_norm * (0.3 + 0.7 * _gf(il.astype(np.float64), sigma=1.2))
+                for il in self._illum_stack
+            ]
+            self._shaded_ts = list(self._cycle_ts) if self._cycle_ts else []
 
         # Recompute ice deposits (depends on illumination)
         self._ice_prob, self._drill_sites = generate_ice_deposits(
@@ -1883,20 +1904,19 @@ class LunarPCDViewer(QMainWindow):
             self._cycle_frame = 0
 
         # Update display
-        day_frac = self._cycle_frame / n * 28.0
-        day_num = int(day_frac) + 1
-        hour_frac = (day_frac % 1.0) * 24.0
         pct = float(np.mean(self._shaded_stack[self._cycle_frame]) * 100)
-        self._cycle_label.setText(
-            f"Day {day_num}/28 ({hour_frac:.0f}h) | {pct:.0f}% sunlit"
-        )
+        frame_label = f"Frame {self._cycle_frame + 1}/{n} | {pct:.0f}% sunlit"
+        if self._shaded_ts and self._cycle_frame < len(self._shaded_ts):
+            ts = self._shaded_ts[self._cycle_frame]
+            frame_label = ts.strftime("%b %d %H:%M") + f" | {pct:.0f}% sunlit"
+        self._cycle_label.setText(frame_label)
 
         if self._current_layer == "solar":
             self._show_image(
                 self._shaded_stack[self._cycle_frame], "shadow", zmin=0.0, zmax=1.0
             )
-            if self._cycle_ts:
-                ts = self._cycle_ts[self._cycle_frame]
+            if self._shaded_ts and self._cycle_frame < len(self._shaded_ts):
+                ts = self._shaded_ts[self._cycle_frame]
                 self._info_detail.setText(
                     ts.strftime("%Y-%m-%d %H:%M UTC") + f" | {pct:.0f}% sunlit"
                 )
