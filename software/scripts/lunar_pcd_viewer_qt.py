@@ -403,11 +403,57 @@ class LunarPCDViewer(QMainWindow):
         self._sidebar_layout.addWidget(self._layer_list)
 
         # Contour overlay toggle (applies to elevation layer)
-        from PyQt5.QtWidgets import QCheckBox
+        from PyQt5.QtWidgets import QCheckBox, QComboBox
+
         self._chk_contours = QCheckBox("Show contour lines")
         self._chk_contours.setChecked(True)
         self._chk_contours.toggled.connect(self._on_contour_toggled)
         self._sidebar_layout.addWidget(self._chk_contours)
+
+        # ── 3D RENDERING OPTIONS ──
+        self._3d_group = QGroupBox("3D OPTIONS")
+        g3d_lay = QVBoxLayout(self._3d_group)
+        g3d_lay.setSpacing(4)
+
+        # Render mode: points / wireframe / solid
+        row_mode = QHBoxLayout()
+        row_mode.addWidget(QLabel("Mode:"))
+        self._combo_3d_mode = QComboBox()
+        self._combo_3d_mode.addItems(["Points", "Wireframe", "Solid", "Solid + Wire"])
+        self._combo_3d_mode.setCurrentIndex(0)
+        self._combo_3d_mode.currentIndexChanged.connect(
+            lambda _: self._refresh_3d()
+        )
+        row_mode.addWidget(self._combo_3d_mode)
+        g3d_lay.addLayout(row_mode)
+
+        # Colouring options
+        self._chk_elev_color = QCheckBox("Elevation colouring")
+        self._chk_elev_color.setChecked(True)
+        self._chk_elev_color.toggled.connect(lambda _: self._refresh_3d())
+        g3d_lay.addWidget(self._chk_elev_color)
+
+        self._chk_solar_light = QCheckBox("Solar lighting + shadows")
+        self._chk_solar_light.setChecked(False)
+        self._chk_solar_light.toggled.connect(lambda _: self._refresh_3d())
+        g3d_lay.addWidget(self._chk_solar_light)
+
+        # 3D solar animation
+        self._btn_3d_cycle = QPushButton("Play 3D Solar Day")
+        self._btn_3d_cycle.clicked.connect(self._toggle_3d_cycle)
+        g3d_lay.addWidget(self._btn_3d_cycle)
+        self._3d_cycle_label = QLabel("")
+        self._3d_cycle_label.setFont(QFont("Courier New", 9))
+        g3d_lay.addWidget(self._3d_cycle_label)
+
+        self._sidebar_layout.addWidget(self._3d_group)
+
+        # 3D cycle state
+        self._3d_cycle_playing = False
+        self._3d_cycle_frame = 0
+        self._3d_cycle_timer = QTimer(self)
+        self._3d_cycle_timer.setInterval(200)
+        self._3d_cycle_timer.timeout.connect(self._3d_cycle_step)
 
         # ── MISSION SETUP — always visible ──
         setup_group = QGroupBox("MISSION SETUP")
@@ -829,6 +875,7 @@ class LunarPCDViewer(QMainWindow):
     def _update_sidebar_visibility(self, layer):
         """Show/hide layer-specific sidebar groups."""
         self._sun_group.setVisible(layer == "solar")
+        self._3d_group.setVisible(layer == "3d")
 
     def _set_click_mode(self, mode):
         """Set what a map click does: 'lander', 'rover', 'wp', or None."""
@@ -1007,54 +1054,153 @@ class LunarPCDViewer(QMainWindow):
     # Layer renderers
     # -----------------------------------------------------------------------
 
-    def _render_3d(self):
-        """3D terrain as a dense scatter plot from the interpolated grid."""
+    def _compute_3d_colors(self, illum=None):
+        """Build per-vertex RGBA colours for the 3D view."""
+        zg = self._zg
+        rows, cols = zg.shape
+        z_flat = zg.ravel()
+
+        if self._chk_elev_color.isChecked():
+            # Elevation colouring via lunar LUT
+            z_norm = (z_flat - z_flat.min()) / (z_flat.max() - z_flat.min() + 1e-9)
+            lut = LUTS["topo"]
+            idx = (z_norm * 255).astype(np.uint8)
+            colors = lut[idx].astype(np.float32) / 255.0
+        else:
+            # Flat grey
+            colors = np.full((len(z_flat), 4), 0.6, dtype=np.float32)
+            colors[:, 3] = 1.0
+
+        if self._chk_solar_light.isChecked():
+            # Apply illumination as brightness multiplier
+            if illum is None:
+                illum = self._illum0
+            from scipy.ndimage import gaussian_filter as _gf
+
+            illum_smooth = _gf(illum.astype(np.float64), sigma=1.2)
+            brightness = (0.3 + 0.7 * illum_smooth).ravel().astype(np.float32)
+            colors[:, 0] *= brightness
+            colors[:, 1] *= brightness
+            colors[:, 2] *= brightness
+
+        return colors
+
+    def _render_3d(self, illum=None):
+        """Render 3D terrain in the selected mode."""
         self._gl_view.clear()
         xg, yg, zg = self._xg, self._yg, self._zg
 
-        # Colour by elevation using lunar LUT
-        z_flat = zg.ravel()
-        z_norm = (z_flat - z_flat.min()) / (z_flat.max() - z_flat.min() + 1e-9)
-        lut = LUTS["lunar"]
-        idx = (z_norm * 255).astype(np.uint8)
-        colors = lut[idx].astype(np.float32) / 255.0
+        colors = self._compute_3d_colors(illum)
 
-        # Build position array — Z is elevation (up = high terrain)
-        pos = np.column_stack([
-            xg.ravel(),
-            yg.ravel(),
-            z_flat,
-        ]).astype(np.float32)
+        mode = self._combo_3d_mode.currentText()
 
-        scatter = gl.GLScatterPlotItem(
-            pos=pos, color=colors, size=2.0, pxMode=True
-        )
-        self._gl_view.addItem(scatter)
+        if mode == "Points":
+            pos = np.column_stack([
+                xg.ravel(), yg.ravel(), zg.ravel(),
+            ]).astype(np.float32)
+            scatter = gl.GLScatterPlotItem(
+                pos=pos, color=colors, size=2.0, pxMode=True,
+            )
+            self._gl_view.addItem(scatter)
 
-        # Add a reference grid at the minimum elevation
-        grid = gl.GLGridItem()
-        z_span = float(np.ptp(zg))
+        else:
+            # Mesh modes: wireframe, solid, or both
+            rows, cols = zg.shape
+            # Reshape colours to (rows, cols, 4) for vertex colouring
+            vert_colors = colors.reshape(rows, cols, 4)
+
+            # GLSurfacePlotItem needs (len_x, len_y) = (cols, rows)
+            z_t = zg.T.astype(np.float64)
+            colors_flat = vert_colors.transpose(1, 0, 2).reshape(-1, 4).copy()
+
+            draw_faces = mode in ("Solid", "Solid + Wire")
+            draw_edges = mode in ("Wireframe", "Solid + Wire")
+
+            surface = gl.GLSurfacePlotItem(
+                x=xg[0, :].astype(np.float64),
+                y=yg[:, 0].astype(np.float64),
+                z=z_t,
+                shader=None,
+                smooth=False,
+                computeNormals=False,
+                drawFaces=draw_faces,
+                drawEdges=draw_edges,
+                edgeColor=(0.3, 0.3, 0.3, 0.6) if draw_faces else (0.7, 0.7, 0.7, 0.8),
+            )
+            # Set vertex colours directly on the mesh data
+            surface._meshdata.setVertexColors(colors_flat)
+            surface.meshDataChanged()
+            self._gl_view.addItem(surface)
+
+        # Reference grid at minimum elevation
+        ref_grid = gl.GLGridItem()
         x_span = float(np.ptp(xg))
         y_span = float(np.ptp(yg))
-        grid.setSize(x=x_span, y=y_span)
-        grid.translate(
-            float(np.mean(xg)),
-            float(np.mean(yg)),
-            float(np.min(zg)),
+        ref_grid.setSize(x=x_span, y=y_span)
+        ref_grid.translate(
+            float(np.mean(xg)), float(np.mean(yg)), float(np.min(zg)),
         )
-        grid.setColor((255, 255, 255, 40))
-        self._gl_view.addItem(grid)
+        ref_grid.setColor((255, 255, 255, 40))
+        self._gl_view.addItem(ref_grid)
 
-        # Centre camera looking down at terrain from above
-        cx = float(np.mean(xg))
-        cy = float(np.mean(yg))
-        cz = float(np.mean(zg))
-        span = max(x_span, y_span)
-        self._gl_view.opts["center"] = pg.Vector(cx, cy, cz)
-        self._gl_view.opts["distance"] = span * 1.8
-        self._gl_view.opts["elevation"] = 25
-        self._gl_view.opts["azimuth"] = 45
+        # Camera (only set on first render, not during animation)
+        if illum is None:
+            cx = float(np.mean(xg))
+            cy = float(np.mean(yg))
+            cz = float(np.mean(zg))
+            span = max(x_span, y_span)
+            self._gl_view.opts["center"] = pg.Vector(cx, cy, cz)
+            self._gl_view.opts["distance"] = span * 1.8
+            self._gl_view.opts["elevation"] = 25
+            self._gl_view.opts["azimuth"] = 45
+
         self._gl_view.update()
+
+    def _refresh_3d(self):
+        """Re-render 3D view when options change."""
+        if self._current_layer == "3d" and self._gl_view is not None:
+            self._render_3d()
+
+    def _toggle_3d_cycle(self):
+        """Start/stop the 3D solar day animation."""
+        if self._3d_cycle_playing:
+            self._3d_cycle_playing = False
+            self._3d_cycle_timer.stop()
+            self._btn_3d_cycle.setText("Play 3D Solar Day")
+            self._3d_cycle_label.setText("")
+        else:
+            # Enable solar lighting for the animation
+            self._chk_solar_light.setChecked(True)
+            self._3d_cycle_playing = True
+            self._3d_cycle_frame = 0
+            self._btn_3d_cycle.setText("Stop")
+            n = len(self._illum_stack)
+            interval = max(50, int(20000 / n))
+            self._3d_cycle_timer.setInterval(interval)
+            self._3d_cycle_timer.start()
+
+    def _3d_cycle_step(self):
+        """Advance the 3D solar animation by one frame."""
+        if self._illum_stack is None:
+            return
+        n = len(self._illum_stack)
+        self._3d_cycle_frame = (self._3d_cycle_frame + 1) % n
+
+        illum = self._illum_stack[self._3d_cycle_frame]
+
+        # Skip night frames (sun below horizon)
+        if float(np.mean(illum)) < 0.01:
+            return
+
+        pct = float(np.mean(illum) * 100)
+        ts_label = f"Frame {self._3d_cycle_frame + 1}/{n} | {pct:.0f}% sunlit"
+        if self._cycle_ts and self._3d_cycle_frame < len(self._cycle_ts):
+            ts = self._cycle_ts[self._3d_cycle_frame]
+            ts_label = ts.strftime("%b %d %H:%M") + f" | {pct:.0f}% sunlit"
+        self._3d_cycle_label.setText(ts_label)
+
+        if self._current_layer == "3d":
+            self._render_3d(illum=illum)
 
     def _render_elevation(self):
         self._show_image(self._zg, "topo")
