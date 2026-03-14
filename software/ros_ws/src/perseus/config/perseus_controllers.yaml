@@ -6,17 +6,14 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
     diff_drive_base_controller:
       type: diff_drive_controller/DiffDriveController
-
 joint_state_broadcaster:
   ros__parameters:
     map_interface_to_joint_state:
       effort: current
-
 diff_drive_base_controller:
   ros__parameters:
     left_wheel_names: ["front_left_wheel_joint", "rear_left_wheel_joint"]
     right_wheel_names: ["front_right_wheel_joint", "rear_right_wheel_joint"]
-
     # Increased from 0.714 to account for wheel scrub on sand.
     # The rocker-bogie's passive wheels resist lateral slip, making the
     # effective turning radius wider. Tune this value (try 0.85–1.05)
@@ -24,30 +21,24 @@ diff_drive_base_controller:
     wheel_separation: 0.95
     wheels_per_side: 2
     wheel_radius: 0.147
-
     open_loop: false
-
     # EKF is handling transforms, keep this off
     enable_odom_tf: false
-
     # Looser covariance on sand — wheel odometry is less trustworthy,
     # let the EKF lean more on IMU/GPS
     pose_covariance_diagonal: [0.05, 0.05, 0.05, 0.05, 0.05, 0.1]
     twist_covariance_diagonal: [0.05, 0.05, 0.05, 0.05, 0.05, 0.1]
-
     publish_rate: 50.0
     odom_frame_id: odom
     base_frame_id: base_link
     cmd_vel_timeout: 1.0
-
     # Kinematic limits
     # Reduced linear velocity on sand for better traction control
     linear.x.max_velocity: 1.2
-    linear.x.max_acceleration: 4.0    # Slower accel reduces wheel dig-in
+    linear.x.max_acceleration: 4.0 # Slower accel reduces wheel dig-in
     linear.x.max_jerk: .NAN
-
     # Higher angular velocity so the controller commands enough wheel
     # differential to actually overcome sand resistance during point turns
     angular.z.max_velocity: 4.0
-    angular.z.max_acceleration: 4.0   # Smoother ramp avoids the lurch-then-slip
+    angular.z.max_acceleration: 4.0 # Smoother ramp avoids the lurch-then-slip
     angular.z.max_jerk: .NAN
