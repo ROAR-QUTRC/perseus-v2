@@ -502,6 +502,7 @@ class LunarPCDViewer(QMainWindow):
         # 3D view — lazy-created on first use to avoid OpenGL context errors
         # when running without nixgl or on Wayland without EGL.
         self._gl_view = None  # created in _ensure_gl_view()
+        self._gl_ok = False
         self._gl_placeholder = QLabel("Loading 3D view...")
         self._gl_placeholder.setAlignment(Qt.AlignCenter)
         self._stack.addWidget(self._gl_placeholder)  # index 0 = placeholder/GL
@@ -749,25 +750,50 @@ class LunarPCDViewer(QMainWindow):
         self._hover_label.setText("Move cursor over terrain...")
 
     def _ensure_gl_view(self):
-        """Lazy-create the GLViewWidget, replacing the placeholder at index 0."""
+        """Lazy-create the GLViewWidget, replacing the placeholder at index 0.
+
+        Tests that an OpenGL context can actually be created — on NixOS
+        without nixgl, the widget constructs fine but painting fails.
+        """
         if self._gl_view is not None:
-            return True
+            return self._gl_ok
         try:
+            from OpenGL.GL import glGetString, GL_VERSION
+
             view = gl.GLViewWidget()
             view.setCameraPosition(distance=5, elevation=30, azimuth=45)
             t = _theme(self._theme_name)
             view.setBackgroundColor(t["panel_bg"])
+
+            # Force context creation and test it actually works
+            view.show()
+            view.makeCurrent()
+            version = glGetString(GL_VERSION)
+            view.doneCurrent()
+            view.hide()
+
+            if version is None:
+                raise RuntimeError("OpenGL context created but glGetString returned None")
+
+            print(f"[PERSEUS] OpenGL OK: {version.decode() if isinstance(version, bytes) else version}")
+
             # Replace placeholder with GL widget
             self._stack.removeWidget(self._gl_placeholder)
             self._gl_placeholder.deleteLater()
             self._stack.insertWidget(0, view)
             self._gl_view = view
+            self._gl_ok = True
             return True
         except Exception as e:
             print(f"[PERSEUS] OpenGL unavailable: {e}")
             self._gl_placeholder.setText(
-                "3D view unavailable — run with nixgl for OpenGL support"
+                "3D view unavailable\n\n"
+                "Run with nixgl for OpenGL support:\n"
+                "  nixgl python3 lunar_pcd_viewer_qt.py <file.pcd>"
             )
+            self._gl_placeholder.setAlignment(Qt.AlignCenter)
+            self._gl_view = None
+            self._gl_ok = False
             return False
 
     def _show_layer(self, layer):
