@@ -50,7 +50,7 @@
 
 
     <!-- Left IR Camera -->
-    <gazebo reference="${name}_infra1_frame">
+    <gazebo reference="${name}_infra1_optical_frame">
       <sensor name="ir_left_camera" type="camera">
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
@@ -61,11 +61,11 @@
           <image>
             <width>640</width>
             <height>480</height>
-            <format>L_INT8</format>
+            <!-- <format>L_INT8</format> -->
           </image>
           <clip>
             <near>0.05</near>
-            <far>100</far>
+            <far>50</far>
           </clip>
         </camera>
         <topic>/${name}/${name}/infra1/image_raw</topic>
@@ -74,7 +74,7 @@
     </gazebo>
 
     <!-- Right IR Camera -->
-    <gazebo reference="${name}_infra2_frame">
+    <gazebo reference="${name}_infra2_optical_frame">
       <sensor name="ir_right_camera" type="camera">
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
@@ -85,11 +85,11 @@
           <image>
             <width>640</width>
             <height>480</height>
-            <format>L_INT8</format>
+            <!-- <format>L_INT8</format> -->
           </image>
           <clip>
             <near>0.05</near>
-            <far>100</far>
+            <far>50</far>
           </clip>
         </camera>
         <topic>/${name}/${name}/infra2/image_raw</topic>
