@@ -86,6 +86,7 @@ from lunar_pcd_compute import (
     generate_ice_deposits,
     load_pcd,
     make_terrain_grid,
+    _bilinear_interp,
     _world_to_grid,
 )
 
@@ -184,13 +185,15 @@ def _stylesheet(t):
     QScrollArea {{
         border: none;
     }}
-    QGroupBox#infoGroup {{
+    QLabel#descBar {{
+        background-color: {t['sidebar_bg']};
+        border: 1px solid {t['grid_color']};
+        padding: 4px 8px;
+        color: {t['font_color']};
+    }}
+    QGroupBox#hoverGroup {{
         border: 1px solid {t['accent']};
         background-color: {t['sidebar_bg']};
-        padding: 10px;
-    }}
-    QFrame[frameShape="4"] {{
-        color: {t['grid_color']};
     }}
     """
 
@@ -306,6 +309,16 @@ class LunarPCDViewer(QMainWindow):
         self._stats_label = QLabel("")
         self._stats_label.setAlignment(Qt.AlignCenter)
         root_layout.addWidget(self._stats_label)
+
+        # Layer description banner — spans full width above the main content
+        self._desc_bar = QLabel("")
+        self._desc_bar.setObjectName("descBar")
+        self._desc_bar.setWordWrap(True)
+        self._desc_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self._desc_bar.setFont(QFont("Courier New", 10))
+        self._desc_bar.setMinimumHeight(40)
+        self._desc_bar.setContentsMargins(8, 4, 8, 4)
+        root_layout.addWidget(self._desc_bar)
 
         # Splitter: sidebar | main view
         splitter = QSplitter(Qt.Horizontal)
@@ -448,36 +461,27 @@ class LunarPCDViewer(QMainWindow):
         self._btn_theme.clicked.connect(self._toggle_theme)
         self._sidebar_layout.addWidget(self._btn_theme)
 
-        # Info panel — large description box for the active layer
-        self._info_group = QGroupBox("LAYER INFO")
-        self._info_group.setObjectName("infoGroup")
-        info_lay = QVBoxLayout(self._info_group)
-        info_lay.setContentsMargins(8, 14, 8, 8)
-        info_lay.setSpacing(6)
-
-        self._info_title = QLabel("")
-        self._info_title.setFont(QFont("Courier New", 11, QFont.Bold))
-        self._info_title.setWordWrap(True)
-        info_lay.addWidget(self._info_title)
-
-        self._info_desc = QLabel("")
-        self._info_desc.setWordWrap(True)
-        self._info_desc.setFont(QFont("Courier New", 10))
-        self._info_desc.setMinimumHeight(80)
-        info_lay.addWidget(self._info_desc)
-
-        # Separator line
-        sep = QFrame()
-        sep.setFrameShape(QFrame.HLine)
-        sep.setFrameShadow(QFrame.Sunken)
-        info_lay.addWidget(sep)
-
+        # Action detail (path cost, LOS result, etc.)
         self._info_detail = QLabel("")
         self._info_detail.setWordWrap(True)
         self._info_detail.setFont(QFont("Courier New", 10))
-        info_lay.addWidget(self._info_detail)
+        self._sidebar_layout.addWidget(self._info_detail)
 
-        self._sidebar_layout.addWidget(self._info_group, stretch=1)
+        # Real-time hover readout panel
+        self._hover_group = QGroupBox("CURSOR READOUT")
+        self._hover_group.setObjectName("hoverGroup")
+        hover_lay = QVBoxLayout(self._hover_group)
+        hover_lay.setContentsMargins(6, 14, 6, 6)
+        hover_lay.setSpacing(1)
+
+        self._hover_label = QLabel("Move cursor over terrain...")
+        self._hover_label.setWordWrap(True)
+        self._hover_label.setFont(QFont("Courier New", 9))
+        self._hover_label.setTextFormat(Qt.RichText)
+        self._hover_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        hover_lay.addWidget(self._hover_label)
+
+        self._sidebar_layout.addWidget(self._hover_group, stretch=1)
 
         self._sidebar_layout.addStretch()
         sidebar_scroll.setWidget(sidebar_widget)
@@ -502,6 +506,12 @@ class LunarPCDViewer(QMainWindow):
         self._image_item = pg.ImageItem()
         self._plot_widget.addItem(self._image_item)
         self._plot_widget.scene().sigMouseClicked.connect(self._on_plot_clicked)
+        # Enable mouse move tracking for hover readout
+        self._hover_proxy = pg.SignalProxy(
+            self._plot_widget.scene().sigMouseMoved,
+            rateLimit=30,
+            slot=self._on_plot_hover,
+        )
         self._stack.addWidget(self._plot_widget)
 
         splitter.addWidget(self._stack)
@@ -535,6 +545,11 @@ class LunarPCDViewer(QMainWindow):
             ax.setPen(pg.mkPen(t["font_color"]))
             ax.setTextPen(pg.mkPen(t["font_color"]))
         self._header.setStyleSheet(f"color: {t['accent']};")
+        self._desc_bar.setStyleSheet(
+            f"background-color: {t['sidebar_bg']}; "
+            f"border: 1px solid {t['grid_color']}; "
+            f"color: {t['font_color']}; padding: 4px 8px;"
+        )
 
     def _toggle_theme(self):
         self._theme_name = "light" if self._theme_name == "dark" else "dark"
@@ -681,10 +696,11 @@ class LunarPCDViewer(QMainWindow):
     def _update_info(self, layer):
         title, desc = LAYER_INFO.get(layer, ("", ""))
         t = _theme(self._theme_name)
-        self._info_title.setText(title)
-        self._info_title.setStyleSheet(f"color: {t['accent']};")
-        self._info_desc.setText(desc)
+        self._desc_bar.setText(
+            f"<b style='color:{t['accent']}'>{title}</b> &mdash; {desc}"
+        )
         self._info_detail.setText("")
+        self._hover_label.setText("Move cursor over terrain...")
 
     def _ensure_gl_view(self):
         """Lazy-create the GLViewWidget, replacing the placeholder at index 0."""
@@ -1221,6 +1237,151 @@ class LunarPCDViewer(QMainWindow):
     # -----------------------------------------------------------------------
     # Click handling
     # -----------------------------------------------------------------------
+
+    def _on_plot_hover(self, args):
+        """Update the cursor readout panel with all data at the hover position."""
+        if self._xg is None:
+            return
+
+        pos = args[0]
+        vb = self._plot_widget.getPlotItem().getViewBox()
+        mouse_point = vb.mapSceneToView(pos)
+        wx, wy = float(mouse_point.x()), float(mouse_point.y())
+
+        xg, yg, zg = self._xg, self._yg, self._zg
+        x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
+        y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
+
+        if not (x_min <= wx <= x_max and y_min <= wy <= y_max):
+            self._hover_label.setText("Cursor outside terrain bounds")
+            return
+
+        t = _theme(self._theme_name)
+        ac = t["accent"]
+
+        # Sample all grids at this position
+        elev = float(_bilinear_interp(zg, xg, yg, wx, wy))
+
+        rows, cols = zg.shape
+        col_f = (wx - x_min) / (x_max - x_min + 1e-12) * (cols - 1)
+        row_f = (wy - y_min) / (y_max - y_min + 1e-12) * (rows - 1)
+        ci = int(np.clip(round(col_f), 0, cols - 1))
+        ri = int(np.clip(round(row_f), 0, rows - 1))
+
+        slope = float(self._slope_deg[ri, ci]) if self._slope_deg is not None else 0
+        hazard_v = float(self._hazard[ri, ci]) if self._hazard is not None else 0
+        solar_up = (
+            float(self._solar_uptime[ri, ci]) * 100
+            if self._solar_uptime is not None
+            else 0
+        )
+        comms_v = (
+            float(self._comms_coverage[ri, ci]) * 100
+            if self._comms_coverage is not None
+            else 0
+        )
+        ice_v = (
+            float(self._ice_prob[ri, ci]) * 100
+            if self._ice_prob is not None
+            else 0
+        )
+        rad_v = (
+            float(self._solar_radiation[ri, ci]) / 1000.0
+            if self._solar_radiation is not None
+            else 0
+        )
+        psr_v = (
+            bool(self._psr_mask[ri, ci])
+            if self._psr_mask is not None
+            else False
+        )
+
+        # Mission score — different grid resolution, needs separate lookup
+        score_str = "N/A"
+        if self._score_grid is not None:
+            sxg, syg = self._score_xg, self._score_yg
+            sx_min, sx_max = float(sxg[0, 0]), float(sxg[0, -1])
+            sy_min, sy_max = float(syg[0, 0]), float(syg[-1, 0])
+            if sx_min <= wx <= sx_max and sy_min <= wy <= sy_max:
+                sr, sc = self._score_grid.shape
+                sci = int(np.clip(
+                    round((wx - sx_min) / (sx_max - sx_min + 1e-12) * (sc - 1)),
+                    0, sc - 1,
+                ))
+                sri = int(np.clip(
+                    round((wy - sy_min) / (sy_max - sy_min + 1e-12) * (sr - 1)),
+                    0, sr - 1,
+                ))
+                sv = float(self._score_grid[sri, sci])
+                score_str = f"{sv:.0f}/100"
+                # Component breakdown
+                comp = self._score_comp
+                score_str += (
+                    f" (Sol:{comp['solar'][sri, sci]:.0f} "
+                    f"Slp:{comp['slope'][sri, sci]:.0f} "
+                    f"Clr:{comp['clearance'][sri, sci]:.0f} "
+                    f"Com:{comp['comms'][sri, sci]:.0f})"
+                )
+
+        # Battery range at this point (if lander is placed)
+        range_str = "No lander"
+        if self._lander_pos is not None:
+            lander_key = (
+                round(self._lander_pos[0], 2),
+                round(self._lander_pos[1], 2),
+                round(self._charge_pct, 0),
+            )
+            if lander_key in self._range_cache:
+                _, reachable, range_pct = self._range_cache[lander_key]
+                rv = float(range_pct[ri, ci])
+                if reachable[ri, ci]:
+                    range_str = f"{rv:.0f}% remaining"
+                else:
+                    range_str = "OUT OF RANGE"
+
+        # Illumination at current frame
+        illum_str = ""
+        if self._illum0 is not None:
+            illum_now = float(self._illum0[ri, ci])
+            illum_str = "SUNLIT" if illum_now > 0.5 else "SHADOW"
+
+        # Traversal cost
+        cost_str = ""
+        if self._cost_grid is not None:
+            cv = float(self._cost_grid[ri, ci])
+            cost_str = "IMPASSABLE" if np.isinf(cv) else f"{cv:.1f}"
+
+        # Build HTML readout
+        lines = [
+            f"<b style='color:{ac}'>POSITION</b>",
+            f"  X: {wx:.2f} m  Y: {wy:.2f} m",
+            f"  Grid: [{ri}, {ci}]",
+            "",
+            f"<b style='color:{ac}'>TERRAIN</b>",
+            f"  Elevation: {elev:.2f} m",
+            f"  Slope:     {slope:.1f} deg",
+            f"  Hazard:    {hazard_v:.2f}",
+            f"  Traversal: {cost_str}",
+            "",
+            f"<b style='color:{ac}'>SOLAR</b>",
+            f"  Uptime:    {solar_up:.0f}%",
+            f"  Radiation: {rad_v:.1f} kWh/m^2",
+            f"  Current:   {illum_str}",
+            f"  PSR:       {'YES' if psr_v else 'No'}",
+            "",
+            f"<b style='color:{ac}'>COMMS</b>",
+            f"  Signal:    {comms_v:.0f}%",
+            "",
+            f"<b style='color:{ac}'>RESOURCES</b>",
+            f"  Ice prob:  {ice_v:.1f}%",
+            "",
+            f"<b style='color:{ac}'>MISSION</b>",
+            f"  Score:     {score_str}",
+            "",
+            f"<b style='color:{ac}'>BATTERY</b>",
+            f"  Range:     {range_str}",
+        ]
+        self._hover_label.setText("<pre>" + "\n".join(lines) + "</pre>")
 
     def _on_plot_clicked(self, event):
         """Handle mouse clicks on the 2D plot view."""
