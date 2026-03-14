@@ -1036,8 +1036,8 @@ class LunarPCDViewer(QMainWindow):
         span = max(float(np.ptp(xg)), float(np.ptp(yg)))
         self._gl_view.opts["center"] = pg.Vector(cx, cy, cz)
         self._gl_view.opts["distance"] = span * 1.5
-        self._gl_view.opts["elevation"] = -30
-        self._gl_view.opts["azimuth"] = 45
+        self._gl_view.opts["elevation"] = 30
+        self._gl_view.opts["azimuth"] = 225
         self._gl_view.update()
 
     def _render_elevation(self):
