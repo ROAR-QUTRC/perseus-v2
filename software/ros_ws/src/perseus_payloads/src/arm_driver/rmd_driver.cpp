@@ -87,8 +87,8 @@ void RmdDriver::_enable_status_messages()
 
 void RmdDriver::_handle_position_control(actuator_msgs::msg::Actuators servo_control)
 {
-    RCLCPP_INFO(this->get_logger(), "Received position control command for RMD servos");
-    for (const auto& motor_id : this->_get_online_servos())
+    // RCLCPP_INFO(this->get_logger(), "Received position control command for RMD servos");
+    for (const auto& [motor_id, param_group] : this->PARAMETER_GROUP_MAP)
     {
         // For each online servo, send position command
         const uint8_t index = static_cast<uint8_t>(motor_id) - 1;

@@ -46,6 +46,9 @@ private:
     const std::unordered_map<hi_can::addressing::post_landing::arm::control_board::group,
                              std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
         PARAMETER_GROUP_MAP = {
+            {hi_can::addressing::post_landing::arm::control_board::group::ELBOW,
+             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
+                 hi_can::addressing::post_landing::arm::control_board::group::ELBOW)},
             {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN,
              std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
                  hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN)},
