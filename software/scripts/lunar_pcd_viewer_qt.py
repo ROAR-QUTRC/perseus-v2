@@ -691,8 +691,10 @@ class LunarPCDViewer(QMainWindow):
         t0 = time.monotonic()
         print(f"[PERSEUS] Loading point cloud: {self._pcd_path}")
         self._points, self._intensity = load_pcd(self._pcd_path)
+        # Negate Z — PCD scanner uses Z-down, we need Z-up
+        self._points[:, 2] = -self._points[:, 2]
         n = len(self._points)
-        print(f"[PERSEUS] Loaded {n:,} points")
+        print(f"[PERSEUS] Loaded {n:,} points (Z inverted to Z-up)")
 
         print("[PERSEUS] Interpolating terrain grid...")
         self._xg, self._yg, self._zg = make_terrain_grid(self._points, resolution=120)
