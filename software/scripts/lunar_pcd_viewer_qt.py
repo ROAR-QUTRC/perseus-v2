@@ -1010,33 +1010,47 @@ class LunarPCDViewer(QMainWindow):
         self._gl_view.clear()
         xg, yg, zg = self._xg, self._yg, self._zg
 
-        # pyqtgraph GL uses Z-up, matching our data convention
-        pos = np.column_stack([
-            xg.ravel(),
-            yg.ravel(),
-            zg.ravel(),
-        ]).astype(np.float32)
-
-        # Colour by elevation using lunar LUT (use original zg for colours)
+        # Colour by elevation using lunar LUT
         z_flat = zg.ravel()
         z_norm = (z_flat - z_flat.min()) / (z_flat.max() - z_flat.min() + 1e-9)
         lut = LUTS["lunar"]
         idx = (z_norm * 255).astype(np.uint8)
         colors = lut[idx].astype(np.float32) / 255.0
 
+        # Build position array — Z is elevation (up = high terrain)
+        pos = np.column_stack([
+            xg.ravel(),
+            yg.ravel(),
+            z_flat,
+        ]).astype(np.float32)
+
         scatter = gl.GLScatterPlotItem(
             pos=pos, color=colors, size=2.0, pxMode=True
         )
         self._gl_view.addItem(scatter)
 
-        # Centre camera on terrain
+        # Add a reference grid at the minimum elevation
+        grid = gl.GLGridItem()
+        z_span = float(np.ptp(zg))
+        x_span = float(np.ptp(xg))
+        y_span = float(np.ptp(yg))
+        grid.setSize(x=x_span, y=y_span)
+        grid.translate(
+            float(np.mean(xg)),
+            float(np.mean(yg)),
+            float(np.min(zg)),
+        )
+        grid.setColor((255, 255, 255, 40))
+        self._gl_view.addItem(grid)
+
+        # Centre camera looking down at terrain from above
         cx = float(np.mean(xg))
         cy = float(np.mean(yg))
         cz = float(np.mean(zg))
-        span = max(float(np.ptp(xg)), float(np.ptp(yg)))
+        span = max(x_span, y_span)
         self._gl_view.opts["center"] = pg.Vector(cx, cy, cz)
-        self._gl_view.opts["distance"] = span * 1.5
-        self._gl_view.opts["elevation"] = 30
+        self._gl_view.opts["distance"] = span * 1.8
+        self._gl_view.opts["elevation"] = 25
         self._gl_view.opts["azimuth"] = 45
         self._gl_view.update()
 
