@@ -11,7 +11,7 @@
         <!-- qutrc@big-brain IP -->
         <Peer address="192.168.2.11"/> 
         <!-- qutrc@medium-brain IP -->
-        <Peer address="192.168.2.12"/>
+        <!-- <Peer address="192.168.2.12"/> -->
          <!-- Base Station -->
          <!-- Kelvin's Machine -->
         <Peer address="192.168.2.13"/> 
