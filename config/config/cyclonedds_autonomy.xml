@@ -1,0 +1,23 @@
+<CycloneDDS>
+  <Domain>
+    <General>
+      <!-- Avoid broadcasting data to all client  -->
+      <AllowMulticast>false</AllowMulticast> 
+    </General>
+
+    <Discovery>
+      <Peers>
+        <!-- Robot PC -->
+        <!-- qutrc@big-brain IP -->
+        <Peer address="192.168.2.11"/> 
+        <!-- qutrc@medium-brain IP -->
+        <Peer address="192.168.2.12"/>
+         <!-- Base Station -->
+         <!-- Kelvin's Machine -->
+        <Peer address="192.168.2.13"/> 
+         <!-- Dan's Machine -->
+        <Peer address="192.168.2.50"/> 
+      </Peers>
+    </Discovery>
+  </Domain>
+</CycloneDDS>
