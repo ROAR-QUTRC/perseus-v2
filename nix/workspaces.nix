@@ -98,10 +98,14 @@ let
   # and additional packages for the PCD Qt viewer (PyOpenGL, pyqtgraph)
   # Used to construct PYTHONPATH in the shell hook so `import open3d` works (x86_64 only)
   open3dPythonDeps = pkgs.lib.optionalAttrs isx86_64 {
-    env = pkgs.python3.withPackages (ps: (pkgs.open3d.pythonDeps ps) ++ [
-      ps.pyopengl
-      ps.pyqtgraph
-    ]);
+    env = pkgs.python3.withPackages (
+      ps:
+      (pkgs.open3d.pythonDeps ps)
+      ++ [
+        ps.pyopengl
+        ps.pyqtgraph
+      ]
+    );
   };
 
   # --- ROS WORKSPACES ---

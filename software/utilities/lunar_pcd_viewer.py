@@ -31,7 +31,7 @@ Usage:
 
 import argparse
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import numpy as np
 import plotly.graph_objects as go
@@ -71,9 +71,8 @@ from lunar_pcd_compute import (
     generate_ice_deposits,
     load_pcd,
     make_terrain_grid,
+    _world_to_grid,
 )
-
-
 
 
 def _t(theme_name):
@@ -888,6 +887,7 @@ function(n, fig) {
     return newFig;
 }
 """
+
 
 def create_app(pcd_path: str):
     print(f"[PERSEUS] Loading point cloud: {pcd_path}")

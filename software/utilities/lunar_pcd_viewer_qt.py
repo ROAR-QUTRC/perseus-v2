@@ -14,8 +14,7 @@ import argparse
 import math
 import sys
 import time
-from datetime import datetime, timedelta, timezone
-from functools import partial
+from datetime import datetime, timezone
 
 # ---------------------------------------------------------------------------
 # PyOpenGL context fix — must be applied before any OpenGL imports.
@@ -37,22 +36,19 @@ def _patched_getContext(context=None):
 
 _ctxdata.getContext = _patched_getContext
 
-import numpy as np
+import numpy as np  # noqa: E402
 
-from PyQt5.QtCore import (
+from PyQt5.QtCore import (  # noqa: E402
     QObject,
     Qt,
-    QThread,
     QTimer,
     pyqtSignal,
 )
-from PyQt5.QtGui import QColor, QFont
-from PyQt5.QtWidgets import (
+from PyQt5.QtGui import QColor, QFont  # noqa: E402
+from PyQt5.QtWidgets import (  # noqa: E402
     QApplication,
-    QButtonGroup,
     QDateEdit,
     QDoubleSpinBox,
-    QFrame,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -60,18 +56,16 @@ from PyQt5.QtWidgets import (
     QListWidgetItem,
     QMainWindow,
     QPushButton,
-    QRadioButton,
     QScrollArea,
     QSlider,
-    QSpinBox,
     QSplitter,
     QVBoxLayout,
     QWidget,
 )
-from PyQt5.QtCore import QDate
+from PyQt5.QtCore import QDate  # noqa: E402
 
-import pyqtgraph as pg
-import pyqtgraph.opengl as gl
+import pyqtgraph as pg  # noqa: E402
+import pyqtgraph.opengl as gl  # noqa: E402
 
 from lunar_pcd_compute import (
     ALL_LAYERS,
@@ -109,7 +103,6 @@ from lunar_pcd_compute import (
     load_pcd,
     make_terrain_grid,
     _bilinear_interp,
-    _world_to_grid,
 )
 
 
@@ -143,43 +136,43 @@ def _stylesheet(t):
     """Build a QSS stylesheet from a theme dict."""
     return f"""
     QMainWindow, QWidget {{
-        background-color: {t['page_bg']};
-        color: {t['font_color']};
+        background-color: {t["page_bg"]};
+        color: {t["font_color"]};
         font-family: "Courier New", monospace;
         font-size: 11px;
     }}
     QLabel {{
-        color: {t['font_color']};
+        color: {t["font_color"]};
     }}
     QListWidget {{
-        background-color: {t['sidebar_bg']};
-        color: {t['font_color']};
-        border: 1px solid {t['grid_color']};
+        background-color: {t["sidebar_bg"]};
+        color: {t["font_color"]};
+        border: 1px solid {t["grid_color"]};
         outline: none;
     }}
     QListWidget::item {{
         padding: 4px 6px;
     }}
     QListWidget::item:selected {{
-        background-color: {t['btn_bg']};
-        color: {t['accent']};
+        background-color: {t["btn_bg"]};
+        color: {t["accent"]};
     }}
     QPushButton {{
-        background-color: {t['btn_bg']};
-        color: {t['font_color']};
-        border: 1px solid {t['grid_color']};
+        background-color: {t["btn_bg"]};
+        color: {t["font_color"]};
+        border: 1px solid {t["grid_color"]};
         padding: 4px 10px;
         font-family: "Courier New", monospace;
     }}
     QPushButton:hover {{
-        border-color: {t['accent']};
+        border-color: {t["accent"]};
     }}
     QGroupBox {{
-        border: 1px solid {t['grid_color']};
+        border: 1px solid {t["grid_color"]};
         margin-top: 8px;
         padding-top: 12px;
         font-weight: bold;
-        color: {t['accent']};
+        color: {t["accent"]};
     }}
     QGroupBox::title {{
         subcontrol-origin: margin;
@@ -188,34 +181,34 @@ def _stylesheet(t):
     }}
     QSlider::groove:horizontal {{
         height: 4px;
-        background: {t['grid_color']};
+        background: {t["grid_color"]};
     }}
     QSlider::handle:horizontal {{
-        background: {t['accent']};
+        background: {t["accent"]};
         width: 12px;
         margin: -4px 0;
     }}
     QSpinBox {{
-        background-color: {t['input_bg']};
-        color: {t['font_color']};
-        border: 1px solid {t['grid_color']};
+        background-color: {t["input_bg"]};
+        color: {t["font_color"]};
+        border: 1px solid {t["grid_color"]};
         padding: 2px;
     }}
     QRadioButton {{
-        color: {t['font_color']};
+        color: {t["font_color"]};
     }}
     QScrollArea {{
         border: none;
     }}
     QLabel#descBar {{
-        background-color: {t['sidebar_bg']};
-        border: 1px solid {t['grid_color']};
+        background-color: {t["sidebar_bg"]};
+        border: 1px solid {t["grid_color"]};
         padding: 4px 8px;
-        color: {t['font_color']};
+        color: {t["font_color"]};
     }}
     QGroupBox#hoverGroup {{
-        border: 1px solid {t['accent']};
-        background-color: {t['sidebar_bg']};
+        border: 1px solid {t["accent"]};
+        background-color: {t["sidebar_bg"]};
     }}
     """
 
@@ -391,7 +384,7 @@ class LunarPCDViewer(QMainWindow):
 
         # Layer list — contour merged into elevation, rover sim removed
         self._viewer_layers = [
-            (k, l) for k, l in ALL_LAYERS if k not in ("contour", "rover")
+            (k, label) for k, label in ALL_LAYERS if k not in ("contour", "rover")
         ]
         self._layer_list = QListWidget()
         for key, label in self._viewer_layers:
@@ -421,9 +414,7 @@ class LunarPCDViewer(QMainWindow):
         self._combo_3d_mode = QComboBox()
         self._combo_3d_mode.addItems(["Points", "Wireframe", "Solid", "Solid + Wire"])
         self._combo_3d_mode.setCurrentIndex(0)
-        self._combo_3d_mode.currentIndexChanged.connect(
-            lambda _: self._refresh_3d()
-        )
+        self._combo_3d_mode.currentIndexChanged.connect(lambda _: self._refresh_3d())
         row_mode.addWidget(self._combo_3d_mode)
         g3d_lay.addLayout(row_mode)
 
@@ -463,9 +454,7 @@ class LunarPCDViewer(QMainWindow):
         # Lander / comms base
         self._btn_place_lander = QPushButton("Place Lander / Base")
         self._btn_place_lander.setCheckable(True)
-        self._btn_place_lander.clicked.connect(
-            lambda: self._set_click_mode("lander")
-        )
+        self._btn_place_lander.clicked.connect(lambda: self._set_click_mode("lander"))
         setup_lay.addWidget(self._btn_place_lander)
         self._lander_label = QLabel("Lander: not placed")
         self._lander_label.setFont(QFont("Courier New", 9))
@@ -475,9 +464,7 @@ class LunarPCDViewer(QMainWindow):
         # Rover
         self._btn_place_rover = QPushButton("Place Rover")
         self._btn_place_rover.setCheckable(True)
-        self._btn_place_rover.clicked.connect(
-            lambda: self._set_click_mode("rover")
-        )
+        self._btn_place_rover.clicked.connect(lambda: self._set_click_mode("rover"))
         setup_lay.addWidget(self._btn_place_rover)
         self._rover_label = QLabel("Rover: not placed")
         self._rover_label.setFont(QFont("Courier New", 9))
@@ -548,9 +535,7 @@ class LunarPCDViewer(QMainWindow):
         # Waypoints
         self._btn_add_wp = QPushButton("Add Waypoint")
         self._btn_add_wp.setCheckable(True)
-        self._btn_add_wp.clicked.connect(
-            lambda: self._set_click_mode("wp")
-        )
+        self._btn_add_wp.clicked.connect(lambda: self._set_click_mode("wp"))
         setup_lay.addWidget(self._btn_add_wp)
         self._wp_label = QLabel("Waypoints: 0")
         self._wp_label.setFont(QFont("Courier New", 9))
@@ -808,9 +793,7 @@ class LunarPCDViewer(QMainWindow):
         )
 
         print("[PERSEUS] [7/8] Energy cost grid...")
-        self._energy_cost_grid = compute_energy_cost_grid(
-            self._slope_deg, self._hazard
-        )
+        self._energy_cost_grid = compute_energy_cost_grid(self._slope_deg, self._hazard)
 
         print("[PERSEUS] [8/8] Sparse graphs...")
         self._traversal_graph = build_sparse_graph(self._cost_grid, xg, yg)
@@ -962,9 +945,7 @@ class LunarPCDViewer(QMainWindow):
                     f"{self._gl_view.height()}, items={len(self._gl_view.items)}"
                 )
             else:
-                self._info_detail.setText(
-                    "3D unavailable — run with nixgl"
-                )
+                self._info_detail.setText("3D unavailable — run with nixgl")
         else:
             self._plot_widget.raise_()
             self._plot_widget.setVisible(True)
@@ -1037,7 +1018,6 @@ class LunarPCDViewer(QMainWindow):
 
         x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
         y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
-        cols, rows = data.shape[1], data.shape[0]
         # setRect(x, y, w, h) in scene/world coordinates
         from PyQt5.QtCore import QRectF
 
@@ -1091,11 +1071,18 @@ class LunarPCDViewer(QMainWindow):
         mode = self._combo_3d_mode.currentText()
 
         if mode == "Points":
-            pos = np.column_stack([
-                xg.ravel(), yg.ravel(), zg.ravel(),
-            ]).astype(np.float32)
+            pos = np.column_stack(
+                [
+                    xg.ravel(),
+                    yg.ravel(),
+                    zg.ravel(),
+                ]
+            ).astype(np.float32)
             scatter = gl.GLScatterPlotItem(
-                pos=pos, color=colors, size=2.0, pxMode=True,
+                pos=pos,
+                color=colors,
+                size=2.0,
+                pxMode=True,
             )
             self._gl_view.addItem(scatter)
 
@@ -1134,7 +1121,9 @@ class LunarPCDViewer(QMainWindow):
         y_span = float(np.ptp(yg))
         ref_grid.setSize(x=x_span, y=y_span)
         ref_grid.translate(
-            float(np.mean(xg)), float(np.mean(yg)), float(np.min(zg)),
+            float(np.mean(xg)),
+            float(np.mean(yg)),
+            float(np.min(zg)),
         )
         ref_grid.setColor((255, 255, 255, 40))
         self._gl_view.addItem(ref_grid)
@@ -1232,7 +1221,8 @@ class LunarPCDViewer(QMainWindow):
 
         for level in levels:
             iso = pg.IsocurveItem(
-                data=zg_t, level=float(level),
+                data=zg_t,
+                level=float(level),
                 pen=pg.mkPen(contour_color, width=1.5),
             )
             transform = QTransform()
@@ -1244,7 +1234,7 @@ class LunarPCDViewer(QMainWindow):
             # Place a height label near the middle of the contour
             diff = np.abs(zg - level)
             r3, c3 = rows // 3, cols // 3
-            sub = diff[r3:2*r3, c3:2*c3]
+            sub = diff[r3 : 2 * r3, c3 : 2 * c3]
             if sub.size > 0:
                 idx = np.unravel_index(np.argmin(sub), sub.shape)
                 lr, lc = idx[0] + r3, idx[1] + c3
@@ -1371,12 +1361,8 @@ class LunarPCDViewer(QMainWindow):
             if self._los_data and self._base_pos:
                 bm = self._los_data["blocked_mask"]
                 n_seg = len(bm)
-                lx = np.linspace(
-                    self._base_pos[0], self._rover_pos_comms[0], n_seg + 1
-                )
-                ly = np.linspace(
-                    self._base_pos[1], self._rover_pos_comms[1], n_seg + 1
-                )
+                lx = np.linspace(self._base_pos[0], self._rover_pos_comms[0], n_seg + 1)
+                ly = np.linspace(self._base_pos[1], self._rover_pos_comms[1], n_seg + 1)
                 for i in range(0, n_seg, 3):
                     color = "#cc0000" if bm[i] else "#00ff88"
                     end = min(i + 4, n_seg)
@@ -1515,9 +1501,7 @@ class LunarPCDViewer(QMainWindow):
                     pen=pg.mkPen("w", width=2),
                 )
                 self._add_overlay(ws)
-                wt = pg.TextItem(
-                    f"WP{i + 1}", color=t["accent"], anchor=(0.5, 1.2)
-                )
+                wt = pg.TextItem(f"WP{i + 1}", color=t["accent"], anchor=(0.5, 1.2))
                 wt.setPos(wp[i, 0], wp[i, 1])
                 self._add_overlay(wt)
 
@@ -1585,21 +1569,13 @@ class LunarPCDViewer(QMainWindow):
             if self._comms_coverage is not None
             else 0
         )
-        ice_v = (
-            float(self._ice_prob[ri, ci]) * 100
-            if self._ice_prob is not None
-            else 0
-        )
+        ice_v = float(self._ice_prob[ri, ci]) * 100 if self._ice_prob is not None else 0
         rad_v = (
             float(self._solar_radiation[ri, ci]) / 1000.0
             if self._solar_radiation is not None
             else 0
         )
-        psr_v = (
-            bool(self._psr_mask[ri, ci])
-            if self._psr_mask is not None
-            else False
-        )
+        psr_v = bool(self._psr_mask[ri, ci]) if self._psr_mask is not None else False
 
         # Mission score — different grid resolution, needs separate lookup
         score_str = "N/A"
@@ -1609,14 +1585,20 @@ class LunarPCDViewer(QMainWindow):
             sy_min, sy_max = float(syg[0, 0]), float(syg[-1, 0])
             if sx_min <= wx <= sx_max and sy_min <= wy <= sy_max:
                 sr, sc = self._score_grid.shape
-                sci = int(np.clip(
-                    round((wx - sx_min) / (sx_max - sx_min + 1e-12) * (sc - 1)),
-                    0, sc - 1,
-                ))
-                sri = int(np.clip(
-                    round((wy - sy_min) / (sy_max - sy_min + 1e-12) * (sr - 1)),
-                    0, sr - 1,
-                ))
+                sci = int(
+                    np.clip(
+                        round((wx - sx_min) / (sx_max - sx_min + 1e-12) * (sc - 1)),
+                        0,
+                        sc - 1,
+                    )
+                )
+                sri = int(
+                    np.clip(
+                        round((wy - sy_min) / (sy_max - sy_min + 1e-12) * (sr - 1)),
+                        0,
+                        sr - 1,
+                    )
+                )
                 sv = float(self._score_grid[sri, sci])
                 score_str = f"{sv:.0f}/100"
                 # Component breakdown
@@ -1740,9 +1722,7 @@ class LunarPCDViewer(QMainWindow):
             self._path_end = None
             self._path_coords = None
             self._path_cost = None
-            self._info_detail.setText(
-                f"Start: ({wx:.2f}, {wy:.2f}) — click for END"
-            )
+            self._info_detail.setText(f"Start: ({wx:.2f}, {wy:.2f}) — click for END")
         elif self._path_end is None:
             self._path_end = (wx, wy)
             self._info_detail.setText("Computing path...")
@@ -1775,8 +1755,11 @@ class LunarPCDViewer(QMainWindow):
         self._rover_pos = (wx, wy)
         if self._base_pos:
             self._los_data = compute_line_of_sight(
-                self._xg, self._yg, self._zg,
-                self._base_pos, self._rover_pos_comms,
+                self._xg,
+                self._yg,
+                self._zg,
+                self._base_pos,
+                self._rover_pos_comms,
             )
         self._update_position_labels()
         self._show_layer("comms")
@@ -1806,9 +1789,7 @@ class LunarPCDViewer(QMainWindow):
         self._cost_grid = compute_traversal_cost(
             self._slope_deg, self._hazard, self._solar_uptime, self._comms_coverage
         )
-        self._traversal_graph = build_sparse_graph(
-            self._cost_grid, self._xg, self._yg
-        )
+        self._traversal_graph = build_sparse_graph(self._cost_grid, self._xg, self._yg)
         # Recompute scores with new comms
         (
             self._score_xg,
@@ -1817,15 +1798,19 @@ class LunarPCDViewer(QMainWindow):
             self._score_comp,
             self._score_summary,
         ) = compute_mission_score(
-            self._xg, self._yg, self._zg,
-            self._slope_deg, self._solar_uptime, self._comms_coverage,
-            self._hazard, self._ice_prob, cell_size=0.25,
+            self._xg,
+            self._yg,
+            self._zg,
+            self._slope_deg,
+            self._solar_uptime,
+            self._comms_coverage,
+            self._hazard,
+            self._ice_prob,
+            cell_size=0.25,
         )
 
         self._update_position_labels()
-        self._info_detail.setText(
-            f"Lander placed at ({wx:.2f}, {wy:.2f})"
-        )
+        self._info_detail.setText(f"Lander placed at ({wx:.2f}, {wy:.2f})")
         self._show_layer(self._current_layer)
 
     def _place_rover(self, wx, wy):
@@ -1833,19 +1818,23 @@ class LunarPCDViewer(QMainWindow):
         self._rover_pos = (wx, wy)
         self._rover_pos_comms = (wx, wy)
         self._rover_data = compute_rover_footprint(
-            self._xg, self._yg, self._zg,
-            self._rover_pos, rover_heading=self._rover_heading,
+            self._xg,
+            self._yg,
+            self._zg,
+            self._rover_pos,
+            rover_heading=self._rover_heading,
         )
         # Compute LOS from base to rover
         if self._base_pos:
             self._los_data = compute_line_of_sight(
-                self._xg, self._yg, self._zg,
-                self._base_pos, self._rover_pos,
+                self._xg,
+                self._yg,
+                self._zg,
+                self._base_pos,
+                self._rover_pos,
             )
         self._update_position_labels()
-        self._info_detail.setText(
-            f"Rover placed at ({wx:.2f}, {wy:.2f})"
-        )
+        self._info_detail.setText(f"Rover placed at ({wx:.2f}, {wy:.2f})")
         self._show_layer(self._current_layer)
 
     def _place_waypoint(self, wx, wy):
@@ -1856,16 +1845,17 @@ class LunarPCDViewer(QMainWindow):
         self._waypoints.append((wx, wy))
         # Recompute route
         wp_path, wp_cost = compute_wp_route(
-            self._lander_pos, self._waypoints,
-            self._traversal_graph, self._cost_grid,
-            self._xg, self._yg,
+            self._lander_pos,
+            self._waypoints,
+            self._traversal_graph,
+            self._cost_grid,
+            self._xg,
+            self._yg,
         )
         self._wp_path = wp_path
         self._wp_cost = wp_cost
         self._update_position_labels()
-        self._info_detail.setText(
-            f"WP{len(self._waypoints)} at ({wx:.2f}, {wy:.2f})"
-        )
+        self._info_detail.setText(f"WP{len(self._waypoints)} at ({wx:.2f}, {wy:.2f})")
         self._show_layer(self._current_layer)
 
     # -----------------------------------------------------------------------
@@ -1897,8 +1887,13 @@ class LunarPCDViewer(QMainWindow):
             self._solar_radiation,
             self._psr_mask,
         ) = compute_lunar_cycle_illumination(
-            self._xg, self._yg, self._zg, self._sun_date,
-            lat, lon, n_steps=112,
+            self._xg,
+            self._yg,
+            self._zg,
+            self._sun_date,
+            lat,
+            lon,
+            n_steps=112,
         )
         from scipy.ndimage import gaussian_filter as _gf
 
@@ -1922,17 +1917,29 @@ class LunarPCDViewer(QMainWindow):
 
         # Recompute ice deposits (depends on illumination)
         self._ice_prob, self._drill_sites = generate_ice_deposits(
-            self._xg, self._yg, self._zg, self._illum0,
+            self._xg,
+            self._yg,
+            self._zg,
+            self._illum0,
         )
 
         # Recompute mission scores
         (
-            self._score_xg, self._score_yg, self._score_grid,
-            self._score_comp, self._score_summary,
+            self._score_xg,
+            self._score_yg,
+            self._score_grid,
+            self._score_comp,
+            self._score_summary,
         ) = compute_mission_score(
-            self._xg, self._yg, self._zg, self._slope_deg,
-            self._solar_uptime, self._comms_coverage,
-            self._hazard, self._ice_prob, cell_size=0.25,
+            self._xg,
+            self._yg,
+            self._zg,
+            self._slope_deg,
+            self._solar_uptime,
+            self._comms_coverage,
+            self._hazard,
+            self._ice_prob,
+            cell_size=0.25,
         )
 
         self._location_info.setText(f"({lat:.1f}, {lon:.1f})")
@@ -1956,9 +1963,7 @@ class LunarPCDViewer(QMainWindow):
         self._info_detail.setText(
             f"Sun Az: {az:.1f} | Elev: {elev:.2f} | {status} | {pct:.0f}% lit"
         )
-        self._cycle_label.setText(
-            f"{self._sun_date.strftime('%Y-%m-%d %H:%M')} UTC"
-        )
+        self._cycle_label.setText(f"{self._sun_date.strftime('%Y-%m-%d %H:%M')} UTC")
 
         if self._current_layer == "solar":
             self._show_layer("solar")
@@ -2045,9 +2050,7 @@ class LunarPCDViewer(QMainWindow):
         # Recompute energy cost grid with custom parameters
         from lunar_pcd_compute import BATTERY_VOLTAGE
 
-        difficulty = np.clip(
-            np.maximum(self._slope_deg / 15.0, self._hazard), 0.0, 1.0
-        )
+        difficulty = np.clip(np.maximum(self._slope_deg / 15.0, self._hazard), 0.0, 1.0)
         current = current_flat + difficulty * (current_max - current_flat)
         power_w = BATTERY_VOLTAGE * current
         wh_per_metre = power_w / speed / 3600.0
