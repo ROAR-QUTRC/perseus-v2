@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 
-from launch.actions import RegisterEventHandler, LogInfo
+from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -54,7 +54,6 @@ def generate_launch_description():
         ],
         parameters=[use_sim_time_param],
     )
-
 
     # NOTE: There was a comment in one of the ROS2 Control examples
     # about launching the controllers *after* the controller manager
