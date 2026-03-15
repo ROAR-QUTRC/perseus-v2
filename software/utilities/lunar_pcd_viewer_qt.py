@@ -67,7 +67,7 @@ from PyQt5.QtCore import QDate  # noqa: E402
 import pyqtgraph as pg  # noqa: E402
 import pyqtgraph.opengl as gl  # noqa: E402
 
-from lunar_pcd_compute import (
+from lunar_pcd_compute import (  # noqa: E402
     ALL_LAYERS,
     BATTERY_ENERGY_WH,
     COMMS_CS,
