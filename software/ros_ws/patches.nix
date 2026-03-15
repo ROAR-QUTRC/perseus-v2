@@ -184,6 +184,36 @@ let
         ];
       }
     );
+    lidarslam-msgs = rosPrev.lidarslam-msgs.overrideAttrs (
+      {
+        buildInputs ? [ ],
+        ...
+      }:
+      {
+        buildInputs = buildInputs ++ [ rosFinal.ament-cmake-auto ];
+      }
+    );
+    ndt-omp-ros2 = rosPrev.ndt-omp-ros2.overrideAttrs (
+      {
+        patches ? [ ],
+        ...
+      }:
+      {
+        patches = patches ++ [ ./patches/ndt-omp-ros2/boost.patch ];
+      }
+    );
+    graph-based-slam = rosPrev.graph-based-slam.overrideAttrs (
+      {
+        propagatedBuildInputs ? [ ],
+        ...
+      }:
+      {
+        propagatedBuildInputs = propagatedBuildInputs ++ [
+          rosFinal.nav-msgs
+          rosFinal.std-srvs
+        ];
+      }
+    );
   };
 
 in
