@@ -980,8 +980,6 @@ class LunarPCDViewer(QMainWindow):
                 self._render_comms()
             elif layer == "resources":
                 self._render_resources()
-            elif layer == "rover":
-                self._render_rover()
             elif layer == "psr":
                 self._render_psr()
             elif layer == "score":
@@ -1407,71 +1405,6 @@ class LunarPCDViewer(QMainWindow):
             )
             self._add_overlay(s)
 
-    def _render_rover(self):
-        self._show_image(self._slope_deg, "hazard")
-        t = _theme(self._theme_name)
-
-        # Contour lines on slope
-        xg, yg = self._xg, self._yg
-        x_min, x_max = float(xg[0, 0]), float(xg[0, -1])
-        y_min, y_max = float(yg[0, 0]), float(yg[-1, 0])
-        rows, cols = self._slope_deg.shape
-        from PyQt5.QtGui import QTransform
-
-        sx = (x_max - x_min) / (cols - 1) if cols > 1 else 1.0
-        sy = (y_max - y_min) / (rows - 1) if rows > 1 else 1.0
-
-        for level in [5, 10, 15]:
-            iso = pg.IsocurveItem(
-                data=self._slope_deg.T,
-                level=float(level),
-                pen=pg.mkPen("rgba(0,255,170,80)", width=1),
-            )
-            transform = QTransform()
-            transform.translate(x_min, y_min)
-            transform.scale(sx, sy)
-            iso.setTransform(transform)
-            self._add_overlay(iso)
-
-        if self._rover_data:
-            # Body outline
-            bc = np.asarray(self._rover_data["body_corners"])
-            bx = list(bc[:, 0]) + [bc[0, 0]]
-            by = list(bc[:, 1]) + [bc[0, 1]]
-            body = pg.PlotDataItem(
-                bx, by, pen=pg.mkPen(t["accent"], width=2),
-                fillLevel=0, fillBrush=pg.mkBrush(0, 204, 255, 60),
-            )
-            self._add_overlay(body)
-
-            # Wheel markers
-            wp = np.asarray(self._rover_data["wheel_positions"])
-            contact = self._rover_data["contact_ok"]
-            colors = [
-                pg.mkBrush("#00ff88") if c else pg.mkBrush("#cc0000")
-                for c in contact
-            ]
-            for i in range(4):
-                s = pg.ScatterPlotItem(
-                    [wp[i, 0]],
-                    [wp[i, 1]],
-                    symbol="o",
-                    size=10,
-                    brush=colors[i],
-                    pen=pg.mkPen("w", width=1),
-                )
-                self._add_overlay(s)
-
-            # Info text
-            clr = self._rover_data["min_clearance"]
-            self._info_detail.setText(
-                f"Clearance: {clr:.2f}m | "
-                f"Pitch: {self._rover_data['tilt_pitch']:.1f} deg | "
-                f"Roll: {self._rover_data['tilt_roll']:.1f} deg"
-            )
-        else:
-            self._info_detail.setText("Click to place rover")
-
     def _render_psr(self):
         rad_kwh = self._solar_radiation / 1000.0
         self._show_image(rad_kwh, "solar_rad")
@@ -1798,8 +1731,6 @@ class LunarPCDViewer(QMainWindow):
             self._handle_path_click(wx, wy)
         elif layer == "comms":
             self._handle_comms_click(wx, wy)
-        elif layer == "rover":
-            self._handle_rover_click(wx, wy)
         elif layer == "range":
             self._handle_range_click(wx, wy)
 
@@ -1830,8 +1761,6 @@ class LunarPCDViewer(QMainWindow):
                 self._path_cost = cost
             else:
                 self._info_detail.setText("No path found!")
-            # Reset for next click pair
-            self._path_start_next = True
         else:
             # Reset
             self._path_start = (wx, wy)
@@ -1851,9 +1780,6 @@ class LunarPCDViewer(QMainWindow):
             )
         self._update_position_labels()
         self._show_layer("comms")
-
-    def _handle_rover_click(self, wx, wy):
-        self._place_rover(wx, wy)
 
     def _handle_range_click(self, wx, wy):
         self._place_waypoint(wx, wy)

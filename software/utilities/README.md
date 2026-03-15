@@ -27,7 +27,7 @@ python3 lunar_pcd_viewer.py scan_1.pcd --port 8060
 nixgl python3 lunar_pcd_viewer_qt.py <path_to.pcd>
 ```
 
-Native Qt window with 12 analysis layers including 3D point cloud rendering.
+Native Qt window with 11 analysis layers including 3D point cloud rendering.
 Requires `nixgl` for OpenGL context (see below).
 
 ### Browser viewer (Dash/Plotly)
@@ -44,8 +44,8 @@ On non-NixOS systems, OpenGL drivers from the host aren't visible inside the
 Nix shell. The `nixgl` wrapper bridges the host GPU drivers so PyQt5/OpenGL can
 create a rendering context.
 
-- **With `nixgl`** — all 12 layers work, including the 3D point cloud scatter view.
-- **Without `nixgl`** — the 11 2D layers work normally. The 3D layer shows a
+- **With `nixgl`** — all 11 layers work, including the 3D point cloud scatter view.
+- **Without `nixgl`** — the 10 2D layers work normally. The 3D layer shows a
   fallback message instead of crashing.
 
 ## Shared compute module

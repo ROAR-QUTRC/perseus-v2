@@ -315,7 +315,7 @@ def compute_comms_coverage(xg, yg, zg, base_pos, antenna_height=1.0):
     )
     max_dist = float(np.sqrt((x_max - x_min) ** 2 + (y_max - y_min) ** 2))
 
-    # Cast 720 rays (0.5-deg spacing) outward from the base
+    # Cast 360 rays (1-deg spacing) outward from the base
     n_rays = 360
     n_steps = int(max_dist / step_size) + 1
     angles = np.linspace(0, 2 * np.pi, n_rays, endpoint=False)
@@ -723,7 +723,6 @@ BATTERY_VOLTAGE = 24.0  # V
 BATTERY_CAPACITY = 50.0  # Ah
 BATTERY_ENERGY_WH = BATTERY_VOLTAGE * BATTERY_CAPACITY  # 1200 Wh total
 
-CURRENT_IDLE = 0.5  # A — stationary
 CURRENT_FLAT = 4.0  # A — driving on flat ground
 CURRENT_MAX = 40.0  # A — max draw in rough/steep terrain
 
@@ -904,14 +903,6 @@ SCORE_CS = [
     [0.5, "#ccaa00"],
     [0.75, "#66cc44"],
     [1.0, "#00ff88"],
-]
-
-PSR_CS = [
-    [0.0, "#000000"],
-    [0.25, "#1a0033"],
-    [0.5, "#330066"],
-    [0.75, "#660088"],
-    [1.0, "#cc00ff"],
 ]
 
 # Solar radiation: black (none) → dark red → orange → yellow → white (peak)
