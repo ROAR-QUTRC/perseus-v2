@@ -26,7 +26,6 @@ extend-ignore-re = [
 [default.extend-words]
 area_sizez = "area_sizez"
 sizez = "sizez"
-Fo = "Fo"
 substituters = "substituters"
 # Perspective-n-Point (computer vision algorithm, e.g. cv::solvePnP)
 Pn = "Pn"

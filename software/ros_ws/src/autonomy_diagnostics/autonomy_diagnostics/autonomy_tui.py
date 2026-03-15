@@ -131,6 +131,8 @@ def load_config(robot_name: str = "perseus-lite") -> Dict[str, Any]:
     Falls back to defaults if config file is not found.
     """
     # Default configuration (fallback if config file not found)
+    # Topics, TF frames, lifecycle nodes, and config files are loaded
+    # exclusively from config/<robot>.yaml - no hardcoded defaults.
     defaults = {
         "settings": {
             "stale_data_timeout": STALE_DATA_TIMEOUT,
@@ -144,101 +146,10 @@ def load_config(robot_name: str = "perseus-lite") -> Dict[str, Any]:
             "refresh_max_ms": 2000,
             "refresh_step_ms": 100,
         },
-        "monitored_topics": [
-            {
-                "name": "scan",
-                "topic": "/scan",
-                "type": "LaserScan",
-                "expected_hz": 10.0,
-                "critical": True,
-            },
-            {
-                "name": "imu",
-                "topic": "/imu/data",
-                "type": "Imu",
-                "expected_hz": 100.0,
-                "critical": True,
-            },
-            {
-                "name": "odom",
-                "topic": "/odom",
-                "type": "Odometry",
-                "expected_hz": 50.0,
-                "critical": True,
-            },
-            {
-                "name": "odom_filtered",
-                "topic": "/odometry/filtered",
-                "type": "Odometry",
-                "expected_hz": 30.0,
-                "critical": True,
-            },
-            {
-                "name": "map",
-                "topic": "/map",
-                "type": "OccupancyGrid",
-                "expected_hz": 0.1,
-                "critical": False,
-            },
-            {
-                "name": "cmd_vel",
-                "topic": "/cmd_vel",
-                "type": "Twist",
-                "expected_hz": 0.0,
-                "critical": False,
-            },
-            {
-                "name": "joint_states",
-                "topic": "/joint_states",
-                "type": "JointState",
-                "expected_hz": 50.0,
-                "critical": True,
-            },
-        ],
-        "tf_frames": [
-            {
-                "parent": "map",
-                "child": "odom",
-                "description": "SLAM/AMCL",
-                "critical": True,
-            },
-            {
-                "parent": "odom",
-                "child": "base_link",
-                "description": "EKF",
-                "critical": True,
-            },
-            {
-                "parent": "base_link",
-                "child": "chassis",
-                "description": "URDF",
-                "critical": True,
-            },
-            {
-                "parent": "chassis",
-                "child": "laser_2d_frame",
-                "description": "LiDAR",
-                "critical": True,
-            },
-            {
-                "parent": "chassis",
-                "child": "imu_link",
-                "description": "IMU",
-                "critical": True,
-            },
-        ],
-        "lifecycle_nodes": [
-            "bt_navigator",
-            "controller_server",
-            "planner_server",
-            "map_server",
-            "amcl",
-            "smoother_server",
-            "velocity_smoother",
-            "collision_monitor",
-            "waypoint_follower",
-            "behavior_server",
-        ],
+        "monitored_topics": [],
+        "tf_frames": [],
+        "lifecycle_nodes": [],
+        "config_files": [],
         "joystick": {
             "device_path": "/dev/input/js*",
         },
@@ -258,9 +169,16 @@ def load_config(robot_name: str = "perseus-lite") -> Dict[str, Any]:
                         if key not in config:
                             config[key] = defaults[key]
                     return config
+            logger.warning(f"Config file '{config_path}' is empty")
+        else:
+            logger.warning(
+                f"Config file not found: {config_path}. "
+                f"No topics, TF frames, or lifecycle nodes will be monitored."
+            )
     except Exception as e:
         logger.warning(
-            f"Failed to load config file for '{robot_name}', using defaults: {e}"
+            f"Failed to load config for '{robot_name}': {e}. "
+            f"No topics, TF frames, or lifecycle nodes will be monitored."
         )
 
     return defaults
