@@ -28,14 +28,19 @@
 	import { getRosConnection as getRosConnection } from '$lib/scripts/rosBridge.svelte';
     import { Slider } from '$lib/components/ui/slider/index';
 	import Speedometer from "svelte-speedometer";
-	import type { AngularVelocityMessageType } from '$lib/scripts/rosTypes';
+	import type { ActuatorsMessageType, AngularVelocityMessageType, EmptyRequestType, Float64MultiArrayType} from '$lib/scripts/rosTypes';
 
 	type rosBooleanMessage = { data: boolean };
+	type rosFloatMessage = { data: number };
 
-	//may need to change the message type
+	//declare ROS topics
 	let speedTopic: ROSLIB.Topic<AngularVelocityMessageType> | null = null;
+	let waterConcentrationTopic: ROSLIB.Topic<rosFloatMessage> | null = null;
+	let ilmeniteConcentrationTopic: ROSLIB.Topic<rosFloatMessage> | null = null;
 	let controlTopic: ROSLIB.Topic<AngularVelocityMessageType> | null = null;
 	let brakeTopic: ROSLIB.Topic<rosBooleanMessage> | null = null;
+	let getWaterConcentration: ROSLIB.Topic<EmptyRequestType, Float64MultiArrayType> | null = null;
+	let getIlmeniteConcentration: ROSLIB.Topic<EmptyRequestType, Float64MultiArrayType> | null = null;
 
     const minVelocity = 0;
     const maxVelocity = 100;
@@ -48,6 +53,7 @@
 
     const clamp = (v: number) => Math.max(minVelocity, Math.min(maxVelocity, v));
 
+	//adjusts desired centrifuge velocity based on slider position
     function handleSliderChange(next: number) {
         sliderValue = next;
         inputValue = String(next);
@@ -95,19 +101,23 @@
 		};
 	}
 
-	// const takeReading = (type: string) => {
-	// 	if (getConcentration) {
-	// 		getConcentration.callService({type}, (response) => {
-	// 			if (type = "water") {
-	// 				waterConcentration = response.data;
-	// 			}
-	// 			else if(type = "ilminite") {
-	// 				ilmeniteConcentration = response.data;
-	// 			}
-	// 		})
-	// 	}
-	// }
+	//request water concentration reading from controller node
+	const takeWaterReading = () => {
+		console.log("water");
+		if (getWaterConcentration) {
+			getWaterConcentration.callService({}, (response: Float64Array) => {})
+		}
+	}
 
+	//request ilmenite concentration reading from controller node
+	const takeIlmeniteReading = () => {
+		console.log("ilmenite");
+		if (getIlmeniteConcentration) {
+			getIlmeniteConcentration.callService({}, (response: Float64Array) => {})
+		}
+	}
+
+	//establish ROS publishers, subscribers and services
 	$effect(() => {
 		const rosConnection = getRosConnection();
 		if (rosConnection) {
@@ -126,10 +136,34 @@
 				name: '/centrifuge/speed',
 				messageType: 'actuator_msgs/msg/ActuatorsAngularVelocity'
 			});
-			speedTopic.subscribe(onResponseMessage);
+			speedTopic.subscribe(onSpeedMessage);
+			getWaterConcentration = new ROSLIB.Service({
+				ros: rosConnection,
+				name: '/water/reading',
+				serviceType: 'perseus_interfaces/srv/Concentration'
+			});
+			getIlmeniteConcentration = new ROSLIB.Service({
+				ros: rosConnection,
+				name: '/ilmenite/reading',
+				serviceType: 'perseus_interfaces/srv/Concentration'
+			});
+			waterConcentrationTopic = new ROSLIB.Topic({
+				ros: rosConnection,
+				name: '/water_concentration/result',
+				messageType: 'std_msgs/msg/Float64'
+			});
+			waterConcentrationTopic.subscribe(onWaterMessage);
+			ilmeniteConcentrationTopic = new ROSLIB.Topic({
+				ros: rosConnection,
+				name: '/ilmenite_concentration/result',
+				messageType: 'std_msgs/msg/Float64'
+			});
+			ilmeniteConcentrationTopic.subscribe(onIlmeniteMessage);
 		}
 		else {
 			speedTopic?.unsubscribe();
+			waterConcentrationTopic?.unsubscribe();
+			ilmeniteConcentrationTopic?.unsubscribe();
 			brakeTopic = null;
 			controlTopic = null;
 			speedTopic = null;
@@ -137,11 +171,26 @@
 	});
 
 	//update spedometer with current velocity
-	const onResponseMessage = (message: ActuatorsMessageType) => {
+	const onSpeedMessage = (message: ActuatorsMessageType) => {
 		let response = message.velocity;
 		console.log(response);
 		currentVelocity = response[0];
 	}
+
+	//update spedometer with current water concentration
+	const onWaterMessage = (message: rosFloatMessage) => {
+		let response = message;
+		console.log(response.data);
+		waterConcentration = response.data;
+	}
+
+	//update spedometer with current ilmenite concentration
+	const onIlmeniteMessage = (message: rosFloatMessage) => {
+		let response = message;
+		console.log(response);
+		ilmeniteConcentration = response.data;
+	}
+
 </script>
 
 <div class="widget-shell">
@@ -199,15 +248,15 @@
 		<div style="display:flex; flex-direction: row; width:100%; justify-content: space-around; align-items:center">
 			<div style="margin-top:30px">
 				<h1>Water Concentration (%)</h1>
-				<button type="button" class="btn" onclick={stopCentrifuge} style="margin-top:10px; margin-bottom:20px; background-color:violet;">
+				<button type="button" class="btn" onclick={takeWaterReading} style="margin-top:10px; margin-bottom:20px; background-color:violet;">
 					Take Water Reading
 				</button>
 				<Speedometer 
 					maxValue={100}
-					value={currentVelocity}
+					value={waterConcentration}
 					needleColor="violet"
-					startColor="tomato"
-					endColor="lightgreen"
+					startColor="lightblue"
+					endColor="darkblue"
 					segments={10}
 					needleTransitionDuration={100}
 				/>
@@ -215,15 +264,15 @@
 
 			<div style="margin-top:30px">
 				<h1>Ilmenite Concentration (%)</h1>
-				<button type="button" class="btn" onclick={stopCentrifuge} style="margin-top:10px; margin-bottom:20px; background-color:violet;">
+				<button type="button" class="btn" onclick={takeIlmeniteReading} style="margin-top:10px; margin-bottom:20px; background-color:violet;">
 					Take Ilmenite Reading
 				</button>
 				<Speedometer 
 					maxValue={100}
-					value={currentVelocity}
+					value={ilmeniteConcentration}
 					needleColor="violet"
-					startColor="tomato"
-					endColor="lightgreen"
+					startColor="white"
+					endColor=#22262b
 					segments={10}
 					needleTransitionDuration={100}
 				/>

@@ -34,9 +34,12 @@ SpaceResourcesController::SpaceResourcesController(const rclcpp::NodeOptions& op
         std::bind(&SpaceResourcesController::_handle_ilmenite_reading_request, this,
                   std::placeholders::_1, std::placeholders::_2));
 
-    // Publisher to send concentration results to WebUI
-    _concentration_result_pub = this->create_publisher<std_msgs::msg::Float64>(
-        "/concentration/result", 10);
+    // Publishers to send concentration results to WebUI
+    _water_concentration_result_pub = this->create_publisher<std_msgs::msg::Float64>(
+        "/water_concentration/result", 10);
+
+    _ilmenite_concentration_result_pub = this->create_publisher<std_msgs::msg::Float64>(
+        "/ilmenite_concentration/result", 10);
 
     // MOVE TO WEBUI NODE!!
     // Service setup so the WebUI node can call water or illmenite actions to be triggered by the controller (i.e first step)
@@ -75,6 +78,7 @@ void SpaceResourcesController::_handle_ilmenite_reading_request(
     std::shared_ptr<perseus_interfaces::srv::Concentration::Response> response)
 {
     _call_concentration_service(_ilmenite_concentration_service, "ilmenite");
+
 }
 
 void SpaceResourcesController::_call_concentration_service(
@@ -104,7 +108,13 @@ void SpaceResourcesController::_call_concentration_service(
             double concentration = response->concentration;
             std_msgs::msg::Float64 result_msg;
             result_msg.data = concentration;
-            _concentration_result_pub->publish(result_msg);
+
+            if (sample_type.c_str() == "water") {
+                _water_concentration_result_pub->publish(result_msg);
+            }
+            else if (sample_type.c_str() == "ilmenite") {
+                _ilmenite_concentration_result_pub->publish(result_msg);
+            }
 
             RCLCPP_INFO(this->get_logger(),
                         "[%s] concentration=%.4f", sample_type.c_str(), concentration);

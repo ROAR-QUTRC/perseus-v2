@@ -26,7 +26,8 @@ private:
         rclcpp::Client<perseus_interfaces::srv::Concentration>::SharedPtr client,
         const std::string& sample_type);
 
-    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr _concentration_result_pub;
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr _water_concentration_result_pub;
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr _ilmenite_concentration_result_pub;
     rclcpp::Client<perseus_interfaces::srv::Concentration>::SharedPtr _water_concentration_service;
     rclcpp::Client<perseus_interfaces::srv::Concentration>::SharedPtr _ilmenite_concentration_service;
     rclcpp::Service<perseus_interfaces::srv::Concentration>::SharedPtr _water_reading_service;
