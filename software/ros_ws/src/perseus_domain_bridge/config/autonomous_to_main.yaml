@@ -1,5 +1,5 @@
 name: autonomous_to_main
-from_domain: 0  # overridden at launch time
+from_domain: 0 # overridden at launch time
 to_domain: 2
 topics:
   /livox/scan:
