@@ -3,6 +3,7 @@
     <General>
       <!-- Avoid broadcasting data to all client  -->
       <AllowMulticast>false</AllowMulticast> 
+      <NetworkInterfaceAddress>eth0</NetworkInterfaceAddress>
     </General>
 
     <Discovery>
