@@ -90,6 +90,6 @@ def generate_launch_description():
         [
             sim_filter_launch,
             fast_lio_launch,
-            # map_saver_launch,
+            map_saver_launch,
         ]
     )
