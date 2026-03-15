@@ -1,5 +1,0 @@
-name: main_to_autonomous
-from_domain: 0
-to_domain: 2
-topics:
-  pose:

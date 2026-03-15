@@ -1,4 +1,4 @@
-name: autonomous_to_main
+name: big-brain-bridge
 from_domain: 0 # overridden at launch time
 to_domain: 2
 topics:
@@ -14,3 +14,9 @@ topics:
     type: tf2_msgs/msg/TFMessage
     qos:
       reliability: reliable
+  # navigate_through_poses:
+  #   type: nav2_msgs/msg/NavigateThroughPoses
+  #   from_domain: 2
+  #   to_domain: 0
+  #   qos:
+  #     reliability: reliable
