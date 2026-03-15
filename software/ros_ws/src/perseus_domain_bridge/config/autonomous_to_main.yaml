@@ -2,3 +2,13 @@ name: autonomuus_to_main
 from_domain: 0
 to_domain: 2
 topics:
+  /livox/scan:
+    type: sensor_msgs/msg/LaserScan
+    qos:
+      reliability: best_effort
+  tf:
+    type: tf2_msgs/msg/TFMessage
+  tf_static:
+    type: tf2_msgs/msg/TFMessage
+  plan:
+    type: nav_msgs/msg/Path
