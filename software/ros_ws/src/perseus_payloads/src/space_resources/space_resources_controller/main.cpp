@@ -78,7 +78,6 @@ void SpaceResourcesController::_handle_ilmenite_reading_request(
     std::shared_ptr<perseus_interfaces::srv::Concentration::Response> response)
 {
     _call_concentration_service(_ilmenite_concentration_service, "ilmenite");
-
 }
 
 void SpaceResourcesController::_call_concentration_service(
@@ -109,10 +108,12 @@ void SpaceResourcesController::_call_concentration_service(
             std_msgs::msg::Float64 result_msg;
             result_msg.data = concentration;
 
-            if (sample_type.c_str() == "water") {
+            if (sample_type.c_str() == "water")
+            {
                 _water_concentration_result_pub->publish(result_msg);
             }
-            else if (sample_type.c_str() == "ilmenite") {
+            else if (sample_type.c_str() == "ilmenite")
+            {
                 _ilmenite_concentration_result_pub->publish(result_msg);
             }
 
