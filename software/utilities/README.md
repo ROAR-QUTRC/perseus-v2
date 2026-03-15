@@ -1,47 +1,52 @@
-# Perseus Lunar PCD Scripts
+# Perseus Lunar PCD Utilities
 
 Tools for visualising and analysing lunar LiDAR point cloud data (.pcd files).
 
-## Viewers
+All dependencies (`PyOpenGL`, `pyqtgraph`, `open3d`, `plotly`, `dash`, etc.) are
+provided by the Nix dev shell — no pip installs required.
 
-### Browser viewer (Dash/Plotly)
+## Quick start
+
+Enter the Nix dev shell, then run from `software/utilities/`:
 
 ```bash
+nix develop   # or direnv if configured
+
+# Desktop viewer (recommended)
+nixgl python3 lunar_pcd_viewer_qt.py scan_1.pcd
+
+# Browser viewer
 python3 lunar_pcd_viewer.py scan_1.pcd --port 8060
 ```
 
-Opens a Dash web app at `http://localhost:8060`.
+## Viewers
 
 ### Desktop viewer (PyQt5/pyqtgraph)
 
 ```bash
-nixgl python3 lunar_pcd_viewer_qt.py scan_1.pcd
+nixgl python3 lunar_pcd_viewer_qt.py <path_to.pcd>
 ```
 
-Native Qt window with the same 12 analysis layers as the browser version.
+Native Qt window with 12 analysis layers including 3D point cloud rendering.
+Requires `nixgl` for OpenGL context (see below).
+
+### Browser viewer (Dash/Plotly)
+
+```bash
+python3 lunar_pcd_viewer.py <path_to.pcd> --port 8060
+```
+
+Opens a Dash web app at `http://localhost:8060`. Does not require `nixgl`.
 
 ## Why `nixgl`?
 
-On NixOS (and Nix-managed environments), OpenGL drivers from the host system
-aren't visible inside the Nix shell by default. The `nixgl` wrapper sets up the
-correct driver paths so that PyQt5/OpenGL can create a rendering context.
+On non-NixOS systems, OpenGL drivers from the host aren't visible inside the
+Nix shell. The `nixgl` wrapper bridges the host GPU drivers so PyQt5/OpenGL can
+create a rendering context.
 
 - **With `nixgl`** — all 12 layers work, including the 3D point cloud scatter view.
 - **Without `nixgl`** — the 11 2D layers work normally. The 3D layer shows a
   fallback message instead of crashing.
-
-If you don't have `nixgl` available, install it or add it to your Nix flake:
-
-```nix
-# In your flake inputs or shell packages
-nixgl.url = "github:nix-community/nixGL";
-```
-
-Then run with:
-
-```bash
-nixgl python3 lunar_pcd_viewer_qt.py scan_1.pcd
-```
 
 ## Shared compute module
 

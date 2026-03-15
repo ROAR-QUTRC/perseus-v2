@@ -974,8 +974,6 @@ class LunarPCDViewer(QMainWindow):
                 self._render_elevation()
             elif layer == "solar":
                 self._render_solar()
-            elif layer == "hazard":
-                self._render_hazard()
             elif layer == "path":
                 self._render_path()
             elif layer == "comms":
@@ -1274,9 +1272,6 @@ class LunarPCDViewer(QMainWindow):
             illum_smooth = _gf(self._illum0.astype(np.float64), sigma=1.2)
             shaded = z_norm * (0.3 + 0.7 * illum_smooth)
             self._show_image(shaded, "shadow", zmin=0.0, zmax=1.0)
-
-    def _render_hazard(self):
-        self._show_image(self._hazard, "hazard", zmin=0.0, zmax=1.0)
 
     def _render_path(self):
         self._show_image(self._hazard, "hazard", zmin=0.0, zmax=1.0)

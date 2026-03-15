@@ -1002,7 +1002,6 @@ ALL_LAYERS = [
     ("elevation", "ELEVATION MAP"),
     ("contour", "CONTOUR MAP"),
     ("solar", "SOLAR / SHADOW"),
-    ("hazard", "HAZARD MAP"),
     ("path", "PATH PLANNER"),
     ("comms", "COMMS / LOS"),
     ("resources", "RESOURCES / ICE"),
@@ -1035,19 +1034,16 @@ LAYER_INFO = {
         "date/time. Adjust lat/lon and date above, or play the 28-day lunar "
         "cycle to see how illumination changes.",
     ),
-    "hazard": (
-        "TERRAIN HAZARD MAP",
-        "Risk assessment combining slope steepness and surface roughness. "
-        "Green = safe traversal, orange = caution, red = dangerous or "
-        "impassable (slope > 15 deg).",
-    ),
     "path": (
-        "PATH PLANNER",
-        "Click two points on the map to compute the safest route between them "
-        "using shortest-path optimisation. The route avoids steep slopes, "
-        "hazardous terrain, and comms dead zones — it will not plan through "
-        "areas with no radio line-of-sight to the lander, and strongly "
-        "prefers paths that maintain strong signal coverage.",
+        "PATH PLANNER & HAZARD MAP",
+        "Terrain hazard overlay with interactive path planning. The background "
+        "shows a risk assessment combining slope steepness and surface roughness: "
+        "green = safe traversal, orange = caution, red = dangerous or impassable "
+        "(slope > 15 deg). Click two points to compute the safest route using "
+        "shortest-path optimisation. The route avoids steep slopes, hazardous "
+        "terrain, and comms dead zones — it will not plan through areas with no "
+        "radio line-of-sight to the lander, and strongly prefers paths that "
+        "maintain strong signal coverage.",
     ),
     "comms": (
         "LINE-OF-SIGHT COMMS",
