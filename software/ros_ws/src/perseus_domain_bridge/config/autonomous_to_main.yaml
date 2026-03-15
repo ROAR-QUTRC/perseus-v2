@@ -10,5 +10,3 @@ topics:
     type: tf2_msgs/msg/TFMessage
   tf_static:
     type: tf2_msgs/msg/TFMessage
-  plan:
-    type: nav_msgs/msg/Path
