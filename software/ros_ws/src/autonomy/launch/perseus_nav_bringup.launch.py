@@ -87,7 +87,7 @@ def generate_launch_description():
 
     declare_use_composition_cmd = DeclareLaunchArgument(
         "use_composition",
-        default_value="False",
+        default_value="True",
         description="Use composed bringup if True",
     )
 
@@ -198,17 +198,7 @@ def generate_launch_description():
                 arguments=["--ros-args", "--log-level", log_level],
                 remappings=remappings,
             ),
-            Node(
-                package="opennav_docking",
-                executable="opennav_docking",
-                name="docking_server",
-                output="screen",
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
-            ),
+
             Node(
                 package="nav2_lifecycle_manager",
                 executable="lifecycle_manager",
@@ -280,13 +270,6 @@ def generate_launch_description():
                         package="nav2_collision_monitor",
                         plugin="nav2_collision_monitor::CollisionMonitor",
                         name="collision_monitor",
-                        parameters=[configured_params],
-                        remappings=remappings,
-                    ),
-                    ComposableNode(
-                        package="opennav_docking",
-                        plugin="opennav_docking::DockingServer",
-                        name="docking_server",
                         parameters=[configured_params],
                         remappings=remappings,
                     ),
