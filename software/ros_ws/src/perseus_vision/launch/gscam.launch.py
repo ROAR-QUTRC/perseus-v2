@@ -103,6 +103,7 @@ def generate_launch_description():
                 "gscam_config": gst_pipeline,
                 "camera_info_url": camera_info_path,
                 "image_encoding": image_encoding,
+                "use_sensor_data_qos": True,
             }
         ],
     )
