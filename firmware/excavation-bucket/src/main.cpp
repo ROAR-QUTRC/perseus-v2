@@ -394,8 +394,8 @@ void setup()
     packet_manager->set_transmission_config(
         static_cast<flagged_address_t>(
             standard_address_t{DEVICE_ADDRESS,
-                static_cast<uint8_t>(group::MAGNET),
-                static_cast<uint8_t>(magnet_parameter::MAGNET_ENABLE)}),
+                               static_cast<uint8_t>(group::MAGNET),
+                               static_cast<uint8_t>(magnet_parameter::MAGNET_ENABLE)}),
         {
             .generator = [=]()
             {
@@ -410,8 +410,8 @@ void setup()
     packet_manager->set_callback(
         filter_t{static_cast<flagged_address_t>(
             standard_address_t{DEVICE_ADDRESS,
-                static_cast<uint8_t>(group::MAGNET),
-                static_cast<uint8_t>(magnet_parameter::MAGNET_ENABLE)})},
+                               static_cast<uint8_t>(group::MAGNET),
+                               static_cast<uint8_t>(magnet_parameter::MAGNET_ENABLE)})},
         {
             .data_callback = handle_magnet_enable_data,
         });
