@@ -9,6 +9,7 @@
   builtin-interfaces,
   cv-bridge,
   geometry-msgs,
+  gscam,
   onnxruntime,
   opencv,
   perseus-interfaces,
@@ -38,6 +39,7 @@ buildRosPackage rec {
     builtin-interfaces
     cv-bridge
     geometry-msgs
+    gscam
     onnxruntime
     opencv
     perseus-interfaces
