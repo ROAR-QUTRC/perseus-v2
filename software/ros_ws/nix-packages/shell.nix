@@ -67,6 +67,7 @@ pkgs.mkShell {
           nav2-msgs
           navigation2
           nlohmann_json
+          onnxruntime
           opencv
           openssl
           pcl-conversions
@@ -105,6 +106,7 @@ pkgs.mkShell {
           tf2-sensor-msgs
           twist-mux
           urdf
+          vision-msgs
           visualization-msgs
           xacro
           yaml-cpp-vendor

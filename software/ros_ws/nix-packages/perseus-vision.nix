@@ -8,6 +8,7 @@
   builtin-interfaces,
   cv-bridge,
   geometry-msgs,
+  onnxruntime,
   opencv,
   perseus-interfaces,
   rclcpp,
@@ -16,6 +17,7 @@
   tf2,
   tf2-geometry-msgs,
   tf2-ros,
+  vision-msgs,
   visualization-msgs,
 }:
 buildRosPackage rec {
@@ -34,6 +36,7 @@ buildRosPackage rec {
     builtin-interfaces
     cv-bridge
     geometry-msgs
+    onnxruntime
     opencv
     perseus-interfaces
     rclcpp
@@ -42,6 +45,7 @@ buildRosPackage rec {
     tf2
     tf2-geometry-msgs
     tf2-ros
+    vision-msgs
     visualization-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
