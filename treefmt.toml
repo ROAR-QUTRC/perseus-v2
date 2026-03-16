@@ -27,6 +27,7 @@ excludes = [
     "*.stl",
     "*.step",
     "*.3mf",
+    "*.onnx",
     "hardware/**",
     "*.lock",
     "*.patch",
