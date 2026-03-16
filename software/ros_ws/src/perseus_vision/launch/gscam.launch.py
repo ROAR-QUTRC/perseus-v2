@@ -17,6 +17,7 @@ def generate_launch_description():
     camera_config = LaunchConfiguration("gst_config")
     camera_info = LaunchConfiguration("camera_info")
     camera_namespace = LaunchConfiguration("camera_namespace")
+    jpeg_encoding = LaunchConfiguration("jpeg_encoding")
 
     arguments = [
         DeclareLaunchArgument(
@@ -38,6 +39,11 @@ def generate_launch_description():
             "camera_namespace",
             default_value="",
             description="The namespace to prepend to any topics/services published from the gscam node. If not specified, the camera name will be used.",
+        ),
+        DeclareLaunchArgument(
+            "jpeg_encoding",
+            default_value="true",
+            description="Whether to encode the image as a compressed jpeg file",
         ),
     ]
 
@@ -61,9 +67,12 @@ def generate_launch_description():
         " ! video/x-raw",
         " ! videoconvert",
     ]
+    pipeline_with_encoding = IfElseSubstitution(
+        jpeg_encoding, default_camera_config + [" ! jpegenc"], default_camera_config
+    )
 
     gst_pipeline = IfElseSubstitution(
-        EqualsSubstitution(camera_config, ""), default_camera_config, camera_config
+        EqualsSubstitution(camera_config, ""), pipeline_with_encoding, camera_config
     )
 
     gscam_namespace = IfElseSubstitution(
@@ -82,6 +91,7 @@ def generate_launch_description():
             "/",
         ),
     )
+    image_encoding = IfElseSubstitution(jpeg_encoding, "jpeg", "rgb8")
     gscam_node = Node(
         package="gscam",
         executable="gscam_node",
@@ -92,6 +102,7 @@ def generate_launch_description():
                 "reopen_on_eof": True,
                 "gscam_config": gst_pipeline,
                 "camera_info_url": camera_info_path,
+                "image_encoding": image_encoding,
             }
         ],
     )
