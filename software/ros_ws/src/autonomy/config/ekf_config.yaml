@@ -1,5 +1,7 @@
 ekf_filter_node:
   ros__parameters:
+    # Reduced from 50Hz to 20Hz to lower CPU load; this config only fuses
+    # wheel odometry (vx) and IMU orientation, so 20Hz is sufficient.
     frequency: 20.0
     sensor_timeout: 1.0
     two_d_mode: true
