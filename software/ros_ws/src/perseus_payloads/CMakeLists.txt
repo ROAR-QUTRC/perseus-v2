@@ -41,8 +41,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs actuator_msgs std_msgs std_srvs
-                                 perseus_interfaces)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs actuator_msgs std_msgs
+                                 std_srvs perseus_interfaces)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
@@ -120,8 +120,14 @@ ament_target_dependencies(centrifuge_driver PUBLIC rclcpp sensor_msgs
                           actuator_msgs)
 ament_target_dependencies(ilmenite_station PUBLIC rclcpp actuator_msgs)
 ament_target_dependencies(ilmenite_ml PUBLIC rclcpp sensor_msgs)
-ament_target_dependencies(space_resources_controller PUBLIC rclcpp std_srvs
-                          actuator_msgs std_msgs perseus_interfaces)
+ament_target_dependencies(
+  space_resources_controller
+  PUBLIC
+  rclcpp
+  std_srvs
+  actuator_msgs
+  std_msgs
+  perseus_interfaces)
 
 # target_link_libraries(arm_driver PUBLIC st3215_lib)
 target_link_libraries(bucket_driver PUBLIC hi_can_raw)
