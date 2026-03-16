@@ -391,6 +391,30 @@ void setup()
         {
             .data_callback = handle_motor_current_data,
         });
+    packet_manager->set_transmission_config(
+        static_cast<flagged_address_t>(
+            standard_address_t{DEVICE_ADDRESS,
+                static_cast<uint8_t>(group::MAGNET),
+                static_cast<uint8_t>(magnet_parameter::MAGNET_ENABLE)}),
+        {
+            .generator = [=]()
+            {
+                return current_t{static_cast<uint16_t>(std::clamp(motor_bank_3->get_average_current() * 1000,
+                                                                  static_cast<float>(std::numeric_limits<uint16_t>::min()),
+                                                                  static_cast<float>(std::numeric_limits<uint16_t>::max())))}
+                    .serialize_data();
+            },
+            .interval = 100ms,
+            .should_transmit_immediately = true,
+        });
+    packet_manager->set_callback(
+        filter_t{static_cast<flagged_address_t>(
+            standard_address_t{DEVICE_ADDRESS,
+                static_cast<uint8_t>(group::MAGNET),
+                static_cast<uint8_t>(magnet_parameter::MAGNET_ENABLE)})},
+        {
+            .data_callback = handle_magnet_enable_data,
+        });
 }
 
 void loop()
@@ -415,6 +439,23 @@ void handle_motor_speed_data(const Packet& packet)
         printf(std::format("Failed to parse speed packet: {}\n", e.what()).c_str());
     }
 }
+void handle_magnet_enable_data(const Packet& packet)
+{
+    using namespace excavation::bucket::controller;
+    using namespace hi_can::parameters::excavation::bucket::controller;
+    try
+    {
+        standard_address_t address{packet.get_address().address};
+        set_magnet_enable(
+            static_cast<magnet_parameter>(standard_address_t(packet.get_address().address).magnet_parameter),
+            magnet_t{packet.get_data()}.value);
+    }
+    catch (const std::exception& e)
+    {
+        printf(std::format("Failed to parse magnet packet: {}\n", e.what()).c_str());
+    }
+}
+
 void handle_motor_current_data(const Packet& packet)
 {
     using namespace excavation::bucket::controller;
@@ -470,6 +511,20 @@ void set_motor_speed(const excavation::bucket::controller::group& group, const i
         break;
     }
 }
+
+void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const bool& on)
+{
+    using namespace excavation::bucket::controller;
+    switch (param)
+    {
+    case param::MAGNET_ENABLE:
+        digitalWrite(MAGNET_PIN, on);
+        break;
+    default:
+        break;
+    }
+}
+
 void set_motor_current(const excavation::bucket::controller::group& group,
                        const uint16_t& current)
 {
