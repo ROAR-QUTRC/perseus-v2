@@ -192,9 +192,9 @@
 						{/each}
 					</ScrollArea>
 				</div>
-				<div class="mt-4 flex space-x-2">
-					<Button size="sm" class="w-full" onclick={saveState}>Save State</Button>
-					<Button variant="outline" size="sm" class="w-full" onclick={resetState}>
+				<div class="mt-4 flex space-x-2 flex-row">
+					<Button size="sm" class="flex-1" onclick={saveState}>Save State</Button>
+					<Button variant="outline" size="sm" class="flex-1" onclick={resetState}>
 						Reset State
 					</Button>
 				</div>
