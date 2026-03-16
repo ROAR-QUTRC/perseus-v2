@@ -51,6 +51,7 @@ pkgs.mkShell {
           diff-drive-controller
           fast-lio
           geometry-msgs
+          gscam
           gz-ros2-control
           hardware-interface
           hi-can

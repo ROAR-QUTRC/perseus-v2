@@ -8,6 +8,7 @@
   builtin-interfaces,
   cv-bridge,
   geometry-msgs,
+  gscam,
   opencv,
   perseus-interfaces,
   rclcpp,
@@ -34,6 +35,7 @@ buildRosPackage rec {
     builtin-interfaces
     cv-bridge
     geometry-msgs
+    gscam
     opencv
     perseus-interfaces
     rclcpp

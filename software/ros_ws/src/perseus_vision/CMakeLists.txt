@@ -47,8 +47,6 @@ install(TARGETS aruco_detector_node DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/ DESTINATION include/)
 
-install(DIRECTORY config/ DESTINATION share/${PROJECT_NAME}/config)
-
-install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
+install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})
 
 ament_package()
