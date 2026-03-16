@@ -81,7 +81,7 @@ namespace perseus_vision
         // subscribers
         rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_image_;
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr sub_camera_info_;
-        
+
         // publishers
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_annotated_;
         rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub_colour_;
