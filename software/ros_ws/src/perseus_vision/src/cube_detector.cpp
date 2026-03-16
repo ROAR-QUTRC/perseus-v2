@@ -7,16 +7,17 @@
 namespace perseus_vision
 {
 
-    // ── constructor ───────────────────────────────────────────────────────────────
-    CubeDetector::CubeDetector()
-        : Node("cube_detector"),
-          ort_env_(ORT_LOGGING_LEVEL_WARNING, "cube_detector")
-    {
-        // ── parameters ──────────────────────────────────────────────────────────────
-        declare_parameter("model_path", "");
-        declare_parameter("confidence_threshold", 0.5);
-        declare_parameter("camera_topic", "/camera/camera/color/image_raw");
-        declare_parameter("camera_info_topic", "/camera/camera/color/camera_info");
+// ── constructor ───────────────────────────────────────────────────────────────
+CubeDetector::CubeDetector()
+: Node("cube_detector"),
+  ort_env_(ORT_LOGGING_LEVEL_WARNING, "cube_detector")
+{
+  // ── parameters ──────────────────────────────────────────────────────────────
+    declare_parameter("model_path", std::string(std::getenv("HOME")) + 
+    "/perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector.onnx");
+  declare_parameter("confidence_threshold", 0.5);
+  declare_parameter("camera_topic",         "/camera/camera/color/image_raw");
+  declare_parameter("camera_info_topic",    "/camera/camera/color/camera_info");
 
         const auto camera_topic = get_parameter("camera_topic").as_string();
         const auto camera_info_topic = get_parameter("camera_info_topic").as_string();
