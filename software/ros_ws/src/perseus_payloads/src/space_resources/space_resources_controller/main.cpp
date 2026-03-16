@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <memory>
 #include <sstream>
+
+using namespace std::chrono_literals;
 //
 static std::string iso_timestamp()
 {
@@ -24,12 +26,12 @@ SpaceResourcesController::SpaceResourcesController(const rclcpp::NodeOptions& op
     _ilmenite_concentration_service =
         this->create_client<perseus_interfaces::srv::Concentration>("/ilmenite/concentration");
 
-    _water_reading_service = this->create_service<perseus_interfaces::srv::Concentration>(
+    _water_reading_service = this->create_service<std_srvs::srv::Empty>(
         "/water/reading",
         std::bind(&SpaceResourcesController::_handle_water_reading_request, this,
                   std::placeholders::_1, std::placeholders::_2));
 
-    _ilmenite_reading_service = this->create_service<perseus_interfaces::srv::Concentration>(
+    _ilmenite_reading_service = this->create_service<std_srvs::srv::Empty>(
         "/ilmenite/reading",
         std::bind(&SpaceResourcesController::_handle_ilmenite_reading_request, this,
                   std::placeholders::_1, std::placeholders::_2));
@@ -41,12 +43,12 @@ SpaceResourcesController::SpaceResourcesController(const rclcpp::NodeOptions& op
     _ilmenite_concentration_result_pub = this->create_publisher<std_msgs::msg::Float64>(
         "/ilmenite_concentration/result", 10);
 
-    // MOVE TO WEBUI NODE!!
+    // MOVE TO WEBUI NODE!! ALSO TRANSLATE TO TYPESCRIPT
     // Service setup so the WebUI node can call water or illmenite actions to be triggered by the controller (i.e first step)
     // _water_reading_service =
-    //     this->create_client<perseus_interfaces::srv::Concentration>("/water/reading");
+    //     this->create_client<std_srvs::srv::Empty>("/water/reading");
     // _ilmenite_reading_service =
-    //     this->create_client<perseus_interfaces::srv::Concentration>("/ilmenite/reading");
+    //     this->create_client<std_srvs::srv::Empty>("/ilmenite/reading");
 
     // Service call 'receiving' end - when WebUI calls /water/reading or /ilmenite/reading,
     // the corresponding handler triggers the ML pipeline and waits for the result
@@ -66,17 +68,23 @@ SpaceResourcesController::SpaceResourcesController(const rclcpp::NodeOptions& op
 
 // Called when WebUI triggers /water/reading — forwards to ML node
 void SpaceResourcesController::_handle_water_reading_request(
-    const std::shared_ptr<perseus_interfaces::srv::Concentration::Request> request,
-    std::shared_ptr<perseus_interfaces::srv::Concentration::Response> response)
+    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+    std::shared_ptr<std_srvs::srv::Empty::Response> response)
 {
+    // Silence unused variable warnings
+    (void)response;
+    (void)request;
     _call_concentration_service(_water_concentration_service, "water");
 }
 
 // Called when WebUI triggers /ilmenite/reading — forwards to ML node
 void SpaceResourcesController::_handle_ilmenite_reading_request(
-    const std::shared_ptr<perseus_interfaces::srv::Concentration::Request> request,
-    std::shared_ptr<perseus_interfaces::srv::Concentration::Response> response)
+    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+    std::shared_ptr<std_srvs::srv::Empty::Response> response)
 {
+    // Silence unused variable warnings
+    (void)response;
+    (void)request;
     _call_concentration_service(_ilmenite_concentration_service, "ilmenite");
 }
 
@@ -84,7 +92,7 @@ void SpaceResourcesController::_call_concentration_service(
     rclcpp::Client<perseus_interfaces::srv::Concentration>::SharedPtr client,
     const std::string& sample_type)
 {
-    if (!client->wait_for_service(std::chrono::seconds(2)))
+    if (!client->wait_for_service(2s))
     {
         RCLCPP_ERROR(this->get_logger(),
                      "Concentration service for '%s' not available", sample_type.c_str());
@@ -108,11 +116,11 @@ void SpaceResourcesController::_call_concentration_service(
             std_msgs::msg::Float64 result_msg;
             result_msg.data = concentration;
 
-            if (sample_type.c_str() == "water")
+            if (sample_type == "water")
             {
                 _water_concentration_result_pub->publish(result_msg);
             }
-            else if (sample_type.c_str() == "ilmenite")
+            else if (sample_type == "ilmenite")
             {
                 _ilmenite_concentration_result_pub->publish(result_msg);
             }
