@@ -128,8 +128,8 @@ let
         # fix locale issues
         export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
         ${pkgs.lib.optionalString isx86_64 ''
-          # Open3D Python module and its Python dependencies (plotly, dash, etc.)
-          export PYTHONPATH="${pkgs.open3d}/lib/python${pkgs.python3.pythonVersion}/site-packages:${open3dPythonDeps.env}/lib/python${pkgs.python3.pythonVersion}/site-packages''${PYTHONPATH:+:$PYTHONPATH}"
+        # Open3D Python module and its Python dependencies (plotly, dash, etc.)
+        export PYTHONPATH="${pkgs.open3d}/lib/python${pkgs.python3.pythonVersion}/site-packages:${open3dPythonDeps.env}/lib/python${pkgs.python3.pythonVersion}/site-packages''${PYTHONPATH:+:$PYTHONPATH}"
         ''}
       ''
       + additionalPostShellHook;
@@ -160,6 +160,7 @@ in
       export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc}/bin"
       # ONNX Runtime with CUDA support
       export ORT_LIB_LOCATION="${cudaPkgs.onnxruntime-cuda}/lib"
+      export LD_LIBRARY_PATH="${cudaPkgs.onnxruntime-cuda}/lib:$LD_LIBRARY_PATH"
     '';
   };
 }

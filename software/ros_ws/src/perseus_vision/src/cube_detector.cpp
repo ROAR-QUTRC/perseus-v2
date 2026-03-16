@@ -14,7 +14,7 @@ namespace perseus_vision
     {
         // ── parameters ──────────────────────────────────────────────────────────────
         declare_parameter("model_path", std::string(std::getenv("HOME")) +
-                                            "/perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector.onnx");
+                                            "/perseus-v2/software/ros_ws/src/perseus_vision/models/best.onnx");
         declare_parameter("confidence_threshold", 0.5);
         declare_parameter("camera_topic", "/camera/camera/color/image_raw");
         declare_parameter("camera_info_topic", "/camera/camera/color/camera_info");
