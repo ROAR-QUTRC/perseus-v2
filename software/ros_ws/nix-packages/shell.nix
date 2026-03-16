@@ -106,7 +106,6 @@ pkgs.mkShell {
           tf2-sensor-msgs
           twist-mux
           urdf
-          vision-msgs
           visualization-msgs
           xacro
           yaml-cpp-vendor
@@ -123,9 +122,6 @@ pkgs.mkShell {
         eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete ros2)"
         eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete colcon)"
     fi
-    # Expose ONNX Runtime pkg-config so CMake can find it
-    export PKG_CONFIG_PATH="${pkgs.onnxruntime.dev}/lib/pkgconfig:$PKG_CONFIG_PATH"
-
   ''
   + extraShellHook;
 }

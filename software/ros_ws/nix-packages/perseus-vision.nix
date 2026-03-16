@@ -17,7 +17,6 @@
   tf2,
   tf2-geometry-msgs,
   tf2-ros,
-  vision-msgs,
   visualization-msgs,
 }:
 buildRosPackage rec {
@@ -45,7 +44,6 @@ buildRosPackage rec {
     tf2
     tf2-geometry-msgs
     tf2-ros
-    vision-msgs
     visualization-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
