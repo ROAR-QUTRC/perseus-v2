@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "ament_index_cpp/get_package_share_directory.hpp"
+// #include "ament_index_cpp/get_package_share_directory.hpp"
 #include "cv_bridge/cv_bridge.hpp"
 #include "onnxruntime/onnxruntime_cxx_api.h"
 #include "opencv2/opencv.hpp"
@@ -13,10 +13,6 @@
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "vision_msgs/msg/detection2_d.hpp"
-#include "vision_msgs/msg/detection2_d_array.hpp"
-#include "vision_msgs/msg/object_hypothesis_with_pose.hpp"
-
 namespace perseus_vision
 {
 
@@ -58,9 +54,9 @@ namespace perseus_vision
             const std::vector<Detection>& detections,
             const std_msgs::msg::Header& header);
 
-        void publish_detections(
-            const std::vector<Detection>& detections,
-            const std_msgs::msg::Header& header);
+        // void publish_detections(
+        //     const std::vector<Detection>& detections,
+        //     const std_msgs::msg::Header& header);
 
         // ONNX Runtime
         Ort::Env ort_env_;
@@ -88,7 +84,6 @@ namespace perseus_vision
 
         // publishers
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_annotated_;
-        rclcpp::Publisher<vision_msgs::msg::Detection2DArray>::SharedPtr pub_detections_;
         rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub_colour_;
     };
 

@@ -8,6 +8,7 @@
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+
   <depend>builtin_interfaces</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
@@ -16,10 +17,10 @@
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
   <depend>geometry_msgs</depend>
+  <!-- <depend>ament_index_cpp</depend> -->
   <depend>tf2_geometry_msgs</depend>
   <depend>visualization_msgs</depend>
   <depend>onnxruntime</depend>
-  <depend>vision_msgs</depend>
   <build_depend>opencv</build_depend>
   <exec_depend>opencv</exec_depend>
   <test_depend>ament_lint_auto</test_depend>
