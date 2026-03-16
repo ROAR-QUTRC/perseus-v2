@@ -30,12 +30,11 @@ message(STATUS "ONNXRuntime lib:     ${ORT_LIBRARIES}")
 include_directories(include)
 
 # ── aruco_detector_node ───────────────────────────────────────────────────────
-add_executable(aruco_detector_node
-  src/aruco_detector.cpp
-  src/aruco_detector_node.cpp
-)
+add_executable(aruco_detector_node src/aruco_detector.cpp
+                                   src/aruco_detector_node.cpp)
 
-ament_target_dependencies(aruco_detector_node
+ament_target_dependencies(
+  aruco_detector_node
   rclcpp
   sensor_msgs
   std_msgs
@@ -46,55 +45,37 @@ ament_target_dependencies(aruco_detector_node
   cv_bridge
   OpenCV
   visualization_msgs
-  perseus_interfaces
-)
+  perseus_interfaces)
 
-target_include_directories(aruco_detector_node
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
+target_include_directories(
+  aruco_detector_node
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:include>)
 
 # ── cube_detector ─────────────────────────────────────────────────────────────
-add_executable(cube_detector
-  src/cube_detector.cpp
-  src/cube_detector_node.cpp
-)
+add_executable(cube_detector src/cube_detector.cpp src/cube_detector_node.cpp)
 
-target_include_directories(cube_detector
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-  PRIVATE
-    ${ORT_INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS}
-)
+target_include_directories(
+  cube_detector
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:include>
+  PRIVATE ${ORT_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
-target_link_libraries(cube_detector
-  ${ORT_LIBRARIES}
-  ${OpenCV_LIBS}
-)
+target_link_libraries(cube_detector ${ORT_LIBRARIES} ${OpenCV_LIBS})
 
-ament_target_dependencies(cube_detector
-  rclcpp
-  sensor_msgs
-  std_msgs
-# vision_msgs  
-  cv_bridge
-  ament_index_cpp
-)
+ament_target_dependencies(
+  cube_detector rclcpp sensor_msgs std_msgs
+  # vision_msgs
+  cv_bridge ament_index_cpp)
 
 # ── install ───────────────────────────────────────────────────────────────────
-install(TARGETS
-  aruco_detector_node
-  cube_detector
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(TARGETS aruco_detector_node cube_detector
+        DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY include/   DESTINATION include/)
-install(DIRECTORY config/    DESTINATION share/${PROJECT_NAME}/config)
-install(DIRECTORY launch/    DESTINATION share/${PROJECT_NAME}/launch)
-install(DIRECTORY models/    DESTINATION share/${PROJECT_NAME}/models)
+install(DIRECTORY include/ DESTINATION include/)
+install(DIRECTORY config/ DESTINATION share/${PROJECT_NAME}/config)
+install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
+install(DIRECTORY models/ DESTINATION share/${PROJECT_NAME}/models)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
