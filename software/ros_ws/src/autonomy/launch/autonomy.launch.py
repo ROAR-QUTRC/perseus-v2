@@ -47,8 +47,6 @@ def generate_launch_description():
         description="Full path to the ROS2 parameters file for SLAM Toolbox",
     )
 
-    map_file = os.path.join(autonomy_dir, "map", "sim_map_serial")
-
     declare_nav_params_file_cmd = DeclareLaunchArgument(
         "nav_params_file",
         default_value=os.path.join(autonomy_dir, "config", "nav_sim_params.yaml"),
@@ -70,7 +68,6 @@ def generate_launch_description():
             "slam_params_file": slam_params_file,
             "use_sim_time": use_sim_time,
             "autostart": autostart,
-            "map_file_name": map_file,  # FOR SIMULATION ONLY
         }.items(),
     )
 
