@@ -415,6 +415,11 @@ def generate_launch_description():
             default_value="/camera/depth/image_compressedDepth",
             description="Output depth compressed image topic",
         ),
+        DeclareLaunchArgument(
+            "intra_process_comms",
+            default_value="true",
+            description="Whether to enable intra process comms - fixes qos issue",
+        ),
     ]
 
     # Include the realsense2_camera rs_launch.py with all parameters
