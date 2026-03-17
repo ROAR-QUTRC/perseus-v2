@@ -33,7 +33,7 @@ def generate_launch_description():
 
     declare_imu_topic = DeclareLaunchArgument(
         "imu_topic",
-        default_value="/imu/data",
+        default_value="/livox/imu/corrected",
         description="IMU topic for robot_localization ekf (imu0)",
     )
     declare_autostart_cmd = DeclareLaunchArgument(
@@ -57,7 +57,7 @@ def generate_launch_description():
 
     declare_ekf_config_file_cmd = DeclareLaunchArgument(
         "ekf_config_file",
-        default_value=os.path.join(autonomy_dir, "config", "ekf_config.yaml"),
+        default_value=os.path.join(autonomy_dir, "config", "ekf_config_fast_lio.yaml"),
         description="Full path to the ROS2 parameters file for EKF",
     )
 
@@ -119,18 +119,5 @@ def generate_launch_description():
     ld.add_action(ekf_node)
     ld.add_action(slam_launch)
     ld.add_action(nav_launch)
-
-    # Include network recovery launch
-    network_recovery_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("network_recovery"),
-                "launch",
-                "network_recovery.launch.py",
-            )
-        ),
-        launch_arguments={"use_sim_time": use_sim_time}.items(),
-    )
-    ld.add_action(network_recovery_launch)
 
     return ld
