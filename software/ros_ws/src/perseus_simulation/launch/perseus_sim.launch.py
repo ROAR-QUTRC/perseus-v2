@@ -130,12 +130,30 @@ def generate_launch_description():
         condition=IfCondition(launch_ekf),
     )
 
+    twist_mux_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus"),
+                        "launch",
+                        "twist_mux.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
     launch_files = [
         gz_launch,
         rsp_launch,
         controllers_launch,
         ekf_delayed,
         rviz,
+        twist_mux_launch,
     ]
 
     return LaunchDescription(arguments + launch_files)

@@ -8,6 +8,9 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(lidarslam_msgs REQUIRED)
+find_package(graph_based_slam REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -39,11 +42,22 @@ add_executable(sim_pointcloud_filter src/sim_pointcloud_filter.cpp)
 ament_target_dependencies(sim_pointcloud_filter rclcpp sensor_msgs)
 add_executable(map_saver src/map_saver.cpp)
 ament_target_dependencies(map_saver rclcpp std_srvs sensor_msgs)
+add_executable(fastlio_maparray_bridge src/fastlio_maparray_bridge.cpp)
+ament_target_dependencies(
+  fastlio_maparray_bridge
+  rclcpp
+  sensor_msgs
+  nav_msgs
+  geometry_msgs
+  lidarslam_msgs
+  graph_based_slam)
 
 install(TARGETS sim_pointcloud_filter DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS sim_pointcloud_filter DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS map_saver DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS fastlio_maparray_bridge DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

@@ -51,6 +51,7 @@ pkgs.mkShell {
           diff-drive-controller
           fast-lio
           geometry-msgs
+          graph-based-slam
           gz-ros2-control
           hardware-interface
           hi-can
@@ -62,8 +63,10 @@ pkgs.mkShell {
           laser-geometry
           launch
           launch-ros
+          lidarslam-msgs
           mecanum-drive-controller
           message-filters
+          nav-msgs
           nav2-msgs
           navigation2
           nlohmann_json

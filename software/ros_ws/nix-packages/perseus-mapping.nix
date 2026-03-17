@@ -6,6 +6,9 @@
   ament-lint-auto,
   ament-lint-common,
   fast-lio,
+  graph-based-slam,
+  lidarslam-msgs,
+  nav-msgs,
   pcl-conversions,
   sensor-msgs,
   std-srvs,
@@ -24,6 +27,9 @@ buildRosPackage rec {
   ];
   propagatedBuildInputs = [
     fast-lio
+    graph-based-slam
+    lidarslam-msgs
+    nav-msgs
     pcl-conversions
     sensor-msgs
     std-srvs

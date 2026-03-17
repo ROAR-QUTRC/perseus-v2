@@ -86,10 +86,24 @@ def generate_launch_description():
         ),
     )
 
+    # Node for calling /cloud_registered & /Odometry bridge to MapArray for loop closure
+    bridge_node_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("perseus_mapping"),
+                    "launch",
+                    "loop_closure.launch.py",
+                ]
+            )
+        ),
+    )
+
     return LaunchDescription(
         [
             sim_filter_launch,
             fast_lio_launch,
             map_saver_launch,
+            bridge_node_launch,
         ]
     )
