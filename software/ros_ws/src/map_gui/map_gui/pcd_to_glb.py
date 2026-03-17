@@ -24,7 +24,7 @@ class PcdToGlbNode(Node):
     """
 
     def __init__(self):
-        super().__init__('pcd_to_glb')
+        super().__init__("pcd_to_glb")
 
         self._declare_parameters()
         self._load_parameters()
@@ -48,40 +48,54 @@ class PcdToGlbNode(Node):
 
     def _declare_parameters(self) -> None:
         self.declare_parameter(
-            'input_folder',
-            str(Path.home() / 'maps'),
-            ParameterDescriptor(description='Folder to monitor for new PCD files')
+            "input_folder",
+            str(Path.home() / "maps"),
+            ParameterDescriptor(description="Folder to monitor for new PCD files"),
         )
         self.declare_parameter(
-            'check_interval',
+            "check_interval",
             10.0,
-            ParameterDescriptor(description='How often to check for new files in seconds')
+            ParameterDescriptor(
+                description="How often to check for new files in seconds"
+            ),
         )
         self.declare_parameter(
-            'poisson_depth',
+            "poisson_depth",
             9,
-            ParameterDescriptor(description='Depth for Poisson surface reconstruction')
+            ParameterDescriptor(description="Depth for Poisson surface reconstruction"),
         )
         self.declare_parameter(
-            'density_quantile',
+            "density_quantile",
             0.003,
-            ParameterDescriptor(description='Density filter quantile for mesh cleanup')
+            ParameterDescriptor(description="Density filter quantile for mesh cleanup"),
         )
         self.declare_parameter(
-            'crop_margin',
+            "crop_margin",
             0.1,
-            ParameterDescriptor(description='Margin around point cloud bounds when cropping in metres')
+            ParameterDescriptor(
+                description="Margin around point cloud bounds when cropping in metres"
+            ),
         )
 
     def _load_parameters(self) -> None:
-        self.input_folder = Path(self.get_parameter('input_folder').get_parameter_value().string_value)
-        self.check_interval = self.get_parameter('check_interval').get_parameter_value().double_value
-        self.poisson_depth = self.get_parameter('poisson_depth').get_parameter_value().integer_value
-        self.density_quantile = self.get_parameter('density_quantile').get_parameter_value().double_value
-        self.crop_margin = self.get_parameter('crop_margin').get_parameter_value().double_value
+        self.input_folder = Path(
+            self.get_parameter("input_folder").get_parameter_value().string_value
+        )
+        self.check_interval = (
+            self.get_parameter("check_interval").get_parameter_value().double_value
+        )
+        self.poisson_depth = (
+            self.get_parameter("poisson_depth").get_parameter_value().integer_value
+        )
+        self.density_quantile = (
+            self.get_parameter("density_quantile").get_parameter_value().double_value
+        )
+        self.crop_margin = (
+            self.get_parameter("crop_margin").get_parameter_value().double_value
+        )
 
     def check_for_new_files(self) -> None:
-        pcd_files = sorted(glob.glob(os.path.join(self.input_folder, '*.pcd')))
+        pcd_files = sorted(glob.glob(os.path.join(self.input_folder, "*.pcd")))
         new_files = [f for f in pcd_files if f not in self.processed]
 
         for pcd_path in new_files:
@@ -90,8 +104,8 @@ class PcdToGlbNode(Node):
 
     def process_file(self, pcd_path: str) -> None:
         filename = os.path.splitext(os.path.basename(pcd_path))[0]
-        output_path = os.path.join(self.output_folder, f'{filename}.glb')
-        self.get_logger().info(f'Processing: {pcd_path}')
+        output_path = os.path.join(self.output_folder, f"{filename}.glb")
+        self.get_logger().info(f"Processing: {pcd_path}")
 
         try:
             point_cloud = o3d.io.read_point_cloud(pcd_path)
@@ -105,7 +119,9 @@ class PcdToGlbNode(Node):
             )
 
             densities = np.asarray(densities)
-            mesh.remove_vertices_by_mask(densities < np.quantile(densities, self.density_quantile))
+            mesh.remove_vertices_by_mask(
+                densities < np.quantile(densities, self.density_quantile)
+            )
 
             # # Crop to point cloud edges to try and fix warping issues??
             # pts = np.asarray(point_cloud.points)
@@ -139,10 +155,10 @@ class PcdToGlbNode(Node):
             # mesh.vertex_colors = o3d.utility.Vector3dVector(colors)
 
             o3d.io.write_triangle_mesh(output_path, mesh)
-            self.get_logger().info(f'Saved: {output_path}')
+            self.get_logger().info(f"Saved: {output_path}")
 
         except Exception as e:
-            self.get_logger().error(f'Error processing {pcd_path}: {e}')
+            self.get_logger().error(f"Error processing {pcd_path}: {e}")
 
 
 def main(args=None):
@@ -158,5 +174,5 @@ def main(args=None):
             rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
