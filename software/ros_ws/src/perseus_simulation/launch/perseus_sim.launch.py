@@ -10,9 +10,12 @@ from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
 )
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
+from launch.launch_description_sources import (
+    PythonLaunchDescriptionSource,
+    AnyLaunchDescriptionSource,
+)
 
 
 def generate_launch_description():
@@ -32,7 +35,7 @@ def generate_launch_description():
             description="If true, launch the EKF filter node",
         ),
     ]
-    # IMPORTED LAUNCH FILES
+    # # IMPORTED LAUNCH FILES
     gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -83,6 +86,10 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
+    controllers_launch_delayed = TimerAction(
+        period=10.0,
+        actions=[controllers_launch],
+    )
     rviz_config = PathJoinSubstitution(
         [FindPackageShare("perseus_simulation"), "rviz", "view.rviz"]
     )
@@ -129,12 +136,45 @@ def generate_launch_description():
         actions=[ekf_node],
         condition=IfCondition(launch_ekf),
     )
-
+    rosbridge_launch = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("rosbridge_server"),
+                        "launch",
+                        "rosbridge_websocket_launch.xml",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+    twist_mux_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus"),
+                        "launch",
+                        "twist_mux.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
     launch_files = [
         gz_launch,
         rsp_launch,
-        controllers_launch,
+        controllers_launch_delayed,
         ekf_delayed,
+        rosbridge_launch,
+        twist_mux_launch,
         rviz,
     ]
 
