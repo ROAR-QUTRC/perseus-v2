@@ -130,7 +130,7 @@ let
         export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
         # enable coloured ros2 launch output
         export RCUTILS_COLORIZED_OUTPUT=1
-        export CYCLONEDDS_URI=file://$HOME/perseus-v2/config/cyclonedds_autonomy.xml
+        # export CYCLONEDDS_URI=file://$HOME/perseus-v2/config/cyclonedds_autonomy.xml
         # fix locale issues
         export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
         ${pkgs.lib.optionalString isx86_64 ''
