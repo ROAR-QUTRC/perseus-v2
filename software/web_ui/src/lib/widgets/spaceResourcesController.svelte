@@ -39,8 +39,8 @@
 	let ilmeniteConcentrationTopic: ROSLIB.Topic<rosFloatMessage> | null = null;
 	let controlTopic: ROSLIB.Topic<AngularVelocityMessageType> | null = null;
 	let brakeTopic: ROSLIB.Topic<rosBooleanMessage> | null = null;
-	let getWaterConcentration: ROSLIB.Topic<EmptyRequestType, Float64MultiArrayType> | null = null;
-	let getIlmeniteConcentration: ROSLIB.Topic<EmptyRequestType, Float64MultiArrayType> | null = null;
+	let getWaterConcentration: ROSLIB.Service<EmptyRequestType, EmptyRequestType> | null = null;
+	let getIlmeniteConcentration: ROSLIB.Service<EmptyRequestType, EmptyRequestType> | null = null;
 
     const minVelocity = 0;
     const maxVelocity = 100;
@@ -105,7 +105,7 @@
 	const takeWaterReading = () => {
 		console.log("water");
 		if (getWaterConcentration) {
-			getWaterConcentration.callService({}, (response: Float64Array) => {})
+			getWaterConcentration.callService({}, () => {})
 		}
 	}
 
@@ -113,7 +113,7 @@
 	const takeIlmeniteReading = () => {
 		console.log("ilmenite");
 		if (getIlmeniteConcentration) {
-			getIlmeniteConcentration.callService({}, (response: Float64Array) => {})
+			getIlmeniteConcentration.callService({}, () => {})
 		}
 	}
 
@@ -140,12 +140,12 @@
 			getWaterConcentration = new ROSLIB.Service({
 				ros: rosConnection,
 				name: '/water/reading',
-				serviceType: 'perseus_interfaces/srv/Concentration'
+				serviceType: 'std_srvs/srv/Empty'
 			});
 			getIlmeniteConcentration = new ROSLIB.Service({
 				ros: rosConnection,
 				name: '/ilmenite/reading',
-				serviceType: 'perseus_interfaces/srv/Concentration'
+				serviceType: 'std_srvs/srv/Empty'
 			});
 			waterConcentrationTopic = new ROSLIB.Topic({
 				ros: rosConnection,
@@ -171,7 +171,7 @@
 	});
 
 	//update spedometer with current velocity
-	const onSpeedMessage = (message: ActuatorsMessageType) => {
+	const onSpeedMessage = (message: AngularVelocityMessageType) => {
 		let response = message.velocity;
 		console.log(response);
 		currentVelocity = response[0];
