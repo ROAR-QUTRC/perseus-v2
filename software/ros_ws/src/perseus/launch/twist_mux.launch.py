@@ -34,8 +34,11 @@ def generate_launch_description():
         output="screen",
         parameters=[use_sim_time_param],
         remappings=[
-            ("/cmd_vel_in", "/cmd_vel_nav"),
-            ("/cmd_vel_out", "/cmd_vel_nav_stamped"),
+            (
+                "/cmd_vel_in",
+                "/web_vel_unstamped",
+            ),  # Foxglove extension publishes unstamped topic, remap to match expected input
+            ("/cmd_vel_out", "/web_vel"),
         ],
     )
 

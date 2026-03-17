@@ -1,0 +1,12 @@
+[Unit]
+Description=Set time from Google HTTP headers
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | sed -n "s/^ *Date: *//p")"'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
