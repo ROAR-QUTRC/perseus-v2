@@ -1,0 +1,38 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 18c6e4c..6974a90 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 3.5)
++cmake_minimum_required(VERSION 3.10)
+ project(ndt_omp_ros2)
+ 
+ # -mavx causes a lot of errors!!
+@@ -6,7 +6,7 @@ project(ndt_omp_ros2)
+ #set(CMAKE_CXX_FLAGS "-std=c++14 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2")
+ 
+ if(NOT CMAKE_CXX_STANDARD)
+-  set(CMAKE_CXX_STANDARD 14)
++  set(CMAKE_CXX_STANDARD 17)
+ endif()
+ 
+ # pcl 1.7 causes a segfault when it is built with debug mode
+diff --git a/include/pclomp/voxel_grid_covariance_omp_impl.hpp b/include/pclomp/voxel_grid_covariance_omp_impl.hpp
+index be4cb2b..a9ca1f7 100644
+--- a/include/pclomp/voxel_grid_covariance_omp_impl.hpp
++++ b/include/pclomp/voxel_grid_covariance_omp_impl.hpp
+@@ -39,7 +39,13 @@
+ #define PCL_VOXEL_GRID_COVARIANCE_IMPL_OMP_H_
+ 
+ #include <pcl/common/common.h>
+-#include <pcl/filters/boost.h>
++
++#include <boost/random.hpp>
++#include <boost/random/normal_distribution.hpp>
++#include <boost/dynamic_bitset.hpp>
++#include <boost/mpl/size.hpp>
++#include <boost/fusion/sequence/intrinsic/at_key.hpp>
++#include <boost/optional.hpp>
+ #include "voxel_grid_covariance_omp.h"
+ #include <Eigen/Dense>
+ #include <Eigen/Cholesky>
