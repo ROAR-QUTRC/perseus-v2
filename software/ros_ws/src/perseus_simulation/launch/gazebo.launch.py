@@ -42,7 +42,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "initial_pose_y",
-            default_value="-3.0",
+            default_value="3.0",
             description="Initial Y position of the robot",
         ),
         DeclareLaunchArgument(
@@ -67,11 +67,7 @@ def generate_launch_description():
         )
         gz_launch = ExecuteProcess(
             cmd=[
-                "nix",
-                "run",
-                "--impure",
-                "github:nix-community/nixGL",
-                "--",
+                "nixgl",
                 "ros2",
                 "launch",
                 "ros_gz_sim",
