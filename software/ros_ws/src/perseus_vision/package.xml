@@ -27,6 +27,8 @@
   <test_depend>ament_lint_common</test_depend>
   <build_depend>perseus_interfaces</build_depend>
   <exec_depend>perseus_interfaces</exec_depend>
+  <!-- This enables USB camera support -->
+  <depend>usb_cam</depend> 
   <export>
     <build_type>ament_cmake</build_type>
   </export>
