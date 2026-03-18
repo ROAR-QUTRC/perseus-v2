@@ -39,6 +39,7 @@ pkgs.mkShell {
           ament-cmake-xmllint
           ament-copyright
           ament-flake8
+          ament-index-cpp
           ament-lint-auto
           ament-lint-common
           ament-pep257
