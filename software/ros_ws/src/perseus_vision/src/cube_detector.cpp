@@ -15,7 +15,7 @@ namespace perseus_vision
         // ── parameters ──────────────────────────────────────────────────────────────
         declare_parameter("model_path", "/perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector_yolob8s.onnx");
         declare_parameter("confidence_threshold", 0.5);
-        declare_parameter("camera_topic", "/image_raw");
+        declare_parameter("camera_topic", "/camera/camera/color/image_raw");
         declare_parameter("camera_info_topic", "/camera/camera/color/camera_info");
         declare_parameter("always_on", true);  // keep node alive even without subscribers
         declare_parameter("use_cuda", true);
@@ -115,6 +115,10 @@ namespace perseus_vision
         if (_processing_frequency_hz > 0.0)
         {
             const int64_t now_ns = this->now().nanoseconds();
+            if (_last_inference_time_ns != 0 && now_ns < _last_inference_time_ns)
+            {
+                _last_inference_time_ns = 0;
+            }
             const int64_t min_period_ns = static_cast<int64_t>(1e9 / _processing_frequency_hz);
             if (_last_inference_time_ns != 0 && (now_ns - _last_inference_time_ns) < min_period_ns)
             {
