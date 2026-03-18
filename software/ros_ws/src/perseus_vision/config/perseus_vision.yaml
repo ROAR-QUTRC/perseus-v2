@@ -41,16 +41,13 @@ cube_detector:
     inter_op_num_threads: 2
     output_topic: /perseus_vision/cube/detections
     publish_img: true
-
-    depth_estimation_mode: "none"   # "none" | "depth_image" | "stereo"
-    
+    depth_estimation_mode: "none" # "none" | "depth_image" | "stereo"
     depth_image:
       topic: "/camera/camera/depth/image_rect_raw"
       info_topic: "/camera/camera/depth/camera_info"
       unit_scale: 0.001
       max_range_m: 5.0
       min_range_m: 0.1
-
     stereo:
       left_topic: "/stereo/left/image_raw"
       right_topic: "/stereo/right/image_raw"
