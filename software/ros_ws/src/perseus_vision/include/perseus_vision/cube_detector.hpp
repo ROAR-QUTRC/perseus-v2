@@ -18,6 +18,7 @@
 #include "opencv2/opencv.hpp"
 #include "perseus_interfaces/msg/object_detections.hpp"
 #include "perseus_interfaces/srv/detect_objects.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
@@ -93,6 +94,8 @@ namespace perseus_vision
         void handle_detect_objects_request(
             const std::shared_ptr<DetectObjects::Request> request,
             std::shared_ptr<DetectObjects::Response> response);
+        rcl_interfaces::msg::SetParametersResult parameter_callback(
+            const std::vector<rclcpp::Parameter>& parameters);
 
         // ONNX Runtime
         Ort::Env _ort_env;
@@ -125,7 +128,7 @@ namespace perseus_vision
         double _depth_unit_scale{0.001};
         double _depth_max_range_m{5.0};
         double _depth_min_range_m{0.1};
-        double _processing_frequency_hz{0.0};
+        std::atomic<double> _processing_frequency_hz{0.0};
         int64_t _last_inference_time_ns{0};
         int _intra_op_num_threads;
         int _inter_op_num_threads;

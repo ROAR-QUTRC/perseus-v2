@@ -60,12 +60,14 @@ namespace perseus_vision
         _always_on.store(get_parameter("always_on").as_bool());  // set initial value of atomic bool
         _should_use_cuda = get_parameter("use_cuda").as_bool();
         _publish_annotated_image = get_parameter("publish_annotated_image").as_bool();
-        _processing_frequency_hz = get_parameter("processing_frequency_hz").as_double();
+        _processing_frequency_hz.store(get_parameter("processing_frequency_hz").as_double());
         _model_path = get_parameter("model_path").as_string();
         _tf_output_frame = get_parameter("tf_output_frame").as_string();
         _output_img_topic = get_parameter("output_img_topic").as_string();
         _output_detections_topic = get_parameter("output_detections_topic").as_string();
         _output_markers_topic = get_parameter("output_markers_topic").as_string();
+        _param_callback_handle = add_on_set_parameters_callback(
+            std::bind(&CubeDetector::parameter_callback, this, std::placeholders::_1));
         if (_model_path.rfind("~/", 0) == 0)
         {
             if (const char* home = std::getenv("HOME"))
@@ -202,21 +204,20 @@ namespace perseus_vision
             _has_latest_bgr_frame = true;
         }
 
-        _always_on.store(get_parameter("always_on").as_bool());
         if (!_always_on.load())
         {
             return;
         }
 
-        _processing_frequency_hz = get_parameter("processing_frequency_hz").as_double();
-        if (_processing_frequency_hz > 0.0)
+        const double processing_frequency_hz = _processing_frequency_hz.load();
+        if (processing_frequency_hz > 0.0)
         {
             const int64_t now_ns = this->now().nanoseconds();
             if (_last_inference_time_ns != 0 && now_ns < _last_inference_time_ns)
             {
                 _last_inference_time_ns = 0;
             }
-            const int64_t min_period_ns = static_cast<int64_t>(1e9 / _processing_frequency_hz);
+            const int64_t min_period_ns = static_cast<int64_t>(1e9 / processing_frequency_hz);
             if (_last_inference_time_ns != 0 && (now_ns - _last_inference_time_ns) < min_period_ns)
             {
                 return;
@@ -732,7 +733,6 @@ namespace perseus_vision
         const std::shared_ptr<DetectObjects::Request> request,
         std::shared_ptr<DetectObjects::Response> response)
     {
-        _always_on.store(get_parameter("always_on").as_bool());
         if (!_always_on.load())
         {
             cv::Mat latest_frame;
@@ -862,6 +862,37 @@ namespace perseus_vision
         }
 
         RCLCPP_INFO(get_logger(), "Saved cube detection capture: %s", filename.c_str());
+    }
+
+    rcl_interfaces::msg::SetParametersResult CubeDetector::parameter_callback(
+        const std::vector<rclcpp::Parameter>& parameters)
+    {
+        rcl_interfaces::msg::SetParametersResult result;
+        result.successful = true;
+
+        for (const auto& parameter : parameters)
+        {
+            if (parameter.get_name() == "always_on")
+            {
+                _always_on.store(parameter.as_bool());
+                continue;
+            }
+
+            if (parameter.get_name() == "processing_frequency_hz")
+            {
+                const double processing_frequency_hz = parameter.as_double();
+                if (processing_frequency_hz < 0.0)
+                {
+                    result.successful = false;
+                    result.reason = "processing_frequency_hz must be non-negative";
+                    return result;
+                }
+
+                _processing_frequency_hz.store(processing_frequency_hz);
+            }
+        }
+
+        return result;
     }
 
 }  // namespace perseus_vision
