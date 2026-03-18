@@ -107,7 +107,7 @@ namespace perseus_vision
         std::string _output_img_topic;
         std::string _output_detections_topic;
         std::string _output_markers_topic;
-        
+
         float _confidence_threshold;
         std::atomic_bool _always_on{true};
         bool _should_use_cuda;
