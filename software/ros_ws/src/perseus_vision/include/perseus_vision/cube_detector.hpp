@@ -1,5 +1,8 @@
 #pragma once
 
+/// @file cube_detector.hpp
+/// @brief Cube detection and depth-based pose estimation ROS2 node.
+
 #include <atomic>
 #include <chrono>
 #include <cstdint>
@@ -46,10 +49,19 @@ namespace perseus_vision
         cv::Rect bbox;  // in original image coordinates
     };
 
+    /// @brief ROS2 node for detecting colored cubes and estimating their poses.
+    ///
+    /// Subscribes to RGB images, runs ONNX-based object detection to find cubes,
+    /// and can use aligned depth data to estimate 3D poses for publishing as
+    /// detection messages and RViz markers. Also provides a service interface for
+    /// returning the latest cached detections and optionally saving an annotated image.
     class CubeDetector : public rclcpp::Node
     {
     public:
         using DetectObjects = perseus_interfaces::srv::DetectObjects;
+
+        /// @brief Constructs the node, declaring parameters and setting up
+        ///        subscriptions, publishers, inference resources, and the detection service.
         CubeDetector();
 
     private:
