@@ -19,6 +19,7 @@ aruco_detector:
     # Row-major 3x3 K
     camera_matrix: [530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0]
     distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
+
 cube_detector:
   ros__parameters:
     model_path: /perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector_yolob8s.onnx
@@ -28,7 +29,7 @@ cube_detector:
     processing_frequency_hz: 5.0 # 0.0 means process every incoming frame
     nms_iou_threshold: 0.45 # Non-maximum suppression IOU threshold
     use_cuda: false # CUDA is not supported in perseus-v2 nix environment, set to false to use CPU
-    camera_topic: /image_raw
+    camera_topic: /camera/camera/color/image_raw
     camera_info_topic: /camera/camera/color/camera_info
     # For CPU use:
     # intra_op_num_threads controls how many threads can be used to
@@ -41,12 +42,15 @@ cube_detector:
     inter_op_num_threads: 2
     output_topic: /perseus_vision/cube/detections
     publish_img: true
-    depth_estimation_mode: "none" # "none" | "depth_image" | "stereo"
+
+    depth_estimation_mode: "depth_image"   # "none" | "depth_image" | "stereo"
+    tf_output_frame: "base_link" # marker pose output frame
+    
     depth_image:
-      topic: "/camera/camera/depth/image_rect_raw"
-      info_topic: "/camera/camera/depth/camera_info"
-      unit_scale: 0.001
-      max_range_m: 5.0
+      topic: "/camera/camera/aligned_depth_to_color/image_raw"
+      info_topic: "/camera/camera/aligned_depth_to_color/camera_info"
+      unit_scale: 0.001 # Scale factor to convert depth image units to meters (e.g., 0.001 for millimeters)
+      max_range_m: 10.0
       min_range_m: 0.1
     stereo:
       left_topic: "/stereo/left/image_raw"
@@ -56,3 +60,4 @@ cube_detector:
       baseline_m: 0.12
       min_disparity: 1.0
       max_disparity: 64.0
+

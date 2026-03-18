@@ -1,11 +1,16 @@
 #pragma once
 
 #include <atomic>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 
+#include "builtin_interfaces/msg/time.hpp"
+#include "geometry_msgs/msg/pose.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/quaternion.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 #include "cv_bridge/cv_bridge.hpp"
 #include "onnxruntime/onnxruntime_cxx_api.h"
@@ -14,6 +19,9 @@
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_listener.h"
+#include "visualization_msgs/msg/marker_array.hpp"
 namespace perseus_vision
 {
 
@@ -44,6 +52,8 @@ namespace perseus_vision
         // callbacks
         void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
         void camera_info_callback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
+        void depth_image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
+        void depth_camera_info_callback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
 
         // inference helpers
         std::vector<float> preprocess(const cv::Mat& bgr_image);
@@ -54,6 +64,24 @@ namespace perseus_vision
             const cv::Mat& image,
             const std::vector<Detection>& detections,
             const std_msgs::msg::Header& header);
+        void publish_depth_markers(
+            const std::vector<Detection>& detections,
+            const std_msgs::msg::Header& header);
+        bool estimate_cube_pose_from_depth(
+            const Detection& detection,
+            geometry_msgs::msg::Pose& pose_out,
+            double& distance_m_out) const;
+        bool read_depth_meters_at_pixel(
+            const sensor_msgs::msg::Image& depth_msg,
+            int u,
+            int v,
+            double& depth_m_out) const;
+        geometry_msgs::msg::Quaternion quaternion_from_yaw_pitch(double yaw, double pitch) const;
+        bool transform_pose_to_output_frame(
+            const geometry_msgs::msg::Pose& input_pose,
+            const std::string& source_frame,
+            const builtin_interfaces::msg::Time& stamp,
+            geometry_msgs::msg::Pose& output_pose) const;
 
         // ONNX Runtime
         Ort::Env _ort_env;
@@ -72,10 +100,16 @@ namespace perseus_vision
         // parameters
         std::string _model_path;
         std::string _depth_estimation_mode;
+        std::string _depth_topic;
+        std::string _depth_info_topic;
+        std::string _tf_output_frame;
         float _confidence_threshold;
         std::atomic_bool _always_on{true};
         bool _should_use_cuda;
         bool _publish_annotated_image;
+        double _depth_unit_scale{0.001};
+        double _depth_max_range_m{5.0};
+        double _depth_min_range_m{0.1};
         double _processing_frequency_hz{0.0};
         int64_t _last_inference_time_ns{0};
         int _intra_op_num_threads;
@@ -86,14 +120,26 @@ namespace perseus_vision
         std::mutex _camera_matrix_mutex;
         cv::Mat _camera_matrix;
         cv::Mat _dist_coeffs;
+        mutable std::mutex _depth_mutex;
+        sensor_msgs::msg::Image::SharedPtr _latest_depth_image;
+        bool _has_depth_intrinsics{false};
+        double _depth_fx{0.0};
+        double _depth_fy{0.0};
+        double _depth_cx{0.0};
+        double _depth_cy{0.0};
 
         // subscribers
         rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr _sub_image;
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr _sub_camera_info;
+        rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr _sub_depth_image;
+        rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr _sub_depth_camera_info;
 
         // publishers
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr _pub_annotated;
         rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _pub_colour;
+        rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _pub_cube_markers;
+        std::unique_ptr<tf2_ros::Buffer> _tf_buffer;
+        std::shared_ptr<tf2_ros::TransformListener> _tf_listener;
     };
 
 }  // namespace perseus_vision

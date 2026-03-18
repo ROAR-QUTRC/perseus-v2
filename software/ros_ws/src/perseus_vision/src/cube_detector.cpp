@@ -1,8 +1,16 @@
 #include "perseus_vision/cube_detector.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <iomanip>
+#include <limits>
+#include <sstream>
 #include <string>
 #include <vector>
+
+#include "tf2/exceptions.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 namespace perseus_vision
 {
@@ -25,26 +33,38 @@ namespace perseus_vision
         declare_parameter("inter_op_num_threads", 2);
         declare_parameter("nms_iou_threshold", 0.45);
         declare_parameter("depth_estimation_mode", "none");
+        declare_parameter("depth_image.topic", "/camera/camera/depth/image_rect_raw");
+        declare_parameter("depth_image.info_topic", "/camera/camera/depth/camera_info");
+        declare_parameter("depth_image.unit_scale", 0.001);
+        declare_parameter("depth_image.max_range_m", 5.0);
+        declare_parameter("depth_image.min_range_m", 0.1);
+        declare_parameter("tf_output_frame", "odom");
+        declare_parameter("camera_optical_frame", "camera_link_optical");
         const auto camera_topic = get_parameter("camera_topic").as_string();
         const auto camera_info_topic = get_parameter("camera_info_topic").as_string();
         _intra_op_num_threads = get_parameter("intra_op_num_threads").as_int();
         _inter_op_num_threads = get_parameter("inter_op_num_threads").as_int();
         _nms_iou_threshold = static_cast<float>(get_parameter("nms_iou_threshold").as_double());
         _depth_estimation_mode = get_parameter("depth_estimation_mode").as_string();
+        _depth_topic = get_parameter("depth_image.topic").as_string();
+        _depth_info_topic = get_parameter("depth_image.info_topic").as_string();
+        _depth_unit_scale = get_parameter("depth_image.unit_scale").as_double();
+        _depth_max_range_m = get_parameter("depth_image.max_range_m").as_double();
+        _depth_min_range_m = get_parameter("depth_image.min_range_m").as_double();
         _confidence_threshold = static_cast<float>(get_parameter("confidence_threshold").as_double());
         _always_on.store(get_parameter("always_on").as_bool());  // set initial value of atomic bool
         _should_use_cuda = get_parameter("use_cuda").as_bool();
         _publish_annotated_image = get_parameter("publish_annotated_image").as_bool();
         _processing_frequency_hz = get_parameter("processing_frequency_hz").as_double();
         _model_path = std::string(std::getenv("HOME")) + get_parameter("model_path").as_string();
-
+        _tf_output_frame = get_parameter("tf_output_frame").as_string();
         if (_model_path.empty())
         {
             _model_path = ament_index_cpp::get_package_share_directory("perseus_vision") + "/models/cube_detector_yolob8s.onnx";
         }
 
         // ── load ONNX model ──────────────────────────────────────────────────────────
-        RCLCPP_INFO(get_logger(), "Loading model: %s", _model_path.c_str());
+        RCLCPP_INFO(get_logger(), "Loading model: %sWW", _model_path.c_str());
 
         Ort::SessionOptions session_opts;
         session_opts.SetIntraOpNumThreads(_intra_op_num_threads);
@@ -84,12 +104,25 @@ namespace perseus_vision
         _sub_camera_info = create_subscription<sensor_msgs::msg::CameraInfo>(
             camera_info_topic, kQosDepth,
             std::bind(&CubeDetector::camera_info_callback, this, std::placeholders::_1));
+        if (_depth_estimation_mode == "depth_image")
+        {
+            _sub_depth_image = create_subscription<sensor_msgs::msg::Image>(
+                _depth_topic, kQosDepth,
+                std::bind(&CubeDetector::depth_image_callback, this, std::placeholders::_1));
+            _sub_depth_camera_info = create_subscription<sensor_msgs::msg::CameraInfo>(
+                _depth_info_topic, kQosDepth,
+                std::bind(&CubeDetector::depth_camera_info_callback, this, std::placeholders::_1));
+        }
 
         // ── publishers ───────────────────────────────────────────────────────────────
         _pub_annotated = create_publisher<sensor_msgs::msg::Image>(
             "/perseus_vision/annotated_image", kQosDepth);
         _pub_colour = create_publisher<std_msgs::msg::String>(
             "/perseus_vision/detected_colour", kQosDepth);
+        _pub_cube_markers = create_publisher<visualization_msgs::msg::MarkerArray>(
+            "/perseus_vision/cube_markers", kQosDepth);
+        _tf_buffer = std::make_unique<tf2_ros::Buffer>(get_clock());
+        _tf_listener = std::make_shared<tf2_ros::TransformListener>(*_tf_buffer);
 
         RCLCPP_INFO(get_logger(), "CubeDetectorNode ready — subscribed to %s", camera_topic.c_str());
         if (_always_on.load())
@@ -138,7 +171,7 @@ namespace perseus_vision
             return;
         }
 
-        // ── preprocess → infer ───────────────────────────────────────────────────
+        // ── preprocess -> infer ───────────────────────────────────────────────────
         auto blob = preprocess(cv_ptr->image);
 
         std::array<int64_t, 4> input_shape = {1, 3, 640, 640};
@@ -167,6 +200,10 @@ namespace perseus_vision
         {
             publish_annotated_image(cv_ptr->image, detections, msg->header);
         }
+        if (_depth_estimation_mode == "depth_image")
+        {
+            publish_depth_markers(detections, msg->header);
+        }
         //   publish_detections(detections, msg->header);
     }
 
@@ -183,6 +220,22 @@ namespace perseus_vision
         _dist_coeffs = cv::Mat(static_cast<int>(msg->d.size()), 1, CV_64F);
         for (size_t i = 0; i < msg->d.size(); ++i)
             _dist_coeffs.at<double>(static_cast<int>(i), 0) = msg->d[i];
+    }
+
+    void CubeDetector::depth_image_callback(const sensor_msgs::msg::Image::SharedPtr msg)
+    {
+        std::lock_guard<std::mutex> lock(_depth_mutex);
+        _latest_depth_image = msg;
+    }
+
+    void CubeDetector::depth_camera_info_callback(const sensor_msgs::msg::CameraInfo::SharedPtr msg)
+    {
+        std::lock_guard<std::mutex> lock(_depth_mutex);
+        _depth_fx = msg->k[0];
+        _depth_fy = msg->k[4];
+        _depth_cx = msg->k[2];
+        _depth_cy = msg->k[5];
+        _has_depth_intrinsics = _depth_fx > 0.0 && _depth_fy > 0.0;
     }
 
     // ── preprocess ────────────────────────────────────────────────────────────────
@@ -315,6 +368,270 @@ namespace perseus_vision
 
         _pub_annotated->publish(
             *cv_bridge::CvImage(header, "bgr8", annotated).toImageMsg());
+    }
+
+    void CubeDetector::publish_depth_markers(
+        const std::vector<Detection>& detections,
+        const std_msgs::msg::Header& header)
+    {
+        visualization_msgs::msg::MarkerArray marker_array;
+        std_msgs::msg::Header marker_header = header;
+        std::string source_frame = header.frame_id;
+        {
+            std::lock_guard<std::mutex> lock(_depth_mutex);
+            if (_latest_depth_image)
+            {
+                source_frame = _latest_depth_image->header.frame_id;
+            }
+        }
+        _tf_output_frame = get_parameter("tf_output_frame").as_string();
+        if (_tf_output_frame.empty())
+        {
+            _tf_output_frame = source_frame;
+        }
+        marker_header.frame_id = _tf_output_frame;
+
+        visualization_msgs::msg::Marker clear_marker;
+        clear_marker.header = marker_header;
+        clear_marker.ns = "cube_depth";
+        clear_marker.id = 0;
+        clear_marker.action = visualization_msgs::msg::Marker::DELETEALL;
+        marker_array.markers.push_back(clear_marker);
+
+        int marker_id = 1;
+        for (const auto& detection : detections)
+        {
+            geometry_msgs::msg::Pose pose;
+            double distance_m = 0.0;
+            if (!estimate_cube_pose_from_depth(detection, pose, distance_m))
+            {
+                continue;
+            }
+            geometry_msgs::msg::Pose marker_pose = pose;
+            if (_tf_output_frame != source_frame)
+            {
+                if (!transform_pose_to_output_frame(pose, source_frame, header.stamp, marker_pose))
+                {
+                    continue;
+                }
+            }
+
+            visualization_msgs::msg::Marker cube_marker;
+            cube_marker.header = marker_header;
+            cube_marker.ns = "cube_depth";
+            cube_marker.id = marker_id++;
+            cube_marker.type = visualization_msgs::msg::Marker::CUBE;
+            cube_marker.action = visualization_msgs::msg::Marker::ADD;
+            cube_marker.pose = marker_pose;
+            cube_marker.scale.x = 0.12;
+            cube_marker.scale.y = 0.12;
+            cube_marker.scale.z = 0.12;
+            cube_marker.color.a = 0.85f;
+            cube_marker.color.r = static_cast<float>(CLASS_COLOURS[detection.class_id][2] / 255.0);
+            cube_marker.color.g = static_cast<float>(CLASS_COLOURS[detection.class_id][1] / 255.0);
+            cube_marker.color.b = static_cast<float>(CLASS_COLOURS[detection.class_id][0] / 255.0);
+            cube_marker.lifetime = rclcpp::Duration::from_seconds(0.2);
+            marker_array.markers.push_back(cube_marker);
+
+            visualization_msgs::msg::Marker text_marker;
+            text_marker.header = marker_header;
+            text_marker.ns = "cube_depth_text";
+            text_marker.id = marker_id++;
+            text_marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+            text_marker.action = visualization_msgs::msg::Marker::ADD;
+            text_marker.pose = marker_pose;
+            text_marker.pose.position.z += 0.12;
+            text_marker.scale.z = 0.08;
+            text_marker.color.a = 1.0f;
+            text_marker.color.r = 1.0f;
+            text_marker.color.g = 1.0f;
+            text_marker.color.b = 1.0f;
+            std::ostringstream ss;
+            ss << CLASS_NAMES[detection.class_id]
+               << " x:" << std::fixed << std::setprecision(2) << marker_pose.position.x
+               << " y:" << std::fixed << std::setprecision(2) << marker_pose.position.y;
+            text_marker.text = ss.str();
+            text_marker.lifetime = rclcpp::Duration::from_seconds(0.2);
+            marker_array.markers.push_back(text_marker);
+        }
+
+        _pub_cube_markers->publish(marker_array);
+    }
+
+    bool CubeDetector::estimate_cube_pose_from_depth(
+        const Detection& detection,
+        geometry_msgs::msg::Pose& pose_out,
+        double& distance_m_out) const
+    {
+        sensor_msgs::msg::Image::SharedPtr depth_msg;
+        double fx = 0.0;
+        double fy = 0.0;
+        double cx = 0.0;
+        double cy = 0.0;
+
+        {
+            std::lock_guard<std::mutex> lock(_depth_mutex);
+            if (!_latest_depth_image || !_has_depth_intrinsics)
+            {
+                return false;
+            }
+            depth_msg = _latest_depth_image;
+            fx = _depth_fx;
+            fy = _depth_fy;
+            cx = _depth_cx;
+            cy = _depth_cy;
+        }
+
+        if (!depth_msg || fx <= 0.0 || fy <= 0.0)
+        {
+            return false;
+        }
+
+        const int u = detection.bbox.x + detection.bbox.width / 2;
+        const int v = detection.bbox.y + detection.bbox.height / 2;
+        if (u < 0 || v < 0 || u >= static_cast<int>(depth_msg->width) || v >= static_cast<int>(depth_msg->height))
+        {
+            return false;
+        }
+
+        double depth_m = 0.0;
+        if (!read_depth_meters_at_pixel(*depth_msg, u, v, depth_m))
+        {
+            return false;
+        }
+        if (depth_m < _depth_min_range_m || depth_m > _depth_max_range_m)
+        {
+            return false;
+        }
+
+        const double x = (static_cast<double>(u) - cx) * depth_m / fx;
+        const double y = (static_cast<double>(v) - cy) * depth_m / fy;
+        const double z = depth_m;
+
+        const double yaw = std::atan2(x, z);
+        const double pitch = -std::atan2(y, std::sqrt(x * x + z * z));
+
+        pose_out.position.x = x;
+        pose_out.position.y = y;
+        pose_out.position.z = z;
+        pose_out.orientation = quaternion_from_yaw_pitch(yaw, pitch);
+        distance_m_out = std::sqrt(x * x + y * y + z * z);
+        return true;
+    }
+
+    bool CubeDetector::read_depth_meters_at_pixel(
+        const sensor_msgs::msg::Image& depth_msg,
+        int u,
+        int v,
+        double& depth_m_out) const
+    {
+        const int radius = 1;
+        std::vector<double> samples;
+        samples.reserve((2 * radius + 1) * (2 * radius + 1));
+
+        for (int dv = -radius; dv <= radius; ++dv)
+        {
+            const int yy = v + dv;
+            if (yy < 0 || yy >= static_cast<int>(depth_msg.height))
+            {
+                continue;
+            }
+            for (int du = -radius; du <= radius; ++du)
+            {
+                const int xx = u + du;
+                if (xx < 0 || xx >= static_cast<int>(depth_msg.width))
+                {
+                    continue;
+                }
+
+                double depth_m = std::numeric_limits<double>::quiet_NaN();
+                if (depth_msg.encoding == "16UC1")
+                {
+                    const auto* row = reinterpret_cast<const uint16_t*>(&depth_msg.data[yy * depth_msg.step]);
+                    const uint16_t raw = row[xx];
+                    if (raw > 0)
+                    {
+                        depth_m = static_cast<double>(raw) * _depth_unit_scale;
+                    }
+                }
+                else if (depth_msg.encoding == "32FC1")
+                {
+                    const auto* row = reinterpret_cast<const float*>(&depth_msg.data[yy * depth_msg.step]);
+                    depth_m = static_cast<double>(row[xx]);
+                }
+                else
+                {
+                    return false;
+                }
+
+                if (std::isfinite(depth_m))
+                {
+                    samples.push_back(depth_m);
+                }
+            }
+        }
+
+        if (samples.empty())
+        {
+            return false;
+        }
+
+        std::sort(samples.begin(), samples.end());
+        depth_m_out = samples[samples.size() / 2];
+        return true;
+    }
+
+    geometry_msgs::msg::Quaternion CubeDetector::quaternion_from_yaw_pitch(double yaw, double pitch) const
+    {
+        const double half_yaw = 0.5 * yaw;
+        const double half_pitch = 0.5 * pitch;
+        const double cy = std::cos(half_yaw);
+        const double sy = std::sin(half_yaw);
+        const double cp = std::cos(half_pitch);
+        const double sp = std::sin(half_pitch);
+
+        geometry_msgs::msg::Quaternion q;
+        q.w = cy * cp;
+        q.x = -sy * sp;
+        q.y = cy * sp;
+        q.z = sy * cp;
+        return q;
+    }
+
+    bool CubeDetector::transform_pose_to_output_frame(
+        const geometry_msgs::msg::Pose& input_pose,
+        const std::string& source_frame,
+        const builtin_interfaces::msg::Time& stamp,
+        geometry_msgs::msg::Pose& output_pose) const
+    {
+        if (!_tf_buffer)
+        {
+            return false;
+        }
+
+        geometry_msgs::msg::PoseStamped in_pose;
+        in_pose.header.frame_id = source_frame;
+        in_pose.header.stamp = stamp;
+        in_pose.pose = input_pose;
+
+        try
+        {
+            const geometry_msgs::msg::PoseStamped out_pose = _tf_buffer->transform(in_pose, _tf_output_frame);
+            output_pose = out_pose.pose;
+            return true;
+        }
+        catch (const tf2::TransformException& ex)
+        {
+            RCLCPP_WARN_THROTTLE(
+                get_logger(),
+                *get_clock(),
+                2000,
+                "Failed to transform cube pose from %s to %s: %s",
+                source_frame.c_str(),
+                _tf_output_frame.c_str(),
+                ex.what());
+            return false;
+        }
     }
 
 }  // namespace perseus_vision
