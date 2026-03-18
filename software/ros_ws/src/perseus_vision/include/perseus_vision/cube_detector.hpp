@@ -65,8 +65,8 @@ namespace perseus_vision
         // image size tracking for coordinate scaling
         int _orig_h{0};
         int _orig_w{0};
-        int  _pad_x{0};
-        int  _pad_y{0};
+        int _pad_x{0};
+        int _pad_y{0};
         float _letterbox_scale{1.0f};
         const int _num_classes = static_cast<int>(CLASS_NAMES.size());
         // parameters

@@ -30,7 +30,6 @@ namespace perseus_vision
         declare_parameter("nms_iou_threshold", 0.45);
         _nms_iou_threshold = static_cast<float>(get_parameter("nms_iou_threshold").as_double());
 
-        
         _confidence_threshold = static_cast<float>(
             get_parameter("confidence_threshold").as_double());
         _always_on.store(get_parameter("always_on").as_bool());  // set initial value of atomic bool
@@ -96,7 +95,9 @@ namespace perseus_vision
         if (_always_on.load())
         {
             RCLCPP_INFO(get_logger(), "Node is set to always_on, will process images even without subscribers");
-        } else {
+        }
+        else
+        {
             RCLCPP_INFO(get_logger(), "Always on is disabled!");
         }
     }
@@ -107,7 +108,7 @@ namespace perseus_vision
         _always_on.store(get_parameter("always_on").as_bool());
         if (!_always_on.load())
         {
-            return; // skip processing if always_on is false and there are no subscribers
+            return;  // skip processing if always_on is false and there are no subscribers
         }
 
         _processing_frequency_hz = get_parameter("processing_frequency_hz").as_double();
@@ -160,7 +161,7 @@ namespace perseus_vision
         auto detections = postprocess(out_data, num_boxes);
         if (_publish_annotated_image)
         {
-        publish_annotated_image(cv_ptr->image, detections, msg->header);
+            publish_annotated_image(cv_ptr->image, detections, msg->header);
         }
         //   publish_detections(detections, msg->header);
     }
@@ -222,24 +223,30 @@ namespace perseus_vision
     std::vector<Detection> CubeDetector::postprocess(const float* data, size_t num_boxes)
     {
         std::vector<cv::Rect> boxes;
-        std::vector<float>    scores;
-        std::vector<int>      class_ids;
+        std::vector<float> scores;
+        std::vector<int> class_ids;
 
         for (size_t i = 0; i < num_boxes; ++i)
         {
             const float xc = data[0 * num_boxes + i];
             const float yc = data[1 * num_boxes + i];
-            const float w  = data[2 * num_boxes + i];
-            const float h  = data[3 * num_boxes + i];
+            const float w = data[2 * num_boxes + i];
+            const float h = data[3 * num_boxes + i];
 
-            int   best_class = 0;
+            int best_class = 0;
             float best_score = 0.0f;
-            for (int c = 0; c < _num_classes; ++c) {
+            for (int c = 0; c < _num_classes; ++c)
+            {
                 float score = data[(4 + c) * num_boxes + i];
-                if (score > best_score) { best_score = score; best_class = c; }
+                if (score > best_score)
+                {
+                    best_score = score;
+                    best_class = c;
+                }
             }
 
-            if (best_score < _confidence_threshold) continue;
+            if (best_score < _confidence_threshold)
+                continue;
             // YOLOv8 outputs box coordinates in the letterboxed 640x640 space, so we need to reverse the letterbox transformation to get back to original image coordinates
             const int x1 = std::clamp(static_cast<int>((xc - w / 2.0f - _pad_x) / _letterbox_scale), 0, _orig_w);
             const int y1 = std::clamp(static_cast<int>((yc - h / 2.0f - _pad_y) / _letterbox_scale), 0, _orig_h);
