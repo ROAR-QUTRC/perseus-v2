@@ -3,7 +3,6 @@
   lib,
   buildRosPackage,
   ament-cmake,
-  ament-index-cpp,
   ament-lint-auto,
   ament-lint-common,
   builtin-interfaces,
@@ -18,6 +17,7 @@
   tf2,
   tf2-geometry-msgs,
   tf2-ros,
+  usb-cam,
   visualization-msgs,
 }:
 buildRosPackage rec {
@@ -33,7 +33,6 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
-    ament-index-cpp
     builtin-interfaces
     cv-bridge
     geometry-msgs
@@ -46,6 +45,7 @@ buildRosPackage rec {
     tf2
     tf2-geometry-msgs
     tf2-ros
+    usb-cam
     visualization-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
