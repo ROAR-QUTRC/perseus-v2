@@ -29,9 +29,9 @@
 namespace perseus_vision
 {
 
-    static const std::vector<std::string> CLASS_NAMES = {"blue", "green", "red", "white"};
+    inline const std::vector<std::string> CLASS_NAMES = {"blue", "green", "red", "white"};
 
-    static const std::vector<cv::Scalar> CLASS_COLOURS = {
+    inline const std::vector<cv::Scalar> CLASS_COLOURS = {
         cv::Scalar(255, 100, 0),    // blue
         cv::Scalar(0, 200, 0),      // green
         cv::Scalar(0, 0, 255),      // red
