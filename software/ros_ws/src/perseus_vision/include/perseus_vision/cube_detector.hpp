@@ -71,6 +71,7 @@ namespace perseus_vision
         const int _num_classes = static_cast<int>(CLASS_NAMES.size());
         // parameters
         std::string _model_path;
+        std::string _depth_estimation_mode;
         float _confidence_threshold;
         std::atomic_bool _always_on{true};
         bool _should_use_cuda;

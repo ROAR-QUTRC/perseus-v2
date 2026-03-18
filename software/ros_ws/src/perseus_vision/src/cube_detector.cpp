@@ -23,15 +23,15 @@ namespace perseus_vision
         declare_parameter("processing_frequency_hz", 0.0);  // 0 = process every frame
         declare_parameter("intra_op_num_threads", 4);
         declare_parameter("inter_op_num_threads", 2);
+        declare_parameter("nms_iou_threshold", 0.45);
+        declare_parameter("depth_estimation_mode", "none");
         const auto camera_topic = get_parameter("camera_topic").as_string();
         const auto camera_info_topic = get_parameter("camera_info_topic").as_string();
         _intra_op_num_threads = get_parameter("intra_op_num_threads").as_int();
         _inter_op_num_threads = get_parameter("inter_op_num_threads").as_int();
-        declare_parameter("nms_iou_threshold", 0.45);
         _nms_iou_threshold = static_cast<float>(get_parameter("nms_iou_threshold").as_double());
-
-        _confidence_threshold = static_cast<float>(
-            get_parameter("confidence_threshold").as_double());
+        _depth_estimation_mode = get_parameter("depth_estimation_mode").as_string();
+        _confidence_threshold = static_cast<float>(get_parameter("confidence_threshold").as_double());
         _always_on.store(get_parameter("always_on").as_bool());  // set initial value of atomic bool
         _should_use_cuda = get_parameter("use_cuda").as_bool();
         _publish_annotated_image = get_parameter("publish_annotated_image").as_bool();
