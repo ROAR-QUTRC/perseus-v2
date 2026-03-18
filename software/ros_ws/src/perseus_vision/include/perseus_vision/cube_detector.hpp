@@ -55,10 +55,6 @@ namespace perseus_vision
             const std::vector<Detection>& detections,
             const std_msgs::msg::Header& header);
 
-        // void publish_detections(
-        //     const std::vector<Detection>& detections,
-        //     const std_msgs::msg::Header& header);
-
         // ONNX Runtime
         Ort::Env _ort_env;
         Ort::AllocatorWithDefaultOptions _ort_allocator;
@@ -69,16 +65,22 @@ namespace perseus_vision
         // image size tracking for coordinate scaling
         int _orig_h{0};
         int _orig_w{0};
-
+        int  _pad_x{0};
+        int  _pad_y{0};
+        float _letterbox_scale{1.0f};
+        const int _num_classes = static_cast<int>(CLASS_NAMES.size());
         // parameters
         std::string _model_path;
         float _confidence_threshold;
         std::atomic_bool _always_on{true};
         bool _should_use_cuda;
         bool _publish_annotated_image;
+        double _processing_frequency_hz{0.0};
+        int64_t _last_inference_time_ns{0};
         int _intra_op_num_threads;
         int _inter_op_num_threads;
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr _param_callback_handle;
+        float _nms_iou_threshold{0.45f};
         // camera calibration (kept for future use)
         std::mutex _camera_matrix_mutex;
         cv::Mat _camera_matrix;

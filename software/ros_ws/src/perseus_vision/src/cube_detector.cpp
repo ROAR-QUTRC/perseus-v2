@@ -13,27 +13,31 @@ namespace perseus_vision
           _ort_env(ORT_LOGGING_LEVEL_WARNING, "cube_detector")
     {
         // ── parameters ──────────────────────────────────────────────────────────────
-        declare_parameter("model_path", std::string(std::getenv("HOME")) +
-                                            "/perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector_yolob8s.onnx");
+        declare_parameter("model_path", "/perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector_yolob8s.onnx");
         declare_parameter("confidence_threshold", 0.5);
         declare_parameter("camera_topic", "/image_raw");
         declare_parameter("camera_info_topic", "/camera/camera/color/camera_info");
         declare_parameter("always_on", true);  // keep node alive even without subscribers
         declare_parameter("use_cuda", true);
         declare_parameter("publish_annotated_image", true);
+        declare_parameter("processing_frequency_hz", 0.0);  // 0 = process every frame
         declare_parameter("intra_op_num_threads", 4);
         declare_parameter("inter_op_num_threads", 2);
         const auto camera_topic = get_parameter("camera_topic").as_string();
         const auto camera_info_topic = get_parameter("camera_info_topic").as_string();
         _intra_op_num_threads = get_parameter("intra_op_num_threads").as_int();
         _inter_op_num_threads = get_parameter("inter_op_num_threads").as_int();
+        declare_parameter("nms_iou_threshold", 0.45);
+        _nms_iou_threshold = static_cast<float>(get_parameter("nms_iou_threshold").as_double());
+
         
         _confidence_threshold = static_cast<float>(
             get_parameter("confidence_threshold").as_double());
         _always_on.store(get_parameter("always_on").as_bool());  // set initial value of atomic bool
         _should_use_cuda = get_parameter("use_cuda").as_bool();
         _publish_annotated_image = get_parameter("publish_annotated_image").as_bool();
-        _model_path = get_parameter("model_path").as_string();
+        _processing_frequency_hz = get_parameter("processing_frequency_hz").as_double();
+        _model_path = std::string(std::getenv("HOME")) + get_parameter("model_path").as_string();
 
         if (_model_path.empty())
         {
@@ -85,10 +89,6 @@ namespace perseus_vision
         // ── publishers ───────────────────────────────────────────────────────────────
         _pub_annotated = create_publisher<sensor_msgs::msg::Image>(
             "/perseus_vision/annotated_image", kQosDepth);
-
-        //   pub_detections_ = create_publisher<vision_msgs::msg::Detection2DArray>(
-        //     "/perseus_vision/detections", kQosDepth);
-
         _pub_colour = create_publisher<std_msgs::msg::String>(
             "/perseus_vision/detected_colour", kQosDepth);
 
@@ -108,6 +108,18 @@ namespace perseus_vision
         if (!_always_on.load())
         {
             return; // skip processing if always_on is false and there are no subscribers
+        }
+
+        _processing_frequency_hz = get_parameter("processing_frequency_hz").as_double();
+        if (_processing_frequency_hz > 0.0)
+        {
+            const int64_t now_ns = this->now().nanoseconds();
+            const int64_t min_period_ns = static_cast<int64_t>(1e9 / _processing_frequency_hz);
+            if (_last_inference_time_ns != 0 && (now_ns - _last_inference_time_ns) < min_period_ns)
+            {
+                return;
+            }
+            _last_inference_time_ns = now_ns;
         }
 
         cv_bridge::CvImagePtr cv_ptr;
@@ -174,9 +186,25 @@ namespace perseus_vision
         _orig_h = bgr_image.rows;
         _orig_w = bgr_image.cols;
 
-        cv::Mat resized, rgb;
-        cv::resize(bgr_image, resized, cv::Size(640, 640));
-        cv::cvtColor(resized, rgb, cv::COLOR_BGR2RGB);
+        // ── letterbox (preserve aspect ratio) ───────────────────────────────
+        float scale = std::min(640.0f / _orig_w, 640.0f / _orig_h);
+        int new_w = static_cast<int>(_orig_w * scale);
+        int new_h = static_cast<int>(_orig_h * scale);
+
+        _pad_x = (640 - new_w) / 2;
+        _pad_y = (640 - new_h) / 2;
+        _letterbox_scale = scale;
+
+        cv::Mat resized;
+        cv::resize(bgr_image, resized, cv::Size(new_w, new_h));
+
+        // pad to 640x640 with grey (114 = YOLOv8 default padding value)
+        cv::Mat padded(640, 640, CV_8UC3, cv::Scalar(114, 114, 114));
+        resized.copyTo(padded(cv::Rect(_pad_x, _pad_y, new_w, new_h)));
+
+        // ── BGR → RGB → float → CHW ─────────────────────────────────────────
+        cv::Mat rgb;
+        cv::cvtColor(padded, rgb, cv::COLOR_BGR2RGB);
         rgb.convertTo(rgb, CV_32FC3, 1.0 / 255.0);
 
         std::vector<cv::Mat> channels(3);
@@ -185,14 +213,11 @@ namespace perseus_vision
         std::vector<float> blob;
         blob.reserve(3 * 640 * 640);
         for (auto& ch : channels)
-        {
             blob.insert(blob.end(),
                         reinterpret_cast<float*>(ch.data),
                         reinterpret_cast<float*>(ch.data) + 640 * 640);
-        }
         return blob;
     }
-
     // ── postprocess ───────────────────────────────────────────────────────────────
     std::vector<Detection> CubeDetector::postprocess(const float* data, size_t num_boxes)
     {
@@ -209,24 +234,28 @@ namespace perseus_vision
 
             int   best_class = 0;
             float best_score = 0.0f;
-            for (int c = 0; c < num_classes; ++c) {
+            for (int c = 0; c < _num_classes; ++c) {
                 float score = data[(4 + c) * num_boxes + i];
                 if (score > best_score) { best_score = score; best_class = c; }
             }
 
             if (best_score < _confidence_threshold) continue;
+            // YOLOv8 outputs box coordinates in the letterboxed 640x640 space, so we need to reverse the letterbox transformation to get back to original image coordinates
+            const int x1 = std::clamp(static_cast<int>((xc - w / 2.0f - _pad_x) / _letterbox_scale), 0, _orig_w);
+            const int y1 = std::clamp(static_cast<int>((yc - h / 2.0f - _pad_y) / _letterbox_scale), 0, _orig_h);
+            const int x2 = std::clamp(static_cast<int>((xc + w / 2.0f - _pad_x) / _letterbox_scale), 0, _orig_w);
+            const int y2 = std::clamp(static_cast<int>((yc + h / 2.0f - _pad_y) / _letterbox_scale), 0, _orig_h);
 
-            int x1 = (xc - w / 2.0f) * scale_x;
-            int y1 = (yc - h / 2.0f) * scale_y;
-
-            boxes.push_back(cv::Rect(x1, y1, w * scale_x, h * scale_y));
+            boxes.push_back(cv::Rect(x1, y1, x2 - x1, y2 - y1));
             scores.push_back(best_score);
             class_ids.push_back(best_class);
         }
 
-        // Apply NMS to filter overlapping boxes
+        // NMS — guard against empty boxes
         std::vector<int> indices;
-        cv::dnn::NMSBoxes(boxes, scores, _confidence_threshold, 0.45f, indices);
+        if (!boxes.empty())
+            // Suppress non-maximal boxes with IOU > 0.45 (YOLOv8 default NMS threshold)
+            cv::dnn::NMSBoxes(boxes, scores, _confidence_threshold, _nms_iou_threshold, indices);
 
         std::vector<Detection> detections;
         for (int idx : indices)
@@ -276,50 +305,5 @@ namespace perseus_vision
         _pub_annotated->publish(
             *cv_bridge::CvImage(header, "bgr8", annotated).toImageMsg());
     }
-
-    // ── publish detections ────────────────────────────────────────────────────────
-    // void CubeDetector::publish_detections(
-    //   const std::vector<Detection> & detections,
-    //   const std_msgs::msg::Header & header)
-    // {
-    //   vision_msgs::msg::Detection2DArray det_array;
-    //   det_array.header = header;
-
-    //   std::string best_colour;
-    //   float       best_conf = 0.0f;
-
-    //   for (const auto & d : detections) {
-    //     vision_msgs::msg::Detection2D det;
-    //     det.header = header;
-
-    //     // hypothesis: class + confidence
-    //     vision_msgs::msg::ObjectHypothesisWithPose hyp;
-    //     hyp.hypothesis.class_id = CLASS_NAMES[d.class_id];  // "blue" not "0"
-    //     hyp.hypothesis.score    = static_cast<double>(d.confidence);
-    //     det.results.push_back(hyp);
-
-    //     // bounding box center + size in pixel coordinates
-    //     det.bbox.center.position.x = static_cast<double>(d.bbox.x + d.bbox.width  / 2);
-    //     det.bbox.center.position.y = static_cast<double>(d.bbox.y + d.bbox.height / 2);
-    //     det.bbox.size_x            = static_cast<double>(d.bbox.width);
-    //     det.bbox.size_y            = static_cast<double>(d.bbox.height);
-
-    //     det_array.detections.push_back(det);
-
-    //     if (d.confidence > best_conf) {
-    //       best_conf   = d.confidence;
-    //       best_colour = CLASS_NAMES[d.class_id];
-    //     }
-    //   }
-
-    //   pub_detections_->publish(det_array);
-
-    //   // publish highest confidence colour separately
-    //   if (!best_colour.empty()) {
-    //     std_msgs::msg::String colour_msg;
-    //     colour_msg.data = best_colour;
-    //     pub_colour_->publish(colour_msg);
-    //   }
-    // }
 
 }  // namespace perseus_vision
