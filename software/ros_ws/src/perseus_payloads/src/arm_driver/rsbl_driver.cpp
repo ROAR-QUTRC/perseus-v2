@@ -47,23 +47,11 @@ RsblDriver::RsblDriver(const rclcpp::NodeOptions& options)
     RCLCPP_INFO(this->get_logger(), "Arm Controller initialized");
 }
 
-// Normalised field contains: [time_ms, acceleration]
+// expect arrays in form [tilt, pan, elbow]
 void RsblDriver::_handle_arm_control(const actuator_msgs::msg::Actuators::SharedPtr msg)
 {
     if (msg->position.size() >= 3)
     {
-        // int16_t pos_tilt = static_cast<int16_t>((msg->position[0] * (4096.0 / (2.0 * M_PI))) + 2048.0);
-        // int16_t pos_pan = static_cast<int16_t>((msg->position[1] * (4096.0 / (2.0 * M_PI))) + 2048.0);
-
-        // uint16_t speed_tilt = 0;
-        // uint16_t speed_pan = 0;
-
-        // if (msg->velocity.size() >= 2)
-        // {
-        //     speed_tilt = static_cast<uint16_t>(std::abs(msg->velocity[0] * (4096.0 / (2.0 * M_PI))));
-        //     speed_pan = static_cast<uint16_t>(std::abs(msg->velocity[1] * (4096.0 / (2.0 * M_PI))));
-        // }
-
         using namespace hi_can::addressing;
 
         position_control_t position_control{};
@@ -80,24 +68,6 @@ void RsblDriver::_handle_arm_control(const actuator_msgs::msg::Actuators::Shared
                                                                   static_cast<uint8_t>(rsbl_parameters::SET_POS_EX))),
                 position_control.serialize_data()});
         }
-
-        // position_control.position = pos_pan;
-        // position_control.duration_ms = speed_pan;
-        // position_control.acceleration = acceleration;
-        // _can_interface->transmit(Packet{
-        //     static_cast<flagged_address_t>(standard_address_t(this->baseAddress,
-        //                                                       static_cast<uint8_t>(group::SHOULDER_PAN),
-        //                                                       static_cast<uint8_t>(rsbl_parameters::SET_POS_EX))),
-        //     position_control.serialize_data()});
-
-        // position_control.position = pos_tilt;
-        // position_control.duration_ms = speed_tilt;
-        // position_control.acceleration = acceleration;
-        // _can_interface->transmit(Packet{
-        //     static_cast<flagged_address_t>(standard_address_t(this->baseAddress,
-        //                                                       static_cast<uint8_t>(group::SHOULDER_TILT),
-        //                                                       static_cast<uint8_t>(rsbl_parameters::SET_POS_EX))),
-        //     position_control.serialize_data()});
     }
 }
 

@@ -82,10 +82,10 @@ void ArmController::_receive_rmd_positions(const std_msgs::msg::Float64MultiArra
 void ArmController::_receive_rsbl_positions(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
 {
     // Update current arm positions with RSBL servo data
-    for (size_t i = 0; i < msg->data.size() && (i + 3) < _current_arm_positions.size(); ++i)
+    for (size_t i = 0; i < msg->data.size() && (i + 2) < _current_arm_positions.size(); ++i)
     {
-        // Should be positions 3 and 4
-        _current_arm_positions[i + 3] = msg->data[i];
+        // Should be positions 3 4 and 5
+        _current_arm_positions[i + 2] = msg->data[i];
     }
 }
 
