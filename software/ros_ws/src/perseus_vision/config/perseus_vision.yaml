@@ -43,8 +43,6 @@ cube_detector:
     # YOLOv8 is mostly sequential, so 2 is sufficient here.
     # Higher values rarely help and may cause thread contention.
     inter_op_num_threads: 2
-    output_topic: /perseus_vision/cube/detections/
-    publish_img: true
     depth_estimation_mode: "depth_image" # "none" | "depth_image" | "stereo"
     tf_output_frame: "base_link" # marker pose output frame
     depth_image:
