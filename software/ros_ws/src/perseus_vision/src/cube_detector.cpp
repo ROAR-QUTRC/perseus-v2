@@ -1,8 +1,11 @@
 #include "perseus_vision/cube_detector.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
+#include <filesystem>
 #include <iomanip>
 #include <limits>
 #include <sstream>
@@ -69,7 +72,7 @@ namespace perseus_vision
         }
 
         // ── load ONNX model ──────────────────────────────────────────────────────────
-        RCLCPP_INFO(get_logger(), "Loading model: %sWW", _model_path.c_str());
+        RCLCPP_INFO(get_logger(), "Loading model: %s", _model_path.c_str());
 
         Ort::SessionOptions session_opts;
         session_opts.SetIntraOpNumThreads(_intra_op_num_threads);
@@ -126,6 +129,9 @@ namespace perseus_vision
             _output_markers_topic, kQosDepth);
         _pub_cube_detections = create_publisher<perseus_interfaces::msg::ObjectDetections>(
             _output_detections_topic, kQosDepth);
+        _srv_detect_objects = create_service<DetectObjects>(
+            "detect_objects",
+            std::bind(&CubeDetector::handle_detect_objects_request, this, std::placeholders::_1, std::placeholders::_2));
         _tf_buffer = std::make_unique<tf2_ros::Buffer>(get_clock());
         _tf_listener = std::make_shared<tf2_ros::TransformListener>(*_tf_buffer);
 
@@ -201,10 +207,7 @@ namespace perseus_vision
         const size_t num_boxes = static_cast<size_t>(out_shape[2]);
 
         auto detections = postprocess(out_data, num_boxes);
-        if (_publish_annotated_image)
-        {
-            publish_annotated_image(cv_ptr->image, detections, msg->header);
-        }
+        publish_annotated_image(cv_ptr->image, detections, msg->header);
         if (_depth_estimation_mode == "depth_image")
         {
             publish_depth_markers(detections, msg->header);
@@ -371,8 +374,15 @@ namespace perseus_vision
                            cv::MARKER_CROSS, 15, 1);
         }
 
-        _pub_annotated->publish(
-            *cv_bridge::CvImage(header, "bgr8", annotated).toImageMsg());
+        if (_publish_annotated_image)
+        {
+            _pub_annotated->publish(
+                *cv_bridge::CvImage(header, "bgr8", annotated).toImageMsg());
+        }
+        {
+            std::lock_guard<std::mutex> lock(_detections_mutex);
+            _latest_annotated_frame = annotated.clone();
+        }
     }
 
     void CubeDetector::publish_depth_markers(
@@ -398,6 +408,7 @@ namespace perseus_vision
         perseus_interfaces::msg::ObjectDetections detections_msg;
         detections_msg.stamp = header.stamp;
         detections_msg.frame_id = marker_header.frame_id;
+        std::vector<cv::Rect> detection_bboxes_for_service;
 
         visualization_msgs::msg::Marker clear_marker;
         clear_marker.header = marker_header;
@@ -465,10 +476,19 @@ namespace perseus_vision
             // Cube IDs are mapped by class order: blue=1, green=2, red=3, white=4.
             detections_msg.ids.push_back(detection.class_id + 1);
             detections_msg.poses.push_back(marker_pose);
+            detection_bboxes_for_service.push_back(detection.bbox);
         }
 
         _pub_cube_markers->publish(marker_array);
         _pub_cube_detections->publish(detections_msg);
+        {
+            std::lock_guard<std::mutex> lock(_detections_mutex);
+            _latest_detections_stamp = detections_msg.stamp;
+            _latest_detections_frame_id = detections_msg.frame_id;
+            _latest_detection_ids = detections_msg.ids;
+            _latest_detection_poses = detections_msg.poses;
+            _latest_detection_bboxes = std::move(detection_bboxes_for_service);
+        }
     }
 
     bool CubeDetector::estimate_cube_pose_from_depth(
@@ -645,6 +665,117 @@ namespace perseus_vision
                 ex.what());
             return false;
         }
+    }
+
+    void CubeDetector::handle_detect_objects_request(
+        const std::shared_ptr<DetectObjects::Request> request,
+        std::shared_ptr<DetectObjects::Response> response)
+    {
+        cv::Mat frame_to_save;
+        std::vector<int32_t> ids_copy;
+        std::vector<geometry_msgs::msg::Pose> poses_copy;
+        std::vector<cv::Rect> bboxes_copy;
+        std::string frame_id_copy;
+
+        {
+            std::lock_guard<std::mutex> lock(_detections_mutex);
+            response->stamp = _latest_detections_stamp;
+            response->frame_id = _latest_detections_frame_id;
+            response->ids = _latest_detection_ids;
+            response->poses = _latest_detection_poses;
+
+            if (request->capture_image)
+            {
+                frame_to_save = _latest_annotated_frame.clone();
+                ids_copy = _latest_detection_ids;
+                poses_copy = _latest_detection_poses;
+                bboxes_copy = _latest_detection_bboxes;
+                frame_id_copy = _latest_detections_frame_id;
+            }
+        }
+
+        if (!request->capture_image)
+        {
+            return;
+        }
+
+        if (frame_to_save.empty())
+        {
+            RCLCPP_WARN(get_logger(), "detect_objects capture requested, but no annotated frame available");
+            return;
+        }
+
+        std::string save_dir = request->img_save_path;
+        if (save_dir.empty())
+        {
+            save_dir = ".";
+        }
+
+        if (!save_dir.empty())
+        {
+            std::error_code ec;
+            std::filesystem::create_directories(save_dir, ec);
+            if (ec)
+            {
+                RCLCPP_WARN(get_logger(), "Failed to create directory %s: %s", save_dir.c_str(), ec.message().c_str());
+            }
+        }
+
+        auto now = std::chrono::system_clock::now();
+        const auto epoch_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+        const auto now_time_t = std::chrono::system_clock::to_time_t(now);
+        const auto* local_tm = std::localtime(&now_time_t);
+        char timestamp_str[64];
+        std::strftime(timestamp_str, sizeof(timestamp_str), "%Y-%m-%d %H:%M:%S", local_tm);
+
+        cv::putText(
+            frame_to_save,
+            std::string("Time: ") + timestamp_str,
+            cv::Point(10, 25),
+            cv::FONT_HERSHEY_SIMPLEX,
+            0.6,
+            cv::Scalar(0, 255, 255),
+            2);
+
+        int y = 50;
+        cv::putText(
+            frame_to_save,
+            std::string("Frame: ") + frame_id_copy,
+            cv::Point(10, y),
+            cv::FONT_HERSHEY_SIMPLEX,
+            0.5,
+            cv::Scalar(255, 255, 0),
+            1);
+
+        for (size_t i = 0; i < ids_copy.size() && i < poses_copy.size(); ++i)
+        {
+            if (i < bboxes_copy.size())
+            {
+                cv::rectangle(frame_to_save, bboxes_copy[i], cv::Scalar(0, 255, 255), 2);
+            }
+            y += 20;
+            std::ostringstream line;
+            line << "ID " << ids_copy[i]
+                 << " x=" << std::fixed << std::setprecision(2) << poses_copy[i].position.x
+                 << " y=" << std::fixed << std::setprecision(2) << poses_copy[i].position.y;
+            cv::putText(
+                frame_to_save,
+                line.str(),
+                cv::Point(10, y),
+                cv::FONT_HERSHEY_SIMPLEX,
+                0.5,
+                cv::Scalar(0, 255, 0),
+                1);
+        }
+
+        const std::string filename = save_dir + "/cube_detections_" + std::to_string(epoch_ms) + ".png";
+        if (!cv::imwrite(filename, frame_to_save))
+        {
+            RCLCPP_ERROR(get_logger(), "Failed to save capture image to %s", filename.c_str());
+            return;
+        }
+
+        RCLCPP_INFO(get_logger(), "Saved cube detection capture: %s", filename.c_str());
     }
 
 }  // namespace perseus_vision

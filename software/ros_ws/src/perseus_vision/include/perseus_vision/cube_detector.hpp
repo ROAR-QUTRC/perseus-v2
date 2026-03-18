@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -16,6 +17,7 @@
 #include "onnxruntime/onnxruntime_cxx_api.h"
 #include "opencv2/opencv.hpp"
 #include "perseus_interfaces/msg/object_detections.hpp"
+#include "perseus_interfaces/srv/detect_objects.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
@@ -45,6 +47,7 @@ namespace perseus_vision
     class CubeDetector : public rclcpp::Node
     {
     public:
+        using DetectObjects = perseus_interfaces::srv::DetectObjects;
         CubeDetector();
 
     private:
@@ -83,6 +86,9 @@ namespace perseus_vision
             const std::string& source_frame,
             const builtin_interfaces::msg::Time& stamp,
             geometry_msgs::msg::Pose& output_pose) const;
+        void handle_detect_objects_request(
+            const std::shared_ptr<DetectObjects::Request> request,
+            std::shared_ptr<DetectObjects::Response> response);
 
         // ONNX Runtime
         Ort::Env _ort_env;
@@ -143,8 +149,16 @@ namespace perseus_vision
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr _pub_annotated;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _pub_cube_markers;
         rclcpp::Publisher<perseus_interfaces::msg::ObjectDetections>::SharedPtr _pub_cube_detections;
+        rclcpp::Service<DetectObjects>::SharedPtr _srv_detect_objects;
         std::unique_ptr<tf2_ros::Buffer> _tf_buffer;
         std::shared_ptr<tf2_ros::TransformListener> _tf_listener;
+        mutable std::mutex _detections_mutex;
+        builtin_interfaces::msg::Time _latest_detections_stamp;
+        std::string _latest_detections_frame_id;
+        std::vector<int32_t> _latest_detection_ids;
+        std::vector<geometry_msgs::msg::Pose> _latest_detection_poses;
+        std::vector<cv::Rect> _latest_detection_bboxes;
+        cv::Mat _latest_annotated_frame;
     };
 
 }  // namespace perseus_vision
