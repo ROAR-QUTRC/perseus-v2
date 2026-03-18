@@ -500,6 +500,7 @@ namespace perseus_vision
         _pub_cube_detections->publish(detections_msg);
         {
             std::lock_guard<std::mutex> lock(_detections_mutex);
+            // Cache only detections that produced valid depth-derived poses.
             _latest_detections_stamp = detections_msg.stamp;
             _latest_detections_frame_id = detections_msg.frame_id;
             _latest_detection_ids = detections_msg.ids;
@@ -712,16 +713,6 @@ namespace perseus_vision
 
         auto detections = postprocess(out_data, num_boxes);
         publish_annotated_image(bgr_image, detections, header);
-
-        // Refresh detection snapshot every inference call so service output is current.
-        {
-            std::lock_guard<std::mutex> lock(_detections_mutex);
-            _latest_detections_stamp = header.stamp;
-            _latest_detections_frame_id = _tf_output_frame;
-            _latest_detection_ids.clear();
-            _latest_detection_poses.clear();
-            _latest_detection_bboxes.clear();
-        }
 
         if (_depth_estimation_mode == "depth_image")
         {
