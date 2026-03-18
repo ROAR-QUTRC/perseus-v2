@@ -29,7 +29,7 @@ namespace perseus_vision
         declare_parameter("camera_topic", "/camera/camera/color/image_raw");
         declare_parameter("camera_info_topic", "/camera/camera/color/camera_info");
         declare_parameter("always_on", true);  // keep node alive even without subscribers
-        declare_parameter("use_cuda", true);
+        declare_parameter("use_cuda", false);
         declare_parameter("publish_annotated_image", true);
         declare_parameter("processing_frequency_hz", 0.0);  // 0 = process every frame
         declare_parameter("intra_op_num_threads", 4);
@@ -796,14 +796,11 @@ namespace perseus_vision
             save_dir = ".";
         }
 
-        if (!save_dir.empty())
+        std::error_code ec;
+        std::filesystem::create_directories(save_dir, ec);
+        if (ec)
         {
-            std::error_code ec;
-            std::filesystem::create_directories(save_dir, ec);
-            if (ec)
-            {
-                RCLCPP_WARN(get_logger(), "Failed to create directory %s: %s", save_dir.c_str(), ec.message().c_str());
-            }
+            RCLCPP_WARN(get_logger(), "Failed to create directory %s: %s", save_dir.c_str(), ec.message().c_str());
         }
 
         auto now = std::chrono::system_clock::now();
