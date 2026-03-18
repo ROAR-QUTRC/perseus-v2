@@ -19,7 +19,6 @@ aruco_detector:
     # Row-major 3x3 K
     camera_matrix: [530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0]
     distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
-
 cube_detector:
   ros__parameters:
     model_path: /perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector_yolob8s.onnx
@@ -42,10 +41,8 @@ cube_detector:
     inter_op_num_threads: 2
     output_topic: /perseus_vision/cube/detections
     publish_img: true
-
-    depth_estimation_mode: "depth_image"   # "none" | "depth_image" | "stereo"
+    depth_estimation_mode: "depth_image" # "none" | "depth_image" | "stereo"
     tf_output_frame: "base_link" # marker pose output frame
-    
     depth_image:
       topic: "/camera/camera/aligned_depth_to_color/image_raw"
       info_topic: "/camera/camera/aligned_depth_to_color/camera_info"
@@ -60,4 +57,3 @@ cube_detector:
       baseline_m: 0.12
       min_disparity: 1.0
       max_disparity: 64.0
-

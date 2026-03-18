@@ -64,10 +64,16 @@ target_include_directories(
 target_link_libraries(cube_detector ${ORT_LIBRARIES} ${OpenCV_LIBS})
 
 ament_target_dependencies(
-  cube_detector rclcpp sensor_msgs std_msgs
-  cv_bridge ament_index_cpp
-  geometry_msgs visualization_msgs
-  tf2_ros tf2_geometry_msgs)
+  cube_detector
+  rclcpp
+  sensor_msgs
+  std_msgs
+  cv_bridge
+  ament_index_cpp
+  geometry_msgs
+  visualization_msgs
+  tf2_ros
+  tf2_geometry_msgs)
 
 # ── install ───────────────────────────────────────────────────────────────────
 install(TARGETS aruco_detector_node cube_detector
