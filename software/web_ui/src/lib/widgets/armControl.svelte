@@ -224,9 +224,9 @@
 	const jointIdMap: Record<JointNameType, number> = {
 		WRIST_TILT: 1,
 		WRIST_PAN: 2,
-		ELBOW: 3,
-		SHOULDER_TILT: 4,
-		SHOULDER_PAN: 5
+		SHOULDER_TILT: 3,
+		SHOULDER_PAN: 4,
+		ELBOW: 5
 	};
 	let motors = $state<Record<JointNameType, MotorData>>({} as Record<JointNameType, MotorData>);
 	let onlineMotors = $state<Array<number>>([]);
