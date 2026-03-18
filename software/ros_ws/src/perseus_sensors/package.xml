@@ -23,7 +23,7 @@
   <exec_depend>realsense2-camera</exec_depend>
   <exec_depend>realsense2-description</exec_depend>
   <exec_depend>rplidar_ros</exec_depend>
-  
+  <depend>usb_cam</depend> 
 
   <export>
     <build_type>ament_cmake</build_type>
