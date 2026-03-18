@@ -19,3 +19,12 @@ aruco_detector:
     # Row-major 3x3 K
     camera_matrix: [530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0]
     distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
+cube_detector:
+  ros__parameters:
+    model_path: /home/bocho0600/perseus-v2/software/ros_ws/src/perseus_vision/models/best.onnx
+    confidence_threshold: 0.08
+    camera_topic: /image_raw
+    camera_info_topic: /camera/camera/color/camera_info
+    publish_output: true
+    output_topic: /perseus_vision/cube/detections
+    publish_img: true
