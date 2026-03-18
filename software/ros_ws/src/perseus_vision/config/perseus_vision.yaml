@@ -21,10 +21,20 @@ aruco_detector:
     distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
 cube_detector:
   ros__parameters:
-    model_path: /home/bocho0600/perseus-v2/software/ros_ws/src/perseus_vision/models/best.onnx
-    confidence_threshold: 0.08
+    model_path: /home/bocho0600/perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector_yolob8s.onnx
+    confidence_threshold: 0.005
+    always_on: false # Set to true to keep the node running even when no subscribers are present
+    use_cuda: false # CUDA is not supported in perseus-v2 nix environment, set to false to use CPU
     camera_topic: /image_raw
     camera_info_topic: /camera/camera/color/camera_info
-    publish_output: true
+    # For CPU use: 
+    # intra_op_num_threads controls how many threads can be used to
+    # parallelize the execution of individual operations.
+    intra_op_num_threads: 4
+    # inter_op_num_threads: number of operations that can run
+    # in parallel when the model graph has independent branches.
+    # YOLOv8 is mostly sequential, so 2 is sufficient here.
+    # Higher values rarely help and may cause thread contention.
+    inter_op_num_threads: 2 
     output_topic: /perseus_vision/cube/detections
     publish_img: true

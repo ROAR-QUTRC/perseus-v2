@@ -10,78 +10,106 @@ namespace perseus_vision
     // ── constructor ───────────────────────────────────────────────────────────────
     CubeDetector::CubeDetector()
         : Node("cube_detector"),
-          ort_env_(ORT_LOGGING_LEVEL_WARNING, "cube_detector")
+          _ort_env(ORT_LOGGING_LEVEL_WARNING, "cube_detector")
     {
         // ── parameters ──────────────────────────────────────────────────────────────
         declare_parameter("model_path", std::string(std::getenv("HOME")) +
-                                            "/perseus-v2/software/ros_ws/src/perseus_vision/models/best.onnx");
+                                            "/perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector_yolob8s.onnx");
         declare_parameter("confidence_threshold", 0.5);
-        declare_parameter("camera_topic", "/camera/camera/color/image_raw");
+        declare_parameter("camera_topic", "/image_raw");
         declare_parameter("camera_info_topic", "/camera/camera/color/camera_info");
-
+        declare_parameter("always_on", true);  // keep node alive even without subscribers
+        declare_parameter("use_cuda", true);
+        declare_parameter("publish_annotated_image", true);
+        declare_parameter("intra_op_num_threads", 4);
+        declare_parameter("inter_op_num_threads", 2);
         const auto camera_topic = get_parameter("camera_topic").as_string();
         const auto camera_info_topic = get_parameter("camera_info_topic").as_string();
-        confidence_threshold_ = static_cast<float>(
+        _intra_op_num_threads = get_parameter("intra_op_num_threads").as_int();
+        _inter_op_num_threads = get_parameter("inter_op_num_threads").as_int();
+        
+        _confidence_threshold = static_cast<float>(
             get_parameter("confidence_threshold").as_double());
+        _always_on.store(get_parameter("always_on").as_bool());  // set initial value of atomic bool
+        _should_use_cuda = get_parameter("use_cuda").as_bool();
+        _publish_annotated_image = get_parameter("publish_annotated_image").as_bool();
+        _model_path = get_parameter("model_path").as_string();
 
-        model_path_ = get_parameter("model_path").as_string();
-        //   if (model_path_.empty()) {
-        //     model_path_ = ament_index_cpp::get_package_share_directory("perseus_vision")
-        //                 + "/models/best.onnx";
-        //   }
+        if (_model_path.empty())
+        {
+            _model_path = ament_index_cpp::get_package_share_directory("perseus_vision") + "/models/cube_detector_yolob8s.onnx";
+        }
 
         // ── load ONNX model ──────────────────────────────────────────────────────────
-        RCLCPP_INFO(get_logger(), "Loading model: %s", model_path_.c_str());
+        RCLCPP_INFO(get_logger(), "Loading model: %s", _model_path.c_str());
 
         Ort::SessionOptions session_opts;
-        session_opts.SetIntraOpNumThreads(1);
+        session_opts.SetIntraOpNumThreads(_intra_op_num_threads);
         session_opts.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+        session_opts.SetInterOpNumThreads(_inter_op_num_threads);
 
-        OrtCUDAProviderOptions cuda_opts{};
-        try
+        if (_should_use_cuda)
         {
-            session_opts.AppendExecutionProvider_CUDA(cuda_opts);
-            RCLCPP_INFO(get_logger(), "Using CUDA execution provider");
-        }
-        catch (const Ort::Exception&)
-        {
-            RCLCPP_WARN(get_logger(), "CUDA unavailable, falling back to CPU");
+            OrtCUDAProviderOptions cuda_opts{};
+            try
+            {
+                session_opts.AppendExecutionProvider_CUDA(cuda_opts);
+                RCLCPP_INFO(get_logger(), "Using CUDA execution provider");
+            }
+            catch (const Ort::Exception&)
+            {
+                RCLCPP_WARN(get_logger(), "CUDA unavailable, falling back to CPU");
+            }
         }
 
-        ort_session_ = std::make_unique<Ort::Session>(
-            ort_env_, model_path_.c_str(), session_opts);
+        _ort_session = std::make_unique<Ort::Session>(
+            _ort_env, _model_path.c_str(), session_opts);
 
-        input_name_ = ort_session_->GetInputNameAllocated(0, ort_allocator_).get();
-        output_name_ = ort_session_->GetOutputNameAllocated(0, ort_allocator_).get();
+        auto input_name = _ort_session->GetInputNameAllocated(0, _ort_allocator);
+        auto output_name = _ort_session->GetOutputNameAllocated(0, _ort_allocator);
+        _input_name = input_name.get();
+        _output_name = output_name.get();
 
         RCLCPP_INFO(get_logger(), "Model loaded — input: %s  output: %s",
-                    input_name_.c_str(), output_name_.c_str());
+                    _input_name.c_str(), _output_name.c_str());
 
         // ── subscribers ──────────────────────────────────────────────────────────────
-        sub_image_ = create_subscription<sensor_msgs::msg::Image>(
+        _sub_image = create_subscription<sensor_msgs::msg::Image>(
             camera_topic, kQosDepth,
             std::bind(&CubeDetector::image_callback, this, std::placeholders::_1));
 
-        sub_camera_info_ = create_subscription<sensor_msgs::msg::CameraInfo>(
+        _sub_camera_info = create_subscription<sensor_msgs::msg::CameraInfo>(
             camera_info_topic, kQosDepth,
             std::bind(&CubeDetector::camera_info_callback, this, std::placeholders::_1));
 
         // ── publishers ───────────────────────────────────────────────────────────────
-        pub_annotated_ = create_publisher<sensor_msgs::msg::Image>(
+        _pub_annotated = create_publisher<sensor_msgs::msg::Image>(
             "/perseus_vision/annotated_image", kQosDepth);
 
         //   pub_detections_ = create_publisher<vision_msgs::msg::Detection2DArray>(
         //     "/perseus_vision/detections", kQosDepth);
 
-        pub_colour_ = create_publisher<std_msgs::msg::String>(
+        _pub_colour = create_publisher<std_msgs::msg::String>(
             "/perseus_vision/detected_colour", kQosDepth);
 
         RCLCPP_INFO(get_logger(), "CubeDetectorNode ready — subscribed to %s", camera_topic.c_str());
+        if (_always_on.load())
+        {
+            RCLCPP_INFO(get_logger(), "Node is set to always_on, will process images even without subscribers");
+        } else {
+            RCLCPP_INFO(get_logger(), "Always on is disabled!");
+        }
     }
 
     // ── image callback ────────────────────────────────────────────────────────────
     void CubeDetector::image_callback(const sensor_msgs::msg::Image::SharedPtr msg)
     {
+        _always_on.store(get_parameter("always_on").as_bool());
+        if (!_always_on.load())
+        {
+            return; // skip processing if always_on is false and there are no subscribers
+        }
+
         cv_bridge::CvImagePtr cv_ptr;
         try
         {
@@ -104,10 +132,10 @@ namespace perseus_vision
             mem_info, blob.data(), blob.size(),
             input_shape.data(), input_shape.size());
 
-        const char* input_names[] = {input_name_.c_str()};
-        const char* output_names[] = {output_name_.c_str()};
+        const char* input_names[] = {_input_name.c_str()};
+        const char* output_names[] = {_output_name.c_str()};
 
-        auto output_tensors = ort_session_->Run(
+        auto output_tensors = _ort_session->Run(
             Ort::RunOptions{nullptr},
             input_names, &input_tensor, 1,
             output_names, 1);
@@ -118,31 +146,33 @@ namespace perseus_vision
         const size_t num_boxes = static_cast<size_t>(out_shape[2]);
 
         auto detections = postprocess(out_data, num_boxes);
-
+        if (_publish_annotated_image)
+        {
         publish_annotated_image(cv_ptr->image, detections, msg->header);
+        }
         //   publish_detections(detections, msg->header);
     }
 
     // ── camera info callback (kept for future depth use) ─────────────────────────
     void CubeDetector::camera_info_callback(const sensor_msgs::msg::CameraInfo::SharedPtr msg)
     {
-        std::lock_guard<std::mutex> lock(camera_matrix_mutex_);
+        std::lock_guard<std::mutex> lock(_camera_matrix_mutex);
 
-        camera_matrix_ = cv::Mat(3, 3, CV_64F);
+        _camera_matrix = cv::Mat(3, 3, CV_64F);
         for (int r = 0; r < 3; ++r)
             for (int c = 0; c < 3; ++c)
-                camera_matrix_.at<double>(r, c) = msg->k[r * 3 + c];
+                _camera_matrix.at<double>(r, c) = msg->k[r * 3 + c];
 
-        dist_coeffs_ = cv::Mat(static_cast<int>(msg->d.size()), 1, CV_64F);
+        _dist_coeffs = cv::Mat(static_cast<int>(msg->d.size()), 1, CV_64F);
         for (size_t i = 0; i < msg->d.size(); ++i)
-            dist_coeffs_.at<double>(static_cast<int>(i), 0) = msg->d[i];
+            _dist_coeffs.at<double>(static_cast<int>(i), 0) = msg->d[i];
     }
 
     // ── preprocess ────────────────────────────────────────────────────────────────
     std::vector<float> CubeDetector::preprocess(const cv::Mat& bgr_image)
     {
-        orig_h_ = bgr_image.rows;
-        orig_w_ = bgr_image.cols;
+        _orig_h = bgr_image.rows;
+        _orig_w = bgr_image.cols;
 
         cv::Mat resized, rgb;
         cv::resize(bgr_image, resized, cv::Size(640, 640));
@@ -166,42 +196,41 @@ namespace perseus_vision
     // ── postprocess ───────────────────────────────────────────────────────────────
     std::vector<Detection> CubeDetector::postprocess(const float* data, size_t num_boxes)
     {
-        const float scale_x = static_cast<float>(orig_w_) / 640.0f;
-        const float scale_y = static_cast<float>(orig_h_) / 640.0f;
-        const int num_classes = static_cast<int>(CLASS_NAMES.size());
-
-        std::vector<Detection> detections;
+        std::vector<cv::Rect> boxes;
+        std::vector<float>    scores;
+        std::vector<int>      class_ids;
 
         for (size_t i = 0; i < num_boxes; ++i)
         {
-            // data layout: [field][box] → field f, box i = data[f * num_boxes + i]
             const float xc = data[0 * num_boxes + i];
             const float yc = data[1 * num_boxes + i];
-            const float w = data[2 * num_boxes + i];
-            const float h = data[3 * num_boxes + i];
+            const float w  = data[2 * num_boxes + i];
+            const float h  = data[3 * num_boxes + i];
 
-            int best_class = 0;
+            int   best_class = 0;
             float best_score = 0.0f;
-            for (int c = 0; c < num_classes; ++c)
-            {
-                const float score = data[(4 + c) * num_boxes + i];
-                if (score > best_score)
-                {
-                    best_score = score;
-                    best_class = c;
-                }
+            for (int c = 0; c < num_classes; ++c) {
+                float score = data[(4 + c) * num_boxes + i];
+                if (score > best_score) { best_score = score; best_class = c; }
             }
 
-            if (best_score < confidence_threshold_)
-                continue;
+            if (best_score < _confidence_threshold) continue;
 
-            const int x1 = std::clamp(static_cast<int>((xc - w / 2.0f) * scale_x), 0, orig_w_);
-            const int y1 = std::clamp(static_cast<int>((yc - h / 2.0f) * scale_y), 0, orig_h_);
-            const int x2 = std::clamp(static_cast<int>((xc + w / 2.0f) * scale_x), 0, orig_w_);
-            const int y2 = std::clamp(static_cast<int>((yc + h / 2.0f) * scale_y), 0, orig_h_);
+            int x1 = (xc - w / 2.0f) * scale_x;
+            int y1 = (yc - h / 2.0f) * scale_y;
 
-            detections.push_back({best_class, best_score, cv::Rect(x1, y1, x2 - x1, y2 - y1)});
+            boxes.push_back(cv::Rect(x1, y1, w * scale_x, h * scale_y));
+            scores.push_back(best_score);
+            class_ids.push_back(best_class);
         }
+
+        // Apply NMS to filter overlapping boxes
+        std::vector<int> indices;
+        cv::dnn::NMSBoxes(boxes, scores, _confidence_threshold, 0.45f, indices);
+
+        std::vector<Detection> detections;
+        for (int idx : indices)
+            detections.push_back({class_ids[idx], scores[idx], boxes[idx]});
 
         return detections;
     }
@@ -244,7 +273,7 @@ namespace perseus_vision
                            cv::MARKER_CROSS, 15, 1);
         }
 
-        pub_annotated_->publish(
+        _pub_annotated->publish(
             *cv_bridge::CvImage(header, "bgr8", annotated).toImageMsg());
     }
 

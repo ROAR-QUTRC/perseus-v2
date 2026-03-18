@@ -1,11 +1,12 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 
-// #include "ament_index_cpp/get_package_share_directory.hpp"
+#include "ament_index_cpp/get_package_share_directory.hpp"
 #include "cv_bridge/cv_bridge.hpp"
 #include "onnxruntime/onnxruntime_cxx_api.h"
 #include "opencv2/opencv.hpp"
@@ -16,13 +17,13 @@
 namespace perseus_vision
 {
 
-    static const std::vector<std::string> CLASS_NAMES = {"blue", "red", "green", "yellow"};
+    static const std::vector<std::string> CLASS_NAMES = {"blue", "green", "red", "white"};
 
     static const std::vector<cv::Scalar> CLASS_COLOURS = {
-        cv::Scalar(255, 100, 0),  // blue
-        cv::Scalar(0, 0, 255),    // red
-        cv::Scalar(0, 200, 0),    // green
-        cv::Scalar(0, 220, 255),  // yellow
+        cv::Scalar(255, 100, 0),    // blue
+        cv::Scalar(0, 200, 0),      // green
+        cv::Scalar(0, 0, 255),      // red
+        cv::Scalar(255, 255, 255),  // white
     };
 
     struct Detection
@@ -59,32 +60,37 @@ namespace perseus_vision
         //     const std_msgs::msg::Header& header);
 
         // ONNX Runtime
-        Ort::Env ort_env_;
-        Ort::AllocatorWithDefaultOptions ort_allocator_;
-        std::unique_ptr<Ort::Session> ort_session_;
-        std::string input_name_;
-        std::string output_name_;
+        Ort::Env _ort_env;
+        Ort::AllocatorWithDefaultOptions _ort_allocator;
+        std::unique_ptr<Ort::Session> _ort_session;
+        std::string _input_name;
+        std::string _output_name;
 
         // image size tracking for coordinate scaling
-        int orig_h_{0};
-        int orig_w_{0};
+        int _orig_h{0};
+        int _orig_w{0};
 
         // parameters
-        std::string model_path_;
-        float confidence_threshold_;
-
+        std::string _model_path;
+        float _confidence_threshold;
+        std::atomic_bool _always_on{true};
+        bool _should_use_cuda;
+        bool _publish_annotated_image;
+        int _intra_op_num_threads;
+        int _inter_op_num_threads;
+        rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr _param_callback_handle;
         // camera calibration (kept for future use)
-        std::mutex camera_matrix_mutex_;
-        cv::Mat camera_matrix_;
-        cv::Mat dist_coeffs_;
+        std::mutex _camera_matrix_mutex;
+        cv::Mat _camera_matrix;
+        cv::Mat _dist_coeffs;
 
         // subscribers
-        rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_image_;
-        rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr sub_camera_info_;
+        rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr _sub_image;
+        rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr _sub_camera_info;
 
         // publishers
-        rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_annotated_;
-        rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub_colour_;
+        rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr _pub_annotated;
+        rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _pub_colour;
     };
 
 }  // namespace perseus_vision
