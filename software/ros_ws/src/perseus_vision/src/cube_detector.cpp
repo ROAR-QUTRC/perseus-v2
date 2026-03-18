@@ -24,7 +24,7 @@ namespace perseus_vision
           _ort_env(ORT_LOGGING_LEVEL_WARNING, "cube_detector")
     {
         // ── parameters ──────────────────────────────────────────────────────────────
-        declare_parameter("model_path", "/perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector_yolob8s.onnx");
+        declare_parameter("model_path", "");
         declare_parameter("confidence_threshold", 0.5);
         declare_parameter("camera_topic", "/camera/camera/color/image_raw");
         declare_parameter("camera_info_topic", "/camera/camera/color/camera_info");
