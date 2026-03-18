@@ -21,6 +21,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "std_msgs/msg/header.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
@@ -86,6 +87,9 @@ namespace perseus_vision
             const std::string& source_frame,
             const builtin_interfaces::msg::Time& stamp,
             geometry_msgs::msg::Pose& output_pose) const;
+        void run_inference_pipeline(
+            const cv::Mat& bgr_image,
+            const std_msgs::msg::Header& header);
         void handle_detect_objects_request(
             const std::shared_ptr<DetectObjects::Request> request,
             std::shared_ptr<DetectObjects::Response> response);
@@ -152,6 +156,11 @@ namespace perseus_vision
         rclcpp::Service<DetectObjects>::SharedPtr _srv_detect_objects;
         std::unique_ptr<tf2_ros::Buffer> _tf_buffer;
         std::shared_ptr<tf2_ros::TransformListener> _tf_listener;
+        mutable std::mutex _latest_image_mutex;
+        cv::Mat _latest_bgr_frame;
+        std_msgs::msg::Header _latest_bgr_header;
+        bool _has_latest_bgr_frame{false};
+        mutable std::mutex _inference_mutex;
         mutable std::mutex _detections_mutex;
         builtin_interfaces::msg::Time _latest_detections_stamp;
         std::string _latest_detections_frame_id;

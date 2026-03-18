@@ -61,14 +61,40 @@ namespace perseus_vision
         _should_use_cuda = get_parameter("use_cuda").as_bool();
         _publish_annotated_image = get_parameter("publish_annotated_image").as_bool();
         _processing_frequency_hz = get_parameter("processing_frequency_hz").as_double();
-        _model_path = std::string(std::getenv("HOME")) + get_parameter("model_path").as_string();
+        _model_path = get_parameter("model_path").as_string();
         _tf_output_frame = get_parameter("tf_output_frame").as_string();
         _output_img_topic = get_parameter("output_img_topic").as_string();
         _output_detections_topic = get_parameter("output_detections_topic").as_string();
         _output_markers_topic = get_parameter("output_markers_topic").as_string();
-        if (_model_path.empty())
+        if (_model_path.rfind("~/", 0) == 0)
         {
-            _model_path = ament_index_cpp::get_package_share_directory("perseus_vision") + "/models/cube_detector_yolob8s.onnx";
+            if (const char* home = std::getenv("HOME"))
+            {
+                _model_path = std::string(home) + _model_path.substr(1);
+            }
+        }
+
+        // Backward compatibility: some configs use "/perseus-v2/..." (missing $HOME prefix).
+        if (!_model_path.empty() && !std::filesystem::exists(_model_path))
+        {
+            if (const char* home = std::getenv("HOME"))
+            {
+                const std::string home_prefixed = std::string(home) + _model_path;
+                if (std::filesystem::exists(home_prefixed))
+                {
+                    _model_path = home_prefixed;
+                }
+            }
+        }
+
+        if (_model_path.empty() || !std::filesystem::exists(_model_path))
+        {
+            const std::string packaged_model =
+                ament_index_cpp::get_package_share_directory("perseus_vision") + "/models/cube_detector_yolob8s.onnx";
+            if (std::filesystem::exists(packaged_model))
+            {
+                _model_path = packaged_model;
+            }
         }
 
         // ── load ONNX model ──────────────────────────────────────────────────────────
@@ -93,8 +119,16 @@ namespace perseus_vision
             }
         }
 
-        _ort_session = std::make_unique<Ort::Session>(
-            _ort_env, _model_path.c_str(), session_opts);
+        try
+        {
+            _ort_session = std::make_unique<Ort::Session>(
+                _ort_env, _model_path.c_str(), session_opts);
+        }
+        catch (const Ort::Exception& e)
+        {
+            RCLCPP_FATAL(get_logger(), "Failed to load ONNX model from '%s': %s", _model_path.c_str(), e.what());
+            throw;
+        }
 
         auto input_name = _ort_session->GetInputNameAllocated(0, _ort_allocator);
         auto output_name = _ort_session->GetOutputNameAllocated(0, _ort_allocator);
@@ -149,10 +183,29 @@ namespace perseus_vision
     // ── image callback ────────────────────────────────────────────────────────────
     void CubeDetector::image_callback(const sensor_msgs::msg::Image::SharedPtr msg)
     {
+        cv_bridge::CvImagePtr cv_ptr;
+        try
+        {
+            cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+        }
+        catch (const cv_bridge::Exception& e)
+        {
+            RCLCPP_ERROR(get_logger(), "cv_bridge exception: %s", e.what());
+            return;
+        }
+
+        // Always cache latest frame so service can run on-demand even when always_on is false.
+        {
+            std::lock_guard<std::mutex> lock(_latest_image_mutex);
+            _latest_bgr_frame = cv_ptr->image.clone();
+            _latest_bgr_header = msg->header;
+            _has_latest_bgr_frame = true;
+        }
+
         _always_on.store(get_parameter("always_on").as_bool());
         if (!_always_on.load())
         {
-            return;  // skip processing if always_on is false and there are no subscribers
+            return;
         }
 
         _processing_frequency_hz = get_parameter("processing_frequency_hz").as_double();
@@ -171,48 +224,8 @@ namespace perseus_vision
             _last_inference_time_ns = now_ns;
         }
 
-        cv_bridge::CvImagePtr cv_ptr;
-        try
-        {
-            cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        }
-        catch (const cv_bridge::Exception& e)
-        {
-            RCLCPP_ERROR(get_logger(), "cv_bridge exception: %s", e.what());
-            return;
-        }
-
-        // ── preprocess -> infer ───────────────────────────────────────────────────
-        auto blob = preprocess(cv_ptr->image);
-
-        std::array<int64_t, 4> input_shape = {1, 3, 640, 640};
-        Ort::MemoryInfo mem_info =
-            Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-
-        Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
-            mem_info, blob.data(), blob.size(),
-            input_shape.data(), input_shape.size());
-
-        const char* input_names[] = {_input_name.c_str()};
-        const char* output_names[] = {_output_name.c_str()};
-
-        auto output_tensors = _ort_session->Run(
-            Ort::RunOptions{nullptr},
-            input_names, &input_tensor, 1,
-            output_names, 1);
-
-        // output shape: [1, 8, 8400]
-        const float* out_data = output_tensors[0].GetTensorData<float>();
-        const auto out_shape = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
-        const size_t num_boxes = static_cast<size_t>(out_shape[2]);
-
-        auto detections = postprocess(out_data, num_boxes);
-        publish_annotated_image(cv_ptr->image, detections, msg->header);
-        if (_depth_estimation_mode == "depth_image")
-        {
-            publish_depth_markers(detections, msg->header);
-        }
-        //   publish_detections(detections, msg->header);
+        std::lock_guard<std::mutex> lock(_inference_mutex);
+        run_inference_pipeline(cv_ptr->image, msg->header);
     }
 
     // ── camera info callback (kept for future depth use) ─────────────────────────
@@ -392,11 +405,13 @@ namespace perseus_vision
         visualization_msgs::msg::MarkerArray marker_array;
         std_msgs::msg::Header marker_header = header;
         std::string source_frame = header.frame_id;
+        builtin_interfaces::msg::Time source_stamp = header.stamp;
         {
             std::lock_guard<std::mutex> lock(_depth_mutex);
             if (_latest_depth_image)
             {
                 source_frame = _latest_depth_image->header.frame_id;
+                source_stamp = _latest_depth_image->header.stamp;
             }
         }
         _tf_output_frame = get_parameter("tf_output_frame").as_string();
@@ -405,8 +420,9 @@ namespace perseus_vision
             _tf_output_frame = source_frame;
         }
         marker_header.frame_id = _tf_output_frame;
+        marker_header.stamp = source_stamp;
         perseus_interfaces::msg::ObjectDetections detections_msg;
-        detections_msg.stamp = header.stamp;
+        detections_msg.stamp = source_stamp;
         detections_msg.frame_id = marker_header.frame_id;
         std::vector<cv::Rect> detection_bboxes_for_service;
 
@@ -429,7 +445,7 @@ namespace perseus_vision
             geometry_msgs::msg::Pose marker_pose = pose;
             if (_tf_output_frame != source_frame)
             {
-                if (!transform_pose_to_output_frame(pose, source_frame, header.stamp, marker_pose))
+                if (!transform_pose_to_output_frame(pose, source_frame, source_stamp, marker_pose))
                 {
                     continue;
                 }
@@ -667,10 +683,79 @@ namespace perseus_vision
         }
     }
 
+    void CubeDetector::run_inference_pipeline(
+        const cv::Mat& bgr_image,
+        const std_msgs::msg::Header& header)
+    {
+        auto blob = preprocess(bgr_image);
+
+        std::array<int64_t, 4> input_shape = {1, 3, 640, 640};
+        Ort::MemoryInfo mem_info =
+            Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+
+        Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
+            mem_info, blob.data(), blob.size(),
+            input_shape.data(), input_shape.size());
+
+        const char* input_names[] = {_input_name.c_str()};
+        const char* output_names[] = {_output_name.c_str()};
+
+        auto output_tensors = _ort_session->Run(
+            Ort::RunOptions{nullptr},
+            input_names, &input_tensor, 1,
+            output_names, 1);
+
+        const float* out_data = output_tensors[0].GetTensorData<float>();
+        const auto out_shape = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
+        const size_t num_boxes = static_cast<size_t>(out_shape[2]);
+
+        auto detections = postprocess(out_data, num_boxes);
+        publish_annotated_image(bgr_image, detections, header);
+
+        // Refresh detection snapshot every inference call so service output is current.
+        {
+            std::lock_guard<std::mutex> lock(_detections_mutex);
+            _latest_detections_stamp = header.stamp;
+            _latest_detections_frame_id = _tf_output_frame;
+            _latest_detection_ids.clear();
+            _latest_detection_poses.clear();
+            _latest_detection_bboxes.clear();
+        }
+
+        if (_depth_estimation_mode == "depth_image")
+        {
+            publish_depth_markers(detections, header);
+        }
+    }
+
     void CubeDetector::handle_detect_objects_request(
         const std::shared_ptr<DetectObjects::Request> request,
         std::shared_ptr<DetectObjects::Response> response)
     {
+        _always_on.store(get_parameter("always_on").as_bool());
+        if (!_always_on.load())
+        {
+            cv::Mat latest_frame;
+            std_msgs::msg::Header latest_header;
+            {
+                std::lock_guard<std::mutex> lock(_latest_image_mutex);
+                if (!_has_latest_bgr_frame || _latest_bgr_frame.empty())
+                {
+                    RCLCPP_WARN(get_logger(), "detect_objects requested, but no camera frame has been received yet");
+                }
+                else
+                {
+                    latest_frame = _latest_bgr_frame.clone();
+                    latest_header = _latest_bgr_header;
+                }
+            }
+            if (!latest_frame.empty())
+            {
+                std::lock_guard<std::mutex> lock(_inference_mutex);
+                run_inference_pipeline(latest_frame, latest_header);
+            }
+        }
+
         cv::Mat frame_to_save;
         std::vector<int32_t> ids_copy;
         std::vector<geometry_msgs::msg::Pose> poses_copy;
@@ -724,9 +809,10 @@ namespace perseus_vision
         auto now = std::chrono::system_clock::now();
         const auto epoch_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
         const auto now_time_t = std::chrono::system_clock::to_time_t(now);
-        const auto* local_tm = std::localtime(&now_time_t);
+        struct tm local_tm;
+        localtime_r(&now_time_t, &local_tm);
         char timestamp_str[64];
-        std::strftime(timestamp_str, sizeof(timestamp_str), "%Y-%m-%d %H:%M:%S", local_tm);
+        std::strftime(timestamp_str, sizeof(timestamp_str), "%Y-%m-%d %H:%M:%S", &local_tm);
 
         cv::putText(
             frame_to_save,
