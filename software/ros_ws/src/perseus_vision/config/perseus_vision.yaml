@@ -19,6 +19,7 @@ aruco_detector:
     # Row-major 3x3 K
     camera_matrix: [530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0]
     distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
+    
 cube_detector:
   ros__parameters:
     model_path: /perseus-v2/software/ros_ws/src/perseus_vision/models/cube_detector_yolob8s.onnx
@@ -30,6 +31,12 @@ cube_detector:
     use_cuda: false # CUDA is not supported in perseus-v2 nix environment, set to false to use CPU
     camera_topic: /camera/camera/color/image_raw
     camera_info_topic: /camera/camera/color/camera_info
+
+    # Output topics 
+    output_img_topic: /perseus_vision/cube/image_annotated
+    output_detections_topic: /perseus_vision/cube/detections
+    output_markers_topic: /perseus_vision/cube/markers
+
     # For CPU use:
     # intra_op_num_threads controls how many threads can be used to
     # parallelize the execution of individual operations.
@@ -39,7 +46,7 @@ cube_detector:
     # YOLOv8 is mostly sequential, so 2 is sufficient here.
     # Higher values rarely help and may cause thread contention.
     inter_op_num_threads: 2
-    output_topic: /perseus_vision/cube/detections
+    output_topic: /perseus_vision/cube/detections/
     publish_img: true
     depth_estimation_mode: "depth_image" # "none" | "depth_image" | "stereo"
     tf_output_frame: "base_link" # marker pose output frame

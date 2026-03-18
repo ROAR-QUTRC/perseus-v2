@@ -39,7 +39,9 @@ namespace perseus_vision
         declare_parameter("depth_image.max_range_m", 5.0);
         declare_parameter("depth_image.min_range_m", 0.1);
         declare_parameter("tf_output_frame", "odom");
-        declare_parameter("camera_optical_frame", "camera_link_optical");
+        declare_parameter("output_img_topic", "/perseus_vision/cube/image_annotated");
+        declare_parameter("output_detections_topic", "/perseus_vision/cube/detections");
+        declare_parameter("output_markers_topic", "/perseus_vision/cube/markers");
         const auto camera_topic = get_parameter("camera_topic").as_string();
         const auto camera_info_topic = get_parameter("camera_info_topic").as_string();
         _intra_op_num_threads = get_parameter("intra_op_num_threads").as_int();
@@ -58,6 +60,9 @@ namespace perseus_vision
         _processing_frequency_hz = get_parameter("processing_frequency_hz").as_double();
         _model_path = std::string(std::getenv("HOME")) + get_parameter("model_path").as_string();
         _tf_output_frame = get_parameter("tf_output_frame").as_string();
+        _output_img_topic = get_parameter("output_img_topic").as_string();
+        _output_detections_topic = get_parameter("output_detections_topic").as_string();
+        _output_markers_topic = get_parameter("output_markers_topic").as_string();
         if (_model_path.empty())
         {
             _model_path = ament_index_cpp::get_package_share_directory("perseus_vision") + "/models/cube_detector_yolob8s.onnx";
@@ -116,11 +121,11 @@ namespace perseus_vision
 
         // ── publishers ───────────────────────────────────────────────────────────────
         _pub_annotated = create_publisher<sensor_msgs::msg::Image>(
-            "/perseus_vision/annotated_image", kQosDepth);
-        _pub_colour = create_publisher<std_msgs::msg::String>(
-            "/perseus_vision/detected_colour", kQosDepth);
+            _output_img_topic, kQosDepth);
         _pub_cube_markers = create_publisher<visualization_msgs::msg::MarkerArray>(
-            "/perseus_vision/cube_markers", kQosDepth);
+            _output_markers_topic, kQosDepth);
+        _pub_cube_detections = create_publisher<perseus_interfaces::msg::ObjectDetections>(
+            _output_detections_topic, kQosDepth);
         _tf_buffer = std::make_unique<tf2_ros::Buffer>(get_clock());
         _tf_listener = std::make_shared<tf2_ros::TransformListener>(*_tf_buffer);
 
@@ -390,6 +395,9 @@ namespace perseus_vision
             _tf_output_frame = source_frame;
         }
         marker_header.frame_id = _tf_output_frame;
+        perseus_interfaces::msg::ObjectDetections detections_msg;
+        detections_msg.stamp = header.stamp;
+        detections_msg.frame_id = marker_header.frame_id;
 
         visualization_msgs::msg::Marker clear_marker;
         clear_marker.header = marker_header;
@@ -453,9 +461,14 @@ namespace perseus_vision
             text_marker.text = ss.str();
             text_marker.lifetime = rclcpp::Duration::from_seconds(0.2);
             marker_array.markers.push_back(text_marker);
+
+            // Cube IDs are mapped by class order: blue=1, green=2, red=3, white=4.
+            detections_msg.ids.push_back(detection.class_id + 1);
+            detections_msg.poses.push_back(marker_pose);
         }
 
         _pub_cube_markers->publish(marker_array);
+        _pub_cube_detections->publish(detections_msg);
     }
 
     bool CubeDetector::estimate_cube_pose_from_depth(

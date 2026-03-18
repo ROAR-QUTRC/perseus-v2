@@ -73,7 +73,8 @@ ament_target_dependencies(
   geometry_msgs
   visualization_msgs
   tf2_ros
-  tf2_geometry_msgs)
+  tf2_geometry_msgs
+  perseus_interfaces)
 
 # ── install ───────────────────────────────────────────────────────────────────
 install(TARGETS aruco_detector_node cube_detector

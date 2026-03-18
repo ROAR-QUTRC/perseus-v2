@@ -15,6 +15,7 @@
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "onnxruntime/onnxruntime_cxx_api.h"
 #include "opencv2/opencv.hpp"
+#include "perseus_interfaces/msg/object_detections.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
@@ -103,6 +104,10 @@ namespace perseus_vision
         std::string _depth_topic;
         std::string _depth_info_topic;
         std::string _tf_output_frame;
+        std::string _output_img_topic;
+        std::string _output_detections_topic;
+        std::string _output_markers_topic;
+        
         float _confidence_threshold;
         std::atomic_bool _always_on{true};
         bool _should_use_cuda;
@@ -136,8 +141,8 @@ namespace perseus_vision
 
         // publishers
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr _pub_annotated;
-        rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _pub_colour;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _pub_cube_markers;
+        rclcpp::Publisher<perseus_interfaces::msg::ObjectDetections>::SharedPtr _pub_cube_detections;
         std::unique_ptr<tf2_ros::Buffer> _tf_buffer;
         std::shared_ptr<tf2_ros::TransformListener> _tf_listener;
     };
