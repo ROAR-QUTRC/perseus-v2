@@ -40,14 +40,22 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
-	import type { RequestInt8ArrayResponseType, TriggerDeviceRequestType, TriggerDeviceResponseType } from '$lib/scripts/perseusMsgs';
-	import type { EmptyRequestType, Float64MultiArrayType, SetBoolRequestType, SetBoolResponseType } from '$lib/scripts/rosTypes';
+	import type {
+		RequestInt8ArrayResponseType,
+		TriggerDeviceRequestType,
+		TriggerDeviceResponseType
+	} from '$lib/scripts/perseusMsgs';
+	import type {
+		EmptyRequestType,
+		Float64MultiArrayType,
+		SetBoolRequestType,
+		SetBoolResponseType
+	} from '$lib/scripts/rosTypes';
 	import { faChevronDown, faChevronUp, faRefresh } from '@fortawesome/free-solid-svg-icons';
 	import { sentenceCase } from 'change-case';
 	import * as ROSLIB from 'roslib';
 	import { onMount, untrack } from 'svelte';
 	import Fa, { FaLayers } from 'svelte-fa';
-
 
 	interface MotorData {
 		rmdMotor: boolean;
@@ -68,15 +76,26 @@
 	// ---------------------------
 
 	let interval: NodeJS.Timeout | null = null;
-	let automaticPositionMessages = $derived(settings.groups.general.automaticallySendMessages.value === 'true');
+	let automaticPositionMessages = $derived(
+		settings.groups.general.automaticallySendMessages.value === 'true'
+	);
 	let debugEnabled = $state(false);
 	let motorControlTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
 	let motorStatusTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-	let enableDebugStatsService: ROSLIB.Service<SetBoolRequestType, SetBoolResponseType> | null = null;
-	let setIdService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
-	let setZeroPositionService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
-	let restartMotorService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null = null;
-	let getCanIdsService: ROSLIB.Service<EmptyRequestType, RequestInt8ArrayResponseType> | null = null;
+	let enableDebugStatsService: ROSLIB.Service<SetBoolRequestType, SetBoolResponseType> | null =
+		null;
+	let setIdService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null =
+		null;
+	let setZeroPositionService: ROSLIB.Service<
+		TriggerDeviceRequestType,
+		TriggerDeviceResponseType
+	> | null = null;
+	let restartMotorService: ROSLIB.Service<
+		TriggerDeviceRequestType,
+		TriggerDeviceResponseType
+	> | null = null;
+	let getCanIdsService: ROSLIB.Service<EmptyRequestType, RequestInt8ArrayResponseType> | null =
+		null;
 	// ROS2 connection
 	$effect(() => {
 		const ros = getRosConnection();
@@ -91,7 +110,7 @@
 				name: '/arm/status',
 				messageType: 'std_msgs/msg/Float64MultiArray'
 			});
-			motorStatusTopic.subscribe(onStatusMessage)
+			motorStatusTopic.subscribe(onStatusMessage);
 			enableDebugStatsService = new ROSLIB.Service({
 				ros: ros,
 				name: '/arm/rmd/enable_debug_stats',
@@ -122,7 +141,7 @@
 			motorControlTopic = null;
 		}
 	});
-	
+
 	// Handle changes to settings
 	$effect(() => {
 		if (!automaticPositionMessages && interval) {
@@ -139,7 +158,7 @@
 			}
 		});
 	});
-	
+
 	const sendPositions = () => {
 		if (motorControlTopic) {
 			// save draft targets to targets
@@ -149,16 +168,18 @@
 			const data = [0, 0, 0, 0, 0];
 			Object.keys(jointIdMap).forEach((joint) => {
 				const jointName = joint as JointNameType;
-				data[jointIdMap[jointName] - 1] = motors[jointName].targetAngle * (motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
-			})
-			console.log(data)
+				data[jointIdMap[jointName] - 1] =
+					motors[jointName].targetAngle *
+					(motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
+			});
+			console.log(data);
 			const message = {
 				// Index of this array corresponds to motor ID - 1
 				data
 			};
 			motorControlTopic.publish(message);
 		}
-	}
+	};
 
 	const onStatusMessage = (message: Float64MultiArrayType) => {
 		// message.data is an array of floats in the order:
@@ -170,17 +191,20 @@
 			data.push(message.data.slice(i, i + SUBARRAY_SIZE));
 		}
 		for (const dataSet of data) {
-			const jointName = Object.keys(jointIdMap).find(key => jointIdMap[key as JointNameType] === dataSet[0]) as JointNameType;
+			const jointName = Object.keys(jointIdMap).find(
+				(key) => jointIdMap[key as JointNameType] === dataSet[0]
+			) as JointNameType;
 			if (jointName) {
 				motors[jointName].error = dataSet[1] === 0 ? 'None' : `Error code ${dataSet[1]}`;
-				motors[jointName].angle = dataSet[2] / (motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
-				motors[jointName].rpm = dataSet[3]; 
+				motors[jointName].angle =
+					dataSet[2] / (motors[jointName].showDirectPosition ? 1 : motors[jointName].gearRatio);
+				motors[jointName].rpm = dataSet[3];
 				motors[jointName].temperature = dataSet[4];
 				motors[jointName].voltage = dataSet[5];
 				motors[jointName].current = dataSet[6];
 			}
 		}
-	}
+	};
 
 	const onEnableDebug = () => {
 		if (enableDebugStatsService) {
@@ -188,26 +212,24 @@
 				debugEnabled = !debugEnabled;
 			});
 		}
-	}
+	};
 
 	// ---------------------------
 	//			UI LOGIC
 	// ---------------------------
 
-	type JointNameType = typeof joints[number];
-	
+	type JointNameType = (typeof joints)[number];
+
 	const joints = ['SHOULDER_PAN', 'SHOULDER_TILT', 'ELBOW', 'WRIST_PAN', 'WRIST_TILT'] as const;
 	const jointIdMap: Record<JointNameType, number> = {
 		WRIST_TILT: 1,
 		WRIST_PAN: 2,
-		ELBOW: 3,
-		SHOULDER_TILT: 4,
-		SHOULDER_PAN: 5,
+		SHOULDER_TILT: 3,
+		SHOULDER_PAN: 4,
+		ELBOW: 5
 	};
-	let motors = $state<Record<JointNameType, MotorData>>(
-		{} as Record<JointNameType, MotorData>
-	);
-	let onlineMotors = $state<Array<number>>([])
+	let motors = $state<Record<JointNameType, MotorData>>({} as Record<JointNameType, MotorData>);
+	let onlineMotors = $state<Array<number>>([]);
 	let bigIncrement = $derived(Number(settings.groups.general.bigIncrementValue.value));
 	let smallIncrement = $derived(Number(settings.groups.general.smallIncrementValue.value));
 
@@ -215,7 +237,9 @@
 		if (motors[motorId].showDirectPosition && directButton) return;
 		if (!motors[motorId].showDirectPosition && !directButton) return;
 		motors[motorId].showDirectPosition = !motors[motorId].showDirectPosition;
-		const scale = motors[motorId].showDirectPosition ? motors[motorId].gearRatio : (1 / motors[motorId].gearRatio);
+		const scale = motors[motorId].showDirectPosition
+			? motors[motorId].gearRatio
+			: 1 / motors[motorId].gearRatio;
 		motors[motorId].targetAngle = motors[motorId].targetAngle * scale;
 		motors[motorId].draftTargetAngle = motors[motorId].draftTargetAngle * scale;
 		motors[motorId].angle = motors[motorId].angle * scale;
@@ -224,27 +248,30 @@
 	const setTargetAngle = (joint: JointNameType, angle?: number) => {
 		motors[joint].targetAngle = angle ?? motors[joint].draftTargetAngle;
 		motors[joint].draftTargetAngle = motors[joint].targetAngle;
-	}
+	};
 
 	const setCurrentToZero = (joint: JointNameType) => {
 		if (setZeroPositionService) {
-			setZeroPositionService.callService({ id: jointIdMap[joint], trigger: true, data: 0 }, (response) => {
-				// Do nothing for now
-			});
+			setZeroPositionService.callService(
+				{ id: jointIdMap[joint], trigger: true, data: 0 },
+				(response) => {
+					// Do nothing for now
+				}
+			);
 		}
-	}
+	};
 
 	const incrementDraftTarget = (joint: JointNameType, increment: number) => {
 		motors[joint].draftTargetAngle += increment;
-	}
+	};
 
 	const getAllIds = () => {
 		if (getCanIdsService) {
 			getCanIdsService.callService({}, (response) => {
 				onlineMotors = response.data;
-			})
+			});
 		}
-	}
+	};
 
 	let getMotorIdInterval: NodeJS.Timeout | null = null;
 
@@ -275,7 +302,6 @@
 		motors.SHOULDER_TILT.gearRatio = 25;
 		motors.SHOULDER_TILT.rmdMotor = false;
 
-
 		// ensure connected motors is updated regularly
 		getMotorIdInterval = setInterval(getAllIds, 1000);
 
@@ -289,45 +315,62 @@
 				getMotorIdInterval = null;
 			}
 		};
-	})
+	});
 </script>
 
-<div class="w-full h-full flex flex-col">
-	<div class="flex items-center w-full pb-2 gap-2 px-4">
+<div class="flex h-full w-full flex-col">
+	<div class="flex w-full items-center gap-2 px-4 pb-2">
 		<Button disabled={automaticPositionMessages} onclick={sendPositions}>Send Angles</Button>
 		<Button onclick={onEnableDebug}>{debugEnabled ? 'Disable' : 'Enable'} Debug</Button>
-		<p class="ml-auto">Available Motor IDs: {onlineMotors.length > 0 ? onlineMotors.join(', ') : 'None'}</p>
+		<p class="ml-auto">
+			Available Motor IDs: {onlineMotors.length > 0 ? onlineMotors.join(', ') : 'None'}
+		</p>
 		<Button class=" rounded-full" variant="ghost" size="icon"><Fa icon={faRefresh} /></Button>
 	</div>
-	<ScrollArea class="h-full w-full pr-2 flex-1">
-		<div class="h-full w-full flex flex-wrap gap-x-2">
+	<ScrollArea class="h-full w-full flex-1 pr-2">
+		<div class="flex h-full w-full flex-wrap gap-x-2">
 			{#each Object.keys(motors) as motor}
 				{@const data = motors[motor as JointNameType]}
 				{@const id = motor as JointNameType}
-				<div class="border rounded-2xl mb-2 w-fit h-fit flex flex-col p-2">
-					<p class="text-xl text-center mb-2">{sentenceCase(motor)} <span class="opacity-50">(id: {jointIdMap[id]})</span></p>
-					<div class="flex gap-2" class:disabled={!onlineMotors.includes(jointIdMap[id])}>
+				<div class="mb-2 flex h-fit w-fit flex-col rounded-2xl border p-2">
+					<p class="mb-2 text-center text-xl">
+						{sentenceCase(motor)} <span class="opacity-50">(id: {jointIdMap[id]})</span>
+					</p>
+					<!-- <div class="flex gap-2" class:disabled={!onlineMotors.includes(jointIdMap[id])}> -->
+					<div class="flex gap-2">
 						<div>
 							<!-- Gage -->
-							<div class="border aspect-square rounded-[50%] text-center flex flex-col justify-center relative">
+							<div
+								class="relative flex aspect-square flex-col justify-center rounded-[50%] border text-center"
+							>
 								<p>Angle: {data.angle.toFixed(1)}&deg;</p>
 								<p>RPM: {data.rpm.toFixed(1)}</p>
 								<p>Temp: {data.temperature.toFixed(1)} &deg;C</p>
-								<span class="absolute border border-l-0 border-r left-1/2 top-0 h-[5%] translate-x-[-1px]"></span>
-								<span class="absolute border border-l-0 border-r left-1/2 bottom-0 h-[5%] translate-x-[-1px]"></span>
-								<span class="absolute border border-b-0 border-t top-1/2 w-[5%] translate-x-[-1px]"></span>
-								<span class="absolute border border-b-0 border-t top-1/2 right-0 w-[5%] translate-x-[-1px]"></span>
-								<svg viewBox="0 0 100 100" class="w-full h-full absolute top-0 left-0 overflow-visible">
+								<span
+									class="absolute left-1/2 top-0 h-[5%] translate-x-[-1px] border border-l-0 border-r"
+								></span>
+								<span
+									class="absolute bottom-0 left-1/2 h-[5%] translate-x-[-1px] border border-l-0 border-r"
+								></span>
+								<span class="absolute top-1/2 w-[5%] translate-x-[-1px] border border-b-0 border-t"
+								></span>
+								<span
+									class="absolute right-0 top-1/2 w-[5%] translate-x-[-1px] border border-b-0 border-t"
+								></span>
+								<svg
+									viewBox="0 0 100 100"
+									class="absolute left-0 top-0 h-full w-full overflow-visible"
+								>
 									<circle
 										r="3%"
-										cx={`${50 * Math.cos(((data.angle) * -1 - 90) * Math.PI / 180) + 50}%`}
-										cy={`${50 * Math.sin(((data.angle) * -1 - 90) * Math.PI / 180) + 50}%`}
+										cx={`${50 * Math.cos(((data.angle * -1 - 90) * Math.PI) / 180) + 50}%`}
+										cy={`${50 * Math.sin(((data.angle * -1 - 90) * Math.PI) / 180) + 50}%`}
 										fill="hsl(20.5 90.2% 48.2%)"
 									/>
-									<circle 
+									<circle
 										r="3%"
-										cx={`${50 * Math.cos((data.targetAngle * -1 - 90) * Math.PI / 180) + 50}%`}
-										cy={`${50 * Math.sin((data.targetAngle * -1 - 90) * Math.PI / 180) + 50}%`}
+										cx={`${50 * Math.cos(((data.targetAngle * -1 - 90) * Math.PI) / 180) + 50}%`}
+										cy={`${50 * Math.sin(((data.targetAngle * -1 - 90) * Math.PI) / 180) + 50}%`}
 										fill="hsl(20.5 90.2% 48.2%)"
 										opacity="0.3"
 										class="transition-all"
@@ -335,31 +378,45 @@
 								</svg>
 							</div>
 							<ButtonGroup.Root class="mt-2">
-								<Button class="border" 
-										variant={data.showDirectPosition ? 'default' : 'outline'} 
-										onclick={() => toggleDirectOutput(id, true)}>
+								<Button
+									class="border"
+									variant={data.showDirectPosition ? 'default' : 'outline'}
+									onclick={() => toggleDirectOutput(id, true)}
+								>
 									Direct
 								</Button>
-								<Button class="border" 
-										variant={data.showDirectPosition ? 'outline' : 'default'} 
-										onclick={() => toggleDirectOutput(id, false)}>
+								<Button
+									class="border"
+									variant={data.showDirectPosition ? 'outline' : 'default'}
+									onclick={() => toggleDirectOutput(id, false)}
+								>
 									Output
 								</Button>
 							</ButtonGroup.Root>
-							<p class="opacity-40 text-center">Gear ratio: 1:{data.gearRatio}</p>
+							<p class="text-center opacity-40">Gear ratio: 1:{data.gearRatio}</p>
 						</div>
 						<div>
 							<!-- Controller -->
-							<ButtonGroup.Root orientation="vertical" class="max-w-[5rem]" >
+							<ButtonGroup.Root orientation="vertical" class="max-w-[5rem]">
 								<Button variant="outline" onclick={() => incrementDraftTarget(id, bigIncrement)}>
 									<FaLayers pull="left">
 										<Fa translateY={0} icon={faChevronUp} />
 										<Fa translateY={0.4} icon={faChevronUp} />
 									</FaLayers>
 								</Button>
-								<Button variant="outline" onclick={() => incrementDraftTarget(id, smallIncrement)}><Fa icon={faChevronUp} /></Button>
-								<Input type="number" max={32767} min={-32767} class="focus-visible:ring-1 z-10 text-center pr-0" bind:value={data.draftTargetAngle}/>
-								<Button variant="outline" onclick={() => incrementDraftTarget(id, -smallIncrement)}><Fa icon={faChevronDown} /></Button>
+								<Button variant="outline" onclick={() => incrementDraftTarget(id, smallIncrement)}
+									><Fa icon={faChevronUp} /></Button
+								>
+								<Input
+									type="number"
+									max={32767}
+									min={-32767}
+									class="z-10 pr-0 text-center focus-visible:ring-1"
+									bind:value={data.draftTargetAngle}
+								/>
+								<Button variant="outline" onclick={() => incrementDraftTarget(id, -smallIncrement)}
+									><Fa icon={faChevronDown} /></Button
+								>
 								<Button variant="outline" onclick={() => incrementDraftTarget(id, -bigIncrement)}>
 									<FaLayers pull="left">
 										<Fa translateY={0} icon={faChevronDown} />
@@ -371,7 +428,11 @@
 						<div class="flex flex-col">
 							<!-- Extra stats -->
 							<Button variant="outline" onclick={() => setTargetAngle(id, 0)}>Zero Servo</Button>
-							<Button disabled={!motors[id].rmdMotor} class="mt-2" onclick={() => setCurrentToZero(id)}>Write Zero Pos</Button>
+							<Button
+								disabled={!motors[id].rmdMotor}
+								class="mt-2"
+								onclick={() => setCurrentToZero(id)}>Write Zero Pos</Button
+							>
 							<p>Current: {data.current.toFixed(2)} A</p>
 							<p>Voltage: {data.voltage.toFixed(2)} V</p>
 							<p>Error: {data.error}</p>
