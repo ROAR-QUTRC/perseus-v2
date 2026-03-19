@@ -418,6 +418,9 @@ namespace perseus_vision
             response->frame_id = tf_output_frame_;
             response->ids = latest_ids_;
             response->poses = latest_poses_;
+            response->message = latest_ids_.empty()
+                                    ? "No ArUco detections are currently cached."
+                                    : "Returned cached ArUco detections.";
             detection_count = latest_ids_.size();
 
             // Copy data needed for image processing
