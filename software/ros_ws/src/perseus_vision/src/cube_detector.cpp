@@ -970,7 +970,7 @@ namespace perseus_vision
             if (parameter.get_name() == "tf_output_frame")
             {
                 std::lock_guard<std::mutex> lock(_parameter_mutex);
-                _tf_output_frame = parameter.as_string(); 
+                _tf_output_frame = parameter.as_string();
             }
         }
 

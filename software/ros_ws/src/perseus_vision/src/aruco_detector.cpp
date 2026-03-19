@@ -40,7 +40,6 @@ namespace perseus_vision
         }
     }  // namespace
 
-
     ArucoDetector::ArucoDetector()
         : Node("aruco_detector")
     {
