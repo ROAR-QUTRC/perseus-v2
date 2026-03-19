@@ -279,13 +279,12 @@ void register_rsbl_servo(const control_board::group& group)
     packet_manager->set_transmission_config(static_cast<flagged_address_t>(address),
                                             {.generator = [=]()
                                              {
-
-                                                // static int posCount = 0;
-                                                // posCount++;
-                                                // printf("Generating status packet with position %d\n", posCount);
-                                                status_1_t status{};  // TODO: get actual position
-                                                // status.position = static_cast<int16_t>(posCount);
-                                                status.position = static_cast<int16_t>(current_positions[ID - 1]);
+                                                 // static int posCount = 0;
+                                                 // posCount++;
+                                                 // printf("Generating status packet with position %d\n", posCount);
+                                                 status_1_t status{};  // TODO: get actual position
+                                                 // status.position = static_cast<int16_t>(posCount);
+                                                 status.position = static_cast<int16_t>(current_positions[ID - 1]);
                                                  //  status.speed = static_cast<int16_t>(servo.ReadSpeed(ID));
                                                  //  status.load = static_cast<int16_t>(servo.ReadLoad(ID));
                                                  //  status.position = static_cast<int16_t>(123);
