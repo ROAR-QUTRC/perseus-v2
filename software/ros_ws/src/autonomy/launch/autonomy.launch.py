@@ -115,5 +115,5 @@ def generate_launch_description():
     # Include launch files and nodes
     ld.add_action(ekf_node)
     ld.add_action(slam_launch)
-    # ld.add_action(nav_launch)
+    ld.add_action(nav_launch)
     return ld
