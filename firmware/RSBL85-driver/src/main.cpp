@@ -82,7 +82,7 @@ void loop()
     //               servo.ReadPos(ELBOW), servo.ReadSpeed(ELBOW), servo.ReadLoad(ELBOW), servo.ReadVoltage(ELBOW),
     //               servo.ReadTemper(ELBOW), servo.ReadMove(ELBOW), servo.ReadCurrent(ELBOW));
     // servo.WriteSpe(ELBOW, -100, 0);
-    
+
     std::vector<uint8_t> data;
 
     bool start_byte_found = false;
@@ -149,7 +149,6 @@ void loop()
 
         constexpr double MAX_SPEED = 30000.0;
         const double error = target_positions[id] - positions[id];
-
 
         // Serial.printf("id: %d, read_pos: %d, full_rev_count: %d, raw_angle: %d, position: %f, target_position: %f, error: %f\n",
         //               id + 1, read_pos, full_rev_count[id], raw_angle, positions[id], target_positions[id], error);
