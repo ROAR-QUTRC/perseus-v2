@@ -319,7 +319,7 @@ velocity_smoother:
     scale_velocities: false
     feedback: "OPEN_LOOP"
     max_velocity: [0.3, 0.0, 0.4] # [x, y, theta], Increase  max vel to avoid stalling
-    min_velocity: [-0.3, 0.0, -0.4] 
+    min_velocity: [-0.3, 0.0, -0.4]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]
