@@ -426,6 +426,7 @@ namespace perseus_vision
         detections_msg.stamp = source_stamp;
         detections_msg.frame_id = marker_header.frame_id;
         std::vector<cv::Rect> detection_bboxes_for_service;
+        std::string detection_message;
 
         visualization_msgs::msg::Marker clear_marker;
         clear_marker.header = marker_header;
@@ -496,6 +497,39 @@ namespace perseus_vision
             detection_bboxes_for_service.push_back(detection.bbox);
         }
 
+        if (detections.empty())
+        {
+            detection_message = "No cube detections found in the latest image.";
+        }
+        else if (detections_msg.ids.empty())
+        {
+            std::ostringstream message_stream;
+            message_stream << "Detected " << detections.size()
+                           << " cube(s) in 2D, but depth estimation failed for all detections. "
+                           << "Returning 0 depth-resolved cube pose(s).";
+            detection_message = message_stream.str();
+            RCLCPP_WARN_THROTTLE(
+                get_logger(),
+                *get_clock(),
+                2000,
+                "%s",
+                detection_message.c_str());
+        }
+        else if (detections_msg.ids.size() < detections.size())
+        {
+            std::ostringstream message_stream;
+            message_stream << "Resolved " << detections_msg.ids.size() << " of " << detections.size()
+                           << " detected cube(s) to depth-derived poses.";
+            detection_message = message_stream.str();
+        }
+        else
+        {
+            std::ostringstream message_stream;
+            message_stream << "Resolved all " << detections_msg.ids.size()
+                           << " detected cube(s) to depth-derived poses.";
+            detection_message = message_stream.str();
+        }
+
         _pub_cube_markers->publish(marker_array);
         _pub_cube_detections->publish(detections_msg);
         {
@@ -506,6 +540,7 @@ namespace perseus_vision
             _latest_detection_ids = detections_msg.ids;
             _latest_detection_poses = detections_msg.poses;
             _latest_detection_bboxes = std::move(detection_bboxes_for_service);
+            _latest_detection_message = std::move(detection_message);
         }
     }
 
@@ -733,6 +768,7 @@ namespace perseus_vision
                 if (!_has_latest_bgr_frame || _latest_bgr_frame.empty())
                 {
                     RCLCPP_WARN(get_logger(), "detect_objects requested, but no camera frame has been received yet");
+                    response->message = "No camera frame has been received yet.";
                 }
                 else
                 {
@@ -759,6 +795,7 @@ namespace perseus_vision
             response->frame_id = _latest_detections_frame_id;
             response->ids = _latest_detection_ids;
             response->poses = _latest_detection_poses;
+            response->message = _latest_detection_message;
 
             if (request->capture_image)
             {

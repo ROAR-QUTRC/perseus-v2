@@ -182,6 +182,7 @@ namespace perseus_vision
         std::vector<int32_t> _latest_detection_ids;
         std::vector<geometry_msgs::msg::Pose> _latest_detection_poses;
         std::vector<cv::Rect> _latest_detection_bboxes;
+        std::string _latest_detection_message{"No cube detections are currently cached."};
         cv::Mat _latest_annotated_frame;
     };
 

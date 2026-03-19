@@ -17,3 +17,7 @@ int32[] ids
 # Pose of each detected marker, in the same order as `ids`
 # (ids[i] corresponds to poses[i])
 geometry_msgs/Pose[] poses
+
+# Human-readable status for callers, e.g. when 2D detections were found but
+# could not be resolved into poses.
+string message
