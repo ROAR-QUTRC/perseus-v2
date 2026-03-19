@@ -97,6 +97,7 @@ namespace perseus_vision
         geometry_msgs::msg::Quaternion quaternion_from_yaw_pitch(double yaw, double pitch) const;
         bool transform_pose_to_output_frame(
             const geometry_msgs::msg::Pose& input_pose,
+            const std::string& target_frame,
             const std::string& source_frame,
             const builtin_interfaces::msg::Time& stamp,
             geometry_msgs::msg::Pose& output_pose) const;
@@ -146,6 +147,7 @@ namespace perseus_vision
         int _inter_op_num_threads;
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr _param_callback_handle;
         float _nms_iou_threshold{0.45f};
+        mutable std::mutex _parameter_mutex;
         // camera calibration (kept for future use)
         std::mutex _camera_matrix_mutex;
         cv::Mat _camera_matrix;

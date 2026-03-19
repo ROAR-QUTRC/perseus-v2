@@ -406,6 +406,7 @@ namespace perseus_vision
         visualization_msgs::msg::MarkerArray marker_array;
         std_msgs::msg::Header marker_header = header;
         std::string source_frame = header.frame_id;
+        std::string target_frame;
         builtin_interfaces::msg::Time source_stamp = header.stamp;
         {
             std::lock_guard<std::mutex> lock(_depth_mutex);
@@ -415,12 +416,15 @@ namespace perseus_vision
                 source_stamp = _latest_depth_image->header.stamp;
             }
         }
-        _tf_output_frame = get_parameter("tf_output_frame").as_string();
-        if (_tf_output_frame.empty())
         {
-            _tf_output_frame = source_frame;
+            std::lock_guard<std::mutex> lock(_parameter_mutex);
+            target_frame = _tf_output_frame;
         }
-        marker_header.frame_id = _tf_output_frame;
+        if (target_frame.empty())
+        {
+            target_frame = source_frame;
+        }
+        marker_header.frame_id = target_frame;
         marker_header.stamp = source_stamp;
         perseus_interfaces::msg::ObjectDetections detections_msg;
         detections_msg.stamp = source_stamp;
@@ -445,9 +449,9 @@ namespace perseus_vision
                 continue;
             }
             geometry_msgs::msg::Pose marker_pose = pose;
-            if (_tf_output_frame != source_frame)
+            if (target_frame != source_frame)
             {
-                if (!transform_pose_to_output_frame(pose, source_frame, source_stamp, marker_pose))
+                if (!transform_pose_to_output_frame(pose, target_frame, source_frame, source_stamp, marker_pose))
                 {
                     continue;
                 }
@@ -686,6 +690,7 @@ namespace perseus_vision
 
     bool CubeDetector::transform_pose_to_output_frame(
         const geometry_msgs::msg::Pose& input_pose,
+        const std::string& target_frame,
         const std::string& source_frame,
         const builtin_interfaces::msg::Time& stamp,
         geometry_msgs::msg::Pose& output_pose) const
@@ -702,7 +707,7 @@ namespace perseus_vision
 
         try
         {
-            const geometry_msgs::msg::PoseStamped out_pose = _tf_buffer->transform(in_pose, _tf_output_frame);
+            const geometry_msgs::msg::PoseStamped out_pose = _tf_buffer->transform(in_pose, target_frame);
             output_pose = out_pose.pose;
             return true;
         }
@@ -714,7 +719,7 @@ namespace perseus_vision
                 2000,
                 "Failed to transform cube pose from %s to %s: %s",
                 source_frame.c_str(),
-                _tf_output_frame.c_str(),
+                target_frame.c_str(),
                 ex.what());
             return false;
         }
@@ -914,6 +919,13 @@ namespace perseus_vision
                 }
 
                 _processing_frequency_hz.store(processing_frequency_hz);
+                continue;
+            }
+
+            if (parameter.get_name() == "tf_output_frame")
+            {
+                std::lock_guard<std::mutex> lock(_parameter_mutex);
+                _tf_output_frame = parameter.as_string(); 
             }
         }
 
