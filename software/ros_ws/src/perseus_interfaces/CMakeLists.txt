@@ -42,7 +42,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake
-                               rosidl_default_generators geometry_msgs)
+                               rosidl_default_generators geometry_msgs sensor_msgs)
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -61,7 +61,8 @@ rosidl_generate_interfaces(
   "srv/RunWaypoints.srv"
   "msg/Waypoint.msg"
   DEPENDENCIES
-  geometry_msgs)
+  geometry_msgs
+  sensor_msgs)
 
 ament_export_dependencies(rosidl_default_runtime)
 

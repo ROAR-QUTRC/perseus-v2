@@ -25,6 +25,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "sensor_msgs/msg/region_of_interest.hpp"
 #include "std_msgs/msg/header.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "tf2_ros/buffer.h"
@@ -83,6 +84,9 @@ namespace perseus_vision
             const std::vector<Detection>& detections,
             const std_msgs::msg::Header& header);
         void publish_depth_markers(
+            const std::vector<Detection>& detections,
+            const std_msgs::msg::Header& header);
+        void publish_2d_detections(
             const std::vector<Detection>& detections,
             const std_msgs::msg::Header& header);
         bool estimate_cube_pose_from_depth(

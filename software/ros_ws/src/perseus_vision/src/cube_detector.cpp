@@ -17,6 +17,19 @@
 
 namespace perseus_vision
 {
+    namespace
+    {
+        sensor_msgs::msg::RegionOfInterest roi_from_rect(const cv::Rect& bbox)
+        {
+            sensor_msgs::msg::RegionOfInterest roi;
+            roi.x_offset = static_cast<uint32_t>(std::max(0, bbox.x));
+            roi.y_offset = static_cast<uint32_t>(std::max(0, bbox.y));
+            roi.width = static_cast<uint32_t>(std::max(0, bbox.width));
+            roi.height = static_cast<uint32_t>(std::max(0, bbox.height));
+            roi.do_rectify = false;
+            return roi;
+        }
+    }  // namespace
 
     // ── constructor ───────────────────────────────────────────────────────────────
     CubeDetector::CubeDetector()
@@ -498,6 +511,7 @@ namespace perseus_vision
             // Cube IDs are mapped by class order: blue=1, green=2, red=3, white=4.
             detections_msg.ids.push_back(detection.class_id + 1);
             detections_msg.poses.push_back(marker_pose);
+            detections_msg.regions_of_interest.push_back(roi_from_rect(detection.bbox));
             detection_bboxes_for_service.push_back(detection.bbox);
         }
 
@@ -546,6 +560,34 @@ namespace perseus_vision
             _latest_detection_bboxes = std::move(detection_bboxes_for_service);
             _latest_detection_message = std::move(detection_message);
         }
+    }
+
+    void CubeDetector::publish_2d_detections(
+        const std::vector<Detection>& detections,
+        const std_msgs::msg::Header& header)
+    {
+        perseus_interfaces::msg::ObjectDetections detections_msg;
+        detections_msg.stamp = header.stamp;
+        detections_msg.frame_id = header.frame_id;
+
+        for (const auto& detection : detections)
+        {
+            geometry_msgs::msg::Pose unresolved_pose;
+            const double nan = std::numeric_limits<double>::quiet_NaN();
+            unresolved_pose.position.x = nan;
+            unresolved_pose.position.y = nan;
+            unresolved_pose.position.z = nan;
+            unresolved_pose.orientation.x = nan;
+            unresolved_pose.orientation.y = nan;
+            unresolved_pose.orientation.z = nan;
+            unresolved_pose.orientation.w = nan;
+
+            detections_msg.ids.push_back(detection.class_id + 1);
+            detections_msg.poses.push_back(unresolved_pose);
+            detections_msg.regions_of_interest.push_back(roi_from_rect(detection.bbox));
+        }
+
+        _pub_cube_detections->publish(detections_msg);
     }
 
     bool CubeDetector::estimate_cube_pose_from_depth(
@@ -757,7 +799,10 @@ namespace perseus_vision
         if (_depth_estimation_mode == "depth_image")
         {
             publish_depth_markers(detections, header);
+            return;
         }
+
+        publish_2d_detections(detections, header);
     }
 
     void CubeDetector::handle_detect_objects_request(
