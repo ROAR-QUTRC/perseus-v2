@@ -125,11 +125,9 @@ class ExtractFeatures(Node):
             )
             self.reply(request_id, {"ok": True, "saved_path": str(file_path)})
         except Exception as e:
-            self.get_logger().error(
-                f"SaveJson failed: id={request_id}, error={e}"
-            )
+            self.get_logger().error(f"SaveJson failed: id={request_id}, error={e}")
             self.reply(request_id, {"ok": False, "message": str(e)})
-        
+
     def LoadImage(self, imageID: str):
         if imageID in self.cache:
             return self.cache[imageID]
@@ -187,7 +185,7 @@ class ExtractFeatures(Node):
             request = json.loads(message.data)
             self.get_logger().info(
                 f"Request received: id={request.get('id', '')}, op={request.get('op', '')}, mode={request.get('mode', '')}"
-)
+            )
             request_id = str(request.get("id", ""))
 
             operation = str(request.get("op", ""))
