@@ -147,8 +147,6 @@ controller_server:
       # RotateToGoal.scale: 1.0
       # RotateToGoal.slowing_factor: 20.0
       # RotateToGoal.lookahead_time: -1.0
-
-
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
       # Core speed
       desired_linear_vel: 0.25 # was 0.3 (slightly calmer)
@@ -176,7 +174,6 @@ controller_server:
       approach_velocity_scaling_dist: 0.8 # was 0.6 (more gradual slow down)
       min_approach_linear_velocity: 0.06 # was 0.05
       transform_tolerance: 0.5
-      
 local_costmap:
   local_costmap:
     ros__parameters:
