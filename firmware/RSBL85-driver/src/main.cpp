@@ -45,6 +45,9 @@ void setup()
     target_positions[TILT - 1] = 25.0 * tilt_target;
     target_positions[PAN - 1] = 25.0 * pan_target;
     target_positions[ELBOW - 1] = 25.0 * elbow_target;
+
+    // servo.unLockEprom(ELBOW);
+    // servo.WheelMode(ELBOW);
 }
 
 std::vector<double> positions(3, 0);
@@ -55,7 +58,8 @@ void write_angle(int id, double angle, double speed)
     // TODO: set max speed
 }
 
-const int ids[] = {TILT, PAN, ELBOW};
+const std::vector<uint8_t> ids = {TILT, PAN, ELBOW};
+// const std::vector<uint8_t> ids = {ELBOW};
 
 /*
 UART Protocol:
@@ -69,6 +73,16 @@ UART Protocol:
 
 void loop()
 {
+    // check if the motor is online
+    // Serial.printf("online: [%d -> %s, %d -> %s, %d -> %s]\n", TILT, servo.Ping(TILT) == TILT ? "true" : "false",
+    //               PAN, servo.Ping(PAN) == PAN ? "true" : "false",
+    //               ELBOW, servo.Ping(ELBOW) == ELBOW ? "true" : "false");
+    // print all status messages for elbow
+    // Serial.printf("pos: %d, speed: %d, load: %d, voltage: %d, temp: %d, move: %d, current: %d\n",
+    //               servo.ReadPos(ELBOW), servo.ReadSpeed(ELBOW), servo.ReadLoad(ELBOW), servo.ReadVoltage(ELBOW),
+    //               servo.ReadTemper(ELBOW), servo.ReadMove(ELBOW), servo.ReadCurrent(ELBOW));
+    // servo.WriteSpe(ELBOW, -100, 0);
+    
     std::vector<uint8_t> data;
 
     bool start_byte_found = false;
@@ -112,11 +126,12 @@ void loop()
     }
     Serial2.print("<a," + String(positions[TILT - 1]) + "," + String(positions[PAN - 1]) + "," + String(positions[ELBOW - 1]) + ">");
 
-    for (unsigned i = 0; i < 3; i++)
+    for (unsigned i = 0; i < ids.size(); i++)
     {
         // id starts at 1 but vector index starts at 0
         const int id = ids[i] - 1;
-        const int read_pos = servo.ReadPos(id);
+        const int read_pos = servo.ReadPos(id + 1);
+        // Serial.printf("id: %d, read_pos: %d\n", id + 1, read_pos);
         const int diff = read_pos - past_positions[id];
 
         if (abs(diff) > 2000)
@@ -135,17 +150,22 @@ void loop()
         constexpr double MAX_SPEED = 30000.0;
         const double error = target_positions[id] - positions[id];
 
+
+        // Serial.printf("id: %d, read_pos: %d, full_rev_count: %d, raw_angle: %d, position: %f, target_position: %f, error: %f\n",
+        //               id + 1, read_pos, full_rev_count[id], raw_angle, positions[id], target_positions[id], error);
         if (abs(error) <= 1)
         {
-            servo.WriteSpe(id, 0, 0);
+            servo.WriteSpe(id + 1, 0, 0);
         }
         else if (abs(error) < 360)
         {  // Reduce speed when 1 revolution from target
-            servo.WriteSpe(id, error / 360.0 * MAX_SPEED, 0);
+            servo.WriteSpe(id + 1, error / 360.0 * MAX_SPEED, 0);
         }
         else
-            servo.WriteSpe(id, error > 0 ? MAX_SPEED : -MAX_SPEED, 0);
+            servo.WriteSpe(id + 1, error > 0 ? MAX_SPEED : -MAX_SPEED, 0);
     }
+
+    delay(1);
 
     Serial.printf("online: [%s, %s, %s], Target angles [%f, %f, %f], Motor loads -> Tilt: %d, Pan: %d, Elbow: %d\n",
                   servo.Ping(TILT) == TILT ? "true" : "false",
