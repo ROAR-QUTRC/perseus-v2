@@ -25,7 +25,7 @@ namespace perseus_vision
     {
         // ── parameters ──────────────────────────────────────────────────────────────
         declare_parameter("model_path", "");
-        declare_parameter("confidence_threshold", 0.5);
+        declare_parameter("confidence_threshold", 0.3);
         declare_parameter("camera_topic", "/camera/camera/color/image_raw");
         declare_parameter("camera_info_topic", "/camera/camera/color/camera_info");
         declare_parameter("always_on", true);  // keep node alive even without subscribers
