@@ -49,13 +49,16 @@ void handle_uart(void* args);
 void init_uart();
 int write_to_motor(uint8_t id, double position, double speed);
 
+#pragma region Main loop
+
 extern "C" void app_main()
 {
     init_uart();
 
     try
     {
-        auto& interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_5, GPIO_NUM_4), 0,
+        // tx: 2, rx: 1
+        auto& interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_2, GPIO_NUM_1), 0,
                                                       filter_t{
                                                           .address = static_cast<flagged_address_t>(BASE_ADDRESS),
                                                           .mask = DEVICE_MASK,
@@ -91,40 +94,11 @@ extern "C" void app_main()
             printf("Error handling CAN packet: %s\n", e.what());
         }
 
-        constexpr int TILT = 1;
-        constexpr int PAN = 2;
-        constexpr int ELBOW = 3;
-
-        const int c = getchar();
-        if (c != -1)
-        {
-            switch (c)
-            {
-            case 'w':
-                write_to_motor(ELBOW, current_positions[ELBOW] + 5.0, 100.0);
-                break;
-            case 's':
-                write_to_motor(ELBOW, current_positions[ELBOW] - 5.0, 100.0);
-                break;
-            case 'a':
-                write_to_motor(TILT, current_positions[TILT] - 5.0, 100.0);
-                break;
-            case 'd':
-                write_to_motor(TILT, current_positions[TILT] + 5.0, 100.0);
-                break;
-
-            case 'q':
-                write_to_motor(PAN, current_positions[PAN] - 5.0, 100.0);
-                break;
-            case 'e':
-                write_to_motor(PAN, current_positions[PAN] + 5.0, 100.0);
-                break;
-            }
-        }
-
         DELAY(1);
     }
 }
+
+#pragma endregion Main loop
 
 #pragma region UART
 
@@ -242,7 +216,7 @@ void handle_rsbl_servo_command(const Packet& packet)
         case rsbl_parameters::SET_POS_EX:
         {
             const position_control_t position_control_cmd = position_control_t{packet.get_data()};
-            if (group_id > 2)
+            if (group_id > 3)
             {
                 printf("Received RSBL command for invalid group %d\n", group_id);
                 return;
@@ -305,13 +279,18 @@ void register_rsbl_servo(const control_board::group& group)
     packet_manager->set_transmission_config(static_cast<flagged_address_t>(address),
                                             {.generator = [=]()
                                              {
-                                                 status_1_t status{};  // TODO: get actual position
-                                                 status.position = static_cast<int16_t>(current_positions[ID]);
+
+                                                // static int posCount = 0;
+                                                // posCount++;
+                                                // printf("Generating status packet with position %d\n", posCount);
+                                                status_1_t status{};  // TODO: get actual position
+                                                // status.position = static_cast<int16_t>(posCount);
+                                                status.position = static_cast<int16_t>(current_positions[ID - 1]);
                                                  //  status.speed = static_cast<int16_t>(servo.ReadSpeed(ID));
                                                  //  status.load = static_cast<int16_t>(servo.ReadLoad(ID));
                                                  //  status.position = static_cast<int16_t>(123);
-                                                 status.speed = static_cast<int16_t>(345);
-                                                 status.load = static_cast<int16_t>(567);
+                                                 status.speed = static_cast<int16_t>(0);
+                                                 status.load = static_cast<int16_t>(0);
                                                  return status.serialize_data();
                                              },
                                              .interval = 100ms});
