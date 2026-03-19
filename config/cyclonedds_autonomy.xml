@@ -18,6 +18,7 @@
         <Peer address="192.168.2.13"/> 
          <!-- Dan's Machine -->
         <Peer address="192.168.2.50"/> 
+        <Peer address="192.168.2.109"/>
       </Peers>
     </Discovery>
   </Domain>
