@@ -337,7 +337,7 @@ namespace hi_can::parameters
     {
         namespace control
         {
-            namespace colour 
+            namespace colour
             {
                 typedef SimpleSerializable<wrapped_value_t<int32_t>> rgba_t;
             }

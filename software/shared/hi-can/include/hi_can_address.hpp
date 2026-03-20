@@ -453,10 +453,10 @@ namespace hi_can
             namespace control
             {
                 constexpr uint8_t SUBSYSTEM_ID = 0x00;
-                namespace colour 
+                namespace colour
                 {
                     constexpr uint8_t DEVICE = 0x00;
-                    enum class group 
+                    enum class group
                     {
                         RING = 0x00,
                     };
@@ -467,7 +467,7 @@ namespace hi_can
                     };
                 }
             }
-        } 
+        }
 
         // legacy addresses for old hardware
         /// @brief Namespace containing all addresses in the legacy system
