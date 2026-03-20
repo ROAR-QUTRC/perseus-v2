@@ -12,6 +12,7 @@
   onnxruntime,
   opencv,
   perseus-interfaces,
+  rcl-interfaces,
   rclcpp,
   sensor-msgs,
   std-msgs,
@@ -40,6 +41,7 @@ buildRosPackage rec {
     onnxruntime
     opencv
     perseus-interfaces
+    rcl-interfaces
     rclcpp
     sensor-msgs
     std-msgs

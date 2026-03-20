@@ -75,6 +75,7 @@ pkgs.mkShell {
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
+          rcl-interfaces
           rclcpp
           rclcpp-action
           rclcpp-components
