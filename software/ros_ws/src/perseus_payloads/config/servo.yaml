@@ -36,10 +36,9 @@ scene_collision_proximity_threshold: 0.05
 # Singularity handling
 # Lower threshold: servo slows as it approaches singularity
 # Hard stop: servo halts within singularity but can still leave
-# Leaving multiplier: much easier to escape once inside a singularity
-lower_singularity_threshold: 17.0
-hard_stop_singularity_threshold: 30.0
-leaving_singularity_threshold_multiplier: 5.0
+lower_singularity_threshold: 15.0
+hard_stop_singularity_threshold: 50.0 
+leaving_singularity_threshold_multiplier: 15.0
 # Joint limit margins
 joint_limit_margins: [0.1, 0.1, 0.1, 0.1, 0.1, 0.05]
 # Smoothing
