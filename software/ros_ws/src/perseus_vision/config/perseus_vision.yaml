@@ -43,7 +43,7 @@ cube_detector:
     # YOLOv8 is mostly sequential, so 2 is sufficient here.
     # Higher values rarely help and may cause thread contention.
     inter_op_num_threads: 2
-    depth_estimation_mode: "depth_image" # "none" | "depth_image" | "stereo"
+    depth_estimation_mode: "depth_image" # "none" | "depth_image"
     tf_output_frame: "base_link" # marker pose output frame
     depth_image:
       topic: "/camera/camera/aligned_depth_to_color/image_raw"
