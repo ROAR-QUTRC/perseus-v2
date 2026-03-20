@@ -8,6 +8,7 @@ endif()
 # ── ROS + system dependencies ─────────────────────────────────────────────────
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -66,6 +67,7 @@ target_link_libraries(cube_detector ${ORT_LIBRARIES} ${OpenCV_LIBS})
 ament_target_dependencies(
   cube_detector
   rclcpp
+  rcl_interfaces
   sensor_msgs
   std_msgs
   cv_bridge
