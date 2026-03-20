@@ -709,7 +709,7 @@ namespace hi_can::parameters::post_landing::arm::control_board
                     using namespace hi_can::addressing::post_landing::arm::control_board;
 
                     const pwm_parameters parameter_id =
-                        static_cast<pwm_parameters>(packet.get_address().address & (~hi_can::addressing::GROUP_MASK & hi_can::addressing::MASK_ALL)); // mask results in only bits for the parameters
+                        static_cast<pwm_parameters>(packet.get_address().address & (~hi_can::addressing::GROUP_MASK & hi_can::addressing::MASK_ALL));  // mask results in only bits for the parameters
                     std::vector<uint8_t> raw_data = packet.get_data();
                     switch (parameter_id)
                     {
