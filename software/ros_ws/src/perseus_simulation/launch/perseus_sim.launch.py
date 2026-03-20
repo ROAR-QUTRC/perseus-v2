@@ -86,6 +86,11 @@ def generate_launch_description():
             "launch_controller_manager": "false",
         }.items(),
     )
+    # Delay controller startup until Gazebo and ros2_control have had time to
+    # spawn the robot and expose the control interfaces. The 10 s value is a
+    # conservative fallback for slower first runs or heavier worlds; if startup
+    # sequencing changes, this is the place to tune or replace with an event-
+    # driven trigger.
     controllers_launch_delayed = TimerAction(
         period=10.0,
         actions=[controllers_launch],
