@@ -67,7 +67,7 @@ void setup()
             {
                 return rgba_t{static_cast<uint32_t>(0)}.serialize_data();
             },
-            .interval = 100ms,
+            .interval = 500ms,
             .should_transmit_immediately = true,
         });
     packet_manager->set_callback(
