@@ -463,6 +463,7 @@ namespace hi_can
                     enum class parameter
                     {
                         RGB = 0x00,
+                        STATUS = 0x01,
                     };
                 }
             }

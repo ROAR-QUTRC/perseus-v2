@@ -15,11 +15,14 @@ using namespace addressing::status_light;
 using namespace addressing::status_light::control::colour;
 using namespace hi_can::parameters::status_light::control::colour;
 
-constexpr size_t LED_COUNT = 60;
+using namespace std::chrono;
+using namespace std::chrono_literals;
+
+constexpr size_t LED_COUNT = 64;
 CRGB leds[LED_COUNT];
 CRGB last_colour = CRGB::Red;
 
-const standard_address_t light_address{
+constexpr standard_address_t DEVICE_ADDRESS{
     status_light::SYSTEM_ID,
     status_light::control::SUBSYSTEM_ID,
     status_light::control::colour::DEVICE,
@@ -29,28 +32,48 @@ std::optional<PacketManager> packet_manager;
 
 void startup_animation();
 void handle_light_data(const Packet& packet);
-void set_light_colour(const status_light::control::colour::group& group, const rgba_t& colour);
+void set_light_colour(const status_light::control::colour::parameter& param, const uint32_t& colour);
 
 void setup()
 {
     FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, LED_COUNT);
 
-    auto& interface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
-                                                  addressing::filter_t{
-                                                      .address = 0x01000000,
-                                                      .mask = hi_can::addressing::DEVICE_MASK,
-                                                  });
-    packet_manager.emplace(interface);
-    packet_manager->set_callback(
-        filter_t{static_cast<flagged_address_t>(
-            standard_address_t{light_address,
-                               static_cast<uint8_t>(group::RING),
-                               static_cast<uint8_t>(parameter::RGB)})},
-        {
-            .data_callback = handle_light_data,
-        });                                            
+    try 
+    {
+        auto& interface = TwaiInterface::get_instance(
+            std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
+            addressing::filter_t{
+                .address = static_cast<flagged_address_t>(DEVICE_ADDRESS),  // 0x03800000
+                .mask = hi_can::addressing::DEVICE_MASK,
+            });
+        packet_manager.emplace(interface);
+    }
+    catch (const std::exception& e)
+    {
+        printf(std::format("Failed to twai: {}\n", e.what()).c_str());
+    }
 
-    startup_animation();
+    packet_manager->set_transmission_config(
+        static_cast<flagged_address_t>(
+            standard_address_t{DEVICE_ADDRESS,
+                static_cast<uint8_t>(group::RING),
+                static_cast<uint8_t>(parameter::STATUS)}),
+        {
+            .generator = [=]()
+            {
+                return rgba_t{static_cast<uint32_t>(0)}.serialize_data();
+            },
+            .interval = 100ms,
+            .should_transmit_immediately = true,
+        }
+    );
+    packet_manager->set_callback(
+        filter_t{static_cast<flagged_address_t>(standard_address_t{DEVICE_ADDRESS,
+                                static_cast<uint8_t>(group::RING),
+                                static_cast<uint8_t>(parameter::RGB)})},
+        {.data_callback = handle_light_data,});                                            
+
+    // startup_animation();
 }
 
 void loop()
@@ -61,12 +84,25 @@ void loop()
 
 void handle_light_data(const Packet& packet) 
 {
+    printf("Hi");
     try
     {
+        // Print received packet info
         standard_address_t address{packet.get_address().address};
+        printf("RX: addr=0x%08X sys=%d sub=%d dev=%d grp=%d param=%d data=[",
+            (uint32_t)packet.get_address().address,
+            address.system,
+            address.subsystem,
+            address.device,
+            address.group,
+            address.parameter);
+        for (auto b : packet.get_data())
+            printf("%02X ", b);
+        printf("]\n");
+
         set_light_colour(
-            static_cast<group>(standard_address_t(packet.get_address().address).parameter),
-            rgba_t{packet.get_data()});
+            static_cast<parameter>(standard_address_t(packet.get_address().address).parameter),
+            rgba_t{packet.get_data()}.value);
     }
     catch (const std::exception& e)
     {
@@ -74,19 +110,20 @@ void handle_light_data(const Packet& packet)
     }
 }
 
-CRGB rgba_to_crgb(rgba_t colour)
+CRGB uint32_to_crgb(uint32_t raw)
 {
-    // changing rgba_t -> CRGB
-    int32_t raw = colour.value;
+    // changing int32_t -> CRGB
     return CRGB((raw >> 16) & 0xFF, (raw >> 8) & 0xFF, raw & 0xFF);
 }
 
-void set_light_colour(const status_light::control::colour::group& group, const rgba_t& colour)
+void set_light_colour(const status_light::control::colour::parameter& param, const uint32_t& colour)
 {
-    switch (group) {
-    case group::RING: {                          
-        CRGB rgb_colour = rgba_to_crgb(colour);
+
+    switch (param) {
+    case parameter::RGB: {                          
+        CRGB rgb_colour = uint32_to_crgb(colour);
         fill_solid(&leds[0], LED_COUNT, rgb_colour);
+        printf("Changed colour!");
         break;
     }
     default:
