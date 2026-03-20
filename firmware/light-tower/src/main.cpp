@@ -21,6 +21,7 @@ using namespace std::chrono_literals;
 constexpr size_t LED_COUNT = 64;
 CRGB leds[LED_COUNT];
 CRGB last_colour = CRGB::Red;
+volatile bool can_healthy = false;
 
 constexpr standard_address_t DEVICE_ADDRESS{
     status_light::SYSTEM_ID,
@@ -37,6 +38,9 @@ void set_light_colour(const status_light::control::colour::parameter& param, con
 void setup()
 {
     FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, LED_COUNT);
+
+    fill_solid(&leds[0], LED_COUNT, CRGB::Black);
+    FastLED.show();
 
     try
     {
@@ -80,12 +84,21 @@ void setup()
 void loop()
 {
     packet_manager->handle();
+
+    if (!can_healthy)
+    {
+        // flash red every 500ms
+        uint32_t t = millis();
+        bool flash_on = (t / 500) % 2 == 0;
+        fill_solid(&leds[0], LED_COUNT, flash_on ? CRGB::Red : CRGB::Black);
+        FastLED.show();
+    }
+    
     delay(1);
 }
 
 void handle_light_data(const Packet& packet)
 {
-    printf("Hi");
     try
     {
         // Print received packet info
@@ -119,10 +132,9 @@ CRGB uint32_to_crgb(uint32_t raw)
 
 void set_light_colour(const status_light::control::colour::parameter& param, const uint32_t& colour)
 {
-    switch (param)
-    {
-    case parameter::RGB:
-    {
+    can_healthy = true;
+    switch (param) {
+    case parameter::RGB: {                          
         CRGB rgb_colour = uint32_to_crgb(colour);
         fill_solid(&leds[0], LED_COUNT, rgb_colour);
         printf("Changed colour!");
@@ -132,72 +144,5 @@ void set_light_colour(const status_light::control::colour::parameter& param, con
         fill_solid(&leds[0], LED_COUNT, CRGB::Red);
         break;
     }
-    FastLED.show();
-}
-
-void startup_animation()
-{
-    // 1. Wipe red around the ring
-    for (int i = 0; i < LED_COUNT; i++)
-    {
-        leds[i] = CRGB::Red;
-        FastLED.show();
-        delay(18);
-    }
-
-    // 2. Wipe green over the top
-    for (int i = 0; i < LED_COUNT; i++)
-    {
-        leds[i] = CRGB::Green;
-        FastLED.show();
-        delay(18);
-    }
-
-    // 3. Wipe blue over the top
-    for (int i = 0; i < LED_COUNT; i++)
-    {
-        leds[i] = CRGB::Blue;
-        FastLED.show();
-        delay(18);
-    }
-
-    // 4. Rainbow spin — two full cycles
-    for (int cycle = 0; cycle < 512; cycle++)
-    {
-        for (int i = 0; i < LED_COUNT; i++)
-        {
-            leds[i] = CHSV((cycle * 3 + i * (256 / LED_COUNT)) & 0xFF, 255, 255);
-        }
-        FastLED.show();
-        delay(8);
-    }
-
-    // 5. Breathe white in and out twice
-    for (int repeat = 0; repeat < 2; repeat++)
-    {
-        for (int v = 0; v < 255; v++)
-        {
-            fill_solid(&leds[0], LED_COUNT, CHSV(0, 0, v));
-            FastLED.show();
-            delay(4);
-        }
-        for (int v = 255; v >= 0; v--)
-        {
-            fill_solid(&leds[0], LED_COUNT, CHSV(0, 0, v));
-            FastLED.show();
-            delay(4);
-        }
-    }
-
-    // 6. Fade up to last_colour (ready state)
-    for (int v = 0; v < 255; v++)
-    {
-        CRGB scaled = last_colour;
-        nscale8(&scaled, 1, v);
-        fill_solid(&leds[0], LED_COUNT, scaled);
-        FastLED.show();
-        delay(4);
-    }
-    fill_solid(&leds[0], LED_COUNT, last_colour);
     FastLED.show();
 }
