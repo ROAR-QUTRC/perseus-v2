@@ -38,7 +38,7 @@
  * Author: Rein Appeldoorn
  */
 
-#include "pointcloud_to_laserscan/laserscan_to_pointcloud_node.hpp"
+#include "pcl_to_lsr/laserscan_to_pointcloud_node.hpp"
 
 #include <chrono>
 #include <functional>
