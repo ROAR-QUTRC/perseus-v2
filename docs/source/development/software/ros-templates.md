@@ -1,4 +1,4 @@
-# ROS Templates
+# Templates
 
 :::{warning}
 Before starting to develop any code, make sure to run `nix develop` to enter the development environment.
