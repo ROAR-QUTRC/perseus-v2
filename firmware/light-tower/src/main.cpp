@@ -93,7 +93,7 @@ void loop()
         fill_solid(&leds[0], LED_COUNT, flash_on ? CRGB::Red : CRGB::Black);
         FastLED.show();
     }
-    
+
     delay(1);
 }
 
@@ -133,8 +133,10 @@ CRGB uint32_to_crgb(uint32_t raw)
 void set_light_colour(const status_light::control::colour::parameter& param, const uint32_t& colour)
 {
     can_healthy = true;
-    switch (param) {
-    case parameter::RGB: {                          
+    switch (param)
+    {
+    case parameter::RGB:
+    {
         CRGB rgb_colour = uint32_to_crgb(colour);
         fill_solid(&leds[0], LED_COUNT, rgb_colour);
         printf("Changed colour!");
