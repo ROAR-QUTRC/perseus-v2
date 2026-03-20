@@ -1,6 +1,5 @@
 #include "arm_driver/end_effector.hpp"
 
-
 EndEffector::EndEffector(const rclcpp::NodeOptions& options)
     : Node("end_effector", options)
 {
@@ -44,9 +43,9 @@ void EndEffector::_handle_write(const std_msgs::msg::UInt16MultiArray::SharedPtr
     using namespace hi_can::parameters::post_landing::arm::control_board;
 
     addressing::standard_address_t address{
-    addressing::post_landing::SYSTEM_ID,
-    addressing::post_landing::arm::SUBSYSTEM_ID,
-    DEVICE_ID};
+        addressing::post_landing::SYSTEM_ID,
+        addressing::post_landing::arm::SUBSYSTEM_ID,
+        DEVICE_ID};
     address.parameter = static_cast<uint8_t>(pwm_parameters::SET_PWM);
     pwm_t pwm_command{};
 
@@ -59,8 +58,7 @@ void EndEffector::_handle_write(const std_msgs::msg::UInt16MultiArray::SharedPtr
         address.device = static_cast<uint8_t>(group);
         _can_interface->transmit(Packet{
             static_cast<hi_can::addressing::flagged_address_t>(address),
-            pwm_command.serialize_data()
-        });
+            pwm_command.serialize_data()});
     }
 }
 
