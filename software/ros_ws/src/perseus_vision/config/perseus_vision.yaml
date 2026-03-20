@@ -21,7 +21,7 @@ aruco_detector:
     distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
 cube_detector:
   ros__parameters:
-    model_path: "cube_detector_yolob8s123.onnx" # Empty uses the model installed under the package share directory
+    model_path: "cube_detector_yolob8s.onnx" # Empty uses the model installed under the package share directory
     confidence_threshold: 0.3
     always_on: true # Set to true to keep the node running even when no subscribers are present
     publish_annotated_image: true # Whether to publish the annotated image with detections drawn on it
