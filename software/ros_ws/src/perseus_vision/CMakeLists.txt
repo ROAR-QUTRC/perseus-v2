@@ -72,6 +72,7 @@ ament_target_dependencies(
   ament_index_cpp
   geometry_msgs
   visualization_msgs
+  tf2
   tf2_ros
   tf2_geometry_msgs
   perseus_interfaces)
