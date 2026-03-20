@@ -7,176 +7,149 @@
 #include <thread>
 #include <vector>
 
-/* Terminology:
-- Band refers to one of the transparent windows on the light tower
-- Ring refers to the concentric loop of LEDs inside, usually 2 or more loops of LED strip
-*/
-
 #define DATA_PIN 15
 
-constexpr size_t HIGH_DENSITY_LEDS_PER_RING = 30;
-constexpr size_t HIGH_DENSITY_RING_COUNT = 3;
-constexpr size_t HIGH_DENSITY_LED_COUNT = HIGH_DENSITY_LEDS_PER_RING * HIGH_DENSITY_RING_COUNT;
-
-constexpr size_t LOW_DENSITY_LEDS_PER_RING = 12;
-constexpr size_t LOW_DENSITY_RING_COUNT = 2;
-constexpr size_t LOW_DENSITY_LED_COUNT = LOW_DENSITY_LEDS_PER_RING * LOW_DENSITY_RING_COUNT;
-
-constexpr size_t LED_COUNT = HIGH_DENSITY_LED_COUNT + (4 * LOW_DENSITY_LED_COUNT);
-
-CRGB leds[LED_COUNT];
-
 using namespace hi_can;
-using namespace addressing::legacy;
-using namespace addressing::legacy::power::control;
-using namespace parameters::legacy::power::control::power_bus;
-using namespace std::chrono;
-using namespace std::chrono_literals;
+using namespace addressing;
+using namespace addressing::status_light;
+using namespace addressing::status_light::control::colour;
+using namespace hi_can::parameters::status_light::control::colour;
 
-const address_t rcb_address{power::SYSTEM_ID,
-                            power::control::SUBSYSTEM_ID,
-                            static_cast<uint8_t>(device::ROVER_CONTROL_BOARD)};
+constexpr size_t LED_COUNT = 60;
+CRGB leds[LED_COUNT];
+CRGB last_colour = CRGB::Red;
 
-PowerBusParameterGroup compute_bus{rcb_address, power::control::rcb::groups::COMPUTE_BUS};
-PowerBusParameterGroup drive_bus{rcb_address, power::control::rcb::groups::DRIVE_BUS};
-PowerBusParameterGroup aux_bus{rcb_address, power::control::rcb::groups::AUX_BUS};
-PowerBusParameterGroup spare_bus{rcb_address, power::control::rcb::groups::SPARE_BUS};
+const standard_address_t light_address{
+    status_light::SYSTEM_ID,
+    status_light::control::SUBSYSTEM_ID,
+    status_light::control::colour::DEVICE,
+};
 
 std::optional<PacketManager> packet_manager;
 
-void set_ring_status(int main_ring, power_status compute, power_status drive, power_status aux, power_status spare);
+void startup_animation();
+void handle_light_data(const Packet& packet);
+void set_light_colour(const status_light::control::colour::group& group, const rgba_t& colour);
 
 void setup()
 {
     FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, LED_COUNT);
 
-    // initialise the CAN interface
     auto& interface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
                                                   addressing::filter_t{
                                                       .address = 0x01000000,
                                                       .mask = hi_can::addressing::DEVICE_MASK,
                                                   });
     packet_manager.emplace(interface);
-    packet_manager->add_group(compute_bus);
-    packet_manager->add_group(drive_bus);
-    packet_manager->add_group(aux_bus);
-    packet_manager->add_group(spare_bus);
+    packet_manager->set_callback(
+        filter_t{static_cast<flagged_address_t>(
+            standard_address_t{light_address,
+                               static_cast<uint8_t>(group::RING),
+                               static_cast<uint8_t>(parameter::RGB)})},
+        {
+            .data_callback = handle_light_data,
+        });                                            
+
+    startup_animation();
 }
 
 void loop()
 {
-    static steady_clock::time_point last_update = steady_clock::now();
-
-    // TwaiInterface::get_instance().handle();
-    packet_manager->handle(false);
-
-    // needs delay in between LED updates so they actually refresh
-    if ((steady_clock::now() - last_update) > 50ms)
-    {
-        last_update = steady_clock::now();
-        printf(std::format("Compute: {}  Drive: {}  Aux: {}  Spare: {}\n",
-                           static_cast<uint8_t>(compute_bus.get_status().status),
-                           static_cast<uint8_t>(drive_bus.get_status().status),
-                           static_cast<uint8_t>(aux_bus.get_status().status),
-                           static_cast<uint8_t>(spare_bus.get_status().status))
-                   .c_str());
-        set_ring_status(0, compute_bus.get_status().status, drive_bus.get_status().status, aux_bus.get_status().status, spare_bus.get_status().status);
-    }
-    // feed WDT
-    std::this_thread::sleep_for(1ms);
+    packet_manager->handle();
+    delay(1);
 }
 
-CRGB status_to_color(power_status status)
+void handle_light_data(const Packet& packet) 
 {
-    static bool blink_on = false;
-    static steady_clock::time_point last_blink = steady_clock::now();
-
-    if ((steady_clock::now() - last_blink) > 500ms)
+    try
     {
-        last_blink = steady_clock::now();
-        blink_on = !blink_on;
+        standard_address_t address{packet.get_address().address};
+        set_light_colour(
+            static_cast<group>(standard_address_t(packet.get_address().address).parameter),
+            rgba_t{packet.get_data()});
     }
-
-    switch (status)
+    catch (const std::exception& e)
     {
-    case power_status::OFF:
-        return CRGB::Black;
-    case power_status::ON:
-        return CRGB::Green;
-    case power_status::PRECHARGING:
-        return CRGB::Yellow;
-    case power_status::SHORT_CIRCUIT:
-        return CRGB::Red;
-    case power_status::SWITCH_FAILED:
-        return blink_on ? CRGB::OrangeRed : CRGB::Black;
-    case power_status::OVERLOAD:
-        return CRGB::Blue;
-    case power_status::FAULT:
-        return blink_on ? CRGB::Red : CRGB::Black;
+        printf(std::format("Failed to parse colour packet: {}\n", e.what()).c_str());
+    }
+}
+
+CRGB rgba_to_crgb(rgba_t colour)
+{
+    // changing rgba_t -> CRGB
+    int32_t raw = colour.value;
+    return CRGB((raw >> 16) & 0xFF, (raw >> 8) & 0xFF, raw & 0xFF);
+}
+
+void set_light_colour(const status_light::control::colour::group& group, const rgba_t& colour)
+{
+    switch (group) {
+    case group::RING: {                          
+        CRGB rgb_colour = rgba_to_crgb(colour);
+        fill_solid(&leds[0], LED_COUNT, rgb_colour);
+        break;
+    }
     default:
-        return CRGB::Black;
+        fill_solid(&leds[0], LED_COUNT, CRGB::Red);
+        break;
     }
-}
-void set_ring_status(int main_ring, power_status compute, power_status drive, power_status aux, power_status spare)
-{
-    size_t led_index = 0;
-    fill_solid(&leds[led_index], HIGH_DENSITY_LED_COUNT, CRGB::Lime);
-    led_index += HIGH_DENSITY_LED_COUNT;
-
-    fill_solid(&leds[led_index], LOW_DENSITY_LED_COUNT, status_to_color(compute));
-    led_index += LOW_DENSITY_LED_COUNT;
-    fill_solid(&leds[led_index], LOW_DENSITY_LED_COUNT, status_to_color(drive));
-    led_index += LOW_DENSITY_LED_COUNT;
-    fill_solid(&leds[led_index], LOW_DENSITY_LED_COUNT, status_to_color(aux));
-    led_index += LOW_DENSITY_LED_COUNT;
-    fill_solid(&leds[led_index], LOW_DENSITY_LED_COUNT, status_to_color(spare));
-
     FastLED.show();
 }
 
 void startup_animation()
 {
-    size_t led_index = 0;
-    fill_solid(&leds[led_index], LED_COUNT, CRGB::Black);
-    for (int i = 0; i <= LED_COUNT; i++)
-    {
-        // insert 50ms delay for smoother transition
-        leds[led_index] = CRGB::White;
+    // 1. Wipe red around the ring
+    for (int i = 0; i < LED_COUNT; i++) {
+        leds[i] = CRGB::Red;
         FastLED.show();
-        std::this_thread::sleep_for(5s / LED_COUNT);
+        delay(18);
     }
 
-    std::vector<size_t> band_sizes = {HIGH_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT, LOW_DENSITY_LED_COUNT};
-    std::vector<size_t> ring_count = {HIGH_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT, LOW_DENSITY_RING_COUNT};
-    steady_clock::duration animation_time = 5s;
-    int rotation_count = 3;
-    steady_clock::duration step_time = animation_time / (rotation_count * HIGH_DENSITY_LED_COUNT);
-    float current_pos = 0.0f;
+    // 2. Wipe green over the top
+    for (int i = 0; i < LED_COUNT; i++) {
+        leds[i] = CRGB::Green;
+        FastLED.show();
+        delay(18);
+    }
 
-    steady_clock::time_point start_time = steady_clock::now();
-    while ((steady_clock::now() - start_time < 10s))
-    {
-        size_t current_offset = 0;
-        for (size_t i = 0; i <= band_sizes.size(); i++)  // Loop over all bands
-        {
-            size_t band_size = band_sizes[i];
-            bool is_reversed = i % 2;
-            size_t rotation_offset = band_size - static_cast<size_t>(std::round(current_pos * band_size));
+    // 3. Wipe blue over the top
+    for (int i = 0; i < LED_COUNT; i++) {
+        leds[i] = CRGB::Blue;
+        FastLED.show();
+        delay(18);
+    }
 
-            fill_solid(&leds[led_index], band_size, CRGB::Black);
-
-            for (size_t j = 0; j <= ring_count[i]; j++)
-            {
-                for (size_t k = 0; k <= (band_size / ring_count[i]) / 2; k++)  // loop over each LED in a half ring (band_size/ring_count = Num of LEDs for a ring)
-                {
-                    size_t led_offset = (rotation_offset + k) % band_size;
-                    leds[led_offset + current_offset + (j * band_size / ring_count[i])] = CRGB::White;
-                }
-            }
-            current_offset += band_size;
+    // 4. Rainbow spin — two full cycles
+    for (int cycle = 0; cycle < 512; cycle++) {
+        for (int i = 0; i < LED_COUNT; i++) {
+            leds[i] = CHSV((cycle * 3 + i * (256 / LED_COUNT)) & 0xFF, 255, 255);
         }
         FastLED.show();
-        std::this_thread::sleep_for(step_time);
-        current_pos += 1.0f / HIGH_DENSITY_LED_COUNT;
+        delay(8);
     }
+
+    // 5. Breathe white in and out twice
+    for (int repeat = 0; repeat < 2; repeat++) {
+        for (int v = 0; v < 255; v++) {
+            fill_solid(&leds[0], LED_COUNT, CHSV(0, 0, v));
+            FastLED.show();
+            delay(4);
+        }
+        for (int v = 255; v >= 0; v--) {
+            fill_solid(&leds[0], LED_COUNT, CHSV(0, 0, v));
+            FastLED.show();
+            delay(4);
+        }
+    }
+
+    // 6. Fade up to last_colour (ready state)
+    for (int v = 0; v < 255; v++) {
+        CRGB scaled = last_colour;
+        nscale8(&scaled, 1, v);
+        fill_solid(&leds[0], LED_COUNT, scaled);
+        FastLED.show();
+        delay(4);
+    }
+    fill_solid(&leds[0], LED_COUNT, last_colour);
+    FastLED.show();
 }

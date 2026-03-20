@@ -333,6 +333,17 @@ namespace hi_can::parameters
         }
     }
 
+    namespace status_light
+    {
+        namespace control
+        {
+            namespace colour 
+            {
+                typedef SimpleSerializable<wrapped_value_t<int32_t>> rgba_t;
+            }
+        }
+    }
+
     namespace legacy
     {
         namespace drive
