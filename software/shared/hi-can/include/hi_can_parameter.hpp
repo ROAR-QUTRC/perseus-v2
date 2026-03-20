@@ -686,19 +686,35 @@ namespace hi_can::parameters
                 typedef SimpleSerializable<_status_1_t> status_1_t;
                 typedef SimpleSerializable<_status_2_t> status_2_t;
 
-                class ControlBoardParameterGroup : public ParameterGroup
+                class rsblParameterGroup : public ParameterGroup
                 {
                 public:
-                    ControlBoardParameterGroup(addressing::post_landing::arm::control_board::group servo_id);
+                    rsblParameterGroup(addressing::post_landing::arm::control_board::rsbl_group servo_id);
                     int16_t& get_position() { return _position.value; }
                     status_1_t& get_status_1() { return _status_1; }
                     status_2_t& get_status_2() { return _status_2; }
 
                 private:
-                    addressing::post_landing::arm::control_board::group _servo_id;
+                    addressing::post_landing::arm::control_board::rsbl_group _servo_id;
                     position_t _position{};
                     status_1_t _status_1{};
                     status_2_t _status_2{};
+                };
+                class pwmParameterGroup : public ParameterGroup
+                {
+                public:
+                    pwmParameterGroup(addressing::post_landing::arm::control_board::pwm_group pwm_device);
+                    pwm_t& get_pwm_1() { return _pwm_1; }
+                    pwm_t& get_pwm_2() { return _pwm_2; }
+                    pwm_t& get_pwm_3() { return _pwm_3; }
+                    pwm_t& get_pwm_4() { return _pwm_4; }
+
+                private:
+                    addressing::post_landing::arm::control_board::pwm_group _pwm_device;
+                    pwm_t _pwm_1{};
+                    pwm_t _pwm_2{};
+                    pwm_t _pwm_3{};
+                    pwm_t _pwm_4{};
                 };
             }
         }

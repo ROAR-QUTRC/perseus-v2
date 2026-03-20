@@ -43,24 +43,24 @@ private:
     std::optional<hi_can::PacketManager> _packet_manager;
 
     // Servo board parameter groups
-    const std::unordered_map<hi_can::addressing::post_landing::arm::control_board::group,
-                             std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
+    const std::unordered_map<hi_can::addressing::post_landing::arm::control_board::rsbl_group,
+                             std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::rsblParameterGroup>>
         PARAMETER_GROUP_MAP = {
-            {hi_can::addressing::post_landing::arm::control_board::group::ELBOW,
-             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-                 hi_can::addressing::post_landing::arm::control_board::group::ELBOW)},
-            {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN,
-             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-                 hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN)},
-            {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT,
-             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-                 hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT)},
+            {hi_can::addressing::post_landing::arm::control_board::rsbl_group::ELBOW,
+             std::make_shared<hi_can::parameters::post_landing::arm::control_board::rsblParameterGroup>(
+                 hi_can::addressing::post_landing::arm::control_board::rsbl_group::ELBOW)},
+            {hi_can::addressing::post_landing::arm::control_board::rsbl_group::SHOULDER_PAN,
+             std::make_shared<hi_can::parameters::post_landing::arm::control_board::rsblParameterGroup>(
+                 hi_can::addressing::post_landing::arm::control_board::rsbl_group::SHOULDER_PAN)},
+            {hi_can::addressing::post_landing::arm::control_board::rsbl_group::SHOULDER_TILT,
+             std::make_shared<hi_can::parameters::post_landing::arm::control_board::rsblParameterGroup>(
+                 hi_can::addressing::post_landing::arm::control_board::rsbl_group::SHOULDER_TILT)},
         };
 
     // Motor feedback
     constexpr static auto POSITION_PUBLISH_MS = std::chrono::milliseconds(100);
     constexpr static auto STATUS_REQUEST_MS = std::chrono::milliseconds(500);
-    std::vector<hi_can::addressing::post_landing::arm::control_board::group> _available_servos;
+    std::vector<hi_can::addressing::post_landing::arm::control_board::rsbl_group> _available_servos;
     uint16_t _status_message_ms = 500;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _status_publisher;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _motor_position_publisher;

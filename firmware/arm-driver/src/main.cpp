@@ -37,20 +37,20 @@ std::optional<hi_can::PacketManager> packet_manager;
 std::vector<double> current_positions(3, 0);
 
 // map of group to GPIO pin and if its an input (true) or output (false)
-std::unordered_map<control_board::group, std::pair<uint8_t, bool>> pwm_pin_map = {
-    {control_board::group::PWM_1, {6, false}},
-    {control_board::group::PWM_2, {7, false}},
-    {control_board::group::PWM_3, {8, true}},
-    {control_board::group::PWM_4, {9, true}}};
+std::unordered_map<control_board::pwm_group, std::pair<uint8_t, bool>> pwm_pin_map = {
+    {control_board::pwm_group::PWM_1, {6, false}},
+    {control_board::pwm_group::PWM_2, {7, false}},
+    {control_board::pwm_group::PWM_3, {8, true}},
+    {control_board::pwm_group::PWM_4, {9, true}}};
 
 const addressing::standard_address_t BASE_ADDRESS{
     SYSTEM_ID,
     arm::SUBSYSTEM_ID,
     arm::control_board::DEVICE_ID};
 
-void register_pwm_device(const control_board::group& group);
+void register_pwm_device(const control_board::pwm_group& group);
 void handle_pwm_data(const Packet& packet);
-void register_rsbl_servo(const control_board::group& group);
+void register_rsbl_servo(const control_board::rsbl_group& group);
 void handle_rsbl_servo_command(const Packet& packet);
 
 void handle_uart(void* args);
@@ -82,9 +82,9 @@ extern "C" void app_main()
     }
 
     // register motors
-    register_rsbl_servo(control_board::group::SHOULDER_TILT);
-    register_rsbl_servo(control_board::group::SHOULDER_PAN);
-    register_rsbl_servo(control_board::group::ELBOW);
+    register_rsbl_servo(control_board::rsbl_group::SHOULDER_TILT);
+    register_rsbl_servo(control_board::rsbl_group::SHOULDER_PAN);
+    register_rsbl_servo(control_board::rsbl_group::ELBOW);
 
     for (const auto& [group, pin_info] : pwm_pin_map)
     {
@@ -271,7 +271,7 @@ void handle_rsbl_servo_command(const Packet& packet)
     }
 }
 
-void register_rsbl_servo(const control_board::group& group)
+void register_rsbl_servo(const control_board::rsbl_group& group)
 {
     standard_address_t address{
         BASE_ADDRESS,
@@ -331,7 +331,7 @@ void handle_pwm_data(const Packet& packet)
     try
     {
         // get target device group from address
-        control_board::group group_id = static_cast<control_board::group>(
+        control_board::pwm_group group_id = static_cast<control_board::pwm_group>(
             static_cast<standard_address_t>(
                 packet.get_address().address)
                 .group);
@@ -351,7 +351,7 @@ void handle_pwm_data(const Packet& packet)
     }
 }
 
-void register_pwm_device(const control_board::group& group)
+void register_pwm_device(const control_board::pwm_group& group)
 {
     standard_address_t address{
         BASE_ADDRESS,

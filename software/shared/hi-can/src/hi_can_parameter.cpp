@@ -220,6 +220,11 @@ namespace hi_can::parameters::drive::vesc
     }
 }
 
+namespace hi_can::parameters::post_landing::arm::control_board
+{
+
+}
+
 namespace hi_can::parameters::post_landing::arm::rmd_servo
 {
     namespace send_message
@@ -539,51 +544,6 @@ namespace hi_can::parameters::post_landing::arm::rmd_servo
                     default:
                         break;
                     }
-                    // switch (command)
-                    // {
-                    // case command_t::READ_MOTOR_STATUS_1:
-                    // {
-                    //     receive_message::status_1_t status_1 = {};
-                    //     status_1.deserialize_data(raw_data);
-                    //     this->_motor_temperature = status_1.motor_temperature;
-                    //     this->_brake_status = status_1.brake_status;
-                    //     this->_voltage = status_1.voltage;
-                    //     this->_error_status = status_1.error_status;
-                    //     break;
-                    // }
-                    // case command_t::SET_TORQUE_CLOSED_LOOP:
-                    // case command_t::SET_SPEED_CLOSED_LOOP:
-                    // case command_t::SET_ABSOLUTE_POSITION_CLOSED_LOOP:
-                    // case command_t::SET_INCREMENTAL_POSITION_CLOSED_LOOP:
-                    // case command_t::READ_MOTOR_STATUS_2:
-                    // {
-                    //     receive_message::status_2_t status_2 = {};
-                    //     status_2.deserialize_data(raw_data);
-                    //     this->_motor_temperature = status_2.motor_temperature;
-                    //     this->_torque_current = status_2.torque_current;
-                    //     this->_motor_speed = status_2.motor_speed;
-                    //     this->_motor_angle = status_2.motor_angle;
-                    //     break;
-                    // }
-                    // case command_t::READ_MOTOR_STATUS_3:
-                    // {
-                    //     receive_message::status_3_t status_3 = {};
-                    //     status_3.deserialize_data(raw_data);
-                    //     this->_motor_temperature = status_3.motor_temperature;
-                    //     this->_phase_a_current = status_3.phase_a_current;
-                    //     this->_phase_b_current = status_3.phase_b_current;
-                    //     this->_phase_c_current = status_3.phase_c_current;
-                    //     break;
-                    // }
-                    // case command_t::MOTOR_STOP:
-                    // case command_t::MOTOR_SHUTDOWN:
-                    // case command_t::SYSTEM_BRAKE_RELEASE:
-                    // case command_t::SYSTEM_BRAKE_LOCK:
-                    //     // These don't have any data sent back from the servos, so do nothing
-                    //     break;
-                    // default:
-                    //     break;
-                    // }
                 },
             });
     }
@@ -683,7 +643,7 @@ namespace hi_can::parameters::post_landing::arm::rmd_servo
 }
 namespace hi_can::parameters::post_landing::arm::control_board
 {
-    ControlBoardParameterGroup::ControlBoardParameterGroup(addressing::post_landing::arm::control_board::group servo_id)
+    rsblParameterGroup::rsblParameterGroup(addressing::post_landing::arm::control_board::rsbl_group servo_id)
         : _servo_id(servo_id)
     {
         const standard_address_t address(
@@ -721,6 +681,44 @@ namespace hi_can::parameters::post_landing::arm::control_board
                         status_2_t status_2 = {};
                         status_2.deserialize_data(raw_data);
                         this->_status_2 = status_2;
+                        break;
+                    }
+                    default:
+                        break;
+                    }
+                },
+            });
+    }
+
+    pwmParameterGroup::pwmParameterGroup(addressing::post_landing::arm::control_board::pwm_group pwm_device_id)
+        : _pwm_device(pwm_device_id)
+    {
+        const standard_address_t address(
+            addressing::post_landing::SYSTEM_ID,
+            addressing::post_landing::arm::SUBSYSTEM_ID,
+            addressing::post_landing::arm::control_board::DEVICE_ID,
+            static_cast<uint8_t>(pwm_device_id));
+
+        _callbacks.emplace_back(
+            filter_t{
+                .address = flagged_address_t(address),
+                // Mask everything except for the parameter ID
+                .mask = 0xFFFFFF00,
+            },
+            PacketManager::callback_config_t{
+                .data_callback = [this](const Packet& packet)
+                {
+                    using namespace hi_can::addressing::post_landing::arm::control_board;
+
+                    const pwm_parameters parameter_id =
+                        static_cast<pwm_parameters>(packet.get_address().address & 0x000000FF);
+                    std::vector<uint8_t> raw_data = packet.get_data();
+                    switch (parameter_id)
+                    {
+                    case pwm_parameters::GET_ANALOG:
+                    {
+                        pwm_t data = {};
+                        data.deserialize_data(raw_data);
                         break;
                     }
                     default:
