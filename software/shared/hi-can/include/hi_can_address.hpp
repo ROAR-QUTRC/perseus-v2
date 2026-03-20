@@ -415,15 +415,18 @@ namespace hi_can
                     constexpr uint8_t DEVICE_ID = 0x05;
 
                     /// @brief Servo board output IDs - includes RSBL servos and PWM channels
-                    enum class group : uint8_t
+                    enum class rsbl_group : uint8_t
                     {
                         SHOULDER_TILT = 0x01,
                         SHOULDER_PAN = 0x02,
                         ELBOW = 0x03,
-                        PWM_1 = 0x04,
-                        PWM_2 = 0x05,
-                        PWM_3 = 0x06,
-                        PWM_4 = 0x07,
+                    };
+                    enum class pwm_group : uint8_t
+                    {
+                        PWM_1 = 0x00,
+                        PWM_2 = 0x01,
+                        PWM_3 = 0x02,
+                        PWM_4 = 0x03,
                     };
                     enum class pwm_parameters
                     {

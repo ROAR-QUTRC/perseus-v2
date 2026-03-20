@@ -18,6 +18,11 @@ def generate_launch_description():
         executable="arm_controller",
         output="both",
     )
+    end_effector = Node(
+        package="perseus_payloads",
+        executable="end_effector",
+        output="both",
+    )
 
     # return LaunchDescription([rmd_driver, arm_controller])
-    return LaunchDescription([rmd_driver, rsbl_driver, arm_controller])
+    return LaunchDescription([rmd_driver, rsbl_driver, arm_controller, end_effector])
