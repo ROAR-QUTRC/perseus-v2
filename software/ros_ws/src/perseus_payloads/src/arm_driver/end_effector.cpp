@@ -66,16 +66,16 @@ void EndEffector::_handle_write(const std_msgs::msg::UInt16MultiArray::SharedPtr
 void EndEffector::_handle_read()
 {
     std_msgs::msg::UInt16MultiArray msg;
-        RCLCPP_INFO(this->get_logger(), "Publishing [%u, %u, %u, %u]", 
-            this->_pwm_parameter_group->get_pwm_1().value,
-            this->_pwm_parameter_group->get_pwm_2().value,
-            this->_pwm_parameter_group->get_pwm_3().value,
-            this->_pwm_parameter_group->get_pwm_4().value);
-        msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_1().value));
-        msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_2().value));
-        msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_3().value));
-        msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_4().value));
-        _read->publish(msg);
+    RCLCPP_INFO(this->get_logger(), "Publishing [%u, %u, %u, %u]",
+                this->_pwm_parameter_group->get_pwm_1().value,
+                this->_pwm_parameter_group->get_pwm_2().value,
+                this->_pwm_parameter_group->get_pwm_3().value,
+                this->_pwm_parameter_group->get_pwm_4().value);
+    msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_1().value));
+    msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_2().value));
+    msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_3().value));
+    msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_4().value));
+    _read->publish(msg);
 }
 
 void EndEffector::_handle_can_packets()

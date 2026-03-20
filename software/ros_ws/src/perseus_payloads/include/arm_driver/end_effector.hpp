@@ -34,6 +34,6 @@ private:
     rclcpp::TimerBase::SharedPtr _packet_timer;
     std::optional<hi_can::RawCanInterface> _can_interface;
     std::optional<hi_can::PacketManager> _packet_manager;
-    const std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup> _pwm_parameter_group = 
-    std::make_shared<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup>();
+    const std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup> _pwm_parameter_group =
+        std::make_shared<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup>();
 };
