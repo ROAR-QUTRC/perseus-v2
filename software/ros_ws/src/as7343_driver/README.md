@@ -63,10 +63,10 @@ ros2 run as7343_driver as7343_node --ros-args -p gain:=128
 
 ## Services
 
-| Service                | Type                                       | Description                                |
-| ---------------------- | ------------------------------------------ | ------------------------------------------ |
-| `~/get_spectral_data`  | `perseus_interfaces/srv/GetSpectralData`   | Read 14-channel spectral data from sensor  |
-| `~/get_flicker_status` | `perseus_interfaces/srv/GetFlickerStatus`  | Read ambient light flicker detection status |
+| Service                | Type                                      | Description                                 |
+| ---------------------- | ----------------------------------------- | ------------------------------------------- |
+| `~/get_spectral_data`  | `perseus_interfaces/srv/GetSpectralData`  | Read 14-channel spectral data from sensor   |
+| `~/get_flicker_status` | `perseus_interfaces/srv/GetFlickerStatus` | Read ambient light flicker detection status |
 
 ### Calling the Spectral Data Service
 
@@ -99,7 +99,7 @@ data_valid: true
 integration_time_ms: 50.04
 gain: 256
 success: true
-message: 'OK'
+message: "OK"
 ```
 
 **C++ client example:**
@@ -177,7 +177,7 @@ hz_120_detected: false
 fd_saturation: false
 fd_valid: true
 success: true
-message: 'OK'
+message: "OK"
 ```
 
 ### Inspecting Service Definitions
