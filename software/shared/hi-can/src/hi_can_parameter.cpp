@@ -1,7 +1,5 @@
 #include "hi_can_parameter.hpp"
 
-#include <iostream>
-
 using namespace hi_can;
 using namespace addressing;
 
@@ -699,8 +697,6 @@ namespace hi_can::parameters::post_landing::arm::control_board
             addressing::post_landing::arm::SUBSYSTEM_ID,
             addressing::post_landing::arm::control_board::DEVICE_ID);
 
-        // std::cout << "mask: "  << std::hex << (hi_can::addressing::DEVICE_MASK) << std::endl;
-
         _callbacks.emplace_back(
             filter_t{
                 .address = flagged_address_t(address),
@@ -713,9 +709,8 @@ namespace hi_can::parameters::post_landing::arm::control_board
                     using namespace hi_can::addressing::post_landing::arm::control_board;
 
                     const pwm_parameters parameter_id =
-                        static_cast<pwm_parameters>(packet.get_address().address & (~hi_can::addressing::PARAM_MASK & hi_can::addressing::MASK_ALL));
+                        static_cast<pwm_parameters>(packet.get_address().address & (~hi_can::addressing::GROUP_MASK & hi_can::addressing::MASK_ALL)); // mask results in only bits for the parameters
                     std::vector<uint8_t> raw_data = packet.get_data();
-                    // std::cout << "Received packet with address: " << std::hex << packet.get_address().address << std::endl;
                     switch (parameter_id)
                     {
                     case pwm_parameters::GET_ANALOG:
@@ -723,6 +718,7 @@ namespace hi_can::parameters::post_landing::arm::control_board
                         pwm_t data = {};
                         data.deserialize_data(raw_data);
                         const pwm_group group = static_cast<pwm_group>(static_cast<standard_address_t>(packet.get_address().address).group);
+
                         switch (group)
                         {
                         case pwm_group::PWM_1:
