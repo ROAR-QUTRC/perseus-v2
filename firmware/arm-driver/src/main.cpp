@@ -1,6 +1,6 @@
+#include <Arduino.h>
 #include <driver/gpio.h>
 #include <math.h>
-#include <Arduino.h>
 
 #include <chrono>
 #include <hi_can_twai.hpp>
@@ -38,11 +38,10 @@ std::vector<double> current_positions(3, 0);
 
 // map of group to GPIO pin and if its an input (true) or output (false)
 std::unordered_map<control_board::group, std::pair<uint8_t, bool>> pwm_pin_map = {
-    {control_board::group::PWM_1, {6, false}}, 
-    {control_board::group::PWM_2, {7, false}}, 
-    {control_board::group::PWM_3, {8, true}}, 
-    {control_board::group::PWM_4, {9, true}}
-};
+    {control_board::group::PWM_1, {6, false}},
+    {control_board::group::PWM_2, {7, false}},
+    {control_board::group::PWM_3, {8, true}},
+    {control_board::group::PWM_4, {9, true}}};
 
 const addressing::standard_address_t BASE_ADDRESS{
     SYSTEM_ID,
@@ -86,8 +85,8 @@ extern "C" void app_main()
     register_rsbl_servo(control_board::group::SHOULDER_TILT);
     register_rsbl_servo(control_board::group::SHOULDER_PAN);
     register_rsbl_servo(control_board::group::ELBOW);
-    
-    for (const auto& [group, pin_info] : pwm_pin_map) 
+
+    for (const auto& [group, pin_info] : pwm_pin_map)
     {
         register_pwm_device(group);
     }
@@ -337,15 +336,14 @@ void handle_pwm_data(const Packet& packet)
                 packet.get_address().address)
                 .group);
         uint16_t pwm_value = pwm_t{packet.get_data()}.value;
-        
+
         // set pwm value
         if (!pwm_pin_map[group_id].second)
         {
             // output
-            uint16_t duty = static_cast<uint16_t>((pwm_value / 65535.0) * 255); // map 16-bit value to 8-bit duty cycle
+            uint16_t duty = static_cast<uint16_t>((pwm_value / 65535.0) * 255);  // map 16-bit value to 8-bit duty cycle
             analogWrite(pwm_pin_map[group_id].first, duty);
         }
-                
     }
     catch (const std::exception& e)
     {
@@ -364,25 +362,25 @@ void register_pwm_device(const control_board::group& group)
     {
         packet_manager->set_callback(
             filter_t{static_cast<flagged_address_t>(address)},
-            {.data_callback = handle_pwm_data });
-            pinMode(pwm_pin_map[group].first, OUTPUT);
+            {.data_callback = handle_pwm_data});
+        pinMode(pwm_pin_map[group].first, OUTPUT);
     }
     else
     {
         pinMode(pwm_pin_map[group].first, INPUT);
-        
+
         address.parameter = static_cast<uint8_t>(control_board::pwm_parameters::GET_ANALOG);
-        
+
         packet_manager->set_transmission_config(static_cast<flagged_address_t>(address),
-        {.generator = [=]()
-            {
-                pwm_t pwm{};
-                int reading = analogRead(pwm_pin_map[group].first);
-                pwm.value = static_cast<uint16_t>((reading / 255.0) * 65535); // map 8-bit reading to 16-bit value
-                return pwm.serialize_data();
-            },
-            .interval = 100ms});
-        }
+                                                {.generator = [=]()
+                                                 {
+                                                     pwm_t pwm{};
+                                                     int reading = analogRead(pwm_pin_map[group].first);
+                                                     pwm.value = static_cast<uint16_t>((reading / 255.0) * 65535);  // map 8-bit reading to 16-bit value
+                                                     return pwm.serialize_data();
+                                                 },
+                                                 .interval = 100ms});
+    }
 }
 
 #pragma endregion PWM Device
