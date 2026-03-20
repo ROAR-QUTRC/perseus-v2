@@ -13,6 +13,7 @@
   <depend>rclcpp</depend>
   <depend>backward_ros</depend>
   <depend>perseus_interfaces</depend>
+  <depend>std_srvs</depend>
   <depend>fd_wrapper</depend>
 
   <test_depend>ament_lint_auto</test_depend>

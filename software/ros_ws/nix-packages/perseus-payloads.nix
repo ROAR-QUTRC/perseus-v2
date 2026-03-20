@@ -7,6 +7,7 @@
   backward-ros,
   hi-can-raw,
   perseus-interfaces,
+  pigpio,
   rclcpp,
   sensor-msgs,
   std-msgs,
@@ -24,6 +25,7 @@ buildRosPackage rec {
     backward-ros
     hi-can-raw
     perseus-interfaces
+    pigpio
     rclcpp
     sensor-msgs
     std-msgs

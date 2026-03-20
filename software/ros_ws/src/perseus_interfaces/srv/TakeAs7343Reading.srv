@@ -1,0 +1,7 @@
+---
+perseus_interfaces/As7343Data no_led_reading
+perseus_interfaces/As7343Data white_led_reading
+perseus_interfaces/As7343Data uv_led_reading
+
+bool success
+string message

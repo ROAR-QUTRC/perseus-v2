@@ -41,8 +41,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp sensor_msgs actuator_msgs std_msgs
-                                 perseus_interfaces)
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+    rclcpp
+    sensor_msgs
+    actuator_msgs
+    std_msgs
+    perseus_interfaces
+    pigpio
+    std_srvs)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
@@ -118,14 +124,21 @@ ament_target_dependencies(bucket_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
 #Space Resources
 ament_target_dependencies(centrifuge_driver PUBLIC rclcpp sensor_msgs
                           actuator_msgs)
-ament_target_dependencies(ilmenite_station PUBLIC rclcpp actuator_msgs)
+ament_target_dependencies(
+  ilmenite_station
+  PUBLIC
+  rclcpp
+  actuator_msgs
+  pigpio
+  perseus_interfaces
+  std_srvs)
 ament_target_dependencies(ilmenite_ml PUBLIC rclcpp sensor_msgs)
 ament_target_dependencies(space_resources_controller PUBLIC rclcpp
                           actuator_msgs std_msgs perseus_interfaces)
 
 # target_link_libraries(arm_driver PUBLIC st3215_lib)
 target_link_libraries(bucket_driver PUBLIC hi_can_raw)
-#target_link_libraries(centrifuge_driver PUBLIC hi_can_raw)
+target_link_libraries(ilmenite_station PUBLIC pigpio)
 
 # Install ROS Executable
 install(TARGETS arm_driver DESTINATION lib/${PROJECT_NAME})

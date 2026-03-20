@@ -9,6 +9,7 @@
   fd-wrapper,
   perseus-interfaces,
   rclcpp,
+  std-srvs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-as7343-driver";
@@ -27,6 +28,7 @@ buildRosPackage rec {
     fd-wrapper
     perseus-interfaces
     rclcpp
+    std-srvs
   ];
   nativeBuildInputs = [ ament-cmake ];
 

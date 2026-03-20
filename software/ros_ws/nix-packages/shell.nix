@@ -71,6 +71,7 @@ pkgs.mkShell {
           opencv
           openssl
           pcl-conversions
+          pigpio
           pluginlib
           python3Packages.pygame
           python3Packages.pytest

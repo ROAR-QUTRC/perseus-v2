@@ -1,5 +1,7 @@
 #include "as7343_driver/as7343_node.hpp"
 
+#include <functional>
+#include <memory>
 #include <stdexcept>
 #include <thread>
 
@@ -95,6 +97,7 @@ namespace as7343_driver
             "~/get_flicker_status",
             std::bind(&As7343Node::_handle_get_flicker_status, this,
                       std::placeholders::_1, std::placeholders::_2));
+        _led_srv = create_service<std_srvs::srv::SetBool>("~/set_led_status", std::bind(&As7343Node::_handle_set_led_status, this, std::placeholders::_1, std::placeholders::_2));
     }
 
     bool As7343Node::_initialize_device()
@@ -241,6 +244,24 @@ namespace as7343_driver
         response->fd_saturation = data.fd_saturation;
         response->fd_valid = data.fd_valid;
 
+        response->success = true;
+        response->message = "OK";
+    }
+
+    void As7343Node::_handle_set_led_status(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response)
+    {
+        if (!_device_initialized || !_device)
+        {
+            response->success = false;
+            response->message = "AS7343 device not initialized";
+            return;
+        }
+        if (!_device->set_led(request->data, _led_current_ma))
+        {
+            response->success = false;
+            response->message = "Failed to turn on LED";
+            return;
+        }
         response->success = true;
         response->message = "OK";
     }
