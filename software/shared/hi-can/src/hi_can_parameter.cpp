@@ -1,5 +1,7 @@
 #include "hi_can_parameter.hpp"
 
+#include <iostream>
+
 using namespace hi_can;
 using namespace addressing;
 
@@ -690,35 +692,55 @@ namespace hi_can::parameters::post_landing::arm::control_board
             });
     }
 
-    pwmParameterGroup::pwmParameterGroup(addressing::post_landing::arm::control_board::pwm_group pwm_device_id)
-        : _pwm_device(pwm_device_id)
+    pwmParameterGroup::pwmParameterGroup()
     {
         const standard_address_t address(
             addressing::post_landing::SYSTEM_ID,
             addressing::post_landing::arm::SUBSYSTEM_ID,
-            addressing::post_landing::arm::control_board::DEVICE_ID,
-            static_cast<uint8_t>(pwm_device_id));
+            addressing::post_landing::arm::control_board::DEVICE_ID);
+
+        // std::cout << "mask: "  << std::hex << (hi_can::addressing::DEVICE_MASK) << std::endl;
 
         _callbacks.emplace_back(
             filter_t{
                 .address = flagged_address_t(address),
-                // Mask everything except for the parameter ID
-                .mask = 0xFFFFFF00,
+                // Mask everything except for the parameter and group ID
+                .mask = hi_can::addressing::DEVICE_MASK,
             },
             PacketManager::callback_config_t{
                 .data_callback = [this](const Packet& packet)
                 {
                     using namespace hi_can::addressing::post_landing::arm::control_board;
-
+                    
                     const pwm_parameters parameter_id =
-                        static_cast<pwm_parameters>(packet.get_address().address & 0x000000FF);
+                    static_cast<pwm_parameters>(packet.get_address().address & (~hi_can::addressing::PARAM_MASK & hi_can::addressing::MASK_ALL));
                     std::vector<uint8_t> raw_data = packet.get_data();
+                    // std::cout << "Received packet with address: " << std::hex << packet.get_address().address << std::endl;
                     switch (parameter_id)
                     {
                     case pwm_parameters::GET_ANALOG:
                     {
                         pwm_t data = {};
                         data.deserialize_data(raw_data);
+                        const pwm_group group = static_cast<pwm_group>(static_cast<standard_address_t>(packet.get_address().address).group);
+                        switch (group)
+                        {
+                        case pwm_group::PWM_1:
+                            this->_pwm_1= data;
+                            break;
+                        case pwm_group::PWM_2:
+                            this->_pwm_2 = data;
+                            break;
+                        case pwm_group::PWM_3:
+                            this->_pwm_3 = data;
+                            break;
+                        case pwm_group::PWM_4:
+                            this->_pwm_4 = data;
+                            break;
+                        default:
+                            // should never get here
+                            break;
+                        }
                         break;
                     }
                     default:

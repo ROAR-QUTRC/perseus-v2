@@ -34,18 +34,6 @@ private:
     rclcpp::TimerBase::SharedPtr _packet_timer;
     std::optional<hi_can::RawCanInterface> _can_interface;
     std::optional<hi_can::PacketManager> _packet_manager;
-    const std::map<hi_can::addressing::post_landing::arm::control_board::pwm_group, std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup>> PARAMETER_GROUP_MAP = {
-        {hi_can::addressing::post_landing::arm::control_board::pwm_group::PWM_1,
-         std::make_shared<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup>(
-             hi_can::addressing::post_landing::arm::control_board::pwm_group::PWM_1)},
-        {hi_can::addressing::post_landing::arm::control_board::pwm_group::PWM_2,
-         std::make_shared<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup>(
-             hi_can::addressing::post_landing::arm::control_board::pwm_group::PWM_2)},
-        {hi_can::addressing::post_landing::arm::control_board::pwm_group::PWM_3,
-         std::make_shared<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup>(
-             hi_can::addressing::post_landing::arm::control_board::pwm_group::PWM_3)},
-        {hi_can::addressing::post_landing::arm::control_board::pwm_group::PWM_4,
-         std::make_shared<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup>(
-             hi_can::addressing::post_landing::arm::control_board::pwm_group::PWM_4)},
-    };
+    const std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup> _pwm_parameter_group = 
+    std::make_shared<hi_can::parameters::post_landing::arm::control_board::pwmParameterGroup>();
 };
