@@ -1,5 +1,6 @@
 #include <driver/gpio.h>
 #include <math.h>
+#include <Arduino.h>
 
 #include <chrono>
 #include <hi_can_twai.hpp>
@@ -35,6 +36,14 @@ using namespace hi_can::parameters::post_landing::arm::control_board;
 std::optional<hi_can::PacketManager> packet_manager;
 std::vector<double> current_positions(3, 0);
 
+// map of group to GPIO pin and if its an input (true) or output (false)
+std::unordered_map<control_board::group, std::pair<uint8_t, bool>> pwm_pin_map = {
+    {control_board::group::PWM_1, {6, false}}, 
+    {control_board::group::PWM_2, {7, false}}, 
+    {control_board::group::PWM_3, {8, true}}, 
+    {control_board::group::PWM_4, {9, true}}
+};
+
 const addressing::standard_address_t BASE_ADDRESS{
     SYSTEM_ID,
     arm::SUBSYSTEM_ID,
@@ -53,6 +62,7 @@ int write_to_motor(uint8_t id, double position, double speed);
 
 extern "C" void app_main()
 {
+    // Initialise communications
     init_uart();
 
     try
@@ -72,11 +82,15 @@ extern "C" void app_main()
         printf("Error initializing CAN interface: %s\n", e.what());
     }
 
-    register_pwm_device(control_board::group::PWM_1);
-    register_pwm_device(control_board::group::PWM_2);
+    // register motors
     register_rsbl_servo(control_board::group::SHOULDER_TILT);
     register_rsbl_servo(control_board::group::SHOULDER_PAN);
     register_rsbl_servo(control_board::group::ELBOW);
+    
+    for (const auto& [group, pin_info] : pwm_pin_map) 
+    {
+        register_pwm_device(group);
+    }
 
     printf("Setup complete, entering main loop\n");
 
@@ -207,9 +221,6 @@ void handle_rsbl_servo_command(const Packet& packet)
                 packet.get_address().address)
                 .parameter);
 
-        printf("Target device group: %d\n", group_id);
-        printf("command: %d\n", static_cast<uint8_t>(command_type));
-
         // action command
         switch (command_type)
         {
@@ -326,15 +337,15 @@ void handle_pwm_data(const Packet& packet)
                 packet.get_address().address)
                 .group);
         uint16_t pwm_value = pwm_t{packet.get_data()}.value;
+        
         // set pwm value
-        if (group_id == control_board::group::PWM_1)
+        if (!pwm_pin_map[group_id].second)
         {
-            printf("Received PWM_1 command: %d\n", pwm_value);
+            // output
+            uint16_t duty = static_cast<uint16_t>((pwm_value / 65535.0) * 255); // map 16-bit value to 8-bit duty cycle
+            analogWrite(pwm_pin_map[group_id].first, duty);
         }
-        else if (group_id == control_board::group::PWM_2)
-        {
-            printf("Received PWM_2 command: %d\n", pwm_value);
-        }
+                
     }
     catch (const std::exception& e)
     {
@@ -344,14 +355,34 @@ void handle_pwm_data(const Packet& packet)
 
 void register_pwm_device(const control_board::group& group)
 {
-    const standard_address_t address{
+    standard_address_t address{
         BASE_ADDRESS,
         static_cast<uint8_t>(group),
         static_cast<uint8_t>(control_board::pwm_parameters::SET_PWM)};
 
-    packet_manager->set_callback(
-        filter_t{static_cast<flagged_address_t>(address)},
-        {.data_callback = handle_pwm_data});
+    if (!pwm_pin_map[group].second)
+    {
+        packet_manager->set_callback(
+            filter_t{static_cast<flagged_address_t>(address)},
+            {.data_callback = handle_pwm_data });
+            pinMode(pwm_pin_map[group].first, OUTPUT);
+    }
+    else
+    {
+        pinMode(pwm_pin_map[group].first, INPUT);
+        
+        address.parameter = static_cast<uint8_t>(control_board::pwm_parameters::GET_ANALOG);
+        
+        packet_manager->set_transmission_config(static_cast<flagged_address_t>(address),
+        {.generator = [=]()
+            {
+                pwm_t pwm{};
+                int reading = analogRead(pwm_pin_map[group].first);
+                pwm.value = static_cast<uint16_t>((reading / 255.0) * 65535); // map 8-bit reading to 16-bit value
+                return pwm.serialize_data();
+            },
+            .interval = 100ms});
+        }
 }
 
 #pragma endregion PWM Device

@@ -422,11 +422,13 @@ namespace hi_can
                         ELBOW = 0x03,
                         PWM_1 = 0x04,
                         PWM_2 = 0x05,
+                        PWM_3 = 0x06,
+                        PWM_4 = 0x07,
                     };
                     enum class pwm_parameters
                     {
                         SET_PWM = 0x00,
-                        SET_DIGITAL = 0x01,
+                        GET_ANALOG = 0x01,
                     };
                     enum class rsbl_parameters
                     {
