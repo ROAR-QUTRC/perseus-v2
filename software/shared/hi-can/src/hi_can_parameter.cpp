@@ -711,9 +711,9 @@ namespace hi_can::parameters::post_landing::arm::control_board
                 .data_callback = [this](const Packet& packet)
                 {
                     using namespace hi_can::addressing::post_landing::arm::control_board;
-                    
+
                     const pwm_parameters parameter_id =
-                    static_cast<pwm_parameters>(packet.get_address().address & (~hi_can::addressing::PARAM_MASK & hi_can::addressing::MASK_ALL));
+                        static_cast<pwm_parameters>(packet.get_address().address & (~hi_can::addressing::PARAM_MASK & hi_can::addressing::MASK_ALL));
                     std::vector<uint8_t> raw_data = packet.get_data();
                     // std::cout << "Received packet with address: " << std::hex << packet.get_address().address << std::endl;
                     switch (parameter_id)
@@ -726,7 +726,7 @@ namespace hi_can::parameters::post_landing::arm::control_board
                         switch (group)
                         {
                         case pwm_group::PWM_1:
-                            this->_pwm_1= data;
+                            this->_pwm_1 = data;
                             break;
                         case pwm_group::PWM_2:
                             this->_pwm_2 = data;
