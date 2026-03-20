@@ -8,11 +8,6 @@ as7343_node:
     frame_id: "as7343_link"
     required: false
     retry_count: 3
-    # Publish rate in Hz
-    # Note: in 18-channel mode with default integration time (~50ms per cycle,
-    # ~150ms for all 3 cycles), the maximum useful rate is approximately 6 Hz.
-    # Setting this higher than the sensor can deliver will result in repeated readings.
-    publish_rate_hz: 5.0
     # Sensor Configuration
     # Gain: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048
     # Higher gain = more sensitivity but risk of saturation

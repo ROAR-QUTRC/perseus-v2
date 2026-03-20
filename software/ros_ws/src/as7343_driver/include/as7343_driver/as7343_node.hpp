@@ -2,10 +2,9 @@
 
 #include <atomic>
 #include <memory>
-#include <perseus_interfaces/msg/flicker_status.hpp>
-#include <perseus_interfaces/msg/spectral_data.hpp>
+#include <perseus_interfaces/srv/get_flicker_status.hpp>
+#include <perseus_interfaces/srv/get_spectral_data.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/float64.hpp>
 #include <string>
 
 #include "as7343_driver/as7343_device.hpp"
@@ -17,20 +16,22 @@ namespace as7343_driver
     {
     public:
         explicit As7343Node(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
-        ~As7343Node();
+        ~As7343Node() = default;
 
     private:
         void _initialize_parameters();
-        void _initialize_publishers();
+        void _initialize_services();
         bool _initialize_device();
-        void _timer_callback();
-        void _publish_spectral_data();
-        void _publish_flicker_status();
+        void _handle_get_spectral_data(
+            const std::shared_ptr<perseus_interfaces::srv::GetSpectralData::Request> request,
+            std::shared_ptr<perseus_interfaces::srv::GetSpectralData::Response> response);
+        void _handle_get_flicker_status(
+            const std::shared_ptr<perseus_interfaces::srv::GetFlickerStatus::Request> request,
+            std::shared_ptr<perseus_interfaces::srv::GetFlickerStatus::Response> response);
 
         // Node parameters
         std::string _i2c_bus_path;
         uint8_t _device_address;
-        double _publish_rate_hz;
         std::string _frame_id;
         bool _required;
         int _retry_count;
@@ -46,14 +47,11 @@ namespace as7343_driver
 
         // ROS2 components
         std::unique_ptr<As7343Device> _device;
-        rclcpp::Publisher<perseus_interfaces::msg::SpectralData>::SharedPtr _spectral_pub;
-        rclcpp::Publisher<perseus_interfaces::msg::FlickerStatus>::SharedPtr _flicker_pub;
-        rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr _integration_time_pub;
-        rclcpp::TimerBase::SharedPtr _timer;
+        rclcpp::Service<perseus_interfaces::srv::GetSpectralData>::SharedPtr _spectral_srv;
+        rclcpp::Service<perseus_interfaces::srv::GetFlickerStatus>::SharedPtr _flicker_srv;
 
         // Status tracking
         std::atomic<bool> _device_initialized{false};
-        size_t _sequence_number{0};
     };
 
 }  // namespace as7343_driver

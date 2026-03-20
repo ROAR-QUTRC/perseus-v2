@@ -1,0 +1,30 @@
+# Request a single spectral reading from the AS7343 sensor
+---
+# Spectral channel data (raw 16-bit ADC counts)
+uint16 f1_405nm
+uint16 f2_425nm
+uint16 fz_450nm
+uint16 f3_475nm
+uint16 f4_515nm
+uint16 f5_550nm
+uint16 fy_555nm
+uint16 fxl_600nm
+uint16 f6_640nm
+uint16 f7_690nm
+uint16 f8_745nm
+uint16 nir_855nm
+uint16 vis_clear
+uint16 fd_flicker
+
+# Sensor status
+bool analog_saturation
+bool digital_saturation
+bool data_valid
+
+# Current sensor configuration
+float64 integration_time_ms
+uint16 gain
+
+# Service status
+bool success
+string message

@@ -10,7 +10,7 @@ namespace as7343_driver
         : Node("as7343_node", options)
     {
         _initialize_parameters();
-        _initialize_publishers();
+        _initialize_services();
 
         if (!_initialize_device())
         {
@@ -25,23 +25,11 @@ namespace as7343_driver
             }
         }
 
-        auto timer_period = std::chrono::milliseconds(static_cast<int>(1000.0 / _publish_rate_hz));
-        _timer = create_wall_timer(timer_period, std::bind(&As7343Node::_timer_callback, this));
-
-        RCLCPP_INFO(get_logger(), "AS7343 spectral sensor node initialized");
+        RCLCPP_INFO(get_logger(), "AS7343 spectral sensor node initialized (service mode)");
         RCLCPP_INFO(get_logger(), "  I2C bus: %s, address: 0x%02X", _i2c_bus_path.c_str(), _device_address);
         RCLCPP_INFO(get_logger(), "  Gain: %ux, Integration time: %.2f ms",
                     _device->get_gain_multiplier(), _device->get_integration_time_ms());
-        RCLCPP_INFO(get_logger(), "  SMUX mode: %d channels, Publish rate: %.1f Hz",
-                    _smux_mode, _publish_rate_hz);
-    }
-
-    As7343Node::~As7343Node()
-    {
-        if (_timer)
-        {
-            _timer->cancel();
-        }
+        RCLCPP_INFO(get_logger(), "  SMUX mode: %d channels", _smux_mode);
     }
 
     void As7343Node::_initialize_parameters()
@@ -49,7 +37,6 @@ namespace as7343_driver
         // I2C configuration
         declare_parameter("i2c_bus", "/dev/i2c-1");
         declare_parameter("device_address", 0x39);
-        declare_parameter("publish_rate_hz", 5.0);
         declare_parameter("frame_id", "as7343_link");
         declare_parameter("required", false);
         declare_parameter("retry_count", 3);
@@ -74,7 +61,6 @@ namespace as7343_driver
         }
         _device_address = static_cast<uint8_t>(device_address_int);
 
-        _publish_rate_hz = get_parameter("publish_rate_hz").as_double();
         _frame_id = get_parameter("frame_id").as_string();
         _required = get_parameter("required").as_bool();
         _retry_count = get_parameter("retry_count").as_int();
@@ -88,10 +74,6 @@ namespace as7343_driver
         _flicker_detection_enabled = get_parameter("flicker_detection_enabled").as_bool();
 
         // Validate parameters
-        if (_publish_rate_hz <= 0.0)
-        {
-            throw std::invalid_argument("Publish rate must be positive");
-        }
         if (_retry_count < 0)
         {
             throw std::invalid_argument("Retry count must be non-negative");
@@ -102,11 +84,17 @@ namespace as7343_driver
         }
     }
 
-    void As7343Node::_initialize_publishers()
+    void As7343Node::_initialize_services()
     {
-        _spectral_pub = create_publisher<perseus_interfaces::msg::SpectralData>("~/spectral_data", 10);
-        _flicker_pub = create_publisher<perseus_interfaces::msg::FlickerStatus>("~/flicker_status", 10);
-        _integration_time_pub = create_publisher<std_msgs::msg::Float64>("~/integration_time_ms", 10);
+        _spectral_srv = create_service<perseus_interfaces::srv::GetSpectralData>(
+            "~/get_spectral_data",
+            std::bind(&As7343Node::_handle_get_spectral_data, this,
+                      std::placeholders::_1, std::placeholders::_2));
+
+        _flicker_srv = create_service<perseus_interfaces::srv::GetFlickerStatus>(
+            "~/get_flicker_status",
+            std::bind(&As7343Node::_handle_get_flicker_status, this,
+                      std::placeholders::_1, std::placeholders::_2));
     }
 
     bool As7343Node::_initialize_device()
@@ -159,70 +147,54 @@ namespace as7343_driver
         return false;
     }
 
-    void As7343Node::_timer_callback()
+    void As7343Node::_handle_get_spectral_data(
+        const std::shared_ptr<perseus_interfaces::srv::GetSpectralData::Request> /*request*/,
+        std::shared_ptr<perseus_interfaces::srv::GetSpectralData::Response> response)
     {
         if (!_device_initialized || !_device)
         {
+            response->success = false;
+            response->message = "AS7343 device not initialized";
             return;
         }
 
-        _publish_spectral_data();
-
-        if (_flicker_detection_enabled)
-        {
-            _publish_flicker_status();
-        }
-    }
-
-    void As7343Node::_publish_spectral_data()
-    {
         auto reading = _device->read_spectral_data();
         if (!reading.has_value())
         {
-            RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                                 "Failed to read spectral data from AS7343");
+            response->success = false;
+            response->message = "Failed to read spectral data from AS7343";
             return;
         }
 
         const auto& data = reading.value();
 
-        perseus_interfaces::msg::SpectralData msg;
-        msg.header.stamp = now();
-        msg.header.frame_id = _frame_id;
-
         // Spectral channels
-        msg.f1_405nm = data.f1_405nm;
-        msg.f2_425nm = data.f2_425nm;
-        msg.fz_450nm = data.fz_450nm;
-        msg.f3_475nm = data.f3_475nm;
-        msg.f4_515nm = data.f4_515nm;
-        msg.f5_550nm = data.f5_550nm;
-        msg.fy_555nm = data.fy_555nm;
-        msg.fxl_600nm = data.fxl_600nm;
-        msg.f6_640nm = data.f6_640nm;
-        msg.f7_690nm = data.f7_690nm;
-        msg.f8_745nm = data.f8_745nm;
-        msg.nir_855nm = data.nir_855nm;
-        msg.vis_clear = data.vis_clear;
-        msg.fd_flicker = data.fd_flicker;
+        response->f1_405nm = data.f1_405nm;
+        response->f2_425nm = data.f2_425nm;
+        response->fz_450nm = data.fz_450nm;
+        response->f3_475nm = data.f3_475nm;
+        response->f4_515nm = data.f4_515nm;
+        response->f5_550nm = data.f5_550nm;
+        response->fy_555nm = data.fy_555nm;
+        response->fxl_600nm = data.fxl_600nm;
+        response->f6_640nm = data.f6_640nm;
+        response->f7_690nm = data.f7_690nm;
+        response->f8_745nm = data.f8_745nm;
+        response->nir_855nm = data.nir_855nm;
+        response->vis_clear = data.vis_clear;
+        response->fd_flicker = data.fd_flicker;
 
         // Status
-        msg.analog_saturation = data.analog_saturation;
-        msg.digital_saturation = data.digital_saturation;
-        msg.data_valid = data.data_valid;
+        response->analog_saturation = data.analog_saturation;
+        response->digital_saturation = data.digital_saturation;
+        response->data_valid = data.data_valid;
 
         // Current configuration
-        msg.integration_time_ms = _device->get_integration_time_ms();
-        msg.gain = _device->get_gain_multiplier();
+        response->integration_time_ms = _device->get_integration_time_ms();
+        response->gain = _device->get_gain_multiplier();
 
-        _spectral_pub->publish(msg);
-
-        // Publish integration time as a separate topic for easy monitoring
-        std_msgs::msg::Float64 time_msg;
-        time_msg.data = _device->get_integration_time_ms();
-        _integration_time_pub->publish(time_msg);
-
-        _sequence_number++;
+        response->success = true;
+        response->message = "OK";
 
         if (data.analog_saturation || data.digital_saturation)
         {
@@ -233,29 +205,44 @@ namespace as7343_driver
         }
     }
 
-    void As7343Node::_publish_flicker_status()
+    void As7343Node::_handle_get_flicker_status(
+        const std::shared_ptr<perseus_interfaces::srv::GetFlickerStatus::Request> /*request*/,
+        std::shared_ptr<perseus_interfaces::srv::GetFlickerStatus::Response> response)
     {
+        if (!_device_initialized || !_device)
+        {
+            response->success = false;
+            response->message = "AS7343 device not initialized";
+            return;
+        }
+
+        if (!_flicker_detection_enabled)
+        {
+            response->success = false;
+            response->message = "Flicker detection is not enabled";
+            return;
+        }
+
         auto reading = _device->read_flicker_status();
         if (!reading.has_value())
         {
+            response->success = false;
+            response->message = "Failed to read flicker status from AS7343";
             return;
         }
 
         const auto& data = reading.value();
 
-        perseus_interfaces::msg::FlickerStatus msg;
-        msg.header.stamp = now();
-        msg.header.frame_id = _frame_id;
+        response->detected_frequency_hz = data.detected_frequency_hz;
+        response->hz_100_valid = data.hz_100_valid;
+        response->hz_120_valid = data.hz_120_valid;
+        response->hz_100_detected = data.hz_100_detected;
+        response->hz_120_detected = data.hz_120_detected;
+        response->fd_saturation = data.fd_saturation;
+        response->fd_valid = data.fd_valid;
 
-        msg.detected_frequency_hz = data.detected_frequency_hz;
-        msg.hz_100_valid = data.hz_100_valid;
-        msg.hz_120_valid = data.hz_120_valid;
-        msg.hz_100_detected = data.hz_100_detected;
-        msg.hz_120_detected = data.hz_120_detected;
-        msg.fd_saturation = data.fd_saturation;
-        msg.fd_valid = data.fd_valid;
-
-        _flicker_pub->publish(msg);
+        response->success = true;
+        response->message = "OK";
     }
 
 }  // namespace as7343_driver

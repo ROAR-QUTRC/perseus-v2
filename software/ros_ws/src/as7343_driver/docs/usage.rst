@@ -36,8 +36,7 @@ Running the node directly
     ros2 run as7343_driver as7343_node --ros-args \
         -p i2c_bus:=/dev/i2c-1 \
         -p device_address:=57 \
-        -p gain:=256 \
-        -p publish_rate_hz:=5.0
+        -p gain:=256
 
 Note: when passing ``device_address`` on the command line, use the decimal value (57 = 0x39).
 
@@ -57,20 +56,19 @@ Check that the node is running::
     ros2 node list
     # Should show /as7343_node
 
-List the topics::
+List the services::
 
-    ros2 topic list
-    # /as7343_node/spectral_data
-    # /as7343_node/flicker_status
-    # /as7343_node/integration_time_ms
+    ros2 service list | grep as7343
+    # /as7343_node/get_spectral_data
+    # /as7343_node/get_flicker_status
 
-Echo spectral data::
+Call the spectral data service::
 
-    ros2 topic echo /as7343_node/spectral_data
+    ros2 service call /as7343_node/get_spectral_data perseus_interfaces/srv/GetSpectralData
 
-Check publish rate::
+Call the flicker status service::
 
-    ros2 topic hz /as7343_node/spectral_data
+    ros2 service call /as7343_node/get_flicker_status perseus_interfaces/srv/GetFlickerStatus
 
 Troubleshooting
 ---------------
@@ -79,7 +77,7 @@ Troubleshooting
 
 - Verify sensor is detected: ``i2cdetect -y 1``
 - Check I2C permissions (see Hardware Setup)
-- If ``required`` is ``false``, the node will start but won't publish data
+- If ``required`` is ``false``, the node will start but services will return ``success: false``
 
 **All channel values are 0**
 
@@ -92,8 +90,7 @@ Troubleshooting
 - Reduce ``atime`` or ``astep`` to shorten integration time
 - Move sensor further from bright light source
 
-**Low publish rate**
+**Service returns success: false**
 
-- In 18-channel mode, each reading takes ~3x the integration time
-- Default: ~150 ms per reading, max ~6.6 Hz
-- To increase rate: reduce ``atime``/``astep`` or switch to 6-channel mode
+- Check that the sensor was initialized (look for init log messages)
+- For flicker status, ensure ``flicker_detection_enabled`` is ``true``

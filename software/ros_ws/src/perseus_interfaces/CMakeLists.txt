@@ -65,6 +65,8 @@ rosidl_generate_interfaces(
   "msg/FlickerStatus.msg"
   "srv/IlluminanceArray.srv"
   "srv/Concentration.srv"
+  "srv/GetSpectralData.srv"
+  "srv/GetFlickerStatus.srv"
   DEPENDENCIES
   geometry_msgs
   sensor_msgs

@@ -1,16 +1,18 @@
-Published Topics
-================
+Services
+========
 
-The AS7343 node publishes the following topics. All topic names are relative to the node namespace (default: ``/as7343_node/``).
+The AS7343 node provides the following services. All service names are relative to the node namespace (default: ``/as7343_node/``).
 
-``~/spectral_data``
--------------------
+``~/get_spectral_data``
+-----------------------
 
-**Type:** ``perseus_interfaces/msg/SpectralData``
+**Type:** ``perseus_interfaces/srv/GetSpectralData``
 
-**Rate:** Configured by ``publish_rate_hz`` parameter (default 5 Hz)
+Reads the 14 unique spectral channels from the AS7343 on demand. All channel values are raw 16-bit ADC counts (0–65535). The response also includes sensor status and the current configuration.
 
-Contains the 14 unique spectral channel readings from the AS7343, plus sensor status. All channel values are raw 16-bit ADC counts (0–65535).
+**Request:** Empty (no fields).
+
+**Response:**
 
 .. list-table:: Spectral Channel Fields
    :header-rows: 1
@@ -93,16 +95,28 @@ Contains the 14 unique spectral channel readings from the AS7343, plus sensor st
      - The current integration time per cycle in milliseconds.
    * - ``gain``
      - The current gain multiplier (1–2048).
+   * - ``success``
+     - ``true`` if the reading was successful.
+   * - ``message``
+     - ``"OK"`` on success, or an error description on failure.
+
+**CLI example:**
+
+::
+
+    ros2 service call /as7343_node/get_spectral_data perseus_interfaces/srv/GetSpectralData
 
 
-``~/flicker_status``
---------------------
+``~/get_flicker_status``
+------------------------
 
-**Type:** ``perseus_interfaces/msg/FlickerStatus``
+**Type:** ``perseus_interfaces/srv/GetFlickerStatus``
 
-**Rate:** Same as ``publish_rate_hz`` (only published if ``flicker_detection_enabled`` is ``true``)
+Reads the ambient light flicker detection status (only available if ``flicker_detection_enabled`` is ``true``). Useful for identifying artificial lighting frequency.
 
-Reports ambient light flicker detection. Useful for identifying artificial lighting frequency.
+**Request:** Empty (no fields).
+
+**Response:**
 
 .. list-table:: Fields
    :header-rows: 1
@@ -124,13 +138,13 @@ Reports ambient light flicker detection. Useful for identifying artificial light
      - ``true`` if the flicker detection channel is saturated
    * - ``fd_valid``
      - ``true`` if the flicker measurement is complete and valid
+   * - ``success``
+     - ``true`` if the reading was successful.
+   * - ``message``
+     - ``"OK"`` on success, or an error description on failure.
 
+**CLI example:**
 
-``~/integration_time_ms``
--------------------------
+::
 
-**Type:** ``std_msgs/msg/Float64``
-
-**Rate:** Same as ``publish_rate_hz``
-
-Publishes the current integration time per measurement cycle in milliseconds. This is a convenience topic for monitoring — the same value is also included in the ``spectral_data`` message.
+    ros2 service call /as7343_node/get_flicker_status perseus_interfaces/srv/GetFlickerStatus
