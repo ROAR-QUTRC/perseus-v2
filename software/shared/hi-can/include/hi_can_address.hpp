@@ -421,19 +421,7 @@ namespace hi_can
                         SHOULDER_PAN = 0x02,
                         ELBOW = 0x03,
                     };
-                    enum class pwm_group : uint8_t
-                    {
-                        PWM_1 = 0x00,
-                        PWM_2 = 0x01,
-                        PWM_3 = 0x02,
-                        PWM_4 = 0x03,
-                    };
-                    enum class pwm_parameters
-                    {
-                        SET_PWM = 0x00,
-                        GET_ANALOG = 0x01,
-                    };
-                    enum class rsbl_parameters
+                    enum class rsbl_parameters : uint8_t
                     {
                         SET_POS_EX = 0x00,
                         SET_POSITION_SINGLE = 0x01,
@@ -441,6 +429,18 @@ namespace hi_can
                         SET_TORQUE_ENABLE = 0x03,
                         STATUS_1 = 0x04,
                         STATUS_2 = 0x05,
+                    };
+                    enum class pwm_group : uint8_t
+                    {
+                        PWM_1 = 0x04,
+                        PWM_2 = 0x05,
+                        PWM_3 = 0x06,
+                        PWM_4 = 0x07,
+                    };
+                    enum class pwm_parameters : uint8_t
+                    {
+                        SET_PWM = 0x00,
+                        GET_ANALOG = 0x01,
                     };
                 }
             }

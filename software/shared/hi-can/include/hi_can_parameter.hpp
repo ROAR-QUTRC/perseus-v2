@@ -703,14 +703,13 @@ namespace hi_can::parameters
                 class pwmParameterGroup : public ParameterGroup
                 {
                 public:
-                    pwmParameterGroup(addressing::post_landing::arm::control_board::pwm_group pwm_device);
+                    pwmParameterGroup();
                     pwm_t& get_pwm_1() { return _pwm_1; }
                     pwm_t& get_pwm_2() { return _pwm_2; }
                     pwm_t& get_pwm_3() { return _pwm_3; }
                     pwm_t& get_pwm_4() { return _pwm_4; }
 
                 private:
-                    addressing::post_landing::arm::control_board::pwm_group _pwm_device;
                     pwm_t _pwm_1{};
                     pwm_t _pwm_2{};
                     pwm_t _pwm_3{};

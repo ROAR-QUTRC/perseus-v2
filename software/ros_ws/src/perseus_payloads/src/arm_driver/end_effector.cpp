@@ -9,6 +9,7 @@ EndEffector::EndEffector(const rclcpp::NodeOptions& options)
     {
         _can_interface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "can0")));
         _packet_manager.emplace(_can_interface.value());
+        _packet_manager->add_group(*_pwm_parameter_group);
     }
     catch (const std::exception& e)
     {
@@ -52,7 +53,7 @@ void EndEffector::_handle_write(const std_msgs::msg::UInt16MultiArray::SharedPtr
     RCLCPP_INFO(this->get_logger(), "Received write command with %zu data bytes", msg->data.size());
 
     uint8_t index = 0;
-    for (const auto& [group, parameter_group] : PARAMETER_GROUP_MAP)
+    for (const auto& group : {pwm_group::PWM_1, pwm_group::PWM_2, pwm_group::PWM_3, pwm_group::PWM_4})
     {
         pwm_command.value = msg->data[index++];  // Expecting a single uint16 value for PWM command
         address.device = static_cast<uint8_t>(group);
@@ -64,16 +65,17 @@ void EndEffector::_handle_write(const std_msgs::msg::UInt16MultiArray::SharedPtr
 
 void EndEffector::_handle_read()
 {
-    RCLCPP_INFO(this->get_logger(), "Publishing end effector state...");
-    for (const auto& [group, parameter_group] : PARAMETER_GROUP_MAP)
-    {
-        std_msgs::msg::UInt16MultiArray msg;
-        msg.data.push_back(static_cast<uint16_t>(parameter_group->get_pwm_1().value));
-        msg.data.push_back(static_cast<uint16_t>(parameter_group->get_pwm_2().value));
-        msg.data.push_back(static_cast<uint16_t>(parameter_group->get_pwm_3().value));
-        msg.data.push_back(static_cast<uint16_t>(parameter_group->get_pwm_4().value));
+    std_msgs::msg::UInt16MultiArray msg;
+        RCLCPP_INFO(this->get_logger(), "Publishing [%u, %u, %u, %u]", 
+            this->_pwm_parameter_group->get_pwm_1().value,
+            this->_pwm_parameter_group->get_pwm_2().value,
+            this->_pwm_parameter_group->get_pwm_3().value,
+            this->_pwm_parameter_group->get_pwm_4().value);
+        msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_1().value));
+        msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_2().value));
+        msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_3().value));
+        msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_4().value));
         _read->publish(msg);
-    }
 }
 
 void EndEffector::_handle_can_packets()
