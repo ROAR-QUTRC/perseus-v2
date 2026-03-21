@@ -1,4 +1,5 @@
 #include "perseus_lights/light_controller.hpp"
+#include "perseus_lights/light_driver.hpp"
 
 #include <termios.h>
 #include <unistd.h>
@@ -6,20 +7,7 @@
 #include <iostream>
 #include <thread>
 
-namespace
-{
-    // Mirror of ring::commands from light_driver.hpp
-    enum class commands : uint8_t
-    {
-        WHITE = 0,
-        RED = 1,
-        BLUE = 2,
-        CYAN = 3,
-        GREEN = 4,
-        YELLOW = 5,
-        MAGENTA = 6,
-    };
-}
+using namespace ring;
 
 LightController::LightController(const rclcpp::NodeOptions& options)
     : Node("light_controller", options)
