@@ -11,6 +11,7 @@ final: prev: {
   perseus-input = final.callPackage ./perseus-input.nix { };
   perseus-input-config = final.callPackage ./perseus-input-config.nix { };
   perseus-interfaces = final.callPackage ./perseus-interfaces.nix { };
+  perseus-lights = final.callPackage ./perseus-lights.nix { };
   perseus-lite = final.callPackage ./perseus-lite.nix { };
   perseus-lite-description = final.callPackage ./perseus-lite-description.nix { };
   perseus-lite-hardware = final.callPackage ./perseus-lite-hardware.nix { };
