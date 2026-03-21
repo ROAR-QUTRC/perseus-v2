@@ -62,16 +62,19 @@ void LightController::_run_keyboard_loop()
     };
 
     char c{};
-    while (rclcpp::ok() && read(STDIN_FILENO, &c, 1) == 1) {
-        if (c == 'q' || c == 'Q') {
+    while (rclcpp::ok() && read(STDIN_FILENO, &c, 1) == 1)
+    {
+        if (c == 'q' || c == 'Q')
+        {
             rclcpp::shutdown();
             break;
         }
 
         auto it = key_map.find(c);
-        if (it == key_map.end()) continue;
+        if (it == key_map.end())
+            continue;
 
-        auto msg = std_msgs::msg::Int8{};  // was Byte
+        auto msg = std_msgs::msg::Int8{};            // was Byte
         msg.data = static_cast<int8_t>(it->second);  // was uint8_t
         _command_publisher->publish(msg);
 
