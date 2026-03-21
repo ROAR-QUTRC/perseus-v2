@@ -28,6 +28,8 @@ interface CameraEventType {
     devices?: string[];
     resolution?: { width: number; height: number };
     transform?: videoTransformType;
+    file?: string | null;
+    convertFromJpeg?: boolean;
     forceRestart?: boolean;
   };
 }
@@ -133,6 +135,8 @@ let gstInstances: {
   device: string;
   resolution?: { width: number; height: number };
   transform?: videoTransformType;
+  file: string | null;
+  convertFromJpeg?: boolean;
   instance: ChildProcessWithoutNullStreams;
 }[] = [];
 
@@ -140,6 +144,8 @@ const startStream = (
   device: string,
   resolution: { width: number; height: number },
   transform: videoTransformType,
+  file: string | null,
+  convertFromJpeg: boolean = false,
 ) => {
   let gstArgs = [
     "webrtcsink",
@@ -150,6 +156,9 @@ const startStream = (
   ];
   if (device === "test") gstArgs.push("videotestsrc");
   else gstArgs.push("v4l2src", `device=/dev/v4l/by-id/${device}`);
+  if (convertFromJpeg) {
+    gstArgs.push("!", "jpegdec");
+  }
   gstArgs.push(
     "!",
     `video/x-raw,width=${resolution.width},height=${resolution.height}`,
@@ -158,12 +167,35 @@ const startStream = (
   );
   if (transform !== "none")
     gstArgs.push("!", `videoflip`, `method=${transform}`);
+  // If the video should be saved:
+  if (file)
+    gstArgs.push(
+      "!",
+      "tee",
+      "name=t", // Split the pipeline (to every spot with 't.')
+      "t.",
+      "!",
+      "queue",
+      "leaky=2", // If the queue fills up, start dropping frames from the oldest first
+      "!",
+      "jpegenc",
+      "!",
+      "avimux",
+      "!",
+      "filesink",
+      `location=${file}`, // Save frames as an avi file to ${file}
+      "t.",
+      "!",
+      "queue",
+    ); // If the webrtcsink fills up the queue (it can't display the video as fast as it's coming in), it will slow down the video
   gstArgs.push("!", "ws.");
 
   gstInstances.push({
     device: device,
     resolution: resolution,
     transform: transform,
+    file: file,
+    convertFromJpeg: convertFromJpeg,
     instance: spawn("gst-launch-1.0", gstArgs),
   });
 
@@ -189,7 +221,7 @@ socket.on("camera-event", (event: CameraEventType) => {
     case "request-stream":
       // request stream
       log(
-        `Requesting stream for device: ${formatDeviceName(event.data?.devices![0])} @ ${event.data?.resolution?.width}x${event.data?.resolution?.height} with transform: ${event.data?.transform}`,
+        `Requesting stream for device: ${formatDeviceName(event.data?.devices![0])} @ ${event.data?.resolution?.width}x${event.data?.resolution?.height} with transform: ${event.data?.transform} and file: ${event.data?.file}`,
       );
       let index = gstInstances.findIndex(
         (instance) => instance.device === event.data?.devices?.[0],
@@ -203,14 +235,23 @@ socket.on("camera-event", (event: CameraEventType) => {
       let shouldStartStream = true;
 
       if (index !== -1) {
-        // If the stream is already running, check if we need to restart it
-        if (event.data.resolution && event.data.transform) {
+        if (!gstInstances[index]) {
+          gstInstances.splice(index, 1);
+        } else if (
+          event.data.resolution &&
+          event.data.transform &&
+          event.data.convertFromJpeg !== undefined
+        ) {
+          // If the stream is already running, check if we need to restart it
           if (
             event.data.resolution.width !==
               gstInstances[index].resolution?.width ||
             event.data.resolution.height !==
               gstInstances[index].resolution?.height ||
-            event.data.transform !== gstInstances[index].transform
+            event.data.transform !== gstInstances[index].transform ||
+            event.data.convertFromJpeg !==
+              gstInstances[index].convertFromJpeg ||
+            event.data.file !== gstInstances[index].file
           ) {
             // Restart the stream with new preferences
             gstInstances[index].instance.kill();
@@ -227,12 +268,16 @@ socket.on("camera-event", (event: CameraEventType) => {
       if (shouldStartStream) {
         // Validate arguments
         if (!event.data.transform) event.data.transform = "none";
+        if (event.data.convertFromJpeg === undefined)
+          event.data.convertFromJpeg = false;
         if (!event.data.resolution)
           event.data.resolution = { width: 320, height: 240 };
         startStream(
           event.data.devices![0],
           event.data.resolution,
           event.data.transform,
+          event.data.file ?? null,
+          event.data.convertFromJpeg,
         );
       }
 

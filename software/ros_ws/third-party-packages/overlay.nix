@@ -1,11 +1,13 @@
 final: prev:
 let
-  individualPackages = prev: final: {
-    ortools = final.callPackage ./ortools { };
-    livox-ros-driver2 = final.callPackage ./livox-ros-driver2 { };
+  individualPackages = individualFinal: individualPrev: {
+    livox-ros-driver2 = individualFinal.callPackage ./livox-ros-driver2 { };
+    fast-lio = individualFinal.callPackage ./fast-lio { };
+    ndt-omp-ros2 = individualFinal.callPackage ./ndt-omp-ros2 { };
   };
 in
 prev.lib.composeManyExtensions [
   individualPackages
   (import ./opennav-coverage/overlay.nix)
+  (import ./lidarslam-ros2/overlay.nix)
 ] final prev

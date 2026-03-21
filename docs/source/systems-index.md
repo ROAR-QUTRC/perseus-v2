@@ -1,6 +1,6 @@
 # Systems
 
-This section describes what systems are present on Perseus, what they are and what they do. For information how to develop each of these systems check their corresponding pages in the <project:development-index.md> section.
+This section describes what systems are present on Perseus, what they are and what they do. For information how to develop each of these systems check their corresponding pages in this section.
 
 Fundamentally, the rover is split into two main sub-systems: Hardware, and Software.
 The [_software_ system](project:/systems/software-index.md) lays out how the _code_ interacts with itself and its environment, as well as which bits do what.
@@ -14,9 +14,7 @@ Whilst those two documents contain the majority of the information you'll need d
 - You've probably noticed by now that we use Nix to manage all our software - this gets complicated quickly and there's only so much that source comments can do, so it's explained [here](project:/systems/nix.md)
 
 If you're just looking for a high-level overview, this diagram contains the basics of the information flow between modules (as well as some power information):
-![Architecture](generated/system_architecture.drawio.svg){.has-dark-opt}
-
-Finally, if you're wondering about a specific payload, those get their own [section](project:/subsystems.md).
+![Architecture](generated/system-architecture.drawio.svg){.has-dark-opt}
 
 ```{toctree}
 :maxdepth: 1

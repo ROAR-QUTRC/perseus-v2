@@ -14,7 +14,7 @@ from exhale import utils
 
 project = "Perseus V2"
 author = "ROAR Team"
-copyright = f"2024, {author}"
+copyright = f"%Y, {author}"
 
 # General configuration
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -33,6 +33,8 @@ extensions = [
     "sphinx_immaterial.graphviz",  # graphviz support with theme integration
     "sphinx_tippy",  # preview tooltips on link hover
 ]
+
+manpages_url = "https://manpages.debian.org/{path}"
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -70,10 +72,10 @@ def exhale_kind_overrides(kind):
 
 exhale_args = {
     # Required arguments
-    "containmentFolder": "./generated",
+    "containmentFolder": "./generated/exhale",
     "rootFileName": "index.rst",
     "rootFileTitle": "Generated Documentation",
-    "doxygenStripFromPath": "../../software",
+    "doxygenStripFromPath": "../..",
     # Optional arguments
     "createTreeView": True,
     # configure Exhale to run doxygen if it's available AND we haven't already generated output (speeds up dev shell builds a bit)
@@ -83,23 +85,38 @@ exhale_args = {
     # dedent so we can provide multiline string
     "exhaleDoxygenStdin": dedent(
         """
-        INPUT=./../../software
+        INPUT= ./../../software ./../../firmware/components
         RECURSIVE = YES
-        EXCLUDE_PATTERNS = *.md setup.py __init__.py __pycache__* */tests/* */test/* */launch/*
+        EXCLUDE_PATTERNS = */tests/* */test/* */launch/*
+        EXCLUDE_PATTERNS += */build/*
+        EXCLUDE_PATTERNS += *.py __pycache__*
+        EXCLUDE_PATTERNS += */main.cpp
+        EXCLUDE_PATTERNS += *.md
+        # packages that don't need documentation (most of them)
+        # and are problematic to generate docs for (a few of them)
+        EXCLUDE_PATTERNS += */src/perseus_bt_nodes/* */src/perseus_hardware/*
         EXCLUDE_SYMLINKS = YES
 
-        # we do NOT want program listings as that exposes the source code
-        XML_PROGRAMLISTING = NO
+        BUILTIN_STL_SUPPORT = YES
 
         # generate graphs
         HAVE_DOT = YES
 
         # exclude main functions
         EXCLUDE_SYMBOLS += main
+
+        PREDEFINED += DOXYGEN_SHOULD_SKIP_THIS
+        SKIP_FUNCTION_MACROS = YES
         """
     ),
     # Page layout configuration
     "contentsDirectives": False,
+    "pageLevelConfigMeta": dedent(
+        """
+        .. highlight:: none
+
+        """
+    ),
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "customSpecificationsMapping": utils.makeCustomSpecificationsMapping(
@@ -122,7 +139,7 @@ myst_enable_extensions = [
     "replacements",
     "strikethrough",
 ]
-myst_heading_anchors = 4  # auto-generated heading anchors (slugs)
+myst_heading_anchors = 5  # auto-generated heading anchors (slugs)
 suppress_warnings = ["myst.strikethrough"]
 
 ros_distro = os.environ.get("ROS_DISTRO", "jazzy")
@@ -159,6 +176,13 @@ todo_include_todos = True
 
 # Options for markup
 primary_domain = "cpp"
+rst_prolog = """
+.. role:: py-inline(code)
+   :language: python
+
+.. role:: cpp-inline(code)
+   :language: cpp
+"""
 highlight_language = "cpp"
 
 # Options for HTML output
@@ -248,16 +272,35 @@ object_description_options = [
     ("std:option", dict(toc_icon_class="sub-data", toc_icon_text="O")),
 ]
 
+# markup options
+primary_domain = "cpp"
 
 # Output configuration/extensions/Sphinx python configuration
 nitpicky = True
 nitpick_ignore_regex = {
-    # ignore not being able to find STL documentation
+    # not being able to find STL documentation
     ("cpp:identifier", "std.*"),
-    # unfortunately the same goes for hi_can
+    # or ROS things
+    ("cpp:identifier", "rclcpp.*"),
+    # silence {expr} role namespace warnings
     ("cpp:identifier", "hi_can.*"),
-    ("cpp:identifier", "addressing"),
+    ("cpp:identifier", "addressing.*"),
+    ("cpp:identifier", "parameters.*"),
 }
+
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".txt": "markdown",
+    ".md": "markdown",
+}
+
+suppress_warnings = [
+    # unfortunately Exhale generates a LOT of "could not find ..." docutils warnings,
+    # so we need to silence it :(
+    "docutils",
+    # and tippy Wikipedia references fail for some reason
+    "tippy.wiki",
+]
 
 
 def index_figures(app):
@@ -301,12 +344,25 @@ def add_graph_fix_css(app, pagename, templatename, context, doctree):
         app.add_css_file("css/graph-fix.css")
 
 
+# silence missing reference warnings (mostly namespaces) from generated code
+def silence_warnings(app, domain, node):
+    is_cpp = domain.name == "cpp" or domain.name == "std"
+    if not is_cpp:
+        return False
+
+    is_generated = node["refdoc"].startswith("generated/exhale")
+    if is_generated:
+        return True
+
+
 def setup(app):
     # run the figures hack
     app.connect("builder-inited", index_figures)
     # add graph fix CSS to generated documentation
     # Fixes background fill colours on the "this class" node in class/collaboration diagrams
     app.connect("html-page-context", add_graph_fix_css)
+
+    app.connect("warn-missing-reference", silence_warnings)
 
     # add custom confval and option objects
     app.add_object_type(
