@@ -22,24 +22,31 @@ void LightDriver::_control_callback(const std_msgs::msg::Int8::SharedPtr msg)
     {
     case commands::WHITE:
         colour = colours::WHITE;
+        RCLCPP_INFO(this->get_logger(), "[Colour] White");
         break;
     case commands::RED:
         colour = colours::RED;
+        RCLCPP_INFO(this->get_logger(), "[Colour] Red");
         break;
     case commands::BLUE:
         colour = colours::BLUE;
+        RCLCPP_INFO(this->get_logger(), "[Colour] Blue");
         break;
     case commands::CYAN:
         colour = colours::CYAN;
+        RCLCPP_INFO(this->get_logger(), "[Colour] Cyan");
         break;
     case commands::GREEN:
         colour = colours::GREEN;
+        RCLCPP_INFO(this->get_logger(), "[Colour] Green");
         break;
     case commands::YELLOW:
         colour = colours::YELLOW;
+        RCLCPP_INFO(this->get_logger(), "[Colour] Yellow");
         break;
     case commands::MAGENTA:
         colour = colours::MAGENTA;
+        RCLCPP_INFO(this->get_logger(), "[Colour] Magenta");
         break;
     default:
         RCLCPP_WARN(this->get_logger(), "Unknown light command: %d", msg->data);

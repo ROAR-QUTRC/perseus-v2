@@ -11,7 +11,7 @@ namespace ring
     {
         WHITE = 0x00FFFFFF,
         RED = 0x00FF0000,
-        BLUE = 0x00FF0000,
+        BLUE = 0x000000FF,
         CYAN = 0x00FFFF00,
         GREEN = 0x0000FF00,
         YELLOW = 0x0000FFFF,
