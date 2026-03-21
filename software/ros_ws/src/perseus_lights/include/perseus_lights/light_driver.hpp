@@ -3,7 +3,7 @@
 #include <chrono>
 #include <hi_can_raw.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/byte.hpp>
+#include <std_msgs/msg/int8.hpp>
 
 namespace ring
 {
@@ -35,10 +35,10 @@ public:
     explicit LightDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
 private:
-    void _control_callback(const std_msgs::msg::Byte::SharedPtr msg);
+    void _control_callback(const std_msgs::msg::Int8::SharedPtr msg);
     void _write_lights(ring::colours colour);
 
     hi_can::RawCanInterface _can_interface;
 
-    rclcpp::Subscription<std_msgs::msg::Byte>::SharedPtr _command_subscription;
+    rclcpp::Subscription<std_msgs::msg::Int8>::SharedPtr _command_subscription;
 };

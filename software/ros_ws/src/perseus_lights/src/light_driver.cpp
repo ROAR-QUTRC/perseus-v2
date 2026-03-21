@@ -8,11 +8,11 @@ LightDriver::LightDriver(const rclcpp::NodeOptions& options)
     : Node("light_driver", options)
 {
     _can_interface = hi_can::RawCanInterface(this->declare_parameter("can_bus", "can0"));
-    _command_subscription = this->create_subscription<std_msgs::msg::Byte>("light_status", 10, std::bind(&LightDriver::_control_callback, this, std::placeholders::_1));
+    _command_subscription = this->create_subscription<std_msgs::msg::Int8>("light_status", 10, std::bind(&LightDriver::_control_callback, this, std::placeholders::_1));
     RCLCPP_INFO(this->get_logger(), "Light Status Driver node initialised");
 }
 
-void LightDriver::_control_callback(const std_msgs::msg::Byte::SharedPtr msg)
+void LightDriver::_control_callback(const std_msgs::msg::Int8::SharedPtr msg)
 {
     using namespace ring;
 
