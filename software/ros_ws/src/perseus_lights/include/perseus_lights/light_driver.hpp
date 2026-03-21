@@ -12,9 +12,9 @@ namespace ring
         WHITE = 0x00FFFFFF,
         RED = 0x00FF0000,
         BLUE = 0x000000FF,
-        CYAN = 0x00FFFF00,
+        CYAN = 0x0000FFFF,
         GREEN = 0x0000FF00,
-        YELLOW = 0x0000FFFF,
+        YELLOW = 0x00FFFF00,
         MAGENTA = 0x00FF00FF,
     };
     enum class commands : uint8_t
