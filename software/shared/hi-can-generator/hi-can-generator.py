@@ -138,20 +138,25 @@ def main():
     par_bits = int(systems["PARAMETER_ADDRESS_BITS"])
 
     for sys_id, sys_val in systems.items():
-        if not isinstance(sys_id, int): continue
+        if not isinstance(sys_id, int):
+            continue
         sys_name = sys_val["SYSTEM_NAME"]
 
         for sub_id, sub_val in sys_val.items():
-            if not isinstance(sub_id, int): continue
+            if not isinstance(sub_id, int):
+                continue
             sub_name = sub_val["SUBSYSTEM_NAME"]
 
             for dev_id, dev_val in sub_val.items():
-                if not isinstance(dev_id, int): continue
+                if not isinstance(dev_id, int):
+                    continue
                 dev_name = dev_val.get("DEVICE_NAME") or dev_val.get("DEVICES")
-                if dev_name is None: continue
+                if dev_name is None:
+                    continue
 
                 for grp_id, grp_val in dev_val.items():
-                    if not isinstance(grp_id, int): continue
+                    if not isinstance(grp_id, int):
+                        continue
                     grp_name = grp_val["GROUP_NAME"]
                     has_parameter = False
 
@@ -159,7 +164,8 @@ def main():
                         if not isinstance(par_id, int) or not isinstance(par_val, dict):
                             continue
                         par_name = par_val.get("PARAMETER_NAME")
-                        if par_name is None: continue
+                        if par_name is None:
+                            continue
                         
                         has_parameter = True
                         can_id = (
