@@ -4,7 +4,9 @@
   buildRosPackage,
   ament-cmake,
   hi-can-raw,
+  nav-msgs,
   rclcpp,
+  sensor-msgs,
   std-msgs,
 }:
 buildRosPackage rec {
@@ -17,7 +19,9 @@ buildRosPackage rec {
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
     hi-can-raw
+    nav-msgs
     rclcpp
+    sensor-msgs
     std-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
