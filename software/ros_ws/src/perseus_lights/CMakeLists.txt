@@ -38,11 +38,11 @@ file(GLOB_RECURSE LIGHT_DRIVER_CODE_SOURCES src/*.cpp)
 add_executable(light_driver ${LIGHT_DRIVER_CODE_SOURCES})
 
 # Add include dirs for hpp files
-target_include_directories(light_driver 
+target_include_directories(light_driver
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add dependencies for exec
-ament_target_dependencies(light_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS} 
+ament_target_dependencies(light_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           std_msgs)
 
 target_link_libraries(light_driver PUBLIC hi_can_raw)
@@ -52,7 +52,6 @@ install(TARGETS light_driver DESTINATION lib/${PROJECT_NAME})
 install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
-  OPTIONAL
-)
+  OPTIONAL)
 
 ament_package()
