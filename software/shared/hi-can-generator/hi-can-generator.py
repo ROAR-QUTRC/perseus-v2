@@ -132,7 +132,6 @@ def main():
 
     # Build flat lookup table
     flat_lut = {}
-    sys_bits = int(systems["SYSTEM_ADDRESS_BITS"])
     sub_bits = int(systems["SUBSYSTEM_ADDRESS_BITS"])
     dev_bits = int(systems["DEVICE_ADDRESS_BITS"])
     grp_bits = int(systems["GROUP_ADDRESS_BITS"])
