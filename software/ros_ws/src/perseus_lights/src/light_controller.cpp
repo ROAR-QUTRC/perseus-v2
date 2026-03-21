@@ -24,7 +24,7 @@ namespace
 LightController::LightController(const rclcpp::NodeOptions& options)
     : Node("light_controller", options)
 {
-    _command_publisher = this->create_publisher<std_msgs::msg::Byte>("light_status", 10);
+    _command_publisher = this->create_publisher<std_msgs::msg::Int8>("light_status", 10);
 
     std::cout << "Light Controller - press a key to change colour:\n"
               << "  1  White\n"
@@ -62,29 +62,22 @@ void LightController::_run_keyboard_loop()
     };
 
     char c{};
-    while (rclcpp::ok() && read(STDIN_FILENO, &c, 1) == 1)
-    {
-        if (c == 'q' || c == 'Q')
-        {
-            RCLCPP_INFO(this->get_logger(), "Quit requested");
+    while (rclcpp::ok() && read(STDIN_FILENO, &c, 1) == 1) {
+        if (c == 'q' || c == 'Q') {
             rclcpp::shutdown();
             break;
         }
 
         auto it = key_map.find(c);
-        if (it == key_map.end())
-        {
-            continue;  // ignore unrecognised keys
-        }
+        if (it == key_map.end()) continue;
 
-        auto msg = std_msgs::msg::Byte{};
-        msg.data = static_cast<uint8_t>(it->second);
+        auto msg = std_msgs::msg::Int8{};  // was Byte
+        msg.data = static_cast<int8_t>(it->second);  // was uint8_t
         _command_publisher->publish(msg);
 
-        RCLCPP_INFO(this->get_logger(), "Published command: %u", msg.data);
+        RCLCPP_INFO(this->get_logger(), "Published command: %d", msg.data);
     }
 
-    // Restore terminal before thread exits
     tcsetattr(STDIN_FILENO, TCSANOW, &old_to);
 }
 
