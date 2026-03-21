@@ -32,23 +32,31 @@ if(NOT hi_can_raw_FOUND)
 endif()
 
 # Find execs
-file(GLOB_RECURSE LIGHT_DRIVER_CODE_SOURCES src/*.cpp)
+file(GLOB_RECURSE LIGHT_DRIVER_CODE_SOURCES src/light_driver.cpp)
+file(GLOB_RECURSE LIGHT_CONTROLLER_CODE_SOURCES src/light_controller.cpp)
 
 # Add exec targets
 add_executable(light_driver ${LIGHT_DRIVER_CODE_SOURCES})
+add_executable(light_controller ${LIGHT_CONTROLLER_CODE_SOURCES})
+
 
 # Add include dirs for hpp files
 target_include_directories(light_driver
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(light_controller 
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Add dependencies for exec
 ament_target_dependencies(light_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
+                          std_msgs)
+ament_target_dependencies(light_controller PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS} 
                           std_msgs)
 
 target_link_libraries(light_driver PUBLIC hi_can_raw)
 
 # Install ROS things
 install(TARGETS light_driver DESTINATION lib/${PROJECT_NAME})
+install(TARGETS light_controller DESTINATION lib/${PROJECT_NAME})
 install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
