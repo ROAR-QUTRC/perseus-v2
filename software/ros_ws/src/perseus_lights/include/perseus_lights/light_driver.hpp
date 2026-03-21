@@ -17,13 +17,14 @@ namespace ring
         YELLOW = 0x00FFFF00,
         MAGENTA = 0xFF00FF00,
     };
-    enum class commands : uint8_t {
-        WHITE =   0,
-        RED =     1,
-        BLUE =    2,
-        CYAN =    3,
-        GREEN =   4,
-        YELLOW =  5,
+    enum class commands : uint8_t
+    {
+        WHITE = 0,
+        RED = 1,
+        BLUE = 2,
+        CYAN = 3,
+        GREEN = 4,
+        YELLOW = 5,
         MAGENTA = 6,
     };
 }

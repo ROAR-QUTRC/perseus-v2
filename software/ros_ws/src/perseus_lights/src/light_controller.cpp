@@ -1,18 +1,22 @@
 #include "perseus_lights/light_controller.hpp"
+
 #include <termios.h>
 #include <unistd.h>
+
 #include <iostream>
 #include <thread>
 
-namespace {
+namespace
+{
     // Mirror of ring::commands from light_driver.hpp
-    enum class commands : uint8_t {
-        WHITE   = 0,
-        RED     = 1,
-        BLUE    = 2,
-        CYAN    = 3,
-        GREEN   = 4,
-        YELLOW  = 5,
+    enum class commands : uint8_t
+    {
+        WHITE = 0,
+        RED = 1,
+        BLUE = 2,
+        CYAN = 3,
+        GREEN = 4,
+        YELLOW = 5,
         MAGENTA = 6,
     };
 }
@@ -41,11 +45,11 @@ void LightController::_run_keyboard_loop()
 {
     // Put terminal in raw (non-canonical, no-echo) mode so each keypress
     // is delivered immediately without waiting for Enter.
-    termios old_tio{}, new_tio{};
-    tcgetattr(STDIN_FILENO, &old_tio);
-    new_tio = old_tio;
-    new_tio.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+    termios old_to{}, new_to{};
+    tcgetattr(STDIN_FILENO, &old_to);
+    new_to = old_to;
+    new_to.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_to);
 
     const std::unordered_map<char, commands> key_map = {
         {'1', commands::WHITE},
@@ -58,15 +62,18 @@ void LightController::_run_keyboard_loop()
     };
 
     char c{};
-    while (rclcpp::ok() && read(STDIN_FILENO, &c, 1) == 1) {
-        if (c == 'q' || c == 'Q') {
+    while (rclcpp::ok() && read(STDIN_FILENO, &c, 1) == 1)
+    {
+        if (c == 'q' || c == 'Q')
+        {
             RCLCPP_INFO(this->get_logger(), "Quit requested");
             rclcpp::shutdown();
             break;
         }
 
         auto it = key_map.find(c);
-        if (it == key_map.end()) {
+        if (it == key_map.end())
+        {
             continue;  // ignore unrecognised keys
         }
 
@@ -78,16 +85,19 @@ void LightController::_run_keyboard_loop()
     }
 
     // Restore terminal before thread exits
-    tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_to);
 }
 
 int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
-    try {
+    try
+    {
         auto node = std::make_shared<LightController>();
         rclcpp::spin(node);
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         RCLCPP_ERROR(rclcpp::get_logger("main"), "Error: %s", e.what());
         return 1;
     }
