@@ -15,11 +15,7 @@ def parse_enum_class(enum_class, key):
 
 
 def get_enum_class(token, name):
-    enum_string = (
-        token.split(f"enum class {name}")[1]
-        .split("{")[1]
-        .split("}")[0]
-    )
+    enum_string = token.split(f"enum class {name}")[1].split("{")[1].split("}")[0]
     return enum_string
 
 
@@ -32,7 +28,9 @@ def main():
     arguments = sys.argv
     argc = len(arguments)
     if argc < 2:
-        raise Exception(f"ERROR: Please supply the file path of hi_can_address.hpp. Args are: {arguments}")
+        raise Exception(
+            f"ERROR: Please supply the file path of hi_can_address.hpp. Args are: {arguments}"
+        )
 
     hi_can_address_filepath = sys.argv[1]
     output_json_filepath = sys.argv[2] if argc >= 3 else None
@@ -43,15 +41,20 @@ def main():
         with open(hi_can_address_filepath, "r") as hi_can_address_file:
             hi_can_address_content = hi_can_address_file.read()
     except Exception as err:
-        print(f"ERROR while opening and reading hi_can_address.hpp at {hi_can_address_filepath}: {err}")
+        print(
+            f"ERROR while opening and reading hi_can_address.hpp at {hi_can_address_filepath}: {err}"
+        )
         sys.exit(1)
 
     if hi_can_address_content == "":
         raise Exception("ERROR hi_can_address.hpp file is empty")
 
-
     hi_can_address_content_no_comments = re.sub(
-        r"//.*?$|/\*.*?\*/", "", hi_can_address_content, flags=re.MULTILINE | re.DOTALL # use regex to remove single line and multi-line comments
+        r"//.*?$|/\*.*?\*/",
+        "",
+        hi_can_address_content,
+        flags=re.MULTILINE
+        | re.DOTALL,  # use regex to remove single line and multi-line comments
     )
 
     hi_can_address_tokenized = hi_can_address_content_no_comments.split("namespace ")
@@ -68,38 +71,53 @@ def main():
         elif " GROUP_ID" in token:
             group_name = token.split()[0]
             group_id = get_id(token, "GROUP")
-            system[system_id][subsystem_id][device_id].update({group_id: {"GROUP_NAME": group_name}})
+            system[system_id][subsystem_id][device_id].update(
+                {group_id: {"GROUP_NAME": group_name}}
+            )
             if "enum class parameter" in token:
-                parameters = parse_enum_class(get_enum_class(token, "parameter"), "PARAMETERS")
+                parameters = parse_enum_class(
+                    get_enum_class(token, "parameter"), "PARAMETERS"
+                )
                 system[system_id][subsystem_id][device_id][group_id].update(parameters)
         elif " DEVICE_ID" in token:
             device_name = token.split()[0]
             device_id = get_id(token, "DEVICE")
-            system[system_id][subsystem_id].update({device_id: {"DEVICE_NAME": device_name}})
+            system[system_id][subsystem_id].update(
+                {device_id: {"DEVICE_NAME": device_name}}
+            )
             if "enum class group" in token:
                 groups = parse_enum_class(get_enum_class(token, "group"), "GROUP_NAME")
                 system[system_id][subsystem_id][device_id].update(groups)
                 parameters_for_groups = {}
-                
+
                 # Check for multiple parameter enums within the device namespace
                 if token.split("enum class group")[1].find("enum class ") != -1:
-                    for parameter_enum in token.split("enum class group")[1].split("enum class ")[1:]:
-                        parameters = parse_enum_class(parameter_enum.split("{")[1].split("}")[0], "PARAMETER_NAME")
+                    for parameter_enum in token.split("enum class group")[1].split(
+                        "enum class "
+                    )[1:]:
+                        parameters = parse_enum_class(
+                            parameter_enum.split("{")[1].split("}")[0], "PARAMETER_NAME"
+                        )
                         parameter_name = parameter_enum.split()[0].upper()
                         parameters_for_groups[parameter_name.split("_")[0]] = parameters
 
                     # Generalised Parameter Matching
                     for key, group in groups.items():
                         group_prefix = group["GROUP_NAME"].upper().split("_")[0]
-                        
+
                         # Match prefix (e.g., BANK_1 -> BANK)
                         if group_prefix in parameters_for_groups:
                             group.update(parameters_for_groups[group_prefix])
                         # Match specific actuator mappings (e.g., LIFT/TILT -> ACTUATOR)
-                        elif group_prefix in ["LIFT", "TILT", "JAWS"] and "ACTUATOR" in parameters_for_groups:
+                        elif (
+                            group_prefix in ["LIFT", "TILT", "JAWS"]
+                            and "ACTUATOR" in parameters_for_groups
+                        ):
                             group.update(parameters_for_groups["ACTUATOR"])
                         # Handle Magnet shorthand
-                        elif group_prefix == "MAGN" and "MAGNET" in parameters_for_groups:
+                        elif (
+                            group_prefix == "MAGN" and "MAGNET" in parameters_for_groups
+                        ):
                             group.update(parameters_for_groups["MAGNET"])
 
                 system[system_id][subsystem_id][device_id].update(groups)
@@ -109,8 +127,12 @@ def main():
             system[system_id].update({subsystem_id: {"SUBSYSTEM_NAME": subsystem_name}})
             if system_name == "drive":
                 device_id = 0
-                system[system_id][subsystem_id].update({device_id: {"DEVICE_NAME": "vesc"}})
-                groups = parse_enum_class(get_enum_class(token, "command_id"), "GROUP_NAME")
+                system[system_id][subsystem_id].update(
+                    {device_id: {"DEVICE_NAME": "vesc"}}
+                )
+                groups = parse_enum_class(
+                    get_enum_class(token, "command_id"), "GROUP_NAME"
+                )
                 system[system_id][subsystem_id][device_id].update(groups)
         elif " SYSTEM_ID" in token:
             if system_id != -1:
@@ -120,15 +142,25 @@ def main():
             system = {system_id: {"SYSTEM_NAME": system_name}}
         else:
             if "SYSTEM_ADDRESS_BITS" in token:
-                systems["SYSTEM_ADDRESS_BITS"] = token.split("SYSTEM_ADDRESS_BITS = ")[1].split(";")[0]
+                systems["SYSTEM_ADDRESS_BITS"] = token.split("SYSTEM_ADDRESS_BITS = ")[
+                    1
+                ].split(";")[0]
             if "SUBSYSTEM_ADDRESS_BITS" in token:
-                systems["SUBSYSTEM_ADDRESS_BITS"] = token.split("SUBSYSTEM_ADDRESS_BITS = ")[1].split(";")[0]
+                systems["SUBSYSTEM_ADDRESS_BITS"] = token.split(
+                    "SUBSYSTEM_ADDRESS_BITS = "
+                )[1].split(";")[0]
             if "DEVICE_ADDRESS_BITS" in token:
-                systems["DEVICE_ADDRESS_BITS"] = token.split("DEVICE_ADDRESS_BITS = ")[1].split(";")[0]
+                systems["DEVICE_ADDRESS_BITS"] = token.split("DEVICE_ADDRESS_BITS = ")[
+                    1
+                ].split(";")[0]
             if "GROUP_ADDRESS_BITS" in token:
-                systems["GROUP_ADDRESS_BITS"] = token.split("GROUP_ADDRESS_BITS = ")[1].split(";")[0]
+                systems["GROUP_ADDRESS_BITS"] = token.split("GROUP_ADDRESS_BITS = ")[
+                    1
+                ].split(";")[0]
             if "PARAM_ADDRESS_BITS" in token:
-                systems["PARAMETER_ADDRESS_BITS"] = token.split("PARAM_ADDRESS_BITS = ")[1].split(";")[0]
+                systems["PARAMETER_ADDRESS_BITS"] = token.split(
+                    "PARAM_ADDRESS_BITS = "
+                )[1].split(";")[0]
 
     # Build flat lookup table
     flat_lut = {}
@@ -166,7 +198,7 @@ def main():
                         par_name = par_val.get("PARAMETER_NAME")
                         if par_name is None:
                             continue
-                        
+
                         has_parameter = True
                         can_id = (
                             (sys_id << (sub_bits + dev_bits + grp_bits + par_bits))
