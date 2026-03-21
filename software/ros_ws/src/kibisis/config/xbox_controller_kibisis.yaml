@@ -1,4 +1,4 @@
-generic_controller:
+xbox_controller:
   ros__parameters:
     max_update_rate: 20
     turbo_scaling: 2.0

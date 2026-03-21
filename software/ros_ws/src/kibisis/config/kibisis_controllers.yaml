@@ -1,4 +1,4 @@
-controller_manager:
+/kibisis/kibisis_control_manager:
   ros__parameters:
     update_rate: 50
     lock_memory: False
@@ -24,7 +24,7 @@ joint_state_broadcaster:
       effort: current
 
 # Differential drive controller
-diff_drive_base_controller:
+/kibisis/diff_drive_base_controller:
   ros__parameters:
     left_wheel_names: ["left_wheel_joint"]
     right_wheel_names: ["right_wheel_joint"]
