@@ -26,6 +26,7 @@ IlmeniteStation::IlmeniteStation(const rclcpp::NodeOptions& options)
     _lid_servo_pin = this->declare_parameter("lid_servo_pin", 0);
     _tip_servo_pin = this->declare_parameter("tip_servo_pin", 1);
     _uv_led_pin = this->declare_parameter("uv_led_pin", 2);
+    _vibe_motor_pin = this->declare_parameter("vibe_motor_pin", 3);
 
     // Initialize GPIO pins
     gpioSetMode(_lid_servo_pin, PI_OUTPUT);
@@ -34,6 +35,8 @@ IlmeniteStation::IlmeniteStation(const rclcpp::NodeOptions& options)
     gpioServo(_tip_servo_pin, _tip_upright_pulsewidth);
     gpioSetMode(_uv_led_pin, PI_OUTPUT);
     gpioWrite(_uv_led_pin, 0);
+    gpioSetMode(_vibe_motor_pin, PI_OUTPUT);
+    gpioWrite(_vibe_motor_pin, 0);
 }
 
 void IlmeniteStation::_set_lid_servo(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response)
@@ -123,6 +126,12 @@ void IlmeniteStation::_process_ilmenite(const std::shared_ptr<perseus_interfaces
     }
     auto led_off_result = _led_client->async_send_request(request_led_off);
     led_off_result.wait();
+
+    // Vibrate motor
+    gpioWrite(_vibe_motor_pin, 1);
+    rclcpp::sleep_for(500ms);
+    gpioWrite(_vibe_motor_pin, 0);
+    rclcpp::sleep_for(100ms);
 
     while (!_spectral_data_client->wait_for_service(100ms))
     {

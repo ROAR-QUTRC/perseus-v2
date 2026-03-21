@@ -25,6 +25,7 @@ private:
     uint8_t _lid_servo_pin;
     uint8_t _tip_servo_pin;
     uint8_t _uv_led_pin;
+    uint8_t _vibe_motor_pin;
 
     const uint16_t _lid_open_pulsewidth = 1000;
     const uint16_t _lid_closed_pulsewidth = 2000;
