@@ -87,10 +87,8 @@ void loop()
 
     if (!can_healthy)
     {
-        // flash red every 500ms
-        uint32_t t = millis();
-        bool flash_on = (t / 500) % 2 == 0;
-        fill_solid(&leds[0], LED_COUNT, flash_on ? CRGB::Red : CRGB::Black);
+        // MAGENTA = 0x00FF00FF,
+        fill_solid(&leds[0], LED_COUNT, CRGB::Magenta );
         FastLED.show();
     }
 
