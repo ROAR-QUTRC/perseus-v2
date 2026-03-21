@@ -12,7 +12,7 @@ LightDriver::LightDriver(const rclcpp::NodeOptions& options)
     RCLCPP_INFO(this->get_logger(), "Light Status Driver node initialised");
 }
 
-void LightDriver::_control_callback(const std_msgs::msg::Byte::SharedPtr msg) 
+void LightDriver::_control_callback(const std_msgs::msg::Byte::SharedPtr msg)
 {
     using namespace ring;
 
@@ -49,7 +49,7 @@ void LightDriver::_control_callback(const std_msgs::msg::Byte::SharedPtr msg)
     _write_lights(colour);
 }
 
-void LightDriver::_write_lights(ring::colours colour) 
+void LightDriver::_write_lights(ring::colours colour)
 {
     using namespace hi_can;
     using namespace addressing;
@@ -67,8 +67,8 @@ void LightDriver::_write_lights(ring::colours colour)
         Packet(
             static_cast<flagged_address_t>(
                 standard_address_t{LIGHT_ADDRESS,
-                    static_cast<uint8_t>(group::RING),
-                    static_cast<uint8_t>(parameter::RGB)}),
+                                   static_cast<uint8_t>(group::RING),
+                                   static_cast<uint8_t>(parameter::RGB)}),
             rgba_t{static_cast<uint32_t>(colour)}.serialize_data()));
 }
 
