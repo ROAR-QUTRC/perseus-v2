@@ -339,7 +339,7 @@ namespace hi_can::parameters
         {
             namespace colour
             {
-                typedef SimpleSerializable<wrapped_value_t<int32_t>> rgba_t;
+                typedef SimpleSerializable<wrapped_value_t<uint32_t>> rgba_t;
             }
         }
     }
