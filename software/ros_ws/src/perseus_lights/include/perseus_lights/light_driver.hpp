@@ -9,13 +9,13 @@ namespace ring
 {
     enum class colours : uint32_t
     {
-        WHITE = 0xFFFFFF00,
-        RED = 0x0000FF00,
-        BLUE = 0xFF000000,
-        CYAN = 0xFFFF0000,
-        GREEN = 0x00FF0000,
-        YELLOW = 0x00FFFF00,
-        MAGENTA = 0xFF00FF00,
+        WHITE = 0x00FFFFFF,
+        RED = 0x00FF0000,
+        BLUE = 0x00FF0000,
+        CYAN = 0x00FFFF00,
+        GREEN = 0x0000FF00,
+        YELLOW = 0x0000FFFF,
+        MAGENTA = 0x00FF00FF,
     };
     enum class commands : uint8_t
     {
