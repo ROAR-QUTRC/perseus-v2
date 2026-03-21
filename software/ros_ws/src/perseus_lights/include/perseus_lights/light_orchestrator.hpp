@@ -1,10 +1,10 @@
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/int8.hpp>
-#include <sensor_msgs/msg/joy.hpp>
-#include <nav_msgs/msg/path.hpp>
 #include <hi_can_raw.hpp>
+#include <nav_msgs/msg/path.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/joy.hpp>
+#include <std_msgs/msg/int8.hpp>
 
 #include "perseus_lights/light_driver.hpp"  // for ring::commands
 
@@ -28,7 +28,7 @@ private:
 
     // --- Subscriptions ---
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _joy_subscription;
-    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr   _path_subscription;
+    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr _path_subscription;
 
     // --- Publisher ---
     rclcpp::Publisher<std_msgs::msg::Int8>::SharedPtr _status_publisher;
@@ -37,11 +37,11 @@ private:
     rclcpp::TimerBase::SharedPtr _topic_check_timer;
 
     // --- State flags ---
-    bool _joy_seen      = false;
-    bool _map_seen      = false;
+    bool _joy_seen = false;
+    bool _map_seen = false;
     bool _path_received = false;
     bool _power_bus_off = false;
-    bool _error_state   = false;
+    bool _error_state = false;
 
     // --- Timestamp of last joy message (for liveness check) ---
     rclcpp::Time _last_joy_time;

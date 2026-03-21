@@ -88,7 +88,7 @@ void loop()
     if (!can_healthy)
     {
         // MAGENTA = 0x00FF00FF,
-        fill_solid(&leds[0], LED_COUNT, CRGB::Magenta );
+        fill_solid(&leds[0], LED_COUNT, CRGB::Magenta);
         FastLED.show();
     }
 

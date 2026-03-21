@@ -54,8 +54,9 @@ ament_target_dependencies(light_driver PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS}
                           std_msgs)
 ament_target_dependencies(light_controller PUBLIC
                           ${THIS_PACKAGE_INCLUDE_DEPENDS} std_msgs)
-ament_target_dependencies(light_orchestrator PUBLIC
-                          ${THIS_PACKAGE_INCLUDE_DEPENDS} std_msgs sensor_msgs nav_msgs)
+ament_target_dependencies(
+  light_orchestrator PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS} std_msgs
+  sensor_msgs nav_msgs)
 
 target_link_libraries(light_driver PUBLIC hi_can_raw)
 target_link_libraries(light_controller PUBLIC hi_can_raw)
