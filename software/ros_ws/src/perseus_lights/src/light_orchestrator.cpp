@@ -1,4 +1,5 @@
 #include "perseus_lights/light_orchestrator.hpp"
+
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -41,7 +42,8 @@ void LightStatusOrchestrator::_joy_callback(const sensor_msgs::msg::Joy::SharedP
     bool was_seen = _joy_seen;
     _joy_seen = true;
 
-    if (!was_seen) {
+    if (!was_seen)
+    {
         RCLCPP_INFO(this->get_logger(), "[Trigger] /joy topic is now visible");
         _update_status();
     }
@@ -56,7 +58,8 @@ void LightStatusOrchestrator::_path_callback(const nav_msgs::msg::Path::SharedPt
     bool was_received = _path_received;
     _path_received = true;
 
-    if (!was_received) {
+    if (!was_received)
+    {
         RCLCPP_INFO(this->get_logger(), "[Trigger] Nav2 path received");
         _update_status();
     }
@@ -78,7 +81,8 @@ void LightStatusOrchestrator::_check_topic_timer_callback()
     const double joy_age = (now - _last_joy_time).seconds();
 
     // /joy timed out → topic gone → white
-    if (_joy_seen && joy_age > TOPIC_TIMEOUT_S) {
+    if (_joy_seen && joy_age > TOPIC_TIMEOUT_S)
+    {
         RCLCPP_WARN(this->get_logger(), "[Trigger] /joy topic lost (timeout %.1fs)", joy_age);
         _joy_seen = false;
         _path_received = false;  // path is no longer meaningful without joystick
@@ -96,27 +100,33 @@ void LightStatusOrchestrator::_update_status()
 {
     ring::commands status;
 
-    if (_error_state) {
+    if (_error_state)
+    {
         RCLCPP_ERROR(this->get_logger(), "[Status] RED — error state active");
         status = ring::commands::RED;
     }
-    else if (_power_bus_off) {
+    else if (_power_bus_off)
+    {
         RCLCPP_WARN(this->get_logger(), "[Status] YELLOW — power bus off");
         status = ring::commands::YELLOW;
     }
-    else if (_path_received) {
+    else if (_path_received)
+    {
         RCLCPP_INFO(this->get_logger(), "[Status] GREEN — nav2 path active");
         status = ring::commands::GREEN;
     }
-    else if (_map_seen) {
+    else if (_map_seen)
+    {
         RCLCPP_INFO(this->get_logger(), "[Status] CYAN — /map visible");
         status = ring::commands::CYAN;
     }
-    else if (_joy_seen) {
+    else if (_joy_seen)
+    {
         RCLCPP_INFO(this->get_logger(), "[Status] BLUE — /joy visible");
         status = ring::commands::BLUE;
     }
-    else {
+    else
+    {
         RCLCPP_INFO(this->get_logger(), "[Status] WHITE — idle, no joy");
         status = ring::commands::WHITE;
     }

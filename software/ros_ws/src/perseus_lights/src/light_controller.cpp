@@ -1,11 +1,12 @@
 #include "perseus_lights/light_controller.hpp"
-#include "perseus_lights/light_driver.hpp"
 
 #include <termios.h>
 #include <unistd.h>
 
 #include <iostream>
 #include <thread>
+
+#include "perseus_lights/light_driver.hpp"
 
 using namespace ring;
 

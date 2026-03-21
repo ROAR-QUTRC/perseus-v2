@@ -1,9 +1,9 @@
 #pragma once
 
 #include <chrono>
+#include <hi_can_raw.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/int8.hpp>
-#include <hi_can_raw.hpp>
 
 namespace ring
 {
