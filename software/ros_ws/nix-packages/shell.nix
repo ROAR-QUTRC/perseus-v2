@@ -108,7 +108,6 @@ pkgs.mkShell {
           tf2-sensor-msgs
           twist-mux
           urdf
-          usb-cam
           visualization-msgs
           xacro
           yaml-cpp-vendor

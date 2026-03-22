@@ -17,7 +17,6 @@
   simple-networking,
   tf2,
   tf2-geometry-msgs,
-  usb-cam,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-sensors";
@@ -42,7 +41,6 @@ buildRosPackage rec {
     simple-networking
     tf2
     tf2-geometry-msgs
-    usb-cam
   ];
   nativeBuildInputs = [ ament-cmake ];
 
