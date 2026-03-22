@@ -81,55 +81,55 @@ void I2CSlave::handleIrq()
     }
 }
 
-    int8_t I2CSlave::getMotorASpeed() const { return static_cast<int8_t>(live_regs_[kibisis::kRegMotorASpeed]); }
-    int8_t I2CSlave::getMotorBSpeed() const { return static_cast<int8_t>(live_regs_[kibisis::kRegMotorBSpeed]); }
-    int8_t I2CSlave::getSpaceMotorSpeed() const { return static_cast<int8_t>(live_regs_[kibisis::kRegSpaceMotorSpeed]); }
+int8_t I2CSlave::getMotorASpeed() const { return static_cast<int8_t>(live_regs_[kibisis::kRegMotorASpeed]); }
+int8_t I2CSlave::getMotorBSpeed() const { return static_cast<int8_t>(live_regs_[kibisis::kRegMotorBSpeed]); }
+int8_t I2CSlave::getSpaceMotorSpeed() const { return static_cast<int8_t>(live_regs_[kibisis::kRegSpaceMotorSpeed]); }
 
-    void I2CSlave::setStatus(const uint8_t status)
-    {
-        shadow_regs_[kibisis::kRegStatus] = status;
-    }
+void I2CSlave::setStatus(const uint8_t status)
+{
+    shadow_regs_[kibisis::kRegStatus] = status;
+}
 
-    void I2CSlave::setEncoderA(const int32_t counts)
-    {
-        memcpy(const_cast<uint8_t*>(&shadow_regs_[kibisis::kRegEncACount0]), &counts, 4);
-    }
+void I2CSlave::setEncoderA(const int32_t counts)
+{
+    memcpy(const_cast<uint8_t*>(&shadow_regs_[kibisis::kRegEncACount0]), &counts, 4);
+}
 
-    void I2CSlave::setEncoderB(const int32_t counts)
-    {
-        memcpy(const_cast<uint8_t*>(&shadow_regs_[kibisis::kRegEncBCount0]), &counts, 4);
-    }
+void I2CSlave::setEncoderB(const int32_t counts)
+{
+    memcpy(const_cast<uint8_t*>(&shadow_regs_[kibisis::kRegEncBCount0]), &counts, 4);
+}
 
-    bool I2CSlave::getLdrSampleTrigger()
-    {
-        const uint32_t saved = save_and_disable_interrupts();
-        const bool triggered = (live_regs_[kibisis::kRegLdrSample] != 0);
-        if (triggered)
-            live_regs_[kibisis::kRegLdrSample] = 0;
-        restore_interrupts(saved);
-        return triggered;
-    }
+bool I2CSlave::getLdrSampleTrigger()
+{
+    const uint32_t saved = save_and_disable_interrupts();
+    const bool triggered = (live_regs_[kibisis::kRegLdrSample] != 0);
+    if (triggered)
+        live_regs_[kibisis::kRegLdrSample] = 0;
+    restore_interrupts(saved);
+    return triggered;
+}
 
-    void I2CSlave::setLdrAmbientA(const uint16_t value)
-    {
-        shadow_regs_[kibisis::kRegLdrAAmbient0] = static_cast<uint8_t>(value & 0xFF);
-        shadow_regs_[kibisis::kRegLdrAAmbient0 + 1] = static_cast<uint8_t>(value >> 8);
-    }
+void I2CSlave::setLdrAmbientA(const uint16_t value)
+{
+    shadow_regs_[kibisis::kRegLdrAAmbient0] = static_cast<uint8_t>(value & 0xFF);
+    shadow_regs_[kibisis::kRegLdrAAmbient0 + 1] = static_cast<uint8_t>(value >> 8);
+}
 
-    void I2CSlave::setLdrAmbientB(const uint16_t value)
-    {
-        shadow_regs_[kibisis::kRegLdrBAmbient0] = static_cast<uint8_t>(value & 0xFF);
-        shadow_regs_[kibisis::kRegLdrBAmbient0 + 1] = static_cast<uint8_t>(value >> 8);
-    }
+void I2CSlave::setLdrAmbientB(const uint16_t value)
+{
+    shadow_regs_[kibisis::kRegLdrBAmbient0] = static_cast<uint8_t>(value & 0xFF);
+    shadow_regs_[kibisis::kRegLdrBAmbient0 + 1] = static_cast<uint8_t>(value >> 8);
+}
 
-    void I2CSlave::setLdrIlluminatedA(const uint16_t value)
-    {
-        shadow_regs_[kibisis::kRegLdrAIlluminated0] = static_cast<uint8_t>(value & 0xFF);
-        shadow_regs_[kibisis::kRegLdrAIlluminated0 + 1] = static_cast<uint8_t>(value >> 8);
-    }
+void I2CSlave::setLdrIlluminatedA(const uint16_t value)
+{
+    shadow_regs_[kibisis::kRegLdrAIlluminated0] = static_cast<uint8_t>(value & 0xFF);
+    shadow_regs_[kibisis::kRegLdrAIlluminated0 + 1] = static_cast<uint8_t>(value >> 8);
+}
 
-    void I2CSlave::setLdrIlluminatedB(const uint16_t value)
-    {
-        shadow_regs_[kibisis::kRegLdrBIlluminated0] = static_cast<uint8_t>(value & 0xFF);
-        shadow_regs_[kibisis::kRegLdrBIlluminated0 + 1] = static_cast<uint8_t>(value >> 8);
-    }
+void I2CSlave::setLdrIlluminatedB(const uint16_t value)
+{
+    shadow_regs_[kibisis::kRegLdrBIlluminated0] = static_cast<uint8_t>(value & 0xFF);
+    shadow_regs_[kibisis::kRegLdrBIlluminated0 + 1] = static_cast<uint8_t>(value >> 8);
+}
