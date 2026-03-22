@@ -360,5 +360,5 @@ Temporary Items
 # Temporary Fast-LIO package
 /software/ros_ws/src/spark-fast-lio
 
-# Temporary Perseus Vision package
-/software/ros_ws/src/perseus_vision/models/*.onnx
+# Ignore generated models, which are too large
+/software/ros_ws/src/perseus_vision/models/
