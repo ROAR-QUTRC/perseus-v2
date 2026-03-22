@@ -20,13 +20,13 @@
   ros_type_name: "sensor_msgs/msg/JointState"
   gz_type_name: "gz.msgs.Model"
   direction: GZ_TO_ROS
-# sensors
+# 2D lidar
 - ros_topic_name: "scan"
   gz_topic_name: "scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
   direction: GZ_TO_ROS
-# 2D lidar
+# 3D lidar
 - ros_topic_name: "scan_3d"
   gz_topic_name: "scan_3d"
   ros_type_name: "sensor_msgs/msg/LaserScan"
@@ -37,44 +37,64 @@
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS
-# CameraInfo (use color camera_info)
-- ros_topic_name: "/camera/camera/color/camera_info"
-  gz_topic_name: "/perseus/rgbd_camera/camera_info"
-  ros_type_name: "sensor_msgs/msg/CameraInfo"
-  gz_type_name: "gz.msgs.CameraInfo"
-  direction: GZ_TO_ROS
-# RGB image
+# ─── RGB Color Camera ───────────────────────────────────────────────────────
 - ros_topic_name: "/camera/camera/color/image_raw"
-  gz_topic_name: "/perseus/rgbd_camera/image"
+  gz_topic_name: "/camera/camera/color/image_raw"
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
   direction: GZ_TO_ROS
-# Depth image (aligned-to-color equivalent)
-- ros_topic_name: "/camera/camera/aligned_depth_to_color/image_raw"
-  gz_topic_name: "/perseus/rgbd_camera/depth_image"
-  ros_type_name: "sensor_msgs/msg/Image"
-  gz_type_name: "gz.msgs.Image"
-  direction: GZ_TO_ROS
-# Depth camera_info (aligned-to-color camera_info)
-- ros_topic_name: "/camera/camera/aligned_depth_to_color/camera_info"
-  gz_topic_name: "/perseus/rgbd_camera/camera_info"
+- ros_topic_name: "/camera/camera/color/camera_info"
+  gz_topic_name: "/camera/camera/color/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "gz.msgs.CameraInfo"
   direction: GZ_TO_ROS
-# PointCloud2 (match RealSense-style topic)
+# ─── Depth Camera ────────────────────────────────────────────────────────────
+- ros_topic_name: "/camera/camera/aligned_depth_to_color/image_raw"
+  gz_topic_name: "/camera/camera/depth/depth_image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+- ros_topic_name: "/camera/camera/aligned_depth_to_color/camera_info"
+  gz_topic_name: "/camera/camera/depth/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+# ─── PointCloud ──────────────────────────────────────────────────────────────
 - ros_topic_name: "/camera/camera/depth/color/points"
-  gz_topic_name: "/perseus/rgbd_camera/points"
+  gz_topic_name: "/camera/camera/depth/points"
   ros_type_name: "sensor_msgs/msg/PointCloud2"
   gz_type_name: "gz.msgs.PointCloudPacked"
   direction: GZ_TO_ROS
-# Livox MID-360 topics
-- ros_topic_name: /livox/lidar
-  gz_topic_name: /scan_3d/points
-  ros_type_name: sensor_msgs/msg/PointCloud2
-  gz_type_name: gz.msgs.PointCloudPacked
+# ─── Infra1 (Left IR) ────────────────────────────────────────────────────────
+- ros_topic_name: "/camera/camera/infra1/image_raw"
+  gz_topic_name: "/camera/camera/infra1/image_raw"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+- ros_topic_name: "/camera/camera/infra1/camera_info"
+  gz_topic_name: "/camera/camera/infra1/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+# ─── Infra2 (Right IR) ───────────────────────────────────────────────────────
+- ros_topic_name: "/camera/camera/infra2/image_raw"
+  gz_topic_name: "/camera/camera/infra2/image_raw"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+- ros_topic_name: "/camera/camera/infra2/camera_info"
+  gz_topic_name: "/camera/camera/infra2/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+# ─── Livox MID-360 ───────────────────────────────────────────────────────────
+- ros_topic_name: "/livox/lidar"
+  gz_topic_name: "/scan_3d/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: "gz.msgs.PointCloudPacked"
   direction: GZ_TO_ROS
 - ros_topic_name: "/livox/imu"
-  gz_topic_name: "scan_3d/imu"
+  gz_topic_name: "/scan_3d/imu"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS
