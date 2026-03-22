@@ -27,7 +27,6 @@
 #include "sensor_msgs/msg/image.hpp"
 #include "sensor_msgs/msg/region_of_interest.hpp"
 #include "std_msgs/msg/header.hpp"
-#include "std_msgs/msg/string.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 #include "visualization_msgs/msg/marker_array.hpp"
