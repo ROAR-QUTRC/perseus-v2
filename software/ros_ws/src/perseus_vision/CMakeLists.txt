@@ -86,7 +86,9 @@ install(TARGETS aruco_detector_node cube_detector
 install(DIRECTORY include/ DESTINATION include/)
 install(DIRECTORY config/ DESTINATION share/${PROJECT_NAME}/config)
 install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
-install(DIRECTORY models/ DESTINATION share/${PROJECT_NAME}/models)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/models")
+  install(DIRECTORY models/ DESTINATION share/${PROJECT_NAME}/models)
+endif()
 
 # ── ONNX Model Download ──────────────────────────────────────────────────────
 set(MODEL_FILENAME "cube_detector_yolob8s.onnx")
