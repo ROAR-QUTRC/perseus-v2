@@ -15,7 +15,9 @@ string frame_id
 int32[] ids
 
 # Pose of each detected marker, in the same order as `ids`
-# (ids[i] corresponds to poses[i])
+# (ids[i] corresponds to poses[i]).
+# For 2D-only detections where no 3D pose could be estimated, all pose fields
+# are set to NaN and consumers must check for finite values before use.
 geometry_msgs/Pose[] poses
 
 # Human-readable status for callers, e.g. when 2D detections were found but
