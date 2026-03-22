@@ -5,7 +5,7 @@
 	export const name = 'Arm End Effector';
 	// These properties are optional
 	export const description =
-		'Control and view the analog signals sent and recieved from the end effector';
+		'Control and view the analog signals sent and received from the end effector';
 	export const group: WidgetGroupType = 'ROS';
 	export const isRosDependent = true; // Set to true if the widget requires a ROS connection
 
