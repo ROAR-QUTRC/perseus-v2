@@ -30,6 +30,11 @@ namespace perseus_vision
             return roi;
         }
 
+        std::string default_packaged_model_path()
+        {
+            return ament_index_cpp::get_package_share_directory("perseus_vision") + "/models/cube_detector_yolob8s.onnx";
+        }
+
     }  // namespace
 
     // ── constructor ───────────────────────────────────────────────────────────────
