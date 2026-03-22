@@ -47,7 +47,7 @@
 	} from '$lib/scripts/perseusMsgs';
 	import type {
 		EmptyRequestType,
-		Float64MultiArrayType,
+		NumberArrayType,
 		SetBoolRequestType,
 		SetBoolResponseType
 	} from '$lib/scripts/rosTypes';
@@ -80,8 +80,8 @@
 		settings.groups.general.automaticallySendMessages.value === 'true'
 	);
 	let debugEnabled = $state(false);
-	let motorControlTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
-	let motorStatusTopic: ROSLIB.Topic<Float64MultiArrayType> | null = null;
+	let motorControlTopic: ROSLIB.Topic<NumberArrayType> | null = null;
+	let motorStatusTopic: ROSLIB.Topic<NumberArrayType> | null = null;
 	let enableDebugStatsService: ROSLIB.Service<SetBoolRequestType, SetBoolResponseType> | null =
 		null;
 	let setIdService: ROSLIB.Service<TriggerDeviceRequestType, TriggerDeviceResponseType> | null =
@@ -181,7 +181,7 @@
 		}
 	};
 
-	const onStatusMessage = (message: Float64MultiArrayType) => {
+	const onStatusMessage = (message: NumberArrayType) => {
 		// message.data is an array of floats in the order:
 		// [motor_id, error_code, angle, rpm, temperature, voltage, current, load]
 		// Reshape data (Each motor sends 10 values)
