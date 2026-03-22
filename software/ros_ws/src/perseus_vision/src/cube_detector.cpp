@@ -179,7 +179,7 @@ namespace perseus_vision
         _pub_cube_detections = create_publisher<perseus_interfaces::msg::ObjectDetections>(
             _output_detections_topic, kQosDepth);
         _srv_detect_objects = create_service<DetectObjects>(
-            "detect_objects",
+            "~/detect_objects",
             std::bind(&CubeDetector::handle_detect_objects_request, this, std::placeholders::_1, std::placeholders::_2));
         _tf_buffer = std::make_unique<tf2_ros::Buffer>(get_clock());
         _tf_listener = std::make_shared<tf2_ros::TransformListener>(*_tf_buffer);
