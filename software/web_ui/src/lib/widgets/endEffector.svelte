@@ -19,6 +19,15 @@
 				output: {
 					type: 'switch',
 					value: 'false'
+				},
+				inverted: {
+					type: 'switch',
+					value: 'false',
+					description: 'Set this to true for active low value'
+				},
+				digital: {
+					type: 'switch',
+					value: 'false'
 				}
 			},
 			channelB: {
@@ -27,6 +36,15 @@
 					value: 'Channel B'
 				},
 				output: {
+					type: 'switch',
+					value: 'false'
+				},
+				inverted: {
+					type: 'switch',
+					value: 'false',
+					description: 'Set this to true for active low value'
+				},
+				digital: {
 					type: 'switch',
 					value: 'false'
 				}
@@ -39,6 +57,15 @@
 				output: {
 					type: 'switch',
 					value: 'false'
+				},
+				inverted: {
+					type: 'switch',
+					value: 'false',
+					description: 'Set this to true for active low value'
+				},
+				digital: {
+					type: 'switch',
+					value: 'false'
 				}
 			},
 			channelD: {
@@ -47,6 +74,15 @@
 					value: 'Channel D'
 				},
 				output: {
+					type: 'switch',
+					value: 'false'
+				},
+				inverted: {
+					type: 'switch',
+					value: 'false',
+					description: 'Set this to true for active low value'
+				},
+				digital: {
 					type: 'switch',
 					value: 'false'
 				}
@@ -61,6 +97,7 @@
 	import Slider from '$lib/components/ui/slider/slider.svelte';
 	import type { NumberArrayType } from '$lib/scripts/rosTypes';
 	import { untrack } from 'svelte';
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 
 	// Generate map based off settings object so number of channels is entirely dependent on the settings
 	const CHANNEL_KEY_INDEX_MAP: Record<string, number> = Object.entries(settings.groups).reduce(
@@ -71,21 +108,32 @@
 		{} as Record<string, number>
 	);
 
-	let data = $state<Array<{ label: string; output: boolean; value: number }>>([]);
+	interface ChannelData {
+		label: string;
+		output: boolean;
+		value: number;
+		inverted: boolean;
+		digital: boolean;
+	}
+
+	let data = $state<Array<ChannelData>>([]);
 
 	// use effect to update label and direction while still being able to bind to $state rune
 	$effect(() => {
-		const output: Array<{ label: string; output: boolean; value: number }> = [];
+		const output: Array<ChannelData> = [];
 		Object.entries(settings.groups).forEach(([key, group]) => {
 			// next value is dependent on previous value, so untrack to prevent infinite loop
 			untrack(() => {
 				output.push({
 					label: group.label.value || String(CHANNEL_KEY_INDEX_MAP[key]),
 					output: group.output.value === 'true',
-					value: data[CHANNEL_KEY_INDEX_MAP[key]]?.value ?? 0 // preserve slider value if it exists, otherwise default to 0
+					value: data[CHANNEL_KEY_INDEX_MAP[key]]?.value ?? 0, // preserve slider value if it exists, otherwise default to 0
+					inverted: group.inverted.value === 'true',
+					digital: group.digital.value === 'true'
 				});
 			});
 		});
+		console.log(output);
 		data = output;
 	});
 
@@ -118,55 +166,78 @@
 		});
 	});
 
-	const writeValue = (channelIndex: number, percentage: number) => {
+	const writeValue = () => {
 		if (!write) return;
 		// topic takes all values at once
 		const pwmValues = data.map((channel) => {
-			if (!channel.output) return Math.round((channel.value / 100) * 65535); // map percentage to 16bit int for ROS topic
+			if (!channel.output) {
+				let output = channel.value;
+				if (channel.digital) output *= 100; // UI is locked to 0 or 1 for digital inputs
+				output = Math.round((output / 100) * 65535); // map percentage to 16bit int for ROS topic
+				if (channel.inverted) output = 65535 - output;
+
+				return output; // if digital, threshold the output to either fully on or off
+			}
 			return 0; // if channel is not an output, send 0
 		});
-		pwmValues[channelIndex] = Math.round((percentage / 100) * 65535); // update the changed value
+		// pwmValues[channelIndex] = Math.round((percentage / 100) * 65535); // update the changed value
 		write.publish({ data: pwmValues });
 	};
 </script>
 
-<h3 class="text-lg"><strong>Inputs:</strong></h3>
-{#if data.filter((channel) => !channel.output).length > 0}
-	<!-- Use if instead of iterating filtered list as filter returns a new array -->
-	{#each data as channel, index}
-		{#if !channel.output}
-			<!-- Render sliders for end effector inputs -->
-			<div class={channel.output ? 'pointer-events-none opacity-30' : ''}>
-				<p>{channel.label}{index === 0 ? ' (Servo)' : ''}: {channel.value.toFixed()}%</p>
-				<!-- onValueCommit is used to prevent flooding CAN with intermediate values -->
-				<Slider
-					onValueCommit={(e) => writeValue(index, e)}
-					class="my-2"
-					disabled={channel.output}
-					type="single"
-					max={100}
-					min={0}
-					bind:value={data[index].value}
-				/>
-			</div>
-		{/if}
-	{/each}
-{:else}
-	<p>Use the widget settings to configure inputs.</p>
-{/if}
+<ScrollArea orientation="vertical" class="h-full w-full">
+	<h3 class="text-lg"><strong>Inputs:</strong></h3>
+	{#if data.filter((channel) => !channel.output).length > 0}
+		<!-- Use if instead of iterating filtered list as filter returns a new array -->
+		{#each data as channel, index}
+			{#if !channel.output}
+				<!-- Render sliders for end effector inputs -->
+				<div class={channel.output ? 'pointer-events-none opacity-30' : ''}>
+					<div class="flex flex-row justify-between">
+						<p>
+							{channel.label}: {channel.digital
+								? channel.value
+									? 'HIGH'
+									: 'LOW'
+								: `${channel.value.toFixed()}%`}
+						</p>
+						<kbd class="mt-auto text-xs opacity-70">
+							{index === 0 ? 'Servo' : ''}
+							{channel.inverted ? 'Inverted' : ''}
+							{channel.digital ? 'Digital' : ''}
+						</kbd>
+					</div>
+					<!-- onValueCommit is used to prevent flooding CAN with intermediate values -->
+					<Slider
+						onValueCommit={writeValue}
+						class="my-2"
+						disabled={channel.output}
+						type="single"
+						max={channel.digital ? 1 : 100}
+						min={0}
+						step={1}
+						bind:value={data[index].value}
+					/>
+				</div>
+			{/if}
+		{/each}
+	{:else}
+		<p>Use the widget settings to configure inputs.</p>
+	{/if}
 
-<h3 class="mt-4 text-lg"><strong>Outputs:</strong></h3>
-{#each data.filter((channel) => channel.output) as channel, index}
-	<!-- Render value readouts for end effector outputs -->
-	<div class="flex flex-row items-center gap-3">
-		<p>{channel.label}: {channel.value.toFixed()}%</p>
-		<div class="rounded-1/2 h-[6px] flex-1 rounded-[3px] border">
-			<span
-				class="block h-full rounded-[3px] bg-primary transition-all duration-300"
-				style:width={`${channel.value.toFixed()}%`}
-			></span>
+	<h3 class="mt-4 text-lg"><strong>Outputs:</strong></h3>
+	{#each data.filter((channel) => channel.output) as channel, index}
+		<!-- Render value readouts for end effector outputs -->
+		<div class="flex flex-row items-center gap-3">
+			<p>{channel.label}: {channel.value.toFixed()}%</p>
+			<div class="rounded-1/2 h-[6px] flex-1 rounded-[3px] border">
+				<span
+					class="block h-full rounded-[3px] bg-primary transition-all duration-300"
+					style:width={`${channel.value.toFixed()}%`}
+				></span>
+			</div>
 		</div>
-	</div>
-{:else}
-	<p>Use the widget settings to configure outputs.</p>
-{/each}
+	{:else}
+		<p>Use the widget settings to configure outputs.</p>
+	{/each}
+</ScrollArea>

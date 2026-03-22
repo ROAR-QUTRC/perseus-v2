@@ -56,7 +56,7 @@ void EndEffector::_handle_write(const std_msgs::msg::UInt16MultiArray::SharedPtr
     for (const auto& group : {pwm_group::PWM_1, pwm_group::PWM_2, pwm_group::PWM_3, pwm_group::PWM_4})
     {
         pwm_command.value = msg->data[index++];  // Expecting a single uint16 value for PWM command
-        address.device = static_cast<uint8_t>(group);
+        address.group = static_cast<uint8_t>(group);
         _can_interface->transmit(Packet{
             static_cast<hi_can::addressing::flagged_address_t>(address),
             pwm_command.serialize_data()});
