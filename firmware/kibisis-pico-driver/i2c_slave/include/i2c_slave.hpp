@@ -1,75 +1,81 @@
 #pragma once
+
 #include <cstdint>
 #include <cstring>
 
 #include "hardware/i2c.h"
 #include "pico/stdlib.h"
 
-static constexpr uint8_t SLAVE_ADDR = 0x41;
+/// Register map constants shared between Pico firmware and Pi driver.
+namespace kibisis
+{
+// I2C slave address
+constexpr uint8_t kSlaveAddr             = 0x41;
 
-// Pi→Pico (command) registers
-static constexpr uint8_t REG_MOTOR_A_SPEED = 0x00;
-static constexpr uint8_t REG_MOTOR_B_SPEED = 0x01;
-static constexpr uint8_t REG_SPACE_MOTOR_SPEED = 0x02;
+// Pi→Pico command registers
+constexpr uint8_t kRegMotorASpeed        = 0x00;
+constexpr uint8_t kRegMotorBSpeed        = 0x01;
+constexpr uint8_t kRegSpaceMotorSpeed    = 0x02;
 
-// Pico→Pi (state) registers
-static constexpr uint8_t REG_STATUS = 0x20;
+// Pico→Pi state registers
+constexpr uint8_t kRegStatus             = 0x20;
 
-// Encoder counts (0x10–0x17, int32_t LE per encoder)
-// 0x10–0x13 = Encoder A, 0x14–0x17 = Encoder B
+// Encoder counts 0x10–0x17 (int32_t LE, A then B)
+constexpr uint8_t kRegEncACount0         = 0x10;
+constexpr uint8_t kRegEncBCount0         = 0x14;
 
 // LDR trigger (Pi→Pico)
-static constexpr uint8_t REG_LDR_SAMPLE = 0x40;
+constexpr uint8_t kRegLdrSample          = 0x40;
 
-// LDR ambient readings — LEDs off (Pico→Pi, uint16_t LE)
-static constexpr uint8_t REG_LDR_A_AMBIENT_0 = 0x41;
-static constexpr uint8_t REG_LDR_A_AMBIENT_1 = 0x42;
-static constexpr uint8_t REG_LDR_B_AMBIENT_0 = 0x43;
-static constexpr uint8_t REG_LDR_B_AMBIENT_1 = 0x44;
+// LDR results (Pico→Pi, uint16_t LE each)
+constexpr uint8_t kRegLdrAAmbient0       = 0x41;
+constexpr uint8_t kRegLdrBAmbient0       = 0x43;
+constexpr uint8_t kRegLdrAIlluminated0   = 0x45;
+constexpr uint8_t kRegLdrBIlluminated0   = 0x47;
 
-// LDR illuminated readings — LEDs on (Pico→Pi, uint16_t LE)
-static constexpr uint8_t REG_LDR_A_ILLUMINATED_0 = 0x45;
-static constexpr uint8_t REG_LDR_A_ILLUMINATED_1 = 0x46;
-static constexpr uint8_t REG_LDR_B_ILLUMINATED_0 = 0x47;
-static constexpr uint8_t REG_LDR_B_ILLUMINATED_1 = 0x48;
+constexpr size_t  kRegCount              = 73;  // 0x00–0x48
+}  // namespace kibisis
 
-static constexpr size_t REG_COUNT = 73;  // 0x00–0x48
-
+/// I2C slave driver for the Kibisis Pico.
+///
+/// Owns the I2C0 peripheral in slave mode at address kibisis::kSlaveAddr.
+/// Pi writes command registers; Pico writes state registers into shadow_regs_
+/// and atomically publishes them via commitRegisters().
 class I2CSlave
 {
 public:
     void init();
 
-    // Motor speed getters (Pi→Pico)
-    int8_t getMotorASpeed() const { return static_cast<int8_t>(live_regs_[REG_MOTOR_A_SPEED]); }
-    int8_t getMotorBSpeed() const { return static_cast<int8_t>(live_regs_[REG_MOTOR_B_SPEED]); }
-    int8_t getSpaceMotorSpeed() const { return static_cast<int8_t>(live_regs_[REG_SPACE_MOTOR_SPEED]); }
+    // ----- Getters (Pi→Pico command registers) -----
+    [[nodiscard]] int8_t getMotorASpeed()     const;
+    [[nodiscard]] int8_t getMotorBSpeed()     const;
+    [[nodiscard]] int8_t getSpaceMotorSpeed() const;
 
-    // Status setter (Pico→Pi)
-    void setStatus(uint8_t v) { shadow_regs_[REG_STATUS] = v; }
+    /// Returns true (and clears the flag) if the Pi has requested an LDR sample.
+    [[nodiscard]] bool getLdrSampleTrigger();
 
-    // Encoder setters (Pico→Pi)
+    // ----- Setters (Pico→Pi state, written to shadow then committed) -----
+    void setStatus(uint8_t status);
     void setEncoderA(int32_t counts);
     void setEncoderB(int32_t counts);
-
-    // LDR: returns true (and clears the flag) if Pi has requested a sample
-    bool getLdrSampleTrigger();
-
-    // LDR result setters (Pico→Pi)
     void setLdrAmbientA(uint16_t value);
     void setLdrAmbientB(uint16_t value);
     void setLdrIlluminatedA(uint16_t value);
     void setLdrIlluminatedB(uint16_t value);
 
-    // Atomically commit shadow→live for all Pico→Pi registers
+    /// Atomically copy shadow→live for all Pico→Pi registers.
+    /// Call once per main-loop iteration after updating all shadow values.
     void commitRegisters();
 
 private:
-    static void i2c_irq_handler();
-    void handle_irq();
+    static void i2cIrqHandler();
+    void handleIrq();
 
-    volatile uint8_t live_regs_[REG_COUNT] = {};
-    volatile uint8_t shadow_regs_[REG_COUNT] = {};
+    static constexpr uint kPinSda = 4;
+    static constexpr uint kPinScl = 5;
+
+    volatile uint8_t live_regs_[kibisis::kRegCount]   = {};
+    volatile uint8_t shadow_regs_[kibisis::kRegCount] = {};
     volatile uint8_t reg_ptr_ = 0xFF;
 
     static I2CSlave* instance_;

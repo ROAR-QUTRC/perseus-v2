@@ -1,4 +1,4 @@
-add_library(status_light_lib src/status-light.cpp)
+add_library(status_light_lib src/status_light.cpp)
 target_include_directories(status_light_lib PUBLIC include)
 target_link_libraries(status_light_lib pico_stdlib hardware_pio)
 

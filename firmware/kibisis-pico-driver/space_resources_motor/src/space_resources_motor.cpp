@@ -6,35 +6,41 @@ void SpaceResourcesMotor::init()
     slice_ = pwm_gpio_to_slice_num(pin_);
     chan_ = pwm_gpio_to_channel(pin_);
 
-    // We want a 3000us period.
-    // PWM wrap = (SYS_CLK_HZ / clkdiv) * period_s - 1
-    // Use clkdiv=150 -> 1MHz tick (1us resolution), wrap=2999
+    // 1 µs resolution: 150 MHz / 150 = 1 MHz tick, wrap at 2999 → 3000 µs period.
+    static constexpr float kClkDiv = 150.0f;
     pwm_config cfg = pwm_get_default_config();
-    pwm_config_set_clkdiv(&cfg, 150.0f);       // 150MHz / 150 = 1MHz = 1us/tick
-    pwm_config_set_wrap(&cfg, PERIOD_US - 1);  // 2999
+    pwm_config_set_clkdiv(&cfg, kClkDiv);
+    pwm_config_set_wrap(&cfg, kPeriodUs - 1);
     pwm_init(slice_, &cfg, true);
 
-    setPulseUs(NEUTRAL_US);
+    setPulseUs(kNeutralUs);
 }
 
-void SpaceResourcesMotor::setSpeed(int8_t speed)
+void SpaceResourcesMotor::setSpeed(const int8_t speed)
 {
-    int8_t clamped = std::clamp(speed, (int8_t)-100, (int8_t)100);
-    uint32_t pulse_us;
+    const int8_t clamped = std::clamp(speed, static_cast<int8_t>(-100), static_cast<int8_t>(100));
+    uint32_t pulseUs = 0;
+
     if (clamped >= 0)
     {
-        // 0..+100 -> 1500..2500us
-        pulse_us = NEUTRAL_US + (uint32_t)(clamped * (int32_t)(MAX_US - NEUTRAL_US) / 100);
+        // 0..+100 → 1500..2500 µs
+        pulseUs = kNeutralUs
+                  + static_cast<uint32_t>(clamped)
+                    * (kMaxUs - kNeutralUs) / 100;
     }
     else
     {
-        // -100..0 -> 500..1500us
-        pulse_us = NEUTRAL_US + (int32_t)(clamped * (int32_t)(NEUTRAL_US - MIN_US) / 100);
+        // -100..0 → 500..1500 µs
+        pulseUs = static_cast<uint32_t>(
+            static_cast<int32_t>(kNeutralUs)
+            + static_cast<int32_t>(clamped)
+              * static_cast<int32_t>(kNeutralUs - kMinUs) / 100);
     }
-    setPulseUs(pulse_us);
+
+    setPulseUs(pulseUs);
 }
 
-void SpaceResourcesMotor::setPulseUs(uint32_t pulse_us)
+void SpaceResourcesMotor::setPulseUs(const uint32_t pulseUs)
 {
-    pwm_set_chan_level(slice_, chan_, pulse_us);
+    pwm_set_chan_level(slice_, chan_, pulseUs);
 }

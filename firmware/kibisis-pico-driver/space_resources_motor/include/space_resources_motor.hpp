@@ -1,43 +1,41 @@
 #pragma once
+
 #include <algorithm>
 #include <cstdint>
 
 #include "hardware/pwm.h"
 #include "pico/stdlib.h"
 
-// DFRobot DFR0430 brushless ESC controlled via PPM signal.
-//
-// PPM pulse range: 500us - 2500us within a 3000us period.
-// Neutral (stop): 1500us
-// Full forward:   2500us
-// Full reverse:   500us
-//
-// Speed is expressed as int8_t: -100 to +100
-// 0 = neutral (1500us pulse)
-
+/// DFRobot DFR0430 brushless ESC driver via PPM signal.
+///
+/// PPM pulse range: 500 µs – 2500 µs within a 3000 µs period.
+///   Neutral (stop): 1500 µs
+///   Full forward:   2500 µs
+///   Full reverse:    500 µs
+///
+/// Speed is expressed as int8_t in the range [-100, 100].
+/// 0 = neutral (1500 µs pulse).
 class SpaceResourcesMotor
 {
 public:
-    // GP12 by default — change if your wiring differs
-    explicit SpaceResourcesMotor(uint pin = 15)
-        : pin_(pin)
-    {
-    }
+    explicit SpaceResourcesMotor(uint pin = 15) : pin_(pin) {}
 
     void init();
-    void setSpeed(int8_t speed);  // -100 to +100
+
+    /// Set motor speed in the range [-100, 100]. 0 = neutral/stop.
+    void setSpeed(int8_t speed);
+
     void stop() { setSpeed(0); }
 
 private:
     uint pin_;
-    uint slice_;
-    uint chan_;
+    uint slice_ = 0;
+    uint chan_  = 0;
 
-    static constexpr uint32_t PERIOD_US = 3000;
-    static constexpr uint32_t NEUTRAL_US = 1500;
-    static constexpr uint32_t MIN_US = 500;
-    static constexpr uint32_t MAX_US = 2500;
-    static constexpr uint32_t MOTOR_SYS_CLK_HZ = 150'000'000;
+    static constexpr uint32_t kPeriodUs  = 3000;
+    static constexpr uint32_t kNeutralUs = 1500;
+    static constexpr uint32_t kMinUs     = 500;
+    static constexpr uint32_t kMaxUs     = 2500;
 
-    void setPulseUs(uint32_t pulse_us);
+    void setPulseUs(uint32_t pulseUs);
 };

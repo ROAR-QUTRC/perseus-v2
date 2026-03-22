@@ -2,16 +2,14 @@
 
 void LdrSensors::init()
 {
-    // Power enable pins — off by default
-    gpio_init(PIN_LDR_A_EN);
-    gpio_set_dir(PIN_LDR_A_EN, GPIO_OUT);
-    gpio_put(PIN_LDR_A_EN, 0);
+    gpio_init(kPinLdrAEnable);
+    gpio_set_dir(kPinLdrAEnable, GPIO_OUT);
+    gpio_put(kPinLdrAEnable, 0);
 
-    gpio_init(PIN_LDR_B_EN);
-    gpio_set_dir(PIN_LDR_B_EN, GPIO_OUT);
-    gpio_put(PIN_LDR_B_EN, 0);
+    gpio_init(kPinLdrBEnable);
+    gpio_set_dir(kPinLdrBEnable, GPIO_OUT);
+    gpio_put(kPinLdrBEnable, 0);
 
-    // ADC
     adc_init();
     adc_gpio_init(26);  // ADC0 — LDR A
     adc_gpio_init(27);  // ADC1 — LDR B
@@ -19,29 +17,28 @@ void LdrSensors::init()
 
 LdrSensors::Reading LdrSensors::sample()
 {
-    Reading result = {};
+    Reading result{};
 
-    // --- Ambient readings (LEDs off) ---
-    adc_select_input(ADC_CH_LDR_A);
-    result.ldr_a_ambient = adc_read();
+    // Ambient readings (LEDs off)
+    adc_select_input(kAdcChLdrA);
+    result.ldrAAmbient = adc_read();
 
-    adc_select_input(ADC_CH_LDR_B);
-    result.ldr_b_ambient = adc_read();
+    adc_select_input(kAdcChLdrB);
+    result.ldrBAmbient = adc_read();
 
-    // --- Illuminated readings (LEDs on) ---
-    gpio_put(PIN_LDR_A_EN, 1);
-    gpio_put(PIN_LDR_B_EN, 1);
-    sleep_ms(SETTLE_MS);
+    // Illuminated readings (LEDs on)
+    gpio_put(kPinLdrAEnable, 1);
+    gpio_put(kPinLdrBEnable, 1);
+    sleep_ms(kSettleMs);
 
-    adc_select_input(ADC_CH_LDR_A);
-    result.ldr_a_illuminated = adc_read();
+    adc_select_input(kAdcChLdrA);
+    result.ldrAIlluminated = adc_read();
 
-    adc_select_input(ADC_CH_LDR_B);
-    result.ldr_b_illuminated = adc_read();
+    adc_select_input(kAdcChLdrB);
+    result.ldrBIlluminated = adc_read();
 
-    // LEDs off
-    gpio_put(PIN_LDR_A_EN, 0);
-    gpio_put(PIN_LDR_B_EN, 0);
+    gpio_put(kPinLdrAEnable, 0);
+    gpio_put(kPinLdrBEnable, 0);
 
     return result;
 }
