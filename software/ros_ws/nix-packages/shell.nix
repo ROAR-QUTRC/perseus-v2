@@ -47,6 +47,7 @@ pkgs.mkShell {
           boost
           builtin-interfaces
           controller-manager
+          controller-manager-msgs
           cv-bridge
           diff-drive-controller
           fast-lio
