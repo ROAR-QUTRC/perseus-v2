@@ -76,12 +76,10 @@ void I2CSlave::handleIrq()
 
     if (status & I2C_IC_INTR_STAT_R_STOP_DET_BITS)
     {
-        if (status & I2C_IC_INTR_STAT_R_STOP_DET_BITS)
-        {
-            reg_ptr_ = 0xFF;
-            (void)i2c0->hw->clr_stop_det;
-        }
+        reg_ptr_ = 0xFF;
+        (void)i2c0->hw->clr_stop_det;
     }
+}
 
     int8_t I2CSlave::getMotorASpeed() const { return static_cast<int8_t>(live_regs_[kibisis::kRegMotorASpeed]); }
     int8_t I2CSlave::getMotorBSpeed() const { return static_cast<int8_t>(live_regs_[kibisis::kRegMotorBSpeed]); }
