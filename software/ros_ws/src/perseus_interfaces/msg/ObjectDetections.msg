@@ -11,3 +11,6 @@ int32[] ids
 # Pose of each detected marker, in the same order as `ids`
 # (ids[i] corresponds to poses[i])
 geometry_msgs/Pose[] poses
+
+# 2D image-space region for each detection, in the same order as `ids`
+sensor_msgs/RegionOfInterest[] regions_of_interest
