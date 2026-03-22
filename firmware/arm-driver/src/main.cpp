@@ -1,19 +1,21 @@
 #include <Arduino.h>
+#include <ESP32Servo.h>
+#include <FastLED.h>
 #include <driver/gpio.h>
 #include <math.h>
+
 #include <chrono>
 #include <hi_can_twai.hpp>
 #include <optional>
 #include <string>
 #include <vector>
+
 #include "driver/uart.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "stdio.h"
-#include <ESP32Servo.h>
-#include <FastLED.h>
 
 #define DELAY(x) vTaskDelay(x);
 
@@ -38,10 +40,10 @@ std::vector<double> current_positions(3, 0);
 
 // map of group to GPIO pin and if its an input (true) or output (false)
 Servo servo;
-constexpr bool IN = true; // alias for readability
+constexpr bool IN = true;  // alias for readability
 constexpr bool OUT = false;
 std::unordered_map<control_board::pwm_group, std::pair<uint8_t, bool>> pwm_pin_map = {
-    {control_board::pwm_group::PWM_1, {6, OUT}}, //  this channel is a special case for the servo
+    {control_board::pwm_group::PWM_1, {6, OUT}},  //  this channel is a special case for the servo
     {control_board::pwm_group::PWM_2, {7, OUT}},
     {control_board::pwm_group::PWM_3, {8, IN}},
     {control_board::pwm_group::PWM_4, {9, IN}}};
@@ -69,7 +71,7 @@ extern "C" void app_main()
 
     try
     {
-        auto& interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_2, GPIO_NUM_1), 0, // tx: 2, rx: 1
+        auto& interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_2, GPIO_NUM_1), 0,  // tx: 2, rx: 1
                                                       filter_t{
                                                           .address = static_cast<flagged_address_t>(BASE_ADDRESS),
                                                           .mask = DEVICE_MASK,
@@ -350,11 +352,14 @@ void handle_pwm_data(const Packet& packet, bool is_servo)
         if (!pwm_pin_map[group_id].second)
         {
             // output
-            if (is_servo) {
+            if (is_servo)
+            {
                 // map 16-bit value to servo angle (0-180)
                 double angle = (pwm_value / 65535.0) * 180.0;
                 servo.write(angle);
-            } else {
+            }
+            else
+            {
                 uint16_t duty = static_cast<uint16_t>((pwm_value / 65535.0) * 255);  // map 16-bit value to 8-bit duty cycle
                 analogWrite(pwm_pin_map[group_id].first, duty);
             }
@@ -377,13 +382,17 @@ void register_pwm_device(const control_board::pwm_group& group, bool is_servo)
     {
         packet_manager->set_callback(
             filter_t{static_cast<flagged_address_t>(address)},
-            {.data_callback = [=](const Packet& p) { handle_pwm_data(p, is_servo); }});
+            {.data_callback = [=](const Packet& p)
+             { handle_pwm_data(p, is_servo); }});
 
-        if (is_servo) {
+        if (is_servo)
+        {
             // attach servo to pin
             servo.attach(pwm_pin_map[group].first);
-            servo.write(0); // start at 0 degrees
-        } else {
+            servo.write(0);  // start at 0 degrees
+        }
+        else
+        {
             pinMode(pwm_pin_map[group].first, OUTPUT);
         }
     }
