@@ -20,6 +20,9 @@ int32[] ids
 # are set to NaN and consumers must check for finite values before use.
 geometry_msgs/Pose[] poses
 
+# 2D image-space region for each detection, in the same order as `ids`
+sensor_msgs/RegionOfInterest[] regions_of_interest
+
 # Human-readable status for callers, e.g. when 2D detections were found but
 # could not be resolved into poses.
 string message
