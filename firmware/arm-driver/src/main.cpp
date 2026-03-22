@@ -1,19 +1,19 @@
 #include <Arduino.h>
 #include <driver/gpio.h>
 #include <math.h>
-
 #include <chrono>
 #include <hi_can_twai.hpp>
 #include <optional>
 #include <string>
 #include <vector>
-
 #include "driver/uart.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "stdio.h"
+#include <ESP32Servo.h>
+#include <FastLED.h>
 
 #define DELAY(x) vTaskDelay(x);
 
@@ -37,19 +37,22 @@ std::optional<hi_can::PacketManager> packet_manager;
 std::vector<double> current_positions(3, 0);
 
 // map of group to GPIO pin and if its an input (true) or output (false)
+Servo servo;
+constexpr bool IN = true; // alias for readability
+constexpr bool OUT = false;
 std::unordered_map<control_board::pwm_group, std::pair<uint8_t, bool>> pwm_pin_map = {
-    {control_board::pwm_group::PWM_1, {6, false}},
-    {control_board::pwm_group::PWM_2, {7, false}},
-    {control_board::pwm_group::PWM_3, {8, true}},
-    {control_board::pwm_group::PWM_4, {9, true}}};
+    {control_board::pwm_group::PWM_1, {6, OUT}}, //  this channel is a special case for the servo
+    {control_board::pwm_group::PWM_2, {7, OUT}},
+    {control_board::pwm_group::PWM_3, {8, IN}},
+    {control_board::pwm_group::PWM_4, {9, IN}}};
 
 const addressing::standard_address_t BASE_ADDRESS{
     SYSTEM_ID,
     arm::SUBSYSTEM_ID,
     arm::control_board::DEVICE_ID};
 
-void register_pwm_device(const control_board::pwm_group& group);
-void handle_pwm_data(const Packet& packet);
+void register_pwm_device(const control_board::pwm_group& group, bool is_servo = false);
+void handle_pwm_data(const Packet& packet, bool is_servo = false);
 void register_rsbl_servo(const control_board::rsbl_group& group);
 void handle_rsbl_servo_command(const Packet& packet);
 
@@ -66,8 +69,7 @@ extern "C" void app_main()
 
     try
     {
-        // tx: 2, rx: 1
-        auto& interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_2, GPIO_NUM_1), 0,
+        auto& interface = TwaiInterface::get_instance(std::make_pair(GPIO_NUM_2, GPIO_NUM_1), 0, // tx: 2, rx: 1
                                                       filter_t{
                                                           .address = static_cast<flagged_address_t>(BASE_ADDRESS),
                                                           .mask = DEVICE_MASK,
@@ -88,7 +90,14 @@ extern "C" void app_main()
 
     for (const auto& [group, pin_info] : pwm_pin_map)
     {
-        register_pwm_device(group);
+        if (group == control_board::pwm_group::PWM_1)
+        {
+            register_pwm_device(group, true);
+        }
+        else
+        {
+            register_pwm_device(group);
+        }
     }
 
     printf("Setup complete, entering main loop\n");
@@ -196,7 +205,7 @@ void handle_uart(void* args)
 int write_to_motor(uint8_t id, double position, double speed)
 {
     std::string data = "<t," + std::to_string(id) + "," + std::to_string(position) + "," + std::to_string(speed) + ">";
-    printf("<t,%s,%s,%s>\n", std::to_string(id).c_str(), std::to_string(position).c_str(), std::to_string(speed).c_str());
+    // printf("<t,%s,%s,%s>\n", std::to_string(id).c_str(), std::to_string(position).c_str(), std::to_string(speed).c_str());
     return uart_write_bytes(UART_NUM, data.c_str(), strlen(data.c_str()));
 }
 
@@ -326,7 +335,7 @@ void register_rsbl_servo(const control_board::rsbl_group& group)
 
 #pragma region PWM Device
 
-void handle_pwm_data(const Packet& packet)
+void handle_pwm_data(const Packet& packet, bool is_servo)
 {
     try
     {
@@ -341,8 +350,14 @@ void handle_pwm_data(const Packet& packet)
         if (!pwm_pin_map[group_id].second)
         {
             // output
-            uint16_t duty = static_cast<uint16_t>((pwm_value / 65535.0) * 255);  // map 16-bit value to 8-bit duty cycle
-            analogWrite(pwm_pin_map[group_id].first, duty);
+            if (is_servo) {
+                // map 16-bit value to servo angle (0-180)
+                double angle = (pwm_value / 65535.0) * 180.0;
+                servo.write(angle);
+            } else {
+                uint16_t duty = static_cast<uint16_t>((pwm_value / 65535.0) * 255);  // map 16-bit value to 8-bit duty cycle
+                analogWrite(pwm_pin_map[group_id].first, duty);
+            }
         }
     }
     catch (const std::exception& e)
@@ -351,7 +366,7 @@ void handle_pwm_data(const Packet& packet)
     }
 }
 
-void register_pwm_device(const control_board::pwm_group& group)
+void register_pwm_device(const control_board::pwm_group& group, bool is_servo)
 {
     standard_address_t address{
         BASE_ADDRESS,
@@ -362,8 +377,15 @@ void register_pwm_device(const control_board::pwm_group& group)
     {
         packet_manager->set_callback(
             filter_t{static_cast<flagged_address_t>(address)},
-            {.data_callback = handle_pwm_data});
-        pinMode(pwm_pin_map[group].first, OUTPUT);
+            {.data_callback = [=](const Packet& p) { handle_pwm_data(p, is_servo); }});
+
+        if (is_servo) {
+            // attach servo to pin
+            servo.attach(pwm_pin_map[group].first);
+            servo.write(0); // start at 0 degrees
+        } else {
+            pinMode(pwm_pin_map[group].first, OUTPUT);
+        }
     }
     else
     {
