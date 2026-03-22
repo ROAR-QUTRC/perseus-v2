@@ -29,6 +29,7 @@ namespace perseus_vision
             roi.do_rectify = false;
             return roi;
         }
+
     }  // namespace
 
     // ── constructor ───────────────────────────────────────────────────────────────
@@ -557,6 +558,7 @@ namespace perseus_vision
             _latest_detections_frame_id = detections_msg.frame_id;
             _latest_detection_ids = detections_msg.ids;
             _latest_detection_poses = detections_msg.poses;
+            _latest_detection_regions_of_interest = detections_msg.regions_of_interest;
             _latest_detection_bboxes = std::move(detection_bboxes_for_service);
             _latest_detection_message = std::move(detection_message);
         }
@@ -588,6 +590,31 @@ namespace perseus_vision
         }
 
         _pub_cube_detections->publish(detections_msg);
+        {
+            std::lock_guard<std::mutex> lock(_detections_mutex);
+            _latest_detections_stamp = detections_msg.stamp;
+            _latest_detections_frame_id = detections_msg.frame_id;
+            _latest_detection_ids = detections_msg.ids;
+            _latest_detection_poses = detections_msg.poses;
+            _latest_detection_regions_of_interest = detections_msg.regions_of_interest;
+            _latest_detection_bboxes.clear();
+            _latest_detection_bboxes.reserve(detections.size());
+            for (const auto& detection : detections)
+            {
+                _latest_detection_bboxes.push_back(detection.bbox);
+            }
+            if (detections.empty())
+            {
+                _latest_detection_message = "No cube detections found in the latest image.";
+            }
+            else
+            {
+                std::ostringstream message_stream;
+                message_stream << "Detected " << detections.size()
+                               << " cube(s) in 2D only; 3D poses are unavailable in the current depth mode.";
+                _latest_detection_message = message_stream.str();
+            }
+        }
     }
 
     bool CubeDetector::estimate_cube_pose_from_depth(
@@ -845,6 +872,7 @@ namespace perseus_vision
             response->frame_id = _latest_detections_frame_id;
             response->ids = _latest_detection_ids;
             response->poses = _latest_detection_poses;
+            response->regions_of_interest = _latest_detection_regions_of_interest;
             response->message = _latest_detection_message;
 
             if (request->capture_image)
