@@ -168,8 +168,14 @@ KibisisSystemHardware::export_state_interfaces()
             &hw_velocities_[i]);
     }
 
-    // GPIO — moisture sensor ADC reading
+    // GPIO — moisture sensor
     state_interfaces.emplace_back("moisture_sensor", "adc_raw", &moisture_adc_state_);
+
+    // GPIO — LDR sensors
+    state_interfaces.emplace_back("ldr_sensor", "a_ambient",     &ldr_a_ambient_state_);
+    state_interfaces.emplace_back("ldr_sensor", "b_ambient",     &ldr_b_ambient_state_);
+    state_interfaces.emplace_back("ldr_sensor", "a_illuminated", &ldr_a_illuminated_state_);
+    state_interfaces.emplace_back("ldr_sensor", "b_illuminated", &ldr_b_illuminated_state_);
 
     return state_interfaces;
 }
@@ -190,8 +196,11 @@ KibisisSystemHardware::export_command_interfaces()
     // GPIO — space motor speed (-100..100)
     command_interfaces.emplace_back("space_motor", "velocity", &space_motor_cmd_);
 
-    // GPIO — moisture sensor trigger (write 1.0 to request a sample)
+    // GPIO — moisture sensor trigger
     command_interfaces.emplace_back("moisture_sensor", "trigger", &moisture_trigger_cmd_);
+
+    // GPIO — LDR trigger
+    command_interfaces.emplace_back("ldr_sensor", "trigger", &ldr_trigger_cmd_);
 
     return command_interfaces;
 }
@@ -206,9 +215,14 @@ hardware_interface::CallbackReturn KibisisSystemHardware::on_configure(
         hw_commands_[i]    = 0.0;
         prev_positions_[i] = 0.0;
     }
-    space_motor_cmd_      = 0.0;
-    moisture_trigger_cmd_ = 0.0;
-    moisture_adc_state_   = 0.0;
+    space_motor_cmd_          = 0.0;
+    moisture_trigger_cmd_     = 0.0;
+    moisture_adc_state_       = 0.0;
+    ldr_trigger_cmd_          = 0.0;
+    ldr_a_ambient_state_      = 0.0;
+    ldr_b_ambient_state_      = 0.0;
+    ldr_a_illuminated_state_  = 0.0;
+    ldr_b_illuminated_state_  = 0.0;
 
     if (!i2c_open())
     {
@@ -229,8 +243,9 @@ hardware_interface::CallbackReturn KibisisSystemHardware::on_activate(
     const rclcpp_lifecycle::State& /*previous_state*/)
 {
     for (auto& cmd : hw_commands_) cmd = 0.0;
-    space_motor_cmd_      = 0.0;
-    moisture_trigger_cmd_ = 0.0;
+    space_motor_cmd_          = 0.0;
+    moisture_trigger_cmd_     = 0.0;
+    ldr_trigger_cmd_          = 0.0;
 
     RCLCPP_INFO(LOGGER, "Activated");
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -239,7 +254,6 @@ hardware_interface::CallbackReturn KibisisSystemHardware::on_activate(
 hardware_interface::CallbackReturn KibisisSystemHardware::on_deactivate(
     const rclcpp_lifecycle::State& /*previous_state*/)
 {
-    // Stop all motors safely
     const uint8_t zero = 0;
     i2c_write_reg(REG_MOTOR_A_SPEED,     &zero, 1);
     i2c_write_reg(REG_MOTOR_B_SPEED,     &zero, 1);
@@ -260,7 +274,6 @@ void KibisisSystemHardware::read_wheel_encoder(size_t joint_index)
     uint8_t buf[4] = {};
     if (!i2c_read_reg(reg, buf, 4)) return;
 
-    // Assemble little-endian int32_t
     const int32_t counts = static_cast<int32_t>(
         static_cast<uint32_t>(buf[0])         |
         (static_cast<uint32_t>(buf[1]) << 8)  |
@@ -283,25 +296,45 @@ hardware_interface::return_type KibisisSystemHardware::read(
 {
     const double dt = period.seconds();
 
+    // Wheel encoders
     for (size_t i = 0; i < hw_positions_.size(); ++i)
     {
         read_wheel_encoder(i);
-
         if (dt > 0.0)
-        {
             hw_velocities_[i] = (hw_positions_[i] - prev_positions_[i]) / dt;
-        }
         prev_positions_[i] = hw_positions_[i];
     }
 
-    // Always read moisture value — stable until next trigger
-    uint8_t moisture_buf[2] = {};
-    if (i2c_read_reg(REG_MOISTURE_VALUE_0, moisture_buf, 2))
+    // Moisture sensor — always read, stable until next trigger
     {
-        const uint16_t adc_raw =
-            static_cast<uint16_t>(moisture_buf[0]) |
-            (static_cast<uint16_t>(moisture_buf[1]) << 8);
-        moisture_adc_state_ = static_cast<double>(adc_raw);
+        uint8_t buf[2] = {};
+        if (i2c_read_reg(REG_MOISTURE_VALUE_0, buf, 2))
+        {
+            moisture_adc_state_ = static_cast<double>(
+                static_cast<uint16_t>(buf[0]) |
+                (static_cast<uint16_t>(buf[1]) << 8));
+        }
+    }
+
+    // LDR sensors — always read, stable until next trigger
+    {
+        uint8_t buf[2] = {};
+
+        if (i2c_read_reg(REG_LDR_A_AMBIENT_0, buf, 2))
+            ldr_a_ambient_state_ = static_cast<double>(
+                static_cast<uint16_t>(buf[0]) | (static_cast<uint16_t>(buf[1]) << 8));
+
+        if (i2c_read_reg(REG_LDR_B_AMBIENT_0, buf, 2))
+            ldr_b_ambient_state_ = static_cast<double>(
+                static_cast<uint16_t>(buf[0]) | (static_cast<uint16_t>(buf[1]) << 8));
+
+        if (i2c_read_reg(REG_LDR_A_ILLUMINATED_0, buf, 2))
+            ldr_a_illuminated_state_ = static_cast<double>(
+                static_cast<uint16_t>(buf[0]) | (static_cast<uint16_t>(buf[1]) << 8));
+
+        if (i2c_read_reg(REG_LDR_B_ILLUMINATED_0, buf, 2))
+            ldr_b_illuminated_state_ = static_cast<double>(
+                static_cast<uint16_t>(buf[0]) | (static_cast<uint16_t>(buf[1]) << 8));
     }
 
     return hardware_interface::return_type::OK;
@@ -310,24 +343,32 @@ hardware_interface::return_type KibisisSystemHardware::read(
 hardware_interface::return_type KibisisSystemHardware::write(
     const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
-    // Drive motors (index 0 = left/Motor A, index 1 = right/Motor B)
+    // Drive motors
     write_drive_motor(REG_MOTOR_A_SPEED, hw_commands_[0]);
     write_drive_motor(REG_MOTOR_B_SPEED, hw_commands_[1]);
 
-    // Space motor — command is already -100..100
+    // Space motor
     {
-        const double  clamped = std::clamp(space_motor_cmd_, -100.0, 100.0);
-        const int8_t  speed   = static_cast<int8_t>(std::round(clamped));
+        const double clamped = std::clamp(space_motor_cmd_, -100.0, 100.0);
+        const int8_t speed   = static_cast<int8_t>(std::round(clamped));
         i2c_write_reg(REG_SPACE_MOTOR_SPEED,
             reinterpret_cast<const uint8_t*>(&speed), 1);
     }
 
-    // Moisture trigger — auto-clears after sending so it only fires once
+    // Moisture trigger — fires once and clears
     if (moisture_trigger_cmd_ >= 1.0)
     {
         const uint8_t trigger = 0x01;
         i2c_write_reg(REG_MOISTURE_SAMPLE, &trigger, 1);
         moisture_trigger_cmd_ = 0.0;
+    }
+
+    // LDR trigger — fires once and clears
+    if (ldr_trigger_cmd_ >= 1.0)
+    {
+        const uint8_t trigger = 0x01;
+        i2c_write_reg(REG_LDR_SAMPLE, &trigger, 1);
+        ldr_trigger_cmd_ = 0.0;
     }
 
     return hardware_interface::return_type::OK;

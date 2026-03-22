@@ -84,10 +84,21 @@ def generate_launch_description():
         parameters=[use_sim_time_param],
     )
 
+    ldr_trigger_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "ldr_trigger_controller",
+            "--controller-manager", "/kibisis/kibisis_control_manager",
+            "--controller-manager-timeout", "30",
+        ],
+        parameters=[use_sim_time_param],
+    )
+
     # -------------------------------------------------------------------------
     # kibisis_sensors node — bridges ROS2 API to GPIO interfaces.
-    # Namespaced under /kibisis so all its topics are /kibisis/moisture/...
-    # and /kibisis/space_motor/...
+    # Namespaced under /kibisis so all its topics are /kibisis/moisture/...,
+    # /kibisis/space_motor/..., and /kibisis/ldr/...
     # -------------------------------------------------------------------------
     kibisis_sensors = Node(
         package="kibisis_sensors",
@@ -101,8 +112,8 @@ def generate_launch_description():
     # -------------------------------------------------------------------------
     # Launch sequence:
     #   1. controller_manager + joint_state_broadcaster
-    #   2. diff_drive + space_motor + moisture_trigger (after jsb is up)
-    #   3. kibisis_sensors (after moisture_trigger is up)
+    #   2. diff_drive + space_motor + moisture_trigger + ldr_trigger (after jsb)
+    #   3. kibisis_sensors (after ldr_trigger is up)
     # -------------------------------------------------------------------------
     return LaunchDescription([
         controller_manager,
@@ -115,13 +126,14 @@ def generate_launch_description():
                     diff_drive_spawner,
                     space_motor_spawner,
                     moisture_trigger_spawner,
+                    ldr_trigger_spawner,
                 ],
             )
         ),
 
         RegisterEventHandler(
             OnProcessExit(
-                target_action=moisture_trigger_spawner,
+                target_action=ldr_trigger_spawner,
                 on_exit=[kibisis_sensors],
             )
         ),
