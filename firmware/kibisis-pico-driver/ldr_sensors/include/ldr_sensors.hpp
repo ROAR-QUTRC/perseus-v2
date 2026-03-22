@@ -1,7 +1,8 @@
 #pragma once
-#include "pico/stdlib.h"
-#include "hardware/adc.h"
 #include <cstdint>
+
+#include "hardware/adc.h"
+#include "pico/stdlib.h"
 
 // LDR sensor module for Kibisis.
 //
@@ -21,7 +22,8 @@
 class LdrSensors
 {
 public:
-    struct Reading {
+    struct Reading
+    {
         uint16_t ldr_a_ambient;      // LDR A before LEDs on
         uint16_t ldr_b_ambient;      // LDR B before LEDs on
         uint16_t ldr_a_illuminated;  // LDR A with LEDs on
@@ -32,9 +34,9 @@ public:
     Reading sample();
 
 private:
-    static constexpr uint PIN_LDR_A_EN = 20;   // power enable for LDR A LED
-    static constexpr uint PIN_LDR_B_EN = 21;   // power enable for LDR B LED
-    static constexpr uint ADC_CH_LDR_A = 0;    // GP26 = ADC0
-    static constexpr uint ADC_CH_LDR_B = 1;    // GP27 = ADC1
-    static constexpr uint SETTLE_MS    = 10;   // time for LDR to stabilise after LED on
+    static constexpr uint PIN_LDR_A_EN = 20;  // power enable for LDR A LED
+    static constexpr uint PIN_LDR_B_EN = 21;  // power enable for LDR B LED
+    static constexpr uint ADC_CH_LDR_A = 0;   // GP26 = ADC0
+    static constexpr uint ADC_CH_LDR_B = 1;   // GP27 = ADC1
+    static constexpr uint SETTLE_MS = 10;     // time for LDR to stabilise after LED on
 };

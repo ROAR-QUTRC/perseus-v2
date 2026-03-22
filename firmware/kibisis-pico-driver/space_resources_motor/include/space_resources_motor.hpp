@@ -1,8 +1,9 @@
 #pragma once
-#include "pico/stdlib.h"
-#include "hardware/pwm.h"
-#include <cstdint>
 #include <algorithm>
+#include <cstdint>
+
+#include "hardware/pwm.h"
+#include "pico/stdlib.h"
 
 // DFRobot DFR0430 brushless ESC controlled via PPM signal.
 //
@@ -18,7 +19,10 @@ class SpaceResourcesMotor
 {
 public:
     // GP12 by default — change if your wiring differs
-    explicit SpaceResourcesMotor(uint pin = 15) : pin_(pin) {}
+    explicit SpaceResourcesMotor(uint pin = 15)
+        : pin_(pin)
+    {
+    }
 
     void init();
     void setSpeed(int8_t speed);  // -100 to +100
@@ -29,11 +33,11 @@ private:
     uint slice_;
     uint chan_;
 
-    static constexpr uint32_t PERIOD_US   = 3000;
-    static constexpr uint32_t NEUTRAL_US  = 1500;
-    static constexpr uint32_t MIN_US      = 500;
-    static constexpr uint32_t MAX_US      = 2500;
+    static constexpr uint32_t PERIOD_US = 3000;
+    static constexpr uint32_t NEUTRAL_US = 1500;
+    static constexpr uint32_t MIN_US = 500;
+    static constexpr uint32_t MAX_US = 2500;
     static constexpr uint32_t MOTOR_SYS_CLK_HZ = 150'000'000;
-    
+
     void setPulseUs(uint32_t pulse_us);
 };

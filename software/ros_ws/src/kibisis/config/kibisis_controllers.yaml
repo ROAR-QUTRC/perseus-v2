@@ -2,31 +2,24 @@
   ros__parameters:
     update_rate: 50
     lock_memory: False
-
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
-
     diff_drive_base_controller:
       type: diff_drive_controller/DiffDriveController
-
     # ForwardCommandController for space motor GPIO command interface
     space_motor_controller:
       type: forward_command_controller/ForwardCommandController
-
     # ForwardCommandController for moisture sensor trigger GPIO command interface
     moisture_trigger_controller:
       type: forward_command_controller/ForwardCommandController
-
     # ForwardCommandController for LDR sensor trigger GPIO command interface
     ldr_trigger_controller:
       type: forward_command_controller/ForwardCommandController
-
 # Joint state broadcaster also broadcasts GPIO state interfaces
 joint_state_broadcaster:
   ros__parameters:
     map_interface_to_joint_state:
       effort: current
-
 # Differential drive controller
 /kibisis/diff_drive_base_controller:
   ros__parameters:
@@ -50,40 +43,34 @@ joint_state_broadcaster:
     angular.z.max_velocity: 10.0
     angular.z.max_acceleration: 5.0
     angular.z.max_jerk: .NAN
-
 # Space motor — ForwardCommandController for space_motor/velocity GPIO interface
 space_motor_controller:
   ros__parameters:
     joints:
       - space_motor
     interface_name: velocity
-
 /kibisis/space_motor_controller:
   ros__parameters:
     joints:
       - space_motor
     interface_name: velocity
-
 # Moisture trigger — ForwardCommandController for moisture_sensor/trigger GPIO interface
 moisture_trigger_controller:
   ros__parameters:
     joints:
       - moisture_sensor
     interface_name: trigger
-
 /kibisis/moisture_trigger_controller:
   ros__parameters:
     joints:
       - moisture_sensor
     interface_name: trigger
-
 # LDR trigger — ForwardCommandController for ldr_sensor/trigger GPIO interface
 ldr_trigger_controller:
   ros__parameters:
     joints:
       - ldr_sensor
     interface_name: trigger
-
 /kibisis/ldr_trigger_controller:
   ros__parameters:
     joints:

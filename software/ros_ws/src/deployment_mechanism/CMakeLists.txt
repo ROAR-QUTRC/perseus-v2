@@ -14,34 +14,19 @@ find_package(std_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GPIODCXX REQUIRED libgpiodcxx)
 
-add_executable(deployment_mechanism
-  src/deployment_mechanism.cpp
-)
+add_executable(deployment_mechanism src/deployment_mechanism.cpp)
 
-target_include_directories(deployment_mechanism PRIVATE
-  include
-  ${GPIODCXX_INCLUDE_DIRS}
-)
+target_include_directories(deployment_mechanism
+                           PRIVATE include ${GPIODCXX_INCLUDE_DIRS})
 
-target_link_libraries(deployment_mechanism
-  ${GPIODCXX_LIBRARIES}
-)
+target_link_libraries(deployment_mechanism ${GPIODCXX_LIBRARIES})
 
-ament_target_dependencies(deployment_mechanism
-  rclcpp
-  std_msgs
-)
+ament_target_dependencies(deployment_mechanism rclcpp std_msgs)
 
-install(TARGETS deployment_mechanism
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(TARGETS deployment_mechanism DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY include/
-  DESTINATION include
-)
+install(DIRECTORY include/ DESTINATION include)
 
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
-)
+install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
 
 ament_package()

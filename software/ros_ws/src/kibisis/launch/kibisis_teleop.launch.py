@@ -32,15 +32,16 @@ def generate_launch_description():
         output="both",
         emulate_tty=True,
         parameters=[
-            PathJoinSubstitution([
-                FindPackageShare("kibisis"),
-                "config",
-                "xbox_controller_kibisis.yaml",
-            ])
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("kibisis"),
+                    "config",
+                    "xbox_controller_kibisis.yaml",
+                ]
+            )
         ],
         remappings=[
-            ("/input_devices/cmd_vel",
-             "/kibisis/diff_drive_base_controller/cmd_vel"),
+            ("/input_devices/cmd_vel", "/kibisis/diff_drive_base_controller/cmd_vel"),
         ],
     )
 

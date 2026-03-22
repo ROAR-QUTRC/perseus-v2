@@ -1,10 +1,11 @@
 #include <stdio.h>
-#include "pico/stdlib.h"
-#include "i2c_slave.hpp"
+
 #include "drive_motors.hpp"
+#include "i2c_slave.hpp"
+#include "ldr_sensors.hpp"
+#include "pico/stdlib.h"
 #include "quadrature_encoders.hpp"
 #include "space_resources_motor.hpp"
-#include "ldr_sensors.hpp"
 #include "status-light.hpp"
 
 static constexpr uint LED_PIN = PICO_DEFAULT_LED_PIN;
@@ -46,7 +47,8 @@ int main()
         motors.setMotorB(b);
 
         // LDR sample on demand
-        if (slave.getLdrSampleTrigger()) {
+        if (slave.getLdrSampleTrigger())
+        {
             auto r = ldrs.sample();
             slave.setLdrAmbientA(r.ldr_a_ambient);
             slave.setLdrAmbientB(r.ldr_b_ambient);

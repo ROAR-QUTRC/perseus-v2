@@ -42,12 +42,14 @@ using namespace std::chrono_literals;
 class KibisisSensorsNode : public rclcpp::Node
 {
 public:
-    KibisisSensorsNode() : Node("kibisis_sensors")
+    KibisisSensorsNode()
+        : Node("kibisis_sensors")
     {
         // --- Space motor ---
         space_motor_sub_ = create_subscription<std_msgs::msg::Float32>(
             "space_motor/cmd", 10,
-            [this](const std_msgs::msg::Float32::SharedPtr msg) {
+            [this](const std_msgs::msg::Float32::SharedPtr msg)
+            {
                 auto clamped = std_msgs::msg::Float32();
                 clamped.data = std::clamp(msg->data, -100.0f, 100.0f);
                 space_motor_cmd_pub_->publish(clamped);
@@ -73,19 +75,20 @@ public:
 
         moisture_state_sub_ = create_subscription<std_msgs::msg::Float32>(
             "/kibisis/moisture/adc_raw", 10,
-            [this](const std_msgs::msg::Float32::SharedPtr msg) {
+            [this](const std_msgs::msg::Float32::SharedPtr msg)
+            {
                 if (waiting_for_moisture_)
                 {
                     moisture_pub_->publish(*msg);
                     waiting_for_moisture_ = false;
                     RCLCPP_INFO(get_logger(),
-                        "Moisture sample complete: %.0f / 4095", msg->data);
+                                "Moisture sample complete: %.0f / 4095", msg->data);
                 }
             });
 
         // --- LDR sensors ---
-        ldr_a_ambient_pub_     = create_publisher<std_msgs::msg::Float32>("ldr/a_ambient", 10);
-        ldr_b_ambient_pub_     = create_publisher<std_msgs::msg::Float32>("ldr/b_ambient", 10);
+        ldr_a_ambient_pub_ = create_publisher<std_msgs::msg::Float32>("ldr/a_ambient", 10);
+        ldr_b_ambient_pub_ = create_publisher<std_msgs::msg::Float32>("ldr/b_ambient", 10);
         ldr_a_illuminated_pub_ = create_publisher<std_msgs::msg::Float32>("ldr/a_illuminated", 10);
         ldr_b_illuminated_pub_ = create_publisher<std_msgs::msg::Float32>("ldr/b_illuminated", 10);
 
@@ -104,8 +107,10 @@ public:
         // Subscribe to all four LDR state interfaces broadcast by JointStateBroadcaster
         ldr_a_ambient_sub_ = create_subscription<std_msgs::msg::Float32>(
             "/kibisis/ldr/a_ambient", 10,
-            [this](const std_msgs::msg::Float32::SharedPtr msg) {
-                if (waiting_for_ldr_) {
+            [this](const std_msgs::msg::Float32::SharedPtr msg)
+            {
+                if (waiting_for_ldr_)
+                {
                     ldr_a_ambient_pub_->publish(*msg);
                     ldr_a_received_ = true;
                     check_ldr_complete();
@@ -114,8 +119,10 @@ public:
 
         ldr_b_ambient_sub_ = create_subscription<std_msgs::msg::Float32>(
             "/kibisis/ldr/b_ambient", 10,
-            [this](const std_msgs::msg::Float32::SharedPtr msg) {
-                if (waiting_for_ldr_) {
+            [this](const std_msgs::msg::Float32::SharedPtr msg)
+            {
+                if (waiting_for_ldr_)
+                {
                     ldr_b_ambient_pub_->publish(*msg);
                     ldr_b_received_ = true;
                     check_ldr_complete();
@@ -124,8 +131,10 @@ public:
 
         ldr_a_illuminated_sub_ = create_subscription<std_msgs::msg::Float32>(
             "/kibisis/ldr/a_illuminated", 10,
-            [this](const std_msgs::msg::Float32::SharedPtr msg) {
-                if (waiting_for_ldr_) {
+            [this](const std_msgs::msg::Float32::SharedPtr msg)
+            {
+                if (waiting_for_ldr_)
+                {
                     ldr_a_illuminated_pub_->publish(*msg);
                     ldr_a_illuminated_received_ = true;
                     check_ldr_complete();
@@ -134,8 +143,10 @@ public:
 
         ldr_b_illuminated_sub_ = create_subscription<std_msgs::msg::Float32>(
             "/kibisis/ldr/b_illuminated", 10,
-            [this](const std_msgs::msg::Float32::SharedPtr msg) {
-                if (waiting_for_ldr_) {
+            [this](const std_msgs::msg::Float32::SharedPtr msg)
+            {
+                if (waiting_for_ldr_)
+                {
                     ldr_b_illuminated_pub_->publish(*msg);
                     ldr_b_illuminated_received_ = true;
                     check_ldr_complete();
@@ -184,9 +195,9 @@ private:
         auto trigger_msg = std_msgs::msg::Float32();
         trigger_msg.data = 1.0f;
         ldr_trigger_pub_->publish(trigger_msg);
-        waiting_for_ldr_           = true;
-        ldr_a_received_            = false;
-        ldr_b_received_            = false;
+        waiting_for_ldr_ = true;
+        ldr_a_received_ = false;
+        ldr_b_received_ = false;
         ldr_a_illuminated_received_ = false;
         ldr_b_illuminated_received_ = false;
 
@@ -227,11 +238,11 @@ private:
     rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr ldr_a_illuminated_sub_;
     rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr ldr_b_illuminated_sub_;
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr ldr_service_;
-    bool waiting_for_ldr_              = false;
-    bool ldr_a_received_               = false;
-    bool ldr_b_received_               = false;
-    bool ldr_a_illuminated_received_   = false;
-    bool ldr_b_illuminated_received_   = false;
+    bool waiting_for_ldr_ = false;
+    bool ldr_a_received_ = false;
+    bool ldr_b_received_ = false;
+    bool ldr_a_illuminated_received_ = false;
+    bool ldr_b_illuminated_received_ = false;
 };
 
 int main(int argc, char* argv[])

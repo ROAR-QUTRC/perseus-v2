@@ -1,4 +1,5 @@
 #include "status-light.hpp"
+
 #include "ws2812.pio.h"
 
 void StatusLight::init()
