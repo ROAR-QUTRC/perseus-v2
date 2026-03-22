@@ -38,7 +38,7 @@ public:
 private:
     static constexpr uint kPinLdrAEnable = 20;  ///< GPIO enabling LDR A LED power
     static constexpr uint kPinLdrBEnable = 21;  ///< GPIO enabling LDR B LED power
-    static constexpr uint kAdcChLdrA     = 0;   ///< GP26 = ADC channel 0
-    static constexpr uint kAdcChLdrB     = 1;   ///< GP27 = ADC channel 1
-    static constexpr uint kSettleMs      = 10;  ///< LED stabilisation time in ms
+    static constexpr uint kAdcChLdrA = 0;       ///< GP26 = ADC channel 0
+    static constexpr uint kAdcChLdrB = 1;       ///< GP27 = ADC channel 1
+    static constexpr uint kSettleMs = 10;       ///< LED stabilisation time in ms
 };

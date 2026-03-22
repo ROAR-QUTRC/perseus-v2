@@ -4,8 +4,6 @@
 
 #include "hardware/pio.h"
 
-#include "hardware/pio.h"
-
 /// Quadrature encoder reader for Kibisis drive motors.
 ///
 /// Channel A and B pins must be consecutive GPIOs (B = A + 1).
@@ -42,8 +40,8 @@ private:
     static constexpr uint kEncBPinA = 15;
     static constexpr uint kEncBPinB = 16;
 
-    static constexpr uint kEncASm   = 0;
-    static constexpr uint kEncBSm   = 1;
+    static constexpr uint kEncASm = 0;
+    static constexpr uint kEncBSm = 1;
 
     uint pio_program_offset_ = 0;
     bool initialised_ = false;

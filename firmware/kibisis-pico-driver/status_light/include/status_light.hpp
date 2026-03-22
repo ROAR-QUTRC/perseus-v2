@@ -17,19 +17,19 @@ public:
     void setAmber();
 
 private:
-    static constexpr uint kLedPin   = 28;
+    static constexpr uint kLedPin = 28;
     static constexpr uint kLedCount = 8;
-    static constexpr float kFreqHz  = 800'000.0f;
-    static constexpr bool kIsRgbw   = false;
+    static constexpr float kFreqHz = 800'000.0f;
+    static constexpr bool kIsRgbw = false;
 
     // Amber in GRB byte order: G=120, R=255, B=0
     static constexpr uint32_t kAmber =
         (static_cast<uint32_t>(120) << 16) |
-        (static_cast<uint32_t>(255) <<  8) |
+        (static_cast<uint32_t>(255) << 8) |
         static_cast<uint32_t>(0);
 
-    PIO  pio_ = pio1;
-    uint sm_  = 0;
+    PIO pio_ = pio1;
+    uint sm_ = 0;
 
     void put(uint32_t grb);
 };

@@ -18,7 +18,10 @@
 class SpaceResourcesMotor
 {
 public:
-    explicit SpaceResourcesMotor(uint pin = 15) : pin_(pin) {}
+    explicit SpaceResourcesMotor(uint pin = 15)
+        : pin_(pin)
+    {
+    }
 
     void init();
 
@@ -30,12 +33,12 @@ public:
 private:
     uint pin_;
     uint slice_ = 0;
-    uint chan_  = 0;
+    uint chan_ = 0;
 
-    static constexpr uint32_t kPeriodUs  = 3000;
+    static constexpr uint32_t kPeriodUs = 3000;
     static constexpr uint32_t kNeutralUs = 1500;
-    static constexpr uint32_t kMinUs     = 500;
-    static constexpr uint32_t kMaxUs     = 2500;
+    static constexpr uint32_t kMinUs = 500;
+    static constexpr uint32_t kMaxUs = 2500;
 
     void setPulseUs(uint32_t pulseUs);
 };

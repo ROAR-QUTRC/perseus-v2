@@ -24,17 +24,13 @@ void SpaceResourcesMotor::setSpeed(const int8_t speed)
     if (clamped >= 0)
     {
         // 0..+100 → 1500..2500 µs
-        pulseUs = kNeutralUs
-                  + static_cast<uint32_t>(clamped)
-                    * (kMaxUs - kNeutralUs) / 100;
+        pulseUs = kNeutralUs + static_cast<uint32_t>(clamped) * (kMaxUs - kNeutralUs) / 100;
     }
     else
     {
         // -100..0 → 500..1500 µs
         pulseUs = static_cast<uint32_t>(
-            static_cast<int32_t>(kNeutralUs)
-            + static_cast<int32_t>(clamped)
-              * static_cast<int32_t>(kNeutralUs - kMinUs) / 100);
+            static_cast<int32_t>(kNeutralUs) + static_cast<int32_t>(clamped) * static_cast<int32_t>(kNeutralUs - kMinUs) / 100);
     }
 
     setPulseUs(pulseUs);

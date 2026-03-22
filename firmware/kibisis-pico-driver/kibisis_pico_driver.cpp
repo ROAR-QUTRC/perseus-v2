@@ -3,15 +3,14 @@
 #include "drive_motors.hpp"
 #include "i2c_slave.hpp"
 #include "ldr_sensors.hpp"
+#include "pico/stdlib.h"
 #include "quadrature_encoders.hpp"
 #include "space_resources_motor.hpp"
 #include "status_light.hpp"
 
-#include "pico/stdlib.h"
-
 namespace
 {
-constexpr uint kLedPin = PICO_DEFAULT_LED_PIN;
+    constexpr uint kLedPin = PICO_DEFAULT_LED_PIN;
 }
 
 int main()

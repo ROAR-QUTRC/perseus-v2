@@ -49,15 +49,15 @@ pico_set_program_version(kibisis_pico_driver "0.1")
 pico_enable_stdio_uart(kibisis_pico_driver 0)
 pico_enable_stdio_usb(kibisis_pico_driver 1)
 
-target_link_libraries(kibisis_pico_driver
-    pico_stdlib
-    i2c_slave_lib
-    drive_motors_lib
-    quadrature_encoders_lib
-    space_resources_motor_lib
-    ldr_sensors_lib
-    status_light_lib
-    hardware_adc
-)
+target_link_libraries(
+  kibisis_pico_driver
+  pico_stdlib
+  i2c_slave_lib
+  drive_motors_lib
+  quadrature_encoders_lib
+  space_resources_motor_lib
+  ldr_sensors_lib
+  status_light_lib
+  hardware_adc)
 
 pico_add_extra_outputs(kibisis_pico_driver)
