@@ -125,7 +125,6 @@ pkgs.mkShell {
     if [[ ! $DIRENV_IN_ENVRC ]]; then
         eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete ros2)"
         eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete colcon)"
-        export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
     fi
   ''
   + extraShellHook;
