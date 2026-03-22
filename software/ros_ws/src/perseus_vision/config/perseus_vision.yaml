@@ -21,7 +21,10 @@ aruco_detector:
     distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
 cube_detector:
   ros__parameters:
-    model_path: "cube_detector_yolob8s.onnx" # Empty uses the model installed under the package share directory
+    # Leave empty to use the default model installed with the package.
+    # To use a custom model, place it in perseus_vision/models/, rebuild the package,
+    # then set model_path to the model filename, e.g. "my_model.onnx".
+    model_path: ""
     confidence_threshold: 0.3
     always_on: true # Set to true to keep the node running even when no subscribers are present
     publish_annotated_image: true # Whether to publish the annotated image with detections drawn on it
