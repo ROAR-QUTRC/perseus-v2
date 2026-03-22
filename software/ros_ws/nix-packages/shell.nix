@@ -108,6 +108,7 @@ pkgs.mkShell {
           tf2-ros
           tf2-sensor-msgs
           twist-mux
+          twist-stamper
           urdf
           v4l2-camera
           visualization-msgs
