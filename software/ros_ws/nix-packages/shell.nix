@@ -88,6 +88,7 @@ pkgs.mkShell {
           ros-gz-sim
           ros2controlcli
           ros2launch
+          rosbridge-server
           rosidl-default-generators
           rosidl-default-runtime
           rplidar-ros
@@ -104,6 +105,7 @@ pkgs.mkShell {
           tf2-ros
           tf2-sensor-msgs
           twist-mux
+          twist-stamper
           urdf
           visualization-msgs
           xacro
