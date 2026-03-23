@@ -2,6 +2,7 @@ final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
   autonomy-diagnostics = final.callPackage ./autonomy-diagnostics.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
+  mapping-autotune = final.callPackage ./mapping-autotune.nix { };
   pcl-to-lsr = final.callPackage ./pcl-to-lsr.nix { };
   perseus = final.callPackage ./perseus.nix { };
   perseus-autonomy-bridge = final.callPackage ./perseus-autonomy-bridge.nix { };

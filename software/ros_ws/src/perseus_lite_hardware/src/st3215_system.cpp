@@ -471,6 +471,11 @@ namespace perseus_lite_hardware
 
                 // Scale RPM to protocol units: protocol = RPM * (MAX_PROTOCOL / MAX_RPM)
                 double scaled_velocity = rpm * (static_cast<double>(_MAX_VELOCITY_PROTOCOL) / _servo_max_rpm);
+
+                // Temporary diagnostic — remove after calibration
+                RCLCPP_INFO_THROTTLE(rclcpp::get_logger(LOGGER_NAME), *get_clock(), 2000,
+                                     "write() servo_max_rpm=%.1f rpm=%.2f protocol=%.0f",
+                                     _servo_max_rpm, rpm, scaled_velocity);
                 double clamped_velocity = std::clamp(scaled_velocity,
                                                      static_cast<double>(_MIN_VELOCITY_PROTOCOL),
                                                      static_cast<double>(_MAX_VELOCITY_PROTOCOL));
