@@ -103,4 +103,4 @@ export const getWidgetsByLayoutId = (id: string): Array<WidgetType> => {
 };
 
 // The widget group property is a string from the list of groups defined in this type:
-export type WidgetGroupType = "ROS" | "CAN Bus" | "Gstreamer" | "Misc";
+export type WidgetGroupType = "ROS" | "CAN Bus" | "Gstreamer" | "Kibisis" | "Misc";
