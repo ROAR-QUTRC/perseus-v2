@@ -420,6 +420,16 @@ namespace perseus_lite_hardware
                 _current_positions[i] = state.position;
                 _current_velocities[i] = state.velocity;
                 _temperatures[i] = state.temperature;
+
+                // Invert feedback for left-side motors (IDs 2, 3) to match
+                // the command inversion in write(). Without this, the
+                // diff_drive_controller sees left wheels going "backward"
+                // when driving forward, causing phantom rotation in odom.
+                if (_servo_ids[i] == 2 || _servo_ids[i] == 3)
+                {
+                    _current_velocities[i] = -_current_velocities[i];
+                    _current_positions[i] = -_current_positions[i];
+                }
             }
 
             return hardware_interface::return_type::OK;
