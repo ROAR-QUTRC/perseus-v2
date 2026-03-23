@@ -5,7 +5,7 @@ See <project:/home/nix-basics.md> for more information.
 
 ## Packages
 
-Intended for use with `nix build`.
+Intended for use with `nix build`. These can be found in the `packages` section of the `flake.nix`.
 
 ### `default`
 
@@ -65,7 +65,7 @@ Intended for use with `nix run`. Most of these can be found under the `apps` sec
 
 ### `default`
 
-The default executable is the perseus launch file, so this is equivalent to `nix run .#perseus`. It can also be run using `nix run`, which runs the default executable.
+The default executable is the perseus launch file, so this is equivalent to `nix run .#perseus`. It can also be run using `nix run`, which will run the default executable.
 
 ### `perseus`
 
@@ -110,11 +110,12 @@ Contact James N if you need one.
 
 ### `nixpkgs`
 
-You can access all [`nixpkgs`](https://github.com/NixOS/nixpkgs/tree/master/pkgs) through this. You might not have the newest version of `nixpkgs` depending on our `flake.lock` file, but this means you don't need to install a program that you only need to use once or twice.
+You can access all [`nixpkgs`](https://github.com/NixOS/nixpkgs/tree/master/pkgs) through this.
+You might not have the newest version of `nixpkgs` depending on how recently our `flake.lock` file was updated, but this means you don't need to install a program that you only need to use once or twice (even if it's a little outdated).
 
 ## Development shells
 
-Intended for use with `nix develop`.
+Intended for use with `nix develop`. These can be found under `devShells` in the `flake.nix`.
 
 ### `default`
 
@@ -123,3 +124,7 @@ Workspace containing everything needed to build and run the core software.
 ### `simulation`
 
 Same as the `default` dev shell, but extended with the packages needed to run simulation.
+
+### `docs`
+
+Workspace containing everything needed to build the docs (e.g. drawio for figures).
