@@ -55,7 +55,7 @@ endforeach()
 
 # INSTALL (ROS)
 install(
-  DIRECTORY config launch maps rviz urdf worlds
+  DIRECTORY config launch maps rviz scripts urdf worlds
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
