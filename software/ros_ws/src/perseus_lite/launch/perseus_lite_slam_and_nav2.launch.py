@@ -33,6 +33,7 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     # Get package directories
     bringup_dir = get_package_share_directory("autonomy")
+    perseus_lite_dir = get_package_share_directory("perseus_lite")
 
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -240,6 +241,19 @@ def generate_launch_description():
     # Environment variable for logging
     stdout_linebuf_envvar = SetEnvironmentVariable(
         "RCUTILS_LOGGING_BUFFERED_STREAM", "1"
+    )
+
+    # Raise CycloneDDS participant limit (default is too low for full Nav2 + SLAM stack)
+    # After rebuild, the XML will be available in the installed share directory.
+    # Before rebuild, set CYCLONEDDS_URI manually:
+    #   export CYCLONEDDS_URI=/path/to/cyclonedds.xml
+    cyclonedds_xml = os.path.join(
+        get_package_share_directory("perseus_lite"), "config", "cyclonedds.xml"
+    )
+    cyclonedds_uri = SetEnvironmentVariable(
+        "CYCLONEDDS_URI", cyclonedds_xml
+    ) if os.path.isfile(cyclonedds_xml) else LogInfo(
+        msg="cyclonedds.xml not found in install — set CYCLONEDDS_URI manually if needed"
     )
 
     # Nav2 nodes (non-composable)
@@ -484,6 +498,7 @@ def generate_launch_description():
 
     launch_files = [
         stdout_linebuf_envvar,
+        cyclonedds_uri,
         perseus_lite_launch,
         ekf_node,
         slam_toolbox,

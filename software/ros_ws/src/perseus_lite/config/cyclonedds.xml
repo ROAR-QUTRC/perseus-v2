@@ -1,0 +1,5 @@
+<CycloneDDS>
+  <Domain>
+    <MaxAutoParticipantIndex>120</MaxAutoParticipantIndex>
+  </Domain>
+</CycloneDDS>
