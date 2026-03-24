@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>pointcloud_to_laserscan</name>
+    <name>pcl_to_lsr</name>
     <version>2.0.2</version>
     <description>Converts a 3D Point Cloud into a 2D laser scan. This is useful for making devices like the Kinect appear like a laser scanner for 2D-based algorithms (e.g. laser-based SLAM).</description>
 

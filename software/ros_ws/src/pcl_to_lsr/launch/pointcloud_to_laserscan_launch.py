@@ -8,7 +8,7 @@ import os
 
 def generate_launch_description():
     config_file = os.path.join(
-        get_package_share_directory("pointcloud_to_laserscan"),
+        get_package_share_directory("pcl_to_lsr"),
         "config",
         "pointcloud_to_laserscan.yaml",
     )
@@ -31,7 +31,7 @@ def generate_launch_description():
                 description="converts lidar pointcloud to scan",
             ),
             Node(
-                package="pointcloud_to_laserscan",
+                package="pcl_to_lsr",
                 executable="pointcloud_to_laserscan_node",
                 remappings=[
                     ("cloud_in", LaunchConfiguration("scan_in")),

@@ -111,7 +111,7 @@ controller_server:
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
       # Core speed
-      desired_linear_vel: 0.25 # was 0.3 (slightly calmer)
+      desired_linear_vel: 0.3 # was 0.25 increased to avoid stalling
       # Lookahead tuning (reduces zig-zag / wobble)
       lookahead_dist: 0.75 # was 0.6
       min_lookahead_dist: 0.50 # was 0.3
@@ -128,12 +128,12 @@ controller_server:
       max_allowed_time_to_collision_up_to_carrot: 1.2
       use_regulated_linear_velocity_scaling: true
       use_cost_regulated_linear_velocity_scaling: true
-      cost_scaling_dist: 0.45 # was 0.3 (start scaling a bit later / smoother)
-      cost_scaling_gain: 0.6 # was 1.0 (less oscillatory modulation)
-      inflation_cost_scaling_factor: 3.0
+      cost_scaling_gain: 0.1 # was 0.6 — lower = less slowdown near obstacles
+      cost_scaling_dist: 0.2 # was 0.45 — start scaling closer to obstacles
+      inflation_cost_scaling_factor: 2.0 # was 3.0 — how much to slow down in inflated areas
       # Approaching goal behavior (smooth final approach)
       use_velocity_scaled_lookahead_dist: true
-      approach_velocity_scaling_dist: 0.8 # was 0.6 (more gradual slow down)
+      approach_velocity_scaling_dist: 0.4 # was 0.8 — start slowing down closer to goal
       min_approach_linear_velocity: 0.06 # was 0.05
       transform_tolerance: 0.5
 local_costmap:
@@ -318,8 +318,8 @@ velocity_smoother:
     smoothing_frequency: 20.0 # Increased from 10.0 for smoother operation
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.15, 0.0, 0.2] # [x, y, theta], Reduced max velocities for stability
-    min_velocity: [-0.15, 0.0, -0.2]
+    max_velocity: [0.3, 0.0, 0.4] # [x, y, theta], Increase  max vel to avoid stalling
+    min_velocity: [-0.3, 0.0, -0.4]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]
@@ -333,7 +333,7 @@ collision_monitor:
     base_frame_id: "base_footprint"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
-    cmd_vel_out_topic: "cmd_vel_out" # Correct output topic
+    cmd_vel_out_topic: "cmd_vel_nav_stamped" # Feeds into twist_mux navigation input
     state_topic: "collision_monitor_state"
     transform_tolerance: 1.0 # Increased from 0.5 for timing tolerance
     source_timeout: 5.0 # Increased from 2.0 for more robust operation

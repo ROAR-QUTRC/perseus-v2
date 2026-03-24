@@ -49,6 +49,7 @@ pkgs.mkShell {
           controller-manager
           cv-bridge
           diff-drive-controller
+          fast-lio
           geometry-msgs
           gz-ros2-control
           hardware-interface
@@ -68,6 +69,7 @@ pkgs.mkShell {
           nlohmann_json
           opencv
           openssl
+          pcl-conversions
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
@@ -86,6 +88,7 @@ pkgs.mkShell {
           ros-gz-sim
           ros2controlcli
           ros2launch
+          rosbridge-server
           rosidl-default-generators
           rosidl-default-runtime
           rplidar-ros
@@ -94,6 +97,7 @@ pkgs.mkShell {
           simple-networking
           slam-toolbox
           std-msgs
+          std-srvs
           teleop-twist-joy
           teleop-twist-keyboard
           tf2
@@ -101,6 +105,7 @@ pkgs.mkShell {
           tf2-ros
           tf2-sensor-msgs
           twist-mux
+          twist-stamper
           urdf
           visualization-msgs
           xacro
