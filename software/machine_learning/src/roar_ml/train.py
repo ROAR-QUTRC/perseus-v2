@@ -1,5 +1,7 @@
 import torch
 
+from model import IlmeniteModel
+from loader import IlmeniteDataLoader
 
 def main():
     # Set num of threads
