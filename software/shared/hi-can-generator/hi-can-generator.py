@@ -76,7 +76,7 @@ def main():
             )
             if "enum class parameter" in token:
                 parameters = parse_enum_class(
-                    get_enum_class(token, "parameter"), "PARAMETERS"
+                    get_enum_class(token, "parameter"), "PARAMETER_NAME"
                 )
                 system[system_id][subsystem_id][device_id][group_id].update(parameters)
         elif " DEVICE_ID" in token:
@@ -161,6 +161,7 @@ def main():
                 systems["PARAMETER_ADDRESS_BITS"] = token.split(
                     "PARAM_ADDRESS_BITS = "
                 )[1].split(";")[0]
+    systems.update(system)
 
     # Build flat lookup table
     flat_lut = {}
