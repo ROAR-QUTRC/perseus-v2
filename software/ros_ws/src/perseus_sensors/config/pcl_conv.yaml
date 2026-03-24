@@ -10,3 +10,4 @@ pointcloud_to_laserscan:
     range_max: 40.0
     use_inf: true
     inf_epsilon: 1.0
+    use_dynamic_conversions: true

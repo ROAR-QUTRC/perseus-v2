@@ -44,16 +44,112 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 #include <utility>
+#include <vector>
 
+#include "Eigen/Eigenvalues"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "tf2_ros/create_timer_ros.h"
 #include "tf2_sensor_msgs/tf2_sensor_msgs.hpp"
 
 namespace pointcloud_to_laserscan
 {
+    namespace
+    {
+        std::optional<Eigen::Vector3d> estimate_plane_normal(
+            const sensor_msgs::msg::PointCloud2& cloud_msg,
+            double min_height,
+            double max_height)
+        {
+            std::vector<Eigen::Vector3d> plane_points;
+            plane_points.reserve(cloud_msg.width * cloud_msg.height);
+
+            for (sensor_msgs::PointCloud2ConstIterator<float> iter_x(cloud_msg, "x"),
+                 iter_y(cloud_msg, "y"), iter_z(cloud_msg, "z");
+                 iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z)
+            {
+                if (std::isnan(*iter_x) || std::isnan(*iter_y) || std::isnan(*iter_z))
+                {
+                    continue;
+                }
+
+                if (*iter_z > max_height || *iter_z < min_height)
+                {
+                    continue;
+                }
+
+                plane_points.emplace_back(*iter_x, *iter_y, *iter_z);
+            }
+
+            if (plane_points.size() < 3)
+            {
+                return std::nullopt;
+            }
+
+            Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
+            for (const Eigen::Vector3d& point : plane_points)
+            {
+                centroid += point;
+            }
+            centroid /= static_cast<double>(plane_points.size());
+
+            Eigen::Matrix3d covariance = Eigen::Matrix3d::Zero();
+            for (const Eigen::Vector3d& point : plane_points)
+            {
+                const Eigen::Vector3d centered_point = point - centroid;
+                covariance += centered_point * centered_point.transpose();
+            }
+
+            Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(covariance);
+            if (solver.info() != Eigen::Success)
+            {
+                return std::nullopt;
+            }
+
+            Eigen::Vector3d normal = solver.eigenvectors().col(0).normalized();
+            if (normal.z() < 0.0)
+            {
+                normal = -normal;
+            }
+
+            return normal;
+        }
+
+        std::shared_ptr<sensor_msgs::msg::PointCloud2> rotate_cloud(
+            const sensor_msgs::msg::PointCloud2& cloud_msg,
+            const Eigen::Quaterniond& rotation)
+        {
+            auto rotated_cloud = std::make_shared<sensor_msgs::msg::PointCloud2>(cloud_msg);
+            sensor_msgs::PointCloud2Iterator<float> out_x(*rotated_cloud, "x");
+            sensor_msgs::PointCloud2Iterator<float> out_y(*rotated_cloud, "y");
+            sensor_msgs::PointCloud2Iterator<float> out_z(*rotated_cloud, "z");
+
+            for (sensor_msgs::PointCloud2ConstIterator<float> iter_x(cloud_msg, "x"),
+                 iter_y(cloud_msg, "y"), iter_z(cloud_msg, "z");
+                 iter_x != iter_x.end();
+                 ++iter_x, ++iter_y, ++iter_z, ++out_x, ++out_y, ++out_z)
+            {
+                if (std::isnan(*iter_x) || std::isnan(*iter_y) || std::isnan(*iter_z))
+                {
+                    *out_x = *iter_x;
+                    *out_y = *iter_y;
+                    *out_z = *iter_z;
+                    continue;
+                }
+
+                const Eigen::Vector3d rotated_point =
+                    rotation * Eigen::Vector3d(*iter_x, *iter_y, *iter_z);
+                *out_x = static_cast<float>(rotated_point.x());
+                *out_y = static_cast<float>(rotated_point.y());
+                *out_z = static_cast<float>(rotated_point.z());
+            }
+
+            return rotated_cloud;
+        }
+    }  // namespace
 
     PointCloudToLaserScanNode::PointCloudToLaserScanNode(const rclcpp::NodeOptions& options)
         : rclcpp::Node("pointcloud_to_laserscan", options)
@@ -76,6 +172,9 @@ namespace pointcloud_to_laserscan
         use_inf_ = this->declare_parameter("use_inf", true);
         cloud_in_ = this->declare_parameter("cloud_in", "/livox/lidar");
         scan_out_ = this->declare_parameter("scan_out", "/livox/scan");
+        use_dynamic_conversions_ = this->declare_parameter("use_dynamic_conversions", true);
+        imu_topic_ = this->declare_parameter("imu_topic", "/livox/imu/corrected");
+        imu_frame_id_ = this->declare_parameter("imu_frame_id", "livox_frame");
         pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(scan_out_, rclcpp::SensorDataQoS());
 
         using std::placeholders::_1;
@@ -189,6 +288,41 @@ namespace pointcloud_to_laserscan
             {
                 RCLCPP_ERROR_STREAM(this->get_logger(), "Transform failure: " << ex.what());
                 return;
+            }
+        }
+
+        if (use_dynamic_conversions_)
+        {
+            const std::optional<Eigen::Vector3d> current_plane_normal =
+                estimate_plane_normal(*cloud_msg, min_height_, max_height_);
+
+            if (current_plane_normal.has_value())
+            {
+                if (!initial_plane_normal_.has_value())
+                {
+                    initial_plane_normal_ = current_plane_normal;
+                    RCLCPP_INFO(
+                        this->get_logger(),
+                        "Captured initial lidar plane normal for dynamic conversions");
+                }
+                else
+                {
+                    Eigen::Vector3d aligned_normal = *current_plane_normal;
+                    if (aligned_normal.dot(*initial_plane_normal_) < 0.0)
+                    {
+                        aligned_normal = -aligned_normal;
+                    }
+
+                    const Eigen::Quaterniond plane_alignment =
+                        Eigen::Quaterniond::FromTwoVectors(aligned_normal, *initial_plane_normal_);
+                    cloud_msg = rotate_cloud(*cloud_msg, plane_alignment);
+                }
+            }
+            else
+            {
+                RCLCPP_WARN_THROTTLE(
+                    this->get_logger(), *this->get_clock(), 2000,
+                    "Dynamic conversions enabled, but there are not enough in-plane points to estimate the lidar orientation");
             }
         }
 

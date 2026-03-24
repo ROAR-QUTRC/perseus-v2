@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(pcl_to_lsr)
 
 find_package(ament_cmake REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 find_package(laser_geometry REQUIRED)
 find_package(message_filters REQUIRED)
@@ -21,6 +22,7 @@ target_include_directories(
          "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(
   laserscan_to_pointcloud
+  Eigen3::Eigen
   laser_geometry::laser_geometry
   message_filters::message_filters
   rclcpp::rclcpp
@@ -42,6 +44,7 @@ target_include_directories(
          "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(
   pointcloud_to_laserscan
+  Eigen3::Eigen
   laser_geometry::laser_geometry
   message_filters::message_filters
   rclcpp::rclcpp
@@ -72,6 +75,7 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_dependencies(
+  Eigen3
   laser_geometry
   message_filters
   rclcpp

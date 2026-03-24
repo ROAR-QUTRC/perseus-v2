@@ -43,9 +43,11 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 
+#include "Eigen/Geometry"
 #include "message_filters/subscriber.h"
 #include "pcl_to_lsr/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
@@ -95,6 +97,10 @@ namespace pointcloud_to_laserscan
         double inf_epsilon_;
         std::string cloud_in_;
         std::string scan_out_;
+        bool use_dynamic_conversions_;
+        std::string imu_topic_;
+        std::string imu_frame_id_;
+        std::optional<Eigen::Vector3d> initial_plane_normal_;
     };
 
 }  // namespace pointcloud_to_laserscan
