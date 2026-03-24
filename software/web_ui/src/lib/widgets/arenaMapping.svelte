@@ -3,7 +3,7 @@
 
 	// Internal identifiers follow: American spelling + snake_case + minimal abbreviations.
 	const widget_name = 'Arena Map Editor';
-	const widget_description = 'Create the YAML file that Perseus will use to navigate';
+	const widget_description = 'Create the JSON file that Perseus will use to navigate';
 	const widget_group = 'ROS';
 	const is_ros_dependent = true;
 
@@ -18,11 +18,6 @@
 		is_ros_dependent as isRosDependant,
 		widget_settings as settings
 	};
-
-
-	// function nextWaypointName(): string {
-	// 	throw new Error('Function not implemented.');
-	// }
 </script>
 
 <script lang="ts">
@@ -32,12 +27,21 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index';
 	import { Square } from 'svelte-radix';
 	import type { Point } from 'chart.js';
+	//import { toNamespacedPath } from 'path';
 	//import { response } from 'express';
 
+
+	// ---------- Declare custom types ---------- //
+
+	//Function options for the map gui
 	type Mode = 'waypoint' | 'border' | 'origin'| 'manual';
+
+	//Direction of x and y axies
 	type Direction = 'up' | 'down' | 'left' | 'right' | 'unselected';
+
 	type rosStringMessage = { data: string };
 
+	//Data for each waypoint
 	type WaypointRow = {
 		id: string;
 		name: string;
@@ -48,10 +52,14 @@
 		centroidY: number;
 		relativeX: number;
 		relativeY: number;
+		xAdjustment: number;
+		yAdjustment: number;
 		yaw: number;
 		contour: number[][];
+		height: number;
 	};
 
+	//Data for rover origin
 	type OriginRow = {
 		id: string;
 		name: string;
@@ -62,6 +70,7 @@
 		centroidY: number;
 	};
 
+	//Data for waypoint angle of approach
 	type ArrowRow = {
 		id: string;
 		name: string;
@@ -71,60 +80,82 @@
 		centroidX: number;
 		centroidY: number;
 	};
+	
+	//Data for manual waypoint
 	type WaypointPoint = {
 		xCoordinate: number;
 		yCoordinate: number;
 	}
 
+
+	// ---------- Declare variables ---------- //
+
 	let imageElement: HTMLImageElement | null = null;
 
-	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_12.png';
-	// mapImageUrl = `http://localhost:8000/${mapImageId}`;
+	//File name of current map
+	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_5.png'
 
-	//Ros topics to listen to requests and reply
+	//ROS topics to subscribe and publish to
 	const requestTopicName = '/map_editor/request';
 	const responseTopicName = '/map_editor/response';
 
-	// Setting the hue saturation and value thresholds for the image extraction - can be changed to adjust extraction results
+	// ROS request/response plumbing
+	let requestTopic: ROSLIB.Topic<rosStringMessage> | null = null;
+	let responseTopic: ROSLIB.Topic<rosStringMessage> | null = null;
+
+	//Setting the hue saturation and value thresholds for the image extraction - can be changed to adjust extraction results
 	const defaultHueTolerance = 10;
 	const defaultSaturationTolerance = 60;
 	const defaultValueTolerance = 60;
 
-	let statusMessage = $state('Ready');
-	let mode = $state<Mode>('waypoint');
-
-	// last response visuals
+	//Last response visuals
 	let contour = $state<number[][]>([]);
 	let currentClickPosition = $state<{ x: number; y: number } | null>(null);
 	let centroid = $state<[number, number] | null>(null);
 	let sampleImageHexadecimalColor = $state<string>('');
 	let svgViewBox = $state('0 0 1 1');
 
-	// stored waypoints
+	//Instructions and confirmation messages for user
+	let statusMessage = $state('Ready');
+
+	//Current function of the map gui
+	let mode = $state<Mode>('waypoint');
+
+	//Stored waypoints
 	let waypoints = $state<WaypointRow[]>([]);
-	let waypointToggle = $state(0);
 
-	// 0 -> selecting waypoint
-	// 1 -> selecting arrow
-	let lastID = $state('');
-
-	//stored origin
+	//Stored origin
 	let origins = $state<OriginRow[]>([]);
 
 	//stored arrow
 	let arrows = $state<ArrowRow[]>([]);
 
+	//Alternates between reading in waypoint and angle of approach
+	let waypointToggle = $state(0);
+	// 0 -> selecting waypoint
+	// 1 -> selecting arrow
+
+	//Define origin
+	let positiveXDirection = $state<Direction>('up');
+	let positiveYDirection = $state<Direction>('left');
+	let xOriginAverage = $state(0);
+	let yOriginAverage = $state(0);
+
+	//Bind the next arrow click to the waypoint that was just added
+	let pendingYawWaypointId: string | null = null;
+
+	//ID of last waypoint
+	let lastID = $state('');
+
 	let borderContour = $state<number[][]>([]);
 
-	// ROS request/response plumbing
-	let requestTopic: ROSLIB.Topic<rosStringMessage> | null = null;
-	let responseTopic: ROSLIB.Topic<rosStringMessage> | null = null;
-
-	//scale
+	//Map scale (defaults to 1x)
 	let scale = $state(1);
+
+	//Heigh of map image in pixels
 	let mapHeight = $state(0);
 
-	//saving json
+	//Saving json
 	type PendingExtractionRequest = {
 		id: string;
 		mode: Mode;
@@ -134,18 +165,14 @@
 	let pendingSaveId: string | null = null;
 	let jsonPreview = $state('');
 
-	//origin
-	let positiveXDirection = $state<Direction>('up');
-	let positiveYDirection = $state<Direction>('left');
-	let xOriginAverage = $state(0);
-	let yOriginAverage = $state(0);
-	// bind the next arrow click to the waypoint that was just added
-	let pendingYawWaypointId: string | null = null;
 
+	// ---------- ROS management ---------- //
+
+	//Establish subscription and publication to ROS topics
 	$effect(() => {
 		const rosConnection = getRosConnection();
 
-		// clean up any previous subscription/topic first
+		//Clean up any previous subscription/topic first
 		if (responseTopic) {
 			try {
 				responseTopic.unsubscribe(onResponseMessage);
@@ -184,7 +211,82 @@
 		};
 	});
 
-	//direction mapping from image coordinates (dx right+, dy down+)
+	//Handle response message from ExtractFeatures node
+	const onResponseMessage = (message: rosStringMessage) => {
+		const response: any = JSON.parse(message.data);
+		const responseId = String(response?.id ?? '');
+
+		//Save reply
+		if (pendingSaveId && responseId === pendingSaveId) {
+			pendingSaveId = null;
+			statusMessage = response?.ok
+				? `Saved: ${response.saved_path ?? 'OK'}`
+				: `Save failed: ${response?.message ?? 'Unknown error'}`;
+			return;
+		}
+
+		//Extraction reply must match a tracked request
+		const pending = pendingExtractionRequests.get(responseId);
+		if (!pending) return;
+
+		pendingExtractionRequests.delete(responseId);
+		const responseMode = pending.mode;
+
+		if (!response?.ok) {
+			statusMessage = response?.message ?? 'Request failed';
+			return;
+		}
+
+		//No information is needed from the ROS node when in manual mode
+		if (responseMode === 'manual') return;
+
+		if (responseMode === 'border') {
+			borderContour = Array.isArray(response.contour) ? response.contour : [];
+			statusMessage = `Border OK ${getSampleHex(response)}`;
+			return;
+		}
+
+		sampleImageHexadecimalColor = getSampleHex(response);
+		centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
+		contour = Array.isArray(response.contour) ? response.contour : [];
+
+		if (responseMode === 'waypoint') {
+			if (waypointToggle === 0) {
+				addWaypointFromResponse(response, contour);
+
+				statusMessage = centroid
+					? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+					: `Waypoint added ${sampleImageHexadecimalColor}`;
+
+				waypointToggle = 1;
+			} else {
+				const arrow = addAngleFromResponse(response);
+
+				statusMessage = centroid
+					? `Arrow added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+					: `Arrow added ${sampleImageHexadecimalColor}`;
+
+				waypointToggle = 0;
+
+				if (pendingYawWaypointId && arrow) {
+					applyArrowYawToWaypoint(pendingYawWaypointId, arrow);
+					pendingYawWaypointId = null;
+				}
+			}
+			return;
+		}
+
+		if (responseMode === 'origin') {
+			addOriginFromResponse(response);
+
+			statusMessage = centroid
+				? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+				: `Origin added ${sampleImageHexadecimalColor}`;
+		}
+	};
+
+
+	//Direction mapping from image coordinates (dx right+, dy down+)
 	function axisFromImage(dir: Direction, dx: number, dy: number): number {
 		switch (dir) {
 			case 'right': return dx;
@@ -196,78 +298,7 @@
 	}
 
 
-	const onResponseMessage = (message: rosStringMessage) => {
-	const response: any = JSON.parse(message.data);
-	const responseId = String(response?.id ?? '');
-
-	// save reply
-	if (pendingSaveId && responseId === pendingSaveId) {
-		pendingSaveId = null;
-		statusMessage = response?.ok
-			? `Saved: ${response.saved_path ?? 'OK'}`
-			: `Save failed: ${response?.message ?? 'Unknown error'}`;
-		return;
-	}
-
-	// extraction reply must match a tracked request
-	const pending = pendingExtractionRequests.get(responseId);
-	if (!pending) return;
-
-	pendingExtractionRequests.delete(responseId);
-	const responseMode = pending.mode;
-
-	if (!response?.ok) {
-		statusMessage = response?.message ?? 'Request failed';
-		return;
-	}
-
-	if (responseMode === 'manual') return;
-
-	if (responseMode === 'border') {
-		borderContour = Array.isArray(response.contour) ? response.contour : [];
-		statusMessage = `Border OK ${getSampleHex(response)}`;
-		return;
-	}
-
-	sampleImageHexadecimalColor = getSampleHex(response);
-	centroid = Array.isArray(response.centroid) ? (response.centroid as [number, number]) : null;
-	contour = Array.isArray(response.contour) ? response.contour : [];
-
-	if (responseMode === 'waypoint') {
-		if (waypointToggle === 0) {
-			addWaypointFromResponse(response, contour);
-
-			statusMessage = centroid
-				? `Waypoint added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
-				: `Waypoint added ${sampleImageHexadecimalColor}`;
-
-			waypointToggle = 1;
-		} else {
-			const arrow = addAngleFromResponse(response);
-
-			statusMessage = centroid
-				? `Arrow added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
-				: `Arrow added ${sampleImageHexadecimalColor}`;
-
-			waypointToggle = 0;
-
-			if (pendingYawWaypointId && arrow) {
-				applyArrowYawToWaypoint(pendingYawWaypointId, arrow);
-				pendingYawWaypointId = null;
-			}
-		}
-		return;
-	}
-
-	if (responseMode === 'origin') {
-		addOriginFromResponse(response);
-
-		statusMessage = centroid
-			? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
-			: `Origin added ${sampleImageHexadecimalColor}`;
-	}
-};
-
+	
 	function toRelative(centroidX: number, centroidY: number) {
 		if (origins.length === 0) {
 			return { relativeX: centroidX, relativeY: centroidY };
@@ -384,7 +415,10 @@
 				centroidY: clickY,
 				relativeX: rel.relativeX,
 				relativeY: rel.relativeY,
+				xAdjustment: 0,
+				yAdjustment: 0,
 				yaw: 0,
+				height: 0,
 				contour: []
 			}
 		];
@@ -444,7 +478,10 @@
 				centroidY,
 				relativeX: rel.relativeX,
 				relativeY: rel.relativeY,
+				xAdjustment: 0,
+				yAdjustment: 0,
 				yaw: 0,
+				height: 0,
 				contour: extractedContour
 			}
 		];
@@ -489,6 +526,7 @@
 
 		waypoints = waypoints.map((w) => (w.id === waypointId ? { ...w, yaw: yawDeg } : w));
 	}
+
 	function addOriginFromResponse(response: any) {
 		if (!response?.ok) return;
 		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
@@ -536,12 +574,24 @@
 	function clearWaypoints() {
 		waypoints = [];
 	}
+
 	function updateYaw(id: string, yawDeg: number) {
 		let yaw = Number.isFinite(yawDeg) ? yawDeg : 0;
 		yaw = ((yaw % 360) + 360) % 360; // keep within 0..359.999
 		waypoints = waypoints.map((w) => (w.id === id ? { ...w, yaw } : w));
 	}
 
+	function updateHeight(id: string, waypointHeight: number) {
+		if (scale == 1) {
+			statusMessage = 'ERROR: Scale must be set before waypoint height can be adjusted';
+		} 
+		else {
+			let height = Number.isFinite(waypointHeight) ?  waypointHeight: 0;
+			waypoints = waypoints.map((w) => (w.id === id ? { ...w, height } : w));
+			optimalViewingDistnace();
+		}
+		
+	}
 
 	function updateName(id: string, name: string) {
 		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
@@ -591,12 +641,15 @@
 
 		return ordered;
 	}
+
 	function wrapPi(rad: number) {
 		return Math.atan2(Math.sin(rad), Math.cos(rad));
 	}
+
 	function roundJsonOutput(n: number, dp: number) {
 		return Number.isFinite(n) ? Number(n.toFixed(dp)) : 0;
 	}
+
 	function buildJson(): string {
 			const ordered = orderWaypointsByPath(waypoints);
 
@@ -643,6 +696,7 @@
 			''
 		);
 	}
+
 	// Function that sets the file name of the saved file created in buildJson()
 	function saveJsonToScripts() {
 		if (!requestTopic) {
@@ -748,6 +802,23 @@
 			scale = mapHeight / (nSquares * metersPerSquare);
 			scale = parseFloat(scale.toFixed(6));
 		}
+	}
+
+
+	function optimalViewingDistnace() {
+		const n = waypoints.length;
+		waypoints = waypoints.map((waypoint, i) => {
+			console.log("math?")
+			if (i >= n) return waypoint;
+			
+			const heightOfWaypoint = waypoint.height / 1000;
+			const fieldOfView = 58 / 2;
+			const verticalDistanceFromWaypoint = heightOfWaypoint / Math.tan(fieldOfView * (Math.PI/180))
+			const yaw = waypoint.yaw;
+			const optimalY = Math.sin(yaw*(Math.PI/180)) * verticalDistanceFromWaypoint;
+			const optimalX = Math.cos(yaw*(Math.PI/180)) * verticalDistanceFromWaypoint;
+			return { ...waypoint, xAdjustment: optimalX, yAdjustment: optimalY };
+		});
 	}
 
 </script>
@@ -959,13 +1030,14 @@
 						<th>Waypoint Y</th>
 						<th>Relative Y</th>
 						<th>Yaw</th>
+						<th>Height</th>
 						<th></th>
 					</tr>
 				</thead>
 				<tbody>
 					{#if waypoints.length === 0}
 						<tr>
-							<td colspan="8" class="empty">No waypoints yet — switch to Waypoint mode and click markers.</td>
+							<td colspan="10" class="empty">No waypoints yet — switch to Waypoint mode and click markers.</td>
 						</tr>
 					{:else}
 						{#each waypoints as waypoint, i (waypoint.id)}
@@ -985,16 +1057,19 @@
 									</span>
 								</td>
 								<td>{(waypoint.centroidX / scale).toFixed(2)}</td>
-								<td>{(waypoint.relativeX / scale).toFixed(2)}</td>
+								<td>{((waypoint.relativeX / scale)+waypoint.xAdjustment).toFixed(2)}</td>
 								<td>{(waypoint.centroidY / scale).toFixed(2)}</td>
-								<td>{(waypoint.relativeY / scale).toFixed(2)}</td>
+								<td>{((waypoint.relativeY / scale)+waypoint.yAdjustment).toFixed(2)}</td>
 								<td>
 									<input
 										class="yawInput" type="number" min="0" max="360"step="1"
 										value={waypoint.yaw} oninput={(event) => updateYaw(waypoint.id, Number((event.target as HTMLInputElement).value))}
 									/>
 								</td>
-
+								<td><input 
+										id="height" type="number" min="0" step="10" value="0.00"
+										oninput={(event) => updateHeight(waypoint.id, Number((event.target as HTMLInputElement).value))}
+									/></td>
 								<td class="right">
 									<button type="button" class="danger" onclick={() => deleteWaypoint(waypoint.id)}>
 										Delete
