@@ -31,7 +31,7 @@
 	//import { response } from 'express';
 
 
-	// ---------- Declare custom types ---------- //
+// ---------- Declare custom types ---------- //
 
 	//Function options for the map gui
 	type Mode = 'waypoint' | 'border' | 'origin'| 'manual';
@@ -88,7 +88,7 @@
 	}
 
 
-	// ---------- Declare variables ---------- //
+// ---------- Declare variables ---------- //
 
 	let imageElement: HTMLImageElement | null = null;
 
@@ -116,7 +116,7 @@
 	let svgViewBox = $state('0 0 1 1');
 
 	//Instructions and confirmation messages for user
-	let statusMessage = $state('Ready');
+	let statusMessage = $state('RECOMMENDED ACTION -> Click on a waypoint');
 
 	//Current function of the map gui
 	let mode = $state<Mode>('waypoint');
@@ -166,7 +166,7 @@
 	let jsonPreview = $state('');
 
 
-	// ---------- ROS management ---------- //
+// ---------- ROS management ---------- //
 
 	//Establish subscription and publication to ROS topics
 	$effect(() => {
@@ -179,8 +179,6 @@
 			} catch {}
 			responseTopic = null;
 		}
-
-		requestTopic = null;
 
 		if (!rosConnection || !rosConnection.isConnected) {
 			return;
@@ -251,7 +249,9 @@
 		contour = Array.isArray(response.contour) ? response.contour : [];
 
 		if (responseMode === 'waypoint') {
-			if (waypointToggle === 0) {
+			//If reading in a waypoint
+			if (!waypointToggle) {
+				//Create waypoint object
 				addWaypointFromResponse(response, contour);
 
 				statusMessage = centroid
@@ -259,7 +259,14 @@
 					: `Waypoint added ${sampleImageHexadecimalColor}`;
 
 				waypointToggle = 1;
+
+				//Wait before displaying next-step instruction for user
+				setTimeout(() => {
+					statusMessage ="REQUIRED ACTION -> Click on the waypoint's corresponding arrow";
+				}, 2000);
+			//If reading in a waypoint's arrow
 			} else {
+				//Create arrow object
 				const arrow = addAngleFromResponse(response);
 
 				statusMessage = centroid
@@ -272,86 +279,123 @@
 					applyArrowYawToWaypoint(pendingYawWaypointId, arrow);
 					pendingYawWaypointId = null;
 				}
+
+				//Wait before displaying next-step instruction for user
+				setTimeout(() => {
+					statusMessage ="RECOMMENDED ACTION -> Click on the next waypoint";
+				}, 2000);
 			}
 			return;
 		}
 
 		if (responseMode === 'origin') {
+			//Create origin object
 			addOriginFromResponse(response);
 
-			statusMessage = centroid
-				? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
-				: `Origin added ${sampleImageHexadecimalColor}`;
+			// statusMessage = centroid
+			// 	? `Origin added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
+			// 	: `Origin added ${sampleImageHexadecimalColor}`;
 		}
 	};
 
+	//Handles request to ExtractFeatures node when map image is clicked
+	async function onMapClick(event: MouseEvent) {
+		const xOriginDirection = positiveXDirection;
+		const yOriginDirection = positiveYDirection;
 
-	//Direction mapping from image coordinates (dx right+, dy down+)
-	function axisFromImage(dir: Direction, dx: number, dy: number): number {
-		switch (dir) {
-			case 'right': return dx;
-			case 'left':  return -dx;
-			case 'down':  return dy;
-			case 'up':    return -dy;
-			default:      return 0;
-		}
-	}
+		//Set click position to x and y coordinates of the cursor
+		const clickPosition = clickToNaturalPosition(event);
+		if (!clickPosition) return;
+		currentClickPosition = clickPosition;
 
-
-	
-	function toRelative(centroidX: number, centroidY: number) {
-		if (origins.length === 0) {
-			return { relativeX: centroidX, relativeY: centroidY };
+		if (mode === 'manual') {
+			addManualWaypoint(clickPosition);
+			return;
 		}
 
-		// Default to common map convention if user hasn't selected directions yet
-		const xDir: Direction = positiveXDirection === 'unselected' ? 'left' : positiveXDirection;
-		const yDir: Direction = positiveYDirection === 'unselected' ? 'up' : positiveYDirection;
+		//Both x and y axis must be assigned before using automatic origin mode
+		if (mode === 'origin') {
+			if (xOriginDirection === 'unselected' || yOriginDirection === 'unselected') {
+				statusMessage = 'ACTION REQUIRED -> Select both X and Y positive directions for origin mode.';
+				return;
+			} 
+			addManualOrigin(clickPosition);
+			return;
+		}
 
-		const dx = centroidX - xOriginAverage; // +right
-		const dy = centroidY - yOriginAverage; // +down
+			
+		contour = [];
+		centroid = null;
+		sampleImageHexadecimalColor = '';
 
-		return {
-			relativeX: axisFromImage(xDir, dx, dy),
-			relativeY: axisFromImage(yDir, dx, dy)
+		statusMessage = `${mode} @ (${clickPosition.x}, ${clickPosition.y})…`;
+
+		const extractionMode = mode === 'waypoint' ? 'border' : mode;
+
+		const request = {
+			op: 'extract_feature',
+			mode: extractionMode,
+			imageID: mapImageId,
+			sampleXPosition: clickPosition.x,
+			sampleYPosition: clickPosition.y,
+			hueTolerance: defaultHueTolerance,
+			saturationTolerance: defaultSaturationTolerance,
+			valueTolerance: defaultValueTolerance,
+			xOriginDirectionection: xOriginDirection,
+			yOriginDirectionection: yOriginDirection
 		};
-	}
 
-	function calculateOrigin() {
-		if (origins.length === 0) return;
+		const id = generateID();
 
-		let totalSumXValuesOrigin = 0;
-		let totalSumYValuesOrigin = 0;
+		if (!requestTopic) {
+			statusMessage = 'ROS not connected';
+			return;
+		}
 
-		origins.forEach((o) => {
-			totalSumXValuesOrigin += o.centroidX;
-			totalSumYValuesOrigin += o.centroidY;
-		});
+		pendingExtractionRequests.set(id, { id, mode });
 
-		xOriginAverage = totalSumXValuesOrigin / origins.length;
-		yOriginAverage = totalSumYValuesOrigin / origins.length;
-
-		// recompute relative coords for all waypoints using updated origin + directions
-		waypoints = waypoints.map((waypoint) => {
-			const rel = toRelative(waypoint.centroidX, waypoint.centroidY);
-			return { ...waypoint, relativeX: rel.relativeX, relativeY: rel.relativeY };
+		requestTopic.publish({
+			data: JSON.stringify({ id, ...request })
 		});
 	}
-	
-	function calculateAngle() {
-		const n = Math.min(waypoints.length, arrows.length);
-		waypoints = waypoints.map((waypoint, i) => {
-			if (i >= n) return waypoint;
 
-			const arrow = arrows[i];
-			const dx = arrow.centroidX - waypoint.centroidX;
-			const dy = arrow.centroidY - waypoint.centroidY;
-			const angleOfArrowDegrees = ((Math.atan2(-dx, -dy) * 180) / Math.PI + 360) % 360;
-			return { ...waypoint, yaw: angleOfArrowDegrees };
-		});
+//---------- Map Interaction Helper Functions ----------//
 
+//--------- Mode Management ----------//
+
+	//Waypoint mode instructions
+	function toWaypoint() {
+		mode = 'waypoint';
+		if (!waypointToggle) {
+			statusMessage = 'RECOMMENDED ACTION -> Click on a waypoint'
+		}
+		else {
+			statusMessage = `REQUIRED ACTION -> Click on the arrow that corresponds to the most recently selected waypoint`
+		}
 	}
 
+	//Origin mode instructions
+	function toOrigin() {
+		mode = 'origin';
+		statusMessage = 'ALERT -> Origin is currently in manual mode'
+		setTimeout(() => {
+			statusMessage ="RECOMMENDED ACTION -> Click on the starting location for the rover";
+		}, 2000);
+	}
+
+	//Manual mode instructions
+	function toManual() {
+		mode = 'manual';
+		statusMessage = 'ALERT -> Waypoint is currently in manual mode'
+		setTimeout(() => {
+			statusMessage ="RECOMMENDED ACTION -> Click on a waypoint. The point will not be centred. Yaw will not be calculated";
+		}, 2000);
+	}
+
+
+// ---------- Object Creation ----------//
+
+	//Creates unique ID for each object
 	function generateID() {
 		lastID = typeof crypto !== 'undefined' && 'randomUUID' in crypto
 			? crypto.randomUUID()
@@ -359,50 +403,24 @@
 		return lastID;
 	}
 
-	function clamp(value: number, minimumImageHeight: number, maximumImageHeight: number) {
-		return Math.max(minimumImageHeight, Math.min(maximumImageHeight, value));
-	}
-
-	//Converts the click on the image to the pixle coordinates on the image
-	function clickToNaturalPosition(event: MouseEvent) {
-		if (!imageElement) return null;
-
-		const imageRectangle = imageElement.getBoundingClientRect();
-		const displayX = event.clientX - imageRectangle.left;
-		const displayY = event.clientY - imageRectangle.top;
-
-		const naturalX = Math.round(displayX * (imageElement.naturalWidth / imageRectangle.width));
-		const naturalY = Math.round(displayY * (imageElement.naturalHeight / imageRectangle.height));
-
-		return {
-			x: clamp(naturalX, 0, imageElement.naturalWidth - 1),
-			y: clamp(naturalY, 0, imageElement.naturalHeight - 1)
-		};
-	}
-
-	// creates the waypoint names
+	//Creates the waypoint names
 	function nextWaypointName() {
 		const waypointNumber = waypoints.length + 1;
 		return `WP${String(waypointNumber)}`;
 	}
 
-	function nextOriginName() {
-		const originNumber = origins.length + 1;
-		return `O${String(originNumber)}`;
-	}
-
-	function nextArrowName() {
-		const arrowNumber = arrows.length + 1;
-		return `AR${String(arrowNumber)}`;
-	}
-
+	//Add waypoint without ROS node processing
 	function addManualWaypoint(clickPosition: { x: number; y: number }) {
+		//Pixel coordinates of click position
 		const clickX = clickPosition.x;
 		const clickY = clickPosition.y;
 
 		const id = generateID();
+
+		//Adjust click position relative to origin
 		const rel = toRelative(clickX, clickY);
 
+		//Add new waypoint after exisitng waypoint objects
 		waypoints = [
 			...waypoints,
 			{
@@ -427,35 +445,16 @@
 		statusMessage = `Manual waypoint added @ (${clickX}, ${clickY})`;
 	}
 
-	function addManualOrigin(clickPosition: { x: number; y: number }) {
-		const clickX = clickPosition.x;
-		const clickY = clickPosition.y;
-
-		origins = [
-			...origins,
-			{
-				id: generateID(),
-				name: nextOriginName(),        
-				hexadecimalColor: '#ffffff',      
-				clickX,
-				clickY,
-				centroidX: clickX,
-				centroidY: clickY
-			}
-		];
-
-		statusMessage = `Origin point added @ (${clickX}, ${clickY})`;
-	}
-
-
-
+	//Add waypoint with ROS node processing
 	function addWaypointFromResponse(response: any, extractedContour: number[][]) {
 		if (!response?.ok) return;
 		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
 
+		//Pixel coordinates of the determined centre of the clicked shape
 		const centroidX = Number(response.centroid[0]);
 		const centroidY = Number(response.centroid[1]);
 
+		//Pixel coordinates of click position
 		const clickX = Number(response.sampleXPosition ?? currentClickPosition?.x);
 		const clickY = Number(response.sampleYPosition ?? currentClickPosition?.y);
 
@@ -464,14 +463,17 @@
 		}
 
 		const id = generateID();
+
+		//Adjust click position relative to origin
 		const rel = toRelative(centroidX, centroidY);
 
+		//Add new waypoint after exisitng waypoint objects
 		waypoints = [
 			...waypoints,
 			{
 				id,
 				name: nextWaypointName(),
-				hexadecimalColor: getSampleHex(response),
+				hexadecimalColor: getSampleHex(response.sampleImageHex),
 				clickX,
 				clickY,
 				centroidX,
@@ -489,66 +491,53 @@
 		pendingYawWaypointId = id;
 	}
 
-	function addAngleFromResponse(response: any): ArrowRow | null {
-		if (!response?.ok) return null;
-		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return null;
-
-		const centroidX = Number(response.centroid[0]);
-		const centroidY = Number(response.centroid[1]);
-
-		const clickX = Number(response.sampleXPosition ?? currentClickPosition?.x);
-		const clickY = Number(response.sampleYPosition ?? currentClickPosition?.y);
-		if (!Number.isFinite(clickX) || !Number.isFinite(clickY) || !Number.isFinite(centroidX) || !Number.isFinite(centroidY)) return null;
-
-		const arrow: ArrowRow = {
-			id: generateID(),
-			name: nextArrowName(),
-			hexadecimalColor: String(response.sampleImageHexValue ?? ''),
-			clickX,
-			clickY,
-			centroidX,
-			centroidY
-		};
-
-		arrows = [...arrows, arrow];
-		return arrow;
+	//Creates the origin names
+	function nextOriginName() {
+		const originNumber = origins.length + 1;
+		return `O${String(originNumber)}`;
 	}
 
-	function applyArrowYawToWaypoint(waypointId: string, arrow: ArrowRow) {
-		const wp = waypoints.find((w) => w.id === waypointId);
-		if (!wp) return;
+	//Add origin without ROS node processing
+	function addManualOrigin(clickPosition: { x: number; y: number }) {
+		//Pixel coordinates of click position
+		const clickX = clickPosition.x;
+		const clickY = clickPosition.y;
 
-		const dx = arrow.centroidX - wp.centroidX; // +right
-		const dy = arrow.centroidY - wp.centroidY; // +down
+		//Add new origin point after exisitng origin point objects
+		origins = [
+			...origins,
+			{
+				id: generateID(),
+				name: nextOriginName(),        
+				hexadecimalColor: '#ffffff',      
+				clickX,
+				clickY,
+				centroidX: clickX,
+				centroidY: clickY
+			}
+		];
 
-		// 0=N, 90=W, 180=S, 270=E
-		const yawDeg = ((Math.atan2(-dx, -dy) * 180) / Math.PI + 360) % 360;
-
-		waypoints = waypoints.map((w) => (w.id === waypointId ? { ...w, yaw: yawDeg } : w));
+		statusMessage = `Origin point added @ (${clickX}, ${clickY})`;
 	}
 
+	//Add origin with ROS node processing
 	function addOriginFromResponse(response: any) {
 		if (!response?.ok) return;
 		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return;
 
+		//Prefer server echo; fall back to local currentClickPosition.
 		const centroidX = Number(response.centroid[0]);
 		const centroidY = Number(response.centroid[1]);
-
-		// Prefer server echo; fall back to local currentClickPosition.
 		const clickX = Number(response.sampleXPosition ?? currentClickPosition?.x);
 		const clickY = Number(response.sampleYPosition ?? currentClickPosition?.y);
 
-		if (
-			!Number.isFinite(clickX) ||
-			!Number.isFinite(clickY) ||
-			!Number.isFinite(centroidX) ||
-			!Number.isFinite(centroidY)
-		) {
+		if (!Number.isFinite(clickX) || !Number.isFinite(clickY) || !Number.isFinite(centroidX) || !Number.isFinite(centroidY)) {
 			return;
 		}
 
 		const hexadecimalColor = String(response.sampleImageHexValue ?? '');
 
+		//Add new origin point after exisitng origin point objects
 		origins = [
 			...origins,
 			{
@@ -563,6 +552,42 @@
 		];
 	}
 
+	//Creates the arrow names
+	function nextArrowName() {
+		const arrowNumber = arrows.length + 1;
+		return `AR${String(arrowNumber)}`;
+	}
+
+	//Creates the waypoint names
+	function addAngleFromResponse(response: any) {
+		if (!response?.ok) return null;
+		if (!Array.isArray(response.centroid) || response.centroid.length !== 2) return null;
+
+		//Prefer server echo; fall back to local currentClickPosition.
+		const centroidX = Number(response.centroid[0]);
+		const centroidY = Number(response.centroid[1]);
+		const clickX = Number(response.sampleXPosition ?? currentClickPosition?.x);
+		const clickY = Number(response.sampleYPosition ?? currentClickPosition?.y);
+
+		if (!Number.isFinite(clickX) || !Number.isFinite(clickY) || !Number.isFinite(centroidX) || !Number.isFinite(centroidY)) {
+			return;
+		};
+
+		//Add new arrow after exisitng origin point objects
+		arrows = [
+			... arrows,
+			{
+			id: generateID(),
+			name: nextArrowName(),
+			hexadecimalColor: String(response.sampleImageHexValue ?? ''),
+			clickX,
+			clickY,
+			centroidX,
+			centroidY
+			}
+		]
+	}
+
 	function deleteWaypoint(id: string) {
 		waypoints = waypoints.filter((waypoint) => waypoint.id !== id);
 	}
@@ -575,27 +600,147 @@
 		waypoints = [];
 	}
 
+	// function updateName(id: string, name: string) {
+	// 	waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
+	// }
+
+
+// ---------- Yaw Helper Functions ----------//
+
+	//Use corresponding arrow to add angle of approach to waypoint
+	function applyArrowYawToWaypoint(waypointId: string, arrow: ArrowRow) {
+		const wp = waypoints.find((w) => w.id === waypointId);
+		if (!wp) return;
+
+		const dx = arrow.centroidX - wp.centroidX; // +right
+		const dy = arrow.centroidY - wp.centroidY; // +down
+
+		// 0=N, 90=W, 180=S, 270=E
+		const yawDeg = ((Math.atan2(-dx, -dy) * 180) / Math.PI + 360) % 360;
+
+		waypoints = waypoints.map((w) => (w.id === waypointId ? { ...w, yaw: yawDeg } : w));
+	}
+
+	//Update yaw from manual input
 	function updateYaw(id: string, yawDeg: number) {
 		let yaw = Number.isFinite(yawDeg) ? yawDeg : 0;
 		yaw = ((yaw % 360) + 360) % 360; // keep within 0..359.999
 		waypoints = waypoints.map((w) => (w.id === id ? { ...w, yaw } : w));
 	}
 
+	// function calculateAngle() {
+	// 	const n = Math.min(waypoints.length, arrows.length);
+	// 	waypoints = waypoints.map((waypoint, i) => {
+	// 		if (i >= n) return waypoint;
+	// 		const arrow = arrows[i];
+	// 		const dx = arrow.centroidX - waypoint.centroidX;
+	// 		const dy = arrow.centroidY - waypoint.centroidY;
+	// 		const angleOfArrowDegrees = ((Math.atan2(-dx, -dy) * 180) / Math.PI + 360) % 360;
+	// 		return { ...waypoint, yaw: angleOfArrowDegrees };
+	// 	});
+	// }
+
+
+// ---------- Origin Helper Functions ----------//
+
+	//Calculate average origin based off one or more origin points
+	function calculateOrigin() {
+		if (origins.length === 0) return;
+
+		let totalSumXValuesOrigin = 0;
+		let totalSumYValuesOrigin = 0;
+
+		origins.forEach((o) => {
+			totalSumXValuesOrigin += o.centroidX;
+			totalSumYValuesOrigin += o.centroidY;
+		});
+
+		xOriginAverage = totalSumXValuesOrigin / origins.length;
+		yOriginAverage = totalSumYValuesOrigin / origins.length;
+
+		//Recompute relative coordinates for all waypoints using updated origin + directions
+		waypoints = waypoints.map((waypoint) => {
+			const rel = toRelative(waypoint.centroidX, waypoint.centroidY);
+			return { ...waypoint, relativeX: rel.relativeX, relativeY: rel.relativeY };
+		});
+	}
+
+	//Adjust waypoint coordinates to be relative to the rover start point
+	function toRelative(centroidX: number, centroidY: number) {
+		if (origins.length === 0) {
+			return { relativeX: centroidX, relativeY: centroidY };
+		}
+
+		//Default to common map convention if user hasn't selected directions yet
+		const xDir: Direction = positiveXDirection === 'unselected' ? 'left' : positiveXDirection;
+		const yDir: Direction = positiveYDirection === 'unselected' ? 'up' : positiveYDirection;
+
+		const dx = centroidX - xOriginAverage; // +right
+		const dy = centroidY - yOriginAverage; // +down
+
+		return {
+			relativeX: axisFromImage(xDir, dx, dy),
+			relativeY: axisFromImage(yDir, dx, dy)
+		};
+	}
+
+	//Direction mapping from image coordinates (dx right+, dy down+)
+	function axisFromImage(dir: Direction, dx: number, dy: number): number {
+		switch (dir) {
+			case 'right': return dx;
+			case 'left':  return -dx;
+			case 'down':  return dy;
+			case 'up':    return -dy;
+			default:      return 0;
+		}
+	}
+
+
+// ---------- Height Helper Functions ----------//
+
+	//Update waypoint height from user input
 	function updateHeight(id: string, waypointHeight: number) {
 		if (scale == 1) {
-			statusMessage = 'ERROR: Scale must be set before waypoint height can be adjusted';
+			statusMessage = 'ERROR -> Scale must be set before waypoint height can be adjusted';
 		} 
 		else {
 			let height = Number.isFinite(waypointHeight) ?  waypointHeight: 0;
 			waypoints = waypoints.map((w) => (w.id === id ? { ...w, height } : w));
-			optimalViewingDistnace();
+			optimalViewingDistance();
 		}
-		
 	}
 
-	function updateName(id: string, name: string) {
-		waypoints = waypoints.map((waypoint) => (waypoint.id === id ? { ...waypoint, name } : waypoint));
+	
+
+	function clamp(value: number, minimumImageHeight: number, maximumImageHeight: number) {
+		return Math.max(minimumImageHeight, Math.min(maximumImageHeight, value));
 	}
+
+	//Converts the click on the image to the pixle coordinates on the image
+	function clickToNaturalPosition(event: MouseEvent) {
+		if (!imageElement) return null;
+
+		const imageRectangle = imageElement.getBoundingClientRect();
+		const displayX = event.clientX - imageRectangle.left;
+		const displayY = event.clientY - imageRectangle.top;
+
+		const naturalX = Math.round(displayX * (imageElement.naturalWidth / imageRectangle.width));
+		const naturalY = Math.round(displayY * (imageElement.naturalHeight / imageRectangle.height));
+
+		return {
+			x: clamp(naturalX, 0, imageElement.naturalWidth - 1),
+			y: clamp(naturalY, 0, imageElement.naturalHeight - 1)
+		};
+	}
+
+
+	
+	
+
+
+
+
+
 
 	function ChangeInPointDistance(Point1Position: WaypointPoint, Point2Position: WaypointPoint) {
 		const DistanceBetweenPointsX = Point1Position.xCoordinate - Point2Position.xCoordinate;
@@ -723,68 +868,6 @@
 		});
 	}
 
-	async function onMapClick(event: MouseEvent) {
-		const xOriginDirection = positiveXDirection;
-		const yOriginDirection = positiveYDirection;
-
-		if (mode === 'manual') {
-			const clickPosition = clickToNaturalPosition(event);
-			if (!clickPosition) return;
-			currentClickPosition = clickPosition;
-			addManualWaypoint(clickPosition);
-			return;
-		}
-
-		if (mode === 'origin') {
-			if (xOriginDirection === 'unselected' || yOriginDirection === 'unselected') {
-				statusMessage = 'Please select both X and Y positive directions for origin mode.';
-				return;
-			}
-
-			const clickPosition = clickToNaturalPosition(event);
-			if (!clickPosition) return;
-			addManualOrigin(clickPosition);
-			return;
-		}
-
-		const clickPosition = clickToNaturalPosition(event);
-		if (!clickPosition) return;
-
-		currentClickPosition = clickPosition;
-		contour = [];
-		centroid = null;
-		sampleImageHexadecimalColor = '';
-
-		statusMessage = `${mode} @ (${clickPosition.x}, ${clickPosition.y})…`;
-
-		const extractionMode = mode === 'waypoint' ? 'border' : mode;
-
-		const request = {
-			op: 'extract_feature',
-			mode: extractionMode,
-			imageID: mapImageId,
-			sampleXPosition: clickPosition.x,
-			sampleYPosition: clickPosition.y,
-			hueTolerance: defaultHueTolerance,
-			saturationTolerance: defaultSaturationTolerance,
-			valueTolerance: defaultValueTolerance,
-			xOriginDirectionection: xOriginDirection,
-			yOriginDirectionection: yOriginDirection
-		};
-
-		const id = generateID();
-
-		if (!requestTopic) {
-			statusMessage = 'ROS not connected';
-			return;
-		}
-
-		pendingExtractionRequests.set(id, { id, mode });
-
-		requestTopic.publish({
-			data: JSON.stringify({ id, ...request })
-		});
-	}
 
 	function updateScale() {
 		const squares = document.getElementById("squares") as HTMLInputElement;
@@ -805,7 +888,7 @@
 	}
 
 
-	function optimalViewingDistnace() {
+	function optimalViewingDistance() {
 		const n = waypoints.length;
 		waypoints = waypoints.map((waypoint, i) => {
 			console.log("math?")
@@ -825,19 +908,17 @@
 <ScrollArea orientation="vertical" class="relative flex h-full w-full">
 	<div class="wrap">
 		<div class="topbar">
-			<div class="status">Status: {statusMessage}</div>
-
 			<div class="controls flex ">
-				<button class:active={mode === 'waypoint'} onclick={() => (mode = 'waypoint')}>
+				<button class:active={mode === 'waypoint'} onclick={toWaypoint}>
 					Waypoint mode
 				</button>
-				<button class:active={mode === 'border'} onclick={() => (mode = 'border')}>
+				<!-- <button class:active={mode === 'border'} onclick={() => (mode = 'border')}>
 					Border mode
-				</button>
-				<button class:active={mode === 'origin'} onclick={() => (mode = 'origin')}>
+				</button> -->
+				<button class:active={mode === 'origin'} onclick={toOrigin}>
 					Origin mode
 				</button>
-				<button class:active={mode === 'manual'} onclick={() => (mode = 'manual')}>
+				<button class:active={mode === 'manual'} onclick={toManual}>
 					Manual mode
 				</button>
 				<button type="button" class="danger" onclick={clearWaypoints} disabled={waypoints.length === 0}>
@@ -848,6 +929,7 @@
 					Save JSON
 				</button>
 			</div>
+			<div class="status" style="margin-top: 10px;">Status: {statusMessage}</div>
 		</div>
 
 		<div class="row">
