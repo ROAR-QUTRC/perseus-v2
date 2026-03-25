@@ -49,8 +49,6 @@ pkgs.mkShell {
           controller-manager
           cv-bridge
           diff-drive-controller
-          eigen
-          eigen3-cmake-module
           fast-lio
           geometry-msgs
           gz-ros2-control
