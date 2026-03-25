@@ -86,9 +86,6 @@ install(TARGETS aruco_detector_node cube_detector
 install(DIRECTORY include/ DESTINATION include/)
 install(DIRECTORY config/ DESTINATION share/${PROJECT_NAME}/config)
 install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/models")
-  install(DIRECTORY models/ DESTINATION share/${PROJECT_NAME}/models)
-endif()
 
 # ── ONNX Model Download ──────────────────────────────────────────────────────
 set(MODEL_FILENAME "cube_detector_yolob8s.onnx")
@@ -100,12 +97,17 @@ set(MODEL_SHA256
 set(MODEL_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/models")
 set(MODEL_OUTPUT_PATH "${MODEL_OUTPUT_DIR}/${MODEL_FILENAME}")
 
-file(MAKE_DIRECTORY ${MODEL_OUTPUT_DIR})
+# Check if model was provided externally (e.g., by Nix fetchurl)
+set(MODEL_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/models/${MODEL_FILENAME}")
 
-if(NOT EXISTS ${MODEL_OUTPUT_PATH})
+if(EXISTS "${MODEL_SOURCE_PATH}")
+  message(STATUS "[perseus_vision] Using pre-provided model from source tree.")
+  set(MODEL_OUTPUT_PATH "${MODEL_SOURCE_PATH}")
+elseif(NOT EXISTS "${MODEL_OUTPUT_PATH}")
+  file(MAKE_DIRECTORY "${MODEL_OUTPUT_DIR}")
   message(STATUS "[perseus_vision] Downloading ONNX model...")
   file(
-    DOWNLOAD ${MODEL_URL} ${MODEL_OUTPUT_PATH}
+    DOWNLOAD "${MODEL_URL}" "${MODEL_OUTPUT_PATH}"
     EXPECTED_HASH SHA256=${MODEL_SHA256}
     SHOW_PROGRESS
     STATUS DOWNLOAD_STATUS)
@@ -117,7 +119,7 @@ if(NOT EXISTS ${MODEL_OUTPUT_PATH})
   message(STATUS "[perseus_vision] Model downloaded successfully.")
 endif()
 
-install(FILES ${MODEL_OUTPUT_PATH} DESTINATION share/${PROJECT_NAME}/models)
+install(FILES "${MODEL_OUTPUT_PATH}" DESTINATION share/${PROJECT_NAME}/models)
 # ─────────────────────────────────────────────────────────────────────────────
 
 if(BUILD_TESTING)
