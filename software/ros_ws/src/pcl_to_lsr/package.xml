@@ -28,7 +28,6 @@
     <depend>tf2_ros</depend>
     <depend>tf2_sensor_msgs</depend>
     <depend>eigen</depend>
-    <depend>geometry_msgs</depend>
 
     <exec_depend>launch</exec_depend>
     <exec_depend>launch_ros</exec_depend>

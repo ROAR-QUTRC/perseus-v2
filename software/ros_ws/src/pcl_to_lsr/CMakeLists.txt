@@ -12,8 +12,6 @@ find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_sensor_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
-
 add_library(laserscan_to_pointcloud SHARED src/laserscan_to_pointcloud_node.cpp)
 target_compile_definitions(laserscan_to_pointcloud
                            PRIVATE "POINTCLOUD_TO_LASERSCAN_BUILDING_DLL")
