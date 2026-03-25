@@ -38,6 +38,20 @@
         <state_interface name="adc_raw"/>
       </gpio>
 
+      <!--
+        LDR sensor GPIO interfaces.
+        kibisis_sensors node writes 1.0 to ldr_sensor/trigger to sample.
+        Four state interfaces return ambient and illuminated readings for
+        LDR A and LDR B (0-4095 each).
+      -->
+      <gpio name="ldr_sensor">
+        <command_interface name="trigger"/>
+        <state_interface name="a_ambient"/>
+        <state_interface name="b_ambient"/>
+        <state_interface name="a_illuminated"/>
+        <state_interface name="b_illuminated"/>
+      </gpio>
+
     </ros2_control>
   </xacro:macro>
 </robot>

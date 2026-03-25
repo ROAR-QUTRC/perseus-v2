@@ -1,9 +1,11 @@
 final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
+  deployment-mechanism = final.callPackage ./deployment-mechanism.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   kibisis = final.callPackage ./kibisis.nix { };
   kibisis-description = final.callPackage ./kibisis-description.nix { };
   kibisis-hardware = final.callPackage ./kibisis-hardware.nix { };
+  kibisis-sensors = final.callPackage ./kibisis-sensors.nix { };
   pcl-to-lsr = final.callPackage ./pcl-to-lsr.nix { };
   perseus = final.callPackage ./perseus.nix { };
   perseus-autonomy-bridge = final.callPackage ./perseus-autonomy-bridge.nix { };

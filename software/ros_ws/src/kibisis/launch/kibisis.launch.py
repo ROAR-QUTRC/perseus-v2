@@ -48,18 +48,18 @@ def generate_launch_description():
     def robot_state_publisher(context):
         performed_use_mock = IfCondition(use_mock_hardware).evaluate(context)
         final_plugin = (
-            "mock_components/GenericSystem"
-            if performed_use_mock
-            else hardware_plugin
+            "mock_components/GenericSystem" if performed_use_mock else hardware_plugin
         )
         return [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    PathJoinSubstitution([
-                        FindPackageShare("kibisis"),
-                        "launch",
-                        "robot_state_publisher.launch.py",
-                    ])
+                    PathJoinSubstitution(
+                        [
+                            FindPackageShare("kibisis"),
+                            "launch",
+                            "robot_state_publisher.launch.py",
+                        ]
+                    )
                 ),
                 launch_arguments={
                     "use_sim_time": use_sim_time,
@@ -70,11 +70,13 @@ def generate_launch_description():
 
     controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-                FindPackageShare("kibisis"),
-                "launch",
-                "controllers.launch.py",
-            ])
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("kibisis"),
+                    "launch",
+                    "controllers.launch.py",
+                ]
+            )
         ),
         launch_arguments={
             "use_sim_time": use_sim_time,
@@ -82,7 +84,10 @@ def generate_launch_description():
         }.items(),
     )
 
-    return LaunchDescription(arguments + [
-        OpaqueFunction(function=robot_state_publisher),
-        controllers_launch,
-    ])
+    return LaunchDescription(
+        arguments
+        + [
+            OpaqueFunction(function=robot_state_publisher),
+            controllers_launch,
+        ]
+    )

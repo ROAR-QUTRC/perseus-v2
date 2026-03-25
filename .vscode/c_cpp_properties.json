@@ -14,7 +14,10 @@
       "name": "Linux",
       "intelliSenseMode": "${default}",
       "cStandard": "gnu17",
-      "cppStandard": "c++20"
+      "cppStandard": "c++20",
+      "compileCommands": [
+        "${workspaceFolder}/firmware/kibisis-pico-driver/build/compile_commands.json"
+      ]
     }
   ],
   "version": 4

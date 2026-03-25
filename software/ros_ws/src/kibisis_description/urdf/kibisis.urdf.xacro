@@ -9,22 +9,22 @@
 
     <!-- Robot properties -->
     <!-- Wheel dimensions: 20cm diameter, 30cm apart -->
-    <xacro:property name="wheel_radius" value="0.10"/>
-    <xacro:property name="wheel_width" value="0.04"/>
-    <xacro:property name="wheel_separation" value="0.30"/>
+    <xacro:property name="wheel_radius" value="0.115"/>
+    <xacro:property name="wheel_width" value="0.05"/>
+    <xacro:property name="wheel_separation" value="0.25"/>
     <xacro:property name="wheel_mass" value="0.3"/>
 
     <!-- Base dimensions (disc-shaped like Roomba) -->
-    <xacro:property name="base_radius" value="0.17"/>
-    <xacro:property name="base_height" value="0.08"/>
-    <xacro:property name="base_mass" value="2.5"/>
+    <xacro:property name="base_radius" value="0.30"/>
+    <xacro:property name="base_height" value="0.115"/>
+    <xacro:property name="base_mass" value="2.0"/>
 
     <!-- Caster wheel properties -->
     <xacro:property name="caster_radius" value="0.025"/>
     <xacro:property name="caster_mass" value="0.1"/>
 
     <!-- Camera position: 4cm above wheel axle -->
-    <xacro:property name="camera_height" value="0.04"/>
+    <xacro:property name="camera_height" value="0.15"/>
 
     <!-- Base link -->
     <link name="${prefix}base_link"/>

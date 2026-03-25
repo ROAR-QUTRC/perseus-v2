@@ -1,0 +1,3 @@
+add_library(ldr_sensors_lib src/ldr_sensors.cpp)
+target_include_directories(ldr_sensors_lib PUBLIC include)
+target_link_libraries(ldr_sensors_lib pico_stdlib hardware_adc)
