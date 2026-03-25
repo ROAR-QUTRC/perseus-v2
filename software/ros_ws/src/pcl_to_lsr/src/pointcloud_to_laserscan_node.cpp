@@ -172,8 +172,8 @@ namespace pointcloud_to_laserscan
         use_inf_ = this->declare_parameter("use_inf", true);
         cloud_in_ = this->declare_parameter("cloud_in", "/livox/lidar");
         scan_out_ = this->declare_parameter("scan_out", "/livox/scan");
-        imu_frame_ = this->declare_parameter("use_dynamic_conversion.imu_frame", "imu_link");
-        imu_topic_ = this->declare_parameter("use_dynamic_conversion.imu_topic", "/imu/data");
+        imu_frame_ = this->declare_parameter("use_dynamic_conversion.imu_frame", "livox_frame");
+        imu_topic_ = this->declare_parameter("use_dynamic_conversion.imu_topic", "/livox/imu/corrected");
         tilt_threshold_ = this->declare_parameter("tilt_threshold", 0.1745);                        // ~10 degrees
         use_dynamic_conversion_ = this->declare_parameter("use_dynamic_conversion.enabled", true);  // Enable tilt-based adjustment by default
         pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(scan_out_, rclcpp::SensorDataQoS());
