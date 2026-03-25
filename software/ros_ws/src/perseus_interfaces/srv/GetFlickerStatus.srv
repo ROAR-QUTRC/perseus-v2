@@ -1,0 +1,18 @@
+# Request flicker detection status from the AS7343 sensor
+---
+# Detected flicker frequency in Hz (0 = none, 100 = 50Hz mains, 120 = 60Hz mains)
+uint16 detected_frequency_hz
+
+# Validity flags
+bool hz_100_valid
+bool hz_120_valid
+bool hz_100_detected
+bool hz_120_detected
+
+# Raw flicker detection status
+bool fd_saturation
+bool fd_valid
+
+# Service status
+bool success
+string message

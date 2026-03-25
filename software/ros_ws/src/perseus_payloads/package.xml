@@ -17,6 +17,7 @@
   <depend>std_srvs</depend>
   <depend>perseus_interfaces</depend>
   <depend>hi_can_raw</depend>
+  <depend>pigpio</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

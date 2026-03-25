@@ -1,0 +1,32 @@
+as7343_node:
+  ros__parameters:
+    # I2C Configuration
+    # Raspberry Pi 4/5 default I2C bus is /dev/i2c-1
+    # Use i2cdetect -y 1 to verify the sensor is detected at 0x39
+    i2c_bus: "/dev/i2c-1"
+    device_address: 0x39
+    frame_id: "as7343_link"
+    required: false
+    retry_count: 3
+    # Sensor Configuration
+    # Gain: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048
+    # Higher gain = more sensitivity but risk of saturation
+    gain: 256
+    # Integration time control
+    # t_integration = (atime + 1) * (astep + 1) * 2.78 us
+    # Default: (29+1) * (599+1) * 2.78us = 50.04 ms per cycle
+    # In 18-channel mode this is repeated 3x = ~150 ms total
+    atime: 29
+    astep: 599
+    # SMUX mode: 6, 12, or 18 channels
+    # 6  = single cycle (FZ, FY, FXL, NIR, VIS, FD only)
+    # 12 = two cycles (adds F2, F3, F4, F6)
+    # 18 = all 14 unique channels (recommended)
+    smux_mode: 18
+    # On-board LED control (SparkFun/Adafruit breakout boards)
+    # Useful for reflectance measurements
+    led_enabled: false
+    led_current_ma: 4 # Range: 4-258 mA (even values only)
+    # Flicker detection
+    # Detects 100Hz (50Hz mains) and 120Hz (60Hz mains) ambient light flicker
+    flicker_detection_enabled: true

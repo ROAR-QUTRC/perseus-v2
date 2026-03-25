@@ -2,40 +2,38 @@
 {
   lib,
   buildRosPackage,
-  actuator-msgs,
   ament-cmake,
+  ament-lint-auto,
+  ament-lint-common,
   backward-ros,
-  hi-can-raw,
+  fd-wrapper,
   perseus-interfaces,
-  pigpio,
   rclcpp,
-  sensor-msgs,
-  std-msgs,
   std-srvs,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-perseus-payloads";
+  pname = "ros-jazzy-as7343-driver";
   version = "0.0.1";
 
-  src = ./../src/perseus_payloads;
+  src = ./../src/as7343_driver;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
+  checkInputs = [
+    ament-lint-auto
+    ament-lint-common
+  ];
   propagatedBuildInputs = [
-    actuator-msgs
     backward-ros
-    hi-can-raw
+    fd-wrapper
     perseus-interfaces
-    pigpio
     rclcpp
-    sensor-msgs
-    std-msgs
     std-srvs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "Payload-specific nodes and launch files for the Perseus Rover.";
+    description = "ROS 2 driver for the ams-OSRAM AS7343 14-channel multi-spectral sensor over I2C. Designed for Raspberry Pi 4/5.";
     license = with lib.licenses; [ mit ];
   };
 }
