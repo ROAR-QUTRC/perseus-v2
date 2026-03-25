@@ -34,6 +34,8 @@ class IlmeniteController(Node):
         self.response_publisher.publish(payload)
 
     def ilmenite_request_callback(self, request, response):
+        self.get_logger().info("Ilmenite Reading Requested")
+
         # Sending 'call' to the ML, triggering the process that will send the concentration back to the controller
         ilmenite_reading_client_async = IlmeniteController()
         future = ilmenite_reading_client_async.send_request()
