@@ -10,19 +10,45 @@ channels = [
     ("FXL_600"),
     ("NIR_855"),
     ("VIS1"),
-    ("FD1"),
     ("F2_425"),
     ("F3_475"),
     ("F4_515"),
     ("F6_640"),
-    ("VIS2"),
-    ("FD2"),
     ("F1_405"),
     ("F7_690"),
     ("F8_745"),
     ("F5_550_narrow"),
-    ("VIS3"),
-    ("FD3"),
+
+    ("FZ_450_2"),
+    ("FY_555_wide_2"),
+    ("FXL_600_2"),
+    ("NIR_855_2"),
+    ("VIS1_2"),
+    ("F2_425_2"),
+    ("F3_475_2"),
+    ("F4_515_2"),
+    ("F6_640_2"),
+    ("F1_405_2"),
+    ("F7_690_2"),
+    ("F8_745_2"),
+    ("F5_550_narrow_2"),
+
+
+
+    ("FZ_450_3"),
+    ("FY_555_wide_3"),
+    ("FXL_600_3"),
+    ("NIR_855_3"),
+    ("VIS1_3"),
+    ("F2_425_3"),
+    ("F3_475_3"),
+    ("F4_515_3"),
+    ("F6_640_3"),
+    ("F1_405_3"),
+    ("F7_690_3"),
+    ("F8_745_3"),
+    ("F5_550_narrow_3")
+
 ]
 
 EPS = 1e-6
@@ -36,9 +62,26 @@ def compute_ratios(raw):
         ch["F2_425"] / (ch["F6_640"] + EPS),
         ch["F2_425"] / (ch["F5_550_narrow"] + EPS),
         ch["F5_550_narrow"] / (ch["F7_690"] + EPS),
-        ch["F3_475"] / (ch["F7_690"] + EPS)
+        ch["F3_475"] / (ch["F7_690"] + EPS),
+
+        ch["F1_405_2"]/(ch["F5_550_narrow_2"] + EPS),
+        ch["F2_425_2"] / (ch["F7_690_2"] + EPS),
+        ch["F4_515_2"] / (ch["F6_640_2"] + EPS),
+        ch["F2_425_2"] / (ch["F6_640_2"] + EPS),
+        ch["F2_425_2"] / (ch["F5_550_narrow_2"] + EPS),
+        ch["F5_550_narrow_2"] / (ch["F7_690_2"] + EPS),
+        ch["F3_475_2"] / (ch["F7_690_2"] + EPS),
+
+        ch["F1_405_3"]/(ch["F5_550_narrow_3"] + EPS),
+        ch["F2_425_3"] / (ch["F7_690_3"] + EPS),
+        ch["F4_515_3"] / (ch["F6_640_3"] + EPS),
+        ch["F2_425_3"] / (ch["F6_640_3"] + EPS),
+        ch["F2_425_3"] / (ch["F5_550_narrow_3"] + EPS),
+        ch["F5_550_narrow_3"] / (ch["F7_690_3"] + EPS),
+        ch["F3_475_3"] / (ch["F7_690_3"] + EPS)
     ]
     return ratios
+
 
 
 
@@ -63,7 +106,7 @@ class IlmeniteDataLoader(Dataset):
                 ratios = compute_ratios(raw_values)
 
                 # Making a dict of tuples (label, ratios)
-                temp[key] = (labels[key], ratios)
+                temp[key] = (labels[key] / 100.0, ratios)
 
         #scaling/normalising ratios
         all_ratios = np.array([v[1] for v in temp.values()])

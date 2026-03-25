@@ -4,9 +4,11 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 import json
+from tqdm import tqdm
 
 from model import IlmeniteModel
 from loader import IlmeniteDataLoader
+
 
 torch.manual_seed(0)
 
@@ -47,67 +49,77 @@ net = IlmeniteModel().to(device)
 #MSELoss for regression - predicting continuous concentration values
 criterion = nn.MSELoss()
 #adam optimiser (adjusts the learning rate)
-optimizer = optim.Adam(net.parameters(), lr=0.001)
+optimiser = optim.Adam(net.parameters(), lr=0.01)
 
 #reduce learning rate if val loss stops improving for 5 epochs
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer, mode="min", patience=5, factor=0.5, verbose=True
-)
+     optimiser, mode="min", patience=5, factor=0.5
+ )
 
 
 #training loop
 losses = {"train": [], "val": []}
 best_val_loss = float("inf")
+# train_loss_arr = []
 
-for epoch in range(200):
+NUM_OF_EPOCHS = 100
+
+for epoch in range(NUM_OF_EPOCHS):
 
     net.train()
     epoch_loss = 0.0
-    for data, labels in train_loader:
+    for data, labels in tqdm(train_loader):
         #converting yaml to float tensors
         data   = data.to(device)
+        # print(len(data))
         labels = labels.unsqueeze(1).to(device)
 
         #zero the parameter gradients
-        optimizer.zero_grad()
+        optimiser.zero_grad()
         outputs = net(data)
         loss = criterion(outputs, labels)
         loss.backward()
-        optimizer.step() #updating weights via adam optimiser
+        optimiser.step() #updating weights via adam optimiser
 
         epoch_loss += loss.item()
 
-    train_loss = epoch_loss / len(train_loader)
+        train_loss = epoch_loss / len(train_loader)
     losses["train"].append(train_loss)
 
-
-#validation dataset
-net.eval() #turning droupouts off
-val_loss = 0.0
-with torch.no_grad(): #optimiser is not needed cuz weights have been finalised
-    for data, labels in val_loader:
-        data   = data.to(device)
-        labels = labels.unsqueeze(1).to(device)
-        outputs = net(data)
-
-        loss = criterion(outputs, labels)
-        val_loss += loss.item()
+    #validation
+    net.eval() #turning dropouts off
+    val_loss = 0.0
+    with torch.no_grad(): #optimiser is not needed cuz weights have been finalised
+        for data, labels in val_loader:
+            data   = data.to(device)
+            labels = labels.unsqueeze(1).to(device)
+            outputs = net(data)
+            val_loss += criterion(outputs, labels).item()
 
     val_loss = val_loss / len(val_loader)
     losses["val"].append(val_loss)
 
     scheduler.step(val_loss)
-    print(f"Epoch {epoch+1:>3}/200 | Train Loss: {train_loss:.6f} | Val Loss: {val_loss:.6f}")
+    print(f"Epoch {epoch+1:>3}/{NUM_OF_EPOCHS} | Train Loss: {train_loss:.6f} | Val Loss: {val_loss:.6f}")
 
-    #Overfitting warning
+    #overfitting warning
     if train_loss < val_loss * 0.5:
-        print(" Warning: possible overfitting (train loss much lower than val loss)")
+        print("Warning: possible overfitting")
 
-    #Save best model
+    #save best model
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         torch.save(net.state_dict(), "ilmenite_model.pth")
-        print(f" Saved best model (val loss: {best_val_loss:.6f})")
+        print(f"Saved best model (val loss: {best_val_loss:.6f})")
+
+
+for loss in losses["train"]:
+    print(f"{loss}")
+
+print("printing validation losses")
+
+for loss in losses["val"]:
+     print(f"{loss:.6f}")
 
 print(f"\nFinished Training. Best val loss: {best_val_loss:.6f}")
 
