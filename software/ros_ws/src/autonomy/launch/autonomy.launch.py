@@ -92,6 +92,19 @@ def generate_launch_description():
 
     # Include Keepout Filter launch (optional)
 
+    # Crater Exit Node
+    crater_exit_dir = get_package_share_directory("crater_exit")
+    crater_exit_node = Node(
+        package="crater_exit",
+        executable="crater_exit_node",
+        name="crater_exit_node",
+        output="screen",
+        parameters=[
+            os.path.join(crater_exit_dir, "config", "crater_exit_params.yaml"),
+            {"use_sim_time": use_sim_time},
+        ],
+    )
+
     # EKF Node for sensor fusion and localization
     ekf_node = Node(
         package="robot_localization",
@@ -119,5 +132,6 @@ def generate_launch_description():
     ld.add_action(ekf_node)
     # ld.add_action(slam_launch)
     # ld.add_action(nav_launch)
+    ld.add_action(crater_exit_node)
 
     return ld

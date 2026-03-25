@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "geometry_msgs/msg/pose_array.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav2_msgs/action/navigate_through_poses.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -74,6 +75,10 @@ public:
             "/autonomy/cancel_waypoints",
             std::bind(&Nav2WaypointsBridge::on_cancel, this, std::placeholders::_1, std::placeholders::_2));
 
+        // Publisher for active waypoints (used by crater_exit node for caching)
+        _waypoints_pub = this->create_publisher<geometry_msgs::msg::PoseArray>(
+            "/autonomy/active_waypoints", rclcpp::QoS(1).transient_local());
+
         RCLCPP_INFO(get_logger(), "Ready: /autonomy/run_waypoints, /autonomy/cancel_waypoints");
         RCLCPP_INFO(get_logger(), "Feedback topic: '%s'", _feedback_topic_name.c_str());
     }
@@ -93,6 +98,7 @@ private:
 
     rclcpp::Service<perseus_interfaces::srv::RunWaypoints>::SharedPtr _srv_run;
     rclcpp::Service<perseus_interfaces::srv::RunWaypoints>::SharedPtr _srv_cancel;
+    rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr _waypoints_pub;
 
     std::string _feedback_topic_name;
 
@@ -171,6 +177,16 @@ private:
             };
 
             _action_client->async_send_goal(goal, opts);
+
+            // Publish waypoints as PoseArray for external caching (e.g. crater_exit)
+            geometry_msgs::msg::PoseArray waypoints_msg;
+            waypoints_msg.header.stamp = this->now();
+            waypoints_msg.header.frame_id = "map";
+            for (const auto& ps : goal.poses)
+            {
+                waypoints_msg.poses.push_back(ps.pose);
+            }
+            _waypoints_pub->publish(waypoints_msg);
 
             resp->success = true;
             resp->message = "Goal sent to /navigate_through_poses";

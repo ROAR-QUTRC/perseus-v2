@@ -7,6 +7,11 @@ cmd_vel_mux:
         timeout: 0.5
         priority: 1
         short_desc: "Navigation stack velocity commands"
+      - name: "Crater Exit"
+        topic: "/cmd_vel_crater_exit"
+        timeout: 0.5
+        priority: 5
+        short_desc: "Crater exit override"
       - name: "Differential Base Controller"
         topic: "/diff_base_controller/cmd_vel"
         timeout: 0.2

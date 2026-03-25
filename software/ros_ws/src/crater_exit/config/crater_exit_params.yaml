@@ -1,0 +1,21 @@
+crater_exit_node:
+  ros__parameters:
+    # Topics
+    scan_topic: "/scan"
+    imu_topic: "/livox/imu/corrected"
+    cmd_vel_out_topic: "/cmd_vel_crater_exit"
+
+    # Crater detection thresholds
+    obstacle_distance_threshold: 1.5   # meters - rays closer than this count as "obstacle"
+    obstacle_coverage_threshold: 0.7   # fraction of valid rays that must be obstacles
+    detection_confirmation_count: 5    # consecutive scans confirming crater before acting
+    min_quadrants_with_obstacles: 3    # must see obstacles in at least N of 4 quadrants
+
+    # Exit behavior
+    exit_linear_speed: 0.08            # m/s - slow forward crawl
+    exit_timeout: 15.0                 # seconds - max time before aborting exit attempt
+    pitch_threshold_deg: -3.0          # degrees - avg pitch below this = nose down = crested rim
+    pitch_window_duration: 3.0         # seconds - rolling window for pitch averaging (filters vibration/divots)
+
+    # Safety
+    enable_crater_exit: true           # master enable/disable
