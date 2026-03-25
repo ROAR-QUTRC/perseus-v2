@@ -46,7 +46,7 @@ export async function canSocket(io) {
       process.exit(0);
     });
   }
-};
+}
 
 function cleanup() {
   if (cleaned) return;
