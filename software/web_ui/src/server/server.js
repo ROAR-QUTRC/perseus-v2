@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 
 import { handler } from "../../build/handler.js";
+import { canSocket } from "./scripts/canSocket.js";
 import { resourceMonitor } from "./scripts/resourceMonitorSocket.js";
 import { cameraSocket } from "./scripts/camerasSocket.js";
 import { hostname } from "os";
@@ -30,6 +31,7 @@ io.on("connection", (socket) => {
 });
 
 resourceMonitor(io);
+canSocket(io);
 
 app.use(handler);
 

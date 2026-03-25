@@ -1,0 +1,296 @@
+{
+  "0x00000000": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "SET_DUTY",
+    "parameter": null
+  },
+  "0x00000100": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "SET_CURRENT",
+    "parameter": null
+  },
+  "0x00000200": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "SET_CURRENT_BRAKE",
+    "parameter": null
+  },
+  "0x00000300": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "SET_RPM",
+    "parameter": null
+  },
+  "0x00000400": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "SET_POS",
+    "parameter": null
+  },
+  "0x00000900": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "STATUS_1",
+    "parameter": null
+  },
+  "0x00000a00": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "SET_CURRENT_REL",
+    "parameter": null
+  },
+  "0x00000b00": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "SET_CURRENT_BRAKE_REL",
+    "parameter": null
+  },
+  "0x00000c00": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "SET_CURRENT_HANDBRAKE",
+    "parameter": null
+  },
+  "0x00000d00": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "SET_CURRENT_HANDBRAKE_REL",
+    "parameter": null
+  },
+  "0x00000e00": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "STATUS_2",
+    "parameter": null
+  },
+  "0x00000f00": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "STATUS_3",
+    "parameter": null
+  },
+  "0x00001000": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "STATUS_4",
+    "parameter": null
+  },
+  "0x00001b00": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "STATUS_5",
+    "parameter": null
+  },
+  "0x00003a00": {
+    "system": "drive",
+    "subsystem": "vesc",
+    "device": "vesc",
+    "group": "STATUS_6",
+    "parameter": null
+  },
+  "0x02000100": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "BANK_1",
+    "parameter": "CURRENT_LIMIT"
+  },
+  "0x02000101": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "BANK_1",
+    "parameter": "STATUS"
+  },
+  "0x02000200": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "BANK_2",
+    "parameter": "CURRENT_LIMIT"
+  },
+  "0x02000201": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "BANK_2",
+    "parameter": "STATUS"
+  },
+  "0x02000300": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "BANK_3",
+    "parameter": "CURRENT_LIMIT"
+  },
+  "0x02000301": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "BANK_3",
+    "parameter": "STATUS"
+  },
+  "0x02000400": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "LIFT_BOTH",
+    "parameter": "SPEED"
+  },
+  "0x02000401": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "LIFT_BOTH",
+    "parameter": "POSITION"
+  },
+  "0x02000500": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "LIFT_LEFT",
+    "parameter": "SPEED"
+  },
+  "0x02000501": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "LIFT_LEFT",
+    "parameter": "POSITION"
+  },
+  "0x02000600": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "LIFT_RIGHT",
+    "parameter": "SPEED"
+  },
+  "0x02000601": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "LIFT_RIGHT",
+    "parameter": "POSITION"
+  },
+  "0x02000700": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "TILT_BOTH",
+    "parameter": "SPEED"
+  },
+  "0x02000701": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "TILT_BOTH",
+    "parameter": "POSITION"
+  },
+  "0x02000800": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "TILT_LEFT",
+    "parameter": "SPEED"
+  },
+  "0x02000801": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "TILT_LEFT",
+    "parameter": "POSITION"
+  },
+  "0x02000900": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "TILT_RIGHT",
+    "parameter": "SPEED"
+  },
+  "0x02000901": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "TILT_RIGHT",
+    "parameter": "POSITION"
+  },
+  "0x02000a00": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "JAWS_BOTH",
+    "parameter": "SPEED"
+  },
+  "0x02000a01": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "JAWS_BOTH",
+    "parameter": "POSITION"
+  },
+  "0x02000b00": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "JAWS_LEFT",
+    "parameter": "SPEED"
+  },
+  "0x02000b01": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "JAWS_LEFT",
+    "parameter": "POSITION"
+  },
+  "0x02000c00": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "JAWS_RIGHT",
+    "parameter": "SPEED"
+  },
+  "0x02000c01": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "JAWS_RIGHT",
+    "parameter": "POSITION"
+  },
+  "0x02000d00": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "MAGNET",
+    "parameter": "ROTATE_SPEED"
+  },
+  "0x02000d01": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "MAGNET",
+    "parameter": "ROTATE_POSITION"
+  },
+  "0x02000d03": {
+    "system": "excavation",
+    "subsystem": "bucket",
+    "device": "controller",
+    "group": "MAGNET",
+    "parameter": "MAGNET_ENABLE"
+  }
+}
