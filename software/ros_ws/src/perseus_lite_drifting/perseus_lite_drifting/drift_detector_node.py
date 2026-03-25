@@ -28,9 +28,7 @@ class DriftDetectorNode(Node):
         self._last_play_time = 0.0
         self._player_process = None
 
-        self._odom_sub = self.create_subscription(
-            Odometry, "/odom", self._odom_cb, 10
-        )
+        self._odom_sub = self.create_subscription(Odometry, "/odom", self._odom_cb, 10)
 
         self.get_logger().info(
             f"Drift detector started — "
