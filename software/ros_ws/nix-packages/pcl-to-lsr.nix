@@ -13,7 +13,6 @@
   ament-lint-auto,
   eigen,
   eigen3-cmake-module,
-  geometry-msgs,
   laser-geometry,
   launch,
   launch-ros,
@@ -46,7 +45,6 @@ buildRosPackage rec {
   propagatedBuildInputs = [
     eigen
     eigen3-cmake-module
-    geometry-msgs
     laser-geometry
     launch
     launch-ros
