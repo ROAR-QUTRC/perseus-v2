@@ -47,8 +47,7 @@ std::unordered_map<control_board::pwm_group, std::pair<uint8_t, bool>> pwm_pin_m
     {control_board::pwm_group::PWM_2, {7, OUT}},
     {control_board::pwm_group::PWM_3, {8, OUT}},
     {control_board::pwm_group::PWM_4, {9, OUT}},
-    {control_board::pwm_group::PWM_5, {37, OUT}}
-};
+    {control_board::pwm_group::PWM_5, {37, OUT}}};
 
 const addressing::standard_address_t BASE_ADDRESS{
     SYSTEM_ID,
@@ -362,9 +361,12 @@ void handle_pwm_data(const Packet& packet, bool is_servo)
                 printf("writing %f to servo", angle);
 
                 // Space resources only:
-                if (angle < 45) servo.writeMicroseconds(1000);
-                else if (angle > 135) servo.writeMicroseconds(2000);
-                else servo.writeMicroseconds(1500);
+                if (angle < 45)
+                    servo.writeMicroseconds(1000);
+                else if (angle > 135)
+                    servo.writeMicroseconds(2000);
+                else
+                    servo.writeMicroseconds(1500);
             }
             else
             {
