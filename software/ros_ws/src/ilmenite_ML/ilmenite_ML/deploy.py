@@ -38,6 +38,11 @@ def load_scaler(scaler_path):
     #raise NotImplementedError("put sensor reading code in here")
 
 
+def get_sensor_reading():
+    test_values = input("Enter 18 channel values separated by commas:\n> ")
+    input_array = [float(x.strip()) for x in test_values.split(',')]
+    return input_array
+
 def predict_concentration(model, raw_sample, scaler, device):
     ratios = np.array(compute_ratios(raw_sample))
     ratios_scaled = (ratios - scaler["mean"]) / (scaler["std"] + 1e-8)
@@ -59,6 +64,10 @@ def log_prediction(log_path, raw_sample, concentration):
         sensor_vals = ",".join(str(v) for v in raw_sample)
         f.write(f",{sensor_vals},{concentration:.6f}\n")
 
+# Add this function somewhere above main()
+def snap_to_nearest(value):
+    levels = [0.00, 0.02, 0.05, 0.10, 0.15]
+    return min(levels, key=lambda x: abs(x - value))
 
 def main():
     #setting up network
@@ -81,12 +90,13 @@ def main():
                 continue
 
             #run through model
+            
             concentration = predict_concentration(model, raw_sample, scaler, device)
+            rounded_concentration = snap_to_nearest(concentration)
 
             log_prediction(LOG_PATH, raw_sample, concentration)
 
-            print(f"Concentration: {concentration:.4f} | Logged to {LOG_PATH}")
-
+            print(f"Concentration: {concentration:.4f} | Rounded Concentration: {rounded_concentration:.2%} | Logged to {LOG_PATH}")
             time.sleep(POLL_INTERVAL)
 
     except KeyboardInterrupt:
