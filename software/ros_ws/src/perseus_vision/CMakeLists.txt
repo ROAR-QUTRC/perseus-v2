@@ -86,7 +86,41 @@ install(TARGETS aruco_detector_node cube_detector
 install(DIRECTORY include/ DESTINATION include/)
 install(DIRECTORY config/ DESTINATION share/${PROJECT_NAME}/config)
 install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
-install(DIRECTORY models/ DESTINATION share/${PROJECT_NAME}/models)
+
+# ── ONNX Model Download ──────────────────────────────────────────────────────
+set(MODEL_FILENAME "cube_detector_yolob8s.onnx")
+set(MODEL_URL
+    "https://github.com/ROAR-QUTRC/perseus-v2/releases/download/models-v1/${MODEL_FILENAME}"
+)
+set(MODEL_SHA256
+    "1245a1285628839cac4a86dc1380c55b64bc8f764b4190c1c6e7162dafca55f7")
+set(MODEL_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/models")
+set(MODEL_OUTPUT_PATH "${MODEL_OUTPUT_DIR}/${MODEL_FILENAME}")
+
+# Check if model was provided externally (e.g., by Nix fetchurl)
+set(MODEL_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/models/${MODEL_FILENAME}")
+
+if(EXISTS "${MODEL_SOURCE_PATH}")
+  message(STATUS "[perseus_vision] Using pre-provided model from source tree.")
+  set(MODEL_OUTPUT_PATH "${MODEL_SOURCE_PATH}")
+elseif(NOT EXISTS "${MODEL_OUTPUT_PATH}")
+  file(MAKE_DIRECTORY "${MODEL_OUTPUT_DIR}")
+  message(STATUS "[perseus_vision] Downloading ONNX model...")
+  file(
+    DOWNLOAD "${MODEL_URL}" "${MODEL_OUTPUT_PATH}"
+    EXPECTED_HASH SHA256=${MODEL_SHA256}
+    SHOW_PROGRESS
+    STATUS DOWNLOAD_STATUS)
+  list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+  if(NOT STATUS_CODE EQUAL 0)
+    message(
+      FATAL_ERROR "[perseus_vision] Model download failed: ${DOWNLOAD_STATUS}")
+  endif()
+  message(STATUS "[perseus_vision] Model downloaded successfully.")
+endif()
+
+install(FILES "${MODEL_OUTPUT_PATH}" DESTINATION share/${PROJECT_NAME}/models)
+# ─────────────────────────────────────────────────────────────────────────────
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

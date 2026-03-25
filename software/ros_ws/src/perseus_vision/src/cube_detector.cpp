@@ -30,6 +30,11 @@ namespace perseus_vision
             return roi;
         }
 
+        std::string default_packaged_model_path()
+        {
+            return ament_index_cpp::get_package_share_directory("perseus_vision") + "/models/cube_detector_yolob8s.onnx";
+        }
+
     }  // namespace
 
     // ── constructor ───────────────────────────────────────────────────────────────
@@ -90,6 +95,9 @@ namespace perseus_vision
             }
         }
 
+        const std::string package_models_dir =
+            ament_index_cpp::get_package_share_directory("perseus_vision") + "/models";
+
         // Backward compatibility: some configs use "/perseus-v2/..." (missing $HOME prefix).
         if (!_model_path.empty() && !std::filesystem::exists(_model_path))
         {
@@ -103,10 +111,20 @@ namespace perseus_vision
             }
         }
 
+        // Resolve bare relative filenames from the installed package models directory.
+        if (!_model_path.empty() && !std::filesystem::path(_model_path).is_absolute() &&
+            !std::filesystem::exists(_model_path))
+        {
+            const std::string packaged_model_candidate = package_models_dir + "/" + _model_path;
+            if (std::filesystem::exists(packaged_model_candidate))
+            {
+                _model_path = packaged_model_candidate;
+            }
+        }
+
         if (_model_path.empty() || !std::filesystem::exists(_model_path))
         {
-            const std::string packaged_model =
-                ament_index_cpp::get_package_share_directory("perseus_vision") + "/models/cube_detector_yolob8s.onnx";
+            const std::string packaged_model = default_packaged_model_path();
             if (std::filesystem::exists(packaged_model))
             {
                 _model_path = packaged_model;
