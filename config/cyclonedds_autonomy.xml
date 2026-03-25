@@ -15,11 +15,11 @@
         <Peer address="192.168.2.12"/>
          <!-- Base Station -->
          <!-- Kelvin's Machine -->
-        <Peer address="192.168.2.13"/> 
+        <!-- <Peer address="192.168.2.13"/>  -->
          <!-- Luca's Machine -->
         <!-- <Peer address="192.168.2.14"/> -->
          <!-- Dan's Machine -->
-        <Peer address="192.168.2.50"/>
+        <!-- <Peer address="192.168.2.50"/> -->
         <!-- Kelvin's eth0 -->
         <Peer address="192.168.2.109"/>
         <!-- Shaans -->
