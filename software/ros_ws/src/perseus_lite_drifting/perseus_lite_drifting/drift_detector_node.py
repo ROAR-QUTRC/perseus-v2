@@ -29,7 +29,7 @@ class DriftDetectorNode(Node):
         self._player_process = None
 
         self._odom_sub = self.create_subscription(
-            Odometry, "/odometry/filtered", self._odom_cb, 10
+            Odometry, "/odom", self._odom_cb, 10
         )
 
         self.get_logger().info(
@@ -71,6 +71,11 @@ class DriftDetectorNode(Node):
             self.get_logger().error(f"Failed to play audio: {e}")
 
     def _odom_cb(self, msg: Odometry):
+        linear_speed = abs(msg.twist.twist.linear.x)
+        angular_speed = abs(msg.twist.twist.angular.z)
+        self.get_logger().info(
+            f"linear: {linear_speed:.4f} m/s | angular: {angular_speed:.4f} rad/s"
+        )
         if self._is_drifting(msg) and self._can_play():
             self._play_audio()
 

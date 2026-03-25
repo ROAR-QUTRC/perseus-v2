@@ -1,8 +1,8 @@
 drift_detector_node:
   ros__parameters:
     # Drift detection thresholds
-    min_linear_velocity: 0.1 # m/s — robot must be moving forward
-    min_angular_velocity: 0.3 # rad/s — robot must be rotating significantly
+    min_linear_velocity: 0.025 # m/s — robot must be moving forward
+    min_angular_velocity: 0.075 # rad/s — robot must be rotating significantly
     # Audio playback
     cooldown_seconds: 30.0 # minimum seconds between plays
     audio_player: "mpg123" # command-line MP3 player (mpg123, ffplay, etc.)
