@@ -463,7 +463,8 @@ namespace hi_can
                 constexpr uint8_t SUBSYSTEM_ID = 0x00;
                 namespace elevator
                 {
-                    const standard_address_t DEVICE_ADDRESS{SYSTEM_ID, SUBSYSTEM_ID, 0x00};
+                    constexpr uint8_t DEVICE_ID = 0x00;
+                    const standard_address_t DEVICE_ADDRESS{SYSTEM_ID, SUBSYSTEM_ID, DEVICE_ID};
                     namespace motor
                     {
                         constexpr uint8_t GROUP_ID = 0x01;
