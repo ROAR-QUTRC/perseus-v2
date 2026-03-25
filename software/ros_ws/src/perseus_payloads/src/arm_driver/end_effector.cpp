@@ -53,7 +53,7 @@ void EndEffector::_handle_write(const std_msgs::msg::UInt16MultiArray::SharedPtr
     RCLCPP_INFO(this->get_logger(), "Received write command with %zu data bytes", msg->data.size());
 
     uint8_t index = 0;
-    for (const auto& group : {pwm_group::PWM_1, pwm_group::PWM_2, pwm_group::PWM_3, pwm_group::PWM_4})
+    for (const auto& group : {pwm_group::PWM_1, pwm_group::PWM_2, pwm_group::PWM_3, pwm_group::PWM_4, pwm_group::PWM_5})
     {
         pwm_command.value = msg->data[index++];  // Expecting a single uint16 value for PWM command
         address.group = static_cast<uint8_t>(group);
@@ -70,6 +70,7 @@ void EndEffector::_handle_read()
     msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_2().value));
     msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_3().value));
     msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_4().value));
+    msg.data.push_back(static_cast<uint16_t>(this->_pwm_parameter_group->get_pwm_5().value));
     _read->publish(msg);
 }
 

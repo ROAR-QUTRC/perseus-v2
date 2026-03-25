@@ -733,6 +733,9 @@ namespace hi_can::parameters::post_landing::arm::control_board
                         case pwm_group::PWM_4:
                             this->_pwm_4 = data;
                             break;
+                        case pwm_group::PWM_5:
+                            this->_pwm_5 = data;
+                            break;
                         default:
                             // should never get here
                             break;

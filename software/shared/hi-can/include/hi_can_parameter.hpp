@@ -708,12 +708,14 @@ namespace hi_can::parameters
                     pwm_t& get_pwm_2() { return _pwm_2; }
                     pwm_t& get_pwm_3() { return _pwm_3; }
                     pwm_t& get_pwm_4() { return _pwm_4; }
+                    pwm_t& get_pwm_5() { return _pwm_5; }
 
                 private:
                     pwm_t _pwm_1{};
                     pwm_t _pwm_2{};
                     pwm_t _pwm_3{};
                     pwm_t _pwm_4{};
+                    pwm_t _pwm_5{};
                 };
             }
         }
