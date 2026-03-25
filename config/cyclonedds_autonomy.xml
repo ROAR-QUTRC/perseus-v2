@@ -22,7 +22,7 @@
         <!-- <Peer address="192.168.2.50"/> -->
         <!-- <Peer address="192.168.2.109"/> -->
         <!-- Shaans -->
-        <Peer address="192.168.2.140">
+        <Peer address="192.168.2.140"/>
       </Peers>
     </Discovery>
   </Domain>
