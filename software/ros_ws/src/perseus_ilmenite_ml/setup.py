@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = "ilmenite_ML"
+package_name = "perseus_ilmenite_ml"
 
 setup(
     name=package_name,

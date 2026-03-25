@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ilmenite_ML</name>
+  <name>perseus_ilmenite_ml</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="175209784+MatthiasTheBritishDuck@users.noreply.github.com">matthias_the_british_duck</maintainer>
