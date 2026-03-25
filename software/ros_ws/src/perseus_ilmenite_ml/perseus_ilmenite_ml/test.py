@@ -4,13 +4,12 @@ import rclpy
 from rclpy.node import Node
 from perseus_interfaces.srv import TakeAs7343Reading
 
+
 class MockSensor(Node):
     def __init__(self):
-        super().__init__('mock_sensor')
+        super().__init__("mock_sensor")
         self.srv = self.create_service(
-            TakeAs7343Reading,
-            '/read_ilmenite',
-            self.callback
+            TakeAs7343Reading, "/read_ilmenite", self.callback
         )
 
     def callback(self, request, response):
@@ -49,5 +48,6 @@ def main():
     rclpy.spin(node)
     rclpy.shutdown()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

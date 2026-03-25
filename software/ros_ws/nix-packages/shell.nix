@@ -13,10 +13,9 @@ pkgs.mkShell {
   packages = [
     (pkgs.rosPackages.${rosDistro}.buildEnv {
       wrapPrograms = false;
-      paths =
-        [
-          pkgs.colcon
-          pkgs.rosPackages.${rosDistro}.ros-core
+      paths = [
+        pkgs.colcon
+        pkgs.rosPackages.${rosDistro}.ros-core
 
         # Work around https://github.com/lopsided98/nix-ros-overlay/pull/624
         pkgs.rosPackages.${rosDistro}.ament-cmake-core
@@ -107,6 +106,7 @@ pkgs.mkShell {
           tf2-geometry-msgs
           tf2-ros
           tf2-sensor-msgs
+          torch
           twist-mux
           twist-stamper
           urdf
@@ -126,5 +126,6 @@ pkgs.mkShell {
         eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete ros2)"
         eval "$(${pkgs.python3Packages.argcomplete}/bin/register-python-argcomplete colcon)"
     fi
-  '' + extraShellHook;
+  ''
+  + extraShellHook;
 }
