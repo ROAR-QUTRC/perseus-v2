@@ -69,7 +69,7 @@
 			}
 
 			// Update data
-			canMsgs[index].latestData = value.data;
+			canMsgs[inArray].latestData = value.data;
 		})
 	});
 

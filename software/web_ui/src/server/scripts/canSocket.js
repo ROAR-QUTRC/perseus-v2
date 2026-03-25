@@ -2,7 +2,6 @@
 import { spawn } from "child_process";
 import path from "path";
 import fs from "node:fs";
-import { response } from "express";
 
 const hiCanGeneratorFileLocation = path.resolve(
   "../shared/hi-can-generator/hi-can-generator.py",
@@ -19,19 +18,19 @@ let canLookup = null;
 const buffer = [];
 const MAX_BUFFER = 1000;
 
-export const canSocket = (socket) => {
+export const canSocket = (io) => {
   if (!running) {
     // Create lookup table file on launch
-    generateFile();
+    await generateFile();
 
-    // Start processing candump output
+    // Start processing candump output (after file generated)
     const stopCandump = startCanDump("can0");
 
     // Send messages as they are received
     timeoutId = setInterval(() => {
       if (buffer.length === 0) return;
       const batch = buffer.splice(0, buffer.length);
-      socket.emit("can-data", batch);
+      io.emit("can-data", batch);
     }, 2000);
 
     running = true;
@@ -84,14 +83,6 @@ const lookupTable = () => {
   });
 };
 
-const getCanData = () => {
-  return new Promise((resolve, reject) => {
-    const temp = latestInfo;
-    latestInfo = [];
-    resolve(latestInfo);
-  });
-};
-
 export function startCanDump(iface) {
   const proc = spawn("candump", [iface]);
 
@@ -107,6 +98,10 @@ export function startCanDump(iface) {
       if (!line.trim()) continue;
 
       const parsed = parseCandump(line);
+      if (!parsed || !parsed.data.length) {
+        // Unknown CAN or no data
+        continue;
+      }
       if (parsed) {
         buffer.push(parsed);
 
