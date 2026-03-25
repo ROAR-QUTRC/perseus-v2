@@ -86,6 +86,25 @@
 					type: 'switch',
 					value: 'false'
 				}
+			},
+			channelE: {
+				label: {
+					type: 'text',
+					value: 'Channel E'
+				},
+				output: {
+					type: 'switch',
+					value: 'false'
+				},
+				inverted: {
+					type: 'switch',
+					value: 'false',
+					description: 'Set this to true for active low value'
+				},
+				digital: {
+					type: 'switch',
+					value: 'false'
+				}
 			}
 		}
 	});
