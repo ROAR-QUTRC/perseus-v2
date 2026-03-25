@@ -436,6 +436,7 @@ namespace hi_can
                         PWM_2 = 0x05,
                         PWM_3 = 0x06,
                         PWM_4 = 0x07,
+                        PWM_5 = 0x08,
                     };
                     enum class pwm_parameters : uint8_t
                     {

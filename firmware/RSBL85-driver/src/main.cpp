@@ -17,6 +17,7 @@ constexpr int PAN = 2;
 constexpr int ELBOW = 3;
 
 std::vector<int> past_positions(3, 0);
+std::vector<int> offsets(3, 0);
 std::vector<double> target_positions(3, 0.0);
 
 void setup()
@@ -38,23 +39,23 @@ void setup()
     past_positions[PAN - 1] = servo.ReadPos(PAN);
     past_positions[ELBOW - 1] = servo.ReadPos(ELBOW);
 
-    double tilt_target = 0.0;
-    double pan_target = 0.0;
-    double elbow_target = 0.0;
+    // read current values and store them as offsets
+    offsets[TILT - 1] = servo.ReadPos(TILT);
+    offsets[PAN - 1] = servo.ReadPos(PAN);
+    offsets[ELBOW - 1] = servo.ReadPos(ELBOW);
 
-    target_positions[TILT - 1] = 25.0 * tilt_target;
-    target_positions[PAN - 1] = 25.0 * pan_target;
-    target_positions[ELBOW - 1] = 25.0 * elbow_target;
-
-    // servo.unLockEprom(ELBOW);
-    // servo.WheelMode(ELBOW);
+    // set the offsets as the startup positions so that servos dont zero on startup
+    target_positions[TILT - 1] = offsets[TILT - 1];
+    target_positions[PAN - 1] = offsets[PAN - 1];
+    target_positions[ELBOW - 1] = offsets[ELBOW - 1];
 }
 
 std::vector<double> positions(3, 0);
 std::vector<int16_t> full_rev_count(3, 0);
 void write_angle(int id, double angle, double speed)
 {
-    target_positions[id - 1] = angle;
+    // add offset to angle so that all positions are relative to starting position
+    target_positions[id - 1] = angle + offsets[id - 1];
     // TODO: set max speed
 }
 
@@ -73,16 +74,6 @@ UART Protocol:
 
 void loop()
 {
-    // check if the motor is online
-    // Serial.printf("online: [%d -> %s, %d -> %s, %d -> %s]\n", TILT, servo.Ping(TILT) == TILT ? "true" : "false",
-    //               PAN, servo.Ping(PAN) == PAN ? "true" : "false",
-    //               ELBOW, servo.Ping(ELBOW) == ELBOW ? "true" : "false");
-    // print all status messages for elbow
-    // Serial.printf("pos: %d, speed: %d, load: %d, voltage: %d, temp: %d, move: %d, current: %d\n",
-    //               servo.ReadPos(ELBOW), servo.ReadSpeed(ELBOW), servo.ReadLoad(ELBOW), servo.ReadVoltage(ELBOW),
-    //               servo.ReadTemper(ELBOW), servo.ReadMove(ELBOW), servo.ReadCurrent(ELBOW));
-    // servo.WriteSpe(ELBOW, -100, 0);
-
     std::vector<uint8_t> data;
 
     bool start_byte_found = false;
