@@ -51,17 +51,17 @@ ros2 run perseus_lite_drifting drift_detector_node --ros-args \
 
 All parameters are in `config/drifting_params.yaml`:
 
-| Parameter | Default | Description |
-|---|---|---|
-| `min_linear_velocity` | `0.1` | Minimum forward speed (m/s) to count as moving |
-| `min_angular_velocity` | `0.3` | Minimum yaw rate (rad/s) to count as rotating |
-| `cooldown_seconds` | `30.0` | Minimum seconds between audio plays |
-| `audio_player` | `mpg123` | Command-line MP3 player binary |
+| Parameter              | Default  | Description                                    |
+| ---------------------- | -------- | ---------------------------------------------- |
+| `min_linear_velocity`  | `0.1`    | Minimum forward speed (m/s) to count as moving |
+| `min_angular_velocity` | `0.3`    | Minimum yaw rate (rad/s) to count as rotating  |
+| `cooldown_seconds`     | `30.0`   | Minimum seconds between audio plays            |
+| `audio_player`         | `mpg123` | Command-line MP3 player binary                 |
 
 ## Topics
 
-| Topic | Type | Direction | Description |
-|---|---|---|---|
+| Topic                | Type                | Direction  | Description                |
+| -------------------- | ------------------- | ---------- | -------------------------- |
 | `/odometry/filtered` | `nav_msgs/Odometry` | Subscribed | Filtered odometry from EKF |
 
 ## Package Structure
