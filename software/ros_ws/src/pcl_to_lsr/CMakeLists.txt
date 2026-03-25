@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 project(pcl_to_lsr)
 
 find_package(ament_cmake REQUIRED)
-find_package(Eigen3 REQUIRED)
 
 find_package(laser_geometry REQUIRED)
 find_package(message_filters REQUIRED)
