@@ -6,6 +6,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
+    ExecuteProcess,
     IncludeLaunchDescription,
     GroupAction,
     LogInfo,
@@ -33,6 +34,7 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     # Get package directories
     bringup_dir = get_package_share_directory("autonomy")
+    perseus_lite_dir = get_package_share_directory("perseus_lite")
 
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -240,6 +242,19 @@ def generate_launch_description():
     # Environment variable for logging
     stdout_linebuf_envvar = SetEnvironmentVariable(
         "RCUTILS_LOGGING_BUFFERED_STREAM", "1"
+    )
+
+    # Raise CycloneDDS participant limit (default is too low for full Nav2 + SLAM stack)
+    # After rebuild, the XML will be available in the installed share directory.
+    # Before rebuild, set CYCLONEDDS_URI manually:
+    #   export CYCLONEDDS_URI=/path/to/cyclonedds.xml
+    cyclonedds_xml = os.path.join(
+        get_package_share_directory("perseus_lite"), "config", "cyclonedds.xml"
+    )
+    cyclonedds_uri = SetEnvironmentVariable(
+        "CYCLONEDDS_URI", cyclonedds_xml
+    ) if os.path.isfile(cyclonedds_xml) else LogInfo(
+        msg="cyclonedds.xml not found in install — set CYCLONEDDS_URI manually if needed"
     )
 
     # Nav2 nodes (non-composable)
@@ -482,9 +497,27 @@ def generate_launch_description():
             ]
         return [LogInfo(msg="No joystick detected, skipping controller launch")]
 
+    # Scan range filter: exclude lidar readings < 0.5m (robot arms/legs)
+    # Publishes /scan_filtered from /scan — SLAM and Nav2 use the filtered topic
+    scan_filter_script = os.path.join(
+        get_package_share_directory("perseus_lite"), "scripts", "scan_range_filter.py"
+    )
+    if not os.path.isfile(scan_filter_script):
+        # Fallback to source tree path (before rebuild installs scripts/)
+        scan_filter_script = os.path.join(
+            os.path.dirname(__file__), "..", "scripts", "scan_range_filter.py"
+        )
+    scan_range_filter = ExecuteProcess(
+        cmd=["python3", scan_filter_script,
+             "--ros-args", "-p", "min_range:=0.5"],
+        output="screen",
+    )
+
     launch_files = [
         stdout_linebuf_envvar,
+        cyclonedds_uri,
         perseus_lite_launch,
+        scan_range_filter,
         ekf_node,
         slam_toolbox,
         load_nav2_nodes,
