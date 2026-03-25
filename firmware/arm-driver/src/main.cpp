@@ -45,8 +45,10 @@ constexpr bool OUT = false;
 std::unordered_map<control_board::pwm_group, std::pair<uint8_t, bool>> pwm_pin_map = {
     {control_board::pwm_group::PWM_1, {6, OUT}},  //  this channel is a special case for the servo
     {control_board::pwm_group::PWM_2, {7, OUT}},
-    {control_board::pwm_group::PWM_3, {8, IN}},
-    {control_board::pwm_group::PWM_4, {9, IN}}};
+    {control_board::pwm_group::PWM_3, {8, OUT}},
+    {control_board::pwm_group::PWM_4, {9, OUT}},
+    {control_board::pwm_group::PWM_5, {37, OUT}}
+};
 
 const addressing::standard_address_t BASE_ADDRESS{
     SYSTEM_ID,
@@ -356,12 +358,19 @@ void handle_pwm_data(const Packet& packet, bool is_servo)
             {
                 // map 16-bit value to servo angle (0-180)
                 double angle = (pwm_value / 65535.0) * 180.0;
-                servo.write(angle);
+                // servo.write(angle);
+                printf("writing %f to servo", angle);
+
+                // Space resources only:
+                if (angle < 45) servo.writeMicroseconds(1000);
+                else if (angle > 135) servo.writeMicroseconds(2000);
+                else servo.writeMicroseconds(1500);
             }
             else
             {
                 uint16_t duty = static_cast<uint16_t>((pwm_value / 65535.0) * 255);  // map 16-bit value to 8-bit duty cycle
                 analogWrite(pwm_pin_map[group_id].first, duty);
+                printf("writing %f duty to %d pin", duty, pwm_pin_map[group_id].first);
             }
         }
     }
@@ -389,7 +398,9 @@ void register_pwm_device(const control_board::pwm_group& group, bool is_servo)
         {
             // attach servo to pin
             servo.attach(pwm_pin_map[group].first);
-            servo.write(0);  // start at 0 degrees
+            // servo.write(0);  // start at 0 degrees
+            // space resources:
+            servo.writeMicroseconds(1500);
         }
         else
         {
