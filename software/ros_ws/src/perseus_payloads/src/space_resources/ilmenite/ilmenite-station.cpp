@@ -12,6 +12,8 @@
 #include <rclcpp/rclcpp/logging.hpp>
 #include <rclcpp/rclcpp/utilities.hpp>
 
+#include "std_srvs/srv/set_bool.hpp"
+
 using namespace std::chrono_literals;
 
 IlmeniteStation::IlmeniteStation(const rclcpp::NodeOptions& options)
@@ -23,6 +25,7 @@ IlmeniteStation::IlmeniteStation(const rclcpp::NodeOptions& options)
     _read_ilmenite_service = create_service<perseus_interfaces::srv::TakeAs7343Reading>("/read_ilmenite", std::bind(&IlmeniteStation::_process_ilmenite, this, std::placeholders::_1, std::placeholders::_2));
     _ilmenite_set_lid_servo = create_service<std_srvs::srv::SetBool>("/set_lid_servo", std::bind(&IlmeniteStation::_set_lid_servo, this, std::placeholders::_1, std::placeholders::_2));
     _ilmenite_set_tip_servo = create_service<std_srvs::srv::SetBool>("/set_tip_servo", std::bind(&IlmeniteStation::_set_tip_servo, this, std::placeholders::_1, std::placeholders::_2));
+    _centrifuge_tip_chute = create_service<std_srvs::srv::SetBool>("/set_centrifuge_tip", std::bind(&IlmeniteStation::_set_centrifuge_tip, this, std::placeholders::_1, std::placeholders::_2));
     _lid_servo_pin = this->declare_parameter("lid_servo_pin", 0);
     _tip_servo_pin = this->declare_parameter("tip_servo_pin", 1);
     _uv_led_pin = this->declare_parameter("uv_led_pin", 2);
@@ -33,6 +36,8 @@ IlmeniteStation::IlmeniteStation(const rclcpp::NodeOptions& options)
     gpioServo(_lid_servo_pin, _lid_closed_pulsewidth);
     gpioSetMode(_tip_servo_pin, PI_OUTPUT);
     gpioServo(_tip_servo_pin, _tip_upright_pulsewidth);
+    gpioSetMode(_centrifuge_tip_pin, PI_OUTPUT);
+    gpioServo(_centrifuge_tip_pin, _centrifuge_tip_flat_pulsewidth);
     gpioSetMode(_uv_led_pin, PI_OUTPUT);
     gpioWrite(_uv_led_pin, 0);
     gpioSetMode(_vibe_motor_pin, PI_OUTPUT);
@@ -44,12 +49,12 @@ void IlmeniteStation::_set_lid_servo(const std::shared_ptr<std_srvs::srv::SetBoo
     int servo_error_value;
     if (request->data == 0)
     {
-        RCLCPP_INFO(this->get_logger(), "Requested state of servo is closed");
+        RCLCPP_INFO(this->get_logger(), "Requested state of lid servo is closed");
         servo_error_value = gpioServo(_lid_servo_pin, _lid_closed_pulsewidth);
     }
     else
     {
-        RCLCPP_INFO(this->get_logger(), "Requested state of servo is open");
+        RCLCPP_INFO(this->get_logger(), "Requested state of lid servo is open");
         servo_error_value = gpioServo(_lid_servo_pin, _lid_open_pulsewidth);
     }
 
@@ -61,15 +66,19 @@ void IlmeniteStation::_set_lid_servo(const std::shared_ptr<std_srvs::srv::SetBoo
     }
     else if (servo_error_value == PI_BAD_USER_GPIO)
     {
-        RCLCPP_DEBUG(this->get_logger(), "Set lid servo failed due to bad user GPIO");
+        RCLCPP_ERROR(this->get_logger(), "Set lid servo failed due to bad user GPIO");
         response->message = "Bad user GPIO";
         response->success = 0;
     }
     else if (servo_error_value == PI_BAD_PULSEWIDTH)
     {
-        RCLCPP_DEBUG(this->get_logger(), "Set lid servo failed due to bad pulsewidth");
+        RCLCPP_ERROR(this->get_logger(), "Set lid servo failed due to bad pulsewidth");
         response->message = "Bad pulsewidth";
         response->success = 0;
+    }
+    else
+    {
+        RCLCPP_ERROR(this->get_logger(), "Unknown error while setting lid servo: %d", servo_error_value);
     }
 }
 
@@ -83,7 +92,7 @@ void IlmeniteStation::_set_tip_servo(const std::shared_ptr<std_srvs::srv::SetBoo
     }
     else
     {
-        RCLCPP_INFO(this->get_logger(), "Requested state of servo is open");
+        RCLCPP_INFO(this->get_logger(), "Requested state of tip servo is open");
         servo_error_value = gpioServo(_tip_servo_pin, _tip_upside_down_pulsewidth);
     }
 
@@ -95,15 +104,57 @@ void IlmeniteStation::_set_tip_servo(const std::shared_ptr<std_srvs::srv::SetBoo
     }
     else if (servo_error_value == PI_BAD_USER_GPIO)
     {
-        RCLCPP_DEBUG(this->get_logger(), "Set tip servo failed due to bad user GPIO");
+        RCLCPP_ERROR(this->get_logger(), "Set tip servo failed due to bad user GPIO");
         response->message = "Bad user GPIO";
         response->success = false;
     }
     else if (servo_error_value == PI_BAD_PULSEWIDTH)
     {
-        RCLCPP_DEBUG(this->get_logger(), "Set tip servo failed due to bad pulsewidth");
+        RCLCPP_ERROR(this->get_logger(), "Set tip servo failed due to bad pulsewidth");
         response->message = "Bad pulsewidth";
         response->success = false;
+    }
+    else
+    {
+        RCLCPP_ERROR(this->get_logger(), "Unknown error while setting tip servo: %d", servo_error_value);
+    }
+}
+
+void IlmeniteStation::_set_centrifuge_tip(const std::shared_ptr<std_srvs::srv::SetBool_Request> request, std::shared_ptr<std_srvs::srv::SetBool_Response> response)
+{
+    int servo_error_value;
+    if (request->data == 0)
+    {
+        RCLCPP_INFO(this->get_logger(), "Requested state of centrifuge tip servo is flat");
+        servo_error_value = gpioServo(_centrifuge_tip_pin, _centrifuge_tip_flat_pulsewidth);
+    }
+    else
+    {
+        RCLCPP_INFO(this->get_logger(), "Requested state of centrifuge tip servo is open");
+        servo_error_value = gpioServo(_centrifuge_tip_pin, _centrifuge_tip_upright_pulsewidth);
+    }
+
+    if (servo_error_value == 0)
+    {
+        RCLCPP_DEBUG(this->get_logger(), "Set centrifuge tip servo succeeded");
+        response->message = "Success";
+        response->success = true;
+    }
+    else if (servo_error_value == PI_BAD_USER_GPIO)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Set centrifuge tip servo failed due to bad user GPIO");
+        response->message = "Bad user GPIO";
+        response->success = false;
+    }
+    else if (servo_error_value == PI_BAD_PULSEWIDTH)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Set centrifuge tip servo failed due to bad pulsewidth");
+        response->message = "Bad pulsewidth";
+        response->success = false;
+    }
+    else
+    {
+        RCLCPP_ERROR(this->get_logger(), "Unknown error while setting centrifuge tip servo: %d", servo_error_value);
     }
 }
 
@@ -129,7 +180,7 @@ void IlmeniteStation::_process_ilmenite(const std::shared_ptr<perseus_interfaces
 
     // Vibrate motor
     gpioWrite(_vibe_motor_pin, 1);
-    rclcpp::sleep_for(500ms);
+    rclcpp::sleep_for(1000ms);
     gpioWrite(_vibe_motor_pin, 0);
     rclcpp::sleep_for(100ms);
 
@@ -151,6 +202,7 @@ void IlmeniteStation::_process_ilmenite(const std::shared_ptr<perseus_interfaces
         RCLCPP_ERROR(this->get_logger(), "No LED reading had error: %s", led_off_spectral_data_result->message.c_str());
         led_off_spectral_data.success = false;
         response->message = "No LED reading had error: " + led_off_spectral_data_result->message;
+        RCLCPP_WARN(this->get_logger(), "Reading is continuing, you should disregard this data for machine learning");
     }
     else
     {
@@ -310,6 +362,8 @@ void IlmeniteStation::_process_ilmenite(const std::shared_ptr<perseus_interfaces
         led_uv_spectral_data.fd_flicker = led_uv_spectral_data_result->fd_flicker;
     }
     response->uv_led_reading = led_uv_spectral_data;
+
+    response->success = response->no_led_reading.success && response->uv_led_reading.success && response->white_led_reading.success;
 }
 
 IlmeniteStation::~IlmeniteStation()
