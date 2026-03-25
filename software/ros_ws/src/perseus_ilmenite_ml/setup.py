@@ -10,7 +10,7 @@ setup(
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
     ],
-    install_requires=["setuptools"],
+    install_requires=["setuptools", "pytorch"],
     zip_safe=True,
     maintainer="matthias_the_british_duck",
     maintainer_email="175209784+MatthiasTheBritishDuck@users.noreply.github.com",
@@ -22,6 +22,9 @@ setup(
         ],
     },
     entry_points={
-        "console_scripts": [],
+        "console_scripts": [
+		"ilmenite_ml = perseus_ilmenite_ml.ilmenite_controller:main",
+		"test_ml = perseus_ilmenite_ml.test:main"
+	],
     },
 )

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-from std_srvs import Empty
-from perseus_interfaces import Concentration
+from std_srvs.srv import Empty 
+from std_msgs.msg import Float64
+from perseus_interfaces.srv import TakeAs7343Reading
+from perseus_ilmenite_ml.deploy import get_sensor_reading
 
 import rclpy
 from rclpy.node import Node        
@@ -11,14 +13,14 @@ class IlmeniteController(Node):
         super().__init__('ilmenite_controller')
 
         self.cache = {}
-        self.response_publisher = self.create_publisher(float, '/ilmenite_concentration/result', 10)
+        self.response_publisher = self.create_publisher(Float64, '/ilmenite_concentration/result', 10)
 
         self.srv = self.create_service(Empty, 'ilmenite/request', self.ilmenite_request_callback)
 
-        self.cli = self.create_client(Concentration, 'ilmenite/reading')
+        self.cli = self.create_client(TakeAs7343Reading, '/read_ilmenite')
         while not self.cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("Concentration service for ilmenite not available")
-        self.req = Concentration.Request()
+        self.req = TakeAs7343Reading.Request()
 
         self.get_logger().info("Ilmenite ML Ready")
     
@@ -27,7 +29,7 @@ class IlmeniteController(Node):
 
     def ilmenite_request_callback(self, request, response):
         #Sending 'call' to the ML, triggering the process that will send the concentration back to the controller
-        ilmenite_reading_client_async = IlmeniteReadingClientAsync()
+        ilmenite_reading_client_async = IlmeniteController()
         future = ilmenite_reading_client_async.send_request()
         rclpy.spin_until_future_complete(ilmenite_reading_client_async, future)
         response = future.result()
