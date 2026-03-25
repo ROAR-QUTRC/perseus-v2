@@ -292,5 +292,12 @@
     "device": "controller",
     "group": "MAGNET",
     "parameter": "MAGNET_ENABLE"
+  },
+  "0x03000100": {
+    "system": "shared",
+    "subsystem": "elevator",
+    "device": "elevator",
+    "group": "motor",
+    "parameter": "SPEED"
   }
 }

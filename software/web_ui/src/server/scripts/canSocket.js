@@ -17,12 +17,11 @@ const MAX_BUFFER = 1000;
 
 export const canSocket = (socket) => {
 	if (!running) {
-		console.log("Can Socket");
 		// Create lookup table file on launch
 		generateFile();
 
 		// Start processing candump output
-		const stopCandump = startCanDump("vcan0");
+		const stopCandump = startCanDump("can0");
 
 		// Send messages as they are recieved
 		timeoutId = setInterval(() => {
@@ -41,15 +40,12 @@ async function generateFile() {
 		
 		canLookup = data;
 		fs.writeFileSync(canLookupFilePath, JSON.stringify(data, null, 2));
-
-		console.log("File Written");
 	} catch (err) {
 		console.error("Error:", err);
 	}
 }
 
 const lookupTable = () => {
-	console.log("LOOKUP TABLE");
 	return new Promise((resolve, reject) => {
 		const pythonProcess = spawn("python3", [hiCanGeneratorFileLocation, hiCanAddressFileLocation]);
 
@@ -70,16 +66,12 @@ const lookupTable = () => {
 				return;
 			}
 
-			// console.log(output.slice(output.length-200,output.length), "\n");
-
 			try {
 				canLookup = JSON.parse(output);
-				console.log("CAN LOOKUP TYPE:", typeof canLookup)
 				resolve(JSON.parse(output));
 			} catch (err) {
-				console.log(typeof output);
 				console.error(err);
-				reject(`Invalid JSON\n ${output.slice(0,200)}\n...\n${output.slice(output.length-200,output.length)}`);
+				reject(`Invalid JSON\n`);
 			}
 		});
 	});
@@ -110,7 +102,6 @@ export function startCanDump(iface) {
 			const parsed = parseCandump(line);
 			if (parsed) {
 				buffer.push(parsed);
-				console.log("Added: ", parsed);
 
 				// avoid memory overflow
 				if (buffer.length > MAX_BUFFER) {
@@ -141,8 +132,6 @@ function parseCandump(line) {
 		details: canDetails,
 		data: parts.slice(3)
 	};
-
-	// console.log("Parsing input", parsed);
 
 	return parsed 
 }

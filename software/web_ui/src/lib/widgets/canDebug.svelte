@@ -50,11 +50,8 @@
 
 	// On update from socket
 	socket.on('can-data', (dataList: Array<CanData>) => {
-		console.log("RECEIVING...");
-		console.log("DATA", dataList);
 
 		dataList.forEach((value, index) => {
-			console.log(value);
 			const inArray = canMsgs.findIndex((msg) => msg.address === value.address);
 
 			if (inArray === -1) {
@@ -73,15 +70,11 @@
 
 			// Update data
 			canMsgs[index].latestData = value.data;
-			// console.log(JSON.stringify(data, null, 2));
 		})
 	});
 
 	// On creation of widget
 	onMount(() => {
-		// Create charts/interfaces
-		console.log("Mounted");
-
 		return () => {
 			socket.disconnect();
 		};
