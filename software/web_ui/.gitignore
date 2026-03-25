@@ -8,7 +8,7 @@ db
 .vercel
 /.svelte-kit
 /build
-./src/lib/canLookup.json
+src/lib/canLookup.json
 
 # OS
 .DS_Store
