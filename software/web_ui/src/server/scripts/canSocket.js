@@ -1,12 +1,16 @@
 // @ts-nocheck
 import { spawn } from "child_process";
-import path from 'path';
-import fs from 'node:fs';
+import path from "path";
+import fs from "node:fs";
 import { response } from "express";
 
-const hiCanGeneratorFileLocation = path.resolve("../shared/hi-can-generator/hi-can-generator.py");
-const hiCanAddressFileLocation = path.resolve("../shared/hi-can/include/hi_can_address.hpp");
-const canLookupFilePath = path.resolve('src/lib/canLookup.json');
+const hiCanGeneratorFileLocation = path.resolve(
+  "../shared/hi-can-generator/hi-can-generator.py",
+);
+const hiCanAddressFileLocation = path.resolve(
+  "../shared/hi-can/include/hi_can_address.hpp",
+);
+const canLookupFilePath = path.resolve("src/lib/canLookup.json");
 
 let timeoutId;
 let running = false;
@@ -16,123 +20,125 @@ const buffer = [];
 const MAX_BUFFER = 1000;
 
 export const canSocket = (socket) => {
-	if (!running) {
-		// Create lookup table file on launch
-		generateFile();
+  if (!running) {
+    // Create lookup table file on launch
+    generateFile();
 
-		// Start processing candump output
-		const stopCandump = startCanDump("can0");
+    // Start processing candump output
+    const stopCandump = startCanDump("can0");
 
-		// Send messages as they are recieved
-		timeoutId = setInterval(() => {
-			if (buffer.length === 0) return;
-			const batch = buffer.splice(0, buffer.length);
-			socket.emit("can-data", batch);
-		}, 2000);
+    // Send messages as they are received
+    timeoutId = setInterval(() => {
+      if (buffer.length === 0) return;
+      const batch = buffer.splice(0, buffer.length);
+      socket.emit("can-data", batch);
+    }, 2000);
 
-		running = true;
-	}
+    running = true;
+  }
 };
 
 async function generateFile() {
-	try {
-		const data = await lookupTable();
-		
-		canLookup = data;
-		fs.writeFileSync(canLookupFilePath, JSON.stringify(data, null, 2));
-	} catch (err) {
-		console.error("Error:", err);
-	}
+  try {
+    const data = await lookupTable();
+
+    canLookup = data;
+    fs.writeFileSync(canLookupFilePath, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error("Error:", err);
+  }
 }
 
 const lookupTable = () => {
-	return new Promise((resolve, reject) => {
-		const pythonProcess = spawn("python3", [hiCanGeneratorFileLocation, hiCanAddressFileLocation]);
+  return new Promise((resolve, reject) => {
+    const pythonProcess = spawn("python3", [
+      hiCanGeneratorFileLocation,
+      hiCanAddressFileLocation,
+    ]);
 
-		let output = "";
-		let error = "";
+    let output = "";
+    let error = "";
 
-		pythonProcess.stdout.on("data", (data) => {
-			output += data.toString();
-		});
+    pythonProcess.stdout.on("data", (data) => {
+      output += data.toString();
+    });
 
-		pythonProcess.stderr.on("data", (data) => {
-			error += data.toString();
-		});
+    pythonProcess.stderr.on("data", (data) => {
+      error += data.toString();
+    });
 
-		pythonProcess.on("close", (code) => {
-			if (code !== 0) {
-				reject(error);
-				return;
-			}
+    pythonProcess.on("close", (code) => {
+      if (code !== 0) {
+        reject(error);
+        return;
+      }
 
-			try {
-				canLookup = JSON.parse(output);
-				resolve(JSON.parse(output));
-			} catch (err) {
-				console.error(err);
-				reject(`Invalid JSON\n`);
-			}
-		});
-	});
+      try {
+        canLookup = JSON.parse(output);
+        resolve(JSON.parse(output));
+      } catch (err) {
+        console.error(err);
+        reject(`Invalid JSON\n`);
+      }
+    });
+  });
 };
 
 const getCanData = () => {
-	return new Promise((resolve, reject) => {
-		const temp = latestInfo;
-		latestInfo = [];
-		resolve(latestInfo);
-	});
+  return new Promise((resolve, reject) => {
+    const temp = latestInfo;
+    latestInfo = [];
+    resolve(latestInfo);
+  });
 };
 
 export function startCanDump(iface) {
-	const proc = spawn("candump", [iface]);
+  const proc = spawn("candump", [iface]);
 
-	let leftover = "";
+  let leftover = "";
 
-	proc.stdout.on("data", (data) => {
-		leftover += data.toString();
+  proc.stdout.on("data", (data) => {
+    leftover += data.toString();
 
-		const lines = leftover.split("\n");
-		leftover = lines.pop() || "";
+    const lines = leftover.split("\n");
+    leftover = lines.pop() || "";
 
-		for (const line of lines) {
-			if (!line.trim()) continue;
+    for (const line of lines) {
+      if (!line.trim()) continue;
 
-			const parsed = parseCandump(line);
-			if (parsed) {
-				buffer.push(parsed);
+      const parsed = parseCandump(line);
+      if (parsed) {
+        buffer.push(parsed);
 
-				// avoid memory overflow
-				if (buffer.length > MAX_BUFFER) {
-					buffer.shift();
-				}
-			}
-		}
-	});
+        // avoid memory overflow
+        if (buffer.length > MAX_BUFFER) {
+          buffer.shift();
+        }
+      }
+    }
+  });
 
-	proc.stderr.on("data", (d) => {
-		console.error("STDERR:", d.toString());
-	});
+  proc.stderr.on("data", (d) => {
+    console.error("STDERR:", d.toString());
+  });
 
-	return () => proc.kill() // stop function
+  return () => proc.kill(); // stop function
 }
 
 function parseCandump(line) {
-	const parts = line.trim().split(/\s+/);
-	if (parts.length < 4) {
-		return null;
-	}
-	const address = `0x${parseInt(parts[1], 16).toString(16).padStart(8, "0")}`;
-	const canDetails = canLookup[address];
+  const parts = line.trim().split(/\s+/);
+  if (parts.length < 4) {
+    return null;
+  }
+  const address = `0x${parseInt(parts[1], 16).toString(16).padStart(8, "0")}`;
+  const canDetails = canLookup[address];
 
-	const parsed = {
-		iface: parts[0],
-		address: address,
-		details: canDetails,
-		data: parts.slice(3)
-	};
+  const parsed = {
+    iface: parts[0],
+    address: address,
+    details: canDetails,
+    data: parts.slice(3),
+  };
 
-	return parsed 
+  return parsed;
 }
-
