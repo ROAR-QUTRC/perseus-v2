@@ -1,5 +1,6 @@
 final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
+  ilmenite-ML = final.callPackage ./ilmenite-ML.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   kibisis = final.callPackage ./kibisis.nix { };
   pcl-to-lsr = final.callPackage ./pcl-to-lsr.nix { };
