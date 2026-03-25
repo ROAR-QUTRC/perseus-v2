@@ -13,8 +13,8 @@ pointcloud_to_laserscan:
     # IMU Configuration for tilt detection
     imu_frame: "livox_frame"
     imu_topic: "/livox/imu/corrected"
-    tilt_threshold: 0.1745 # ~10 degrees in radians
     use_dynamic_conversion: # Enable tilt-based height adjustment
       enabled: true
+      tilt_threshold: 0.1745 # ~10 degrees in radians
       imu_topic: "/livox/imu/corrected" # Required if use_dynamic_conversion is enabled
       imu_frame: "livox_frame"
