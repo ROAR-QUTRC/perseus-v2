@@ -18,7 +18,7 @@ let canLookup = null;
 const buffer = [];
 const MAX_BUFFER = 1000;
 
-export const canSocket = (io) => {
+export async function canSocket(io) {
   if (!running) {
     // Create lookup table file on launch
     await generateFile();
@@ -98,7 +98,8 @@ export function startCanDump(iface) {
       if (!line.trim()) continue;
 
       const parsed = parseCandump(line);
-      if (!parsed || !parsed.data.length) {
+
+      if (!parsed.details || !parsed.data.length) {
         // Unknown CAN or no data
         continue;
       }

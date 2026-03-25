@@ -25,7 +25,7 @@
 			device: string;
 			group: string;
 			parameter: string | null;
-			latestData: number;
+			latestData: string[];
 		}[]
 	>([]);
 
@@ -43,7 +43,7 @@
 		iface: string;
 		address: string;
 		details: CanLutEntry;
-		data: number;
+		data: string[];
 	}
 
 	const socket: Socket = io();
