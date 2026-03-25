@@ -13,6 +13,7 @@ const canLookupFilePath = path.resolve("src/lib/canLookup.json");
 
 let timeoutId;
 let running = false;
+let stopCandump = null;
 
 let canLookup = null;
 const buffer = [];
@@ -24,7 +25,7 @@ export async function canSocket(io) {
     await generateFile();
 
     // Start processing candump output (after file generated)
-    const stopCandump = startCanDump("can0");
+    stopCandump = startCanDump("vcan0");
 
     // Send messages as they are received
     timeoutId = setInterval(() => {
@@ -34,8 +35,32 @@ export async function canSocket(io) {
     }, 2000);
 
     running = true;
+
+    process.on("SIGINT", () => {
+      cleanup();
+      process.exit(0);
+    });
+
+    process.on("SIGTERM", () => {
+      cleanup();
+      process.exit(0);
+    });
   }
 };
+
+function cleanup() {
+  if (cleaned) return;
+  cleaned = true;
+
+  stopCandump?.();
+  stopCandump = null;
+
+  if (timeoutId) {
+    clearInterval(timeoutId);
+    timeoutId = null;
+  }
+  console.log("Cleaned");
+}
 
 async function generateFile() {
   try {
