@@ -8,8 +8,6 @@
 #include <string>
 #include <vector>
 
-//#include "std_srvs/srv/empty.hpp"
-
 class SpaceResourcesController : public rclcpp::Node
 {
 public:

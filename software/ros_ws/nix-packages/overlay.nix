@@ -10,6 +10,7 @@ final: prev: {
   perseus-can-if = final.callPackage ./perseus-can-if.nix { };
   perseus-description = final.callPackage ./perseus-description.nix { };
   perseus-hardware = final.callPackage ./perseus-hardware.nix { };
+  perseus-ilmenite-ml = final.callPackage ./perseus-ilmenite-ml.nix { };
   perseus-input = final.callPackage ./perseus-input.nix { };
   perseus-input-config = final.callPackage ./perseus-input-config.nix { };
   perseus-interfaces = final.callPackage ./perseus-interfaces.nix { };

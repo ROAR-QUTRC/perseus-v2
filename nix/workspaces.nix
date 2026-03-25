@@ -22,9 +22,6 @@ let
       yaml-cpp
       libnice
       ;
-    inherit (pkgs.python312Packages)
-      torch
-      ;
     inherit (pkgs.gst_all_1)
       gstreamer
       gst-plugins-base

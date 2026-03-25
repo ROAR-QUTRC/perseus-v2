@@ -180,6 +180,15 @@ let
           propagatedBuildInputs = final.lib.remove rosFinal.perseus-input-config propagatedBuildInputs;
         }
       );
+      perseus-ilmenite-ml = rosPrev.perseus-ilmenite-ml.overrideAttrs (
+        {
+          propagatedBuildInputs ? [ ],
+          ...
+        }:
+        {
+          propagatedBuildInputs = propagatedBuildInputs ++ [ final.python3Packages.torch ];
+        }
+      );
       fast-lio = rosPrev.fast-lio.overrideAttrs (
         {
           patches ? [ ],

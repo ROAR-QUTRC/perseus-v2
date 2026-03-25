@@ -5,13 +5,15 @@
   ament-copyright,
   ament-flake8,
   ament-pep257,
+  perseus-interfaces,
   python3Packages,
+  std-srvs,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-ilmenite-ML";
+  pname = "ros-jazzy-perseus-ilmenite-ml";
   version = "0.0.0";
 
-  src = ./../src/ilmenite_ML;
+  src = ./../src/perseus_ilmenite_ml;
 
   buildType = "ament_python";
   checkInputs = [
@@ -19,6 +21,10 @@ buildRosPackage rec {
     ament-flake8
     ament-pep257
     python3Packages.pytest
+  ];
+  propagatedBuildInputs = [
+    perseus-interfaces
+    std-srvs
   ];
 
   meta = {

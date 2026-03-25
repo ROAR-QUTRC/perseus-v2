@@ -23,7 +23,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "ilmenite_ml = perseus_ilmenite_ml.ilmenite_controller:main",
+            "IlmeniteController = perseus_ilmenite_ml.ilmenite_controller:main",
             "test_ml = perseus_ilmenite_ml.test:main",
         ],
     },

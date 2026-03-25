@@ -134,7 +134,7 @@ ament_target_dependencies(
   std_srvs)
 ament_target_dependencies(ilmenite_ml PUBLIC rclcpp sensor_msgs)
 ament_target_dependencies(space_resources_controller PUBLIC rclcpp
-                          actuator_msgs std_msgs perseus_interfaces)
+                          actuator_msgs std_msgs perseus_interfaces std_srvs)
 
 # target_link_libraries(arm_driver PUBLIC st3215_lib)
 target_link_libraries(bucket_driver PUBLIC hi_can_raw)

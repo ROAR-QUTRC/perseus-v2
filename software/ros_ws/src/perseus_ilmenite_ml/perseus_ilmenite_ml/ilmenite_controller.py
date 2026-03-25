@@ -36,10 +36,7 @@ class IlmeniteController(Node):
     def ilmenite_request_callback(self, request, response):
         self.get_logger().info("Ilmenite Reading Requested")
 
-        # Sending 'call' to the ML, triggering the process that will send the concentration back to the controller
-        ilmenite_reading_client_async = IlmeniteController()
-        future = ilmenite_reading_client_async.send_request()
-        rclpy.spin_until_future_complete(ilmenite_reading_client_async, future)
+        future = self.send_request()
         response = future.result()
 
         get_sensor_reading(response)
@@ -52,7 +49,7 @@ class IlmeniteController(Node):
         return
 
     def send_request(self):
-        return self.cli.call_async()
+        return self.cli.call_async(self.req)
 
 
 def main(arguments=None):

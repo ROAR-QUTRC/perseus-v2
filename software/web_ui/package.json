@@ -54,7 +54,8 @@
     "socket.io-client": "^4.8.1",
     "svelte-fa": "^4.0.3",
     "svelte-grid-extended": "^1.2.1",
-    "svelte-radix": "^3.0.2"
+    "svelte-radix": "^3.0.2",
+    "svelte-speedometer": "^3.1.0"
   },
   "packageManager": "yarn@4.12.0"
 }

@@ -252,7 +252,7 @@
 					Take Water Reading
 				</button>
 				<Speedometer 
-					maxValue={100}
+					maxValue={30}
 					value={waterConcentration}
 					needleColor="violet"
 					startColor="lightblue"
@@ -268,7 +268,7 @@
 					Take Ilmenite Reading
 				</button>
 				<Speedometer 
-					maxValue={100}
+					maxValue={15}
 					value={ilmeniteConcentration}
 					needleColor="violet"
 					startColor="white"

@@ -5,8 +5,8 @@ import json
 import numpy as np
 
 
-from model import IlmeniteModel
-from loader import compute_ratios
+from .model import IlmeniteModel
+from .loader import compute_ratios
 
 
 # configuration
@@ -40,7 +40,7 @@ def load_scaler(scaler_path):
 # raise NotImplementedError("put sensor reading code in here")
 
 
-def get_sensor_reading():
+def get_sensor_reading(nput_array):
     test_values = input("Enter 18 channel values separated by commas:\n> ")
     input_array = [float(x.strip()) for x in test_values.split(",")]
     return input_array

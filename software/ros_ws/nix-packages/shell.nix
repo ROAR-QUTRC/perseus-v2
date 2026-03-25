@@ -106,7 +106,6 @@ pkgs.mkShell {
           tf2-geometry-msgs
           tf2-ros
           tf2-sensor-msgs
-          torch
           twist-mux
           twist-stamper
           urdf
