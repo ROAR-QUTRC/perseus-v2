@@ -139,12 +139,12 @@
 			speedTopic.subscribe(onSpeedMessage);
 			getWaterConcentration = new ROSLIB.Service({
 				ros: rosConnection,
-				name: '/water/reading',
+				name: '/water/request',
 				serviceType: 'std_srvs/srv/Empty'
 			});
 			getIlmeniteConcentration = new ROSLIB.Service({
 				ros: rosConnection,
-				name: '/ilmenite/reading',
+				name: '/ilmenite/request',
 				serviceType: 'std_srvs/srv/Empty'
 			});
 			waterConcentrationTopic = new ROSLIB.Topic({
