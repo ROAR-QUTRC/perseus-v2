@@ -43,14 +43,14 @@
 
 #include <atomic>
 #include <memory>
-#include <optional>
+#include <mutex>
 #include <string>
 #include <thread>
 
-#include "Eigen/Geometry"
 #include "message_filters/subscriber.h"
 #include "pcl_to_lsr/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "tf2_ros/buffer.h"
@@ -76,7 +76,14 @@ namespace pointcloud_to_laserscan
     private:
         void cloud_callback(sensor_msgs::msg::PointCloud2::ConstSharedPtr cloud_msg);
 
+        void imu_callback(sensor_msgs::msg::Imu::ConstSharedPtr imu_msg);
+
         void subscription_listener_thread_loop();
+
+        // Helper function to extract roll, pitch, yaw from quaternion
+        void quaternion_to_euler(
+            double qx, double qy, double qz, double qw,
+            double& roll, double& pitch, double& yaw);
 
         std::unique_ptr<tf2_ros::Buffer> tf2_;
         std::unique_ptr<tf2_ros::TransformListener> tf2_listener_;
@@ -84,8 +91,17 @@ namespace pointcloud_to_laserscan
         std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::LaserScan>> pub_;
         std::unique_ptr<MessageFilter> message_filter_;
 
+        // IMU subscription
+        rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
+
         std::thread subscription_listener_thread_;
         std::atomic_bool alive_{true};
+
+        // IMU data (protected by mutex)
+        std::mutex imu_data_mutex_;
+        double imu_roll_{0.0};   // Roll angle in radians
+        double imu_pitch_{0.0};  // Pitch angle in radians
+        double imu_yaw_{0.0};    // Yaw angle in radians
 
         // ROS Parameters
         int input_queue_size_;
@@ -97,10 +113,12 @@ namespace pointcloud_to_laserscan
         double inf_epsilon_;
         std::string cloud_in_;
         std::string scan_out_;
-        bool use_dynamic_conversions_;
+
+        // IMU Parameters
+        std::string imu_frame_;
         std::string imu_topic_;
-        std::string imu_frame_id_;
-        std::optional<Eigen::Vector3d> initial_plane_normal_;
+        double tilt_threshold_;        // Threshold (in radians) to consider the robot as tilted
+        bool use_dynamic_conversion_;  // Enable/disable tilt-based height adjustment
     };
 
 }  // namespace pointcloud_to_laserscan

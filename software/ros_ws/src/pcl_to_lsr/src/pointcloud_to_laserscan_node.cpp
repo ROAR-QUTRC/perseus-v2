@@ -172,10 +172,17 @@ namespace pointcloud_to_laserscan
         use_inf_ = this->declare_parameter("use_inf", true);
         cloud_in_ = this->declare_parameter("cloud_in", "/livox/lidar");
         scan_out_ = this->declare_parameter("scan_out", "/livox/scan");
-        use_dynamic_conversions_ = this->declare_parameter("use_dynamic_conversions", true);
-        imu_topic_ = this->declare_parameter("imu_topic", "/livox/imu/corrected");
-        imu_frame_id_ = this->declare_parameter("imu_frame_id", "livox_frame");
+        imu_frame_ = this->declare_parameter("use_dynamic_conversion.imu_frame", "imu_link");
+        imu_topic_ = this->declare_parameter("use_dynamic_conversion.imu_topic", "/imu/data");
+        tilt_threshold_ = this->declare_parameter("tilt_threshold", 0.1745);                        // ~10 degrees
+        use_dynamic_conversion_ = this->declare_parameter("use_dynamic_conversion.enabled", true);  // Enable tilt-based adjustment by default
         pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(scan_out_, rclcpp::SensorDataQoS());
+
+        // Subscribe to IMU topic
+        rclcpp::SensorDataQoS qos;
+        imu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>(
+            imu_topic_, qos,
+            std::bind(&PointCloudToLaserScanNode::imu_callback, this, std::placeholders::_1));
 
         using std::placeholders::_1;
         // if pointcloud target frame specified, we need to filter by transform availability
@@ -206,6 +213,56 @@ namespace pointcloud_to_laserscan
     {
         alive_.store(false);
         subscription_listener_thread_.join();
+    }
+
+    void PointCloudToLaserScanNode::imu_callback(sensor_msgs::msg::Imu::ConstSharedPtr imu_msg)
+    {
+        // Extract roll, pitch, yaw from the IMU quaternion
+        double roll, pitch, yaw;
+        quaternion_to_euler(
+            imu_msg->orientation.x,
+            imu_msg->orientation.y,
+            imu_msg->orientation.z,
+            imu_msg->orientation.w,
+            roll, pitch, yaw);
+
+        // Store the IMU orientation data with mutex protection
+        {
+            std::lock_guard<std::mutex> lock(imu_data_mutex_);
+            imu_roll_ = roll;
+            imu_pitch_ = pitch;
+            imu_yaw_ = yaw;
+        }
+
+        RCLCPP_DEBUG(
+            this->get_logger(),
+            "IMU: roll=%.2f, pitch=%.2f, yaw=%.2f degrees",
+            roll * 180.0 / M_PI, pitch * 180.0 / M_PI, yaw * 180.0 / M_PI);
+    }
+
+    void PointCloudToLaserScanNode::quaternion_to_euler(
+        double qx, double qy, double qz, double qw,
+        double& roll, double& pitch, double& yaw)
+    {
+        // Convert quaternion to Euler angles (roll, pitch, yaw)
+        // Using the formula for ZYX convention (yaw, pitch, roll)
+
+        // Roll (x-axis rotation)
+        double sinr_cosp = 2.0 * (qw * qx + qy * qz);
+        double cosr_cosp = 1.0 - 2.0 * (qx * qx + qy * qy);
+        roll = atan2(sinr_cosp, cosr_cosp);
+
+        // Pitch (y-axis rotation)
+        double sinp = 2.0 * (qw * qy - qz * qx);
+        if (std::abs(sinp) >= 1.0)
+            pitch = std::copysign(M_PI / 2.0, sinp);  // Use 90 degrees if out of range
+        else
+            pitch = asin(sinp);
+
+        // Yaw (z-axis rotation)
+        double siny_cosp = 2.0 * (qw * qz + qx * qy);
+        double cosy_cosp = 1.0 - 2.0 * (qy * qy + qz * qz);
+        yaw = atan2(siny_cosp, cosy_cosp);
     }
 
     void PointCloudToLaserScanNode::subscription_listener_thread_loop()
@@ -291,38 +348,38 @@ namespace pointcloud_to_laserscan
             }
         }
 
-        if (use_dynamic_conversions_)
+        // Read current IMU orientation and compute adjusted height bounds for tilted case
+        double current_pitch, current_roll;
         {
-            const std::optional<Eigen::Vector3d> current_plane_normal =
-                estimate_plane_normal(*cloud_msg, min_height_, max_height_);
+            std::lock_guard<std::mutex> lock(imu_data_mutex_);
+            current_pitch = imu_pitch_;
+            current_roll = imu_roll_;
+        }
 
-            if (current_plane_normal.has_value())
-            {
-                if (!initial_plane_normal_.has_value())
-                {
-                    initial_plane_normal_ = current_plane_normal;
-                    RCLCPP_INFO(
-                        this->get_logger(),
-                        "Captured initial lidar plane normal for dynamic conversions");
-                }
-                else
-                {
-                    Eigen::Vector3d aligned_normal = *current_plane_normal;
-                    if (aligned_normal.dot(*initial_plane_normal_) < 0.0)
-                    {
-                        aligned_normal = -aligned_normal;
-                    }
+        // Calculate adjusted height thresholds based on IMU tilt
+        // When the robot is tilted, the effective ground level shifts
+        double adjusted_min_height = min_height_;
+        double adjusted_max_height = max_height_;
 
-                    const Eigen::Quaterniond plane_alignment =
-                        Eigen::Quaterniond::FromTwoVectors(aligned_normal, *initial_plane_normal_);
-                    cloud_msg = rotate_cloud(*cloud_msg, plane_alignment);
-                }
-            }
-            else
+        if (use_dynamic_conversion_)
+        {
+            double tilt_angle = std::sqrt(current_pitch * current_pitch + current_roll * current_roll);
+            if (tilt_angle > tilt_threshold_)
             {
-                RCLCPP_WARN_THROTTLE(
-                    this->get_logger(), *this->get_clock(), 2000,
-                    "Dynamic conversions enabled, but there are not enough in-plane points to estimate the lidar orientation");
+                // Robot is tilted - adjust height filtering
+                // The ground appears higher/lower depending on pitch and roll
+                double pitch_offset = std::sin(current_pitch) * 0.5;  // Scale factor for effect magnitude
+                double roll_offset = std::sin(current_roll) * 0.5;
+                double total_offset = std::sqrt(pitch_offset * pitch_offset + roll_offset * roll_offset);
+
+                // Expand the height range when tilted to account for ground angle variation
+                adjusted_min_height = min_height_ - total_offset;
+                adjusted_max_height = max_height_ + total_offset;
+
+                RCLCPP_DEBUG(
+                    this->get_logger(),
+                    "Robot tilted (%.2f°): adjusted height range [%.3f, %.3f]",
+                    tilt_angle * 180.0 / M_PI, adjusted_min_height, adjusted_max_height);
             }
         }
 
@@ -340,12 +397,12 @@ namespace pointcloud_to_laserscan
                 continue;
             }
 
-            if (*iter_z > max_height_ || *iter_z < min_height_)
+            if (*iter_z > adjusted_max_height || *iter_z < adjusted_min_height)
             {
                 RCLCPP_DEBUG(
                     this->get_logger(),
                     "rejected for height %f not in range (%f, %f)\n",
-                    *iter_z, min_height_, max_height_);
+                    *iter_z, adjusted_min_height, adjusted_max_height);
                 continue;
             }
 
