@@ -12,5 +12,6 @@ python3Packages.buildPythonPackage {
   propagatedBuildInputs = [
     python3Packages.torch
     python3Packages.pyyaml
+    python3Packages.tqdm
   ];
 }
