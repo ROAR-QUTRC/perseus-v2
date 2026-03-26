@@ -59,9 +59,12 @@
 			label = path.split('/').pop() ?? path;
 			new GLTFLoader().load(path, (gltf) => {
 				gltf.scene.traverse((obj) => {
-					if (obj as THREE.Mesh) {
-						(obj as THREE.Mesh).material = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, side: THREE.DoubleSide })
-					}
+					if ((obj as THREE.Mesh).isMesh) {
+    					(obj as THREE.Mesh).material = new THREE.MeshStandardMaterial({
+        				vertexColors: true,
+        				side: THREE.DoubleSide,
+    })
+}
 				});
 				currentMesh = gltf.scene;
 				scene.add(currentMesh);
