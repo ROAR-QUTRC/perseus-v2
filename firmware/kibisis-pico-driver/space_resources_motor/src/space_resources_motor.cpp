@@ -1,42 +1,62 @@
+// space_resources_motor.cpp
+// Implementation of the SRMotor rack-and-pinion motor driver.
+
 #include "space_resources_motor.hpp"
 
-void SpaceResourcesMotor::init()
-{
-    gpio_set_function(pin_, GPIO_FUNC_PWM);
-    slice_ = pwm_gpio_to_slice_num(pin_);
-    chan_ = pwm_gpio_to_channel(pin_);
+#include <cstdint>
 
-    // 1 µs resolution: 150 MHz / 150 = 1 MHz tick, wrap at 2999 → 3000 µs period.
-    static constexpr float kClkDiv = 150.0f;
+#include "hardware/pwm.h"
+#include "pico/stdlib.h"
+
+void SRMotor::init()
+{
+    gpio_set_function(kSignalPin, GPIO_FUNC_PWM);
+    const uint32_t slice = pwm_gpio_to_slice_num(kSignalPin);
+
     pwm_config cfg = pwm_get_default_config();
     pwm_config_set_clkdiv(&cfg, kClkDiv);
-    pwm_config_set_wrap(&cfg, kPeriodUs - 1);
-    pwm_init(slice_, &cfg, true);
+    pwm_config_set_wrap(&cfg, kWrapVal);
+    pwm_init(slice, &cfg, true);
 
-    setPulseUs(kNeutralUs);
+    set_pulse_us(kPwStopUs);
 }
 
-void SpaceResourcesMotor::setSpeed(const int8_t speed)
+void SRMotor::setSpeed(const int8_t speed)
 {
-    const int8_t clamped = std::clamp(speed, static_cast<int8_t>(-100), static_cast<int8_t>(100));
-    uint32_t pulseUs = 0;
-
-    if (clamped >= 0)
+    if (speed == 0)
     {
-        // 0..+100 → 1500..2500 µs
-        pulseUs = kNeutralUs + static_cast<uint32_t>(clamped) * (kMaxUs - kNeutralUs) / 100;
+        set_pulse_us(kPwStopUs);
+        return;
+    }
+
+    const int8_t clamped = (speed > 100) ? 100 : (speed < -100) ? -100 : speed;
+
+    if (clamped > 0)
+    {
+        const uint32_t magnitude = static_cast<uint32_t>(clamped);
+        const uint32_t pw = kPwDeadHighUs
+                            + (magnitude * (kPwExtendMaxUs - kPwDeadHighUs)) / 100U;
+        set_pulse_us(pw);
     }
     else
     {
-        // -100..0 → 500..1500 µs
-        pulseUs = static_cast<uint32_t>(
-            static_cast<int32_t>(kNeutralUs) + static_cast<int32_t>(clamped) * static_cast<int32_t>(kNeutralUs - kMinUs) / 100);
+        const uint32_t magnitude = static_cast<uint32_t>(-clamped);
+        const uint32_t pw = kPwDeadLowUs
+                            - (magnitude * (kPwDeadLowUs - kPwRetractMaxUs)) / 100U;
+        set_pulse_us(pw);
     }
-
-    setPulseUs(pulseUs);
 }
 
-void SpaceResourcesMotor::setPulseUs(const uint32_t pulseUs)
+uint32_t SRMotor::us_to_level(const uint32_t &pulse_us)
 {
-    pwm_set_chan_level(slice_, chan_, pulseUs);
+    return static_cast<uint32_t>(
+        (static_cast<uint64_t>(pulse_us) * kSysClkHz)
+        / (static_cast<uint64_t>(kClkDiv) * 1'000'000ULL));
+}
+
+void SRMotor::set_pulse_us(const uint32_t &pulse_us) const
+{
+    const uint32_t slice   = pwm_gpio_to_slice_num(kSignalPin);
+    const uint32_t channel = pwm_gpio_to_channel(kSignalPin);
+    pwm_set_chan_level(slice, channel, us_to_level(pulse_us));
 }

@@ -37,8 +37,9 @@ int main()
     status_light.init();
     printf("Status light initialised.\n");
 
-    // SpaceResourcesMotor space_motor;
-    // space_motor.init();
+    SRMotor space_motor;
+    space_motor.init();
+    printf("Space resources motor initialised.\n");
 
     printf("Kibisis firmware ready. I2C @ 0x%02X\n", kibisis::kSlaveAddr);
 
@@ -48,6 +49,8 @@ int main()
         const int8_t motor_b = slave.getMotorBSpeed();
         motors.setMotorA(motor_a);
         motors.setMotorB(motor_b);
+
+        space_motor.setSpeed(slave.getSpaceMotorSpeed());
 
         if (slave.getLdrSampleTrigger())
         {
@@ -61,12 +64,11 @@ int main()
                    reading.ldrBAmbient, reading.ldrBIlluminated);
         }
 
-        // space_motor.setSpeed(slave.getSpaceMotorSpeed());
-
         slave.setStatus(0x01);
         slave.commitRegisters();
 
-        printf("Motor A: %d  Motor B: %d\n", motor_a, motor_b);
+        printf("Motor A: %d  Motor B: %d\n",
+               motor_a, motor_b);
         sleep_ms(50);
     }
 }

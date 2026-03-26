@@ -5,20 +5,20 @@
 #include "hardware/adc.h"
 #include "pico/stdlib.h"
 
-/// LDR sensor module for Kibisis.
-///
-/// Two LDRs on ADC0 (GP26) and ADC1 (GP27).
-/// Each LDR LED is powered via a dedicated GPIO enable pin:
-///   LDR A → ADC0 (GP26), LED powered by GP20
-///   LDR B → ADC1 (GP27), LED powered by GP21
-///
-/// sample() takes four readings:
-///   1. LDR A ambient (LEDs off)
-///   2. LDR B ambient (LEDs off)
-///   3. LDR A illuminated (LEDs on)
-///   4. LDR B illuminated (LEDs on)
-///
-/// All readings are 12-bit (0–4095).
+// LDR sensor module for Kibisis.
+//
+// Two LDRs on ADC0 (GP26) and ADC1 (GP27).
+// Each LDR LED is powered via a dedicated GPIO enable pin:
+//   LDR A - ADC0 (GP26), LED powered by GP20   (Phototransistor)
+//   LDR B - ADC1 (GP27), LED powered by GP21   (LDR) 
+//
+// sample() takes four readings:
+//   1. LDR A ambient (LEDs off)
+//   2. LDR B ambient (LEDs off)
+//   3. LDR A illuminated (LEDs on)
+//   4. LDR B illuminated (LEDs on)
+//
+// All readings are 12-bit (0–4095).
 class LdrSensors
 {
 public:
