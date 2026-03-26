@@ -1,12 +1,10 @@
 #pragma once
-
 #include <hi_can_raw.hpp>
-#include <nav_msgs/msg/path.hpp>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include <std_msgs/msg/int8.hpp>
-
+#include "perseus_interfaces/msg/navigation_data.hpp"
 #include "perseus_lights/light_driver.hpp"  // for ring::commands
 
 class LightStatusOrchestrator : public rclcpp::Node
@@ -17,7 +15,7 @@ public:
 private:
     // --- Callbacks ---
     void _joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg);
-    void _path_callback(const nav_msgs::msg::Path::SharedPtr msg);
+    void _nav_data_callback(const perseus_interfaces::msg::NavigationData::SharedPtr msg);
     void _can_callback(const std::vector<uint8_t>& data);
     void _handle_rcb_status(const hi_can::Packet& packet);
 
@@ -30,11 +28,11 @@ private:
 
     // --- Subscriptions ---
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr _joy_subscription;
-    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr _path_subscription;
+    rclcpp::Subscription<perseus_interfaces::msg::NavigationData>::SharedPtr _nav_data_subscription;
 
-    // --- CAN --- Callback ---
+    // --- CAN ---
     rclcpp::TimerBase::SharedPtr _packet_timer;
-    constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(100);
+    constexpr static auto PACKET_HANLDE_MS = std::chrono::milliseconds(100);
     void _handle_can();
 
     // --- Publisher ---
@@ -44,18 +42,18 @@ private:
     rclcpp::TimerBase::SharedPtr _topic_check_timer;
 
     // --- State flags ---
-    bool _joy_seen = false;
-    bool _map_seen = false;
-    bool _path_received = false;
-    bool _power_bus_off = false;
-    bool _error_state = false;
+    bool _joy_seen            = false;
+    bool _autonomy_bridge_seen = false;
+    bool _navigation_active   = false;
+    bool _power_bus_off       = false;
+    bool _error_state         = false;
 
     std::optional<hi_can::RawCanInterface> _can_interface;
-    std::optional<hi_can::PacketManager> _packet_manager;
+    std::optional<hi_can::PacketManager>   _packet_manager;
 
-    // --- Timestamp of last joy message (for liveness check) ---
+    // --- Timestamps for liveness checks ---
     rclcpp::Time _last_joy_time;
-    rclcpp::Time _last_map_time;
+    rclcpp::Time _last_nav_data_time;
 
     // Timeout threshold (seconds) for considering a topic "gone"
     static constexpr double TOPIC_TIMEOUT_S = 2.0;

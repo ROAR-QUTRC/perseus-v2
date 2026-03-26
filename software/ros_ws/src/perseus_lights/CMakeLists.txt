@@ -9,7 +9,7 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp std_msgs sensor_msgs nav_msgs)
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp std_msgs sensor_msgs nav_msgs perseus_interfaces)
 set(THIS_PACKAGE_BUILD_DEPENDS ament_cmake)
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
@@ -56,7 +56,7 @@ ament_target_dependencies(light_controller PUBLIC
                           ${THIS_PACKAGE_INCLUDE_DEPENDS} std_msgs)
 ament_target_dependencies(
   light_orchestrator PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS} std_msgs
-  sensor_msgs nav_msgs)
+  sensor_msgs nav_msgs perseus_interfaces)
 
 target_link_libraries(light_driver PUBLIC hi_can_raw)
 target_link_libraries(light_controller PUBLIC hi_can_raw)
