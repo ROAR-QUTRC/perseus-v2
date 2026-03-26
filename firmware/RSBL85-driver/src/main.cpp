@@ -35,8 +35,9 @@ void setup()
     Serial.println("Motor 2 online: " + String(PAN == servo.Ping(PAN) ? "true" : "false"));
     Serial.println("Motor 3 online: " + String(ELBOW == servo.Ping(ELBOW) ? "true" : "false"));
 
-    while (servo.ReadPos(ELBOW) == -1) {
-        //wait for motors to come online
+    while (servo.ReadPos(ELBOW) == -1)
+    {
+        // wait for motors to come online
     }
     past_positions[TILT - 1] = servo.ReadPos(TILT);
     past_positions[PAN - 1] = servo.ReadPos(PAN);

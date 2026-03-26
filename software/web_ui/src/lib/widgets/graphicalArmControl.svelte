@@ -4,7 +4,7 @@
 
 	export const name = 'Armed and Ready for Battle!';
 	// These properties are optional
-	export const description = 'Controll the arm joint angles with a graphical interface (NO IK)';
+	export const description = 'Control the arm joint angles with a graphical interface (NO IK)';
 	export const group: WidgetGroupType = 'ROS';
 	export const isRosDependent = true; // Set to true if the widget requires a ROS connection
 
@@ -94,7 +94,7 @@
 		WRIST_TILT: 4
 	};
 
-	// these are ordered accoring to the index in the JONT_ID_INDEX_MAP
+	// these are ordered according to the index in the JOINT_ID_INDEX_MAP
 	let angles = $state<
 		Array<{
 			jointId: JointNameType;
