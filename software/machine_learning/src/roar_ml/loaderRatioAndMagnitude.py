@@ -27,7 +27,10 @@ EPS = 1e-6
 
 
 def compute_ratios(raw):
-
+    """
+    Computes 21 spectral ratios (7 per lighting condition x 3 conditions).
+    These capture the spectral shape independent of absolute brightness.
+    """
     ch = {name: raw[i] for i, name in enumerate(CHANNEL_NAMES)}
 
     ratios = [

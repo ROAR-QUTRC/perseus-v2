@@ -4,12 +4,14 @@ let
   native = (import ./native/overlay.nix);
   ros_ws = (import ./ros_ws/overlay.nix rosDistro);
   scripts = (import ./scripts/overlay.nix);
+  machine_learning = (import ./machine_learning/overlay.nix);
   composed = prev.lib.composeManyExtensions [
     (final: prev: { inherit cleanCmakeSource; })
     shared
     native
     ros_ws
     scripts
+    machine_learning
   ] final prev;
   # utility function to provide a clean src with the cmake build directory (and typical build outputs) removed
   cleanCmakeSource =

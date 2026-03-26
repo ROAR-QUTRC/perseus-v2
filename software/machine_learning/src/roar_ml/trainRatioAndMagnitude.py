@@ -5,8 +5,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 import json
 
-from model import IlmeniteModel
-from loader import IlmeniteDataLoader
+from modelRatioAndMagnitude import IlmeniteModel
+from loaderRatioAndMagnitude import IlmeniteDataLoader
 
 torch.manual_seed(0)
 

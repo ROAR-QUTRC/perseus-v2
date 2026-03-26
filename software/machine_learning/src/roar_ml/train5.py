@@ -44,7 +44,6 @@ net = IlmeniteModel().to(device)
 
 criterion = nn.MSELoss()
 optimiser = optim.Adam(net.parameters(), lr=0.01) #lr = 0.01 is the best so far
-#tried lr = 0.05
 
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimiser, mode="min", patience=5, factor=0.5
@@ -52,10 +51,10 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
 
 #training loop
 
-losses = {"train": [], "val": []}
-best_val_loss = float("inf")
+losses                      = {"train": [], "val": []}
+best_val_loss               = float("inf")
 best_train_loss_at_best_val = float("inf")
-NUM_OF_EPOCHS = 120
+NUM_OF_EPOCHS               = 120
 
 for epoch in range(NUM_OF_EPOCHS):
 
@@ -96,17 +95,17 @@ for epoch in range(NUM_OF_EPOCHS):
 
     # Overfitting warning 
     if train_loss < val_loss * 0.5:
-        print("Warning: possible overfitting")
+        print("  Warning: possible overfitting")
 
     # Save best model 
     if val_loss < best_val_loss:
-        best_val_loss = val_loss
+        best_val_loss               = val_loss
         best_train_loss_at_best_val = train_loss
         torch.save(net.state_dict(), "ilmenite_model.pth")
         print(f"  Saved best model (val loss: {best_val_loss:.6f})")
 
 print(f"\nFinished Training.")
-print(f"Best Val Loss: {best_val_loss:.6f}")
+print(f"Best Val Loss:          {best_val_loss:.6f}")
 print(f"Train Loss at best val: {best_train_loss_at_best_val:.6f}")
 
 
