@@ -67,17 +67,17 @@ stereo_odom:
     use_clahe: true
     use_equalize_hist: false
     sync_queue_size: 10
-    max_features: 250
-    min_tracked_features: 80
+    max_features: 400
+    min_tracked_features: 50
     feature_quality_level: 0.01
     min_feature_distance_px: 12.0
     feature_block_size: 5
     lk_window_size_px: 21
     lk_max_pyramid_level: 3
-    min_inliers: 20
+    min_inliers: 12
     ransac_iterations: 120
-    ransac_inlier_threshold_m: 0.10
-    max_frame_delta_s: 0.25
+    ransac_inlier_threshold_m: 0.15
+    max_frame_delta_s: 0.50
     min_valid_depth_m: 0.2
     max_valid_depth_m: 6.0
     min_valid_disparity_px: 1.0

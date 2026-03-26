@@ -7,19 +7,20 @@ log_level: info
 output: screen
 # Color stream settings.
 # Lightweight profile to reduce bandwidth and CPU load.
-enable_color: true
+enable_color: false
 rgb_camera.color_profile: 424,240,15
 rgb_camera.color_format: RGB8
 rgb_camera.enable_auto_exposure: true
 # Depth and infrared stream settings.
-# Only depth is enabled; infrared streams stay off.
-enable_depth: true
+# Keep stereo infrared enabled for stereo odometry, but force a lightweight
+# profile instead of letting the driver fall back to its 848x480x30 default.
+enable_depth: false
 enable_infra: false
-enable_infra1: false
-enable_infra2: false
+enable_infra1: true
+enable_infra2: true
 depth_module.depth_profile: 424,240,15
 depth_module.depth_format: Z16
-depth_module.infra_profile: 0,0,0
+depth_module.infra_profile: 424,240,15
 depth_module.infra_format: RGB8
 depth_module.infra1_format: Y8
 depth_module.infra2_format: Y8
@@ -35,7 +36,7 @@ depth_module.exposure.2: 1
 depth_module.gain.2: 16
 # Synchronization and IMU publication.
 # Keeps color and depth timestamps aligned while leaving IMU outputs off.
-enable_sync: true
+enable_sync: false
 depth_module.inter_cam_sync_mode: 0
 enable_rgbd: false
 enable_gyro: false
