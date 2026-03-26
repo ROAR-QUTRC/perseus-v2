@@ -35,19 +35,19 @@ void setup()
     Serial.println("Motor 2 online: " + String(PAN == servo.Ping(PAN) ? "true" : "false"));
     Serial.println("Motor 3 online: " + String(ELBOW == servo.Ping(ELBOW) ? "true" : "false"));
 
+    while (servo.ReadPos(ELBOW) == -1) {
+        //wait for motors to come online
+    }
     past_positions[TILT - 1] = servo.ReadPos(TILT);
     past_positions[PAN - 1] = servo.ReadPos(PAN);
     past_positions[ELBOW - 1] = servo.ReadPos(ELBOW);
 
     // read current values and store them as offsets
-    offsets[TILT - 1] = servo.ReadPos(TILT);
-    offsets[PAN - 1] = servo.ReadPos(PAN);
-    offsets[ELBOW - 1] = servo.ReadPos(ELBOW);
 
     // set the offsets as the startup positions so that servos dont zero on startup
-    target_positions[TILT - 1] = offsets[TILT - 1];
-    target_positions[PAN - 1] = offsets[PAN - 1];
-    target_positions[ELBOW - 1] = offsets[ELBOW - 1];
+    target_positions[TILT - 1] = 0;
+    target_positions[PAN - 1] = 0;
+    target_positions[ELBOW - 1] = 0;
 }
 
 std::vector<double> positions(3, 0);
@@ -55,7 +55,7 @@ std::vector<int16_t> full_rev_count(3, 0);
 void write_angle(int id, double angle, double speed)
 {
     // add offset to angle so that all positions are relative to starting position
-    target_positions[id - 1] = angle + offsets[id - 1];
+    target_positions[id - 1] = angle;
     // TODO: set max speed
 }
 
@@ -74,6 +74,7 @@ UART Protocol:
 
 void loop()
 {
+    // Serial.printf("offset %d, %d, %d\n", offsets[TILT - 1], offsets[PAN - 1], offsets[ELBOW - 1]);
     std::vector<uint8_t> data;
 
     bool start_byte_found = false;
