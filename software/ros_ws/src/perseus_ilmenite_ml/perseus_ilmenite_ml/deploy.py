@@ -5,8 +5,10 @@ import json
 import numpy as np
 import datetime
 
-from model import IlmeniteModel
-from loader import compute_ratios, compute_features
+from perseus_ilmenite_ml.model import IlmeniteModel
+from perseus_ilmenite_ml.loader import compute_ratios
+from rosidl_runtime_py import message_to_ordereddict
+
 
 #configuration
 WEIGHTS_PATH = "ilmenite_model.pth"
@@ -32,11 +34,16 @@ def load_scaler(scaler_path):
     return scaler
 
 #input is an array
-def get_sensor_reading(input_array):
-    extracted_array = [float(x.strip()) for x in input_array.split(',')]
-    extracted_array_13 = extracted_array.pop(12)
-    return extracted_array
-
+def get_sensor_reading(input_msg):
+    input_array = message_to_ordereddict(input_msg)
+    led_settings = ['no_led_reading', 'white_led_reading', 'uv_led_reading']
+    samples = ['f2_425nm','fz_450nm', 'f3_475nm', 'f4_515nm', 'f5_550nm', 'fy_555nm', 'fxl_600nm', 'f6_640nm', 'f7_690nm', 'f8_745nm', 'nir_855nm']
+    extracted_array = []
+    for l in led_settings:
+        for s in samples:
+            extracted_array.append(f"{input_array[l][s]}")
+    print(extracted_array)
+    return
 
 #def get_sensor_reading():
     #raw_values = input("Enter 39 channel values separated by commas:\n> ")
