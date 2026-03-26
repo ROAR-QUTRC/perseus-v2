@@ -54,3 +54,40 @@ cube_detector:
       unit_scale: 0.001 # Scale factor to convert depth image units to meters (e.g., 0.001 for millimeters)
       max_range_m: 10.0
       min_range_m: 0.1
+stereo_odom:
+  ros__parameters:
+    left_image_topic: /camera/camera/infra1/image_rect_raw
+    right_image_topic: /camera/camera/infra2/image_rect_raw
+    left_camera_info_topic: /camera/camera/infra1/camera_info
+    right_camera_info_topic: /camera/camera/infra2/camera_info
+    odom_topic: /perseus_vision/stereo_odom
+    odom_frame_id: odom
+    child_frame_id: camera_infra1_optical_frame
+    publish_tf: true
+    use_clahe: true
+    use_equalize_hist: false
+    sync_queue_size: 10
+    max_features: 250
+    min_tracked_features: 80
+    feature_quality_level: 0.01
+    min_feature_distance_px: 12.0
+    feature_block_size: 5
+    lk_window_size_px: 21
+    lk_max_pyramid_level: 3
+    min_inliers: 20
+    ransac_iterations: 120
+    ransac_inlier_threshold_m: 0.10
+    max_frame_delta_s: 0.25
+    min_valid_depth_m: 0.2
+    max_valid_depth_m: 6.0
+    min_valid_disparity_px: 1.0
+    max_translation_per_frame_m: 0.50
+    max_rotation_per_frame_rad: 0.70
+    stereo_num_disparities: 64
+    stereo_block_size: 15
+    stereo_pre_filter_cap: 31
+    stereo_texture_threshold: 10
+    stereo_uniqueness_ratio: 10
+    stereo_speckle_window_size: 50
+    stereo_speckle_range: 2
+    stereo_disp12_max_diff: 1
