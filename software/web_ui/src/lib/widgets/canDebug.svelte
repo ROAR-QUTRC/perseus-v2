@@ -26,6 +26,7 @@
 			group: string;
 			parameter: string | null;
 			latestData: string[];
+			timestamp: string;
 		}[]
 	>([]);
 
@@ -42,6 +43,7 @@
 	interface CanData {
 		iface: string;
 		address: string;
+		timestamp: string;
 		details: CanLutEntry;
 		data: string[];
 	}
@@ -63,13 +65,15 @@
 					device: value.details.device,
 					group: value.details.group,
 					parameter: value.details.parameter,
-					latestData: value.data
+					latestData: value.data,
+					timestamp: value.timestamp,
 				});
 				return;
 			}
 
-			// Update data
+			// Update data and timestamp
 			canMsgs[inArray].latestData = value.data;
+			canMsgs[inArray].timestamp = value.timestamp;
 		})
 	});
 
@@ -93,6 +97,7 @@
 					<th class="p-2">Group</th>
 					<th class="p-2">Parameter</th>
 					<th class="border-l p-2">Latest Data</th>
+					<th class="border-l p-2">Timestamp</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -115,6 +120,9 @@
 						</td>
 						<td class=" w-full overflow-hidden border-l p-2">
 							<p class="w-full text-center mb-2">{canMsg.latestData}</p>
+						</td>
+						<td class="p-2 border-l">
+							<p class="w-full text-center mb-2">{canMsg.timestamp}</p>
 						</td>
 					</tr>
 				{/each}

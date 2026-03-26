@@ -25,7 +25,7 @@ export async function canSocket(io) {
     await generateFile();
 
     // Start processing candump output (after file generated)
-    stopCandump = startCanDump("vcan0");
+    stopCandump = startCanDump("can0");
 
     // Send messages as they are received
     timeoutId = setInterval(() => {
@@ -154,12 +154,26 @@ function parseCandump(line) {
   const address = `0x${parseInt(parts[1], 16).toString(16).padStart(8, "0")}`;
   const canDetails = canLookup[address];
 
+  const timestamp = formatTimestamp(Date.now());
+
   const parsed = {
     iface: parts[0],
     address: address,
+    timestamp: timestamp,
     details: canDetails,
     data: parts.slice(3),
   };
 
   return parsed;
 }
+
+function formatTimestamp(ts) {
+		const d = new Date(ts);
+
+		const hours = String(d.getHours()).padStart(2, "0");
+		const minutes = String(d.getMinutes()).padStart(2, "0");
+		const seconds = String(d.getSeconds()).padStart(2, "0");
+		const ms = String(d.getMilliseconds()).padStart(2, "0");
+		
+		return `${hours}:${minutes}:${seconds}.${ms}`;
+	}
