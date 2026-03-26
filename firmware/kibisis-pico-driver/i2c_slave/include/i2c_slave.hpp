@@ -13,9 +13,9 @@ namespace kibisis
     constexpr uint8_t kSlaveAddr = 0x41;
 
     // Pi→Pico command registers
-    constexpr uint8_t kRegMotorASpeed      = 0x00;
-    constexpr uint8_t kRegMotorBSpeed      = 0x01;
-    constexpr uint8_t kRegSpaceMotorSpeed  = 0x02;
+    constexpr uint8_t kRegMotorASpeed = 0x00;
+    constexpr uint8_t kRegMotorBSpeed = 0x01;
+    constexpr uint8_t kRegSpaceMotorSpeed = 0x02;
 
     // Pico→Pi state registers
     constexpr uint8_t kRegStatus = 0x20;
@@ -28,8 +28,8 @@ namespace kibisis
     constexpr uint8_t kRegLdrSample = 0x40;
 
     // LDR results (Pico→Pi, uint16_t LE each)
-    constexpr uint8_t kRegLdrAAmbient0     = 0x41;
-    constexpr uint8_t kRegLdrBAmbient0     = 0x43;
+    constexpr uint8_t kRegLdrAAmbient0 = 0x41;
+    constexpr uint8_t kRegLdrBAmbient0 = 0x43;
     constexpr uint8_t kRegLdrAIlluminated0 = 0x45;
     constexpr uint8_t kRegLdrBIlluminated0 = 0x47;
 

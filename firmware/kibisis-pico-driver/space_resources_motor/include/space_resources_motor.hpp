@@ -28,18 +28,18 @@ public:
     void setSpeed(int8_t speed);
 
 private:
-    static constexpr uint32_t kSysClkHz       = 125'000'000U;
-    static constexpr float    kClkDiv         = 64.0F;
-    static constexpr uint32_t kWrapVal        = 2441U;
+    static constexpr uint32_t kSysClkHz = 125'000'000U;
+    static constexpr float kClkDiv = 64.0F;
+    static constexpr uint32_t kWrapVal = 2441U;
 
-    static constexpr uint32_t kPwStopUs       = 1500U;
-    static constexpr uint32_t kPwExtendMaxUs  = 2500U;
+    static constexpr uint32_t kPwStopUs = 1500U;
+    static constexpr uint32_t kPwExtendMaxUs = 2500U;
     static constexpr uint32_t kPwRetractMaxUs = 500U;
-    static constexpr uint32_t kPwDeadHighUs   = 1600U;
-    static constexpr uint32_t kPwDeadLowUs    = 1400U;
+    static constexpr uint32_t kPwDeadHighUs = 1600U;
+    static constexpr uint32_t kPwDeadLowUs = 1400U;
 
-    static constexpr uint32_t kSignalPin      = 16U;
+    static constexpr uint32_t kSignalPin = 16U;
 
-    static uint32_t us_to_level(const uint32_t &pulse_us);
-    void set_pulse_us(const uint32_t &pulse_us) const;
+    static uint32_t us_to_level(const uint32_t& pulse_us);
+    void set_pulse_us(const uint32_t& pulse_us) const;
 };

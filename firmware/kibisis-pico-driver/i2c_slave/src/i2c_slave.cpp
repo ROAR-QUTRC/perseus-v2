@@ -127,24 +127,24 @@ void I2CSlave::setEncoderB(const int32_t counts)
 
 void I2CSlave::setLdrAmbientA(const uint16_t value)
 {
-    shadow_regs_[kibisis::kRegLdrAAmbient0]     = static_cast<uint8_t>(value & 0xFF);
+    shadow_regs_[kibisis::kRegLdrAAmbient0] = static_cast<uint8_t>(value & 0xFF);
     shadow_regs_[kibisis::kRegLdrAAmbient0 + 1] = static_cast<uint8_t>(value >> 8);
 }
 
 void I2CSlave::setLdrAmbientB(const uint16_t value)
 {
-    shadow_regs_[kibisis::kRegLdrBAmbient0]     = static_cast<uint8_t>(value & 0xFF);
+    shadow_regs_[kibisis::kRegLdrBAmbient0] = static_cast<uint8_t>(value & 0xFF);
     shadow_regs_[kibisis::kRegLdrBAmbient0 + 1] = static_cast<uint8_t>(value >> 8);
 }
 
 void I2CSlave::setLdrIlluminatedA(const uint16_t value)
 {
-    shadow_regs_[kibisis::kRegLdrAIlluminated0]     = static_cast<uint8_t>(value & 0xFF);
+    shadow_regs_[kibisis::kRegLdrAIlluminated0] = static_cast<uint8_t>(value & 0xFF);
     shadow_regs_[kibisis::kRegLdrAIlluminated0 + 1] = static_cast<uint8_t>(value >> 8);
 }
 
 void I2CSlave::setLdrIlluminatedB(const uint16_t value)
 {
-    shadow_regs_[kibisis::kRegLdrBIlluminated0]     = static_cast<uint8_t>(value & 0xFF);
+    shadow_regs_[kibisis::kRegLdrBIlluminated0] = static_cast<uint8_t>(value & 0xFF);
     shadow_regs_[kibisis::kRegLdrBIlluminated0 + 1] = static_cast<uint8_t>(value >> 8);
 }
