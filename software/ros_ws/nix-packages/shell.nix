@@ -65,6 +65,7 @@ pkgs.mkShell {
           launch-ros
           mecanum-drive-controller
           message-filters
+          nav-msgs
           nav2-msgs
           navigation2
           nlohmann_json
