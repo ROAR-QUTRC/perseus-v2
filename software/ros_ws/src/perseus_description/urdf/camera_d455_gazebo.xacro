@@ -4,8 +4,7 @@
   <xacro:macro name="camera_d455_gazebo" params="name:=camera">
 
     <gazebo reference="${name}_color_frame">
-      <material>Gazebo/Red</material>
-      <sensor name="rgb_camera" type="camera">
+      <sensor name="rgbd_camera" type="rgbd_camera">
         <pose>0 0 0 0 0 0</pose>
         <visualize>true</visualize>
         <update_rate>30</update_rate>
@@ -15,21 +14,20 @@
           <image>
             <width>640</width>
             <height>480</height>
-            <format>R8G8B8</format>
           </image>
           <clip>
             <near>0.05</near>
-            <far>100</far>
+            <far>10.0</far>
           </clip>
         </camera>
-        <topic>/${name}/${name}/color/image_raw</topic>
+        <topic>/${name}/${name}/color</topic>
         <gz_frame_id>${name}_color_optical_frame</gz_frame_id>
       </sensor>
     </gazebo>
 
     <!-- Depth Camera -->
     <gazebo reference="${name}_depth_frame">
-      <sensor name="rgbd_camera" type="rgbd_camera">
+      <sensor name="depth_camera" type="depth_camera">
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
         <update_rate>30</update_rate>
@@ -47,10 +45,9 @@
         </camera>
         <topic>/${name}/${name}/depth</topic>
         <gz_frame_id>${name}_depth_optical_frame</gz_frame_id>
-        <min_depth>0.05</min_depth>
-        <max_depth>10.0</max_depth>
       </sensor>
     </gazebo>
+
 
     <!-- Left IR Camera -->
     <gazebo reference="${name}_infra1_frame">

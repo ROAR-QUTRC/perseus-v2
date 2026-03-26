@@ -39,7 +39,12 @@
   direction: GZ_TO_ROS
 # ─── RGB Color Camera ───────────────────────────────────────────────────────
 - ros_topic_name: "/camera/camera/color/image_raw"
-  gz_topic_name: "/camera/camera/color/image_raw"
+  gz_topic_name: "/camera/camera/color/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+- ros_topic_name: "/camera/camera/aligned_depth_to_color/image_raw"
+  gz_topic_name: "/camera/camera/color/depth_image"
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
   direction: GZ_TO_ROS
@@ -49,13 +54,13 @@
   gz_type_name: "gz.msgs.CameraInfo"
   direction: GZ_TO_ROS
 # ─── Depth Camera ────────────────────────────────────────────────────────────
-- ros_topic_name: "/camera/camera/aligned_depth_to_color/image_raw"
-  gz_topic_name: "/camera/camera/depth/depth_image"
+- ros_topic_name: "/camera/camera/depth/image_rect_raw"
+  gz_topic_name: "/camera/camera/depth"
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
   direction: GZ_TO_ROS
-- ros_topic_name: "/camera/camera/aligned_depth_to_color/camera_info"
-  gz_topic_name: "/camera/camera/depth/camera_info"
+- ros_topic_name: "/camera/camera/depth/camera_info"
+  gz_topic_name: "/camera/camera/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "gz.msgs.CameraInfo"
   direction: GZ_TO_ROS
