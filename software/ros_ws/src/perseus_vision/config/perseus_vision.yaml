@@ -64,7 +64,7 @@ stereo_odom:
     odom_frame_id: odom
     tracking_frame_id: camera_infra1_optical_frame
     child_frame_id: base_link
-    publish_tf: true
+    publish_tf: false
     use_clahe: true
     use_equalize_hist: false
     sync_queue_size: 10
