@@ -84,7 +84,7 @@
 
 	// UI logic
 
-	const LIVE_MESSAGE = true;
+	const LIVE_MESSAGE = false;
 
 	const JOINT_ID_INDEX_MAP: Record<JointNameType, number> = {
 		SHOULDER_PAN: 0,
