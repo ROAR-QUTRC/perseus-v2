@@ -9,6 +9,7 @@
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "tf2/LinearMath/Quaternion.h"
+#include "tf2/exceptions.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 namespace perseus_vision
@@ -37,7 +38,9 @@ namespace perseus_vision
             "right_camera_info_topic", "/camera/camera/infra2/camera_info");
         odom_topic_ = declare_parameter<std::string>("odom_topic", "/perseus_vision/stereo_odom");
         odom_frame_id_ = declare_parameter<std::string>("odom_frame_id", "odom");
-        child_frame_id_ = declare_parameter<std::string>("child_frame_id", "camera_infra1_optical_frame");
+        tracking_frame_id_ = declare_parameter<std::string>(
+            "tracking_frame_id", "camera_infra1_optical_frame");
+        child_frame_id_ = declare_parameter<std::string>("child_frame_id", tracking_frame_id_);
 
         publish_tf_ = declare_parameter<bool>("publish_tf", true);
         use_clahe_ = declare_parameter<bool>("use_clahe", true);
@@ -107,14 +110,18 @@ namespace perseus_vision
             std::placeholders::_2));
 
         odom_pub_ = create_publisher<nav_msgs::msg::Odometry>(odom_topic_, 10);
+        tf_buffer_ = std::make_shared<tf2_ros::Buffer>(get_clock());
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
         RCLCPP_INFO(
             get_logger(),
-            "Stereo odom listening on [%s] and [%s], publishing odom on [%s]",
+            "Stereo odom listening on [%s] and [%s], publishing odom on [%s] as %s -> %s",
             left_image_topic_.c_str(),
             right_image_topic_.c_str(),
-            odom_topic_.c_str());
+            odom_topic_.c_str(),
+            odom_frame_id_.c_str(),
+            child_frame_id_.c_str());
     }
 
     void StereoOdom::left_camera_info_callback(const sensor_msgs::msg::CameraInfo::SharedPtr msg)
@@ -433,6 +440,69 @@ namespace perseus_vision
         }
     }
 
+    bool StereoOdom::resolve_output_pose(
+        cv::Matx33d& world_rotation_from_child,
+        cv::Vec3d& world_translation_from_child,
+        cv::Matx33d& child_rotation_from_tracking) const
+    {
+        if (child_frame_id_ == tracking_frame_id_)
+        {
+            world_rotation_from_child = world_rotation_from_camera_;
+            world_translation_from_child = world_translation_from_camera_;
+            child_rotation_from_tracking = cv::Matx33d::eye();
+            return true;
+        }
+
+        geometry_msgs::msg::TransformStamped tracking_from_child_msg;
+        try
+        {
+            tracking_from_child_msg = tf_buffer_->lookupTransform(
+                tracking_frame_id_, child_frame_id_, tf2::TimePointZero);
+        }
+        catch (const tf2::TransformException& ex)
+        {
+            RCLCPP_WARN_THROTTLE(
+                get_logger(),
+                *get_clock(),
+                3000,
+                "Stereo odom is waiting for TF from [%s] to [%s]: %s",
+                tracking_frame_id_.c_str(),
+                child_frame_id_.c_str(),
+                ex.what());
+            return false;
+        }
+
+        const auto& translation = tracking_from_child_msg.transform.translation;
+        const auto& quaternion_msg = tracking_from_child_msg.transform.rotation;
+        tf2::Quaternion tracking_from_child_quaternion(
+            quaternion_msg.x,
+            quaternion_msg.y,
+            quaternion_msg.z,
+            quaternion_msg.w);
+        tf2::Matrix3x3 tracking_from_child_matrix(tracking_from_child_quaternion);
+
+        const cv::Matx33d tracking_rotation_from_child(
+            tracking_from_child_matrix[0][0],
+            tracking_from_child_matrix[0][1],
+            tracking_from_child_matrix[0][2],
+            tracking_from_child_matrix[1][0],
+            tracking_from_child_matrix[1][1],
+            tracking_from_child_matrix[1][2],
+            tracking_from_child_matrix[2][0],
+            tracking_from_child_matrix[2][1],
+            tracking_from_child_matrix[2][2]);
+        const cv::Vec3d tracking_translation_from_child(
+            translation.x,
+            translation.y,
+            translation.z);
+
+        world_rotation_from_child = world_rotation_from_camera_ * tracking_rotation_from_child;
+        world_translation_from_child =
+            world_translation_from_camera_ + (world_rotation_from_camera_ * tracking_translation_from_child);
+        child_rotation_from_tracking = tracking_rotation_from_child.t();
+        return true;
+    }
+
     void StereoOdom::publish_odometry(
         const rclcpp::Time& stamp,
         const cv::Matx33d& delta_rotation,
@@ -445,39 +515,57 @@ namespace perseus_vision
         world_translation_from_camera_ += world_rotation_from_camera_ * camera_translation_from_previous;
         world_rotation_from_camera_ = world_rotation_from_camera_ * camera_rotation_from_previous;
 
-        tf2::Matrix3x3 rotation_matrix(
-            world_rotation_from_camera_(0, 0),
-            world_rotation_from_camera_(0, 1),
-            world_rotation_from_camera_(0, 2),
-            world_rotation_from_camera_(1, 0),
-            world_rotation_from_camera_(1, 1),
-            world_rotation_from_camera_(1, 2),
-            world_rotation_from_camera_(2, 0),
-            world_rotation_from_camera_(2, 1),
-            world_rotation_from_camera_(2, 2));
-        tf2::Quaternion quaternion;
-        rotation_matrix.getRotation(quaternion);
+        cv::Matx33d world_rotation_from_child;
+        cv::Vec3d world_translation_from_child;
+        cv::Matx33d child_rotation_from_tracking;
+        if (!resolve_output_pose(
+                world_rotation_from_child,
+                world_translation_from_child,
+                child_rotation_from_tracking))
+        {
+            return;
+        }
+
+        tf2::Matrix3x3 child_rotation_matrix(
+            world_rotation_from_child(0, 0),
+            world_rotation_from_child(0, 1),
+            world_rotation_from_child(0, 2),
+            world_rotation_from_child(1, 0),
+            world_rotation_from_child(1, 1),
+            world_rotation_from_child(1, 2),
+            world_rotation_from_child(2, 0),
+            world_rotation_from_child(2, 1),
+            world_rotation_from_child(2, 2));
+        tf2::Quaternion child_quaternion;
+        child_rotation_matrix.getRotation(child_quaternion);
+
+        const cv::Vec3d child_linear_velocity = child_rotation_from_tracking * camera_translation_from_previous;
+        cv::Mat rotation_vector;
+        cv::Rodrigues(camera_rotation_from_previous, rotation_vector);
+        const cv::Vec3d tracking_angular_velocity(
+            rotation_vector.at<double>(0, 0),
+            rotation_vector.at<double>(1, 0),
+            rotation_vector.at<double>(2, 0));
+        const cv::Vec3d child_angular_velocity =
+            child_rotation_from_tracking * tracking_angular_velocity;
 
         nav_msgs::msg::Odometry odom_msg;
         odom_msg.header.stamp = stamp;
         odom_msg.header.frame_id = odom_frame_id_;
         odom_msg.child_frame_id = child_frame_id_;
-        odom_msg.pose.pose.position.x = world_translation_from_camera_[0];
-        odom_msg.pose.pose.position.y = world_translation_from_camera_[1];
-        odom_msg.pose.pose.position.z = world_translation_from_camera_[2];
-        odom_msg.pose.pose.orientation = tf2::toMsg(quaternion);
+        odom_msg.pose.pose.position.x = world_translation_from_child[0];
+        odom_msg.pose.pose.position.y = world_translation_from_child[1];
+        odom_msg.pose.pose.position.z = world_translation_from_child[2];
+        odom_msg.pose.pose.orientation = tf2::toMsg(child_quaternion);
 
         if (dt_s > 1e-3)
         {
-            odom_msg.twist.twist.linear.x = camera_translation_from_previous[0] / dt_s;
-            odom_msg.twist.twist.linear.y = camera_translation_from_previous[1] / dt_s;
-            odom_msg.twist.twist.linear.z = camera_translation_from_previous[2] / dt_s;
-
-            cv::Mat rotation_vector;
-            cv::Rodrigues(camera_rotation_from_previous, rotation_vector);
-            odom_msg.twist.twist.angular.x = rotation_vector.at<double>(0, 0) / dt_s;
-            odom_msg.twist.twist.angular.y = rotation_vector.at<double>(1, 0) / dt_s;
-            odom_msg.twist.twist.angular.z = rotation_vector.at<double>(2, 0) / dt_s;
+            odom_msg.twist.twist.linear.x = child_linear_velocity[0] / dt_s;
+            odom_msg.twist.twist.linear.y = child_linear_velocity[1] / dt_s;
+            odom_msg.twist.twist.linear.z = child_linear_velocity[2] / dt_s;
+            odom_msg.twist.twist.angular.x = child_angular_velocity[0] / dt_s;
+            odom_msg.twist.twist.angular.y = child_angular_velocity[1] / dt_s;
+            odom_msg.twist.twist.angular.z = child_angular_velocity[2] / dt_s;
         }
 
         odom_msg.pose.covariance[0] = 0.05;

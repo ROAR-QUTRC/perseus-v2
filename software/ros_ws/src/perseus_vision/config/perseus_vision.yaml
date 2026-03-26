@@ -62,7 +62,8 @@ stereo_odom:
     right_camera_info_topic: /camera/camera/infra2/camera_info
     odom_topic: /perseus_vision/stereo_odom
     odom_frame_id: odom
-    child_frame_id: camera_infra1_optical_frame
+    tracking_frame_id: camera_infra1_optical_frame
+    child_frame_id: base_link
     publish_tf: true
     use_clahe: true
     use_equalize_hist: false

@@ -124,7 +124,7 @@ let
         # use CycloneDDS ROS middleware
         export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
         # use our custom CycloneDDS config which sets up the ROS machines as peers to each other
-        export CYCLONEDDS_URI=file://$HOME/perseus-v2/config/cyclonedds_autonomy.xml
+        # export CYCLONEDDS_URI=file://$HOME/perseus-v2/config/cyclonedds_autonomy.xml
         # enable coloured ros2 launch output
         export RCUTILS_COLORIZED_OUTPUT=1
         # fix locale issues

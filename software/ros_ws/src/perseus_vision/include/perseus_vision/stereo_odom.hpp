@@ -16,7 +16,9 @@
 #include "sensor_msgs/image_encodings.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_broadcaster.h"
+#include "tf2_ros/transform_listener.h"
 
 namespace perseus_vision
 {
@@ -82,6 +84,10 @@ namespace perseus_vision
             double& mean_error_m) const;
         void reset_tracking(const cv::Mat& left_image, const cv::Mat& disparity, const rclcpp::Time& stamp);
         void publish_odometry(const rclcpp::Time& stamp, const cv::Matx33d& delta_rotation, const cv::Vec3d& delta_translation, double dt_s);
+        bool resolve_output_pose(
+            cv::Matx33d& world_rotation_from_child,
+            cv::Vec3d& world_translation_from_child,
+            cv::Matx33d& child_rotation_from_tracking) const;
 
         std::string left_image_topic_;
         std::string right_image_topic_;
@@ -89,6 +95,7 @@ namespace perseus_vision
         std::string right_camera_info_topic_;
         std::string odom_topic_;
         std::string odom_frame_id_;
+        std::string tracking_frame_id_;
         std::string child_frame_id_;
 
         bool publish_tf_{true};
@@ -137,7 +144,9 @@ namespace perseus_vision
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr left_camera_info_sub_;
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr right_camera_info_sub_;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+        std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
         std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+        std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
         cv::Ptr<cv::CLAHE> clahe_;
         cv::Ptr<cv::StereoBM> stereo_matcher_;
     };
