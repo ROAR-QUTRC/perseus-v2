@@ -140,13 +140,13 @@
 	// use effect to update label and direction while still being able to bind to $state rune
 	$effect(() => {
 		const output: Array<ChannelData> = [];
-		Object.entries(settings.groups).forEach(([key, group]) => {
+		Object.entries(settings.groups).forEach(([key, group], index) => {
 			// next value is dependent on previous value, so untrack to prevent infinite loop
 			untrack(() => {
 				output.push({
 					label: group.label.value || String(CHANNEL_KEY_INDEX_MAP[key]),
 					output: group.output.value === 'true',
-					value: data[CHANNEL_KEY_INDEX_MAP[key]]?.value ?? 0, // preserve slider value if it exists, otherwise default to 0
+					value: data[CHANNEL_KEY_INDEX_MAP[key]]?.value ?? (index === 0 ? 50 : 0), // preserve slider value if it exists, otherwise default to 0
 					inverted: group.inverted.value === 'true',
 					digital: group.digital.value === 'true'
 				});
