@@ -47,7 +47,7 @@ namespace perseus_vision
         marker_length_ = this->declare_parameter<double>("marker_length", 0.35);
         axis_length_ = this->declare_parameter<double>("axis_length", 0.03);
         dictionary_id_ = this->declare_parameter<int>("dictionary_id", 1);
-        camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_link_optical");
+        camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_color_optical_frame");
         tf_output_frame_ = this->declare_parameter<std::string>("tf_output_frame", "odom");
         input_img_ = this->declare_parameter<std::string>("input_img", "/camera/camera/color/image_raw");
         output_img_ = this->declare_parameter<std::string>("output_img", "/perseus_vision/aruco/image");
