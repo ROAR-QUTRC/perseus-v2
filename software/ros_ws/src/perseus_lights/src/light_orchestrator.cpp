@@ -21,7 +21,7 @@ LightStatusOrchestrator::LightStatusOrchestrator(const rclcpp::NodeOptions& opti
         "/plan", 10,
         std::bind(&LightStatusOrchestrator::_path_callback, this, std::placeholders::_1));
 
-    // TODO: CAN subscription for power bus status → yellow
+    // CAN subscription for power bus status → yellow
     try
     {
         _can_interface.emplace(hi_can::RawCanInterface(this->declare_parameter("can_bus", "can0")));

@@ -134,6 +134,19 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
         }.items(),
     )
+    lights_launch = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus_lights"),
+                        "launch",
+                        "lights.launch.py",
+                    ]
+                )
+            ]
+        )
+    )
 
     def launch_payload(context):
         payload = context.perform_substitution(LaunchConfiguration("payload"))
@@ -159,6 +172,7 @@ def generate_launch_description():
         controllers_launch,
         twist_mux_launch,
         rosbridge_launch,
+        lights_launch,
         OpaqueFunction(function=launch_payload),
     ]
 
