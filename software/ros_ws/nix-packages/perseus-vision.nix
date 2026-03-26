@@ -9,6 +9,8 @@
   builtin-interfaces,
   cv-bridge,
   geometry-msgs,
+  message-filters,
+  nav-msgs,
   onnxruntime,
   opencv,
   perseus-interfaces,
@@ -38,6 +40,8 @@ buildRosPackage rec {
     builtin-interfaces
     cv-bridge
     geometry-msgs
+    message-filters
+    nav-msgs
     onnxruntime
     opencv
     perseus-interfaces
