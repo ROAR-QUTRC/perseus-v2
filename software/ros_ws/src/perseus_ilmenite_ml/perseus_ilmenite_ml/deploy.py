@@ -6,7 +6,7 @@ import numpy as np
 import datetime
 
 from model import IlmeniteModel
-from loaderimport compute_ratios, compute_features
+from loader import compute_ratios, compute_features
 
 #configuration
 WEIGHTS_PATH = "ilmenite_model.pth"
