@@ -1,6 +1,5 @@
 final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
-  deployment-mechanism = final.callPackage ./deployment-mechanism.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   kibisis = final.callPackage ./kibisis.nix { };
   kibisis-description = final.callPackage ./kibisis-description.nix { };
