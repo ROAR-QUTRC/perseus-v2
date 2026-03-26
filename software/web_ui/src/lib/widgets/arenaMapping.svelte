@@ -361,6 +361,52 @@
 
 //---------- Map Interaction Helper Functions ----------//
 
+	//Converts the click on the image to the pixle coordinates on the image
+	function clickToNaturalPosition(event: MouseEvent) {
+		if (!imageElement) return null;
+
+		const imageRectangle = imageElement.getBoundingClientRect();
+		const displayX = event.clientX - imageRectangle.left;
+		const displayY = event.clientY - imageRectangle.top;
+
+		const naturalX = Math.round(displayX * (imageElement.naturalWidth / imageRectangle.width));
+		const naturalY = Math.round(displayY * (imageElement.naturalHeight / imageRectangle.height));
+
+		return {
+			x: clamp(naturalX, 0, imageElement.naturalWidth - 1),
+			y: clamp(naturalY, 0, imageElement.naturalHeight - 1)
+		};
+	}
+
+	function clamp(value: number, minimumImageHeight: number, maximumImageHeight: number) {
+		return Math.max(minimumImageHeight, Math.min(maximumImageHeight, value));
+	}
+
+		function drawRotatedRectangle(waypoint: WaypointRow) {
+		const arrowLength = 25;
+
+		// Same convention as YAML: N=0, E=-pi/2, W=+pi/2
+		const t = (-waypoint.yaw * Math.PI) / 180;
+
+		const yawX1Coordinate = waypoint.centroidX;
+		const yawY1Coordinate = waypoint.centroidY;
+		const yawX2Coordinate = yawX1Coordinate + Math.sin(t) * arrowLength;
+		const yawY2Coordinate = yawY1Coordinate - Math.cos(t) * arrowLength;
+
+		return { yawX1Coordinate, yawX2Coordinate, yawY1Coordinate, yawY2Coordinate };
+	}
+
+	// Function to help translate the difference in case variables from the back end to front end
+	function getSampleHex(response: any): string {
+		return String(
+			response?.sampleImageHexValue ??
+			response?.sampleImageHex ??
+			response?.sampleImageHexadecimalColor ??
+			''
+		);
+	}
+
+
 //--------- Mode Management ----------//
 
 	//Waypoint mode instructions
@@ -464,6 +510,8 @@
 
 		const id = generateID();
 
+		const hexadecimalColor = response.sample_image_hex;
+
 		//Adjust click position relative to origin
 		const rel = toRelative(centroidX, centroidY);
 
@@ -473,7 +521,7 @@
 			{
 				id,
 				name: nextWaypointName(),
-				hexadecimalColor: getSampleHex(response.sampleImageHex),
+				hexadecimalColor,
 				clickX,
 				clickY,
 				centroidX,
@@ -710,43 +758,24 @@
 		}
 	}
 
-	
-
-	function clamp(value: number, minimumImageHeight: number, maximumImageHeight: number) {
-		return Math.max(minimumImageHeight, Math.min(maximumImageHeight, value));
-	}
-
-	//Converts the click on the image to the pixle coordinates on the image
-	function clickToNaturalPosition(event: MouseEvent) {
-		if (!imageElement) return null;
-
-		const imageRectangle = imageElement.getBoundingClientRect();
-		const displayX = event.clientX - imageRectangle.left;
-		const displayY = event.clientY - imageRectangle.top;
-
-		const naturalX = Math.round(displayX * (imageElement.naturalWidth / imageRectangle.width));
-		const naturalY = Math.round(displayY * (imageElement.naturalHeight / imageRectangle.height));
-
-		return {
-			x: clamp(naturalX, 0, imageElement.naturalWidth - 1),
-			y: clamp(naturalY, 0, imageElement.naturalHeight - 1)
-		};
+	function optimalViewingDistance() {
+		const n = waypoints.length;
+		waypoints = waypoints.map((waypoint, i) => {
+			console.log("math?")
+			if (i >= n) return waypoint;
+			
+			const heightOfWaypoint = waypoint.height / 1000;
+			const fieldOfView = 58 / 2;
+			const verticalDistanceFromWaypoint = heightOfWaypoint / Math.tan(fieldOfView * (Math.PI/180))
+			const yaw = waypoint.yaw;
+			const optimalY = Math.sin(yaw*(Math.PI/180)) * verticalDistanceFromWaypoint;
+			const optimalX = Math.cos(yaw*(Math.PI/180)) * verticalDistanceFromWaypoint;
+			return { ...waypoint, xAdjustment: optimalX, yAdjustment: optimalY };
+		});
 	}
 
 
-	
-	
-
-
-
-
-
-
-	function ChangeInPointDistance(Point1Position: WaypointPoint, Point2Position: WaypointPoint) {
-		const DistanceBetweenPointsX = Point1Position.xCoordinate - Point2Position.xCoordinate;
-		const DistanceBetweenPointsY = Point1Position.yCoordinate - Point2Position.yCoordinate;
-		return DistanceBetweenPointsX * DistanceBetweenPointsX + DistanceBetweenPointsY * DistanceBetweenPointsY;
-	}
+//---------- Scale Helper Functions ----------//
 
 	function waypointMeters(waypoint: WaypointRow): WaypointPoint {
 		const pixelsPerMeter = Number.isFinite(scale) && scale > 0 ? scale : 1;
@@ -755,6 +784,90 @@
 			yCoordinate: waypoint.relativeY / pixelsPerMeter
 		};
 	}
+
+	//Updates map scale when a value is changed
+	function updateScale() {
+		//Number of grid squares top to bottom in map image
+		const squares = document.getElementById("squares") as HTMLInputElement;
+		//Real world length of grid squares
+		const gridSpacing = document.getElementById("gridSpacing") as HTMLInputElement;
+
+		const nSquares = squares.valueAsNumber;
+		const metersPerSquare = gridSpacing.valueAsNumber;
+
+		if (
+			mapHeight > 0 &&
+			Number.isFinite(nSquares) && nSquares > 0 &&
+			Number.isFinite(metersPerSquare) && metersPerSquare > 0
+		) {
+			//Pixels per meter
+			scale = mapHeight / (nSquares * metersPerSquare);
+			scale = parseFloat(scale.toFixed(6));
+		}
+	}
+	
+
+//---------- JSON Functions ----------//
+
+// Function that sets the file name of the saved file created in buildJson()
+	function saveJsonToScripts() {
+		if (!requestTopic) {
+			statusMessage = 'ROS not connected';
+			return;
+		}
+
+		if (pendingSaveId) {
+			statusMessage = 'Save already in progress';
+			return;
+		}
+
+		const id = generateID();
+		pendingSaveId = id;
+		statusMessage = 'Sending JSON save request…';
+
+		requestTopic.publish({
+			data: JSON.stringify({
+				id,
+				op: 'save_json',
+				file_name: 'Waypoints.json',
+				json_text: jsonPreview
+			})
+		});
+	}
+
+	function buildJson(): string {
+		const ordered = orderWaypointsByPath(waypoints);
+
+		const payload = {
+			waypoints: ordered.map((w) => {
+				const xRelativeCoordinate = w.relativeX / scale;
+				const yRelativeCoordinate = w.relativeY / scale;
+
+				// yaw stored as DEGREES in UI but output yaw in RADIANS for navigation
+				const YawOutputRadians = wrapPi((w.yaw * Math.PI) / 180);
+
+				return {
+					name: w.name,
+					x: roundJsonOutput(xRelativeCoordinate, 3),
+					y: roundJsonOutput(yRelativeCoordinate, 3),
+					yaw: roundJsonOutput(YawOutputRadians, 6)
+				};
+			})
+		};
+
+		return JSON.stringify(payload, null, 2);
+	}
+
+	function roundJsonOutput(n: number, dp: number) {
+		return Number.isFinite(n) ? Number(n.toFixed(dp)) : 0;
+	}
+
+	function wrapPi(rad: number) {
+		return Math.atan2(Math.sin(rad), Math.cos(rad));
+	}
+
+
+//---------- Waypoint Ordering ----------//
 
 	function orderWaypointsByPath(input: WaypointRow[]): WaypointRow[] {
 		const remaining = [...input];
@@ -787,122 +900,12 @@
 		return ordered;
 	}
 
-	function wrapPi(rad: number) {
-		return Math.atan2(Math.sin(rad), Math.cos(rad));
+	function ChangeInPointDistance(Point1Position: WaypointPoint, Point2Position: WaypointPoint) {
+		const DistanceBetweenPointsX = Point1Position.xCoordinate - Point2Position.xCoordinate;
+		const DistanceBetweenPointsY = Point1Position.yCoordinate - Point2Position.yCoordinate;
+		return DistanceBetweenPointsX * DistanceBetweenPointsX + DistanceBetweenPointsY * DistanceBetweenPointsY;
 	}
 
-	function roundJsonOutput(n: number, dp: number) {
-		return Number.isFinite(n) ? Number(n.toFixed(dp)) : 0;
-	}
-
-	function buildJson(): string {
-			const ordered = orderWaypointsByPath(waypoints);
-
-			const payload = {
-			waypoints: ordered.map((w) => {
-				const xRelativeCoordinate = w.relativeX / scale;
-				const yRelativeCoordinate = w.relativeY / scale;
-
-				// yaw stored as DEGREES in UI but output yaw in RADIANS for navigation
-				const YawOutputRadians = wrapPi((w.yaw * Math.PI) / 180);
-
-				return {
-					name: w.name,
-					x: roundJsonOutput(xRelativeCoordinate, 3),
-					y: roundJsonOutput(yRelativeCoordinate, 3),
-					yaw: roundJsonOutput(YawOutputRadians, 6)
-				};
-			})
-	};
-
-	return JSON.stringify(payload, null, 2);
-	}
-
-	function drawRotatedRectangle(waypoint: WaypointRow) {
-		const arrowLength = 25;
-
-		// Same convention as YAML: N=0, E=-pi/2, W=+pi/2
-		const t = (-waypoint.yaw * Math.PI) / 180;
-
-		const yawX1Coordinate = waypoint.centroidX;
-		const yawY1Coordinate = waypoint.centroidY;
-		const yawX2Coordinate = yawX1Coordinate + Math.sin(t) * arrowLength;
-		const yawY2Coordinate = yawY1Coordinate - Math.cos(t) * arrowLength;
-
-		return { yawX1Coordinate, yawX2Coordinate, yawY1Coordinate, yawY2Coordinate };
-	}
-
-	// Function to help translate the difference in case variables from the back end to front end
-	function getSampleHex(response: any): string {
-		return String(
-			response?.sampleImageHexValue ??
-			response?.sampleImageHex ??
-			response?.sampleImageHexadecimalColor ??
-			''
-		);
-	}
-
-	// Function that sets the file name of the saved file created in buildJson()
-	function saveJsonToScripts() {
-		if (!requestTopic) {
-			statusMessage = 'ROS not connected';
-			return;
-		}
-
-		if (pendingSaveId) {
-			statusMessage = 'Save already in progress';
-			return;
-		}
-
-		const id = generateID();
-		pendingSaveId = id;
-		statusMessage = 'Sending JSON save request…';
-
-		requestTopic.publish({
-			data: JSON.stringify({
-				id,
-				op: 'save_json',
-				file_name: 'Waypoints.json',
-				json_text: jsonPreview
-			})
-		});
-	}
-
-
-	function updateScale() {
-		const squares = document.getElementById("squares") as HTMLInputElement;
-		const gridSpacing = document.getElementById("gridSpacing") as HTMLInputElement;
-
-		const nSquares = squares.valueAsNumber;
-		const metersPerSquare = gridSpacing.valueAsNumber;
-
-		if (
-			mapHeight > 0 &&
-			Number.isFinite(nSquares) && nSquares > 0 &&
-			Number.isFinite(metersPerSquare) && metersPerSquare > 0
-		) {
-			// pixels per meter
-			scale = mapHeight / (nSquares * metersPerSquare);
-			scale = parseFloat(scale.toFixed(6));
-		}
-	}
-
-
-	function optimalViewingDistance() {
-		const n = waypoints.length;
-		waypoints = waypoints.map((waypoint, i) => {
-			console.log("math?")
-			if (i >= n) return waypoint;
-			
-			const heightOfWaypoint = waypoint.height / 1000;
-			const fieldOfView = 58 / 2;
-			const verticalDistanceFromWaypoint = heightOfWaypoint / Math.tan(fieldOfView * (Math.PI/180))
-			const yaw = waypoint.yaw;
-			const optimalY = Math.sin(yaw*(Math.PI/180)) * verticalDistanceFromWaypoint;
-			const optimalX = Math.cos(yaw*(Math.PI/180)) * verticalDistanceFromWaypoint;
-			return { ...waypoint, xAdjustment: optimalX, yAdjustment: optimalY };
-		});
-	}
 
 </script>
 <ScrollArea orientation="vertical" class="relative flex h-full w-full">
