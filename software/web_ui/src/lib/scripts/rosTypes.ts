@@ -14,6 +14,10 @@ export interface ActuatorsMessageType {
   normalized: Array<number>; // float64
 }
 
+export interface NumberMessageType {
+  data: number;
+}
+
 // Service types
 export interface EmptyRequestType {}
 
