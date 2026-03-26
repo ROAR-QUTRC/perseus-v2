@@ -1,0 +1,101 @@
+import os
+import json
+import numpy as np
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+ 
+from modelRatioAndMagnitude import IlmeniteModel
+from loaderRatioAndMagnitude import IlmeniteDataLoader, compute_ratios
+
+WEIGHTS_PATH = "ilmenite_model.pth"
+SCALER_PATH  = "ilmenite_scaler.json"
+ 
+# All known concentration levels
+CLASS_LABELS = [0.0, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15, 0.175]
+ 
+PATH  = "~/perseus-v2/software/machine_learning/data/"
+data_dir = os.environ.get("ROAR_DATA_DIR", os.path.expanduser(PATH))
+ 
+ 
+
+#loading model and scaler
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+ 
+net = IlmeniteModel().to(device)
+net.load_state_dict(torch.load(WEIGHTS_PATH, map_location=device))
+net.eval()
+print(f"Model loaded from: {WEIGHTS_PATH}")
+ 
+with open(SCALER_PATH, "r") as f:
+    scaler = json.load(f)
+scaler_mean = np.array(scaler["mean"])
+scaler_std  = np.array(scaler["std"])
+print(f"Scaler loaded from: {SCALER_PATH}")
+ 
+ 
+
+#loading in dataset
+def collate_fn(batch):
+    data   = torch.tensor([item[0] for item in batch], dtype=torch.float32)
+    labels = torch.tensor([item[1] for item in batch], dtype=torch.float32)
+    return data, labels
+ 
+dataset = IlmeniteDataLoader(data_dir, "test_1")
+loader  = DataLoader(dataset, batch_size=1, shuffle=False, collate_fn=collate_fn)
+print(f"Evaluating on {len(dataset)} samples\n")
+ 
+ 
+
+#predictions
+def snap_to_nearest(value, levels):
+    """Round a continuous prediction to the nearest known concentration level."""
+    return min(levels, key=lambda x: abs(x - value))
+ 
+actual    = []
+predicted = []
+ 
+with torch.no_grad():
+    for data, labels in loader:
+        data   = data.to(device)
+        output = net(data).item()
+ 
+        # Snap prediction to nearest class label
+        pred_class   = snap_to_nearest(output, CLASS_LABELS)
+        actual_class = snap_to_nearest(labels.item(), CLASS_LABELS)
+ 
+        actual.append(actual_class)
+        predicted.append(pred_class)
+ 
+ 
+#accuracy
+correct = sum(a == p for a, p in zip(actual, predicted))
+total   = len(actual)
+print(f"Overall accuracy: {100 * correct / total:.1f}% ({correct}/{total})")
+ 
+#per-class accuracy
+print("\nPer-class accuracy:")
+for cls in CLASS_LABELS:
+    cls_actual    = [a for a in actual if a == cls]
+    cls_correct   = sum(a == p for a, p in zip(actual, predicted) if a == cls)
+    if len(cls_actual) > 0:
+        acc = 100 * cls_correct / len(cls_actual)
+        print(f"  Concentration {cls:.3f}: {acc:.1f}%  ({cls_correct}/{len(cls_actual)})")
+ 
+ 
+#confusion matrix
+print("\nConfusion Matrix (rows = actual, cols = predicted):")
+print(f"{'':>6}", end="")
+for cls in CLASS_LABELS:
+    print(f"  {cls:.2f}", end="")
+print()
+ 
+for actual_cls in CLASS_LABELS:
+    print(f"{actual_cls:.2f}  ", end="")
+    for pred_cls in CLASS_LABELS:
+        count = sum(1 for a, p in zip(actual, predicted) if a == actual_cls and p == pred_cls)
+        print(f"  {count:>4}", end="")
+    print()
+ 
+print("\nRows = actual concentration | Cols = predicted concentration")
+print("Diagonal = correct predictions")
