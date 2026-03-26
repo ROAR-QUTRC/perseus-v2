@@ -2,10 +2,10 @@
 
 #include <hi_can_raw.hpp>
 #include <nav_msgs/msg/path.hpp>
+#include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include <std_msgs/msg/int8.hpp>
-#include <optional>
 
 #include "perseus_lights/light_driver.hpp"  // for ring::commands
 
@@ -34,7 +34,7 @@ private:
 
     // --- CAN --- Callback ---
     rclcpp::TimerBase::SharedPtr _packet_timer;
-    constexpr static auto PACKET_HANLDE_MS = std::chrono::milliseconds(100);
+    constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(100);
     void _handle_can();
 
     // --- Publisher ---
