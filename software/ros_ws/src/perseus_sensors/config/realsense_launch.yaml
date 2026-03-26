@@ -5,14 +5,12 @@ initial_reset: false
 accelerate_gpu_with_glsl: false
 log_level: info
 output: screen
-
 # Color stream settings.
 # Lightweight profile to reduce bandwidth and CPU load.
 enable_color: true
 rgb_camera.color_profile: 424,240,15
 rgb_camera.color_format: RGB8
 rgb_camera.enable_auto_exposure: true
-
 # Depth and infrared stream settings.
 # Only depth is enabled; infrared streams stay off.
 enable_depth: true
@@ -35,7 +33,6 @@ depth_module.exposure.1: 7500
 depth_module.gain.1: 16
 depth_module.exposure.2: 1
 depth_module.gain.2: 16
-
 # Synchronization and IMU publication.
 # Keeps color and depth timestamps aligned while leaving IMU outputs off.
 enable_sync: true
@@ -47,17 +44,14 @@ gyro_fps: 0
 enable_motion: false
 accel_fps: 0
 unite_imu_method: 0
-
 # Sensor clipping and covariance values.
 clip_distance: -2.0
 angular_velocity_cov: 0.01
 linear_accel_cov: 0.01
-
 # TF and diagnostics publication.
 diagnostics_period: 0.0
 publish_tf: true
 tf_publish_rate: 0.0
-
 # Point cloud generation options.
 # Disabled for a minimal camera-only setup.
 pointcloud.enable: false
@@ -65,7 +59,6 @@ pointcloud.stream_filter: 2
 pointcloud.stream_index_filter: 0
 pointcloud.ordered_pc: false
 pointcloud.allow_no_texture_points: false
-
 # Post-processing filters applied by the RealSense driver.
 # Align depth to the RGB camera frame so pixels match the color image.
 align_depth.enable: true
@@ -79,22 +72,17 @@ temporal_filter.enable: false
 disparity_filter.enable: false
 hole_filling_filter.enable: false
 hdr_merge.enable: false
-
 # Device connection and reconnection timing.
 wait_for_device_timeout: -1.0
 reconnect_timeout: 6.0
-
 # Root frame naming.
 base_frame_id: link
 tf_prefix: ""
-
 # Safety camera stream options for supported devices.
 enable_safety: false
 safety_camera.safety_mode: 0
-
 # Additional depth-mapping outputs for supported devices.
 enable_labeled_point_cloud: false
 depth_mapping_camera.labeled_point_cloud_profile: 0,0,0
-
 enable_occupancy: false
 depth_mapping_camera.occupancy_profile: 0,0,0
