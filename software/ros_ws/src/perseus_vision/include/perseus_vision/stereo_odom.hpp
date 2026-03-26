@@ -137,6 +137,9 @@ namespace perseus_vision
 
         cv::Matx33d world_rotation_from_camera_ = cv::Matx33d::eye();
         cv::Vec3d world_translation_from_camera_{0.0, 0.0, 0.0};
+        bool has_initial_output_pose_{false};
+        cv::Matx33d initial_output_rotation_ = cv::Matx33d::eye();
+        cv::Vec3d initial_output_translation_{0.0, 0.0, 0.0};
 
         ImageSubscriber left_image_sub_;
         ImageSubscriber right_image_sub_;

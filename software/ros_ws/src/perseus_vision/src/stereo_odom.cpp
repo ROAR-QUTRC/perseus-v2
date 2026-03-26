@@ -526,6 +526,19 @@ namespace perseus_vision
             return;
         }
 
+        if (!has_initial_output_pose_)
+        {
+            initial_output_rotation_ = world_rotation_from_child;
+            initial_output_translation_ = world_translation_from_child;
+            has_initial_output_pose_ = true;
+        }
+
+        // Normalize the published odom frame so the chosen child frame starts
+        // at identity when stereo odom first acquires a usable pose estimate.
+        world_rotation_from_child = initial_output_rotation_.t() * world_rotation_from_child;
+        world_translation_from_child =
+            initial_output_rotation_.t() * (world_translation_from_child - initial_output_translation_);
+
         tf2::Matrix3x3 child_rotation_matrix(
             world_rotation_from_child(0, 0),
             world_rotation_from_child(0, 1),
