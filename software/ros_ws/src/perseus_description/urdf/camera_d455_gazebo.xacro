@@ -22,7 +22,7 @@
             <far>100</far>
           </clip>
         </camera>
-        <topic>/camera/camera/color/image_raw</topic>
+        <topic>/${name}/${name}/color/image_raw</topic>
         <gz_frame_id>${name}_color_optical_frame</gz_frame_id>
       </sensor>
     </gazebo>
@@ -45,7 +45,7 @@
             <far>10.0</far>
           </clip>
         </camera>
-        <topic>/camera/camera/depth</topic>
+        <topic>/${name}/${name}/depth</topic>
         <gz_frame_id>${name}_depth_optical_frame</gz_frame_id>
         <min_depth>0.05</min_depth>
         <max_depth>10.0</max_depth>
@@ -71,7 +71,7 @@
             <far>100</far>
           </clip>
         </camera>
-        <topic>/camera/camera/infra1/image_raw</topic>
+        <topic>/${name}/${name}/infra1/image_raw</topic>
         <gz_frame_id>${name}_infra1_optical_frame</gz_frame_id>
       </sensor>
     </gazebo>
@@ -95,7 +95,7 @@
             <far>100</far>
           </clip>
         </camera>
-        <topic>/camera/camera/infra2/image_raw</topic>
+        <topic>/${name}/${name}/infra2/image_raw</topic>
         <gz_frame_id>${name}_infra2_optical_frame</gz_frame_id>
       </sensor>
     </gazebo>
