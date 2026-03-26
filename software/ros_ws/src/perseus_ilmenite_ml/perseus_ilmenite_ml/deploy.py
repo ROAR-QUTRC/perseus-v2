@@ -6,7 +6,7 @@ import numpy as np
 import datetime
 
 from perseus_ilmenite_ml.model import IlmeniteModel
-from perseus_ilmenite_ml.loader import compute_ratios
+from perseus_ilmenite_ml.loader import compute_features
 from rosidl_runtime_py import message_to_ordereddict
 
 
