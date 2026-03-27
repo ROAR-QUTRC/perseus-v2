@@ -18,7 +18,7 @@ def generate_launch_description():
     declare_ekf_config = DeclareLaunchArgument(
         "ekf_config",
         default_value=PathJoinSubstitution(
-            [FindPackageShare("autonomy"), "config", "ekf_config_stereo_odom.yaml"]
+            [FindPackageShare("autonomy"), "config", "ekf_config_fast_lio_core.yaml"]
         ),
         description="Full path to the ROS2 parameters file for EKF",
     )

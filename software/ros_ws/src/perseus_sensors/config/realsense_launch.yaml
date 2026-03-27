@@ -26,10 +26,10 @@ depth_module.infra1_format: Y8
 depth_module.infra2_format: Y8
 depth_module.color_profile: 0,0,0
 depth_module.color_format: RGB8
-depth_module.exposure: 8500
-depth_module.gain: 16
 depth_module.hdr_enabled: false
-depth_module.enable_auto_exposure: true
+depth_module.enable_auto_exposure: false   # lock it down — auto-exposure thrashes in sun
+depth_module.exposure: 50                 # drop dramatically from 8500; tune from here
+depth_module.gain: 16                      # keep low to avoid amplifying noise
 depth_module.exposure.1: 7500
 depth_module.gain.1: 16
 depth_module.exposure.2: 1
