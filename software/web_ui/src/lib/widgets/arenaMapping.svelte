@@ -93,7 +93,7 @@
 	let imageElement: HTMLImageElement | null = null;
 
 	//File name of current map
-	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_5.png'
+	const mapImageId = 'Cropped_ARCH_2025_Autonomous_map_2.png'
 
 	//ROS topics to subscribe and publish to
 	const requestTopicName = '/map_editor/request';
@@ -142,7 +142,8 @@
 	let yOriginAverage = $state(0);
 
 	//Bind the next arrow click to the waypoint that was just added
-	let pendingYawWaypointId: string | null = null;
+	let pendingYawWaypointId: string = "";
+	let pendingYawArrowId: string | "";
 
 	//ID of last waypoint
 	let lastID = $state('');
@@ -253,7 +254,7 @@
 			//If reading in a waypoint's arrow
 			} else {
 				//Create arrow object
-				const arrow = addAngleFromResponse(response);
+				addAngleFromResponse(response);
 
 				statusMessage = centroid
 					? `Arrow added — centroid (${centroid[0]}, ${centroid[1]}) ${sampleImageHexadecimalColor}`
@@ -261,10 +262,13 @@
 
 				waypointToggle = 0;
 
-				if (pendingYawWaypointId && arrow) {
-					applyArrowYawToWaypoint(pendingYawWaypointId, arrow);
-					pendingYawWaypointId = null;
-				}
+				console.log(pendingYawWaypointId);
+				console.log(pendingYawArrowId);
+
+				applyArrowYawToWaypoint(pendingYawWaypointId, pendingYawArrowId);
+
+				pendingYawWaypointId = "";
+				pendingYawArrowId = "";
 
 				//Wait before displaying next-step instruction for user
 				setTimeout(() => {
@@ -342,7 +346,7 @@
 		requestTopic.publish({
 			data: JSON.stringify({ id, ...request })
 		});
-		console.log(JSON.stringify({ id, ...request }))
+
 	}
 
 //---------- Map Interaction Helper Functions ----------//
@@ -497,7 +501,6 @@
 		const id = generateID();
 
 		const hexadecimalColor = response.sampleHex;
-		console.log(hexadecimalColor);
 
 		//Adjust click position relative to origin
 		const rel = toRelative(centroidX, centroidY);
@@ -608,11 +611,15 @@
 			return;
 		};
 
+		const id = generateID();
+
+		console.log(id);
+
 		//Add new arrow after exisitng origin point objects
 		arrows = [
 			... arrows,
 			{
-			id: generateID(),
+			id,
 			name: nextArrowName(),
 			hexadecimalColor: String(response.sampleImageHexValue ?? ''),
 			clickX,
@@ -621,6 +628,8 @@
 			centroidY
 			}
 		]
+
+		pendingYawArrowId = id;
 	}
 
 	function deleteWaypoint(id: string) {
@@ -643,15 +652,23 @@
 // ---------- Yaw Helper Functions ----------//
 
 	//Use corresponding arrow to add angle of approach to waypoint
-	function applyArrowYawToWaypoint(waypointId: string, arrow: ArrowRow) {
+	function applyArrowYawToWaypoint(waypointId: string, arrowId: string) {
+		console.log(waypoints);
 		const wp = waypoints.find((w) => w.id === waypointId);
+		console.log(wp)
 		if (!wp) return;
 
-		const dx = arrow.centroidX - wp.centroidX; // +right
-		const dy = arrow.centroidY - wp.centroidY; // +down
+		const ar = arrows.find((a) => a.id === arrowId);
+		console.log(ar)
+		if (!ar) return;
+
+		const dx = ar.centroidX - wp.centroidX; // +right
+		const dy = ar.centroidY - wp.centroidY; // +down
 
 		// 0=N, 90=W, 180=S, 270=E
 		const yawDeg = ((Math.atan2(-dx, -dy) * 180) / Math.PI + 360) % 360;
+
+		console.log(yawDeg)
 
 		waypoints = waypoints.map((w) => (w.id === waypointId ? { ...w, yaw: yawDeg } : w));
 	}
@@ -748,9 +765,7 @@
 	function optimalViewingDistance() {
 		const n = waypoints.length;
 		waypoints = waypoints.map((waypoint, i) => {
-			console.log("math?")
 			if (i >= n) return waypoint;
-			
 			const heightOfWaypoint = waypoint.height / 1000;
 			const fieldOfView = 58 / 2;
 			const verticalDistanceFromWaypoint = heightOfWaypoint / Math.tan(fieldOfView * (Math.PI/180))
@@ -813,7 +828,6 @@
 		statusMessage = 'Sending JSON save request…';
 
 		jsonPreview = buildJson();
-		console.log(jsonPreview);
 
 		requestTopic.publish({
 			data: JSON.stringify({
