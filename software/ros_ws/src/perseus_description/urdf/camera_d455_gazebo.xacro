@@ -4,8 +4,7 @@
   <xacro:macro name="camera_d455_gazebo" params="name:=camera">
 
     <gazebo reference="${name}_color_frame">
-      <material>Gazebo/Red</material>
-      <sensor name="rgb_camera" type="camera">
+      <sensor name="rgbd_camera" type="rgbd_camera">
         <pose>0 0 0 0 0 0</pose>
         <visualize>true</visualize>
         <update_rate>30</update_rate>
@@ -15,21 +14,20 @@
           <image>
             <width>640</width>
             <height>480</height>
-            <format>R8G8B8</format>
           </image>
           <clip>
             <near>0.05</near>
-            <far>100</far>
+            <far>10.0</far>
           </clip>
         </camera>
-        <topic>/camera/camera/color/image_raw</topic>
+        <topic>/${name}/${name}/color</topic>
         <gz_frame_id>${name}_color_optical_frame</gz_frame_id>
       </sensor>
     </gazebo>
 
     <!-- Depth Camera -->
     <gazebo reference="${name}_depth_frame">
-      <sensor name="rgbd_camera" type="rgbd_camera">
+      <sensor name="depth_camera" type="depth_camera">
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
         <update_rate>30</update_rate>
@@ -45,15 +43,14 @@
             <far>10.0</far>
           </clip>
         </camera>
-        <topic>/camera/camera/depth</topic>
+        <topic>/${name}/${name}/depth</topic>
         <gz_frame_id>${name}_depth_optical_frame</gz_frame_id>
-        <min_depth>0.05</min_depth>
-        <max_depth>10.0</max_depth>
       </sensor>
     </gazebo>
 
+
     <!-- Left IR Camera -->
-    <gazebo reference="${name}_infra1_optical_frame">
+    <gazebo reference="${name}_infra1_frame">
       <sensor name="ir_left_camera" type="camera">
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
@@ -64,20 +61,20 @@
           <image>
             <width>640</width>
             <height>480</height>
-            <!-- <format>L_INT8</format> -->
+            <format>L_INT8</format>
           </image>
           <clip>
             <near>0.05</near>
-            <far>50</far>
+            <far>100</far>
           </clip>
         </camera>
-        <topic>/camera/camera/infra1/image_raw</topic>
+        <topic>/${name}/${name}/infra1/image_raw</topic>
         <gz_frame_id>${name}_infra1_optical_frame</gz_frame_id>
       </sensor>
     </gazebo>
 
     <!-- Right IR Camera -->
-    <gazebo reference="${name}_infra2_optical_frame">
+    <gazebo reference="${name}_infra2_frame">
       <sensor name="ir_right_camera" type="camera">
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
@@ -88,14 +85,14 @@
           <image>
             <width>640</width>
             <height>480</height>
-            <!-- <format>L_INT8</format> -->
+            <format>L_INT8</format>
           </image>
           <clip>
             <near>0.05</near>
-            <far>50</far>
+            <far>100</far>
           </clip>
         </camera>
-        <topic>/camera/camera/infra2/image_raw</topic>
+        <topic>/${name}/${name}/infra2/image_raw</topic>
         <gz_frame_id>${name}_infra2_optical_frame</gz_frame_id>
       </sensor>
     </gazebo>

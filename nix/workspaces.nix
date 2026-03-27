@@ -166,6 +166,7 @@ in
       export NVCC_PREPEND_FLAGS="-ccbin ${pkgs.gcc}/bin"
       # ONNX Runtime with CUDA support
       export ORT_LIB_LOCATION="${cudaPkgs.onnxruntime-cuda}/lib"
+      export LD_LIBRARY_PATH="${cudaPkgs.onnxruntime-cuda}/lib:$LD_LIBRARY_PATH"
     '';
   };
 }
