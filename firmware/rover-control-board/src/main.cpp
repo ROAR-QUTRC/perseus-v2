@@ -7,7 +7,6 @@
 #include <freertos/timers.h>
 
 // standard libraries
-#include <chrono>
 #include <cstdio>
 #include <optional>
 #include <string>
@@ -42,8 +41,6 @@ void loop(void* args);
 
 using namespace hi_can;
 using namespace hi_can::addressing;
-using namespace std::chrono;
-using namespace std::chrono_literals;
 
 std::optional<PacketManager> packet_manager = std::nullopt;
 std::vector<TwaiPowerBusParameterGroup> parameter_groups;
@@ -67,20 +64,14 @@ RoverPowerBus aux_bus(hi_can::addressing::power::distribution::rover_control_boa
                       static_cast<gpio_num_t>(ROVER_PIN::A8), static_cast<gpio_num_t>(ROVER_PIN::A7),
                       AUX_VOLTAGE_DIVIDER_HIGH_RESISTOR, AUX_VOLTAGE_DIVIDER_LOW_RESISTOR, AUX_CURRENT_SENSE_RESISTOR);
 
-const std::vector<std::tuple<std::string, power::distribution::rover_control_board::group, RoverPowerBus&>> BUS_GROUPS = {
-    {"compute", power::distribution::rover_control_board::group::COMPUTE_BUS, compute_bus},
-    {"drive", power::distribution::rover_control_board::group::DRIVE_BUS, drive_bus},
-    {"aux", power::distribution::rover_control_board::group::AUX_BUS, aux_bus},
-    {"spare", power::distribution::rover_control_board::group::SPARE_BUS, spare_bus},
+const std::vector<std::pair<std::string, RoverPowerBus&>> BUS_GROUPS = {
+    {"compute", compute_bus},
+    {"drive", drive_bus},
+    {"aux", aux_bus},
+    {"spare", spare_bus},
 };
 
 bool btnState = true;
-
-constexpr standard_address_t RCB_DEVICE_ADDRESS{
-    power::SYSTEM_ID,
-    power::distribution::SUBSYSTEM_ID,
-    power::distribution::rover_control_board::DEVICE_ID,
-};
 
 IoDebouncedButton power_button(static_cast<gpio_num_t>(ROVER_PIN::A9), GPIO_FLOATING, true);
 
@@ -130,15 +121,11 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
         printf("Error \"%s\" while reserving space for parameter groups", e.what());
         return;
     }
-    for (const auto& [name, id, power_bus] : BUS_GROUPS)
+    for (const auto& [name, power_bus] : BUS_GROUPS)
     {
         try
         {
-            parameter_groups.emplace_back(power_bus.get_parameter_group());
-            packet_manager->add_group(parameter_groups.back());
-            packet_manager->set_transmission_config(
-                flagged_address_t(standard_address_t(RCB_DEVICE_ADDRESS, static_cast<uint8_t>(id), static_cast<uint8_t>(hi_can::addressing::power::distribution::rover_control_board::power_bus::parameter::POWER_STATUS))),
-                power_bus.get_transmission_config());
+            packet_manager->add_group(power_bus.get_parameter_group());
         }
         catch (const std::exception& error)
         {
@@ -151,7 +138,7 @@ extern "C" void app_main()  // entry point - ESP-IDF expects C linkage
 
     packet_manager->set_callback(
         filter_t{static_cast<flagged_address_t>(
-            standard_address_t{power::distribution::rover_control_board::DEVICE_ID,
+            standard_address_t{RCB_DEVICE_ADDRESS,
                                static_cast<uint8_t>(power::distribution::rover_control_board::group::CONTACTOR),
                                static_cast<uint8_t>(power::distribution::rover_control_board::contactor::parameter::SHUTDOWN)})},
         PacketManager::callback_config_t{

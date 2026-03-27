@@ -5,6 +5,12 @@
 #include "rover_thread.hpp"
 #include "sdkconfig.h"
 
+constexpr hi_can::addressing::standard_address_t RCB_DEVICE_ADDRESS{
+    hi_can::addressing::power::SYSTEM_ID,
+    hi_can::addressing::power::distribution::SUBSYSTEM_ID,
+    hi_can::addressing::power::distribution::rover_control_board::DEVICE_ID,
+};
+
 class TwaiPowerBusParameterGroup : public hi_can::parameters::ParameterGroup
 {
 public:

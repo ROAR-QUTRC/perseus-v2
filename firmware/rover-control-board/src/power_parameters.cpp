@@ -4,6 +4,7 @@
 
 #include "rover_core.hpp"
 
+using namespace std::chrono_literals;
 using namespace hi_can;
 using namespace hi_can::addressing;
 
@@ -60,6 +61,14 @@ TwaiPowerBusParameterGroup::TwaiPowerBusParameterGroup(addressing::power::distri
                 memcpy(&_currentLimit, (packet.get_data().data()), sizeof(uint32_t));
             },
         });
+    _transmissions.emplace_back(
+        flagged_address_t(standard_address_t(RCB_DEVICE_ADDRESS, static_cast<uint8_t>(bus), static_cast<uint8_t>(hi_can::addressing::power::distribution::rover_control_board::power_bus::parameter::POWER_STATUS))),
+        PacketManager::transmission_config_t{
+            .generator = [this](void)
+            {
+                return _currentStatus.serialize_data();
+            },
+            .interval = 100ms});
     _busStateHandler = busStateHandler;
     // Timer for scheduled control
     _oneSecondTimer = timer_create(_oneSecondTimerCallback,

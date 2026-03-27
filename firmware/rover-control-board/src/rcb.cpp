@@ -62,13 +62,6 @@ RoverPowerBus::RoverPowerBus(hi_can::addressing::power::distribution::rover_cont
     gptimer_set_alarm_action(_timer, &_precharge_off_config);
     gptimer_enable(_timer);
 
-    _status_transmission_config = {
-        .generator = [&](void)
-        {
-            return _can_parameters.get_status().serialize_data();
-        },
-        .interval = std::chrono::nanoseconds(100000000)};  // 100 milliseconds
-
     _can_parameters.set_bus_status(power_status::OFF);
     _can_parameters.set_bus_voltage(0);
     _can_parameters.set_bus_current(0);
