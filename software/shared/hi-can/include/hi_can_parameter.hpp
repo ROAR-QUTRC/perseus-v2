@@ -284,14 +284,11 @@ namespace hi_can::parameters
         namespace bms
         {
 #pragma pack(push, 1)
-            struct _bms_information  // These are all transmitted from the BMS in big-endian, but converted to little-endian in the ESP32 firmware
+            struct _bms_status  // These are all transmitted from the BMS in big-endian, but converted to little-endian in the ESP32 firmware
             {
                 uint16_t voltage;                          // 10mV
                 int16_t current;                           // 10mA
                 uint16_t current_capacity;                 // 10mAh
-                uint16_t nominal_capacity;                 // 10mAh
-                uint16_t cycles;                           // I'm guessing number of charge cycles of the batteries?
-                uint32_t balance_status;                   // Whether each cell is being balanced (1) or not (0) - bit by bit
                 enum class protection_status_t : uint16_t  // Bitwise OR of each of the following statuses
                 {
                     CELL_OVER_VOLTAGE = 1 << 0,
@@ -309,16 +306,6 @@ namespace hi_can::parameters
                     MOSFET_LOCK = 1 << 12,
                 };
                 protection_status_t protection_status;
-                uint8_t percent_remaining;            // current_capacity/nominal_capacity as a percent
-                enum class mosfet_status_t : uint8_t  // Whether the charging (bit 0) and discharging (bit 1) mosfets are on (1) or off (0)
-                {
-                    CHARGING = 1 << 0,
-                    DISCHARGING = 1 << 1,
-                };
-                mosfet_status_t mosfet_status;
-                uint8_t amount_of_cells;             // The number of cells in series
-                uint8_t amount_of_NTCs;              // The number of NTC temperature sensors
-                std::vector<uint16_t> temperatures;  // The temperature of each NTC sensor, 0.1 Kelvin
             };
             struct _mosfet_control
             {
@@ -332,7 +319,8 @@ namespace hi_can::parameters
                 control_command_t control_command;
             };
 #pragma pack(pop)
-            typedef SimpleSerializable<_bms_information> bms_information_t;
+            typedef SimpleSerializable<_bms_status> bms_information_t;
+            typedef SimpleSerializable<std::vector<uint16_t>> bms_temperature_t;  // The temperature of each NTC sensor, 0.1 Kelvin
             typedef SimpleSerializable<std::vector<uint16_t>> cell_voltage_t;
             typedef SimpleSerializable<_mosfet_control> mosfet_control_t;
         }
