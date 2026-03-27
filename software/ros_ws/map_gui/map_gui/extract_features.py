@@ -94,6 +94,8 @@ class ExtractFeatures(Node):
         )
         self.response_publisher = self.create_publisher(String, RESPONSE_TOPIC_NAME, 10)
 
+        self.get_logger().info("Extract Features Ready")
+
     def reply(self, request_id: str, payload: dict[str, Any]):
         payload["id"] = request_id
         self.response_publisher.publish(String(data=json.dumps(payload)))
@@ -107,6 +109,7 @@ class ExtractFeatures(Node):
 
     def SaveJson(self, request_id: str, request: dict):
         json_text = request.get("json_text", "")
+
         file_name = self.SaveJsonFileName(request.get("file_name", "waypoints.json"))
         file_path = os.path.expanduser(
             f"~/perseus-v2/software/web_ui/static/{file_name}"
@@ -301,7 +304,6 @@ class ExtractFeatures(Node):
                         "message": "No suitable contour near click",
                         "sampleXPosition": x_pos,
                         "sampleYPosition": y_pos,
-                        "sampleHex": sampleHexadecimalColor,
                         "sample_image_hex": sampleHexadecimalColor,
                     },
                 )

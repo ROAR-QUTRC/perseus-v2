@@ -13,7 +13,7 @@ buildRosPackage rec {
   pname = "ros-jazzy-map-gui";
   version = "0.0.0";
 
-  src = ./../src/map_gui;
+  src = ./../map_gui;
 
   buildType = "ament_python";
   checkInputs = [

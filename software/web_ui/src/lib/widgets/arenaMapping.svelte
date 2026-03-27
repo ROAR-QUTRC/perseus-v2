@@ -173,40 +173,26 @@
 		const rosConnection = getRosConnection();
 
 		//Clean up any previous subscription/topic first
-		if (responseTopic) {
-			try {
-				responseTopic.unsubscribe(onResponseMessage);
-			} catch {}
-			responseTopic = null;
+		if (rosConnection) {
+			requestTopic = new ROSLIB.Topic({
+				ros: rosConnection,
+				name: requestTopicName,
+				messageType: 'std_msgs/msg/String'
+			});
+
+			responseTopic = new ROSLIB.Topic({
+				ros: rosConnection,
+				name: responseTopicName,
+				messageType: 'std_msgs/msg/String'
+			});
+
+			responseTopic.subscribe(onResponseMessage);
 		}
-
-		if (!rosConnection || !rosConnection.isConnected) {
-			return;
-		}
-
-		requestTopic = new ROSLIB.Topic({
-			ros: rosConnection,
-			name: requestTopicName,
-			messageType: 'std_msgs/msg/String'
-		});
-
-		responseTopic = new ROSLIB.Topic({
-			ros: rosConnection,
-			name: responseTopicName,
-			messageType: 'std_msgs/msg/String'
-		});
-
-		responseTopic.subscribe(onResponseMessage);
-
-		return () => {
-			if (responseTopic) {
-				try {
-					responseTopic.unsubscribe(onResponseMessage);
-				} catch {}
-				responseTopic = null;
-			}
+		else {
+			responseTopic?.unsubscribe;
 			requestTopic = null;
-		};
+		}
+
 	});
 
 	//Handle response message from ExtractFeatures node
@@ -322,7 +308,6 @@
 			addManualOrigin(clickPosition);
 			return;
 		}
-
 			
 		contour = [];
 		centroid = null;
@@ -330,11 +315,11 @@
 
 		statusMessage = `${mode} @ (${clickPosition.x}, ${clickPosition.y})…`;
 
-		const extractionMode = mode === 'waypoint' ? 'border' : mode;
+		//const extractionMode = mode === 'waypoint' ? 'border' : mode;
 
 		const request = {
 			op: 'extract_feature',
-			mode: extractionMode,
+			mode: mode,
 			imageID: mapImageId,
 			sampleXPosition: clickPosition.x,
 			sampleYPosition: clickPosition.y,
@@ -344,7 +329,7 @@
 			xOriginDirectionection: xOriginDirection,
 			yOriginDirectionection: yOriginDirection
 		};
-
+		
 		const id = generateID();
 
 		if (!requestTopic) {
@@ -357,6 +342,7 @@
 		requestTopic.publish({
 			data: JSON.stringify({ id, ...request })
 		});
+		console.log(JSON.stringify({ id, ...request }))
 	}
 
 //---------- Map Interaction Helper Functions ----------//
@@ -510,7 +496,8 @@
 
 		const id = generateID();
 
-		const hexadecimalColor = response.sample_image_hex;
+		const hexadecimalColor = response.sampleHex;
+		console.log(hexadecimalColor);
 
 		//Adjust click position relative to origin
 		const rel = toRelative(centroidX, centroidY);
@@ -825,11 +812,14 @@
 		pendingSaveId = id;
 		statusMessage = 'Sending JSON save request…';
 
+		jsonPreview = buildJson();
+		console.log(jsonPreview);
+
 		requestTopic.publish({
 			data: JSON.stringify({
 				id,
 				op: 'save_json',
-				file_name: 'Waypoints.json',
+				file_name: 'waypoints.json',
 				json_text: jsonPreview
 			})
 		});
@@ -1128,14 +1118,7 @@
 						{#each waypoints as waypoint, i (waypoint.id)}
 							<tr>
 								<td>{i + 1}</td>
-								<td>
-									<input
-										class="nameInput"
-										value={waypoint.name}
-										oninput={(event) =>
-											updateName(waypoint.id, (event.target as HTMLInputElement).value)}
-									/>
-								</td>
+								<td>{waypoint.name}</td>
 								<td>
 									<span class="chip" style={`background:${waypoint.hexadecimalColor || '#eee'}`}>
 										{waypoint.hexadecimalColor}
