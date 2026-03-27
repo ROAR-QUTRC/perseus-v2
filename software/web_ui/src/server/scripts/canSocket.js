@@ -114,9 +114,9 @@ export function startCanDump(iface) {
   const proc = spawn("candump", [iface]);
 
   let leftover = "";
-  
-  proc.on('error', (err) => {
-    console.error('Failed to start candump:', err.message);
+
+  proc.on("error", (err) => {
+    console.error("Failed to start candump:", err.message);
   });
 
   proc.stdout.on("data", (data) => {
@@ -137,16 +137,18 @@ export function startCanDump(iface) {
 
       buffer.push(parsed);
 
-        // avoid memory overflow
-        if (buffer.length > MAX_BUFFER) {
-          buffer.shift();
-        }
+      // avoid memory overflow
+      if (buffer.length > MAX_BUFFER) {
+        buffer.shift();
+      }
     }
   });
 
   proc.stderr.on("data", (d) => {
     if (d.toString().includes("SIOCGIFINDEX: No such device")) {
-      console.error(`Failed to start candump: can bus "${canBus}" cannot be found or is incorrect`);
+      console.error(
+        `Failed to start candump: can bus "${canBus}" cannot be found or is incorrect`,
+      );
     } else {
       console.error("STDERR:", d.toString());
     }
