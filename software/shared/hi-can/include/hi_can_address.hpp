@@ -407,7 +407,7 @@ namespace hi_can
                         SPEED = 0x00,
                         POSITION = 0x01,
                     };
-                    enum class magnet_parameter
+                    enum class magnet_parameter : uint8_t
                     {
                         ROTATE_SPEED = 0x00,
                         ROTATE_POSITION = 0x01,

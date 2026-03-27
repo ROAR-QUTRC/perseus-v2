@@ -38,6 +38,7 @@ static constexpr uint32_t PWM_FREQ = 1500;  // Hz
 static constexpr uint32_t PWM_DEADBAND = 2;                              // 2 PWM steps of enforced deadband to reset cycle-by-cycle current chopping
 static constexpr uint32_t PWM_MAX = (1 << PWM_BITS) - 1 - PWM_DEADBAND;  // 4095
 
+
 class MotorDriver
 {
 public:
@@ -256,6 +257,7 @@ void set_motor_current(const excavation::bucket::controller::group& group,
                        const uint16_t& current);
 void register_motor_bank(const excavation::bucket::controller::group& group,
                          const uint8_t& speed_param);
+void handle_magnet_enable_data(const Packet& packet);
 
 std::optional<MotorBank> motor_bank_1;
 std::optional<MotorBank> motor_bank_2;
@@ -412,7 +414,7 @@ void setup()
             standard_address_t{DEVICE_ADDRESS,
                                static_cast<uint8_t>(group::MAGNET),
                                static_cast<uint8_t>(magnet_parameter::MAGNET_ENABLE)})},
-        {
+        PacketManager::callback_config_t{
             .data_callback = handle_magnet_enable_data,
         });
 }
@@ -439,6 +441,11 @@ void handle_motor_speed_data(const Packet& packet)
         printf(std::format("Failed to parse speed packet: {}\n", e.what()).c_str());
     }
 }
+
+static constexpr int MAGNET_DEBOUNCE_THRESHOLD = 1;
+static bool     magnet_debounce_target   = false;
+static int      magnet_debounce_count    = 0;
+
 void handle_magnet_enable_data(const Packet& packet)
 {
     using namespace excavation::bucket::controller;
@@ -446,9 +453,27 @@ void handle_magnet_enable_data(const Packet& packet)
     try
     {
         standard_address_t address{packet.get_address().address};
-        set_magnet_enable(
-            static_cast<magnet_parameter>(standard_address_t(packet.get_address().address).magnet_parameter),
-            magnet_t{packet.get_data()}.value);
+        bool new_value = magnet_t{packet.get_data()}.value;
+
+        if (new_value == magnet_debounce_target)
+        {
+            magnet_debounce_count++;
+        }
+        else
+        {
+            // State changed — reset streak with this new value
+            magnet_debounce_target = new_value;
+            magnet_debounce_count  = 1;
+        }
+
+        if (magnet_debounce_count >= MAGNET_DEBOUNCE_THRESHOLD)
+        {
+            set_motor_speed(
+                static_cast<excavation::bucket::controller::group>(address.group),
+                new_value);
+            // Cap the count so it doesn't overflow on a steady stream
+            magnet_debounce_count = MAGNET_DEBOUNCE_THRESHOLD;
+        }
     }
     catch (const std::exception& e)
     {
@@ -512,18 +537,18 @@ void set_motor_speed(const excavation::bucket::controller::group& group, const i
     }
 }
 
-void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const bool& on)
-{
-    using namespace excavation::bucket::controller;
-    switch (param)
-    {
-    case param::MAGNET_ENABLE:
-        digitalWrite(MAGNET_PIN, on);
-        break;
-    default:
-        break;
-    }
-}
+// void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const bool& on)
+// {
+//     using namespace excavation::bucket::controller;
+//     switch (param)
+//     {
+//     case param::MAGNET_ENABLE:
+//         digitalWrite(MAGNET_PIN, on);
+//         break;
+//     default:
+//         break;
+//     }
+// }
 
 void set_motor_current(const excavation::bucket::controller::group& group,
                        const uint16_t& current)
