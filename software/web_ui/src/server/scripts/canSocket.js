@@ -14,6 +14,7 @@ const canLookupFilePath = path.resolve("src/lib/canLookup.json");
 let timeoutId;
 let running = false;
 let stopCandump = null;
+let cleaned = false;
 
 let canLookup = null;
 const buffer = [];
@@ -98,7 +99,6 @@ const lookupTable = () => {
       }
 
       try {
-        canLookup = JSON.parse(output);
         resolve(JSON.parse(output));
       } catch (err) {
         console.error(err);
@@ -124,18 +124,17 @@ export function startCanDump(iface) {
 
       const parsed = parseCandump(line);
 
-      if (!parsed.details || !parsed.data.length) {
+      if (!parsed || !parsed.details || !parsed.data.length) {
         // Unknown CAN or no data
         continue;
       }
-      if (parsed) {
-        buffer.push(parsed);
+
+      buffer.push(parsed);
 
         // avoid memory overflow
         if (buffer.length > MAX_BUFFER) {
           buffer.shift();
         }
-      }
     }
   });
 
@@ -173,7 +172,7 @@ function formatTimestamp(ts) {
   const hours = String(d.getHours()).padStart(2, "0");
   const minutes = String(d.getMinutes()).padStart(2, "0");
   const seconds = String(d.getSeconds()).padStart(2, "0");
-  const ms = String(d.getMilliseconds()).padStart(2, "0");
+  const ms = String(d.getMilliseconds()).padStart(3, "0");
 
   return `${hours}:${minutes}:${seconds}.${ms}`;
 }

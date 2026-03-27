@@ -48,37 +48,37 @@
 		data: string[];
 	}
 
-	const socket: Socket = io();
-
-	// On update from socket
-	socket.on('can-data', (dataList: Array<CanData>) => {
-
-		dataList.forEach((value, index) => {
-			const inArray = canMsgs.findIndex((msg) => msg.address === value.address);
-
-			if (inArray === -1) {
-				// Add new row
-				canMsgs.push({
-					address: value.address,
-					system: value.details.system,
-					subsystem: value.details.subsystem,
-					device: value.details.device,
-					group: value.details.group,
-					parameter: value.details.parameter,
-					latestData: value.data,
-					timestamp: value.timestamp,
-				});
-				return;
-			}
-
-			// Update data and timestamp
-			canMsgs[inArray].latestData = value.data;
-			canMsgs[inArray].timestamp = value.timestamp;
-		})
-	});
-
 	// On creation of widget
 	onMount(() => {
+		const socket: Socket = io();
+		
+		// On update from socket
+		socket.on('can-data', (dataList: Array<CanData>) => {
+
+			dataList.forEach((value, index) => {
+				const inArray = canMsgs.findIndex((msg) => msg.address === value.address);
+
+				if (inArray === -1) {
+					// Add new row
+					canMsgs.push({
+						address: value.address,
+						system: value.details.system,
+						subsystem: value.details.subsystem,
+						device: value.details.device,
+						group: value.details.group,
+						parameter: value.details.parameter,
+						latestData: value.data,
+						timestamp: value.timestamp,
+					});
+					return;
+				}
+
+				// Update data and timestamp
+				canMsgs[inArray].latestData = value.data;
+				canMsgs[inArray].timestamp = value.timestamp;
+			})
+		});
+
 		return () => {
 			socket.disconnect();
 		};
