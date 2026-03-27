@@ -14,7 +14,7 @@ echo "<CycloneDDS>
       <!-- Avoid broadcasting data to all client  -->
       <AllowMulticast>false</AllowMulticast> " >config/cyclonedds_autonomy.xml
 for INTERFACE in $INTERFACES_NO_LO; do
-        echo "      <NetworkInterfaceAddress>$INTERFACE</NetworkInterfaceAddress>" >>config/cyclonedds_autonomy.xml
+  echo "      <NetworkInterfaceAddress>$INTERFACE</NetworkInterfaceAddress>" >>config/cyclonedds_autonomy.xml
 done
 echo "    </General>
 
