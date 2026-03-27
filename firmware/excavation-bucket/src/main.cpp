@@ -258,6 +258,7 @@ void set_motor_current(const excavation::bucket::controller::group& group,
 void register_motor_bank(const excavation::bucket::controller::group& group,
                          const uint8_t& speed_param);
 void handle_magnet_enable_data(const Packet& packet);
+void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const bool& on);
 
 std::optional<MotorBank> motor_bank_1;
 std::optional<MotorBank> motor_bank_2;
@@ -450,35 +451,14 @@ void handle_magnet_enable_data(const Packet& packet)
 {
     using namespace excavation::bucket::controller;
     using namespace hi_can::parameters::excavation::bucket::controller;
-    try
-    {
-        standard_address_t address{packet.get_address().address};
-        bool new_value = magnet_t{packet.get_data()}.value;
 
-        if (new_value == magnet_debounce_target)
-        {
-            magnet_debounce_count++;
-        }
-        else
-        {
-            // State changed — reset streak with this new value
-            magnet_debounce_target = new_value;
-            magnet_debounce_count  = 1;
-        }
+    standard_address_t address{packet.get_address().address};
+    bool new_value = magnet_t{packet.get_data()}.value;
+    set_magnet_enable(
+        static_cast<excavation::bucket::controller::magnet_parameter>(address.parameter),
+        new_value);
 
-        if (magnet_debounce_count >= MAGNET_DEBOUNCE_THRESHOLD)
-        {
-            set_motor_speed(
-                static_cast<excavation::bucket::controller::group>(address.group),
-                new_value);
-            // Cap the count so it doesn't overflow on a steady stream
-            magnet_debounce_count = MAGNET_DEBOUNCE_THRESHOLD;
-        }
-    }
-    catch (const std::exception& e)
-    {
-        printf(std::format("Failed to parse magnet packet: {}\n", e.what()).c_str());
-    }
+    printf("[MAGNET VALUE] %d\n", new_value);
 }
 
 void handle_motor_current_data(const Packet& packet)
@@ -522,6 +502,8 @@ void set_motor_speed(const excavation::bucket::controller::group& group, const i
     case group::JAWS_BOTH:
         set_motor_speed(group::JAWS_LEFT, speed);
         set_motor_speed(group::JAWS_RIGHT, speed);
+        printf("[LEFT] %d\n", speed);
+        printf("[RIRGHT] %d\n", speed);
         break;
     case group::JAWS_LEFT:
         motor_bank_2->set_speed_a(speed);
@@ -537,18 +519,18 @@ void set_motor_speed(const excavation::bucket::controller::group& group, const i
     }
 }
 
-// void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const bool& on)
-// {
-//     using namespace excavation::bucket::controller;
-//     switch (param)
-//     {
-//     case param::MAGNET_ENABLE:
-//         digitalWrite(MAGNET_PIN, on);
-//         break;
-//     default:
-//         break;
-//     }
-// }
+void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const bool& on)
+{
+    using namespace excavation::bucket::controller;
+    switch (param)
+    {
+    case magnet_parameter::MAGNET_ENABLE:
+        digitalWrite(MAGNET_PIN, on);
+        break;
+    default:
+        break;
+    }
+}
 
 void set_motor_current(const excavation::bucket::controller::group& group,
                        const uint16_t& current)
