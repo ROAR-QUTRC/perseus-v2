@@ -23,6 +23,7 @@ def generate_launch_description():
     ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
     autostart = LaunchConfiguration("autostart")
+    map_yaml_file = LaunchConfiguration("map")
 
     # Declare arguments
     declare_use_sim_time_cmd = DeclareLaunchArgument(
@@ -31,6 +32,11 @@ def generate_launch_description():
         description="Use simulation/Gazebo clock",
     )
 
+    declare_imu_topic = DeclareLaunchArgument(
+        "imu_topic",
+        default_value="/livox/imu/corrected",
+        description="IMU topic for robot_localization ekf (imu0)",
+    )
     declare_autostart_cmd = DeclareLaunchArgument(
         "autostart",
         default_value="true",
@@ -50,8 +56,14 @@ def generate_launch_description():
 
     declare_ekf_config_file_cmd = DeclareLaunchArgument(
         "ekf_config_file",
-        default_value=os.path.join(autonomy_dir, "config", "ekf_config.yaml"),
+        default_value=os.path.join(autonomy_dir, "config", "ekf_config_fast_lio_core.yaml"),
         description="Full path to the ROS2 parameters file for EKF",
+    )
+
+    declare_map_cmd = DeclareLaunchArgument(
+        "map",
+        default_value=os.path.join(autonomy_dir, "maps", "prime_map.yaml"),
+        description="Full path to the map yaml file",
     )
 
     # Include SLAM Toolbox launch
@@ -76,7 +88,7 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
             "autostart": autostart,
             "params_file": nav_params_file,
-            "use_composition": "true",
+            "use_composition": "False",
             "use_respawn": "False",
             "log_level": "info",
         }.items(),
@@ -92,8 +104,47 @@ def generate_launch_description():
         output="screen",
         parameters=[
             ekf_config_file,
-            {"use_sim_time": use_sim_time},
+            {"use_sim_time": use_sim_time, "imu0": LaunchConfiguration("imu_topic")},
         ],
+    )
+
+    # Map Server Node
+    map_server_node = Node(
+        package="nav2_map_server",
+        executable="map_server",
+        name="map_server",
+        output="screen",
+        parameters=[
+            {
+                "yaml_filename": map_yaml_file,
+                "frame_id": "map",
+                "use_sim_time": use_sim_time,
+            }
+        ],
+    )
+
+    # Lifecycle Manager for map_server
+    map_lifecycle_manager = Node(
+        package="nav2_lifecycle_manager",
+        executable="lifecycle_manager",
+        name="lifecycle_manager_map",
+        output="screen",
+        parameters=[
+            {
+                "autostart": autostart,
+                "node_names": ["map_server"],
+                "use_sim_time": use_sim_time,
+            }
+        ],
+    )
+
+    # Static transform: map -> odom (identity, FAST-LIO2 handles drift correction)
+    static_map_odom_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_map_to_odom",
+        output="screen",
+        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
     )
 
     # Create launch description
@@ -102,12 +153,17 @@ def generate_launch_description():
     # Declare arguments
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_autostart_cmd)
-    ld.add_action(declare_slam_params_file_cmd)
+    ld.add_action(declare_imu_topic)
+    # ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_nav_params_file_cmd)
     ld.add_action(declare_ekf_config_file_cmd)
+    ld.add_action(declare_map_cmd)
 
     # Include launch files and nodes
     ld.add_action(ekf_node)
-    ld.add_action(slam_launch)
+    ld.add_action(map_server_node)
+    ld.add_action(map_lifecycle_manager)
+    ld.add_action(static_map_odom_tf)
+    # ld.add_action(slam_launch)
     ld.add_action(nav_launch)
     return ld
