@@ -58,7 +58,7 @@ def generate_launch_description():
 
     declare_map_cmd = DeclareLaunchArgument(
         "map",
-        default_value=os.path.join(autonomy_dir, "maps", "prime_map.yaml"),
+        default_value=os.path.join(autonomy_dir, "maps", "aut_arch_2026.yaml"),
         description="Full path to the map yaml file",
     )
 
