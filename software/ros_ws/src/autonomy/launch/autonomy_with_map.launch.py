@@ -42,11 +42,6 @@ def generate_launch_description():
         default_value="true",
         description="Automatically startup the autonomy stack",
     )
-    declare_slam_params_file_cmd = DeclareLaunchArgument(
-        "slam_params_file",
-        default_value=os.path.join(autonomy_dir, "config", "slam_toolbox_params.yaml"),
-        description="Full path to the ROS2 parameters file for SLAM Toolbox",
-    )
 
     declare_nav_params_file_cmd = DeclareLaunchArgument(
         "nav_params_file",
@@ -66,17 +61,6 @@ def generate_launch_description():
         description="Full path to the map yaml file",
     )
 
-    # Include SLAM Toolbox launch
-    slam_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(autonomy_dir, "launch", "online_async_launch.py")
-        ),
-        launch_arguments={
-            "slam_params_file": slam_params_file,
-            "use_sim_time": use_sim_time,
-            "autostart": autostart,
-        }.items(),
-    )
 
     # Include Nav2 Bringup launch
     nav_launch = IncludeLaunchDescription(
