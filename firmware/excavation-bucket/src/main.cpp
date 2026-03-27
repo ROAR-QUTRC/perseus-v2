@@ -38,7 +38,6 @@ static constexpr uint32_t PWM_FREQ = 1500;  // Hz
 static constexpr uint32_t PWM_DEADBAND = 2;                              // 2 PWM steps of enforced deadband to reset cycle-by-cycle current chopping
 static constexpr uint32_t PWM_MAX = (1 << PWM_BITS) - 1 - PWM_DEADBAND;  // 4095
 
-
 class MotorDriver
 {
 public:
@@ -444,8 +443,8 @@ void handle_motor_speed_data(const Packet& packet)
 }
 
 static constexpr int MAGNET_DEBOUNCE_THRESHOLD = 1;
-static bool     magnet_debounce_target   = false;
-static int      magnet_debounce_count    = 0;
+static bool magnet_debounce_target = false;
+static int magnet_debounce_count = 0;
 
 void handle_magnet_enable_data(const Packet& packet)
 {
@@ -454,7 +453,8 @@ void handle_magnet_enable_data(const Packet& packet)
 
     standard_address_t address{packet.get_address().address};
 
-    if (packet.get_data().size() != 1) {
+    if (packet.get_data().size() != 1)
+    {
         return;
     }
 
@@ -530,7 +530,7 @@ void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& p
     switch (param)
     {
     case magnet_parameter::MAGNET_ENABLE:
-        
+
         switch (on)
         {
         case 0xAB:
