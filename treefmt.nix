@@ -67,6 +67,8 @@
         "*.stl"
         "*.step"
         "*.3mf"
+        # ML models
+        "*.onnx"
         # PCBs (KiCAD)
         "hardware/**"
       ];
