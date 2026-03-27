@@ -10,6 +10,7 @@
   geometry-msgs,
   rosidl-default-generators,
   rosidl-default-runtime,
+  sensor-msgs,
   std-msgs,
 }:
 buildRosPackage rec {
@@ -32,6 +33,7 @@ buildRosPackage rec {
     builtin-interfaces
     geometry-msgs
     rosidl-default-runtime
+    sensor-msgs
     std-msgs
   ];
   nativeBuildInputs = [

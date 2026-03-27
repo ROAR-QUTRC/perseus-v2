@@ -1,12 +1,44 @@
 #include "perseus_vision/aruco_detector.hpp"
 
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <ctime>
 #include <filesystem>
 
 namespace perseus_vision
 {
+    namespace
+    {
+        sensor_msgs::msg::RegionOfInterest roi_from_corners(const std::vector<cv::Point2f>& corner_points)
+        {
+            sensor_msgs::msg::RegionOfInterest roi;
+            if (corner_points.empty())
+            {
+                return roi;
+            }
+
+            double min_x = corner_points.front().x;
+            double max_x = corner_points.front().x;
+            double min_y = corner_points.front().y;
+            double max_y = corner_points.front().y;
+
+            for (const auto& pt : corner_points)
+            {
+                min_x = std::min(min_x, static_cast<double>(pt.x));
+                max_x = std::max(max_x, static_cast<double>(pt.x));
+                min_y = std::min(min_y, static_cast<double>(pt.y));
+                max_y = std::max(max_y, static_cast<double>(pt.y));
+            }
+
+            roi.x_offset = static_cast<uint32_t>(std::max(0.0, std::floor(min_x)));
+            roi.y_offset = static_cast<uint32_t>(std::max(0.0, std::floor(min_y)));
+            roi.width = static_cast<uint32_t>(std::max(0.0, std::ceil(max_x - min_x)));
+            roi.height = static_cast<uint32_t>(std::max(0.0, std::ceil(max_y - min_y)));
+            roi.do_rectify = false;
+            return roi;
+        }
+    }  // namespace
 
     ArucoDetector::ArucoDetector()
         : Node("aruco_detector")
@@ -15,7 +47,7 @@ namespace perseus_vision
         marker_length_ = this->declare_parameter<double>("marker_length", 0.35);
         axis_length_ = this->declare_parameter<double>("axis_length", 0.03);
         dictionary_id_ = this->declare_parameter<int>("dictionary_id", 1);
-        camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_link_optical");
+        camera_frame_ = this->declare_parameter<std::string>("camera_frame", "camera_color_optical_frame");
         tf_output_frame_ = this->declare_parameter<std::string>("tf_output_frame", "odom");
         input_img_ = this->declare_parameter<std::string>("input_img", "/camera/camera/color/image_raw");
         output_img_ = this->declare_parameter<std::string>("output_img", "/perseus_vision/aruco/image");
@@ -184,6 +216,7 @@ namespace perseus_vision
             std::lock_guard<std::mutex> lock(detections_mutex_);
             latest_ids_.clear();
             latest_poses_.clear();
+            latest_regions_of_interest_.clear();
             latest_timestamp_ = header.stamp;
         }
 
@@ -266,7 +299,7 @@ namespace perseus_vision
                     cv::Point3d pos(tvecs[i][2], -tvecs[i][0], -tvecs[i][1]);
                     marker_coords.push_back({ids[i], pos});
 
-                    transform_and_publish_marker(header, ids[i], rvecs[i], tvecs[i]);
+                    transform_and_publish_marker(header, ids[i], roi_from_corners(image_points), rvecs[i], tvecs[i]);
                 }
             }
             else
@@ -329,12 +362,14 @@ namespace perseus_vision
                 std::lock_guard<std::mutex> lock(detections_mutex_);
                 detection_msg.ids = latest_ids_;
                 detection_msg.poses = latest_poses_;
+                detection_msg.regions_of_interest = latest_regions_of_interest_;
             }
             detection_pub_->publish(detection_msg);
         }
     }
 
     void ArucoDetector::transform_and_publish_marker(const std_msgs::msg::Header& header, int marker_id,
+                                                     const sensor_msgs::msg::RegionOfInterest& region_of_interest,
                                                      const cv::Vec3d& rvec, const cv::Vec3d& tvec)
     {
         try
@@ -372,6 +407,7 @@ namespace perseus_vision
                 std::lock_guard<std::mutex> lock(detections_mutex_);
                 latest_ids_.push_back(marker_id);
                 latest_poses_.push_back(marker_pose_out.pose);
+                latest_regions_of_interest_.push_back(region_of_interest);
             }
 
             geometry_msgs::msg::TransformStamped transform;
@@ -418,6 +454,9 @@ namespace perseus_vision
             response->frame_id = tf_output_frame_;
             response->ids = latest_ids_;
             response->poses = latest_poses_;
+            response->message = latest_ids_.empty()
+                                    ? "No ArUco detections are currently cached."
+                                    : "Returned cached ArUco detections.";
             detection_count = latest_ids_.size();
 
             // Copy data needed for image processing

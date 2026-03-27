@@ -39,6 +39,7 @@ pkgs.mkShell {
           ament-cmake-xmllint
           ament-copyright
           ament-flake8
+          ament-index-cpp
           ament-lint-auto
           ament-lint-common
           ament-pep257
@@ -70,12 +71,14 @@ pkgs.mkShell {
           nav2-msgs
           navigation2
           nlohmann_json
+          onnxruntime
           opencv
           openssl
           pcl-conversions
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
+          rcl-interfaces
           rclcpp
           rclcpp-action
           rclcpp-components
