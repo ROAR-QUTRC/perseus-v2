@@ -63,6 +63,8 @@ install(
             urdf
             worlds
             behavior_trees
+            maps
+            images
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
 
