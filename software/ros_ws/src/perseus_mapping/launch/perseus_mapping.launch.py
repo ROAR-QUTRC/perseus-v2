@@ -5,6 +5,7 @@ from launch.substitutions import PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
+from launch_ros.actions import Node
 import os
 import yaml
 import tempfile
@@ -85,11 +86,16 @@ def generate_launch_description():
             )
         ),
     )
-
-    return LaunchDescription(
-        [
-            sim_filter_launch,
-            fast_lio_launch,
-            map_saver_launch,
-        ]
+    odom_transform_node = Node(
+        package='perseus_mapping',
+        executable='odom_transform',
+        name='odom_transform',
+        parameters=[{'use_sim_time': use_sim_time}],
     )
+
+    return LaunchDescription([
+        sim_filter_launch,
+        fast_lio_launch,
+        odom_transform_node,
+        map_saver_launch,
+    ])
