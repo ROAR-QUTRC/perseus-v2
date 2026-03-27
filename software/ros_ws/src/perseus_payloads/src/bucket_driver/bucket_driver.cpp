@@ -98,13 +98,14 @@ void BucketDriver::_write_actuators(double lift, double tilt, double jaws, doubl
                                       static_cast<uint8_t>(controller::group::MAGNET),
                                       static_cast<uint8_t>(controller::magnet_parameter::ROTATE_SPEED)}),
                speed_t{rotate_pwm}.serialize_data()));
-
+    
+    uint8_t magnet_hex = magnet ? 0xAB : 0xCD;
     _can_interface.transmit(
         Packet(static_cast<addressing::flagged_address_t>(
                    standard_address_t{base_address,
                                       static_cast<uint8_t>(controller::group::MAGNET),
                                       static_cast<uint8_t>(controller::magnet_parameter::MAGNET_ENABLE)}),
-               magnet_t{magnet}.serialize_data()));
+               magnet_t{magnet_hex}.serialize_data()));
 }
 
 int main(int argc, char** argv)

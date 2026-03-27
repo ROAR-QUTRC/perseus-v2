@@ -258,7 +258,7 @@ void set_motor_current(const excavation::bucket::controller::group& group,
 void register_motor_bank(const excavation::bucket::controller::group& group,
                          const uint8_t& speed_param);
 void handle_magnet_enable_data(const Packet& packet);
-void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const bool& on);
+void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const uint8_t& on);
 
 std::optional<MotorBank> motor_bank_1;
 std::optional<MotorBank> motor_bank_2;
@@ -453,6 +453,11 @@ void handle_magnet_enable_data(const Packet& packet)
     using namespace hi_can::parameters::excavation::bucket::controller;
 
     standard_address_t address{packet.get_address().address};
+
+    if (packet.get_data().size() != 1) {
+        return;
+    }
+
     bool new_value = magnet_t{packet.get_data()}.value;
     set_magnet_enable(
         static_cast<excavation::bucket::controller::magnet_parameter>(address.parameter),
@@ -519,13 +524,24 @@ void set_motor_speed(const excavation::bucket::controller::group& group, const i
     }
 }
 
-void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const bool& on)
+void set_magnet_enable(const excavation::bucket::controller::magnet_parameter& param, const uint8_t on)
 {
     using namespace excavation::bucket::controller;
     switch (param)
     {
     case magnet_parameter::MAGNET_ENABLE:
-        digitalWrite(MAGNET_PIN, on);
+        
+        switch (on)
+        {
+        case 0xAB:
+            digitalWrite(MAGNET_PIN, 1);
+            break;
+        case 0xCD:
+            digitalWrite(MAGNET_PIN, 0);
+            break;
+        default:
+            break;
+        }
         break;
     default:
         break;
