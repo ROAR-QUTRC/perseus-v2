@@ -63,8 +63,10 @@ pkgs.mkShell {
           laser-geometry
           launch
           launch-ros
+          lifecycle-msgs
           mecanum-drive-controller
           message-filters
+          nav-msgs
           nav2-msgs
           navigation2
           nlohmann_json
@@ -75,6 +77,7 @@ pkgs.mkShell {
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
+          python3Packages.pyyaml
           rcl-interfaces
           rclcpp
           rclcpp-action
@@ -105,6 +108,7 @@ pkgs.mkShell {
           teleop-twist-keyboard
           tf2
           tf2-geometry-msgs
+          tf2-msgs
           tf2-ros
           tf2-sensor-msgs
           twist-mux
