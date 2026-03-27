@@ -11,6 +11,8 @@ const hiCanAddressFileLocation = path.resolve(
 );
 const canLookupFilePath = path.resolve("src/lib/canLookup.json");
 
+const canBus = "can0";
+
 let timeoutId;
 let running = false;
 let stopCandump = null;
@@ -26,7 +28,7 @@ export async function canSocket(io) {
     await generateFile();
 
     // Start processing candump output (after file generated)
-    stopCandump = startCanDump("can0");
+    stopCandump = startCanDump(canBus);
 
     // Send messages as they are received
     timeoutId = setInterval(() => {
@@ -43,6 +45,7 @@ export async function canSocket(io) {
     });
 
     process.on("SIGTERM", () => {
+      console.log("PROCESS ENDED\n");
       cleanup();
       process.exit(0);
     });
@@ -60,7 +63,6 @@ function cleanup() {
     clearInterval(timeoutId);
     timeoutId = null;
   }
-  console.log("Cleaned");
 }
 
 async function generateFile() {
@@ -112,6 +114,10 @@ export function startCanDump(iface) {
   const proc = spawn("candump", [iface]);
 
   let leftover = "";
+  
+  proc.on('error', (err) => {
+    console.error('Failed to start candump:', err.message);
+  });
 
   proc.stdout.on("data", (data) => {
     leftover += data.toString();
@@ -139,7 +145,12 @@ export function startCanDump(iface) {
   });
 
   proc.stderr.on("data", (d) => {
-    console.error("STDERR:", d.toString());
+    if (d.toString().includes("SIOCGIFINDEX: No such device")) {
+      console.error(`Failed to start candump: can bus "${canBus}" cannot be found or is incorrect`);
+    } else {
+      console.error("STDERR:", d.toString());
+    }
+    cleanup();
   });
 
   return () => proc.kill(); // stop function
@@ -147,7 +158,7 @@ export function startCanDump(iface) {
 
 function parseCandump(line) {
   const parts = line.trim().split(/\s+/);
-  if (parts.length < 4) {
+  if (parts.length < 4 || !canLookup) {
     return null;
   }
   const address = `0x${parseInt(parts[1], 16).toString(16).padStart(8, "0")}`;
