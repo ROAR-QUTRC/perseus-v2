@@ -1,12 +1,17 @@
+#include <freertos/FreeRTOS.h>
+
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <optional>
 #include <vector>
 
+#include "freertos/idf_additions.h"
 #include "hi_can_address.hpp"
 #include "hi_can_parameter.hpp"
 #include "hi_can_twai.hpp"
+#include "portmacro.h"
 #include "uart-driver.hpp"
 #include "uart-message.hpp"
 
@@ -26,7 +31,10 @@ constexpr uint8_t BMS_HEADER_LENGTH = 3;
 constexpr uint8_t BMS_TRAILER_LENGTH = 0;
 constexpr uint8_t BMS_FOOTER_LENGTH = 1;
 
-UartDriver uart_driver(2, 9600);
+std::optional<UartDriver> uart_driver;
+parameters::power::bms::bms_status_t bms_status = {};
+parameters::power::bms::bms_temperature_t temperatures = {};
+parameters::power::bms::cell_voltage_t voltages = {};
 
 std::function<std::vector<uint8_t>(const raw_uart_message_t)> bms_crc_creator = [](const raw_uart_message_t data)
 {
@@ -46,9 +54,19 @@ extern "C" void app_main()
 {
     try
     {
+        uart_driver.emplace(1, 9600);
+    }
+    catch (const std::exception& e)
+    {
+        printf("Error while initialising UART\n");
+        return;
+    }
+    try
+    {
+        printf("Initialising CAN\n");
         auto& can_interface = TwaiInterface::get_instance(std::make_pair(bsp::CAN_TX_PIN, bsp::CAN_RX_PIN), 0,
                                                           filter_t{
-                                                              .address = static_cast<flagged_address_t>(standard_address_t(SYSTEM_ID, battery::SUBSYSTEM_ID)),
+                                                              .address = static_cast<flagged_address_t>(standard_address_t(SYSTEM_ID, battery::SUBSYSTEM_ID, static_cast<uint8_t>(battery::device::BMS))),
                                                               .mask = DEVICE_MASK,
                                                           });
         packet_manager.emplace(can_interface);
@@ -67,67 +85,89 @@ extern "C" void app_main()
             {
                 parameters::power::bms::mosfet_control_t command;
                 command.deserialize_data(packet.get_data());
-                uart_driver.transmit(static_cast<raw_uart_message_t>(flagged_uart_message_t(std::vector<uint8_t>{
-                                                                                                BMS_START_BYTE,
-                                                                                                BMS_WRITE_BYTE,
-                                                                                                static_cast<uint8_t>(battery::bms::bms_parameter::MOSFET_CONTROL)},
-                                                                                            std::vector<uint8_t>{0x00, static_cast<uint8_t>(command.control_command)}, std::vector<uint8_t>{}, bms_crc_creator, std::vector<uint8_t>{BMS_STOP_BYTE})));
-                return;
-            }});
-    packet_manager->set_transmission_config(static_cast<flagged_address_t>(standard_address_t(SYSTEM_ID, battery::SUBSYSTEM_ID, static_cast<uint8_t>(battery::device::BMS), battery::bms::GROUP_ID, static_cast<uint8_t>(battery::bms::bms_parameter::INFO))), PacketManager::transmission_config_t{.generator = [&]()
-                                                                                                                                                                                                                                                                                                    {
-                                                                                                                                                                                                                                                                                                        raw_uart_message_t received_message{};
-                                                                                                                                                                                                                                                                                                        uart_driver.transmit(static_cast<raw_uart_message_t>(flagged_uart_message_t(std::vector<uint8_t>{BMS_START_BYTE, BMS_READ_BYTE, static_cast<uint8_t>(battery::bms::bms_parameter::INFO)}, std::vector<uint8_t>{}, std::vector<uint8_t>{}, std::nullopt, std::vector<uint8_t>{BMS_STOP_BYTE})));
-                                                                                                                                                                                                                                                                                                        if (uart_driver.receive_flagged(received_message, 3, 0, bms_crc_creator, 1) == -1)
-                                                                                                                                                                                                                                                                                                        {
-                                                                                                                                                                                                                                                                                                            return std::vector<uint8_t>{};
-                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                        std::vector<uint8_t> data = {};
-                                                                                                                                                                                                                                                                                                        std::copy(received_message.begin() + BMS_HEADER_LENGTH + DATA_LENGTH_BYTES, received_message.begin() + BMS_HEADER_LENGTH + DATA_LENGTH_BYTES + received_message.at(BMS_HEADER_LENGTH), data.begin());
-                                                                                                                                                                                                                                                                                                        parameters::power::bms::bms_information_t information = {};
-                                                                                                                                                                                                                                                                                                        information.voltage = data[0] << 8 | data[1];
-                                                                                                                                                                                                                                                                                                        information.current = data[2] << 8 | data[3];
-                                                                                                                                                                                                                                                                                                        information.current_capacity = data[4] << 8 | data[5];
-                                                                                                                                                                                                                                                                                                        information.nominal_capacity = data[6] << 8 | data[7];
-                                                                                                                                                                                                                                                                                                        information.cycles = data[8] << 8 | data[9];
-                                                                                                                                                                                                                                                                                                        // 10-11 is the product data
-                                                                                                                                                                                                                                                                                                        information.balance_status = data[14] << 24 | data[15] << 16 | data[12] << 8 | data[13];
-                                                                                                                                                                                                                                                                                                        information.protection_status = static_cast<parameters::power::bms::_bms_information::protection_status_t>(data[16] << 8 | data[17]);
-                                                                                                                                                                                                                                                                                                        // 18 is the BMS version
-                                                                                                                                                                                                                                                                                                        information.percent_remaining = data[19];
-                                                                                                                                                                                                                                                                                                        information.mosfet_status = static_cast<parameters::power::bms::_bms_information::mosfet_status_t>(data[20]);
-                                                                                                                                                                                                                                                                                                        information.amount_of_cells = data[21];
-                                                                                                                                                                                                                                                                                                        information.amount_of_NTCs = data[22];
-                                                                                                                                                                                                                                                                                                        information.temperatures = {};
-                                                                                                                                                                                                                                                                                                        for (int i = 0; i < information.amount_of_NTCs; i++)
-                                                                                                                                                                                                                                                                                                        {
-                                                                                                                                                                                                                                                                                                            information.temperatures.emplace_back(data[23 + i] << 8 | data[24 + i]);
-                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                        return information.serialize_data();
-                                                                                                                                                                                                                                                                                                    },
-                                                                                                                                                                                                                                                                                                    .interval = message_interval});
-    packet_manager->set_transmission_config(static_cast<flagged_address_t>(standard_address_t(SYSTEM_ID, battery::SUBSYSTEM_ID, static_cast<uint8_t>(battery::device::BMS), battery::bms::GROUP_ID, static_cast<uint8_t>(battery::bms::bms_parameter::VOLTAGE))), PacketManager::transmission_config_t{.generator = [&]()
-                                                                                                                                                                                                                                                                                                       {
-                                                                                                                                                                                                                                                                                                           raw_uart_message_t received_message{};
-                                                                                                                                                                                                                                                                                                           uart_driver.transmit(static_cast<raw_uart_message_t>(flagged_uart_message_t(std::vector<uint8_t>{BMS_START_BYTE, BMS_READ_BYTE, static_cast<uint8_t>(battery::bms::bms_parameter::INFO)}, std::vector<uint8_t>{}, std::vector<uint8_t>{}, std::nullopt, std::vector<uint8_t>{BMS_STOP_BYTE})));
-                                                                                                                                                                                                                                                                                                           if (uart_driver.receive_flagged(received_message, 3, 0, bms_crc_creator, 1) == -1)
+                if (1)
+                {
+                    printf("I would turn off the BMS right now\n");
+                }
+                else
+                {
+                    uart_driver->transmit(static_cast<raw_uart_message_t>(flagged_uart_message_t(std::vector<uint8_t>{
+                                                                                                     BMS_START_BYTE,
+                                                                                                     BMS_WRITE_BYTE,
+                                                                                                     static_cast<uint8_t>(bms_message_command::MOSFET_CONTROL)},
+                                                                                                 std::vector<uint8_t>{0x00, static_cast<uint8_t>(command.control_command)}, std::vector<uint8_t>{}, bms_crc_creator, std::vector<uint8_t>{BMS_STOP_BYTE})));
+                }
+                return; }});
+    packet_manager->set_transmission_config(static_cast<flagged_address_t>(standard_address_t(SYSTEM_ID, battery::SUBSYSTEM_ID, static_cast<uint8_t>(battery::device::BMS), battery::bms::GROUP_ID, static_cast<uint8_t>(battery::bms::bms_parameter::STATUS))), PacketManager::transmission_config_t{.generator = [&]()
+                                                                                                                                                                                                                                                                                                      {
+                                                                                                                                                                                                                                                                                                          printf("Battery status transmitting\n");
+                                                                                                                                                                                                                                                                                                          return bms_status.serialize_data();
+                                                                                                                                                                                                                                                                                                      },
+                                                                                                                                                                                                                                                                                                      .interval = message_interval});
+    // packet_manager->set_transmission_config(static_cast<flagged_address_t>(standard_address_t(SYSTEM_ID, battery::SUBSYSTEM_ID, static_cast<uint8_t>(battery::device::BMS), battery::bms::GROUP_ID, static_cast<uint8_t>(battery::bms::bms_parameter::VOLTAGE))), PacketManager::transmission_config_t{.generator = [&]()
+    //                                                                                                                                                                                                                                                                                                    {
+    //                                                                                                                                                                                                                                                                                                        return voltages.serialize_data();
+    //                                                                                                                                                                                                                                                                                                    },
+    //                                                                                                                                                                                                                                                                                                    .interval = message_interval});
+    //
+    packet_manager->set_transmission_config(static_cast<flagged_address_t>(standard_address_t(SYSTEM_ID, battery::SUBSYSTEM_ID, static_cast<uint8_t>(battery::device::BMS), battery::bms::GROUP_ID, static_cast<uint8_t>(battery::bms::bms_parameter::TEMPERATURE))), PacketManager::transmission_config_t{.generator = [&]()
                                                                                                                                                                                                                                                                                                            {
-                                                                                                                                                                                                                                                                                                               return std::vector<uint8_t>{};
-                                                                                                                                                                                                                                                                                                           }
-                                                                                                                                                                                                                                                                                                           std::vector<uint8_t> data = {};
-                                                                                                                                                                                                                                                                                                           std::copy(received_message.begin() + BMS_HEADER_LENGTH + DATA_LENGTH_BYTES, received_message.begin() + BMS_HEADER_LENGTH + DATA_LENGTH_BYTES + received_message.at(BMS_HEADER_LENGTH), data.begin());
-                                                                                                                                                                                                                                                                                                           uint8_t data_length = received_message.at(BMS_HEADER_LENGTH);
-                                                                                                                                                                                                                                                                                                           parameters::power::bms::cell_voltage_t received_voltage = {};
-                                                                                                                                                                                                                                                                                                           for (int i = 0; i < data_length; i++)
-                                                                                                                                                                                                                                                                                                           {
-                                                                                                                                                                                                                                                                                                               received_voltage.emplace_back(data.at(2 * i) << 8 | data.at(2 * i + 1));
-                                                                                                                                                                                                                                                                                                           }
-                                                                                                                                                                                                                                                                                                           return received_voltage.serialize_data();
-                                                                                                                                                                                                                                                                                                       },
-                                                                                                                                                                                                                                                                                                       .interval = message_interval});
-
+                                                                                                                                                                                                                                                                                                               printf("Temperature transmitting\n");
+                                                                                                                                                                                                                                                                                                               return temperatures.serialize_data();
+                                                                                                                                                                                                                                                                                                           },
+                                                                                                                                                                                                                                                                                                           .interval = message_interval});
+    TickType_t last_updated = xTaskGetTickCount();
     while (1)
     {
+        printf("Handling packets\n");
         packet_manager->handle();
+        if ((xTaskGetTickCount() - last_updated) > 25)
+        {
+            last_updated = xTaskGetTickCount();
+            raw_uart_message_t info_message{};
+            printf("Talking to BMS about info\n");
+            if (uart_driver->receive_flagged(info_message, 3, 0, bms_crc_creator, 1) == -1)
+            {
+                printf("Error receiving info message\n");
+                bms_status = {};
+            }
+            else
+            {
+                printf("Received info message\n");
+                std::vector<uint8_t> data = {};
+                std::copy(info_message.begin() + BMS_HEADER_LENGTH + DATA_LENGTH_BYTES, info_message.begin() + BMS_HEADER_LENGTH + DATA_LENGTH_BYTES + info_message.at(BMS_HEADER_LENGTH), data.begin());
+
+                bms_status.voltage = data[0] << 8 | data[1];
+                bms_status.current = data[2] << 8 | data[3];
+                bms_status.current_capacity = data[4] << 8 | data[5];
+                bms_status.protection_status = static_cast<parameters::power::bms::_bms_status_t::protection_status_t>(data[16] << 8 | data[17]);
+                uint16_t amount_of_NTCs = data[22];
+
+                temperatures = {};
+                for (int i = 0; i < amount_of_NTCs; i++)
+                {
+                    temperatures.emplace_back(data[23 + i] << 8 | data[24 + i]);
+                }
+            }
+            //     raw_uart_message_t voltage_message{};
+            //     uart_driver->transmit(static_cast<raw_uart_message_t>(flagged_uart_message_t(std::vector<uint8_t>{BMS_START_BYTE, BMS_READ_BYTE, static_cast<uint8_t>(bms_message_command::VOLTAGE)}, std::vector<uint8_t>{}, std::vector<uint8_t>{}, std::nullopt, std::vector<uint8_t>{BMS_STOP_BYTE})));
+            //     if (uart_driver->receive_flagged(voltage_message, 3, 0, bms_crc_creator, 1) == -1)
+            //     {
+            //         voltages = {};
+            //     }
+            //     else
+            //     {
+            //         std::vector<uint8_t> data = {};
+            //         std::copy(voltage_message.begin() + BMS_HEADER_LENGTH + DATA_LENGTH_BYTES, voltage_message.begin() + BMS_HEADER_LENGTH + DATA_LENGTH_BYTES + voltage_message.at(BMS_HEADER_LENGTH), data.begin());
+            //         uint8_t cells_amount = voltage_message.at(BMS_HEADER_LENGTH);
+            //         voltages = {};
+            //         for (int i = 0; i < cells_amount; i++)
+            //         {
+            //             voltages.emplace_back(data.at(2 * i) << 8 | data.at(2 * i + 1));
+            //         }
+            //     }
+        }
+        printf("Letting IDLE task run\n");
+        vTaskDelay(1);
     }
 }

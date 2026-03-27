@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "freertos/FreeRTOS.h"
+using namespace std::chrono_literals;
 
 TickType_t ticks_to_wait_receive = 100;
 
@@ -20,9 +21,16 @@ UartDriver::UartDriver(const unsigned int port_number, const unsigned int baud_r
         return;
     }
     _uart_port = port_number;
-    ESP_ERROR_CHECK(uart_driver_install(static_cast<uart_port_t>(port_number), buffer_size, buffer_size, 0, NULL, 0));
+    if ((uart_driver_install(static_cast<uart_port_t>(port_number), buffer_size, buffer_size, 0, NULL, 0)) != ESP_OK)
+    {
+        throw std::runtime_error("Error: Can't install uart driver\n");
+        return;
+    }
     uart_config_t uart_config{.baud_rate = static_cast<int>(baud_rate), .data_bits = UART_DATA_8_BITS, .parity = UART_PARITY_DISABLE, .stop_bits = UART_STOP_BITS_1, .flow_ctrl = UART_HW_FLOWCTRL_DISABLE, .rx_flow_ctrl_thresh = 0};
-    ESP_ERROR_CHECK(uart_param_config(static_cast<uart_port_t>(port_number), &uart_config));
+    if ((uart_param_config(static_cast<uart_port_t>(port_number), &uart_config)) != ESP_OK)
+    {
+        throw std::runtime_error("Error: Can't configure uart parameters");
+    }
 }
 
 UartDriver::~UartDriver()
@@ -43,11 +51,12 @@ int UartDriver::receive(raw_uart_message_t& message, unsigned int bytes_to_read)
         return 0;
     }
     size_t bytes_available = 0;
-    std::chrono::time_point start_of_receive = std::chrono::steady_clock::now();
+    TickType_t start_of_receive = xTaskGetTickCount();
     while (bytes_available < bytes_to_read)
     {
+        printf("No full message yet - bytes available: %d\n", bytes_available);
         ESP_ERROR_CHECK(uart_get_buffered_data_len(static_cast<uart_port_t>(_uart_port), &bytes_available));
-        if ((start_of_receive - std::chrono::steady_clock::now()) > std::chrono::milliseconds(500))
+        if ((start_of_receive - xTaskGetTickCount()) > 50)
         {
             return -1;
         }
