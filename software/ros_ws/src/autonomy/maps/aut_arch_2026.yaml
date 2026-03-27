@@ -2,14 +2,12 @@
 # Map: aut_arch_2026
 # Frame: odom
 # Size: 1969x1613 px = 30.52m x 25.00m
-
 image: aut_arch_2026.pgm
 resolution: 0.0155
 origin: [-12.9700, -3.0410, 0.0]
 negate: 0
 occupied_thresh: 0.65
 free_thresh: 0.25
-
 # Nav2 map_server params
 # frame_id: odom
 # topic: /aut_arch_2026
