@@ -18,7 +18,6 @@ def generate_launch_description():
     """
 
     autonomy_dir = get_package_share_directory("autonomy")
-    slam_params_file = LaunchConfiguration("slam_params_file")
     nav_params_file = LaunchConfiguration("nav_params_file")
     ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -51,7 +50,9 @@ def generate_launch_description():
 
     declare_ekf_config_file_cmd = DeclareLaunchArgument(
         "ekf_config_file",
-        default_value=os.path.join(autonomy_dir, "config", "ekf_config_fast_lio_core.yaml"),
+        default_value=os.path.join(
+            autonomy_dir, "config", "ekf_config_fast_lio_core.yaml"
+        ),
         description="Full path to the ROS2 parameters file for EKF",
     )
 

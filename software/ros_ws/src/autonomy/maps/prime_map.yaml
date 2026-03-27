@@ -2,14 +2,12 @@
 # Map: prime_map
 # Frame: odom
 # Size: 2000x1410 px = 100.00m x 70.50m
-
 image: prime_map.pgm
 resolution: 0.05
 origin: [-22.6370, -17.0970, 0.0]
 negate: 0
 occupied_thresh: 0.65
 free_thresh: 0.25
-
 # Nav2 map_server params
 # frame_id: odom
 # topic: /prime_map
