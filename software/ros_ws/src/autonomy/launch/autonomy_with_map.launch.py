@@ -18,7 +18,6 @@ def generate_launch_description():
     """
 
     autonomy_dir = get_package_share_directory("autonomy")
-    slam_params_file = LaunchConfiguration("slam_params_file")
     nav_params_file = LaunchConfiguration("nav_params_file")
     ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -64,18 +63,6 @@ def generate_launch_description():
         "map",
         default_value=os.path.join(autonomy_dir, "maps", "prime_map.yaml"),
         description="Full path to the map yaml file",
-    )
-
-    # Include SLAM Toolbox launch
-    slam_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(autonomy_dir, "launch", "online_async_launch.py")
-        ),
-        launch_arguments={
-            "slam_params_file": slam_params_file,
-            "use_sim_time": use_sim_time,
-            "autostart": autostart,
-        }.items(),
     )
 
     # Include Nav2 Bringup launch
