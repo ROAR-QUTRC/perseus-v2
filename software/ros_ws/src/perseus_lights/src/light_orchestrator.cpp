@@ -147,14 +147,14 @@ void LightStatusOrchestrator::_can_callback(const std::vector<uint8_t>& data)
         _power_bus_off = true;
         _error_state   = false;
         break;
-    case power_status::FAULT:
-        _error_state = true;
-        break;
     case power_status::ON:
         _power_bus_off = false;
         _error_state   = false;
         break;
+    case power_status::PRECHARGING:
+        break;
     default:
+        _error_state = true;
         break;
     }
 
