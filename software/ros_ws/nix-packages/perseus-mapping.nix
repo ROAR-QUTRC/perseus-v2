@@ -9,6 +9,8 @@
   pcl-conversions,
   sensor-msgs,
   std-srvs,
+  tf2,
+  tf2-geometry-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-mapping";
@@ -27,6 +29,8 @@ buildRosPackage rec {
     pcl-conversions
     sensor-msgs
     std-srvs
+    tf2
+    tf2-geometry-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
