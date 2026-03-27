@@ -3,7 +3,7 @@ aruco_detector:
     marker_length: 0.35
     axis_length: 0.03
     dictionary_id: 1 # 4x4: 50=0, 100=1, 250=2, 1000=3 | 5x5: 50=4, 100=5, 250=6, 1000=7 | 6x6: 50=8, 100=9, 250=10, 1000=11
-    camera_frame: camera_link_optical
+    camera_frame: camera_color_optical_frame
     tf_output_frame: odom
     input_img: /camera/camera/color/image_raw
     output_img: /perseus_vision/aruco/image
@@ -19,3 +19,38 @@ aruco_detector:
     # Row-major 3x3 K
     camera_matrix: [530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0]
     distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
+cube_detector:
+  ros__parameters:
+    # Leave empty to use the default model installed with the package.
+    # To use a custom model, place it in perseus_vision/models/, rebuild the package,
+    # then set model_path to the model filename, e.g. "my_model.onnx".
+    model_path: ""
+    confidence_threshold: 0.3
+    always_on: true # Set to true to keep the node running even when no subscribers are present
+    publish_annotated_image: true # Whether to publish the annotated image with detections drawn on it
+    processing_frequency_hz: 5.0 # 0.0 means process every incoming frame
+    nms_iou_threshold: 0.45 # Non-maximum suppression IOU threshold
+    use_cuda: false # CUDA is not supported in perseus-v2 nix environment, set to false to use CPU
+    camera_topic: /camera/camera/color/image_raw
+    camera_info_topic: /camera/camera/color/camera_info
+    # Output topics
+    output_img_topic: /perseus_vision/cube/image_annotated
+    output_detections_topic: /perseus_vision/cube/detections
+    output_markers_topic: /perseus_vision/cube/markers
+    # For CPU use:
+    # intra_op_num_threads controls how many threads can be used to
+    # parallelize the execution of individual operations.
+    intra_op_num_threads: 4
+    # inter_op_num_threads: number of operations that can run
+    # in parallel when the model graph has independent branches.
+    # YOLOv8 is mostly sequential, so 2 is sufficient here.
+    # Higher values rarely help and may cause thread contention.
+    inter_op_num_threads: 2
+    depth_estimation_mode: "depth_image" # "none" | "depth_image"
+    tf_output_frame: "base_link" # marker pose output frame
+    depth_image:
+      topic: "/camera/camera/aligned_depth_to_color/image_raw"
+      info_topic: "/camera/camera/aligned_depth_to_color/camera_info"
+      unit_scale: 0.001 # Scale factor to convert depth image units to meters (e.g., 0.001 for millimeters)
+      max_range_m: 10.0
+      min_range_m: 0.1
