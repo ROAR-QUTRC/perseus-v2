@@ -61,7 +61,6 @@ def generate_launch_description():
         description="Full path to the map yaml file",
     )
 
-
     # Include Nav2 Bringup launch
     nav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
