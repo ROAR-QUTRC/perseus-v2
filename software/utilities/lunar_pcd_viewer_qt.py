@@ -754,8 +754,13 @@ class LunarPCDViewer(QMainWindow):
             self._points = self._flatten_ground_plane(self._points)
             print("[PERSEUS] Ground plane compensation applied")
 
-        print("[PERSEUS] Interpolating terrain grid...")
-        self._xg, self._yg, self._zg = make_terrain_grid(self._points, resolution=120)
+        if self._raw_points:
+            grid_res = int(np.sqrt(n))
+            grid_res = max(120, min(grid_res, 800))
+        else:
+            grid_res = 120
+        print(f"[PERSEUS] Interpolating terrain grid (resolution={grid_res})...")
+        self._xg, self._yg, self._zg = make_terrain_grid(self._points, resolution=grid_res)
         xg, yg, zg = self._xg, self._yg, self._zg
 
         now = datetime.now(timezone.utc)
