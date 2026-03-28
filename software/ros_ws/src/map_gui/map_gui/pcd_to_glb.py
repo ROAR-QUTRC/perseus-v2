@@ -328,13 +328,13 @@ class PcdToGlbNode(Node):
                 return
 
             point_cloud, _ = point_cloud.remove_statistical_outlier(
-            nb_neighbors=35,   # increase to 30-50 for more aggressive
-            std_ratio=1.0     # lower = more aggressive (try 0.5-2.0)
+                nb_neighbors=35,  # increase to 30-50 for more aggressive
+                std_ratio=1.0,  # lower = more aggressive (try 0.5-2.0)
             )
 
             cl, ind = point_cloud.remove_radius_outlier(
-            nb_points=20,      # minimum neighbours within radius
-            radius=3         # search radius — tune to your map's scale
+                nb_points=20,  # minimum neighbours within radius
+                radius=3,  # search radius — tune to your map's scale
             )
             point_cloud = point_cloud.select_by_index(ind)
 
