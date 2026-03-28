@@ -6,19 +6,22 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from tf2_ros import StaticTransformBroadcaster
+from geometry_msgs.msg import TransformStamped
+import math
 
 
 def generate_launch_description():
     """
-    Launch the complete autonomy stack including SLAM, navigation.
+    Launch the autonomy stack including map server and navigation.
 
-    This launch file combines:
-    - online_async_launch.py: SLAM Toolbox for mapping/localization
+    This launch file includes:
+    - Static map frame to odom transform
+    - Map server for loading pre-recorded map (aut_arch_2026.yaml)
     - perseus_nav_bringup.launch.py: Nav2 navigation stack
     """
 
     autonomy_dir = get_package_share_directory("autonomy")
-    slam_params_file = LaunchConfiguration("slam_params_file")
     nav_params_file = LaunchConfiguration("nav_params_file")
     ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -41,13 +44,8 @@ def generate_launch_description():
         default_value="true",
         description="Automatically startup the autonomy stack",
     )
-    declare_slam_params_file_cmd = DeclareLaunchArgument(
-        "slam_params_file",
-        default_value=os.path.join(autonomy_dir, "config", "slam_toolbox_params.yaml"),
-        description="Full path to the ROS2 parameters file for SLAM Toolbox",
-    )
 
-    map_file = os.path.join(autonomy_dir, "map", "sim_map_serial")
+    map_file = os.path.join(autonomy_dir, "map", "aut_arch_2026")
 
     declare_nav_params_file_cmd = DeclareLaunchArgument(
         "nav_params_file",
@@ -61,17 +59,24 @@ def generate_launch_description():
         description="Full path to the ROS2 parameters file for EKF",
     )
 
-    # Include SLAM Toolbox launch
-    slam_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(autonomy_dir, "launch", "online_async_launch.py")
-        ),
-        launch_arguments={
-            "slam_params_file": slam_params_file,
-            "use_sim_time": use_sim_time,
-            "autostart": autostart,
-            "map_file_name": map_file,  # FOR SIMULATION ONLY
-        }.items(),
+    # Static transform from map to odom
+    static_tf_map_to_odom = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
+        output="screen",
+    )
+
+    # Map server node
+    map_server = Node(
+        package="nav2_map_server",
+        executable="map_server",
+        name="map_server",
+        output="screen",
+        parameters=[
+            {"yaml_filename": map_file + ".yaml"},
+            {"use_sim_time": use_sim_time},
+        ],
     )
 
     # Include Nav2 Bringup launch
@@ -111,13 +116,13 @@ def generate_launch_description():
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_imu_topic)
-    ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_nav_params_file_cmd)
     ld.add_action(declare_ekf_config_file_cmd)
 
     # Include launch files and nodes
+    ld.add_action(static_tf_map_to_odom)
+    ld.add_action(map_server)
     ld.add_action(ekf_node)
-    ld.add_action(slam_launch)
     ld.add_action(nav_launch)
 
     return ld
