@@ -398,12 +398,41 @@ class LunarPCDViewer(QMainWindow):
         self._sidebar_layout.addWidget(self._layer_list)
 
         # Contour overlay toggle (applies to elevation layer)
-        from PyQt5.QtWidgets import QCheckBox, QComboBox
+        from PyQt5.QtWidgets import QCheckBox, QComboBox, QSlider
 
         self._chk_contours = QCheckBox("Show contour lines")
         self._chk_contours.setChecked(True)
         self._chk_contours.toggled.connect(self._on_contour_toggled)
         self._sidebar_layout.addWidget(self._chk_contours)
+
+        # ── ELEVATION COLOUR RANGE ──
+        self._elev_group = QGroupBox("ELEVATION RANGE")
+        elev_lay = QVBoxLayout(self._elev_group)
+        elev_lay.setSpacing(4)
+
+        self._elev_range_label = QLabel("Min: 0%  Max: 100%")
+        self._elev_range_label.setFont(QFont("Courier New", 9))
+        elev_lay.addWidget(self._elev_range_label)
+
+        elev_lay.addWidget(QLabel("Colour min (clip low):"))
+        self._elev_min_slider = QSlider(Qt.Horizontal)
+        self._elev_min_slider.setRange(0, 100)
+        self._elev_min_slider.setValue(0)
+        self._elev_min_slider.valueChanged.connect(self._on_elev_range_changed)
+        elev_lay.addWidget(self._elev_min_slider)
+
+        elev_lay.addWidget(QLabel("Colour max (clip high):"))
+        self._elev_max_slider = QSlider(Qt.Horizontal)
+        self._elev_max_slider.setRange(0, 100)
+        self._elev_max_slider.setValue(100)
+        self._elev_max_slider.valueChanged.connect(self._on_elev_range_changed)
+        elev_lay.addWidget(self._elev_max_slider)
+
+        self._btn_elev_reset = QPushButton("Reset Range")
+        self._btn_elev_reset.clicked.connect(self._reset_elev_range)
+        elev_lay.addWidget(self._btn_elev_reset)
+
+        self._sidebar_layout.addWidget(self._elev_group)
 
         # ── 3D RENDERING OPTIONS ──
         self._3d_group = QGroupBox("3D OPTIONS")
@@ -892,6 +921,7 @@ class LunarPCDViewer(QMainWindow):
 
     def _update_sidebar_visibility(self, layer):
         """Show/hide layer-specific sidebar groups."""
+        self._elev_group.setVisible(layer == "elevation")
         self._sun_group.setVisible(layer == "solar")
         self._3d_group.setVisible(layer == "3d")
 
@@ -1259,9 +1289,45 @@ class LunarPCDViewer(QMainWindow):
             self._render_3d(illum=illum)
 
     def _render_elevation(self):
-        self._show_image(self._zg, "topo")
+        zg = self._zg
+        z_min = float(np.nanmin(zg))
+        z_max = float(np.nanmax(zg))
+        z_range = z_max - z_min if z_max > z_min else 1.0
+        lo = z_min + z_range * (self._elev_min_slider.value() / 100.0)
+        hi = z_min + z_range * (self._elev_max_slider.value() / 100.0)
+        if hi <= lo:
+            hi = lo + 0.01
+        self._show_image(zg, "topo", zmin=lo, zmax=hi)
         if self._chk_contours.isChecked():
             self._draw_contour_lines()
+
+    def _on_elev_range_changed(self, _value):
+        lo = self._elev_min_slider.value()
+        hi = self._elev_max_slider.value()
+        # Prevent min from exceeding max
+        if lo >= hi:
+            if self.sender() is self._elev_min_slider:
+                self._elev_min_slider.setValue(hi - 1)
+                lo = hi - 1
+            else:
+                self._elev_max_slider.setValue(lo + 1)
+                hi = lo + 1
+        zg = self._zg
+        if zg is not None:
+            z_min = float(np.nanmin(zg))
+            z_max = float(np.nanmax(zg))
+            z_range = z_max - z_min if z_max > z_min else 1.0
+            lo_m = z_min + z_range * (lo / 100.0)
+            hi_m = z_min + z_range * (hi / 100.0)
+            self._elev_range_label.setText(
+                f"Min: {lo_m:.2f}m ({lo}%)  Max: {hi_m:.2f}m ({hi}%)"
+            )
+        if self._current_layer == "elevation":
+            self._render_elevation()
+
+    def _reset_elev_range(self):
+        self._elev_min_slider.setValue(0)
+        self._elev_max_slider.setValue(100)
 
     def _on_contour_toggled(self, checked):
         if self._current_layer == "elevation":
