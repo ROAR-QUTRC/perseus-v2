@@ -136,37 +136,6 @@ controller_server:
       approach_velocity_scaling_dist: 0.4 # was 0.8 — start slowing down closer to goal
       min_approach_linear_velocity: 0.06 # was 0.05
       transform_tolerance: 0.5
-      xy_goal_tolerance: 0.25
-      trans_stopped_velocity: 0.03 # decreased from 0.05 for better stopping accuracy
-      short_circuit_trajectory_evaluation: true
-      stateful: true
-      # plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      # # Core speed
-      # desired_linear_vel: 0.25 # was 0.3 (slightly calmer)
-      # # Lookahead tuning (reduces zig-zag / wobble)
-      # lookahead_dist: 0.75 # was 0.6
-      # min_lookahead_dist: 0.50 # was 0.3
-      # max_lookahead_dist: 1.10 # was 0.9
-      # lookahead_time: 1.0 # was 1.5 (less "late correction")
-      # # Rotation / heading handling (reduce overshoot)
-      # use_rotate_to_heading: true
-      # rotate_to_heading_angular_vel: 0.6 # was 1.0 (less aggressive)
-      # rotate_to_heading_min_angle: 1.05 # was 0.785 (~60deg). Avoids flip-flopping
-      # # Limit angular aggressiveness to reduce oscillation
-      # max_angular_accel: 2.0 # was 3.2
-      # max_linear_accel: 2.0
-      # # Collision / regulation behavior (avoid speed oscillations)
-      # max_allowed_time_to_collision_up_to_carrot: 1.2
-      # use_regulated_linear_velocity_scaling: true
-      # use_cost_regulated_linear_velocity_scaling: true
-      # cost_scaling_dist: 0.45 # was 0.3 (start scaling a bit later / smoother)
-      # cost_scaling_gain: 0.6 # was 1.0 (less oscillatory modulation)
-      # inflation_cost_scaling_factor: 3.0
-      # # Approaching goal behavior (smooth final approach)
-      # use_velocity_scaled_lookahead_dist: true
-      # approach_velocity_scaling_dist: 0.8 # was 0.6 (more gradual slow down)
-      # min_approach_linear_velocity: 0.06 # was 0.05
-      # transform_tolerance: 0.5
 local_costmap:
   local_costmap:
     ros__parameters:
@@ -307,7 +276,7 @@ behavior_server:
     transform_timeout: 0.2 # Increased from 0.1 for timing tolerance
     simulate_ahead_time: 2.0
     max_rotational_vel: 0.5 # # Reduced from 1.0 for smoother rotation for EFK
-    min_rotational_vel: 0.27 # Reduced from 0.5 to ensure it can still rotate at low speeds without stopping
+    min_rotational_vel: 0.2 # Reduced from 0.
     rotational_acc_lim: 3.2 # increased from 2.0 for better responsiveness
     enable_stamped_cmd_vel: true
 waypoint_follower:
@@ -327,7 +296,7 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     max_velocity: [0.3, 0.0, 0.4] # [x, y, theta], Increase  max vel to avoid stalling
     min_velocity: [-0.3, 0.0, -0.4]
-    #  deadband_velocity: [0.0, 0.0, 0.0]
+    deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
