@@ -1,13 +1,15 @@
-#include <rclcpp/rclcpp.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
+
+#include <nav_msgs/msg/odometry.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 class OdomTransform : public rclcpp::Node
 {
 public:
-    OdomTransform() : Node("odom_transform")
+    OdomTransform()
+        : Node("odom_transform")
     {
         correction_.setRPY(0.0, 0.0, M_PI / 2.0);
 
@@ -57,7 +59,7 @@ private:
     tf2::Quaternion correction_;
 };
 
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<OdomTransform>());

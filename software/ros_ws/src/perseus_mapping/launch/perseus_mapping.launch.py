@@ -87,15 +87,17 @@ def generate_launch_description():
         ),
     )
     odom_transform_node = Node(
-        package='perseus_mapping',
-        executable='odom_transform',
-        name='odom_transform',
-        parameters=[{'use_sim_time': use_sim_time}],
+        package="perseus_mapping",
+        executable="odom_transform",
+        name="odom_transform",
+        parameters=[{"use_sim_time": use_sim_time}],
     )
 
-    return LaunchDescription([
-        sim_filter_launch,
-        fast_lio_launch,
-        odom_transform_node,
-        map_saver_launch,
-    ])
+    return LaunchDescription(
+        [
+            sim_filter_launch,
+            fast_lio_launch,
+            odom_transform_node,
+            map_saver_launch,
+        ]
+    )

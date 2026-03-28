@@ -53,7 +53,3 @@ install(TARGETS map_saver DESTINATION lib/${PROJECT_NAME})
 install(TARGETS odom_transform DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
-
-
-
-
