@@ -124,6 +124,14 @@ def generate_launch_description():
         arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
     )
 
+    # Nav2 Waypoints Bridge Node
+    nav2_waypoints_bridge_node = Node(
+        package="perseus_autonomy_bridge",
+        executable="nav2_waypoints_bridge",
+        name="nav2_waypoints_bridge",
+        output="screen",
+    )
+
     # Create launch description
     ld = LaunchDescription()
 
@@ -139,5 +147,6 @@ def generate_launch_description():
     ld.add_action(map_server_node)
     ld.add_action(map_lifecycle_manager)
     ld.add_action(static_map_odom_tf)
+    ld.add_action(nav2_waypoints_bridge_node)
     ld.add_action(nav_launch)
     return ld
