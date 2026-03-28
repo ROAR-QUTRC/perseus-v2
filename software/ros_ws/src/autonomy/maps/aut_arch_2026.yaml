@@ -4,7 +4,7 @@
 # Size: 1969x1613 px = 30.52m x 25.00m
 image: aut_arch_2026.pgm
 resolution: 0.0155
-origin: [3.9830, -12.9870, 0.0]
+origin: [-12.9870, 3.9830, 0.0]
 negate: 0
 occupied_thresh: 0.65
 free_thresh: 0.25
