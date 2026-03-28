@@ -109,7 +109,6 @@ controller_server:
       xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.25
     FollowPath:
-<<<<<<< HEAD
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
       # Core speed
       desired_linear_vel: 0.3 # was 0.25 increased to avoid stalling
@@ -136,30 +135,6 @@ controller_server:
       use_velocity_scaled_lookahead_dist: true
       approach_velocity_scaling_dist: 0.4 # was 0.8 — start slowing down closer to goal
       min_approach_linear_velocity: 0.06 # was 0.05
-=======
-      plugin: "dwb_core::DWBLocalPlanner"
-      debug_trajectory_details: true
-      min_vel_x: 0.0
-      min_vel_y: 0.0
-      max_vel_x: 0.5 # significantly large to ensure robot can rotate, limited by accels and vel_smoother
-      max_vel_y: 0.0
-      max_vel_theta: 1.2 # significantly large to ensure robot can rotate, limited by accels and vel_smoother
-      min_speed_xy: 0.0
-      max_speed_xy: 0.3
-      min_speed_theta: 0.2
-      acc_lim_x: 2.0
-      acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
-      decel_lim_y: 0.0
-      decel_lim_theta: -3.2
-      vx_samples: 20
-      vy_samples: 0
-      vtheta_samples: 60
-      # sim_time: 2.0
-      linear_granularity: 0.05
-      angular_granularity: 0.025
->>>>>>> dca4d2c5 (feat: Update FollowPath plugin to DWBLocalPlanner with enhanced parameters for improved navigation)
       transform_tolerance: 0.5
       xy_goal_tolerance: 0.25
       trans_stopped_velocity: 0.03 # decreased from 0.05 for better stopping accuracy
@@ -385,14 +360,9 @@ velocity_smoother:
     smoothing_frequency: 20.0 # Increased from 10.0 for smoother operation
     scale_velocities: false
     feedback: "OPEN_LOOP"
-<<<<<<< HEAD
     max_velocity: [0.3, 0.0, 0.4] # [x, y, theta], Increase  max vel to avoid stalling
     min_velocity: [-0.3, 0.0, -0.4]
-=======
-    max_velocity: [0.25, 0.0, 0.35] # [x, y, theta], Reduced max velocities for stability
-    min_velocity: [-0.25, 0.0, -0.35]
->>>>>>> 88f9ddf4 (feat: Update EKF configuration, adjust navigation parameters, and modify launch files for improved sensor integration)
-    deadband_velocity: [0.0, 0.0, 0.0]
+    #  deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]

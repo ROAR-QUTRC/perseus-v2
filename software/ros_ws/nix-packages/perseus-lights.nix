@@ -5,6 +5,7 @@
   ament-cmake,
   hi-can-raw,
   nav-msgs,
+  perseus-interfaces,
   rclcpp,
   sensor-msgs,
   std-msgs,
@@ -20,6 +21,7 @@ buildRosPackage rec {
   propagatedBuildInputs = [
     hi-can-raw
     nav-msgs
+    perseus-interfaces
     rclcpp
     sensor-msgs
     std-msgs

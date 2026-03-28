@@ -4,6 +4,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include <std_msgs/msg/int8.hpp>
+
 #include "perseus_interfaces/msg/navigation_data.hpp"
 #include "perseus_lights/light_driver.hpp"  // for ring::commands
 
@@ -32,7 +33,7 @@ private:
 
     // --- CAN ---
     rclcpp::TimerBase::SharedPtr _packet_timer;
-    constexpr static auto PACKET_HANLDE_MS = std::chrono::milliseconds(100);
+    constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(100);
     void _handle_can();
 
     // --- Publisher ---
@@ -42,14 +43,14 @@ private:
     rclcpp::TimerBase::SharedPtr _topic_check_timer;
 
     // --- State flags ---
-    bool _joy_seen            = false;
+    bool _joy_seen = false;
     bool _autonomy_bridge_seen = false;
-    bool _navigation_active   = false;
-    bool _power_bus_off       = false;
-    bool _error_state         = false;
+    bool _navigation_active = false;
+    bool _power_bus_off = false;
+    bool _error_state = false;
 
     std::optional<hi_can::RawCanInterface> _can_interface;
-    std::optional<hi_can::PacketManager>   _packet_manager;
+    std::optional<hi_can::PacketManager> _packet_manager;
 
     // --- Timestamps for liveness checks ---
     rclcpp::Time _last_joy_time;

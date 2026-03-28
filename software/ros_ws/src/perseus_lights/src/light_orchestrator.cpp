@@ -6,7 +6,6 @@ using namespace std::chrono_literals;
 using namespace hi_can::addressing;
 using namespace hi_can::parameters::legacy::power::control::power_bus;
 
-
 LightStatusOrchestrator::LightStatusOrchestrator(const rclcpp::NodeOptions& options)
     : Node("light_status_orchestrator", options)
 {
@@ -32,26 +31,23 @@ LightStatusOrchestrator::LightStatusOrchestrator(const rclcpp::NodeOptions& opti
 
         _packet_manager->set_callback(
             filter_t{static_cast<flagged_address_t>(legacy::address_t{
-                    legacy::power::SYSTEM_ID,
-                    legacy::power::control::SUBSYSTEM_ID,
-                    static_cast<uint8_t>(legacy::power::control::device::ROVER_CONTROL_BOARD),
-                    static_cast<uint8_t>(legacy::power::control::rcb::groups::DRIVE_BUS),
-                    static_cast<uint8_t>(legacy::power::control::power_bus::parameter::POWER_STATUS)
-                }
-            )},
+                legacy::power::SYSTEM_ID,
+                legacy::power::control::SUBSYSTEM_ID,
+                static_cast<uint8_t>(legacy::power::control::device::ROVER_CONTROL_BOARD),
+                static_cast<uint8_t>(legacy::power::control::rcb::groups::DRIVE_BUS),
+                static_cast<uint8_t>(legacy::power::control::power_bus::parameter::POWER_STATUS)})},
             hi_can::PacketManager::callback_config_t{
                 .data_callback = std::bind(&LightStatusOrchestrator::_handle_rcb_status, this, std::placeholders::_1),
             });
     }
-    catch(const std::exception& e)
+    catch (const std::exception& e)
     {
         RCLCPP_INFO(this->get_logger(), "Failed to CAN");
     }
 
     _packet_timer = this->create_wall_timer(
-        PACKET_HANLDE_MS,
-        std::bind(&LightStatusOrchestrator::_handle_can, this)
-    );
+        PACKET_HANDLE_MS,
+        std::bind(&LightStatusOrchestrator::_handle_can, this));
 
     // Timer: periodically check topic liveness (detects dropped topics)
     _topic_check_timer = this->create_wall_timer(
@@ -92,17 +88,17 @@ void LightStatusOrchestrator::_nav_data_callback(
     _last_nav_data_time = this->now();
 
     const bool was_bridge_seen = _autonomy_bridge_seen;
-    const bool was_navigating  = _navigation_active;
+    const bool was_navigating = _navigation_active;
 
     _autonomy_bridge_seen = true;
-    _navigation_active    = msg->navigation_active;
+    _navigation_active = msg->navigation_active;
 
     if (was_bridge_seen != _autonomy_bridge_seen || was_navigating != _navigation_active)
     {
         RCLCPP_INFO(this->get_logger(),
                     "[Trigger] NavigationData update — bridge_seen=%s navigation_active=%s",
                     _autonomy_bridge_seen ? "true" : "false",
-                    _navigation_active    ? "true" : "false");
+                    _navigation_active ? "true" : "false");
         _update_status();
     }
 }
@@ -116,7 +112,7 @@ void LightStatusOrchestrator::_handle_can()
     {
         _packet_manager->handle();
     }
-    catch(const std::exception& e)
+    catch (const std::exception& e)
     {
         RCLCPP_WARN(this->get_logger(), "CAN handle failed");
     }
@@ -145,11 +141,11 @@ void LightStatusOrchestrator::_can_callback(const std::vector<uint8_t>& data)
     {
     case power_status::OFF:
         _power_bus_off = true;
-        _error_state   = false;
+        _error_state = false;
         break;
     case power_status::ON:
         _power_bus_off = false;
-        _error_state   = false;
+        _error_state = false;
         break;
     case power_status::PRECHARGING:
         break;
@@ -185,7 +181,7 @@ void LightStatusOrchestrator::_check_topic_timer_callback()
         RCLCPP_WARN(this->get_logger(),
                     "[Trigger] /autonomy/navigation_info lost (timeout %.1fs)", nav_age);
         _autonomy_bridge_seen = false;
-        _navigation_active    = false;
+        _navigation_active = false;
         _update_status();
     }
 }
@@ -238,7 +234,6 @@ void LightStatusOrchestrator::_publish_status(ring::commands command)
     msg.data = static_cast<int8_t>(command);
     _status_publisher->publish(msg);
 }
-
 
 int main(int argc, char** argv)
 {
