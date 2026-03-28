@@ -398,7 +398,7 @@ class LunarPCDViewer(QMainWindow):
         self._sidebar_layout.addWidget(self._layer_list)
 
         # Contour overlay toggle (applies to elevation layer)
-        from PyQt5.QtWidgets import QCheckBox, QComboBox, QSlider
+        from PyQt5.QtWidgets import QCheckBox, QComboBox
 
         self._chk_contours = QCheckBox("Show contour lines")
         self._chk_contours.setChecked(True)
