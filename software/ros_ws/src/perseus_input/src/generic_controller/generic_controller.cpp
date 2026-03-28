@@ -195,7 +195,7 @@ double GenericController::AxisParser::get_value()
             scaling = 2.0;
     }
     if (!std::isfinite(scaling))
-        scaling = 1.0;
+        scaling = 0.5;
 
     double deadband_positive = params[DEADBAND_POSITIVE_IDX].as_double();
     double deadband_negative = params[DEADBAND_NEGATIVE_IDX].as_double();
