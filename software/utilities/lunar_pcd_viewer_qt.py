@@ -294,6 +294,7 @@ class LunarPCDViewer(QMainWindow):
         self._elev_clip_max = None
         self._3d_clip_min = None
         self._3d_clip_max = None
+        self._3d_camera_initialized = False
 
         # Sun controls state
         self._sun_lat = DEFAULT_LAT
@@ -1214,6 +1215,9 @@ class LunarPCDViewer(QMainWindow):
 
     def _render_3d(self, illum=None):
         """Render 3D terrain in the selected mode."""
+        # Preserve camera state across re-renders
+        cam = self._gl_view.cameraPosition()
+        opts = self._gl_view.opts.copy()
         self._gl_view.clear()
         xg, yg, zg = self._xg, self._yg, self._zg
 
@@ -1290,8 +1294,9 @@ class LunarPCDViewer(QMainWindow):
         ref_grid.setColor((255, 255, 255, 40))
         self._gl_view.addItem(ref_grid)
 
-        # Camera (only set on first render, not during animation)
-        if illum is None:
+        # Restore camera state (opts saved before clear)
+        if not self._3d_camera_initialized:
+            # First render — set sensible defaults
             cx = float(np.mean(xg))
             cy = float(np.mean(yg))
             cz = float(np.mean(zg))
@@ -1300,6 +1305,12 @@ class LunarPCDViewer(QMainWindow):
             self._gl_view.opts["distance"] = span * 1.8
             self._gl_view.opts["elevation"] = 25
             self._gl_view.opts["azimuth"] = 45
+            self._3d_camera_initialized = True
+        else:
+            # Subsequent renders — restore saved camera
+            for key in ("center", "distance", "elevation", "azimuth", "fov"):
+                if key in opts:
+                    self._gl_view.opts[key] = opts[key]
 
         self._gl_view.update()
 
