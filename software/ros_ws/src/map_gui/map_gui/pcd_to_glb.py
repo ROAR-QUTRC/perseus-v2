@@ -137,7 +137,7 @@ class PcdToGlbNode(Node):
         )
         self.declare_parameter(
             "border_shrink_factor",
-            0.97,
+            0.65,
             ParameterDescriptor(
                 description="Fraction of scan XY extent to keep (0.85–0.97). Lower = more border removed."
             ),
@@ -249,18 +249,28 @@ class PcdToGlbNode(Node):
         )
 
         # Reducing noise
-        point_cloud_down = point_cloud.voxel_down_sample(voxel_size=0.05)
+        point_cloud_down = point_cloud.voxel_down_sample(voxel_size=2)
         # cl, ind = point_cloud_down.remove_radius_outlier(
         #     nb_points=16,
         #     radius=0.5
         # )
         # self.display_inlier_outlier(point_cloud_down, ind)
 
-        bbox = o3d.geometry.AxisAlignedBoundingBox(
-            min_bound=(-10, -10, -1), max_bound=(10, 10, 5)
-        )
 
-        # Crop the point cloud
+        aabb = point_cloud_down.get_axis_aligned_bounding_box()
+        center = aabb.get_center()
+
+# Translate to center XY and set Z floor to 0
+        point_cloud_down.translate((
+        -center[0],          # center X
+        -center[1],          # center Y
+        -aabb.get_min_bound()[2]   # floor Z to 0
+        ))
+
+        bbox = o3d.geometry.AxisAlignedBoundingBox(
+        min_bound=(-10, -10, -1), max_bound=(10, 10, 5)
+)       
+
         pcd_cropped = point_cloud_down.crop(bbox)
         o3d.visualization.draw_geometries([pcd_cropped])
 
@@ -316,6 +326,10 @@ class PcdToGlbNode(Node):
                 self.get_logger().error(f"Empty point cloud: {pcd_path}")
                 return
 
+            point_cloud, _ = point_cloud.remove_statistical_outlier(
+            nb_neighbors=35,   # increase to 30-50 for more aggressive
+            std_ratio=0.9     # lower = more aggressive (try 0.5-2.0)
+            )
             point_cloud.estimate_normals(
                 search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=3.0, max_nn=30)
             )
@@ -330,15 +344,13 @@ class PcdToGlbNode(Node):
             # first loose filter
             density_mean = np.mean(densities)
             density_std = np.std(densities)
-            density_threshold = density_mean - 3.5 * density_std
+            density_threshold = density_mean - 3 * density_std
             mesh.remove_vertices_by_mask(densities < density_threshold)
 
             # mesh.remove_vertices_by_mask(
             #     densities < np.quantile(densities, self.density_quantile)
             # )
 
-            aabb = point_cloud.get_axis_aligned_bounding_box()
-            print(aabb.get_extent())  # Returns (width, height, depth)
 
             # second tighter filter
             # Then spatial crop to remove remaining border skirt
@@ -379,35 +391,16 @@ class PcdToGlbNode(Node):
             mesh.triangle_normals = o3d.utility.Vector3dVector([])
             mesh.compute_vertex_normals()
 
-            # ----------------------------------------------------------
-            # Ground-normalised height heatmap
-            #   t=0 (z_low)  → blue   (below ground / ditch)
-            #   t=0.5        → green  (ground level)
-            #   t=1 (z_high) → red    (above ground / obstacles / walls)
-            # ----------------------------------------------------------
-            t = np.clip(
-                0.5
-                + z_relative
-                / (
-                    2.0
-                    * np.where(
-                        z_relative >= 0, self.heatmap_z_high, abs(self.heatmap_z_low)
-                    )
-                ),
-                0.0,
-                1.0,
-            )
-
-            # dead-band around zero so ±threshold always maps to green
             green_band = 0.05
             t = np.where(
             np.abs(z_relative) < green_band,
-            0.5,  # force green
+            0.5,
             np.clip(
             0.5 + z_relative / (2.0 * np.where(z_relative >= 0, self.heatmap_z_high, abs(self.heatmap_z_low))),
             0.0, 1.0
             )
-) #so i can commit
+) 
+
 
             # colors = np.zeros((len(t), 3))
             # colors[:, 1] = np.clip(2.0 * t, 0, 0.5) * np.clip(2.0 * (1.0 - t), 0, 1)   # G: peaks at mid
