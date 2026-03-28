@@ -1148,8 +1148,16 @@ class LunarPCDViewer(QMainWindow):
         z_flat = zg.ravel()
 
         if self._chk_elev_color.isChecked():
-            lo = self._3d_clip_min if self._3d_clip_min is not None else float(z_flat.min())
-            hi = self._3d_clip_max if self._3d_clip_max is not None else float(z_flat.max())
+            lo = (
+                self._3d_clip_min
+                if self._3d_clip_min is not None
+                else float(z_flat.min())
+            )
+            hi = (
+                self._3d_clip_max
+                if self._3d_clip_max is not None
+                else float(z_flat.max())
+            )
             if hi <= lo:
                 hi = lo + 0.01
             z_norm = np.clip((z_flat - lo) / (hi - lo), 0.0, 1.0)
