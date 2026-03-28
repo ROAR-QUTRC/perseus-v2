@@ -7,7 +7,7 @@ generic_controller:
         turbo: 2.5
         axis: 1
         # Positive scaling: joystick forward = positive linear.x = forward (ROS convention)
-        scaling: 0.7
+        scaling: 0.35
         enable:
           axis: 2
           is_less_than: true
@@ -20,7 +20,7 @@ generic_controller:
         turbo: 2.5
         axis: 0
         # Positive scaling: joystick left = positive angular.z = turn left (ROS convention)
-        scaling: 1.0
+        scaling: 0.7
         enable:
           follows: drive.forward.enable
         turbo_enable:
