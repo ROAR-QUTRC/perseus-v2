@@ -9,8 +9,8 @@
     runtime_pos_log_enable: false
     map_file_path: "~/maps/scan.pcd"
     common:
-      lid_topic: "/livox/lidar_filtered" # simulation - filtered to remove NaN/Inf values
-      # lid_topic: "/livox/lidar" # physical rover
+      # lid_topic: "/livox/lidar_filtered" # simulation - filtered to remove NaN/Inf values
+      lid_topic: "/livox/lidar" # physical rover
       imu_topic: "/livox/imu"
       map_frame: "lidar_map"
       body_frame: "lidar_odom"
