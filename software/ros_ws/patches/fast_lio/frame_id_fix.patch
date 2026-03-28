@@ -1,5 +1,5 @@
 diff --git a/src/laserMapping.cpp b/src/laserMapping.cpp
-index e5d9950..32654c6 100644
+index e5d9950..f8ad97a 100644
 --- a/src/laserMapping.cpp
 +++ b/src/laserMapping.cpp
 @@ -505,7 +505,7 @@ void publish_frame_world(rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::Share
@@ -58,7 +58,15 @@ index e5d9950..32654c6 100644
      trans.header.stamp = get_ros_time(lidar_end_time);
      trans.transform.translation.x = odomAftMapped.pose.pose.position.x;
      trans.transform.translation.y = odomAftMapped.pose.pose.position.y;
-@@ -662,7 +662,7 @@ void publish_path(rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath)
+@@ -655,14 +655,14 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
+     trans.transform.rotation.x = odomAftMapped.pose.pose.orientation.x;
+     trans.transform.rotation.y = odomAftMapped.pose.pose.orientation.y;
+     trans.transform.rotation.z = odomAftMapped.pose.pose.orientation.z;
+-    tf_br->sendTransform(trans);
++    // tf_br->sendTransform(trans);
+ }
+ 
+ void publish_path(rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath)
  {
      set_posestamp(msg_body_pose);
      msg_body_pose.header.stamp = get_ros_time(lidar_end_time); // ros::Time().fromSec(lidar_end_time);
