@@ -7,7 +7,7 @@ log_level: info
 output: screen
 # Color stream settings.
 # Lightweight profile to reduce bandwidth and CPU load.
-enable_color: false
+enable_color: true
 rgb_camera.color_profile: 424,240,15
 rgb_camera.color_format: RGB8
 rgb_camera.enable_auto_exposure: true
