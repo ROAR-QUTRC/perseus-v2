@@ -1158,6 +1158,7 @@ class LunarPCDViewer(QMainWindow):
 
         else:
             # Mesh modes: wireframe, solid, or both
+            colors = self._compute_3d_colors(illum)
             rows, cols = zg.shape
             # Reshape colours to (rows, cols, 4) for vertex colouring
             vert_colors = colors.reshape(rows, cols, 4)
