@@ -13,10 +13,10 @@ rgb_camera.color_format: RGB8
 rgb_camera.enable_auto_exposure: true
 # Depth and infrared stream settings.
 # Only depth is enabled; infrared streams stay off.
-enable_depth: false
+enable_depth: true
 enable_infra: false
-enable_infra1: true
-enable_infra2: true
+enable_infra1: false
+enable_infra2: false
 depth_module.depth_profile: 424,240,30
 depth_module.depth_format: Z16
 depth_module.infra_profile: 424,240,30
