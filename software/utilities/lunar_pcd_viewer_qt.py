@@ -292,6 +292,8 @@ class LunarPCDViewer(QMainWindow):
         self._z_norm = None
         self._elev_clip_min = None
         self._elev_clip_max = None
+        self._3d_clip_min = None
+        self._3d_clip_max = None
 
         # Sun controls state
         self._sun_lat = DEFAULT_LAT
@@ -468,6 +470,39 @@ class LunarPCDViewer(QMainWindow):
         self._chk_solar_light.setChecked(False)
         self._chk_solar_light.toggled.connect(lambda _: self._refresh_3d())
         g3d_lay.addWidget(self._chk_solar_light)
+
+        # 3D elevation colour range
+        from PyQt5.QtWidgets import QLineEdit as _QLE
+        from PyQt5.QtGui import QDoubleValidator as _QDV
+
+        self._3d_range_label = QLabel("Colour range (m):")
+        self._3d_range_label.setFont(QFont("Courier New", 9))
+        g3d_lay.addWidget(self._3d_range_label)
+
+        row_3d_min = QHBoxLayout()
+        row_3d_min.addWidget(QLabel("Min (m):"))
+        self._3d_min_input = _QLE()
+        self._3d_min_input.setValidator(_QDV())
+        self._3d_min_input.returnPressed.connect(self._on_3d_range_applied)
+        row_3d_min.addWidget(self._3d_min_input)
+        g3d_lay.addLayout(row_3d_min)
+
+        row_3d_max = QHBoxLayout()
+        row_3d_max.addWidget(QLabel("Max (m):"))
+        self._3d_max_input = _QLE()
+        self._3d_max_input.setValidator(_QDV())
+        self._3d_max_input.returnPressed.connect(self._on_3d_range_applied)
+        row_3d_max.addWidget(self._3d_max_input)
+        g3d_lay.addLayout(row_3d_max)
+
+        row_3d_btns = QHBoxLayout()
+        self._btn_3d_range_apply = QPushButton("Apply")
+        self._btn_3d_range_apply.clicked.connect(self._on_3d_range_applied)
+        row_3d_btns.addWidget(self._btn_3d_range_apply)
+        self._btn_3d_range_reset = QPushButton("Reset")
+        self._btn_3d_range_reset.clicked.connect(self._reset_3d_range)
+        row_3d_btns.addWidget(self._btn_3d_range_reset)
+        g3d_lay.addLayout(row_3d_btns)
 
         # 3D solar animation
         self._btn_3d_cycle = QPushButton("Play 3D Solar Day")
@@ -908,6 +943,7 @@ class LunarPCDViewer(QMainWindow):
 
         # Show initial layer (elevation avoids OpenGL requirement on startup)
         self._init_elev_inputs()
+        self._init_3d_range_inputs()
         self._update_position_labels()
         self._layer_list.setCurrentRow(1)  # "elevation"
         self._current_layer = "elevation"
@@ -1112,8 +1148,11 @@ class LunarPCDViewer(QMainWindow):
         z_flat = zg.ravel()
 
         if self._chk_elev_color.isChecked():
-            # Elevation colouring via lunar LUT
-            z_norm = (z_flat - z_flat.min()) / (z_flat.max() - z_flat.min() + 1e-9)
+            lo = self._3d_clip_min if self._3d_clip_min is not None else float(z_flat.min())
+            hi = self._3d_clip_max if self._3d_clip_max is not None else float(z_flat.max())
+            if hi <= lo:
+                hi = lo + 0.01
+            z_norm = np.clip((z_flat - lo) / (hi - lo), 0.0, 1.0)
             lut = LUTS["topo"]
             idx = (z_norm * 255).astype(np.uint8)
             colors = lut[idx].astype(np.float32) / 255.0
@@ -1143,7 +1182,11 @@ class LunarPCDViewer(QMainWindow):
         intensity = self._intensity
 
         if self._chk_elev_color.isChecked():
-            z_norm = (z - z.min()) / (z.max() - z.min() + 1e-9)
+            lo = self._3d_clip_min if self._3d_clip_min is not None else float(z.min())
+            hi = self._3d_clip_max if self._3d_clip_max is not None else float(z.max())
+            if hi <= lo:
+                hi = lo + 0.01
+            z_norm = np.clip((z - lo) / (hi - lo), 0.0, 1.0)
             lut = LUTS["topo"]
             idx = (z_norm * 255).astype(np.uint8)
             colors = lut[idx].astype(np.float32) / 255.0
@@ -1256,6 +1299,33 @@ class LunarPCDViewer(QMainWindow):
         """Re-render 3D view when options change."""
         if self._current_layer == "3d" and self._gl_view is not None:
             self._render_3d()
+
+    def _init_3d_range_inputs(self):
+        """Populate 3D range inputs with actual data range after loading."""
+        if self._raw_points and self._points is not None:
+            z = self._points[:, 2]
+        elif self._zg is not None:
+            z = self._zg.ravel()
+        else:
+            return
+        z_min, z_max = float(z.min()), float(z.max())
+        self._3d_min_input.setPlaceholderText(f"{z_min:.2f}")
+        self._3d_max_input.setPlaceholderText(f"{z_max:.2f}")
+        self._3d_range_label.setText(f"Colour range: {z_min:.2f}m to {z_max:.2f}m")
+
+    def _on_3d_range_applied(self):
+        min_text = self._3d_min_input.text().strip()
+        max_text = self._3d_max_input.text().strip()
+        self._3d_clip_min = float(min_text) if min_text else None
+        self._3d_clip_max = float(max_text) if max_text else None
+        self._refresh_3d()
+
+    def _reset_3d_range(self):
+        self._3d_clip_min = None
+        self._3d_clip_max = None
+        self._3d_min_input.clear()
+        self._3d_max_input.clear()
+        self._refresh_3d()
 
     def _toggle_3d_cycle(self):
         """Start/stop the 3D solar day animation."""
