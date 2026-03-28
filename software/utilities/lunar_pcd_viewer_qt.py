@@ -724,8 +724,10 @@ class LunarPCDViewer(QMainWindow):
         coeffs, _, _, _ = np.linalg.lstsq(A, z[valid], rcond=None)
         a, b, c = coeffs
         tilt_deg = np.degrees(np.arctan(np.sqrt(a**2 + b**2)))
-        print(f"[PERSEUS] Ground plane tilt: {tilt_deg:.2f} deg "
-              f"(dz/dx={a:.4f}, dz/dy={b:.4f})")
+        print(
+            f"[PERSEUS] Ground plane tilt: {tilt_deg:.2f} deg "
+            f"(dz/dx={a:.4f}, dz/dy={b:.4f})"
+        )
         points = points.copy()
         points[:, 2] -= a * points[:, 0] + b * points[:, 1]
         return points
@@ -2112,7 +2114,8 @@ def main():
     )
     parser.add_argument("pcd_file", help="Path to .pcd file")
     parser.add_argument(
-        "--flatten", action="store_true",
+        "--flatten",
+        action="store_true",
         help="Automatically compensate for ground-plane tilt (levelling)",
     )
     args = parser.parse_args()
