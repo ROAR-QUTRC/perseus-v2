@@ -256,20 +256,21 @@ class PcdToGlbNode(Node):
         # )
         # self.display_inlier_outlier(point_cloud_down, ind)
 
-
         aabb = point_cloud_down.get_axis_aligned_bounding_box()
         center = aabb.get_center()
 
-# Translate to center XY and set Z floor to 0
-        point_cloud_down.translate((
-        -center[0],          # center X
-        -center[1],          # center Y
-        -aabb.get_min_bound()[2]   # floor Z to 0
-        ))
+        # Translate to center XY and set Z floor to 0
+        point_cloud_down.translate(
+            (
+                -center[0],  # center X
+                -center[1],  # center Y
+                -aabb.get_min_bound()[2],  # floor Z to 0
+            )
+        )
 
         bbox = o3d.geometry.AxisAlignedBoundingBox(
-        min_bound=(-10, -10, -1), max_bound=(10, 10, 5)
-)       
+            min_bound=(-10, -10, -1), max_bound=(10, 10, 5)
+        )
 
         pcd_cropped = point_cloud_down.crop(bbox)
         o3d.visualization.draw_geometries([pcd_cropped])
@@ -358,7 +359,6 @@ class PcdToGlbNode(Node):
             #     densities < np.quantile(densities, self.density_quantile)
             # )
 
-
             # second tighter filter
             # Then spatial crop to remove remaining border skirt
             pts = np.asarray(point_cloud.points)
@@ -400,14 +400,23 @@ class PcdToGlbNode(Node):
 
             green_band = 0.05
             t = np.where(
-            np.abs(z_relative) < green_band,
-            0.5,
-            np.clip(
-            0.5 + z_relative / (2.0 * np.where(z_relative >= 0, self.heatmap_z_high, abs(self.heatmap_z_low))),
-            0.0, 1.0
+                np.abs(z_relative) < green_band,
+                0.5,
+                np.clip(
+                    0.5
+                    + z_relative
+                    / (
+                        2.0
+                        * np.where(
+                            z_relative >= 0,
+                            self.heatmap_z_high,
+                            abs(self.heatmap_z_low),
+                        )
+                    ),
+                    0.0,
+                    1.0,
+                ),
             )
-) 
-
 
             # colors = np.zeros((len(t), 3))
             # colors[:, 1] = np.clip(2.0 * t, 0, 0.5) * np.clip(2.0 * (1.0 - t), 0, 1)   # G: peaks at mid
