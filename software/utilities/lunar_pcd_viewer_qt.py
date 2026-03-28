@@ -445,7 +445,7 @@ class LunarPCDViewer(QMainWindow):
         self._3d_cycle_playing = False
         self._3d_cycle_frame = 0
         self._3d_cycle_timer = QTimer(self)
-        self._3d_cycle_timer.setInterval(200)
+        self._3d_cycle_timer.setInterval(40)
         self._3d_cycle_timer.timeout.connect(self._3d_cycle_step)
 
         # ── MISSION SETUP — always visible ──
@@ -599,8 +599,8 @@ class LunarPCDViewer(QMainWindow):
         self._btn_update_sun.clicked.connect(self._on_update_sun)
         sun_lay.addWidget(self._btn_update_sun)
 
-        # Lunar day/night cycle animation (28 Earth days in ~20 seconds)
-        self._btn_cycle = QPushButton("Play Lunar Day (20s)")
+        # Lunar day/night cycle animation (28 Earth days in ~4 seconds)
+        self._btn_cycle = QPushButton("Play Lunar Day (4s)")
         self._btn_cycle.clicked.connect(self._toggle_cycle)
         sun_lay.addWidget(self._btn_cycle)
         self._cycle_label = QLabel("")
@@ -679,7 +679,7 @@ class LunarPCDViewer(QMainWindow):
 
         # Cycle timer
         self._cycle_timer = QTimer(self)
-        self._cycle_timer.setInterval(300)
+        self._cycle_timer.setInterval(60)
         self._cycle_timer.timeout.connect(self._cycle_step)
 
         # Apply initial theme
@@ -1231,7 +1231,7 @@ class LunarPCDViewer(QMainWindow):
             self._3d_cycle_frame = 0
             self._btn_3d_cycle.setText("Stop")
             n = len(self._illum_stack)
-            interval = max(50, int(20000 / n))
+            interval = max(10, int(4000 / n))
             self._3d_cycle_timer.setInterval(interval)
             self._3d_cycle_timer.start()
 
@@ -2043,15 +2043,14 @@ class LunarPCDViewer(QMainWindow):
         if self._cycle_playing:
             self._cycle_playing = False
             self._cycle_timer.stop()
-            self._btn_cycle.setText("Play Lunar Day (20s)")
+            self._btn_cycle.setText("Play Lunar Day (4s)")
             self._cycle_label.setText("")
         else:
             self._cycle_playing = True
             self._cycle_frame = 0
             self._btn_cycle.setText("Stop")
-            # 112 frames over 20 seconds = ~178ms per frame
             n = len(self._shaded_stack) if self._shaded_stack else 112
-            interval = max(50, int(20000 / n))
+            interval = max(10, int(4000 / n))
             self._cycle_timer.setInterval(interval)
             self._cycle_timer.start()
 
