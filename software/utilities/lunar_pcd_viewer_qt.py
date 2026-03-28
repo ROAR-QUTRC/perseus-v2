@@ -290,6 +290,8 @@ class LunarPCDViewer(QMainWindow):
         self._score_comp = self._score_summary = None
         self._shaded_stack = None
         self._z_norm = None
+        self._elev_clip_min = None
+        self._elev_clip_max = None
 
         # Sun controls state
         self._sun_lat = DEFAULT_LAT
@@ -398,7 +400,8 @@ class LunarPCDViewer(QMainWindow):
         self._sidebar_layout.addWidget(self._layer_list)
 
         # Contour overlay toggle (applies to elevation layer)
-        from PyQt5.QtWidgets import QCheckBox, QComboBox
+        from PyQt5.QtWidgets import QCheckBox, QComboBox, QLineEdit
+        from PyQt5.QtGui import QDoubleValidator
 
         self._chk_contours = QCheckBox("Show contour lines")
         self._chk_contours.setChecked(True)
@@ -410,23 +413,29 @@ class LunarPCDViewer(QMainWindow):
         elev_lay = QVBoxLayout(self._elev_group)
         elev_lay.setSpacing(4)
 
-        self._elev_range_label = QLabel("Min: 0%  Max: 100%")
+        self._elev_range_label = QLabel("Enter min/max elevation (m)")
         self._elev_range_label.setFont(QFont("Courier New", 9))
         elev_lay.addWidget(self._elev_range_label)
 
-        elev_lay.addWidget(QLabel("Colour min (clip low):"))
-        self._elev_min_slider = QSlider(Qt.Horizontal)
-        self._elev_min_slider.setRange(0, 100)
-        self._elev_min_slider.setValue(0)
-        self._elev_min_slider.valueChanged.connect(self._on_elev_range_changed)
-        elev_lay.addWidget(self._elev_min_slider)
+        row_min = QHBoxLayout()
+        row_min.addWidget(QLabel("Min (m):"))
+        self._elev_min_input = QLineEdit()
+        self._elev_min_input.setValidator(QDoubleValidator())
+        self._elev_min_input.returnPressed.connect(self._on_elev_range_applied)
+        row_min.addWidget(self._elev_min_input)
+        elev_lay.addLayout(row_min)
 
-        elev_lay.addWidget(QLabel("Colour max (clip high):"))
-        self._elev_max_slider = QSlider(Qt.Horizontal)
-        self._elev_max_slider.setRange(0, 100)
-        self._elev_max_slider.setValue(100)
-        self._elev_max_slider.valueChanged.connect(self._on_elev_range_changed)
-        elev_lay.addWidget(self._elev_max_slider)
+        row_max = QHBoxLayout()
+        row_max.addWidget(QLabel("Max (m):"))
+        self._elev_max_input = QLineEdit()
+        self._elev_max_input.setValidator(QDoubleValidator())
+        self._elev_max_input.returnPressed.connect(self._on_elev_range_applied)
+        row_max.addWidget(self._elev_max_input)
+        elev_lay.addLayout(row_max)
+
+        self._btn_elev_apply = QPushButton("Apply")
+        self._btn_elev_apply.clicked.connect(self._on_elev_range_applied)
+        elev_lay.addWidget(self._btn_elev_apply)
 
         self._btn_elev_reset = QPushButton("Reset Range")
         self._btn_elev_reset.clicked.connect(self._reset_elev_range)
@@ -898,6 +907,7 @@ class LunarPCDViewer(QMainWindow):
         )
 
         # Show initial layer (elevation avoids OpenGL requirement on startup)
+        self._init_elev_inputs()
         self._update_position_labels()
         self._layer_list.setCurrentRow(1)  # "elevation"
         self._current_layer = "elevation"
@@ -1292,42 +1302,44 @@ class LunarPCDViewer(QMainWindow):
         zg = self._zg
         z_min = float(np.nanmin(zg))
         z_max = float(np.nanmax(zg))
-        z_range = z_max - z_min if z_max > z_min else 1.0
-        lo = z_min + z_range * (self._elev_min_slider.value() / 100.0)
-        hi = z_min + z_range * (self._elev_max_slider.value() / 100.0)
+
+        # Use user-specified range if set, otherwise full range
+        lo = self._elev_clip_min if self._elev_clip_min is not None else z_min
+        hi = self._elev_clip_max if self._elev_clip_max is not None else z_max
         if hi <= lo:
             hi = lo + 0.01
         self._show_image(zg, "topo", zmin=lo, zmax=hi)
         if self._chk_contours.isChecked():
             self._draw_contour_lines()
 
-    def _on_elev_range_changed(self, _value):
-        lo = self._elev_min_slider.value()
-        hi = self._elev_max_slider.value()
-        # Prevent min from exceeding max
-        if lo >= hi:
-            if self.sender() is self._elev_min_slider:
-                self._elev_min_slider.setValue(hi - 1)
-                lo = hi - 1
-            else:
-                self._elev_max_slider.setValue(lo + 1)
-                hi = lo + 1
+    def _init_elev_inputs(self):
+        """Populate elevation inputs with actual data range after loading."""
         zg = self._zg
-        if zg is not None:
-            z_min = float(np.nanmin(zg))
-            z_max = float(np.nanmax(zg))
-            z_range = z_max - z_min if z_max > z_min else 1.0
-            lo_m = z_min + z_range * (lo / 100.0)
-            hi_m = z_min + z_range * (hi / 100.0)
-            self._elev_range_label.setText(
-                f"Min: {lo_m:.2f}m ({lo}%)  Max: {hi_m:.2f}m ({hi}%)"
-            )
+        if zg is None:
+            return
+        z_min = float(np.nanmin(zg))
+        z_max = float(np.nanmax(zg))
+        self._elev_min_input.setPlaceholderText(f"{z_min:.2f}")
+        self._elev_max_input.setPlaceholderText(f"{z_max:.2f}")
+        self._elev_range_label.setText(
+            f"Data range: {z_min:.2f}m to {z_max:.2f}m"
+        )
+
+    def _on_elev_range_applied(self):
+        min_text = self._elev_min_input.text().strip()
+        max_text = self._elev_max_input.text().strip()
+        self._elev_clip_min = float(min_text) if min_text else None
+        self._elev_clip_max = float(max_text) if max_text else None
         if self._current_layer == "elevation":
             self._render_elevation()
 
     def _reset_elev_range(self):
-        self._elev_min_slider.setValue(0)
-        self._elev_max_slider.setValue(100)
+        self._elev_clip_min = None
+        self._elev_clip_max = None
+        self._elev_min_input.clear()
+        self._elev_max_input.clear()
+        if self._current_layer == "elevation":
+            self._render_elevation()
 
     def _on_contour_toggled(self, checked):
         if self._current_layer == "elevation":
