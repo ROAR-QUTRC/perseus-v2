@@ -2234,14 +2234,14 @@ def main():
     )
     parser.add_argument("pcd_file", help="Path to .pcd file")
     parser.add_argument(
-        "--flatten",
+        "--no-flatten",
         action="store_true",
-        help="Automatically compensate for ground-plane tilt (levelling)",
+        help="Disable automatic ground-plane tilt compensation",
     )
     parser.add_argument(
-        "--raw-points",
+        "--no-raw-points",
         action="store_true",
-        help="Render all raw points in 3D view instead of interpolated grid",
+        help="Use interpolated grid instead of raw points in 3D view",
     )
     args = parser.parse_args()
 
@@ -2249,7 +2249,9 @@ def main():
     app.setApplicationName("Perseus Lunar PCD Viewer")
 
     viewer = LunarPCDViewer(
-        args.pcd_file, flatten=args.flatten, raw_points=args.raw_points
+        args.pcd_file,
+        flatten=not args.no_flatten,
+        raw_points=not args.no_raw_points,
     )
     viewer.show()
 
