@@ -208,8 +208,6 @@ def generate_launch_description():
     ld.add_action(imu_frequency_arg)
     ld.add_action(use_sim_time_arg)
 
-    # Add nodes
-    ld.add_action(pointcloud_to_laserscan_node)
     ld.add_action(imu_bias_container)
 
     # Add Livox driver launch
