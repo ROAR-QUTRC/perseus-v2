@@ -1321,9 +1321,7 @@ class LunarPCDViewer(QMainWindow):
         z_max = float(np.nanmax(zg))
         self._elev_min_input.setPlaceholderText(f"{z_min:.2f}")
         self._elev_max_input.setPlaceholderText(f"{z_max:.2f}")
-        self._elev_range_label.setText(
-            f"Data range: {z_min:.2f}m to {z_max:.2f}m"
-        )
+        self._elev_range_label.setText(f"Data range: {z_min:.2f}m to {z_max:.2f}m")
 
     def _on_elev_range_applied(self):
         min_text = self._elev_min_input.text().strip()
