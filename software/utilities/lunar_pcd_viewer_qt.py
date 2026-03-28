@@ -760,7 +760,9 @@ class LunarPCDViewer(QMainWindow):
         else:
             grid_res = 120
         print(f"[PERSEUS] Interpolating terrain grid (resolution={grid_res})...")
-        self._xg, self._yg, self._zg = make_terrain_grid(self._points, resolution=grid_res)
+        self._xg, self._yg, self._zg = make_terrain_grid(
+            self._points, resolution=grid_res
+        )
         xg, yg, zg = self._xg, self._yg, self._zg
 
         now = datetime.now(timezone.utc)
