@@ -21,6 +21,6 @@ def generate_launch_description():
         output="both",
     )
 
-    nodes = [light_driver, light_controller]
+    nodes = [light_driver]
 
     return LaunchDescription(nodes)
