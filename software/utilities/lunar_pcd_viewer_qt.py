@@ -505,6 +505,11 @@ class LunarPCDViewer(QMainWindow):
         row_3d_btns.addWidget(self._btn_3d_range_reset)
         g3d_lay.addLayout(row_3d_btns)
 
+        self._chk_3d_clip_geom = QCheckBox("Hide geometry outside range")
+        self._chk_3d_clip_geom.setChecked(False)
+        self._chk_3d_clip_geom.toggled.connect(lambda _: self._refresh_3d())
+        g3d_lay.addWidget(self._chk_3d_clip_geom)
+
         # 3D solar animation
         self._btn_3d_cycle = QPushButton("Play 3D Solar Day")
         self._btn_3d_cycle.clicked.connect(self._toggle_3d_cycle)
@@ -1213,6 +1218,12 @@ class LunarPCDViewer(QMainWindow):
             )
         return colors
 
+    def _get_3d_clip_bounds(self):
+        """Return (lo, hi) clip bounds or (None, None) if clipping disabled."""
+        if not self._chk_3d_clip_geom.isChecked():
+            return None, None
+        return self._3d_clip_min, self._3d_clip_max
+
     def _render_3d(self, illum=None):
         """Render 3D terrain in the selected mode."""
         # Preserve camera state across re-renders
@@ -1220,12 +1231,22 @@ class LunarPCDViewer(QMainWindow):
         opts = self._gl_view.opts.copy()
         self._gl_view.clear()
         xg, yg, zg = self._xg, self._yg, self._zg
+        clip_lo, clip_hi = self._get_3d_clip_bounds()
 
         mode = self._combo_3d_mode.currentText()
 
         if mode == "Points" and self._raw_points:
             pos = self._points.astype(np.float32)
             colors = self._compute_raw_point_colors()
+            if clip_lo is not None or clip_hi is not None:
+                z = pos[:, 2]
+                mask = np.ones(len(z), dtype=bool)
+                if clip_lo is not None:
+                    mask &= z >= clip_lo
+                if clip_hi is not None:
+                    mask &= z <= clip_hi
+                pos = pos[mask]
+                colors = colors[mask]
             scatter = gl.GLScatterPlotItem(
                 pos=pos,
                 color=colors,
@@ -1243,6 +1264,15 @@ class LunarPCDViewer(QMainWindow):
                     zg.ravel(),
                 ]
             ).astype(np.float32)
+            if clip_lo is not None or clip_hi is not None:
+                z = pos[:, 2]
+                mask = np.ones(len(z), dtype=bool)
+                if clip_lo is not None:
+                    mask &= z >= clip_lo
+                if clip_hi is not None:
+                    mask &= z <= clip_hi
+                pos = pos[mask]
+                colors = colors[mask]
             scatter = gl.GLScatterPlotItem(
                 pos=pos,
                 color=colors,
@@ -1255,8 +1285,16 @@ class LunarPCDViewer(QMainWindow):
             # Mesh modes: wireframe, solid, or both
             colors = self._compute_3d_colors(illum)
             rows, cols = zg.shape
-            # Reshape colours to (rows, cols, 4) for vertex colouring
             vert_colors = colors.reshape(rows, cols, 4)
+
+            # For clipping, make out-of-range vertices fully transparent
+            if clip_lo is not None or clip_hi is not None:
+                out_mask = np.zeros((rows, cols), dtype=bool)
+                if clip_lo is not None:
+                    out_mask |= zg < clip_lo
+                if clip_hi is not None:
+                    out_mask |= zg > clip_hi
+                vert_colors[out_mask] = [0.0, 0.0, 0.0, 0.0]
 
             # GLSurfacePlotItem needs (len_x, len_y) = (cols, rows)
             z_t = zg.T.astype(np.float64)
