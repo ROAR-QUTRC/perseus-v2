@@ -5,7 +5,7 @@ twist_mux:
       navigation:
         topic: cmd_vel_smoothed
         timeout: 0.5
-        priority: 10
+        priority: 100
       web_ui:
         topic: web_vel
         timeout: 0.5
@@ -17,4 +17,4 @@ twist_mux:
       joystick:
         topic: joy_vel
         timeout: 0.5
-        priority: 100
+        priority: 90
