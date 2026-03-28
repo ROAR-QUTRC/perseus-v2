@@ -131,18 +131,6 @@ def generate_launch_description():
         "config",
         "lidar_processing_config.yaml",
     )
-    pointcloud_to_laserscan_config_file = os.path.join(
-        get_package_share_directory("perseus_sensors"),
-        "config",
-        "pcl_conv.yaml",
-    )
-    # Declare Arguments
-    declare_publisher_name = DeclareLaunchArgument(
-        "scan_out", default_value="/livox/scan", description="Publisher topic name"
-    )
-    declare_subscriber_name = DeclareLaunchArgument(
-        "scan_in", default_value="/livox/lidar", description="Subscriber topic name"
-    )
 
     # Declare launch arguments
     imu_frequency_arg = DeclareLaunchArgument(
@@ -157,8 +145,6 @@ def generate_launch_description():
         description="Use simulated time if true",
     )
 
-    scan_in = LaunchConfiguration("scan_in")
-    scan_out = LaunchConfiguration("scan_out")
     use_sim_time = LaunchConfiguration("use_sim_time")
 
     imu_bias_container = ComposableNodeContainer(
@@ -190,7 +176,6 @@ def generate_launch_description():
         ],
     )
 
-
     # Create launch description and populate
     ld = LaunchDescription()
 
@@ -203,8 +188,6 @@ def generate_launch_description():
 
     # Add arguments
     ld.add_action(declare_interface_arg)
-    ld.add_action(declare_publisher_name)
-    ld.add_action(declare_subscriber_name)
     ld.add_action(imu_frequency_arg)
     ld.add_action(use_sim_time_arg)
 
