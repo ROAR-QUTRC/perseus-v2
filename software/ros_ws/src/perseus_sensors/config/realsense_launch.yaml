@@ -17,9 +17,9 @@ enable_depth: false
 enable_infra: false
 enable_infra1: true
 enable_infra2: true
-depth_module.depth_profile: 424,240,15
+depth_module.depth_profile: 424,240,30
 depth_module.depth_format: Z16
-depth_module.infra_profile: 424,240,15
+depth_module.infra_profile: 424,240,30
 depth_module.infra_format: RGB8
 depth_module.infra1_format: Y8
 depth_module.infra2_format: Y8
