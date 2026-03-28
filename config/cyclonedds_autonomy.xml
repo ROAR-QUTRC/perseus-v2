@@ -22,8 +22,8 @@
         <Peer address="192.168.2.13"/> 
         <!-- Kelvin's eth0 -->
         <Peer address="192.168.2.21"/>
-        <!-- Shaans -->
-        <!-- <Peer address="192.168.2.140"/> -->
+        <!-- Dan's Ethernet -->
+        <Peer address="192.168.2.51"/>
       </Peers>
     </Discovery>
   </Domain>
