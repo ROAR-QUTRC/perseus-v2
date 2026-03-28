@@ -6,11 +6,11 @@ import numpy as np
 import os
 import glob
 from pathlib import Path
-import random
-import gc
 
 
-def find_output_folder( self, start: Path) -> Path: #add self back if code fails to find folder
+def find_output_folder(
+    self, start: Path
+) -> Path:  # add self back if code fails to find folder
     current = start
     for _ in range(5):
         candidate = current / "web_ui/static/maps"
@@ -71,7 +71,9 @@ class PcdToGlbNode(Node):
         self.declare_parameter(
             "check_interval",
             10.0,
-            ParameterDescriptor(description="How often to check for new files in seconds"),
+            ParameterDescriptor(
+                description="How often to check for new files in seconds"
+            ),
         )
         self.declare_parameter(
             "poisson_depth",
@@ -95,32 +97,38 @@ class PcdToGlbNode(Node):
             0.15,
             ParameterDescriptor(
                 description="RANSAC inlier distance threshold in metres "
-                            "(tighten for flat ground, loosen for noisy LiDAR)"
+                "(tighten for flat ground, loosen for noisy LiDAR)"
             ),
         )
         self.declare_parameter(
             "ransac_iterations",
             2000,
-            ParameterDescriptor(description="Number of RANSAC iterations for plane fitting"),
+            ParameterDescriptor(
+                description="Number of RANSAC iterations for plane fitting"
+            ),
         )
         self.declare_parameter(
             "ground_z_alignment_min",
             0.7,
             ParameterDescriptor(
                 description="Minimum |cos(angle)| between plane normal and Z axis to accept as "
-                            "ground (0–1). Below this triggers histogram fallback."
+                "ground (0–1). Below this triggers histogram fallback."
             ),
         )
         # Heatmap colour range (metres relative to detected ground plane)
         self.declare_parameter(
             "heatmap_z_low",
-            -1.5, 
-            ParameterDescriptor(description="Signed distance (m) below ground mapped to full blue"),
+            -1.5,
+            ParameterDescriptor(
+                description="Signed distance (m) below ground mapped to full blue"
+            ),
         )
         self.declare_parameter(
             "heatmap_z_high",
             1.5,
-            ParameterDescriptor(description="Signed distance (m) above ground mapped to full red"),
+            ParameterDescriptor(
+                description="Signed distance (m) above ground mapped to full red"
+            ),
         )
         self.declare_parameter(
             "voxel_size",
@@ -130,8 +138,10 @@ class PcdToGlbNode(Node):
         self.declare_parameter(
             "border_shrink_factor",
             0.97,
-            ParameterDescriptor(description="Fraction of scan XY extent to keep (0.85–0.97). Lower = more border removed.")
-)
+            ParameterDescriptor(
+                description="Fraction of scan XY extent to keep (0.85–0.97). Lower = more border removed."
+            ),
+        )
 
     def _load_parameters(self) -> None:
         self.input_folder = Path(
@@ -150,13 +160,17 @@ class PcdToGlbNode(Node):
         #     self.get_parameter("crop_margin").get_parameter_value().double_value
         # )
         self.ransac_distance_threshold = (
-            self.get_parameter("ransac_distance_threshold").get_parameter_value().double_value
+            self.get_parameter("ransac_distance_threshold")
+            .get_parameter_value()
+            .double_value
         )
         self.ransac_iterations = (
             self.get_parameter("ransac_iterations").get_parameter_value().integer_value
         )
         self.ground_z_alignment_min = (
-            self.get_parameter("ground_z_alignment_min").get_parameter_value().double_value
+            self.get_parameter("ground_z_alignment_min")
+            .get_parameter_value()
+            .double_value
         )
         self.heatmap_z_low = (
             self.get_parameter("heatmap_z_low").get_parameter_value().double_value
@@ -168,9 +182,10 @@ class PcdToGlbNode(Node):
             self.get_parameter("voxel_size").get_parameter_value().double_value
         )
         self.border_shrink_factor = (
-            self.get_parameter("border_shrink_factor").get_parameter_value().double_value
+            self.get_parameter("border_shrink_factor")
+            .get_parameter_value()
+            .double_value
         )
-        
 
     # ------------------------------------------------------------------
     # File watching
@@ -190,18 +205,19 @@ class PcdToGlbNode(Node):
         inlier_cloud = cloud.select_by_index(ind)
         outlier_cloud = cloud.select_by_index(ind, invert=True)
 
-        o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud],
-                                      zoom=0.3412,
-                                      front=[0.4257, -0.2125, -0.8795],
-                                      lookat=[2.6172, 2.0475, 1.532],
-                                      up=[-0.0694, -0.9768, 0.2024])
+        o3d.visualization.draw_geometries(
+            [inlier_cloud, outlier_cloud],
+            zoom=0.3412,
+            front=[0.4257, -0.2125, -0.8795],
+            lookat=[2.6172, 2.0475, 1.532],
+            up=[-0.0694, -0.9768, 0.2024],
+        )
 
     # ------------------------------------------------------------------
     # Ground plane estimation
     # ------------------------------------------------------------------
-        
 
-    #shaan's original code continues
+    # shaan's original code continues
     def _estimate_ground_plane(
         self, point_cloud: o3d.geometry.PointCloud
     ) -> tuple[float, float, float, float]:
@@ -220,16 +236,17 @@ class PcdToGlbNode(Node):
         )
         [a, b, c, d] = plane_model
 
-        #inlier cloud determines the ground plane
+        # inlier cloud determines the ground plane
         inlier_cloud = point_cloud.select_by_index(inliers)
         outlier_cloud = point_cloud.select_by_index(inliers, invert=True)
         inlier_cloud.paint_uniform_color([0, 1, 0])
-        o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud],
-                                  zoom=0.8,
-                                  front=[-0.4999, -0.1659, -0.8499],
-                                  lookat=[2.1813, 2.0619, 2.0999],
-                                  up=[0.1204, -0.9852, 0.1215])
-
+        o3d.visualization.draw_geometries(
+            [inlier_cloud, outlier_cloud],
+            zoom=0.8,
+            front=[-0.4999, -0.1659, -0.8499],
+            lookat=[2.1813, 2.0619, 2.0999],
+            up=[0.1204, -0.9852, 0.1215],
+        )
 
         # Reducing noise
         point_cloud_down = point_cloud.voxel_down_sample(voxel_size=0.05)
@@ -237,10 +254,11 @@ class PcdToGlbNode(Node):
         #     nb_points=16,
         #     radius=0.5
         # )
-        #self.display_inlier_outlier(point_cloud_down, ind)
+        # self.display_inlier_outlier(point_cloud_down, ind)
 
-        bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=(-10, -10, -1), 
-                                           max_bound=(10, 10, 5))
+        bbox = o3d.geometry.AxisAlignedBoundingBox(
+            min_bound=(-10, -10, -1), max_bound=(10, 10, 5)
+        )
 
         # Crop the point cloud
         pcd_cropped = point_cloud_down.crop(bbox)
@@ -260,8 +278,6 @@ class PcdToGlbNode(Node):
                 f"plane=({a:.3f}x + {b:.3f}y + {c:.3f}z + {d:.3f} = 0)"
             )
             return (a, b, c, d)
-        
-        
 
         # ---- Fallback: flat horizontal plane at histogram peak Z ----
         self.get_logger().warn(
@@ -275,7 +291,9 @@ class PcdToGlbNode(Node):
         self.get_logger().info(f"Ground z from histogram peak: {ground_z:.3f} m")
         # Horizontal upward-facing plane: 0x + 0y + 1z - ground_z = 0
         self.get_logger().info(f"Plane: {a:.3f}x + {b:.3f}y + {c:.3f}z + {d:.3f} = 0")
-        self.get_logger().info(f"Inlier count: {len(inliers)} / {len(np.asarray(point_cloud.points))}")
+        self.get_logger().info(
+            f"Inlier count: {len(inliers)} / {len(np.asarray(point_cloud.points))}"
+        )
         return (0.0, 0.0, 1.0, -ground_z)
 
     # ------------------------------------------------------------------
@@ -290,7 +308,6 @@ class PcdToGlbNode(Node):
         point_cloud = None
         mesh = None
 
-
         try:
             point_cloud = o3d.io.read_point_cloud(pcd_path)
 
@@ -298,7 +315,7 @@ class PcdToGlbNode(Node):
             if len(point_cloud.points) == 0:
                 self.get_logger().error(f"Empty point cloud: {pcd_path}")
                 return
-            
+
             point_cloud.estimate_normals(
                 search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=3.0, max_nn=30)
             )
@@ -310,23 +327,20 @@ class PcdToGlbNode(Node):
 
             densities = np.asarray(densities)
 
-            #first loose filter
+            # first loose filter
             density_mean = np.mean(densities)
             density_std = np.std(densities)
             density_threshold = density_mean - 3.5 * density_std
-            mesh.remove_vertices_by_mask(
-                 densities < density_threshold)
-            
+            mesh.remove_vertices_by_mask(densities < density_threshold)
+
             # mesh.remove_vertices_by_mask(
             #     densities < np.quantile(densities, self.density_quantile)
             # )
 
             aabb = point_cloud.get_axis_aligned_bounding_box()
-            print(aabb.get_extent()) # Returns (width, height, depth)
+            print(aabb.get_extent())  # Returns (width, height, depth)
 
-
-
-            #second tighter filter  
+            # second tighter filter
             # Then spatial crop to remove remaining border skirt
             pts = np.asarray(point_cloud.points)
             xy_min = pts[:, :2].min(axis=0)
@@ -339,8 +353,10 @@ class PcdToGlbNode(Node):
             xy_shrunk_max = xy_center + xy_extent * self.border_shrink_factor
 
             in_bounds = (
-            (vertices[:, 0] >= xy_shrunk_min[0]) & (vertices[:, 0] <= xy_shrunk_max[0]) &
-            (vertices[:, 1] >= xy_shrunk_min[1]) & (vertices[:, 1] <= xy_shrunk_max[1])
+                (vertices[:, 0] >= xy_shrunk_min[0])
+                & (vertices[:, 0] <= xy_shrunk_max[0])
+                & (vertices[:, 1] >= xy_shrunk_min[1])
+                & (vertices[:, 1] <= xy_shrunk_max[1])
             )
             mesh.remove_vertices_by_mask(~in_bounds)
 
@@ -354,7 +370,6 @@ class PcdToGlbNode(Node):
                 + c * pre_flip_vertices[:, 2]
                 + d
             ) / plane_normal_len
-            
 
             # Flip Z axis — mesh renders inverted in Three.js otherwise.
             # Heights were already captured above so this only affects geometry.
@@ -371,12 +386,20 @@ class PcdToGlbNode(Node):
             #   t=1 (z_high) → red    (above ground / obstacles / walls)
             # ----------------------------------------------------------
             t = np.clip(
-                0.5 + z_relative / (2.0 * np.where(z_relative >= 0, self.heatmap_z_high, abs(self.heatmap_z_low))),
-                0.0, 1.0
+                0.5
+                + z_relative
+                / (
+                    2.0
+                    * np.where(
+                        z_relative >= 0, self.heatmap_z_high, abs(self.heatmap_z_low)
+                    )
+                ),
+                0.0,
+                1.0,
             )
 
-            #dead-band around zero so ±threshold always maps to green
-            green_band = 0.05 
+            # dead-band around zero so ±threshold always maps to green
+            green_band = 0.05
             t = np.where(
             np.abs(z_relative) < green_band,
             0.5,  # force green
@@ -392,14 +415,14 @@ class PcdToGlbNode(Node):
             # colors[:, 2] = np.clip(2.0 * t - 1.0, 0, 2)                               # B: lower half
 
             colours = np.zeros((len(t), 3))
-            colours[:, 2] = np.clip(2.0 * t - 1.0, 0, 1)                                        # R: above ground
-            colours[:, 1] = np.clip(2.0 * t, 0, 1) * np.clip(2.0 * (1.0 - t), 0, 1)            # G: ground level
-            colours[:, 0] = np.clip(1.0 - 2.0 * t, 0, 1)           
+            colours[:, 2] = np.clip(2.0 * t - 1.0, 0, 1)  # R: above ground
+            colours[:, 1] = np.clip(2.0 * t, 0, 1) * np.clip(
+                2.0 * (1.0 - t), 0, 1
+            )  # G: ground level
+            colours[:, 0] = np.clip(1.0 - 2.0 * t, 0, 1)
 
             mesh.vertex_colors = o3d.utility.Vector3dVector(colours)
             pts = np.asarray(point_cloud.points)
-
-        
 
             o3d.io.write_triangle_mesh(output_path, mesh)
             self.get_logger().info(f"Saved: {output_path}")
@@ -412,13 +435,13 @@ class PcdToGlbNode(Node):
             self.get_logger().error(f"Error processing {pcd_path}: {e}")
 
         finally:
-        # Explicitly free memory after every file regardless of success/failure
+            # Explicitly free memory after every file regardless of success/failure
             del point_cloud
             del mesh
             import gc
+
             gc.collect()
             self.get_logger().info(f"Memory cleaned up after processing {pcd_path}")
-
 
 
 def main(args=None):
