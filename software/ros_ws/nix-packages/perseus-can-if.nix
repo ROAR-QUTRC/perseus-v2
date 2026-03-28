@@ -7,6 +7,7 @@
   hi-can-raw,
   nlohmann_json,
   rclcpp,
+  ros2launch,
   sensor-msgs,
 }:
 buildRosPackage rec {
@@ -22,6 +23,7 @@ buildRosPackage rec {
     hi-can-raw
     nlohmann_json
     rclcpp
+    ros2launch
     sensor-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
