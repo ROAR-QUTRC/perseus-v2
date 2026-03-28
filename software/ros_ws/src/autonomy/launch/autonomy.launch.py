@@ -27,14 +27,8 @@ def generate_launch_description():
     # Declare arguments
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         "use_sim_time",
-        default_value="true",
+        default_value="false",
         description="Use simulation/Gazebo clock",
-    )
-
-    declare_imu_topic = DeclareLaunchArgument(
-        "imu_topic",
-        default_value="/livox/imu/corrected",
-        description="IMU topic for robot_localization ekf (imu0)",
     )
     declare_autostart_cmd = DeclareLaunchArgument(
         "autostart",
@@ -44,7 +38,7 @@ def generate_launch_description():
 
     declare_nav_params_file_cmd = DeclareLaunchArgument(
         "nav_params_file",
-        default_value=os.path.join(autonomy_dir, "config", "nav_sim_params.yaml"),
+        default_value=os.path.join(autonomy_dir, "config", "nav_aut_arch.yaml"),
         description="Full path to the ROS2 parameters file for Nav2",
     )
 
@@ -76,8 +70,6 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Include Keepout Filter launch (optional)
-
     # EKF Node for sensor fusion and localization
     ekf_node = Node(
         package="robot_localization",
@@ -86,7 +78,7 @@ def generate_launch_description():
         output="screen",
         parameters=[
             ekf_config_file,
-            {"use_sim_time": use_sim_time, "imu0": LaunchConfiguration("imu_topic")},
+            {"use_sim_time": use_sim_time},
         ],
     )
 
@@ -135,7 +127,6 @@ def generate_launch_description():
     # Declare arguments
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_autostart_cmd)
-    ld.add_action(declare_imu_topic)
     ld.add_action(declare_nav_params_file_cmd)
     ld.add_action(declare_ekf_config_file_cmd)
     ld.add_action(declare_map_cmd)
