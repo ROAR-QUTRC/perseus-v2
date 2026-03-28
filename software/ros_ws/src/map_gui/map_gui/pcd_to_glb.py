@@ -384,7 +384,7 @@ class PcdToGlbNode(Node):
             0.5 + z_relative / (2.0 * np.where(z_relative >= 0, self.heatmap_z_high, abs(self.heatmap_z_low))),
             0.0, 1.0
             )
-)
+) #so i can commit
 
             # colors = np.zeros((len(t), 3))
             # colors[:, 1] = np.clip(2.0 * t, 0, 0.5) * np.clip(2.0 * (1.0 - t), 0, 1)   # G: peaks at mid
