@@ -112,6 +112,9 @@ def generate_launch_description():
             "use_respawn": "False",
             "log_level": "info",
         }.items(),
+        remappings=[
+            ("cmd_vel_smoothed", "cmd_vel_out"),
+        ],
     )
 
     # Include Keepout Filter launch (optional)
