@@ -12,9 +12,11 @@ find_package(rcl_interfaces REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(message_filters REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(visualization_msgs REQUIRED)
@@ -79,8 +81,28 @@ ament_target_dependencies(
   tf2_geometry_msgs
   perseus_interfaces)
 
+# ── stereo_odom ───────────────────────────────────────────────────────────────
+add_executable(stereo_odom_node src/stereo_odom.cpp src/stereo_odom_node.cpp)
+
+target_include_directories(
+  stereo_odom_node PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                          $<INSTALL_INTERFACE:include>)
+
+ament_target_dependencies(
+  stereo_odom_node
+  rclcpp
+  sensor_msgs
+  nav_msgs
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  cv_bridge
+  OpenCV
+  message_filters)
+
 # ── install ───────────────────────────────────────────────────────────────────
-install(TARGETS aruco_detector_node cube_detector
+install(TARGETS aruco_detector_node cube_detector stereo_odom_node
         DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/ DESTINATION include/)
