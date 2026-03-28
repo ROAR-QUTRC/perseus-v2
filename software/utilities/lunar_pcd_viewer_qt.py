@@ -238,10 +238,11 @@ class ComputeWorker(QObject):
 
 
 class LunarPCDViewer(QMainWindow):
-    def __init__(self, pcd_path: str, flatten: bool = False):
+    def __init__(self, pcd_path: str, flatten: bool = False, raw_points: bool = False):
         super().__init__()
         self._pcd_path = pcd_path
         self._flatten = flatten
+        self._raw_points = raw_points
         self._theme_name = "dark"
         self._current_layer = "elevation"
 
@@ -854,9 +855,10 @@ class LunarPCDViewer(QMainWindow):
         yr = float(pts[:, 1].max()) - float(pts[:, 1].min())
         zr = float(pts[:, 2].max()) - float(pts[:, 2].min())
         self._header.setText(f"PERSEUS — {self._pcd_path}")
+        raw_tag = " | 3D: raw points" if self._raw_points else ""
         self._stats_label.setText(
             f"{n:,} points | {xr:.1f} x {yr:.1f} x {zr:.1f} m | "
-            f"Grid: {xg.shape[0]}x{xg.shape[1]}"
+            f"Grid: {xg.shape[0]}x{xg.shape[1]}{raw_tag}"
         )
 
         # Show initial layer (elevation avoids OpenGL requirement on startup)
@@ -1087,16 +1089,45 @@ class LunarPCDViewer(QMainWindow):
 
         return colors
 
+    def _compute_raw_point_colors(self):
+        """Build per-point RGBA colours for the raw point cloud."""
+        pts = self._points
+        z = pts[:, 2]
+        intensity = self._intensity
+
+        if self._chk_elev_color.isChecked():
+            z_norm = (z - z.min()) / (z.max() - z.min() + 1e-9)
+            lut = LUTS["topo"]
+            idx = (z_norm * 255).astype(np.uint8)
+            colors = lut[idx].astype(np.float32) / 255.0
+        else:
+            # Use intensity for brightness when elevation colouring is off
+            i_max = intensity.max() if intensity.max() > 0 else 1.0
+            brightness = 0.3 + 0.7 * (intensity / i_max)
+            colors = np.column_stack([brightness, brightness, brightness,
+                                      np.ones(len(pts), dtype=np.float32)])
+        return colors
+
     def _render_3d(self, illum=None):
         """Render 3D terrain in the selected mode."""
         self._gl_view.clear()
         xg, yg, zg = self._xg, self._yg, self._zg
 
-        colors = self._compute_3d_colors(illum)
-
         mode = self._combo_3d_mode.currentText()
 
-        if mode == "Points":
+        if mode == "Points" and self._raw_points:
+            pos = self._points.astype(np.float32)
+            colors = self._compute_raw_point_colors()
+            scatter = gl.GLScatterPlotItem(
+                pos=pos,
+                color=colors,
+                size=1.5,
+                pxMode=True,
+            )
+            self._gl_view.addItem(scatter)
+
+        elif mode == "Points":
+            colors = self._compute_3d_colors(illum)
             pos = np.column_stack(
                 [
                     xg.ravel(),
@@ -2118,12 +2149,17 @@ def main():
         action="store_true",
         help="Automatically compensate for ground-plane tilt (levelling)",
     )
+    parser.add_argument(
+        "--raw-points", action="store_true",
+        help="Render all raw points in 3D view instead of interpolated grid",
+    )
     args = parser.parse_args()
 
     app = QApplication(sys.argv)
     app.setApplicationName("Perseus Lunar PCD Viewer")
 
-    viewer = LunarPCDViewer(args.pcd_file, flatten=args.flatten)
+    viewer = LunarPCDViewer(args.pcd_file, flatten=args.flatten,
+                            raw_points=args.raw_points)
     viewer.show()
 
     sys.exit(app.exec_())
