@@ -3,7 +3,7 @@
     <General>
       <!-- Avoid broadcasting data to all client  -->
       <AllowMulticast>false</AllowMulticast> 
-      <NetworkInterfaceAddress>enp12s0</NetworkInterfaceAddress>
+      <NetworkInterfaceAddress>eth0</NetworkInterfaceAddress>
     </General>
 
     <Discovery>
