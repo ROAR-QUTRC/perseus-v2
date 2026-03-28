@@ -134,6 +134,22 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
         }.items(),
     )
+    rcb_driver_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("perseus_can_if"),
+                        "launch",
+                        "rcb_driver.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "can_bus": can_bus,
+        }.items(),
+    )
 
     def launch_payload(context):
         payload = context.perform_substitution(LaunchConfiguration("payload"))
@@ -159,6 +175,7 @@ def generate_launch_description():
         controllers_launch,
         twist_mux_launch,
         rosbridge_launch,
+        rcb_driver_launch,
         OpaqueFunction(function=launch_payload),
     ]
 
