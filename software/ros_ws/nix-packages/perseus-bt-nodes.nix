@@ -8,6 +8,7 @@
   behaviortree-cpp,
   builtin-interfaces,
   geometry-msgs,
+  perseus-interfaces,
   rclcpp,
 }:
 buildRosPackage rec {
@@ -26,6 +27,7 @@ buildRosPackage rec {
     behaviortree-cpp
     builtin-interfaces
     geometry-msgs
+    perseus-interfaces
     rclcpp
   ];
   nativeBuildInputs = [ ament-cmake ];
