@@ -22,6 +22,7 @@ def generate_launch_description():
     nav_params_file = LaunchConfiguration("nav_params_file")
     ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
+    # pcd_to_glb = LaunchConfiguration("pcd_to_glb")
     autostart = LaunchConfiguration("autostart")
 
     # Declare arguments
@@ -60,6 +61,12 @@ def generate_launch_description():
         default_value=os.path.join(autonomy_dir, "config", "ekf_config_fast_lio.yaml"),
         description="Full path to the ROS2 parameters file for EKF",
     )
+
+    # declare pcd_to_glb_cmd = DeclareLaunchArgument(
+    #     "pcd_to_glb_file",
+    #     default_value = os.path.join(autonomy_dir, "ros_ws/src/map_gui/map_gui/", "pcd_to_glb.py"),
+    #     description = "Full path to the file that turns a pcd into a glb"
+    # )
 
     # Include SLAM Toolbox launch
     slam_launch = IncludeLaunchDescription(
