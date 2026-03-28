@@ -25,9 +25,11 @@ i2c_imu_node:
     gyro_offset_z: 0.0
     # Covariance matrices
     # Angular velocity covariance (adjust based on sensor specs)
-    angular_velocity_covariance: [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01]
+    angular_velocity_covariance:
+      [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01]
     # Linear acceleration covariance (adjust based on sensor specs)
-    linear_acceleration_covariance: [0.1, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.1]
+    linear_acceleration_covariance:
+      [0.1, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.1]
 # Example configurations for different IMU devices
 # To use a different IMU, simply change the device_type parameter above.
 # The device_address will automatically use the default for the selected device type.
