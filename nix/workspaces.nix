@@ -128,6 +128,7 @@ let
       postShellHook = ''
         # use CycloneDDS ROS middleware
         export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+        export CYCLONEDDS_URI=file://$HOME/perseus-v2/config/cyclonedds_autonomy.xml
         # enable coloured ros2 launch output
         export RCUTILS_COLORIZED_OUTPUT=1
         export CYCLONEDDS_URI=file://$HOME/perseus-v2/config/cyclonedds_autonomy.xml
