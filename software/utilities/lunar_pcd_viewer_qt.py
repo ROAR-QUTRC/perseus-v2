@@ -1104,8 +1104,14 @@ class LunarPCDViewer(QMainWindow):
             # Use intensity for brightness when elevation colouring is off
             i_max = intensity.max() if intensity.max() > 0 else 1.0
             brightness = 0.3 + 0.7 * (intensity / i_max)
-            colors = np.column_stack([brightness, brightness, brightness,
-                                      np.ones(len(pts), dtype=np.float32)])
+            colors = np.column_stack(
+                [
+                    brightness,
+                    brightness,
+                    brightness,
+                    np.ones(len(pts), dtype=np.float32),
+                ]
+            )
         return colors
 
     def _render_3d(self, illum=None):
@@ -2150,7 +2156,8 @@ def main():
         help="Automatically compensate for ground-plane tilt (levelling)",
     )
     parser.add_argument(
-        "--raw-points", action="store_true",
+        "--raw-points",
+        action="store_true",
         help="Render all raw points in 3D view instead of interpolated grid",
     )
     args = parser.parse_args()
@@ -2158,8 +2165,9 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("Perseus Lunar PCD Viewer")
 
-    viewer = LunarPCDViewer(args.pcd_file, flatten=args.flatten,
-                            raw_points=args.raw_points)
+    viewer = LunarPCDViewer(
+        args.pcd_file, flatten=args.flatten, raw_points=args.raw_points
+    )
     viewer.show()
 
     sys.exit(app.exec_())
