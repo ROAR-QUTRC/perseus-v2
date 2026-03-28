@@ -238,9 +238,10 @@ class ComputeWorker(QObject):
 
 
 class LunarPCDViewer(QMainWindow):
-    def __init__(self, pcd_path: str):
+    def __init__(self, pcd_path: str, flatten: bool = False):
         super().__init__()
         self._pcd_path = pcd_path
+        self._flatten = flatten
         self._theme_name = "dark"
         self._current_layer = "elevation"
 
@@ -711,6 +712,25 @@ class LunarPCDViewer(QMainWindow):
         self._show_layer(self._current_layer)
 
     # -----------------------------------------------------------------------
+    # Ground plane compensation
+    # -----------------------------------------------------------------------
+
+    @staticmethod
+    def _flatten_ground_plane(points):
+        """Remove ground-plane tilt by fitting a plane and subtracting it."""
+        x, y, z = points[:, 0], points[:, 1], points[:, 2]
+        valid = np.isfinite(x) & np.isfinite(y) & np.isfinite(z)
+        A = np.column_stack([x[valid], y[valid], np.ones(valid.sum())])
+        coeffs, _, _, _ = np.linalg.lstsq(A, z[valid], rcond=None)
+        a, b, c = coeffs
+        tilt_deg = np.degrees(np.arctan(np.sqrt(a**2 + b**2)))
+        print(f"[PERSEUS] Ground plane tilt: {tilt_deg:.2f} deg "
+              f"(dz/dx={a:.4f}, dz/dy={b:.4f})")
+        points = points.copy()
+        points[:, 2] -= a * points[:, 0] + b * points[:, 1]
+        return points
+
+    # -----------------------------------------------------------------------
     # Data loading
     # -----------------------------------------------------------------------
 
@@ -726,6 +746,10 @@ class LunarPCDViewer(QMainWindow):
         self._points[:, 2] = -self._points[:, 2]
         n = len(self._points)
         print(f"[PERSEUS] Loaded {n:,} points (Z inverted to Z-up)")
+
+        if self._flatten:
+            self._points = self._flatten_ground_plane(self._points)
+            print("[PERSEUS] Ground plane compensation applied")
 
         print("[PERSEUS] Interpolating terrain grid...")
         self._xg, self._yg, self._zg = make_terrain_grid(self._points, resolution=120)
@@ -2087,12 +2111,16 @@ def main():
         description="Perseus Lunar PCD Viewer (Qt Desktop)"
     )
     parser.add_argument("pcd_file", help="Path to .pcd file")
+    parser.add_argument(
+        "--flatten", action="store_true",
+        help="Automatically compensate for ground-plane tilt (levelling)",
+    )
     args = parser.parse_args()
 
     app = QApplication(sys.argv)
     app.setApplicationName("Perseus Lunar PCD Viewer")
 
-    viewer = LunarPCDViewer(args.pcd_file)
+    viewer = LunarPCDViewer(args.pcd_file, flatten=args.flatten)
     viewer.show()
 
     sys.exit(app.exec_())
