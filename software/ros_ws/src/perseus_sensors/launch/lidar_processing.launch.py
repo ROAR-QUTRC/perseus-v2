@@ -190,21 +190,6 @@ def generate_launch_description():
         ],
     )
 
-    # Pointcloud to Laserscan converter node
-    pointcloud_to_laserscan_node = Node(
-        package="pcl_to_lsr",
-        executable="pointcloud_to_laserscan_node",
-        remappings=[
-            ("cloud_in", scan_in),
-            ("scan_out", scan_out),
-        ],
-        parameters=[
-            pointcloud_to_laserscan_config_file,
-            {"use_sim_time": use_sim_time},
-        ],
-        name="pointcloud_to_laserscan",
-        output="screen",
-    )
 
     # Create launch description and populate
     ld = LaunchDescription()
