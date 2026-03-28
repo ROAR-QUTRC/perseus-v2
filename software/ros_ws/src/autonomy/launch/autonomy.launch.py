@@ -23,6 +23,7 @@ def generate_launch_description():
     ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
     autostart = LaunchConfiguration("autostart")
+    map_yaml_file = LaunchConfiguration("map")
 
     # Declare arguments
     declare_use_sim_time_cmd = DeclareLaunchArgument(
@@ -42,8 +43,6 @@ def generate_launch_description():
         description="Automatically startup the autonomy stack",
     )
 
-    map_file = os.path.join(autonomy_dir, "map", "aut_arch_2026")
-
     declare_nav_params_file_cmd = DeclareLaunchArgument(
         "nav_params_file",
         default_value=os.path.join(autonomy_dir, "config", "nav_sim_params.yaml"),
@@ -54,6 +53,12 @@ def generate_launch_description():
         "ekf_config_file",
         default_value=os.path.join(autonomy_dir, "config", "ekf_config.yaml"),
         description="Full path to the ROS2 parameters file for EKF",
+    )
+
+    declare_map_cmd = DeclareLaunchArgument(
+        "map",
+        default_value=os.path.join(autonomy_dir, "maps", "aut_arch_2026.yaml"),
+        description="Full path to the map yaml file",
     )
 
     # Static transform from map to odom
@@ -71,8 +76,25 @@ def generate_launch_description():
         name="map_server",
         output="screen",
         parameters=[
-            {"yaml_filename": map_file + ".yaml"},
-            {"use_sim_time": use_sim_time},
+            {
+                "yaml_filename": map_yaml_file,
+                "frame_id": "map",
+                "use_sim_time": use_sim_time,
+            }
+        ],
+    )
+
+    map_lifecycle_manager = Node(
+        package="nav2_lifecycle_manager",
+        executable="lifecycle_manager",
+        name="lifecycle_manager_map",
+        output="screen",
+        parameters=[
+            {
+                "autostart": autostart,
+                "node_names": ["map_server"],
+                "use_sim_time": use_sim_time,
+            }
         ],
     )
 
@@ -115,10 +137,12 @@ def generate_launch_description():
     ld.add_action(declare_imu_topic)
     ld.add_action(declare_nav_params_file_cmd)
     ld.add_action(declare_ekf_config_file_cmd)
+    ld.add_action(declare_map_cmd)
 
     # Include launch files and nodes
     ld.add_action(static_tf_map_to_odom)
     ld.add_action(map_server)
+    ld.add_action(map_lifecycle_manager)
     ld.add_action(ekf_node)
     ld.add_action(nav_launch)
 
