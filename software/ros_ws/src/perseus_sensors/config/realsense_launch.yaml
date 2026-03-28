@@ -25,7 +25,7 @@ depth_module.infra_format: RGB8
 depth_module.infra1_format: Y8
 depth_module.infra2_format: Y8
 depth_module.color_profile: 0,0,0
-depth_module.color_format: RGB8 
+depth_module.color_format: RGB8
 depth_module.hdr_enabled: false
 depth_module.emitter_enabled: 0
 depth_module.enable_auto_exposure: true # lock it down — auto-exposure thrashes in sun
@@ -34,7 +34,7 @@ depth_module.gain: 16 # keep low to avoid amplifying noise
 depth_module.exposure.1: 7500
 depth_module.gain.1: 16
 depth_module.exposure.2: 1
-depth_module.gain.2: 16 
+depth_module.gain.2: 16
 # Synchronization and IMU publication.
 # Keeps color and depth timestamps aligned while leaving IMU outputs off.
 enable_sync: true
