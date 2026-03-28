@@ -150,9 +150,9 @@ def generate_launch_description():
 
     # Include launch files and nodes
     ld.add_action(ekf_node)
-    ld.add_action(map_server_node)
-    ld.add_action(map_lifecycle_manager)
-    ld.add_action(static_map_odom_tf)
-    ld.add_action(nav2_waypoints_bridge_node)
-    ld.add_action(nav_launch)
+    # ld.add_action(map_server_node)
+    # ld.add_action(map_lifecycle_manager)
+    # ld.add_action(static_map_odom_tf)
+    # ld.add_action(nav2_waypoints_bridge_node)
+    # ld.add_action(nav_launch)
     return ld
