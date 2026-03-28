@@ -17,7 +17,7 @@ public:
             "/odom_raw", 10,
             std::bind(&OdomTransform::callback, this, std::placeholders::_1));
 
-        pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
+        pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/fast_lio/odom", 10);
 
         RCLCPP_INFO(this->get_logger(), "Odom transform node started, applying 90deg CCW correction");
     }
@@ -40,7 +40,7 @@ private:
         tf2::Vector3 pos_out = tf2::quatRotate(correction_, pos_in);
         out.pose.pose.position.x = pos_out.x();
         out.pose.pose.position.y = pos_out.y();
-        out.pose.pose.position.z = pos_out.z();
+        out.pose.pose.position.z = -pos_out.z();
 
         tf2::Vector3 vel_in(
             msg->twist.twist.linear.x,

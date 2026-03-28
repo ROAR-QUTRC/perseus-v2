@@ -21,6 +21,7 @@ def generate_launch_description():
         launch_config = yaml.safe_load(f)
 
     use_sim_time = str(launch_config.get("use_sim_time", "false")).lower()
+    use_sim_time_bool = bool(launch_config.get("use_sim_time", False))
     rviz = str(launch_config.get("rviz", "false")).lower()
     sim = str(launch_config.get("sim", "false")).lower()
 
@@ -90,7 +91,7 @@ def generate_launch_description():
         package="perseus_mapping",
         executable="odom_transform",
         name="odom_transform",
-        parameters=[{"use_sim_time": use_sim_time}],
+        parameters=[{'use_sim_time': use_sim_time_bool}],
     )
 
     return LaunchDescription(
