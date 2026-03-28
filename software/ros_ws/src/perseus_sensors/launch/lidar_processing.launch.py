@@ -94,6 +94,11 @@ def launch_setup(context, *args, **kwargs):
     """
 
     interface = LaunchConfiguration("interface").perform(context)
+    use_sim_time_val = LaunchConfiguration("use_sim_time").perform(context)
+
+    # Only launch Livox if not using simulated time
+    if use_sim_time_val.lower() == "true":
+        return []
 
     config_path = (
         Path(get_package_share_directory("perseus_sensors"))

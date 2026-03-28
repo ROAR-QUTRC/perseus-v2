@@ -3,6 +3,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -18,6 +19,7 @@ def generate_launch_description():
     """
 
     autonomy_dir = get_package_share_directory("autonomy")
+    sensors_dir = get_package_share_directory("perseus_sensors")
     nav_params_file = LaunchConfiguration("nav_params_file")
     ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
