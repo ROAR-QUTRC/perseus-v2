@@ -7,7 +7,7 @@ aruco_detector:
     tf_output_frame: odom
     input_img: /camera/camera/color/image_raw
     output_img: /perseus_vision/aruco/image
-    publish_tf: true
+    publish_tf: false
     publish_img: true
     compressed_io: false
     publish_output: true
@@ -26,7 +26,7 @@ cube_detector:
     # then set model_path to the model filename, e.g. "my_model.onnx".
     model_path: ""
     confidence_threshold: 0.3
-    always_on: true # Set to true to keep the node running even when no subscribers are present
+    always_on: true # Set to true to keepn the node running even when no subscribers are present
     publish_annotated_image: true # Whether to publish the annotated image with detections drawn on it
     processing_frequency_hz: 5.0 # 0.0 means process every incoming frame
     nms_iou_threshold: 0.45 # Non-maximum suppression IOU threshold
