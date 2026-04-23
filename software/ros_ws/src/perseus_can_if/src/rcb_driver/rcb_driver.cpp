@@ -8,17 +8,16 @@ RcbDriver::RcbDriver(const rclcpp::NodeOptions& options)
     : Node("rcb_driver", options)
 {
     using namespace hi_can;
-    using namespace addressing::legacy;
-    using namespace addressing::legacy::power::control::rcb;
-    using namespace parameters::legacy::power::control::power_bus;
+    using namespace addressing::power::distribution::rover_control_board;
+    using namespace parameters::power::distribution;
 
     try
     {
         _can_interface.emplace(RawCanInterface(this->declare_parameter("can_bus", "can0")));
         _packet_manager.emplace(_can_interface.value());
 
-        _packet_manager->set_callback(addressing::filter_t(power::SYSTEM_ID, power::control::SUBSYSTEM_ID,
-                                                           static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD)),
+        _packet_manager->set_callback(addressing::filter_t(addressing::power::SYSTEM_ID, addressing::power::distribution::SUBSYSTEM_ID,
+                                                           static_cast<uint8_t>(addressing::power::distribution::rover_control_board::DEVICE_ID)),
                                       {.data_callback =
                                            [this](const hi_can::Packet& packet)
                                        {
@@ -54,8 +53,9 @@ void RcbDriver::_call_receive()
 void RcbDriver::_can_to_ros(const hi_can::Packet& packet)
 {
     using namespace hi_can;
-    using namespace addressing::legacy::power;
-    using namespace addressing::legacy::power::control;
+    using namespace addressing::power;
+    using namespace addressing::power::distribution;
+    using namespace addressing::power::distribution::rover_control_board;
 
     // Find the bus group and process accordingly
     for (const auto& [name, id] : this->BUS_GROUPS)
@@ -63,14 +63,14 @@ void RcbDriver::_can_to_ros(const hi_can::Packet& packet)
         const auto target_address = addressing::legacy::address_t(
             SYSTEM_ID,
             SUBSYSTEM_ID,
-            static_cast<uint8_t>(device::ROVER_CONTROL_BOARD),
+            static_cast<uint8_t>(DEVICE_ID),
             static_cast<uint8_t>(id),
             static_cast<uint8_t>(power_bus::parameter::POWER_STATUS));
         if (packet.get_address() == static_cast<int>(target_address))
         {
             const auto& raw_data = packet.get_data();
 
-            parameters::legacy::power::control::power_bus::status_t data;
+            parameters::power::distribution::status_t data;
             data.deserialize_data(raw_data);
 
             auto message = std_msgs::msg::String();
@@ -87,8 +87,8 @@ void RcbDriver::_can_to_ros(const hi_can::Packet& packet)
 void RcbDriver::_ros_to_can(std_msgs::msg::String::UniquePtr msg)
 {
     using namespace hi_can;
-    using namespace addressing::legacy;
-    using namespace hi_can::parameters::legacy::power::control::power_bus;
+    using namespace addressing;
+    using namespace hi_can::parameters::power::distribution;
 
     try
     {
@@ -99,12 +99,12 @@ void RcbDriver::_ros_to_can(std_msgs::msg::String::UniquePtr msg)
 
         RCLCPP_INFO(get_logger(), "Setting power state of bus: %s to %s", data["bus"].get<std::string>().c_str(), data["on"].get<std::string>().c_str());
 
-        using namespace hi_can::addressing::legacy::power::control::rcb;
+        using namespace hi_can::addressing::power::distribution::rover_control_board;
 
-        const address_t address(power::SYSTEM_ID, power::control::SUBSYSTEM_ID,
-                                static_cast<uint8_t>(power::control::device::ROVER_CONTROL_BOARD),
-                                static_cast<uint8_t>(group->second),
-                                static_cast<uint8_t>(power::control::power_bus::parameter::CONTROL_IMMEDIATE));
+        const standard_address_t address(power::SYSTEM_ID, power::distribution::SUBSYSTEM_ID,
+                                         static_cast<uint8_t>(power::distribution::rover_control_board::DEVICE_ID),
+                                         static_cast<uint8_t>(group->second),
+                                         static_cast<uint8_t>(power_bus::parameter::CONTROL_IMMEDIATE));
 
         _can_interface->transmit(Packet(static_cast<addressing::flagged_address_t>(address),
                                         immediate_control_t(_immediate_control_t{data["on"].get<std::string>()[0] == '1', data["clear"].get<std::string>()[0] == '1', 0}).serialize_data()));

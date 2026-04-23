@@ -16,3 +16,6 @@ processing-plant:
 elevator-module:
   - *common
   - "firmware/elevator-module/**"
+rover-control-board:
+  - *common
+  - "firmware/rover-control-board/**"

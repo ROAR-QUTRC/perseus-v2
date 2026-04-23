@@ -20,16 +20,16 @@ private:
     void _call_receive();
 
     constexpr static auto PACKET_TIMEOUT = std::chrono::milliseconds(100);
-    const std::vector<std::pair<std::string, hi_can::addressing::legacy::power::control::rcb::groups>> BUS_GROUPS = {
-        {"compute", hi_can::addressing::legacy::power::control::rcb::groups::COMPUTE_BUS},
-        {"drive", hi_can::addressing::legacy::power::control::rcb::groups::DRIVE_BUS},
-        {"aux", hi_can::addressing::legacy::power::control::rcb::groups::AUX_BUS},
-        {"spare", hi_can::addressing::legacy::power::control::rcb::groups::SPARE_BUS},
+    const std::vector<std::pair<std::string, hi_can::addressing::power::distribution::rover_control_board::group>> BUS_GROUPS = {
+        {"compute", hi_can::addressing::power::distribution::rover_control_board::group::COMPUTE_BUS},
+        {"drive", hi_can::addressing::power::distribution::rover_control_board::group::DRIVE_BUS},
+        {"aux", hi_can::addressing::power::distribution::rover_control_board::group::AUX_BUS},
+        {"spare", hi_can::addressing::power::distribution::rover_control_board::group::SPARE_BUS},
     };
 
     std::optional<hi_can::RawCanInterface> _can_interface;
     std::optional<hi_can::PacketManager> _packet_manager;
-    std::vector<std::pair<std::string, hi_can::parameters::legacy::power::control::power_bus::PowerBusParameterGroup>> _parameter_groups;
+    std::vector<std::pair<std::string, hi_can::parameters::power::distribution::PowerBusParameterGroup>> _parameter_groups;
 
     rclcpp::TimerBase::SharedPtr _packet_timeout_timer;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _packet_publisher;
