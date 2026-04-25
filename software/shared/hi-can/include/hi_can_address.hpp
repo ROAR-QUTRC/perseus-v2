@@ -365,6 +365,86 @@ namespace hi_can
         {
             /// @brief The post-landing system ID
             constexpr uint8_t SYSTEM_ID = 0x03;
+            /// @brief Namespace containing all addresses in the arm subsystem
+            namespace arm
+            {
+                /// @brief The arm subsystem ID
+                constexpr uint8_t SUBSYSTEM_ID = 0x01;
+                /// @brief Namespace containing all the servos in the arm subsystem
+                namespace rmd_servo
+                {
+                    /// @brief The device ID of the rmd servos
+                    constexpr uint8_t DEVICE_ID = 0x00;
+                    /// @brief The RMD-L-4015-100-C Motor ID commands
+                    enum class message_type : uint16_t
+                    {
+                        // SEND ADDRESS - 0x140 + ID
+                        SEND = 0x140,
+                        // RECEIVE ADDRESS - 0x240 + ID
+                        RECEIVE = 0x240,
+                        // MOTION MODE CONTROL ADDRESS - 0x400 + ID
+                        MOTION_MODE = 0x400,
+                        // MULTI-MOTOR COMMAND
+                        MULTI_MOTOR_SEND = 0x280,
+                        // CANID SETTING - CAUTION: sets all motors on the CANBUS to the same address! To change one motor's ID, use the function control command
+                        CANID = 0x300,
+                    };
+                    enum class motor_id_t : uint8_t
+                    {
+                        ALL = 0x00,
+                        WRIST_TILT = 0x01,
+                        WRIST_PAN = 0x02,
+                    };
+                    struct servo_address_t : public flagged_address_t
+                    {
+                        constexpr servo_address_t() = default;
+                        constexpr servo_address_t(const message_type function, const motor_id_t motor_id = motor_id_t::ALL)
+                            : flagged_address_t(static_cast<uint16_t>(function) + static_cast<uint8_t>(motor_id), false, false, false)
+                        {
+                        }
+                        constexpr uint8_t get_motor_id()
+                        {
+                            return (address && 0x000F);
+                        }
+                    };
+                }
+
+                namespace control_board  // ESP32 servo controller board (RSBL servos + PWM for gripper)
+                {
+                    /// @brief The device ID of the servo board
+                    constexpr uint8_t DEVICE_ID = 0x05;
+
+                    /// @brief Servo board output IDs - includes RSBL servos and PWM channels
+                    enum class rsbl_group : uint8_t
+                    {
+                        SHOULDER_TILT = 0x01,
+                        SHOULDER_PAN = 0x02,
+                        ELBOW = 0x03,
+                    };
+                    enum class rsbl_parameters : uint8_t
+                    {
+                        SET_POS_EX = 0x00,
+                        SET_POSITION_SINGLE = 0x01,
+                        SET_SPEED = 0x02,
+                        SET_TORQUE_ENABLE = 0x03,
+                        STATUS_1 = 0x04,
+                        STATUS_2 = 0x05,
+                    };
+                    enum class pwm_group : uint8_t
+                    {
+                        PWM_1 = 0x04,
+                        PWM_2 = 0x05,
+                        PWM_3 = 0x06,
+                        PWM_4 = 0x07,
+                        PWM_5 = 0x08,
+                    };
+                    enum class pwm_parameters : uint8_t
+                    {
+                        SET_PWM = 0x00,
+                        GET_ANALOG = 0x01,
+                    };
+                }
+            }
         }
         /// @brief Namespace containing all addresses in the excavation system
         namespace excavation
