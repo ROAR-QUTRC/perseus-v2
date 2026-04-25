@@ -1,5 +1,6 @@
 final: prev: {
   autonomy = final.callPackage ./autonomy.nix { };
+  autonomy-diagnostics = final.callPackage ./autonomy-diagnostics.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   pcl-to-lsr = final.callPackage ./pcl-to-lsr.nix { };
   perseus = final.callPackage ./perseus.nix { };
