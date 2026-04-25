@@ -1,5 +1,5 @@
 // std_msgs types
-export interface Float64MultiArrayType {
+export interface NumberArrayType {
   data: Array<number>;
 }
 
