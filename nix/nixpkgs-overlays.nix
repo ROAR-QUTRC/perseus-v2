@@ -20,6 +20,7 @@
   (import ../packages/overlay.nix)
   (final: prev: {
     inherit self; # add self access for hacks like nixGL
+    elfutils = if prev.stdenv.hostPlatform.isDarwin then prev.libdwarf else prev.elfutils;
     # alias the output to pkgs.ros to make it easier to use
     ros = final.rosPackages.${rosDistro};
     # and add pkgs.unstable access
