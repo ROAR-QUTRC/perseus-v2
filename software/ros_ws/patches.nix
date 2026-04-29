@@ -287,6 +287,13 @@ let
           }
         )
       );
+      tracetools =
+        if final.stdenv.hostPlatform.isDarwin then
+          (rosPrev.tracetools.overrideAttrs {
+            propagatedBuildInputs = [ ];
+          })
+        else
+          rosPrev.tracetools;
     };
 
 in
