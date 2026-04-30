@@ -304,6 +304,19 @@ let
           ))
         else
           rosPrev.librealsense2;
+      realtime-tools =
+        if final.stdenv.hostPlatform.isDarwin then
+          (rosPrev.realtime-tools.overrideAttrs (
+            {
+              propagatedBuildInputs ? [ ],
+              ...
+            }:
+            {
+              propagatedBuildInputs = final.lib.remove final.libcap propagatedBuildInputs;
+            }
+          ))
+        else
+          rosPrev.realtime-tools;
     };
 
 in
