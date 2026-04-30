@@ -294,6 +294,16 @@ let
           })
         else
           rosPrev.tracetools;
+      librealsense2 =
+        if final.stdenv.hostPlatform.isDarwin then
+          (rosPrev.librealsense2.overrideAttrs (
+            { buildInputs, ... }:
+            {
+              buildInputs = final.lib.remove final.udev buildInputs;
+            }
+          ))
+        else
+          rosPrev.librealsense2;
     };
 
 in
