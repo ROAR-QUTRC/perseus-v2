@@ -1,6 +1,6 @@
 { pkgs, treefmtEval, ... }:
 let
-  inherit (pkgs.stdenv.hostPlatform) isx86_64;
+  inherit (pkgs.stdenv.hostPlatform) isx86_64 isDarwin;
 
   productionDomainId = 42;
   devDomainId = 51;
@@ -10,7 +10,6 @@ let
   # Packages which should be available in the shell, both in development and production
   standardPkgs = {
     inherit (pkgs)
-      groot2
       bashInteractive
       can-utils
       corepack_24
@@ -54,6 +53,7 @@ let
       nav2-common
       ;
   }
+  // (pkgs.lib.optionalAttrs (!isDarwin) { inherit (pkgs) groot2; })
   # Open3D is x86_64-linux only (uses Intel MKL/IPP)
   // pkgs.lib.optionalAttrs isx86_64 { inherit (pkgs) open3d; };
   # Packages which should be available only in the dev shell
