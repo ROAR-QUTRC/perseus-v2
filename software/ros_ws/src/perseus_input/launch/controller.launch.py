@@ -78,12 +78,10 @@ def generate_launch_description():
         is_xbox,
         controller_configs["xbox"],
         IfElseSubstitution(
-            is_logitech, 
-            controller_configs["logitech"], 
+            is_logitech,
+            controller_configs["logitech"],
             IfElseSubstitution(
-                is_taranis,
-                controller_configs["taranis"],
-                controller_configs["8bitdo"]
+                is_taranis, controller_configs["taranis"], controller_configs["8bitdo"]
             ),
         ),
     )

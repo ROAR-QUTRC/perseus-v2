@@ -25,27 +25,26 @@ generic_controller:
           follows: drive.forward.enable
         turbo_enable:
           follows: drive.forward.turbo_enable
-
           # TODO: Choose switch for jaw control on bucket
           # Right joy up/down" Axis 3
           # Left joystick left/right: 1
-#    bucket:
-#      lift:
-#        scaling: 0.1
-#        axis: 4
-#      tilt:
-#        scaling: -0.1
-#        axis: 3
-#      jaws:
-#        scaling: 0.1
-#        button_positive: 4
-#        button_negative: 5
-#      rotate:
-#        scaling: 0.5
-#        button_positive: 3
-#        button_negative: 0
-#      magnet:
-#        hold: true
-#        button_positive: 2
-#        button_negative: 1
+    #    bucket:
+    #      lift:
+    #        scaling: 0.1
+    #        axis: 4
+    #      tilt:
+    #        scaling: -0.1
+    #        axis: 3
+    #      jaws:
+    #        scaling: 0.1
+    #        button_positive: 4
+    #        button_negative: 5
+    #      rotate:
+    #        scaling: 0.5
+    #        button_positive: 3
+    #        button_negative: 0
+    #      magnet:
+    #        hold: true
+    #        button_positive: 2
+    #        button_negative: 1
     timeout_ns: 150000000
