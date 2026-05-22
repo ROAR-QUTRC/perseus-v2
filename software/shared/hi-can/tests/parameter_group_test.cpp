@@ -129,9 +129,9 @@ TEST_F(VescParameterGroupTest, DeserializesStatus1)
 {
     // rpm = 2500, current = 4.2 A, duty_cycle = 0.157 (15.7%)
     const auto payload = concat({
-        be32(2500),    // rpm
-        be16(42),      // current * 10
-        be16(157),     // duty_cycle * 1000
+        be32(2500),  // rpm
+        be16(42),    // current * 10
+        be16(157),   // duty_cycle * 1000
     });
 
     inject(addressing::drive::vesc::command_id::STATUS_1, payload);
@@ -165,10 +165,10 @@ TEST_F(VescParameterGroupTest, DeserializesStatus2)
 TEST_F(VescParameterGroupTest, DeserializesStatus4)
 {
     const auto payload = concat({
-        be16(425),    // temp_fet * 10 → 42.5 C
-        be16(380),    // temp_motor * 10 → 38.0 C
-        be16(127),    // current_in * 10 → 12.7 A
-        be16(9000),   // pid_pos * 50 → 180.0 deg
+        be16(425),   // temp_fet * 10 → 42.5 C
+        be16(380),   // temp_motor * 10 → 38.0 C
+        be16(127),   // current_in * 10 → 12.7 A
+        be16(9000),  // pid_pos * 50 → 180.0 deg
     });
 
     inject(addressing::drive::vesc::command_id::STATUS_4, payload);
@@ -210,7 +210,7 @@ TEST_F(VescParameterGroupTest, DeserializesStatus1NegativeCurrent)
 {
     const auto payload = concat({
         be32(0),
-        be16(-42),   // current * 10 → -4.2 A
+        be16(-42),  // current * 10 → -4.2 A
         be16(0),
     });
     inject(addressing::drive::vesc::command_id::STATUS_1, payload);
