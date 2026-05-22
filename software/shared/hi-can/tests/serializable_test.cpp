@@ -5,85 +5,70 @@
 
 #include <gtest/gtest.h>
 
+#include <bit>
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
 
 #include "hi_can_parameter.hpp"
+#include "test_helpers.hpp"
 
 using namespace hi_can::parameters;
+using hi_can_test::be16;
+using hi_can_test::be32;
 
 // ---------- scaled_int32_t ------------------------------------------------
-
-// Helper: build the expected big-endian byte sequence for a given int32 value.
-static std::vector<uint8_t> be_bytes(int32_t v)
-{
-    return {
-        static_cast<uint8_t>((v >> 24) & 0xFF),
-        static_cast<uint8_t>((v >> 16) & 0xFF),
-        static_cast<uint8_t>((v >> 8) & 0xFF),
-        static_cast<uint8_t>(v & 0xFF),
-    };
-}
-static std::vector<uint8_t> be_bytes(int16_t v)
-{
-    return {
-        static_cast<uint8_t>((v >> 8) & 0xFF),
-        static_cast<uint8_t>(v & 0xFF),
-    };
-}
 
 TEST(ScaledInt32, SerializesAsBigEndian)
 {
     scaled_int32_t<1.0> s;
     s.value = 0x01020304;
-    EXPECT_EQ(s.serialize_data(), be_bytes(int32_t{0x01020304}));
+    EXPECT_EQ(s.serialize_data(), be32(0x01020304));
 }
 
 TEST(ScaledInt32, AppliesScalingOnSerialize)
 {
-    // scaling factor 1000 means a value of 1.5 → 1500 on the wire
+    // Scaling factor 1000 means a value of 1.5 → 1500 on the wire.
     scaled_int32_t<1000.0> s;
     s.value = 1.5;
-    EXPECT_EQ(s.serialize_data(), be_bytes(int32_t{1500}));
+    EXPECT_EQ(s.serialize_data(), be32(1500));
 }
 
 TEST(ScaledInt32, RoundsHalfAwayFromZero)
 {
-    // round() in <cmath> is "round half away from zero"
+    // round() in <cmath> is "round half away from zero".
     scaled_int32_t<1.0> s;
     s.value = 0.5;
-    EXPECT_EQ(s.serialize_data(), be_bytes(int32_t{1}));
+    EXPECT_EQ(s.serialize_data(), be32(1));
     s.value = -0.5;
-    EXPECT_EQ(s.serialize_data(), be_bytes(int32_t{-1}));
+    EXPECT_EQ(s.serialize_data(), be32(-1));
 }
 
 TEST(ScaledInt32, HandlesNegativeValues)
 {
     scaled_int32_t<10.0> s;
     s.value = -3.2;
-    // -3.2 * 10 = -32 → big-endian int32
-    EXPECT_EQ(s.serialize_data(), be_bytes(int32_t{-32}));
+    EXPECT_EQ(s.serialize_data(), be32(-32));
 }
 
 TEST(ScaledInt32, DeserializeReversesScaling)
 {
     scaled_int32_t<1000.0> s;
-    s.deserialize_data(be_bytes(int32_t{1500}));
+    s.deserialize_data(be32(1500));
     EXPECT_DOUBLE_EQ(s.value, 1.5);
 }
 
 TEST(ScaledInt32, DeserializeHandlesNegatives)
 {
     scaled_int32_t<10.0> s;
-    s.deserialize_data(be_bytes(int32_t{-32}));
+    s.deserialize_data(be32(-32));
     EXPECT_DOUBLE_EQ(s.value, -3.2);
 }
 
 TEST(ScaledInt32, DeserializeHandlesZero)
 {
     scaled_int32_t<1000.0> s;
-    s.deserialize_data(be_bytes(int32_t{0}));
+    s.deserialize_data(be32(0));
     EXPECT_DOUBLE_EQ(s.value, 0.0);
 }
 
@@ -114,21 +99,21 @@ TEST(ScaledInt16, SerializesAsBigEndian)
 {
     scaled_int16_t<1.0> s;
     s.value = 0x0102;
-    EXPECT_EQ(s.serialize_data(), be_bytes(int16_t{0x0102}));
+    EXPECT_EQ(s.serialize_data(), be16(0x0102));
 }
 
 TEST(ScaledInt16, AppliesScalingOnSerialize)
 {
     scaled_int16_t<10.0> s;
     s.value = 12.7;
-    EXPECT_EQ(s.serialize_data(), be_bytes(int16_t{127}));
+    EXPECT_EQ(s.serialize_data(), be16(127));
 }
 
 TEST(ScaledInt16, HandlesNegativeValues)
 {
     scaled_int16_t<10.0> s;
     s.value = -3.2;
-    EXPECT_EQ(s.serialize_data(), be_bytes(int16_t{-32}));
+    EXPECT_EQ(s.serialize_data(), be16(-32));
 }
 
 TEST(ScaledInt16, RoundTripsAcrossSignFlip)
@@ -151,17 +136,17 @@ TEST(ScaledInt16, ThrowsOnWrongSize)
 //
 // SimpleSerializable is a raw memcpy of a packed POD struct in NATIVE byte
 // order. This is intentionally distinct from scaled_int{16,32}_t which use
-// network byte order. Mixing them up is a common bug source — the tests below
-// pin the layout.
+// network byte order. Mixing them up is a common bug source — the tests
+// below pin the layout.
 
 namespace
 {
 #pragma pack(push, 1)
     struct probe_pod_t
     {
-        uint8_t a;
-        uint16_t b;
-        int8_t c;
+        uint8_t first;
+        uint16_t second;
+        int8_t third;
     };
 #pragma pack(pop)
 }  // namespace
@@ -169,36 +154,41 @@ namespace
 TEST(SimpleSerializable, RoundTripsPodStruct)
 {
     SimpleSerializable<probe_pod_t> in;
-    in.a = 0xAB;
-    in.b = 0x1234;
-    in.c = -7;
+    in.first = 0xAB;
+    in.second = 0x1234;
+    in.third = -7;
 
     SimpleSerializable<probe_pod_t> out(in.serialize_data());
 
-    EXPECT_EQ(out.a, 0xAB);
-    EXPECT_EQ(out.b, 0x1234);
-    EXPECT_EQ(out.c, -7);
+    EXPECT_EQ(out.first, 0xAB);
+    EXPECT_EQ(out.second, 0x1234);
+    EXPECT_EQ(out.third, -7);
 }
 
 TEST(SimpleSerializable, ProducesPackedSize)
 {
     // probe_pod_t: 1 + 2 + 1 = 4 bytes, packed.
     SimpleSerializable<probe_pod_t> s;
-    s.a = 0;
-    s.b = 0;
-    s.c = 0;
+    s.first = 0;
+    s.second = 0;
+    s.third = 0;
     EXPECT_EQ(s.serialize_data().size(), 4u);
 }
 
-TEST(SimpleSerializable, UsesNativeByteOrder)
+TEST(SimpleSerializable, UsesLittleEndianOnLittleEndianHosts)
 {
-    // Pin this to little-endian. Every platform the rover runs on (x86_64,
-    // aarch64, armhf) is little-endian; if we ever land on a big-endian host
-    // this test will (correctly) fail and force us to revisit the wire format.
+    // SimpleSerializable is a raw memcpy, so the bytes appear in the host's
+    // native byte order. Every platform the rover runs on (x86_64, aarch64,
+    // armhf) is little-endian, so we pin to that here. If a future port
+    // lands on a big-endian host, this test fires loudly and the wire format
+    // must be revisited (it would silently change otherwise).
+    if constexpr (std::endian::native != std::endian::little)
+        GTEST_SKIP() << "Host is not little-endian; SimpleSerializable wire format would diverge.";
+
     SimpleSerializable<probe_pod_t> s;
-    s.a = 0x11;
-    s.b = 0x2233;  // little-endian → 0x33, 0x22
-    s.c = 0x44;
+    s.first = 0x11;
+    s.second = 0x2233;  // little-endian → 0x33, 0x22
+    s.third = 0x44;
 
     const std::vector<uint8_t> expected = {0x11, 0x33, 0x22, 0x44};
     EXPECT_EQ(s.serialize_data(), expected);
@@ -250,4 +240,54 @@ TEST(WrappedValue, RoundTripsBool)
 
     SimpleSerializable<wrapped_value_t<bool>> out(bytes);
     EXPECT_TRUE(out.value);
+}
+
+TEST(WrappedValue, DefaultConstructsToZero)
+{
+    SimpleSerializable<wrapped_value_t<uint16_t>> s;
+    EXPECT_EQ(s.value, 0u);
+}
+
+// ---------- bucket_controller wire format ---------------------------------
+//
+// excavation::bucket::controller::{speed_t, current_t, magnet_t} are real
+// device typedefs of SimpleSerializable<wrapped_value_t<T>>. Pinning their
+// wire layout here serves as the worked example for arm end-effector PWM
+// (which is the same pattern: SimpleSerializable<wrapped_value_t<uint16_t>>).
+
+TEST(BucketControllerWire, SpeedIsLittleEndianInt16)
+{
+    if constexpr (std::endian::native != std::endian::little)
+        GTEST_SKIP() << "Host is not little-endian.";
+
+    excavation::bucket::controller::speed_t s;
+    s.value = 1234;  // 0x04D2 little-endian → {0xD2, 0x04}
+    EXPECT_EQ(s.serialize_data(), (std::vector<uint8_t>{0xD2, 0x04}));
+}
+
+TEST(BucketControllerWire, SpeedNegativeRoundTrips)
+{
+    excavation::bucket::controller::speed_t a;
+    a.value = -2048;
+    excavation::bucket::controller::speed_t b(a.serialize_data());
+    EXPECT_EQ(b.value, -2048);
+}
+
+TEST(BucketControllerWire, CurrentIsLittleEndianUint16)
+{
+    if constexpr (std::endian::native != std::endian::little)
+        GTEST_SKIP() << "Host is not little-endian.";
+
+    excavation::bucket::controller::current_t c;
+    c.value = 0xBEEF;
+    EXPECT_EQ(c.serialize_data(), (std::vector<uint8_t>{0xEF, 0xBE}));
+}
+
+TEST(BucketControllerWire, MagnetIsSingleByteBool)
+{
+    excavation::bucket::controller::magnet_t m;
+    m.value = true;
+    EXPECT_EQ(m.serialize_data(), (std::vector<uint8_t>{0x01}));
+    m.value = false;
+    EXPECT_EQ(m.serialize_data(), (std::vector<uint8_t>{0x00}));
 }

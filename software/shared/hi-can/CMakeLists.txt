@@ -91,8 +91,9 @@ if(BUILD_TESTING)
   find_package(GTest REQUIRED)
   include(GoogleTest)
 
-  set(HI_CAN_TEST_SOURCES tests/serializable_test.cpp
-                          tests/parameter_group_test.cpp)
+  set(HI_CAN_TEST_SOURCES
+      tests/serializable_test.cpp tests/parameter_group_test.cpp
+      tests/esc_parameter_group_test.cpp tests/filter_test.cpp)
 
   foreach(test_source ${HI_CAN_TEST_SOURCES})
     get_filename_component(test_name ${test_source} NAME_WE)
@@ -102,6 +103,9 @@ if(BUILD_TESTING)
     target_include_directories(
       ${test_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
                            ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-    gtest_discover_tests(${test_name})
+    # Defer test discovery to ctest time so cross-compile builds (where the
+    # test binary cannot be run on the build host) don't try to execute the
+    # binary during configure.
+    gtest_discover_tests(${test_name} DISCOVERY_MODE PRE_TEST)
   endforeach()
 endif()
