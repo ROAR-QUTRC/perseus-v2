@@ -85,11 +85,23 @@ if(BUILD_SHARED_LIBS)
           DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
 endif(BUILD_SHARED_LIBS)
 
-# TESTING find_package(GTest REQUIRED) enable_testing()
+# TESTING
+include(CTest)
+if(BUILD_TESTING)
+  find_package(GTest REQUIRED)
+  include(GoogleTest)
 
-# add_executable(interface_test tests/packet_manager_test.cpp)
-# target_link_libraries(interface_test GTest::gtest_main)
-# target_include_directories(interface_test PUBLIC
-# ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  set(HI_CAN_TEST_SOURCES tests/serializable_test.cpp
+                          tests/parameter_group_test.cpp)
 
-# include(GoogleTest) gtest_discover_tests(interface_test)
+  foreach(test_source ${HI_CAN_TEST_SOURCES})
+    get_filename_component(test_name ${test_source} NAME_WE)
+    add_executable(${test_name} ${test_source})
+    target_link_libraries(${test_name} PRIVATE ${PROJECT_NAME}
+                                               GTest::gtest_main)
+    target_include_directories(
+      ${test_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+                           ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+    gtest_discover_tests(${test_name})
+  endforeach()
+endif()
