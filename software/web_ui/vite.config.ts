@@ -3,6 +3,7 @@ import { defineConfig, type ViteDevServer } from "vite";
 
 import { Server } from "socket.io";
 import { resourceMonitor } from "./src/server/scripts/resourceMonitorSocket";
+import { canSocket } from "./src/server/scripts/canSocket";
 import { cameraSocket } from "./src/server/scripts/camerasSocket";
 
 let clientCount: number = 0;
@@ -29,6 +30,7 @@ export const webSocketServer = {
     });
 
     resourceMonitor(io);
+    canSocket(io);
   },
 };
 
