@@ -41,6 +41,6 @@ buildRosPackage rec {
 
   meta = {
     description = "Perseus custom message definitions";
-    license = with lib.licenses; [ "TODO-CATKIN-PACKAGE-LICENSE" ];
+    license = with lib.licenses; [ mit ];
   };
 }

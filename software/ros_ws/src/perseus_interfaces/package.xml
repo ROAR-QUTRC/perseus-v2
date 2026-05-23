@@ -7,7 +7,7 @@
   <description>Perseus custom message definitions</description>
 
   <maintainer email="brockjamesmorgan@gmail.com">brock</maintainer>
-  <license>TODO</license>
+  <license>MIT</license>
 
   <!-- Build system -->
   <buildtool_depend>ament_cmake</buildtool_depend>
