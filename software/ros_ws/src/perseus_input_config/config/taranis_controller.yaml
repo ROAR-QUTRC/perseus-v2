@@ -33,6 +33,6 @@ generic_controller:
       jaws:
         scaling: 0.1
         axis: 6
-      #rotate:
-      #magnet:
+        #rotate:
+        #magnet:
     timeout_ns: 150000000
