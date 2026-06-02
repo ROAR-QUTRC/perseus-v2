@@ -23,7 +23,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "type",
             default_value="xbox",
-            description="Controller type: Either 'xbox', '8bitdo', or 'logitech'",
+            description="Controller type: Either 'xbox', '8bitdo', 'logitech' or 'taranis'",
         ),
         DeclareLaunchArgument(
             "wireless",
@@ -55,6 +55,7 @@ def generate_launch_description():
     # CONFIG + DATA FILES
     is_xbox = EqualsSubstitution(controller_type, "xbox")
     is_logitech = EqualsSubstitution(controller_type, "logitech")
+    is_taranis = EqualsSubstitution(controller_type, "taranis")
     is_dual_stick = EqualsSubstitution(dual_stick, "true")
     controller_configs = {
         "xbox": [
@@ -71,12 +72,17 @@ def generate_launch_description():
         ],
         "logitech": ["logitech_controller.yaml"],
         "8bitdo": ["8bitdo_controller.yaml"],
+        "taranis": ["taranis_controller.yaml"],
     }
     controller_config_name = IfElseSubstitution(
         is_xbox,
         controller_configs["xbox"],
         IfElseSubstitution(
-            is_logitech, controller_configs["logitech"], controller_configs["8bitdo"]
+            is_logitech,
+            controller_configs["logitech"],
+            IfElseSubstitution(
+                is_taranis, controller_configs["taranis"], controller_configs["8bitdo"]
+            ),
         ),
     )
     preferred_config_path = PathJoinSubstitution(

@@ -174,8 +174,8 @@ GenericController::AxisParser::AxisParser(GenericController& parent, const std::
 double GenericController::AxisParser::get_value()
 {
     if (_has_enable &&
-        !_parent._enable_parsers.at(_param_base_name + ".enable").get_value() &&
-        !_parent._enable_parsers.at(_param_base_name + ".turbo_enable").get_value())
+        !_parent._enable_parsers.at(_param_base_name + ".enable").get_value())
+        //!_parent._enable_parsers.at(_param_base_name + ".turbo_enable").get_value())
         return 0.0;
 
     auto params = _resolve_params();
