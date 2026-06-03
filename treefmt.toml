@@ -1,71 +1,15 @@
-excludes = [
-    "build/**",
-    "result/**",
-    "generated/**",
-    "treefmt.toml",
-    "docs/figures-source/**",
-    "docs/pyproject/**",
-    "docs/source/_static/fonts/**",
-    "docs/source/robots.txt",
-    "docs/source/intersphinx/**",
-    "*.rviz",
-    "setup.cfg",
-    "software/ros_ws/src/**/resource/**",
-    "*.drawio",
-    "*.svg",
-    "*.ttf",
-    "*.png",
-    "*.jpg",
-    "*.jpeg",
-    "*.gif",
-    "*.bmp",
-    "*.ico",
-    "*.pdf",
-    "*sdkconfig*",
-    "software/ros_ws/src/**/meshes/**",
-    "*.dae",
-    "*.stl",
-    "*.step",
-    "*.3mf",
-    "*.onnx",
-    "hardware/**",
-    "*.lock",
-    "*.patch",
-    "package-lock.json",
-    "go.mod",
-    "go.sum",
-    ".gitattributes",
-    ".gitignore",
-    ".gitmodules",
-    ".hgignore",
-    ".svnignore",
-    "LICENSE",
-]
+excludes = ["build/**", "result/**", "generated/**", "treefmt.toml", "docs/figures-source/**", "docs/pyproject/**", "docs/source/_static/fonts/**", "docs/source/robots.txt", "docs/source/intersphinx/**", "*.rviz", "setup.cfg", "software/ros_ws/src/**/resource/**", "*.drawio", "*.svg", "*.ttf", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.ico", "*.pdf", "*sdkconfig*", "software/ros_ws/src/**/meshes/**", "*.dae", "*.stl", "*.step", "*.3mf", "*.onnx", "hardware/**", "*.lock", "*.patch", "package-lock.json", "go.mod", "go.sum", ".gitattributes", ".gitignore", ".gitmodules", ".hgignore", ".svnignore", "LICENSE"]
 
 [formatter.actionlint]
 command = "actionlint"
 excludes = []
-includes = [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+includes = [".github/workflows/*.yml", ".github/workflows/*.yaml", ".gitea/workflows/*.yml", ".gitea/workflows/*.yaml", ".forgejo/workflows/*.yml", ".forgejo/workflows/*.yaml"]
 options = []
 
 [formatter.clang-format]
 command = "clang-format"
 excludes = []
-includes = [
-    "*.c",
-    "*.cc",
-    "*.cpp",
-    "*.h",
-    "*.hh",
-    "*.hpp",
-    "*.glsl",
-    "*.vert",
-    ".tesc",
-    ".tese",
-    ".geom",
-    ".frag",
-    ".comp",
-]
+includes = ["*.c", "*.cc", "*.cpp", "*.h", "*.hh", "*.hpp", "*.glsl", "*.vert", ".tesc", ".tese", ".geom", ".frag", ".comp"]
 options = ["-i"]
 
 [formatter.cmake-format]
@@ -95,25 +39,8 @@ options = []
 [formatter.prettier]
 command = "prettier"
 excludes = []
-includes = [
-    "*.cjs",
-    "*.css",
-    "*.html",
-    "*.js",
-    "*.json",
-    "*.json5",
-    "*.jsx",
-    "*.md",
-    "*.mdx",
-    "*.mjs",
-    "*.scss",
-    "*.ts",
-    "*.tsx",
-    "*.vue",
-    "*.yaml",
-    "*.yml",
-]
-options = ["--write", "--config", "/nix/store/08dd0r4gskvj94nzfkppinw9z0393jnd-prettierrc.json"]
+includes = ["*.cjs", "*.css", "*.html", "*.js", "*.json", "*.json5", "*.jsx", "*.md", "*.mdx", "*.mjs", "*.scss", "*.ts", "*.tsx", "*.vue", "*.yaml", "*.yml"]
+options = ["--write", "--config", "/nix/store/fhgb1zj8kkhp6v07vcw6mbk59qjcrvmg-prettierrc.json"]
 
 [formatter.ruff-format]
 command = "ruff"
