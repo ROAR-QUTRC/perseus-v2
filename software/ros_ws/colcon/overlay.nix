@@ -11,13 +11,5 @@ let
   colcon-ignore = final.callPackage ./colcon-ignore.nix { };
 in
 {
-  # manually packaged python packages needed for colcon clean
-  pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
-    (pyFinal: pyPrev: {
-      colcon-clean = pyFinal.callPackage ./clean.nix { };
-      scantree = pyFinal.callPackage ./scantree.nix { };
-    })
-  ];
-
   inherit colcon colconWithExtensions colcon-ignore;
 }
