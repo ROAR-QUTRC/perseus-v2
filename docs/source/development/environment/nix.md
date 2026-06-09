@@ -111,11 +111,11 @@ Runs [`treefmt`](https://github.com/numtide/treefmt) with the project config —
 
 The flake is configured with substituters so most builds are cache hits:
 
-| Cache | Key prefix |
-|-------|-----------|
+| Cache                     | Key prefix                      |
+| ------------------------- | ------------------------------- |
 | `perseus-lite.cachix.org` | `perseus-lite.cachix.org-1:...` |
-| `roar-qutrc.cachix.org` | `roar-qutrc.cachix.org-1:...` |
-| `ros.cachix.org` | `ros.cachix.org-1:...` |
+| `roar-qutrc.cachix.org`   | `roar-qutrc.cachix.org-1:...`   |
+| `ros.cachix.org`          | `ros.cachix.org-1:...`          |
 
 ---
 

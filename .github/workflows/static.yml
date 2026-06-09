@@ -3,7 +3,6 @@
 # and Cachix substituters as the main `all.yaml` workflow so warm-cache
 # builds are fast.
 name: Deploy docs to Pages
-
 on:
   push:
     branches: ["main"]
@@ -15,18 +14,15 @@ on:
       - "default.nix"
       - ".github/workflows/static.yml"
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 # Allow only one concurrent deployment, but don't cancel an in-progress
 # run — we want production deployments to finish.
 concurrency:
   group: "pages"
   cancel-in-progress: false
-
 jobs:
   build:
     name: Build docs
@@ -50,7 +46,6 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: "_site"
-
   deploy:
     name: Deploy to Pages
     needs: build

@@ -95,3 +95,17 @@ To rename the node requires a similar process to the package. In this case, the 
 :::{tip}
 For more in-depth information on customising the template see the [ROS2 Package Tutorial](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-Your-First-ROS2-Package.html). It is recommended to setup and run this template first before attempting to follow the tutorial.
 :::
+
+## Package versioning
+
+In-house packages use a simple scheme in `package.xml` (and `setup.py` for
+`ament_python` packages):
+
+- New packages start at `0.1.0`.
+- Bump the minor version when a package gains user-visible functionality;
+  bump the patch version for fixes.
+- Vendored or forked external packages (e.g. `pcl_to_lsr`) keep their
+  upstream version untouched.
+
+Keep the version in the matching `software/ros_ws/nix-packages/*.nix` recipe
+in sync — CI regenerates these recipes when `package.xml` changes.

@@ -22,6 +22,7 @@ def generate_launch_description():
     serial_port = LaunchConfiguration("serial_port")
     baud_rate = LaunchConfiguration("baud_rate")
     cmd_vel_topic = LaunchConfiguration("cmd_vel_topic")
+    lidar_port = LaunchConfiguration("lidar_port")
 
     arguments = [
         DeclareLaunchArgument(
@@ -58,6 +59,11 @@ def generate_launch_description():
             "cmd_vel_topic",
             default_value="/cmd_vel",
             description="Topic name for cmd_vel commands (use /joy_vel for xbox controller compatibility)",
+        ),
+        DeclareLaunchArgument(
+            "lidar_port",
+            default_value="/dev/ttyUSB0",
+            description="Serial port for the RPLidar C1",
         ),
     ]
 
@@ -122,7 +128,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             "frame_id": "c1_lidar_frame",
-            "serial_port": "/dev/ttyUSB0",
+            "serial_port": lidar_port,
             "serial_baudrate": "460800",
             "inverted": "false",
         }.items(),
