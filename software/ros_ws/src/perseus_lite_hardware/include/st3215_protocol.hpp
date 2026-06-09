@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <numbers>
 #include <numeric>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -23,6 +24,19 @@ namespace perseus_lite_hardware::protocol
     static constexpr uint8_t PACKET_HEADER_BYTE = 0xFF;
     static constexpr size_t PACKET_HEADER_SIZE = 2;
     static constexpr size_t PACKET_ID_INDEX = 2;
+    static constexpr size_t PACKET_LENGTH_INDEX = 3;
+    static constexpr size_t PACKET_MIN_SIZE = 4;  // header(2) + ID(1) + length(1)
+
+    // Status payload layout (offsets within the payload: error byte + the 8
+    // bytes read from PRESENT_POSITION_L (0x38) through PRESENT_TEMPERATURE (0x3F))
+    static constexpr size_t STATUS_DATA_SIZE = 8;
+    static constexpr size_t ERROR_BYTE_INDEX = 0;
+    static constexpr size_t POSITION_LOW_BYTE_INDEX = 1;
+    static constexpr size_t POSITION_HIGH_BYTE_INDEX = 2;
+    static constexpr size_t VELOCITY_LOW_BYTE_INDEX = 3;
+    static constexpr size_t VELOCITY_HIGH_BYTE_INDEX = 4;
+    static constexpr size_t VOLTAGE_BYTE_INDEX = 7;
+    static constexpr size_t TEMPERATURE_BYTE_INDEX = 8;
 
     enum class Command : uint8_t
     {
@@ -90,14 +104,116 @@ namespace perseus_lite_hardware::protocol
         return static_cast<uint16_t>(servo_speed);
     }
 
-    inline double apply_motor_direction(uint8_t servo_id, double velocity)
+    inline double apply_motor_direction(uint8_t servo_id, double velocity,
+                                        std::span<const uint8_t> inverted_servo_ids)
     {
-        // Servo IDs 2 and 3 are left-side motors that need direction inversion
-        if (servo_id == 2 || servo_id == 3)
+        if (std::find(inverted_servo_ids.begin(), inverted_servo_ids.end(), servo_id) !=
+            inverted_servo_ids.end())
         {
             return -velocity;
         }
         return velocity;
+    }
+
+    /**
+     * @brief A validated packet located inside a raw serial buffer
+     * @details payload spans the bytes between the length byte and the
+     *          checksum: for a status response that is the error byte followed
+     *          by the requested register data.
+     */
+    struct ExtractedPacket
+    {
+        uint8_t id;
+        std::span<const uint8_t> payload;
+    };
+
+    /**
+     * @brief Scans a raw serial buffer for valid servo response packets
+     * @details Searches for 0xFF 0xFF headers, validates the declared length
+     *          against the buffer bounds and verifies the checksum. Invalid or
+     *          truncated candidates are skipped. The returned spans alias the
+     *          input buffer and must not outlive it.
+     */
+    inline std::vector<ExtractedPacket> extract_packets(std::span<const uint8_t> buffer)
+    {
+        std::vector<ExtractedPacket> packets;
+        if (buffer.size() < PACKET_MIN_SIZE)
+        {
+            return packets;
+        }
+
+        for (size_t i = 0; i + PACKET_MIN_SIZE <= buffer.size(); ++i)
+        {
+            if (buffer[i] != PACKET_HEADER_BYTE || buffer[i + 1] != PACKET_HEADER_BYTE)
+            {
+                continue;
+            }
+
+            const uint8_t id = buffer[i + PACKET_ID_INDEX];
+            const uint8_t length = buffer[i + PACKET_LENGTH_INDEX];
+
+            // length counts payload + checksum; a zero length cannot carry a checksum
+            if (length == 0 || i + PACKET_MIN_SIZE + length > buffer.size())
+            {
+                continue;
+            }
+
+            const uint8_t checksum = calculate_checksum(
+                std::span{buffer.data() + i + PACKET_ID_INDEX,
+                          static_cast<size_t>(PACKET_MIN_SIZE + length - 1 - PACKET_ID_INDEX)});
+            if (checksum != buffer[i + PACKET_MIN_SIZE + length - 1])
+            {
+                continue;
+            }
+
+            packets.push_back({id,
+                               std::span{buffer.data() + i + PACKET_MIN_SIZE,
+                                         static_cast<size_t>(length - 1)}});
+
+            // Resume scanning after this packet (loop increment adds 1)
+            i += PACKET_MIN_SIZE + length - 1;
+        }
+
+        return packets;
+    }
+
+    /**
+     * @brief Decoded servo status read from PRESENT_POSITION_L (0x38) onwards
+     */
+    struct ServoStatus
+    {
+        uint8_t error_flags;
+        double position_rad;
+        double velocity_rad_s;
+        double temperature_c;
+    };
+
+    /**
+     * @brief Decodes a status payload (error byte + 8 register bytes)
+     * @return std::nullopt if the payload is too short to be a status response
+     * @details The 8 data bytes cover registers 0x38-0x3F: position(2),
+     *          speed(2), load(2), voltage(1), temperature(1).
+     */
+    inline std::optional<ServoStatus> parse_status_payload(std::span<const uint8_t> payload)
+    {
+        if (payload.size() < 1 + STATUS_DATA_SIZE)
+        {
+            return std::nullopt;
+        }
+
+        const auto raw_pos = static_cast<uint16_t>(
+            payload[POSITION_LOW_BYTE_INDEX] |
+            (static_cast<uint16_t>(payload[POSITION_HIGH_BYTE_INDEX]) << 8));
+        const auto raw_vel = static_cast<uint16_t>(
+            payload[VELOCITY_LOW_BYTE_INDEX] |
+            (static_cast<uint16_t>(payload[VELOCITY_HIGH_BYTE_INDEX]) << 8));
+
+        return ServoStatus{
+            payload[ERROR_BYTE_INDEX],
+            ticks_to_radians(parse_signed_value(raw_pos)),
+            raw_velocity_to_rad_s(parse_signed_value(raw_vel)),
+            static_cast<double>(payload[TEMPERATURE_BYTE_INDEX]),
+        };
     }
 
 }  // namespace perseus_lite_hardware::protocol

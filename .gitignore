@@ -2,6 +2,9 @@
 .direnv/
 result
 
+# Claude Code session data (worktrees, local settings)
+.claude/
+
 # ROS
 log/
 install/

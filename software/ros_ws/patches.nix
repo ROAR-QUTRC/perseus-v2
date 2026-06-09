@@ -168,6 +168,9 @@ let
       perseus-vision =
         let
           cubeDetectorModel = prev.fetchurl {
+            # The trained model is published on the upstream perseus-v2
+            # releases page; this fork has no release of its own for it.
+            # Mirror to a perseus-lite release if upstream ever removes it.
             url = "https://github.com/ROAR-QUTRC/perseus-v2/releases/download/models-v1/cube_detector_yolob8s.onnx";
             sha256 = "sha256-EkWhKFYog5ysSobcE4DFW2S8j3ZLQZDBxucWLa/KVfc=";
           };

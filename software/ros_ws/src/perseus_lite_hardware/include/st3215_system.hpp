@@ -121,44 +121,17 @@ namespace perseus_lite_hardware
 
     private:
         // Constants for ST3215 servo specifications
-        static constexpr double _RPM_SCALE_FACTOR = 7.5;                                        // RPM scaling factor (lower value = higher speed output)
-        static constexpr int16_t _MAX_VELOCITY_RPM = 1000;                                      // Maximum velocity value in protocol
-        static constexpr int16_t _MIN_VELOCITY_RPM = -1000;                                     // Minimum velocity value in protocol
-        static constexpr size_t _BUFFER_SIZE = 256;                                             // Buffer size for serial communication
-        static constexpr uint16_t _ENCODER_TICKS_PER_REVOLUTION = 4096;                         // Encoder resolution
-        static constexpr double _RADIANS_PER_REVOLUTION = 2.0 * std::numbers::pi;               // Radians in one revolution
-        static constexpr double _SECONDS_PER_MINUTE = 60.0;                                     // For RPM to rad/s conversion
-        static constexpr double _RPM_TO_RAD_S = _RADIANS_PER_REVOLUTION / _SECONDS_PER_MINUTE;  // Conversion factor
-        static constexpr double _RAD_S_TO_RPM = _SECONDS_PER_MINUTE / _RADIANS_PER_REVOLUTION;  // Inverse conversion
-
-        // Protocol constants
-        static constexpr uint8_t _PACKET_HEADER_BYTE = 0xFF;     // Packet header byte
-        static constexpr size_t _PACKET_HEADER_SIZE = 2;         // Two FF bytes in header
-        static constexpr size_t _PACKET_ID_INDEX = 2;            // Position of ID byte in packet
-        static constexpr size_t _PACKET_LENGTH_INDEX = 3;        // Position of length byte in packet
-        static constexpr size_t _PACKET_MIN_SIZE = 4;            // Minimum valid packet size
+        static constexpr size_t _BUFFER_SIZE = 256;              // Buffer size for serial communication
         static constexpr uint8_t _WHEEL_MODE_VALUE = 1;          // Value for wheel mode setting
         static constexpr uint8_t _TORQUE_ENABLE_VALUE = 1;       // Value to enable torque
         static constexpr uint8_t _PRESENT_POSITION_REG = 0x38;   // Present position register
-        static constexpr size_t _STATUS_PACKET_DATA_SIZE = 8;    // Expected size of status data
-        static constexpr uint16_t _SIGN_BIT_MASK = 1 << 15;      // Mask for sign bit in position/velocity
         static constexpr size_t _ROOM_TEMPERATURE_CELSIUS = 25;  // Default room temperature
 
         // Communication timing constants
-        static constexpr auto _READ_TIMEOUT = std::chrono::milliseconds(10);
-        static constexpr auto _WRITE_TIMEOUT = std::chrono::milliseconds(1);
         static constexpr auto _SERVO_TIMEOUT = std::chrono::seconds(1);
         static constexpr auto _COMMAND_DELAY = std::chrono::milliseconds(10);
         static constexpr auto _COMMUNICATION_CYCLE_DELAY = std::chrono::milliseconds(20);
         static constexpr auto _RESPONSE_TIMEOUT = std::chrono::milliseconds(50);
-
-        // Servo packet indices (relative to data portion)
-        static constexpr size_t _ERROR_BYTE_INDEX = 0;
-        static constexpr size_t _POSITION_LOW_BYTE_INDEX = 1;
-        static constexpr size_t _POSITION_HIGH_BYTE_INDEX = 2;
-        static constexpr size_t _VELOCITY_LOW_BYTE_INDEX = 3;
-        static constexpr size_t _VELOCITY_HIGH_BYTE_INDEX = 4;
-        static constexpr size_t _TEMPERATURE_BYTE_INDEX = 7;
 
         // Communication thread control
         std::atomic<bool> _comm_thread_running{false};
@@ -185,9 +158,6 @@ namespace perseus_lite_hardware
          */
         void communication_thread() noexcept;
 
-        // Communication timestamping and timeout
-        std::vector<rclcpp::Time> _last_update_times;
-
         /**
          * @brief Sends a command packet to a specific servo
          * @param id The servo ID to send the command to
@@ -204,13 +174,17 @@ namespace perseus_lite_hardware
          */
         void process_response(std::span<const uint8_t> response) noexcept;
         /**
-         * @brief Updates servo state data for a specific servo
-         * @param id The servo ID to update
-         * @param index The index in the servo arrays
-         * @return true if the update was successful, false otherwise
-         * @details Updates position, velocity, and temperature for the specified servo
+         * @brief Reads available bytes from the serial port, giving up after a deadline
+         * @param buffer Destination buffer for the read
+         * @param timeout How long to wait for any bytes to arrive
+         * @param error Set to the read error, or operation_aborted on timeout
+         * @return The number of bytes read (0 on timeout or error)
+         * @details Runs an async read against a deadline timer on _io_context so a
+         *          wedged servo or unplugged adapter cannot block the thread forever.
          */
-        [[nodiscard]] bool update_servo_states(uint8_t id, size_t index) noexcept;
+        [[nodiscard]] size_t read_with_timeout(std::span<uint8_t> buffer,
+                                               std::chrono::milliseconds timeout,
+                                               boost::system::error_code& error);
         /**
          * @brief Verifies that required command interfaces are available for a joint
          * @param joint_info Information about the joint configuration
@@ -228,12 +202,14 @@ namespace perseus_lite_hardware
         std::vector<double> _current_velocities;  // State feedback
         std::vector<double> _temperatures;        // State feedback
         std::vector<uint8_t> _servo_ids;
+        std::vector<uint8_t> _inverted_servo_ids;  // Servos whose drive direction is inverted
 
         // Communication members
+        // _serial_mutex serializes complete request/response transactions on the
+        // bus; _io_context is only ever run from the thread holding it.
         mutable std::mutex _serial_mutex;
         boost::asio::io_context _io_context;
         boost::asio::serial_port _serial_port{_io_context};
-        std::thread _io_thread;
     };
 
 }  // namespace perseus_lite_hardware

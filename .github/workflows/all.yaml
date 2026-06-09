@@ -20,9 +20,10 @@ jobs:
       nix_conf: ${{ steps.export-vars.outputs.nix_conf }}
       format_msg: ${{ steps.export-vars.outputs.format_msg }}
       package_msg: ${{ steps.export-vars.outputs.package_msg }}
-      is-main: ${{ (github.repository == 'ROAR-QUTRC/perseus-v2') && (github.ref == 'refs/heads/main') }}
+      is-main: ${{ (github.repository == 'DingoOz/perseus-lite') && (github.ref == 'refs/heads/main') }}
       has-cachix-secret: ${{ secrets.CACHIX_AUTH_TOKEN != '' }}
       has-repo-secret: ${{ secrets.REPO_DEPLOY_KEY != '' }}
+      has-docs-deploy-secret: ${{ secrets.DOCS_DEPLOY_KEY != '' }}
       # Direct pushes to main are blocked by branch protection on this fork,
       # so skip auto-commit there. Feature branches and manual dispatch keep working.
       can-push-commits: ${{ (github.event_name == 'workflow_dispatch') || ((github.event_name == 'push') && (github.ref != 'refs/heads/main')) }}
@@ -160,9 +161,10 @@ jobs:
           nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
       - name: Build docs
         run: nix build --option sandbox relaxed -L .#docs
-      # From here, deploying to the website repo
+      # From here, deploying to the website repo (skipped on this fork unless
+      # a DOCS_DEPLOY_KEY secret is configured)
       - name: Checkout website repo
-        if: ${{ (needs.global-vars.outputs.can-push-commits == 'true') && (needs.global-vars.outputs.is-main == 'true') }}
+        if: ${{ (needs.global-vars.outputs.can-push-commits == 'true') && (needs.global-vars.outputs.is-main == 'true') && (needs.global-vars.outputs.has-docs-deploy-secret == 'true') }}
         id: checkout-website
         uses: actions/checkout@v4
         with:
@@ -201,6 +203,22 @@ jobs:
         name: Commit and push changes
         with:
           commit_message: ${{ needs.global-vars.outputs.package_msg }}
+  static-analysis:
+    name: Static analysis (advisory)
+    runs-on: ubuntu-latest
+    # Advisory only: findings annotate the run without blocking the merge
+    continue-on-error: true
+    if: ${{ !cancelled() && ((needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true')) }}
+    needs: [changes]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+      - name: Run cppcheck
+        run: |
+          cppcheck --enable=warning,performance,portability --std=c++20 \
+            --inline-suppr --error-exitcode=1 \
+            software/ros_ws/src software/shared software/arm-teleop-direct
   build:
     name: Build software
     strategy:
@@ -227,14 +245,16 @@ jobs:
         if: ${{ needs.global-vars.outputs.has-cachix-secret == 'true' }}
         run: nix run -L .#scripts.cachix.shell
       - name: Run unit tests
+        # Tests run for every package so new test suites are picked up
+        # automatically. The colcon-in-nix Python lacks pytest, so ament_python
+        # packages report "no tests ran" (exit 5) rather than running their
+        # suites — colcon test-result still fails the job on any recorded
+        # C++/ctest failure.
         run: |
           nix develop -L -c bash -c '
             cd software/ros_ws &&
             colcon build --cmake-args -DBUILD_TESTING=ON &&
-            colcon test \
-              --packages-select perseus_lite_hardware perseus_lite perseus_lite_simulation \
-              --return-code-on-test-failure \
-              --ctest-args -R "Test\." &&
+            colcon test --ctest-args -R "Test\." ;
             colcon test-result --verbose
           '
       - name: Run flake checks

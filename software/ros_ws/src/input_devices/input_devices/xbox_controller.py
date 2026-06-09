@@ -130,6 +130,15 @@ class XboxController(Node):
                 read_only=True,
             ),
         )
+
+        self.declare_parameter(
+            "base_frame",
+            "base_link",
+            ParameterDescriptor(
+                description="Frame id stamped onto TwistStamped messages",
+                read_only=True,
+            ),
+        )
         self.add_on_set_parameters_callback(self._parameter_callback)
 
     def _parameter_callback(self, params: List[Parameter]) -> SetParametersResult:
@@ -191,6 +200,7 @@ class XboxController(Node):
         self.high_speed_multiplier = self.get_parameter("high_speed_multiplier").value
         self.deadman_threshold = self.get_parameter("deadman_threshold").value
         self.use_stamped_msg = self.get_parameter("use_stamped_msg").value
+        self.base_frame = self.get_parameter("base_frame").value
 
     def process_joystick_input(self, joy_msg: Joy) -> None:
         """
@@ -229,7 +239,7 @@ class XboxController(Node):
         if self.use_stamped_msg:
             stamped_twist = TwistStamped()
             stamped_twist.header.stamp = self.get_clock().now().to_msg()
-            stamped_twist.header.frame_id = "base_link"
+            stamped_twist.header.frame_id = self.base_frame
             stamped_twist.twist = twist
             self.velocity_publisher.publish(stamped_twist)
         else:

@@ -62,8 +62,7 @@ if(BUILD_TESTING)
   target_compile_options(gz_bridge_config_test PUBLIC ${YAML_CPP_CFLAGS_OTHER})
   target_compile_definitions(
     gz_bridge_config_test
-    PRIVATE
-      TEST_CONFIG_DIR="${CMAKE_CURRENT_SOURCE_DIR}/config")
+    PRIVATE TEST_CONFIG_DIR="${CMAKE_CURRENT_SOURCE_DIR}/config")
 
   include(GoogleTest)
   gtest_discover_tests(gz_bridge_config_test)
