@@ -10,6 +10,7 @@ final: prev: {
   perseus-lite = final.callPackage ./perseus-lite.nix { };
   perseus-lite-description = final.callPackage ./perseus-lite-description.nix { };
   perseus-lite-hardware = final.callPackage ./perseus-lite-hardware.nix { };
+  perseus-lite-missions = final.callPackage ./perseus-lite-missions.nix { };
   perseus-lite-simulation = final.callPackage ./perseus-lite-simulation.nix { };
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };
   perseus-vision = final.callPackage ./perseus-vision.nix { };
