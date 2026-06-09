@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>perseus_lite_missions</name>
+  <version>0.1.0</version>
+  <description>Mission Zero (Selene Base Rescue) and follow-on scripted missions for the lite robot tutorial campaign.</description>
+  <maintainer email="nigel.hungerfordsymes@gmail.com">Nigel Hungerford-Symes</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav2_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>action_msgs</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+
+  <exec_depend>perseus_lite_simulation</exec_depend>
+  <exec_depend>autonomy</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
