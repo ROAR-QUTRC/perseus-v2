@@ -33,6 +33,8 @@ let
       twist-stamper
       rosbridge-suite
       livox-ros-driver2
+      vikit-common
+      vikit-ros
       rviz2-fixed
       rosbag2
       teleop-twist-keyboard
