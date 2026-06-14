@@ -35,6 +35,14 @@ buildRosPackage {
   # rpg_vikit is a monorepo; build only the vikit_common package
   sourceRoot = "${src.name}/vikit_common";
 
+  # Upstream hardcodes -std=c++0x (C++11), but Sophus 1.24.6 headers require
+  # C++14/17 (std::enable_if_t). Bump to C++17 to match vikit_ros.
+  postPatch = ''
+    substituteInPlace CMakeLists.txt \
+      --replace-warn "-std=c++0x" "-std=c++17" \
+      --replace-warn "-std=c++11" "-std=c++17"
+  '';
+
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
