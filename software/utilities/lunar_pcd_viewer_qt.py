@@ -1227,7 +1227,6 @@ class LunarPCDViewer(QMainWindow):
     def _render_3d(self, illum=None):
         """Render 3D terrain in the selected mode."""
         # Preserve camera state across re-renders
-        cam = self._gl_view.cameraPosition()
         opts = self._gl_view.opts.copy()
         self._gl_view.clear()
         xg, yg, zg = self._xg, self._yg, self._zg
