@@ -95,9 +95,17 @@ let
   // treefmtEval.config.build.programs;
 
   # Python environment containing Open3D's Python runtime dependencies (plotly, dash, etc.)
+  # and additional packages for the PCD Qt viewer (PyOpenGL, pyqtgraph)
   # Used to construct PYTHONPATH in the shell hook so `import open3d` works (x86_64 only)
   open3dPythonDeps = pkgs.lib.optionalAttrs isx86_64 {
-    env = pkgs.python3.withPackages pkgs.open3d.pythonDeps;
+    env = pkgs.python3.withPackages (
+      ps:
+      (pkgs.open3d.pythonDeps ps)
+      ++ [
+        ps.pyopengl
+        ps.pyqtgraph
+      ]
+    );
   };
 
   # --- ROS WORKSPACES ---
@@ -131,6 +139,8 @@ let
           # Open3D Python module and its Python dependencies (plotly, dash, etc.)
           export PYTHONPATH="${pkgs.open3d}/lib/python${pkgs.python3.pythonVersion}/site-packages:${open3dPythonDeps.env}/lib/python${pkgs.python3.pythonVersion}/site-packages''${PYTHONPATH:+:$PYTHONPATH}"
         ''}
+        # Qt5 platform plugins (xcb, wayland) for PyQt5 applications
+        export QT_PLUGIN_PATH="${pkgs.libsForQt5.qt5.qtbase.bin}/${pkgs.libsForQt5.qt5.qtbase.qtPluginPrefix}''${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
       ''
       + additionalPostShellHook;
     };

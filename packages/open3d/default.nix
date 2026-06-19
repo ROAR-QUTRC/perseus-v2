@@ -149,6 +149,7 @@ stdenv.mkDerivation rec {
       numpy
       plotly
       dash
+      scipy
     ];
 
   # Patch download URLs to use pre-fetched local files from the Nix store
