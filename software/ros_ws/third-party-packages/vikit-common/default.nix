@@ -37,10 +37,17 @@ buildRosPackage {
 
   # Upstream hardcodes -std=c++0x (C++11), but Sophus 1.24.6 headers require
   # C++14/17 (std::enable_if_t). Bump to C++17 to match vikit_ros.
+  #
+  # Also strip `-march=native`: it bakes the build machine's ISA into the
+  # artifact, which breaks reproducibility and risks SIGILL when a binary-cached
+  # build (e.g. from CI) is run on robot hardware with a different CPU. The
+  # x86/ARM baseline `-msse*/-march=armv8-a` flags the CMakeLists already sets
+  # for each architecture are kept.
   postPatch = ''
     substituteInPlace CMakeLists.txt \
       --replace-warn "-std=c++0x" "-std=c++17" \
-      --replace-warn "-std=c++11" "-std=c++17"
+      --replace-warn "-std=c++11" "-std=c++17" \
+      --replace-warn "-march=native " ""
   '';
 
   buildType = "ament_cmake";
@@ -69,6 +76,7 @@ buildRosPackage {
 
   meta = {
     description = "Vikit common: camera models, math and interpolation utilities (ROS2 port)";
-    license = with lib.licenses; [ gpl3Plus ];
+    # Upstream package.xml declares "GPLv3" with no "or later" clause -> GPL-3.0-only.
+    license = with lib.licenses; [ gpl3Only ];
   };
 }
