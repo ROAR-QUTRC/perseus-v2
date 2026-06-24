@@ -58,6 +58,7 @@ buildRosPackage {
 
   meta = {
     description = "Vikit ROS2 integration: camera parameter handling and ROS utilities";
-    license = with lib.licenses; [ gpl3Plus ];
+    # Upstream package.xml declares "GPLv3" with no "or later" clause -> GPL-3.0-only.
+    license = with lib.licenses; [ gpl3Only ];
   };
 }
