@@ -213,9 +213,10 @@ ros-jazzy-twist-mux = "*"
 # before perseus_lite_simulation can run end-to-end.
 
 [feature.simulation.tasks]
-# In the simulation env, build everything including perseus_lite_simulation.
-build = { cmd = "colcon build --symlink-install", cwd = "software/ros_ws" }
-build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON", cwd = "software/ros_ws" }
+# Sim env builds perseus_lite_simulation (Gazebo) but skips perseus_vision,
+# which needs onnxruntime-cpp from the machine-learning env.
+build = { cmd = "colcon build --symlink-install --packages-skip perseus_vision", cwd = "software/ros_ws" }
+build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_vision", cwd = "software/ros_ws" }
 test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_lite_simulation --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
 sim = { cmd = "ros2 launch perseus_lite_simulation perseus_sim.launch.py", cwd = "software/ros_ws" }
 
