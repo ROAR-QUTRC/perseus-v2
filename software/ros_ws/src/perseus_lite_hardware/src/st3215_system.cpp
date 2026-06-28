@@ -1,12 +1,12 @@
 #include "st3215_system.hpp"
 
-#include "st3215_protocol.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <hardware_interface/system_interface.hpp>
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
 #include <rclcpp/rclcpp.hpp>
+
+#include "st3215_protocol.hpp"
 
 namespace
 {

@@ -1,6 +1,9 @@
 excludes = [
     ".claude/**",
     ".pixi/**",
+    # web_ui is a self-contained Svelte app with its own prettier + plugins (yarn);
+    # format it via its own tooling, not the global treefmt prettier.
+    "software/web_ui/**",
     "build/**",
     "result/**",
     "generated/**",
@@ -99,8 +102,6 @@ includes = [
     "*.ts",
     "*.tsx",
     "*.vue",
-    "*.yaml",
-    "*.yml",
 ]
 options = ["--write"]
 

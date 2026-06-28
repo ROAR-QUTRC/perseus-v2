@@ -1,9 +1,9 @@
+#include "st3215_protocol.hpp"
+
 #include <gtest/gtest.h>
 
 #include <cmath>
 #include <numbers>
-
-#include "st3215_protocol.hpp"
 
 namespace protocol = perseus_lite_hardware::protocol;
 

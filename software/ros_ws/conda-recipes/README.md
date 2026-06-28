@@ -20,11 +20,11 @@ They are not ported. If a future feature needs one, write its recipe here.
 
 ## Remaining optional items
 
-| Package | Why deferred | Action |
-| --- | --- | --- |
-| `twist_stamper` | Not in robostack-jazzy. A `perseus_lite_simulation` **runtime** (`exec_depend`) — sim *builds* without it; only launching needs it. | Vendor the tiny upstream ament_python package into `software/ros_ws/src/`, or write a recipe. (Auto-cloning was blocked as untrusted; do this deliberately.) |
-| `groot2` | No conda package (BehaviorTree GUI debug tool). | Install the v1.6.1 AppImage manually, or add a `pixi run install-groot2` task that downloads it. Low priority. |
-| RealSense | `realsense2-camera` pulls a conflicting `ros2-distro-mutex`/`libboost`/`libudev` set (breaks the solve, esp. linux-aarch64). Optional on the lite robot. | If needed, add as a separate linux-64 optional environment so it can't poison the default solve. |
+| Package         | Why deferred                                                                                                                                             | Action                                                                                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `twist_stamper` | Not in robostack-jazzy. A `perseus_lite_simulation` **runtime** (`exec_depend`) — sim _builds_ without it; only launching needs it.                      | Vendor the tiny upstream ament_python package into `software/ros_ws/src/`, or write a recipe. (Auto-cloning was blocked as untrusted; do this deliberately.) |
+| `groot2`        | No conda package (BehaviorTree GUI debug tool).                                                                                                          | Install the v1.6.1 AppImage manually, or add a `pixi run install-groot2` task that downloads it. Low priority.                                               |
+| RealSense       | `realsense2-camera` pulls a conflicting `ros2-distro-mutex`/`libboost`/`libudev` set (breaks the solve, esp. linux-aarch64). Optional on the lite robot. | If needed, add as a separate linux-64 optional environment so it can't poison the default solve.                                                             |
 
 ## Already available — no recipe needed
 
@@ -32,5 +32,5 @@ They are not ported. If a future feature needs one, write its recipe here.
 - The `software/shared/{crc,fd-wrapper,ptr-wrapper,simple-networking,type-demangle}`
   C++ libs build **in-tree**: `perseus_sensors`'s CMake `add_subdirectory`
   fallback compiles them. No recipe, no package.xml.
-- All core ROS 2, Nav2, slam_toolbox, robot_localization, ros2_control,
-  behaviortree_cpp, ros_gz_*, rviz2, rplidar_ros, twist_mux — in robostack-jazzy.
+- All core ROS 2, Nav2, slam*toolbox, robot_localization, ros2_control,
+  behaviortree_cpp, ros_gz*\*, rviz2, rplidar_ros, twist_mux — in robostack-jazzy.
