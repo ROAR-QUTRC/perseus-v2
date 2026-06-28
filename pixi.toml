@@ -45,12 +45,18 @@ make = "*"
 pkg-config = "*"
 # colcon + ament test/lint tooling
 colcon-common-extensions = "*"
-setuptools = "*"
+# setuptools <80: colcon's ament_python --symlink-install runs
+# `setup.py develop --editable`, which setuptools 80 removed. Jazzy targets ~68.
+setuptools = "<80"
 pytest = "*"
 numpy = "*"
 
 # System libraries pulled in by package.xml <depend> tags
-libboost-devel = "*"          # perseus_lite_hardware, arm-teleop-direct (Boost ASIO)
+# Pinned to 1.88: Boost 1.90 (pulled by the newest ros2-distro-mutex) removed the
+# compiled boost_system library + its CMake component config, breaking
+# perseus_lite_hardware's `find_package(Boost ... COMPONENTS system)`. 1.88 still
+# ships boost_system and aligns the default env with the simulation/ml envs.
+libboost-devel = "1.88.*"     # perseus_lite_hardware, arm-teleop-direct (Boost ASIO)
 openssl = "*"                 # perseus_sensors (simple-networking)
 nlohmann_json = "*"           # perseus_sensors
 yaml-cpp = "*"                # arm-teleop-direct, tests
@@ -164,11 +170,14 @@ version = "*"
 # Tasks (replace documented `nix develop -c ...` / colcon invocations)
 # ---------------------------------------------------------------------------
 [tasks]
-# Full workspace build. perseus_lite_simulation is skipped here — it needs the
-# Gazebo deps only present in the `simulation` environment (see [feature.simulation.tasks]).
-build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
+# Core workspace build — 12/13 packages build cleanly in the default env today.
+# Skipped (pending migration phases, see conda-recipes/README.md):
+#   perseus_lite_simulation -> Gazebo deps (use the `simulation` env)
+#   perseus_sensors         -> needs the software/shared/simple-networking lib wired in
+#   perseus_vision          -> needs onnxruntime-cpp (C++) + header-layout/model-fetch fix
+build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation perseus_sensors perseus_vision", cwd = "software/ros_ws" }
 # Build with tests enabled
-build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
+build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation perseus_sensors perseus_vision", cwd = "software/ros_ws" }
 # CI unit-test subset (mirrors CLAUDE.md / .github pattern: Test.* prefix only)
 test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_lite_simulation --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
 # Convenience launchers
