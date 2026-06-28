@@ -38,18 +38,22 @@ designs, and challenge docs are deleted, not just disabled.
 | `software/arm-teleop-direct/`                                             | Standalone serial Feetech arm teleop (C++). Lite-relevant.     |
 | `software/{daemons,scripts,utilities,web_ui,shared,native,home-manager}/` | General system infra — keep.                                   |
 | `firmware/`                                                               | ESP32/MCU firmware. Subdirs split lite/v2 — see §4.            |
-| `packages/`                                                               | Nix overlays for third-party deps (Groot2, Livox SDK, Open3D). |
 | `docs/`                                                                   | Sphinx docs site (mostly perseus-v2 — see §4).                 |
-| `nix/`, `flake.nix`, `default.nix`, `shell.nix`                           | Nix-based dev shell + build.                                   |
-| `.clang-format`, `treefmt.nix`, `treefmt.toml`                            | Formatting config — run before commits.                        |
+| `pixi.toml`, `pixi.lock`                                                   | Pixi/RoboStack dev environments + build (replaced Nix).        |
+| `.clang-format`, `treefmt.toml`                                           | Formatting config — run before commits.                        |
 
 ## 3. Build / run quick reference
 
 ```bash
-# Dev shell (direnv loads automatically; otherwise:)
-nix develop
+# Dev environment via Pixi/RoboStack (direnv loads automatically; otherwise:)
+pixi shell                  # default env; ROS 2 Jazzy auto-sourced
+# or run tasks directly without entering a shell:
+pixi run -e default build   # colcon build (skips sim + vision; see pixi.toml)
+pixi run -e default test    # CI unit-test subset
+pixi run -e simulation build # full build incl. perseus_lite_simulation (Gazebo)
+pixi run -e machine-learning build # full build incl. perseus_vision (CUDA ONNX)
 
-# Build ROS workspace
+# Manual colcon build inside `pixi shell`:
 cd software/ros_ws
 colcon build --symlink-install
 source install/setup.bash
@@ -75,6 +79,28 @@ ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/TwistStamped \
   '{header: {frame_id: base_link}, twist: {linear: {x: 0.5}}}'
 ```
 
+### Build system: Pixi/RoboStack (Nix removed)
+
+The project migrated from Nix to **Pixi**. ROS 2 Jazzy + deps come from the
+`robostack-jazzy` conda channel; `pixi.lock` pins exact versions. Four
+environments: `default` (the robot; linux-64 **and** linux-aarch64), `simulation`
+and `machine-learning` (linux-64 only — Gazebo / CUDA have no aarch64 builds),
+and `docs`. Run `nix fmt`'s replacement with `pixi run -e format fmt`.
+
+Migration notes:
+
+- **Open3D** is now a conda-forge package (no custom build); **Groot2** has no
+  conda package (install the AppImage manually if needed).
+- The upstream third-party SLAM/coverage packages (`lidarslam_ros2`,
+  `ndt-omp-ros2`, `opennav-coverage`, `fields2cover`) were **dropped** — nothing
+  in the lite workspace referenced them. See `software/ros_ws/conda-recipes/`.
+- `perseus_vision` builds only in `machine-learning` (needs CUDA `onnxruntime-cpp`).
+- `twist_stamper` (a `perseus_lite_simulation` runtime dep) is not in RoboStack
+  and is not yet vendored — sim builds, but launching it needs that package.
+- `software/home-manager/` is **orphaned**: it was Nix machine-provisioning with
+  no Pixi equivalent. Preserved (not deleted) but non-functional without a flake;
+  extract to its own repo or remove.
+
 ## 4. What's lite-relevant vs upstream-only
 
 ### KEEP — used directly by lite
@@ -92,9 +118,8 @@ ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/TwistStamped \
 | `perseus_vision`                                                        | ONNX detectors (cube, ArUco)                                                                             |
 | `perseus_lite_simulation`                                               | Gazebo sim forked from `perseus_simulation`; spawns the lite URDF, vendors `twist_mux` config (Phase 3). |
 | `software/arm-teleop-direct`                                            | Serial Feetech arm teleop                                                                                |
-| `software/shared`                                                       | Shared C++ libs (fd-wrapper, crc, ptr-wrapper, simple-networking, type-demangle)                         |
-| `software/{daemons,scripts,utilities,web_ui,home-manager,native}`       | General infra                                                                                            |
-| `packages/{groot2,open3d}`                                              | Nix overlays for autonomy deps                                                                           |
+| `software/shared`                                                       | Shared C++ libs (fd-wrapper, crc, ptr-wrapper, simple-networking, type-demangle); built in-tree by `perseus_sensors` via CMake `add_subdirectory` |
+| `software/{daemons,scripts,utilities,web_ui,home-manager,native}`       | General infra (`home-manager` is orphaned Nix machine-config — see note below)                          |
 
 ### REMOVED — deleted, not in tree
 
@@ -188,7 +213,7 @@ Took **Option A** (full fork). `perseus_simulation/` was copied to
 Verified: `colcon build` passes 16 packages; `ROS2 launch --show-args
 perseus_lite_simulation perseus_sim.launch.py` resolves the full launch
 graph (rsp + controllers + gazebo + rosbridge + twist_mux + ekf + rviz)
-without errors. Actually running Gazebo requires `nix develop .#simulation`
+without errors. Actually running Gazebo requires `pixi shell -e simulation`
 and a GPU — not validated in this batch.
 
 ### Phase 4 — hard-divergence delete — DONE
