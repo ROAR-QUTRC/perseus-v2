@@ -60,8 +60,10 @@ libboost-devel = "1.88.*"     # perseus_lite_hardware, arm-teleop-direct (Boost 
 openssl = "*"                 # perseus_sensors (simple-networking)
 nlohmann_json = "*"           # perseus_sensors
 yaml-cpp = "*"                # arm-teleop-direct, tests
-libopencv = "*"               # perseus_vision (also pulls opencv python)
-onnxruntime = "*"             # perseus_vision (CPU build; GPU build in machine-learning env)
+libopencv = "*"               # cv_bridge / perseus_vision (OpenCV)
+# NOTE: no onnxruntime here. conda-forge ships onnxruntime-cpp (the C++ lib
+# perseus_vision needs) only in CUDA builds, so vision builds in the
+# machine-learning env, matching the old Nix machineLearning shell.
 pygame = "*"                  # input_devices (python3-pygame)
 ncurses = "*"                 # arm-teleop-direct (curses TUI)
 
@@ -173,11 +175,12 @@ version = "*"
 # Core workspace build — 12/13 packages build cleanly in the default env today.
 # Skipped (pending migration phases, see conda-recipes/README.md):
 #   perseus_lite_simulation -> Gazebo deps (use the `simulation` env)
-#   perseus_sensors         -> needs the software/shared/simple-networking lib wired in
-#   perseus_vision          -> needs onnxruntime-cpp (C++) + header-layout/model-fetch fix
-build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation perseus_sensors perseus_vision", cwd = "software/ros_ws" }
+#   perseus_vision          -> needs onnxruntime-cpp (CUDA) (use the `machine-learning` env)
+# perseus_sensors builds here: its CMake add_subdirectory fallback compiles the
+# software/shared/{simple-networking,fd-wrapper,ptr-wrapper} libs in-tree.
+build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation perseus_vision", cwd = "software/ros_ws" }
 # Build with tests enabled
-build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation perseus_sensors perseus_vision", cwd = "software/ros_ws" }
+build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation perseus_vision", cwd = "software/ros_ws" }
 # CI unit-test subset (mirrors CLAUDE.md / .github pattern: Test.* prefix only)
 test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_lite_simulation --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
 # Convenience launchers
@@ -221,7 +224,11 @@ platforms = ["linux-64"]
 [feature.machine-learning.dependencies]
 cuda-toolkit = "*"
 cudnn = "*"
-onnxruntime = { version = "*", build = "*cuda*" }   # GPU-enabled build
+onnxruntime-cpp = "*"          # C++ ONNX Runtime (CUDA build) for perseus_vision
+
+[feature.machine-learning.tasks]
+# The ml env has onnxruntime-cpp, so it builds the full workspace incl. vision.
+build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
 
 # ---------------------------------------------------------------------------
 # Feature: docs (Sphinx) — old `.#docs`
