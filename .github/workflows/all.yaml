@@ -1,8 +1,11 @@
-name: Nix CI/CD
+# Pixi CI: format check, build + unit tests on x86_64 and ARM64.
+# Replaces the former Nix/Cachix pipeline. ROS 2 Jazzy and all deps come from
+# the robostack-jazzy conda channel via Pixi; pixi.lock pins exact versions.
+name: CI
 on:
   push:
     branches-ignore:
-      - gh-readonly-queue/** # ignore push actions triggered by merge queue
+      - "gh-readonly-queue/**"
   pull_request:
   merge_group:
   workflow_dispatch:
@@ -12,232 +15,42 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  # set up variables shared between jobs
-  global-vars:
-    name: Setup global variables
-    runs-on: ubuntu-latest
-    outputs:
-      nix_conf: ${{ steps.export-vars.outputs.nix_conf }}
-      format_msg: ${{ steps.export-vars.outputs.format_msg }}
-      package_msg: ${{ steps.export-vars.outputs.package_msg }}
-      is-main: ${{ (github.repository == 'ROAR-QUTRC/perseus-v2') && (github.ref == 'refs/heads/main') }}
-      has-cachix-secret: ${{ secrets.CACHIX_AUTH_TOKEN != '' }}
-      has-repo-secret: ${{ secrets.REPO_DEPLOY_KEY != '' }}
-      # Direct pushes to main are blocked by branch protection on this fork,
-      # so skip auto-commit there. Feature branches and manual dispatch keep working.
-      can-push-commits: ${{ (github.event_name == 'workflow_dispatch') || ((github.event_name == 'push') && (github.ref != 'refs/heads/main')) }}
-    steps:
-      - name: Export Nix config
-        id: export-vars
-        run: |
-          {
-            echo 'nix_conf<<NIX_EOF'
-            echo 'extra-trusted-substituters = https://perseus-lite.cachix.org https://roar-qutrc.cachix.org https://ros.cachix.org'
-            echo 'extra-trusted-public-keys = perseus-lite.cachix.org-1:k9gqOm0YvX64OQCFpvpZie9fVxTATbrKQ1uVgd0HiX4= roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA= ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo='
-            echo "extra-trusted-users = $(whoami)"
-            echo 'NIX_EOF'
-          } >> "$GITHUB_OUTPUT"
-          {
-            echo "format_msg=chore: Format and lint"
-            echo "package_msg=chore: Update Nix packaging"
-          } >> "$GITHUB_OUTPUT"
-  # get the file changes to filter other jobs
-  changes:
-    name: Detect changes
-    runs-on: ubuntu-latest
-    outputs:
-      manual: ${{ github.event_name == 'workflow_dispatch'}}
-      software: ${{ steps.filter.outputs.software }}
-      docs: ${{ steps.filter.outputs.docs }}
-      docs-shell: ${{ steps.filter.outputs.docs-shell }}
-      formatter-config: ${{ steps.filter.outputs.formatter-config }}
-      packages: ${{ steps.filter.outputs.packages }}
-      skip-format: ${{ steps.previous-format.outputs.skip }}
-      skip-package: ${{ steps.previous-package.outputs.skip }}
-    needs: global-vars
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: .github/filters.yaml
-      - name: Check for previous formatting
-        id: previous-format
-        # WARNING: The commit message check is fragile and may break if the commit message changes,
-        # hence it's determined by the global-vars job
-        # We can skip the format job if the last message was a format *or* package message,
-        # since package will always run after format
-        run: |
-          case "$(git log -1 --pretty=format:%B)" in
-            "${{ needs.global-vars.outputs.package_msg }}"|"${{ needs.global-vars.outputs.format_msg }}")
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-              echo "Skipping format job because of previous formatting or packaging"
-              ;;
-            *)
-              echo "skip=false" >> "$GITHUB_OUTPUT"
-              echo "Format job will run"
-              ;;
-          esac
-      - name: Check for previous packaging
-        id: previous-package
-        # same thing as the format check job
-        run: |
-          if [ "$(git log -1 --pretty=format:%B)" = "${{ needs.global-vars.outputs.package_msg }}" ]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Skipping package job because of previous packaging"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-            echo "Package job will run"
-          fi;
-  # We don't want to run commit actions on pull request workflows (ie, after the merge commit),
-  # only on push, so all commit+push steps are filtered by the event name
   format:
     name: Format and lint
-    # needed to push changes if needed - will still run if no SSH key available, just won't re-run CI/CD
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
-    if: ${{ needs.changes.outputs.skip-format != 'true' }}
-    needs: [changes, global-vars]
     steps:
       - uses: actions/checkout@v4
-        if: ${{ needs.global-vars.outputs.has-repo-secret }}
-        id: checkout-with-ssh
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
-          ssh-key: ${{ secrets.REPO_DEPLOY_KEY }}
-      - uses: actions/checkout@v4
-        # just checkout with GITHUB_TOKEN and accept that there will be no re-run
-        if: ${{ steps.checkout-with-ssh.outcome != 'success' }}
-      - uses: nixbuild/nix-quick-install-action@v30
-        with:
-          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
-      - name: Update `treefmt.toml`
-        if: ${{ (needs.global-vars.outputs.can-push-commits == 'true') &&  (needs.changes.outputs.formatter-config == 'true') }}
-        id: update-config
-        run: nix run -L .#tools.treefmt-write-config
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        if: ${{ steps.update-config.outcome == 'success' }}
-        with:
-          commit_message: "chore: Update `treefmt.toml`"
-      - name: Format and lint repository
-        run: nix fmt
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        if: ${{ needs.global-vars.outputs.can-push-commits == 'true' }}
-        id: push-format
-        with:
-          commit_message: ${{ needs.global-vars.outputs.format_msg }}
-  docs-shell:
-    name: Build docs dev shell
-    runs-on: ubuntu-latest
-    if: ${{ !cancelled() && (needs.format.result != 'failure') && ((needs.changes.outputs.docs-shell == 'true') || (needs.changes.outputs.manual == 'true')) }}
-    needs: [changes, format, global-vars]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: nixbuild/nix-quick-install-action@v30
-        with:
-          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
-      - name: Build docs dev shell
-        run: nix develop -L .#docs -c echo 'Docs shell test success'
-      - name: Upload docs dev shell to Cachix
-        if: ${{ needs.global-vars.outputs.has-cachix-secret }}
-        run: nix run -L .#scripts.cachix.docs-shell
-    env:
-      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-  docs:
-    name: Build docs
-    runs-on: ubuntu-latest
-    # GitHub applies an implicit `success()` to the `if` condition
-    # unless you manually specify another status check function.
-    # Therefore, since we want this to run regardless of the docs dev shell,
-    # we need to add `!cancelled()` (or `always()`) to the condition to remove the implicit `success()`
-    # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#status-check-functions
-    if: ${{ !cancelled() && (needs.format.result != 'failure') &&  ((needs.changes.outputs.docs == 'true') || (needs.changes.outputs.manual == 'true')) }}
-    needs: [changes, format, docs-shell, global-vars]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: nixbuild/nix-quick-install-action@v30
-        with:
-          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
-      - name: Build docs
-        run: nix build --option sandbox relaxed -L .#docs
-      # From here, deploying to the website repo
-      - name: Checkout website repo
-        if: ${{ (needs.global-vars.outputs.can-push-commits == 'true') && (needs.global-vars.outputs.is-main == 'true') }}
-        id: checkout-website
-        uses: actions/checkout@v4
-        with:
-          repository: ROAR-QUTRC/roar-qutrc.github.io
-          ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
-          path: docs
-      - name: Update docs in checked out repo
-        if: ${{ steps.checkout-website.outcome == 'success' }}
-        run: |
-          rm -rf docs/*
-          cp -a result/html/. docs/
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        name: Commit and push changes
-        if: ${{ steps.checkout-website.outcome == 'success' }}
-        with:
-          commit_message: "Update generated docs"
-          repository: ./docs
-  package:
-    name: Re-generate Nix packaging
-    runs-on: ubuntu-latest
-    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.changes.outputs.skip-package != 'true') && (needs.changes.outputs.packages == 'true') && (needs.global-vars.outputs.can-push-commits == 'true') }}
-    needs: [changes, format, global-vars]
-    steps:
-      - uses: actions/checkout@v4
-        if: ${{ needs.global-vars.outputs.has-repo-secret }}
-        id: checkout-with-ssh
-        with:
-          ssh-key: ${{ secrets.REPO_DEPLOY_KEY }}
-      - uses: actions/checkout@v4
-        if: ${{ steps.checkout-with-ssh.outcome != 'success' }}
-      - uses: nixbuild/nix-quick-install-action@v30
-        with:
-          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
-      - run: ./software/scripts/nix-package.sh --no-commit
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        name: Commit and push changes
-        with:
-          commit_message: ${{ needs.global-vars.outputs.package_msg }}
+          environments: format
+          cache: true
+      - name: treefmt --ci
+        run: pixi run -e format fmt-check
   build:
-    name: Build software
+    name: Build + test
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
-    # this job should run even if `package` is skipped, but not if `format` fails,
-    # hence the unusual conditions
-    if: ${{ !cancelled() && (needs.format.result != 'failure') && (needs.package.result != 'failure') && ((needs.changes.outputs.software == 'true') || (needs.changes.outputs.manual == 'true')) }}
-    needs: [changes, format, global-vars, package]
     steps:
       - uses: actions/checkout@v4
-      - uses: nixbuild/nix-quick-install-action@v30
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
-          nix_conf: ${{ needs.global-vars.outputs.nix_conf }}
-      - name: Build repository
-        run: nix build -L
-      - name: Upload build to Cachix
-        if: ${{ needs.global-vars.outputs.has-cachix-secret == 'true' }}
-        run: nix run -L .#scripts.cachix.build
-      - name: Test dev shell
-        run: nix develop -L -c echo 'Shell test success'
-      - name: Upload dev shell to Cachix
-        if: ${{ needs.global-vars.outputs.has-cachix-secret == 'true' }}
-        run: nix run -L .#scripts.cachix.shell
+          environments: default
+          cache: true
+      - name: Build workspace
+        run: pixi run -e default build-test
       - name: Run unit tests
-        run: |
-          nix develop -L -c bash -c '
-            cd software/ros_ws &&
-            colcon build --cmake-args -DBUILD_TESTING=ON &&
-            colcon test \
-              --packages-select perseus_lite_hardware perseus_lite perseus_lite_simulation \
-              --return-code-on-test-failure \
-              --ctest-args -R "Test\." &&
-            colcon test-result --verbose
-          '
-      - name: Run flake checks
-        run: nix flake check -L
-    env:
-      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+        run: pixi run -e default test
+  build-sim:
+    name: Build simulation (linux-64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.10
+        with:
+          environments: simulation
+          cache: true
+      - name: Build workspace (with Gazebo)
+        run: pixi run -e simulation build

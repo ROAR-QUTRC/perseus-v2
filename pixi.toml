@@ -22,14 +22,17 @@ name = "perseus-lite"
 version = "0.1.0"
 description = "Lite 4-wheel skid-steer rover — ROS 2 Jazzy workspace (Pixi/RoboStack)"
 authors = ["DingoOz <nigel.hungerfordsymes@gmail.com>"]
-channels = ["https://prefix.dev/robostack-jazzy", "https://prefix.dev/conda-forge"]
+channels = [
+  "https://prefix.dev/robostack-jazzy",
+  "https://prefix.dev/conda-forge",
+]
 platforms = ["linux-64", "linux-aarch64"]
 
 [activation.env]
 # Mirror the old nix/workspaces.nix middleware setup.
 RMW_IMPLEMENTATION = "rmw_cyclonedds_cpp"
 RCUTILS_COLORIZED_OUTPUT = "1"
-ROS_DOMAIN_ID = "51"           # dev domain (production used 42)
+ROS_DOMAIN_ID = "51"                      # dev domain (production used 42)
 
 # ---------------------------------------------------------------------------
 # Build / host toolchain (conda-forge)
@@ -56,22 +59,22 @@ numpy = "*"
 # compiled boost_system library + its CMake component config, breaking
 # perseus_lite_hardware's `find_package(Boost ... COMPONENTS system)`. 1.88 still
 # ships boost_system and aligns the default env with the simulation/ml envs.
-libboost-devel = "1.88.*"     # perseus_lite_hardware, arm-teleop-direct (Boost ASIO)
-openssl = "*"                 # perseus_sensors (simple-networking)
-nlohmann_json = "*"           # perseus_sensors
-yaml-cpp = "*"                # arm-teleop-direct, tests
-libopencv = "*"               # cv_bridge / perseus_vision (OpenCV)
+libboost-devel = "1.88.*" # perseus_lite_hardware, arm-teleop-direct (Boost ASIO)
+openssl = "*"             # perseus_sensors (simple-networking)
+nlohmann_json = "*"       # perseus_sensors
+yaml-cpp = "*"            # arm-teleop-direct, tests
+libopencv = "*"           # cv_bridge / perseus_vision (OpenCV)
 # NOTE: no onnxruntime here. conda-forge ships onnxruntime-cpp (the C++ lib
 # perseus_vision needs) only in CUDA builds, so vision builds in the
 # machine-learning env, matching the old Nix machineLearning shell.
-pygame = "*"                  # input_devices (python3-pygame)
-ncurses = "*"                 # arm-teleop-direct (curses TUI)
+pygame = "*"  # input_devices (python3-pygame)
+ncurses = "*" # arm-teleop-direct (curses TUI)
 
 # ---------------------------------------------------------------------------
 # ROS 2 Jazzy packages (robostack-jazzy). Names: ros-jazzy-<pkg-with-dashes>.
 # ---------------------------------------------------------------------------
 [dependencies.ros-jazzy-ros-base]
-version = "*"                 # core: rclcpp/rclpy, rmw, ament, launch, tf2, common msgs
+version = "*" # core: rclcpp/rclpy, rmw, ament, launch, tf2, common msgs
 [dependencies.ros-jazzy-ament-cmake]
 version = "*"
 [dependencies.ros-jazzy-ament-cmake-gtest]
@@ -181,8 +184,9 @@ version = "*"
 build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation perseus_vision", cwd = "software/ros_ws" }
 # Build with tests enabled
 build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation perseus_vision", cwd = "software/ros_ws" }
-# CI unit-test subset (mirrors CLAUDE.md / .github pattern: Test.* prefix only)
-test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_lite_simulation --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
+# CI unit-test subset (mirrors CLAUDE.md pattern: Test.* prefix only).
+# perseus_lite_simulation tests run in the simulation env (see its tasks).
+test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
 # Convenience launchers
 bringup = { cmd = "ros2 launch perseus_lite perseus_lite.launch.py", cwd = "software/ros_ws" }
 bringup-mock = { cmd = "ros2 launch perseus_lite perseus_lite.launch.py use_mock_hardware:=True", cwd = "software/ros_ws" }
@@ -211,6 +215,8 @@ ros-jazzy-twist-mux = "*"
 [feature.simulation.tasks]
 # In the simulation env, build everything including perseus_lite_simulation.
 build = { cmd = "colcon build --symlink-install", cwd = "software/ros_ws" }
+build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON", cwd = "software/ros_ws" }
+test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_lite_simulation --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
 sim = { cmd = "ros2 launch perseus_lite_simulation perseus_sim.launch.py", cwd = "software/ros_ws" }
 
 # ---------------------------------------------------------------------------
@@ -224,7 +230,7 @@ platforms = ["linux-64"]
 [feature.machine-learning.dependencies]
 cuda-toolkit = "*"
 cudnn = "*"
-onnxruntime-cpp = "*"          # C++ ONNX Runtime (CUDA build) for perseus_vision
+onnxruntime-cpp = "*" # C++ ONNX Runtime (CUDA build) for perseus_vision
 
 [feature.machine-learning.tasks]
 # The ml env has onnxruntime-cpp, so it builds the full workspace incl. vision.
@@ -235,11 +241,34 @@ build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_sim
 # ---------------------------------------------------------------------------
 [feature.docs.dependencies]
 python = ">=3.11"
-sphinx = "*"
-uv = "*"
+uv = "*"          # resolves the Sphinx toolchain from docs/pyproject/uv.lock
+doxygen = "*"     # breathe/exhale C++ API docs
 
 [feature.docs.tasks]
-docs = { cmd = "uv run sphinx-build -b html source build/html", cwd = "docs" }
+# uv reads docs/pyproject/{pyproject.toml,uv.lock}; sphinx source is docs/source.
+docs = { cmd = "uv run --project pyproject sphinx-build -b html source build/html", cwd = "docs" }
+
+# ---------------------------------------------------------------------------
+# Feature: format (treefmt + formatters) — replaces `nix fmt`
+# keep-sorted / shfmt / nixfmt are not on conda-forge and were dropped from
+# treefmt.toml; shellcheck still lints shell, nixfmt is moot once Nix is gone.
+# ---------------------------------------------------------------------------
+[feature.format.dependencies]
+treefmt = "*"
+clang-tools = "*"  # clang-format
+cmake-format = "*"
+ruff = "*"
+shellcheck = "*"
+taplo = "*"
+typos = "*"
+yamlfmt = "*"
+actionlint = "*"
+dos2unix = "*"
+prettier = "*"
+
+[feature.format.tasks]
+fmt = "treefmt --allow-missing-formatter"
+fmt-check = "treefmt --allow-missing-formatter --ci"
 
 # ---------------------------------------------------------------------------
 # Environment composition
@@ -252,3 +281,4 @@ default = { solve-group = "default" }
 simulation = { features = ["simulation"] }
 machine-learning = { features = ["machine-learning"] }
 docs = { features = ["docs"], no-default-feature = true }
+format = { features = ["format"], no-default-feature = true }

@@ -1,4 +1,6 @@
 excludes = [
+    ".claude/**",
+    ".pixi/**",
     "build/**",
     "result/**",
     "generated/**",
@@ -79,18 +81,6 @@ excludes = []
 includes = ["*"]
 options = ["--keepdate"]
 
-[formatter.keep-sorted]
-command = "keep-sorted"
-excludes = []
-includes = ["*"]
-options = []
-
-[formatter.nixfmt]
-command = "nixfmt"
-excludes = []
-includes = ["*.nix"]
-options = []
-
 [formatter.prettier]
 command = "prettier"
 excludes = []
@@ -112,7 +102,7 @@ includes = [
     "*.yaml",
     "*.yml",
 ]
-options = ["--write", "--config", "/nix/store/08dd0r4gskvj94nzfkppinw9z0393jnd-prettierrc.json"]
+options = ["--write"]
 
 [formatter.ruff-format]
 command = "ruff"
@@ -125,12 +115,6 @@ command = "shellcheck"
 excludes = []
 includes = ["*.sh", "*.bash", "*.envrc", "*.envrc.*"]
 options = []
-
-[formatter.shfmt]
-command = "shfmt"
-excludes = []
-includes = ["*.sh", "*.bash", "*.envrc", "*.envrc.*"]
-options = ["-w", "-i", "2", "-s"]
 
 [formatter.taplo]
 command = "taplo"
