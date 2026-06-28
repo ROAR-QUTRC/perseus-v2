@@ -2,6 +2,9 @@
 .direnv/
 result
 
+# pixi: per-machine solved environments (the lockfile IS committed)
+.pixi/
+
 # ROS
 log/
 install/

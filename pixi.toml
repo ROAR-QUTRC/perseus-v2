@@ -1,0 +1,238 @@
+# pixi.toml — perseus-lite dev environment (Pixi / RoboStack replacement for Nix)
+#
+# Replaces the former flake.nix dev shells. ROS 2 Jazzy and all ROS deps come
+# from the RoboStack `robostack-jazzy` conda channel; system libs from
+# conda-forge. The colcon workspace under software/ros_ws is unchanged — Pixi
+# only supplies the toolchain + dependencies, then `pixi run build` invokes colcon.
+#
+# Environments (parallel to the old `nix develop .#<name>` shells):
+#   default          -> base ROS workspace (hardware, description, autonomy, vision, input)
+#   simulation       -> default + Gazebo (ros_gz_*, gz_ros2_control)
+#   machine-learning -> default + CUDA toolkit + onnxruntime GPU
+#   docs             -> Sphinx docs build
+#
+# Quick start:
+#   pixi install                 # resolve + fetch (large first time)
+#   pixi shell                   # enter default env (ROS auto-sourced)
+#   pixi run build               # colcon build the workspace
+#   pixi run test                # run the CI unit-test subset
+
+[workspace]
+name = "perseus-lite"
+version = "0.1.0"
+description = "Lite 4-wheel skid-steer rover — ROS 2 Jazzy workspace (Pixi/RoboStack)"
+authors = ["DingoOz <nigel.hungerfordsymes@gmail.com>"]
+channels = ["https://prefix.dev/robostack-jazzy", "https://prefix.dev/conda-forge"]
+platforms = ["linux-64", "linux-aarch64"]
+
+[activation.env]
+# Mirror the old nix/workspaces.nix middleware setup.
+RMW_IMPLEMENTATION = "rmw_cyclonedds_cpp"
+RCUTILS_COLORIZED_OUTPUT = "1"
+ROS_DOMAIN_ID = "51"           # dev domain (production used 42)
+
+# ---------------------------------------------------------------------------
+# Build / host toolchain (conda-forge)
+# ---------------------------------------------------------------------------
+[dependencies]
+python = ">=3.11"
+# Compilers + build system
+c-compiler = "*"
+cxx-compiler = "*"
+cmake = ">=3.20"
+ninja = "*"
+make = "*"
+pkg-config = "*"
+# colcon + ament test/lint tooling
+colcon-common-extensions = "*"
+setuptools = "*"
+pytest = "*"
+numpy = "*"
+
+# System libraries pulled in by package.xml <depend> tags
+libboost-devel = "*"          # perseus_lite_hardware, arm-teleop-direct (Boost ASIO)
+openssl = "*"                 # perseus_sensors (simple-networking)
+nlohmann_json = "*"           # perseus_sensors
+yaml-cpp = "*"                # arm-teleop-direct, tests
+libopencv = "*"               # perseus_vision (also pulls opencv python)
+onnxruntime = "*"             # perseus_vision (CPU build; GPU build in machine-learning env)
+pygame = "*"                  # input_devices (python3-pygame)
+ncurses = "*"                 # arm-teleop-direct (curses TUI)
+
+# ---------------------------------------------------------------------------
+# ROS 2 Jazzy packages (robostack-jazzy). Names: ros-jazzy-<pkg-with-dashes>.
+# ---------------------------------------------------------------------------
+[dependencies.ros-jazzy-ros-base]
+version = "*"                 # core: rclcpp/rclpy, rmw, ament, launch, tf2, common msgs
+[dependencies.ros-jazzy-ament-cmake]
+version = "*"
+[dependencies.ros-jazzy-ament-cmake-gtest]
+version = "*"
+[dependencies.ros-jazzy-ament-lint-auto]
+version = "*"
+[dependencies.ros-jazzy-ament-lint-common]
+version = "*"
+
+[dependencies.ros-jazzy-rmw-cyclonedds-cpp]
+version = "*"
+
+# Messages / interfaces
+[dependencies.ros-jazzy-nav2-msgs]
+version = "*"
+[dependencies.ros-jazzy-actuator-msgs]
+version = "*"
+[dependencies.ros-jazzy-visualization-msgs]
+version = "*"
+[dependencies.ros-jazzy-rosidl-default-generators]
+version = "*"
+
+# ros2_control stack
+[dependencies.ros-jazzy-hardware-interface]
+version = "*"
+[dependencies.ros-jazzy-controller-manager]
+version = "*"
+[dependencies.ros-jazzy-diff-drive-controller]
+version = "*"
+[dependencies.ros-jazzy-joint-state-broadcaster]
+version = "*"
+[dependencies.ros-jazzy-ros2controlcli]
+version = "*"
+[dependencies.ros-jazzy-pluginlib]
+version = "*"
+
+# Description / viz
+[dependencies.ros-jazzy-xacro]
+version = "*"
+[dependencies.ros-jazzy-urdf]
+version = "*"
+[dependencies.ros-jazzy-robot-state-publisher]
+version = "*"
+[dependencies.ros-jazzy-joint-state-publisher]
+version = "*"
+[dependencies.ros-jazzy-joint-state-publisher-gui]
+version = "*"
+[dependencies.ros-jazzy-rviz2]
+version = "*"
+
+# Autonomy: Nav2 + SLAM + localization + behavior trees
+[dependencies.ros-jazzy-navigation2]
+version = "*"
+[dependencies.ros-jazzy-slam-toolbox]
+version = "*"
+[dependencies.ros-jazzy-robot-localization]
+version = "*"
+[dependencies.ros-jazzy-behaviortree-cpp]
+version = "*"
+[dependencies.ros-jazzy-backward-ros]
+version = "*"
+
+# pcl_to_lsr
+[dependencies.ros-jazzy-laser-geometry]
+version = "*"
+[dependencies.ros-jazzy-message-filters]
+version = "*"
+[dependencies.ros-jazzy-tf2-sensor-msgs]
+version = "*"
+[dependencies.ros-jazzy-tf2-geometry-msgs]
+version = "*"
+
+# Vision
+[dependencies.ros-jazzy-cv-bridge]
+version = "*"
+[dependencies.ros-jazzy-ament-index-cpp]
+version = "*"
+
+# Input / teleop
+[dependencies.ros-jazzy-joy]
+version = "*"
+[dependencies.ros-jazzy-teleop-twist-keyboard]
+version = "*"
+[dependencies.ros-jazzy-teleop-twist-joy]
+version = "*"
+
+# Sensors (drivers)
+[dependencies.ros-jazzy-rplidar-ros]
+version = "*"
+# NOTE: RealSense (ros-jazzy-realsense2-camera/-description) is intentionally NOT
+# here. It pulls an older ros2-distro-mutex pinning a conflicting libboost-devel
+# and a libudev1 needing glibc unavailable on linux-aarch64, which breaks the
+# whole solve. RealSense is optional on the lite robot — it will be reintroduced
+# as a separate optional environment during the sensors phase (alongside the
+# simple-networking custom lib that perseus_sensors also needs).
+
+# ---------------------------------------------------------------------------
+# Tasks (replace documented `nix develop -c ...` / colcon invocations)
+# ---------------------------------------------------------------------------
+[tasks]
+# Full workspace build. perseus_lite_simulation is skipped here — it needs the
+# Gazebo deps only present in the `simulation` environment (see [feature.simulation.tasks]).
+build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
+# Build with tests enabled
+build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
+# CI unit-test subset (mirrors CLAUDE.md / .github pattern: Test.* prefix only)
+test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_lite_simulation --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
+# Convenience launchers
+bringup = { cmd = "ros2 launch perseus_lite perseus_lite.launch.py", cwd = "software/ros_ws" }
+bringup-mock = { cmd = "ros2 launch perseus_lite perseus_lite.launch.py use_mock_hardware:=True", cwd = "software/ros_ws" }
+clean = { cmd = "rm -rf build install log", cwd = "software/ros_ws" }
+
+# ---------------------------------------------------------------------------
+# Feature: simulation (Gazebo) — old `nix develop .#simulation`
+# linux-64 only: Gazebo + ros-gz/twist-stamper have no linux-aarch64 builds in
+# robostack-jazzy, and sim runs on x86 workstations, not the ARM robot.
+# ---------------------------------------------------------------------------
+[feature.simulation]
+platforms = ["linux-64"]
+
+[feature.simulation.dependencies]
+ros-jazzy-ros-gz-sim = "*"
+ros-jazzy-ros-gz-bridge = "*"
+ros-jazzy-ros-gz-image = "*"
+ros-jazzy-ros-gz-interfaces = "*"
+ros-jazzy-gz-ros2-control = "*"
+ros-jazzy-rosbridge-suite = "*"
+ros-jazzy-twist-mux = "*"
+# ros-jazzy-twist-stamper is NOT in robostack-jazzy — see conda-recipes/ backlog.
+# It's a tiny ament_python pkg; vendor into the workspace or build a conda recipe
+# before perseus_lite_simulation can run end-to-end.
+
+[feature.simulation.tasks]
+# In the simulation env, build everything including perseus_lite_simulation.
+build = { cmd = "colcon build --symlink-install", cwd = "software/ros_ws" }
+sim = { cmd = "ros2 launch perseus_lite_simulation perseus_sim.launch.py", cwd = "software/ros_ws" }
+
+# ---------------------------------------------------------------------------
+# Feature: machine-learning (CUDA + onnxruntime GPU) — old `.#machineLearning`
+# linux-64 for now. Jetson (linux-aarch64/sbsa) GPU onnxruntime is deferred to
+# the hardware-validation phase — it needs Tegra-specific CUDA handling.
+# ---------------------------------------------------------------------------
+[feature.machine-learning]
+platforms = ["linux-64"]
+
+[feature.machine-learning.dependencies]
+cuda-toolkit = "*"
+cudnn = "*"
+onnxruntime = { version = "*", build = "*cuda*" }   # GPU-enabled build
+
+# ---------------------------------------------------------------------------
+# Feature: docs (Sphinx) — old `.#docs`
+# ---------------------------------------------------------------------------
+[feature.docs.dependencies]
+python = ">=3.11"
+sphinx = "*"
+uv = "*"
+
+[feature.docs.tasks]
+docs = { cmd = "uv run sphinx-build -b html source build/html", cwd = "docs" }
+
+# ---------------------------------------------------------------------------
+# Environment composition
+# ---------------------------------------------------------------------------
+[environments]
+# Each non-default env solves independently (no shared solve-group): they target
+# linux-64 only and pin packages (Gazebo, CUDA onnxruntime) that would otherwise
+# drag linux-aarch64-incompatible constraints into the default robot environment.
+default = { solve-group = "default" }
+simulation = { features = ["simulation"] }
+machine-learning = { features = ["machine-learning"] }
+docs = { features = ["docs"], no-default-feature = true }
