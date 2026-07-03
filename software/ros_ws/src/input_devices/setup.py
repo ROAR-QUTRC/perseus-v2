@@ -22,7 +22,6 @@ setup(
     maintainer_email="59348282+RandomSpaceship@users.noreply.github.com",
     description="Nodes which publish input device data to topics",
     license="MIT",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "generic_controller = input_devices.generic_controller:main",

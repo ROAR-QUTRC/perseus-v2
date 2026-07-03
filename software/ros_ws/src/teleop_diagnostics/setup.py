@@ -20,7 +20,6 @@ setup(
     maintainer_email="roar@qut.edu.au",
     description="TUI diagnostic tool for teleoperation debugging",
     license="MIT",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "teleop_tui = teleop_diagnostics.teleop_tui:main",
