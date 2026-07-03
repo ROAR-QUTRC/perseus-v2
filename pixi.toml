@@ -12,10 +12,12 @@
 #   docs             -> Sphinx docs build
 #
 # Quick start:
-#   pixi install                 # resolve + fetch (large first time)
-#   pixi shell                   # enter default env (ROS auto-sourced)
-#   pixi run build               # colcon build the workspace
-#   pixi run test                # run the CI unit-test subset
+#   pixi install                       # resolve + fetch (large first time)
+#   pixi shell                         # enter default env (ROS auto-sourced)
+#   pixi run -e default build          # colcon build the workspace
+#   pixi run -e default test           # run the CI unit-test subset
+# (the bare `pixi run build`/`test` are ambiguous — build/test exist in
+# multiple environments; always pass -e/--environment)
 
 [workspace]
 name = "perseus-lite"
@@ -187,9 +189,10 @@ build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTIN
 # CI unit-test subset (mirrors CLAUDE.md pattern: Test.* prefix only).
 # perseus_lite_simulation tests run in the simulation env (see its tasks).
 test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
-# Convenience launchers
-bringup = { cmd = "ros2 launch perseus_lite perseus_lite.launch.py", cwd = "software/ros_ws" }
-bringup-mock = { cmd = "ros2 launch perseus_lite perseus_lite.launch.py use_mock_hardware:=True", cwd = "software/ros_ws" }
+# Convenience launchers. `ros2 launch` only sees ROS's own AMENT_PREFIX_PATH
+# entries, not the colcon workspace overlay, so source install/setup.bash first.
+bringup = { cmd = "bash -c 'source install/setup.bash && ros2 launch perseus_lite perseus_lite.launch.py'", cwd = "software/ros_ws" }
+bringup-mock = { cmd = "bash -c 'source install/setup.bash && ros2 launch perseus_lite perseus_lite.launch.py use_mock_hardware:=True'", cwd = "software/ros_ws" }
 clean = { cmd = "rm -rf build install log", cwd = "software/ros_ws" }
 
 # ---------------------------------------------------------------------------
@@ -208,9 +211,9 @@ ros-jazzy-ros-gz-interfaces = "*"
 ros-jazzy-gz-ros2-control = "*"
 ros-jazzy-rosbridge-suite = "*"
 ros-jazzy-twist-mux = "*"
-# ros-jazzy-twist-stamper is NOT in robostack-jazzy — see conda-recipes/ backlog.
-# It's a tiny ament_python pkg; vendor into the workspace or build a conda recipe
-# before perseus_lite_simulation can run end-to-end.
+cbor2 = "*"                       # rosbridge_server (ros-jazzy-rosbridge-suite) imports this but doesn't depend on it
+# ros-jazzy-twist-stamper is NOT in robostack-jazzy. Replaced by the in-tree
+# software/ros_ws/src/twist_stamper package (original code, not vendored).
 
 [feature.simulation.tasks]
 # Sim env builds perseus_lite_simulation (Gazebo) but skips perseus_vision,
@@ -218,7 +221,12 @@ ros-jazzy-twist-mux = "*"
 build = { cmd = "colcon build --symlink-install --packages-skip perseus_vision", cwd = "software/ros_ws" }
 build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_vision", cwd = "software/ros_ws" }
 test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_lite_simulation --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
-sim = { cmd = "ros2 launch perseus_lite_simulation perseus_sim.launch.py", cwd = "software/ros_ws" }
+# Rebuild first (fast, incremental) so perseus_lite_simulation is always in
+# install/, then source the overlay before launching — ros2 launch otherwise
+# only sees ROS's own packages, not the colcon workspace.
+sim = { cmd = "bash -c 'source install/setup.bash && ros2 launch perseus_lite_simulation perseus_sim.launch.py'", cwd = "software/ros_ws", depends-on = [
+  "build",
+] }
 
 # ---------------------------------------------------------------------------
 # Feature: machine-learning (CUDA + onnxruntime GPU) — old `.#machineLearning`

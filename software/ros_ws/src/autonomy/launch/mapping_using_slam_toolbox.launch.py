@@ -79,24 +79,18 @@ def generate_launch_description():
         ],
     )
 
-    # RViz with nixGL support
+    # RViz
     rviz_config = PathJoinSubstitution(
         [FindPackageShare("autonomy"), "rviz", "perseus_slam.rviz"]
     )
     rviz = ExecuteProcess(
         cmd=[
-            "nix",
-            "run",
-            "--impure",
-            "github:nix-community/nixGL",
-            "--",
             "rviz2",
             "-d",
             rviz_config,
         ],
         output="screen",
         additional_env={
-            "NIXPKGS_ALLOW_UNFREE": "1",
             "QT_QPA_PLATFORM": "xcb",
             "QT_SCREEN_SCALE_FACTORS": "1",
             "ROS_NAMESPACE": "/",

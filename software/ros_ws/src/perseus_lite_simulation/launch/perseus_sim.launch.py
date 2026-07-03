@@ -103,18 +103,12 @@ def generate_launch_description():
     )
     rviz = ExecuteProcess(
         cmd=[
-            "nix",
-            "run",
-            "--impure",
-            "github:nix-community/nixGL",
-            "--",
             "rviz2",
             "-d",
             rviz_config,
         ],
         output="screen",
         additional_env={
-            "NIXPKGS_ALLOW_UNFREE": "1",
             "QT_QPA_PLATFORM": "xcb",
             "QT_SCREEN_SCALE_FACTORS": "1",
             "ROS_NAMESPACE": "/",

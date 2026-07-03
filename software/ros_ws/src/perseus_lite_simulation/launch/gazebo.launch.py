@@ -67,11 +67,6 @@ def generate_launch_description():
         )
         gz_launch = ExecuteProcess(
             cmd=[
-                "nix",
-                "run",
-                "--impure",
-                "github:nix-community/nixGL",
-                "--",
                 "ros2",
                 "launch",
                 "ros_gz_sim",
@@ -80,7 +75,6 @@ def generate_launch_description():
             ],
             output="both",
             additional_env={
-                "NIXPKGS_ALLOW_UNFREE": "1",
                 "QT_QPA_PLATFORM": "xcb",
                 "QT_SCREEN_SCALE_FACTORS": "1",
                 "PROJ_IGNORE_CELESTIAL_BODY": "YES",  # Fixed here

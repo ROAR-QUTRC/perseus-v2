@@ -2647,6 +2647,7 @@ environments:
       - conda: https://prefix.dev/conda-forge/linux-64/c-compiler-1.11.0-h4d9bdce_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cairo-1.18.4-he90730b_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/capnproto-1.3.0-h791c776_1.conda
+      - conda: https://prefix.dev/conda-forge/linux-64/cbor2-6.1.2-py312h868fb18_0.conda
       - conda: https://prefix.dev/conda-forge/linux-64/ceres-solver-2.2.0-cpugplhc142d66_210.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cffi-2.0.0-py312h460c074_1.conda
       - conda: https://prefix.dev/conda-forge/linux-64/cfitsio-4.6.3-ha0b56bc_0.conda
@@ -4194,6 +4195,21 @@ packages:
     - capnproto >=1.3.0,<1.3.1.0a0
   size: 4184704
   timestamp: 1773416650601
+- conda: https://prefix.dev/conda-forge/linux-64/cbor2-6.1.2-py312h868fb18_0.conda
+  sha256: d0af372ba8d52dc07afd0d190adfe75e3b3567cd68427b4f6bfdbe7431f6c55b
+  md5: dacf21b14c45a64769894fd06451b4df
+  depends:
+  - python
+  - libgcc >=14
+  - __glibc >=2.17,<3.0.a0
+  - python_abi 3.12.* *_cp312
+  constrains:
+  - __glibc >=2.17
+  license: MIT
+  license_family: MIT
+  run_exports: {}
+  size: 457990
+  timestamp: 1780495432231
 - conda: https://prefix.dev/conda-forge/linux-64/ceres-solver-2.2.0-cpugplhc142d66_210.conda
   sha256: 2881e9545dc9ac93290a53265b0cc71282aaf79d608e14f177af7fa4eae0c811
   md5: f4d013e878cf1e611fdefab0c980e15b
