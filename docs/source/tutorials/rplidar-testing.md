@@ -85,7 +85,7 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 Launch the RPLidar driver with default settings:
 
 ```console
-nix develop --command ros2 launch rplidar_ros rplidar_c1_launch.py
+pixi run -e default ros2 launch rplidar_ros rplidar_c1_launch.py
 ```
 
 This starts the RPLidar node with these default parameters:
@@ -100,7 +100,7 @@ This starts the RPLidar node with these default parameters:
 If your RPLidar uses a different port or requires custom settings:
 
 ```console
-nix develop --command ros2 launch rplidar_ros rplidar_c1_launch.py serial_port:=/dev/ttyUSB1 serial_baudrate:=460800
+pixi run -e default ros2 launch rplidar_ros rplidar_c1_launch.py serial_port:=/dev/ttyUSB1 serial_baudrate:=460800
 ```
 
 ## Data Verification
@@ -137,7 +137,7 @@ The scan frequency should be around 10-15 Hz for normal operation.
 For visual confirmation of scan data, launch with RViz:
 
 ```console
-nix develop --command ros2 launch rplidar_ros view_rplidar_c1_launch.py
+pixi run -e default ros2 launch rplidar_ros view_rplidar_c1_launch.py
 ```
 
 This launches both the RPLidar driver and RViz. In RViz:

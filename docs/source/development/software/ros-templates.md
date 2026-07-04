@@ -1,7 +1,7 @@
 # Templates
 
 :::{warning}
-Before starting to develop any code, make sure to run `nix develop` to enter the development environment.
+Before starting to develop any code, make sure to run `pixi shell` to enter the development environment.
 :::
 
 When first starting to write code in ROS2, it can be difficult to know where to start. To provide guidance there is a template ROS2 package which can be found at `software/templates/ros2`. This package includes a pair of C++ header and source files with basic functionality, as well as a python launch file. There are also some CMake snippets in `software/templates` that can be used to set up additional functionality within the code.
@@ -28,13 +28,11 @@ This will create a file structure slightly different from the template, however,
 Make sure you are in the root directory before completing the below steps
 :::
 
-Before building the node, you need to enter the nix develop shell, as per [the core software specifications](https://roar-qutrc.github.io/systems/software/core.html).
+Before building the node, you need to enter the Pixi dev shell, as per [the core software specifications](https://roar-qutrc.github.io/systems/software/core.html).
 
 ```
-nix develop
+pixi shell
 ```
-
-After entering the develop shell, stage your commits to git (locally) before attempting to build with nix.if you don't stage your changes nix will not be able to see the new ROS2 package and the build will fail.
 
 After completing the above steps, you can build the ROS2 node using colcon. Colcon is used as part of the ROS framework to build the packages and allow them to be run directly within ROS. To build the packages, navigate to the `software/ros_ws/` folder and run the following commands:
 

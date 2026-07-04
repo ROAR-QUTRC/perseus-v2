@@ -18,7 +18,7 @@ sd_hide_title: true
       <p class="pl-hero__lede">
         A 50%-scale exploration rover. Feetech ST3215 servos over a single serial cable,
         rocker suspension, SLAM, autonomy, vision, and a manipulator arm &mdash; all driven
-        by a single Nix-managed workspace.
+        by a single Pixi-managed workspace.
       </p>
       <div class="pl-hero__ctas">
         <a class="pl-btn pl-btn--primary" href="home/perseus-lite-operation/basic-operation.html">
@@ -34,7 +34,7 @@ sd_hide_title: true
         <div><dt>Wheels</dt><dd>4&times; ST3215</dd></div>
         <div><dt>Bus</dt><dd>USB Serial</dd></div>
         <div><dt>Distro</dt><dd>ROS 2 Jazzy</dd></div>
-        <div><dt>Toolchain</dt><dd>Nix Flakes</dd></div>
+        <div><dt>Toolchain</dt><dd>Pixi / RoboStack</dd></div>
       </dl>
     </div>
     <div class="pl-hero__art">
@@ -50,7 +50,7 @@ sd_hide_title: true
   <header class="pl-section__head">
     <span class="pl-section__eyebrow">Capabilities</span>
     <h2 class="pl-section__title">What the rover can do</h2>
-    <p class="pl-section__lede">Lite is intentionally small &mdash; not feature-poor. Every system below ships in this repo and is reachable from <code>nix shell</code>.</p>
+    <p class="pl-section__lede">Lite is intentionally small &mdash; not feature-poor. Every system below ships in this repo and is reachable from <code>pixi shell</code>.</p>
   </header>
   <div class="pl-cards">
     <article class="pl-card">
@@ -96,7 +96,7 @@ sd_hide_title: true
   <header class="pl-section__head">
     <span class="pl-section__eyebrow">Quick start</span>
     <h2 class="pl-section__title">Teleoperate in two terminals</h2>
-    <p class="pl-section__lede">Power the rover, plug the USB cable into your laptop, then open two shells inside <code>~/perseus-lite</code>. Everything below runs through <code>nix</code> &mdash; no system packages required.</p>
+    <p class="pl-section__lede">Power the rover, plug the USB cable into your laptop, then open two shells inside <code>~/perseus-lite</code>. Everything below runs through <code>pixi</code> &mdash; no system packages required.</p>
   </header>
   <div class="pl-terminals">
     <div class="pl-term">
@@ -106,8 +106,8 @@ sd_hide_title: true
         <span class="pl-term__dot pl-term__dot--g"></span>
         <span class="pl-term__title">terminal 1 &middot; robot bringup</span>
       </div>
-      <pre class="pl-term__body"><code><span class="pl-tok-c"># Drop into the Nix-managed dev shell</span>
-<span class="pl-tok-p">$</span> nix shell
+      <pre class="pl-term__body"><code><span class="pl-tok-c"># Drop into the Pixi-managed dev shell</span>
+<span class="pl-tok-p">$</span> pixi shell
 <span class="pl-tok-c"># Launch ros2_control, drivers, and twist_mux</span>
 <span class="pl-tok-p">$</span> ros2 launch perseus_lite perseus_lite.launch.py \
       cmd_vel_topic:=/joy_vel</code></pre>
@@ -120,7 +120,7 @@ sd_hide_title: true
         <span class="pl-term__title">terminal 2 &middot; controller input</span>
       </div>
       <pre class="pl-term__body"><code><span class="pl-tok-c"># Xbox / generic gamepad teleop</span>
-<span class="pl-tok-p">$</span> nix run .#generic_controller
+<span class="pl-tok-p">$</span> ros2 run input_devices generic_controller
 
 <span class="pl-tok-c"># &mdash; or, if you prefer keyboard &mdash;</span>
 <span class="pl-tok-p">$</span> ros2 run teleop_twist_keyboard teleop_twist_keyboard \
@@ -132,8 +132,8 @@ sd_hide_title: true
       <span>Full operation guide</span>
       <span class="pl-btn__arrow">&rarr;</span>
     </a>
-    <a class="pl-btn pl-btn--ghost" href="home/nix-basics.html">
-      <span>Nix basics</span>
+    <a class="pl-btn pl-btn--ghost" href="home/getting-started.html">
+      <span>Dev environment setup</span>
       <span class="pl-btn__arrow">&rarr;</span>
     </a>
   </div>
@@ -147,7 +147,7 @@ sd_hide_title: true
   <div class="pl-paths">
     <a class="pl-path" href="home/getting-started.html">
       <h3>I&rsquo;m new here</h3>
-      <p>Install Nix, clone the repo, and get a working dev shell on a fresh laptop.</p>
+      <p>Install Pixi, clone the repo, and get a working dev shell on a fresh laptop.</p>
       <span class="pl-path__arrow">&rarr;</span>
     </a>
     <a class="pl-path" href="systems-index.html">

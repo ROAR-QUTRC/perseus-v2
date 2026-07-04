@@ -3,30 +3,27 @@
 ## How to build
 
 Unless you're making major edits to the raw markdown/reST files, or you're fiddling with the build toolchain, you probably don't need to build them locally - let the continuous deployment take care of it for you!
-However, if you do need to test things locally, you have two options.
-The first is to enter a _development shell_ using `nix develop` - if you want slightly faster builds, you're modifying Python dependencies, or you're tinkering with the build toolchain, this is what you'll need.
-The second is to use `nix build` - this option (by default) requires root access in order to allow the build to have access to the internet.
-If you have root access, this option is useful if you're making small edits to the documentation and you want to check that everything's building properly before pushing to GitHub.
+However, if you do need to test things locally, the Pixi `docs` environment provides everything needed.
 
-### Using `nix develop`
-
-#### Building
+### Building
 
 0. Run a `git pull` - since CI/CD runs Intersphinx inventory updates, you need to make sure your repo is up to date before building!
-1. Run `nix develop .#docs`
-2. Run `nix run .#docs.setup` - this will build the draw.io figures to SVGs and copy them into `/docs/source/generated`.
-3. `cd` to the `/docs` directory
-4. Whenever you want to rebuild the docs, run `make html` - they will be output in `build/html`.
+1. Run `pixi install -e docs` (first time only, or after `pixi.toml`/`pixi.lock` changes) to resolve and fetch the `docs` environment.
+2. Run `pixi run -e docs docs` - this invokes `uv run --project pyproject sphinx-build -b html source build/html` and outputs the built site to `docs/build/html`.
 
-Note that depending on the edits you made, you may also have to run `make clean` before rebuilding.
+:::{note}
+draw.io figure generation (building `.drawio` sources into SVGs) was part of the old Nix-based docs shell and has not yet been ported to Pixi - see the `[feature.docs.dependencies]` comment in `pixi.toml`. If you need to update figures, you'll need `drawio` available some other way for now.
+:::
+
+Note that depending on the edits you made, you may also have to remove `docs/build` before rebuilding.
 Sphinx is smart enough to only rebuild the files which have changed, which is normally fine - except for when changes propagate to other files.
 One such example is adding new files which appear in the navigation tree - although this affects _every_ page, since they all have the navigation sidebar, only files whose `toctree`s have changed will be updated.
-As such, the new file and its associated heading will not be visible in navigation until a full rebuild after a `clean`.
+As such, the new file and its associated heading will not be visible in navigation until a full rebuild after removing `docs/build`.
 
-#### Python environment management with `uv`
+### Python environment management with `uv`
 
-Before managing python dependencies, you will first need to cd to the `/docs/pyproject` directory.
-This is because the `pyproject.toml` and `uv.lock` files (defining the Python project) have been moved to this directory so that only changes to these specific files cause a rebuild of the Python workspace.
+Before managing python dependencies, you will first need to cd to the `docs/pyproject` directory.
+This is because the `pyproject.toml` and `uv.lock` files (defining the Python project) live in this directory so that only changes to these specific files cause a rebuild of the Python workspace.
 
 To:
 
@@ -34,38 +31,19 @@ To:
 - Remove dependencies: `uv remove DEPENDENCY`
 - Update the package versions in the lockfile: `uv lock --update`
 
-You will have to exit and re-enter the dev shell for any of these changes to take effect, as the Python environment is built and applied upon entering the dev shell.
+These changes take effect the next time `pixi run -e docs docs` (or `uv run ...` directly) resolves the environment - no separate shell re-entry step is needed.
 Alternatively, you can also run `uv run COMMAND` to run a command in the currently specified Python environment.
 However, as previously mentioned, `uv` can only be run from the directory containing the `pyproject.toml` file, which limits its usefulness.
-For further usage, consult the `uv` [usage documentation](https://docs.astral.sh/uv/reference/cli/) - in particular you may find the `venv` command useful (though at that point you may as well just exit and re-enter the shell to rebuild the environment with Nix anyway).
-
-### Using `nix build`
-
-To build the documentation, run `sudo nix build .#docs --option sandbox relaxed` - the output will be in the `result` symlink in the directory where you ran the command.
-
-:::{warning}
-While this option is possible, it is mainly used for the Github Actions.
-For general development, you should use the `nix develop` option described above, as it is safer and faster.
-:::
-
-:::{note}
-A quick start to view changes locally is to run the following commands from the /perseus-lite directory
-
-sudo nix build .#docs --option sandbox relaxed
-
-nix run nixpkgs#darkhttpd -- ./result/html/
-
-...and then view the '127.0.0.1:8080' or 'localhost:8080' in a browser
-:::
+For further usage, consult the `uv` [usage documentation](https://docs.astral.sh/uv/reference/cli/) - in particular you may find the `venv` command useful.
 
 ## Serving the built docs
 
-`darkhttpd` is an excellent fast and lightweight HTTP server, and is excellent for quickly testing that the docs are displaying properly.
 Whilst simply opening the built files from a file browser is fine 99% of the time, some JavaScript may not run correctly without being loaded from a HTTP server for some reason.
-Run `nix run nixpkgs#darkhttpd -- DOCS_LOCATION` to start serving the documentation ({keys}`ctrl+c` to terminate).
-You may have to experiment with using either `localhost:8080` or the loopback address `127.0.0.1:8080` - sometimes one of these won't load correctly and certain features won't work.
+Python's built-in HTTP server is always available in the `docs` Pixi environment and works well for this:
 
-- Using `nix build .#docs`: `nix run nixpkgs#darkhttpd -- ./result/html/`
-- Building with the dev shell: `nix run nixpkgs#darkhttpd -- ./docs/build/html/` (assuming you're in the repository root)
+```console
+pixi run -e docs python -m http.server -d docs/build/html 8080
+```
 
-To serve on a different port than `8080`, add the `--port PORT` flag to the end of the command.
+Then view `localhost:8080` (or the loopback address `127.0.0.1:8080`) in a browser - you may have to experiment with which one loads correctly, as sometimes one of these won't work for certain features.
+To serve on a different port than `8080`, change the trailing port number in the command above.

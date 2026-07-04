@@ -115,10 +115,6 @@ This is the digital heart of the rover, and contains pretty much everything whic
 By convention for ROS2 projects, all the actual code in this directory is located under the `src/` subdirectory - everything else in `ros_ws/` is build infrastructure.
 The most important packages are are detailed below - if you want more information, there should be `README` files in each package's source directory.
 
-:::{warning}
-When creating a new ROS2 package you must stage the ROS2 package in git (locally) before attempting to build with nix. Failure to add to git will result in nix not being able to see the new ROS2 package and your nix build will fail.
-:::
-
 ### `perseus_lite`
 
 This is the bringup package and contains ROS2 launch files for the main tasks needed to bring up the lite rover (controllers, robot state publisher, SLAM + Nav2, etc.).
@@ -145,14 +141,15 @@ It also implements the fail-over functionality which handles autonomous recovery
 
 :::{tip}
 The ROS2 build system `colcon` can fail to rebuild cached outputs after events such as a `git pull` or when a non-ROS dependency changes, which may result in `colcon build` incorrectly failing.
-The solution is to clean the workspace (`colcon clean workspace -y` or `nix run .#clean`) and then re-run `colcon build`.
+The solution is to clean the workspace (`colcon clean workspace -y` or `./software/scripts/clean.sh`) and then re-run `colcon build` (or `pixi run -e default build`).
 To ensure that this doesn't happen at all, run a clean after every git pull or after changing any code outside of `software/ros_ws/src`.
 :::
 
 ## Shared Libraries
 
 :::{tip}
-Shared libraries can be made available to your ROS2 package and nodes by including them as a dependency in your package's package.xml and then running the script 'nix-package.sh'
+Shared libraries that are packaged for RoboStack/conda-forge can be made available to your ROS2 package by adding them as a `<depend>` in your package's `package.xml`, then adding the corresponding `ros-jazzy-<pkg>` (or conda-forge) entry to `pixi.toml`'s `[dependencies]` and re-running `pixi install` to re-solve the lock file.
+Bespoke libraries under `software/shared/` that aren't packaged for RoboStack (e.g. `simple-networking`, `fd-wrapper`) are instead consumed via a CMake `add_subdirectory` fallback - see `perseus_sensors/CMakeLists.txt` for an example.
 :::
 
 ### Simple-networking

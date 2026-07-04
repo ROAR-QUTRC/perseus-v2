@@ -1,25 +1,20 @@
 # Scripts
 
-## autocomplete.sh
-
-For what this script actually does, run `echo $(mk-workspace-shell-setup)`, but it pretty much does what it says in the .envrc file (shown everytime you enter direnv - whenever you go into the perseus repo), setting up autocomplete for ROS and python.
-
 ## clean.sh
 
-This script will be run from the command `nix run .#clean` and shouldn't need to be modified. That said, it removes any built, installed, or generated files and basically resets the repo back to when it was first installed.
+Removes any built, installed, or generated files (`result`, `build`, `log`, `install`, `generated` directories anywhere in the repo) and basically resets the repo back to when it was first installed. Run it directly: `./software/scripts/clean.sh`.
 
-## machine-setup.sh
+## cuda-test.sh
 
-This script is designed to be run on the big-brain to setup any config that the nix home manager can't do itself. Currently, the script:
+Checks the status of the Pixi-managed CUDA development environment (`machine-learning` env): whether `nvcc` is available and Pixi-managed, whether a GPU is detected via `nvidia-smi`, and runs a small compile+run smoke test if a GPU is present.
 
-1. Sets the default shell to be z-shell (to give us autocomplete)
-2. Sets up nix files to be accessible only by sudo (for security purposes)
-3. Creates network rule files (can't create these without sudo, but home-manager can edit them without sudo)
-4. Sets the CAN network send buffer length to be 128 (there was a buffer issue when running E&C)
+## cuda-demo.sh
+
+A visual side-by-side CPU vs CUDA matrix-multiplication demo, for showing off the `machine-learning` env's GPU acceleration. See `--help` for options (matrix size, sequential vs race mode).
 
 ## member-setup.sh
 
-This script should be run whenever installing the repo on a fresh device. It installs required packages (direnv, git, gh), clones the repo, runs nix-setup.sh, builds the nix packages, and restarts the shell. It is designed to be run by the command:
+This script should be run whenever installing the repo on a fresh device. It installs required packages (`direnv`, `git`, `gh`), clones the repo, installs Pixi if it isn't already present, runs `pixi install` and `pixi run -e default build`, then restarts the shell. It is designed to be run by the command:
 
 ```console
 curl https://raw.githubusercontent.com/DingoOz/perseus-lite/refs/heads/main/software/scripts/member-setup.sh | bash
@@ -27,29 +22,6 @@ curl https://raw.githubusercontent.com/DingoOz/perseus-lite/refs/heads/main/soft
 
 Which gets the raw content of the .sh file and executes it by piping it directly into bash.
 
-## nix-packages.sh
+## pixi-env-sanitize.sh
 
-This script should be run whenever the ROS2 package dependencies (any package.xml files in the [`ros_ws`](project:#dir_software_ros_ws) folder) have been changed. It updates the nix packaging with the new dependencies and automatically commits the changes using git (use the `--no-commit` flag to not do this)
-
-## nix-setup.sh
-
-This script should be run on every device that wants to run the perseus repo (members, big-brain, medium-brain, etc). Currently, the script:
-
-1. Installs Nix package manager (see the Nix Basics page)
-2. Adds binary caches (and keys) to the trusted substituters so your computer can copy them instead of compiling them itself
-3. Disables the dirty git tree warning (which will run _everytime_ you have local staged changes and try to build the flake)
-4. Adds the current user to the 'trusted-users' in the nix config, which stops the warning when running nix in a 'relaxed sandbox'.
-5. Adds the direnv hooks to your shell (enables direnv in your shell, so you have the environment variables needed)
-6. Hides the massive wall of text displaying the environment variables on startup/reload
-
-```{note}
-The nix-setup script can't be run on NixOS - you'll have to set these manually in your configuration.nix file (and your home.nix home-manager file), but if you're using NixOS, you should have no trouble doing this
-```
-
-## update.sh
-
-This script will update the nix flake packages to their latest version and then run the formatter. It should be run frequently to ensure that the nixpkgs are up to date (you can check if it will actually update the nixpkgs by looking at the commits on the nix-ros-overlay repo [here](https://github.com/lopsided98/nix-ros-overlay)).
-
-## vcan-setup.sh
-
-This script can be run if you need to test CAN software on your computer without booting up Perseus. It sets up a virtual CAN network, so instead of physically connecting into the CAN network like on the big-brain, you can run Perseus ROS2 scripts to make sure they work together.
+Wired into `pixi.toml`'s `[activation] scripts`, so it runs automatically on every `pixi shell`/`pixi run`. It strips path entries pointing at a native system ROS install (`/opt/ros/*`) or a foreign colcon workspace from `PATH`-like environment variables, defending against contamination leaking in from a parent shell that has already sourced a different ROS/Gazebo installation. See `ERRORS.md` and the "System-ROS contamination hazard" note in the repo's `CLAUDE.md` for the failure mode this prevents.

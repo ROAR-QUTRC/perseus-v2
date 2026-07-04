@@ -39,9 +39,8 @@ If it's not listed here, all enabled extensions have a comment explaining what t
 
 ### Sandboxing
 
-Next, there's the tweaks to make the docs build with no internet access.
-Since this project is built using Nix (more on that in the [next section](#build-infrastructure)), the entire software stack needs to run offline and therefore requires some extra configuration.
-The first offender is the Sphinx-Immaterial theme itself - it sources its font ([Roboto](https://fonts.google.com/specimen/Roboto) by default) from Google's CDNs - this is obviously incompatible with the sandboxing that Nix applies!
+Next, there's the tweaks to make the docs build with no internet access (useful in CI, and inherited from when this project was built with Nix, which required the entire software stack to run offline).
+The first offender is the Sphinx-Immaterial theme itself - it sources its font ([Roboto](https://fonts.google.com/specimen/Roboto) by default) from Google's CDNs - this is obviously incompatible with an offline build!
 As such, its <inv:sphinx-immaterial#font> option has been set to `False` and the fonts are "self-hosted" in the `_static/fonts` directory.
 The other item on the list is [intersphinx](inv:sphinx:std:doc#*intersphinx), which provides all the cross-documentation linking you see even just on this very page.
 Since it normally tries to fetch `objects.inv` files (inventories of site content) from the sites themselves, this too needs to be set up locally.
@@ -67,20 +66,19 @@ In the project `conf.py`, there's a hook set up to run before the build starts w
 
 ## Build Infrastructure
 
-As was previously mentioned, this project is built with Nix, which occasionally brings with it certain challenges (to put it mildly...).
-Whilst this is great from a reproducibility standpoint, certain software simply wasn't ever intended to be used in the way that Nix does it.
-Python (and therefore Sphinx) and draw.io unfortunately both fall into this category and need special treatment to work properly.
+The docs build is driven by Pixi's `docs` environment/feature (see `pixi.toml`), which provides Python, [`uv`](https://docs.astral.sh/uv/) and Doxygen; `uv` in turn manages the Sphinx toolchain itself.
+draw.io figure generation (below) was inherited from the old Nix-based docs shell and has not yet been ported to Pixi - see the `[feature.docs.dependencies]` comment in `pixi.toml`.
 
 ### Python Environment
 
-The first obstacle is Python packages - the credited [blog posts](#credits) which first inspired this toolchain make use of Poetry2Nix, but this is no longer maintained, and the author of the tool recommends using [uv2nix](https://github.com/adisbladis/uv2nix) instead, which is what we have done here.
-The [`uv`](https://docs.astral.sh/uv/) tool is a Python package manager which produces a `uv.lock` lockfile containing enough information to satisfy the purity requirements for a Nix build (specifically versions and hashes of **all** dependencies).
-If that didn't make much sense, don't worry - it just means that the build is reproducible.
-Additionally, if you want to develop directly instead of through Nix, the tool is _extremely_ fast - the speed comparison chart is available on their website for your convenience to see how ludicrous the speed differences are.
-Nix then parses the python project file (`pyproject.toml`) along with the lockfile and uses it to build a workspace with `uv2nix` containing all of the Python packages in a `virtualenv`.
-This allows repeatable and easy integration of _any_ python module, not just those available in the standard `nixpkgs`, in a much more convenient fashion.
+Python dependencies for the docs build are managed by [`uv`](https://docs.astral.sh/uv/), a fast Python package manager, via `docs/pyproject/{pyproject.toml,uv.lock}`.
+The `docs` task (`uv run --project pyproject sphinx-build -b html source build/html`) resolves and runs the Sphinx toolchain from that lockfile, so the exact set of Python dependencies is pinned and reproducible without needing any extra Nix-specific machinery.
 
 ### Draw.io diagrams
+
+:::{note}
+This section describes the draw.io figure pipeline as it existed under the old Nix-based docs shell. It has not yet been ported to the Pixi `docs` environment (documented gap, not implemented - see `pixi.toml`'s `[feature.docs.dependencies]` comment) and is kept here for reference.
+:::
 
 % spellchecker:off
 % we need to disable the spellchecker for xvfb explanation, and we can't put comments inside the paragraph since it breaks it into multiple paragraphs.
@@ -97,7 +95,7 @@ Finally, the aforementioned script does one thing - it takes in a source file pa
 
 ### Deployment
 
-As detailed in the [CI/CD Systems](project:ci-cd.md) document, this entire project uses Nix for everything - and that extends to building in the CI/CD pipeline.
+As detailed in the [CI/CD Systems](project:ci-cd.md) document, this project's CI pipeline is built with Pixi.
 However, that only covers the CI part of CI/CD - deployment needs its own handling.
 
 The built documentation can be hosted using [GitHub Pages](https://pages.github.com/) via a separate static-content repository that the CI pipeline pushes the built output into. The fork does not yet wire this up; the rest of this section describes the deployment shape inherited from upstream so it can be re-enabled with a deploy key when needed.
@@ -114,13 +112,14 @@ Using it with the GitHub Checkout Action leaves the checked out repo in the work
 :::{note}
 The key itself is stored using GitHub Secrets and passed as a parameter to the Checkout step.
 :::
-Finally, to make the deployment, the workflow replaces the contents of the checked out repo with the built static documentation from `nix build .#docs`, then commits and pushes the documentation to the website repo.
+Finally, to make the deployment, the workflow replaces the contents of the checked out repo with the built static documentation from `pixi run -e docs docs`, then commits and pushes the documentation to the website repo.
 Once this runs, the automated deployment is complete, and all going well, the new website is live!
 
-## Nix outputs
+## Nix outputs (historical)
 
-This section documents the outputs made available from the project `flake.nix`.
-See <project:/home/nix-basics.md> for more information.
+:::{note}
+This section documents the outputs that used to be made available from the project's now-deleted `flake.nix`, before the Nix→Pixi migration. None of the `nix build .#docs.*` / `nix run .#docs.*` commands below work anymore - the Pixi equivalent is simply `pixi run -e docs docs` (see [Deployment](#deployment) above). Kept for historical reference.
+:::
 
 ### Packages
 

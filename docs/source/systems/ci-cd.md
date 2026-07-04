@@ -18,7 +18,7 @@ As this is a ROS2 project with C++ and Python nodes, the GoogleTest (gtest) and 
 ### Continuous Delivery
 
 Continuous Delivery refers to the project always being _delivered_ in a functional, ready-to-go state, and handles any final stages needed to package the project and get it into a _deployment_ ready state.
-Since this project is built with Nix, all dependencies fixed and known ahead-of-time, so there's nothing to do here.
+Since this project is built with Pixi, with all dependencies pinned in `pixi.lock`, there's nothing extra to do here.
 
 ### Continuous Deployment
 
@@ -44,35 +44,39 @@ digraph cicd {
     trigger [label="git push\n/ pull_request", shape=cds, fillcolor="#ec407a", fontcolor="white"];
 
     subgraph cluster_run {
-        label=<<b>GitHub Actions runner</b>>; labeljust="l";
+        label=<<b>GitHub Actions runner(s)</b>>; labeljust="l";
         style="rounded,filled"; color="#3949ab"; fillcolor="#1a237e"; fontcolor="#d6c8ff";
 
         checkout [label="actions/checkout", fillcolor="#311b92", fontcolor="white"];
-        installnix [label="nix-quick-install-action", fillcolor="#311b92", fontcolor="white"];
-        cache [label="magic-nix-cache-action\n(read cache)", shape=cylinder, fillcolor="#0277bd", fontcolor="white"];
-        update [label="optional\nnix run …\nauto-commit", fillcolor="#ad1457", fontcolor="white", style="rounded,filled,dashed"];
-        build [label="nix build / check -L", fillcolor="#5e35b1", fontcolor="white", penwidth=2.0];
-        push_cache [label="cachix push\n(scripts.cachix.*)", shape=cylinder, fillcolor="#00838f", fontcolor="white"];
+        setup_pixi [label="prefix-dev/setup-pixi\n(installs Pixi, restores cache)", shape=cylinder, fillcolor="#0277bd", fontcolor="white"];
+        format [label="format job:\npixi run -e format fmt-check", fillcolor="#5e35b1", fontcolor="white"];
+        build [label="build job (matrix):\nlinux-64 + linux-aarch64\npixi run -e default build-test / test", fillcolor="#5e35b1", fontcolor="white", penwidth=2.0];
+        build_sim [label="build-sim job:\nlinux-64 only\npixi run -e simulation build-test / test", fillcolor="#5e35b1", fontcolor="white"];
     }
 
     pass [label="✓ green build", shape=oval, fillcolor="#2e7d32", fontcolor="white"];
     fail [label="✗ failure", shape=oval, fillcolor="#b71c1c", fontcolor="white"];
 
     trigger    -> checkout;
-    checkout   -> installnix -> cache -> update -> build;
-    cache      -> build [style=dashed, label="cache hit"];
-    build      -> push_cache [label="on success"];
-    push_cache -> pass;
+    checkout   -> setup_pixi;
+    setup_pixi -> format;
+    setup_pixi -> build;
+    setup_pixi -> build_sim;
+    format     -> pass;
+    build      -> pass;
+    build_sim  -> pass;
+    format     -> fail [label="non-zero exit", color="#b71c1c"];
     build      -> fail [label="non-zero exit", color="#b71c1c"];
+    build_sim  -> fail [label="non-zero exit", color="#b71c1c"];
 }
 ```
 
 1. Check out the repo with [`actions/checkout`](https://github.com/actions/checkout)
-2. Install Nix with [`nixbuild/nix-quick-install-action`](https://github.com/nixbuild/nix-quick-install-action)
-3. Set up Nix output caching with [`DeterminateSystems/magic-nix-cache-action`](https://github.com/DeterminateSystems/magic-nix-cache-action)
-4. (Optionally) Run some kind of update with `nix run` and commit it back to the repo
-5. Run `nix build -L` (or `check`) on the output - adding the `-L` flag enables logging into the shell and makes it easier to debug when things go wrong
-6. If that succeeds, the builds are passing!
-7. (Optionally) Upload to cachix using one of the scripts in `software/scripts` (wrapped for execution with `nix run`)
+2. Install and cache Pixi with [`prefix-dev/setup-pixi`](https://github.com/prefix-dev/setup-pixi)
+3. Three jobs run (in parallel, each on its own runner):
+   - **format**: `pixi run -e format fmt-check` (treefmt, over the whole repo)
+   - **build**: a matrix over `ubuntu-latest` (linux-64) and `ubuntu-24.04-arm` (linux-aarch64) running `pixi run -e default build-test` then `pixi run -e default test`
+   - **build-sim**: linux-64 only, running `pixi run -e simulation build-test` then `pixi run -e simulation test`
+4. If all three jobs succeed, the build is passing!
 
-If you're curious about any specific workflow, they're all well commented.
+If you're curious about any specific workflow, they're all well commented - see `.github/workflows/all.yaml`.
