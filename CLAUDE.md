@@ -95,11 +95,47 @@ Migration notes:
   `ndt-omp-ros2`, `opennav-coverage`, `fields2cover`) were **dropped** — nothing
   in the lite workspace referenced them. See `software/ros_ws/conda-recipes/`.
 - `perseus_vision` builds only in `machine-learning` (needs CUDA `onnxruntime-cpp`).
-- `twist_stamper` (a `perseus_lite_simulation` runtime dep) is not in RoboStack
-  and is not yet vendored — sim builds, but launching it needs that package.
+  It is **not built in CI** — no CI runner has the machine-learning env's CUDA
+  toolchain available (documented gap, not implemented).
+- `twist_stamper` (a `perseus_lite_simulation` runtime dep) is not in RoboStack;
+  it is vendored in-tree as `software/ros_ws/src/twist_stamper` (original code,
+  built as a normal workspace package).
 - `software/home-manager/` is **orphaned**: it was Nix machine-provisioning with
   no Pixi equivalent. Preserved (not deleted) but non-functional without a flake;
   extract to its own repo or remove.
+- `software/web_ui/`'s Node/gstreamer toolchain has no Pixi equivalent yet
+  (documented gap, not implemented) — same category as `home-manager` above.
+- **Production `ROS_DOMAIN_ID` split is gone**: the old Nix shells used
+  release=42 / dev=51; every Pixi env now hardcodes the dev domain (51, see
+  `pixi.toml`'s `[activation.env]`). A production/release override mechanism
+  has not been ported (documented gap, not implemented).
+- Sphinx docs env has no `drawio`/`graphviz` for figure generation (the old Nix
+  docs shell had both); see `[feature.docs.dependencies]` in `pixi.toml`
+  (documented gap, not implemented).
+- **System-ROS contamination hazard**: if a machine also sources a native
+  `/opt/ros/jazzy/setup.bash` (or another colcon workspace) from `~/.bashrc`,
+  those paths leak into every Pixi env's `LD_LIBRARY_PATH`/`AMENT_PREFIX_PATH`/
+  `CMAKE_PREFIX_PATH`/`PYTHONPATH`/`COLCON_PREFIX_PATH`/`GZ_CONFIG_PATH` and can
+  cause ABI-mismatch crashes (e.g. `gz sim` segfaulting on a plugin built for a
+  different Gazebo version — see `ERRORS.md`). `software/scripts/pixi-env-sanitize.sh`
+  (wired via `pixi.toml`'s `[activation] scripts`) strips known-foreign entries
+  on every `pixi shell`/`pixi run`, but it is a defensive backstop, not a fix
+  for a contaminated parent shell — prefer guarding the offending `~/.bashrc`
+  source line so it's skipped inside Pixi/conda shells.
+- **Known unresolved issue: `gz sim`'s GUI segfaults on this dev machine.**
+  `pixi run -e simulation sim` (and any `gz sim` invocation without `-s`)
+  reliably segfaults a few seconds into startup, inside `libfontconfig` during
+  Qt's `createGui()` (crashing thread, not the physics/server thread — the
+  server keeps running briefly after, then tears the whole process down).
+  This is **unrelated to the `gz_ros2_control` plugin fix** documented in
+  `ERRORS.md`: a headless run (`gz_args:=-s ...`, no GUI) of the identical
+  launch graph on this machine loads `gz_ros2_control`, brings up
+  `controller_manager`, and activates both controllers with no crash — proving
+  the sim logic itself is sound. The crash is specific to the GUI/rendering
+  path (Qt + fontconfig), not yet root-caused (candidates: a font/driver
+  mismatch, or something interacting with the `render` group GPU setup).
+  Documented gap — not fixed. Workaround: run headless for automated
+  verification; GUI use needs further investigation on the affected machine.
 
 ## 4. What's lite-relevant vs upstream-only
 
