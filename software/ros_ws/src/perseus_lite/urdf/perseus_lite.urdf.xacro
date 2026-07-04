@@ -4,6 +4,7 @@
   <xacro:arg name="hardware_plugin" default="perseus_lite_hardware/ST3215SystemHardware" />
   <xacro:arg name="serial_port" default="/dev/ttyACM0" />
   <xacro:arg name="baud_rate" default="1000000" />
+  <xacro:arg name="use_sim" default="false" />
 
   <!-- Import URDF description -->
   <xacro:include filename="$(find perseus_lite_description)/urdf/perseus_lite.urdf.xacro" />
@@ -14,10 +15,22 @@
 
   <!-- Instantiate the description and the ROS2 control information -->
   <xacro:perseus_lite prefix="$(arg prefix)" />
-  <xacro:perseus_lite_ros2_control 
-    name="Perseus_Lite" 
-    prefix="$(arg prefix)" 
+  <xacro:perseus_lite_ros2_control
+    name="Perseus_Lite"
+    prefix="$(arg prefix)"
     hardware_plugin="$(arg hardware_plugin)"
     serial_port="$(arg serial_port)"
     baud_rate="$(arg baud_rate)"/>
+
+  <!-- In simulation, gz_ros2_control hosts the controller_manager itself via
+       this plugin tag; on real hardware controller_manager is launched as a
+       standalone node (see controllers.launch.py) and this block is omitted. -->
+  <xacro:if value="$(arg use_sim)">
+    <gazebo>
+      <plugin filename="gz_ros2_control-system"
+              name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>$(find perseus_lite)/config/perseus_lite_controllers.yaml</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:if>
 </robot>

@@ -30,12 +30,16 @@ def generate_launch_description():
         ),
     ]
 
-    # Include robot bringup from perseus package
+    # Include robot bringup from perseus_lite package
     perseus_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
                 PathJoinSubstitution(
-                    [FindPackageShare("perseus"), "launch", "perseus.launch.py"]
+                    [
+                        FindPackageShare("perseus_lite"),
+                        "launch",
+                        "perseus_lite.launch.py",
+                    ]
                 )
             ]
         ),

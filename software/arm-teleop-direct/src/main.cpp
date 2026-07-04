@@ -11,6 +11,7 @@
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -37,7 +38,17 @@ std::vector<std::string> find_serial_ports()
 {
     std::vector<std::string> ports;
     const std::filesystem::path dev_path("/dev");
-    const std::filesystem::path virtual_port_symlink("/home/dingo/leader_follower");
+    // Overridable via LEADER_FOLLOWER_PORT (falls back to ~/leader_follower);
+    // avoids hardcoding a specific developer's home directory.
+    std::filesystem::path virtual_port_symlink;
+    if (const char* env_port = std::getenv("LEADER_FOLLOWER_PORT"))
+    {
+        virtual_port_symlink = env_port;
+    }
+    else if (const char* home_dir = std::getenv("HOME"))
+    {
+        virtual_port_symlink = std::filesystem::path(home_dir) / "leader_follower";
+    }
 
     // Check if the symlink to the virtual port exists and add it
     if (std::filesystem::exists(virtual_port_symlink))

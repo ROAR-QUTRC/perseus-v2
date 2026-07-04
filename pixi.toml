@@ -30,11 +30,22 @@ channels = [
 ]
 platforms = ["linux-64", "linux-aarch64"]
 
+[activation]
+# Strips system-ROS/foreign-workspace path contamination (eg /opt/ros/jazzy,
+# ~/turtlebot3_ws) leaking in from the parent shell before it can cause
+# ABI-mismatch crashes. See ERRORS.md + CLAUDE.md "System-ROS contamination
+# hazard". Pixi runs activation scripts with bash on linux.
+scripts = ["software/scripts/pixi-env-sanitize.sh"]
+
 [activation.env]
 # Mirror the old nix/workspaces.nix middleware setup.
 RMW_IMPLEMENTATION = "rmw_cyclonedds_cpp"
 RCUTILS_COLORIZED_OUTPUT = "1"
-ROS_DOMAIN_ID = "51"                      # dev domain (production used 42)
+# The old Nix shells split ROS_DOMAIN_ID by build: release=42, dev=51. Pixi
+# has no equivalent split yet -- every env hardcodes the dev domain below.
+# Known gap (documented, not implemented): a production/release environment
+# or task override that sets ROS_DOMAIN_ID=42 has not been ported.
+ROS_DOMAIN_ID = "51" # dev domain (production used 42)
 
 # ---------------------------------------------------------------------------
 # Build / host toolchain (conda-forge)
@@ -163,6 +174,15 @@ version = "*"
 [dependencies.ros-jazzy-teleop-twist-joy]
 version = "*"
 
+# Dev tools dropped in the Nix->Pixi migration, re-added (cheap, useful for
+# debugging): topic_tools (autonomy's cmd_vel_mux), tf2-tools, rqt-graph.
+[dependencies.ros-jazzy-topic-tools]
+version = "*"
+[dependencies.ros-jazzy-tf2-tools]
+version = "*"
+[dependencies.ros-jazzy-rqt-graph]
+version = "*"
+
 # Sensors (drivers)
 [dependencies.ros-jazzy-rplidar-ros]
 version = "*"
@@ -244,6 +264,9 @@ onnxruntime-cpp = "*" # C++ ONNX Runtime (CUDA build) for perseus_vision
 [feature.machine-learning.tasks]
 # The ml env has onnxruntime-cpp, so it builds the full workspace incl. vision.
 build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
+# Known gap (documented, not implemented): perseus_vision is not built in CI.
+# CI runners don't have the machine-learning env's CUDA toolkit/onnxruntime-cpp
+# GPU build available, so no CI job currently builds/tests perseus_vision.
 
 # ---------------------------------------------------------------------------
 # Feature: docs (Sphinx) — old `.#docs`
@@ -252,6 +275,8 @@ build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_sim
 python = ">=3.11"
 uv = "*"          # resolves the Sphinx toolchain from docs/pyproject/uv.lock
 doxygen = "*"     # breathe/exhale C++ API docs
+# Known gap (documented, not implemented): the old Nix docs shell also had
+# drawio/graphviz for figure generation; neither is in this feature yet.
 
 [feature.docs.tasks]
 # uv reads docs/pyproject/{pyproject.toml,uv.lock}; sphinx source is docs/source.
