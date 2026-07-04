@@ -44,7 +44,7 @@ jobs:
       - name: Run unit tests
         run: pixi run -e default test
   build-sim:
-    name: Build simulation (linux-64)
+    name: Build + test simulation (linux-64)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,4 +53,6 @@ jobs:
           environments: simulation
           cache: true
       - name: Build workspace (with Gazebo)
-        run: pixi run -e simulation build
+        run: pixi run -e simulation build-test
+      - name: Run unit tests
+        run: pixi run -e simulation test

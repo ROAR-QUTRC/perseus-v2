@@ -22,24 +22,34 @@ else
   echo "GitHub CLI already logged in."
 fi
 
-# Clone the perseus-v2 repo
+# Clone the perseus-lite repo
 cd ~
-if ! [ -d "perseus-v2" ]; then
-  echo "Perseus repo not detected. Cloning now."
-  gh repo clone ROAR-QUTRC/perseus-v2
+if ! [ -d "perseus-lite" ]; then
+  echo "perseus-lite repo not detected. Cloning now."
+  gh repo clone DingoOz/perseus-lite
 else
-  echo "Perseus repo already cloned. Continuing."
+  echo "perseus-lite repo already cloned. Continuing."
 fi
 
-# Run the nix-setup script
-echo "Running nix-setup.sh script. If asked, accept all config options by typing 'y', then press enter."
+cd ~/perseus-lite
 
-cd ~/perseus-v2
-./software/scripts/nix-setup.sh
+# Install Pixi if it isn't already on PATH
+if ! command -v pixi >/dev/null 2>&1; then
+  echo "Pixi not found. Installing now."
+  curl -fsSL https://pixi.sh/install.sh | bash
+  # The installer adds pixi to ~/.bashrc/~/.zshrc for future shells; pick it
+  # up in this one too.
+  export PATH="$HOME/.pixi/bin:$PATH"
+else
+  echo "Pixi already installed. Continuing."
+fi
 
-# Build nix packages
-echo "Building nix packages. If asked, accept all config options with 'y'"
-/nix/var/nix/profiles/default/bin/nix build --accept-flake-config
+# Resolve + fetch the default environment and build the workspace
+echo "Running 'pixi install' (this can take a while on first run)."
+pixi install
+
+echo "Building the default workspace with 'pixi run -e default build'."
+pixi run -e default build
 
 echo "Setup script ran successfully!"
 echo "Restarting shell"

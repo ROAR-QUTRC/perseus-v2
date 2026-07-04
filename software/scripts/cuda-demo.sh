@@ -155,16 +155,14 @@ fi
 
 # Check for CUDA toolkit and compile CUDA version
 CUDA_AVAILABLE=false
-GPU_AVAILABLE=false
 
 if command -v nvcc &>/dev/null; then
   if nvcc -O3 -o "$CUDA_BINARY" "$CUDA_SOURCE" 2>/dev/null; then
     CUDA_AVAILABLE=true
     print_success "CUDA version compiled"
 
-    # Check for GPU
-    if command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null; then
-      GPU_AVAILABLE=true
+    if ! command -v nvidia-smi &>/dev/null || ! nvidia-smi &>/dev/null; then
+      print_warning "No NVIDIA GPU detected - the CUDA binary will fall back to reporting no GPU"
     fi
   else
     print_warning "CUDA compilation failed - will run CPU-only demo"
@@ -190,11 +188,7 @@ if $SEQUENTIAL_MODE || ! $CUDA_AVAILABLE; then
     print_header "Running CUDA Version"
     echo ""
 
-    if $GPU_AVAILABLE && command -v nixcuda &>/dev/null; then
-      CUDA_OUTPUT=$(nixcuda "$CUDA_BINARY" -n "$MATRIX_SIZE" 2>/dev/null || echo "GPU_USED:0")
-    else
-      CUDA_OUTPUT=$("$CUDA_BINARY" -n "$MATRIX_SIZE" 2>/dev/null || echo "GPU_USED:0")
-    fi
+    CUDA_OUTPUT=$("$CUDA_BINARY" -n "$MATRIX_SIZE" 2>/dev/null || echo "GPU_USED:0")
 
     echo "$CUDA_OUTPUT" | grep -v "TIME_MS:" | grep -v "GPU_USED:" | grep -v "CHECKSUM:"
     CUDA_TIME=$(echo "$CUDA_OUTPUT" | grep "TIME_MS:" | cut -d: -f2)
@@ -259,11 +253,7 @@ printf "\033[2A"
 "$CPU_BINARY" -n "$MATRIX_SIZE" -s >"$CPU_OUTPUT_FILE" 2>/dev/null &
 CPU_PID=$!
 
-if $GPU_AVAILABLE && command -v nixcuda &>/dev/null; then
-  nixcuda "$CUDA_BINARY" -n "$MATRIX_SIZE" -s >"$CUDA_OUTPUT_FILE" 2>/dev/null &
-else
-  "$CUDA_BINARY" -n "$MATRIX_SIZE" -s >"$CUDA_OUTPUT_FILE" 2>/dev/null &
-fi
+"$CUDA_BINARY" -n "$MATRIX_SIZE" -s >"$CUDA_OUTPUT_FILE" 2>/dev/null &
 CUDA_PID=$!
 
 # Track state
@@ -391,7 +381,7 @@ if [[ $gpu_used == "1" ]]; then
 else
   printf "  %bCUDA Time: %b%s ms%b (CPU fallback - no GPU)\n" "$YELLOW" "$BOLD" "$cuda_final_time" "$NC"
   echo ""
-  printf "  %bRun with nixcuda or on a GPU system for acceleration%b\n" "$CYAN" "$NC"
+  printf "  %bRun on a GPU system for acceleration%b\n" "$CYAN" "$NC"
 fi
 
 echo ""
