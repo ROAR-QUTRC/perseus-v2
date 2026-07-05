@@ -8,12 +8,12 @@ The hook. The viewer is dropped straight into the simulator with a problem to so
 
 ## Production notes
 
-- **Shape:** cinematic cold open, then screencast-driven challenges, framed by the rescue story. Each challenge segment shows the broken behaviour, the fix, then the win.  
-- **Brand:** navy/orange, no icons, Australian spelling throughout. Calm, confident voice — stakes are high but the host is reassuring.  
-- **Intro/outro:** hold the standard series sting until after the first win (Segment 5), so we open cold. Close on the standard outro with a clear call to action.  
-- **On-screen:** Gazebo (the Selene Base lunar scene), RViz2 (map \+ costmap), a text editor for the two config files, and a terminal. A small skill-tree overlay appears on each badge unlock.  
-- **Scenario assets:** this lesson ships the `selene_base` Gazebo scenario, the two deliberately broken config files, a reference solution, and the checker node that confirms each win before a badge unlocks.  
-- **Accessibility:** burn-in captions; every command and config change shown also ships as copy-and-paste-able text in the lesson notes.  
+- **Shape:** cinematic cold open, then screencast-driven challenges, framed by the rescue story. Each challenge segment shows the broken behaviour, the fix, then the win.
+- **Brand:** navy/orange, no icons, Australian spelling throughout. Calm, confident voice — stakes are high but the host is reassuring.
+- **Intro/outro:** hold the standard series sting until after the first win (Segment 5), so we open cold. Close on the standard outro with a clear call to action.
+- **On-screen:** Gazebo (the Selene Base lunar scene), RViz2 (map \+ costmap), a text editor for the two config files, and a terminal. A small skill-tree overlay appears on each badge unlock.
+- **Scenario assets:** this lesson ships the `selene_base` Gazebo scenario, the two deliberately broken config files, a reference solution, and the checker node that confirms each win before a badge unlocks.
+- **Accessibility:** burn-in captions; every command and config change shown also ships as copy-and-paste-able text in the lesson notes.
 - **Distro:** ROS2 is the pinned series distribution (Jazzy on Ubuntu 24.04 LTS in the reference recording image). Keep version strings off-screen so the footage ages well.
 
 ---
@@ -22,7 +22,7 @@ The hook. The viewer is dropped straight into the simulator with a problem to so
 
 ### Segment 1 — Cold open: the rescue (0:00–1:00)
 
-**VISUAL:** Black. A single line of telemetry text types on: *SELENE BASE — HABITAT C — PRESSURE: FALLING*. Cut to the Gazebo lunar scene: grey regolith, a collapsed colony building, a small six-wheeled rover sitting in the dust. Slow push-in. Muted alarm tone under the voice.
+**VISUAL:** Black. A single line of telemetry text types on: _SELENE BASE — HABITAT C — PRESSURE: FALLING_. Cut to the Gazebo lunar scene: grey regolith, a collapsed colony building, a small six-wheeled rover sitting in the dust. Slow push-in. Muted alarm tone under the voice.
 
 **NARRATION:**
 
@@ -44,7 +44,7 @@ First, let's prove the rover is alive. We'll take manual control:
 
 **ON-SCREEN:**
 
-ros2 run teleop\_twist\_keyboard teleop\_twist\_keyboard
+ROS2 run teleop_twist_keyboard teleop_twist_keyboard
 
 **NARRATION:**
 
@@ -68,7 +68,7 @@ To reach the leak, the rover has to build a map of the corridors as it drives. L
 
 **ON-SCREEN:**
 
-ros2 launch selene\_base mapping.launch.py
+ROS2 launch selene_base mapping.launch.py
 
 **VISUAL:** Drive the rover slowly down Corridor A. In RViz2 the map comes out as a thick, doubled-up smear — walls blur into each other, the corridor appears to close in on itself. It looks broken, because it is.
 
@@ -88,9 +88,9 @@ Open the mapper's configuration — it's the SLAM toolbox parameter file that sh
 
 **ON-SCREEN (before — `config/slam_params.yaml`):**
 
-slam\_toolbox:
+slam_toolbox:
 
-  ros\_\_parameters:
+ROS\_\_parameters:
 
     resolution: 0.30          \# far too coarse: walls blur into thick blocks
 
@@ -102,9 +102,9 @@ Tighten the resolution to five centimetres so the walls come out thin and crisp,
 
 **ON-SCREEN (after — `config/slam_params.yaml`):**
 
-slam\_toolbox:
+slam_toolbox:
 
-  ros\_\_parameters:
+ROS\_\_parameters:
 
     resolution: 0.05          \# 5 cm cells: crisp, single-width walls
 
@@ -114,7 +114,7 @@ slam\_toolbox:
 
 Save it, restart the mapper, and drive Corridor A again.
 
-**VISUAL:** Relaunch mapping. Drive down the corridor. The map snaps into a clean, single-walled, straight passage. A small checker toast appears: *Corridor A mapped — clean.* The first skill-tree badge lights up in the overlay.
+**VISUAL:** Relaunch mapping. Drive down the corridor. The map snaps into a clean, single-walled, straight passage. A small checker toast appears: _Corridor A mapped — clean._ The first skill-tree badge lights up in the overlay.
 
 **NARRATION:**
 
@@ -142,7 +142,7 @@ Now we ask the rover to drive itself. We'll bring up the navigation stack and se
 
 **ON-SCREEN:**
 
-ros2 launch selene\_base navigation.launch.py
+ROS2 launch selene_base navigation.launch.py
 
 **VISUAL:** In RViz2, use the Nav2 goal tool to drop a goal at the leak. Nav2 reports the path blocked. The rover does not move. Show the costmap: the corridor is flooded edge-to-edge with high-cost (inflated) colour — no clear channel.
 
@@ -162,11 +162,11 @@ Open the navigation configuration. Two things are wrong, and they compound. Firs
 
 **ON-SCREEN (before — `config/nav2_params.yaml`):**
 
-global\_costmap:
+global_costmap:
 
-  global\_costmap:
+global_costmap:
 
-    ros\_\_parameters:
+    ROS\_\_parameters:
 
       robot\_radius: 0.85          \# rover described far larger than it is
 
@@ -174,11 +174,11 @@ global\_costmap:
 
         inflation\_radius: 0.75    \# safety buffer floods the 0.8 m corridor
 
-local\_costmap:
+local_costmap:
 
-  local\_costmap:
+local_costmap:
 
-    ros\_\_parameters:
+    ROS\_\_parameters:
 
       robot\_radius: 0.85
 
@@ -192,11 +192,11 @@ Set the footprint to the rover's true radius — about twenty-eight centimetres 
 
 **ON-SCREEN (after — `config/nav2_params.yaml`):**
 
-global\_costmap:
+global_costmap:
 
-  global\_costmap:
+global_costmap:
 
-    ros\_\_parameters:
+    ROS\_\_parameters:
 
       robot\_radius: 0.28          \# the rover's true radius
 
@@ -204,11 +204,11 @@ global\_costmap:
 
         inflation\_radius: 0.25    \# protects the walls, leaves a drivable channel
 
-local\_costmap:
+local_costmap:
 
-  local\_costmap:
+local_costmap:
 
-    ros\_\_parameters:
+    ROS\_\_parameters:
 
       robot\_radius: 0.28
 
@@ -220,7 +220,7 @@ local\_costmap:
 
 Save it, restart navigation, and send the goal again.
 
-**VISUAL:** Relaunch navigation. Re-send the goal. The costmap inflation shrinks back to thin bands along the walls, leaving a clear channel down the middle. A green path appears. The rover sets off, threads the corridor, rounds the corner, and rolls to a stop directly at the leak. Checker toast: *Habitat reached — zero collisions.* The second badge lights up.
+**VISUAL:** Relaunch navigation. Re-send the goal. The costmap inflation shrinks back to thin bands along the walls, leaving a clear channel down the middle. A green path appears. The rover sets off, threads the corridor, rounds the corner, and rolls to a stop directly at the leak. Checker toast: _Habitat reached — zero collisions._ The second badge lights up.
 
 **NARRATION:**
 
@@ -266,24 +266,24 @@ source /opt/ros/jazzy/setup.bash
 
 \# Drive the rover manually (proves it is alive)
 
-ros2 run teleop\_twist\_keyboard teleop\_twist\_keyboard
+ROS2 run teleop_twist_keyboard teleop_twist_keyboard
 
 \# Challenge 1 — mapping
 
-ros2 launch selene\_base mapping.launch.py
+ROS2 launch selene_base mapping.launch.py
 
-\#   edit config/slam\_params.yaml, then relaunch
+\# edit config/slam_params.yaml, then relaunch
 
 \# Challenge 2 — navigation
 
-ros2 launch selene\_base navigation.launch.py
+ROS2 launch selene_base navigation.launch.py
 
-\#   send a goal in RViz2 (Nav2 Goal tool)
+\# send a goal in RViz2 (Nav2 Goal tool)
 
-\#   edit config/nav2\_params.yaml, then relaunch and re-send the goal
+\# edit config/nav2_params.yaml, then relaunch and re-send the goal
 
 **Challenge 1 — the smeared map.** In `config/slam_params.yaml`, change `resolution` from `0.30` to `0.05` and `max_laser_range` from `3.0` to `12.0`. The map changes from a doubled-up smear to clean, single-width walls.
 
 **Challenge 2 — the blocked corridor.** In `config/nav2_params.yaml` (both `global_costmap` and `local_costmap`), change `robot_radius` from `0.85` to `0.28` and `inflation_radius` from `0.75` to `0.25`. The costmap stops flooding the 0.8 m corridor and the planner finds a route to the leak.
 
-**Why this works.** In ten minutes the viewer drives a robot, repairs a real SLAM map, and solves a real Nav2 navigation problem using the exact parameters professionals tune — without being taught the underlying theory first. The cold open manufactures the questions (why those values matter, how the rover localises, what inflation really does) that the campaign exists to answer, and previews its two pillars: mapping (SLAM) and navigation (Nav2).  
+**Why this works.** In ten minutes the viewer drives a robot, repairs a real SLAM map, and solves a real Nav2 navigation problem using the exact parameters professionals tune — without being taught the underlying theory first. The cold open manufactures the questions (why those values matter, how the rover localises, what inflation really does) that the campaign exists to answer, and previews its two pillars: mapping (SLAM) and navigation (Nav2).

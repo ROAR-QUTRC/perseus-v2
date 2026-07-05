@@ -2,10 +2,10 @@
 
 This readme file explains how to launch the Gazebo Simulation environment and control the rover.
 
-There is a separate nix devshell for simulation which is accessed via:
+There is a separate Pixi environment for simulation which is accessed via:
 
 ```
-nix develop .#simulation
+pixi shell -e simulation
 ```
 
 To run the most basic version of the simulation you will need to run the following in **two separate terminals**.

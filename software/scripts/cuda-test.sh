@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # CUDA environment test script
-# Tests the status of Nix-managed CUDA support
+# Tests the status of the Pixi-managed CUDA support (machine-learning env)
 
 set -euo pipefail
 
@@ -38,11 +38,11 @@ CUDA_RUNTIME_OK=false
 GPU_AVAILABLE=false
 
 echo ""
-print_header "Nix CUDA Environment Test"
+print_header "CUDA Environment Test"
 echo ""
 
 # Test 1: Check CUDA toolkit (nvcc)
-print_header "CUDA Toolkit (Nix-managed)"
+print_header "CUDA Toolkit (Pixi-managed)"
 
 if command -v nvcc &>/dev/null; then
   CUDA_TOOLKIT_OK=true
@@ -51,15 +51,15 @@ if command -v nvcc &>/dev/null; then
   print_success "nvcc found: $NVCC_PATH"
   print_info "CUDA Version: $NVCC_VERSION"
 
-  # Check if it's from Nix store
-  if [[ $NVCC_PATH == /nix/store/* ]]; then
-    print_success "nvcc is Nix-managed (portable)"
+  # Check if it's from the Pixi machine-learning env
+  if [[ $NVCC_PATH == */.pixi/envs/machine-learning/* ]]; then
+    print_success "nvcc is Pixi-managed (machine-learning env)"
   else
-    print_warning "nvcc is not from Nix store"
+    print_warning "nvcc is not from the Pixi machine-learning env"
   fi
 else
   print_error "nvcc not found"
-  print_info "Make sure you're in the Nix dev shell: nix develop"
+  print_info "Make sure you're in the machine-learning Pixi env: pixi shell -e machine-learning"
 fi
 
 echo ""
@@ -81,25 +81,7 @@ fi
 
 echo ""
 
-# Test 3: Check nixcuda wrapper
-print_header "CUDA Runtime Wrapper"
-
-if command -v nixcuda &>/dev/null; then
-  print_success "nixcuda wrapper available"
-  print_info "Use 'nixcuda <program>' to run CUDA binaries with GPU access"
-else
-  print_warning "nixcuda wrapper not found"
-fi
-
-if command -v nixglhost &>/dev/null; then
-  print_success "nixglhost available (underlying wrapper)"
-else
-  print_warning "nixglhost not found"
-fi
-
-echo ""
-
-# Test 4: Check for GPU (using nvidia-smi from host)
+# Test 3: Check for GPU (using nvidia-smi from host)
 print_header "GPU Detection"
 
 if command -v nvidia-smi &>/dev/null; then
@@ -120,7 +102,7 @@ fi
 
 echo ""
 
-# Test 5: Compile and run test (if toolkit available)
+# Test 4: Compile and run test (if toolkit available)
 print_header "CUDA Compilation Test"
 
 if $CUDA_TOOLKIT_OK; then
@@ -172,8 +154,8 @@ CUDA_EOF
     echo ""
     print_header "CUDA Runtime Test"
 
-    if $GPU_AVAILABLE && command -v nixcuda &>/dev/null; then
-      OUTPUT=$(nixcuda "$CUDA_BINARY" 2>/dev/null || echo "STATUS:RUNTIME_FAIL")
+    if $GPU_AVAILABLE; then
+      OUTPUT=$("$CUDA_BINARY" 2>/dev/null || echo "STATUS:RUNTIME_FAIL")
 
       if echo "$OUTPUT" | grep -q "STATUS:GPU_FOUND"; then
         CUDA_RUNTIME_OK=true
@@ -181,7 +163,7 @@ CUDA_EOF
         COMPUTE=$(echo "$OUTPUT" | grep "COMPUTE:" | cut -d: -f2)
         MEMORY=$(echo "$OUTPUT" | grep "MEMORY:" | cut -d: -f2)
 
-        print_success "GPU accessible via nixcuda"
+        print_success "GPU accessible"
         print_info "GPU: $GPU_NAME"
         print_info "Compute Capability: $COMPUTE"
         print_info "Memory: $MEMORY"
@@ -197,11 +179,9 @@ CUDA_EOF
         print_error "Runtime test failed"
         print_info "Output: $OUTPUT"
       fi
-    elif ! $GPU_AVAILABLE; then
+    else
       print_warning "Skipping runtime test - no GPU available"
       print_info "CUDA compilation works, runtime requires GPU"
-    else
-      print_warning "Skipping runtime test - nixcuda not available"
     fi
   else
     print_error "CUDA compilation failed"
@@ -219,7 +199,7 @@ print_header "Summary"
 echo ""
 
 if $CUDA_TOOLKIT_OK; then
-  print_success "CUDA Toolkit: Available (Nix-managed)"
+  print_success "CUDA Toolkit: Available (Pixi-managed)"
 else
   print_error "CUDA Toolkit: Not available"
 fi
@@ -231,7 +211,7 @@ else
 fi
 
 if $CUDA_RUNTIME_OK; then
-  print_success "CUDA Runtime: Working via nixcuda"
+  print_success "CUDA Runtime: Working"
 elif $GPU_AVAILABLE; then
   print_warning "CUDA Runtime: Not tested or failed"
 else
@@ -245,18 +225,14 @@ if $CUDA_TOOLKIT_OK; then
   echo ""
   echo "Usage:"
   echo "  Compile:  nvcc -o my_app my_app.cu"
-  if $GPU_AVAILABLE; then
-    echo "  Run:      nixcuda ./my_app"
-  else
-    echo "  Run:      nixcuda ./my_app  (requires GPU)"
-  fi
+  echo "  Run:      ./my_app"
   echo ""
   echo -e "${BLUE}Try the visual demo:${NC}"
   echo "  ./software/scripts/cuda-demo.sh"
   echo "  (Matrix multiplication - CPU vs CUDA comparison)"
 else
   echo -e "${RED}CUDA development environment is not configured.${NC}"
-  echo "Make sure you're in the Nix dev shell: nix develop"
+  echo "Make sure you're in the machine-learning Pixi env: pixi shell -e machine-learning"
 fi
 
 echo ""

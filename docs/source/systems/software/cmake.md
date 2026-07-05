@@ -1,22 +1,22 @@
 # CMake Build Infrastructure
 
-This project's C++ code (excluding the firmware) is actually targeted at being built in two different ways - first by using Nix, and second by using ordinary `cmake` and `make` commands, both of which have slightly different environments.
+This project's C++ code (excluding the firmware) is actually targeted at being built in two different ways - first via `colcon build` inside the Pixi-managed workspace, and second by using ordinary `cmake` and `make` commands directly, both of which have slightly different environments.
 
-The first major difference between Nix and standard builds is handling dependencies.
-When the project is built using Nix, all of the dependencies that a target specifies are made available to it like they've been installed and the project can build with no particular extra steps.
-However, when built through CMake normally, the individual projects need to manually add the subdirectories of their dependencies.
+The first major difference between the Pixi-managed and standard builds is handling dependencies.
+When the project is built via `colcon build` inside a Pixi environment, all of the ROS/RoboStack dependencies that a target specifies are made available to it like they've been installed (resolved from the `robostack-jazzy`/`conda-forge` channels Pixi manages) and the project can build with no particular extra steps.
+However, when built through CMake normally (outside a Pixi environment, or for the bespoke libraries under `software/shared` that aren't packaged for RoboStack), the individual projects need to manually add the subdirectories of their dependencies.
 They can detect whether the packages is present (installed) using the `find_package` command, and only attempt to manually include their dependencies if they aren't already available.
 
 The other major change is related to the [build type](https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html).
 When you run CMake manually, there is by default no `CMAKE_BUILD_TYPE` specified.
 In this instance, the projects have some additional config in their `CMakeLists.txt` files to default to the `Debug` release type.
-Nix builds, by contrast, _specify_ the `Release` build type.
+Pixi/colcon builds, by contrast, _specify_ the `Release` build type.
 The reason this is important is because these projects add the `-Werror` to the GCC build flags for `Release` builds, thus enforcing the [no warnings](project:/standards/software/general.md#warnings-are-not-acceptable) section of the software standards.
 
 If you're curious as to what all this looks like in practice, check out the `software/templates/` directory.
 
 :::{note}
-Under the hood, Nix's [`stdenv.mkDerivation`](https://nixos.org/manual/nixpkgs/stable/#sec-using-stdenv) automatically detects and uses CMake for these projects.
+Under the hood, `colcon build` invokes CMake (via `ament_cmake`) for each of these projects.
 :::
 
 ## Testing

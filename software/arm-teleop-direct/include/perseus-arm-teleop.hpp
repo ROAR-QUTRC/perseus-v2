@@ -96,6 +96,6 @@ private:
      */
     std::vector<uint8_t> _create_read_command(uint8_t id, uint8_t address, uint8_t size);
 
-    boost::asio::io_service _io_service;
+    boost::asio::io_context _io_context;
     boost::asio::serial_port _serial_port;
 };

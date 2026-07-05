@@ -7,14 +7,12 @@
 #   - video   — play a file, advance when it ends
 #   - drive   — wait for the viewer to publish /cmd_vel for at least `min_duration_s`
 #   - edit    — open a YAML in the web UI, advance when the named checker passes
-
 id: m00-cold-open
 title: Selene Base Rescue
-target_length_s: 630         # 10.5 minutes from the script
+target_length_s: 630 # 10.5 minutes from the script
 distribution: sim
 phase: seed
 tier: 0
-
 # Path components are resolved relative to this package's share dir at runtime
 # (ament_index_python.packages.get_package_share_directory).
 configs:
@@ -22,8 +20,7 @@ configs:
   slam_reference: configs/slam_params.reference.yaml
   nav2_broken: configs/nav2_params.broken.yaml
   nav2_reference: configs/nav2_params.reference.yaml
-world: selene_base.sdf  # lives in perseus_lite_simulation/worlds/
-
+world: selene_base.sdf # lives in perseus_lite_simulation/worlds/
 poses:
   spawn:
     x: 0.0
@@ -34,14 +31,12 @@ poses:
     x: 9.8
     y: 0.0
     yaw: 0.0
-
 segments:
   - id: 1
     kind: video
     title: "Cold open: the rescue"
     time_range: "0:00-1:00"
     video: videos/segment-01-cold-open.mp4
-
   - id: 2
     kind: drive
     title: "First contact: drive it"
@@ -49,13 +44,11 @@ segments:
     instructions: "Use the keyboard arrows or a gamepad to drive the rover. Spend at least 30 seconds moving."
     min_duration_s: 30.0
     cmd_vel_topic: /cmd_vel
-
   - id: 3
     kind: video
     title: "The smeared map (the break)"
     time_range: "2:10-3:00"
     video: videos/segment-03-smeared-map.mp4
-
   - id: 4
     kind: edit
     title: "Challenge 1: fix the map"
@@ -67,19 +60,16 @@ segments:
     hints:
       - "Resolution at 0.3 m draws walls as fat blocks. Tighten it to about 5 cm."
       - "max_laser_range at 3 m only ever sees the nearest wall slice. Open it up to see the whole corridor."
-
   - id: 5
     kind: video
     title: "Brand beat: what just happened"
     time_range: "4:30-5:05"
     video: videos/segment-05-brand-beat.mp4
-
   - id: 6
     kind: video
     title: "The corridor that will not open (the break)"
     time_range: "5:05-6:00"
     video: videos/segment-06-corridor-blocked.mp4
-
   - id: 7
     kind: edit
     title: "Challenge 2: open the corridor"
@@ -91,19 +81,16 @@ segments:
     hints:
       - "The rover's true radius is about 28 cm, not 85 cm."
       - "Bring the inflation buffer down so it protects the walls without sealing the 0.8 m corridor."
-
   - id: 8
     kind: video
     title: "Payoff"
     time_range: "8:15-9:00"
     video: videos/segment-08-payoff.mp4
-
   - id: 9
     kind: video
     title: "Skill tree and call to action"
     time_range: "9:00-10:30"
     video: videos/segment-09-skill-tree.mp4
-
 badges:
   - id: mapping-tier-1
     title: SLAM Mapping — Tier 1

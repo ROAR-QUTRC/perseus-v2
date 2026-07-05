@@ -48,9 +48,7 @@ class GoalReachedChecker(Node):
                     f"tolerance {self.tolerance_m:.2f} m"
                 )
         if self.leak_xy is None:
-            self.get_logger().warning(
-                "No leak pose configured; checker will idle."
-            )
+            self.get_logger().warning("No leak pose configured; checker will idle.")
 
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
@@ -69,8 +67,11 @@ class GoalReachedChecker(Node):
             tx = self.tf_buffer.lookup_transform(
                 self.map_frame, self.robot_frame, Time()
             )
-        except (tf2_ros.LookupException, tf2_ros.ExtrapolationException,
-                tf2_ros.ConnectivityException):
+        except (
+            tf2_ros.LookupException,
+            tf2_ros.ExtrapolationException,
+            tf2_ros.ConnectivityException,
+        ):
             return
         dx = tx.transform.translation.x - self.leak_xy[0]
         dy = tx.transform.translation.y - self.leak_xy[1]

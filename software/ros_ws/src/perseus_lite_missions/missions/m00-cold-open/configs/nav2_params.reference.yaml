@@ -2,7 +2,6 @@
 #
 # robot_radius reflects the rover's true 28 cm radius. inflation_radius
 # protects the walls without sealing the 0.8 m corridor.
-
 bt_navigator:
   ros__parameters:
     global_frame: map
@@ -18,7 +17,6 @@ bt_navigator:
       plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
     plugin_lib_names:
       - perseus_bt_nodes
-
 controller_server:
   ros__parameters:
     enable_stamped_cmd_vel: true
@@ -42,7 +40,6 @@ controller_server:
       lookahead_dist: 0.75
       use_rotate_to_heading: true
       transform_tolerance: 0.5
-
 local_costmap:
   local_costmap:
     ros__parameters:
@@ -54,11 +51,11 @@ local_costmap:
       width: 5
       height: 5
       resolution: 0.05
-      robot_radius: 0.28          # the rover's true radius
+      robot_radius: 0.28 # the rover's true radius
       plugins: ["obstacle_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.25    # protects the walls, leaves a drivable channel
+        inflation_radius: 0.25 # protects the walls, leaves a drivable channel
         cost_scaling_factor: 5.0
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -71,7 +68,6 @@ local_costmap:
           marking: true
           data_type: "LaserScan"
       always_send_full_costmap: true
-
 global_costmap:
   global_costmap:
     ros__parameters:
@@ -80,7 +76,7 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_footprint
       transform_tolerance: 0.5
-      robot_radius: 0.28          # the rover's true radius
+      robot_radius: 0.28 # the rover's true radius
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
@@ -101,10 +97,9 @@ global_costmap:
         map_subscribe_transient_local: true
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.25    # protects the walls, leaves a drivable channel
+        inflation_radius: 0.25 # protects the walls, leaves a drivable channel
         cost_scaling_factor: 1.5
       always_send_full_costmap: true
-
 planner_server:
   ros__parameters:
     expected_planner_frequency: 10.0
@@ -115,13 +110,11 @@ planner_server:
       allow_unknown: true
       max_iterations: 1000000
       motion_model_for_search: "MOORE"
-
 smoother_server:
   ros__parameters:
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
-
 behavior_server:
   ros__parameters:
     local_costmap_topic: local_costmap/costmap_raw
@@ -144,7 +137,6 @@ behavior_server:
     global_frame: map
     robot_base_frame: base_footprint
     enable_stamped_cmd_vel: true
-
 waypoint_follower:
   ros__parameters:
     loop_rate: 20
@@ -154,7 +146,6 @@ waypoint_follower:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
       enabled: true
       waypoint_pause_duration: 200
-
 velocity_smoother:
   ros__parameters:
     smoothing_frequency: 20.0
@@ -166,7 +157,6 @@ velocity_smoother:
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odometry/filtered"
     enable_stamped_cmd_vel: true
-
 collision_monitor:
   ros__parameters:
     base_frame_id: "base_footprint"
@@ -189,7 +179,6 @@ collision_monitor:
       type: "scan"
       topic: "/scan"
       enabled: true
-
 docking_server:
   ros__parameters:
     dock_plugins: ["nova_carter_dock"]

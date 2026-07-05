@@ -11,6 +11,7 @@
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -37,7 +38,17 @@ std::vector<std::string> find_serial_ports()
 {
     std::vector<std::string> ports;
     const std::filesystem::path dev_path("/dev");
-    const std::filesystem::path virtual_port_symlink("/home/dingo/leader_follower");
+    // Overridable via LEADER_FOLLOWER_PORT (falls back to ~/leader_follower);
+    // avoids hardcoding a specific developer's home directory.
+    std::filesystem::path virtual_port_symlink;
+    if (const char* env_port = std::getenv("LEADER_FOLLOWER_PORT"))
+    {
+        virtual_port_symlink = env_port;
+    }
+    else if (const char* home_dir = std::getenv("HOME"))
+    {
+        virtual_port_symlink = std::filesystem::path(home_dir) / "leader_follower";
+    }
 
     // Check if the symlink to the virtual port exists and add it
     if (std::filesystem::exists(virtual_port_symlink))
@@ -151,7 +162,7 @@ std::pair<std::string, std::string> select_serial_ports(const std::vector<std::s
 }
 
 // Create a colored progress bar string
-void display_progress_bar(WINDOW* ncurses_win, int y, int x, uint16_t current, uint16_t min, uint16_t max)
+void display_progress_bar(WINDOW* win, int y, int x, uint16_t current, uint16_t min, uint16_t max)
 {
     // Clamp values to 0-4095
     current = std::min(current, static_cast<uint16_t>(limits::MAX_POSITION));
@@ -166,7 +177,7 @@ void display_progress_bar(WINDOW* ncurses_win, int y, int x, uint16_t current, u
     size_t max_pos = static_cast<size_t>((static_cast<double>(max) / limits::MAX_POSITION) * bar_length);
 
     // Print opening bracket
-    mvwaddch(ncurses_win, y, x, '[');
+    mvwaddch(win, y, x, '[');
     x++;
 
     // Print bar with colors
@@ -176,34 +187,34 @@ void display_progress_bar(WINDOW* ncurses_win, int y, int x, uint16_t current, u
         {
             if (i == min_pos)
             {
-                wattron(ncurses_win, COLOR_PAIR(1));  // Blue for min
-                waddch(ncurses_win, '#');
-                wattroff(ncurses_win, COLOR_PAIR(1));
+                wattron(win, COLOR_PAIR(1));  // Blue for min
+                waddch(win, '#');
+                wattroff(win, COLOR_PAIR(1));
             }
             else if (i == max_pos)
             {
-                wattron(ncurses_win, COLOR_PAIR(2));  // Green for max
-                waddch(ncurses_win, '#');
-                wattroff(ncurses_win, COLOR_PAIR(2));
+                wattron(win, COLOR_PAIR(2));  // Green for max
+                waddch(win, '#');
+                wattroff(win, COLOR_PAIR(2));
             }
             else if (i < current_pos)
             {
                 if (i < min_pos)
                 {
-                    wattron(ncurses_win, COLOR_PAIR(3) | A_DIM);  // Dimmed white for positions before min
-                    waddch(ncurses_win, '#');
-                    wattroff(ncurses_win, COLOR_PAIR(3) | A_DIM);
+                    wattron(win, COLOR_PAIR(3) | A_DIM);  // Dimmed white for positions before min
+                    waddch(win, '#');
+                    wattroff(win, COLOR_PAIR(3) | A_DIM);
                 }
                 else
                 {
-                    wattron(ncurses_win, COLOR_PAIR(3));  // Bright white for current valid position
-                    waddch(ncurses_win, '#');
-                    wattroff(ncurses_win, COLOR_PAIR(3));
+                    wattron(win, COLOR_PAIR(3));  // Bright white for current valid position
+                    waddch(win, '#');
+                    wattroff(win, COLOR_PAIR(3));
                 }
             }
             else
             {
-                waddch(ncurses_win, ' ');
+                waddch(win, ' ');
             }
         }
         else
@@ -211,17 +222,17 @@ void display_progress_bar(WINDOW* ncurses_win, int y, int x, uint16_t current, u
             // For non-color displays, still show all positions but with different characters
             if (i < current_pos)
             {
-                waddch(ncurses_win, (i < min_pos) ? '.' : '#');
+                waddch(win, (i < min_pos) ? '.' : '#');
             }
             else
             {
-                waddch(ncurses_win, ' ');
+                waddch(win, ' ');
             }
         }
     }
 
     // Print closing bracket
-    waddch(ncurses_win, ']');
+    waddch(win, ']');
 }
 
 // Structure to hold servo data including min/max values

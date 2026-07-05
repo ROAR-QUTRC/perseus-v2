@@ -47,9 +47,7 @@ class MapQualityChecker(Node):
         self.declare_parameter("min_max_laser_range", 8.0)
 
         self.params_path = Path(self.get_parameter("slam_params_file").value)
-        self.min_resolution_inverse = (
-            self.get_parameter("min_resolution_inverse").value
-        )
+        self.min_resolution_inverse = self.get_parameter("min_resolution_inverse").value
         self.min_max_laser_range = self.get_parameter("min_max_laser_range").value
 
         self.passed = False

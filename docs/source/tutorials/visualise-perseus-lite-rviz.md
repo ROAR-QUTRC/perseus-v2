@@ -4,7 +4,7 @@ This tutorial shows how to visualise the Perseus-Lite robot model in RViz2, allo
 
 ## Prerequisites
 
-- Nix development environment set up
+- Pixi development environment set up
 - ROS 2 workspace built
 - Perseus-Lite packages installed
 
@@ -13,7 +13,7 @@ This tutorial shows how to visualise the Perseus-Lite robot model in RViz2, allo
 ### 1. Enter the Development Environment
 
 ```bash
-nix develop
+pixi shell
 ```
 
 ### 2. Build the Workspace
@@ -33,10 +33,8 @@ source install/setup.bash
 
 ### 4. Launch the Visualisation
 
-Run the launch file with the nixgl wrapper for OpenGL support:
-
 ```bash
-ros2 launch perseus_lite_description view_robot_nixgl.launch.py
+ros2 launch perseus_lite_description view_robot.launch.py
 ```
 
 ## What You'll See

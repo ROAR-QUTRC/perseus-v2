@@ -5,7 +5,8 @@ To teleoperate with an Xbox controller, with Perseus-Lite powered up you will ne
 ## Terminal 1
 
 ```console
-nix shell
+pixi shell
+source software/ros_ws/install/setup.bash
 ros2 launch perseus_lite perseus_lite.launch.py cmd_vel_topic:=/joy_vel
 ```
 
@@ -16,7 +17,7 @@ The `cmd_vel_topic:=/joy_vel` parameter remaps the velocity command topic for co
 ## Terminal 2
 
 ```console
-nix run .#generic_controller
+ros2 run input_devices generic_controller
 ```
 
 # Basic Operation
@@ -38,7 +39,7 @@ The following conditions must be met before beginning:
 ## Summary
 
 1. Connect Perseus-Lite hardware
-2. Build the software using Nix
+2. Build the software using Pixi
 3. Launch Perseus-Lite system
 4. Launch control software
 5. Operate Perseus-Lite safely
@@ -56,11 +57,11 @@ The following conditions must be met before beginning:
 
 ### Build the Software
 
-Build the Perseus-Lite software using Nix:
+Build the Perseus-Lite software using Pixi:
 
 ```console
 cd perseus-lite
-nix build
+pixi run -e default build
 ```
 
 ### Launch Perseus-Lite System
@@ -69,7 +70,7 @@ Launch the Perseus-Lite ROS2 system:
 
 ```console
 export LC_ALL=C && export LANG=C
-nix develop --command bash -c "cd software/ros_ws && colcon build --packages-up-to perseus_lite && source install/setup.bash && ros2 launch perseus_lite perseus_lite.launch.py"
+pixi run -e default bash -c "cd software/ros_ws && colcon build --packages-up-to perseus_lite && source install/setup.bash && ros2 launch perseus_lite perseus_lite.launch.py"
 ```
 
 :::{note}
@@ -82,7 +83,7 @@ Open a new terminal and verify the system is running:
 
 ```console
 export LC_ALL=C && export LANG=C
-nix develop --command bash -c "source software/ros_ws/install/setup.bash && ros2 topic list"
+pixi run -e default bash -c "source software/ros_ws/install/setup.bash && ros2 topic list"
 ```
 
 You should see topics including:
@@ -95,7 +96,7 @@ Check joint states to verify servo feedback:
 
 ```console
 export LC_ALL=C && export LANG=C
-nix develop --command bash -c "source software/ros_ws/install/setup.bash && ros2 topic echo /joint_states --once"
+pixi run -e default bash -c "source software/ros_ws/install/setup.bash && ros2 topic echo /joint_states --once"
 ```
 
 You should see output similar to this (values will vary based on wheel positions):
@@ -142,7 +143,7 @@ In a new terminal, launch keyboard teleoperation:
 ```console
 cd perseus-lite
 export LC_ALL=C && export LANG=C
-nix develop --command bash -c "source software/ros_ws/install/setup.bash && ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=key_vel"
+pixi run -e default bash -c "source software/ros_ws/install/setup.bash && ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=key_vel"
 ```
 
 :::{note}
@@ -179,7 +180,7 @@ If you prefer Xbox controller input:
 ```console
 cd perseus-lite
 export LC_ALL=C && export LANG=C
-nix develop --command bash -c "source software/ros_ws/install/setup.bash && ros2 launch input_devices xbox_controller.launch.py"
+pixi run -e default bash -c "source software/ros_ws/install/setup.bash && ros2 launch input_devices xbox_controller.launch.py"
 ```
 
 ## Safe Operation

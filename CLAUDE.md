@@ -32,24 +32,28 @@ designs, and challenge docs are deleted, not just disabled.
 
 ## 2. Repository layout
 
-| Path                                                                      | Contents                                                       |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `software/ros_ws/src/`                                                    | All ROS 2 packages (Jazzy). See §4 for KEEP/DISABLE.           |
-| `software/arm-teleop-direct/`                                             | Standalone serial Feetech arm teleop (C++). Lite-relevant.     |
-| `software/{daemons,scripts,utilities,web_ui,shared,native,home-manager}/` | General system infra — keep.                                   |
-| `firmware/`                                                               | ESP32/MCU firmware. Subdirs split lite/v2 — see §4.            |
-| `packages/`                                                               | Nix overlays for third-party deps (Groot2, Livox SDK, Open3D). |
-| `docs/`                                                                   | Sphinx docs site (mostly perseus-v2 — see §4).                 |
-| `nix/`, `flake.nix`, `default.nix`, `shell.nix`                           | Nix-based dev shell + build.                                   |
-| `.clang-format`, `treefmt.nix`, `treefmt.toml`                            | Formatting config — run before commits.                        |
+| Path                                                                      | Contents                                                   |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `software/ros_ws/src/`                                                    | All ROS 2 packages (Jazzy). See §4 for KEEP/DISABLE.       |
+| `software/arm-teleop-direct/`                                             | Standalone serial Feetech arm teleop (C++). Lite-relevant. |
+| `software/{daemons,scripts,utilities,web_ui,shared,native,home-manager}/` | General system infra — keep.                               |
+| `firmware/`                                                               | ESP32/MCU firmware. Subdirs split lite/v2 — see §4.        |
+| `docs/`                                                                   | Sphinx docs site (mostly perseus-v2 — see §4).             |
+| `pixi.toml`, `pixi.lock`                                                  | Pixi/RoboStack dev environments + build (replaced Nix).    |
+| `.clang-format`, `treefmt.toml`                                           | Formatting config — run before commits.                    |
 
 ## 3. Build / run quick reference
 
 ```bash
-# Dev shell (direnv loads automatically; otherwise:)
-nix develop
+# Dev environment via Pixi/RoboStack (direnv loads automatically; otherwise:)
+pixi shell                  # default env; ROS 2 Jazzy auto-sourced
+# or run tasks directly without entering a shell:
+pixi run -e default build   # colcon build (skips sim + vision; see pixi.toml)
+pixi run -e default test    # CI unit-test subset
+pixi run -e simulation build # full build incl. perseus_lite_simulation (Gazebo)
+pixi run -e machine-learning build # full build incl. perseus_vision (CUDA ONNX)
 
-# Build ROS workspace
+# Manual colcon build inside `pixi shell`:
 cd software/ros_ws
 colcon build --symlink-install
 source install/setup.bash
@@ -75,26 +79,85 @@ ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/TwistStamped \
   '{header: {frame_id: base_link}, twist: {linear: {x: 0.5}}}'
 ```
 
+### Build system: Pixi/RoboStack (Nix removed)
+
+The project migrated from Nix to **Pixi**. ROS 2 Jazzy + deps come from the
+`robostack-jazzy` conda channel; `pixi.lock` pins exact versions. Four
+environments: `default` (the robot; linux-64 **and** linux-aarch64), `simulation`
+and `machine-learning` (linux-64 only — Gazebo / CUDA have no aarch64 builds),
+and `docs`. Run `nix fmt`'s replacement with `pixi run -e format fmt`.
+
+Migration notes:
+
+- **Open3D** is available as a conda-forge package, but is **not yet added**
+  to any Pixi environment (documented gap, not implemented) — the old Nix
+  default shell exported it on `PYTHONPATH` on x86_64; `software/utilities/open3d_demo.py`
+  will fail with `ModuleNotFoundError` until it's added as a dependency.
+  **Groot2** has no conda package (install the AppImage manually if needed).
+- The upstream third-party SLAM/coverage packages (`lidarslam_ros2`,
+  `ndt-omp-ros2`, `opennav-coverage`, `fields2cover`) were **dropped** — nothing
+  in the lite workspace referenced them. See `software/ros_ws/conda-recipes/`.
+- `perseus_vision` builds only in `machine-learning` (needs CUDA `onnxruntime-cpp`).
+  It is **not built in CI** — no CI runner has the machine-learning env's CUDA
+  toolchain available (documented gap, not implemented).
+- `twist_stamper` (a `perseus_lite_simulation` runtime dep) is not in RoboStack;
+  it is vendored in-tree as `software/ros_ws/src/twist_stamper` (original code,
+  built as a normal workspace package).
+- `software/home-manager/` is **orphaned**: it was Nix machine-provisioning with
+  no Pixi equivalent. Preserved (not deleted) but non-functional without a flake;
+  extract to its own repo or remove.
+- `software/web_ui/`'s Node/gstreamer toolchain has no Pixi equivalent yet
+  (documented gap, not implemented) — same category as `home-manager` above.
+- **Production `ROS_DOMAIN_ID` split is gone**: the old Nix shells used
+  release=42 / dev=51; every Pixi env now hardcodes the dev domain (51, see
+  `pixi.toml`'s `[activation.env]`). A production/release override mechanism
+  has not been ported (documented gap, not implemented).
+- Sphinx docs env has no `drawio`/`graphviz` for figure generation (the old Nix
+  docs shell had both); see `[feature.docs.dependencies]` in `pixi.toml`
+  (documented gap, not implemented).
+- **System-ROS contamination hazard**: if a machine also sources a native
+  `/opt/ros/jazzy/setup.bash` (or another colcon workspace) from `~/.bashrc`,
+  those paths leak into every Pixi env's `LD_LIBRARY_PATH`/`AMENT_PREFIX_PATH`/
+  `CMAKE_PREFIX_PATH`/`PYTHONPATH`/`COLCON_PREFIX_PATH`/`GZ_CONFIG_PATH` and can
+  cause ABI-mismatch crashes (e.g. `gz sim` segfaulting on a plugin built for a
+  different Gazebo version — see `ERRORS.md`). `software/scripts/pixi-env-sanitize.sh`
+  (wired via `pixi.toml`'s `[activation] scripts`) strips known-foreign entries
+  on every `pixi shell`/`pixi run`, but it is a defensive backstop, not a fix
+  for a contaminated parent shell — prefer guarding the offending `~/.bashrc`
+  source line so it's skipped inside Pixi/conda shells.
+- **Resolved: `gz sim`/`rviz2` GUI segfault from a shared fontconfig cache.**
+  `pixi run -e simulation sim` (and any GUI `gz sim`/`rviz2` invocation) used
+  to reliably segfault a few seconds into startup, inside `libfontconfig`
+  during Qt's text shaping. Root cause: the system's fontconfig (2.15.0) and
+  the Pixi `simulation` env's bundled fontconfig (2.18.1) shared the same
+  default `~/.cache/fontconfig` directory, and reading a cache built by one
+  version with the other corrupted an `FcCharSet` traversal — see `ERRORS.md`.
+  Fixed by pointing `XDG_CACHE_HOME` at `$CONDA_PREFIX/var/cache` (a
+  Pixi-env-private cache dir) in the `additional_env` of every GUI-launching
+  `ExecuteProcess` (`gazebo.launch.py`, `perseus_sim.launch.py`'s RViz,
+  `mapping_using_slam_toolbox.launch.py`'s RViz). Verified with multiple
+  clean 30-75s GUI runs under `sg render`, zero crashes.
+
 ## 4. What's lite-relevant vs upstream-only
 
 ### KEEP — used directly by lite
 
-| Package / dir                                                           | Role                                                                                                     |
-| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `perseus_lite`                                                          | Lite bringup: launch files, controllers, RViz config                                                     |
-| `perseus_lite_hardware`                                                 | `ros2_control` hardware interface for ST3215 servos over serial                                          |
-| `perseus_lite_description`                                              | Lite URDF (4-wheel skid-steer, rocker, scaled meshes). All meshes now self-contained (Phase 2).          |
-| `perseus_sensors`                                                       | IMU + lidar drivers (RPLidar)                                                                            |
-| `perseus_interfaces`                                                    | Custom msg/srv definitions (shared)                                                                      |
-| `input_devices`, `perseus_input`, `perseus_input_config`                | Gamepad/keyboard input + routing                                                                         |
-| `teleop_diagnostics`                                                    | TUI debug for teleop (shared)                                                                            |
-| `autonomy`, `perseus_autonomy_bridge`, `perseus_bt_nodes`, `pcl_to_lsr` | Nav2 / SLAM (slam_toolbox) / behavior trees / pointcloud→laserscan                                       |
-| `perseus_vision`                                                        | ONNX detectors (cube, ArUco)                                                                             |
-| `perseus_lite_simulation`                                               | Gazebo sim forked from `perseus_simulation`; spawns the lite URDF, vendors `twist_mux` config (Phase 3). |
-| `software/arm-teleop-direct`                                            | Serial Feetech arm teleop                                                                                |
-| `software/shared`                                                       | Shared C++ libs (fd-wrapper, crc, ptr-wrapper, simple-networking, type-demangle)                         |
-| `software/{daemons,scripts,utilities,web_ui,home-manager,native}`       | General infra                                                                                            |
-| `packages/{groot2,open3d}`                                              | Nix overlays for autonomy deps                                                                           |
+| Package / dir                                                           | Role                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `perseus_lite`                                                          | Lite bringup: launch files, controllers, RViz config                                                                                                                                                            |
+| `perseus_lite_hardware`                                                 | `ros2_control` hardware interface for ST3215 servos over serial                                                                                                                                                 |
+| `perseus_lite_description`                                              | Lite URDF (4-wheel skid-steer, rocker, scaled meshes). All meshes now self-contained (Phase 2).                                                                                                                 |
+| `perseus_sensors`                                                       | IMU + lidar drivers (RPLidar)                                                                                                                                                                                   |
+| `perseus_interfaces`                                                    | Custom msg/srv definitions (shared)                                                                                                                                                                             |
+| `input_devices`, `perseus_input`, `perseus_input_config`                | Gamepad/keyboard input + routing                                                                                                                                                                                |
+| `teleop_diagnostics`                                                    | TUI debug for teleop (shared)                                                                                                                                                                                   |
+| `autonomy`, `perseus_autonomy_bridge`, `perseus_bt_nodes`, `pcl_to_lsr` | Nav2 / SLAM (slam_toolbox) / behavior trees / pointcloud→laserscan                                                                                                                                              |
+| `perseus_vision`                                                        | ONNX detectors (cube, ArUco)                                                                                                                                                                                    |
+| `perseus_lite_simulation`                                               | Gazebo sim forked from `perseus_simulation`; spawns the lite URDF, vendors `twist_mux` config (Phase 3).                                                                                                        |
+| `perseus_lite_missions`                                                 | Mission Zero (Selene Base Rescue) and follow-on scripted missions: orchestrator + map-quality/goal-reached checker nodes (`simulation` env — needs `perseus_lite_simulation`, `ros_gz_bridge`, `slam_toolbox`). |
+| `software/arm-teleop-direct`                                            | Serial Feetech arm teleop                                                                                                                                                                                       |
+| `software/shared`                                                       | Shared C++ libs (fd-wrapper, crc, ptr-wrapper, simple-networking, type-demangle); built in-tree by `perseus_sensors` via CMake `add_subdirectory`                                                               |
+| `software/{daemons,scripts,utilities,web_ui,home-manager,native}`       | General infra (`home-manager` is orphaned Nix machine-config — see note below)                                                                                                                                  |
 
 ### REMOVED — deleted, not in tree
 
@@ -188,7 +251,7 @@ Took **Option A** (full fork). `perseus_simulation/` was copied to
 Verified: `colcon build` passes 16 packages; `ROS2 launch --show-args
 perseus_lite_simulation perseus_sim.launch.py` resolves the full launch
 graph (rsp + controllers + gazebo + rosbridge + twist_mux + ekf + rviz)
-without errors. Actually running Gazebo requires `nix develop .#simulation`
+without errors. Actually running Gazebo requires `pixi shell -e simulation`
 and a GPU — not validated in this batch.
 
 ### Phase 4 — hard-divergence delete — DONE
@@ -235,8 +298,8 @@ keeping the deletions (`git rm` the paths during conflict resolution).
 1. Read this file end-to-end.
 2. `git fetch upstream && git log --oneline HEAD..upstream/main` — see
    pending upstream drift. Use `git cherry-pick`, not `git merge` (§6).
-3. `colcon list` in `software/ros_ws/` — should be 15 packages, all on
-   the KEEP table in §4.
+3. `colcon list` in `software/ros_ws/` — should be 17 packages (16 from the
+   KEEP table in §4, plus the vendored `twist_stamper`).
 4. Check `ERRORS.md` (per global rules) for any prevention rules touching
    files you plan to edit. Create `ERRORS.md` and log new bugs as
    instructed in `~/.claude/CLAUDE.md`.

@@ -65,13 +65,27 @@ def generate_launch_description():
         model_path = os.path.join(
             get_package_share_directory("perseus_lite_simulation"), "models"
         )
+        gz_launch_env = {
+            "QT_QPA_PLATFORM": "xcb",
+            "QT_SCREEN_SCALE_FACTORS": "1",
+            "PROJ_IGNORE_CELESTIAL_BODY": "YES",  # Fixed here
+            "GZ_SIM_RESOURCE_PATH": model_path,  # Ensure the model path is set correctly
+        }
+        conda_prefix = os.environ.get("CONDA_PREFIX")
+        if conda_prefix:
+            # If a system ROS install (e.g. /opt/ros/jazzy) is also sourced in
+            # the parent shell, its GZ_CONFIG_PATH leaks in here and makes gz
+            # sim load this env's gz-sim core against that install's
+            # (differently versioned) plugins, segfaulting on startup. Pin it
+            # to this Pixi env explicitly.
+            gz_launch_env["GZ_CONFIG_PATH"] = os.path.join(conda_prefix, "share", "gz")
+            # gz sim's GUI (Qt) crashes in libfontconfig if it shares ~/.cache
+            # with the system's fontconfig (different, ABI-incompatible
+            # version). Give this Pixi env its own private cache dir so it
+            # never touches the system one.
+            gz_launch_env["XDG_CACHE_HOME"] = os.path.join(conda_prefix, "var", "cache")
         gz_launch = ExecuteProcess(
             cmd=[
-                "nix",
-                "run",
-                "--impure",
-                "github:nix-community/nixGL",
-                "--",
                 "ros2",
                 "launch",
                 "ros_gz_sim",
@@ -79,13 +93,7 @@ def generate_launch_description():
                 f"gz_args:=-r -v 4 {performed_gz_world_path}",
             ],
             output="both",
-            additional_env={
-                "NIXPKGS_ALLOW_UNFREE": "1",
-                "QT_QPA_PLATFORM": "xcb",
-                "QT_SCREEN_SCALE_FACTORS": "1",
-                "PROJ_IGNORE_CELESTIAL_BODY": "YES",  # Fixed here
-                "GZ_SIM_RESOURCE_PATH": model_path,  # Ensure the model path is set correctly
-            },
+            additional_env=gz_launch_env,
         )
 
         return [gz_launch]

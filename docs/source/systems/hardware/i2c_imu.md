@@ -16,7 +16,7 @@ The driver supports multiple IMU devices:
 ### Enter Development Environment
 
 ```bash
-nix develop
+pixi shell
 ```
 
 ### Build the Package

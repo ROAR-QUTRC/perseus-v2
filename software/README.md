@@ -3,7 +3,7 @@
 This folder contains:
 
 - All code running on the rover
-- The configuration files for the Nix build system
+- The configuration files for the Pixi-managed dev/build environments
 - Machine-specific setup and configuration files
 - Tooling helper scripts
 
@@ -14,26 +14,19 @@ Its subdirectories are as follows. Each one contains its own README.md detailing
 - `ros_ws`: The ROS 2 software workspace containing all the actual logic.
 - `shared`: Libraries which are shared between the `native` and `ros_ws` workspaces, as well as potentially firmware as well.
 - `templates`: Template files for bringing up new projects.
-- `scripts`: Short bash scripts (and Nix files containing scripts) for some commonly run tasks.
+- `scripts`: Short bash scripts for some commonly run tasks.
 - `web_ui`: The rover web interface.
 
 # Build System
 
-This project is built with [Nix](https://nixos.org) rather than `colcon` directly, as this allows:
+This project uses [Pixi](https://pixi.sh) (with ROS 2 and its dependencies pulled from the `robostack-jazzy` conda channel) to provide the dev/build toolchain, then invokes `colcon` inside it to actually build the `ros_ws` workspace. See the root `pixi.toml` for the environments available (`default`, `simulation`, `machine-learning`, `docs`, `format`) and `CLAUDE.md` for the quick-start commands.
 
-- Reproducibility: If it builds on your machine, it builds on _any_ machine.
-- Distro independence: Although ROS 2 is targeted at specific LTS versions of Ubuntu, with Nix it can be built and run on any Linux machine with Nix installed.
-- Binary caching: If the built files have been uploaded, you can download them instead of having to build the project locally.
-- VSCode integration: Since Nix sets up environment variables, you can now edit ROS 2 code in VSCode without errors and with autocomplete!
-- No submodules: Nix can build projects from Git repositories, so you never have to clone it yourself. This means that `git submodule`s can be entirely removed.
+This gets you:
+
+- Reproducibility: `pixi.lock` pins exact package versions, so a clean `pixi install` reproduces the same environment on any machine.
+- Distro independence: RoboStack packages ROS 2 for conda, so the same environment works regardless of your host distro's own package versions.
+- No system ROS install required: Pixi environments are self-contained under `.pixi/`, so they don't conflict with (or require) a system-wide ROS installation.
 
 ## Overview
 
-Each project is built using standard tools (eg CMake), Nix just wraps that in a standard
-
-## Broken OpenGL applications
-
-Applications which use OpenGL (`rviz2`, `gz`, anything which depends on OGRE) will fail to run on non-NixOS systems by default, and likely with obscure and unintelligible error messages. You need to run them using `nixgl COMMAND` instead (assuming you're in the `direnv` environment), which will give it access to the proper OpenGL drivers, and set some required environment variables to keep QT (a GUI library) happy.
-It may take a while to build and download drivers and packages the first time you run it, this is fine.
-
-For example: `nixgl rviz2` will run `rviz2`, or `nixgl gz sim` will launch a `gz` simulation window.
+Each project is built using standard tools (eg CMake via `ament_cmake`/colcon); Pixi just supplies the toolchain and dependencies that `colcon build` needs.

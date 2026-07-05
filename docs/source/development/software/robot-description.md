@@ -18,8 +18,7 @@ Below is the structure:
 ```none
 perseus_lite_description/
  ├── launch/
- │    ├── view_robot.launch.py                  # Launch file to visualise the URDF in RViz
- │    └── view_robot_nixgl.launch.py            # nixGL variant for hardware-accelerated RViz
+ │    └── view_robot.launch.py                  # Launch file to visualise the URDF in RViz
  │
  ├── meshes/                                    # Visual/collision 3D models used by URDF
  │    ├── chassis.dae

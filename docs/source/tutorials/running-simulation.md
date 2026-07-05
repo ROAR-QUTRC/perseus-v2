@@ -4,7 +4,7 @@ This tutorial provides the basic commands needed to run the Perseus Lite rover i
 
 ## Prerequisites
 
-- Nix package manager installed
+- Pixi installed
 - perseus-lite repository cloned locally
 - Basic familiarity with command line interface
 
@@ -13,10 +13,10 @@ This tutorial provides the basic commands needed to run the Perseus Lite rover i
 ### 1. Enter the Simulation Environment
 
 ```bash
-nix develop .#simulation
+pixi shell -e simulation
 ```
 
-This command enters the specialised Nix development shell configured for simulation with all necessary dependencies.
+This command enters the specialised Pixi environment configured for simulation (Gazebo, `ros_gz_*`, `gz_ros2_control`) with all necessary dependencies.
 
 ### 2. Navigate to the ROS Workspace
 
@@ -63,7 +63,7 @@ Future work may migrate these assets to local storage to fully support offline s
 After the simulation has fully started, you need to activate the drive controller. In a **separate terminal**, run:
 
 ```bash
-nix develop .#simulation
+pixi shell -e simulation
 cd software/ros_ws
 source install/setup.bash
 ros2 control set_controller_state diff_drive_base_controller active
@@ -76,7 +76,7 @@ This step is required to enable the rover's wheel movement in simulation.
 Once the simulation is running and the controller is active, you can control the rover using keyboard input. In a **separate terminal**, run:
 
 ```bash
-nix develop .#simulation
+pixi shell -e simulation
 cd software/ros_ws
 source install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cmd_vel_out -p stamped:=true

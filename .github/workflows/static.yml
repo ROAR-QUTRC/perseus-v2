@@ -1,7 +1,5 @@
-# Build the Sphinx documentation site (`nix build .#docs`) and deploy
-# the rendered HTML to GitHub Pages. Reuses the same nix install action
-# and Cachix substituters as the main `all.yaml` workflow so warm-cache
-# builds are fast.
+# Build the Sphinx documentation site with Pixi (`pixi run -e docs docs`)
+# and deploy the rendered HTML to GitHub Pages.
 name: Deploy docs to Pages
 on:
   push:
@@ -9,9 +7,8 @@ on:
     paths:
       - "docs/**"
       - "software/**"
-      - "flake.nix"
-      - "flake.lock"
-      - "default.nix"
+      - "pixi.toml"
+      - "pixi.lock"
       - ".github/workflows/static.yml"
   workflow_dispatch:
 permissions:
@@ -29,20 +26,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: nixbuild/nix-quick-install-action@v30
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
-          nix_conf: |
-            extra-trusted-substituters = https://perseus-lite.cachix.org https://roar-qutrc.cachix.org https://ros.cachix.org
-            extra-trusted-public-keys = perseus-lite.cachix.org-1:k9gqOm0YvX64OQCFpvpZie9fVxTATbrKQ1uVgd0HiX4= roar-qutrc.cachix.org-1:ZKgHZSSHH2hOAN7+83gv1gkraXze5LSEzdocPAEBNnA= ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo=
-            extra-trusted-users = root
+          environments: docs
+          cache: true
       - name: Build docs
-        run: nix build --option sandbox relaxed -L .#docs
+        run: pixi run -e docs docs
       - name: Stage rendered HTML
-        # Dereference the result/ symlink into a regular dir so
-        # upload-pages-artifact can package it cleanly.
         run: |
           mkdir -p _site
-          cp -RL result/html/. _site/
+          cp -RL docs/build/html/. _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: "_site"

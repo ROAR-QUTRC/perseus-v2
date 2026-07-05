@@ -6,28 +6,23 @@ slam_toolbox:
     ceres_trust_strategy: LEVENBERG_MARQUARDT
     ceres_dogleg_type: TRADITIONAL_DOGLEG
     ceres_loss_function: None
-
     odom_frame: odom
     map_frame: map
     base_frame: base_footprint
     scan_topic: /scan
     use_map_saver: true
     mode: mapping
-
     debug_logging: false
     throttle_scans: 1
     transform_publish_period: 0.01
     map_update_interval: 5.0
-
-    resolution: 0.30          # MISSION ZERO CHALLENGE 1 — far too coarse: walls blur into thick blocks
-    max_laser_range: 3.0      # MISSION ZERO CHALLENGE 1 — far too short: only the nearest wall slice is seen
-
+    resolution: 0.30 # MISSION ZERO CHALLENGE 1 — far too coarse: walls blur into thick blocks
+    max_laser_range: 3.0 # MISSION ZERO CHALLENGE 1 — far too short: only the nearest wall slice is seen
     minimum_time_interval: 0.5
     transform_timeout: 0.2
     tf_buffer_duration: 30.0
     stack_size_to_use: 40000000
     enable_interactive_mode: true
-
     use_scan_matching: true
     use_scan_barycenter: true
     minimum_travel_distance: 0.5
@@ -42,15 +37,12 @@ slam_toolbox:
     loop_match_maximum_variance_coarse: 3.0
     loop_match_minimum_response_coarse: 0.35
     loop_match_minimum_response_fine: 0.45
-
     correlation_search_space_dimension: 0.5
     correlation_search_space_resolution: 0.01
     correlation_search_space_smear_deviation: 0.1
-
     loop_search_space_dimension: 8.0
     loop_search_space_resolution: 0.05
     loop_search_space_smear_deviation: 0.03
-
     distance_variance_penalty: 0.5
     angle_variance_penalty: 1.0
     fine_search_angle_offset: 0.00349

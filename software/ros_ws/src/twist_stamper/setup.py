@@ -1,8 +1,6 @@
 from setuptools import find_packages, setup
-import os
-from glob import glob
 
-package_name = "teleop_diagnostics"
+package_name = "twist_stamper"
 
 setup(
     name=package_name,
@@ -11,18 +9,16 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
-        (os.path.join("share", package_name, "launch"), glob("launch/*.launch.py")),
-        (os.path.join("share", package_name, "config"), glob("config/*.yaml")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="ROAR Team",
-    maintainer_email="roar@qut.edu.au",
-    description="TUI diagnostic tool for teleoperation debugging",
+    maintainer="DingoOz",
+    maintainer_email="nigel.hungerfordsymes@gmail.com",
+    description="Republishes an unstamped Twist as a TwistStamped (adds header/timestamp)",
     license="MIT",
     entry_points={
         "console_scripts": [
-            "teleop_tui = teleop_diagnostics.teleop_tui:main",
+            "twist_stamper = twist_stamper.twist_stamper:main",
         ],
     },
 )

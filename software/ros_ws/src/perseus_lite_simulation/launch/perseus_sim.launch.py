@@ -1,3 +1,5 @@
+import os
+
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -132,26 +134,26 @@ def generate_launch_description():
     ekf_config_file = PathJoinSubstitution(
         [FindPackageShare("perseus_lite_simulation"), "config", "ekf_sim_config.yaml"]
     )
+    rviz_env = {
+        "QT_QPA_PLATFORM": "xcb",
+        "QT_SCREEN_SCALE_FACTORS": "1",
+        "ROS_NAMESPACE": "/",
+        "RMW_QOS_POLICY_HISTORY": "keep_last",
+        "RMW_QOS_POLICY_DEPTH": "100",
+    }
+    conda_prefix = os.environ.get("CONDA_PREFIX")
+    if conda_prefix:
+        # rviz2 (Qt) can crash in libfontconfig if it shares ~/.cache with
+        # the system's fontconfig (different, ABI-incompatible version).
+        rviz_env["XDG_CACHE_HOME"] = os.path.join(conda_prefix, "var", "cache")
     rviz = ExecuteProcess(
         cmd=[
-            "nix",
-            "run",
-            "--impure",
-            "github:nix-community/nixGL",
-            "--",
             "rviz2",
             "-d",
             rviz_config,
         ],
         output="screen",
-        additional_env={
-            "NIXPKGS_ALLOW_UNFREE": "1",
-            "QT_QPA_PLATFORM": "xcb",
-            "QT_SCREEN_SCALE_FACTORS": "1",
-            "ROS_NAMESPACE": "/",
-            "RMW_QOS_POLICY_HISTORY": "keep_last",
-            "RMW_QOS_POLICY_DEPTH": "100",
-        },
+        additional_env=rviz_env,
     )
 
     # EKF node - only run if launch_ekf parameter is true

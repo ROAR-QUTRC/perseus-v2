@@ -31,7 +31,6 @@ setup(
         "for the lite robot tutorial campaign."
     ),
     license="MIT",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "orchestrator_node = perseus_lite_missions.orchestrator_node:main",

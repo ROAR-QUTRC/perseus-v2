@@ -92,14 +92,16 @@ class MissionOrchestrator(Node):
             return
         seg = segments[self.current_segment_idx]
         msg = String()
-        msg.data = json.dumps({
-            "segment_idx": self.current_segment_idx,
-            "segment_id": seg.get("id"),
-            "segment_kind": seg.get("kind"),
-            "segment_title": seg.get("title"),
-            "challenge_1_done": self._challenge_1_done,
-            "challenge_2_done": self._challenge_2_done,
-        })
+        msg.data = json.dumps(
+            {
+                "segment_idx": self.current_segment_idx,
+                "segment_id": seg.get("id"),
+                "segment_kind": seg.get("kind"),
+                "segment_title": seg.get("title"),
+                "challenge_1_done": self._challenge_1_done,
+                "challenge_2_done": self._challenge_2_done,
+            }
+        )
         self.state_pub.publish(msg)
 
     def _on_challenge_1(self, msg: Bool):

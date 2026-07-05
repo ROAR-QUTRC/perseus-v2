@@ -13,7 +13,7 @@ This number also determines their colour.
 | 2 or 3      | Software-related tags                                                             | Teal      |
 | 4           | Task specific payload tags                                                        | Yellow    |
 | 5           | Subsystem classification (if applicable) - this one's less strict than the others | Dark blue |
-| 6           | Build system - Nix, CMake, etc                                                    | Purple    |
+| 6           | Build system - Pixi, CMake, etc                                                   | Purple    |
 | 7           | Hardware specific issues                                                          | Green     |
 
 [^meta-tags]: By this I mean tags which generally don't classify what the issue involves, but do change how to deal with it.

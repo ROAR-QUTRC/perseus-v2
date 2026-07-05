@@ -2,8 +2,8 @@
 .direnv/
 result
 
-# Claude Code session data (worktrees, local settings)
-.claude/
+# pixi: per-machine solved environments (the lockfile IS committed)
+.pixi/
 
 # ROS
 log/
@@ -365,3 +365,6 @@ Temporary Items
 
 # Ignore generated models, which are too large
 /software/ros_ws/src/perseus_vision/models/
+
+# pixi/agent session data
+.claude/
