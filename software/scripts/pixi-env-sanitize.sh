@@ -17,7 +17,7 @@
 
 set -uo pipefail
 
-# Path-like variables to strip foreign entries from.
+# Path-like (colon-separated) variables to strip foreign entries from.
 _PIXI_SANITIZE_PATH_VARS=(
   PATH
   LD_LIBRARY_PATH
@@ -25,13 +25,15 @@ _PIXI_SANITIZE_PATH_VARS=(
   CMAKE_PREFIX_PATH
   PYTHONPATH
   COLCON_PREFIX_PATH
+  GZ_CONFIG_PATH
+  GZ_SIM_RESOURCE_PATH
 )
 
 # Path fragments that mark an entry as foreign (system ROS install, or a
 # colcon workspace outside this repo).
 _PIXI_SANITIZE_FOREIGN_PATTERNS=(
   "/opt/ros/"
-  "${HOME}/turtlebot3_ws"
+  "${HOME:-}/turtlebot3_ws"
 )
 
 _pixi_sanitize_is_foreign() {
@@ -69,17 +71,6 @@ _pixi_sanitize_strip_var() {
 for _pixi_sanitize_var in "${_PIXI_SANITIZE_PATH_VARS[@]}"; do
   _pixi_sanitize_strip_var "$_pixi_sanitize_var"
 done
-
-# Foreign toolchains can also set non-path-list env vars that redirect where
-# a Pixi-env tool looks for plugins/config. Only unset these if they point at
-# a foreign install; a value pointing inside this env's own CONDA_PREFIX (or
-# unset entirely) is left alone.
-if [[ -n ${GZ_CONFIG_PATH:-} ]] && _pixi_sanitize_is_foreign "$GZ_CONFIG_PATH"; then
-  unset GZ_CONFIG_PATH
-fi
-if [[ -n ${GZ_SIM_RESOURCE_PATH:-} ]] && _pixi_sanitize_is_foreign "$GZ_SIM_RESOURCE_PATH"; then
-  unset GZ_SIM_RESOURCE_PATH
-fi
 
 unset -f _pixi_sanitize_is_foreign _pixi_sanitize_strip_var
 unset _pixi_sanitize_var _pixi_sanitize_entries
