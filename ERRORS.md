@@ -1,5 +1,15 @@
 # Error Log
 
+### `arm-teleop-direct` silently broken by a Boost version bump — 2026-07-05
+
+- **Severity:** Medium
+- **Category:** Build
+- **File(s):** `software/arm-teleop-direct/include/perseus-arm-teleop.hpp`, `software/arm-teleop-direct/src/perseus-arm-teleop.cpp`, `software/arm-teleop-direct/src/main.cpp`
+- **Pattern:** `software/arm-teleop-direct` is a standalone CMake project (not part of the colcon workspace under `software/ros_ws/src/`), so it is never built by `pixi run build`/`build-test` or exercised by CI. `pixi.toml` pins `libboost-devel = "1.88.*"` for the colcon workspace's benefit (documented reason: Boost 1.90 drops the `boost_system` CMake component perseus_lite_hardware needs), but that pin also silently applies to this out-of-tree project, which still used `boost::asio::io_service` — removed in Boost ≥1.87 (renamed to `io_context`). Separately, `main.cpp`'s `display_progress_bar` had a parameter named `ncurses_win` shadowing the file-scope global `static WINDOW* ncurses_win`, which this project's `-Werror -Wshadow` build flags turn into a hard error. Neither was caught because nothing in `pixi run build`/CI ever compiles this package.
+- **Root cause:** A package living outside the colcon workspace isn't covered by any of the repo's build/test tasks, so a toolchain-wide dependency bump (done for an unrelated in-tree package) broke it with no signal until someone builds it manually.
+- **Fix applied:** Renamed `_io_service`/`io_service` to `_io_context`/`io_context` (3 sites; only ever used to construct `_serial_port`, no `io_service`-specific API in use). Renamed the shadowing parameter to `win` throughout `display_progress_bar`. Verified with a standalone `cmake && make` build — compiles clean.
+- **Prevention rule:** Any package outside `software/ros_ws/src/` (not colcon-built) needs its own explicit build step in CI or a documented manual-verification note, or toolchain-wide pins (Boost, compiler, etc.) will silently break it with no test ever catching the regression.
+
 ### `gz_ros2_control` plugin tag never existed — sim was never end-to-end validated post-fork — 2026-07-04
 
 - **Severity:** High
