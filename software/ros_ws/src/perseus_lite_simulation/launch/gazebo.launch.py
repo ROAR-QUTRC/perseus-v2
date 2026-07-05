@@ -70,6 +70,11 @@ def generate_launch_description():
         # this env's gz-sim core against that install's (differently versioned)
         # plugins, segfaulting on startup. Pin it to this Pixi env explicitly.
         gz_config_path = os.path.join(os.environ["CONDA_PREFIX"], "share", "gz")
+        # gz sim's GUI (Qt) crashes in libfontconfig if it shares ~/.cache with
+        # the system's fontconfig (different, ABI-incompatible version). Give
+        # this Pixi env its own private cache dir so it never touches the
+        # system one.
+        xdg_cache_home = os.path.join(os.environ["CONDA_PREFIX"], "var", "cache")
         gz_launch = ExecuteProcess(
             cmd=[
                 "ros2",
@@ -85,6 +90,7 @@ def generate_launch_description():
                 "PROJ_IGNORE_CELESTIAL_BODY": "YES",  # Fixed here
                 "GZ_SIM_RESOURCE_PATH": model_path,  # Ensure the model path is set correctly
                 "GZ_CONFIG_PATH": gz_config_path,
+                "XDG_CACHE_HOME": xdg_cache_home,
             },
         )
 

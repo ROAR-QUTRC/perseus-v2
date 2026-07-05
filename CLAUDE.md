@@ -122,20 +122,18 @@ Migration notes:
   on every `pixi shell`/`pixi run`, but it is a defensive backstop, not a fix
   for a contaminated parent shell — prefer guarding the offending `~/.bashrc`
   source line so it's skipped inside Pixi/conda shells.
-- **Known unresolved issue: `gz sim`'s GUI segfaults on this dev machine.**
-  `pixi run -e simulation sim` (and any `gz sim` invocation without `-s`)
-  reliably segfaults a few seconds into startup, inside `libfontconfig` during
-  Qt's `createGui()` (crashing thread, not the physics/server thread — the
-  server keeps running briefly after, then tears the whole process down).
-  This is **unrelated to the `gz_ros2_control` plugin fix** documented in
-  `ERRORS.md`: a headless run (`gz_args:=-s ...`, no GUI) of the identical
-  launch graph on this machine loads `gz_ros2_control`, brings up
-  `controller_manager`, and activates both controllers with no crash — proving
-  the sim logic itself is sound. The crash is specific to the GUI/rendering
-  path (Qt + fontconfig), not yet root-caused (candidates: a font/driver
-  mismatch, or something interacting with the `render` group GPU setup).
-  Documented gap — not fixed. Workaround: run headless for automated
-  verification; GUI use needs further investigation on the affected machine.
+- **Resolved: `gz sim`/`rviz2` GUI segfault from a shared fontconfig cache.**
+  `pixi run -e simulation sim` (and any GUI `gz sim`/`rviz2` invocation) used
+  to reliably segfault a few seconds into startup, inside `libfontconfig`
+  during Qt's text shaping. Root cause: the system's fontconfig (2.15.0) and
+  the Pixi `simulation` env's bundled fontconfig (2.18.1) shared the same
+  default `~/.cache/fontconfig` directory, and reading a cache built by one
+  version with the other corrupted an `FcCharSet` traversal — see `ERRORS.md`.
+  Fixed by pointing `XDG_CACHE_HOME` at `$CONDA_PREFIX/var/cache` (a
+  Pixi-env-private cache dir) in the `additional_env` of every GUI-launching
+  `ExecuteProcess` (`gazebo.launch.py`, `perseus_sim.launch.py`'s RViz,
+  `mapping_using_slam_toolbox.launch.py`'s RViz). Verified with multiple
+  clean 30-75s GUI runs under `sg render`, zero crashes.
 
 ## 4. What's lite-relevant vs upstream-only
 

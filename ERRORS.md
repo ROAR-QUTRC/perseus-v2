@@ -1,5 +1,15 @@
 # Error Log
 
+### `gz sim`/`rviz2` GUI segfaults from a shared fontconfig cache — 2026-07-05
+
+- **Severity:** High
+- **Category:** Configuration
+- **File(s):** `software/ros_ws/src/perseus_lite_simulation/launch/gazebo.launch.py`, `software/ros_ws/src/perseus_lite_simulation/launch/perseus_sim.launch.py`, `software/ros_ws/src/autonomy/launch/mapping_using_slam_toolbox.launch.py`
+- **Pattern:** `pixi run sim`'s GUI (Gazebo's Qt-based GUI, and separately RViz) reliably segfaulted a few seconds into startup, in `libfontconfig`'s `FcCharSetFindLeafForward`/`FcCharSetHasChar` (dereferencing a near-null pointer) during Qt text shaping. The system has fontconfig 2.15.0 installed; the Pixi `simulation` env bundles a separate, newer fontconfig 2.18.1 (`libfontconfig.so.1.17.0`). Neither installation overrides `XDG_CACHE_HOME`, so both share the same `~/.cache/fontconfig` directory — a binary charset/font cache written by whichever fontconfig ran most recently. Reading a cache built by one fontconfig version with a different, ABI-incompatible version corrupts an `FcCharSet`'s internal leaf-array traversal, producing the segfault. This is the same "two installations, one shared mutable resource" pattern as the `GZ_CONFIG_PATH` bug, just via a filesystem cache instead of an env var pointing at plugin libraries.
+- **Root cause:** No isolation between the Pixi env's own library versions and whatever else on the machine (system packages, other conda envs) happens to write to the same default (`$HOME`-relative) cache/config locations that aren't Pixi/conda-prefix-scoped by default.
+- **Fix applied:** Added `XDG_CACHE_HOME` (pointed at `$CONDA_PREFIX/var/cache`, a Pixi-env-private directory) to the `additional_env` of all three GUI-launching `ExecuteProcess` actions (Gazebo GUI, and both RViz launches). Verified with three separate clean runs (30s, 75s, 60s) of `pixi run sim` under `sg render` — zero crashes, and the Pixi env's own `var/cache/fontconfig` (plus `mesa_shader_cache`, `Gazebo`, Qt's shader cache) populated as expected, confirming it never touches `~/.cache` anymore. A prior diagnosis session (documented, since corrected, in `CLAUDE.md`) had left this as an open/unresolved gap.
+- **Prevention rule:** When a Pixi/conda-packaged GUI/rendering tool crashes with no informative error (a bare segfault deep in a system library like fontconfig, Mesa, or similar), suspect a shared, version-sensitive cache or config directory under `$HOME` before assuming a code bug — check whether the tool respects an `XDG_*`-style override and, if so, point it at a env-private directory (`$CONDA_PREFIX/...`) rather than trying to reconcile versions.
+
 ### `arm-teleop-direct` silently broken by a Boost version bump — 2026-07-05
 
 - **Severity:** Medium

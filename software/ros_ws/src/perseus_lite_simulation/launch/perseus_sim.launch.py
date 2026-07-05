@@ -1,3 +1,5 @@
+import os
+
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -114,6 +116,9 @@ def generate_launch_description():
             "ROS_NAMESPACE": "/",
             "RMW_QOS_POLICY_HISTORY": "keep_last",
             "RMW_QOS_POLICY_DEPTH": "100",
+            # rviz2 (Qt) can crash in libfontconfig if it shares ~/.cache with
+            # the system's fontconfig (different, ABI-incompatible version).
+            "XDG_CACHE_HOME": os.path.join(os.environ["CONDA_PREFIX"], "var", "cache"),
         },
     )
 
