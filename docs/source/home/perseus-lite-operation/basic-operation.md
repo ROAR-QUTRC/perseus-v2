@@ -6,6 +6,7 @@ To teleoperate with an Xbox controller, with Perseus-Lite powered up you will ne
 
 ```console
 pixi shell
+source software/ros_ws/install/setup.bash
 ros2 launch perseus_lite perseus_lite.launch.py cmd_vel_topic:=/joy_vel
 ```
 

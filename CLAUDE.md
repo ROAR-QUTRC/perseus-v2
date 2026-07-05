@@ -89,8 +89,11 @@ and `docs`. Run `nix fmt`'s replacement with `pixi run -e format fmt`.
 
 Migration notes:
 
-- **Open3D** is now a conda-forge package (no custom build); **Groot2** has no
-  conda package (install the AppImage manually if needed).
+- **Open3D** is available as a conda-forge package, but is **not yet added**
+  to any Pixi environment (documented gap, not implemented) — the old Nix
+  default shell exported it on `PYTHONPATH` on x86_64; `software/utilities/open3d_demo.py`
+  will fail with `ModuleNotFoundError` until it's added as a dependency.
+  **Groot2** has no conda package (install the AppImage manually if needed).
 - The upstream third-party SLAM/coverage packages (`lidarslam_ros2`,
   `ndt-omp-ros2`, `opennav-coverage`, `fields2cover`) were **dropped** — nothing
   in the lite workspace referenced them. See `software/ros_ws/conda-recipes/`.
@@ -294,8 +297,8 @@ keeping the deletions (`git rm` the paths during conflict resolution).
 1. Read this file end-to-end.
 2. `git fetch upstream && git log --oneline HEAD..upstream/main` — see
    pending upstream drift. Use `git cherry-pick`, not `git merge` (§6).
-3. `colcon list` in `software/ros_ws/` — should be 15 packages, all on
-   the KEEP table in §4.
+3. `colcon list` in `software/ros_ws/` — should be 16 packages (15 from the
+   KEEP table in §4, plus the vendored `twist_stamper`).
 4. Check `ERRORS.md` (per global rules) for any prevention rules touching
    files you plan to edit. Create `ERRORS.md` and log new bugs as
    instructed in `~/.claude/CLAUDE.md`.

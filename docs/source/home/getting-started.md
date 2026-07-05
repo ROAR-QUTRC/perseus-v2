@@ -108,10 +108,14 @@ Run `pixi run -e default build`.
 That's it.
 No, really.
 If that succeeds, that means that the entire project built successfully and you can now use it.
-If, instead, you want an interactive shell with the built rover packages available, run `pixi shell` (or `pixi shell -e simulation` / `pixi shell -e machine-learning` for those environments).
-After this runs, you'll be dropped into a sub-shell with the built rover packages available to you.
+If, instead, you want an interactive shell, run `pixi shell` (or `pixi shell -e simulation` / `pixi shell -e machine-learning` for those environments).
+After this runs, you'll be dropped into a sub-shell with the ROS 2 toolchain fully set up.
 :::{note}
 ROS2 command autocomplete works out of the box in a Pixi shell - RoboStack's `ros2-argcomplete` is sourced automatically as part of activating the environment, no extra setup step needed.
+:::
+:::{important}
+`pixi shell` only sets up the ROS 2 toolchain (RoboStack's own `AMENT_PREFIX_PATH` entries) - it does **not** put the rover packages (`perseus_lite`, `input_devices`, etc.) on your path.
+Run `source software/ros_ws/install/setup.bash` after `pixi shell` (or after the build finishes) to layer the colcon workspace overlay in, or the rover packages won't resolve for `ros2 launch`/`ros2 run`.
 :::
 At this point, you can run standard ROS2 commands, and all the rover packages are available like they've been installed.
 

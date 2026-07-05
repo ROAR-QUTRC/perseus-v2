@@ -108,6 +108,8 @@ sd_hide_title: true
       </div>
       <pre class="pl-term__body"><code><span class="pl-tok-c"># Drop into the Pixi-managed dev shell</span>
 <span class="pl-tok-p">$</span> pixi shell
+<span class="pl-tok-c"># Source the built colcon workspace overlay</span>
+<span class="pl-tok-p">$</span> source software/ros_ws/install/setup.bash
 <span class="pl-tok-c"># Launch ros2_control, drivers, and twist_mux</span>
 <span class="pl-tok-p">$</span> ros2 launch perseus_lite perseus_lite.launch.py \
       cmd_vel_topic:=/joy_vel</code></pre>
