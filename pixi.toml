@@ -277,8 +277,14 @@ test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite
 python = ">=3.11"
 uv = "*"          # resolves the Sphinx toolchain from docs/pyproject/uv.lock
 doxygen = "*"     # breathe/exhale C++ API docs
+graphviz = "*"    # `dot` binary for the {graphviz} directives sphinx_immaterial.graphviz renders
 # Known gap (documented, not implemented): the old Nix docs shell also had
-# drawio/graphviz for figure generation; neither is in this feature yet.
+# drawio (headless, via xvfb) for building docs/figures-source/*.drawio into
+# docs/source/generated/*.drawio.svg; not in this feature yet — see
+# docs/source/systems/documentation.md. graphviz is now ported. The
+# drawio-sourced figures are gitignored build output, not checked in, so
+# their absence is a non-fatal "image file not readable" Sphinx warning,
+# not a build failure.
 
 [feature.docs.tasks]
 # uv reads docs/pyproject/{pyproject.toml,uv.lock}; sphinx source is docs/source.
