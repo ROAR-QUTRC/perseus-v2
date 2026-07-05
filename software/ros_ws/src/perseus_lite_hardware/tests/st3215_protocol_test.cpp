@@ -2,8 +2,11 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cmath>
+#include <cstdint>
 #include <numbers>
+#include <vector>
 
 namespace protocol = perseus_lite_hardware::protocol;
 
@@ -205,28 +208,46 @@ TEST_F(ST3215ProtocolTest, EncodeServoVelocityClampNegative)
     EXPECT_TRUE(result & 0x8000);
 }
 
+// Default rover wiring: left-side servos (IDs 2 and 3) are inverted
+const std::array<uint8_t, 2> kLeftSideInverted{2, 3};
+
 TEST_F(ST3215ProtocolTest, MotorDirectionRightSide)
 {
     // Servo IDs 1 and 4 are right-side, no inversion
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(1, 1.0), 1.0);
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(4, 1.0), 1.0);
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(1, -1.0), -1.0);
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(4, -1.0), -1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(1, 1.0, kLeftSideInverted), 1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(4, 1.0, kLeftSideInverted), 1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(1, -1.0, kLeftSideInverted), -1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(4, -1.0, kLeftSideInverted), -1.0);
 }
 
 TEST_F(ST3215ProtocolTest, MotorDirectionLeftSide)
 {
     // Servo IDs 2 and 3 are left-side, direction is inverted
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(2, 1.0), -1.0);
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(3, 1.0), -1.0);
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(2, -1.0), 1.0);
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(3, -1.0), 1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(2, 1.0, kLeftSideInverted), -1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(3, 1.0, kLeftSideInverted), -1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(2, -1.0, kLeftSideInverted), 1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(3, -1.0, kLeftSideInverted), 1.0);
 }
 
 TEST_F(ST3215ProtocolTest, MotorDirectionZero)
 {
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(2, 0.0), 0.0);
-    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(1, 0.0), 0.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(2, 0.0, kLeftSideInverted), 0.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(1, 0.0, kLeftSideInverted), 0.0);
+}
+
+TEST_F(ST3215ProtocolTest, MotorDirectionCustomInversionList)
+{
+    const std::array<uint8_t, 2> custom{1, 4};
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(1, 1.0, custom), -1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(2, 1.0, custom), 1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(3, 1.0, custom), 1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(4, 1.0, custom), -1.0);
+}
+
+TEST_F(ST3215ProtocolTest, MotorDirectionEmptyInversionList)
+{
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(2, 1.0, {}), 1.0);
+    EXPECT_DOUBLE_EQ(protocol::apply_motor_direction(3, -1.0, {}), -1.0);
 }
 
 TEST_F(ST3215ProtocolTest, VelocityRoundTrip)
@@ -292,4 +313,142 @@ TEST_F(ST3215ProtocolTest, ParseSignedValueMaxNegative)
 {
     // Maximum negative value: sign bit | 0x7FFF
     EXPECT_EQ(protocol::parse_signed_value(0xFFFF), -0x7FFF);
+}
+
+namespace
+{
+    // Builds a wire-format status response: FF FF ID LEN ERROR <8 data bytes> SUM
+    std::vector<uint8_t> make_status_response(uint8_t id, uint8_t error,
+                                              uint16_t raw_pos, uint16_t raw_vel,
+                                              uint8_t voltage, uint8_t temperature)
+    {
+        std::vector<uint8_t> payload{
+            error,
+            static_cast<uint8_t>(raw_pos & 0xFF),
+            static_cast<uint8_t>(raw_pos >> 8),
+            static_cast<uint8_t>(raw_vel & 0xFF),
+            static_cast<uint8_t>(raw_vel >> 8),
+            0x00,  // load low
+            0x00,  // load high
+            voltage,
+            temperature,
+        };
+
+        std::vector<uint8_t> packet{0xFF, 0xFF, id,
+                                    static_cast<uint8_t>(payload.size() + 1)};
+        packet.insert(packet.end(), payload.begin(), payload.end());
+        packet.push_back(protocol::calculate_checksum(
+            std::span{packet.data() + 2, packet.size() - 2}));
+        return packet;
+    }
+}  // namespace
+
+TEST_F(ST3215ProtocolTest, ExtractPacketsSingleValidPacket)
+{
+    auto response = make_status_response(3, 0, 1024, 100, 120, 32);
+    auto packets = protocol::extract_packets(response);
+
+    ASSERT_EQ(packets.size(), 1u);
+    EXPECT_EQ(packets[0].id, 3);
+    EXPECT_EQ(packets[0].payload.size(), 9u);  // error byte + 8 data bytes
+}
+
+TEST_F(ST3215ProtocolTest, ExtractPacketsEmptyAndTooShortBuffers)
+{
+    EXPECT_TRUE(protocol::extract_packets({}).empty());
+
+    const std::array<uint8_t, 3> too_short{0xFF, 0xFF, 0x01};
+    EXPECT_TRUE(protocol::extract_packets(too_short).empty());
+}
+
+TEST_F(ST3215ProtocolTest, ExtractPacketsGarbagePrefixIsSkipped)
+{
+    auto response = make_status_response(2, 0, 512, 0, 120, 30);
+    std::vector<uint8_t> noisy{0x12, 0x00, 0xFF, 0x55};
+    noisy.insert(noisy.end(), response.begin(), response.end());
+
+    auto packets = protocol::extract_packets(noisy);
+    ASSERT_EQ(packets.size(), 1u);
+    EXPECT_EQ(packets[0].id, 2);
+}
+
+TEST_F(ST3215ProtocolTest, ExtractPacketsBadChecksumIsRejected)
+{
+    auto response = make_status_response(1, 0, 100, 100, 120, 30);
+    response.back() ^= 0xFF;  // corrupt the checksum
+
+    EXPECT_TRUE(protocol::extract_packets(response).empty());
+}
+
+TEST_F(ST3215ProtocolTest, ExtractPacketsTruncatedPacketIsRejected)
+{
+    auto response = make_status_response(1, 0, 100, 100, 120, 30);
+    response.resize(response.size() - 3);  // drop the tail mid-payload
+
+    EXPECT_TRUE(protocol::extract_packets(response).empty());
+}
+
+TEST_F(ST3215ProtocolTest, ExtractPacketsMultiplePacketsInOneBuffer)
+{
+    auto first = make_status_response(1, 0, 100, 0, 120, 25);
+    auto second = make_status_response(4, 0, 200, 50, 121, 26);
+    std::vector<uint8_t> buffer = first;
+    buffer.insert(buffer.end(), second.begin(), second.end());
+
+    auto packets = protocol::extract_packets(buffer);
+    ASSERT_EQ(packets.size(), 2u);
+    EXPECT_EQ(packets[0].id, 1);
+    EXPECT_EQ(packets[1].id, 4);
+}
+
+TEST_F(ST3215ProtocolTest, ExtractPacketsZeroLengthIsRejected)
+{
+    // A length byte of zero cannot carry a checksum
+    const std::array<uint8_t, 5> packet{0xFF, 0xFF, 0x01, 0x00, 0xFE};
+    EXPECT_TRUE(protocol::extract_packets(packet).empty());
+}
+
+TEST_F(ST3215ProtocolTest, ParseStatusPayloadDecodesFields)
+{
+    auto response = make_status_response(3, 0, 2048, 0x8064 /* -100 */, 120, 32);
+    auto packets = protocol::extract_packets(response);
+    ASSERT_EQ(packets.size(), 1u);
+
+    auto status = protocol::parse_status_payload(packets[0].payload);
+    ASSERT_TRUE(status.has_value());
+    EXPECT_EQ(status->error_flags, 0);
+    EXPECT_NEAR(status->position_rad, std::numbers::pi, 1e-10);
+    EXPECT_NEAR(status->velocity_rad_s, protocol::raw_velocity_to_rad_s(-100), 1e-10);
+    EXPECT_DOUBLE_EQ(status->temperature_c, 32.0);
+}
+
+TEST_F(ST3215ProtocolTest, ParseStatusPayloadReadsTemperatureNotVoltage)
+{
+    // Regression: temperature is the 8th data byte (reg 0x3F); the 7th is
+    // voltage (reg 0x3E) and must not be reported as temperature
+    auto response = make_status_response(1, 0, 0, 0, /*voltage=*/120, /*temperature=*/41);
+    auto packets = protocol::extract_packets(response);
+    ASSERT_EQ(packets.size(), 1u);
+
+    auto status = protocol::parse_status_payload(packets[0].payload);
+    ASSERT_TRUE(status.has_value());
+    EXPECT_DOUBLE_EQ(status->temperature_c, 41.0);
+}
+
+TEST_F(ST3215ProtocolTest, ParseStatusPayloadPropagatesErrorFlags)
+{
+    auto response = make_status_response(1, 0x24 /* overheating | overload */, 0, 0, 120, 85);
+    auto packets = protocol::extract_packets(response);
+    ASSERT_EQ(packets.size(), 1u);
+
+    auto status = protocol::parse_status_payload(packets[0].payload);
+    ASSERT_TRUE(status.has_value());
+    EXPECT_EQ(status->error_flags, 0x24);
+}
+
+TEST_F(ST3215ProtocolTest, ParseStatusPayloadTooShortReturnsNullopt)
+{
+    const std::array<uint8_t, 3> short_payload{0x00, 0x01, 0x02};
+    EXPECT_FALSE(protocol::parse_status_payload(short_payload).has_value());
+    EXPECT_FALSE(protocol::parse_status_payload({}).has_value());
 }

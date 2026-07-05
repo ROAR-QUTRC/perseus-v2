@@ -24,6 +24,7 @@ def generate_launch_description():
     # ARGUMENTS
     use_sim_time = LaunchConfiguration("use_sim_time")
     launch_ekf = LaunchConfiguration("launch_ekf")
+    gz_world = LaunchConfiguration("gz_world")
 
     arguments = [
         DeclareLaunchArgument(
@@ -35,6 +36,31 @@ def generate_launch_description():
             "launch_ekf",
             default_value="false",
             description="If true, launch the EKF filter node",
+        ),
+        DeclareLaunchArgument(
+            "gz_world",
+            default_value="perseus_arc_world.world",
+            description="The world file from `perseus_lite_simulation` to use",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_x",
+            default_value="-3.5",
+            description="Initial X position of the robot",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_y",
+            default_value="-3.0",
+            description="Initial Y position of the robot",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_z",
+            default_value="0.3",
+            description="Initial Z position of the robot",
+        ),
+        DeclareLaunchArgument(
+            "initial_pose_yaw",
+            default_value="0.0",
+            description="Initial yaw of the robot",
         ),
     ]
     # IMPORTED LAUNCH FILES
@@ -52,6 +78,11 @@ def generate_launch_description():
         ),
         launch_arguments={
             "use_sim_time": use_sim_time,
+            "gz_world": gz_world,
+            "initial_pose_x": LaunchConfiguration("initial_pose_x"),
+            "initial_pose_y": LaunchConfiguration("initial_pose_y"),
+            "initial_pose_z": LaunchConfiguration("initial_pose_z"),
+            "initial_pose_yaw": LaunchConfiguration("initial_pose_yaw"),
         }.items(),
     )
     rsp_launch = IncludeLaunchDescription(

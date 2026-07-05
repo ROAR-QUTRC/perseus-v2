@@ -197,7 +197,7 @@ version = "*"
 # Tasks (replace documented `nix develop -c ...` / colcon invocations)
 # ---------------------------------------------------------------------------
 [tasks]
-# Core workspace build — 14/16 packages build cleanly in the default env today.
+# Core workspace build — 15/17 packages build cleanly in the default env today.
 # Skipped (pending migration phases, see conda-recipes/README.md):
 #   perseus_lite_simulation -> Gazebo deps (use the `simulation` env)
 #   perseus_vision          -> needs onnxruntime-cpp (CUDA) (use the `machine-learning` env)

@@ -79,7 +79,30 @@ namespace perseus_lite_hardware
         _servo_ids.reserve(joint_count);
 
         _servo_states.resize(joint_count);  // Initialize servo states vector
-        _last_update_times.resize(joint_count, rclcpp::Time(0, 0, RCL_ROS_TIME));
+
+        // Servos whose drive direction is inverted (left side of the rover).
+        // Override with the hardware parameter 'inverted_servo_ids', a
+        // comma-separated ID list, when the wiring differs.
+        _inverted_servo_ids = {2, 3};
+        if (has_parameter(params.hardware_info.hardware_parameters, "inverted_servo_ids"))
+        {
+            _inverted_servo_ids.clear();
+            std::stringstream ids_ss(params.hardware_info.hardware_parameters.at("inverted_servo_ids"));
+            std::string token;
+            while (std::getline(ids_ss, token, ','))
+            {
+                try
+                {
+                    _inverted_servo_ids.push_back(static_cast<uint8_t>(std::stoi(token)));
+                }
+                catch (const std::exception& e)
+                {
+                    RCLCPP_ERROR(logger, "Invalid 'inverted_servo_ids' entry '%s': %s",
+                                 token.c_str(), e.what());
+                    return hardware_interface::CallbackReturn::ERROR;
+                }
+            }
+        }
 
         // Extract and validate servo IDs
         for (const auto& joint : params.hardware_info.joints)
@@ -250,11 +273,14 @@ namespace perseus_lite_hardware
                 // According to protocol: READ(0x02) command starting at position register (0x38)
                 // Reading 8 bytes to get position(2), speed(2), load(2), temp(1), and moving status(1)
                 const std::array<uint8_t, 2> read_data{
-                    _PRESENT_POSITION_REG,    // Start reading from position register (0x38)
-                    _STATUS_PACKET_DATA_SIZE  // Read 8 bytes total
-                };
+                    _PRESENT_POSITION_REG,                              // Start reading from position register (0x38)
+                    static_cast<uint8_t>(protocol::STATUS_DATA_SIZE)};  // Read 8 bytes total
 
+                try
                 {
+                    // Hold the serial mutex across the whole request/response
+                    // transaction so a velocity write() from the controller
+                    // thread cannot interleave between request and reply.
                     std::lock_guard<std::mutex> lock(_serial_mutex);
                     if (!send_servo_command(servo_id, ServoCommand::READ, std::span{read_data}))
                     {
@@ -262,21 +288,23 @@ namespace perseus_lite_hardware
                                     "Failed to request status from servo %d", servo_id);
                         continue;
                     }
-                }
 
-                // Give the servo time to process and respond
-                std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
-                try
-                {
-                    // Read response with timeout
-                    boost::asio::steady_timer timeout(_io_context, _RESPONSE_TIMEOUT);
+                    // Give the servo time to process and respond so the reply
+                    // is complete when the read returns
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
                     RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME), "Attempting to read response from servo %d", servo_id);
                     boost::system::error_code error;
-                    size_t bytes_read = _serial_port.read_some(
-                        boost::asio::buffer(buffer), error);
+                    const size_t bytes_read = read_with_timeout(buffer, _RESPONSE_TIMEOUT, error);
 
+                    if (error == boost::asio::error::operation_aborted)
+                    {
+                        static rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+                        RCLCPP_WARN_THROTTLE(rclcpp::get_logger(LOGGER_NAME),
+                                             steady_clock, 1000,
+                                             "Timed out waiting for response from servo %d", servo_id);
+                        continue;
+                    }
                     if (error)
                     {
                         RCLCPP_WARN(rclcpp::get_logger(LOGGER_NAME),
@@ -304,6 +332,40 @@ namespace perseus_lite_hardware
         RCLCPP_INFO(rclcpp::get_logger(LOGGER_NAME), "Communication thread stopped");
     }
 
+    size_t ST3215SystemHardware::read_with_timeout(std::span<uint8_t> buffer,
+                                                   std::chrono::milliseconds timeout,
+                                                   boost::system::error_code& error)
+    {
+        size_t bytes_read = 0;
+        error = boost::asio::error::operation_aborted;
+
+        boost::asio::steady_timer deadline(_io_context, timeout);
+
+        _serial_port.async_read_some(
+            boost::asio::buffer(buffer.data(), buffer.size()),
+            [&](const boost::system::error_code& ec, size_t n)
+            {
+                error = ec;
+                bytes_read = n;
+                deadline.cancel();
+            });
+
+        deadline.async_wait(
+            [&](const boost::system::error_code& ec)
+            {
+                // Timer fired (not cancelled by a completed read): abort the read
+                if (ec != boost::asio::error::operation_aborted)
+                {
+                    _serial_port.cancel();
+                }
+            });
+
+        _io_context.restart();
+        _io_context.run();
+
+        return error ? 0 : bytes_read;
+    }
+
     hardware_interface::CallbackReturn ST3215SystemHardware::on_cleanup(
         const rclcpp_lifecycle::State&)
     {
@@ -317,12 +379,6 @@ namespace perseus_lite_hardware
         if (_serial_port.is_open())
         {
             _serial_port.close();
-        }
-
-        if (_io_thread.joinable())
-        {
-            _io_context.stop();
-            _io_thread.join();
         }
 
         return hardware_interface::CallbackReturn::SUCCESS;
@@ -418,7 +474,7 @@ namespace perseus_lite_hardware
                              _servo_ids[i], _command_speeds[i]);
 
                 double corrected_speed = protocol::apply_motor_direction(
-                    _servo_ids[i], _command_speeds[i]);
+                    _servo_ids[i], _command_speeds[i], _inverted_servo_ids);
 
                 uint16_t servo_speed = protocol::encode_servo_velocity(corrected_speed);
 
@@ -495,46 +551,8 @@ namespace perseus_lite_hardware
             RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME), "%s", debug_ss.str().c_str());
         }
 
-        // Minimum packet size: header(2) + ID(1) + length(1) = 4 bytes
-        if (response.size() < _PACKET_MIN_SIZE)
+        for (const auto& [id, payload] : protocol::extract_packets(response))
         {
-            RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                         "Response too short (%zu bytes), ignoring", response.size());
-            return;
-        }
-
-        // Loop through response looking for valid packets
-        for (size_t i = 0; i < response.size() - 3; ++i)
-        {
-            // Look for packet header (0xFF 0xFF)
-            if (response[i] != _PACKET_HEADER_BYTE || response[i + 1] != _PACKET_HEADER_BYTE)
-            {
-                continue;
-            }
-
-            const uint8_t id = response[i + _PACKET_ID_INDEX];
-            const uint8_t length = response[i + _PACKET_LENGTH_INDEX];
-
-            // Validate packet length
-            if (i + _PACKET_MIN_SIZE + length > response.size())
-            {
-                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                             "Incomplete packet for ID %d: expected %d bytes, have %zu",
-                             id, length, response.size() - (i + _PACKET_MIN_SIZE));
-                continue;
-            }
-
-            const uint8_t checksum = protocol::calculate_checksum(
-                std::span{response.data() + i + _PACKET_ID_INDEX, static_cast<size_t>(_PACKET_MIN_SIZE + length - 1 - _PACKET_ID_INDEX)});
-
-            if (checksum != response[i + _PACKET_MIN_SIZE + length - 1])
-            {
-                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                             "Checksum mismatch for ID %d: expected 0x%02X, got 0x%02X",
-                             id, checksum, response[i + _PACKET_MIN_SIZE + length - 1]);
-                continue;
-            }
-
             // Find matching servo ID
             const auto it = std::find(_servo_ids.begin(), _servo_ids.end(), id);
             if (it == _servo_ids.end())
@@ -544,33 +562,13 @@ namespace perseus_lite_hardware
                 continue;
             }
 
-            const auto index = std::distance(_servo_ids.begin(), it);
+            const auto index = static_cast<size_t>(std::distance(_servo_ids.begin(), it));
             RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                         "Processing packet for servo ID %d (index %ld)", id, index);
+                         "Processing packet for servo ID %d (index %zu)", id, index);
 
-            // Extract packet data (skip header, ID, length)
-            const std::span packet{response.data() + i + _PACKET_MIN_SIZE, static_cast<size_t>(length)};
-
-            // Validate index bounds before accessing arrays
-            if (static_cast<size_t>(index) >= _servo_states.size())
+            if (!payload.empty())
             {
-                RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
-                             "Invalid servo index %ld for ID %d (max: %zu)",
-                             index, id, _servo_states.size());
-                continue;
-            }
-
-            // Lock state mutex while updating
-            std::lock_guard<std::mutex> state_lock(_state_mutex);
-            auto& state = _servo_states[index];
-
-            // Update timestamp
-            state.last_update = rclcpp::Clock(RCL_ROS_TIME).now();
-
-            // Process based on response type
-            if (packet.size() > 0)
-            {
-                const uint8_t error_byte = packet[_ERROR_BYTE_INDEX];
+                const uint8_t error_byte = payload[protocol::ERROR_BYTE_INDEX];
 
                 // Check error flags if present
                 if (error_byte != 0)
@@ -597,73 +595,25 @@ namespace perseus_lite_hardware
                         RCLCPP_WARN(rclcpp::get_logger(LOGGER_NAME),
                                     "Servo %d: Instruction Error", id);
                 }
-
-                // Check if this is a status response (should have at least 8 bytes of data)
-                if (packet.size() >= _STATUS_PACKET_DATA_SIZE)
-                {
-                    // Extract position (2 bytes, little endian) with safe conversion
-                    // Ensure we have valid indices before accessing packet data
-                    if (_POSITION_LOW_BYTE_INDEX < packet.size() && _POSITION_HIGH_BYTE_INDEX < packet.size())
-                    {
-                        uint16_t raw_pos_unsigned = static_cast<uint16_t>(
-                            packet[_POSITION_LOW_BYTE_INDEX] | (static_cast<uint16_t>(packet[_POSITION_HIGH_BYTE_INDEX]) << 8));
-                        int16_t raw_pos = protocol::parse_signed_value(raw_pos_unsigned);
-                        state.position = protocol::ticks_to_radians(raw_pos);
-                    }
-
-                    if (_VELOCITY_LOW_BYTE_INDEX < packet.size() && _VELOCITY_HIGH_BYTE_INDEX < packet.size())
-                    {
-                        uint16_t raw_vel_unsigned = static_cast<uint16_t>(
-                            packet[_VELOCITY_LOW_BYTE_INDEX] | (static_cast<uint16_t>(packet[_VELOCITY_HIGH_BYTE_INDEX]) << 8));
-                        int16_t raw_vel = protocol::parse_signed_value(raw_vel_unsigned);
-                        state.velocity = protocol::raw_velocity_to_rad_s(raw_vel);
-                    }
-
-                    // Extract temperature (1 byte)
-                    state.temperature = static_cast<double>(packet[_TEMPERATURE_BYTE_INDEX]);
-
-                    RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
-                                 "Servo %d state updated - Pos: %.2f rad, Vel: %.2f rad/s, Temp: %.1f°C",
-                                 id, state.position, state.velocity, state.temperature);
-                }
             }
 
-            // Skip to end of this packet
-            i += 3 + length;
-        }
-    }
+            // Lock state mutex while updating
+            std::lock_guard<std::mutex> state_lock(_state_mutex);
+            auto& state = _servo_states[index];
 
-    bool ST3215SystemHardware::update_servo_states(uint8_t id, size_t index) noexcept
-    {
-        try
-        {
-            // Validate index bounds before accessing arrays
-            if (index >= _last_update_times.size() ||
-                index >= _current_positions.size() ||
-                index >= _current_velocities.size() ||
-                index >= _temperatures.size())
+            // Update timestamp
+            state.last_update = rclcpp::Clock(RCL_ROS_TIME).now();
+
+            if (const auto status = protocol::parse_status_payload(payload))
             {
-                RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
-                             "Invalid servo index %zu for ID %d (max arrays: %zu, %zu, %zu, %zu)",
-                             index, id, _last_update_times.size(), _current_positions.size(),
-                             _current_velocities.size(), _temperatures.size());
-                return false;
+                state.position = status->position_rad;
+                state.velocity = status->velocity_rad_s;
+                state.temperature = status->temperature_c;
+
+                RCLCPP_DEBUG(rclcpp::get_logger(LOGGER_NAME),
+                             "Servo %d state updated - Pos: %.2f rad, Vel: %.2f rad/s, Temp: %.1f°C",
+                             id, state.position, state.velocity, state.temperature);
             }
-
-            // Update the timestamp first
-            _last_update_times[index] = rclcpp::Clock(RCL_ROS_TIME).now();
-
-            _current_positions[index] = 0.0;                   // Replace with actual position reading
-            _current_velocities[index] = 0.0;                  // Replace with actual velocity reading
-            _temperatures[index] = _ROOM_TEMPERATURE_CELSIUS;  // Replace with actual temperature reading
-
-            return true;
-        }
-        catch (const std::exception& e)
-        {
-            RCLCPP_ERROR(rclcpp::get_logger(LOGGER_NAME),
-                         "Error updating servo %d states: %s", id, e.what());
-            return false;
         }
     }
 

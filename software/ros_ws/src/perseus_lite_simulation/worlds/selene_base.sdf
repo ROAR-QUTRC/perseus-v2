@@ -1,0 +1,229 @@
+<?xml version="1.0" ?>
+<!--
+  Selene Base — Mission Zero scenario.
+
+  Layout (top-down, +X is east, +Y is north):
+
+  Spawn (0, 0) .... open area .... [entrance gap] .... Corridor A .... [leak]
+                                    x=3, y=-1..+1      0.8m wide        x=10
+
+  Habitat is a rectangular structure from x=3 to x=12, y=-3 to y=+3.
+  The west face has a 2m gap for the rover to enter. Inside, the
+  corridor narrows to 0.8m between two internal walls running east
+  to a dead-end at x=10 where the leak marker sits.
+
+  Corridor width (0.8m) is load-bearing for Challenge 2: with the
+  broken robot_radius (0.85m) the planner marks the entire corridor
+  lethal. With the correct radius (0.28m) there is a clear 0.24m
+  channel down the centre and Nav2 can plan through it.
+-->
+<sdf version="1.9">
+  <world name="selene_base">
+
+    <!-- ── Physics ─────────────────────────────────────────────── -->
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <sor>1.4</sor>
+          <use_dynamic_moi_rescaling>true</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>2000.0</contact_max_correcting_vel>
+          <contact_surface_layer>0.01</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!-- ── System plugins ──────────────────────────────────────── -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+
+    <!-- ── Lighting ────────────────────────────────────────────── -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.85 0.85 0.80 1</diffuse>
+      <specular>0.15 0.15 0.12 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.3 0.2 -0.9</direction>
+    </light>
+
+    <!-- ── Lunar terrain ───────────────────────────────────────── -->
+    <include>
+      <uri>model://Moon_DEM</uri>
+    </include>
+
+    <!-- Scatter a few rocks for visual context -->
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 1</uri>
+      <name>rock_a</name>
+      <pose>-2.5  3.2  0  0  0  0.8</pose>
+    </include>
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 2</uri>
+      <name>rock_b</name>
+      <pose>1.8  -4.1  0  0  0 -1.2</pose>
+    </include>
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Falling Rock 4</uri>
+      <name>rock_c</name>
+      <pose>-3.6  -1.5  0  0  0  2.4</pose>
+    </include>
+
+    <!-- ══════════════════════════════════════════════════════════
+         Habitat structure — static model built from box primitives.
+         All walls 0.2m thick, 2.5m tall, grey concrete colour.
+         ══════════════════════════════════════════════════════════ -->
+    <model name="habitat">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+
+      <!-- ── Outer walls ─────────────────────────────────────── -->
+
+      <!-- North outer wall: x=3..12, y=+3 -->
+      <link name="wall_north">
+        <pose>7.5 3.1 1.25 0 0 0</pose>
+        <collision name="col"><geometry><box><size>9.2 0.2 2.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>9.2 0.2 2.5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.52 1</ambient><diffuse>0.55 0.55 0.52 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- South outer wall: x=3..12, y=-3 -->
+      <link name="wall_south">
+        <pose>7.5 -3.1 1.25 0 0 0</pose>
+        <collision name="col"><geometry><box><size>9.2 0.2 2.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>9.2 0.2 2.5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.52 1</ambient><diffuse>0.55 0.55 0.52 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- East outer wall: x=12, y=-3..+3 -->
+      <link name="wall_east">
+        <pose>12.1 0 1.25 0 0 0</pose>
+        <collision name="col"><geometry><box><size>0.2 6.4 2.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 6.4 2.5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.52 1</ambient><diffuse>0.55 0.55 0.52 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- West outer wall — north section: x=3, y=+1..+3 -->
+      <link name="wall_west_north">
+        <pose>2.9 2.0 1.25 0 0 0</pose>
+        <collision name="col"><geometry><box><size>0.2 2.2 2.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 2.2 2.5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.52 1</ambient><diffuse>0.55 0.55 0.52 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- West outer wall — south section: x=3, y=-3..-1 -->
+      <link name="wall_west_south">
+        <pose>2.9 -2.0 1.25 0 0 0</pose>
+        <collision name="col"><geometry><box><size>0.2 2.2 2.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 2.2 2.5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.52 1</ambient><diffuse>0.55 0.55 0.52 1</diffuse></material>
+        </visual>
+      </link>
+      <!-- Gap between west_north and west_south: y=-1..+1 (2m opening) -->
+
+      <!-- ── Corridor A internal walls ───────────────────────── -->
+      <!-- 0.8m clear width: inner faces at y=+0.4 and y=-0.4 -->
+
+      <!-- Corridor left wall: x=3..10, y=+0.5 (inner face at +0.4) -->
+      <link name="corridor_left">
+        <pose>6.5 0.5 1.25 0 0 0</pose>
+        <collision name="col"><geometry><box><size>7.0 0.2 2.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>7.0 0.2 2.5</size></box></geometry>
+          <material><ambient>0.60 0.58 0.55 1</ambient><diffuse>0.60 0.58 0.55 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- Corridor right wall: x=3..10, y=-0.5 (inner face at -0.4) -->
+      <link name="corridor_right">
+        <pose>6.5 -0.5 1.25 0 0 0</pose>
+        <collision name="col"><geometry><box><size>7.0 0.2 2.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>7.0 0.2 2.5</size></box></geometry>
+          <material><ambient>0.60 0.58 0.55 1</ambient><diffuse>0.60 0.58 0.55 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- Corridor dead-end wall: x=10, y=-0.4..+0.4 -->
+      <link name="corridor_end">
+        <pose>10.1 0 1.25 0 0 0</pose>
+        <collision name="col"><geometry><box><size>0.2 1.0 2.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.2 1.0 2.5</size></box></geometry>
+          <material><ambient>0.60 0.58 0.55 1</ambient><diffuse>0.60 0.58 0.55 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- ── Collapsed roof section (visual storytelling) ─────── -->
+      <!-- Tilted panel resting against the west opening — suggests meteorite damage -->
+      <link name="collapsed_panel_a">
+        <pose>3.5 0.7 1.5 0 0.5 0.3</pose>
+        <collision name="col"><geometry><box><size>2.0 0.8 0.08</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>2.0 0.8 0.08</size></box></geometry>
+          <material><ambient>0.45 0.43 0.40 1</ambient><diffuse>0.45 0.43 0.40 1</diffuse></material>
+        </visual>
+      </link>
+
+      <link name="collapsed_panel_b">
+        <pose>4.2 -0.9 2.0 0 -0.35 -0.2</pose>
+        <collision name="col"><geometry><box><size>1.8 0.6 0.08</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.8 0.6 0.08</size></box></geometry>
+          <material><ambient>0.45 0.43 0.40 1</ambient><diffuse>0.45 0.43 0.40 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- Debris blocks near the entrance -->
+      <link name="debris_1">
+        <pose>3.3 -0.6 0.15 0.1 0 0.4</pose>
+        <collision name="col"><geometry><box><size>0.4 0.3 0.3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.4 0.3 0.3</size></box></geometry>
+          <material><ambient>0.50 0.48 0.45 1</ambient><diffuse>0.50 0.48 0.45 1</diffuse></material>
+        </visual>
+      </link>
+
+      <link name="debris_2">
+        <pose>3.8 0.3 0.1 0 0.15 -0.3</pose>
+        <collision name="col"><geometry><box><size>0.3 0.25 0.2</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.3 0.25 0.2</size></box></geometry>
+          <material><ambient>0.50 0.48 0.45 1</ambient><diffuse>0.50 0.48 0.45 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- ── Leak marker ─────────────────────────────────────── -->
+      <!-- Red/orange cylinder on the floor at the corridor dead-end.
+           This is the mission objective — the rover needs to reach it. -->
+      <link name="leak_marker">
+        <pose>9.8 0 0.15 0 0 0</pose>
+        <visual name="vis">
+          <geometry><cylinder><radius>0.08</radius><length>0.3</length></cylinder></geometry>
+          <material>
+            <ambient>0.9 0.25 0.05 1</ambient>
+            <diffuse>0.9 0.25 0.05 1</diffuse>
+            <emissive>0.6 0.15 0.02 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

@@ -2,7 +2,7 @@
 {
   programs.nh = {
     enable = true;
-    flake = "/home/${username}/perseus-v2";
+    flake = "/home/${username}/perseus-lite";
   };
   home.packages = with pkgs; [
     nix-output-monitor
