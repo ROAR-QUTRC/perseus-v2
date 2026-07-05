@@ -197,15 +197,18 @@ version = "*"
 # Tasks (replace documented `nix develop -c ...` / colcon invocations)
 # ---------------------------------------------------------------------------
 [tasks]
-# Core workspace build — 15/17 packages build cleanly in the default env today.
+# Core workspace build — 14/17 packages build cleanly in the default env today.
 # Skipped (pending migration phases, see conda-recipes/README.md):
 #   perseus_lite_simulation -> Gazebo deps (use the `simulation` env)
 #   perseus_vision          -> needs onnxruntime-cpp (CUDA) (use the `machine-learning` env)
+#   perseus_lite_missions   -> exec_depends on perseus_lite_simulation, so it can
+#                              only build where that package is also built (use
+#                              the `simulation` env)
 # perseus_sensors builds here: its CMake add_subdirectory fallback compiles the
 # software/shared/{simple-networking,fd-wrapper,ptr-wrapper} libs in-tree.
-build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation perseus_vision", cwd = "software/ros_ws" }
+build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation perseus_vision perseus_lite_missions", cwd = "software/ros_ws" }
 # Build with tests enabled
-build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation perseus_vision", cwd = "software/ros_ws" }
+build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation perseus_vision perseus_lite_missions", cwd = "software/ros_ws" }
 # CI unit-test subset (mirrors CLAUDE.md pattern: Test.* prefix only).
 # perseus_lite_simulation tests run in the simulation env (see its tasks).
 test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
@@ -263,8 +266,10 @@ onnxruntime-cpp = "*" # C++ ONNX Runtime (CUDA build) for perseus_vision
 
 [feature.machine-learning.tasks]
 # The ml env has onnxruntime-cpp, so it builds the full workspace incl. vision.
-build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
-build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
+# perseus_lite_missions is skipped too: it exec_depends on perseus_lite_simulation,
+# which this env doesn't build (see the `default` feature's build task comment).
+build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation perseus_lite_missions", cwd = "software/ros_ws" }
+build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation perseus_lite_missions", cwd = "software/ros_ws" }
 test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_vision --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
 # Known gap (documented, not implemented): perseus_vision is not built in CI.
 # CI runners don't have the machine-learning env's CUDA toolkit/onnxruntime-cpp
