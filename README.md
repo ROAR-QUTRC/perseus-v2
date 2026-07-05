@@ -26,18 +26,18 @@ Which packages `build`/`build-test`/`test` cover depends on the environment
 `perseus_vision`, `simulation` includes `perseus_lite_simulation`,
 `machine-learning` includes `perseus_vision`.
 
-| Command        | Environment(s)                              | What it does                                                            |
-| -------------- | ------------------------------------------- | ----------------------------------------------------------------------- |
-| `build`        | `default`, `simulation`, `machine-learning` | `colcon build` the workspace                                            |
-| `build-test`   | `default`, `simulation`                     | Same build, with `-DBUILD_TESTING=ON`                                   |
-| `test`         | `default`, `simulation`                     | `colcon test` the workspace's test suite                                |
-| `bringup`      | `default`, `simulation`, `machine-learning` | Launch the robot (`perseus_lite.launch.py`) — real hardware             |
-| `bringup-mock` | `default`, `simulation`, `machine-learning` | Same launch, with mock hardware (`use_mock_hardware:=True`)             |
-| `clean`        | `default`, `simulation`, `machine-learning` | Remove `build/`, `install/`, `log/` from the colcon workspace           |
-| `sim`          | `simulation`                                | Build, then launch the full Gazebo simulation (`perseus_sim.launch.py`) |
-| `docs`         | `docs`                                      | Build the Sphinx documentation site                                     |
-| `fmt`          | `format`                                    | Apply formatting across the repo (`treefmt`)                            |
-| `fmt-check`    | `format`                                    | Check formatting without writing changes (CI mode)                      |
+| Command                 | Environment(s)                              | What it does                                                            |
+| ----------------------- | ------------------------------------------- | ----------------------------------------------------------------------- |
+| `pixi run build`        | `default`, `simulation`, `machine-learning` | `colcon build` the workspace                                            |
+| `pixi run build-test`   | `default`, `simulation`                     | Same build, with `-DBUILD_TESTING=ON`                                   |
+| `pixi run test`         | `default`, `simulation`                     | `colcon test` the workspace's test suite                                |
+| `pixi run bringup`      | `default`, `simulation`, `machine-learning` | Launch the robot (`perseus_lite.launch.py`) — real hardware             |
+| `pixi run bringup-mock` | `default`, `simulation`, `machine-learning` | Same launch, with mock hardware (`use_mock_hardware:=True`)             |
+| `pixi run clean`        | `default`, `simulation`, `machine-learning` | Remove `build/`, `install/`, `log/` from the colcon workspace           |
+| `pixi run sim`          | `simulation`                                | Build, then launch the full Gazebo simulation (`perseus_sim.launch.py`) |
+| `pixi run docs`         | `docs`                                      | Build the Sphinx documentation site                                     |
+| `pixi run fmt`          | `format`                                    | Apply formatting across the repo (`treefmt`)                            |
+| `pixi run fmt-check`    | `format`                                    | Check formatting without writing changes (CI mode)                      |
 
 See `pixi.toml` for the full environment/dependency definitions and
 `CLAUDE.md` for build details, migration notes, and known issues.
