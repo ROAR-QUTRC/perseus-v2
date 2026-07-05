@@ -197,7 +197,7 @@ version = "*"
 # Tasks (replace documented `nix develop -c ...` / colcon invocations)
 # ---------------------------------------------------------------------------
 [tasks]
-# Core workspace build — 12/13 packages build cleanly in the default env today.
+# Core workspace build — 14/16 packages build cleanly in the default env today.
 # Skipped (pending migration phases, see conda-recipes/README.md):
 #   perseus_lite_simulation -> Gazebo deps (use the `simulation` env)
 #   perseus_vision          -> needs onnxruntime-cpp (CUDA) (use the `machine-learning` env)
@@ -264,6 +264,8 @@ onnxruntime-cpp = "*" # C++ ONNX Runtime (CUDA build) for perseus_vision
 [feature.machine-learning.tasks]
 # The ml env has onnxruntime-cpp, so it builds the full workspace incl. vision.
 build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
+build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation", cwd = "software/ros_ws" }
+test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_vision --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
 # Known gap (documented, not implemented): perseus_vision is not built in CI.
 # CI runners don't have the machine-learning env's CUDA toolkit/onnxruntime-cpp
 # GPU build available, so no CI job currently builds/tests perseus_vision.
