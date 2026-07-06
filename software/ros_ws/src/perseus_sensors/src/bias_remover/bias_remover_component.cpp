@@ -31,12 +31,11 @@ namespace imu_processors
     {
     public:
         explicit BiasRemover(const rclcpp::NodeOptions& options)
-            : rclcpp::Node("imu_bias_remover", options)
+            : rclcpp::Node("imu_bias_remover", options),
+              imu_in_topic_{declare_parameter<std::string>("imu_in_topic", "imu")},
+              imu_out_topic_{declare_parameter<std::string>("imu_out_topic", "imu_bias_corrected")},
+              bias_in_topic_{declare_parameter<std::string>("bias_in_topic", "bias")}
         {
-            imu_in_topic_ = declare_parameter<std::string>("imu_in_topic", "imu");
-            imu_out_topic_ = declare_parameter<std::string>("imu_out_topic", "imu_bias_corrected");
-            bias_in_topic_ = declare_parameter<std::string>("bias_in_topic", "bias");
-
             zero_when_no_bias_ = declare_parameter<bool>("zero_when_no_bias", false);
 
             // Rate control (NEW)
