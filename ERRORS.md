@@ -3,6 +3,26 @@
 Defects found and fixed in this codebase, recorded per the error-tracking
 workflow. Review the **Prevention rules** before modifying the listed files.
 
+### ament_python tests silently skipped under `colcon test` in the RoboStack env — 2026-07-07
+
+- **Severity:** Medium
+- **Category:** Configuration
+- **File(s):** `software/ros_ws/src/perseus_lite_tui/pytest.ini`, `software/ros_ws/src/perseus_lite_tui/setup.py`, `software/ros_ws/src/perseus_lite_tui/ruff.toml`
+- **Pattern:** A new `ament_python` package's `pytest` suite does not actually run under `colcon test` in the Pixi/RoboStack Jazzy env, for two independent, compounding reasons that both fail _quietly_ (green build, no obvious error). (1) The env ships `launch_testing` / `launch_ros` pytest plugins whose hookimpls are incompatible with the env's pytest 9 (they declare a `path` arg / a `pytest_launch_collect_makemodule` hook that pytest 9 removed from the hookspec); loading either aborts **every** pytest invocation in the env with `PluginValidationError` before collection. (2) colcon's pytest test-step only _matches_ a package when its `setup.py` metadata declares a `test` dependency (`has_test_dependency` reads `tests_require` **or** `extras_require['test'/'tests'/'testing']`); with neither, colcon silently falls back to the `setup.py`/unittest runner, which finds nothing and exits 5 "NO TESTS RAN". Separately, `ruff format` (the repo treefmt formatter, double-quote default) and `ament_flake8` (enforces flake8-quotes Q000, single quotes) fight over every string literal in the package.
+- **Root cause:** The env's pytest was upgraded past the pinned launch_testing plugins' hookspec; and the repo's own `tests_require=` prohibition (2026-07-03 entry) removes the very metadata colcon uses to pick its pytest runner, so "no `tests_require`" + "nothing else declaring test deps" = unittest fallback.
+- **Fix applied:** Per-package `pytest.ini` with `addopts = -p no:launch_testing -p no:launch_ros` (these tests don't need either plugin), which colcon's `python -m pytest` subprocess honours via rootdir discovery. Declared the test dep as `extras_require={'test': ['pytest']}` (the non-deprecated form, so colcon selects its pytest step) rather than `tests_require=`. Added a package-local `ruff.toml` with `[format] quote-style = "single"` so the formatter and flake8 agree (docstrings stay triple-double, which flake8-quotes also wants). Verified: `colcon test --packages-select perseus_lite_tui` runs 45 pytest tests (incl. the ament lint trio) green, with `configfile: pytest.ini` and neither launch plugin loaded.
+- **Prevention rule:** For a new `ament_python` package that should be tested in CI, don't trust a green `colcon test` summary — confirm the pytest count is non-zero (`colcon test-result --verbose`, or read `build/<pkg>/pytest.xml`). Declare the pytest dep via `extras_require['test']` (never `tests_require=`), and if you add pytest lint/marker tests in this env, disable the launch_testing/launch_ros plugins in the package's `pytest.ini`. When adding Python to this repo, add a package-local `ruff.toml` pinning single quotes if the package's tests run `ament_flake8`.
+
+### Sphinx doctree cache published to Pages after switching to plain-builder invocation — 2026-07-07
+
+- **Severity:** Low
+- **Category:** Configuration
+- **File(s):** `pixi.toml`
+- **Pattern:** The Pixi `docs` task invoked Sphinx as `sphinx-build -b html source build/html` (plain builder mode) instead of the `-M html source build` "make mode" the old Nix build effectively used. In plain-builder mode, without an explicit `-d`, Sphinx writes its doctree cache to `<outdir>/.doctrees` — i.e. _inside_ `build/html` — so the Pages deploy step (`cp -RL docs/build/html/. _site/`) swept ~14 MB of build cache (incl. a ~6 MB `environment.pickle`) into the published site on every deploy. Harmless to page rendering but bloats the artifact and leaks internal build state.
+- **Root cause:** Porting the docs build to a hand-written `sphinx-build` command line dropped make-mode's implicit doctree/output separation, and no one checked the contents of the published output tree.
+- **Fix applied:** Added `-d build/doctrees` to the `docs` task command so the doctree cache lands in a sibling directory outside `build/html`. Verified: a clean `pixi run -e docs docs` produces `build/html` with no `.doctrees`/`*.pickle` and the cache in `build/doctrees` (14 MB) instead.
+- **Prevention rule:** When a build product is published/deployed by copying an output directory wholesale (`cp -RL <dir>`), verify the contents of that directory — build tools frequently drop caches/intermediates (`.doctrees`, `.cache`, sourcemaps) alongside the real output. Prefer the tool's mode that separates intermediates (Sphinx `-M`/`-d`) over a bare builder invocation.
+
 ### cppcheck static-analysis findings went unnoticed because the job was advisory-only — 2026-07-06
 
 - **Severity:** Low
