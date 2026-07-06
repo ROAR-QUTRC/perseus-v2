@@ -17,6 +17,7 @@ PURE_MODULES = (
     'perseus_lite_tui.persistence',
     'perseus_lite_tui.pixi_env',
     'perseus_lite_tui.registry',
+    'perseus_lite_tui.ros_monitor',
     'perseus_lite_tui.topic_stats',
 )
 

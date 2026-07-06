@@ -13,7 +13,15 @@
 import curses
 from pathlib import Path
 
-from perseus_lite_tui import config, jobs, layout, persistence, pixi_env
+from perseus_lite_tui import (
+    config,
+    jobs,
+    layout,
+    persistence,
+    pixi_env,
+    ros_monitor,
+    topic_stats,
+)
 from perseus_lite_tui.registry import (
     BOOL,
     build_launch_command,
@@ -24,14 +32,16 @@ from perseus_lite_tui.registry import (
 
 TAB_LAUNCH = 0
 TAB_TASKS = 1
-TAB_LOGS = 2
+TAB_MONITOR = 2
+TAB_LOGS = 3
 
-_TAB_TITLES = ['Launch', 'Tasks', 'Logs']
+_TAB_TITLES = ['Launch', 'Tasks', 'Monitor', 'Logs']
 
 _HINTS = {
-    TAB_LAUNCH: '↑↓ pick  ←→ option  l/enter launch  r reset  1-3 tabs  q quit',
-    TAB_TASKS: '↑↓ pick  l/enter run  1-3 tabs  q quit',
-    TAB_LOGS: '[ ] job  ↑↓ scroll  k stop  x clear finished  1-3 tabs  q quit',
+    TAB_LAUNCH: '↑↓ pick  ←→ option  l/enter launch  r reset  1-4 tabs  q quit',
+    TAB_TASKS: '↑↓ pick  l/enter run  1-4 tabs  q quit',
+    TAB_MONITOR: '↑↓ scroll  1-4 tabs  q quit',
+    TAB_LOGS: '[ ] job  ↑↓ scroll  k stop  x clear finished  1-4 tabs  q quit',
 }
 
 
@@ -53,6 +63,8 @@ class App:
         self.task_sel = 0
         self.log_sel = 0
         self.log_scroll = 0
+        self.mon_scroll = 0
+        self.monitor = ros_monitor.RosMonitor()
         self.status = ''
         self.colors = {}
         self.stdscr = None
@@ -65,6 +77,7 @@ class App:
             curses.wrapper(self._loop)
         finally:
             self.jobs.stop_all()
+            self.monitor.stop()
             persistence.save_selections(self.state_file, self.selections)
         return 0
 
@@ -73,6 +86,7 @@ class App:
         curses.curs_set(0)
         stdscr.timeout(100)
         self._init_colors()
+        self.monitor.start()
         while True:
             self._render()
             key = stdscr.getch()
@@ -132,6 +146,8 @@ class App:
             self._draw_launch(body_top, body_bottom)
         elif self.active == TAB_TASKS:
             self._draw_tasks(body_top, body_bottom)
+        elif self.active == TAB_MONITOR:
+            self._draw_monitor(body_top, body_bottom)
         else:
             self._draw_logs(body_top, body_bottom)
         self._addstr(maxy - 1, 0, self.status[:maxx], curses.A_BOLD)
@@ -203,6 +219,49 @@ class App:
             if task.note:
                 self._addstr(y, 56, task.note, curses.A_DIM)
             y += 1
+
+    def _draw_monitor(self, top: int, bottom: int) -> None:
+        if not self.monitor.available:
+            self._addstr(
+                top,
+                0,
+                self.monitor.error or 'ROS monitoring unavailable.',
+                self._color('dim'),
+            )
+            self._addstr(
+                top + 1,
+                0,
+                'The rest of the TUI works without ROS.',
+                curses.A_DIM,
+            )
+            return
+        rows = self.monitor.snapshot()
+        header = '{:<34}{:>8}  {:>6}  type'.format('topic', 'rate', 'age')
+        self._addstr(top, 0, header, curses.A_BOLD)
+        if not rows:
+            self._addstr(top + 1, 0, 'Waiting for topics…', curses.A_DIM)
+            return
+        height = max(1, bottom - (top + 1))
+        view, self.mon_scroll = layout.visible_slice(rows, self.mon_scroll, height)
+        y = top + 1
+        for row in view:
+            topic = row['topic']
+            age = row['age']
+            rate = topic_stats.format_rate(row['rate'])
+            stale = age is not None and topic_stats.is_stale(age)
+            attr = self._color('bad') if stale else self._color('running')
+            age_text = '     -' if age is None else f'{age:6.1f}'
+            self._addstr(y, 0, f'{topic:<34}')
+            self._addstr(y, 34, f'{rate:>8}', attr)
+            self._addstr(y, 44, age_text, attr)
+            self._addstr(y, 52, row['type'], curses.A_DIM)
+            y += 1
+
+    def _handle_monitor_key(self, key: int) -> None:
+        if key == curses.KEY_UP:
+            self.mon_scroll = max(0, self.mon_scroll - 1)
+        elif key == curses.KEY_DOWN:
+            self.mon_scroll += 1
 
     def _draw_logs(self, top: int, bottom: int) -> None:
         all_jobs = self.jobs.jobs()
@@ -358,7 +417,7 @@ class App:
     def _handle_key(self, key: int) -> bool:
         if key in (ord('q'), 27):
             return True
-        if key in (ord('1'), ord('2'), ord('3')):
+        if key in (ord('1'), ord('2'), ord('3'), ord('4')):
             self.active = key - ord('1')
             return False
         if key == ord('\t'):
@@ -371,6 +430,8 @@ class App:
             self._handle_launch_key(key)
         elif self.active == TAB_TASKS:
             self._handle_tasks_key(key)
+        elif self.active == TAB_MONITOR:
+            self._handle_monitor_key(key)
         else:
             self._handle_logs_key(key)
         return False
