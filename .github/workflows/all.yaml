@@ -27,10 +27,8 @@ jobs:
       - name: treefmt --ci
         run: pixi run -e format fmt-check
   static-analysis:
-    name: Static analysis (advisory)
+    name: Static analysis
     runs-on: ubuntu-latest
-    # Advisory only: findings annotate the run without blocking the merge
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Install cppcheck
