@@ -69,11 +69,9 @@ def canonical_value(option: Option, value: str) -> str:
 
 
 def option_args(profile: Profile, selections: Dict[str, str]) -> List[str]:
-    """Return `key:=value` args for options that differ from their default.
-
-    Emitting only changed options keeps a plain launch identical to the
-    hand-written pixi `bringup` task, so behaviour is easy to reason about.
-    """
+    """Return `key:=value` args only for options changed from their default."""
+    # Emitting only changed options keeps a plain launch identical to the
+    # hand-written pixi `bringup` task, so behaviour is easy to reason about.
     args: List[str] = []
     for option in profile.options:
         raw = selections.get(option.key, option.default)
@@ -86,14 +84,11 @@ def option_args(profile: Profile, selections: Dict[str, str]) -> List[str]:
 def build_launch_command(
     profile: Profile, selections: Dict[str, str], ros_ws: str
 ) -> List[str]:
-    """Build the argv that launches `profile` in its Pixi environment.
-
-    Everything is routed through `pixi run -e <env>` so the env's activation
-    (including the path-sanitize hook) runs first, and so simulation profiles
-    work even when the TUI itself is running in the default env. A plain
-    `bash -c` (not `-lc`) is used so a login shell can't re-source ~/.bashrc
-    and re-contaminate the environment after the sanitize hook ran.
-    """
+    """Build the argv that launches `profile` in its Pixi environment."""
+    # Routed through `pixi run -e <env>` so the env activation (incl. the
+    # path-sanitize hook) runs first and simulation profiles work from the
+    # default-env TUI. `bash -c` (not `-lc`) avoids re-sourcing ~/.bashrc and
+    # re-contaminating the environment after the sanitize hook ran.
     setup = shlex.quote(f'{ros_ws}/install/setup.bash')
     launch = ' '.join(
         [

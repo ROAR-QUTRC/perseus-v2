@@ -12,6 +12,7 @@ import sys
 
 PURE_MODULES = (
     'perseus_lite_tui.config',
+    'perseus_lite_tui.jobs',
     'perseus_lite_tui.layout',
     'perseus_lite_tui.persistence',
     'perseus_lite_tui.pixi_env',
