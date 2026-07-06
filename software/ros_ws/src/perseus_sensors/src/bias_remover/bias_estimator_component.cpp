@@ -20,14 +20,15 @@ namespace imu_processors
     {
     public:
         explicit BiasEstimator(const rclcpp::NodeOptions& options)
-            : rclcpp::Node("imu_bias_estimator", options)
+            : rclcpp::Node("imu_bias_estimator", options),
+              // Stationary policy: "OR" or "AND"
+              stationary_mode_{declare_parameter<std::string>("stationary_mode", "OR")},
+              // Topics
+              imu_in_topic_{declare_parameter<std::string>("imu_in_topic", "imu")},
+              bias_out_topic_{declare_parameter<std::string>("bias_out_topic", "bias")},
+              cmd_vel_topic_{declare_parameter<std::string>("cmd_vel_topic", "cmd_vel")},
+              odom_topic_{declare_parameter<std::string>("odom_topic", "odom")}
         {
-            // Topics
-            imu_in_topic_ = declare_parameter<std::string>("imu_in_topic", "imu");
-            bias_out_topic_ = declare_parameter<std::string>("bias_out_topic", "bias");
-            cmd_vel_topic_ = declare_parameter<std::string>("cmd_vel_topic", "cmd_vel");
-            odom_topic_ = declare_parameter<std::string>("odom_topic", "odom");
-
             // Behavior
             use_cmd_vel_ = declare_parameter<bool>("use_cmd_vel", false);
             use_odom_ = declare_parameter<bool>("use_odom", false);
@@ -35,9 +36,6 @@ namespace imu_processors
             alpha_ = declare_parameter<double>("accumulator_alpha", 0.01);
             cmd_vel_threshold_ = declare_parameter<double>("cmd_vel_threshold", 0.001);
             odom_threshold_ = declare_parameter<double>("odom_threshold", 0.001);
-
-            // Stationary policy: "OR" or "AND"
-            stationary_mode_ = declare_parameter<std::string>("stationary_mode", "OR");  // OR|AND
 
             // Rate control (NEW)
             estimator_rate_hz_ = declare_parameter<double>("estimator_rate_hz", 50.0);

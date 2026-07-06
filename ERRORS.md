@@ -3,6 +3,36 @@
 Defects found and fixed in this codebase, recorded per the error-tracking
 workflow. Review the **Prevention rules** before modifying the listed files.
 
+### cppcheck static-analysis findings went unnoticed because the job was advisory-only — 2026-07-06
+
+- **Severity:** Low
+- **Category:** Convention
+- **File(s):** `.github/workflows/all.yaml`, `software/ros_ws/src/perseus_sensors/src/bias_remover/bias_estimator_component.cpp`, `software/ros_ws/src/perseus_sensors/src/bias_remover/bias_remover_component.cpp`, `software/ros_ws/src/perseus_vision/src/aruco_detector.cpp`, `software/ros_ws/src/perseus_autonomy_bridge/src/nav2_waypoints_bridge.cpp`
+- **Pattern:** A `continue-on-error: true` CI job (`static-analysis`, ported from the old Nix CI's code-review-fixes PR) ran cppcheck on every push/PR but its findings never blocked a merge, so it silently stayed red across at least two PRs (the Pixi migration merge and whatever introduced the underlying issues) without anyone noticing. Findings: 8× `useInitializationList` (string parameters assigned in constructor bodies instead of the member-init list, in `BiasEstimator`/`BiasRemover`) and 2× `duplicateAssignExpression` (a `double min_x = corner[0].x, max_x = corner[0].x;` comma-declaration cppcheck reads as "the same expression assigned to two different variables," in `aruco_detector.cpp`'s bounding-box calculation). A related but separately-caught issue: an unused `req` parameter in `nav2_waypoints_bridge.cpp::on_cancel` produced a `-Wunused-parameter` build warning on every colcon build.
+- **Root cause:** Advisory-only CI checks are easy to ignore since a red status never blocks anything — the same failure mode as a check nobody looks at.
+- **Fix applied:** Moved the flagged `std::string` member assignments into the constructor member-initializer list (in declaration order, to avoid `-Wreorder`); split the `aruco_detector.cpp` comma-declarations into separate `min_x`/`max_x = min_x` (and `min_y`/`max_y`) statements — same seeding semantics, cppcheck no longer reads it as a duplicate expression; commented out the unused `req` parameter name in `on_cancel`. Removed `continue-on-error: true` from the `static-analysis` job now that the tree is clean, so future findings fail the PR. Verified: `cppcheck --enable=warning,performance,portability --std=c++20 --inline-suppr --error-exitcode=1 software/ros_ws/src software/shared software/arm-teleop-direct` exits 0; a clean (`rm -rf build install log`) `pixi run -e default build-test` produces zero stderr output (previously `perseus_autonomy_bridge` warned on every build).
+- **Prevention rule:** Don't add a CI check as `continue-on-error`/advisory-only as a permanent state — either fix it up and make it blocking promptly, or it will silently accumulate findings that nobody acts on. If a check must start advisory (e.g., to avoid blocking on a large pre-existing backlog), track "flip to blocking" as a concrete, time-boxed follow-up rather than leaving it indefinitely soft.
+
+### Docs env missing `graphviz`, only caught because no CI ever built docs on a PR — 2026-07-06
+
+- **Severity:** Medium
+- **Category:** Configuration
+- **File(s):** `pixi.toml`, `.github/workflows/all.yaml`
+- **Pattern:** The Pixi migration's `docs` feature ported `uv`/`doxygen` but not `graphviz`, even though several docs pages use `{graphviz}` directives (`sphinx_immaterial.graphviz`) that shell out to the `dot` binary at build time. This was a `documented gap, not implemented` note in `CLAUDE.md`, but nothing in CI actually built the Pixi docs env on a pull request — only `static.yml`'s push-to-`main` Pages deploy did, and that workflow still ran the _old_ Nix-based docs build (which had graphviz) right up until this same PR flipped it to Pixi. So the gap was invisible until a PR-time `Build docs` CI job was added as part of this same migration, at which point it failed outright with `FileNotFoundError: 'dot'`.
+- **Root cause:** A capability documented as "not yet ported" had no CI signal forcing it to be revisited, and the one workflow that _would_ have caught it (`static.yml`) was, until this PR, still running the old toolchain that didn't have the gap.
+- **Fix applied:** Added `graphviz = "*"` to `[feature.docs.dependencies]` in `pixi.toml`. Verified with `pixi run -e docs docs` locally (exit 0, 113 pre-existing/unrelated warnings) and via the new PR-time `Build docs` job in `all.yaml`.
+- **Prevention rule:** When porting a toolchain/environment (Nix shell → Pixi env, etc.), diff the old environment's package list against the new one line-by-line rather than relying on "it built once" — and give every build product (including docs) a CI job that runs on pull requests, not just on push to the default branch, so gaps surface before merge.
+
+### `perseus_lite_missions` unbuildable in envs that skip its `exec_depend` — 2026-07-06
+
+- **Severity:** Medium
+- **Category:** Configuration
+- **File(s):** `pixi.toml`
+- **Pattern:** `perseus_lite_missions` (`ament_python`) declares `<exec_depend>perseus_lite_simulation</exec_depend>`, but the `default` and `machine-learning` Pixi envs both `--packages-skip perseus_lite_simulation` in their build tasks. colcon's `ament_python` build task generates an environment hook that sources the exec_depend's install-space files, so building `perseus_lite_missions` in either env failed on a clean workspace with `Failed to find the following files: .../perseus_lite_simulation/share/perseus_lite_simulation/package.sh`. This passed locally the first time only because `perseus_lite_simulation` had already been built earlier in the same `software/ros_ws/install/` from prior work on the `simulation` env — a fresh CI runner caught it immediately.
+- **Root cause:** Adding a new package with a cross-package `exec_depend` without checking whether every env that would build it also builds (or skips) that dependency consistently.
+- **Fix applied:** Added `perseus_lite_missions` to the `--packages-skip` list alongside `perseus_lite_simulation` in both the `default` and `machine-learning` features' `build`/`build-test` tasks; it already builds correctly in `simulation`, where the dependency is present.
+- **Prevention rule:** When a new package's `package.xml` declares an `exec_depend` on another in-tree package, check every Pixi/colcon env's skip list for consistency between the two — and verify with a **fully clean** rebuild (`rm -rf build install log`), not an incremental one, since a stale `install/` directory from earlier env-switching can mask a missing-dependency bug.
+
 ### `gz sim`/`rviz2` GUI segfaults from a shared fontconfig cache — 2026-07-05
 
 - **Severity:** High
