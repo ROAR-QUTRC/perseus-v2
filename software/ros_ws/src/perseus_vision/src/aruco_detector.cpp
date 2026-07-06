@@ -267,8 +267,10 @@ namespace perseus_vision
 
                     // Calculate bounding box area for filtering
                     const auto& corner = corners[i];
-                    double min_x = corner[0].x, max_x = corner[0].x;
-                    double min_y = corner[0].y, max_y = corner[0].y;
+                    double min_x = corner[0].x;
+                    double max_x = min_x;
+                    double min_y = corner[0].y;
+                    double max_y = min_y;
 
                     for (const auto& pt : corner)
                     {
