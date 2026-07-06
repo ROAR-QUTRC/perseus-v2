@@ -183,7 +183,7 @@ private:
     }
 
     void on_cancel(
-        const std::shared_ptr<perseus_interfaces::srv::RunWaypoints::Request> req,
+        const std::shared_ptr<perseus_interfaces::srv::RunWaypoints::Request> /*req*/,
         std::shared_ptr<perseus_interfaces::srv::RunWaypoints::Response> resp)
     {
         if (!_active_goal)
