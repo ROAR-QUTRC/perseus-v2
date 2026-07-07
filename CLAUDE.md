@@ -151,6 +151,7 @@ Migration notes:
 | `perseus_interfaces`                                                    | Custom msg/srv definitions (shared)                                                                                                                                                                             |
 | `input_devices`, `perseus_input`, `perseus_input_config`                | Gamepad/keyboard input + routing                                                                                                                                                                                |
 | `teleop_diagnostics`                                                    | TUI debug for teleop (shared)                                                                                                                                                                                   |
+| `perseus_lite_tui`                                                      | Mission-control TUI (`pixi run tui`): launch/monitor/stop the stack, run dev tasks, live topic rates. ament_python + stdlib `curses`; rclpy is a soft dep. Its own `pytest.ini`/`ruff.toml` — see below.        |
 | `autonomy`, `perseus_autonomy_bridge`, `perseus_bt_nodes`, `pcl_to_lsr` | Nav2 / SLAM (slam_toolbox) / behavior trees / pointcloud→laserscan                                                                                                                                              |
 | `perseus_vision`                                                        | ONNX detectors (cube, ArUco)                                                                                                                                                                                    |
 | `perseus_lite_simulation`                                               | Gazebo sim forked from `perseus_simulation`; spawns the lite URDF, vendors `twist_mux` config (Phase 3).                                                                                                        |
@@ -298,7 +299,7 @@ keeping the deletions (`git rm` the paths during conflict resolution).
 1. Read this file end-to-end.
 2. `git fetch upstream && git log --oneline HEAD..upstream/main` — see
    pending upstream drift. Use `git cherry-pick`, not `git merge` (§6).
-3. `colcon list` in `software/ros_ws/` — should be 17 packages (16 from the
+3. `colcon list` in `software/ros_ws/` — should be 18 packages (17 from the
    KEEP table in §4, plus the vendored `twist_stamper`).
 4. Check `ERRORS.md` (per global rules) for any prevention rules touching
    files you plan to edit. Create `ERRORS.md` and log new bugs as

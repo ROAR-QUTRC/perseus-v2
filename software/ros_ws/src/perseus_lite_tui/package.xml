@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>perseus_lite_tui</name>
+  <version>0.1.0</version>
+  <description>Keyboard-driven curses mission-control TUI for launching, monitoring, and stopping the perseus-lite software stack.</description>
+  <maintainer email="nigel.hungerfordsymes@gmail.com">DingoOz</maintainer>
+  <license>MIT</license>
+
+  <!--
+    Only rclpy is declared. The TUI launches every ROS package by shelling out
+    through `pixi run`, never by importing it, so it must NOT depend on
+    perseus_lite / perseus_lite_simulation / etc. — those are skipped in the
+    default and machine-learning build envs and an exec_depend on them would
+    make this package unbuildable there (see ERRORS.md, 2026-07-06).
+  -->
+  <exec_depend>rclpy</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,9 @@
+# ament_flake8 (used by this package's test/test_flake8.py) enforces the
+# flake8-quotes Q000 rule, which requires single-quoted inline strings. The
+# repo-wide treefmt formatter is `ruff format`, whose default quote style is
+# double — so without this override, `pixi run -e format fmt` and the flake8
+# test would fight over every string literal. Pin ruff to single quotes for
+# this package only so the formatter and the linter agree. Docstrings stay
+# triple-double, which flake8-quotes also expects.
+[format]
+quote-style = "single"

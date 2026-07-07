@@ -211,11 +211,14 @@ build = { cmd = "colcon build --symlink-install --packages-skip perseus_lite_sim
 build-test = { cmd = "colcon build --symlink-install --cmake-args -DBUILD_TESTING=ON --packages-skip perseus_lite_simulation perseus_vision perseus_lite_missions", cwd = "software/ros_ws" }
 # CI unit-test subset (mirrors CLAUDE.md pattern: Test.* prefix only).
 # perseus_lite_simulation tests run in the simulation env (see its tasks).
-test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
+test = { cmd = "colcon test --packages-select perseus_lite_hardware perseus_lite perseus_lite_tui --return-code-on-test-failure --ctest-args -R 'Test\\.' && colcon test-result --verbose", cwd = "software/ros_ws" }
 # Convenience launchers. `ros2 launch` only sees ROS's own AMENT_PREFIX_PATH
 # entries, not the colcon workspace overlay, so source install/setup.bash first.
 bringup = { cmd = "bash -c 'source install/setup.bash && ros2 launch perseus_lite perseus_lite.launch.py'", cwd = "software/ros_ws" }
 bringup-mock = { cmd = "bash -c 'source install/setup.bash && ros2 launch perseus_lite perseus_lite.launch.py use_mock_hardware:=True'", cwd = "software/ros_ws" }
+# Mission-control TUI. Console scripts land in lib/<pkg> (not on PATH), so run
+# it via `ros2 run` after sourcing the overlay.
+tui = { cmd = "bash -c 'source install/setup.bash && ros2 run perseus_lite_tui perseus_tui'", cwd = "software/ros_ws" }
 clean = { cmd = "rm -rf build install log", cwd = "software/ros_ws" }
 
 # ---------------------------------------------------------------------------
