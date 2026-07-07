@@ -138,6 +138,23 @@ Migration notes:
   `mapping_using_slam_toolbox.launch.py`'s RViz). Verified with multiple
   clean 30-75s GUI runs under `sg render`, zero crashes.
 
+### Isaac ROS on the Jetson (Docker, not Pixi)
+
+GPU perception on the **Jetson Orin Nano** runs as **NVIDIA Isaac ROS in Docker**
+under `software/docker/isaac-ros/`, NOT in a Pixi env. Why: the Orin Nano is
+limited to **Isaac ROS 3.2 = ROS 2 Humble** (4.x is Jetson Thor–only), and
+Humble does **not** interoperate with this Jazzy host over raw DDS. So the Humble
+container graph runs on an **isolated `ROS_DOMAIN_ID=52`** and two
+`zenoh-bridge-ros2dds` services tunnel only `/perseus_isaac/*` (standard-typed)
+topics to the host on **51**. Domain map: **51** dev host / **42** legacy prod
+(unported) / **52** Isaac container — never reuse 52 for a host env. This is the
+aarch64/GPU answer to the "Jetson GPU inference deferred" gap; `perseus_vision`
+stays the x86 path. **Status: scaffold only — validated by `docker compose
+config` + lint/tests, not yet GPU-validated on hardware.** The
+`perseus_isaac_relay` package under `ws/` builds only inside the image, never by
+the host colcon workspace. Full runbook:
+`docs/source/systems/software/isaac-ros.md`.
+
 ## 4. What's lite-relevant vs upstream-only
 
 ### KEEP — used directly by lite
