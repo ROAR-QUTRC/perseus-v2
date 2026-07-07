@@ -231,6 +231,9 @@ celerybeat.pid
 
 # Environments
 .env
+# ...but the Isaac ROS stack ships committed, non-secret defaults (image pins,
+# domains, camera device) that docker compose / CI must see.
+!software/docker/isaac-ros/.env
 .venv
 env/
 venv/

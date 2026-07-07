@@ -13,6 +13,16 @@ workflow. Review the **Prevention rules** before modifying the listed files.
 - **Fix applied:** Per-package `pytest.ini` with `addopts = -p no:launch_testing -p no:launch_ros` (these tests don't need either plugin), which colcon's `python -m pytest` subprocess honours via rootdir discovery. Declared the test dep as `extras_require={'test': ['pytest']}` (the non-deprecated form, so colcon selects its pytest step) rather than `tests_require=`. Added a package-local `ruff.toml` with `[format] quote-style = "single"` so the formatter and flake8 agree (docstrings stay triple-double, which flake8-quotes also wants). Verified: `colcon test --packages-select perseus_lite_tui` runs 45 pytest tests (incl. the ament lint trio) green, with `configfile: pytest.ini` and neither launch plugin loaded.
 - **Prevention rule:** For a new `ament_python` package that should be tested in CI, don't trust a green `colcon test` summary — confirm the pytest count is non-zero (`colcon test-result --verbose`, or read `build/<pkg>/pytest.xml`). Declare the pytest dep via `extras_require['test']` (never `tests_require=`), and if you add pytest lint/marker tests in this env, disable the launch_testing/launch_ros plugins in the package's `pytest.ini`. When adding Python to this repo, add a package-local `ruff.toml` pinning single quotes if the package's tests run `ament_flake8`.
 
+### Committed docker `.env` silently swallowed by the global `.gitignore` — 2026-07-07
+
+- **Severity:** Medium
+- **Category:** Configuration
+- **File(s):** `.gitignore`, `software/docker/isaac-ros/.env`, `.github/workflows/all.yaml`
+- **Pattern:** A config file that is meant to be committed but whose name matches a broad `.gitignore` rule (here `.env`, ignored globally) is silently skipped by `git add <dir>` — no error, and it stays present on the author's disk. Every local check that reads it passes, but a fresh checkout (CI, another clone, the robot) doesn't have it. Here `docker compose config` passed locally and failed **only in CI** with `The "ISAAC_ROS_IMAGE" variable is not set` warnings → `service "bridge-jazzy" has neither an image nor a build context specified`, because docker compose loads `.env` from the project directory and the file simply wasn't in the CI checkout.
+- **Root cause:** The repo's `.gitignore` has a generic `.env` rule (Python-template origin); the new committed-on-purpose defaults file matched it, and `git add software/docker/` skipped it without complaint.
+- **Fix applied:** Added a negation `!software/docker/isaac-ros/.env` immediately after the `.env` rule so this specific non-secret file (image pins, ROS domains, camera device) is tracked, and committed it. Verified `git ls-files` now lists it and `docker compose -f .../compose.yaml config` resolves all variables from repo root.
+- **Prevention rule:** After adding a dotfile/config that must ship, confirm it is actually tracked (`git ls-files <path>` returns it, or `git status --ignored` shows it under "Ignored" if not) — a green local run of a tool that reads the file is NOT evidence it was committed. Watch specifically for `.env`, `.envrc`, `*.local`, and other names covered by broad ignore rules.
+
 ### Sphinx doctree cache published to Pages after switching to plain-builder invocation — 2026-07-07
 
 - **Severity:** Low
