@@ -1,0 +1,62 @@
+# Isaac ROS (ROS 2 Humble) perception stack for the Jetson Orin Nano, bridged to
+# the native Jazzy host stack over zenoh. See docs/source/systems/software/
+# isaac-ros.md for the architecture and the on-Jetson bring-up runbook.
+#
+# Domains: the Humble container graph runs isolated on ROS_DOMAIN_ID 52; the
+# host is 51. They never share a domain (raw Humble<->Jazzy DDS is incompatible)
+# — only the two zenoh bridges cross, over loopback TCP.
+#
+# GPU/Jetson only. Validate without a GPU via: docker compose config -q
+services:
+  # Isaac ROS perception graph (camera -> rectify -> apriltag + yolov8 + relay).
+  isaac:
+    build:
+      context: .
+      args:
+        ISAAC_ROS_IMAGE: ${ISAAC_ROS_IMAGE}
+    image: perseus-isaac:humble
+    runtime: nvidia
+    network_mode: host
+    ipc: host
+    restart: unless-stopped
+    environment:
+      ROS_DOMAIN_ID: ${ISAAC_DOMAIN_ID}
+      # Isaac images default to FastDDS; fine, since nothing crosses DDS to the
+      # host — the zenoh bridge is the only path off this domain.
+      RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+    devices:
+      - ${CAMERA_DEVICE}:${CAMERA_DEVICE}
+    volumes:
+      - ./config/camera_info:/opt/perseus/camera_info:ro
+      - isaac-models:/opt/perseus/models
+    command: ros2 launch perseus_isaac_relay perseus_isaac.launch.py
+  # zenoh bridge, Humble side: joins domain 52, forwards /perseus_isaac/* onto
+  # zenoh, and listens on loopback for the Jazzy-side bridge.
+  bridge-humble:
+    image: ${ZENOH_BRIDGE_IMAGE}
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - isaac
+    environment:
+      ROS_DOMAIN_ID: ${ISAAC_DOMAIN_ID}
+    volumes:
+      - ./config/zenoh-bridge-humble.json5:/config/zenoh-bridge.json5:ro
+    command: ["-c", "/config/zenoh-bridge.json5"]
+  # zenoh bridge, Jazzy side: joins the host domain 51 (rmw_cyclonedds_cpp),
+  # connects to the Humble-side bridge, and republishes /perseus_isaac/* to the
+  # host graph. Same pinned image tag as bridge-humble (zenoh versions must match).
+  bridge-jazzy:
+    image: ${ZENOH_BRIDGE_IMAGE}
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - bridge-humble
+    environment:
+      ROS_DOMAIN_ID: ${HOST_DOMAIN_ID}
+    volumes:
+      - ./config/zenoh-bridge-jazzy.json5:/config/zenoh-bridge.json5:ro
+    command: ["-c", "/config/zenoh-bridge.json5"]
+volumes:
+  # Caches the arch-specific TensorRT engine built on first run (see entrypoint).
+  isaac-models:

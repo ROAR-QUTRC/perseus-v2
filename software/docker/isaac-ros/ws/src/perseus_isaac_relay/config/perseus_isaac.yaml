@@ -1,0 +1,28 @@
+# Parameters for the Isaac ROS perception graph (perseus_isaac.launch.py).
+# Tune per camera/marker on-device. Node names match the launch file.
+usb_cam:
+  ros__parameters:
+    video_device: /dev/video0
+    image_width: 640
+    image_height: 480
+    pixel_format: yuyv
+    framerate: 30.0
+    frame_id: camera
+rectify:
+  ros__parameters:
+    output_width: 640
+    output_height: 480
+apriltag:
+  ros__parameters:
+    # tag36h11 is the default AprilTag family; size is the black-square edge in
+    # metres — measure your printed tag. Pose accuracy also needs a real camera
+    # calibration (see config/camera_info/).
+    family: tag36h11
+    size: 0.05
+    max_tags: 16
+
+# Phase 2 (documented, not wired in the launch yet): object detection via
+# isaac_ros_yolov8 + isaac_ros_tensor_rt using the cube model at
+# /opt/perseus/models/cube_detector_yolob8s.onnx. Its tensor input/output names
+# and dimensions are model-specific and must be confirmed on-device before
+# adding the chain — see docs/source/systems/software/isaac-ros.md.

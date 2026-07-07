@@ -1,0 +1,25 @@
+# PLACEHOLDER camera intrinsics (640x480 pinhole). Replace with a real
+# calibration for your USB/CSI camera before trusting AprilTag/detection poses:
+#   ros2 run camera_calibration cameracalibrator ...
+# The container's usb_cam node loads this via camera_info_url (see the launch
+# file). apriltag pose accuracy is only as good as this calibration.
+image_width: 640
+image_height: 480
+camera_name: default_camera
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [500.0, 0.0, 320.0, 0.0, 500.0, 240.0, 0.0, 0.0, 1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.0, 0.0, 0.0, 0.0, 0.0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [500.0, 0.0, 320.0, 0.0, 0.0, 500.0, 240.0, 0.0, 0.0, 0.0, 1.0, 0.0]

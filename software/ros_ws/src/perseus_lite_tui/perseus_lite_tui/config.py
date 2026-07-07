@@ -10,6 +10,10 @@ from perseus_lite_tui.registry import BOOL, Option, Profile, Task
 
 _MOCK = Option('use_mock_hardware', 'Mock hardware', BOOL, 'False')
 
+# Isaac ROS container stack (Jetson; see software/docker/isaac-ros/). Tasks run
+# with cwd=repo_root, so this repo-relative path resolves.
+_ISAAC_COMPOSE = 'software/docker/isaac-ros/compose.yaml'
+
 # Ordered as they appear in the Launch tab. Every launch_file is verified to
 # exist on disk by test/test_config.py, so a rename upstream fails the suite.
 PROFILES = (
@@ -139,4 +143,36 @@ TASKS = (
         note='linux-64 only.',
     ),
     Task('fmt', 'Format (treefmt)', ('pixi', 'run', '-e', 'format', 'fmt')),
+    # --- Isaac ROS (docker; Jetson only) -------------------------------------
+    Task(
+        'isaac_build',
+        'Isaac image build (docker)',
+        ('docker', 'compose', '-f', _ISAAC_COMPOSE, 'build'),
+        group='Isaac',
+        note='Jetson/GPU only; `docker login nvcr.io` may be required.',
+    ),
+    Task(
+        'isaac_up',
+        'Isaac ROS up (docker)',
+        ('docker', 'compose', '-f', _ISAAC_COMPOSE, 'up', '-d'),
+        group='Isaac',
+    ),
+    Task(
+        'isaac_down',
+        'Isaac ROS down (docker)',
+        ('docker', 'compose', '-f', _ISAAC_COMPOSE, 'down'),
+        group='Isaac',
+    ),
+    Task(
+        'isaac_logs',
+        'Isaac ROS logs (docker)',
+        ('docker', 'compose', '-f', _ISAAC_COMPOSE, 'logs', '-f', '--tail=100'),
+        group='Isaac',
+    ),
+    Task(
+        'isaac_status',
+        'Isaac ROS status (docker)',
+        ('docker', 'compose', '-f', _ISAAC_COMPOSE, 'ps'),
+        group='Isaac',
+    ),
 )

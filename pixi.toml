@@ -45,7 +45,9 @@ RCUTILS_COLORIZED_OUTPUT = "1"
 # has no equivalent split yet -- every env hardcodes the dev domain below.
 # Known gap (documented, not implemented): a production/release environment
 # or task override that sets ROS_DOMAIN_ID=42 has not been ported.
-ROS_DOMAIN_ID = "51" # dev domain (production used 42)
+# Domain 52 is RESERVED for the Isaac ROS Humble container graph (isolated from
+# this Jazzy host — see software/docker/isaac-ros/); never assign 52 to a host env.
+ROS_DOMAIN_ID = "51" # dev domain (production used 42; 52 = Isaac container)
 
 # ---------------------------------------------------------------------------
 # Build / host toolchain (conda-forge)
@@ -256,8 +258,10 @@ sim = { cmd = "bash -c 'source install/setup.bash && ros2 launch perseus_lite_si
 
 # ---------------------------------------------------------------------------
 # Feature: machine-learning (CUDA + onnxruntime GPU) — old `.#machineLearning`
-# linux-64 for now. Jetson (linux-aarch64/sbsa) GPU onnxruntime is deferred to
-# the hardware-validation phase — it needs Tegra-specific CUDA handling.
+# linux-64 for now. Jetson (linux-aarch64/sbsa) GPU inference is NOT done in this
+# env: on the Orin Nano it runs through the Isaac ROS Humble container instead
+# (see software/docker/isaac-ros/ + docs/source/systems/software/isaac-ros.md).
+# perseus_vision remains the x86 onnxruntime path built here.
 # ---------------------------------------------------------------------------
 [feature.machine-learning]
 platforms = ["linux-64"]

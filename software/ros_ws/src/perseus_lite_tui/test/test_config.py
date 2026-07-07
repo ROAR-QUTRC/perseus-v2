@@ -37,6 +37,18 @@ def test_every_profile_launch_file_exists():
     assert not missing, 'missing launch files: %s' % missing
 
 
+def test_isaac_compose_files_exist():
+    root = _repo_root()
+    compose_paths = set()
+    for task in config.TASKS:
+        argv = task.argv
+        if 'docker' in argv and '-f' in argv:
+            compose_paths.add(argv[argv.index('-f') + 1])
+    assert compose_paths, 'expected at least one docker compose task'
+    missing = [p for p in compose_paths if not (root / p).is_file()]
+    assert not missing, 'missing compose files: %s' % missing
+
+
 def test_simulation_profiles_are_gated():
     sim = [p for p in config.PROFILES if p.env == 'simulation']
     assert sim, 'expected at least one simulation profile'

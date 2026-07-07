@@ -1,0 +1,29 @@
+{
+  // zenoh-bridge-ros2dds — HUMBLE side (Isaac container graph).
+  //
+  // The ROS domain comes from the ROS_DOMAIN_ID env (ISAAC_DOMAIN_ID=52 in
+  // compose), so this file stays domain-agnostic. This bridge LISTENS on
+  // loopback; the Jazzy-side bridge connects to it. Multicast scouting is off
+  // so the two only ever find each other via the explicit endpoint — the
+  // Humble (52) and Jazzy (51) DDS graphs never cross-discover.
+  //
+  // Only /perseus_isaac/* result topics are forwarded (all standard message
+  // types — no Isaac-specific types cross the bridge; see the relay node).
+  mode: "peer",
+  listen: {
+    endpoints: ["tcp/127.0.0.1:7447"],
+  },
+  scouting: {
+    multicast: {
+      enabled: false,
+    },
+  },
+  plugins: {
+    ros2dds: {
+      allow: {
+        publishers: ["/perseus_isaac/.*"],
+        subscribers: ["/perseus_isaac/.*"],
+      },
+    },
+  },
+}
