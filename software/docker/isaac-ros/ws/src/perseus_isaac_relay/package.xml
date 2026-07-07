@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>perseus_isaac_relay</name>
+  <version>0.1.0</version>
+  <description>Converts Isaac ROS (Humble) perception outputs to standard message types for zenoh-bridging to the perseus-lite Jazzy host, plus the composable launch graph.</description>
+  <maintainer email="nigel.hungerfordsymes@gmail.com">DingoOz</maintainer>
+  <license>MIT</license>
+
+  <!--
+    Humble-only package, built ONLY inside the Isaac ROS container image
+    (software/docker/isaac-ros/Dockerfile). It is deliberately outside
+    software/ros_ws so the host colcon workspace never tries to build it — the
+    Jazzy host cannot provide isaac_ros_apriltag_interfaces.
+  -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>vision_msgs</exec_depend>
+  <exec_depend>diagnostic_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>isaac_ros_apriltag_interfaces</exec_depend>
+
+  <!-- Nodes launched by perseus_isaac.launch.py (provided by the base image). -->
+  <exec_depend>isaac_ros_apriltag</exec_depend>
+  <exec_depend>isaac_ros_yolov8</exec_depend>
+  <exec_depend>isaac_ros_tensor_rt</exec_depend>
+  <exec_depend>isaac_ros_image_proc</exec_depend>
+  <exec_depend>usb_cam</exec_depend>
+  <exec_depend>topic_tools</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
