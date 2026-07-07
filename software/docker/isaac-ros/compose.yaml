@@ -1,0 +1,35 @@
+# Isaac ROS (ROS 2 Humble) perception stack for the Jetson Orin Nano, bridged to
+# the native Jazzy host stack over zenoh. See docs/source/systems/software/
+# isaac-ros.md for the architecture and the on-Jetson bring-up runbook.
+#
+# Domains: the Humble container graph runs isolated on ROS_DOMAIN_ID 52; the
+# host is 51. They never share a domain (raw Humble<->Jazzy DDS is incompatible)
+# — only the two zenoh bridges cross, over loopback TCP.
+#
+# GPU/Jetson only. Validate without a GPU via: docker compose config -q
+services:
+  # Isaac ROS perception graph (camera -> rectify -> apriltag + yolov8 + relay).
+  isaac:
+    build:
+      context: .
+      args:
+        ISAAC_ROS_IMAGE: ${ISAAC_ROS_IMAGE}
+    image: perseus-isaac:humble
+    runtime: nvidia
+    network_mode: host
+    ipc: host
+    restart: unless-stopped
+    environment:
+      ROS_DOMAIN_ID: ${ISAAC_DOMAIN_ID}
+      # Isaac images default to FastDDS; fine, since nothing crosses DDS to the
+      # host — the zenoh bridge is the only path off this domain.
+      RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+    devices:
+      - ${CAMERA_DEVICE}:${CAMERA_DEVICE}
+    volumes:
+      - ./config/camera_info:/opt/perseus/camera_info:ro
+      - isaac-models:/opt/perseus/models
+    command: ros2 launch perseus_isaac_relay perseus_isaac.launch.py
+volumes:
+  # Caches the arch-specific TensorRT engine built on first run (see entrypoint).
+  isaac-models:
