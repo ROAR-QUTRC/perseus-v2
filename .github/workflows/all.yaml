@@ -79,3 +79,10 @@ jobs:
           cache: true
       - name: Build docs
         run: pixi run -e docs docs
+  compose-validate:
+    name: Validate Isaac compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker compose
+        run: docker compose -f software/docker/isaac-ros/compose.yaml config -q
