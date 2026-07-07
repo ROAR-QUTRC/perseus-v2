@@ -1,0 +1,27 @@
+{
+  // zenoh-bridge-ros2dds — JAZZY side (native host stack).
+  //
+  // The ROS domain comes from the ROS_DOMAIN_ID env (HOST_DOMAIN_ID=51 in
+  // compose), matching the host's rmw_cyclonedds_cpp graph. This bridge
+  // CONNECTS to the Humble-side bridge over loopback; multicast scouting is off.
+  //
+  // Republishes the /perseus_isaac/* topics received over zenoh into the host
+  // graph. Same allow-list as the other side so nothing else is bridged.
+  mode: "peer",
+  connect: {
+    endpoints: ["tcp/127.0.0.1:7447"],
+  },
+  scouting: {
+    multicast: {
+      enabled: false,
+    },
+  },
+  plugins: {
+    ros2dds: {
+      allow: {
+        publishers: ["/perseus_isaac/.*"],
+        subscribers: ["/perseus_isaac/.*"],
+      },
+    },
+  },
+}

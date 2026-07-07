@@ -30,6 +30,33 @@ services:
       - ./config/camera_info:/opt/perseus/camera_info:ro
       - isaac-models:/opt/perseus/models
     command: ros2 launch perseus_isaac_relay perseus_isaac.launch.py
+  # zenoh bridge, Humble side: joins domain 52, forwards /perseus_isaac/* onto
+  # zenoh, and listens on loopback for the Jazzy-side bridge.
+  bridge-humble:
+    image: ${ZENOH_BRIDGE_IMAGE}
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - isaac
+    environment:
+      ROS_DOMAIN_ID: ${ISAAC_DOMAIN_ID}
+    volumes:
+      - ./config/zenoh-bridge-humble.json5:/config/zenoh-bridge.json5:ro
+    command: ["-c", "/config/zenoh-bridge.json5"]
+  # zenoh bridge, Jazzy side: joins the host domain 51 (rmw_cyclonedds_cpp),
+  # connects to the Humble-side bridge, and republishes /perseus_isaac/* to the
+  # host graph. Same pinned image tag as bridge-humble (zenoh versions must match).
+  bridge-jazzy:
+    image: ${ZENOH_BRIDGE_IMAGE}
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - bridge-humble
+    environment:
+      ROS_DOMAIN_ID: ${HOST_DOMAIN_ID}
+    volumes:
+      - ./config/zenoh-bridge-jazzy.json5:/config/zenoh-bridge.json5:ro
+    command: ["-c", "/config/zenoh-bridge.json5"]
 volumes:
   # Caches the arch-specific TensorRT engine built on first run (see entrypoint).
   isaac-models:
