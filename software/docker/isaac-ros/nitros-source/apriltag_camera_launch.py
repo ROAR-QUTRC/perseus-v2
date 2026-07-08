@@ -25,7 +25,7 @@ from launch import LaunchDescription
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
-THIS_DIR = os.path.dirname(__file__)
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def generate_launch_description():
