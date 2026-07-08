@@ -535,3 +535,78 @@ test, since the ground-truth ap test above only used a static image.
 10 Hz) → `apriltag` directly, publishing `/tag_detections` and per-tag TF
 frames (`tag36h11:<id>`) at a steady 10 Hz. RViz visualization from a
 second machine: see `nitros-source/README.md` "Live camera test."
+
+Also found and fixed a bug in *our own* launch file while getting this far:
+`os.path.dirname(__file__)` stays relative when `ros2 launch` is invoked
+with a relative path (as `run_test_apriltags.sh` does) — this produced an
+invalid `file://../camera_c920_info.yaml` calibration URL, which `usb_cam`
+silently failed to load, falling back to an all-zero `camera_info`. Corner/
+ID detection doesn't need the K matrix, so it kept working — but pose
+estimation produced `NaN`, which is also why the `camera` TF frame appeared
+to never exist (it only shows up as the parent of a *published* transform,
+and nothing valid was ever published). Fixed with `os.path.abspath()`.
+
+### Root-caused: the rectify+apriltag crash is a genuine race condition
+
+Confirmed via a controlled experiment: launched the **full**
+`camera → rectify → apriltag` graph (`usb_cam` → `RectifyNode` →
+`AprilTagNode`, the actual deployed pipeline, not the rectify-skipping
+workaround) wrapped in `gdb -batch -ex run -ex "thread apply all bt"`.
+**It ran stably for several minutes with all three nodes loaded,
+`/tag_detections` publishing at a steady 10 Hz — no crash.** Running the
+identical graph without `gdb` crashes reproducibly within ~1 second of
+`apriltag` finishing its `load_node` call, every time. That's the
+signature of a genuine data race: `gdb`'s ptrace overhead perturbs
+scheduling enough to avoid whatever timing window the bug depends on.
+
+**Where the race most likely lives, based on reading the actual code**
+(not yet proven with a live backtrace — gdb's startup overhead when
+loading debug info for this many shared libraries made getting one
+impractical in reasonable time; a core-dump-based post-mortem approach
+was set up but not completed before the gdb experiment already gave a
+confident answer):
+
+- `RectifyNode` subscribes to `image_raw` as a NITROS-native `NitrosImage`
+  (`isaac_ros_image_pipeline/isaac_ros_image_proc/src/rectify_node.cpp`).
+  `usb_cam` is a plain RoboStack node with no NITROS awareness — it can
+  only ever publish genuine wire-format `sensor_msgs/Image`. rclcpp's
+  `TypeAdapter<NitrosImage, sensor_msgs::msg::Image>::convert_to_custom`
+  (`isaac_ros_nitros_type/isaac_ros_nitros_image_type/src/nitros_image.cpp`)
+  is what bridges this: it `cudaMallocAsync`s a fresh device buffer and
+  `cudaMemcpyAsync`s the host image into it — **on a CUDA stream acquired
+  from a separate, global `CudaStreamPool`**, not `RectifyNode`'s own
+  dedicated `cuda_stream_` (created in its constructor via
+  `createCudaStream("RectifyNode")`).
+- By contrast, `RectifyNode`'s own output (`image_rect`) is a **native**
+  NITROS-to-NITROS hop into `AprilTagNode` — no `TypeAdapter` conversion,
+  no second stream involved. This asymmetry matches the crash pattern
+  exactly: the only foreign→NITROS conversion in this graph is the
+  `usb_cam → rectify` hop, and that's the one that's timing-sensitive.
+- The cross-stream handoff is *supposed* to be safe — `NitrosBuffer`'s
+  `WriteHandle`/`ReadHandle` (`isaac_ros_nitros/include/isaac_ros_nitros/types/nitros_buffer.hpp`)
+  implement exactly this via CUDA events: a `WriteHandle`'s destructor
+  records an event on its stream, and a subsequent `ReadHandle` does
+  `cudaStreamWaitEvent` against it before the consumer stream touches the
+  data. Somewhere in that handshake — plausibly the exact moment
+  `convert_to_custom`'s local `write_handle` destructs (finalizing the
+  write event) relative to when `RectifyNode::InputCallback` calls
+  `image->get_read_handle(*cuda_stream_)` and then immediately builds an
+  `nvcv::Tensor` from the result — there's a window where the tensor gets
+  wrapped around a pointer/state that isn't valid yet, which NVCV's own
+  validation catches as "the tensor handle is null" the instant
+  `remap_op_` tries to use it.
+
+**This is very likely an upstream NVIDIA bug** (in `isaac_ros_nitros_image_type`'s
+`TypeAdapter` or the `NitrosBuffer` event-synchronization contract), not
+something in code we wrote, and not specific to this from-source build —
+it would presumably reproduce on an official NGC-image deployment too, any
+time a non-NITROS-aware camera driver feeds a NITROS-consuming node
+directly. Not fixed here; `apriltag_camera_launch.py` continues to work
+around it by skipping `RectifyNode` entirely. If picking this up again:
+a live `gdb` backtrace at the actual crash point (not just "does it crash
+under gdb at all") would confirm this precisely — try starting `gdb`
+detached from the process group so its own I/O buffering doesn't hide the
+node-loading log lines (that delay is what made the first gdb attempt look
+hung), or use `rr` (record-and-replay) if available, which is specifically
+built for pinning down non-deterministic race conditions like this one
+without perturbing timing on replay.
