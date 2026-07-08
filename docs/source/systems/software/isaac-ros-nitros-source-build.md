@@ -465,10 +465,73 @@ NITROS-wrapped tensor → VPI/cuAprilTag GPU detection → `AprilTagDetectionArr
 (not just "the process didn't crash") for a real perception algorithm,
 across three additional NVIDIA-maintained native libraries (VPI, CV-CUDA,
 plus the AprilTag detector itself) all functioning correctly together on
-this hardware/JetPack combination. Not yet exercised: a live camera (this
-used a static test image, not `usb_cam`/Argus), and the
-`isaac_ros_image_proc::RectifyNode` half of the real pipeline (the ground
-truth test bypasses rectify, publishing pre-rectified-equivalent camera
-info directly) — the existing `software/docker/isaac-ros/` scaffold's graph
-is camera → rectify → apriltag; this only validated the apriltag stage in
-isolation.
+this hardware/JetPack combination.
+
+### Stage 4 follow-up — live camera (Logitech C920): works, with a real bug found in rectify+apriltag
+
+Added `ros-jazzy-usb-cam` to the `isaac-nitros` Pixi feature and a
+`pixi run -e isaac-nitros test-apriltags` task
+(`run_test_apriltags.sh` → `apriltag_camera_launch.py`) for a live-camera
+test, since the ground-truth ap test above only used a static image.
+
+**Two more issues found, one fixed, one worked around (not yet root-caused):**
+
+1. **Resolution/calibration mismatch in NVIDIA's own bundled config.**
+   `isaac_ros_apriltag_usb_cam.launch.py` + `usb_cam_params.yaml` doesn't
+   set `image_width`/`image_height`, so `usb_cam` defaults to capturing
+   640×480 — but the bundled `camera_info.yaml` it loads is calibrated for
+   1280×720. `usb_cam` still publishes that mismatched calibration on
+   `/camera_info` without erroring, and `RectifyNode` then produces a
+   wrongly-scaled `/image_rect`. Fixed by writing our own
+   `camera_c920_params.yaml` (1280×720 capture, matching a
+   `camera_c920_info.yaml` also at 1280×720) and our own launch file rather
+   than editing NVIDIA's installed config (which colcon would overwrite on
+   rebuild anyway). **Caveat:** `camera_c920_info.yaml`'s intrinsics are
+   NVIDIA's own placeholder test values, not a real calibration for this
+   physical C920 — fine for demoing detection, not for trusting the
+   reported pose. A real calibration needs
+   `ros2 run camera_calibration cameracalibrator` with a checkerboard.
+
+2. **`rectify` → `apriltag` on live camera frames reproducibly crashes —
+   not yet root-caused.**
+   ```
+   terminate called after throwing an instance of 'nvcv::Exception'
+     what():  NVCV_ERROR_INVALID_OPERATION: The tensor handle is null.
+   ```
+   Isolated carefully (each combination tested independently, with a clean
+   process state — an earlier false lead came from a zombie `ros2 launch`
+   process left over from a prior crash still holding the `apriltag_container`
+   node name, which produced a *different*, misleading symptom: the next
+   launch attempt hung indefinitely with zero node-loading progress. Always
+   force-kill (`pkill -9 -f component_container_mt`) and verify with `ps`
+   before re-testing after a crash.):
+   - `apriltag` alone (static test image, no rectify): works
+     (Stage 4 ground-truth test, and again standalone here).
+   - `rectify` + `apriltag` loaded together, **no live frames flowing**
+     (no publisher feeding rectify): loads fine, no crash.
+   - `usb_cam` + `rectify` + `apriltag`, **live frames actively flowing**:
+     crashes consistently, within ~1 second of `apriltag` finishing its
+     `load_node` call — i.e. specifically when `apriltag` starts actually
+     consuming `rectify`'s live NITROS-wrapped image output, not during
+     either node's own initialization alone.
+   - Node load order doesn't matter (tried apriltag-before-usb_cam too;
+     same crash once real frames reach the rectify→apriltag handoff).
+
+   This points at the interaction between `RectifyNode`'s NITROS/CV-CUDA
+   image output and `AprilTagNode`'s consumption of it under real
+   throughput — plausibly related to the still-unresolved `CUDA
+   architectures: 75` vs `87` question from Stage 0, or a CV-CUDA
+   version/ABI mismatch specific to that data path, but not confirmed.
+   **Worked around, not fixed:** `apriltag_camera_launch.py` skips
+   `RectifyNode` entirely and feeds `usb_cam`'s raw image straight to
+   `AprilTagNode`. Verified stable (`/tag_detections` publishing steadily
+   at 10 Hz, matching the camera's framerate, no crash) — but the C920's
+   lens distortion goes uncorrected, so corner/pose accuracy is worse than
+   the rectified path would give. Revisit this if accurate pose (not just
+   "is a tag visible") matters later.
+
+**Result:** live AprilTag detection works —
+`pixi run -e isaac-nitros test-apriltags` launches `usb_cam` (1280×720,
+10 Hz) → `apriltag` directly, publishing `/tag_detections` and per-tag TF
+frames (`tag36h11:<id>`) at a steady 10 Hz. RViz visualization from a
+second machine: see `nitros-source/README.md` "Live camera test."

@@ -301,8 +301,64 @@ pixi run -e isaac-nitros bash -c '
 pkill -f component_container_mt   # clean up when done
 ```
 
-Not yet exercised: a live camera (this test publishes a static PNG, not
-`usb_cam`/Argus) and `isaac_ros_image_proc::RectifyNode` (the ground truth
-fixture bypasses rectify) — the real deployed graph is
-camera → rectify → apriltag, and only the apriltag stage has been validated
-in isolation so far.
+Not yet exercised (at the time the section above was written): a live
+camera and `isaac_ros_image_proc::RectifyNode` — see the next section for
+both, plus a real bug found in the rectify+apriltag combination.
+
+## Live camera test (Logitech C920) + RViz on a different machine
+
+```console
+pixi run -e isaac-nitros test-apriltags
+```
+
+Launches `usb_cam` (1280×720, 10 Hz, `/dev/video0`) → `apriltag` directly —
+publishes `/tag_detections` and a TF frame per detected tag
+(`tag36h11:<id>`) at a steady 10 Hz. Point the C920 at a printed AprilTag
+(`tag36h11` family) to see it.
+
+**Note: this graph skips `RectifyNode`.** `rectify` → `apriltag` on live
+camera frames reproducibly crashes
+(`nvcv::Exception: NVCV_ERROR_INVALID_OPERATION: The tensor handle is
+null.`) — root cause not yet identified, see
+`isaac-ros-nitros-source-build.md`'s "Stage 4 follow-up" section. Detection
+works fine without rectify; the C920's lens distortion just goes
+uncorrected, so trust tag presence/ID but not precise pose numbers (the
+bundled `camera_c920_info.yaml` is also NVIDIA's placeholder calibration,
+not a real one for this camera — see that file's header for how to
+generate a real one).
+
+### Viewing it in RViz from another machine (e.g. your laptop)
+
+This publishes on the same ROS graph as the rest of the robot
+(`ROS_DOMAIN_ID=51`, `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp`, both set by
+`pixi.toml`'s `[activation.env]`). Your laptop needs to join that same
+graph:
+
+1. **Same domain, compatible RMW.** On your laptop, before starting RViz:
+   ```console
+   export ROS_DOMAIN_ID=51
+   export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp   # match the robot's RMW
+   ```
+   (Different RMW vendors — e.g. Fast DDS on your laptop vs Cyclone DDS
+   here — are not guaranteed to discover each other even on the same
+   domain ID. Use Cyclone DDS on both sides to avoid that entirely.)
+2. **Network reachability.** Same LAN/Wi-Fi, no client isolation blocking
+   multicast/UDP between the two machines (a common failure mode on
+   guest/corporate Wi-Fi — a home network or a switch you control is
+   simplest).
+3. **RViz needs `isaac_ros_apriltag_interfaces`** installed to know the
+   `AprilTagDetectionArray` message type if you want to inspect it directly
+   (not needed just to see the `Image` + `TF` displays below, which are
+   both standard types).
+4. **Open RViz with the bundled config**, copied from this directory to
+   your laptop: `apriltag_camera.rviz` (our own — adapted from NVIDIA's
+   `isaac_ros_apriltag/rviz/usb_cam.rviz`, which points at `/image_rect`;
+   ours points at `/image_raw` since this graph skips rectify):
+   ```console
+   rviz2 -d apriltag_camera.rviz
+   ```
+   Fixed Frame is `camera`; you should see the live image, and when a tag
+   is in view, a `tag36h11:<id>` TF frame will appear (axes drawn relative
+   to the camera). No config file handy? Just open RViz, set Fixed Frame to
+   `camera`, add an `Image` display on `/image_raw`, and add a `TF`
+   display — that's the whole config.

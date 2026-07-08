@@ -353,6 +353,7 @@ cmake = ">=3.22,<4"
 ninja = "*"
 colcon-common-extensions = "*"
 magic_enum = "*" # isaac_ros_gxf/isaac_ros_nitros build dep, not in RoboStack
+ros-jazzy-usb-cam = "*" # Stage 4 live-camera test (test-apriltags task)
 
 [feature.isaac-nitros.tasks]
 # NOTE: isaac-ros-cli is NOT pip-installable — it ships as a .deb
@@ -360,6 +361,13 @@ magic_enum = "*" # isaac_ros_gxf/isaac_ros_nitros build dep, not in RoboStack
 # sudo. That's a system-level install this feature deliberately does NOT
 # attempt (see nitros-source/README.md for why) — this env only provides the
 # plain colcon/cmake toolchain for a manual, non-CLI build attempt.
+#
+# Live-camera AprilTag test: usb_cam -> rectify -> apriltag (NVIDIA's own
+# isaac_ros_apriltag_usb_cam.launch.py, installed into ws/install already —
+# not copied/modified). See nitros-source/README.md "Live camera test" for
+# the RViz setup (their bundled usb_cam.rviz already points at the right
+# topics: /image_rect + TF).
+test-apriltags = { cmd = "bash run_test_apriltags.sh", cwd = "software/docker/isaac-ros/nitros-source" }
 
 # ---------------------------------------------------------------------------
 # Environment composition

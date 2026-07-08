@@ -1,0 +1,37 @@
+# usb_cam params for a Logitech C920, used by the Stage 4 live-camera
+# AprilTag test (pixi run -e isaac-nitros test-apriltags). Our own file, not
+# NVIDIA's -- NVIDIA's own isaac_ros_apriltag/config/usb_cam_params.yaml
+# doesn't set image_width/image_height, so usb_cam defaults to 640x480 while
+# their bundled camera_info.yaml is calibrated for 1280x720 -- a silent
+# resolution mismatch (image_raw was 640x480, camera_info claimed 1280x720,
+# rectify then output a wrongly-scaled 1280x720 image). This file captures
+# at 1280x720 to match camera_c920_info.yaml's dimensions instead.
+#
+# 1280x720 YUYV on the C920 tops out around 10 Hz (see `v4l2-ctl
+# --list-formats-ext` -- MJPEG mode supports higher framerates at this
+# resolution but usb_cam's yuyv2rgb pixel_format here expects YUYV, not
+# MJPEG). Fine for a "point the camera at a tag and watch it" demo.
+/**:
+    ros__parameters:
+      video_device: "/dev/video0"
+      image_width: 1280
+      image_height: 720
+      framerate: 10.0
+      io_method: "mmap"
+      frame_id: "camera"
+      pixel_format: "yuyv2rgb"
+      camera_name: "c920"
+      # camera_info_url is overridden at launch time by apriltag_camera_launch.py
+      # (needs an absolute file:// path; this directory isn't an installed
+      # ROS package so there's no package:// URL to use).
+      brightness: -1
+      contrast: -1
+      saturation: -1
+      sharpness: -1
+      gain: -1
+      auto_white_balance: true
+      white_balance: 4000
+      autoexposure: true
+      exposure: 100
+      autofocus: false
+      focus: -1
