@@ -9,6 +9,13 @@ Scaffold lives in `software/docker/isaac-ros/`. It is validated by
 GPU-validated on hardware** — the build/run steps below are the on-Jetson
 bring-up runbook.
 
+This robot's Jetson has since moved to **JetPack 7**, which NVIDIA's Isaac
+ROS 4.x line doesn't yet support on Orin (Thor-only today). The runbook below
+still targets JetPack 6.x per NVIDIA's shipped binaries. A separate,
+experimental from-source build attempt for Orin+JetPack7 is tracked in
+[isaac-ros-nitros-source-build.md](isaac-ros-nitros-source-build.md) — not
+required reading unless you're picking up that effort.
+
 ## Why containers, and why a bridge
 
 Two hard facts shape the whole design:

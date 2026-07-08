@@ -371,3 +371,17 @@ Temporary Items
 
 # pixi/agent session data
 .claude/
+
+# NITROS/GXF from-source build experiment: cloned NVIDIA repos + build output.
+# Source-available/proprietary-licensed, not ours to redistribute — see
+# docs/source/systems/software/isaac-ros-nitros-source-build.md. Everything
+# else under nitros-source/ (our own README/scripts) IS committed.
+/software/docker/isaac-ros/nitros-source/isaac_ros_common/
+/software/docker/isaac-ros/nitros-source/isaac_ros_nitros/
+/software/docker/isaac-ros/nitros-source/gxf/
+/software/docker/isaac-ros/nitros-source/negotiated/
+/software/docker/isaac-ros/nitros-source/build/
+/software/docker/isaac-ros/nitros-source/install/
+/software/docker/isaac-ros/nitros-source/log/
+/software/docker/isaac-ros/nitros-source/ws/
+/software/docker/isaac-ros/nitros-source/gxf_smoke_test

@@ -325,6 +325,43 @@ fmt = "treefmt --allow-missing-formatter"
 fmt-check = "treefmt --allow-missing-formatter --ci"
 
 # ---------------------------------------------------------------------------
+# Feature: isaac-nitros (NITROS/GXF from-source build experiment) — Jetson
+# (linux-aarch64) only. See software/docker/isaac-ros/nitros-source/README.md
+# and docs/source/systems/software/isaac-ros-nitros-source-build.md for the
+# staged plan. Provides a self-contained Python/build toolchain without
+# touching system apt packages: this host has no system pip/venv installed,
+# and CLAUDE.md already flags system-package contamination as a hazard
+# elsewhere (see "System-ROS contamination hazard") — same reasoning applies
+# here, so this stays inside the Pixi-managed prefix.
+# ---------------------------------------------------------------------------
+[feature.isaac-nitros]
+platforms = ["linux-aarch64"]
+
+[feature.isaac-nitros.dependencies]
+python = ">=3.11"
+pip = "*"
+c-compiler = "*"
+cxx-compiler = "*"
+# NOTE: several isaac_ros_nitros CMakeLists.txt files misuse $<INSTALL_PREFIX>
+# (a generator expression only valid inside install(EXPORT)) directly in
+# target properties, which CMake rejects ("should never be evaluated").
+# Confirmed NOT a CMake-version issue -- fails identically on 3.31.8 and 4.3.4
+# -- so this pin is NOT a fix; the actual fix is a local sed patch on the
+# cloned (gitignored) source. Kept <4 only because that's what was tested
+# alongside the patch. See isaac-ros-nitros-source-build.md Stage 1 notes.
+cmake = ">=3.22,<4"
+ninja = "*"
+colcon-common-extensions = "*"
+magic_enum = "*" # isaac_ros_gxf/isaac_ros_nitros build dep, not in RoboStack
+
+[feature.isaac-nitros.tasks]
+# NOTE: isaac-ros-cli is NOT pip-installable — it ships as a .deb
+# (`sudo apt-get install isaac-ros-cli`) and `isaac-ros init` itself requires
+# sudo. That's a system-level install this feature deliberately does NOT
+# attempt (see nitros-source/README.md for why) — this env only provides the
+# plain colcon/cmake toolchain for a manual, non-CLI build attempt.
+
+# ---------------------------------------------------------------------------
 # Environment composition
 # ---------------------------------------------------------------------------
 [environments]
@@ -336,3 +373,4 @@ simulation = { features = ["simulation"] }
 machine-learning = { features = ["machine-learning"] }
 docs = { features = ["docs"], no-default-feature = true }
 format = { features = ["format"], no-default-feature = true }
+isaac-nitros = { features = ["isaac-nitros"] }
