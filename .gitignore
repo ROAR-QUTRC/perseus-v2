@@ -380,6 +380,9 @@ Temporary Items
 /software/docker/isaac-ros/nitros-source/isaac_ros_nitros/
 /software/docker/isaac-ros/nitros-source/gxf/
 /software/docker/isaac-ros/nitros-source/negotiated/
+/software/docker/isaac-ros/nitros-source/isaac_ros_apriltag/
+/software/docker/isaac-ros/nitros-source/isaac_ros_image_pipeline/
+/software/docker/isaac-ros/nitros-source/__pycache__/
 /software/docker/isaac-ros/nitros-source/build/
 /software/docker/isaac-ros/nitros-source/install/
 /software/docker/isaac-ros/nitros-source/log/

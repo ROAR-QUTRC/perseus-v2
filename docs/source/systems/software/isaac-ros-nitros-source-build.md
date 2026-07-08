@@ -376,3 +376,99 @@ Still unresolved from Stage 0: the `CUDA architectures: 75` vs `87`
 discrepancy — now more relevant, since Stage 3 compiled real NITROS C++
 (unlike Stage 1's prebuilt GXF binaries). Worth checking whether Orin-native
 (SM 8.7) codegen is actually happening before scaling this up.
+
+### Stage 4 — result: SUCCESS, real AprilTag detection matches NVIDIA's exact ground truth
+
+Built `isaac_ros_apriltag` (real perception, not just NITROS plumbing) and
+its dependency chain: `isaac_ros_vpi_utils`, `isaac_ros_cvcuda_utils`,
+`isaac_ros_image_proc`, `isaac_ros_nitros_camera_info_type`. Two more repos
+cloned (same gitignore treatment as before, not committed):
+[NVIDIA-ISAAC-ROS/isaac_ros_apriltag](https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_apriltag)
+and
+[NVIDIA-ISAAC-ROS/isaac_ros_image_pipeline](https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_image_pipeline)
+(contains `isaac_ros_image_proc`, `isaac_ros_cvcuda_utils`,
+`isaac_ros_vpi_utils`, plus depth/stereo variants we didn't need).
+
+**A new external dependency, resolved via a different channel than
+Isaac ROS's own binaries:** `isaac_ros_image_proc` (and `isaac_ros_cvcuda_utils`)
+directly requires NVIDIA's **CV-CUDA** library (`cvcuda0-dev`), which isn't in
+any apt repo here. Unlike GXF, CV-CUDA is a
+[separately maintained, actively released open-source project](https://github.com/CVCUDA/CV-CUDA)
+(Apache-2.0) with its own GitHub releases — found a prebuilt `.deb` matching
+this exact platform: `cvcuda-{lib,dev}-0.16.0-cuda13-aarch64-linux.deb`.
+Downloaded and `sudo dpkg -i`'d both (lib first, then dev).
+
+Four more build-recipe snags, all following patterns already established in
+Stages 1/3:
+
+1. **VPI/CV-CUDA headers not found despite being installed** — same root
+   cause as `magic_enum` in Stage 3: conda-forge's cross-compiler doesn't
+   search `/usr/include` (even though `/usr/include/vpi` and
+   `/usr/include/cvcuda` are valid `update-alternatives` symlinks to
+   `/opt/nvidia/{vpi4,cvcuda0}/include`). Fixed by pointing `CXXFLAGS`
+   directly at `/opt/nvidia/vpi4/include` and `/opt/nvidia/cvcuda0/include`
+   — **not** `-I/usr/include` broadly, which was tried first and **broke
+   the build worse**: it made the conda cross-compiler pick up the host's
+   `glibc` `features.h` ahead of its own bundled one, cascading into
+   `bits/timesize.h: No such file or directory` (a header that exists in
+   Ubuntu's glibc layout but not where conda's toolchain expects it). Scope
+   `-I` additions to the exact directory needed, never a broad system path.
+2. **`isaac_ros_cvcuda_utils`'s library needed `-L`/`-rpath` for
+   `/opt/nvidia/cvcuda0/lib`** too — added via `LDFLAGS`.
+3. **Test executables in `isaac_ros_cvcuda_utils` hit the same
+   conda-toolchain-vs-native-glibc linking failure as the Stage 1 GXF smoke
+   test** (`undefined reference to dlopen@GLIBC_2.34` etc.) — but this time
+   there were many of them across multiple packages, so re-linking each
+   individually with the system compiler wasn't practical. Used
+   `--cmake-args -DBUILD_TESTING=OFF` instead once the actual libraries were
+   confirmed building fine; skips gtest binaries for these packages, not
+   full build breakage.
+4. **`colcon build --packages-select isaac_ros_apriltag` alone fails** even
+   though `isaac_ros_image_proc` is only an `exec_depend`, not a `depend` —
+   colcon's `ament_cmake` build task sources every dependency's environment
+   hook (`package.sh`) regardless of depend type, so `isaac_ros_image_proc`
+   genuinely has to be built first regardless of whether apriltag's own
+   compiled code touches it.
+5. `isaac_ros_image_proc` itself just took a while to compile (real CUDA/
+   CV-CUDA kernel code) — ran it in the background rather than assuming a
+   hang.
+
+**Verification — not just "it compiles," but a pixel-exact match against
+NVIDIA's own test fixture.** `isaac_ros_apriltag` ships a real ground-truth
+test case (`isaac_ros_apriltag/test/test_cases/apriltag0/`: a `1920x1080`
+PNG with a physical `tag36h11` id=0 tag, matching `camera_info.json`, and
+exact expected corner/center/pose values baked into
+`isaac_ros_apriltag_pol_test.py`). Running that official test needs
+`isaac_ros_test` (torch, again) — wrote `apriltag_check.py` instead: loads
+the same PNG via `cv_bridge`, publishes it + the camera info, subscribes to
+`tag_detections`, and checks the detection against NVIDIA's exact expected
+values (2px corner/center tolerance, matching their own test).
+
+```
+$ ros2 launch apriltag_launch.py &
+...
+[apriltag]: Using cuAprilTag implementation.
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/apriltag' in container '/apriltag_container'
+
+$ python3 apriltag_check.py
+[apriltag_check]: sent=5 received=True
+id=0 family=tag36h11 center=(926.0,547.0) expected_center=(926.0, 547.0)
+APRILTAG OK
+```
+
+Exact pixel match (`926.0, 547.0`) against NVIDIA's own precomputed ground
+truth — this is real `cuAprilTag`/VPI-based detection producing correct
+results, on this Orin Nano, under JetPack 7, end to end: image →
+NITROS-wrapped tensor → VPI/cuAprilTag GPU detection → `AprilTagDetectionArray`.
+
+**What Stage 4 establishes beyond Stage 3:** actual GPU compute correctness
+(not just "the process didn't crash") for a real perception algorithm,
+across three additional NVIDIA-maintained native libraries (VPI, CV-CUDA,
+plus the AprilTag detector itself) all functioning correctly together on
+this hardware/JetPack combination. Not yet exercised: a live camera (this
+used a static test image, not `usb_cam`/Argus), and the
+`isaac_ros_image_proc::RectifyNode` half of the real pipeline (the ground
+truth test bypasses rectify, publishing pre-rectified-equivalent camera
+info directly) — the existing `software/docker/isaac-ros/` scaffold's graph
+is camera → rectify → apriltag; this only validated the apriltag stage in
+isolation.

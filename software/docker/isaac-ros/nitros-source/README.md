@@ -1,13 +1,15 @@
 # NITROS/GXF from-source build experiment (Orin + JetPack 7)
 
-**Status: Stages 0–3 succeeded.** A real NITROS round trip (two chained
-`NitrosNode`s, negotiation, GXF graph execution) runs on this Jetson Orin
-Nano under JetPack 7 using self-built binaries — see Stage 3 below. This is
-a separate track from the working `software/docker/isaac-ros/` scaffold
-(which targets JetPack 6.x via NVIDIA's prebuilt image) — it exists because
-NVIDIA hasn't shipped Isaac ROS binaries for Orin+JetPack7 yet, and we're
-building our own from source as a stopgap. Stage 4 (real perception
-packages — `isaac_ros_apriltag`/`isaac_ros_image_proc`) is not started.
+**Status: Stages 0–4 all succeeded.** Real AprilTag detection
+(`isaac_ros_apriltag`, VPI/cuAprilTag) running on this Jetson Orin Nano
+under JetPack 7 using entirely self-built binaries, verified to a **pixel-exact
+match** against NVIDIA's own ground-truth test fixture — see Stage 4 below.
+This is a separate track from the working `software/docker/isaac-ros/`
+scaffold (which targets JetPack 6.x via NVIDIA's prebuilt image) — it exists
+because NVIDIA hasn't shipped Isaac ROS binaries for Orin+JetPack7 yet, and
+we're building our own from source as a stopgap. Not yet exercised: a live
+camera (Stage 4 used a static test image) and the rectify half of the real
+camera→rectify→apriltag pipeline.
 
 Full background, findings, and the staged plan: see
 `docs/source/systems/software/isaac-ros-nitros-source-build.md`. Read that
@@ -215,3 +217,92 @@ If you see `sent=N received=0` with the container log showing both nodes
 `from`/`to` strings are absolute (leading `/`). A relative remap resolves
 *inside the node's own namespace* — `('mid1/x', 'y')` on a node namespaced
 `mid1` silently becomes `/mid1/mid1/x`, matching nothing.
+
+## Stage 4 — real perception: `isaac_ros_apriltag` + `isaac_ros_image_proc`
+
+**Result: yes — pixel-exact match against NVIDIA's own ground truth.** See
+`isaac-ros-nitros-source-build.md` for the full story. Two more repos, and a
+dependency resolved through a different channel than Isaac ROS's own
+binaries (NVIDIA's separately-released, actively-maintained
+[CV-CUDA](https://github.com/CVCUDA/CV-CUDA), Apache-2.0):
+
+```console
+git clone --depth 1 https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_apriltag
+# This repo is large enough that a plain `git clone` can time out fetching
+# LFS content — skip the smudge, clone fast, then pull LFS deliberately:
+GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 \
+  https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_image_pipeline
+cd isaac_ros_image_pipeline && git lfs install --local && git lfs pull && cd ..
+
+ln -sfn ../../isaac_ros_apriltag ws/src/isaac_ros_apriltag
+ln -sfn ../../isaac_ros_image_pipeline ws/src/isaac_ros_image_pipeline
+
+# CV-CUDA (cvcuda0-dev) isn't in any apt repo, but CV-CUDA publishes its own
+# GitHub release .debs -- find the one matching this platform (CUDA 13,
+# aarch64) and install lib before dev:
+curl -fSLO https://github.com/CVCUDA/CV-CUDA/releases/download/v0.16.0/cvcuda-lib-0.16.0-cuda13-aarch64-linux.deb
+curl -fSLO https://github.com/CVCUDA/CV-CUDA/releases/download/v0.16.0/cvcuda-dev-0.16.0-cuda13-aarch64-linux.deb
+sudo dpkg -i cvcuda-lib-0.16.0-cuda13-aarch64-linux.deb
+sudo dpkg -i cvcuda-dev-0.16.0-cuda13-aarch64-linux.deb
+
+cd ws
+pixi run -e isaac-nitros bash -c '
+  export CUDAToolkit_ROOT=/usr/local/cuda
+  export CUDACXX=/usr/local/cuda/bin/nvcc
+  export PATH=/usr/local/cuda/bin:$PATH
+  # VPI and CV-CUDA headers: same conda-sysroot issue as magic_enum in Stage 3
+  # -- point CXXFLAGS at the exact include dirs. Do NOT add a bare
+  # -I/usr/include "to be safe": it shadows condas own glibc headers with the
+  # hosts and breaks the build worse (bits/timesize.h: No such file, in gtest).
+  export CXXFLAGS="-I$CONDA_PREFIX/include/magic_enum -I/opt/nvidia/vpi4/include -I/opt/nvidia/cvcuda0/include"
+  export LDFLAGS="-L/opt/nvidia/cvcuda0/lib -Wl,-rpath,/opt/nvidia/cvcuda0/lib"
+  # BUILD_TESTING=OFF: several gtest binaries in these packages hit the same
+  # conda-toolchain-vs-native-glibc link failure as the Stage 1 smoke test,
+  # too many to individually re-link with the system compiler. The actual
+  # libraries build and link fine either way.
+  colcon build --packages-select isaac_ros_cvcuda_utils --cmake-args -DBUILD_TESTING=OFF
+  colcon build --packages-select isaac_ros_image_proc --cmake-args -DBUILD_TESTING=OFF
+  colcon build --packages-select isaac_ros_apriltag --cmake-args -DBUILD_TESTING=OFF
+'
+cd ..
+```
+
+`isaac_ros_image_proc` takes a few minutes (real CUDA/CV-CUDA kernel
+compilation) — run it in the background rather than assuming a hang.
+`colcon build --packages-select isaac_ros_apriltag` alone fails even though
+`isaac_ros_image_proc` is only its `exec_depend`: colcon's `ament_cmake`
+build task sources every dependency's environment hook regardless of
+depend type, so `image_proc` has to actually be built first.
+
+Verification uses NVIDIA's own ground-truth fixture
+(`isaac_ros_apriltag/isaac_ros_apriltag/test/test_cases/apriltag0/`) rather
+than a synthetic message, via `apriltag_launch.py` +
+`apriltag_check.py` in this directory (our own code — loads the same PNG
+via `cv_bridge`, bypassing `isaac_ros_test`'s torch dependency same as
+Stage 3):
+
+```console
+GXF_LIB_DIRS=$(find ws/install -type d -path "*/gxf/lib/*" ! -name test | tr '\n' ':')
+INSTALL_LIB_DIRS=$(find ws/install -maxdepth 2 -type d -name lib | tr '\n' ':')
+EXTRA_LIB_DIRS="/opt/nvidia/vpi4/lib/aarch64-linux-gnu:/opt/nvidia/cvcuda0/lib:"
+
+pixi run -e isaac-nitros bash -c "
+  source ws/install/setup.bash
+  export LD_LIBRARY_PATH=\"$GXF_LIB_DIRS$INSTALL_LIB_DIRS$EXTRA_LIB_DIRS\$LD_LIBRARY_PATH\"
+  ros2 launch apriltag_launch.py &
+"
+sleep 5
+pixi run -e isaac-nitros bash -c '
+  source ws/install/setup.bash
+  python3 apriltag_check.py
+'
+# Expect: id=0 family=tag36h11 center=(926.0,547.0) expected_center=(926.0, 547.0)
+#         APRILTAG OK
+pkill -f component_container_mt   # clean up when done
+```
+
+Not yet exercised: a live camera (this test publishes a static PNG, not
+`usb_cam`/Argus) and `isaac_ros_image_proc::RectifyNode` (the ground truth
+fixture bypasses rectify) — the real deployed graph is
+camera → rectify → apriltag, and only the apriltag stage has been validated
+in isolation so far.
