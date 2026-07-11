@@ -108,9 +108,7 @@ def generate_launch_description():
         name="rviz2",
         arguments=[
             "-d",
-            PathJoinSubstitution(
-                [fast_livo_share, "rviz_cfg", "fast_livo2.rviz"]
-            ),
+            PathJoinSubstitution([fast_livo_share, "rviz_cfg", "fast_livo2.rviz"]),
         ],
         output="screen",
     )
