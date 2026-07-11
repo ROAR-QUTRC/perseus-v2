@@ -35,6 +35,7 @@ let
       livox-ros-driver2
       vikit-common
       vikit-ros
+      fast-livo2
       rviz2-fixed
       rosbag2
       teleop-twist-keyboard
