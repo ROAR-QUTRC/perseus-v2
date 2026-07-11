@@ -10,6 +10,7 @@ let
     ndt-omp-ros2 = individualFinal.callPackage ./ndt-omp-ros2 { };
     vikit-common = individualFinal.callPackage ./vikit-common { inherit sophus; };
     vikit-ros = individualFinal.callPackage ./vikit-ros { inherit sophus; };
+    fast-livo2 = individualFinal.callPackage ./fast-livo2 { inherit sophus; };
   };
 in
 prev.lib.composeManyExtensions [
