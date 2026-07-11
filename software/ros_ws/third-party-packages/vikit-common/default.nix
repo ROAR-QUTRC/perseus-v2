@@ -9,6 +9,7 @@
 # installed headers and library.
 {
   lib,
+  stdenv,
   buildRosPackage,
   fetchFromGitHub,
   ament-cmake,
@@ -40,14 +41,19 @@ buildRosPackage {
   #
   # Also strip `-march=native`: it bakes the build machine's ISA into the
   # artifact, which breaks reproducibility and risks SIGILL when a binary-cached
-  # build (e.g. from CI) is run on robot hardware with a different CPU. The
-  # x86/ARM baseline `-msse*/-march=armv8-a` flags the CMakeLists already sets
-  # for each architecture are kept.
+  # build (e.g. from CI) is run on robot hardware with a different CPU.
   postPatch = ''
     substituteInPlace CMakeLists.txt \
       --replace-warn "-std=c++0x" "-std=c++17" \
       --replace-warn "-std=c++11" "-std=c++17" \
       --replace-warn "-march=native " ""
+  ''
+  # Upstream gates ARM detection on the ARM_ARCHITECTURE env var, which is never
+  # set inside the Nix sandbox, so it applies x86 SSE flags (-msse*, -mmmx) even
+  # on aarch64, where g++ rejects them. Strip those flags on non-x86 platforms.
+  + lib.optionalString (!stdenv.hostPlatform.isx86_64) ''
+    substituteInPlace CMakeLists.txt \
+      --replace-warn "-mmmx -msse -msse -msse2 -msse3 -mssse3" ""
   '';
 
   buildType = "ament_cmake";
