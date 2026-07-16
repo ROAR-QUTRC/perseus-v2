@@ -50,7 +50,7 @@
 				)
 			)
 		)
-		(property "Description" "Smart High-Side Power Switch, PROFET, One Channel, 12V, 15A, Rds(on) 4.4mΩ, PG-TSDSO-14-22"
+		(property "Description" "Power Switch/Driver 1:1 N-Channel 60V 90A PG-HSOF-8-5"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)

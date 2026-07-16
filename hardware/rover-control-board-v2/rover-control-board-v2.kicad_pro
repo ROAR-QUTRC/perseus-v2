@@ -480,7 +480,7 @@
         "uuid": "ed12625f-743c-4dd1-a6f4-666aeca01e2d"
       }
     ],
-    "used_designators": "C1-10,D1-4,#PWR1-20,R1-26,Q1-4,U1-2,PCB1",
+    "used_designators": "J1-3,#SYM1,C1-10,D1-7,#PWR1-21,R1-27,F1,Q1-4,U1-2,PCB1",
     "variants": []
   },
   "sheets": [
@@ -494,7 +494,27 @@
     ],
     [
       "0908bc3c-1fb6-460e-9344-2bebf88f9dfa",
-      "aux smart switch1"
+      "aux1 smart switch"
+    ],
+    [
+      "de2ba33d-2eb5-4503-8ffe-434831759cab",
+      "aux2 smart switch"
+    ],
+    [
+      "73a73000-cf0b-4c5a-90a4-95feeece42ec",
+      "drive1 smart switch1"
+    ],
+    [
+      "1a90740a-57be-4c5f-b4c6-c88339c95d6a",
+      "drive2 smart switch2"
+    ],
+    [
+      "18172300-b21b-47f6-82c0-7255681f8d1c",
+      "external smart switch"
+    ],
+    [
+      "f186a5df-bce3-4173-b0d9-882f1a8a692c",
+      "contactor"
     ]
   ],
   "text_variables": {
