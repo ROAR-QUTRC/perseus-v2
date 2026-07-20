@@ -171,6 +171,21 @@ let
         }
       );
 
+      # rviz-ogre-vendor builds OGRE via ExternalProject but omits zlib from its
+      # inputs. Without a store zlib, OGRE's FindZLIB falls back to the host
+      # /usr/lib/aarch64-linux-gnu/libz.so on aarch64, which Nix's purity check
+      # rejects ("impure path used in link"), breaking the ARM build. Add the
+      # nixpkgs zlib so the store copy is found instead.
+      rviz-ogre-vendor = rosPrev.rviz-ogre-vendor.overrideAttrs (
+        {
+          buildInputs ? [ ],
+          ...
+        }:
+        {
+          buildInputs = buildInputs ++ [ final.zlib ];
+        }
+      );
+
       perseus-input = rosPrev.perseus-input.overrideAttrs (
         {
           propagatedBuildInputs ? [ ],
