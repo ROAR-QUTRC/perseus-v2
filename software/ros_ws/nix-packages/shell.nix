@@ -110,6 +110,7 @@ pkgs.mkShell {
           twist-mux
           twist-stamper
           urdf
+          v4l2-camera
           visualization-msgs
           xacro
           yaml-cpp-vendor
