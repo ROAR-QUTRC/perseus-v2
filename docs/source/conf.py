@@ -144,25 +144,30 @@ suppress_warnings = ["myst.strikethrough"]
 
 ros_distro = os.environ.get("ROS_DISTRO", "jazzy")
 # intersphinx config
-# If you're adding a site to this list, you also need to add it to the Github Actions workflow
-# to allow intersphinx to access the site during a build
+# We point at locally-cached inventory files (./intersphinx/*.inv) rather than
+# fetching each site's objects.inv live at build time. docs.ros.org now sits
+# behind an anti-bot wall (Anubis) that serves an HTML challenge to CI runners
+# instead of the inventory, which broke every `ros:*` cross-reference and, with
+# Sphinx `-W`, failed the whole docs build. Local inventories remove that network
+# dependency entirely. Refresh them with the `docs.fetch-inventories` script.
+# If you add a site here, also add its inventory to ./intersphinx.
 # this is a good guide: https://docs.readthedocs.io/en/stable/guides/intersphinx.html
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-    "ros": (f"https://docs.ros.org/en/{ros_distro}", None),
-    "sphinx": ("https://www.sphinx-doc.org/en/master", None),
+    "python": ("https://docs.python.org/3", "./intersphinx/python.inv"),
+    "ros": (f"https://docs.ros.org/en/{ros_distro}", "./intersphinx/ros.inv"),
+    "sphinx": ("https://www.sphinx-doc.org/en/master", "./intersphinx/sphinx.inv"),
     "myst": (
         "https://myst-parser.readthedocs.io/en/latest",
-        None,
+        "./intersphinx/myst.inv",
     ),
     "breathe": (
         "https://breathe.readthedocs.io/en/stable",
-        None,
+        "./intersphinx/breathe.inv",
     ),
-    "exhale": ("https://exhale.readthedocs.io/en/stable", None),
+    "exhale": ("https://exhale.readthedocs.io/en/stable", "./intersphinx/exhale.inv"),
     "sphinx-immaterial": (
         "https://jbms.github.io/sphinx-immaterial",
-        None,
+        "./intersphinx/sphinx-immaterial.inv",
     ),
 }
 # Sphinx defaults to automatically resolve *unresolved* labels using all your Intersphinx mappings.
