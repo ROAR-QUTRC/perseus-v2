@@ -171,11 +171,14 @@ let
         }
       );
 
-      # rviz-ogre-vendor builds OGRE via ExternalProject but omits zlib from its
-      # inputs. Without a store zlib, OGRE's FindZLIB falls back to the host
-      # /usr/lib/aarch64-linux-gnu/libz.so on aarch64, which Nix's purity check
-      # rejects ("impure path used in link"), breaking the ARM build. Add the
-      # nixpkgs zlib so the store copy is found instead.
+      # rviz-ogre-vendor builds OGRE in a nested CMake ExternalProject that does
+      # not inherit the outer package's search paths, so on aarch64 OGRE's
+      # find_package(ZLIB) resolves to the host /usr/lib/aarch64-linux-gnu/libz.so,
+      # which Nix's purity check rejects ("impure path used in link"), breaking
+      # the ARM build. OGRE's args set CMP0074=NEW, so setting the ZLIB_ROOT
+      # environment variable (which the ExternalProject *does* inherit) forces
+      # find_package(ZLIB) to the store copy. The symlinkJoin gives ZLIB_ROOT a
+      # single prefix containing both lib/ (zlib) and include/ (zlib.dev).
       rviz-ogre-vendor = rosPrev.rviz-ogre-vendor.overrideAttrs (
         {
           buildInputs ? [ ],
@@ -183,6 +186,13 @@ let
         }:
         {
           buildInputs = buildInputs ++ [ final.zlib ];
+          ZLIB_ROOT = final.symlinkJoin {
+            name = "zlib-root";
+            paths = [
+              final.zlib
+              final.zlib.dev
+            ];
+          };
         }
       );
 
