@@ -480,7 +480,7 @@
         "uuid": "ed12625f-743c-4dd1-a6f4-666aeca01e2d"
       }
     ],
-    "used_designators": "VR1,L1,PCB1,3V3_IND1,GND1,F1,R1-29,JP1-3,#PWR1-21,#PWR30-44,U1-2,D1-7,D9-11,C1-12,Q1-5,3V3,VIN_IND1,#SYM1,J1-3,J6-10",
+    "used_designators": "C1-12,D1-7,D9-12,U1-3,JP1-3,J1-3,J6-11,#SYM1,VIN_IND1,#PWR1-21,#PWR26,#PWR30-46,VR1,L1,PCB1,3V3_IND1,GND1,F1,Q1-5,3V3-4,R1-29",
     "variants": []
   },
   "sheets": [
