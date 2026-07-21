@@ -129,7 +129,7 @@
         <always_on>1</always_on>
         <update_rate>10</update_rate>
         <visualize>true</visualize>
-        <topic>scan_3d/imu</topic>
+        <topic>/scan_3d/imu</topic>
         <!-- Add frame id to imu sensor (achieving correct frame association)-->
         <gz_frame_id>${prefix}livox_frame</gz_frame_id>
     </sensor>

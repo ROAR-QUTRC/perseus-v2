@@ -10,6 +10,7 @@
   geometry-msgs,
   rosidl-default-generators,
   rosidl-default-runtime,
+  sensor-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-interfaces";
@@ -31,6 +32,7 @@ buildRosPackage rec {
     builtin-interfaces
     geometry-msgs
     rosidl-default-runtime
+    sensor-msgs
   ];
   nativeBuildInputs = [
     ament-cmake
@@ -39,6 +41,6 @@ buildRosPackage rec {
 
   meta = {
     description = "Perseus custom message definitions";
-    license = with lib.licenses; [ "TODO-CATKIN-PACKAGE-LICENSE" ];
+    license = with lib.licenses; [ mit ];
   };
 }

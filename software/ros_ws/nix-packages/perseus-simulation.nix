@@ -10,6 +10,9 @@
   ros-gz-image,
   ros-gz-interfaces,
   ros-gz-sim,
+  rosbridge-server,
+  twist-mux,
+  twist-stamper,
   yaml-cpp-vendor,
 }:
 buildRosPackage rec {
@@ -31,6 +34,9 @@ buildRosPackage rec {
     ros-gz-image
     ros-gz-interfaces
     ros-gz-sim
+    rosbridge-server
+    twist-mux
+    twist-stamper
   ];
   nativeBuildInputs = [ ament-cmake ];
 

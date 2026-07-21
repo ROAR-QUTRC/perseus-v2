@@ -4,6 +4,7 @@
   buildRosPackage,
   ament-cmake,
   joint-state-publisher-gui,
+  realsense2-description,
   robot-state-publisher,
   rviz2,
 }:
@@ -17,6 +18,7 @@ buildRosPackage rec {
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
     joint-state-publisher-gui
+    realsense2-description
     robot-state-publisher
     rviz2
   ];

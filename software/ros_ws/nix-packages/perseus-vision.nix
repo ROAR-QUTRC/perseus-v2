@@ -3,13 +3,16 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  ament-index-cpp,
   ament-lint-auto,
   ament-lint-common,
   builtin-interfaces,
   cv-bridge,
   geometry-msgs,
+  onnxruntime,
   opencv,
   perseus-interfaces,
+  rcl-interfaces,
   rclcpp,
   sensor-msgs,
   std-msgs,
@@ -31,11 +34,14 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
+    ament-index-cpp
     builtin-interfaces
     cv-bridge
     geometry-msgs
+    onnxruntime
     opencv
     perseus-interfaces
+    rcl-interfaces
     rclcpp
     sensor-msgs
     std-msgs

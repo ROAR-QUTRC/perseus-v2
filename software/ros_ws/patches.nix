@@ -180,6 +180,25 @@ let
           propagatedBuildInputs = final.lib.remove rosFinal.perseus-input-config propagatedBuildInputs;
         }
       );
+      perseus-vision =
+        let
+          cubeDetectorModel = prev.fetchurl {
+            url = "https://github.com/ROAR-QUTRC/perseus-v2/releases/download/models-v1/cube_detector_yolob8s.onnx";
+            sha256 = "sha256-EkWhKFYog5ysSobcE4DFW2S8j3ZLQZDBxucWLa/KVfc=";
+          };
+        in
+        rosPrev.perseus-vision.overrideAttrs (
+          {
+            postUnpack ? "",
+            ...
+          }:
+          {
+            postUnpack = postUnpack + ''
+              mkdir -p $sourceRoot/models
+              cp ${cubeDetectorModel} $sourceRoot/models/cube_detector_yolob8s.onnx
+            '';
+          }
+        );
       fast-lio = rosPrev.fast-lio.overrideAttrs (
         {
           patches ? [ ],

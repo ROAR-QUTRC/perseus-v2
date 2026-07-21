@@ -34,6 +34,6 @@ buildRosPackage rec {
 
   meta = {
     description = "Autonomy Widget Bridge";
-    license = with lib.licenses; [ "TODO-License-declaration" ];
+    license = with lib.licenses; [ mit ];
   };
 }

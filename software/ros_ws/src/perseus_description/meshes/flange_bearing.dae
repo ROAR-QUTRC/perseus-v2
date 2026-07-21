@@ -14,7 +14,7 @@
     <title>Flange Bearing</title>
     <unit meter="0.010000" name="centimeter"/>
     <up_axis>Y_UP</up_axis>
-  </asset>>
+  </asset>
   <library_materials>
     <material id="lambert1" name="lambert1">
       <instance_effect url="#lambert1-fx"/>

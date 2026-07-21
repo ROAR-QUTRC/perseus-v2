@@ -22,6 +22,7 @@
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/compressed_image.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "sensor_msgs/msg/region_of_interest.hpp"
 #include "std_msgs/msg/header.hpp"
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "tf2/LinearMath/Quaternion.h"
@@ -62,6 +63,7 @@ namespace perseus_vision
         void transform_and_publish_marker(
             const std_msgs::msg::Header& header,
             int32_t marker_id,
+            const sensor_msgs::msg::RegionOfInterest& region_of_interest,
             const cv::Vec3d& rvec,
             const cv::Vec3d& tvec);
 
@@ -123,6 +125,7 @@ namespace perseus_vision
         rclcpp::Time latest_timestamp_{0, 0, RCL_ROS_TIME};
         std::vector<int> latest_ids_;
         std::vector<geometry_msgs::msg::Pose> latest_poses_;
+        std::vector<sensor_msgs::msg::RegionOfInterest> latest_regions_of_interest_;
         cv::Mat latest_frame_;
         std::vector<std::pair<int, cv::Point3d>> latest_marker_coords_;
 

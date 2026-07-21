@@ -19,6 +19,9 @@
   <exec_depend>ros_gz_image</exec_depend>
   <exec_depend>ros_gz_interfaces</exec_depend>
   <exec_depend>gz_ros2_control</exec_depend>
+  <exec_depend>rosbridge_server</exec_depend>
+  <exec_depend>twist_mux</exec_depend>
+  <exec_depend>twist_stamper</exec_depend>
 
   <!-- testing -->
   <test_depend>ament_cmake_gtest</test_depend>
