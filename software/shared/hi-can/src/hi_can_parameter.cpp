@@ -1,5 +1,9 @@
 #include "hi_can_parameter.hpp"
 
+#include <algorithm>
+#include <iterator>
+#include <stdexcept>
+
 using namespace hi_can;
 using namespace addressing;
 
@@ -683,51 +687,152 @@ namespace hi_can::parameters::post_landing::arm::rmd_servo
 }
 namespace hi_can::parameters::post_landing::arm::control_board
 {
-    ControlBoardParameterGroup::ControlBoardParameterGroup(addressing::post_landing::arm::control_board::group servo_id)
-        : _servo_id(servo_id)
+    namespace
     {
-        const standard_address_t address(
-            addressing::post_landing::SYSTEM_ID,
-            addressing::post_landing::arm::SUBSYSTEM_ID,
-            addressing::post_landing::arm::control_board::DEVICE_ID,
-            static_cast<uint8_t>(servo_id));
+        using addressing::post_landing::arm::control_board::ALL_JOINTS;
+        using addressing::post_landing::arm::control_board::joint_id;
+
+        std::optional<size_t> find_joint_index(joint_id joint)
+        {
+            const auto joint_it = std::find(ALL_JOINTS.begin(), ALL_JOINTS.end(), joint);
+            if (joint_it == ALL_JOINTS.end())
+                return std::nullopt;
+            return static_cast<size_t>(std::distance(ALL_JOINTS.begin(), joint_it));
+        }
+
+        size_t joint_index(joint_id joint)
+        {
+            const auto index = find_joint_index(joint);
+            if (!index)
+                throw std::invalid_argument("Unknown arm joint ID");
+            return *index;
+        }
+    }
+
+    ControlBoardParameterGroup::ControlBoardParameterGroup()
+    {
+        using addressing::post_landing::arm::control_board::address_t;
+        using addressing::post_landing::arm::control_board::message_id;
+
+        const address_t address(ALL_JOINTS.front(), message_id::STATUS_1);
 
         _callbacks.emplace_back(
             filter_t{
                 .address = flagged_address_t(address),
-                // Mask everything except for the parameter ID
-                .mask = 0xFFFFFF00,
+                // Match the control board; decode the joint and message below.
+                .mask = addressing::SYSTEM_MASK | addressing::SUBSYSTEM_MASK | addressing::DEVICE_MASK,
             },
             PacketManager::callback_config_t{
                 .data_callback = [this](const Packet& packet)
                 {
-                    typedef hi_can::addressing::post_landing::arm::control_board::rsbl_parameters parameter_id_t;
-
-                    const parameter_id_t parameter_id =
-                        static_cast<parameter_id_t>(packet.get_address().address & 0x000000FF);
-                    std::vector<uint8_t> raw_data = packet.get_data();
-                    switch (parameter_id)
+                    const auto packet_address = standard_address_t(packet.get_address().address);
+                    const auto joint = static_cast<joint_id>(packet_address.group);
+                    const auto message = static_cast<message_id>(packet_address.parameter);
+                    const auto index = find_joint_index(joint);
+                    if (!index)
+                        return;
+                    const auto& raw_data = packet.get_data();
+                    switch (message)
                     {
-                    case parameter_id_t::STATUS_1:
-                    {
-                        status_1_t status_1 = {};
-                        status_1.deserialize_data(raw_data);
-                        this->_position = status_1.position;
-                        this->_status_1 = status_1;
+                    case message_id::JOINT_STATE:
+                        this->_joint_statuses[*index].state.deserialize_data(raw_data);
+                        this->_joint_statuses[*index].has_responded = true;
                         break;
-                    }
-                    case parameter_id_t::STATUS_2:
-                    {
-                        status_2_t status_2 = {};
-                        status_2.deserialize_data(raw_data);
-                        this->_status_2 = status_2;
+                    case message_id::STATUS_1:
+                        this->_joint_statuses[*index].status_1.deserialize_data(raw_data);
+                        this->_joint_statuses[*index].has_responded = true;
                         break;
-                    }
+                    case message_id::STATUS_2:
+                        this->_joint_statuses[*index].status_2.deserialize_data(raw_data);
+                        this->_joint_statuses[*index].has_responded = true;
+                        break;
                     default:
                         break;
                     }
                 },
             });
+    }
+
+    std::vector<Packet> ControlBoardParameterGroup::get_startup_transmissions() const
+    {
+        std::vector<Packet> packets;
+        packets.reserve(ALL_JOINTS.size());
+        for (const auto joint : ALL_JOINTS)
+            packets.emplace_back(make_probe_packet(joint));
+        return packets;
+    }
+
+    ControlBoardParameterGroup::joint_status_t& ControlBoardParameterGroup::get_status(joint_id joint)
+    {
+        return _joint_statuses[joint_index(joint)];
+    }
+
+    const ControlBoardParameterGroup::joint_status_t& ControlBoardParameterGroup::get_status(joint_id joint) const
+    {
+        return _joint_statuses[joint_index(joint)];
+    }
+
+    std::vector<joint_id> ControlBoardParameterGroup::get_responsive_joints() const
+    {
+        std::vector<joint_id> joints;
+        for (const auto joint : ALL_JOINTS)
+        {
+            if (get_status(joint).has_responded)
+                joints.emplace_back(joint);
+        }
+        return joints;
+    }
+
+    std::vector<joint_id> ControlBoardParameterGroup::get_ready_joints() const
+    {
+        std::vector<joint_id> joints;
+        for (const auto joint : ALL_JOINTS)
+        {
+            const auto& status = get_status(joint);
+            if (status.has_responded && status.state.is_ready() && !status.state.has_fault())
+                joints.emplace_back(joint);
+        }
+        return joints;
+    }
+
+    std::vector<joint_id> ControlBoardParameterGroup::get_unresponsive_joints() const
+    {
+        std::vector<joint_id> joints;
+        for (const auto joint : ALL_JOINTS)
+        {
+            if (!get_status(joint).has_responded)
+                joints.emplace_back(joint);
+        }
+        return joints;
+    }
+
+    Packet ControlBoardParameterGroup::make_probe_packet(joint_id joint)
+    {
+        using addressing::post_landing::arm::control_board::address_t;
+        using addressing::post_landing::arm::control_board::message_id;
+        return Packet(flagged_address_t(address_t(joint, message_id::PROBE)));
+    }
+
+    Packet ControlBoardParameterGroup::make_zero_packet(joint_id joint)
+    {
+        using addressing::post_landing::arm::control_board::address_t;
+        using addressing::post_landing::arm::control_board::message_id;
+        return Packet(flagged_address_t(address_t(joint, message_id::ZERO_POSITION)));
+    }
+
+    Packet ControlBoardParameterGroup::make_command_packet(joint_id joint, joint_command_t command)
+    {
+        using addressing::post_landing::arm::control_board::address_t;
+        using addressing::post_landing::arm::control_board::message_id;
+        return Packet(flagged_address_t(address_t(joint, message_id::COMMAND)), command.serialize_data());
+    }
+
+    Packet ControlBoardParameterGroup::make_enabled_packet(joint_id joint, bool enabled)
+    {
+        using addressing::post_landing::arm::control_board::address_t;
+        using addressing::post_landing::arm::control_board::message_id;
+        enabled_t payload(enabled);
+        return Packet(flagged_address_t(address_t(joint, message_id::SET_ENABLED)), payload.serialize_data());
     }
 }
 

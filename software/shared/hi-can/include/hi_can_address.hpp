@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <compare>
 #include <cstddef>
 #include <cstdint>
@@ -410,33 +411,67 @@ namespace hi_can
                     };
                 }
 
-                namespace control_board  // ESP32 servo controller board (RSBL servos + PWM for gripper)
+                namespace control_board  // Main arm control board
                 {
-                    /// @brief The device ID of the servo board
+                    /// @brief Device ID of the board which commands every arm joint.
                     constexpr uint8_t DEVICE_ID = 0x05;
 
-                    /// @brief Servo board output IDs - includes RSBL servos and PWM channels
-                    enum class group : uint8_t
+                    /// @brief Arm joint IDs carried in the Hi-CAN parameter-group field.
+                    enum class joint_id : uint8_t
                     {
+                        SHOULDER_PAN = 0x00,
                         SHOULDER_TILT = 0x01,
-                        SHOULDER_PAN = 0x02,
-                        PWM_1 = 0x03,
-                        PWM_2 = 0x04,
-                        ELBOW = 0x06,
+                        ELBOW = 0x02,
+                        WRIST_PITCH = 0x03,
+                        WRIST_ROLL = 0x04,
+                        TOOL = 0x05,
                     };
-                    enum class pwm_parameters
-                    {
-                        SET_PWM = 0x00,
-                        SET_DIGITAL = 0x01,
+
+                    constexpr std::array<joint_id, 6> ALL_JOINTS{
+                        joint_id::SHOULDER_PAN,
+                        joint_id::SHOULDER_TILT,
+                        joint_id::ELBOW,
+                        joint_id::WRIST_PITCH,
+                        joint_id::WRIST_ROLL,
+                        joint_id::TOOL,
                     };
-                    enum class rsbl_parameters
+
+                    /// @brief Messages supported by every arm joint.
+                    enum class message_id : uint8_t
                     {
-                        SET_POS_EX = 0x00,
-                        SET_POSITION_SINGLE = 0x01,
-                        SET_SPEED = 0x02,
-                        SET_TORQUE_ENABLE = 0x03,
-                        STATUS_1 = 0x04,
-                        STATUS_2 = 0x05,
+                        PROBE = 0x00,
+                        ZERO_POSITION = 0x01,
+                        COMMAND = 0x02,
+                        SET_ENABLED = 0x03,
+                        JOINT_STATE = 0x04,
+                        STATUS_1 = 0x05,
+                        STATUS_2 = 0x06,
+                    };
+
+                    /// @brief A complete address for one control-board joint message.
+                    struct address_t : public standard_address_t
+                    {
+                        constexpr address_t(
+                            addressing::post_landing::arm::control_board::joint_id joint,
+                            addressing::post_landing::arm::control_board::message_id message)
+                            : standard_address_t(
+                                  post_landing::SYSTEM_ID,
+                                  arm::SUBSYSTEM_ID,
+                                  DEVICE_ID,
+                                  static_cast<uint8_t>(joint),
+                                  static_cast<uint8_t>(message))
+                        {
+                        }
+
+                        constexpr addressing::post_landing::arm::control_board::joint_id get_joint() const
+                        {
+                            return static_cast<addressing::post_landing::arm::control_board::joint_id>(standard_address_t::group);
+                        }
+
+                        constexpr addressing::post_landing::arm::control_board::message_id get_message() const
+                        {
+                            return static_cast<addressing::post_landing::arm::control_board::message_id>(standard_address_t::parameter);
+                        }
                     };
                 }
             }

@@ -1,22 +1,23 @@
+#pragma once
+
+// Unified arm-controller ROS bridge.
+//
+// Joint order:
+// shoulder_pan, shoulder_tilt, elbow, wrist_pitch, wrist_roll, tool.
+//
+// Topics:
+// /arm/control       - input Float64MultiArray containing six positions.
+// /arm/status        - output unified driver status.
+// /arm/positions     - output six current positions.
+// /arm/can/control   - output Actuators command for the CAN driver.
+// /arm/can/status    - input status from the CAN driver.
+// /arm/can/positions - input positions from the CAN driver.
+
 #include <actuator_msgs/msg/actuators.hpp>
-#include <chrono>
-#include <hi_can_raw.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
 
-// Topics:
-// /arm
-//     /rsbl
-//          /control (publisher Actuators) - ArmControl message with position, velocity, normalized
-//          /status (subscriber Float64MultiArray) - Status messages from all servos
-//          /positions (subscriber Float64MultiArray) - Current positions of all servos
-//     /rmd
-//         /control (publisher Actuators) - target positions for servos
-//         /status (subscriber Float64MultiArray) - status messages from servos
-//     /control (subscriber Float64MultiArray) - High level control parameters for the arm
-//     /position (publisher Float64MultiArray) - High level control parameters for the arm
-
-#define STATUS_FIELD_COUNT 8
+#include <cstddef>
 
 class ArmController : public rclcpp::Node
 {
@@ -26,28 +27,29 @@ public:
     void cleanup();
 
 private:
-    void _handle_arm_control(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
-    void _receive_rmd_positions(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
-    void _receive_rmd_status(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
-    void _receive_rsbl_positions(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
-    void _receive_rsbl_status(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
-    void _publish_arm_status();
-    void _publish_arm_position();
+    void _handle_arm_control(
+        const std_msgs::msg::Float64MultiArray::SharedPtr message);
+    void _handle_driver_status(
+        const std_msgs::msg::Float64MultiArray::SharedPtr message);
+    void _handle_driver_positions(
+        const std_msgs::msg::Float64MultiArray::SharedPtr message);
 
-    constexpr static auto PUBLISH_TIMER_MS = std::chrono::milliseconds(10);
-    std::vector<double> _current_arm_positions;
-    std::vector<double> _motor_status = std::vector(5 * STATUS_FIELD_COUNT, 0.0);  // 5 servos with 8 status fields
-    rclcpp::TimerBase::SharedPtr _position_timer;
-    rclcpp::TimerBase::SharedPtr _status_timer;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _arm_status_publisher;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _arm_position_publisher;
-    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr _arm_control_subscriber;
+    static constexpr std::size_t JOINT_COUNT = 6;
 
-    rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr _rmd_control_publisher;
-    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr _rmd_status_subscriber;
-    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr _rmd_position_subscriber;
+    double _default_velocity = 0.5;
+    double _default_acceleration = 0.5;
 
-    rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr _rsbl_control_publisher;
-    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr _rsbl_status_subscriber;
-    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr _rsbl_position_subscriber;
+    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr
+        _arm_control_subscriber;
+    rclcpp::Publisher<actuator_msgs::msg::Actuators>::SharedPtr
+        _driver_control_publisher;
+
+    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr
+        _driver_status_subscriber;
+    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr
+        _driver_positions_subscriber;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr
+        _arm_status_publisher;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr
+        _arm_positions_publisher;
 };

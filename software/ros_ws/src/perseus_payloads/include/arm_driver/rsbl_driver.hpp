@@ -19,61 +19,61 @@
 //          /status (publisher) - Status messages from all servos
 //          /positions (publisher) - Current positions of all servos
 
-class RsblDriver : public rclcpp::Node
-{
-public:
-    explicit RsblDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
-
-    void cleanup();
-
-private:
-    void _handle_arm_control(const actuator_msgs::msg::Actuators::SharedPtr msg);
-    void _publish_status_messages();
-    void _publish_motor_positions();
-    void _handle_can();
-
-    constexpr static auto PACKET_DELAY_MS = std::chrono::milliseconds(20);
-    const hi_can::addressing::standard_address_t baseAddress{
-        hi_can::addressing::post_landing::SYSTEM_ID,
-        hi_can::addressing::post_landing::arm::SUBSYSTEM_ID,
-        hi_can::addressing::post_landing::arm::control_board::DEVICE_ID};
-
+//  class RsblDriver : public rclcpp::Node
+//  {
+//  public:
+//      explicit RsblDriver(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+//  
+//      void cleanup();
+//  
+//  private:
+//      void _handle_arm_control(const actuator_msgs::msg::Actuators::SharedPtr msg);
+//      void _publish_status_messages();
+//      void _publish_motor_positions();
+//      void _handle_can();
+//  
+//      constexpr static auto PACKET_DELAY_MS = std::chrono::milliseconds(20);
+//      const hi_can::addressing::standard_address_t baseAddress{
+//          hi_can::addressing::post_landing::SYSTEM_ID,
+//          hi_can::addressing::post_landing::arm::SUBSYSTEM_ID,
+//          hi_can::addressing::post_landing::arm::control_board::DEVICE_ID};
+//  
     // CAN handling
-    constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(10);
-    rclcpp::TimerBase::SharedPtr _packet_timer;
-    std::optional<hi_can::RawCanInterface> _can_interface;
-    std::optional<hi_can::PacketManager> _packet_manager;
+  //      constexpr static auto PACKET_HANDLE_MS = std::chrono::milliseconds(10);
+  //      rclcpp::TimerBase::SharedPtr _packet_timer;
+  //      std::optional<hi_can::RawCanInterface> _can_interface;
+  //      std::optional<hi_can::PacketManager> _packet_manager;
 
     // Servo board parameter groups
-    const std::unordered_map<hi_can::addressing::post_landing::arm::control_board::group,
-                             std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
-        PARAMETER_GROUP_MAP = {
-            {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN,
-             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-                 hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN)},
-            {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT,
-             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-                 hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT)},
-            {hi_can::addressing::post_landing::arm::control_board::group::ELBOW,
-             std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
-                 hi_can::addressing::post_landing::arm::control_board::group::ELBOW)},
-        };
+    //  const std::unordered_map<hi_can::addressing::post_landing::arm::control_board::group,
+    //                           std::shared_ptr<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>>
+    //      PARAMETER_GROUP_MAP = {
+    //          {hi_can::addressing::post_landing::arm::control_board::group::SHOUxLDER_PAN,
+    //           std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
+    //               hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_PAN)},
+    //          {hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT,
+    //           std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
+    //               hi_can::addressing::post_landing::arm::control_board::group::SHOULDER_TILT)},
+    //          {hi_can::addressing::post_landing::arm::control_board::group::ELBOW,
+    //           std::make_shared<hi_can::parameters::post_landing::arm::control_board::ControlBoardParameterGroup>(
+    //               hi_can::addressing::post_landing::arm::control_board::group::ELBOW)},
+    //      };
 
     // Motor feedback (10ms = 100Hz to match MoveIt Servo control loop)
-    constexpr static auto POSITION_PUBLISH_MS = std::chrono::milliseconds(10);
-    constexpr static auto STATUS_REQUEST_MS = std::chrono::milliseconds(10);
-    std::vector<hi_can::addressing::post_landing::arm::control_board::group> _available_servos;
-    uint16_t _status_message_ms = 10;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _status_publisher;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _motor_position_publisher;
-    rclcpp::TimerBase::SharedPtr _status_timer;
-    rclcpp::TimerBase::SharedPtr _motor_position_timer;
+  //          constexpr static auto POSITION_PUBLISH_MS = std::chrono::milliseconds(10);
+  //          constexpr static auto STATUS_REQUEST_MS = std::chrono::milliseconds(10);
+  //          std::vector<hi_can::addressing::post_landing::arm::control_board::group> _available_servos;
+  //          uint16_t _status_message_ms = 10;
+  //          rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _status_publisher;
+  //          rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr _motor_position_publisher;
+  //          rclcpp::TimerBase::SharedPtr _status_timer;
+  //          rclcpp::TimerBase::SharedPtr _motor_position_timer;
 
     // Subscriber
-    rclcpp::Subscription<actuator_msgs::msg::Actuators>::SharedPtr _arm_control_subscriber;
-
-    using servo_group = hi_can::addressing::post_landing::arm::control_board::group;
-    std::unordered_map<servo_group, int32_t> _accumulated_steps;
-    std::unordered_map<servo_group, int16_t> _last_raw_pos;
-    std::unordered_map<servo_group, bool>    _first_read;
-};
+   //        rclcpp::Subscription<actuator_msgs::msg::Actuators>::SharedPtr _arm_control_subscriber;
+  
+   //        using servo_group = hi_can::addressing::post_landing::arm::control_board::group;
+   //        std::unordered_map<servo_group, int32_t> _accumulated_steps;
+   //        std::unordered_map<servo_group, int16_t> _last_raw_pos;
+   //        std::unordered_map<servo_group, bool>    _first_read;
+//      };

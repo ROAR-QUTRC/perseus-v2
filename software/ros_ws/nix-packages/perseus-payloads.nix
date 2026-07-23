@@ -6,10 +6,8 @@
   ament-cmake,
   backward-ros,
   hi-can-raw,
-  perseus-msgs,
   rclcpp,
   sensor-msgs,
-  std-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-payloads";
@@ -23,10 +21,8 @@ buildRosPackage rec {
     actuator-msgs
     backward-ros
     hi-can-raw
-    perseus-msgs
     rclcpp
     sensor-msgs
-    std-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 

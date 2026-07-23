@@ -2,6 +2,7 @@
 
 #include <netinet/in.h>
 
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -654,51 +655,97 @@ namespace hi_can::parameters
             }
             namespace control_board  // DEVICE 05
             {
-                typedef SimpleSerializable<wrapped_value_t<uint16_t>> pwm_t;
-                typedef SimpleSerializable<wrapped_value_t<int16_t>> position_t;
-                typedef SimpleSerializable<wrapped_value_t<uint16_t>> speed_t;
-                typedef SimpleSerializable<wrapped_value_t<uint8_t>> acceleration_t;
-                typedef SimpleSerializable<wrapped_value_t<bool>> torque_enable_t;
+                typedef SimpleSerializable<wrapped_value_t<bool>> enabled_t;
+
+                enum class joint_state_flag : uint8_t
+                {
+                    READY = 1U << 0,
+                    ENABLED = 1U << 1,
+                    ZEROED = 1U << 2,
+                };
 
 #pragma pack(push, 1)
-                struct _position_control_t
+                /// @brief Position command sent to any arm joint.
+                struct _joint_command_t
                 {
-                    int16_t position;
-                    uint16_t duration_ms;
-                    uint8_t acceleration;
+                    int16_t position = 0;      // milliradians
+                    uint16_t speed = 0;        // milliradians per second
+                    uint8_t acceleration = 0;  // normalized: 0 to 255
                 };
+                /// @brief Fast-changing feedback for one joint.
                 struct _status_1_t
                 {
-                    int16_t position;  // current position in degrees
-                    int16_t speed;     // current speed
-                    int16_t load;      // current load
+                    int16_t position = 0;  // milliradians
+                    int16_t speed = 0;     // milliradians per second
+                    int16_t load = 0;      // current load/torque
                 };
+                /// @brief Slow-changing feedback for one joint.
                 struct _status_2_t
                 {
-                    uint16_t voltage;    // voltage in mV
-                    int8_t temperature;  // temperature in celsius
-                    uint16_t current;    // current in mA
-                    uint8_t moving;      // is servo moving
+                    uint16_t voltage = 0;    // voltage in mV
+                    int8_t temperature = 0;  // temperature in Celsius
+                    uint16_t current = 0;    // current in mA
+                    uint8_t moving = 0;      // non-zero while moving
+                };
+                /// @brief Response to a probe and notification of lifecycle changes.
+                struct _joint_state_t
+                {
+                    uint8_t flags = 0;
+                    uint8_t fault_code = 0;  // zero means no fault
+
+                    bool has_flag(joint_state_flag flag) const
+                    {
+                        return (flags & static_cast<uint8_t>(flag)) != 0;
+                    }
+                    bool is_ready() const { return has_flag(joint_state_flag::READY); }
+                    bool is_enabled() const { return has_flag(joint_state_flag::ENABLED); }
+                    bool is_zeroed() const { return has_flag(joint_state_flag::ZEROED); }
+                    bool has_fault() const { return fault_code != 0; }
                 };
 #pragma pack(pop)
 
-                typedef SimpleSerializable<_position_control_t> position_control_t;
+                typedef SimpleSerializable<_joint_command_t> joint_command_t;
                 typedef SimpleSerializable<_status_1_t> status_1_t;
                 typedef SimpleSerializable<_status_2_t> status_2_t;
+                typedef SimpleSerializable<_joint_state_t> joint_state_t;
+
+                static_assert(sizeof(_joint_command_t) <= addressing::MAX_PACKET_LEN);
+                static_assert(sizeof(_status_1_t) <= addressing::MAX_PACKET_LEN);
+                static_assert(sizeof(_status_2_t) <= addressing::MAX_PACKET_LEN);
+                static_assert(sizeof(_joint_state_t) <= addressing::MAX_PACKET_LEN);
 
                 class ControlBoardParameterGroup : public ParameterGroup
                 {
                 public:
-                    ControlBoardParameterGroup(addressing::post_landing::arm::control_board::group servo_id);
-                    int16_t& get_position() { return _position.value; }
-                    status_1_t& get_status_1() { return _status_1; }
-                    status_2_t& get_status_2() { return _status_2; }
+                    struct joint_status_t
+                    {
+                        bool has_responded = false;
+                        joint_state_t state{};
+                        status_1_t status_1{};
+                        status_2_t status_2{};
+                    };
+
+                    ControlBoardParameterGroup();
+
+                    std::vector<Packet> get_startup_transmissions() const override;
+
+                    joint_status_t& get_status(addressing::post_landing::arm::control_board::joint_id joint);
+                    const joint_status_t& get_status(addressing::post_landing::arm::control_board::joint_id joint) const;
+                    std::vector<addressing::post_landing::arm::control_board::joint_id> get_responsive_joints() const;
+                    std::vector<addressing::post_landing::arm::control_board::joint_id> get_unresponsive_joints() const;
+                    std::vector<addressing::post_landing::arm::control_board::joint_id> get_ready_joints() const;
+
+                    static Packet make_probe_packet(addressing::post_landing::arm::control_board::joint_id joint);
+                    static Packet make_zero_packet(addressing::post_landing::arm::control_board::joint_id joint);
+                    static Packet make_command_packet(
+                        addressing::post_landing::arm::control_board::joint_id joint,
+                        joint_command_t command);
+                    static Packet make_enabled_packet(
+                        addressing::post_landing::arm::control_board::joint_id joint,
+                        bool enabled);
 
                 private:
-                    addressing::post_landing::arm::control_board::group _servo_id;
-                    position_t _position{};
-                    status_1_t _status_1{};
-                    status_2_t _status_2{};
+                    std::array<joint_status_t, addressing::post_landing::arm::control_board::ALL_JOINTS.size()> _joint_statuses{};
                 };
             }
         }
