@@ -4,8 +4,6 @@
 /// @brief Cube detection and depth-based pose estimation ROS 2 node.
 
 #include <onnxruntime/onnxruntime_cxx_api.h>
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <array>
@@ -30,7 +28,7 @@
 #include <vector>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include "perseus_interfaces/msg/object_detections.hpp"
+#include "perseus_interfaces/msg/detection_array.hpp"
 #include "perseus_interfaces/srv/detect_objects.hpp"
 
 namespace perseus_vision
@@ -73,7 +71,8 @@ namespace perseus_vision
 
         /// @brief Constructs the node, declaring parameters and setting up
         ///        subscriptions, publishers, inference resources, and the detection service.
-        CubeDetector();
+        /// @param options Node options, supplied by the component container or by main().
+        explicit CubeDetector(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
     private:
         /// @brief Default minimum model confidence for a detection to be reported.
@@ -96,8 +95,6 @@ namespace perseus_vision
         static constexpr bool DEFAULT_IS_ALWAYS_ON = true;
         /// @brief Default for whether inference runs on the CUDA execution provider.
         static constexpr bool DEFAULT_SHOULD_USE_CUDA = false;
-        /// @brief Default for whether annotated debug images are published.
-        static constexpr bool DEFAULT_SHOULD_PUBLISH_ANNOTATED_IMAGE = true;
 
         /// @brief Default pose estimation mode. `none` publishes 2D detections only.
         static inline const std::string DEFAULT_DEPTH_ESTIMATION_MODE = "none";
@@ -109,10 +106,6 @@ namespace perseus_vision
         static inline const std::string DEFAULT_DEPTH_TOPIC = "/camera/camera/depth/image_rect_raw";
         /// @brief Default topic that depth camera calibration is read from.
         static inline const std::string DEFAULT_DEPTH_INFO_TOPIC = "/camera/camera/depth/camera_info";
-        /// @brief Default frame that cube poses are transformed into before publishing.
-        static inline const std::string DEFAULT_TF_OUTPUT_FRAME = "odom";
-        /// @brief Default topic that annotated debug images are published on.
-        static inline const std::string DEFAULT_OUTPUT_IMG_TOPIC = "/perseus_vision/cube/image_annotated";
         /// @brief Default topic that detection messages are published on.
         static inline const std::string DEFAULT_OUTPUT_DETECTIONS_TOPIC = "/perseus_vision/cube/detections";
         /// @brief Default topic that rviz visualization markers are published on.
@@ -170,41 +163,14 @@ namespace perseus_vision
         /// @param header Header of the message the image came from.
         void _run_inference_pipeline(const cv::Mat& bgr_image, const std_msgs::msg::Header& header);
 
-        /// @brief Draws detections onto a copy of the image, publishes it, and caches it.
-        /// @param image Image the detections were found in.
-        /// @param detections Detections to draw.
+        /// @brief Publishes image-space detections for the overlay node to draw.
+        /// @param detections Detections found in the frame just processed.
         /// @param header Header of the message the image came from.
-        void _publish_annotated_image(
-            const cv::Mat& image,
+        /// @param detections Detections found in the frame just processed.
+        /// @param header Header of the message the image came from.
+        void _publish_detections(
             const std::vector<detection_t>& detections,
             const std_msgs::msg::Header& header);
-
-        /// @brief Publishes depth-derived cube poses as detections and rviz markers.
-        /// @param detections Detections to estimate poses for.
-        /// @param header Header of the message the detections came from.
-        void _publish_depth_markers(
-            const std::vector<detection_t>& detections,
-            const std_msgs::msg::Header& header);
-
-        /// @brief Publishes detections with placeholder poses when depth is unavailable.
-        /// @param detections Detections to publish.
-        /// @param header Header of the message the detections came from.
-        void _publish_2d_detections(
-            const std::vector<detection_t>& detections,
-            const std_msgs::msg::Header& header);
-
-        /// @brief Reads the frame and stamp that depth-derived poses are expressed in.
-        /// @param header Header of the colour image, used when no depth image has arrived.
-        /// @param source_frame_out Receives the frame the poses are measured in.
-        /// @param source_stamp_out Receives the acquisition time of the depth data.
-        void _get_depth_source(
-            const std_msgs::msg::Header& header,
-            std::string& source_frame_out,
-            builtin_interfaces::msg::Time& source_stamp_out) const;
-
-        /// @brief Reads the configured output frame in a thread-safe way.
-        /// @return The current `tf_output_frame` parameter value.
-        std::string _get_tf_output_frame() const;
 
         /// @brief Builds the human-readable summary returned by the detection service.
         /// @param detected_count Number of cubes found in the image.
@@ -212,13 +178,15 @@ namespace perseus_vision
         /// @return A sentence describing how many detections were resolved.
         std::string _build_depth_summary_message(std::size_t detected_count, std::size_t resolved_count);
 
-        /// @brief Replaces the cached detection results served by the detection service.
-        /// @param detections_msg Detections that were just published.
-        /// @param bounding_boxes Bounding boxes matching @p detections_msg, for image capture.
+        /// @brief Publishes rviz markers for every pose-resolved detection.
+        /// @param detections Detections from the frame just processed.
+        void _publish_markers(const perseus_interfaces::msg::DetectionArray& detections);
+
+        /// @brief Replaces the cached detections served by the detection service.
+        /// @param detections Detections that were just published.
         /// @param message Human-readable summary of the detection pass.
         void _cache_latest_detections(
-            const perseus_interfaces::msg::ObjectDetections& detections_msg,
-            std::vector<cv::Rect> bounding_boxes,
+            const perseus_interfaces::msg::DetectionArray& detections,
             std::string message);
 
         /// @brief Estimates a cube pose from the centre pixel of its bounding box.
@@ -250,20 +218,6 @@ namespace perseus_vision
         /// @return The depth in metres, or NaN if the pixel holds no reading.
         double _read_depth_sample(const sensor_msgs::msg::Image& depth_msg, int row, int column) const;
 
-        /// @brief Transforms a pose between frames using the TF buffer.
-        /// @param input_pose Pose to transform.
-        /// @param target_frame Frame to transform into.
-        /// @param source_frame Frame @p input_pose is measured in.
-        /// @param stamp Time to look the transform up at.
-        /// @param output_pose Receives the transformed pose.
-        /// @return True on success, false if the transform is unavailable.
-        bool _transform_pose_to_output_frame(
-            const geometry_msgs::msg::Pose& input_pose,
-            const std::string& target_frame,
-            const std::string& source_frame,
-            const builtin_interfaces::msg::Time& stamp,
-            geometry_msgs::msg::Pose& output_pose) const;
-
         /// @brief Answers a detection service request from the cached detections.
         /// @param request Incoming request, which may also ask for an image capture.
         /// @param response Response populated with the cached detections.
@@ -278,18 +232,12 @@ namespace perseus_vision
 
         /// @brief Writes an annotated capture of the latest detections to disk.
         /// @param save_path Directory to write the image into; `.` is used if empty.
-        /// @param frame Annotated frame to overlay and save. Modified in place.
-        /// @param ids Detection IDs to list on the image.
-        /// @param poses Detection poses matching @p ids.
-        /// @param bounding_boxes Bounding boxes matching @p ids, drawn onto the image.
-        /// @param frame_id Frame the poses are expressed in, shown on the image.
+        /// @param frame Raw frame to annotate and save. Modified in place.
+        /// @param detections Detections to draw, rendered exactly as the overlay does.
         void _save_detection_capture(
             const std::string& save_path,
             cv::Mat& frame,
-            const std::vector<int32_t>& ids,
-            const std::vector<geometry_msgs::msg::Pose>& poses,
-            const std::vector<cv::Rect>& bounding_boxes,
-            const std::string& frame_id) const;
+            const perseus_interfaces::msg::DetectionArray& detections) const;
 
         /// @brief Applies runtime updates to the reconfigurable parameters.
         /// @param parameters Parameters being set.
@@ -313,19 +261,16 @@ namespace perseus_vision
 
         // Parameters
         std::string _model_path;
+        std::string _output_detections_topic{DEFAULT_OUTPUT_DETECTIONS_TOPIC};
         std::string _depth_estimation_mode{DEFAULT_DEPTH_ESTIMATION_MODE};
         std::string _depth_topic{DEFAULT_DEPTH_TOPIC};
         std::string _depth_info_topic{DEFAULT_DEPTH_INFO_TOPIC};
-        std::string _tf_output_frame{DEFAULT_TF_OUTPUT_FRAME};
-        std::string _output_img_topic{DEFAULT_OUTPUT_IMG_TOPIC};
-        std::string _output_detections_topic{DEFAULT_OUTPUT_DETECTIONS_TOPIC};
         std::string _output_markers_topic{DEFAULT_OUTPUT_MARKERS_TOPIC};
 
         float _confidence_threshold{DEFAULT_CONFIDENCE_THRESHOLD};
         float _nms_iou_threshold{DEFAULT_NMS_IOU_THRESHOLD};
         std::atomic_bool _is_always_on{DEFAULT_IS_ALWAYS_ON};
         bool _should_use_cuda{DEFAULT_SHOULD_USE_CUDA};
-        bool _should_publish_annotated_image{DEFAULT_SHOULD_PUBLISH_ANNOTATED_IMAGE};
         double _depth_unit_scale{DEFAULT_DEPTH_UNIT_SCALE};
         double _depth_max_range_m{DEFAULT_DEPTH_MAX_RANGE_M};
         double _depth_min_range_m{DEFAULT_DEPTH_MIN_RANGE_M};
@@ -334,7 +279,6 @@ namespace perseus_vision
         int _intra_op_num_threads{DEFAULT_INTRA_OP_NUM_THREADS};
         int _inter_op_num_threads{DEFAULT_INTER_OP_NUM_THREADS};
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr _param_callback_handle;
-        mutable std::mutex _parameter_mutex;
 
         // Camera calibration (kept for future use)
         std::mutex _camera_matrix_mutex;
@@ -357,14 +301,9 @@ namespace perseus_vision
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr _depth_camera_info_subscription;
 
         // Publishers and services
-        rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr _annotated_image_publisher;
+        rclcpp::Publisher<perseus_interfaces::msg::DetectionArray>::SharedPtr _detection_publisher;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _cube_marker_publisher;
-        rclcpp::Publisher<perseus_interfaces::msg::ObjectDetections>::SharedPtr _cube_detection_publisher;
         rclcpp::Service<DetectObjects>::SharedPtr _detect_objects_service;
-
-        // TF
-        std::unique_ptr<tf2_ros::Buffer> _tf_buffer;
-        std::shared_ptr<tf2_ros::TransformListener> _tf_listener;
 
         // Cached frames and detections
         mutable std::mutex _latest_image_mutex;
@@ -373,14 +312,8 @@ namespace perseus_vision
         bool _has_latest_bgr_frame{false};
         mutable std::mutex _inference_mutex;
         mutable std::mutex _detections_mutex;
-        builtin_interfaces::msg::Time _latest_detections_stamp;
-        std::string _latest_detections_frame_id;
-        std::vector<int32_t> _latest_detection_ids;
-        std::vector<geometry_msgs::msg::Pose> _latest_detection_poses;
-        std::vector<sensor_msgs::msg::RegionOfInterest> _latest_detection_regions_of_interest;
-        std::vector<cv::Rect> _latest_detection_bounding_boxes;
+        perseus_interfaces::msg::DetectionArray _latest_detections;
         std::string _latest_detection_message{"No cube detections are currently cached."};
-        cv::Mat _latest_annotated_frame;
     };
 
 }  // namespace perseus_vision

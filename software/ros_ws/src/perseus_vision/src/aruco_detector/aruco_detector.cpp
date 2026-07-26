@@ -9,8 +9,11 @@
 #include <cstdio>
 #include <ctime>
 #include <filesystem>
+#include <rclcpp_components/register_node_macro.hpp>
 #include <string>
 #include <vector>
+
+#include "perseus_vision/common/detection_renderer.hpp"
 
 namespace perseus_vision
 {
@@ -18,14 +21,19 @@ namespace perseus_vision
     {
         /// @brief Queue depth used for all image, detection, and marker topics.
         constexpr int QOS_DEPTH = 10;
-        /// @brief JPEG quality used when re-encoding annotated compressed images.
-        constexpr int JPEG_QUALITY = 90;
         /// @brief Thickness of the flat cube drawn for each marker in rviz, in metres.
         constexpr double MARKER_VISUAL_THICKNESS_M = 0.01;
         /// @brief How long rviz keeps a marker before treating it as stale, in seconds.
         constexpr int32_t MARKER_LIFETIME_S = 2;
         /// @brief Topic that rviz visualization markers are published on.
         const std::string MARKER_ARRAY_TOPIC = "/detection/aruco/markers";
+        /// @brief Colour the overlay node draws ArUco boxes in, in OpenCV BGR order.
+        const cv::Scalar DETECTION_COLOR(0, 255, 0);
+        /// @brief Confidence reported for ArUco markers.
+        ///
+        /// Detection is geometric rather than probabilistic: a marker either decodes to a
+        /// valid ID or it is not reported at all, so an accepted marker is always 1.0.
+        constexpr float DETECTION_CONFIDENCE = 1.0f;
 
         /// @brief Default 3x3 intrinsic matrix, in row-major order, used until calibration arrives.
         const std::vector<double> DEFAULT_CAMERA_MATRIX = {530.4, 0.0, 320.0, 0.0, 530.4, 240.0, 0.0, 0.0, 1.0};
@@ -56,39 +64,6 @@ namespace perseus_vision
         constexpr std::size_t COORDINATE_TEXT_BUFFER_SIZE = 150;
         /// @brief Longest formatted timestamp, including the terminator.
         constexpr std::size_t TIMESTAMP_BUFFER_SIZE = 100;
-
-        /// @brief Builds the smallest axis-aligned region of interest containing all corners.
-        /// @param corner_points Marker corners in image coordinates.
-        /// @return The enclosing region of interest, or a zeroed one if @p corner_points is empty.
-        sensor_msgs::msg::RegionOfInterest region_of_interest_from_corners(
-            const std::vector<cv::Point2f>& corner_points)
-        {
-            sensor_msgs::msg::RegionOfInterest region_of_interest;
-            if (corner_points.empty())
-            {
-                return region_of_interest;
-            }
-
-            double min_x = corner_points.front().x;
-            double max_x = corner_points.front().x;
-            double min_y = corner_points.front().y;
-            double max_y = corner_points.front().y;
-
-            for (const auto& corner_point : corner_points)
-            {
-                min_x = std::min(min_x, static_cast<double>(corner_point.x));
-                max_x = std::max(max_x, static_cast<double>(corner_point.x));
-                min_y = std::min(min_y, static_cast<double>(corner_point.y));
-                max_y = std::max(max_y, static_cast<double>(corner_point.y));
-            }
-
-            region_of_interest.x_offset = static_cast<uint32_t>(std::max(0.0, std::floor(min_x)));
-            region_of_interest.y_offset = static_cast<uint32_t>(std::max(0.0, std::floor(min_y)));
-            region_of_interest.width = static_cast<uint32_t>(std::max(0.0, std::ceil(max_x - min_x)));
-            region_of_interest.height = static_cast<uint32_t>(std::max(0.0, std::ceil(max_y - min_y)));
-            region_of_interest.do_rectify = false;
-            return region_of_interest;
-        }
 
         /// @brief Computes the area of the axis-aligned box enclosing a set of corners.
         /// @param corner_points Marker corners in image coordinates.
@@ -127,6 +102,35 @@ namespace perseus_vision
                 cv::Point3f(half_length, half_length, 0.0f),
                 cv::Point3f(half_length, -half_length, 0.0f),
                 cv::Point3f(-half_length, -half_length, 0.0f)};
+        }
+
+        /// @brief Converts a cv::solvePnP result into a pose in the camera frame.
+        /// @param rotation_vector Rodrigues rotation vector from cv::solvePnP.
+        /// @param translation_vector Translation vector from cv::solvePnP.
+        /// @return The equivalent pose.
+        geometry_msgs::msg::Pose pose_from_rodrigues(const cv::Vec3d& rotation_vector,
+                                                     const cv::Vec3d& translation_vector)
+        {
+            cv::Mat rotation_matrix;
+            cv::Rodrigues(rotation_vector, rotation_matrix);
+
+            const tf2::Matrix3x3 tf2_rotation(
+                rotation_matrix.at<double>(0, 0), rotation_matrix.at<double>(0, 1), rotation_matrix.at<double>(0, 2),
+                rotation_matrix.at<double>(1, 0), rotation_matrix.at<double>(1, 1), rotation_matrix.at<double>(1, 2),
+                rotation_matrix.at<double>(2, 0), rotation_matrix.at<double>(2, 1), rotation_matrix.at<double>(2, 2));
+
+            tf2::Quaternion quaternion;
+            tf2_rotation.getRotation(quaternion);
+
+            geometry_msgs::msg::Pose pose;
+            pose.position.x = translation_vector[0];
+            pose.position.y = translation_vector[1];
+            pose.position.z = translation_vector[2];
+            pose.orientation.x = quaternion.x();
+            pose.orientation.y = quaternion.y();
+            pose.orientation.z = quaternion.z();
+            pose.orientation.w = quaternion.w();
+            return pose;
         }
 
         /// @brief Formats the current local time for display on a captured image.
@@ -211,21 +215,18 @@ namespace perseus_vision
         }
     }  // namespace
 
-    ArucoDetector::ArucoDetector()
-        : Node("aruco_detector")
+    ArucoDetector::ArucoDetector(const rclcpp::NodeOptions& options)
+        : Node("aruco_detector", options)
     {
         // Declare and load parameters
         _marker_length = this->declare_parameter<double>("marker_length", DEFAULT_MARKER_LENGTH_M);
-        _axis_length = this->declare_parameter<double>("axis_length", DEFAULT_AXIS_LENGTH_M);
         _dictionary_id = this->declare_parameter<int>("dictionary_id", DEFAULT_DICTIONARY_ID);
         _camera_frame = this->declare_parameter<std::string>("camera_frame", DEFAULT_CAMERA_FRAME);
-        _tf_output_frame = this->declare_parameter<std::string>("tf_output_frame", DEFAULT_TF_OUTPUT_FRAME);
         _input_image_topic = this->declare_parameter<std::string>("input_img", DEFAULT_INPUT_IMAGE_TOPIC);
-        _output_image_topic = this->declare_parameter<std::string>("output_img", DEFAULT_OUTPUT_IMAGE_TOPIC);
+        _output_detections_topic = this->declare_parameter<std::string>(
+            "output_detections_2d_topic", DEFAULT_OUTPUT_DETECTIONS_TOPIC);
         _should_publish_tf = this->declare_parameter<bool>("publish_tf", true);
-        _should_publish_image = this->declare_parameter<bool>("publish_img", true);
         _is_compressed_io = this->declare_parameter<bool>("compressed_io", false);
-        _should_publish_output = this->declare_parameter<bool>("publish_output", false);
         _should_use_camera_info = this->declare_parameter<bool>("use_camera_info", false);
         _output_detections_topic = this->declare_parameter<std::string>("output_topic", DEFAULT_OUTPUT_DETECTIONS_TOPIC);
         _camera_info_topic = this->declare_parameter<std::string>("camera_info_topic", DEFAULT_CAMERA_INFO_TOPIC);
@@ -263,10 +264,8 @@ namespace perseus_vision
         const cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(_dictionary_id);
         _detector = cv::aruco::ArucoDetector(dictionary);
 
-        // TF broadcaster and listener
+        // TF broadcaster
         _tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-        _tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
-        _tf_listener = std::make_unique<tf2_ros::TransformListener>(*_tf_buffer);
 
         // Image subscriber and publisher
         if (_is_compressed_io)
@@ -274,16 +273,12 @@ namespace perseus_vision
             _compressed_image_subscription = this->create_subscription<sensor_msgs::msg::CompressedImage>(
                 _input_image_topic + "/compressed", QOS_DEPTH,
                 std::bind(&ArucoDetector::_compressed_image_callback, this, std::placeholders::_1));
-            _compressed_image_publisher = this->create_publisher<sensor_msgs::msg::CompressedImage>(
-                _output_image_topic + "/compressed", QOS_DEPTH);
         }
         else
         {
             _image_subscription = this->create_subscription<sensor_msgs::msg::Image>(
                 _input_image_topic, QOS_DEPTH,
                 std::bind(&ArucoDetector::_image_callback, this, std::placeholders::_1));
-            _image_publisher = this->create_publisher<sensor_msgs::msg::Image>(
-                _output_image_topic, QOS_DEPTH);
         }
 
         // Camera info subscriber if enabled (works for both raw and compressed modes)
@@ -302,11 +297,8 @@ namespace perseus_vision
             std::bind(&ArucoDetector::_handle_detect_objects_request, this,
                       std::placeholders::_1,
                       std::placeholders::_2));
-        if (_should_publish_output)
-        {
-            _detection_publisher = this->create_publisher<perseus_interfaces::msg::ObjectDetections>(
-                _output_detections_topic, QOS_DEPTH);
-        }
+        _detection_publisher = this->create_publisher<perseus_interfaces::msg::DetectionArray>(
+            _output_detections_topic, QOS_DEPTH);
 
         // Create marker array publisher for visualization
         _marker_array_publisher = this->create_publisher<visualization_msgs::msg::MarkerArray>(
@@ -329,13 +321,6 @@ namespace perseus_vision
         }
 
         _process_image(frame, msg->header);
-
-        if (_should_publish_image)
-        {
-            std::lock_guard<std::mutex> lock(_detections_mutex);
-            const auto processed_msg = cv_bridge::CvImage(msg->header, "bgr8", _latest_frame).toImageMsg();
-            _image_publisher->publish(*processed_msg);
-        }
     }
 
     void ArucoDetector::_compressed_image_callback(const sensor_msgs::msg::CompressedImage::SharedPtr msg)
@@ -357,23 +342,6 @@ namespace perseus_vision
         }
 
         _process_image(frame, msg->header);
-
-        if (_should_publish_image)
-        {
-            sensor_msgs::msg::CompressedImage compressed_msg;
-            compressed_msg.header = msg->header;
-            compressed_msg.format = "jpeg";
-
-            {
-                std::lock_guard<std::mutex> lock(_detections_mutex);
-                std::vector<uchar> buffer;
-                const std::vector<int> encode_params = {cv::IMWRITE_JPEG_QUALITY, JPEG_QUALITY};
-                cv::imencode(".jpg", _latest_frame, buffer, encode_params);
-                compressed_msg.data = buffer;
-            }
-
-            _compressed_image_publisher->publish(compressed_msg);
-        }
     }
 
     void ArucoDetector::_process_image(const cv::Mat& frame, const std_msgs::msg::Header& header)
@@ -382,36 +350,27 @@ namespace perseus_vision
         std::vector<std::vector<cv::Point2f>> corners;
         _detector.detectMarkers(frame, corners, ids);
 
-        // Work with a copy for annotation
-        cv::Mat annotated_frame = frame.clone();
-
-        _reset_latest_detections(header.stamp);
+        // Detections are published rather than drawn here: the overlay node owns
+        // annotation, so nothing is rendered on the live detection path.
+        perseus_interfaces::msg::DetectionArray detections;
+        detections.header = header;
 
         std::vector<marker_coordinate_t> marker_coordinates;
         if (!ids.empty())
         {
-            cv::aruco::drawDetectedMarkers(annotated_frame, corners, ids);
-            marker_coordinates = _estimate_marker_poses(ids, corners, header, annotated_frame);
+            marker_coordinates = _estimate_marker_poses(ids, corners, header, detections);
         }
 
-        // Store annotated frame for capture service
+        // Store the raw frame so the capture service can annotate it on demand
         {
             std::lock_guard<std::mutex> lock(_detections_mutex);
-            _latest_frame = std::move(annotated_frame);
+            _latest_frame = frame.clone();
+            _latest_detections = detections;
             _latest_marker_coordinates = marker_coordinates;
         }
 
-        _publish_marker_array(header);
-        _publish_detections(header);
-    }
-
-    void ArucoDetector::_reset_latest_detections(const rclcpp::Time& stamp)
-    {
-        std::lock_guard<std::mutex> lock(_detections_mutex);
-        _latest_ids.clear();
-        _latest_poses.clear();
-        _latest_regions_of_interest.clear();
-        _latest_timestamp = stamp;
+        _publish_marker_array(detections);
+        _publish_detections(detections);
     }
 
     bool ArucoDetector::_get_camera_calibration(cv::Mat& camera_matrix_out, cv::Mat& distortion_coefficients_out)
@@ -432,16 +391,15 @@ namespace perseus_vision
         const std::vector<int>& ids,
         const std::vector<std::vector<cv::Point2f>>& corners,
         const std_msgs::msg::Header& header,
-        cv::Mat& annotated_frame)
+        perseus_interfaces::msg::DetectionArray& detections_out)
     {
         std::vector<marker_coordinate_t> marker_coordinates;
 
+        // Pose estimation needs intrinsics, but image-space detection does not, so a
+        // missing calibration only disables the 3D half of this function.
         cv::Mat camera_matrix;
         cv::Mat distortion_coefficients;
-        if (!_get_camera_calibration(camera_matrix, distortion_coefficients))
-        {
-            return marker_coordinates;
-        }
+        const bool has_calibration = _get_camera_calibration(camera_matrix, distortion_coefficients);
 
         // Marker corner points in 3D (square marker with given length)
         const std::vector<cv::Point3f> object_points = marker_object_points(_marker_length);
@@ -450,12 +408,8 @@ namespace perseus_vision
         {
             const std::vector<cv::Point2f>& image_points = corners[i];
 
-            cv::Vec3d rotation_vector;
-            cv::Vec3d translation_vector;
-            cv::solvePnP(object_points, image_points, camera_matrix, distortion_coefficients,
-                         rotation_vector, translation_vector);
-
-            // Skip detections with bounding box area smaller than threshold
+            // Skip detections with bounding box area smaller than threshold. This is
+            // checked before solving for the pose so filtered markers cost nothing.
             const double area = bounding_box_area(image_points);
             if (area < _min_bounding_box_area)
             {
@@ -465,119 +419,92 @@ namespace perseus_vision
                 continue;
             }
 
-            cv::drawFrameAxes(
-                annotated_frame,
-                camera_matrix, distortion_coefficients,
-                rotation_vector, translation_vector,
-                static_cast<float>(_axis_length));
+            const int32_t marker_id = static_cast<int32_t>(ids[i]);
 
-            // Store marker position for display, converted to a forward/left/up frame
-            marker_coordinates.push_back(
-                {static_cast<int32_t>(ids[i]),
-                 cv::Point3d(translation_vector[2], -translation_vector[0], -translation_vector[1])});
+            perseus_interfaces::msg::Detection detection;
+            detection.bounding_box = polygon_from_corners(image_points);
+            detection.color = color_from_bgr(DETECTION_COLOR);
+            detection.class_label = "aruco_" + std::to_string(marker_id);
+            detection.id = marker_id;
+            detection.confidence = DETECTION_CONFIDENCE;
+            detection.has_pose = false;
 
-            _transform_and_publish_marker(header,
-                                          static_cast<int32_t>(ids[i]),
-                                          region_of_interest_from_corners(image_points),
-                                          rotation_vector,
-                                          translation_vector);
+            if (has_calibration)
+            {
+                cv::Vec3d rotation_vector;
+                cv::Vec3d translation_vector;
+                cv::solvePnP(object_points, image_points, camera_matrix, distortion_coefficients,
+                             rotation_vector, translation_vector);
+
+                detection.pose = pose_from_rodrigues(rotation_vector, translation_vector);
+                detection.has_pose = true;
+
+                // Store marker position for display, converted to a forward/left/up frame
+                marker_coordinates.push_back(
+                    {marker_id,
+                     cv::Point3d(translation_vector[2], -translation_vector[0], -translation_vector[1])});
+
+                _broadcast_marker_tf(header, marker_id, detection.pose);
+            }
+
+            detections_out.detections.push_back(std::move(detection));
         }
 
         return marker_coordinates;
     }
 
-    void ArucoDetector::_transform_and_publish_marker(const std_msgs::msg::Header& header,
-                                                      int32_t marker_id,
-                                                      const sensor_msgs::msg::RegionOfInterest& region_of_interest,
-                                                      const cv::Vec3d& rotation_vector,
-                                                      const cv::Vec3d& translation_vector)
+    void ArucoDetector::_broadcast_marker_tf(const std_msgs::msg::Header& header,
+                                             int32_t marker_id,
+                                             const geometry_msgs::msg::Pose& pose)
     {
-        try
+        if (!_should_publish_tf)
         {
-            geometry_msgs::msg::PoseStamped marker_pose_camera;
-            marker_pose_camera.header.stamp = header.stamp;
-            marker_pose_camera.header.frame_id = _camera_frame;
-
-            marker_pose_camera.pose.position.x = translation_vector[0];
-            marker_pose_camera.pose.position.y = translation_vector[1];
-            marker_pose_camera.pose.position.z = translation_vector[2];
-
-            // Convert rotation vector to quaternion via tf2::Matrix3x3
-            cv::Mat rotation_matrix;
-            cv::Rodrigues(rotation_vector, rotation_matrix);
-
-            const tf2::Matrix3x3 tf2_rotation(
-                rotation_matrix.at<double>(0, 0), rotation_matrix.at<double>(0, 1), rotation_matrix.at<double>(0, 2),
-                rotation_matrix.at<double>(1, 0), rotation_matrix.at<double>(1, 1), rotation_matrix.at<double>(1, 2),
-                rotation_matrix.at<double>(2, 0), rotation_matrix.at<double>(2, 1), rotation_matrix.at<double>(2, 2));
-
-            tf2::Quaternion quaternion;
-            tf2_rotation.getRotation(quaternion);
-
-            marker_pose_camera.pose.orientation.x = quaternion.x();
-            marker_pose_camera.pose.orientation.y = quaternion.y();
-            marker_pose_camera.pose.orientation.z = quaternion.z();
-            marker_pose_camera.pose.orientation.w = quaternion.w();
-
-            geometry_msgs::msg::PoseStamped marker_pose_out;
-            _tf_buffer->transform(marker_pose_camera, marker_pose_out, _tf_output_frame);
-
-            // Cache this detection for service requests
-            {
-                std::lock_guard<std::mutex> lock(_detections_mutex);
-                _latest_ids.push_back(marker_id);
-                _latest_poses.push_back(marker_pose_out.pose);
-                _latest_regions_of_interest.push_back(region_of_interest);
-            }
-
-            geometry_msgs::msg::TransformStamped transform;
-            transform.header.stamp = header.stamp;
-            transform.header.frame_id = _tf_output_frame;
-            transform.child_frame_id = "aruco_marker_" + std::to_string(marker_id);
-
-            transform.transform.translation.x = marker_pose_out.pose.position.x;
-            transform.transform.translation.y = marker_pose_out.pose.position.y;
-            transform.transform.translation.z = marker_pose_out.pose.position.z;
-
-            transform.transform.rotation = marker_pose_out.pose.orientation;
-
-            if (_should_publish_tf)
-            {
-                _tf_broadcaster->sendTransform(transform);
-            }
-
-            RCLCPP_DEBUG(this->get_logger(),
-                         "ArUco %d in %s: x=%.2f, y=%.2f, z=%.2f",
-                         marker_id, _tf_output_frame.c_str(),
-                         marker_pose_out.pose.position.x,
-                         marker_pose_out.pose.position.y,
-                         marker_pose_out.pose.position.z);
+            return;
         }
-        catch (const tf2::TransformException& ex)
-        {
-            RCLCPP_WARN(this->get_logger(), "Could not transform marker pose: %s", ex.what());
-        }
+
+        // Broadcast the transform that was actually measured, camera to marker, and let
+        // tf2 compose it with the rest of the tree. Transforming into odom here would
+        // both duplicate what tf2 already does and bake in this node's lookup time.
+        geometry_msgs::msg::TransformStamped transform;
+        transform.header.stamp = header.stamp;
+        transform.header.frame_id = _camera_frame;
+        transform.child_frame_id = "aruco_marker_" + std::to_string(marker_id);
+
+        transform.transform.translation.x = pose.position.x;
+        transform.transform.translation.y = pose.position.y;
+        transform.transform.translation.z = pose.position.z;
+        transform.transform.rotation = pose.orientation;
+
+        _tf_broadcaster->sendTransform(transform);
+
+        RCLCPP_DEBUG(this->get_logger(),
+                     "ArUco %d in %s: x=%.2f, y=%.2f, z=%.2f",
+                     marker_id, _camera_frame.c_str(),
+                     pose.position.x, pose.position.y, pose.position.z);
     }
 
-    void ArucoDetector::_publish_marker_array(const std_msgs::msg::Header& header)
+    void ArucoDetector::_publish_marker_array(const perseus_interfaces::msg::DetectionArray& detections)
     {
         visualization_msgs::msg::MarkerArray marker_array;
         {
-            std::lock_guard<std::mutex> lock(_detections_mutex);
-            for (std::size_t i = 0; i < _latest_ids.size(); ++i)
+            for (const auto& detection : detections.detections)
             {
+                if (!detection.has_pose)
+                {
+                    continue;
+                }
+
                 visualization_msgs::msg::Marker marker;
-                marker.header.frame_id = _tf_output_frame;
-                marker.header.stamp = header.stamp;
+                // Markers are drawn in the camera frame, the frame the poses are measured
+                // in. rviz composes the rest of the tree itself.
+                marker.header.frame_id = _camera_frame;
+                marker.header.stamp = detections.header.stamp;
                 marker.ns = "aruco_markers";
-                marker.id = _latest_ids[i];
+                marker.id = detection.id;
                 marker.type = visualization_msgs::msg::Marker::CUBE;
                 marker.action = visualization_msgs::msg::Marker::ADD;
 
-                marker.pose.position.x = _latest_poses[i].position.x;
-                marker.pose.position.y = _latest_poses[i].position.y;
-                marker.pose.position.z = _latest_poses[i].position.z;
-                marker.pose.orientation = _latest_poses[i].orientation;
+                marker.pose = detection.pose;
 
                 marker.scale.x = _marker_length;
                 marker.scale.y = _marker_length;
@@ -597,23 +524,9 @@ namespace perseus_vision
         _marker_array_publisher->publish(marker_array);
     }
 
-    void ArucoDetector::_publish_detections(const std_msgs::msg::Header& header)
+    void ArucoDetector::_publish_detections(const perseus_interfaces::msg::DetectionArray& detections)
     {
-        if (!_should_publish_output || !_detection_publisher)
-        {
-            return;
-        }
-
-        perseus_interfaces::msg::ObjectDetections detection_msg;
-        detection_msg.stamp = header.stamp;
-        detection_msg.frame_id = _tf_output_frame;
-        {
-            std::lock_guard<std::mutex> lock(_detections_mutex);
-            detection_msg.ids = _latest_ids;
-            detection_msg.poses = _latest_poses;
-            detection_msg.regions_of_interest = _latest_regions_of_interest;
-        }
-        _detection_publisher->publish(detection_msg);
+        _detection_publisher->publish(detections);
     }
 
     void ArucoDetector::_handle_detect_objects_request(const std::shared_ptr<DetectObjects::Request> request,
@@ -621,34 +534,32 @@ namespace perseus_vision
     {
         // Get data snapshot while holding lock, then release before I/O
         cv::Mat frame_to_save;
+        perseus_interfaces::msg::DetectionArray detections;
         std::vector<marker_coordinate_t> marker_coordinates;
-        std::vector<int32_t> ids;
         std::size_t detection_count = 0;
         {
             std::lock_guard<std::mutex> lock(_detections_mutex);
 
-            response->stamp = _latest_timestamp;
-            response->frame_id = _tf_output_frame;
-            response->ids = _latest_ids;
-            response->poses = _latest_poses;
-            response->message = _latest_ids.empty()
+            response->header = _latest_detections.header;
+            response->detections = _latest_detections.detections;
+            response->message = _latest_detections.detections.empty()
                                     ? "No ArUco detections are currently cached."
                                     : "Returned cached ArUco detections.";
-            detection_count = _latest_ids.size();
+            detection_count = _latest_detections.detections.size();
 
             // Copy data needed for image processing
             if (request->capture_image)
             {
                 frame_to_save = _latest_frame.clone();
+                detections = _latest_detections;
                 marker_coordinates = _latest_marker_coordinates;
-                ids = _latest_ids;
             }
         }
 
         // Handle image capture if requested (outside of lock)
         if (request->capture_image)
         {
-            _save_annotated_capture(request->img_save_path, frame_to_save, marker_coordinates, ids);
+            _save_annotated_capture(request->img_save_path, frame_to_save, detections, marker_coordinates);
         }
 
         if (detection_count > 0)
@@ -663,8 +574,8 @@ namespace perseus_vision
 
     void ArucoDetector::_save_annotated_capture(const std::string& save_path,
                                                 cv::Mat& frame,
-                                                const std::vector<marker_coordinate_t>& marker_coordinates,
-                                                const std::vector<int32_t>& ids) const
+                                                const perseus_interfaces::msg::DetectionArray& detections,
+                                                const std::vector<marker_coordinate_t>& marker_coordinates) const
     {
         if (frame.empty())
         {
@@ -683,12 +594,20 @@ namespace perseus_vision
                 return;
             }
 
+            // Render exactly as the overlay node does, then add the capture-only text
+            draw_detections(frame, detections);
             draw_capture_overlay(frame, marker_coordinates);
 
             // Add marker IDs and a timestamp to the filename to prevent overwrites
             const auto epoch_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                                       std::chrono::system_clock::now().time_since_epoch())
                                       .count();
+            std::vector<int32_t> ids;
+            ids.reserve(detections.detections.size());
+            for (const auto& detection : detections.detections)
+            {
+                ids.push_back(detection.id);
+            }
             const std::string filename = save_path + "/aruco_" + join_marker_ids(ids) +
                                          "_" + std::to_string(epoch_ms) + ".png";
 
@@ -732,3 +651,5 @@ namespace perseus_vision
     }
 
 }  // namespace perseus_vision
+
+RCLCPP_COMPONENTS_REGISTER_NODE(perseus_vision::ArucoDetector)

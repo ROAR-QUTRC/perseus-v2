@@ -3,8 +3,6 @@
 
 #include "perseus_vision/cube_detector/cube_detector.hpp"
 
-#include <tf2/exceptions.h>
-
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -13,11 +11,12 @@
 #include <ctime>
 #include <filesystem>
 #include <iomanip>
-#include <limits>
+#include <rclcpp_components/register_node_macro.hpp>
 #include <sstream>
 #include <string>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <vector>
+
+#include "perseus_vision/common/detection_renderer.hpp"
 
 namespace perseus_vision
 {
@@ -120,20 +119,6 @@ namespace perseus_vision
             float score{0.0f};
         };
 
-        /// @brief Converts an image-space bounding box into a region of interest message.
-        /// @param bounding_box Bounding box in original image coordinates.
-        /// @return The equivalent region of interest, clamped to non-negative offsets.
-        sensor_msgs::msg::RegionOfInterest region_of_interest_from_rect(const cv::Rect& bounding_box)
-        {
-            sensor_msgs::msg::RegionOfInterest region_of_interest;
-            region_of_interest.x_offset = static_cast<uint32_t>(std::max(0, bounding_box.x));
-            region_of_interest.y_offset = static_cast<uint32_t>(std::max(0, bounding_box.y));
-            region_of_interest.width = static_cast<uint32_t>(std::max(0, bounding_box.width));
-            region_of_interest.height = static_cast<uint32_t>(std::max(0, bounding_box.height));
-            region_of_interest.do_rectify = false;
-            return region_of_interest;
-        }
-
         /// @brief Finds the highest scoring class for one candidate box in the model output.
         /// @param data Model output tensor data.
         /// @param num_boxes Number of candidate boxes in @p data.
@@ -152,23 +137,6 @@ namespace perseus_vision
                 }
             }
             return best;
-        }
-
-        /// @brief Builds a pose whose every field is NaN, marking it as unresolved.
-        /// @return A pose signalling that no 3D position is available.
-        geometry_msgs::msg::Pose make_unresolved_pose()
-        {
-            const double not_a_number = std::numeric_limits<double>::quiet_NaN();
-
-            geometry_msgs::msg::Pose pose;
-            pose.position.x = not_a_number;
-            pose.position.y = not_a_number;
-            pose.position.z = not_a_number;
-            pose.orientation.x = not_a_number;
-            pose.orientation.y = not_a_number;
-            pose.orientation.z = not_a_number;
-            pose.orientation.w = not_a_number;
-            return pose;
         }
 
         /// @brief Builds the quaternion pointing along a given yaw and pitch.
@@ -290,23 +258,14 @@ namespace perseus_vision
             return std::string(timestamp_text);
         }
 
-        /// @brief Draws the capture timestamp, frame ID, and detection list onto an image.
+        /// @brief Draws the capture timestamp and detection list onto an image.
         /// @param frame Image to draw onto. Modified in place.
-        /// @param ids Detection IDs to list.
-        /// @param poses Detection poses matching @p ids.
-        /// @param bounding_boxes Bounding boxes matching @p ids, drawn onto the image.
-        /// @param frame_id Frame the poses are expressed in.
-        void draw_detection_overlay(
-            cv::Mat& frame,
-            const std::vector<int32_t>& ids,
-            const std::vector<geometry_msgs::msg::Pose>& poses,
-            const std::vector<cv::Rect>& bounding_boxes,
-            const std::string& frame_id)
+        /// @param detections Detections to list, already drawn by the shared renderer.
+        void draw_capture_overlay(cv::Mat& frame, const perseus_interfaces::msg::DetectionArray& detections)
         {
             const cv::Scalar timestamp_color(0, 255, 255);
             const cv::Scalar frame_id_color(255, 255, 0);
             const cv::Scalar detection_color(0, 255, 0);
-            const cv::Scalar bounding_box_color(0, 255, 255);
 
             cv::putText(frame, "Time: " + format_local_timestamp(),
                         cv::Point(OVERLAY_MARGIN_PX, OVERLAY_TIMESTAMP_Y_PX),
@@ -314,23 +273,27 @@ namespace perseus_vision
                         timestamp_color, OVERLAY_TIMESTAMP_THICKNESS);
 
             int text_y = OVERLAY_FRAME_Y_PX;
-            cv::putText(frame, "Frame: " + frame_id,
+            cv::putText(frame, "Frame: " + detections.header.frame_id,
                         cv::Point(OVERLAY_MARGIN_PX, text_y),
                         cv::FONT_HERSHEY_SIMPLEX, OVERLAY_TEXT_FONT_SCALE,
                         frame_id_color, OVERLAY_TEXT_THICKNESS);
 
-            for (std::size_t i = 0; i < ids.size() && i < poses.size(); ++i)
+            for (const auto& detection : detections.detections)
             {
-                if (i < bounding_boxes.size())
-                {
-                    cv::rectangle(frame, bounding_boxes[i], bounding_box_color, BOX_THICKNESS);
-                }
-
                 text_y += OVERLAY_LINE_HEIGHT_PX;
                 std::ostringstream detection_line;
-                detection_line << "ID " << ids[i]
-                               << " x=" << std::fixed << std::setprecision(POSE_TEXT_PRECISION) << poses[i].position.x
-                               << " y=" << std::fixed << std::setprecision(POSE_TEXT_PRECISION) << poses[i].position.y;
+                detection_line << "ID " << detection.id;
+                if (detection.has_pose)
+                {
+                    detection_line << " x=" << std::fixed << std::setprecision(POSE_TEXT_PRECISION)
+                                   << detection.pose.position.x
+                                   << " y=" << std::fixed << std::setprecision(POSE_TEXT_PRECISION)
+                                   << detection.pose.position.y;
+                }
+                else
+                {
+                    detection_line << " (no pose)";
+                }
                 cv::putText(frame, detection_line.str(),
                             cv::Point(OVERLAY_MARGIN_PX, text_y),
                             cv::FONT_HERSHEY_SIMPLEX, OVERLAY_TEXT_FONT_SCALE,
@@ -339,8 +302,8 @@ namespace perseus_vision
         }
     }  // namespace
 
-    CubeDetector::CubeDetector()
-        : Node("cube_detector"),
+    CubeDetector::CubeDetector(const rclcpp::NodeOptions& options)
+        : Node("cube_detector", options),
           _ort_env(ORT_LOGGING_LEVEL_WARNING, "cube_detector")
     {
         std::string camera_topic;
@@ -370,19 +333,14 @@ namespace perseus_vision
         }
 
         // Publishers and services
-        _annotated_image_publisher = create_publisher<sensor_msgs::msg::Image>(
-            _output_img_topic, QOS_DEPTH);
+        _detection_publisher = create_publisher<perseus_interfaces::msg::DetectionArray>(
+            _output_detections_topic, QOS_DEPTH);
         _cube_marker_publisher = create_publisher<visualization_msgs::msg::MarkerArray>(
             _output_markers_topic, QOS_DEPTH);
-        _cube_detection_publisher = create_publisher<perseus_interfaces::msg::ObjectDetections>(
-            _output_detections_topic, QOS_DEPTH);
         _detect_objects_service = create_service<DetectObjects>(
             "~/detect_objects",
             std::bind(&CubeDetector::_handle_detect_objects_request, this,
                       std::placeholders::_1, std::placeholders::_2));
-
-        _tf_buffer = std::make_unique<tf2_ros::Buffer>(get_clock());
-        _tf_listener = std::make_shared<tf2_ros::TransformListener>(*_tf_buffer);
 
         RCLCPP_INFO(get_logger(), "CubeDetectorNode ready — subscribed to %s", camera_topic.c_str());
         if (_is_always_on.load())
@@ -404,7 +362,6 @@ namespace perseus_vision
         // Keep the node alive even without subscribers
         declare_parameter("always_on", DEFAULT_IS_ALWAYS_ON);
         declare_parameter("use_cuda", DEFAULT_SHOULD_USE_CUDA);
-        declare_parameter("publish_annotated_image", DEFAULT_SHOULD_PUBLISH_ANNOTATED_IMAGE);
         // Zero processes every frame
         declare_parameter("processing_frequency_hz", DEFAULT_PROCESSING_FREQUENCY_HZ);
         declare_parameter("intra_op_num_threads", DEFAULT_INTRA_OP_NUM_THREADS);
@@ -416,8 +373,6 @@ namespace perseus_vision
         declare_parameter("depth_image.unit_scale", DEFAULT_DEPTH_UNIT_SCALE);
         declare_parameter("depth_image.max_range_m", DEFAULT_DEPTH_MAX_RANGE_M);
         declare_parameter("depth_image.min_range_m", DEFAULT_DEPTH_MIN_RANGE_M);
-        declare_parameter("tf_output_frame", DEFAULT_TF_OUTPUT_FRAME);
-        declare_parameter("output_img_topic", DEFAULT_OUTPUT_IMG_TOPIC);
         declare_parameter("output_detections_topic", DEFAULT_OUTPUT_DETECTIONS_TOPIC);
         declare_parameter("output_markers_topic", DEFAULT_OUTPUT_MARKERS_TOPIC);
 
@@ -435,11 +390,8 @@ namespace perseus_vision
         _confidence_threshold = static_cast<float>(get_parameter("confidence_threshold").as_double());
         _is_always_on.store(get_parameter("always_on").as_bool());
         _should_use_cuda = get_parameter("use_cuda").as_bool();
-        _should_publish_annotated_image = get_parameter("publish_annotated_image").as_bool();
         _processing_frequency_hz.store(get_parameter("processing_frequency_hz").as_double());
         _model_path = get_parameter("model_path").as_string();
-        _tf_output_frame = get_parameter("tf_output_frame").as_string();
-        _output_img_topic = get_parameter("output_img_topic").as_string();
         _output_detections_topic = get_parameter("output_detections_topic").as_string();
         _output_markers_topic = get_parameter("output_markers_topic").as_string();
 
@@ -749,83 +701,7 @@ namespace perseus_vision
         const std::size_t num_boxes = static_cast<std::size_t>(output_shape[2]);
 
         const std::vector<detection_t> detections = _postprocess(output_data, num_boxes);
-        _publish_annotated_image(bgr_image, detections, header);
-
-        if (_depth_estimation_mode == DEPTH_MODE_DEPTH_IMAGE)
-        {
-            _publish_depth_markers(detections, header);
-            return;
-        }
-
-        _publish_2d_detections(detections, header);
-    }
-
-    void CubeDetector::_publish_annotated_image(
-        const cv::Mat& image,
-        const std::vector<detection_t>& detections,
-        const std_msgs::msg::Header& header)
-    {
-        cv::Mat annotated = image.clone();
-
-        for (const auto& detection : detections)
-        {
-            const std::size_t class_index = static_cast<std::size_t>(detection.class_id);
-            const cv::Scalar& color = CLASS_COLORS[class_index];
-
-            cv::rectangle(annotated, detection.bounding_box, color, BOX_THICKNESS);
-
-            // Class and confidence, drawn above the box, such as "blue 0.97"
-            const std::string label =
-                CLASS_NAMES[class_index] + " " + std::to_string(detection.confidence).substr(0, CONFIDENCE_TEXT_LENGTH);
-            cv::putText(annotated, label,
-                        cv::Point(detection.bounding_box.x, detection.bounding_box.y - LABEL_Y_OFFSET_PX),
-                        cv::FONT_HERSHEY_SIMPLEX, LABEL_FONT_SCALE, color, LABEL_THICKNESS);
-
-            // Center coordinates, drawn below the class label, such as "cx:320 cy:240"
-            const int center_x = detection.bounding_box.x + (detection.bounding_box.width / 2);
-            const int center_y = detection.bounding_box.y + (detection.bounding_box.height / 2);
-            const std::string center_label =
-                "cx:" + std::to_string(center_x) + " cy:" + std::to_string(center_y);
-            cv::putText(annotated, center_label,
-                        cv::Point(detection.bounding_box.x, detection.bounding_box.y - CENTER_LABEL_Y_OFFSET_PX),
-                        cv::FONT_HERSHEY_SIMPLEX, CENTER_LABEL_FONT_SCALE, color, CENTER_LABEL_THICKNESS);
-
-            cv::drawMarker(annotated, cv::Point(center_x, center_y), color,
-                           cv::MARKER_CROSS, CROSSHAIR_SIZE_PX, CROSSHAIR_THICKNESS);
-        }
-
-        if (_should_publish_annotated_image)
-        {
-            _annotated_image_publisher->publish(
-                *cv_bridge::CvImage(header, "bgr8", annotated).toImageMsg());
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(_detections_mutex);
-            _latest_annotated_frame = annotated.clone();
-        }
-    }
-
-    void CubeDetector::_get_depth_source(
-        const std_msgs::msg::Header& header,
-        std::string& source_frame_out,
-        builtin_interfaces::msg::Time& source_stamp_out) const
-    {
-        source_frame_out = header.frame_id;
-        source_stamp_out = header.stamp;
-
-        std::lock_guard<std::mutex> lock(_depth_mutex);
-        if (_latest_depth_image)
-        {
-            source_frame_out = _latest_depth_image->header.frame_id;
-            source_stamp_out = _latest_depth_image->header.stamp;
-        }
-    }
-
-    std::string CubeDetector::_get_tf_output_frame() const
-    {
-        std::lock_guard<std::mutex> lock(_parameter_mutex);
-        return _tf_output_frame;
+        _publish_detections(detections, header);
     }
 
     std::string CubeDetector::_build_depth_summary_message(std::size_t detected_count, std::size_t resolved_count)
@@ -857,108 +733,56 @@ namespace perseus_vision
         return message_stream.str();
     }
 
-    void CubeDetector::_cache_latest_detections(
-        const perseus_interfaces::msg::ObjectDetections& detections_msg,
-        std::vector<cv::Rect> bounding_boxes,
-        std::string message)
-    {
-        std::lock_guard<std::mutex> lock(_detections_mutex);
-        _latest_detections_stamp = detections_msg.stamp;
-        _latest_detections_frame_id = detections_msg.frame_id;
-        _latest_detection_ids = detections_msg.ids;
-        _latest_detection_poses = detections_msg.poses;
-        _latest_detection_regions_of_interest = detections_msg.regions_of_interest;
-        _latest_detection_bounding_boxes = std::move(bounding_boxes);
-        _latest_detection_message = std::move(message);
-    }
-
-    void CubeDetector::_publish_depth_markers(
+    void CubeDetector::_publish_detections(
         const std::vector<detection_t>& detections,
         const std_msgs::msg::Header& header)
     {
-        std::string source_frame;
-        builtin_interfaces::msg::Time source_stamp;
-        _get_depth_source(header, source_frame, source_stamp);
+        const bool use_depth = (_depth_estimation_mode == DEPTH_MODE_DEPTH_IMAGE);
 
-        std::string target_frame = _get_tf_output_frame();
-        if (target_frame.empty())
-        {
-            target_frame = source_frame;
-        }
+        perseus_interfaces::msg::DetectionArray detections_msg;
+        detections_msg.header = header;
+        detections_msg.detections.reserve(detections.size());
 
-        std_msgs::msg::Header marker_header = header;
-        marker_header.frame_id = target_frame;
-        marker_header.stamp = source_stamp;
-
-        perseus_interfaces::msg::ObjectDetections detections_msg;
-        detections_msg.stamp = source_stamp;
-        detections_msg.frame_id = target_frame;
-
-        visualization_msgs::msg::MarkerArray marker_array;
-        marker_array.markers.push_back(make_clear_marker(marker_header));
-
-        std::vector<cv::Rect> resolved_bounding_boxes;
-        int32_t marker_id = 1;
+        std::size_t resolved_count = 0;
         for (const auto& detection : detections)
         {
-            geometry_msgs::msg::Pose pose;
-            double distance_m = 0.0;
-            if (!_estimate_cube_pose_from_depth(detection, pose, distance_m))
-            {
-                continue;
-            }
+            const std::size_t class_index = static_cast<std::size_t>(detection.class_id);
 
-            geometry_msgs::msg::Pose marker_pose = pose;
-            if (target_frame != source_frame &&
-                !_transform_pose_to_output_frame(pose, target_frame, source_frame, source_stamp, marker_pose))
-            {
-                continue;
-            }
-
-            marker_array.markers.push_back(
-                make_cube_marker(marker_header, marker_id++, marker_pose, detection.class_id));
-            marker_array.markers.push_back(
-                make_text_marker(marker_header, marker_id++, marker_pose, detection.class_id));
-
+            perseus_interfaces::msg::Detection detection_msg;
+            detection_msg.bounding_box = polygon_from_rect(detection.bounding_box);
+            detection_msg.color = color_from_bgr(CLASS_COLORS[class_index]);
+            detection_msg.class_label = "cube_" + CLASS_NAMES[class_index];
             // Cube IDs are mapped by class order: blue=1, green=2, red=3, white=4.
-            detections_msg.ids.push_back(detection.class_id + 1);
-            detections_msg.poses.push_back(marker_pose);
-            detections_msg.regions_of_interest.push_back(region_of_interest_from_rect(detection.bounding_box));
-            resolved_bounding_boxes.push_back(detection.bounding_box);
+            detection_msg.id = detection.class_id + 1;
+            detection_msg.confidence = detection.confidence;
+            detection_msg.has_pose = false;
+
+            // A detection whose depth cannot be read is still reported, with has_pose
+            // false, rather than dropped. "Seen but not located" is useful to a consumer.
+            if (use_depth)
+            {
+                geometry_msgs::msg::Pose pose;
+                double distance_m = 0.0;
+                if (_estimate_cube_pose_from_depth(detection, pose, distance_m))
+                {
+                    detection_msg.pose = pose;
+                    detection_msg.has_pose = true;
+                    ++resolved_count;
+                }
+            }
+
+            detections_msg.detections.push_back(std::move(detection_msg));
         }
 
-        _cube_marker_publisher->publish(marker_array);
-        _cube_detection_publisher->publish(detections_msg);
-
-        // Cache only detections that produced valid depth-derived poses.
-        _cache_latest_detections(detections_msg,
-                                 std::move(resolved_bounding_boxes),
-                                 _build_depth_summary_message(detections.size(), detections_msg.ids.size()));
-    }
-
-    void CubeDetector::_publish_2d_detections(
-        const std::vector<detection_t>& detections,
-        const std_msgs::msg::Header& header)
-    {
-        perseus_interfaces::msg::ObjectDetections detections_msg;
-        detections_msg.stamp = header.stamp;
-        detections_msg.frame_id = header.frame_id;
-
-        std::vector<cv::Rect> bounding_boxes;
-        bounding_boxes.reserve(detections.size());
-
-        for (const auto& detection : detections)
-        {
-            detections_msg.ids.push_back(detection.class_id + 1);
-            detections_msg.poses.push_back(make_unresolved_pose());
-            detections_msg.regions_of_interest.push_back(region_of_interest_from_rect(detection.bounding_box));
-            bounding_boxes.push_back(detection.bounding_box);
-        }
-
-        _cube_detection_publisher->publish(detections_msg);
+        _detection_publisher->publish(detections_msg);
+        _publish_markers(detections_msg);
 
         std::string message;
-        if (detections.empty())
+        if (use_depth)
+        {
+            message = _build_depth_summary_message(detections.size(), resolved_count);
+        }
+        else if (detections.empty())
         {
             message = "No cube detections found in the latest image.";
         }
@@ -970,7 +794,39 @@ namespace perseus_vision
             message = message_stream.str();
         }
 
-        _cache_latest_detections(detections_msg, std::move(bounding_boxes), std::move(message));
+        _cache_latest_detections(detections_msg, std::move(message));
+    }
+
+    void CubeDetector::_publish_markers(const perseus_interfaces::msg::DetectionArray& detections)
+    {
+        visualization_msgs::msg::MarkerArray marker_array;
+        marker_array.markers.push_back(make_clear_marker(detections.header));
+
+        int32_t marker_id = 1;
+        for (const auto& detection : detections.detections)
+        {
+            if (!detection.has_pose)
+            {
+                continue;
+            }
+
+            const int32_t class_id = detection.id - 1;
+            marker_array.markers.push_back(
+                make_cube_marker(detections.header, marker_id++, detection.pose, class_id));
+            marker_array.markers.push_back(
+                make_text_marker(detections.header, marker_id++, detection.pose, class_id));
+        }
+
+        _cube_marker_publisher->publish(marker_array);
+    }
+
+    void CubeDetector::_cache_latest_detections(
+        const perseus_interfaces::msg::DetectionArray& detections,
+        std::string message)
+    {
+        std::lock_guard<std::mutex> lock(_detections_mutex);
+        _latest_detections = detections;
+        _latest_detection_message = std::move(message);
     }
 
     bool CubeDetector::_estimate_cube_pose_from_depth(
@@ -1102,43 +958,6 @@ namespace perseus_vision
         return static_cast<double>(row_data[column]);
     }
 
-    bool CubeDetector::_transform_pose_to_output_frame(
-        const geometry_msgs::msg::Pose& input_pose,
-        const std::string& target_frame,
-        const std::string& source_frame,
-        const builtin_interfaces::msg::Time& stamp,
-        geometry_msgs::msg::Pose& output_pose) const
-    {
-        if (!_tf_buffer)
-        {
-            return false;
-        }
-
-        geometry_msgs::msg::PoseStamped in_pose;
-        in_pose.header.frame_id = source_frame;
-        in_pose.header.stamp = stamp;
-        in_pose.pose = input_pose;
-
-        try
-        {
-            const geometry_msgs::msg::PoseStamped out_pose = _tf_buffer->transform(in_pose, target_frame);
-            output_pose = out_pose.pose;
-            return true;
-        }
-        catch (const tf2::TransformException& ex)
-        {
-            RCLCPP_WARN_THROTTLE(
-                get_logger(),
-                *get_clock(),
-                LOG_THROTTLE_MS,
-                "Failed to transform cube pose from %s to %s: %s",
-                source_frame.c_str(),
-                target_frame.c_str(),
-                ex.what());
-            return false;
-        }
-    }
-
     void CubeDetector::_handle_detect_objects_request(
         const std::shared_ptr<DetectObjects::Request> request,
         std::shared_ptr<DetectObjects::Response> response)
@@ -1149,27 +968,17 @@ namespace perseus_vision
         }
 
         cv::Mat frame_to_save;
-        std::vector<int32_t> ids;
-        std::vector<geometry_msgs::msg::Pose> poses;
-        std::vector<cv::Rect> bounding_boxes;
-        std::string frame_id;
+        perseus_interfaces::msg::DetectionArray detections;
 
         {
             std::lock_guard<std::mutex> lock(_detections_mutex);
-            response->stamp = _latest_detections_stamp;
-            response->frame_id = _latest_detections_frame_id;
-            response->ids = _latest_detection_ids;
-            response->poses = _latest_detection_poses;
-            response->regions_of_interest = _latest_detection_regions_of_interest;
+            response->header = _latest_detections.header;
+            response->detections = _latest_detections.detections;
             response->message = _latest_detection_message;
 
             if (request->capture_image)
             {
-                frame_to_save = _latest_annotated_frame.clone();
-                ids = _latest_detection_ids;
-                poses = _latest_detection_poses;
-                bounding_boxes = _latest_detection_bounding_boxes;
-                frame_id = _latest_detections_frame_id;
+                detections = _latest_detections;
             }
         }
 
@@ -1178,7 +987,16 @@ namespace perseus_vision
             return;
         }
 
-        _save_detection_capture(request->img_save_path, frame_to_save, ids, poses, bounding_boxes, frame_id);
+        // The raw frame lives under its own mutex, so take it in a separate block.
+        {
+            std::lock_guard<std::mutex> lock(_latest_image_mutex);
+            if (_has_latest_bgr_frame)
+            {
+                frame_to_save = _latest_bgr_frame.clone();
+            }
+        }
+
+        _save_detection_capture(request->img_save_path, frame_to_save, detections);
     }
 
     void CubeDetector::_run_inference_on_cached_frame()
@@ -1204,10 +1022,7 @@ namespace perseus_vision
     void CubeDetector::_save_detection_capture(
         const std::string& save_path,
         cv::Mat& frame,
-        const std::vector<int32_t>& ids,
-        const std::vector<geometry_msgs::msg::Pose>& poses,
-        const std::vector<cv::Rect>& bounding_boxes,
-        const std::string& frame_id) const
+        const perseus_interfaces::msg::DetectionArray& detections) const
     {
         if (frame.empty())
         {
@@ -1225,7 +1040,9 @@ namespace perseus_vision
                         save_directory.c_str(), error_code.message().c_str());
         }
 
-        draw_detection_overlay(frame, ids, poses, bounding_boxes, frame_id);
+        // Render exactly as the overlay node does, then add the capture-only text
+        draw_detections(frame, detections);
+        draw_capture_overlay(frame, detections);
 
         const auto epoch_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                                   std::chrono::system_clock::now().time_since_epoch())
@@ -1267,15 +1084,11 @@ namespace perseus_vision
                 _processing_frequency_hz.store(processing_frequency_hz);
                 continue;
             }
-
-            if (parameter.get_name() == "tf_output_frame")
-            {
-                std::lock_guard<std::mutex> lock(_parameter_mutex);
-                _tf_output_frame = parameter.as_string();
-            }
         }
 
         return result;
     }
 
 }  // namespace perseus_vision
+
+RCLCPP_COMPONENTS_REGISTER_NODE(perseus_vision::CubeDetector)

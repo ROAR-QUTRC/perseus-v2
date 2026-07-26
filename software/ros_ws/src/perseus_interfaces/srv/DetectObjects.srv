@@ -1,28 +1,18 @@
 # Request
-# Calling this service asks the node to return the latest detected ArUco marker
-# poses in the target frame. Optionally, capture and save an annotated image.
+# Calling this service asks the node to return its latest detections. Optionally,
+# capture and save an annotated image.
 bool capture_image
 string img_save_path
 ---
 # Response
-# Time at which the detections are valid (e.g. camera header.stamp)
-builtin_interfaces/Time stamp
+# header.stamp/frame_id match the image the detections came from, exactly as on the
+# detections topic.
+std_msgs/Header header
 
-# Frame in which the poses are expressed (e.g. "odom" or "map")
-string frame_id
+# Latest cached detections. Entries with has_pose false were seen in the image but
+# could not be resolved to a 3D pose.
+Detection[] detections
 
-# IDs of all detected markers
-int32[] ids
-
-# Pose of each detected marker, in the same order as `ids`
-# (ids[i] corresponds to poses[i]).
-# For 2D-only detections where no 3D pose could be estimated, all pose fields
-# are set to NaN and consumers must check for finite values before use.
-geometry_msgs/Pose[] poses
-
-# 2D image-space region for each detection, in the same order as `ids`
-sensor_msgs/RegionOfInterest[] regions_of_interest
-
-# Human-readable status for callers, e.g. when 2D detections were found but
-# could not be resolved into poses.
+# Human-readable status for callers, e.g. when detections were found but none could
+# be resolved into poses.
 string message

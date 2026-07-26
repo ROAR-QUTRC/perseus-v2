@@ -2,15 +2,22 @@
 
 ## Overview
 
-`aruco_detector` detects **OpenCV ArUco markers** in a camera stream and estimates each marker’s **6-DoF pose** using known camera intrinsics + marker size. It can:
+`aruco_detector` detects **OpenCV ArUco markers** in a camera stream and estimates each marker's **6-DoF pose** using known camera intrinsics + marker size. It can:
 
 - Subscribe to **raw** or **compressed** images
 - Optionally subscribe to **CameraInfo** for live calibration
 - Filter weak detections using a **minimum bounding-box area** threshold
-- Publish **annotated debug images**
-- Publish detections on a topic (`ObjectDetections`) (optional)
+- Publish **detections** (`DetectionArray`) carrying both the image-space polygon and,
+  when calibration allows, the 3D pose
+- Publish rviz visualization markers
 - Broadcast TF frames for each detected marker (`aruco_marker_<id>`) (optional)
 - Provide detections via a **service**, with an option to **save an annotated image to disk**
+
+:::{important}
+This node does **not** publish an annotated image stream. Annotation is handled by
+`detection_overlay`, which combines this node's detections with every other detector's
+into a single image. See [the vision pipeline page](project:/development/software/vision_pipeline.md).
+:::
 
 ---
 
@@ -52,7 +59,7 @@ Used when `compressed_io = true`:
 
 ### Camera info (optional)
 
-Used only when `use_camera_info = true` **and** `compressed_io = false` (as implemented):
+Used when `use_camera_info = true`, in both the raw and compressed image modes:
 
 ```text
 <camera_info_topic>   (sensor_msgs/CameraInfo)
@@ -64,73 +71,64 @@ Used only when `use_camera_info = true` **and** `compressed_io = false` (as impl
 /camera/camera/color/camera_info
 ```
 
-> Note: In the current code, `camera_info` subscription is created only in the raw-image branch (not in the compressed branch).
-
 ---
 
 ## Published Topics
 
-### Annotated output image (raw)
+### Detections
 
-Published when `publish_img = true` and `compressed_io = false`:
+Always published, on a single topic. Consumed by `detection_overlay` for drawing, and by
+anything wanting marker poses:
 
 ```text
-<output_img>   (sensor_msgs/Image)
+<output_topic>   (perseus_interfaces/msg/DetectionArray)
 ```
 
 **Default**
 
 ```text
-/detection/aruco/image
+/perseus_vision/aruco/detections
 ```
+
+Each detection carries the marker's **perspective quad** as a 4-point polygon, a
+`class_label` of `aruco_<id>`, the numeric marker `id`, a `confidence` of `1.0`, and the
+marker `pose` in the camera optical frame with `has_pose: true`.
+
+ArUco detection is geometric rather than probabilistic: a marker either decodes to a valid
+ID or it is not reported at all, so an accepted marker is always full confidence.
+
+:::{important}
+The pose is expressed in `camera_frame`, not in `odom`. Transform it yourself via tf2, or
+use the `aruco_marker_<id>` TF frames below. See
+[the vision pipeline page](project:/development/software/vision_pipeline.md) for why.
+:::
+
+If no camera calibration is available the marker is still reported, with `has_pose: false`
+and no TF broadcast.
 
 ---
 
-### Annotated output image (compressed)
+### Visualization markers
 
-Published when `publish_img = true` and `compressed_io = true`:
-
-```text
-<output_img>/compressed   (sensor_msgs/CompressedImage)
-```
-
----
-
-### Detection output topic (optional)
-
-Published when `publish_output = true`:
+Always published:
 
 ```text
-<output_topic>   (perseus_interfaces/msg/ObjectDetections)
-```
-
-**Default**
-
-```text
-/detection/aruco/detections
+/detection/aruco/markers   (visualization_msgs/MarkerArray)
 ```
 
 ---
 
 ## TF Frames
 
-If `publish_tf = true`, for every detected marker ID `N`, the node publishes:
+If `publish_tf = true`, for every marker whose pose was resolved, the node broadcasts:
 
 ```text
-aruco_marker_<N>
+camera_frame  ->  aruco_marker_<N>
 ```
 
-Parent frame:
-
-```text
-tf_output_frame
-```
-
-**Default parent frame**
-
-```text
-odom
-```
+The transform that was actually measured is published as-is, parented to the camera
+frame, and tf2 composes it with the rest of the tree. A consumer wanting the marker in
+`odom` or `map` looks that up itself, which also lets it choose the lookup time.
 
 ---
 
@@ -142,14 +140,14 @@ odom
 /detect_objects   (perseus_interfaces/srv/DetectObjects)
 ```
 
-Returns the **latest cached detections**, including:
+Returns the **latest cached detections** in exactly the shape published on the topic:
 
-- `ids[]`: marker IDs
-- `poses[]`: marker poses in `tf_output_frame`
-- `stamp`: timestamp of the processed frame
-- `frame_id`: set to `tf_output_frame`
+- `header`: stamp and frame of the processed image
+- `detections[]`: `Detection` entries, each with polygon, label, id, confidence, and
+  `pose` when `has_pose` is true
+- `message`: human-readable status
 
-#### Image capture feature (new)
+#### Image capture feature
 
 The request supports an image capture mode:
 
@@ -158,16 +156,20 @@ The request supports an image capture mode:
 
 If `capture_image = true`, the node will:
 
-1. Create the directory `img_save_path` (via `mkdir -p`)
-2. Save an annotated PNG image:
-   - Filename includes detected marker IDs: `aruco_<id1>_<id2>...png`
-   - If no markers: `aruco_no_markers.png`
-
+1. Create the directory `img_save_path` if it does not exist
+2. Annotate a copy of the latest **raw** frame with the cached detections, using the same
+   renderer the overlay node uses, so the capture matches the live stream
 3. Overlay text on the image:
    - Human-readable timestamp (system clock)
-   - Marker coordinate summary (`X, Y, Z` derived from `tvec` conversion)
+   - Marker coordinate summary (`X, Y, Z` derived from the translation vector)
 
-> The saved image uses the node’s cached `latest_frame_` which includes drawn markers/axes.
+4. Save a PNG named `aruco_<id1>_<id2>..._<epoch_ms>.png`, or
+   `aruco_no_markers_<epoch_ms>.png` when nothing was detected
+
+:::{note}
+The frame is annotated **on demand**, not kept permanently annotated. Nothing is drawn on
+the live detection path while no capture is in progress.
+:::
 
 ---
 
@@ -185,17 +187,16 @@ aruco_detector:
 | Parameter               |   Type | Default | Description                                                                                          |
 | ----------------------- | -----: | ------: | ---------------------------------------------------------------------------------------------------- |
 | `marker_length`         | double |  `0.35` | Physical marker size (meters). Used for pose estimation scale.                                       |
-| `axis_length`           | double |  `0.03` | Length of drawn axes in the debug image (meters).                                                    |
 | `dictionary_id`         |    int |     `1` | OpenCV predefined dictionary enum value (must match the printed markers).                            |
-| `min_bounding_box_area` | double | `100.0` | Filters detections: marker’s 2D bounding box area in pixels must be ≥ this threshold to be accepted. |
+| `min_bounding_box_area` | double | `100.0` | Filters detections: marker's 2D bounding box area in pixels must be ≥ this threshold to be accepted. |
 
 **Bounding box filtering details**
 
-- For each detected marker’s 4 corner points, the node computes:
+- For each detected marker's 4 corner points, the node computes:
   - `min_x, max_x, min_y, max_y`
   - area = `(max_x - min_x) * (max_y - min_y)`
 
-- If area < `min_bounding_box_area`, the marker is ignored (no TF, no output pose).
+- If area < `min_bounding_box_area`, the marker is ignored entirely (no detection, no pose, no TF).
 
 This helps reject:
 
@@ -207,37 +208,33 @@ This helps reject:
 
 ### Frames / transforms
 
-| Parameter         |   Type |               Default | Description                                                                                |
-| ----------------- | -----: | --------------------: | ------------------------------------------------------------------------------------------ |
-| `camera_frame`    | string | `camera_link_optical` | Frame ID assigned to marker poses before TF transform. Should be the camera optical frame. |
-| `tf_output_frame` | string |                `odom` | Target frame to transform marker poses into. Also used as `frame_id` in outputs.           |
+| Parameter         |   Type |                       Default | Description                                                                                |
+| ----------------- | -----: | ----------------------------: | ------------------------------------------------------------------------------------------ |
+| `camera_frame`    | string | `camera_color_optical_frame`  | Frame the marker poses are measured in, and the TF parent of `aruco_marker_<id>`. Should be the camera optical frame. |
 
 ---
 
-### Image I/O
+### Image input
 
-| Parameter       |   Type |                          Default | Description                                                              |
-| --------------- | -----: | -------------------------------: | ------------------------------------------------------------------------ |
-| `input_img`     | string | `/camera/camera/color/image_raw` | Raw image topic (base).                                                  |
-| `output_img`    | string |         `/detection/aruco/image` | Output annotated image topic (base).                                     |
-| `compressed_io` |   bool |                          `false` | If true: subscribe/publish to `<topic>/compressed` as `CompressedImage`. |
-| `publish_img`   |   bool |                           `true` | Publish annotated debug images.                                          |
+| Parameter       |   Type |                          Default | Description                                                    |
+| --------------- | -----: | -------------------------------: | ---------------------------------------------------------------- |
+| `input_img`     | string | `/camera/camera/color/image_raw` | Raw image topic (base).                                        |
+| `compressed_io` |   bool |                          `false` | If true, subscribe to `<input_img>/compressed` instead.        |
 
 ---
 
 ### Outputs
 
-| Parameter        |   Type |                       Default | Description                                                       |
-| ---------------- | -----: | ----------------------------: | ----------------------------------------------------------------- |
-| `publish_tf`     |   bool |                        `true` | Broadcast TF transforms `aruco_marker_<id>` in `tf_output_frame`. |
-| `publish_output` |   bool |                       `false` | Publish `ObjectDetections` messages to `output_topic`.            |
-| `output_topic`   | string | `/detection/aruco/detections` | Detection output topic name.                                      |
+| Parameter                     |   Type |                              Default | Description                                                       |
+| ----------------------------- | -----: | -----------------------------------: | ----------------------------------------------------------------- |
+| `publish_tf`   |   bool |                             `true` | Broadcast `camera_frame -> aruco_marker_<id>` transforms. |
+| `output_topic` | string | `/perseus_vision/aruco/detections` | Detection output topic name.                              |
 
 ---
 
 ### Camera calibration
 
-You support two modes:
+Two modes are supported.
 
 #### 1) Parameter-based calibration (always initialized)
 
@@ -247,6 +244,9 @@ These parameters are always declared and used as initial calibration.
 | ------------------------- | --------: | ----------------------------------------: | ------------------------------------------------ |
 | `camera_matrix`           | double[9] | `[530.4, 0, 320, 0, 530.4, 240, 0, 0, 1]` | Row-major intrinsic matrix K.                    |
 | `distortion_coefficients` |  double[] |                             `[0,0,0,0,0]` | Distortion coeffs, typically `[k1,k2,p1,p2,k3]`. |
+
+If `camera_matrix` does not contain exactly 9 elements the node logs an error and falls
+back to the default matrix.
 
 #### 2) CameraInfo override (optional)
 
@@ -259,49 +259,33 @@ If enabled, incoming `CameraInfo` replaces intrinsics.
 
 **CameraInfo behavior**
 
-- `camera_matrix_` is built from `msg->k[0..8]`
-- `dist_coeffs_` is built from `msg->d[]` (any length supported)
+- The intrinsic matrix is rebuilt from `msg->k[0..8]`
+- The distortion coefficients are rebuilt from `msg->d[]` (any length supported)
 
-> In `processImage`, if `camera_matrix_` is empty, pose estimation is skipped (warn once).
-> In the current code, `camera_matrix_` is initialized from params, so it will not be empty unless changed elsewhere.
+> If the intrinsic matrix is ever empty, pose estimation is skipped and a warning is
+> logged once. Because it is initialized from parameters, this will not happen unless it
+> is cleared elsewhere.
 
 ---
 
-## Detection Pipeline (detailed)
+## Detection Pipeline
 
 1. Receive image (raw or compressed)
 2. Detect markers with:
 
    ```cpp
-   detector_.detectMarkers(frame, corners, ids);
+   _detector.detectMarkers(frame, corners, ids);
    ```
 
-3. Clone frame for annotation:
+3. Clear cached detections and record the new timestamp
+4. If markers exist, for each marker:
+   - estimate pose via `cv::solvePnP` using 3D marker corner points and detected 2D image points
+   - compute bounding box area in pixels and apply the `min_bounding_box_area` filter
+   - append a `Detection` holding the marker's perspective quad, colour, label and id
+   - if calibration is available, solve the pose, set `has_pose`, and broadcast TF
 
-   ```cpp
-   annotated_frame = frame.clone();
-   ```
-
-4. Clear cached detections and update timestamp:
-   - `latest_ids_`, `latest_poses_`
-   - `latest_timestamp_ = header.stamp`
-
-5. If markers exist:
-   - draw marker borders
-   - for each marker:
-     - estimate pose via `cv::solvePnP` using 3D marker corner points and detected 2D image points
-     - compute bbox area in pixels
-     - apply `min_bounding_box_area` filter
-     - draw axes
-     - convert pose + transform to output frame
-     - cache pose + id
-     - optionally publish TF transform
-
-6. Cache annotated frame:
-   - `latest_frame_ = annotated_frame.clone()`
-   - `latest_marker_coords_` stores marker positions (in the camera-converted XYZ convention used for display)
-
-7. Optionally publish `ObjectDetections` message if enabled.
+5. Cache the **raw** frame and the detections, for the capture service
+6. Publish the visualization markers and the `DetectionArray`
 
 ---
 
@@ -311,24 +295,17 @@ If enabled, incoming `CameraInfo` replaces intrinsics.
 aruco_detector:
   ros__parameters:
     marker_length: 0.35
-    axis_length: 0.03
     # 4x4: 50=0, 100=1, 250=2, 1000=3 | 5x5: 50=4, 100=5, 250=6, 1000=7 | 6x6: 50=8, 100=9, 250=10, 1000=11
     dictionary_id: 1
     min_bounding_box_area: 150.0
 
-    camera_frame: camera_link_optical
-    tf_output_frame: odom
+    camera_frame: camera_color_optical_frame
 
     input_img: /camera/camera/color/image_raw
-    output_img: /detection/aruco/image
-
     compressed_io: false
-    publish_img: true
 
     publish_tf: true
-
-    publish_output: true
-    output_topic: /detection/aruco/detections
+    output_topic: /perseus_vision/aruco/detections
 
     use_camera_info: true
     camera_info_topic: /camera/camera/color/camera_info
@@ -338,7 +315,15 @@ aruco_detector:
 
 ## Usage
 
-### Run with params file
+### Run the whole pipeline
+
+Preferred, since it also starts the overlay:
+
+```bash
+ros2 launch perseus_vision perseus_vision.launch.py
+```
+
+### Run this node on its own
 
 ```bash
 ros2 run perseus_vision aruco_detector_node --ros-args \
@@ -369,4 +354,5 @@ ros2 service call /detect_objects perseus_interfaces/srv/DetectObjects \
   - distance to marker
   - FOV and lens
 
-- In current modifications, `camera_info` subscription happens only in the raw-image path.
+- To see the detections drawn on the camera stream, subscribe to
+  `/perseus_vision/overlay/image`.

@@ -43,7 +43,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS
     backward_ros ament_cmake rosidl_default_generators geometry_msgs
-    sensor_msgs)
+    sensor_msgs std_msgs)
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -56,14 +56,16 @@ endforeach()
 rosidl_generate_interfaces(
   ${PROJECT_NAME}
   "srv/GetFrontierGoal.srv"
-  "msg/ObjectDetections.msg"
+  "msg/Detection.msg"
+  "msg/DetectionArray.msg"
   "srv/DetectObjects.srv"
   "msg/NavigationData.msg"
   "srv/RunWaypoints.srv"
   "msg/Waypoint.msg"
   DEPENDENCIES
   geometry_msgs
-  sensor_msgs)
+  sensor_msgs
+  std_msgs)
 
 ament_export_dependencies(rosidl_default_runtime)
 
