@@ -31,7 +31,7 @@ namespace perseus_vision
         constexpr double LETTERBOX_PADDING_VALUE = 114.0;
         /// @brief Number of colour channels in a model input tensor.
         constexpr int64_t MODEL_INPUT_CHANNELS = 3;
-        /// @brief Leading box values (centre x, centre y, width, height) in each model output column.
+        /// @brief Leading box values (center x, center y, width, height) in each model output column.
         constexpr std::size_t BOX_COORDINATE_COUNT = 4;
         /// @brief Largest value a single 8-bit colour channel can hold.
         constexpr double PIXEL_VALUE_MAX = 255.0;
@@ -73,19 +73,19 @@ namespace perseus_vision
         constexpr int BOX_THICKNESS = 2;
         /// @brief Height of the class label above the bounding box, in pixels.
         constexpr int LABEL_Y_OFFSET_PX = 20;
-        /// @brief Height of the centre coordinate label above the bounding box, in pixels.
+        /// @brief Height of the center coordinate label above the bounding box, in pixels.
         constexpr int CENTER_LABEL_Y_OFFSET_PX = 5;
         /// @brief Font scale of the class label.
         constexpr double LABEL_FONT_SCALE = 0.6;
-        /// @brief Font scale of the centre coordinate label.
+        /// @brief Font scale of the center coordinate label.
         constexpr double CENTER_LABEL_FONT_SCALE = 0.5;
         /// @brief Stroke thickness of the class label.
         constexpr int LABEL_THICKNESS = 2;
-        /// @brief Stroke thickness of the centre coordinate label.
+        /// @brief Stroke thickness of the center coordinate label.
         constexpr int CENTER_LABEL_THICKNESS = 1;
-        /// @brief Arm length of the crosshair drawn at a detection centre, in pixels.
+        /// @brief Arm length of the crosshair drawn at a detection center, in pixels.
         constexpr int CROSSHAIR_SIZE_PX = 15;
-        /// @brief Stroke thickness of the detection centre crosshair.
+        /// @brief Stroke thickness of the detection center crosshair.
         constexpr int CROSSHAIR_THICKNESS = 1;
         /// @brief Characters of the confidence value kept in a label, as in "0.97".
         constexpr std::size_t CONFIDENCE_TEXT_LENGTH = 4;
@@ -781,7 +781,7 @@ namespace perseus_vision
                         cv::Point(detection.bounding_box.x, detection.bounding_box.y - LABEL_Y_OFFSET_PX),
                         cv::FONT_HERSHEY_SIMPLEX, LABEL_FONT_SCALE, color, LABEL_THICKNESS);
 
-            // Centre coordinates, drawn below the class label, such as "cx:320 cy:240"
+            // Center coordinates, drawn below the class label, such as "cx:320 cy:240"
             const int center_x = detection.bounding_box.x + (detection.bounding_box.width / 2);
             const int center_y = detection.bounding_box.y + (detection.bounding_box.height / 2);
             const std::string center_label =
