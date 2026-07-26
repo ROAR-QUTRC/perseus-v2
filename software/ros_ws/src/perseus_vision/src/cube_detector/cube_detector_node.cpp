@@ -4,7 +4,7 @@
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 
-#include "perseus_vision/cube_detector.hpp"
+#include "perseus_vision/cube_detector/cube_detector.hpp"
 
 /// @brief Spins the cube detector until the node is shut down.
 /// @param argc Argument count passed to ROS for command line parameter parsing.

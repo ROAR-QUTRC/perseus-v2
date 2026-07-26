@@ -1,7 +1,7 @@
 /// @file cube_detector.cpp
 /// @brief Implementation of the cube detection and depth-based pose estimation node.
 
-#include "perseus_vision/cube_detector.hpp"
+#include "perseus_vision/cube_detector/cube_detector.hpp"
 
 #include <tf2/exceptions.h>
 

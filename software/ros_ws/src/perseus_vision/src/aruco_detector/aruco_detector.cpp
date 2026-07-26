@@ -1,7 +1,7 @@
 /// @file aruco_detector.cpp
 /// @brief Implementation of the ArUco marker detection and pose estimation node.
 
-#include "perseus_vision/aruco_detector.hpp"
+#include "perseus_vision/aruco_detector/aruco_detector.hpp"
 
 #include <algorithm>
 #include <chrono>

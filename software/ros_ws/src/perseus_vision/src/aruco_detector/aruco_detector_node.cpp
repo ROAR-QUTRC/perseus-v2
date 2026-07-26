@@ -4,7 +4,7 @@
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 
-#include "perseus_vision/aruco_detector.hpp"
+#include "perseus_vision/aruco_detector/aruco_detector.hpp"
 
 /// @brief Spins the ArUco detector until the node is shut down.
 /// @param argc Argument count passed to ROS for command line parameter parsing.

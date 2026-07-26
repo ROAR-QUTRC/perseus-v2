@@ -31,8 +31,8 @@ message(STATUS "ONNXRuntime lib:     ${ORT_LIBRARIES}")
 include_directories(include)
 
 # ── aruco_detector_node ───────────────────────────────────────────────────────
-add_executable(aruco_detector_node src/aruco_detector.cpp
-                                   src/aruco_detector_node.cpp)
+add_executable(aruco_detector_node src/aruco_detector/aruco_detector.cpp
+                                   src/aruco_detector/aruco_detector_node.cpp)
 
 ament_target_dependencies(
   aruco_detector_node
@@ -54,7 +54,8 @@ target_include_directories(
          $<INSTALL_INTERFACE:include>)
 
 # ── cube_detector ─────────────────────────────────────────────────────────────
-add_executable(cube_detector src/cube_detector.cpp src/cube_detector_node.cpp)
+add_executable(cube_detector src/cube_detector/cube_detector.cpp
+                             src/cube_detector/cube_detector_node.cpp)
 
 target_include_directories(
   cube_detector
