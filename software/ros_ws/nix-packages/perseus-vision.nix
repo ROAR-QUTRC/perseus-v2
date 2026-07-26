@@ -14,6 +14,7 @@
   perseus-interfaces,
   rcl-interfaces,
   rclcpp,
+  rclcpp-components,
   sensor-msgs,
   std-msgs,
   tf2,
@@ -44,6 +45,7 @@ buildRosPackage rec {
     perseus-interfaces
     rcl-interfaces
     rclcpp
+    rclcpp-components
     sensor-msgs
     std-msgs
     tf2

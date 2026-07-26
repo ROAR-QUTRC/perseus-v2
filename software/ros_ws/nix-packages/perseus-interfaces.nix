@@ -11,6 +11,7 @@
   rosidl-default-generators,
   rosidl-default-runtime,
   sensor-msgs,
+  std-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-interfaces";
@@ -33,6 +34,7 @@ buildRosPackage rec {
     geometry-msgs
     rosidl-default-runtime
     sensor-msgs
+    std-msgs
   ];
   nativeBuildInputs = [
     ament-cmake
