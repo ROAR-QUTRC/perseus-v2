@@ -1,12 +1,16 @@
+"""Launch the ArUco marker detection node with the shared vision configuration."""
+
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-import os
-from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
+    """Build the launch description for the ArUco detector node."""
     # Get the package directory
     perseus_vision_dir = get_package_share_directory("perseus_vision")
     config_dir = os.path.join(perseus_vision_dir, "config")
