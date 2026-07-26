@@ -1,3 +1,5 @@
+"""Launch a V4L2 webcam as a drop-in image source for the perseus_vision detectors."""
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
@@ -5,6 +7,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    """Build the launch description for the webcam capture node."""
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time", default_value="false", description="Use simulated time"
