@@ -208,25 +208,25 @@ This helps reject:
 
 ### Frames / transforms
 
-| Parameter         |   Type |                       Default | Description                                                                                |
-| ----------------- | -----: | ----------------------------: | ------------------------------------------------------------------------------------------ |
-| `camera_frame`    | string | `camera_color_optical_frame`  | Frame the marker poses are measured in, and the TF parent of `aruco_marker_<id>`. Should be the camera optical frame. |
+| Parameter      |   Type |                      Default | Description                                                                                                           |
+| -------------- | -----: | ---------------------------: | --------------------------------------------------------------------------------------------------------------------- |
+| `camera_frame` | string | `camera_color_optical_frame` | Frame the marker poses are measured in, and the TF parent of `aruco_marker_<id>`. Should be the camera optical frame. |
 
 ---
 
 ### Image input
 
-| Parameter       |   Type |                          Default | Description                                                    |
-| --------------- | -----: | -------------------------------: | ---------------------------------------------------------------- |
-| `input_img`     | string | `/camera/camera/color/image_raw` | Raw image topic (base).                                        |
-| `compressed_io` |   bool |                          `false` | If true, subscribe to `<input_img>/compressed` instead.        |
+| Parameter       |   Type |                          Default | Description                                             |
+| --------------- | -----: | -------------------------------: | ------------------------------------------------------- |
+| `input_img`     | string | `/camera/camera/color/image_raw` | Raw image topic (base).                                 |
+| `compressed_io` |   bool |                          `false` | If true, subscribe to `<input_img>/compressed` instead. |
 
 ---
 
 ### Outputs
 
-| Parameter                     |   Type |                              Default | Description                                                       |
-| ----------------------------- | -----: | -----------------------------------: | ----------------------------------------------------------------- |
+| Parameter      |   Type |                            Default | Description                                               |
+| -------------- | -----: | ---------------------------------: | --------------------------------------------------------- |
 | `publish_tf`   |   bool |                             `true` | Broadcast `camera_frame -> aruco_marker_<id>` transforms. |
 | `output_topic` | string | `/perseus_vision/aruco/detections` | Detection output topic name.                              |
 

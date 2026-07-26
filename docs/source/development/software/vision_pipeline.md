@@ -186,14 +186,14 @@ detection_overlay:
   ros__parameters: ...
 ```
 
-| Parameter             |     Type |                                                                       Default | Description                                                                                   |
-| --------------------- | -------: | ----------------------------------------------------------------------------: | --------------------------------------------------------------------------------------------- |
-| `input_image_topic`   |   string |                                              `/camera/camera/color/image_raw` | Camera image to annotate.                                                                     |
-| `output_image_topic`  |   string |                                              `/perseus_vision/overlay/image`  | Annotated image output.                                                                       |
-| `detection_topics`    | string[] | `[/perseus_vision/aruco/detections, /perseus_vision/cube/detections]`          | Detection topics to overlay. Add an entry to include a new detector.                          |
-| `max_detection_age_s` |   double |                                                                         `1.0` | Detections older than this are not drawn, so a stalled detector does not freeze boxes on screen. |
-| `compressed_io`       |     bool |                                                                       `false` | Subscribe and publish `<topic>/compressed` as `CompressedImage`.                              |
-| `show_staleness`      |     bool |                                                                       `false` | Draw the detection count and the age of the oldest detection onto the image.                  |
+| Parameter             |     Type |                                                               Default | Description                                                                                      |
+| --------------------- | -------: | --------------------------------------------------------------------: | ------------------------------------------------------------------------------------------------ |
+| `input_image_topic`   |   string |                                      `/camera/camera/color/image_raw` | Camera image to annotate.                                                                        |
+| `output_image_topic`  |   string |                                       `/perseus_vision/overlay/image` | Annotated image output.                                                                          |
+| `detection_topics`    | string[] | `[/perseus_vision/aruco/detections, /perseus_vision/cube/detections]` | Detection topics to overlay. Add an entry to include a new detector.                             |
+| `max_detection_age_s` |   double |                                                                 `1.0` | Detections older than this are not drawn, so a stalled detector does not freeze boxes on screen. |
+| `compressed_io`       |     bool |                                                               `false` | Subscribe and publish `<topic>/compressed` as `CompressedImage`.                                 |
+| `show_staleness`      |     bool |                                                               `false` | Draw the detection count and the age of the oldest detection onto the image.                     |
 
 ---
 
