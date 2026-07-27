@@ -738,6 +738,10 @@ namespace perseus_vision
         const std_msgs::msg::Header& header)
     {
         const bool use_depth = (_depth_estimation_mode == DEPTH_MODE_DEPTH_IMAGE);
+        if (use_depth)
+        {
+            _warn_if_depth_frame_mismatched(header);
+        }
 
         perseus_interfaces::msg::DetectionArray detections_msg;
         detections_msg.header = header;
@@ -795,6 +799,32 @@ namespace perseus_vision
         }
 
         _cache_latest_detections(detections_msg, std::move(message));
+    }
+
+    void CubeDetector::_warn_if_depth_frame_mismatched(const std_msgs::msg::Header& color_header)
+    {
+        std::string depth_frame_id;
+        {
+            std::lock_guard<std::mutex> lock(_depth_mutex);
+            if (!_latest_depth_image)
+            {
+                return;
+            }
+            depth_frame_id = _latest_depth_image->header.frame_id;
+        }
+
+        if (depth_frame_id.empty() || depth_frame_id == color_header.frame_id)
+        {
+            return;
+        }
+
+        RCLCPP_WARN_THROTTLE(
+            get_logger(), *get_clock(), LOG_THROTTLE_MS,
+            "Depth image frame '%s' differs from colour image frame '%s'. Cube poses are "
+            "derived from the depth intrinsics but published in the colour frame, so they "
+            "will be offset by the camera baseline. Use a depth stream aligned to colour, "
+            "such as /camera/camera/aligned_depth_to_color/image_raw.",
+            depth_frame_id.c_str(), color_header.frame_id.c_str());
     }
 
     void CubeDetector::_publish_markers(const perseus_interfaces::msg::DetectionArray& detections)

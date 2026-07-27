@@ -43,6 +43,10 @@ cube_detector:
     inter_op_num_threads: 2
     depth_estimation_mode: "depth_image" # "none" | "depth_image"
     depth_image:
+      # Must be a depth stream ALIGNED TO COLOUR. Poses are computed from the depth
+      # intrinsics but published in the colour image's frame, so an unaligned stream
+      # yields poses offset by the colour-to-depth baseline. The node warns if the two
+      # frame_ids disagree.
       topic: "/camera/camera/aligned_depth_to_color/image_raw"
       info_topic: "/camera/camera/aligned_depth_to_color/camera_info"
       unit_scale: 0.001 # Scale factor to convert depth image units to meters (e.g., 0.001 for millimeters)

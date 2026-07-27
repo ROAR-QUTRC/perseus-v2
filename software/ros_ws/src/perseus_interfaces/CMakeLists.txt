@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(
   perseus_interfaces
-  VERSION 0.0.0
+  VERSION 1.0.0
   LANGUAGES CXX C)
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
 set(default_build_type "Debug")

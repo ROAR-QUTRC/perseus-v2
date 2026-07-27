@@ -39,6 +39,10 @@ bool has_pose
 
 # 3D pose of the detection, in the frame given by DetectionArray.header.frame_id
 # (the camera optical frame). Only meaningful when has_pose is true.
+#
+# A publisher deriving the pose from a second sensor, such as a depth image, must use a
+# stream registered to the image the polygon came from, so that one frame_id is correct
+# for both halves of this message.
 # Consumers transform this into odom/map themselves via tf2, which lets them choose
 # the lookup time rather than inheriting the detector's.
 geometry_msgs/Pose pose

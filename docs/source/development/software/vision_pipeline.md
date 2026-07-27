@@ -108,6 +108,15 @@ This replaces an earlier split where a separate `ObjectDetections` message carri
 `odom`-frame poses on its own topic.
 :::
 
+:::{warning}
+A detector deriving its pose from a **second sensor** must use a stream registered to the
+image the polygon came from. The cube detector computes poses from the depth intrinsics
+but publishes them in the colour image's frame, so `depth_image.topic` must be a depth
+stream **aligned to colour** (`/camera/camera/aligned_depth_to_color/image_raw`, the
+default). An unaligned stream produces poses offset by the colour-to-depth baseline; the
+node logs a throttled warning when the two `frame_id`s disagree.
+:::
+
 **`has_pose` rather than dropping the detection.** A cube whose depth read fails, an ArUco
 marker seen without calibration, or any detector in a 2D-only mode still reports the
 detection with `has_pose: false`. "I can see it but cannot place it" is actionable for a

@@ -103,9 +103,15 @@ namespace perseus_vision
         /// @brief Default topic that colour camera calibration is read from.
         static inline const std::string DEFAULT_CAMERA_INFO_TOPIC = "/camera/camera/color/camera_info";
         /// @brief Default topic that depth images are read from.
-        static inline const std::string DEFAULT_DEPTH_TOPIC = "/camera/camera/depth/image_rect_raw";
+        ///
+        /// The aligned stream is the default because poses are computed from the depth
+        /// intrinsics but published in the colour image's frame. Only an aligned depth
+        /// stream shares that frame; a raw one is offset by the camera baseline.
+        static inline const std::string DEFAULT_DEPTH_TOPIC =
+            "/camera/camera/aligned_depth_to_color/image_raw";
         /// @brief Default topic that depth camera calibration is read from.
-        static inline const std::string DEFAULT_DEPTH_INFO_TOPIC = "/camera/camera/depth/camera_info";
+        static inline const std::string DEFAULT_DEPTH_INFO_TOPIC =
+            "/camera/camera/aligned_depth_to_color/camera_info";
         /// @brief Default topic that detection messages are published on.
         static inline const std::string DEFAULT_OUTPUT_DETECTIONS_TOPIC = "/perseus_vision/cube/detections";
         /// @brief Default topic that rviz visualization markers are published on.
@@ -177,6 +183,15 @@ namespace perseus_vision
         /// @param resolved_count Number of those cubes that got a depth-derived pose.
         /// @return A sentence describing how many detections were resolved.
         std::string _build_depth_summary_message(std::size_t detected_count, std::size_t resolved_count);
+
+        /// @brief Warns when the depth and colour images are not in the same frame.
+        ///
+        /// Poses are derived from the depth intrinsics but published in the colour
+        /// image's frame, so the streams must be aligned for the pose to be correct.
+        /// Without this check a misconfigured depth topic is silently wrong by the
+        /// colour-to-depth baseline rather than producing any visible symptom.
+        /// @param color_header Header of the colour image being processed.
+        void _warn_if_depth_frame_mismatched(const std_msgs::msg::Header& color_header);
 
         /// @brief Publishes rviz markers for every pose-resolved detection.
         /// @param detections Detections from the frame just processed.
