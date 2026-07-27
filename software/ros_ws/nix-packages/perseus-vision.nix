@@ -25,7 +25,7 @@
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-vision";
-  version = "0.0.0";
+  version = "1.0.0";
 
   src = ./../src/perseus_vision;
 

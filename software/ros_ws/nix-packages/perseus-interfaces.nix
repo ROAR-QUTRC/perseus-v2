@@ -15,7 +15,7 @@
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-interfaces";
-  version = "0.0.0";
+  version = "1.0.0";
 
   src = ./../src/perseus_interfaces;
 
