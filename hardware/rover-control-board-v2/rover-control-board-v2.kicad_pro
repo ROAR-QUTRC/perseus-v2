@@ -713,7 +713,7 @@
         "uuid": "ed12625f-743c-4dd1-a6f4-666aeca01e2d"
       }
     ],
-    "used_designators": "#SYM1,VIN_IND1-2,J1-3,J6-12,#PWR1-22,#PWR26,#PWR30-59,GND1,F1,3V3_IND1,PCB1,L1,VR1,R1-32,JP1-3,C1-19,Q1-6,3V3-4,U1-4,D1-7,D9-12",
+    "used_designators": "JP1-16,R1-89,VR1,L1,PCB1,C1-58,D1-7,D9-38,U1-19,3V3-4,Q1-13,VBUS_TP1,#SYM1,VIN_IND1-2,#PWR1-22,#PWR26,#PWR30-152,F1,GND1,J1-3,J6-19,3V3_IND1",
     "variants": []
   },
   "sheets": [
