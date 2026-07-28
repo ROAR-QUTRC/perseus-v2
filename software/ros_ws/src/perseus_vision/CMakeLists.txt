@@ -98,6 +98,7 @@ install(TARGETS aruco_detector_node cube_detector detection_overlay_node
 install(DIRECTORY include/ DESTINATION include/)
 install(DIRECTORY config/ DESTINATION share/${PROJECT_NAME}/config)
 install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
+install(DIRECTORY rviz/ DESTINATION share/${PROJECT_NAME}/rviz)
 
 # ── ONNX Model Download ──────────────────────────────────────────────────────
 set(MODEL_FILENAME "cube_detector_yolob8s.onnx")
