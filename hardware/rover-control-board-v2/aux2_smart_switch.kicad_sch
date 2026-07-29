@@ -3958,7 +3958,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "0427f2d9-195f-4f5c-897c-5cedc3ed44d1")
-		(property "Reference" "R44"
+		(property "Reference" "R55"
 			(at 85.09 113.03 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4022,7 +4022,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R44")
+					(reference "R55")
 					(unit 1)
 				)
 			)
@@ -4040,7 +4040,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "07c32b9c-0f39-4bcf-8e1a-b6a492ce1912")
-		(property "Reference" "#PWR079"
+		(property "Reference" "#PWR087"
 			(at 152.4 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -4100,7 +4100,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR079")
+					(reference "#PWR087")
 					(unit 1)
 				)
 			)
@@ -4117,7 +4117,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "0971bdd0-96c8-4bb5-8eb7-914cb128c3e5")
-		(property "Reference" "D20"
+		(property "Reference" "D18"
 			(at 186.944 141.478 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4192,7 +4192,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "D20")
+					(reference "D18")
 					(unit 1)
 				)
 			)
@@ -4209,7 +4209,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "0e22f688-07f1-4566-8f2d-1e18d8987480")
-		(property "Reference" "R4"
+		(property "Reference" "R52"
 			(at 59.944 44.45 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4271,7 +4271,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R4")
+					(reference "R52")
 					(unit 1)
 				)
 			)
@@ -4290,7 +4290,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "103c4965-15c7-4ec1-8462-491e7598be0d")
-		(property "Reference" "#PWR087"
+		(property "Reference" "#PWR095"
 			(at 246.38 125.73 0)
 			(hide yes)
 			(show_name no)
@@ -4350,7 +4350,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR087")
+					(reference "#PWR095")
 					(unit 1)
 				)
 			)
@@ -4367,7 +4367,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "127b312b-71a7-476c-86b1-eff8c48b3be5")
-		(property "Reference" "R50"
+		(property "Reference" "R61"
 			(at 237.744 118.11 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4429,7 +4429,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R50")
+					(reference "R61")
 					(unit 1)
 				)
 			)
@@ -4446,7 +4446,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "2782ea49-0c22-4488-9739-04f13a5532e4")
-		(property "Reference" "R47"
+		(property "Reference" "R58"
 			(at 180.594 149.86 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4508,7 +4508,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R47")
+					(reference "R58")
 					(unit 1)
 				)
 			)
@@ -4526,7 +4526,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "29276b0c-b08f-4b41-8943-98c7c7f01f3b")
-		(property "Reference" "#PWR082"
+		(property "Reference" "#PWR090"
 			(at 184.15 160.02 0)
 			(hide yes)
 			(show_name no)
@@ -4586,7 +4586,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR082")
+					(reference "#PWR090")
 					(unit 1)
 				)
 			)
@@ -4604,7 +4604,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2c5c96c1-836a-4e66-91a4-c5bd4527aab8")
-		(property "Reference" "#PWR086"
+		(property "Reference" "#PWR094"
 			(at 241.3 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -4664,7 +4664,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR086")
+					(reference "#PWR094")
 					(unit 1)
 				)
 			)
@@ -4788,7 +4788,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "4488c744-5bb1-4bf5-b9d8-6e9c40fecd94")
-		(property "Reference" "R43"
+		(property "Reference" "R54"
 			(at 81.28 118.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4852,7 +4852,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R43")
+					(reference "R54")
 					(unit 1)
 				)
 			)
@@ -4869,7 +4869,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "45ecb864-7647-414a-9906-67e74290ffb8")
-		(property "Reference" "C52"
+		(property "Reference" "C28"
 			(at 55.88 121.92 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4933,7 +4933,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "C52")
+					(reference "C28")
 					(unit 1)
 				)
 			)
@@ -4950,7 +4950,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "482fb802-cb0e-462d-8ede-61253efe4d3d")
-		(property "Reference" "R45"
+		(property "Reference" "R56"
 			(at 163.83 125.984 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5012,7 +5012,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R45")
+					(reference "R56")
 					(unit 1)
 				)
 			)
@@ -5029,7 +5029,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "4c093093-b3e4-466f-af4b-5fde478bead8")
-		(property "Reference" "#PWR0142"
+		(property "Reference" "#PWR081"
 			(at 53.34 113.03 0)
 			(hide yes)
 			(show_name no)
@@ -5089,7 +5089,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR0142")
+					(reference "#PWR081")
 					(unit 1)
 				)
 			)
@@ -5107,7 +5107,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4ff4fd9e-46e7-4854-bb61-7950db5a94a7")
-		(property "Reference" "C25"
+		(property "Reference" "C29"
 			(at 162.56 135.8899 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5171,7 +5171,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "C25")
+					(reference "C29")
 					(unit 1)
 				)
 			)
@@ -5295,7 +5295,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "532f81ad-0ac9-4a14-97e2-d2a581a6f4a0")
-		(property "Reference" "D"
+		(property "Reference" "D15"
 			(at 34.544 62.738 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5370,7 +5370,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "D")
+					(reference "D15")
 					(unit 1)
 				)
 			)
@@ -5387,7 +5387,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "633a097d-7f97-4dca-ac0f-28cbfded9670")
-		(property "Reference" "#PWR077"
+		(property "Reference" "#PWR085"
 			(at 95.25 154.94 0)
 			(hide yes)
 			(show_name no)
@@ -5447,7 +5447,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR077")
+					(reference "#PWR085")
 					(unit 1)
 				)
 			)
@@ -5464,7 +5464,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "69432fa2-f066-4bc1-94fb-16e7b6a19c93")
-		(property "Reference" "#PWR075"
+		(property "Reference" "#PWR082"
 			(at 60.96 154.94 0)
 			(hide yes)
 			(show_name no)
@@ -5524,7 +5524,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR075")
+					(reference "#PWR082")
 					(unit 1)
 				)
 			)
@@ -5541,7 +5541,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "6f2f726b-1525-48c8-bbd3-10b0c92d378a")
-		(property "Reference" "R49"
+		(property "Reference" "R60"
 			(at 237.744 105.41 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5603,7 +5603,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R49")
+					(reference "R60")
 					(unit 1)
 				)
 			)
@@ -5621,7 +5621,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "71b6a86c-b15c-40ef-bd3a-3bde30a56041")
-		(property "Reference" "Q8"
+		(property "Reference" "Q11"
 			(at 80.01 99.06 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5686,7 +5686,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "Q8")
+					(reference "Q11")
 					(unit 1)
 				)
 			)
@@ -5703,7 +5703,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "7464846e-d44b-450b-99da-851f47387329")
-		(property "Reference" "#PWR078"
+		(property "Reference" "#PWR086"
 			(at 107.95 165.1 0)
 			(hide yes)
 			(show_name no)
@@ -5763,7 +5763,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR078")
+					(reference "#PWR086")
 					(unit 1)
 				)
 			)
@@ -5781,7 +5781,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "763169b1-79b0-45bf-bf3d-2e5a7ac0877a")
-		(property "Reference" "#PWR080"
+		(property "Reference" "#PWR088"
 			(at 158.75 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -5841,7 +5841,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR080")
+					(reference "#PWR088")
 					(unit 1)
 				)
 			)
@@ -5859,7 +5859,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7701a1c3-319a-423b-af75-a09e70198276")
-		(property "Reference" "#PWR02"
+		(property "Reference" "#PWR080"
 			(at 44.45 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -5919,7 +5919,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR02")
+					(reference "#PWR080")
 					(unit 1)
 				)
 			)
@@ -5936,7 +5936,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "77e8a75d-f664-4beb-9d1d-06f4542644d7")
-		(property "Reference" "R48"
+		(property "Reference" "R59"
 			(at 190.5 135.636 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5998,7 +5998,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R48")
+					(reference "R59")
 					(unit 1)
 				)
 			)
@@ -6015,7 +6015,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "7c812bc1-b890-4afc-89be-583639f2413f")
-		(property "Reference" "C28"
+		(property "Reference" "C32"
 			(at 231.14 137.16 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6079,7 +6079,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "C28")
+					(reference "C32")
 					(unit 1)
 				)
 			)
@@ -6096,7 +6096,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "83fe7059-464a-491b-bbf1-95cd380d19a0")
-		(property "Reference" "R6"
+		(property "Reference" "R48"
 			(at 40.894 66.04 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6158,7 +6158,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R6")
+					(reference "R48")
 					(unit 1)
 				)
 			)
@@ -6175,7 +6175,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "84319277-0cf3-4ad6-84e5-a77d09709cd1")
-		(property "Reference" "R7"
+		(property "Reference" "R46"
 			(at 28.194 73.66 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6237,7 +6237,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R7")
+					(reference "R46")
 					(unit 1)
 				)
 			)
@@ -6255,7 +6255,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8a512da7-7f35-477a-ac32-8fc28e7d012c")
-		(property "Reference" "#PWR085"
+		(property "Reference" "#PWR093"
 			(at 234.95 148.59 0)
 			(hide yes)
 			(show_name no)
@@ -6315,7 +6315,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR085")
+					(reference "#PWR093")
 					(unit 1)
 				)
 			)
@@ -6333,7 +6333,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8b5d3a3a-dec0-4ed1-b1f3-e50fbffb8f25")
-		(property "Reference" "U7"
+		(property "Reference" "U9"
 			(at 69.85 124.46 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6437,7 +6437,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "U7")
+					(reference "U9")
 					(unit 1)
 				)
 			)
@@ -6454,7 +6454,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a824ac44-4c04-40a6-8442-8c7a1eb5eb14")
-		(property "Reference" "D18"
+		(property "Reference" "D16"
 			(at 60.198 102.616 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6529,7 +6529,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "D18")
+					(reference "D16")
 					(unit 1)
 				)
 			)
@@ -6546,7 +6546,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "aa2d0875-d9d3-46d7-a941-98d09b911944")
-		(property "Reference" "R46"
+		(property "Reference" "R57"
 			(at 173.736 137.16 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6608,7 +6608,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R46")
+					(reference "R57")
 					(unit 1)
 				)
 			)
@@ -6625,7 +6625,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "adb898e9-1619-43d3-9039-e6aec19f865c")
-		(property "Reference" "C26"
+		(property "Reference" "C30"
 			(at 201.93 148.59 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6689,7 +6689,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "C26")
+					(reference "C30")
 					(unit 1)
 				)
 			)
@@ -6707,7 +6707,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ae1dbd30-8af1-4129-986a-31b90fa0fbe3")
-		(property "Reference" "#PWR083"
+		(property "Reference" "#PWR091"
 			(at 193.04 127 0)
 			(hide yes)
 			(show_name no)
@@ -6768,7 +6768,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR083")
+					(reference "#PWR091")
 					(unit 1)
 				)
 			)
@@ -6786,7 +6786,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b2e0ed15-e76f-47d6-b237-22fd9a717da4")
-		(property "Reference" "U8"
+		(property "Reference" "U10"
 			(at 210.82 119.38 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6869,7 +6869,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "U8")
+					(reference "U10")
 					(unit 1)
 				)
 			)
@@ -6887,7 +6887,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "b444d05e-2a17-4cf4-99a5-8b62f64fee67")
-		(property "Reference" "D19"
+		(property "Reference" "D17"
 			(at 149.86 138.4301 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6951,7 +6951,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "D19")
+					(reference "D17")
 					(unit 1)
 				)
 			)
@@ -6968,7 +6968,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "b6b83f25-e00a-4abb-afe2-fadd54fd1f3e")
-		(property "Reference" "R2"
+		(property "Reference" "R50"
 			(at 54.61 28.194 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7030,7 +7030,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R2")
+					(reference "R50")
 					(unit 1)
 				)
 			)
@@ -7047,7 +7047,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "b6f64550-1bce-43db-b705-250b0618932a")
-		(property "Reference" "R"
+		(property "Reference" "R49"
 			(at 54.61 21.844 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7109,7 +7109,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R")
+					(reference "R49")
 					(unit 1)
 				)
 			)
@@ -7127,7 +7127,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bfbc9371-1e17-466c-8c5d-01516106e56a")
-		(property "Reference" "#PWR"
+		(property "Reference" "#PWR083"
 			(at 63.5 68.58 0)
 			(hide yes)
 			(show_name no)
@@ -7187,7 +7187,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR")
+					(reference "#PWR083")
 					(unit 1)
 				)
 			)
@@ -7204,7 +7204,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "c1e37292-888a-4894-aa1a-66df82e1fa95")
-		(property "Reference" "R3"
+		(property "Reference" "R51"
 			(at 59.944 34.29 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7266,7 +7266,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R3")
+					(reference "R51")
 					(unit 1)
 				)
 			)
@@ -7284,7 +7284,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ca9f7a50-8c16-4394-b75a-28983440be43")
-		(property "Reference" "#PWR081"
+		(property "Reference" "#PWR089"
 			(at 170.18 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -7344,7 +7344,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR081")
+					(reference "#PWR089")
 					(unit 1)
 				)
 			)
@@ -7361,7 +7361,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "cb569240-41cd-4e2b-9577-f62361813e9f")
-		(property "Reference" "C27"
+		(property "Reference" "C31"
 			(at 213.36 148.59 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7425,7 +7425,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "C27")
+					(reference "C31")
 					(unit 1)
 				)
 			)
@@ -7442,7 +7442,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "cec24e99-b8d0-4af8-84e6-b835647039b2")
-		(property "Reference" "R42"
+		(property "Reference" "R53"
 			(at 71.12 108.966 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7504,7 +7504,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R42")
+					(reference "R53")
 					(unit 1)
 				)
 			)
@@ -7522,7 +7522,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "dd566761-388b-4e4a-bad9-4c5b8339ef91")
-		(property "Reference" "Q"
+		(property "Reference" "Q10"
 			(at 80.01 36.8299 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7589,7 +7589,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "Q")
+					(reference "Q10")
 					(unit 1)
 				)
 			)
@@ -7606,7 +7606,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e27aed77-392f-4d5a-8630-ce5e78f06aea")
-		(property "Reference" "C29"
+		(property "Reference" "C33"
 			(at 242.57 137.16 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7670,7 +7670,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "C29")
+					(reference "C33")
 					(unit 1)
 				)
 			)
@@ -7687,7 +7687,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e3d857a4-5679-4040-ba0a-5c6337217eea")
-		(property "Reference" "D21"
+		(property "Reference" "D19"
 			(at 248.92 116.8401 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7751,7 +7751,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "D21")
+					(reference "D19")
 					(unit 1)
 				)
 			)
@@ -7769,7 +7769,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e414031d-36bf-407c-ad8c-575187e9ae34")
-		(property "Reference" "#PWR076"
+		(property "Reference" "#PWR084"
 			(at 97.79 105.41 0)
 			(hide yes)
 			(show_name no)
@@ -7829,7 +7829,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR076")
+					(reference "#PWR084")
 					(unit 1)
 				)
 			)
@@ -7847,7 +7847,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e483d007-4f00-448d-94bd-894aa06ac9cc")
-		(property "Reference" "#PWR03"
+		(property "Reference" "#PWR079"
 			(at 31.75 83.82 0)
 			(hide yes)
 			(show_name no)
@@ -7907,7 +7907,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR03")
+					(reference "#PWR079")
 					(unit 1)
 				)
 			)
@@ -7925,7 +7925,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ea7064ff-c395-4d3e-8a7c-203190be630d")
-		(property "Reference" "Q"
+		(property "Reference" "Q9"
 			(at 67.31 55.8799 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7992,7 +7992,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "Q")
+					(reference "Q9")
 					(unit 1)
 				)
 			)
@@ -8010,7 +8010,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ecedf497-8fed-42c8-816c-7516832c4e04")
-		(property "Reference" "#PWR084"
+		(property "Reference" "#PWR092"
 			(at 199.39 167.64 0)
 			(hide yes)
 			(show_name no)
@@ -8070,7 +8070,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "#PWR084")
+					(reference "#PWR092")
 					(unit 1)
 				)
 			)
@@ -8087,7 +8087,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f96fe751-554a-468a-b1ed-0ca771b22c4f")
-		(property "Reference" "J14"
+		(property "Reference" "J12"
 			(at 33.02 127 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8149,7 +8149,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "J14")
+					(reference "J12")
 					(unit 1)
 				)
 			)
@@ -8166,7 +8166,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "feb23e4a-51f3-43ed-baee-01d49a1d1c70")
-		(property "Reference" "R5"
+		(property "Reference" "R47"
 			(at 38.1 53.594 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8228,7 +8228,7 @@
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/de2ba33d-2eb5-4503-8ffe-434831759cab"
-					(reference "R5")
+					(reference "R47")
 					(unit 1)
 				)
 			)
