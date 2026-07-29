@@ -4,6 +4,8 @@
   buildRosPackage,
   ament-cmake,
   backward-ros,
+  compressed-depth-image-transport,
+  compressed-image-transport,
   geometry-msgs,
   hardware-interface,
   nlohmann_json,
@@ -28,6 +30,8 @@ buildRosPackage rec {
   buildInputs = [ ament-cmake ];
   propagatedBuildInputs = [
     backward-ros
+    compressed-depth-image-transport
+    compressed-image-transport
     geometry-msgs
     hardware-interface
     nlohmann_json
