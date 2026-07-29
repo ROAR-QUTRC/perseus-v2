@@ -47,6 +47,8 @@ pkgs.mkShell {
           behaviortree-cpp
           boost
           builtin-interfaces
+          compressed-depth-image-transport
+          compressed-image-transport
           controller-manager
           cv-bridge
           diff-drive-controller

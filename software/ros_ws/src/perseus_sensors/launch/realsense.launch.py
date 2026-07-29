@@ -1,5 +1,5 @@
 """
-RealSense camera launch (+ image compression).
+RealSense camera launch.
 
 Every RealSense driver setting lives in `config/realsense.yaml`. This launch file
 deliberately exposes nothing but the stream toggles, since those are the only settings
@@ -10,6 +10,10 @@ worth changing per run:
     enable_color       color stream
 
 The defaults match the baseline setup: color and depth on, IR off.
+
+Compressed topics need no nodes here. The driver publishes through image_transport, so
+every image topic gains a `/compressed` (and depth a `/compressedDepth`) companion from
+the plugins perseus_sensors depends on.
 
 Usage:
     ros2 launch perseus_sensors realsense.launch.py
@@ -25,21 +29,13 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 CONFIG_FILE_NAME = "realsense.yaml"
 
-# Topics for the image_transport republishers. These follow from camera_name and
-# camera_namespace in the config file, so they are fixed here rather than exposed.
-RGB_IMAGE_TOPIC = "/camera/camera/color/image_raw"
-RGB_COMPRESSED_TOPIC = "/camera/camera/color/image_compressed"
-DEPTH_IMAGE_TOPIC = "/camera/camera/aligned_depth_to_color/image_raw"
-DEPTH_COMPRESSED_TOPIC = "/camera/camera/depth/image_compressedDepth"
-
 
 def generate_launch_description():
-    """Build the launch description for the RealSense driver and its republishers."""
+    """Build the launch description for the RealSense driver."""
     config_file = str(
         Path(get_package_share_directory("perseus_sensors"))
         / "config"
@@ -93,31 +89,11 @@ def generate_launch_description():
         },
     )
 
-    rgb_compress = Node(
-        package="image_transport",
-        executable="republish",
-        name="rgb_compress_republish",
-        output="screen",
-        arguments=["raw", "compressed"],
-        remappings=[("in", RGB_IMAGE_TOPIC), ("out", RGB_COMPRESSED_TOPIC)],
-    )
-
-    depth_compress = Node(
-        package="image_transport",
-        executable="republish",
-        name="depth_compress_republish",
-        output="screen",
-        arguments=["raw", "compressedDepth"],
-        remappings=[("in", DEPTH_IMAGE_TOPIC), ("out", DEPTH_COMPRESSED_TOPIC)],
-    )
-
     return LaunchDescription(
         [
             enable_depth_arg,
             enable_infra_pair_arg,
             enable_color_arg,
             realsense,
-            rgb_compress,
-            depth_compress,
         ]
     )
