@@ -22,9 +22,6 @@ def generate_launch_description():
     """Build the launch description for the webcam, overlay, and rviz."""
     perseus_vision_dir = get_package_share_directory("perseus_vision")
     config_file = os.path.join(perseus_vision_dir, "config", "perseus_vision.yaml")
-    default_rviz_config = os.path.join(
-        perseus_vision_dir, "rviz", "perseus_vision.rviz"
-    )
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
@@ -77,11 +74,6 @@ def generate_launch_description():
     )
     use_rviz_arg = DeclareLaunchArgument(
         "use_rviz", default_value="true", description="Open rviz to view the overlay"
-    )
-    rviz_config_arg = DeclareLaunchArgument(
-        "rviz_config",
-        default_value=default_rviz_config,
-        description="rviz config to open",
     )
 
     # v4l2_camera node: captures from a V4L2 device and publishes image_raw + camera_info
@@ -140,6 +132,8 @@ def generate_launch_description():
     # from nix dies with "Unable to create glx visual". nixGL is invoked directly here
     # rather than via the repo's rviz2-fixed wrapper, as this is the form that works.
     # ExecuteProcess is used because this is a command line, not a ROS package executable.
+    # No -d config is passed: rviz opens with its default view, so add an Image display on
+    # the overlay topic by hand.
     rviz = ExecuteProcess(
         cmd=[
             "nix",
@@ -148,8 +142,6 @@ def generate_launch_description():
             "github:nix-community/nixGL",
             "--",
             "rviz2",
-            "-d",
-            LaunchConfiguration("rviz_config"),
         ],
         output="screen",
         additional_env={
