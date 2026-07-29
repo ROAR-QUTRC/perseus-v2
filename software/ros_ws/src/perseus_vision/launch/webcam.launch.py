@@ -167,7 +167,6 @@ def generate_launch_description():
             camera_frame_arg,
             use_overlay_arg,
             use_rviz_arg,
-            rviz_config_arg,
             webcam_node,
             overlay_node,
             rviz,
