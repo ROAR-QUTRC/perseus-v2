@@ -22,7 +22,9 @@ def generate_launch_description():
     """Build the launch description for the webcam, overlay, and rviz."""
     perseus_vision_dir = get_package_share_directory("perseus_vision")
     config_file = os.path.join(perseus_vision_dir, "config", "perseus_vision.yaml")
-    default_rviz_config = os.path.join(perseus_vision_dir, "rviz", "perseus_vision.rviz")
+    default_rviz_config = os.path.join(
+        perseus_vision_dir, "rviz", "perseus_vision.rviz"
+    )
 
     # Declare launch arguments
     use_sim_time_arg = DeclareLaunchArgument(
