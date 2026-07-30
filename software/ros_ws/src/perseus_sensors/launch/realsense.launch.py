@@ -43,11 +43,11 @@ def generate_launch_description():
     )
 
     enable_depth_arg = DeclareLaunchArgument(
-        "enable_depth", default_value="true", description="Enable the depth stream"
+        "enable_depth", default_value="false", description="Enable the depth stream"
     )
     enable_infra_pair_arg = DeclareLaunchArgument(
         "enable_infra_pair",
-        default_value="false",
+        default_value="true",
         description="Enable the infra1/infra2 IR stream pair",
     )
     enable_color_arg = DeclareLaunchArgument(

@@ -8,7 +8,12 @@
 # Device identity and startup selection.
 camera_name: camera
 camera_namespace: camera
-initial_reset: false
+# Hardware-reset the camera before opening it. Costs a few seconds of startup while the
+# device re-enumerates on USB, and buys recovery from a wedged sensor: if the previous
+# process died without closing cleanly, or the device threw a MIPI fault, opening it
+# again fails with "xioctl(VIDIOC_S_FMT) errno=5" until something resets it. Worth the
+# delay on a vehicle, where the alternative is walking over to unplug the cable.
+initial_reset: true
 accelerate_gpu_with_glsl: false
 log_level: info
 output: screen
@@ -17,29 +22,67 @@ output: screen
 rgb_camera.color_profile: 424,240,15
 rgb_camera.color_format: RGB8
 rgb_camera.enable_auto_exposure: true
+# Unlike depth_module, the RGB sensor exposes no auto_exposure_limit, so the only bound
+# on its exposure is the frame period. auto_exposure_priority false holds the configured
+# frame rate instead of letting AE slow the stream down to buy exposure time, which both
+# caps blur and keeps the rate predictable. Raise color_profile's fps if colour frames
+# still smear — that is the only other lever this sensor has.
+rgb_camera.auto_exposure_priority: false
+# Same host clock as the infra pair, so colour can be compared against stereo timestamps.
+rgb_camera.global_time_enabled: true
 # Depth and infrared stream settings.
 # Depth is enabled by enable_depth, the infra1/infra2 pair by enable_infra_pair. infra0
 # is a separate single stream that only some devices expose, so it stays off here.
+#
+# The infra pair is tuned for outdoor daylight stereo odometry: two global-shutter
+# imagers on a factory-calibrated 95 mm baseline, published with that baseline in the
+# infra2 camera_info P matrix, which is what a stereo front end needs for metric scale.
 enable_infra: false
 depth_module.depth_profile: 424,240,15
 depth_module.depth_format: Z16
-depth_module.infra_profile: 0,0,0
+# 848x480 is the depth module's native width; 0,0,0 already resolved to this, but state
+# it so a firmware default cannot move it. Raise to 60 fps if motion blur still shows.
+depth_module.infra_profile: 848,480,30
 depth_module.infra_format: RGB8
 depth_module.infra1_format: Y8
 depth_module.infra2_format: Y8
 depth_module.color_profile: 0,0,0
 depth_module.color_format: RGB8
-depth_module.exposure: 8500
-depth_module.gain: 16
-depth_module.hdr_enabled: false
+# The IR dot projector must stay off for odometry. Its pattern is rigidly fixed to the
+# camera, so a moving camera sees dots that never move — the front end tracks them as
+# strong corners and biases the motion estimate toward zero. Sunlight swamps it outdoors
+# anyway, so it only ever contaminates the near field.
+depth_module.emitter_enabled: 0
+# Auto exposure, with a hard ceiling. In direct sun the exposure sits far below this
+# limit; the limit exists for when the rover drives into shade, where AE would otherwise
+# stretch toward the 33 ms frame period and smear every feature it is tracking.
 depth_module.enable_auto_exposure: true
+depth_module.auto_exposure_limit_toggle: true
+depth_module.auto_exposure_limit: 5000
+# Gain is left uncapped: in deep shade a noisy image still tracks, a blurred one does not.
+depth_module.auto_gain_limit_toggle: false
+depth_module.auto_gain_limit: 248
+# Hardware timestamps mapped onto the host clock, so the stereo pair and any IMU share
+# one time base.
+depth_module.global_time_enabled: true
+# Manual fallbacks, used only if enable_auto_exposure is turned off.
+depth_module.exposure: 3000
+depth_module.gain: 16
+# HDR alternates exposure between consecutive frames, which makes brightness flicker
+# frame to frame and breaks feature tracking. The .1/.2 values below are its per-step
+# sequence and stay inert while it is off.
+depth_module.hdr_enabled: false
 depth_module.exposure.1: 7500
 depth_module.gain.1: 16
 depth_module.exposure.2: 1
 depth_module.gain.2: 16
 # Synchronization and IMU publication.
-# Keeps color and depth timestamps aligned while leaving IMU outputs off.
-enable_sync: true
+# enable_sync groups every enabled stream into one frameset, which only works when the
+# streams share a frame rate. Color runs at 15 fps and the infra pair at 30, so leaving
+# it on would make the syncer hold or drop infra frames. Odometry needs the stereo pair
+# delivered at full rate far more than it needs color grouped with it, and infra1/infra2
+# are hardware-synchronised inside the depth module regardless of this setting.
+enable_sync: false
 depth_module.inter_cam_sync_mode: 0
 enable_rgbd: false
 enable_gyro: false
@@ -64,8 +107,10 @@ pointcloud.stream_index_filter: 0
 pointcloud.ordered_pc: false
 pointcloud.allow_no_texture_points: false
 # Post-processing filters applied by the RealSense driver.
-# Align depth to the RGB camera frame so pixels match the color image.
-align_depth.enable: true
+# Alignment costs a reprojection of every depth frame and produces nothing while depth is
+# disabled, which is the default now that the infra pair is the primary stream. Turn it
+# back on together with enable_depth if you need depth registered to the color image.
+align_depth.enable: false
 colorizer.enable: false
 decimation_filter.enable: false
 decimation_filter.filter_magnitude: 2
