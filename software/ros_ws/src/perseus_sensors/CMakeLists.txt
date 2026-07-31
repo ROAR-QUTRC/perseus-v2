@@ -104,8 +104,7 @@ target_include_directories(topic_remapper
 ament_target_dependencies(topic_remapper PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Install ROS Executables
-install(TARGETS m2m2_lidar topic_remapper
-        DESTINATION lib/${PROJECT_NAME})
+install(TARGETS m2m2_lidar topic_remapper DESTINATION lib/${PROJECT_NAME})
 
 add_library(bias_estimator_component SHARED
             src/bias_remover/bias_estimator_component.cpp)
