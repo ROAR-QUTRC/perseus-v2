@@ -93,19 +93,6 @@ target_include_directories(m2m2_lidar
 ament_target_dependencies(m2m2_lidar PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 target_link_libraries(m2m2_lidar PUBLIC simple_networking OpenSSL::Crypto)
 
-# I2C IMU Driver
-# Explicit source list - build system tracks dependencies correctly
-add_executable(
-  i2c_imu_node
-  i2c_imu_driver/src/main.cpp i2c_imu_driver/src/i2c_device.cpp
-  i2c_imu_driver/src/i2c_imu_node.cpp i2c_imu_driver/src/imu_device_config.cpp)
-
-target_include_directories(
-  i2c_imu_node PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/i2c_imu_driver/include)
-
-ament_target_dependencies(i2c_imu_node PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(i2c_imu_node PUBLIC fd_wrapper)
-
 # Topic Remapper
 # Dynamic topic remapper that detects message type and republishes at lower frequency
 add_executable(topic_remapper src/topic_remapper/main.cpp
@@ -117,7 +104,7 @@ target_include_directories(topic_remapper
 ament_target_dependencies(topic_remapper PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Install ROS Executables
-install(TARGETS m2m2_lidar i2c_imu_node topic_remapper
+install(TARGETS m2m2_lidar topic_remapper
         DESTINATION lib/${PROJECT_NAME})
 
 add_library(bias_estimator_component SHARED
