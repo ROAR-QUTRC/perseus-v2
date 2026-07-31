@@ -21,10 +21,13 @@ buildRosPackage rec {
   pname = "ros-jazzy-fast-lio";
   version = "0.0.0";
 
+  # ROAR fork of hku-mars/FAST_LIO, so local changes can be carried without waiting on
+  # upstream. Pinned to a commit rather than the branch name: fetchFromGitHub does not
+  # track a moving ref, and a bare branch would silently change what gets built.
   src = fetchFromGitHub {
-    owner = "hku-mars";
+    owner = "bocho0600";
     repo = "FAST_LIO";
-    rev = "a4743b095409588842a5b30ddfa27e29d2f99164";
+    rev = "a4743b095409588842a5b30ddfa27e29d2f99164"; # ROS2 branch HEAD
     sha256 = "0cslk11hskmdclbpkargk198p13fcgmb9l0bfnm601sjimc9r203";
   };
 
