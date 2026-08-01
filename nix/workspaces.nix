@@ -86,8 +86,21 @@ let
       cuda_nvrtc
       cudnn
       ;
-    # ONNX Runtime with CUDA support
-    onnxruntime-cuda = pkgs.onnxruntime.override { cudaSupport = true; };
+    # ONNX Runtime with CUDA support.
+    # On x86_64, restrict the CUDA kernels to sm_120 (Blackwell) rather than nixpkgs'
+    # full capability list (75;80;86;89;90;100;120). Building all seven multiplies
+    # compile time and peak memory by roughly 7x for architectures the dev machines
+    # never run on. aarch64 (Jetson) keeps the nixpkgs defaults.
+    onnxruntime-cuda = pkgs.onnxruntime.override (
+      { cudaSupport = true; }
+      // pkgs.lib.optionalAttrs isx86_64 {
+        cudaPackages = pkgs.cudaPackages // {
+          flags = pkgs.cudaPackages.flags // {
+            cmakeCudaArchitecturesString = "120";
+          };
+        };
+      }
+    );
   };
   # formatters package set for use in ROS workspaces
   formatters = {
@@ -154,8 +167,10 @@ in
   machineLearning = mkWorkspace {
     inherit (pkgs) ros;
     name = "ROAR Machine Learning";
+    # Note: deliberately does not pull in pkgs.ros.simDevPackages. The ML workspace
+    # has no use for the Gazebo dev packages, and they drag in gz-ogre-next-vendor,
+    # whose patches are pinned with stale hashes upstream in nix-ros-overlay.
     additionalPrebuiltPkgs = cudaPkgs;
-    additionalDevPkgs = pkgs.ros.simDevPackages;
     additionalPostShellHook = ''
       # CUDA environment setup
       export CUDA_PATH="${pkgs.cudaPackages.cuda_nvcc}"
