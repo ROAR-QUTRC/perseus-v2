@@ -13,9 +13,29 @@
       lid_topic: "/livox/lidar_filtered" # this is for simulation, the simulated lidar can produce NaN and Inf values which cause errors with the algorithm, this takes data from the filter node instead
       # lid_topic: "/livox/lidar" # this is for when running on perseus
       imu_topic: "/livox/imu"
-      map_frame: "lidar_map"
-      body_frame: "base_link"
+      # TF frames FAST-LIO publishes. These used to be hardcoded in the source and
+      # rewritten by patches/fast_lio/frame_id_fix.patch; the fork reads them as
+      # parameters, so the values below are now what actually takes effect.
+      #
+      # FAST-LIO broadcasts no TF at all here (see the publish block): the EKF in
+      # autonomy/config/ekf_config_fast_lio.yaml owns odom -> base_link. FAST-LIO only
+      # reports /Odometry as odom -> base_link for the EKF to fuse.
+      map_frame: "odom" # world-fixed parent frame of /Odometry, /path and the global clouds
+      # The IMU inside the Livox: this is the frame FAST-LIO's filter actually estimates.
+      # Named after the sensor rather than "imu_frame", which handheld_mapping.launch.py
+      # already uses for a different link. Deliberately not base_link: the estimated pose
+      # is the IMU's, which on this robot is ~0.43 m from base_link and mounted inverted +
+      # yawed 90 deg (perseus.urdf.xacro laser_joint) -- publish.odom_in_base_en composes
+      # that mounting instead of mislabelling the frame.
+      #
+      # With tf_en false this frame is not in TF, so its only remaining use is the header of
+      # /cloud_registered_body, which nothing subscribes to. Set publish.scan_bodyframe_pub_en
+      # to false to drop that topic and make this value inert.
+      body_frame: "livox_imu_frame"
+      # must match the URDF link name: it is the source frame of the lid_frame -> base_frame
+      # lookup that publish.odom_in_base_en composes with
       lid_frame: "livox_frame"
+      base_frame: "base_link"
       time_sync_en: false # ONLY turn on when external time synchronization is really not possible
       time_offset_lidar_to_imu: 0.0 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
       # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
@@ -42,6 +62,14 @@
       scan_publish_en: true # false: close all the point cloud output
       dense_publish_en: false # false: low down the points number in a global-frame point clouds scan.
       scan_bodyframe_pub_en: true # true: output the point cloud scans in IMU-body-frame
+      # no TF broadcasting from FAST-LIO: the EKF owns odom -> base_link, and two publishers
+      # on one TF edge make lookups depend on message arrival order
+      tf_en: false
+      tf_lidar_en: false # would fight the URDF, which already parents livox_frame under base_link
+      tf_base_en: false
+      # report the base pose on /Odometry so the EKF can fuse it without needing a transform
+      # from the message's child frame to base_link
+      odom_in_base_en: true
     pcd_save:
       pcd_save_en: true
       interval: -1 # how many LiDAR frames saved in each pcd file;

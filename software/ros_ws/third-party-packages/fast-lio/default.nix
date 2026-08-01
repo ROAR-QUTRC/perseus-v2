@@ -16,19 +16,30 @@
   sensor-msgs,
   std-msgs,
   tf2,
+  tf2-ros,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-fast-lio";
   version = "0.0.0";
 
-  # ROAR fork of hku-mars/FAST_LIO, so local changes can be carried without waiting on
-  # upstream. Pinned to a commit rather than the branch name: fetchFromGitHub does not
-  # track a moving ref, and a bare branch would silently change what gets built.
+  # Fork of hku-mars/FAST_LIO. It carries what used to live in
+  # ../../patches/fast_lio: the C++17 bump Jazzy needs, and the TF frame names /
+  # TF-publishing switches turned into ROS parameters (common.map_frame,
+  # common.body_frame, common.lid_frame, publish.tf_en, publish.tf_lidar_en).
+  #
+  # fetchSubmodules is required: the ikd-Tree implementation is a git submodule.
+  # Pinned to a commit rather than a branch name, since fetchFromGitHub does not
+  # track a moving ref and a bare branch would silently change what gets built.
+  #
+  # To move the pin, push the fork and re-read both values from:
+  #   nix-prefetch-git --url https://github.com/bocho0600/FAST_LIO \
+  #     --rev <commit> --fetch-submodules
   src = fetchFromGitHub {
     owner = "bocho0600";
     repo = "FAST_LIO";
-    rev = "a4743b095409588842a5b30ddfa27e29d2f99164"; # ROS2 branch HEAD
-    sha256 = "0cslk11hskmdclbpkargk198p13fcgmb9l0bfnm601sjimc9r203";
+    rev = "e2ab20bd9b2307b80092c875d2a1c644c660cbcc"; # feat/configurable-frames
+    hash = "sha256-m0IaUfuPpKvbPPmorVrh3IEXhGhExEdfFJ0F5knh6zw=";
+    fetchSubmodules = true;
   };
 
   buildType = "ament_cmake";
@@ -48,6 +59,8 @@ buildRosPackage rec {
     sensor-msgs
     std-msgs
     tf2
+    # the fork find_package()s tf2_ros explicitly for the (static) transform broadcasters
+    tf2-ros
   ];
   nativeBuildInputs = [
     ament-cmake
