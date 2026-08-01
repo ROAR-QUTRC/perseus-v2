@@ -92,7 +92,9 @@ let
     # compile time and peak memory by roughly 7x for architectures the dev machines
     # never run on. aarch64 (Jetson) keeps the nixpkgs defaults.
     onnxruntime-cuda = pkgs.onnxruntime.override (
-      { cudaSupport = true; }
+      {
+        cudaSupport = true;
+      }
       // pkgs.lib.optionalAttrs isx86_64 {
         cudaPackages = pkgs.cudaPackages // {
           flags = pkgs.cudaPackages.flags // {
