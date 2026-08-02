@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
-    # disable feature extraction for FAST-LIO2, Livox sensors scan 
-    # non-repetitively the pattern differs every frame, so consecutive 
+    # disable feature extraction for FAST-LIO2, Livox sensors scan
+    # non-repetitively the pattern differs every frame, so consecutive
     # points in a "line" aren't neighbours in any stable geometric sense.
     # Edge-jump detection on that is noise.
     feature_extract_enable: false
@@ -58,7 +58,9 @@
       gyr_cov: 0.1
       b_acc_cov: 0.0001
       b_gyr_cov: 0.0001
-      fov_degree: 360.0 # read but never used: dead since FAST-LIO 2 dropped FoV-based map trimming
+      # read into HALF_FOV_COS and then never used again: dead since FAST-LIO 2 dropped
+      # field-of-view based map trimming
+      fov_degree: 360.0
       # Real Mid-360 range (~70 m at high reflectivity, ~40 m at 10%). Used only as the margin
       # that decides when the local map cube slides: the cube moves once the sensor comes within
       # MOV_THRESHOLD (1.5, hardcoded) * det_range of a face, so the observable region never
