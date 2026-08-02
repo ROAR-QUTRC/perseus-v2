@@ -44,6 +44,11 @@
       # lookup that publish.odom_in_base_en composes with
       lid_frame: "livox_frame"
       base_frame: "base_link"
+      # Required here: the Livox is mounted pitched 45 deg nose-down (livox_pitch in
+      # perseus.urdf.xacro). Without this the world frame would inherit that tilt, so a level
+      # robot would report a 45 deg pitch and level travel would be split between the world x
+      # and z axes -- which two_d_mode in the EKF config would then flatten incorrectly.
+      gravity_align_en: true
       time_sync_en: false # ONLY turn on when external time synchronization is really not possible
       time_offset_lidar_to_imu: 0.0 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
       # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
@@ -90,5 +95,14 @@
       odom_in_base_en: true
     pcd_save:
       pcd_save_en: true
-      interval: -1 # how many LiDAR frames saved in each pcd file;
-      # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+      # dead in this branch: the block that would chunk saves by frame count is commented out
+      # upstream, so this value has no effect
+      interval: -1
+      # Periodic saving, done by fast_lio itself -- this replaced the separate map_saver node
+      # that used to poke /map_save on a timer. The map is also written on shutdown, and
+      # on demand via: ros2 service call /map_save std_srvs/srv/Trigger {}
+      save_interval_sec: 30.0
+      # false: keep only the latest map at map_file_path. Enabling it writes a timestamped
+      # copy on every save, each a full snapshot of a map that never shrinks, so disk use
+      # grows quadratically with run time.
+      keep_history: true

@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<robot name="sensor_mount" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!--
+    Mast at the front of the chassis carrying the Livox MID-360 and the RealSense D455.
+
+    The chassis link origin sits at the middle of its front face, at the bottom: its
+    collision box is centred at (-chassis_length/2, 0, chassis_height/2), so the body
+    extends backwards in -x and upwards in +z from that origin. "Front of the chassis,
+    a bit above" is therefore x near 0 and z a little over chassis_height.
+
+    Both sensors hang off sensor_mount rather than off chassis, so re-siting the mast
+    only means changing sensor_mount_*_offset.
+  -->
+  <xacro:macro name="sensor_mount" params="prefix:=^">
+    <link name="${prefix}sensor_mount">
+      <inertial>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <mass value="${sensor_mount_mass}"/>
+        <xacro:box_inertia m="${sensor_mount_mass}" x="${sensor_mount_length}" y="${sensor_mount_width}" z="${sensor_mount_height}"/>
+      </inertial>
+
+    </link>
+
+    <joint name="${prefix}sensor_mount_joint" type="fixed">
+      <parent link="${prefix}chassis"/>
+      <child link="${prefix}sensor_mount"/>
+      <origin xyz="${sensor_mount_x_offset} ${sensor_mount_y_offset} ${sensor_mount_z_offset}" rpy="0.0 0.0 0.0"/>
+    </joint>
+
+    <!--
+      Livox MID-360, on top of the mast and pitched nose-down by livox_pitch.
+
+      A positive pitch about +y takes the sensor +x axis towards -z, so this points the
+      LiDAR forwards and down. The IMU-LiDAR extrinsic in the fast_lio config is internal
+      to the sensor housing and is unaffected by how the housing is mounted.
+    -->
+    <joint name="${prefix}laser_joint" type="fixed">
+      <parent link="${prefix}sensor_mount"/>
+      <child link="${prefix}livox_frame"/>
+      <origin xyz="0.0 0.0 0.1" rpy="0.0 ${livox_pitch} 0.0"/>
+    </joint>
+
+    <!-- RealSense D455, on the front face of the mast, looking straight ahead -->
+    <xacro:sensor_d455 parent="${prefix}sensor_mount" name="camera" use_nominal_extrinsics="true">
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    </xacro:sensor_d455>
+    <xacro:camera_d455_gazebo name="camera"/>
+  </xacro:macro>
+
+</robot>

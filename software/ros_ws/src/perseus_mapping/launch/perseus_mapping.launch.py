@@ -73,23 +73,11 @@ def generate_launch_description():
         condition=IfCondition(sim),
     )
 
-    # Node for calling the fast-lio service topic to save the /cloud_registered map
-    map_saver_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [
-                    FindPackageShare("perseus_mapping"),
-                    "launch",
-                    "map_saver.launch.py",
-                ]
-            )
-        ),
-    )
-
+    # Map saving is handled by fast_lio itself, via the pcd_save block of livox_mid360.yaml
+    # (save_interval_sec for periodic saves, plus the /map_save service on demand).
     return LaunchDescription(
         [
             sim_filter_launch,
             fast_lio_launch,
-            map_saver_launch,
         ]
     )
