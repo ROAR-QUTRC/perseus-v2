@@ -1,11 +1,19 @@
 /**:
   ros__parameters:
-    feature_extract_enable: true
+    # disable feature extraction for FAST-LIO2, Livox sensors scan 
+    # non-repetitively the pattern differs every frame, so consecutive 
+    # points in a "line" aren't neighbours in any stable geometric sense.
+    # Edge-jump detection on that is noise.
+    feature_extract_enable: false
+    # Downsampling size for the LiDAR point cloud before processing. The default of 3 is
     point_filter_num: 3
     max_iteration: 3
-    filter_size_surf: 0.5
+    filter_size_surf: 0.2
     filter_size_map: 0.5
-    cube_side_length: 1000.0
+    # Side length (m) of the cube of space kept in the ikd-Tree for matching; anything that falls
+    # behind is deleted as the cube slides. Bounds memory, not accuracy. Must stay well above
+    # 3 * mapping.det_range (210 m here) -- at or below that the cube slides every scan.
+    cube_side_length: 500.0
     runtime_pos_log_enable: false
     map_file_path: "~/maps/scan.pcd"
     # map_file_path: "" # perseus file path
@@ -50,9 +58,17 @@
       gyr_cov: 0.1
       b_acc_cov: 0.0001
       b_gyr_cov: 0.0001
-      fov_degree: 360.0
-      det_range: 100.0
-      extrinsic_est_en: true # true: enable the online estimation of IMU-LiDAR extrinsic
+      fov_degree: 360.0 # read but never used: dead since FAST-LIO 2 dropped FoV-based map trimming
+      # Real Mid-360 range (~70 m at high reflectivity, ~40 m at 10%). Used only as the margin
+      # that decides when the local map cube slides: the cube moves once the sensor comes within
+      # MOV_THRESHOLD (1.5, hardcoded) * det_range of a face, so the observable region never
+      # falls outside the retained box. Must satisfy cube_side_length > 3 * det_range, or the
+      # cube slides on every scan and thrashes the ikd-Tree.
+      det_range: 70.0
+      # false for Livox: the factory IMU-LiDAR extrinsic below is accurate, and the extrinsic is
+      # only weakly observable unless the robot rotates a lot, so estimating it online mostly adds
+      # a wobbly nuisance parameter.
+      extrinsic_est_en: false
       extrinsic_T: [-0.011, -0.02329, 0.04412]
       extrinsic_R: [1., 0., 0., 0., 1., 0., 0., 0., 1.]
     publish:
