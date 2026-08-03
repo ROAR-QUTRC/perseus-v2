@@ -7,18 +7,13 @@
   compressed-depth-image-transport,
   compressed-image-transport,
   geometry-msgs,
-  hardware-interface,
-  nlohmann_json,
-  openssl,
+  nav-msgs,
   rclcpp,
-  rclcpp-lifecycle,
+  rclcpp-components,
   realsense2-camera,
   realsense2-description,
   rplidar-ros,
   sensor-msgs,
-  simple-networking,
-  tf2,
-  tf2-geometry-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-sensors";
@@ -33,23 +28,18 @@ buildRosPackage rec {
     compressed-depth-image-transport
     compressed-image-transport
     geometry-msgs
-    hardware-interface
-    nlohmann_json
-    openssl
+    nav-msgs
     rclcpp
-    rclcpp-lifecycle
+    rclcpp-components
     realsense2-camera
     realsense2-description
     rplidar-ros
     sensor-msgs
-    simple-networking
-    tf2
-    tf2-geometry-msgs
   ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "ROS 2 package for managing and processing point-cloud data from the Slamtec M2M2 lidar device which is accessed by TCP ethernet. Handles network access, data processing and provides ROS sensor message information.";
+    description = "ROS 2 sensor support for Perseus: IMU bias estimation and removal, a generic topic remapper, and the launch files and configuration for the RealSense and Livox sensors.";
     license = with lib.licenses; [ mit ];
   };
 }
