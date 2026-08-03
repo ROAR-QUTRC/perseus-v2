@@ -54,12 +54,12 @@ pkgs.mkShell {
           joint-state-publisher-gui
           joy
           mecanum-drive-controller
+          nav-msgs
           nav2-msgs
           navigation2
           nlohmann_json
           onnxruntime
           opencv
-          openssl
           pluginlib
           python3Packages.pygame
           python3Packages.pytest
@@ -85,7 +85,6 @@ pkgs.mkShell {
           rplidar-ros
           rviz2
           sensor-msgs
-          simple-networking
           slam-toolbox
           std-msgs
           teleop-twist-joy
