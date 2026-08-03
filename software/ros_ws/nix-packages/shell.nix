@@ -29,14 +29,7 @@ pkgs.mkShell {
           # Dependencies from package.xml files
           actuator-msgs
           ament-cmake
-          ament-cmake-cppcheck
-          ament-cmake-cpplint
-          ament-cmake-flake8
           ament-cmake-gtest
-          ament-cmake-lint-cmake
-          ament-cmake-pep257
-          ament-cmake-uncrustify
-          ament-cmake-xmllint
           ament-copyright
           ament-flake8
           ament-index-cpp
@@ -45,7 +38,6 @@ pkgs.mkShell {
           ament-pep257
           backward-ros
           behaviortree-cpp
-          boost
           builtin-interfaces
           compressed-depth-image-transport
           compressed-image-transport
@@ -59,14 +51,9 @@ pkgs.mkShell {
           hi-can
           hi-can-raw
           joint-state-broadcaster
-          joint-state-publisher
           joint-state-publisher-gui
           joy
-          laser-geometry
-          launch
-          launch-ros
           mecanum-drive-controller
-          message-filters
           nav2-msgs
           navigation2
           nlohmann_json
@@ -106,10 +93,8 @@ pkgs.mkShell {
           tf2
           tf2-geometry-msgs
           tf2-ros
-          tf2-sensor-msgs
           twist-mux
           twist-stamper
-          urdf
           v4l2-camera
           visualization-msgs
           xacro
