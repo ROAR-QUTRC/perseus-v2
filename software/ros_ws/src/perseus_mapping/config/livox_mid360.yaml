@@ -1,108 +1,136 @@
 /**:
   ros__parameters:
-    # disable feature extraction for FAST-LIO2, Livox sensors scan
-    # non-repetitively the pattern differs every frame, so consecutive
-    # points in a "line" aren't neighbours in any stable geometric sense.
-    # Edge-jump detection on that is noise.
+    # FAST-LIO on the real Perseus: Livox MID-360 on a Jetson.
+    #
+    # Sized for the Jetson rather than a workstation. Two things drive that: the real MID-360
+    # emits ~200k points/s (~20k per scan, roughly 2.7x what the Gazebo sensor produces), and a
+    # Jetson core is several times slower than a desktop one. So the voxel sizes here are
+    # deliberately coarser and the iteration count lower than in livox_mid360_sim.yaml.
+    # Measure on the board (`ps -o pcpu,rss` plus `ros2 topic hz /Odometry`) and give back
+    # filter_size_surf first if /Odometry cannot keep up with its input.
+    #
+    # See livox_mid360_sim.yaml for the simulation values; several settings must differ between
+    # the two and are called out below.
+
+    # No feature extraction on FAST-LIO2: it registers raw points against the map instead, and
+    # the along-scan-line logic assumes dense ordered rings that a non-repetitive Livox pattern
+    # does not provide. mid360_handler ignores this flag anyway.
     feature_extract_enable: false
-    # Downsampling size for the LiDAR point cloud before processing. The default of 3 is
+    # Inert with lidar_type 4: mid360_handler never reads it, so decimation has to come from
+    # filter_size_surf below. Left at the upstream value so it is not mistaken for a live dial.
     point_filter_num: 3
+    # 3 rather than the sim's 4. Each iteration re-runs the nearest-neighbour search over every
+    # downsampled point, so this multiplies the dominant cost directly.
     max_iteration: 3
-    filter_size_surf: 0.2
-    filter_size_map: 0.5
-    # Side length (m) of the cube of space kept in the ikd-Tree for matching; anything that falls
-    # behind is deleted as the cube slides. Bounds memory, not accuracy. Must stay well above
-    # 3 * mapping.det_range (210 m here) -- at or below that the cube slides every scan.
-    cube_side_length: 500.0
+    # 0 sizes the residual loop to the machine, leaving one core for Nav2, perception and the
+    # driver. Upstream compiled this loop out entirely on ARM, so it ran single-threaded on the
+    # Jetson no matter how many cores the board had; that is fixed, and this is what makes
+    # FAST-LIO fit here at all.
+    max_threads: 0
+    # 0.15 rather than the sim's 0.1. This is the strongest accuracy dial and also the most
+    # expensive: halving it roughly multiplies the surviving point count, and with 2.7x more
+    # incoming points than the sim there is far less headroom to spend.
+    filter_size_surf: 0.15
+    # Kept near filter_size_surf: a map coarser than the scans caps how precisely a scan can be
+    # matched, which would undo the setting above.
+    filter_size_map: 0.3
+    # Smaller than the sim's 500 to bound memory on a Jetson sharing RAM with the rest of the
+    # stack. Must stay well above 3 * mapping.det_range (210 m here) or the cube slides on
+    # every scan and thrashes the ikd-Tree.
+    cube_side_length: 300.0
     runtime_pos_log_enable: false
     map_file_path: "~/maps/scan.pcd"
-    # map_file_path: "" # perseus file path
     common:
-      lid_topic: "/livox/lidar_filtered" # this is for simulation, the simulated lidar can produce NaN and Inf values which cause errors with the algorithm, this takes data from the filter node instead
-      # lid_topic: "/livox/lidar" # this is for when running on perseus
+      # The Livox driver's own topics. The sim config reads /livox/lidar_filtered instead,
+      # because the simulated sensor emits NaN and Inf that need stripping first.
+      lid_topic: "/livox/lidar"
       imu_topic: "/livox/imu"
-      # TF frames FAST-LIO publishes. These used to be hardcoded in the source and
-      # rewritten by patches/fast_lio/frame_id_fix.patch; the fork reads them as
-      # parameters, so the values below are now what actually takes effect.
+      # TF frames FAST-LIO publishes. These were hardcoded upstream and rewritten by
+      # patches/fast_lio/frame_id_fix.patch; the fork reads them as parameters instead.
       #
-      # FAST-LIO broadcasts no TF at all here (see the publish block): the EKF in
-      # autonomy/config/ekf_config_fast_lio.yaml owns odom -> base_link. FAST-LIO only
-      # reports /Odometry as odom -> base_link for the EKF to fuse.
-      map_frame: "odom" # world-fixed parent frame of /Odometry, /path and the global clouds
-      # The IMU inside the Livox: this is the frame FAST-LIO's filter actually estimates.
-      # Named after the sensor rather than "imu_frame", which handheld_mapping.launch.py
-      # already uses for a different link. Deliberately not base_link: the estimated pose
-      # is the IMU's, which on this robot is ~0.43 m from base_link and mounted inverted +
-      # yawed 90 deg (perseus.urdf.xacro laser_joint) -- publish.odom_in_base_en composes
-      # that mounting instead of mislabelling the frame.
-      #
-      # With tf_en false this frame is not in TF, so its only remaining use is the header of
-      # /cloud_registered_body, which nothing subscribes to. Set publish.scan_bodyframe_pub_en
-      # to false to drop that topic and make this value inert.
+      # FAST-LIO broadcasts no TF at all (see the publish block): the EKF owns odom -> base_link
+      # and FAST-LIO only reports /Odometry as odom -> base_link for it to fuse.
+      map_frame: "odom" # world-fixed parent of /Odometry, /path and the global clouds
+      # The IMU inside the Livox, which is what the filter actually estimates. Deliberately not
+      # base_link: that pose is the IMU's, offset and rotated by the mast mounting, which
+      # publish.odom_in_base_en composes properly rather than mislabelling.
       body_frame: "livox_imu_frame"
-      # must match the URDF link name: it is the source frame of the lid_frame -> base_frame
-      # lookup that publish.odom_in_base_en composes with
+      # Must match the URDF link name: it is the source frame of the lid_frame -> base_frame
+      # lookup that odom_in_base_en and origin_at_base_en both compose with.
       lid_frame: "livox_frame"
       base_frame: "base_link"
-      # Required here: the Livox is mounted pitched 45 deg nose-down (livox_pitch in
-      # perseus.urdf.xacro). Without this the world frame would inherit that tilt, so a level
-      # robot would report a 45 deg pitch and level travel would be split between the world x
-      # and z axes -- which two_d_mode in the EKF config would then flatten incorrectly.
+      # Level the world frame at startup from the averaged accelerometer. Required with the
+      # Livox pitched 45 deg nose-down (livox_pitch in perseus.urdf.xacro): without it the world
+      # frame inherits that tilt, so a level robot reports a 45 deg pitch and level travel is
+      # split between the world x and z axes. Needs the robot stationary at startup.
       gravity_align_en: true
-      time_sync_en: false # ONLY turn on when external time synchronization is really not possible
-      time_offset_lidar_to_imu: 0.0 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
-      # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
+      # Put the world origin on base_link rather than on the IMU up the mast, so the ground
+      # plane is near z = 0 instead of z = -0.65 for everything downstream.
+      origin_at_base_en: true
+      # The MID-360's LiDAR and IMU share one clock, so leave this off.
+      time_sync_en: false
+      time_offset_lidar_to_imu: 0.0
     preprocess:
-      lidar_type: 4 # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR, 4 for any other pointcloud input
-      scan_line: 32
+      # 1 = Livox CustomMsg, 2 = Velodyne, 3 = Ouster, 4 = Livox MID360 PointCloud2.
+      # 4 is correct for the real driver, which emits reflectivity/tag/line. The sim config uses
+      # 2, because Gazebo publishes ring instead of line and type 4 would read the scan-line
+      # index as 0 for every point, wrecking the per-point timestamps.
+      lidar_type: 4
+      # A MID-360 has 4 scan lines. The sim's 32 is its vertical sample count, not a real sensor
+      # property. Do not set this below the real line count: the handler indexes per-line state
+      # arrays with it.
+      scan_line: 4
+      # Minimum range (m); points closer are dropped. Rejects returns off the robot itself.
+      # Raise if the bucket enters the field of view -- but note it is a sphere, so it blinds the
+      # robot in every direction at that radius.
       blind: 0.5
-      timestamp_unit: 3
-      scan_rate: 10
+      timestamp_unit: 3 # ns, as the driver publishes
+      scan_rate: 10 # MID-360 frame rate; drives the per-point time reconstruction
     mapping:
       acc_cov: 0.1
       gyr_cov: 0.1
       b_acc_cov: 0.0001
       b_gyr_cov: 0.0001
-      # read into HALF_FOV_COS and then never used again: dead since FAST-LIO 2 dropped
-      # field-of-view based map trimming
-      fov_degree: 360.0
-      # Real Mid-360 range (~70 m at high reflectivity, ~40 m at 10%). Used only as the margin
-      # that decides when the local map cube slides: the cube moves once the sensor comes within
-      # MOV_THRESHOLD (1.5, hardcoded) * det_range of a face, so the observable region never
-      # falls outside the retained box. Must satisfy cube_side_length > 3 * det_range, or the
-      # cube slides on every scan and thrashes the ikd-Tree.
+      fov_degree: 360.0 # read into HALF_FOV_COS and then never used; dead in FAST-LIO 2
+      # Real MID-360 range (~70 m at high reflectivity, ~40 m at 10%). Only used as the margin
+      # deciding when the local map cube slides. cube_side_length must exceed 3 * this.
       det_range: 70.0
-      # false for Livox: the factory IMU-LiDAR extrinsic below is accurate, and the extrinsic is
-      # only weakly observable unless the robot rotates a lot, so estimating it online mostly adds
-      # a wobbly nuisance parameter.
+      # false for Livox: the factory extrinsic below is accurate, and it is only weakly
+      # observable unless the robot rotates a lot, so estimating it online adds a nuisance
+      # parameter for nothing.
       extrinsic_est_en: false
+      # MID-360 datasheet: the LiDAR origin expressed in IMU coordinates.
       extrinsic_T: [-0.011, -0.02329, 0.04412]
       extrinsic_R: [1., 0., 0., 0., 1., 0., 0., 0., 1.]
     publish:
-      path_en: true # true: publish Path
-      effect_map_en: true # true: publish Effects
-      map_en: true # true: publish Map cloud
-      scan_publish_en: true # false: close all the point cloud output
-      dense_publish_en: false # false: low down the points number in a global-frame point clouds scan.
-      scan_bodyframe_pub_en: true # true: output the point cloud scans in IMU-body-frame
-      # no TF broadcasting from FAST-LIO: the EKF owns odom -> base_link, and two publishers
-      # on one TF edge make lookups depend on message arrival order
+      # Output trimmed to what is actually consumed. Every one of these serialises a point cloud
+      # on the Jetson's CPU, competing with the filter itself.
+      path_en: false # grows without bound and only useful for visualisation
+      effect_map_en: false # debug view of the points that matched
+      # Must stay true: pcd_save writes the buffer that only publish_map() fills, so turning
+      # this off silently makes /map_save write an empty file.
+      map_en: true
+      scan_publish_en: true # /cloud_registered, the per-scan world cloud
+      dense_publish_en: false # publish the downsampled scan rather than full density
+      # false: /cloud_registered_body has no subscriber, and with tf_en false its frame is not
+      # even in TF. It is also full density regardless of dense_publish_en, so it was the
+      # heaviest cloud the node published.
+      scan_bodyframe_pub_en: false
+      # No TF from FAST-LIO: the EKF owns odom -> base_link, and two publishers on one edge make
+      # lookups depend on message arrival order.
       tf_en: false
       tf_lidar_en: false # would fight the URDF, which already parents livox_frame under base_link
       tf_base_en: false
-      # report the base pose on /Odometry so the EKF can fuse it without needing a transform
-      # from the message's child frame to base_link
+      # Report the base pose on /Odometry so the EKF can fuse it with no transform between the
+      # message's child frame and base_link.
       odom_in_base_en: true
     pcd_save:
       pcd_save_en: true
-      # dead in this branch: the block that would chunk saves by frame count is commented out
-      # upstream, so this value has no effect
-      interval: -1
-      # Periodic saving, done by fast_lio itself -- this replaced the separate map_saver node
-      # that used to poke /map_save on a timer. The map is also written on shutdown, and
-      # on demand via: ros2 service call /map_save std_srvs/srv/Trigger {}
-      save_interval_sec: 30.0
-      # false: keep only the latest map at map_file_path. Enabling it writes a timestamped
-      # copy on every save, each a full snapshot of a map that never shrinks, so disk use
-      # grows quadratically with run time.
-      keep_history: true
+      interval: -1 # dead in this branch; the frame-count chunking is commented out upstream
+      # 60 s rather than the sim's 30: each save serialises the whole accumulated map, and the
+      # map never shrinks, so the write gets slower as the run goes on.
+      save_interval_sec: 60.0
+      # false, and it matters: true writes a full timestamped snapshot on every save, so disk
+      # use grows with the square of run time. A single sim session produced 310 files and
+      # 3.8 GB that way.
+      keep_history: false
