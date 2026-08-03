@@ -18,8 +18,8 @@
 				)
 			)
 		)
-		(property "Value" ""
-			(at 0 0 0)
+		(property "Value" "ACS37003"
+			(at -1.524 11.43 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -826,8 +826,8 @@
 				)
 			)
 		)
-		(property "Value" ""
-			(at 0 0 0)
+		(property "Value" "LM82"
+			(at -4.064 7.874 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -1190,8 +1190,8 @@
 				)
 			)
 		)
-		(property "Value" ""
-			(at 0 0 0)
+		(property "Value" "LTC7001"
+			(at -3.81 7.874 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
