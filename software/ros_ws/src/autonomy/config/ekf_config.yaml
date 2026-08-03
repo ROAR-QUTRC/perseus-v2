@@ -1,7 +1,7 @@
 ekf_filter_node:
   ros__parameters:
-    # Reduced from 50Hz to 20Hz to lower CPU load; this config only fuses
-    # wheel odometry (vx) and IMU orientation, so 20Hz is sufficient.
+    # Fuses FAST-LIO's 6-DOF pose with IMU angular velocity. 30 Hz gives a smoother, higher
+    # rate output than FAST-LIO's ~10 Hz alone.
     frequency: 30.0
     sensor_timeout: 1.0
     two_d_mode: false
@@ -9,16 +9,45 @@ ekf_filter_node:
     transform_timeout: 0.5
     print_diagnostics: true
     debug: false
-    odom0: /odom
-    odom0_config: [false, false, false, false, false, false, true, false, false, false, false, false, false, false, false]
     # state_var: [x_pos, y_pos, z_pos, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_accel, y_accel, z_accel]
-
+    #
+    # The diff drive controller's /odom is deliberately not fused. robot_localization scans
+    # odomN from N=0 and stops at the first index it does not find, so FAST-LIO has to occupy
+    # odom0 -- leaving it at odom1 with no odom0 present would make the filter skip it
+    # silently and fuse nothing but the gyro.
+    # ----- FAST-LIO (3D pose backbone) -----
+    # Full 6-DOF pose from LiDAR-inertial odometry, and now the only source of translation at
+    # all: imu0 contributes rates only. It anchors the odom frame outright, so there is nothing
+    # for it to fight with -- but equally, if FAST-LIO stops publishing (degenerate geometry, or
+    # before lid_frame -> base_frame resolves in TF) nothing else constrains position and the
+    # filter coasts on its motion model.
+    #
+    # No transform is needed: FAST-LIO publishes header.frame_id = odom (its common.map_frame)
+    # and child_frame_id = base_link (its publish.odom_in_base_en composes the 45 deg sensor
+    # mounting), which already match world_frame and base_link_frame below. Changing
+    # common.map_frame in livox_mid360.yaml would break that agreement.
+    #
+    # Roll and pitch are gravity-referenced and drift-free because FAST-LIO levels its world
+    # frame at startup (common.gravity_align_en), which is what the IMU alone cannot provide.
+    # Yaw has no absolute reference on this robot, but LIO yaw drifts far slower than
+    # integrated gyro. FAST-LIO publishes no TF, so the EKF remains the sole owner of
+    # odom -> base_link.
+    odom0: /Odometry
+    # Pose only. FAST-LIO never populates the twist of its odometry message -- there is no
+    # assignment to it anywhere in laserMapping.cpp -- so enabling the velocity columns would
+    # fuse a constant zero velocity at 10 Hz and actively drag the estimate towards standstill.
+    #                 x     y     z     roll  pitch yaw   vx     vy     vz     vroll  vpitch vyaw   ax     ay     az
+    odom0_config: [true, true, true, true, true, true, false, false, false, false, false, false, false, false, false]
+    # Absolute, not differential: this is the pose reference, and both it and the filter start
+    # at the robot's initial pose, so they agree from the first message.
     odom0_differential: false
     odom0_relative: false
+    # 10 Hz in against a 30 Hz filter, so the queue only needs to cover a brief stall.
     odom0_queue_size: 10
     odom0_nodelay: true
-    odom0_pose_rejection_threshold: 2.0
-    odom0_twist_rejection_threshold: 2.0
+    # No rejection thresholds on purpose. They gate on Mahalanobis distance, and FAST-LIO's
+    # covariance is one scan stale (it is filled after the message is published), so a tight
+    # threshold silently discards good pose updates from the filter's only pose source.
     imu0: /livox/imu
     # Gyroscope only. The roll/pitch/yaw entries read
     # sensor_msgs/Imu.orientation, which the MID-360 never fills: its ICM-40609 is a 6-axis
