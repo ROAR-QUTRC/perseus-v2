@@ -6,8 +6,6 @@
   ament-lint-auto,
   ament-lint-common,
   fast-lio,
-  pcl-conversions,
-  sensor-msgs,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-mapping";
@@ -21,11 +19,7 @@ buildRosPackage rec {
     ament-lint-auto
     ament-lint-common
   ];
-  propagatedBuildInputs = [
-    fast-lio
-    pcl-conversions
-    sensor-msgs
-  ];
+  propagatedBuildInputs = [ fast-lio ];
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
