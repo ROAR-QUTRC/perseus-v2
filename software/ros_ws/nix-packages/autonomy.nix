@@ -3,6 +3,7 @@
   lib,
   buildRosPackage,
   ament-cmake,
+  fast-lio,
   ament-lint-auto,
   ament-lint-common,
   navigation2,
@@ -24,6 +25,7 @@ buildRosPackage rec {
     ament-lint-common
   ];
   propagatedBuildInputs = [
+    fast-lio
     navigation2
     rclcpp
     robot-localization

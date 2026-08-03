@@ -10,7 +10,6 @@ final: prev: {
   perseus-input = final.callPackage ./perseus-input.nix { };
   perseus-input-config = final.callPackage ./perseus-input-config.nix { };
   perseus-interfaces = final.callPackage ./perseus-interfaces.nix { };
-  perseus-mapping = final.callPackage ./perseus-mapping.nix { };
   perseus-payloads = final.callPackage ./perseus-payloads.nix { };
   perseus-sensors = final.callPackage ./perseus-sensors.nix { };
   perseus-simulation = final.callPackage ./perseus-simulation.nix { };
