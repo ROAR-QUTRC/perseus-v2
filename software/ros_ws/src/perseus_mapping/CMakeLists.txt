@@ -1,11 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(perseus_mapping)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
-# find dependencies
+# Launch and config only: this package builds no targets, it just installs the FAST-LIO
+# parameters and the launch file that feeds them in.
 find_package(ament_cmake REQUIRED)
 
 if(BUILD_TESTING)
@@ -21,22 +18,8 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  DIRECTORY config
-            launch
-            maps
-            rviz
-            urdf
-            worlds
-            src
+  DIRECTORY config launch maps rviz urdf worlds
   DESTINATION share/${PROJECT_NAME}
   OPTIONAL)
-
-find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
-
-add_executable(sim_pointcloud_filter src/sim_pointcloud_filter.cpp)
-ament_target_dependencies(sim_pointcloud_filter rclcpp sensor_msgs)
-
-install(TARGETS sim_pointcloud_filter DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
