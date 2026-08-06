@@ -53,7 +53,6 @@ pkgs.mkShell {
           joy
           mecanum-drive-controller
           nav-msgs
-          nav2-msgs
           navigation2
           nlohmann_json
           onnxruntime
@@ -63,7 +62,6 @@ pkgs.mkShell {
           python3Packages.pytest
           rcl-interfaces
           rclcpp
-          rclcpp-action
           rclcpp-components
           rclcpp-lifecycle
           rclpy
