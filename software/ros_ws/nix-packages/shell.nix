@@ -29,7 +29,6 @@ pkgs.mkShell {
           # Dependencies from package.xml files
           actuator-msgs
           ament-cmake
-          ament-cmake-gtest
           ament-copyright
           ament-flake8
           ament-index-cpp
@@ -46,7 +45,6 @@ pkgs.mkShell {
           diff-drive-controller
           fast-lio
           geometry-msgs
-          gz-ros2-control
           hardware-interface
           hi-can
           hi-can-raw
@@ -73,13 +71,8 @@ pkgs.mkShell {
           realsense2-description
           robot-localization
           robot-state-publisher
-          ros-gz-bridge
-          ros-gz-image
-          ros-gz-interfaces
-          ros-gz-sim
           ros2controlcli
           ros2launch
-          rosbridge-server
           rosidl-default-generators
           rosidl-default-runtime
           rplidar-ros
@@ -93,11 +86,9 @@ pkgs.mkShell {
           tf2-geometry-msgs
           tf2-ros
           twist-mux
-          twist-stamper
           v4l2-camera
           visualization-msgs
           xacro
-          yaml-cpp-vendor
         ]
       )
       ++ builtins.attrValues extraPkgs
