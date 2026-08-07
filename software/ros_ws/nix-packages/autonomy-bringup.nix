@@ -13,10 +13,10 @@
   xacro,
 }:
 buildRosPackage rec {
-  pname = "ros-jazzy-autonomy";
+  pname = "ros-jazzy-autonomy-bringup";
   version = "0.0.1";
 
-  src = ./../src/autonomy;
+  src = ./../src/nav-stack/autonomy_bringup;
 
   buildType = "ament_cmake";
   buildInputs = [ ament-cmake ];
@@ -35,7 +35,7 @@ buildRosPackage rec {
   nativeBuildInputs = [ ament-cmake ];
 
   meta = {
-    description = "ROAR Autonomy software control stack";
+    description = "ROAR autonomy_bringup software control stack";
     license = with lib.licenses; [ mit ];
   };
 }

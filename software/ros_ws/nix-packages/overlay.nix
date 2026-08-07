@@ -1,5 +1,5 @@
 final: prev: {
-  autonomy = final.callPackage ./autonomy.nix { };
+  autonomy-bringup = final.callPackage ./autonomy-bringup.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   perseus = final.callPackage ./perseus.nix { };
   perseus-bt-nodes = final.callPackage ./perseus-bt-nodes.nix { };
