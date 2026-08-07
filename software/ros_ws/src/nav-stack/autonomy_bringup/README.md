@@ -1,9 +1,9 @@
-## Autonomy Package
+## autonomy_bringup Package
 
 To run without actual Perseus hardware set use_mock_hardware to true when launching:
 
 ```
-ros2 launch autonomy mapping_using_slam_toolbox.launch.py use_mock_hardware:=true
+ros2 launch autonomy_bringup mapping_using_slam_toolbox.launch.py use_mock_hardware:=true
 ```
 
 This ROS2 package is intended to cover functionality to:

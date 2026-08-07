@@ -12,7 +12,7 @@ global parameter server, so this launch brings up three things:
 
 Defaults point at the config shipped in the ``fast_livo`` package (Livox Avia +
 pinhole camera). Override ``mapping_params_file`` / ``camera_params_file`` to
-point at Perseus-specific YAMLs (e.g. ones dropped into ``autonomy/config``).
+point at Perseus-specific YAMLs (e.g. ones dropped into ``autonomy_bringup/config``).
 """
 
 from launch import LaunchDescription

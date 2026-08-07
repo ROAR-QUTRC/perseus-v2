@@ -2,7 +2,7 @@
 """Launch the robot_localization EKF on its own.
 
 Fuses wheel odometry and IMU into a single state estimate and owns the
-odom -> base_link transform. Parameters come from autonomy/config/ekf_config.yaml.
+odom -> base_link transform. Parameters come from autonomy_bringup/config/ekf_config.yaml.
 
 The IMU is consumed in its own frame: robot_localization looks up the transform from the
 message's frame_id to base_link_frame and rotates the data itself, so the sensor mounting
@@ -27,7 +27,7 @@ def generate_launch_description():
     declare_params_file = DeclareLaunchArgument(
         "params_file",
         default_value=PathJoinSubstitution(
-            [FindPackageShare("autonomy"), "config", "ekf_config.yaml"]
+            [FindPackageShare("autonomy_bringup"), "config", "ekf_config.yaml"]
         ),
         description="Full path to the ROS2 parameters file for the robot_localization EKF",
     )

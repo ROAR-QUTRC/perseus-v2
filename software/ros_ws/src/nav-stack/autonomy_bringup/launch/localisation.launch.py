@@ -68,7 +68,7 @@ def launch_setup(context, *args, **kwargs):
     is_sim = LaunchConfiguration("sim").perform(context).lower() == "true"
 
     fast_lio_params_file = os.path.join(
-        get_package_share_directory("autonomy"), "config", "livox_mid360.yaml"
+        get_package_share_directory("autonomy_bringup"), "config", "livox_mid360.yaml"
     )
     with open(fast_lio_params_file, "r") as f:
         fast_lio_params = yaml.safe_load(f)
@@ -105,7 +105,7 @@ def launch_setup(context, *args, **kwargs):
     ekf_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
-                [FindPackageShare("autonomy"), "launch", "ekf.launch.py"]
+                [FindPackageShare("autonomy_bringup"), "launch", "ekf.launch.py"]
             )
         ),
         launch_arguments={
@@ -141,7 +141,7 @@ def generate_launch_description():
     declare_ekf_params_file = DeclareLaunchArgument(
         "ekf_params_file",
         default_value=PathJoinSubstitution(
-            [FindPackageShare("autonomy"), "config", "ekf_config.yaml"]
+            [FindPackageShare("autonomy_bringup"), "config", "ekf_config.yaml"]
         ),
         description="Parameters file for the robot_localization EKF.",
     )
