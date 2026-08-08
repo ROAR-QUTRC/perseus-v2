@@ -144,7 +144,7 @@ stereo_odometry:
       nms_n: 3 # non-max-suppression: min. distance between maxima, in pixels
       nms_tau: 50 # non-max-suppression: interest point peakiness threshold
       match_binsize: 50 # matching bin width/height; affects efficiency only
-      match_radius: 100 # matching radius (du/dv), in pixels -- scaled for 424px width
+      match_radius: 150 # matching radius (du/dv), in pixels -- scaled for 424px width
       match_disp_tolerance: 2 # dv tolerance for stereo matches, in pixels
       outlier_disp_tolerance: 5 # outlier removal: disparity tolerance, in pixels
       outlier_flow_tolerance: 5 # outlier removal: flow tolerance, in pixels
