@@ -24,8 +24,8 @@ namespace perseus_vision
         std::string odom_frame_id{"odom"};
         std::string base_link_frame_id{"base_link"};
         std::string sensor_frame_id{"camera"};
-        std::string odometry_topic{"odometry"};
-        std::string pose_topic{"pose"};
+        std::string odometry_topic{"/perseus_vision/stereo_odometry/odometry"};
+        std::string pose_topic{"/perseus_vision/stereo_odometry/pose"};
         // "~/" makes this private to the owning node, e.g. "/stereo_odometry/reset_pose"
         // rather than a bare "/reset_pose" shared across the whole graph.
         std::string reset_service_name{"~/reset_pose"};

@@ -1,17 +1,26 @@
 # Third-Party Notice: libviso2
 
-This directory contains an unmodified, partial copy of libviso2 (LIBrary for ViSual
-Odometry 2), vendored so `stereo_odometry` has an algorithm backend without a nixpkgs
-package existing for it (tracked for follow-up: package it properly, see the PR that
-introduced this directory).
+This directory contains a partial copy of libviso2 (LIBrary for ViSual Odometry 2),
+vendored so `stereo_odometry` has an algorithm backend without a nixpkgs package
+existing for it (tracked for follow-up: package it properly, see the PR that introduced
+this directory).
 
 - Upstream: https://github.com/srv/viso2 (`libviso2/` subdirectory), by Andreas Geiger,
   Institute of Measurement and Control Systems, Karlsruhe Institute of Technology.
 - Only the files needed for stereo odometry are vendored: `matrix`, `matcher`, `triangle`,
   `filter`, `viso`, `viso_stereo`, `sse_to_neon`. Monocular/omnidirectional odometry and
   dense reconstruction were left out as `stereo_odometry` does not use them.
-- Files are byte-for-byte copies (no reformatting, no house-style changes) so they stay
-  diffable against upstream and are not held to this repo's coding standards.
+- Files are otherwise byte-for-byte copies (no reformatting, no house-style changes) so
+  they stay diffable against upstream and are not held to this repo's coding standards,
+  **except one deliberate crash fix**, clearly marked inline:
+  - `matcher.cpp`, `Matcher::removeOutliers()` — Triangle's divide-and-conquer
+    triangulator (`divconqrecurse` in `triangle.cpp`) recurses without bound and
+    crashes via stack exhaustion (SIGSEGV) when handed many duplicate `(u,v)` points,
+    which happens in practice on low-texture/degraded-tracking frames. Reproduced and
+    confirmed via gdb backtrace. Patched with a dedup guard that bails out of outlier
+    removal for that pass, mirroring the existing `size()<=3` early return, rather than
+    patching Triangle's own recursion (a much larger, riskier surface). Search this
+    directory for `perseus_vision patch` to find it.
 
 ## Licensing — read before distributing binaries built from this code
 

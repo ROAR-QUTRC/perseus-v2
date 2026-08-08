@@ -76,10 +76,12 @@ stereo_odometry:
     right_image_topic: /camera/camera/infra2/image_rect_raw
     left_camera_info_topic: /camera/camera/infra1/camera_info
     right_camera_info_topic: /camera/camera/infra2/camera_info
-    output_info_topic: info
-    output_point_cloud_topic: point_cloud
-    output_inliers_topic: inliers_num
-    output_temporal_matches_topic: temporal_matches_num
+    output_odometry_topic: /perseus_vision/stereo_odometry/odometry
+    output_pose_topic: /perseus_vision/stereo_odometry/pose
+    output_info_topic: /perseus_vision/stereo_odometry/info
+    output_point_cloud_topic: /perseus_vision/stereo_odometry/point_cloud
+    output_inliers_topic: /perseus_vision/stereo_odometry/inliers_num
+    output_temporal_matches_topic: /perseus_vision/stereo_odometry/temporal_matches_num
     sync_queue_size: 10
     image_queue_size: 5
     # Frames and TF
@@ -108,25 +110,54 @@ stereo_odometry:
     # inlier count is above ref_frame_inlier_threshold (strong tracking, no need to
     # refresh yet). Runtime-adjustable via `ros2 param set`.
     ref_frame_change_method: 0
-    ref_frame_motion_threshold: 5.0 # pixels, method 1 only
+    ref_frame_motion_threshold: 2.5 # pixels, method 1 only
     ref_frame_inlier_threshold: 150 # method 2 only
-    # libviso2 feature matcher. Defaults are libviso2's own.
+    # Caps how often incoming synchronized stereo pairs are processed. 0.0 processes
+    # every pair (the correct default: skipping frames grows the motion between
+    # processed frames, which needs a wider match_radius/ref_frame_motion_threshold to
+    # compensate). Set this on hardware that cannot keep up with the camera's native
+    # rate, so it degrades to a lower but stable rate instead of falling further and
+    # further behind. Runtime-adjustable via `ros2 param set`.
+    processing_frequency_hz: 0.0
+    # Zeroes a per-frame motion estimate smaller than both thresholds below, instead of
+    # integrating it. Frame-to-frame VO never estimates exact identity for a genuinely
+    # static camera -- sub-pixel feature localisation noise means there is always some
+    # residual translation/rotation, which then integrates without bound since there is
+    # no absolute reference to correct against ("drifting while stationary"). This does
+    # NOT fix a real calibration bias (that would exceed the deadband and pass through
+    # unchanged) -- for that, check num_inliers in .../info while stationary; a high,
+    # stable inlier count with drift that keeps growing points at calibration, not noise.
+    # 0.0 disables a given axis; both 0.0 disables the deadband entirely (every estimate
+    # is integrated as-is). Tune by watching .../pose while stationary and setting these
+    # just above the noise floor you actually observe. Runtime-adjustable via `ros2 param set`.
+    static_translation_deadband_m: 0.01 # 1cm
+    static_rotation_deadband_rad: 0.005 # ~0.3 degrees
+    # libviso2 feature matcher. Pixel-space values below (match_radius, and the
+    # bucket.* block) are scaled for the current infra1/infra2 profile: 424x240 (see
+    # perseus_sensors/config/realsense.yaml's depth_module.infra_profile). They are
+    # proportional to image size, not absolute constants -- if that resolution changes,
+    # rescale these by the same ratio (e.g. going back to the native 848x480 means
+    # roughly doubling match_radius and bucket_width/bucket_height back to their
+    # libviso2-default 200/50/50) to keep the same relative search coverage and feature
+    # density rather than silently searching a smaller/larger fraction of the image.
     matcher:
       nms_n: 3 # non-max-suppression: min. distance between maxima, in pixels
       nms_tau: 50 # non-max-suppression: interest point peakiness threshold
       match_binsize: 50 # matching bin width/height; affects efficiency only
-      match_radius: 200 # matching radius (du/dv), in pixels
+      match_radius: 100 # matching radius (du/dv), in pixels -- scaled for 424px width
       match_disp_tolerance: 2 # dv tolerance for stereo matches, in pixels
       outlier_disp_tolerance: 5 # outlier removal: disparity tolerance, in pixels
       outlier_flow_tolerance: 5 # outlier removal: flow tolerance, in pixels
       multi_stage: true # denser, faster matching in two passes
       half_resolution: true # match at half resolution, refine at full resolution
       refinement: 1 # 0 = none, 1 = pixel, 2 = subpixel
-    # libviso2 feature bucketing, spreads matches evenly across the image.
+    # libviso2 feature bucketing, spreads matches evenly across the image. Bucket
+    # dimensions scaled down with match_radius above -- keeps ~17 buckets across the
+    # image width, same as at native resolution, instead of ~8.
     bucket:
       max_features: 2 # max features retained per bucket
-      bucket_width: 50.0 # pixels
-      bucket_height: 50.0 # pixels
+      bucket_width: 25.0 # pixels -- scaled for 424px width
+      bucket_height: 25.0 # pixels -- scaled for 240px height
     # libviso2 stereo motion estimation (RANSAC).
     stereo:
       ransac_iters: 200

@@ -1229,7 +1229,41 @@ void Matcher::removeOutliers (vector<Matcher::p_match> &p_matched,int32_t method
     in.pointlist[k++] = it->u1c;
     in.pointlist[k++] = it->v1c;
   }
-  
+
+  // --- perseus_vision patch (not in upstream libviso2) -----------------------------
+  // Triangle's divide-and-conquer triangulator (divconqrecurse, triangle.cpp) can
+  // recurse without bound -- and crash via stack exhaustion -- when many input points
+  // share the same (u,v). That happens in practice on low-texture or degraded-tracking
+  // frames, where many weak candidate matches collapse onto the same pixel; reproduced
+  // and confirmed via gdb backtrace (divconqrecurse called with vertices=0). Bail out
+  // exactly like the size()<=3 guard above if too few *distinct* points remain -- this
+  // is an outlier-rejection pass, not essential motion estimation, so skipping it here
+  // just means this pass's matches go through without outlier filtering.
+  {
+    const float duplicate_epsilon = 1e-3f;
+    vector<float> unique_u, unique_v;
+    for (int32_t i=0; i<in.numberofpoints; i++) {
+      float u = in.pointlist[2*i];
+      float v = in.pointlist[2*i+1];
+      bool is_duplicate = false;
+      for (size_t j=0; j<unique_u.size(); j++) {
+        if (fabs(unique_u[j]-u)<duplicate_epsilon && fabs(unique_v[j]-v)<duplicate_epsilon) {
+          is_duplicate = true;
+          break;
+        }
+      }
+      if (!is_duplicate) {
+        unique_u.push_back(u);
+        unique_v.push_back(v);
+      }
+    }
+    if ((int32_t)unique_u.size()<=3) {
+      free(in.pointlist);
+      return;
+    }
+  }
+  // --- end perseus_vision patch -----------------------------------------------------
+
   // input parameters
   in.numberofpointattributes = 0;
   in.pointattributelist      = NULL;

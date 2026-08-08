@@ -131,6 +131,8 @@ namespace perseus_vision
         _image_queue_size = declare_parameter("image_queue_size", DEFAULT_IMAGE_QUEUE_SIZE);
 
         odometry_publisher_config_t odometry_config;
+        odometry_config.odometry_topic = declare_parameter("output_odometry_topic", DEFAULT_OUTPUT_ODOMETRY_TOPIC);
+        odometry_config.pose_topic = declare_parameter("output_pose_topic", DEFAULT_OUTPUT_POSE_TOPIC);
         odometry_config.odom_frame_id = declare_parameter("odom_frame_id", DEFAULT_ODOM_FRAME_ID);
         odometry_config.base_link_frame_id = declare_parameter("base_link_frame_id", DEFAULT_BASE_LINK_FRAME_ID);
         odometry_config.sensor_frame_id = declare_parameter("sensor_frame_id", DEFAULT_SENSOR_FRAME_ID);
@@ -155,6 +157,10 @@ namespace perseus_vision
             "ref_frame_inlier_threshold", static_cast<int64_t>(DEFAULT_REF_FRAME_INLIER_THRESHOLD))));
         _processing_frequency_hz.store(
             declare_parameter("processing_frequency_hz", DEFAULT_PROCESSING_FREQUENCY_HZ));
+        _static_translation_deadband_m.store(declare_parameter(
+            "static_translation_deadband_m", DEFAULT_STATIC_TRANSLATION_DEADBAND_M));
+        _static_rotation_deadband_rad.store(
+            declare_parameter("static_rotation_deadband_rad", DEFAULT_STATIC_ROTATION_DEADBAND_RAD));
 
         Matcher::parameters& matcher_params = _visual_odometer_params.match;
         matcher_params.nms_n = static_cast<int32_t>(
@@ -326,6 +332,10 @@ namespace perseus_vision
         {
             tf2::Transform delta_transform;
             motion_estimate_valid = _run_visual_odometry(left_mono->image, right_mono->image, delta_transform);
+            if (motion_estimate_valid)
+            {
+                _suppress_negligible_motion(delta_transform);
+            }
             _odometry_publisher->integrate_and_publish(delta_transform, left_image->header.stamp);
 
             if (motion_estimate_valid)
@@ -384,6 +394,30 @@ namespace perseus_vision
         _odometry_publisher->set_pose_covariance(STANDARD_POSE_COVARIANCE);
         _odometry_publisher->set_twist_covariance(STANDARD_TWIST_COVARIANCE);
         return true;
+    }
+
+    void StereoOdometry::_suppress_negligible_motion(tf2::Transform& delta_transform) const
+    {
+        const double translation_deadband_m = _static_translation_deadband_m.load();
+        const double rotation_deadband_rad = _static_rotation_deadband_rad.load();
+        if (translation_deadband_m <= 0.0 && rotation_deadband_rad <= 0.0)
+        {
+            return;
+        }
+
+        // A deadband left at its disabled (<=0) default does not require that axis to
+        // pass -- otherwise configuring only one of the two would make the other's
+        // always-false "< 0" comparison block suppression entirely.
+        const bool translation_is_negligible =
+            translation_deadband_m <= 0.0 || delta_transform.getOrigin().length() < translation_deadband_m;
+        const bool rotation_is_negligible =
+            rotation_deadband_rad <= 0.0 ||
+            std::fabs(delta_transform.getRotation().getAngle()) < rotation_deadband_rad;
+
+        if (translation_is_negligible && rotation_is_negligible)
+        {
+            delta_transform.setIdentity();
+        }
     }
 
     double StereoOdometry::_compute_average_feature_flow(const std::vector<Matcher::p_match>& matches) const
@@ -610,6 +644,32 @@ namespace perseus_vision
                     return result;
                 }
                 _processing_frequency_hz.store(processing_frequency_hz);
+                continue;
+            }
+
+            if (parameter.get_name() == "static_translation_deadband_m")
+            {
+                const double deadband_m = parameter.as_double();
+                if (deadband_m < 0.0)
+                {
+                    result.successful = false;
+                    result.reason = "static_translation_deadband_m must be non-negative";
+                    return result;
+                }
+                _static_translation_deadband_m.store(deadband_m);
+                continue;
+            }
+
+            if (parameter.get_name() == "static_rotation_deadband_rad")
+            {
+                const double deadband_rad = parameter.as_double();
+                if (deadband_rad < 0.0)
+                {
+                    result.successful = false;
+                    result.reason = "static_rotation_deadband_rad must be non-negative";
+                    return result;
+                }
+                _static_rotation_deadband_rad.store(deadband_rad);
                 continue;
             }
         }

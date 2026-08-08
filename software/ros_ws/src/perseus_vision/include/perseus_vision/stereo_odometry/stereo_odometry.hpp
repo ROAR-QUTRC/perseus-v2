@@ -65,15 +65,27 @@ namespace perseus_vision
         static constexpr int DEFAULT_IMAGE_QUEUE_SIZE = 5;
         /// @brief Default input rate cap. Zero processes every synchronized frame pair.
         static constexpr double DEFAULT_PROCESSING_FREQUENCY_HZ = 0.0;
+        /// @brief Default minimum per-frame translation treated as real motion. Zero
+        ///        disables the deadband, integrating every estimate as-is.
+        static constexpr double DEFAULT_STATIC_TRANSLATION_DEADBAND_M = 0.0;
+        /// @brief Default minimum per-frame rotation treated as real motion. Zero
+        ///        disables the deadband, integrating every estimate as-is.
+        static constexpr double DEFAULT_STATIC_ROTATION_DEADBAND_RAD = 0.0;
 
         static inline const std::string DEFAULT_LEFT_IMAGE_TOPIC = "/camera/camera/infra1/image_rect_raw";
         static inline const std::string DEFAULT_RIGHT_IMAGE_TOPIC = "/camera/camera/infra2/image_rect_raw";
         static inline const std::string DEFAULT_LEFT_CAMERA_INFO_TOPIC = "/camera/camera/infra1/camera_info";
         static inline const std::string DEFAULT_RIGHT_CAMERA_INFO_TOPIC = "/camera/camera/infra2/camera_info";
-        static inline const std::string DEFAULT_OUTPUT_INFO_TOPIC = "info";
-        static inline const std::string DEFAULT_OUTPUT_POINT_CLOUD_TOPIC = "point_cloud";
-        static inline const std::string DEFAULT_OUTPUT_INLIERS_TOPIC = "inliers_num";
-        static inline const std::string DEFAULT_OUTPUT_TEMPORAL_MATCHES_TOPIC = "temporal_matches_num";
+        static inline const std::string DEFAULT_OUTPUT_ODOMETRY_TOPIC =
+            "/perseus_vision/stereo_odometry/odometry";
+        static inline const std::string DEFAULT_OUTPUT_POSE_TOPIC = "/perseus_vision/stereo_odometry/pose";
+        static inline const std::string DEFAULT_OUTPUT_INFO_TOPIC = "/perseus_vision/stereo_odometry/info";
+        static inline const std::string DEFAULT_OUTPUT_POINT_CLOUD_TOPIC =
+            "/perseus_vision/stereo_odometry/point_cloud";
+        static inline const std::string DEFAULT_OUTPUT_INLIERS_TOPIC =
+            "/perseus_vision/stereo_odometry/inliers_num";
+        static inline const std::string DEFAULT_OUTPUT_TEMPORAL_MATCHES_TOPIC =
+            "/perseus_vision/stereo_odometry/temporal_matches_num";
 
         static inline const std::string DEFAULT_ODOM_FRAME_ID = "odom";
         static inline const std::string DEFAULT_BASE_LINK_FRAME_ID = "base_link";
@@ -122,6 +134,18 @@ namespace perseus_vision
             const cv::Mat& left_mono,
             const cv::Mat& right_mono,
             tf2::Transform& delta_transform_out);
+
+        /// @brief Zeroes a motion estimate that is too small to distinguish from noise.
+        ///
+        /// Frame-to-frame VO never estimates exact identity for a genuinely static
+        /// camera -- sub-pixel feature localisation noise means there is always some
+        /// residual translation/rotation, which then integrates without bound since
+        /// there is no absolute reference to correct against. This does not fix a real
+        /// calibration bias (that would exceed the deadband and pass through
+        /// unchanged); it only suppresses noise-level jitter while stationary.
+        /// @param delta_transform In/out: replaced with identity if below both
+        ///        deadbands.
+        void _suppress_negligible_motion(tf2::Transform& delta_transform) const;
 
         /// @brief Computes the average per-feature pixel flow between the current and
         ///        previous frame, used by the small-motion reference-frame policy.
@@ -179,6 +203,8 @@ namespace perseus_vision
         std::atomic<int32_t> _ref_frame_inlier_threshold{DEFAULT_REF_FRAME_INLIER_THRESHOLD};
         std::atomic<double> _processing_frequency_hz{DEFAULT_PROCESSING_FREQUENCY_HZ};
         int64_t _last_processed_time_ns{0};
+        std::atomic<double> _static_translation_deadband_m{DEFAULT_STATIC_TRANSLATION_DEADBAND_M};
+        std::atomic<double> _static_rotation_deadband_rad{DEFAULT_STATIC_ROTATION_DEADBAND_RAD};
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr _param_callback_handle;
 
         // libviso2

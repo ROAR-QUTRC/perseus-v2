@@ -42,7 +42,7 @@ depth_module.depth_profile: 424,240,30
 depth_module.depth_format: Z16
 # 848x480 is the depth module's native width; 0,0,0 already resolved to this, but state
 # it so a firmware default cannot move it. Raise to 60 fps if motion blur still shows.
-depth_module.infra_profile: 848,480,30
+depth_module.infra_profile: 848,480,15
 depth_module.infra_format: RGB8
 depth_module.infra1_format: Y8
 depth_module.infra2_format: Y8
