@@ -14,4 +14,5 @@ final: prev: {
   perseus-teleop = final.callPackage ./perseus-teleop.nix { };
   perseus-vision = final.callPackage ./perseus-vision.nix { };
   teleop-diagnostics = final.callPackage ./teleop-diagnostics.nix { };
+  watchdog = final.callPackage ./watchdog.nix { };
 }
