@@ -43,7 +43,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # public dependencies (which should propagate)
 set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp geometry_msgs nav_msgs
-                                  perseus_interfaces)
+                                 perseus_interfaces)
 
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS ament_cmake)
@@ -66,7 +66,7 @@ add_executable(
   src/mobility_watchdog/slip_channel_monitor.cpp)
 
 target_include_directories(mobility_watchdog
-                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 ament_target_dependencies(mobility_watchdog PUBLIC
                           ${THIS_PACKAGE_INCLUDE_DEPENDS})

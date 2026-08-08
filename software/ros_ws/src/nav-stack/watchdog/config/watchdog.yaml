@@ -4,21 +4,17 @@ mobility_watchdog:
     cmd_vel_topic: "/cmd_vel_out"
     odometry_topic: "/odometry/filtered"
     output_topic: "/watchdog/mobility_status"
-
     # A channel is only evaluated once its commanded magnitude clears this floor -- below
     # it, slip can't be told apart from ordinary sensor/control noise.
     min_linear_speed_mps: 0.1
     min_angular_speed_rps: 0.1
-
     # Mean slip ratio over detection_window_s, at or above which a channel is reported
     # as slipping. 0.4 means the robot achieved 60% or less of the speed it was commanded.
     slip_ratio_threshold: 0.4
     detection_window_s: 0.75
-
     # Ignored right after a command starts, so the robot's own acceleration lag isn't read
     # as slip before it has had a chance to catch up to the command.
     activation_grace_period_s: 0.4
-
     # A cached command older than this is treated as commanding zero, so the watchdog goes
     # idle rather than comparing odometry against a stale command from a released control.
     command_timeout_s: 0.5
