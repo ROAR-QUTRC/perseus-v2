@@ -63,6 +63,8 @@ namespace perseus_vision
         static constexpr int32_t DEFAULT_REF_FRAME_INLIER_THRESHOLD = 150;
         static constexpr int DEFAULT_SYNC_QUEUE_SIZE = 10;
         static constexpr int DEFAULT_IMAGE_QUEUE_SIZE = 5;
+        /// @brief Default input rate cap. Zero processes every synchronized frame pair.
+        static constexpr double DEFAULT_PROCESSING_FREQUENCY_HZ = 0.0;
 
         static inline const std::string DEFAULT_LEFT_IMAGE_TOPIC = "/camera/camera/infra1/image_rect_raw";
         static inline const std::string DEFAULT_RIGHT_IMAGE_TOPIC = "/camera/camera/infra2/image_rect_raw";
@@ -90,6 +92,14 @@ namespace perseus_vision
         void _initialize_odometer(
             const sensor_msgs::msg::CameraInfo& left_info,
             const sensor_msgs::msg::CameraInfo& right_info);
+
+        /// @brief Applies `processing_frequency_hz` to decide whether to process this frame.
+        ///
+        /// Frames arriving faster than the cap are dropped, not queued, so a Pi that
+        /// cannot keep up degrades to a lower effective rate instead of falling further
+        /// and further behind the camera's actual timestamps.
+        /// @return True if this frame should be processed, false if it should be skipped.
+        bool _should_process_frame_now();
 
         /// @brief Runs one synchronized stereo frame through the odometry pipeline.
         /// @param left_image Left rectified image.
@@ -162,10 +172,13 @@ namespace perseus_vision
         int _sync_queue_size{DEFAULT_SYNC_QUEUE_SIZE};
         int _image_queue_size{DEFAULT_IMAGE_QUEUE_SIZE};
 
-        // Reference-frame change policy — runtime reconfigurable, so declared atomic.
+        // Reference-frame change policy and input rate cap — runtime reconfigurable,
+        // so declared atomic.
         std::atomic<int32_t> _ref_frame_change_method{DEFAULT_REF_FRAME_CHANGE_METHOD};
         std::atomic<double> _ref_frame_motion_threshold_px{DEFAULT_REF_FRAME_MOTION_THRESHOLD_PX};
         std::atomic<int32_t> _ref_frame_inlier_threshold{DEFAULT_REF_FRAME_INLIER_THRESHOLD};
+        std::atomic<double> _processing_frequency_hz{DEFAULT_PROCESSING_FREQUENCY_HZ};
+        int64_t _last_processed_time_ns{0};
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr _param_callback_handle;
 
         // libviso2

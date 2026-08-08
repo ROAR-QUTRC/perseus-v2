@@ -19,6 +19,8 @@ namespace perseus_vision
         constexpr int QOS_DEPTH = 10;
         /// @brief Minimum gap between repeated "odometer lost" warnings, in milliseconds.
         constexpr int64_t LOST_WARNING_THROTTLE_MS = 10000;
+        /// @brief Nanoseconds in one second, used to convert a rate limit into a period.
+        constexpr double NANOSECONDS_PER_SECOND = 1e9;
 
         /// @brief Approximate pose/twist covariance for a successful motion estimate.
         ///
@@ -151,6 +153,8 @@ namespace perseus_vision
             declare_parameter("ref_frame_motion_threshold", DEFAULT_REF_FRAME_MOTION_THRESHOLD_PX));
         _ref_frame_inlier_threshold.store(static_cast<int32_t>(declare_parameter(
             "ref_frame_inlier_threshold", static_cast<int64_t>(DEFAULT_REF_FRAME_INLIER_THRESHOLD))));
+        _processing_frequency_hz.store(
+            declare_parameter("processing_frequency_hz", DEFAULT_PROCESSING_FREQUENCY_HZ));
 
         Matcher::parameters& matcher_params = _visual_odometer_params.match;
         matcher_params.nms_n = static_cast<int32_t>(
@@ -236,6 +240,31 @@ namespace perseus_vision
         _odometry_publisher->set_initial_pose(_load_initial_pose());
     }
 
+    bool StereoOdometry::_should_process_frame_now()
+    {
+        const double processing_frequency_hz = _processing_frequency_hz.load();
+        if (processing_frequency_hz <= 0.0)
+        {
+            return true;
+        }
+
+        const int64_t now_ns = this->now().nanoseconds();
+        // Reset the rate limiter if the clock jumped backwards, such as on a sim time reset.
+        if (_last_processed_time_ns != 0 && now_ns < _last_processed_time_ns)
+        {
+            _last_processed_time_ns = 0;
+        }
+
+        const int64_t min_period_ns = static_cast<int64_t>(NANOSECONDS_PER_SECOND / processing_frequency_hz);
+        if (_last_processed_time_ns != 0 && (now_ns - _last_processed_time_ns) < min_period_ns)
+        {
+            return false;
+        }
+
+        _last_processed_time_ns = now_ns;
+        return true;
+    }
+
     void StereoOdometry::_synchronized_callback(
         const sensor_msgs::msg::Image::ConstSharedPtr& left_image,
         const sensor_msgs::msg::Image::ConstSharedPtr& right_image,
@@ -248,6 +277,10 @@ namespace perseus_vision
         if (is_first_run)
         {
             _initialize_odometer(*left_info, *right_info);
+        }
+        else if (!_should_process_frame_now())
+        {
+            return;
         }
 
         cv_bridge::CvImageConstPtr left_mono;
@@ -564,6 +597,19 @@ namespace perseus_vision
             if (parameter.get_name() == "ref_frame_inlier_threshold")
             {
                 _ref_frame_inlier_threshold.store(static_cast<int32_t>(parameter.as_int()));
+                continue;
+            }
+
+            if (parameter.get_name() == "processing_frequency_hz")
+            {
+                const double processing_frequency_hz = parameter.as_double();
+                if (processing_frequency_hz < 0.0)
+                {
+                    result.successful = false;
+                    result.reason = "processing_frequency_hz must be non-negative";
+                    return result;
+                }
+                _processing_frequency_hz.store(processing_frequency_hz);
                 continue;
             }
         }
