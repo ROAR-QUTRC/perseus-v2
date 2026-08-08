@@ -38,7 +38,7 @@ rgb_camera.global_time_enabled: true
 # imagers on a factory-calibrated 95 mm baseline, published with that baseline in the
 # infra2 camera_info P matrix, which is what a stereo front end needs for metric scale.
 enable_infra: false
-depth_module.depth_profile: 424,240,15
+depth_module.depth_profile: 424,240,30
 depth_module.depth_format: Z16
 # 848x480 is the depth module's native width; 0,0,0 already resolved to this, but state
 # it so a firmware default cannot move it. Raise to 60 fps if motion blur still shows.
