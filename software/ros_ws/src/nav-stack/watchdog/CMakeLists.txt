@@ -1,8 +1,11 @@
-cmake_minimum_required(VERSION 3.10)
+# PROJECT SETUP
+cmake_minimum_required(VERSION 3.23)
+
 project(
-  perseus_interfaces
-  VERSION 1.0.0
-  LANGUAGES CXX C)
+  watchdog
+  VERSION 0.0.1
+  LANGUAGES CXX)
+
 # credit https://www.kitware.com/cmake-and-the-default-build-type/
 set(default_build_type "Debug")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -23,6 +26,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+# COMPILER SETUP
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wshadow)
 endif()
@@ -38,36 +42,49 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # INCLUDE DEPENDENCIES
 
 # public dependencies (which should propagate)
-# set(THIS_PACKAGE_INCLUDE_DEPENDS )
+set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp geometry_msgs nav_msgs
+                                  perseus_interfaces)
 
 # packages which must be present but aren't linked against
-set(THIS_PACKAGE_BUILD_DEPENDS
-    backward_ros ament_cmake rosidl_default_generators geometry_msgs
-    sensor_msgs std_msgs)
+set(THIS_PACKAGE_BUILD_DEPENDS ament_cmake)
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_BUILD_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-# foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
-#   find_package(${Dependency} REQUIRED)
-# endforeach()
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
-rosidl_generate_interfaces(
-  ${PROJECT_NAME}
-  "srv/GetFrontierGoal.srv"
-  "msg/Detection.msg"
-  "msg/DetectionArray.msg"
-  "srv/DetectObjects.srv"
-  "msg/NavigationData.msg"
-  "srv/RunWaypoints.srv"
-  "msg/Waypoint.msg"
-  "msg/MobilityStatus.msg"
-  DEPENDENCIES
-  geometry_msgs
-  sensor_msgs
-  std_msgs)
+include_directories(include)
 
-ament_export_dependencies(rosidl_default_runtime)
+# COMPILE (Executables)
+add_executable(
+  mobility_watchdog
+  src/mobility_watchdog/mobility_watchdog.cpp
+  src/mobility_watchdog/mobility_watchdog_node.cpp
+  src/mobility_watchdog/slip_channel_monitor.cpp)
 
+target_include_directories(mobility_watchdog
+                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+ament_target_dependencies(mobility_watchdog PUBLIC
+                          ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+# INSTALL (ROS)
+install(TARGETS mobility_watchdog DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY include/ DESTINATION include/)
+
+install(
+  DIRECTORY config launch
+  DESTINATION share/${PROJECT_NAME}
+  OPTIONAL)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+# ROS FINALISATION
 ament_package()
