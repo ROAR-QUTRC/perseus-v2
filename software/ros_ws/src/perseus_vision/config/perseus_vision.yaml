@@ -67,3 +67,68 @@ detection_overlay:
     max_detection_age_s: 1.0
     compressed_io: false
     show_staleness: false # Draw the detection count and age onto the image
+stereo_odometry:
+  ros__parameters:
+    # Defaults target the RealSense infra1/infra2 pair (see perseus_sensors/config/
+    # realsense.yaml): two hardware-rectified, hardware-synchronised global-shutter
+    # imagers on a factory-calibrated baseline carried in infra2's camera_info P matrix.
+    left_image_topic: /camera/camera/infra1/image_rect_raw
+    right_image_topic: /camera/camera/infra2/image_rect_raw
+    left_camera_info_topic: /camera/camera/infra1/camera_info
+    right_camera_info_topic: /camera/camera/infra2/camera_info
+    output_info_topic: info
+    output_point_cloud_topic: point_cloud
+    output_inliers_topic: inliers_num
+    output_temporal_matches_topic: temporal_matches_num
+    sync_queue_size: 10
+    image_queue_size: 5
+    # Frames and TF
+    odom_frame_id: odom
+    base_link_frame_id: base_link
+    # Overridden at runtime from the left camera_info header, if it has one set.
+    sensor_frame_id: camera_infra1_optical_frame
+    publish_tf: true
+    invert_tf: false
+    # Initial pose. Interpreted as the base_link pose in odom, transformed to the sensor
+    # frame via TF, unless initial_pose_in_camera_frame is true (then it is the sensor
+    # pose directly). Defaults to identity, i.e. odometry starts at the origin.
+    initial_pose_in_camera_frame: false
+    initial_pose:
+      tx: 0.0
+      ty: 0.0
+      tz: 0.0
+      qx: 0.0
+      qy: 0.0
+      qz: 0.0
+      qw: 1.0
+    # Reference-frame change policy: whether libviso2 keeps the current frame as its
+    # matching reference (instead of advancing to the new one) on the next pass.
+    # 0 = always advance (upstream default). 1 = keep it while the average feature flow
+    # is below ref_frame_motion_threshold (stalled/slow motion). 2 = keep it while the
+    # inlier count is above ref_frame_inlier_threshold (strong tracking, no need to
+    # refresh yet). Runtime-adjustable via `ros2 param set`.
+    ref_frame_change_method: 0
+    ref_frame_motion_threshold: 5.0 # pixels, method 1 only
+    ref_frame_inlier_threshold: 150 # method 2 only
+    # libviso2 feature matcher. Defaults are libviso2's own.
+    matcher:
+      nms_n: 3 # non-max-suppression: min. distance between maxima, in pixels
+      nms_tau: 50 # non-max-suppression: interest point peakiness threshold
+      match_binsize: 50 # matching bin width/height; affects efficiency only
+      match_radius: 200 # matching radius (du/dv), in pixels
+      match_disp_tolerance: 2 # dv tolerance for stereo matches, in pixels
+      outlier_disp_tolerance: 5 # outlier removal: disparity tolerance, in pixels
+      outlier_flow_tolerance: 5 # outlier removal: flow tolerance, in pixels
+      multi_stage: true # denser, faster matching in two passes
+      half_resolution: true # match at half resolution, refine at full resolution
+      refinement: 1 # 0 = none, 1 = pixel, 2 = subpixel
+    # libviso2 feature bucketing, spreads matches evenly across the image.
+    bucket:
+      max_features: 2 # max features retained per bucket
+      bucket_width: 50.0 # pixels
+      bucket_height: 50.0 # pixels
+    # libviso2 stereo motion estimation (RANSAC).
+    stereo:
+      ransac_iters: 200
+      inlier_threshold: 2.0 # fundamental matrix inlier threshold
+      reweighting: true # down-weight border features; more robust to calibration errors

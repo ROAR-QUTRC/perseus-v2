@@ -62,6 +62,7 @@ rosidl_generate_interfaces(
   "msg/NavigationData.msg"
   "srv/RunWaypoints.srv"
   "msg/Waypoint.msg"
+  "msg/StereoOdometryInfo.msg"
   DEPENDENCIES
   geometry_msgs
   sensor_msgs

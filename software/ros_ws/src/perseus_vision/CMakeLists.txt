@@ -21,6 +21,10 @@ find_package(visualization_msgs REQUIRED)
 find_package(perseus_interfaces REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(message_filters REQUIRED)
+find_package(image_transport REQUIRED)
 
 # ── ONNX Runtime (via pkg-config — works with Nix) ────────────────────────────
 find_package(PkgConfig REQUIRED)
@@ -70,6 +74,69 @@ rclcpp_components_register_nodes(
   perseus_vision_components "perseus_vision::ArucoDetector"
   "perseus_vision::CubeDetector" "perseus_vision::DetectionOverlay")
 
+# ── vendored libviso2 (third_party/libviso2/NOTICE.md — GPL-2.0-or-later plus a
+#    separately-licensed, non-commercial-use Triangle module) ──────────────────
+# Kept as its own static library, linked only into perseus_vision_stereo_odom below,
+# so this code never gets pulled into perseus_vision_components' shared library with
+# the MIT-licensed detector nodes.
+add_library(
+  perseus_vision_libviso2 STATIC
+  third_party/libviso2/src/filter.cpp third_party/libviso2/src/matcher.cpp
+  third_party/libviso2/src/matrix.cpp third_party/libviso2/src/triangle.cpp
+  third_party/libviso2/src/viso.cpp third_party/libviso2/src/viso_stereo.cpp)
+target_include_directories(
+  perseus_vision_libviso2
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/libviso2/include>
+  # The vendored sources include sibling headers unqualified (e.g. "matrix.h"), so the
+  # public include above (which requires the libviso2/ prefix) does not resolve them.
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libviso2/include/libviso2)
+# Unmodified upstream code kept diffable against its source — not held to this
+# repo's warning policy.
+target_compile_options(perseus_vision_libviso2 PRIVATE -w)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm.*)$")
+  target_compile_definitions(perseus_vision_libviso2 PRIVATE __ARM_NEON__)
+else()
+  target_compile_options(perseus_vision_libviso2 PRIVATE -msse3)
+endif()
+
+# ── stereo_odometry component library ───────────────────────────────────────────
+# Built separately from perseus_vision_components (see the libviso2 note above).
+add_library(
+  perseus_vision_stereo_odom SHARED src/stereo_odometry/stereo_odometry.cpp
+                                    src/stereo_odometry/odometry_publisher.cpp)
+
+target_include_directories(
+  perseus_vision_stereo_odom
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:include>
+  PRIVATE ${OpenCV_INCLUDE_DIRS})
+
+target_link_libraries(perseus_vision_stereo_odom ${OpenCV_LIBS}
+                      perseus_vision_libviso2)
+
+ament_target_dependencies(
+  perseus_vision_stereo_odom
+  rclcpp
+  rclcpp_components
+  rcl_interfaces
+  sensor_msgs
+  std_msgs
+  std_srvs
+  nav_msgs
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  cv_bridge
+  OpenCV
+  message_filters
+  image_transport
+  perseus_interfaces)
+
+rclcpp_components_register_nodes(perseus_vision_stereo_odom
+                                 "perseus_vision::StereoOdometry")
+
 # ── standalone executables ────────────────────────────────────────────────────
 # Thin wrappers so each node can still be run on its own with `ros2 run`.
 add_executable(aruco_detector_node src/aruco_detector/aruco_detector_node.cpp)
@@ -85,15 +152,19 @@ add_executable(detection_overlay_node
 target_link_libraries(detection_overlay_node perseus_vision_components)
 ament_target_dependencies(detection_overlay_node rclcpp)
 
+add_executable(stereo_odometry src/stereo_odometry/stereo_odometry_node.cpp)
+target_link_libraries(stereo_odometry perseus_vision_stereo_odom)
+ament_target_dependencies(stereo_odometry rclcpp)
+
 # ── install ───────────────────────────────────────────────────────────────────
 install(
-  TARGETS perseus_vision_components
+  TARGETS perseus_vision_components perseus_vision_stereo_odom
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
 install(TARGETS aruco_detector_node cube_detector detection_overlay_node
-        DESTINATION lib/${PROJECT_NAME})
+                stereo_odometry DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/ DESTINATION include/)
 install(DIRECTORY config/ DESTINATION share/${PROJECT_NAME}/config)
