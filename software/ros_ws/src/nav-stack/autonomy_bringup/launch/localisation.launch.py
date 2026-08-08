@@ -114,7 +114,20 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
-    return [fast_lio_launch, ekf_launch]
+    # Watches /odometry/filtered against /cmd_vel_out for wheel slip, so it belongs
+    # wherever the EKF that produces /odometry/filtered is brought up.
+    watchdog_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("watchdog"), "launch", "mobility_watchdog.launch.py"]
+            )
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
+    return [fast_lio_launch, ekf_launch, watchdog_launch]
 
 
 def generate_launch_description():
