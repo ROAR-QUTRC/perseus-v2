@@ -10,6 +10,7 @@
   rclcpp,
   robot-localization,
   slam-toolbox,
+  watchdog,
   xacro,
 }:
 buildRosPackage rec {
@@ -30,6 +31,7 @@ buildRosPackage rec {
     rclcpp
     robot-localization
     slam-toolbox
+    watchdog
     xacro
   ];
   nativeBuildInputs = [ ament-cmake ];
