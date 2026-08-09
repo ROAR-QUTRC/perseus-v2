@@ -1,15 +1,26 @@
 #!/usr/bin/env python3
 """Launch the localisation stack: FAST-LIO odometry fused by the EKF.
 
-Two pieces, and the split matters:
+Three pieces, and the split matters:
 
-  1. fast_lio provides LiDAR-inertial odometry from config/livox_mid360.yaml. It publishes
+  1. dust_filter (perseus_sensors) declutters the raw Livox cloud, removing airborne dust
+     and sand -- see perseus_sensors/config/dust_filter.yaml. livox_mid360.yaml's
+     common.lid_topic already reads its output (/livox/lidar/filtered), not the raw
+     /livox/lidar, so FAST-LIO gets nothing at all until this is running.
+  2. fast_lio provides LiDAR-inertial odometry from config/livox_mid360.yaml. It publishes
      /Odometry as odom -> base_link and broadcasts no TF of its own.
-  2. ekf.launch.py runs robot_localization from config/ekf_config.yaml, fusing that pose
+  3. ekf.launch.py runs robot_localization from config/ekf_config.yaml, fusing that pose
      with IMU angular velocity and owning the odom -> base_link transform.
 
 Start order does not matter. fast_lio withholds /Odometry until lid_frame -> base_frame
 resolves in TF, so until robot_state_publisher is up the EKF runs on the IMU alone.
+
+use_composition (default true) loads dust_filter and FAST-LIO's LaserMappingNode into one
+component container, so the filtered cloud passes between them by pointer instead of over
+DDS. Pass use_composition:=false to fall back to two separate processes (also the only way
+to get fast_lio's own RViz launch via the `rviz` argument, which the composed container does
+not start). Composition needs a FAST-LIO build with the LaserMappingNode component
+registered; if that has not landed yet, use use_composition:=false.
 
 Map saving is handled inside fast_lio, via the pcd_save block of livox_mid360.yaml:
 periodically, on shutdown, and on demand via the /map_save service.
@@ -31,6 +42,8 @@ from launch.actions import (
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -65,7 +78,9 @@ def launch_setup(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration("use_sim_time")
     rviz = LaunchConfiguration("rviz")
     ekf_params_file = LaunchConfiguration("ekf_params_file")
+    dust_filter_params_file = LaunchConfiguration("dust_filter_params_file")
     is_sim = LaunchConfiguration("sim").perform(context).lower() == "true"
+    use_composition = LaunchConfiguration("use_composition").perform(context).lower() == "true"
 
     fast_lio_params_file = os.path.join(
         get_package_share_directory("autonomy_bringup"), "config", "livox_mid360.yaml"
@@ -87,19 +102,50 @@ def launch_setup(context, *args, **kwargs):
     yaml.dump(fast_lio_params, tmp)
     tmp.close()
 
-    fast_lio_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("fast_lio"), "launch", "mapping.launch.py"]
-            )
-        ),
-        launch_arguments={
-            "config_path": os.path.dirname(tmp.name),
-            "config_file": os.path.basename(tmp.name),
-            "rviz": rviz,
-            "use_sim_time": use_sim_time,
-        }.items(),
-    )
+    if use_composition:
+        # dust_filter republishes /livox/lidar as /livox/lidar/filtered, which
+        # livox_mid360.yaml's common.lid_topic already expects to read FAST-LIO's input
+        # from. Loading both in one container lets that hop happen by pointer instead of
+        # over DDS -- but only because use_intra_process_comms is set on both: a container
+        # does not turn it on by itself, it defaults to off per node like anywhere else.
+        fast_lio_launch = ComposableNodeContainer(
+            name="localisation_container",
+            namespace="",
+            package="rclcpp_components",
+            executable="component_container_mt",
+            output="screen",
+            parameters=[{"use_sim_time": use_sim_time}],
+            composable_node_descriptions=[
+                ComposableNode(
+                    package="perseus_sensors",
+                    plugin="perseus_sensors::DustFilter",
+                    name="dust_filter",
+                    parameters=[dust_filter_params_file, {"use_sim_time": use_sim_time}],
+                    extra_arguments=[{"use_intra_process_comms": True}],
+                ),
+                ComposableNode(
+                    package="fast_lio",
+                    plugin="LaserMappingNode",
+                    name="laser_mapping",
+                    parameters=[tmp.name, {"use_sim_time": use_sim_time}],
+                    extra_arguments=[{"use_intra_process_comms": True}],
+                ),
+            ],
+        )
+    else:
+        fast_lio_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                PathJoinSubstitution(
+                    [FindPackageShare("fast_lio"), "launch", "mapping.launch.py"]
+                )
+            ),
+            launch_arguments={
+                "config_path": os.path.dirname(tmp.name),
+                "config_file": os.path.basename(tmp.name),
+                "rviz": rviz,
+                "use_sim_time": use_sim_time,
+            }.items(),
+        )
 
     # Reused rather than duplicated, so the EKF node and its parameters are defined once.
     ekf_launch = IncludeLaunchDescription(
@@ -159,12 +205,31 @@ def generate_launch_description():
         description="Parameters file for the robot_localization EKF.",
     )
 
+    declare_use_composition = DeclareLaunchArgument(
+        "use_composition",
+        default_value="true",
+        description="Load dust_filter and FAST-LIO's LaserMappingNode into one component "
+        "container instead of two separate processes. Needs a FAST-LIO build with the "
+        "LaserMappingNode component registered; set false to fall back to fast_lio's own "
+        "mapping.launch.py (also the only way to get its `rviz` argument).",
+    )
+
+    declare_dust_filter_params_file = DeclareLaunchArgument(
+        "dust_filter_params_file",
+        default_value=PathJoinSubstitution(
+            [FindPackageShare("perseus_sensors"), "config", "dust_filter.yaml"]
+        ),
+        description="Parameters file for dust_filter, used only when use_composition:=true.",
+    )
+
     return LaunchDescription(
         [
             declare_sim,
             declare_use_sim_time,
             declare_rviz,
             declare_ekf_params_file,
+            declare_use_composition,
+            declare_dust_filter_params_file,
             OpaqueFunction(function=launch_setup),
         ]
     )

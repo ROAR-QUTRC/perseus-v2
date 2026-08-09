@@ -1,0 +1,16 @@
+dust_filter:
+  ros__parameters:
+    input_topic: "/livox/lidar"
+    output_topic: "/livox/lidar/filtered"
+
+    # A point survives only if at least min_neighbors other points fall within
+    # search_radius_m of it. Airborne dust returns as isolated points with no coherent
+    # surface behind them; a solid obstacle returns a dense cluster at the sensor's angular
+    # resolution.
+    #
+    # This is naturally less selective close to the sensor, where angular resolution packs
+    # points tighter regardless of what they hit -- if dust kicked up near the robot is
+    # still getting through, tighten min_neighbors or shrink search_radius_m before reaching
+    # for a heavier (e.g. multi-frame) technique.
+    search_radius_m: 0.15
+    min_neighbors: 5

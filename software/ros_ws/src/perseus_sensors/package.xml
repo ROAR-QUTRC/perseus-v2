@@ -3,7 +3,7 @@
 <package format="3">
   <name>perseus_sensors</name>
   <version>0.1.0</version>
-  <description>ROS 2 sensor support for Perseus: IMU bias estimation and removal, a generic topic remapper, and the launch files and configuration for the RealSense and Livox sensors.</description>
+  <description>ROS 2 sensor support for Perseus: IMU bias estimation and removal, a radius-based point cloud dust filter, a generic topic remapper, and the launch files and configuration for the RealSense and Livox sensors.</description>
   <maintainer email="1388693+DingoOz@users.noreply.github.com">DingoOz</maintainer>
   <license>MIT</license>
 

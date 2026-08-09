@@ -27,6 +27,10 @@ buildRosPackage rec {
   # TF-publishing switches turned into ROS parameters (common.map_frame,
   # common.body_frame, common.lid_frame, publish.tf_en, publish.tf_lidar_en).
   #
+  # Also builds LaserMappingNode a second time as an rclcpp component
+  # (fastlio_mapping_component), so it can be loaded into a shared container instead of
+  # always spun as its own process. The standalone fastlio_mapping executable is unchanged.
+  #
   # fetchSubmodules is required: the ikd-Tree implementation is a git submodule.
   # Pinned to a commit rather than a branch name, since fetchFromGitHub does not
   # track a moving ref and a bare branch would silently change what gets built.
@@ -37,8 +41,8 @@ buildRosPackage rec {
   src = fetchFromGitHub {
     owner = "bocho0600";
     repo = "FAST_LIO";
-    rev = "bd73b0592c4ecd9b30d3a61a99d5f12e71c73e10"; # feat/configurable-frames
-    hash = "sha256-B4Rr+n/dsv1sPWUn3NSEsLmi6uGE1vNqBMi+16MORLc=";
+    rev = "2f49357210f3ff589e3f5721d388d4012e43063c"; # feat/configurable-frames
+    hash = "sha256-WDLZ6nHYHOD/rPChNgeI3BhxGeOOz7x0o9QYLAKOKgQ=";
     fetchSubmodules = true;
   };
 
