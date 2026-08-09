@@ -234,7 +234,7 @@
       "no_connect_dangling": "warning",
       "pin_not_connected": "error",
       "pin_not_driven": "error",
-      "pin_to_pin": "warning",
+      "pin_to_pin": "error",
       "power_pin_not_driven": "error",
       "same_local_global_label": "warning",
       "similar_label_and_power": "warning",
@@ -263,7 +263,7 @@
     "classes": [
       {
         "bus_width": 12,
-        "clearance": 0.2,
+        "clearance": 0.15,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.2,
@@ -277,16 +277,87 @@
         "track_width": 0.2,
         "tuning_profile": "",
         "via_diameter": 0.6,
-        "via_drill": 0.3,
+        "via_drill": 0.2,
         "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.15,
+        "diff_pair_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "All Nets",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.2,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.2,
+        "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.15,
+        "diff_pair_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "Power",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 2,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.2,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.2,
+        "wire_width": 6
+      },
+      {
+        "clearance": 0.127,
+        "diff_pair_gap": 0.127,
+        "diff_pair_width": 0.2,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "USB_DIFF",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.257,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.2
       }
     ],
     "meta": {
       "version": 5
     },
     "net_colors": null,
-    "netclass_assignments": null,
-    "netclass_patterns": []
+    "netclass_assignments": {
+      "/USB_D_N": [
+        "USB_DIFF"
+      ],
+      "/USB_D_P": [
+        "USB_DIFF"
+      ]
+    },
+    "netclass_patterns": [
+      {
+        "netclass": "Power",
+        "pattern": "VIN"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "NetD1_C"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "NetC4_1"
+      }
+    ]
   },
   "pcbnew": {
     "last_paths": {
@@ -399,7 +470,7 @@
       "hop_over_size_choice": 0,
       "intersheets_ref_own_page": false,
       "intersheets_ref_prefix": "",
-      "intersheets_ref_short": false,
+      "intersheets_ref_short": true,
       "intersheets_ref_show": false,
       "intersheets_ref_suffix": "",
       "junction_size_choice": 3,
@@ -417,17 +488,45 @@
     "meta": {
       "version": 1
     },
-    "page_layout_descr_file": "",
+    "page_layout_descr_file": "kicad-embed://sheet.kicad_wks",
     "plot_directory": "",
     "reuse_designators": true,
     "subpart_first_id": 65,
     "subpart_id_separator": 0,
-    "top_level_sheets": [],
-    "used_designators": "",
+    "top_level_sheets": [
+      {
+        "filename": "enc-encoder.kicad_sch",
+        "name": "enc-encoder",
+        "uuid": "830e855f-c01b-4865-ac3f-fca5cbe32ffd"
+      }
+    ],
+    "used_designators": "SW1,STATUS1,J1,VR1,#FLG1-2,Y1,#PWR1-9,#PWR13-22,#PWR24-27,#PWR29,#PWR44,#PWR47-48,#PWR51,F1-2,GND1,VIN_IND1,3V3,VBUS1,C3-21,U1-3,D1-2,D4,D6-7,3V3_IND1,L1-2,R1-4,R8-11,R15-16,VCC1",
     "variants": []
   },
-  "sheets": [],
-  "text_variables": {},
+  "sheets": [
+    [
+      "830e855f-c01b-4865-ac3f-fca5cbe32ffd",
+      "enc-encoder"
+    ]
+  ],
+  "text_variables": {
+    "CONFIGURATIONPARAMETERS": "",
+    "CONFIGURATORNAME": "",
+    "DOCUMENTNUMBER": "1",
+    "DRAWN_BY": "Maurice Blake",
+    "ENGINEER": "Maurice Blake",
+    "ISUSERCONFIGURABLE": "",
+    "PROJECT": "Perseus",
+    "RULE": "UNIONINDEX=0¦RULEKIND=Width¦NETSCOPE=AnyNet¦LAYERKIND=SameLayer¦NAME=Schematic Width Constraint¦MAXLIMIT=800mil¦MINLIMIT=6mil¦PREFEREDWIDTH=10mil¦MIDLAYER1_MINWIDTH=10mil¦MIDLAYER1_MAXWIDTH=10mil¦MIDLAYER2_MINWIDTH=10mil¦MIDLAYER2_MAXWIDTH=10mil¦MIDLAYER3_MINWIDTH=10mil¦MIDLAYER3_MAXWIDTH=10mil¦MIDLAYER4_MINWIDTH=10mil¦MIDLAYER4_MAXWIDTH=10mil¦MIDLAYER5_MINWIDTH=10mil¦MIDLAYER5_MAXWIDTH=10mil¦MIDLAYER6_MINWIDTH=10mil¦MIDLAYER6_MAXWIDTH=10mil¦MIDLAYER7_MINWIDTH=10mil¦MIDLAYER7_MAXWIDTH=10mil¦MIDLAYER8_MINWIDTH=10mil¦MIDLAYER8_MAXWIDTH=10mil¦MIDLAYER9_MINWIDTH=10mil¦MIDLAYER9_MAXWIDTH=10mil¦MIDLAYER10_MINWIDTH=10mil¦MIDLAYER10_MAXWIDTH=10mil¦MIDLAYER11_MINWIDTH=10mil¦MIDLAYER11_MAXWIDTH=10mil¦MIDLAYER12_MINWIDTH=10mil¦MIDLAYER12_MAXWIDTH=10mil¦MIDLAYER13_MINWIDTH=10mil¦MIDLAYER13_MAXWIDTH=10mil¦MIDLAYER14_MINWIDTH=10mil¦MIDLAYER14_MAXWIDTH=10mil¦MIDLAYER15_MINWIDTH=10mil¦MIDLAYER15_MAXWIDTH=10mil¦MIDLAYER16_MINWIDTH=10mil¦MIDLAYER16_MAXWIDTH=10mil¦MIDLAYER17_MINWIDTH=10mil¦MIDLAYER17_MAXWIDTH=10mil¦MIDLAYER18_MINWIDTH=10mil¦MIDLAYER18_MAXWIDTH=10mil¦MIDLAYER19_MINWIDTH=10mil¦MIDLAYER19_MAXWIDTH=10mil¦MIDLAYER20_MINWIDTH=10mil¦MIDLAYER20_MAXWIDTH=10mil¦MIDLAYER21_MINWIDTH=10mil¦MIDLAYER21_MAXWIDTH=10mil¦MIDLAYER22_MINWIDTH=10mil¦MIDLAYER22_MAXWIDTH=10mil¦MIDLAYER23_MINWIDTH=10mil¦MIDLAYER23_MAXWIDTH=10mil¦MIDLAYER24_MINWIDTH=10mil¦MIDLAYER24_MAXWIDTH=10mil¦MIDLAYER25_MINWIDTH=10mil¦MIDLAYER25_MAXWIDTH=10mil¦MIDLAYER26_MINWIDTH=10mil¦MIDLAYER26_MAXWIDTH=10mil¦MIDLAYER27_MINWIDTH=10mil¦MIDLAYER27_MAXWIDTH=10mil¦MIDLAYER28_MINWIDTH=10mil¦MIDLAYER28_MAXWIDTH=10mil¦MIDLAYER29_MINWIDTH=10mil¦MIDLAYER29_MAXWIDTH=10mil¦MIDLAYER30_MINWIDTH=10mil¦MIDLAYER30_MAXWIDTH=10mil¦MINIMP=50.000000¦MAXIMP=50.000000¦FAVIMP=50.000000¦UNIT=Imperial",
+    "SHEETSYMBOLDESIGNATOR": "",
+    "SHEETTOTAL": "1",
+    "SPICEMODELCACHE": "",
+    "SUBSYSTEM": "Embedded",
+    "VERSIONCONTROL_PROJFOLDERREVNUMBER": "",
+    "VERSIONCONTROL_PROJFOLDERREVNUMBERSHORT": "",
+    "VERSIONCONTROL_REVNUMBER": "",
+    "VERSIONCONTROL_REVNUMBERSHORT": ""
+  },
   "tuning_profiles": {
     "meta": {
       "version": 0
