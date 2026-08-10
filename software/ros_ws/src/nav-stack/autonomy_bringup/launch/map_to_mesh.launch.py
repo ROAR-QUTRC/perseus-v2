@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Launch map_to_mesh.py: turn FAST-LIO's live map into a mesh, and stream it in.
 
-Not a ROS node -- map_to_mesh.py is a one-shot CLI script (capture one message off the
-map topic, convert, reconstruct, publish, exit), so this runs it as a plain subprocess
-via ExecuteProcess rather than launch_ros's Node action, which expects a persistent,
-package-registered ROS executable.
+Not a ROS node -- map_to_mesh.py is a CLI script (capture one message off the map
+topic, convert, reconstruct, publish; once by default, or on interval:=N repeat every
+N seconds), so this runs it as a plain subprocess via ExecuteProcess rather than
+launch_ros's Node action, which expects a persistent, package-registered ROS
+executable.
 
 Needs FAST-LIO already running with publish.map_en:true (the default in
 config/livox_mid360.yaml) -- there is nothing on the map topic to capture otherwise.
-Re-run this (e.g. after driving further) any time you want move_base_flex to pick up
-an updated mesh; it does not need restarting to receive one.
+The default interval:=0 (single-shot) needs re-running by hand any time you want
+move_base_flex to pick up an updated mesh; pass interval:=N to have it keep doing that
+on its own as FAST-LIO's map grows. Either way move_base_flex does not need restarting
+to receive an update, only to have loaded a mesh at all in the first place.
 """
 
 import os
@@ -68,6 +71,12 @@ def generate_launch_description():
         description="Seconds to keep the node alive after publishing, so the message "
         "actually gets sent before the process exits",
     )
+    declare_interval = DeclareLaunchArgument(
+        "interval",
+        default_value="0.0",
+        description="Seconds between refresh cycles. 0 (default) runs once and exits; "
+        "a positive value keeps refreshing indefinitely as FAST-LIO's map grows",
+    )
 
     map_to_mesh = ExecuteProcess(
         cmd=[
@@ -89,6 +98,8 @@ def generate_launch_description():
             LaunchConfiguration("frame_id"),
             "--publish-hold",
             LaunchConfiguration("publish_hold"),
+            "--interval",
+            LaunchConfiguration("interval"),
         ],
         output="screen",
     )
@@ -103,6 +114,7 @@ def generate_launch_description():
             declare_publish_topic,
             declare_frame_id,
             declare_publish_hold,
+            declare_interval,
             map_to_mesh,
         ]
     )

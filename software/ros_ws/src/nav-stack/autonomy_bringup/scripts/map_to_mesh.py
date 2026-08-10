@@ -68,6 +68,10 @@ class _MapToMesh(Node):
 
 
 def capture_map_cloud(node, timeout_sec):
+    # Reset first: on a repeat cycle, node.cloud_msg still holds the *previous* cycle's
+    # cloud, and the wait loop below would otherwise see it as already-arrived and
+    # return immediately without ever waiting for a fresh one.
+    node.cloud_msg = None
     deadline = node.get_clock().now() + rclpy.duration.Duration(seconds=timeout_sec)
     while node.cloud_msg is None:
         rclpy.spin_once(node, timeout_sec=0.5)
@@ -218,13 +222,45 @@ def main():
         action="store_true",
         help="Only write --output; skip publishing --publish-topic",
     )
+    parser.add_argument(
+        "--interval",
+        type=float,
+        default=0.0,
+        help="Seconds between refresh cycles. 0 (default) captures/reconstructs/publishes "
+        "once and exits; a positive value repeats indefinitely (Ctrl+C to stop), so the "
+        "mesh keeps tracking FAST-LIO's growing map (default: %(default)s)",
+    )
     args = parser.parse_args()
 
     rclpy.init()
+    node = _MapToMesh(args.topic, args.publish_topic)
+    try:
+        if args.interval <= 0:
+            run_cycle(node, args)
+        else:
+            print(f"Refreshing every {args.interval}s. Press Ctrl+C to stop.")
+            while True:
+                try:
+                    run_cycle(node, args)
+                except (TimeoutError, ValueError, subprocess.CalledProcessError) as e:
+                    print(f"Refresh cycle failed, will retry next interval: {e}", file=sys.stderr)
+                deadline = time.time() + args.interval
+                while time.time() < deadline:
+                    rclpy.spin_once(node, timeout_sec=0.5)
+    except TimeoutError as e:
+        # Only reached in single-shot mode -- the repeating branch above catches its own.
+        sys.exit(str(e))
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+    print(f"Done. Point navigation.launch.py's mesh_map_path at {args.output}")
+
+
+def run_cycle(node, args):
     with tempfile.NamedTemporaryFile(suffix=".ply", delete=False) as tmp:
         ply_path = tmp.name
     try:
-        node = _MapToMesh(args.topic, args.publish_topic)
         print(f"Waiting up to {args.timeout}s for a map on {args.topic}...")
         cloud_msg = capture_map_cloud(node, args.timeout)
         print(f"Captured map, writing -> {ply_path}")
@@ -240,15 +276,8 @@ def main():
                 args.output, args.frame_id, node.get_clock().now().to_msg()
             )
             publish_mesh_update(node, mesh_msg, args.publish_hold)
-
-        node.destroy_node()
-    except TimeoutError as e:
-        sys.exit(str(e))
     finally:
         os.unlink(ply_path)
-        rclpy.shutdown()
-
-    print(f"Done. Point navigation.launch.py's mesh_map_path at {args.output}")
 
 
 if __name__ == "__main__":
