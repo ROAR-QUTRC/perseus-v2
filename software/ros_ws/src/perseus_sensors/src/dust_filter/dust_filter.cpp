@@ -3,6 +3,7 @@
 
 #include "perseus_sensors/dust_filter/dust_filter.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <functional>
@@ -54,6 +55,8 @@ namespace perseus_sensors
 
     void DustFilter::_point_cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
     {
+        const auto callback_start = std::chrono::steady_clock::now();
+
         const std::size_t point_count = static_cast<std::size_t>(msg->width) * msg->height;
         const std::vector<indexed_point_t> points = _extract_points(*msg);
         if (points.empty() && point_count > 0)
@@ -96,6 +99,18 @@ namespace perseus_sensors
         output.row_step = output.width * output.point_step;
 
         _filtered_publisher->publish(output);
+
+        const auto callback_elapsed = std::chrono::steady_clock::now() - callback_start;
+        const auto callback_elapsed_ms =
+            std::chrono::duration<double, std::milli>(callback_elapsed).count();
+        RCLCPP_INFO_THROTTLE(
+            this->get_logger(),
+            *this->get_clock(),
+            1000,
+            "Filtered %zu/%zu points in %.1f ms",
+            surviving_count,
+            point_count,
+            callback_elapsed_ms);
     }
 
     std::vector<DustFilter::indexed_point_t> DustFilter::_extract_points(
@@ -147,6 +162,7 @@ namespace perseus_sensors
         const std::vector<indexed_point_t>& points) const
     {
         std::unordered_map<int64_t, std::vector<uint32_t>> voxels;
+        voxels.reserve(points.size());
         for (uint32_t i = 0; i < points.size(); ++i)
         {
             const indexed_point_t& point = points[i];
@@ -179,8 +195,13 @@ namespace perseus_sensors
                     const auto bucket = voxels.find(_voxel_key(ix + dx, it + dy, is + dz));
                     if (bucket != voxels.end())
                     {
-                        neighbor_count +=
-                            _count_matches_in_bucket(bucket->second, points, query, query_index, radius_squared);
+                        neighbor_count += _count_matches_in_bucket(
+                            bucket->second,
+                            points,
+                            query,
+                            query_index,
+                            radius_squared,
+                            _min_neighbors - neighbor_count);
                     }
                 }
             }
@@ -193,11 +214,16 @@ namespace perseus_sensors
         const std::vector<indexed_point_t>& points,
         const indexed_point_t& query,
         std::size_t query_index,
-        float radius_squared) const
+        float radius_squared,
+        std::size_t max_matches_needed) const
     {
         std::size_t match_count = 0;
         for (const uint32_t candidate_index : bucket_indices)
         {
+            if (match_count >= max_matches_needed)
+            {
+                break;
+            }
             if (candidate_index == query_index)
             {
                 continue;

@@ -43,7 +43,7 @@
     common:
       # The Livox driver's own topics. The sim config reads /livox/lidar_filtered instead,
       # because the simulated sensor emits NaN and Inf that need stripping first.
-      lid_topic: "/livox/lidar/filtered"
+      lid_topic: "/livox/lidar"
       imu_topic: "/livox/imu/corrected"
       # TF frames FAST-LIO publishes. These were hardcoded upstream and rewritten by
       # patches/fast_lio/frame_id_fix.patch; the fork reads them as parameters instead.

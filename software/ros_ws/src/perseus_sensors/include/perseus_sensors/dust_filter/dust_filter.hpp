@@ -104,13 +104,18 @@ namespace perseus_sensors
         /// @param query Point to measure distance from.
         /// @param query_index Index of @p query into @p points, excluded from its own count.
         /// @param radius_squared Search radius, squared, to avoid a sqrt per distance check.
-        /// @return The number of matching points in this bucket.
+        /// @param max_matches_needed Stops scanning the bucket once this many matches are
+        ///        found -- a dense near-field bucket can hold far more points than are needed
+        ///        to decide a point survives, and every point sharing that bucket would
+        ///        otherwise re-scan all of it.
+        /// @return The number of matching points in this bucket, capped at @p max_matches_needed.
         std::size_t _count_matches_in_bucket(
             const std::vector<uint32_t>& bucket_indices,
             const std::vector<indexed_point_t>& points,
             const indexed_point_t& query,
             std::size_t query_index,
-            float radius_squared) const;
+            float radius_squared,
+            std::size_t max_matches_needed) const;
 
         /// @brief Packs a voxel's integer coordinates into a single hashable key.
         /// @param ix Voxel coordinate along x, in units of the search radius.

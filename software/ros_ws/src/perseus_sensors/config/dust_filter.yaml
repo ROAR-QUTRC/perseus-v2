@@ -11,5 +11,5 @@ dust_filter:
     # points tighter regardless of what they hit -- if dust kicked up near the robot is
     # still getting through, tighten min_neighbors or shrink search_radius_m before reaching
     # for a heavier (e.g. multi-frame) technique.
-    search_radius_m: 0.15
-    min_neighbors: 5
+    search_radius_m: 0.2
+    min_neighbors: 2
