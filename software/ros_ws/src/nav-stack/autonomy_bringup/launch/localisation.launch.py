@@ -80,7 +80,9 @@ def launch_setup(context, *args, **kwargs):
     ekf_params_file = LaunchConfiguration("ekf_params_file")
     dust_filter_params_file = LaunchConfiguration("dust_filter_params_file")
     is_sim = LaunchConfiguration("sim").perform(context).lower() == "true"
-    use_composition = LaunchConfiguration("use_composition").perform(context).lower() == "true"
+    use_composition = (
+        LaunchConfiguration("use_composition").perform(context).lower() == "true"
+    )
 
     fast_lio_params_file = os.path.join(
         get_package_share_directory("autonomy_bringup"), "config", "livox_mid360.yaml"
@@ -120,7 +122,10 @@ def launch_setup(context, *args, **kwargs):
                     package="perseus_sensors",
                     plugin="perseus_sensors::DustFilter",
                     name="dust_filter",
-                    parameters=[dust_filter_params_file, {"use_sim_time": use_sim_time}],
+                    parameters=[
+                        dust_filter_params_file,
+                        {"use_sim_time": use_sim_time},
+                    ],
                     extra_arguments=[{"use_intra_process_comms": True}],
                 ),
                 ComposableNode(

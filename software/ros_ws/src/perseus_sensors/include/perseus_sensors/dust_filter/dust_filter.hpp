@@ -114,9 +114,9 @@ namespace perseus_sensors
 
         /// @brief Packs a voxel's integer coordinates into a single hashable key.
         /// @param ix Voxel coordinate along x, in units of the search radius.
-        /// @param iy Voxel coordinate along y, in units of the search radius.
-        /// @param iz Voxel coordinate along z, in units of the search radius.
-        static int64_t _voxel_key(int32_t ix, int32_t iy, int32_t iz);
+        /// @param it Voxel coordinate along y, in units of the search radius.
+        /// @param is Voxel coordinate along z, in units of the search radius.
+        static int64_t _voxel_key(int32_t ix, int32_t it, int32_t is);
 
         float _search_radius_m{DEFAULT_SEARCH_RADIUS_M};
         std::size_t _min_neighbors{DEFAULT_MIN_NEIGHBORS};

@@ -151,9 +151,9 @@ namespace perseus_sensors
         {
             const indexed_point_t& point = points[i];
             const int32_t ix = static_cast<int32_t>(std::floor(point.x / _search_radius_m));
-            const int32_t iy = static_cast<int32_t>(std::floor(point.y / _search_radius_m));
-            const int32_t iz = static_cast<int32_t>(std::floor(point.z / _search_radius_m));
-            voxels[_voxel_key(ix, iy, iz)].push_back(i);
+            const int32_t it = static_cast<int32_t>(std::floor(point.y / _search_radius_m));
+            const int32_t is = static_cast<int32_t>(std::floor(point.z / _search_radius_m));
+            voxels[_voxel_key(ix, it, is)].push_back(i);
         }
         return voxels;
     }
@@ -165,8 +165,8 @@ namespace perseus_sensors
     {
         const indexed_point_t& query = points[query_index];
         const int32_t ix = static_cast<int32_t>(std::floor(query.x / _search_radius_m));
-        const int32_t iy = static_cast<int32_t>(std::floor(query.y / _search_radius_m));
-        const int32_t iz = static_cast<int32_t>(std::floor(query.z / _search_radius_m));
+        const int32_t it = static_cast<int32_t>(std::floor(query.y / _search_radius_m));
+        const int32_t is = static_cast<int32_t>(std::floor(query.z / _search_radius_m));
         const float radius_squared = _search_radius_m * _search_radius_m;
 
         std::size_t neighbor_count = 0;
@@ -176,7 +176,7 @@ namespace perseus_sensors
             {
                 for (int32_t dz = -1; dz <= 1 && neighbor_count < _min_neighbors; ++dz)
                 {
-                    const auto bucket = voxels.find(_voxel_key(ix + dx, iy + dy, iz + dz));
+                    const auto bucket = voxels.find(_voxel_key(ix + dx, it + dy, is + dz));
                     if (bucket != voxels.end())
                     {
                         neighbor_count +=
@@ -214,11 +214,11 @@ namespace perseus_sensors
         return match_count;
     }
 
-    int64_t DustFilter::_voxel_key(int32_t ix, int32_t iy, int32_t iz)
+    int64_t DustFilter::_voxel_key(int32_t ix, int32_t it, int32_t is)
     {
         const int64_t x_component = (static_cast<int64_t>(ix) + VOXEL_KEY_AXIS_OFFSET) & VOXEL_KEY_AXIS_MASK;
-        const int64_t y_component = (static_cast<int64_t>(iy) + VOXEL_KEY_AXIS_OFFSET) & VOXEL_KEY_AXIS_MASK;
-        const int64_t z_component = (static_cast<int64_t>(iz) + VOXEL_KEY_AXIS_OFFSET) & VOXEL_KEY_AXIS_MASK;
+        const int64_t y_component = (static_cast<int64_t>(it) + VOXEL_KEY_AXIS_OFFSET) & VOXEL_KEY_AXIS_MASK;
+        const int64_t z_component = (static_cast<int64_t>(is) + VOXEL_KEY_AXIS_OFFSET) & VOXEL_KEY_AXIS_MASK;
         return x_component | (y_component << VOXEL_KEY_BITS_PER_AXIS) |
                (z_component << (2 * VOXEL_KEY_BITS_PER_AXIS));
     }
