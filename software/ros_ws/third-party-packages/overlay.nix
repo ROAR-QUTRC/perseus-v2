@@ -1,11 +1,13 @@
-# `sophus` is the lightweight top-level (nixpkgs) Sophus, passed in explicitly so
-# vikit links against it rather than the ROS-scoped `ros-jazzy-sophus`, which
-# builds Ceres/SuiteSparse from source and isn't in the binary cache.
+# `sophus`/`pkg-config`/`mpi` are the lightweight top-level (nixpkgs) packages, passed in
+# explicitly so vikit links against nixpkgs' Sophus rather than the ROS-scoped
+# `ros-jazzy-sophus` (which builds Ceres/SuiteSparse from source and isn't in the binary
+# cache), and so mesh_msgs_conversions can satisfy its own unused find_package(MPI)/
+# find_package(PkgConfig) calls.
 #
-# It has to arrive as a parameter. `final` below is the ROS package set, not nixpkgs —
+# They have to arrive as parameters. `final` below is the ROS package set, not nixpkgs —
 # this overlay is composed inside rosPkgsOverlay in ../overlay.nix — so `inherit (final)
 # sophus` silently selects ros-jazzy-sophus and CI dies compiling its test suite.
-{ sophus }:
+{ sophus, pkg-config, mpi }:
 final: prev:
 let
   individualPackages = individualFinal: individualPrev: {
@@ -21,6 +23,6 @@ prev.lib.composeManyExtensions [
   individualPackages
   (import ./opennav-coverage/overlay.nix)
   (import ./lidarslam-ros2/overlay.nix)
-  (import ./mesh-tools/overlay.nix)
+  (import ./mesh-tools/overlay.nix { inherit pkg-config mpi; })
   (import ./mesh-navigation/overlay.nix)
 ] final prev

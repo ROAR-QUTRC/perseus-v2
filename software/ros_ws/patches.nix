@@ -276,6 +276,84 @@ let
           }
         )
       );
+      # mesh_map (mesh_navigation) unconditionally #includes
+      # lvr2/algorithm/ClosestSurfacePoint.hpp, added upstream 2026-07-29 (commit 3dd439e) --
+      # after the jazzy release (25.2.1/25.2.2) was cut, so the released lvr2 simply doesn't
+      # have it. lvr2 carries no tags at all; mesh_navigation's own source_dependencies.yaml
+      # already documents lvr2 as unreleasable-via-rosdep and builds it from `main` in CI, so
+      # we pin `main`'s tip the same way rather than the rosdistro release. The header itself
+      # is a small, dependency-free abstract interface (no Embree/CUDA needed to compile it --
+      # Embree stays a `find_package(embree QUIET)` optional in lvr2's own CMakeLists.txt).
+      #
+      # To move the pin, push a newer commit and re-read both values from:
+      #   nix-prefetch-git --url https://github.com/uos/lvr2 --rev <commit>
+      #
+      # lvr2's CMakeLists.txt calls find_package(PkgConfig REQUIRED) to locate FreeImage,
+      # but the released package's ros2nix-generated recipe doesn't request pkg-config as a
+      # native build input -- CMake configure fails outright without it.
+      #
+      # It also unconditionally find_package(OpenGL)s and links the core library against
+      # ${OPENGL_LIBRARIES}, with no buildInput providing it. lvr2_mesh_reducer and
+      # lvr2_hdf5_mesh_tool (under LVR2_BUILD_TOOLS, on by default) then hard-fail configure
+      # by feeding the resulting "OPENGL_INCLUDE_DIR-NOTFOUND" placeholder to
+      # target_include_directories(), which rejects non-absolute paths. We only need the
+      # core library (mesh_msgs_conversions/mesh_layers link against it, not any CLI tool),
+      # so disable LVR2_BUILD_TOOLS entirely and add libGL/libGLU so the core lib's own
+      # find_package(OpenGL) and its display/*.cpp's GL/glu.h actually succeed, instead of
+      # merely avoiding the crash.
+      #
+      # lvr2's exported lvr2-config.cmake also unconditionally find_dependency(MPI)s, even
+      # though nothing in the actual build needs it (lvr2's own configure only ever logs
+      # "Could NOT find MPI" as informational, and adding a real MPI package here just trips
+      # a *different* branch of lvr2's own CMakeLists.txt that then demands a boost_mpi build
+      # variant nixpkgs' boost isn't built with). It's vestigial, so consumers -- e.g.
+      # mesh_msgs_conversions, via find_package(lvr2 REQUIRED) -- shouldn't inherit it as
+      # REQUIRED either. Strip the line from the installed config instead of satisfying it.
+      lvr2 = rosPrev.lvr2.overrideAttrs (
+        {
+          nativeBuildInputs ? [ ],
+          propagatedBuildInputs ? [ ],
+          cmakeFlags ? [ ],
+          postPatch ? "",
+          postInstall ? "",
+          ...
+        }:
+        {
+          version = "2026-08-06";
+          src = final.fetchFromGitHub {
+            owner = "uos";
+            repo = "lvr2";
+            rev = "05a197e2914006555e32481679d80b77f8f8637a";
+            hash = "sha256-8CG4/VemKbtKKsOJxIPkvdxcUCew1fSO6ClqkVow+8I=";
+          };
+          nativeBuildInputs = nativeBuildInputs ++ [ final.pkg-config ];
+          # propagatedBuildInputs, not buildInputs: installed headers like
+          # display/GlTexture.hpp include GL/gl.h directly, so any consumer that includes
+          # lvr2 headers at all -- not just code that calls into these classes -- needs it.
+          propagatedBuildInputs = propagatedBuildInputs ++ [
+            final.libGL
+            final.libGLU
+          ];
+          cmakeFlags = cmakeFlags ++ [ "-DLVR2_BUILD_TOOLS=OFF" ];
+          # lvr2_largescale_reconstruct is add_subdirectory()'d unconditionally on
+          # !MSVC -- LVR2_BUILD_TOOLS does not gate it like the other tools -- and its
+          # LargeScaleReconstruction.tcc #includes <mpi.h> outright. Real MPI isn't an
+          # option here either: as soon as find_package(MPI) succeeds anywhere in this
+          # CMakeLists.txt, it demands a boost_mpi component nixpkgs' boost doesn't build
+          # (see the lvr2-config.cmake fix above). We don't need this tool at all -- mesh_map
+          # only links the core library -- so drop it from the build entirely.
+          postPatch =
+            postPatch
+            + ''
+              sed -i '/add_subdirectory(src\/tools\/lvr2_largescale_reconstruct)/d' CMakeLists.txt
+            '';
+          postInstall =
+            postInstall
+            + ''
+              sed -i '/find_dependency(MPI)/d' "$out/lib/cmake/lvr2/lvr2-config.cmake"
+            '';
+        }
+      );
       lidarslam = patchLidarSlamLicense rosPrev.lidarslam;
       scanmatcher = patchLidarSlamLicense (
         rosPrev.scanmatcher.overrideAttrs (

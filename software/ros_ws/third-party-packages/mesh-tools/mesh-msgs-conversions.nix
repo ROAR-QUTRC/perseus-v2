@@ -10,6 +10,11 @@
   mesh-msgs,
   rclcpp,
   sensor-msgs,
+  # Not in package.xml, so ros2nix didn't pick these up -- CMakeLists.txt find_package()s
+  # both directly (REQUIRED), copy-pasted from lvr2's own list and unused by the actual
+  # conversions code. Passed in from ../overlay.nix since neither is in the ROS package set.
+  pkg-config,
+  mpi,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-mesh-msgs-conversions";
@@ -24,7 +29,10 @@ buildRosPackage rec {
 
   buildType = "ament_cmake";
   sourceRoot = "${src.name}/mesh_msgs_conversions/";
-  buildInputs = [ ament-cmake ];
+  buildInputs = [
+    ament-cmake
+    mpi
+  ];
   checkInputs = [
     ament-lint-auto
     ament-lint-common
@@ -35,7 +43,10 @@ buildRosPackage rec {
     rclcpp
     sensor-msgs
   ];
-  nativeBuildInputs = [ ament-cmake ];
+  nativeBuildInputs = [
+    ament-cmake
+    pkg-config
+  ];
 
   meta = {
     description = "converts point clouds and attributes into meshes and mesh attributes";
