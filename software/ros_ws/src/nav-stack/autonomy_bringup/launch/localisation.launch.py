@@ -92,7 +92,9 @@ def launch_setup(context, *args, **kwargs):
 
     fast_lio_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            PathJoinSubstitution([FindPackageShare("fast_lio"), "launch", "mapping.launch.py"])
+            PathJoinSubstitution(
+                [FindPackageShare("fast_lio"), "launch", "mapping.launch.py"]
+            )
         ),
         launch_arguments={
             "config_path": os.path.dirname(tmp.name),
@@ -178,7 +180,7 @@ def generate_launch_description():
                         "accumulator_alpha": 0.01,
                         "stationary_mode": "AND",  # OR / AND
                         "imu_in_topic": "/livox/imu",
-                        "odom_topic": "/odom", # from the wheel encoder
+                        "odom_topic": "/odom",  # from the wheel encoder
                         "bias_out_topic": "/livox/gyro_bias",
                         "estimator_rate_hz": 100.0,
                     }
