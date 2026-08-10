@@ -1,0 +1,139 @@
+diff --git a/include/mesh_map/layer_manager.h b/include/mesh_map/layer_manager.h
+index 96e7303..d057795 100644
+--- a/include/mesh_map/layer_manager.h
++++ b/include/mesh_map/layer_manager.h
+@@ -149,6 +149,12 @@ private:
+     const std::set<lvr2::VertexHandle>& changed
+   );
+ 
++  //! Set once read_configured_layers() has run. Layer names/types/dependencies come from
++  //! ROS parameters, which throw if declared twice, and are fixed at startup regardless --
++  //! only the underlying mesh changes on a streamed reload -- so read_configured_layers()
++  //! must not repeat that declaration on a second readMap() call.
++  bool configured_ = false;
++
+   //! Reference to the map to publish cost maps
+   MeshMap& map_;
+ 
+diff --git a/include/mesh_map/mesh_map.h b/include/mesh_map/mesh_map.h
+index 03d10f1..567cd88 100644
+--- a/include/mesh_map/mesh_map.h
++++ b/include/mesh_map/mesh_map.h
+@@ -90,6 +90,15 @@ public:
+    */
+   bool readMap();
+ 
++  /**
++   * @brief Callback for mesh_geometry_sub. Writes the incoming mesh to its own working
++   * file and calls readMap() again, so a streamed mesh update goes through the exact
++   * same load -> normals -> k-d tree -> raycaster -> layer graph path a file-based
++   * (re)start does, rather than duplicating it.
++   * @param msg the incoming mesh
++   */
++  void meshGeometryCallback(const mesh_msgs::msg::MeshGeometryStamped::ConstSharedPtr& msg);
++
+   /**
+    * @brief Return and optional vertex handle of to the closest vertex to the given position
+    * @param pos the search position
+@@ -552,6 +561,11 @@ private:
+   //! publisher for the mesh geometry
+   rclcpp::Publisher<mesh_msgs::msg::MeshGeometryStamped>::SharedPtr mesh_geometry_pub;
+ 
++  //! subscriber for streamed mesh updates (e.g. from an external point-cloud-to-mesh
++  //! reconstruction pipeline). Each message replaces the current mesh by writing it to
++  //! mesh_working_file and rerunning readMap(), the same load path used at startup.
++  rclcpp::Subscription<mesh_msgs::msg::MeshGeometryStamped>::SharedPtr mesh_geometry_sub;
++
+   //! publisher for the debug markers
+   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub;
+ 
+diff --git a/src/layer_manager.cpp b/src/layer_manager.cpp
+index 4d0ff5c..24c027c 100644
+--- a/src/layer_manager.cpp
++++ b/src/layer_manager.cpp
+@@ -17,6 +17,13 @@ LayerManager::LayerManager(MeshMap& map, const rclcpp::Node::SharedPtr& node)
+ 
+ void LayerManager::read_configured_layers()
+ {
++  // See the comment on configured_ in layer_manager.h.
++  if (configured_)
++  {
++    return;
++  }
++  configured_ = true;
++
+   const auto layer_names = node_->declare_parameter(
+     MeshMap::MESH_MAP_NAMESPACE + ".layers", std::vector<std::string>()
+   );
+@@ -116,6 +123,11 @@ void LayerManager::read_configured_layers()
+ 
+ bool LayerManager::load_layer_plugins(const rclcpp::Logger& logger)
+ {
++  // instances_ is keyed by layer_name, so insert_or_assign below already replaces each
++  // entry cleanly on a second call (e.g. from a streamed mesh reload) -- dropping the old
++  // shared_ptr, which destroys that layer's own subscriptions/publishers via RAII. loaded_
++  // is a plain vector though, and would otherwise just accumulate a duplicate name per call.
++  loaded_.clear();
+   for (const auto &[layer_name, layer_type] : types_)
+   {
+     try 
+diff --git a/src/mesh_map.cpp b/src/mesh_map.cpp
+index cdd4662..253f001 100644
+--- a/src/mesh_map.cpp
++++ b/src/mesh_map.cpp
+@@ -132,6 +132,9 @@ MeshMap::MeshMap(tf2_ros::Buffer& tf, const rclcpp::Node::SharedPtr& node)
+ 
+   marker_pub = node->create_publisher<visualization_msgs::msg::Marker>("~/marker", 100);
+   mesh_geometry_pub = node->create_publisher<mesh_msgs::msg::MeshGeometryStamped>("~/mesh", rclcpp::QoS(1).transient_local());
++  mesh_geometry_sub = node->create_subscription<mesh_msgs::msg::MeshGeometryStamped>(
++    "~/mesh_update", rclcpp::QoS(1).transient_local(),
++    std::bind(&MeshMap::meshGeometryCallback, this, std::placeholders::_1));
+ 
+   vertex_colors_pub = node->create_publisher<mesh_msgs::msg::MeshVertexColorsStamped>("~/vertex_colors", rclcpp::QoS(1).transient_local());
+   vector_field_pub = node->create_publisher<visualization_msgs::msg::Marker>("~/vector_field", rclcpp::QoS(1).transient_local());
+@@ -456,6 +459,45 @@ bool MeshMap::readMap()
+   return true;
+ }
+ 
++void MeshMap::meshGeometryCallback(const mesh_msgs::msg::MeshGeometryStamped::ConstSharedPtr& msg)
++{
++  RCLCPP_INFO(
++    node->get_logger(),
++    "Received a streamed mesh update (%zu vertices, %zu faces). Reloading map...",
++    msg->mesh_geometry.vertices.size(), msg->mesh_geometry.faces.size());
++
++  lvr2::MeshBufferPtr mesh_buffer;
++  if (!mesh_msgs_conversions::fromMeshGeometryToMeshBuffer(msg->mesh_geometry, mesh_buffer))
++  {
++    RCLCPP_ERROR(node->get_logger(), "Failed to convert the streamed mesh to a mesh buffer -- ignoring update.");
++    return;
++  }
++
++  // Its own working file, not mesh_working_file directly, so a bad update can't corrupt
++  // the file a subsequent restart would load from.
++  const std::string streamed_working_file =
++    (fs::path(mesh_working_file).parent_path() / "mesh_map_streamed.h5").string();
++  if (!mesh_msgs_conversions::writeMeshBuffer(mesh_buffer, streamed_working_file))
++  {
++    RCLCPP_ERROR(
++      node->get_logger(), "Failed to write the streamed mesh to '%s' -- ignoring update.",
++      streamed_working_file.c_str());
++    return;
++  }
++
++  // Same load path a file-based (re)start uses: readMap() only opens mesh_io_ptr when it
++  // is null, so resetting it here (rather than duplicating everything readMap() already
++  // does) is what makes it pick up the new file instead of a no-op.
++  mesh_file = streamed_working_file;
++  mesh_working_file = streamed_working_file;
++  mesh_io_ptr.reset();
++
++  if (!readMap())
++  {
++    RCLCPP_ERROR(node->get_logger(), "Failed to reload the map from the streamed mesh.");
++  }
++}
++
+ void MeshMap::layerChanged(const std::string& layer_name, const std::set<lvr2::VertexHandle>& changes)
+ {
+   std::lock_guard lock(layer_mtx);

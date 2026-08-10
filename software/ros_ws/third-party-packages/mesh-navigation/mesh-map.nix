@@ -28,6 +28,10 @@ buildRosPackage rec {
 
   buildType = "ament_cmake";
   sourceRoot = "${src.name}/mesh_map/";
+  # Adds a mesh_geometry_sub (mesh_msgs/MeshGeometryStamped, on ~/mesh_update) that
+  # replaces the loaded mesh and reruns readMap() -- see the patch for why, and
+  # patches/mesh-map-streamed-reload.patch itself for the exact reload path.
+  patches = [ ./patches/mesh-map-streamed-reload.patch ];
   checkInputs = [ ament-cmake-gtest ];
   propagatedBuildInputs = [
     assimp
