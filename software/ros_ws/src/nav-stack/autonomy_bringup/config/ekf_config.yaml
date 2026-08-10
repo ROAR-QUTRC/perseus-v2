@@ -48,7 +48,7 @@ ekf_filter_node:
     # No rejection thresholds on purpose. They gate on Mahalanobis distance, and FAST-LIO's
     # covariance is one scan stale (it is filled after the message is published), so a tight
     # threshold silently discards good pose updates from the filter's only pose source.
-    imu0: /livox/imu
+    imu0: /livox/imu/corrected
     # Gyroscope only. The roll/pitch/yaw entries read
     # sensor_msgs/Imu.orientation, which the MID-360 never fills: its ICM-40609 is a 6-axis
     # part with no magnetometer and no onboard fusion, so the driver publishes rates and

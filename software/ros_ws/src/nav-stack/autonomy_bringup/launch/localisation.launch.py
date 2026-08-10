@@ -32,6 +32,7 @@ differently shaped cloud -- see sim_overrides() for exactly what changes and why
 import os
 import tempfile
 
+from matplotlib import container
 import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -226,7 +227,45 @@ def generate_launch_description():
         ),
         description="Parameters file for dust_filter, used only when use_composition:=true.",
     )
-
+    bias_remover_container = ComposableNodeContainer(
+        name="imu_bias_container",
+        namespace="",
+        package="rclcpp_components",
+        executable="component_container_mt",  # mt is nice for multiple callbacks
+        output="screen",
+        composable_node_descriptions=[
+            ComposableNode(
+                package="perseus_sensors",
+                plugin="imu_processors::BiasEstimator",
+                name="imu_bias_estimator",
+                parameters=[
+                    {
+                        "use_odom": True,
+                        "use_cmd_vel": False,
+                        "accumulator_alpha": 0.01,
+                        "stationary_mode": "AND",  # OR / AND
+                        "imu_in_topic": "/livox/imu",
+                        "odom_topic": "/odom", # from the wheel encoder
+                        "bias_out_topic": "/livox/gyro_bias",
+                        "estimator_rate_hz": 100.0,
+                    }
+                ],
+            ),
+            ComposableNode(
+                package="perseus_sensors",
+                plugin="imu_processors::BiasRemover",
+                name="imu_bias_remover",
+                parameters=[
+                    {
+                        "imu_in_topic": "/livox/imu",
+                        "bias_in_topic": "/livox/gyro_bias",
+                        "imu_out_topic": "/livox/imu/corrected",
+                        "output_rate_hz": 100.0,
+                    }
+                ],
+            ),
+        ],
+    )
     return LaunchDescription(
         [
             declare_sim,
@@ -235,6 +274,7 @@ def generate_launch_description():
             declare_ekf_params_file,
             declare_use_composition,
             declare_dust_filter_params_file,
+            bias_remover_container,
             OpaqueFunction(function=launch_setup),
         ]
     )

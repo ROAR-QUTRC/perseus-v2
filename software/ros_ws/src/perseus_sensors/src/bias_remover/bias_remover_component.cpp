@@ -51,7 +51,10 @@ namespace imu_processors
             }
             last_output_pub_ = this->get_clock()->now();
 
-            pub_ = create_publisher<sensor_msgs::msg::Imu>(imu_out_topic_, rclcpp::SensorDataQoS());
+            // Reliable QoS to match FAST-LIO's subscriber (laserMapping.cpp uses the
+            // create_subscription(topic, 10, ...) overload, which defaults to reliable).
+            // Best-effort here would silently drop IMU samples FAST-LIO needs for propagation.
+            pub_ = create_publisher<sensor_msgs::msg::Imu>(imu_out_topic_, rclcpp::QoS(10));
 
             bias_sub_ = create_subscription<geometry_msgs::msg::Vector3Stamped>(
                 bias_in_topic_, 10,
