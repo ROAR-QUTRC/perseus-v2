@@ -89,7 +89,9 @@ def generate_launch_description():
                 "use_sim_time": use_sim_time,
                 "global_frame": LaunchConfiguration("global_frame"),
                 "mesh_map.mesh_file": LaunchConfiguration("mesh_map_path"),
-                "mesh_map.mesh_working_file": LaunchConfiguration("mesh_map_working_path"),
+                "mesh_map.mesh_working_file": LaunchConfiguration(
+                    "mesh_map_working_path"
+                ),
             },
         ],
     )

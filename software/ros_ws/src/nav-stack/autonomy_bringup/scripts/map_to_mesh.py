@@ -59,7 +59,9 @@ class _MapToMesh(Node):
         super().__init__("map_to_mesh")
         self.cloud_msg = None
         self.create_subscription(PointCloud2, capture_topic, self._on_cloud, 1)
-        self.mesh_pub = self.create_publisher(MeshGeometryStamped, publish_topic, MESH_UPDATE_QOS)
+        self.mesh_pub = self.create_publisher(
+            MeshGeometryStamped, publish_topic, MESH_UPDATE_QOS
+        )
 
     def _on_cloud(self, msg):
         self.cloud_msg = msg
@@ -78,9 +80,13 @@ def capture_map_cloud(node, timeout_sec):
 
 
 def write_ply(cloud_msg, ply_path):
-    points = point_cloud2.read_points(cloud_msg, field_names=("x", "y", "z"), skip_nans=True)
+    points = point_cloud2.read_points(
+        cloud_msg, field_names=("x", "y", "z"), skip_nans=True
+    )
     if len(points) == 0:
-        raise ValueError("Captured map has no points -- has FAST-LIO mapped anything yet?")
+        raise ValueError(
+            "Captured map has no points -- has FAST-LIO mapped anything yet?"
+        )
     with open(ply_path, "w") as f:
         f.write("ply\nformat ascii 1.0\n")
         f.write(f"element vertex {len(points)}\n")
@@ -119,7 +125,9 @@ def mesh_file_to_geometry_msg(mesh_path, frame_id, stamp):
     """
     mesh = o3d.io.read_triangle_mesh(mesh_path)
     if not mesh.has_vertices() or not mesh.has_triangles():
-        raise ValueError(f"{mesh_path} has no vertices/triangles -- did reconstruction fail?")
+        raise ValueError(
+            f"{mesh_path} has no vertices/triangles -- did reconstruction fail?"
+        )
     mesh.compute_vertex_normals()
 
     vertices = np.asarray(mesh.vertices)
@@ -127,10 +135,15 @@ def mesh_file_to_geometry_msg(mesh_path, frame_id, stamp):
     triangles = np.asarray(mesh.triangles)
 
     geometry = MeshGeometry()
-    geometry.vertices = [Point(x=float(v[0]), y=float(v[1]), z=float(v[2])) for v in vertices]
-    geometry.vertex_normals = [Point(x=float(n[0]), y=float(n[1]), z=float(n[2])) for n in normals]
+    geometry.vertices = [
+        Point(x=float(v[0]), y=float(v[1]), z=float(v[2])) for v in vertices
+    ]
+    geometry.vertex_normals = [
+        Point(x=float(n[0]), y=float(n[1]), z=float(n[2])) for n in normals
+    ]
     geometry.faces = [
-        MeshTriangleIndices(vertex_indices=[int(t[0]), int(t[1]), int(t[2])]) for t in triangles
+        MeshTriangleIndices(vertex_indices=[int(t[0]), int(t[1]), int(t[2])])
+        for t in triangles
     ]
 
     msg = MeshGeometryStamped()
@@ -217,7 +230,9 @@ def main():
         print(f"Captured map, writing -> {ply_path}")
         write_ply(cloud_msg, ply_path)
         print(f"Reconstructing mesh -> {args.output}")
-        reconstruct_mesh(ply_path, args.output, args.voxel_size, args.point_cloud_manager)
+        reconstruct_mesh(
+            ply_path, args.output, args.voxel_size, args.point_cloud_manager
+        )
 
         if not args.no_publish:
             print(f"Reading back {args.output} and publishing -> {args.publish_topic}")

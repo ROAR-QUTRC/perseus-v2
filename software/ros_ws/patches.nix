@@ -338,16 +338,12 @@ let
           # CMakeLists.txt, it demands a boost_mpi component nixpkgs' boost doesn't build
           # (see the lvr2-config.cmake fix above). We don't need this tool at all -- mesh_map
           # only links the core library -- so drop it from the build entirely.
-          postPatch =
-            postPatch
-            + ''
-              sed -i '/add_subdirectory(src\/tools\/lvr2_largescale_reconstruct)/d' CMakeLists.txt
-            '';
-          postInstall =
-            postInstall
-            + ''
-              sed -i '/find_dependency(MPI)/d' "$out/lib/cmake/lvr2/lvr2-config.cmake"
-            '';
+          postPatch = postPatch + ''
+            sed -i '/add_subdirectory(src\/tools\/lvr2_largescale_reconstruct)/d' CMakeLists.txt
+          '';
+          postInstall = postInstall + ''
+            sed -i '/find_dependency(MPI)/d' "$out/lib/cmake/lvr2/lvr2-config.cmake"
+          '';
         }
       );
       lidarslam = patchLidarSlamLicense rosPrev.lidarslam;

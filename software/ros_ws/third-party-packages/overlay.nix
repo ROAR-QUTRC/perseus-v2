@@ -7,7 +7,11 @@
 # They have to arrive as parameters. `final` below is the ROS package set, not nixpkgs —
 # this overlay is composed inside rosPkgsOverlay in ../overlay.nix — so `inherit (final)
 # sophus` silently selects ros-jazzy-sophus and CI dies compiling its test suite.
-{ sophus, pkg-config, mpi }:
+{
+  sophus,
+  pkg-config,
+  mpi,
+}:
 final: prev:
 let
   individualPackages = individualFinal: individualPrev: {
