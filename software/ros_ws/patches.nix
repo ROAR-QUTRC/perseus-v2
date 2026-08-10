@@ -293,14 +293,12 @@ let
       # native build input -- CMake configure fails outright without it.
       #
       # It also unconditionally find_package(OpenGL)s and links the core library against
-      # ${OPENGL_LIBRARIES}, with no buildInput providing it. lvr2_mesh_reducer and
-      # lvr2_hdf5_mesh_tool (under LVR2_BUILD_TOOLS, on by default) then hard-fail configure
-      # by feeding the resulting "OPENGL_INCLUDE_DIR-NOTFOUND" placeholder to
-      # target_include_directories(), which rejects non-absolute paths. We only need the
-      # core library (mesh_msgs_conversions/mesh_layers link against it, not any CLI tool),
-      # so disable LVR2_BUILD_TOOLS entirely and add libGL/libGLU so the core lib's own
-      # find_package(OpenGL) and its display/*.cpp's GL/glu.h actually succeed, instead of
-      # merely avoiding the crash.
+      # ${OPENGL_LIBRARIES}, with no buildInput providing it -- lvr2_mesh_reducer and
+      # lvr2_hdf5_mesh_tool then hard-fail configure by feeding the resulting
+      # "OPENGL_INCLUDE_DIR-NOTFOUND" placeholder to target_include_directories(), which
+      # rejects non-absolute paths. Fixed properly by adding libGL/libGLU below rather than
+      # by disabling LVR2_BUILD_TOOLS -- lvr2_reconstruct (also gated by it) is how a FAST-LIO
+      # point cloud gets turned into the mesh mesh_navigation actually needs, so it stays on.
       #
       # lvr2's exported lvr2-config.cmake also unconditionally find_dependency(MPI)s, even
       # though nothing in the actual build needs it (lvr2's own configure only ever logs
@@ -313,7 +311,6 @@ let
         {
           nativeBuildInputs ? [ ],
           propagatedBuildInputs ? [ ],
-          cmakeFlags ? [ ],
           postPatch ? "",
           postInstall ? "",
           ...
@@ -334,7 +331,6 @@ let
             final.libGL
             final.libGLU
           ];
-          cmakeFlags = cmakeFlags ++ [ "-DLVR2_BUILD_TOOLS=OFF" ];
           # lvr2_largescale_reconstruct is add_subdirectory()'d unconditionally on
           # !MSVC -- LVR2_BUILD_TOOLS does not gate it like the other tools -- and its
           # LargeScaleReconstruction.tcc #includes <mpi.h> outright. Real MPI isn't an
