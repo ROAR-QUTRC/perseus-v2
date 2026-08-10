@@ -21,4 +21,6 @@ prev.lib.composeManyExtensions [
   individualPackages
   (import ./opennav-coverage/overlay.nix)
   (import ./lidarslam-ros2/overlay.nix)
+  (import ./mesh-tools/overlay.nix)
+  (import ./mesh-navigation/overlay.nix)
 ] final prev

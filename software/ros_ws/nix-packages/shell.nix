@@ -52,6 +52,7 @@ pkgs.mkShell {
           joint-state-publisher-gui
           joy
           mecanum-drive-controller
+          mesh-navigation
           nav-msgs
           navigation2
           nlohmann_json

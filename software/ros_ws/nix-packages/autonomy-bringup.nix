@@ -6,6 +6,7 @@
   ament-lint-auto,
   ament-lint-common,
   fast-lio,
+  mesh-navigation,
   navigation2,
   rclcpp,
   robot-localization,
@@ -27,6 +28,7 @@ buildRosPackage rec {
   ];
   propagatedBuildInputs = [
     fast-lio
+    mesh-navigation
     navigation2
     rclcpp
     robot-localization
