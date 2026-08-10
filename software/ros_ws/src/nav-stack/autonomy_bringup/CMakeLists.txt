@@ -60,6 +60,7 @@ install(
             launch
             maps
             rviz
+            scripts
             urdf
             worlds
             behavior_trees
