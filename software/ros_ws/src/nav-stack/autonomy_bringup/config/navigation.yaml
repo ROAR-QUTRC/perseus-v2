@@ -1,0 +1,8 @@
+flat_footprint_broadcaster:
+  ros__parameters:
+    odom_frame: "odom"
+    base_link_frame: "base_link"
+    base_footprint_frame: "base_footprint"
+    # Matches the EKF's frequency (autonomy_bringup/config/ekf_config.yaml) so
+    # base_footprint is never staler than the base_link pose it is derived from.
+    publish_rate_hz: 30.0
