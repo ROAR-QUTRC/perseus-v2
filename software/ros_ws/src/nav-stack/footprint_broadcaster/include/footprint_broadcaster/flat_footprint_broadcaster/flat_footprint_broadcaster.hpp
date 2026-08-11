@@ -4,12 +4,12 @@
 /// @brief Projects the 3D odom -> base_link transform onto the ground plane and
 ///        broadcasts it as odom -> base_footprint for nav2's planar costmaps.
 
-#include <rclcpp/rclcpp.hpp>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
 
 #include <memory>
+#include <rclcpp/rclcpp.hpp>
 #include <string>
 
 namespace footprint_broadcaster

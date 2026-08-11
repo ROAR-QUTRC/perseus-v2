@@ -6,7 +6,6 @@ flat_footprint_broadcaster:
     # Matches the EKF's frequency (autonomy_bringup/config/ekf_config.yaml) so
     # base_footprint is never staler than the base_link pose it is derived from.
     publish_rate_hz: 30.0
-
 global_traversability:
   ros__parameters:
     # FAST-LIO's accumulated map cloud (see config/livox_mid360.yaml's publish.map_en). It is

@@ -447,7 +447,7 @@ namespace global_traversability
         }
 
         // Matches nav2's InflationLayer convention: lethal out to the robot's own radius (it
-        // cannot fit its centre any closer to an obstacle than that), then an exponential decay
+        // cannot fit its center any closer to an obstacle than that), then an exponential decay
         // out to inflation_radius_m, then clear.
         const float inscribed_radius_cells = static_cast<float>(_robot_radius_m) / resolution;
         const float inflation_radius_cells = static_cast<float>(_inflation_radius_m) / resolution;

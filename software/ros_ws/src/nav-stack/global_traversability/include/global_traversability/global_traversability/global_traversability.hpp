@@ -4,14 +4,13 @@
 /// @brief Builds a terrain-aware costmap from the 3D lidar map, in place of a global costmap
 ///        sourced only from a 2D SLAM occupancy grid.
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <grid_map_core/grid_map_core.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
-
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-
 #include <string>
 #include <vector>
 
