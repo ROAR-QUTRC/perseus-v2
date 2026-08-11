@@ -1,5 +1,7 @@
 final: prev: {
   autonomy-bringup = final.callPackage ./autonomy-bringup.nix { };
+  footprint-broadcaster = final.callPackage ./footprint-broadcaster.nix { };
+  global-traversability = final.callPackage ./global-traversability.nix { };
   input-devices = final.callPackage ./input-devices.nix { };
   perseus = final.callPackage ./perseus.nix { };
   perseus-bt-nodes = final.callPackage ./perseus-bt-nodes.nix { };

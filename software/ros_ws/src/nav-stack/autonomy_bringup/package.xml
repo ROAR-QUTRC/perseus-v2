@@ -18,6 +18,7 @@
   <depend>fast-lio</depend>
   <depend>watchdog</depend>
   <depend>footprint_broadcaster</depend>
+  <depend>global_traversability</depend>
 
 
   <test_depend>ament_lint_auto</test_depend>

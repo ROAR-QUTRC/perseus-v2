@@ -6,3 +6,34 @@ flat_footprint_broadcaster:
     # Matches the EKF's frequency (autonomy_bringup/config/ekf_config.yaml) so
     # base_footprint is never staler than the base_link pose it is derived from.
     publish_rate_hz: 30.0
+
+global_traversability:
+  ros__parameters:
+    # FAST-LIO's accumulated map cloud (see config/livox_mid360.yaml's publish.map_en). It is
+    # republished in full on every scan, so this node caches it and only reprocesses on
+    # update_period_s below.
+    pointcloud_topic: "/Laser_map"
+    resolution_m: 0.1
+    map_margin_m: 1.0
+    update_period_s: 5.0
+    # Local plane fit (steepness/roughness/ridge)
+    neighbourhood_radius_m: 0.3
+    min_plane_fit_points: 4
+    # Height a point must clear a cell's ground estimate by to count as an overhead return,
+    # rather than ground-return noise, when computing clearance.
+    ground_margin_m: 0.05
+    # Cells with fewer points than this are border/unknown rather than mapped ground.
+    min_points_per_cell: 3
+    # Obstacle thresholds
+    max_height_diff_m: 0.15
+    max_slope_deg: 30.0
+    max_roughness_m: 0.08
+    min_clearance_m: 0.6
+    # Unmapped cells are treated as obstacles: safer default for a vehicle that cannot verify
+    # unmapped ground ahead of time.
+    treat_unknown_as_obstacle: true
+    # Inflation (mirrors nav2 InflationLayer's own robot_radius/inflation_radius/
+    # cost_scaling_factor semantics)
+    robot_radius_m: 0.3
+    inflation_radius_m: 0.6
+    cost_scaling_factor: 3.0
