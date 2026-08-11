@@ -243,7 +243,10 @@ def main():
                 try:
                     run_cycle(node, args)
                 except (TimeoutError, ValueError, subprocess.CalledProcessError) as e:
-                    print(f"Refresh cycle failed, will retry next interval: {e}", file=sys.stderr)
+                    print(
+                        f"Refresh cycle failed, will retry next interval: {e}",
+                        file=sys.stderr,
+                    )
                 deadline = time.time() + args.interval
                 while time.time() < deadline:
                     rclpy.spin_once(node, timeout_sec=0.5)
