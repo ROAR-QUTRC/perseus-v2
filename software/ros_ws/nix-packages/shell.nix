@@ -45,6 +45,7 @@ pkgs.mkShell {
           diff-drive-controller
           fast-lio
           geometry-msgs
+          grid-map-core
           hardware-interface
           hi-can
           hi-can-raw
@@ -57,6 +58,7 @@ pkgs.mkShell {
           nlohmann_json
           onnxruntime
           opencv
+          pcl-conversions
           pluginlib
           python3Packages.pygame
           python3Packages.pytest

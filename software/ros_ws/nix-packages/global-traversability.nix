@@ -6,8 +6,6 @@
   ament-lint-auto,
   ament-lint-common,
   grid-map-core,
-  grid-map-msgs,
-  grid-map-ros,
   nav-msgs,
   pcl-conversions,
   rclcpp,
@@ -27,8 +25,6 @@ buildRosPackage rec {
   ];
   propagatedBuildInputs = [
     grid-map-core
-    grid-map-msgs
-    grid-map-ros
     nav-msgs
     pcl-conversions
     rclcpp
