@@ -112,7 +112,8 @@ namespace global_traversability
         void _compute_clearance(const pcl::PointCloud<pcl::PointXYZ>& cloud);
 
         /// @brief Fits a local plane around every mapped cell to derive steepness, roughness and
-        ///        ridge from elevation_min.
+        ///        ridge (split into ridge_bump/ridge_pothole, see the two-topic comment in the
+        ///        constructor) from elevation_min.
         void _compute_local_terrain_features();
 
         /// @brief Marks cells with too few points as border/unknown.
@@ -148,9 +149,9 @@ namespace global_traversability
         /// @param stamp Timestamp to publish the message with.
         void _publish_costmap(const rclcpp::Time& stamp);
 
-        /// @brief Publishes every debug layer (height_diff, steepness, roughness, ridge,
-        ///        clearance, border, obstacle, inflation) as its own OccupancyGrid, for
-        ///        inspection/tuning in rviz.
+        /// @brief Publishes every debug layer (height_diff, steepness, roughness, ridge_bump,
+        ///        ridge_pothole, clearance, border, obstacle, inflation) as its own OccupancyGrid,
+        ///        for inspection/tuning in rviz.
         /// @param stamp Timestamp to publish the messages with.
         void _publish_layers(const rclcpp::Time& stamp);
 

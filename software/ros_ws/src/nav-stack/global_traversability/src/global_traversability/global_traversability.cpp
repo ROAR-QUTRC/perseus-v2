@@ -32,7 +32,8 @@ namespace global_traversability
     GlobalTraversability::GlobalTraversability(const rclcpp::NodeOptions& options)
         : rclcpp::Node("global_traversability", options),
           _map({"elevation_min", "elevation_max", "point_count", "height_diff", "steepness",
-                "roughness", "ridge", "clearance", "border", "obstacle", "inflation", "cost"})
+                "roughness", "ridge", "ridge_bump", "ridge_pothole", "clearance", "border",
+                "obstacle", "inflation", "cost"})
     {
         _load_parameters();
 
@@ -49,12 +50,18 @@ namespace global_traversability
 
         // Debug/tuning layers, each its own OccupancyGrid (plain nav_msgs, no grid_map_rviz
         // plugin required) with a fixed value range chosen to make the layer's own units
-        // legible: e.g. ridge is signed (a dip vs a bump), everything else is not.
+        // legible. ridge itself is signed (a dip vs a bump) and is published split into two
+        // unsigned layers instead of one signed one: rviz's occupancy colour schemes are built
+        // for "0 = flat/uninteresting, 100 = extreme", so a single layer with flat sitting at the
+        // signed midpoint (50) renders potholes and flat ground as visually indistinguishable,
+        // while only bumps stand out. Splitting gives potholes the same full 0-100 range bumps
+        // already had.
         const std::vector<LayerPublisher> layer_specs = {
             {"height_diff", 0.0, 1.0, nullptr},
             {"roughness", 0.0, 0.3, nullptr},
             {"steepness", 0.0, 90.0, nullptr},
-            {"ridge", -0.5, 0.5, nullptr},
+            {"ridge_bump", 0.0, 0.5, nullptr},
+            {"ridge_pothole", 0.0, 0.5, nullptr},
             {"clearance", 0.0, 2.0, nullptr},
             {"border", 0.0, 1.0, nullptr},
             {"obstacle", 0.0, 1.0, nullptr},
@@ -165,6 +172,8 @@ namespace global_traversability
         _map["steepness"].setConstant(NaN);
         _map["roughness"].setConstant(NaN);
         _map["ridge"].setConstant(NaN);
+        _map["ridge_bump"].setConstant(NaN);
+        _map["ridge_pothole"].setConstant(NaN);
 
         _accumulate_elevation(cloud);
         _compute_clearance(cloud);
@@ -245,6 +254,8 @@ namespace global_traversability
         Eigen::MatrixXf& steepness = _map["steepness"];
         Eigen::MatrixXf& roughness = _map["roughness"];
         Eigen::MatrixXf& ridge = _map["ridge"];
+        Eigen::MatrixXf& ridge_bump = _map["ridge_bump"];
+        Eigen::MatrixXf& ridge_pothole = _map["ridge_pothole"];
 
         const int rows = _map.getSize()(0);
         const int cols = _map.getSize()(1);
@@ -321,7 +332,13 @@ namespace global_traversability
             steepness(row, col) =
                 static_cast<float>(deg_from_rad(std::acos(std::min(1.0, std::abs(normal.z())))));
             roughness(row, col) = static_cast<float>(std::sqrt(residual_variance));
-            ridge(row, col) = static_cast<float>(static_cast<double>(center) - centroid.z());
+
+            const float ridge_value = static_cast<float>(static_cast<double>(center) - centroid.z());
+            ridge(row, col) = ridge_value;
+            // Split into two unsigned layers rather than publishing this signed value directly:
+            // see the layer_specs comment in the constructor for why.
+            ridge_bump(row, col) = std::max(0.0f, ridge_value);
+            ridge_pothole(row, col) = std::max(0.0f, -ridge_value);
         }
     }
 

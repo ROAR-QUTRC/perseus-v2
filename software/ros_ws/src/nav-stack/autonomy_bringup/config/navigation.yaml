@@ -24,13 +24,13 @@ global_traversability:
     # Cells with fewer points than this are border/unknown rather than mapped ground.
     min_points_per_cell: 3
     # Obstacle thresholds
-    max_height_diff_m: 0.15
+    max_height_diff_m: 0.05
     max_slope_deg: 30.0
     max_roughness_m: 0.08
     min_clearance_m: 0.6
     # Unmapped cells are treated as obstacles: safer default for a vehicle that cannot verify
     # unmapped ground ahead of time.
-    treat_unknown_as_obstacle: true
+    treat_unknown_as_obstacle: false
     # Inflation (mirrors nav2 InflationLayer's own robot_radius/inflation_radius/
     # cost_scaling_factor semantics)
     robot_radius_m: 0.3
