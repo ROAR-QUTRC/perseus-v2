@@ -13,7 +13,6 @@
         <geometry>
             <mesh scale="1.0 1.0  1.0" filename="file://$(find perseus_description)/meshes/mid-360.dae"/>
         </geometry>
-        <material name="black"/>
     </visual>
     <collision>
         <origin xyz="0 0.0 -0.02" rpy="0.0 0.0 0.0"/>

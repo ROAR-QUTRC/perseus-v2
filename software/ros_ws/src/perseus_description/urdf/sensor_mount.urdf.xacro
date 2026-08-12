@@ -20,6 +20,13 @@
         <xacro:box_inertia m="${sensor_mount_mass}" x="${sensor_mount_length}" y="${sensor_mount_width}" z="${sensor_mount_height}"/>
       </inertial>
 
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+        <geometry>
+          <mesh scale="1.0 1.0 1.0" filename="file://$(find perseus_description)/meshes/sensor_mount.dae"/>
+        </geometry>
+      </visual>
+
     </link>
 
     <joint name="${prefix}sensor_mount_joint" type="fixed">
