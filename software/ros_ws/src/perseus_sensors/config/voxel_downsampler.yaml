@@ -5,3 +5,6 @@ voxel_downsampler:
     # Edge length of each voxel cube, in metres. At most one point survives per cube, so a
     # smaller value keeps more detail (and more points); a larger value downsamples harder.
     voxel_size_m: 0.05
+    # Bits per x/y/z coordinate for Draco position quantization (1-30). Higher values keep
+    # more spatial precision at the cost of a larger compressed payload.
+    quantization_bits: 14

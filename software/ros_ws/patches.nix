@@ -276,6 +276,18 @@ let
           }
         )
       );
+      perseus-sensors = rosPrev.perseus-sensors.overrideAttrs (
+        {
+          propagatedBuildInputs ? [ ],
+          ...
+        }:
+        {
+          propagatedBuildInputs = propagatedBuildInputs ++ [
+            final.python3Packages.dracopy
+            rosFinal.perseus-interfaces
+          ];
+        }
+      );
       lidarslam = patchLidarSlamLicense rosPrev.lidarslam;
       scanmatcher = patchLidarSlamLicense (
         rosPrev.scanmatcher.overrideAttrs (
