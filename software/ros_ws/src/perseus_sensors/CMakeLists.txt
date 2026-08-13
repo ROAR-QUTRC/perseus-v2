@@ -117,6 +117,12 @@ ament_target_dependencies(dust_filter rclcpp)
 
 install(TARGETS dust_filter DESTINATION lib/${PROJECT_NAME})
 
+# Voxel Downsampler (Python)
+# Reduces Livox point cloud density by keeping at most one point per voxel cell.
+install(PROGRAMS scripts/voxel_downsampler.py
+        DESTINATION lib/${PROJECT_NAME}
+        RENAME voxel_downsampler)
+
 # Install launch
 install(
   DIRECTORY launch config

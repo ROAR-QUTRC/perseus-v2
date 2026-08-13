@@ -1,0 +1,7 @@
+voxel_downsampler:
+  ros__parameters:
+    input_topic: "/livox/lidar"
+    output_topic: "/livox/lidar/downsampled"
+    # Edge length of each voxel cube, in metres. At most one point survives per cube, so a
+    # smaller value keeps more detail (and more points); a larger value downsamples harder.
+    voxel_size_m: 0.05
