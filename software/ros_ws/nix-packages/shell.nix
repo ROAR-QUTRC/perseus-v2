@@ -76,6 +76,7 @@ pkgs.mkShell {
           rplidar-ros
           rviz2
           sensor-msgs
+          sensor-msgs-py
           slam-toolbox
           std-msgs
           teleop-twist-joy
