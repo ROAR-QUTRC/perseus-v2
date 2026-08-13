@@ -49,7 +49,9 @@ class VoxelDownsampler(Node):
         # e.g. (x, y, z, intensity, tag, line, timestamp) -- whatever fields the message has.
         # We keep every field, not just x/y/z, so nothing the Livox driver adds gets dropped.
         field_names = [f.name for f in msg.fields]
-        points = list(point_cloud2.read_points(msg, field_names=field_names, skip_nans=True))
+        points = list(
+            point_cloud2.read_points(msg, field_names=field_names, skip_nans=True)
+        )
 
         seen_voxels = set()
         kept_points = []
