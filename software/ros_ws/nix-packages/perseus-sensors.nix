@@ -8,6 +8,7 @@
   compressed-image-transport,
   geometry-msgs,
   nav-msgs,
+  perseus-interfaces,
   rclcpp,
   rclcpp-components,
   realsense2-camera,
@@ -29,6 +30,7 @@ buildRosPackage rec {
     compressed-image-transport
     geometry-msgs
     nav-msgs
+    perseus-interfaces
     rclcpp
     rclcpp-components
     realsense2-camera

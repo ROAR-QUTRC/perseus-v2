@@ -1,0 +1,1 @@
+Using saved setting for 'extra-substituters = https://roar-qutrc.cachix.org https://ros.cachix.org' from ~/.local/share/nix/trusted-settings.json.

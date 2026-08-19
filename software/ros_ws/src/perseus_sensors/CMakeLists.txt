@@ -42,7 +42,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # public dependencies (which should propagate)
 set(THIS_PACKAGE_INCLUDE_DEPENDS rclcpp rclcpp_components sensor_msgs
-                                 geometry_msgs nav_msgs)
+                                 geometry_msgs nav_msgs perseus_interfaces)
 # packages which must be present but aren't linked against
 set(THIS_PACKAGE_BUILD_DEPENDS backward_ros ament_cmake)
 
@@ -53,6 +53,8 @@ endforeach()
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
+
+find_package(draco REQUIRED)
 
 # COMPILE (Executables)
 
@@ -116,6 +118,38 @@ target_link_libraries(dust_filter dust_filter_component)
 ament_target_dependencies(dust_filter rclcpp)
 
 install(TARGETS dust_filter DESTINATION lib/${PROJECT_NAME})
+
+# Voxel Downsampler
+# Reduces Livox point cloud density by keeping at most one point per voxel cell, then
+# Draco-compresses the surviving points' positions.
+add_executable(
+  voxel_downsampler src/voxel_downsampler/voxel_downsampler.cpp
+                    src/voxel_downsampler/voxel_downsampler_node.cpp)
+
+target_include_directories(voxel_downsampler
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+ament_target_dependencies(voxel_downsampler PUBLIC rclcpp sensor_msgs
+                          perseus_interfaces)
+target_link_libraries(voxel_downsampler PUBLIC draco::draco)
+
+install(TARGETS voxel_downsampler DESTINATION lib/${PROJECT_NAME})
+
+# Point Cloud Decoder
+# Draco-decodes a CompressedPointCloud back into a PointCloud2, for local visualization (e.g.
+# RViz) on a machine that doesn't need to receive the compressed stream over a constrained link.
+add_executable(
+  point_cloud_decoder src/voxel_downsampler/point_cloud_decoder.cpp
+                      src/voxel_downsampler/point_cloud_decoder_node.cpp)
+
+target_include_directories(point_cloud_decoder
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+ament_target_dependencies(point_cloud_decoder PUBLIC rclcpp sensor_msgs
+                          perseus_interfaces)
+target_link_libraries(point_cloud_decoder PUBLIC draco::draco)
+
+install(TARGETS point_cloud_decoder DESTINATION lib/${PROJECT_NAME})
 
 # Install launch
 install(
