@@ -11,12 +11,10 @@
   perseus-interfaces,
   rclcpp,
   rclcpp-components,
-  rclpy,
   realsense2-camera,
   realsense2-description,
   rplidar-ros,
   sensor-msgs,
-  sensor-msgs-py,
 }:
 buildRosPackage rec {
   pname = "ros-jazzy-perseus-sensors";
@@ -35,12 +33,10 @@ buildRosPackage rec {
     perseus-interfaces
     rclcpp
     rclcpp-components
-    rclpy
     realsense2-camera
     realsense2-description
     rplidar-ros
     sensor-msgs
-    sensor-msgs-py
   ];
   nativeBuildInputs = [ ament-cmake ];
 
