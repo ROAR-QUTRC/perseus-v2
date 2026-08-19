@@ -118,11 +118,20 @@ ament_target_dependencies(dust_filter rclcpp)
 install(TARGETS dust_filter DESTINATION lib/${PROJECT_NAME})
 
 # Voxel Downsampler (Python)
-# Reduces Livox point cloud density by keeping at most one point per voxel cell.
+# Reduces Livox point cloud density by keeping at most one point per voxel cell, then
+# Draco-compresses the surviving points' positions.
 install(
   PROGRAMS scripts/voxel_downsampler.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME voxel_downsampler)
+
+# Point Cloud Decoder (Python)
+# Draco-decodes a CompressedPointCloud back into a PointCloud2, for local visualization (e.g.
+# RViz) on a machine that doesn't need to receive the compressed stream over a constrained link.
+install(
+  PROGRAMS scripts/point_cloud_decoder.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME point_cloud_decoder)
 
 # Install launch
 install(
