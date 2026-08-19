@@ -92,19 +92,28 @@ class VoxelDownsampler(Node):
         # decoded positions (Draco's default reordering would desync them from each other).
         field_index = {name: field_names.index(name) for name in field_names}
         positions = np.array(
-            [(p[field_index["x"]], p[field_index["y"]], p[field_index["z"]]) for p in kept_points],
+            [
+                (p[field_index["x"]], p[field_index["y"]], p[field_index["z"]])
+                for p in kept_points
+            ],
             dtype=np.float32,
         )
         timestamps = np.array(
-            [p[field_index["timestamp"]] for p in kept_points] if "timestamp" in field_index else [],
+            [p[field_index["timestamp"]] for p in kept_points]
+            if "timestamp" in field_index
+            else [],
             dtype=np.float64,
         )
         tags = np.array(
-            [p[field_index["tag"]] for p in kept_points] if "tag" in field_index else [],
+            [p[field_index["tag"]] for p in kept_points]
+            if "tag" in field_index
+            else [],
             dtype=np.uint8,
         )
         lines = np.array(
-            [p[field_index["line"]] for p in kept_points] if "line" in field_index else [],
+            [p[field_index["line"]] for p in kept_points]
+            if "line" in field_index
+            else [],
             dtype=np.uint8,
         )
 

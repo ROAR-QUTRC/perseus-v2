@@ -50,21 +50,36 @@ class PointCloudDecoder(Node):
         )
 
         fields = [
-            point_cloud2.PointField(name="x", offset=0, datatype=point_cloud2.PointField.FLOAT32, count=1),
-            point_cloud2.PointField(name="y", offset=4, datatype=point_cloud2.PointField.FLOAT32, count=1),
-            point_cloud2.PointField(name="z", offset=8, datatype=point_cloud2.PointField.FLOAT32, count=1),
+            point_cloud2.PointField(
+                name="x", offset=0, datatype=point_cloud2.PointField.FLOAT32, count=1
+            ),
+            point_cloud2.PointField(
+                name="y", offset=4, datatype=point_cloud2.PointField.FLOAT32, count=1
+            ),
+            point_cloud2.PointField(
+                name="z", offset=8, datatype=point_cloud2.PointField.FLOAT32, count=1
+            ),
         ]
 
         if has_side_channels:
             fields += [
                 point_cloud2.PointField(
-                    name="timestamp", offset=12, datatype=point_cloud2.PointField.FLOAT64, count=1
+                    name="timestamp",
+                    offset=12,
+                    datatype=point_cloud2.PointField.FLOAT64,
+                    count=1,
                 ),
                 point_cloud2.PointField(
-                    name="tag", offset=20, datatype=point_cloud2.PointField.UINT8, count=1
+                    name="tag",
+                    offset=20,
+                    datatype=point_cloud2.PointField.UINT8,
+                    count=1,
                 ),
                 point_cloud2.PointField(
-                    name="line", offset=21, datatype=point_cloud2.PointField.UINT8, count=1
+                    name="line",
+                    offset=21,
+                    datatype=point_cloud2.PointField.UINT8,
+                    count=1,
                 ),
             ]
             points = [
