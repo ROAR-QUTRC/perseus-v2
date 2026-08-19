@@ -3,10 +3,11 @@
 
 #include "perseus_sensors/voxel_downsampler/voxel_downsampler.hpp"
 
-#include <cmath>
-#include <cstring>
 #include <draco/compression/encode.h>
 #include <draco/point_cloud/point_cloud_builder.h>
+
+#include <cmath>
+#include <cstring>
 #include <functional>
 #include <sensor_msgs/msg/point_field.hpp>
 #include <unordered_set>

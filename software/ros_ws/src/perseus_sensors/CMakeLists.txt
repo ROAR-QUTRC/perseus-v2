@@ -122,8 +122,9 @@ install(TARGETS dust_filter DESTINATION lib/${PROJECT_NAME})
 # Voxel Downsampler
 # Reduces Livox point cloud density by keeping at most one point per voxel cell, then
 # Draco-compresses the surviving points' positions.
-add_executable(voxel_downsampler src/voxel_downsampler/voxel_downsampler.cpp
-                                 src/voxel_downsampler/voxel_downsampler_node.cpp)
+add_executable(
+  voxel_downsampler src/voxel_downsampler/voxel_downsampler.cpp
+                    src/voxel_downsampler/voxel_downsampler_node.cpp)
 
 target_include_directories(voxel_downsampler
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -137,8 +138,9 @@ install(TARGETS voxel_downsampler DESTINATION lib/${PROJECT_NAME})
 # Point Cloud Decoder
 # Draco-decodes a CompressedPointCloud back into a PointCloud2, for local visualization (e.g.
 # RViz) on a machine that doesn't need to receive the compressed stream over a constrained link.
-add_executable(point_cloud_decoder src/voxel_downsampler/point_cloud_decoder.cpp
-                                   src/voxel_downsampler/point_cloud_decoder_node.cpp)
+add_executable(
+  point_cloud_decoder src/voxel_downsampler/point_cloud_decoder.cpp
+                      src/voxel_downsampler/point_cloud_decoder_node.cpp)
 
 target_include_directories(point_cloud_decoder
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

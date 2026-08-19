@@ -3,8 +3,9 @@
 
 #include "perseus_sensors/voxel_downsampler/point_cloud_decoder.hpp"
 
-#include <cstring>
 #include <draco/compression/decode.h>
+
+#include <cstring>
 #include <functional>
 #include <sensor_msgs/msg/point_field.hpp>
 
