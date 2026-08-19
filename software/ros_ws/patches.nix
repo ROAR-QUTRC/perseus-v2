@@ -283,7 +283,7 @@ let
         }:
         {
           propagatedBuildInputs = propagatedBuildInputs ++ [
-            final.python3Packages.dracopy
+            final.draco
             rosFinal.perseus-interfaces
           ];
         }
