@@ -35,6 +35,21 @@
       <origin xyz="${sensor_mount_x_offset} ${sensor_mount_y_offset} ${sensor_mount_z_offset}" rpy="0.0 0.0 0.0"/>
     </joint>
 
+    <link name="${prefix}livox_base">
+      <visual>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 ${pi/2}"/>
+        <geometry>
+          <mesh scale="1.0 1.0 1.0" filename="file://$(find perseus_description)/meshes/lidar_base.dae"/>
+        </geometry>
+      </visual>
+
+    </link>
+    <joint name="${prefix}livox_base_joint" type="fixed">
+      <parent link="${prefix}sensor_mount"/>
+      <child link="${prefix}livox_base"/>
+      <origin xyz="0.0 0.0 0.1" rpy="0.0 0.0 0.0"/>
+    </joint>
+
     <!--
       Livox MID-360, on top of the mast and pitched nose-down by livox_pitch.
 
