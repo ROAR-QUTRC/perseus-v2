@@ -713,7 +713,7 @@
         "uuid": "ed12625f-743c-4dd1-a6f4-666aeca01e2d"
       }
     ],
-    "used_designators": "VBATT_TP1,#SYM1,VIN_IND1-2,BATT_IND1,GND1,F1-8,JP1-16,R1-128,R133-139,J1-19,PCB1,L1-2,3V3_IND1,C1-84,D1-44,D46-51,U1-31,3V1,3V3-4,Q1-31,VR1,VBUS_TP1-2,#PWR1-209,JMP_IND1",
+    "used_designators": "JMP_IND1,#PWR1-209,VR1,VBATT_TP1,Q1-31,3V1,3V3-4,U1-31,D1-44,D46-51,#SYM1,VIN_IND1-2,GND1,BATT_IND1,F1-8,R1-128,R133-139,JP1-16,VBUS_TP1-2,J1-19,PCB1,L1-2,3V3_IND1,C1-84",
     "variants": []
   },
   "sheets": [
@@ -723,35 +723,11 @@
     ],
     [
       "977b49b6-52fe-4534-aa9a-ea79bcc5d2a2",
-      "comp smart switch"
-    ],
-    [
-      "0908bc3c-1fb6-460e-9344-2bebf88f9dfa",
-      "aux1 smart switch"
-    ],
-    [
-      "de2ba33d-2eb5-4503-8ffe-434831759cab",
-      "aux2 smart switch"
-    ],
-    [
-      "73a73000-cf0b-4c5a-90a4-95feeece42ec",
-      "drive1 smart switch1"
-    ],
-    [
-      "1a90740a-57be-4c5f-b4c6-c88339c95d6a",
-      "drive2 smart switch2"
-    ],
-    [
-      "18172300-b21b-47f6-82c0-7255681f8d1c",
-      "external smart switch"
+      "power_bus_1"
     ],
     [
       "f186a5df-bce3-4173-b0d9-882f1a8a692c",
       "contactor"
-    ],
-    [
-      "28c9696c-9c5e-4d4e-8a0d-c4bed3d05fb3",
-      "HV smart switch1"
     ]
   ],
   "text_variables": {

@@ -1307,145 +1307,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "power:+BATT"
-			(power global)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "#PWR"
-				(at 0 -3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "+BATT"
-				(at 0 3.556 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Power symbol creates a global label with name \"+BATT\""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "global power battery"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "+BATT_0_1"
-				(polyline
-					(pts
-						(xy -0.762 1.27) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 2.54) (xy 0.762 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "+BATT_1_1"
-				(pin power_in line
-					(at 0 0 90)
-					(length 0)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "power:GND"
 			(power global)
 			(pin_numbers
@@ -1585,22 +1446,22 @@
 		(uuid "7a3ef828-8b97-4e4d-83fb-4bb1030b2c66")
 	)
 	(junction
+		(at 88.9 45.72)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "ba6a9a63-f8f0-45db-b695-d0e8444d03d3")
+	)
+	(junction
 		(at 57.15 45.72)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "959affdc-4dfd-47ca-babe-e0e83b967366")
+		(uuid "bb8308ea-45a1-47a6-bd8e-94f0ad73cb0e")
 	)
 	(junction
 		(at 76.2 45.72)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "a9be8043-a8cb-4609-bf88-a0c189973b8b")
-	)
-	(junction
-		(at 88.9 45.72)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "ba6a9a63-f8f0-45db-b695-d0e8444d03d3")
+		(uuid "e5b4109b-de76-4837-9341-245c5fd81817")
 	)
 	(wire
 		(pts
@@ -1624,7 +1485,7 @@
 	)
 	(wire
 		(pts
-			(xy 76.2 45.72) (xy 88.9 45.72)
+			(xy 71.12 45.72) (xy 76.2 45.72)
 		)
 		(stroke
 			(width 0)
@@ -1654,6 +1515,16 @@
 	)
 	(wire
 		(pts
+			(xy 76.2 45.72) (xy 88.9 45.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4b24d195-ad38-4ae9-9309-a588469a0770")
+	)
+	(wire
+		(pts
 			(xy 69.85 100.33) (xy 69.85 95.25)
 		)
 		(stroke
@@ -1661,6 +1532,16 @@
 			(type default)
 		)
 		(uuid "519159d6-bad2-4a2e-956b-63be51fe8548")
+	)
+	(wire
+		(pts
+			(xy 76.2 45.72) (xy 76.2 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5c02d8e8-b0b8-43d8-818e-47ccfe00c530")
 	)
 	(wire
 		(pts
@@ -1694,13 +1575,13 @@
 	)
 	(wire
 		(pts
-			(xy 71.12 45.72) (xy 76.2 45.72)
+			(xy 57.15 49.53) (xy 57.15 45.72)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "ad86960a-ab68-4f8e-8694-72240fd516f7")
+		(uuid "af617ff5-77a5-4654-b6b1-1c0848e6616e")
 	)
 	(wire
 		(pts
@@ -1724,7 +1605,7 @@
 	)
 	(wire
 		(pts
-			(xy 52.07 45.72) (xy 57.15 45.72)
+			(xy 49.53 45.72) (xy 57.15 45.72)
 		)
 		(stroke
 			(width 0)
@@ -1744,7 +1625,7 @@
 	)
 	(wire
 		(pts
-			(xy 57.15 60.96) (xy 57.15 53.34)
+			(xy 57.15 60.96) (xy 57.15 57.15)
 		)
 		(stroke
 			(width 0)
@@ -1795,7 +1676,7 @@
 	)
 	(hierarchical_label "PWR_IN"
 		(shape input)
-		(at 52.07 45.72 180)
+		(at 49.53 45.72 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2192,18 +2073,18 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 57.15 49.53 0)
+		(at 57.15 53.34 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "5d34eaf3-c53f-4924-85b4-a3e086dc2ad4")
 		(property "Reference" "C44"
-			(at 60.96 48.2599 0)
+			(at 60.96 52.0699 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2214,7 +2095,7 @@
 			)
 		)
 		(property "Value" "10nF"
-			(at 60.96 50.7999 0)
+			(at 60.96 54.6099 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2225,7 +2106,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 58.1152 53.34 0)
+			(at 58.1152 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2236,7 +2117,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 57.15 49.53 0)
+			(at 57.15 53.34 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2247,7 +2128,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 57.15 49.53 0)
+			(at 57.15 53.34 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2345,189 +2226,6 @@
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/f186a5df-bce3-4173-b0d9-882f1a8a692c"
 					(reference "#PWR0144")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Diode:US1M")
-		(at 76.2 49.53 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "7c0c0d78-7c18-42dc-9cf3-f719c2121c8d")
-		(property "Reference" "D30"
-			(at 78.74 48.2599 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "US1M"
-			(at 78.74 50.7999 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Diode_SMD:D_SMA"
-			(at 80.645 49.53 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" "https://www.diodes.com/assets/Datasheets/ds16008.pdf"
-			(at 76.2 49.53 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "1000V, 1A, General Purpose Rectifier Diode, SMA(DO-214AC)"
-			(at 76.2 49.53 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Sim.Device" "D"
-			(at 76.2 49.53 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Sim.Pins" "1=K 2=A"
-			(at 76.2 49.53 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "9f072bf0-c63d-4669-8d89-8113e76ec5fd")
-		)
-		(pin "2"
-			(uuid "ab6c5892-0cd2-43ea-83e7-13ef4c3e652f")
-		)
-		(instances
-			(project "rover-control-board-v2"
-				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/f186a5df-bce3-4173-b0d9-882f1a8a692c"
-					(reference "D30")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+BATT")
-		(at 9.8986 1.0218 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "7cecb043-7258-4a34-bea5-9c6ad622bf54")
-		(property "Reference" "#PWR0140"
-			(at 13.7086 1.0218 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+BATT"
-			(at 6.0886 1.0217 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 9.8986 1.0218 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 9.8986 1.0218 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+BATT\""
-			(at 9.8986 1.0218 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "b73b9734-eb93-45ee-b8e9-426da5b5f07a")
-		)
-		(instances
-			(project "rover-control-board-v2"
-				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/f186a5df-bce3-4173-b0d9-882f1a8a692c"
-					(reference "#PWR0140")
 					(unit 1)
 				)
 			)
@@ -2929,85 +2627,6 @@
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/f186a5df-bce3-4173-b0d9-882f1a8a692c"
 					(reference "R97")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+BATT")
-		(at 12.4386 3.5618 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "e39dbaa6-a463-4ae6-92a7-67370332b929")
-		(property "Reference" "#PWR0141"
-			(at 16.2486 3.5618 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+BATT"
-			(at 8.6286 3.5617 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 12.4386 3.5618 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 12.4386 3.5618 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+BATT\""
-			(at 12.4386 3.5618 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "b1b50aa7-8286-422a-a753-1f11a8a0a9e9")
-		)
-		(instances
-			(project "rover-control-board-v2"
-				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/f186a5df-bce3-4173-b0d9-882f1a8a692c"
-					(reference "#PWR0141")
 					(unit 1)
 				)
 			)
