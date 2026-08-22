@@ -713,7 +713,7 @@
         "uuid": "ed12625f-743c-4dd1-a6f4-666aeca01e2d"
       }
     ],
-    "used_designators": "JMP_IND1,#PWR1-209,VR1,VBATT_TP1,Q1-31,3V1,3V3-4,U1-31,D1-44,D46-51,#SYM1,VIN_IND1-2,GND1,BATT_IND1,F1-8,R1-128,R133-139,JP1-16,VBUS_TP1-2,J1-19,PCB1,L1-2,3V3_IND1,C1-84",
+    "used_designators": "J1-19,PCB1,L1-2,3V3_IND1-5,C1-84,3V1,3V3-4,Q1-31,D1-44,D46-51,U1-31,GREEN1-3,VBATT_TP1,VR1,RED2-4,#SYM1,VIN_IND1-2,#PWR1-209,JMP_IND1,VBUS_TP1-2,R1-128,R133-139,JP1-16,GND1,BATT_IND1,F1-8",
     "variants": []
   },
   "sheets": [
@@ -724,6 +724,10 @@
     [
       "977b49b6-52fe-4534-aa9a-ea79bcc5d2a2",
       "power_bus_1"
+    ],
+    [
+      "7106b502-039f-413e-a993-2b1139091b86",
+      "current ADC"
     ],
     [
       "f186a5df-bce3-4173-b0d9-882f1a8a692c",

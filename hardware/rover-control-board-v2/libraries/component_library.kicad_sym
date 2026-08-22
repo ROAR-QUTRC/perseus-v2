@@ -2409,7 +2409,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Footprint" "VOM1271T:SOIC254P695X242-4N"
+		(property "Footprint" "footprints:SOIC254P695X242-4N"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
