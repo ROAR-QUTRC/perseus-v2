@@ -7428,7 +7428,7 @@
 				)
 			)
 		)
-		(property "Footprint" "footprints:SOIC254P695X242-4N"
+		(property "Footprint" "Package_SO:SOP-4_3.8x4.1mm_P2.54mm"
 			(at 209.55 149.86 0)
 			(hide yes)
 			(show_name no)
@@ -7472,6 +7472,17 @@
 					(size 1.27 1.27)
 				)
 				(justify bottom)
+			)
+		)
+		(property "digikey_part_num" "VOM1271TCT-ND"
+			(at 209.55 149.86 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "2"
@@ -7982,7 +7993,7 @@
 				)
 			)
 		)
-		(property "Value" ""
+		(property "Value" "D3V3M1U2S9-7"
 			(at 312.42 128.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8015,6 +8026,17 @@
 			)
 		)
 		(property "Description" ""
+			(at 312.42 128.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "31-D3V3M1U2S9-7CT-ND"
 			(at 312.42 128.27 0)
 			(hide yes)
 			(show_name no)
@@ -8829,6 +8851,17 @@
 				)
 			)
 		)
+		(property "digikey_part_num" "620-ACS37003KMCATR-180B5CT-ND"
+			(at 255.27 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "8"
 			(uuid "d0bb6d96-a4ba-472a-83ec-8e9d540d293f")
 		)
@@ -9144,6 +9177,17 @@
 			)
 		)
 		(property "manufactuer part number" ""
+			(at 104.14 129.54 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "350-5991110147FCT-ND"
 			(at 104.14 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -9507,6 +9551,17 @@
 			)
 		)
 		(property "manufactuer part number" ""
+			(at 82.55 95.25 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "350-5991110147FCT-ND"
 			(at 82.55 95.25 0)
 			(hide yes)
 			(show_name no)
@@ -10405,6 +10460,17 @@
 			)
 		)
 		(property "Description" ""
+			(at 114.3 157.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "296-35317-1-ND"
 			(at 114.3 157.48 0)
 			(hide yes)
 			(show_name no)

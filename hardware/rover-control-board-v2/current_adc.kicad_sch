@@ -3737,7 +3737,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "MCP3427x-xUN"
+		(property "Value" "MCP3427T-E/UN"
 			(at 258.6833 110.49 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3748,7 +3748,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SO:MSOP-10_3x3mm_P0.5mm"
+		(property "Footprint" "Package_SO:SOP-4_3.8x4.1mm_P2.54mm"
 			(at 276.86 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -3771,6 +3771,17 @@
 			)
 		)
 		(property "Description" "16-Bit, Multi-Channel ΔΣ Analog-to-Digital Converter with I2C Interface and On-Board Reference, MSOP-10"
+			(at 256.54 120.65 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "150-MCP3427T-E/UNCT-ND"
 			(at 256.54 120.65 0)
 			(hide yes)
 			(show_name no)
@@ -3936,7 +3947,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "MCP3427x-xUN"
+		(property "Value" "MCP3427T-E/UN"
 			(at 196.4533 110.49 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3947,7 +3958,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SO:MSOP-10_3x3mm_P0.5mm"
+		(property "Footprint" "Package_SO:SOP-4_3.8x4.1mm_P2.54mm"
 			(at 214.63 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -3970,6 +3981,17 @@
 			)
 		)
 		(property "Description" "16-Bit, Multi-Channel ΔΣ Analog-to-Digital Converter with I2C Interface and On-Board Reference, MSOP-10"
+			(at 194.31 120.65 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "150-MCP3427T-E/UNCT-ND"
 			(at 194.31 120.65 0)
 			(hide yes)
 			(show_name no)
@@ -4319,7 +4341,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "MCP3427x-xUN"
+		(property "Value" "MCP3427T-E/UN"
 			(at 138.0333 110.49 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4330,7 +4352,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_SO:MSOP-10_3x3mm_P0.5mm"
+		(property "Footprint" "Package_SO:SOP-4_3.8x4.1mm_P2.54mm"
 			(at 156.21 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -4353,6 +4375,17 @@
 			)
 		)
 		(property "Description" "16-Bit, Multi-Channel ΔΣ Analog-to-Digital Converter with I2C Interface and On-Board Reference, MSOP-10"
+			(at 135.89 120.65 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "150-MCP3427T-E/UNCT-ND"
 			(at 135.89 120.65 0)
 			(hide yes)
 			(show_name no)

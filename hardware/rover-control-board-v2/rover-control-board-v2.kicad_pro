@@ -741,6 +741,78 @@
           "label": "#",
           "name": "${ITEM_NUMBER}",
           "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Manufacturer",
+          "name": "Manufacturer",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Manufacturer URL",
+          "name": "Manufacturer URL",
+          "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Ti",
+          "name": "Ti",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Tl (mm)",
+          "name": "Tl (mm)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "W (mm)",
+          "name": "W (mm)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Mounting Technology",
+          "name": "Mounting Technology",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "IR (A)",
+          "name": "IR (A)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Part Number",
+          "name": "Part Number",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Pins",
+          "name": "Pins",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Created Date",
+          "name": "Created Date",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Series",
+          "name": "Series",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "H (mm)",
+          "name": "H (mm)",
+          "show": false
         }
       ],
       "filter_string": "",
@@ -791,7 +863,7 @@
         "uuid": "ed12625f-743c-4dd1-a6f4-666aeca01e2d"
       }
     ],
-    "used_designators": "GND1,F1-8,BATT_IND1,3V3_IND1-5,MP1-3,C1-84,3V1,3V3-4,Q1-31,D1-44,D46-51,U1-31,GREEN1-3,L1-2,PCB1,J1-19,VBATT_TP1,#SYM1,VIN_IND1-2,#PWR1-209,JMP_IND1,VBUS_TP1-2,R1-128,R133-139,JP1-16,RED2-4,VR1",
+    "used_designators": "D1-44,D46-51,GREEN1-3,U1-31,3V1,3V3-4,Q1-31,C1-84,MP1-3,PCB1,L1-2,3V3_IND1-5,VR1,RED2-4,JP1-16,R1-128,R133-139,VBUS_TP1-2,JMP_IND1,#PWR1-209,VIN_IND1-2,#SYM1,VBATT_TP1,J1-19,BATT_IND1,GND1,F1-8",
     "variants": []
   },
   "sheets": [

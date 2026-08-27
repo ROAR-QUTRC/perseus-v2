@@ -9391,7 +9391,7 @@
 				)
 			)
 		)
-		(property "Value" ""
+		(property "Value" "D3V3M1U2S9-7"
 			(at 30.48 139.7 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9424,6 +9424,17 @@
 			)
 		)
 		(property "Description" ""
+			(at 30.48 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "31-D3V3M1U2S9-7CT-ND"
 			(at 30.48 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -16019,6 +16030,17 @@
 				(justify bottom)
 			)
 		)
+		(property "digikey_part_num" "MC74HCT595ADTR2GOSCT-ND"
+			(at 196.85 100.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "13"
 			(uuid "00434ee3-5782-480e-a7cb-722ea5839327")
 		)
@@ -18373,6 +18395,28 @@
 			)
 		)
 		(property "manufactuer part number" "AP63203WU-7"
+			(at 67.31 204.47 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer URL" "https://www.lcsc.com/product-detail/C780769.html?s_z=n_q_AP63203WU-7&spm=wm.fly.bg.0.xh&lcsc_vid=T1UMUVNVEQUMUQEDQFYPXgBWQ1BfAlYDRAUPAVxRElUxVlNeQFlcV1ZVR1BeUzsOAxUeFF5JWBYZEEoKFBINSQcJGk4%3D"
+			(at 67.31 204.47 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "AP63203WU-7DICT-ND"
 			(at 67.31 204.47 0)
 			(hide yes)
 			(show_name no)
