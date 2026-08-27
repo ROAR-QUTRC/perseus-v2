@@ -3115,6 +3115,17 @@
 				)
 			)
 		)
+		(property "digikey_part_num" "399-C0603X103K1RAC3121CT-ND"
+			(at 266.7 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "58d832ff-7dce-403f-ae6f-9d04a1b75197")
 		)
@@ -3506,6 +3517,17 @@
 				)
 			)
 		)
+		(property "digikey_part_num" "399-C0603X103K1RAC3121CT-ND"
+			(at 146.05 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "f396214f-ea4f-4b86-98bd-8cd065b02164")
 		)
@@ -3656,6 +3678,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 194.31 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "311-1344-1-ND"
 			(at 194.31 104.14 0)
 			(hide yes)
 			(show_name no)
@@ -3854,6 +3887,17 @@
 				)
 			)
 		)
+		(property "digikey_part_num" "311-1344-1-ND"
+			(at 256.54 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "da954d34-a9af-4427-8dfd-a6af0b8c8256")
 		)
@@ -4032,6 +4076,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 204.47 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "399-C0603X103K1RAC3121CT-ND"
 			(at 204.47 104.14 0)
 			(hide yes)
 			(show_name no)
@@ -4404,6 +4459,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 135.89 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "311-1344-1-ND"
 			(at 135.89 104.14 0)
 			(hide yes)
 			(show_name no)

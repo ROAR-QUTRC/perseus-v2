@@ -1011,7 +1011,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Transistor_FET:Q_NMOS_DGS"
+		(symbol "Transistor_FET_Other:Q_NMOS_Depletion_GDS"
 			(pin_names
 				(offset 0)
 				(hide yes)
@@ -1032,7 +1032,7 @@
 					(justify left)
 				)
 			)
-			(property "Value" "Q_NMOS_DGS"
+			(property "Value" "Q_NMOS_Depletion_GDS"
 				(at 5.08 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1044,7 +1044,7 @@
 				)
 			)
 			(property "Footprint" ""
-				(at 5.08 2.54 0)
+				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -1065,7 +1065,7 @@
 					)
 				)
 			)
-			(property "Description" "N-MOSFET transistor, drain/gate/source"
+			(property "Description" "Depletion-mode N-channel MOSFET gate/drain/source"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1076,7 +1076,7 @@
 					)
 				)
 			)
-			(property "ki_keywords" "transistor NMOS N-MOS N-MOSFET"
+			(property "ki_keywords" "NMOS"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1087,7 +1087,7 @@
 					)
 				)
 			)
-			(symbol "Q_NMOS_DGS_0_1"
+			(symbol "Q_NMOS_Depletion_GDS_0_1"
 				(polyline
 					(pts
 						(xy 0.254 1.905) (xy 0.254 -1.905)
@@ -1114,31 +1114,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0.762 2.286) (xy 0.762 1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0.762 0.508) (xy 0.762 -0.508)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0.762 -1.27) (xy 0.762 -2.286)
+						(xy 0.762 2.286) (xy 0.762 -2.286)
 					)
 					(stroke
 						(width 0.254)
@@ -1231,7 +1207,7 @@
 				)
 				(polyline
 					(pts
-						(xy 2.921 0.381) (xy 3.683 0.381)
+						(xy 2.794 0.508) (xy 2.921 0.381) (xy 3.683 0.381) (xy 3.81 0.254)
 					)
 					(stroke
 						(width 0)
@@ -1254,11 +1230,11 @@
 					)
 				)
 			)
-			(symbol "Q_NMOS_DGS_1_1"
-				(pin passive line
-					(at 2.54 5.08 270)
+			(symbol "Q_NMOS_Depletion_GDS_1_1"
+				(pin input line
+					(at -5.08 0 0)
 					(length 2.54)
-					(name "D"
+					(name "G"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1273,10 +1249,10 @@
 						)
 					)
 				)
-				(pin input line
-					(at -5.08 0 0)
+				(pin passive line
+					(at 2.54 5.08 270)
 					(length 2.54)
-					(name "G"
+					(name "D"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2030,6 +2006,17 @@
 				)
 			)
 		)
+		(property "digikey_part_num" "350-5991180147FCT-ND"
+			(at 207.01 120.65 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "2f5badc7-bed9-49f2-be04-03ff175d6c87")
 		)
@@ -2046,7 +2033,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:Q_NMOS_DGS")
+		(lib_id "Transistor_FET_Other:Q_NMOS_Depletion_GDS")
 		(at 217.17 146.05 0)
 		(unit 1)
 		(body_style 1)
@@ -2056,8 +2043,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "44ca47e0-cc65-40c8-a4ee-607c3fb698a7")
-		(property "Reference" "Q27"
+		(uuid "58ae3cdf-85e6-4957-9e12-5ecd5089905e")
+		(property "Reference" "Q3"
 			(at 223.52 144.7799 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2068,7 +2055,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "Q_NMOS_DGS"
+		(property "Value" "NMOS_GDS"
 			(at 223.52 147.3199 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2079,8 +2066,8 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
-			(at 222.25 143.51 0)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-223"
+			(at 217.17 146.05 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2101,7 +2088,7 @@
 				)
 			)
 		)
-		(property "Description" "N-MOSFET transistor, drain/gate/source"
+		(property "Description" "Depletion-mode N-channel MOSFET gate/drain/source"
 			(at 217.17 146.05 0)
 			(hide yes)
 			(show_name no)
@@ -2112,19 +2099,30 @@
 				)
 			)
 		)
-		(pin "2"
-			(uuid "7256854c-2428-4ae4-95d4-13424d5b240a")
-		)
-		(pin "1"
-			(uuid "3376dbea-4b84-4c1b-8d6d-13b023a75c65")
+		(property "digikey_part_num" "NTF3055-100T1GOSCT-ND"
+			(at 217.17 146.05 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
 		)
 		(pin "3"
-			(uuid "e225b873-2844-4cb6-9113-fc1c64063a90")
+			(uuid "546fb790-26de-4f46-9c2a-ba2ad1e0f0e8")
+		)
+		(pin "2"
+			(uuid "4c7755ac-7228-4649-baf2-85293a8f828c")
+		)
+		(pin "1"
+			(uuid "e2098ea5-4cdc-4395-8cac-9fe66ba217a9")
 		)
 		(instances
 			(project "rover-control-board-v2"
 				(path "/ed12625f-743c-4dd1-a6f4-666aeca01e2d/f186a5df-bce3-4173-b0d9-882f1a8a692c"
-					(reference "Q27")
+					(reference "Q3")
 					(unit 1)
 				)
 			)
@@ -2390,7 +2388,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "100R"
 			(at 187.96 142.24 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2424,6 +2422,17 @@
 		)
 		(property "Description" "Resistor"
 			(at 187.96 146.05 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "541-100HCT-ND"
+			(at 187.96 146.05 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2515,6 +2524,17 @@
 				)
 			)
 		)
+		(property "digikey_part_num" "311-10.0KHRCT-ND"
+			(at 207.01 133.35 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "236685a8-7b71-4a92-bf88-59d3d74d6cea")
 		)
@@ -2561,7 +2581,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder"
 			(at 198.12 110.998 90)
 			(hide yes)
 			(show_name no)
@@ -2585,6 +2605,17 @@
 		)
 		(property "Description" "Fuse"
 			(at 198.12 109.22 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "5923-0ZCF0100AF2ACT-ND"
+			(at 198.12 109.22 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2666,6 +2697,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 200.66 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "digikey_part_num" "311-4.70KHRCT-ND"
 			(at 200.66 154.94 0)
 			(hide yes)
 			(show_name no)

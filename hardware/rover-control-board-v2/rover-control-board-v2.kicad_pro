@@ -626,7 +626,7 @@
           "group_by": false,
           "label": "Qty",
           "name": "${QUANTITY}",
-          "show": true
+          "show": false
         },
         {
           "group_by": true,
@@ -635,22 +635,22 @@
           "show": true
         },
         {
-          "group_by": true,
+          "group_by": false,
           "label": "DNP",
           "name": "${DNP}",
           "show": true
         },
         {
-          "group_by": true,
+          "group_by": false,
           "label": "Exclude from BOM",
           "name": "${EXCLUDE_FROM_BOM}",
-          "show": true
+          "show": false
         },
         {
-          "group_by": true,
+          "group_by": false,
           "label": "Exclude from Board",
           "name": "${EXCLUDE_FROM_BOARD}",
-          "show": true
+          "show": false
         },
         {
           "group_by": true,
@@ -662,13 +662,91 @@
           "group_by": false,
           "label": "Datasheet",
           "name": "Datasheet",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MAXIMUM_PACKAGE_HEIGHT",
+          "name": "MAXIMUM_PACKAGE_HEIGHT",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "PARTREV",
+          "name": "PARTREV",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "STANDARD",
+          "name": "STANDARD",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Sim.Device",
+          "name": "Sim.Device",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Sim.Pins",
+          "name": "Sim.Pins",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Sim.Type",
+          "name": "Sim.Type",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "digikey_part_num",
+          "name": "digikey_part_num",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "distributors part number",
+          "name": "distributors part number",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "manufactuer part number",
+          "name": "manufactuer part number",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "manufacturer",
+          "name": "manufacturer",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MANUFACTURER",
+          "name": "MANUFACTURER",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
       "include_excluded_from_bom": true,
-      "name": "Default Editing",
+      "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
     },
@@ -713,7 +791,7 @@
         "uuid": "ed12625f-743c-4dd1-a6f4-666aeca01e2d"
       }
     ],
-    "used_designators": "J1-19,PCB1,L1-2,3V3_IND1-5,C1-84,3V1,3V3-4,Q1-31,D1-44,D46-51,U1-31,GREEN1-3,VBATT_TP1,VR1,RED2-4,#SYM1,VIN_IND1-2,#PWR1-209,JMP_IND1,VBUS_TP1-2,R1-128,R133-139,JP1-16,GND1,BATT_IND1,F1-8",
+    "used_designators": "GND1,F1-8,BATT_IND1,3V3_IND1-5,MP1-3,C1-84,3V1,3V3-4,Q1-31,D1-44,D46-51,U1-31,GREEN1-3,L1-2,PCB1,J1-19,VBATT_TP1,#SYM1,VIN_IND1-2,#PWR1-209,JMP_IND1,VBUS_TP1-2,R1-128,R133-139,JP1-16,RED2-4,VR1",
     "variants": []
   },
   "sheets": [
