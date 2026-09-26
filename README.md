@@ -1,3 +1,6 @@
+> [!WARNING]
+> This repository is now archived please see [perseus-v3](https://github.com/ROAR-QUTRC/perseus-v3/).
+
 # perseus-v2
 
 The main codebase for perseus starting 2024
